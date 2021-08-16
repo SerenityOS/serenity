@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ROOT Typ="Contents" Version="1.0">
+	<LINKS>
+		<LINK>
+			<TARGET template="a.xml" Version="1">
+				<INFO Description="test1" Theme="b"/>
+			</TARGET>
+		</LINK>
+		<LINK>
+			<TARGET template="b.xml" Version="2">
+				<INFO Description="test2" Theme="b"/>
+			</TARGET>
+		</LINK>
+	</LINKS>
+</ROOT>

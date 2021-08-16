@@ -1,0 +1,18 @@
+#
+#   generate these charsets into sun.nio.cs
+#
+GBK
+GB18030
+Johab
+MS1255
+MS1256
+MS1258
+MS874
+MS932
+JIS_X_0201
+SJIS
+MS936
+MS949
+MS950
+MS950_HKSCS
+MS950_HKSCS_XP

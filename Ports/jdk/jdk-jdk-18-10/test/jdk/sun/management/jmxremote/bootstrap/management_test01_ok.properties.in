@@ -1,0 +1,2 @@
+com.sun.management.jmxremote.ssl=false
+com.sun.management.jmxremote.authenticate=false

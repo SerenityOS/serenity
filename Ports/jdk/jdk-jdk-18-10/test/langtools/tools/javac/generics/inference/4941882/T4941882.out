@@ -1,0 +1,2 @@
+T4941882.java:13:17: compiler.err.prob.found.req: (compiler.misc.incompatible.bounds: T, (compiler.misc.upper.bounds: java.lang.Object[],java.lang.Object), (compiler.misc.lower.bounds: float[],int[]))
+1 error

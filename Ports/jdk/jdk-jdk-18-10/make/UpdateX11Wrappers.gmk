@@ -1,0 +1,109 @@
+#
+# Copyright (c) 2012, 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+################################################################################
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include Execute.gmk
+include NativeCompilation.gmk
+include ToolsJdk.gmk
+
+################################################################################
+# This file is responsible for extracting the x11 native struct offsets to
+# the xawt Java library. The tool needs to be run on the os/arch that
+# will host the final jvm, thus the tool cannot be used when cross compiling.
+#
+# Two versions of the generated offset file, sizes-32.txt and sizes-64.txt are
+# committed into the source code repository. These are the ones used in
+# GensrcX11Wrappers.gmk to generate the Java code during the build.
+################################################################################
+
+ifeq ($(COMPILE_TYPE), cross)
+  $(error It is not possible to update the x11wrappers when cross-compiling)
+endif
+
+X11WRAPPERS_OUTPUT := $(SUPPORT_OUTPUTDIR)/x11wrappers
+GENERATOR_SOURCE_FILE := $(X11WRAPPERS_OUTPUT)/src/data_generator.c
+
+GENSRC_X11WRAPPERS_DATADIR := $(TOPDIR)/make/data/x11wrappergen
+WRAPPER_OUTPUT_FILE := $(GENSRC_X11WRAPPERS_DATADIR)/sizes-$(BITS).txt
+
+BITS := $(OPENJDK_TARGET_CPU_BITS)
+
+# Generate the C code for the program that will output the offset file.
+$(eval $(call SetupExecute, gensrc_generator, \
+    INFO := Generating X11 wrapper data generator source code, \
+    DEPS := $(GENSRC_X11WRAPPERS_DATADIR)/xlibtypes.txt $(BUILD_TOOLS_JDK), \
+    OUTPUT_FILE := $(GENERATOR_SOURCE_FILE), \
+    COMMAND := $(TOOL_WRAPPERGENERATOR) gen_c_source $(GENERATOR_SOURCE_FILE) \
+        $(GENSRC_X11WRAPPERS_DATADIR)/xlibtypes.txt $(BITS), \
+))
+
+DATA_GENERATOR_INCLUDES := \
+    -I$(TOPDIR)/src/hotspot/share/include \
+    -I$(TOPDIR)/src/hotspot/os/$(HOTSPOT_TARGET_OS_TYPE)/include \
+    -I$(SUPPORT_OUTPUTDIR)/modules_include/java.base \
+    -I$(SUPPORT_OUTPUTDIR)/modules_include/java.base/$(OPENJDK_TARGET_OS_INCLUDE_SUBDIR) \
+    -I$(TOPDIR)/src/java.base/share/native/libjava \
+    -I$(TOPDIR)/src/java.base/$(OPENJDK_TARGET_OS_TYPE)/native/libjava \
+    -I$(TOPDIR)/src/java.desktop/$(OPENJDK_TARGET_OS_TYPE)/native/common/awt \
+    -I$(TOPDIR)/src/java.desktop/share/native/common/awt/debug \
+    -I$(TOPDIR)/src/java.desktop/share/native/libawt/awt/image/cvutils \
+    #
+
+# Compile the generated C code into an executable.
+$(eval $(call SetupNativeCompilation, BUILD_DATA_GENERATOR, \
+    PROGRAM := data_generator, \
+    OUTPUT_DIR := $(X11WRAPPERS_OUTPUT)/bin, \
+    EXTRA_FILES := $(GENERATOR_SOURCE_FILE), \
+    CFLAGS := $(X_CFLAGS) $(DATA_GENERATOR_INCLUDES) $(CFLAGS_JDKEXE), \
+    LDFLAGS := $(LDFLAGS_JDKEXE), \
+    LIBS := $(X_LIBS), \
+    OBJECT_DIR := $(X11WRAPPERS_OUTPUT)/objs, \
+))
+
+# Run the executable to create the data file.
+$(eval $(call SetupExecute, run_wrappergen, \
+    INFO := Generating X11 wrapper data files, \
+    DEPS := $(BUILD_DATA_GENERATOR), \
+    OUTPUT_FILE := $(WRAPPER_OUTPUT_FILE), \
+    COMMAND := $(BUILD_DATA_GENERATOR_TARGET) | $(SORT) > $(WRAPPER_OUTPUT_FILE), \
+))
+
+wrapper-information: $(run_wrappergen)
+	$(ECHO) IMPORTANT: If you update the X11 wrapper data files, they most certainly
+	$(ECHO) need to be updated for both 32 and 64 bit platforms. You have now
+	$(ECHO) updated them for $(BITS) bit platforms only.
+
+TARGETS += $(run_wrappergen) wrapper-information
+
+################################################################################
+
+all: $(TARGETS)
+
+.PHONY: all default

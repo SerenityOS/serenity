@@ -1,0 +1,224 @@
+#
+# Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+ifeq (,$(_MAKEBASE_GMK))
+  $(error You must include MakeBase.gmk prior to including TextFileProcessing.gmk)
+endif
+
+# Helper function for SetupTextFileProcessing; adds a rule for a single file
+# to be processed.
+# param 1 = The namespace argument, e.g. BUILD_VERSION_FILE
+# param 2 = the source file name (full path)
+# param 3 = the target base directory
+# param 4 = the target file name (possibly with a partial path)
+define SetupSingleTextFileForProcessing
+  $(strip $3)/$(strip $4): $2 $$($1_VARDEPS_FILE)
+	$$(call LogInfo, Processing $(strip $4))
+	$$(call MakeDir, $$(@D))
+	$(RM) '$$@' '$$@.includes.tmp' '$$@.replacements.tmp' ; \
+	$$($1_INCLUDES_COMMAND_LINE) < '$$<' > '$$@.includes.tmp' ; \
+	$$($1_REPLACEMENTS_COMMAND_LINE) < '$$@.includes.tmp' > '$$@.replacements.tmp' ; \
+	$(RM) '$$@.includes.tmp' ; \
+	$(MV) '$$@.replacements.tmp' '$$@'
+
+  $1 += $(strip $3)/$(strip $4)
+endef
+
+# Setup make rules for processing one or more text files, in which specified
+# markers are replaced with a given text, or with the contents of a given file.
+#
+# Parameter 1 is the name of the rule. This name is used as variable prefix,
+# and the targets generated are listed in a variable by that name.
+#
+# Remaining parameters are named arguments. These include:
+#   SOURCE_DIRS one or more directory roots to search for files to process
+#   SOURCE_FILES complete paths to one or more files to process
+#   OUTPUT_DIR the directory where we store the processed files.
+#   OUTPUT_FILE the name of the resulting file. Only allowed if processing a
+#       single file.
+#   SOURCE_BASE_DIR a common root to all SOURCE_DIRS or SOURCE_FILES.
+#       If specified, files will keep the path relative to the base in the
+#       OUTPUT_DIR. Otherwise, the hierarchy will be flattened into the OUTPUT_DIR.
+#   INCLUDE_FILES only include files matching these patterns (used only with
+#       SOURCE_DIRS)
+#   EXCLUDE_FILES exclude files matching these patterns (used only with
+#       SOURCE_DIRS)
+#   INCLUDES replace the occurances of a pattern with the contents of a file;
+#       one or more such include pattern, using the syntax:
+#       PLACEHOLDER => FILE_TO_INCLUDE ; ...
+#       Each PLACEHOLDER must be on a single, otherwise empty line (whitespace
+#       padding is allowed).
+#   REPLACEMENTS one or more text replacement patterns, using the syntax:
+#       PATTERN => REPLACEMENT_TEXT ; ...
+#
+#   If both INCLUDES or REPLACEMENTS are present, then the includes will be
+#   processed first, and replacements will be done on the included fragments as well.
+#   If neither is present, the files will just be copied without modifications.
+#
+SetupTextFileProcessing = $(NamedParamsMacroTemplate)
+define SetupTextFileProcessingBody
+
+  ifneq ($$($1_SOURCE_FILES),)
+    ifneq ($$($1_SOURCE_DIRS),)
+      $$(error Cannot use both SOURCE_FILES and SOURCE_DIRS (in $1))
+    endif
+    ifneq ($$($1_EXCLUDE_FILES)$$($1_INCLUDE_FILES),)
+      $$(error Cannot INCLUDE/EXCLUDE_FILES with SOURCE_FILES (in $1))
+    endif
+  else
+    ifeq ($$($1_SOURCE_DIRS),)
+      $$(error Must specify either SOURCE_FILES or SOURCE_DIRS (in $1))
+    endif
+    # Find all files in the source trees. Sort to remove duplicates.
+    $$(foreach src, $$($1_SOURCE_DIRS), $$(if $$(wildcard $$(src)), , \
+        $$(error SOURCE_DIRS contains missing directory $$(src) (in $1))))
+    ifneq ($$($1_SOURCE_BASE_DIR),)
+      $$(foreach src, $$($1_SOURCE_DIRS), \
+          $$(if $$(findstring $$($1_SOURCE_BASE_DIR), $$(src)), , \
+          $$(error SOURCE_DIRS contains directory $$(src) outside \
+              SOURCE_BASE_DIR $$($1_SOURCE_BASE_DIR) (in $1))))
+    endif
+    $1_SOURCE_FILES := $$(sort $$(call FindFiles,$$($1_SOURCE_DIRS)))
+    $1_EXCLUDE_FILES:=$$(foreach i,$$($1_SOURCE_DIRS),$$(addprefix $$i/,$$($1_EXCLUDE_FILES)))
+    $1_INCLUDE_FILES:=$$(foreach i,$$($1_SOURCE_DIRS),$$(addprefix $$i/,$$($1_INCLUDE_FILES)))
+    $1_SOURCE_FILES := $$(filter-out $$($1_EXCLUDE_FILES),$$($1_SOURCE_FILES))
+    ifneq (,$$(strip $$($1_INCLUDE_FILES)))
+      $1_SOURCE_FILES := $$(filter $$($1_INCLUDE_FILES),$$($1_SOURCE_FILES))
+    endif
+    ifeq (,$$($1_SOURCE_FILES))
+      $$(info No sources found for $1 when looking inside the dirs $$($1_SRC))
+    endif
+  endif
+
+  ifneq ($$($1_REPLACEMENTS),)
+    # We have a replacement request, prepare it for the recipe
+    ifneq ($$(findstring /,$$($1_REPLACEMENTS)),)
+      # Cannot use / as separator
+      ifneq ($$(findstring @,$$($1_REPLACEMENTS)),)
+        # Cannot use @ as separator
+        ifneq ($$(findstring |,$$($1_REPLACEMENTS)),)
+          # Cannot use | as separator
+          ifneq ($$(findstring !,$$($1_REPLACEMENTS)),)
+            # Cannot use ! as separator. Give up.
+            $$(error No suitable sed separator can be found for $1. Tested /, @, | and !)
+          else
+            $1_SEP := !
+          endif
+        else
+          $1_SEP := |
+        endif
+      else
+        $1_SEP := @
+      endif
+    else
+      $1_SEP := /
+    endif
+
+    # If we have a trailing "=>" (i.e. last rule replaces with empty, and is not
+    # terminated by a ;), add a trailing ; to minimize the number of corner
+    # cases in the hairy subst expression..
+    ifeq ($$(lastword $$($1_REPLACEMENTS)), =>)
+      $1_REPLACEMENTS += ;
+    endif
+
+    # If we have a trailing ";", add a dummy replacement, since there is no easy
+    # way to delete the last word in make.
+    ifeq ($$(lastword $$($1_REPLACEMENTS)), ;)
+      $1_REPLACEMENTS += DUMMY_REPLACEMENT => DUMMY_REPLACEMENT
+    endif
+
+    # Convert the REPLACEMENTS syntax ( A => B ; C => D ; ...) to a sed command
+    # line (-e "s/A/B/g" -e "s/C/D/g" ...), basically by replacing '=>' with '/'
+    # and ';' with '/g" -e "s/', and adjusting for edge cases.
+    # '&' has special meaning in sed so needs to be escaped.
+    $1_REPLACEMENTS_COMMAND_LINE := $(SED) -e 's$$($1_SEP)$$(subst $$(SPACE);$$(SPACE),$$($1_SEP)g' \
+        -e 's$$($1_SEP),$$(subst $$(SPACE)=>$$(SPACE),$$($1_SEP),$$(subst $$(SPACE)=>$$(SPACE);$$(SPACE),$$($1_SEP)$$($1_SEP)g' \
+        -e 's$$($1_SEP),$$(subst &,\&,$$(strip $$($1_REPLACEMENTS))))))$$($1_SEP)g'
+  else
+    # We don't have any replacements, just pipe the file through cat.
+    $1_REPLACEMENTS_COMMAND_LINE := $(CAT)
+  endif
+
+  ifneq ($$($1_INCLUDES),)
+    # We have a include request, prepare it for the recipe.
+    # Convert an INCLUDE like this PATTERN_1 => file1 ; PATTERN_2 => file2 ;
+    # into an awk script fragment like this:
+    # {
+    #   if (matches("PATTERN_1")) { include("file1") } else
+    #   if (matches("PATTERN_2")) { include("file2") } else
+    #   print
+    # }
+
+    $1_INCLUDES_HEADER_AWK := \
+        function matches(pattern) { return ($$$$0 ~ "^[ \t]*" pattern "[ \t]*$$$$") } \
+        function include(filename) { while ((getline < filename) == 1) print ; close(filename) }
+    $1_INCLUDES_PARTIAL_AWK := $$(subst $$(SPACE);,,$$(subst $$(SPACE)=>$$(SPACE),"$$(RIGHT_PAREN)$$(RIGHT_PAREN) \
+        { include$$(LEFT_PAREN)",$$(subst $$(SPACE);$$(SPACE),"$$(RIGHT_PAREN) } \
+        else if $$(LEFT_PAREN)matches$$(LEFT_PAREN)",$$(strip $$($1_INCLUDES)))))
+    $1_INCLUDES_COMMAND_LINE := $(AWK) '$$($1_INCLUDES_HEADER_AWK) \
+        { if (matches("$$($1_INCLUDES_PARTIAL_AWK)") } else print }'
+  else
+    # We don't have any includes, just pipe the file through cat.
+    $1_INCLUDES_COMMAND_LINE := $(CAT)
+  endif
+
+  $1_VARDEPS := $$($1_INCLUDES_COMMAND_LINE) $$($1_REPLACEMENTS_COMMAND_LINE)
+  $1_VARDEPS_FILE := $$(call DependOnVariable, $1_VARDEPS)
+
+  # Reset target list before populating it
+  $1 :=
+
+  ifneq ($$($1_OUTPUT_FILE),)
+    ifneq ($$(words $$($1_SOURCE_FILES)), 1)
+      $$(error Cannot use OUTPUT_FILE for more than one source file (in $1))
+    endif
+
+    # Note that $1 is space sensitive and must disobey whitespace rules
+    $$(eval $$(call SetupSingleTextFileForProcessing,$1, $$($1_SOURCE_FILES), \
+        $$(patsubst %/, %, $$(dir $$($1_OUTPUT_FILE))), $$(notdir $$($1_OUTPUT_FILE))))
+  else
+    ifeq ($$($1_OUTPUT_DIR),)
+      $$(error Neither OUTPUT_FILE nor OUTPUT_DIR was specified (in $1))
+    endif
+
+    # Now call add_native_source for each source file we are going to process.
+    ifeq ($$($1_SOURCE_BASE_DIR),)
+      # With no base dir specified, put all files in target dir, flattening any
+      # hierarchies. Note that $1 is space sensitive and must disobey whitespace
+      # rules.
+      $$(foreach src, $$($1_SOURCE_FILES), \
+          $$(eval $$(call SetupSingleTextFileForProcessing,$1, $$(src), \
+              $$(patsubst %/, %, $$($1_OUTPUT_DIR)), $$(notdir $$(src)))))
+    else
+      # With a base dir, extract the relative portion of the path. Note that $1
+      # is space sensitive and must disobey whitespace rules, and so is the
+      # arguments to patsubst.
+      $$(foreach src, $$($1_SOURCE_FILES), \
+          $$(eval $$(call SetupSingleTextFileForProcessing,$1, $$(src), \
+              $$(patsubst %/, %, $$($1_OUTPUT_DIR)), \
+              $$(patsubst $$($1_SOURCE_BASE_DIR)/%,%,$$(src)))))
+    endif
+  endif
+endef

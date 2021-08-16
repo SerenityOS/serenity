@@ -1,0 +1,3 @@
+T6245591.java:8:5: compiler.warn.missing.deprecated.annotation
+T6245591.java:15:27: compiler.warn.has.been.deprecated: WINTER, Season
+2 warnings

@@ -1,0 +1,37 @@
+    @Test(dataProvider = "$type$TernaryOpMaskProvider")
+    static void [[TEST]]$vectorteststype$BroadcastMaskedSmokeTest(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb,
+                                          IntFunction<$type$[]> fc, IntFunction<boolean[]> fm) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] b = fb.apply(SPECIES.length());
+        $type$[] c = fc.apply(SPECIES.length());
+        $type$[] r = fr.apply(SPECIES.length());
+        boolean[] mask = fm.apply(SPECIES.length());
+        VectorMask<$Wideboxtype$> vmask = VectorMask.fromArray(SPECIES, mask, 0);
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            $abstractvectortype$ bv = $abstractvectortype$.fromArray(SPECIES, b, i);
+            av.lanewise(VectorOperators.[[TEST]], bv, c[i], vmask).intoArray(r, i);
+        }
+
+        assertBroadcastArraysEquals(r, a, b, c, mask, $vectorteststype$::[[TEST]]);
+    }
+
+    @Test(dataProvider = "$type$TernaryOpMaskProvider")
+    static void [[TEST]]$vectorteststype$AltBroadcastMaskedSmokeTest(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb,
+                                          IntFunction<$type$[]> fc, IntFunction<boolean[]> fm) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] b = fb.apply(SPECIES.length());
+        $type$[] c = fc.apply(SPECIES.length());
+        $type$[] r = fr.apply(SPECIES.length());
+        boolean[] mask = fm.apply(SPECIES.length());
+        VectorMask<$Wideboxtype$> vmask = VectorMask.fromArray(SPECIES, mask, 0);
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            $abstractvectortype$ cv = $abstractvectortype$.fromArray(SPECIES, c, i);
+            av.lanewise(VectorOperators.[[TEST]], b[i], cv, vmask).intoArray(r, i);
+        }
+
+        assertAltBroadcastArraysEquals(r, a, b, c, mask, $vectorteststype$::[[TEST]]);
+    }

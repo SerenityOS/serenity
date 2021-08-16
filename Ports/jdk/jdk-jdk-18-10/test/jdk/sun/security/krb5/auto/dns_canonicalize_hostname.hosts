@@ -1,0 +1,8 @@
+# The preferred name at reverse lookup
+127.0.0.1 dummy.example.com
+
+# The short name
+127.0.0.1 dummy
+
+# The strange name
+127.0.0.1 bogus

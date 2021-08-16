@@ -1,0 +1,10 @@
+option,com/oracle/Test.test1,TestOptionBool
+option,com/oracle/Test,test2,TestOptionBool
+option,com.oracle.Test::test3,TestOptionBool
+option,com/oracle/Test.test4,TestOptionBool,TestOptionBool2
+option,com/oracle/Test,test5,TestOptionBool,TestOptionBool2
+option,com/oracle/Test.test6(I),TestOptionBool
+option,com/oracle/Test,test7,(I),TestOptionBool
+option,com.oracle.Test::test8(I),TestOptionBool
+option,com/oracle/Test.test9(I),TestOptionBool,TestOptionBool2
+option,com/oracle/Test,test10(I),TestOptionBool,TestOptionBool2

@@ -1,0 +1,6 @@
+ErroneousParameters.java:10:36: compiler.err.varargs.must.be.last
+ErroneousParameters.java:11:39: compiler.err.expected3: ',', ')', '['
+ErroneousParameters.java:12:40: compiler.err.illegal.start.of.type
+ErroneousParameters.java:13:41: compiler.err.expected: ']'
+ErroneousParameters.java:14:38: compiler.err.expected3: ',', ')', '['
+5 errors

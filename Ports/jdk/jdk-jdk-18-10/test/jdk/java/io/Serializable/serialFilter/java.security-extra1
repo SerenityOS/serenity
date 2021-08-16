@@ -1,0 +1,4 @@
+# Serialization Input Process-wide Filter
+# See conf/security/java.security for pattern synatx
+#
+jdk.serialFilter=java.**;javax.**;maxarray=34;maxdepth=7

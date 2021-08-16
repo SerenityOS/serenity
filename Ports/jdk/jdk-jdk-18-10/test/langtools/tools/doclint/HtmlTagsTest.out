@@ -1,0 +1,47 @@
+HtmlTagsTest.java:14: error: unknown tag: xyz
+     * <xyz> ... </xyz>
+       ^
+HtmlTagsTest.java:14: error: unknown tag: xyz
+     * <xyz> ... </xyz>
+                 ^
+HtmlTagsTest.java:19: error: unknown tag: xyz
+     * <div> <xyz> </div>
+             ^
+HtmlTagsTest.java:29: error: element not allowed in documentation comments: <html>
+     * <html>
+       ^
+HtmlTagsTest.java:29: error: element not closed: html
+     * <html>
+       ^
+HtmlTagsTest.java:34: error: block element not allowed within inline element <span>: p
+     * <span> <p> </span>
+              ^
+HtmlTagsTest.java:34: warning: empty <p> tag
+     * <span> <p> </span>
+              ^
+HtmlTagsTest.java:39: error: block element not allowed within @link: p
+     * {@link java.lang.String <p> }
+                               ^
+HtmlTagsTest.java:40: error: block element not allowed within @link: p
+     * {@link java.lang.String <p> }
+                               ^
+HtmlTagsTest.java:45: error: invalid end tag: </img>
+     * <img src="any.jpg" alt="alt"> </img>
+                                     ^
+HtmlTagsTest.java:50: error: end tag missing: </b>
+     * <i> <b> </i>
+           ^
+HtmlTagsTest.java:55: error: unexpected end tag: </b>
+     * <i> </b> </i>
+           ^
+HtmlTagsTest.java:55: warning: empty <i> tag
+     * <i> </b> </i>
+                ^
+HtmlTagsTest.java:60: error: text not allowed in <ul> element
+     * <ul> text <li> ... </li> </ul>
+           ^
+HtmlTagsTest.java:65: error: tag not allowed here: <b>
+     * <ul> <b>text</b> <li> ... </li> </ul>
+            ^
+13 errors
+2 warnings

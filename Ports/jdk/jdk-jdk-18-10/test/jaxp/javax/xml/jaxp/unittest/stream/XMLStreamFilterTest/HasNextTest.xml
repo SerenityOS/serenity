@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?><!-- DTD for a "product information". --><mytext>
+this is some text
+</mytext><!--
+<product
+    name="BEA Weblogic Server 6.0"
+    date="Date of Release 12/18/2000"
+    copyrite="2000-2001 BEA Systems, Inc." />
+--><?process me?>
+

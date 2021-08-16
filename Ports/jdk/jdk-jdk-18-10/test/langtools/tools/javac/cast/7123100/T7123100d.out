@@ -1,0 +1,4 @@
+T7123100d.java:14:19: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), compiler.misc.type.captureof: 1, ?, Z
+- compiler.err.warnings.and.werror
+1 error
+1 warning

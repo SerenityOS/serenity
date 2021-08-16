@@ -1,0 +1,5 @@
+T4881269.java:9:13: compiler.err.illegal.dot
+T4881269.java:10:27: compiler.err.illegal.dot
+T4881269.java:10:22: compiler.err.not.stmt
+T4881269.java:11:19: compiler.err.illegal.dot
+4 errors

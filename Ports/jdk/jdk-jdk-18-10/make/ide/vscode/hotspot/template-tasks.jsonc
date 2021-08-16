@@ -1,0 +1,55 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Update compilation database (compile_commands.json)",
+            "type": "shell",
+            "options": {
+                "env": {
+                    "PATH": "{{PATH}}"
+                },
+                "cwd": "{{WORKSPACE_ROOT}}"
+            },
+            "command": "{{MAKE}} CONF_NAME={{CONF_NAME}} compile-commands",
+            "problemMatcher": []
+        },
+        {
+            "label": "Make 'hotspot'",
+            "type": "shell",
+            "options": {
+                "env": {
+                    "PATH": "{{PATH}}"
+                },
+                "cwd": "{{WORKSPACE_ROOT}}"
+            },
+            "command": "{{MAKE}} CONF_NAME={{CONF_NAME}} hotspot",
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "Make 'exploded-image'",
+            "type": "shell",
+            "options": {
+                "env": {
+                    "PATH": "{{PATH}}"
+                },
+                "cwd": "{{WORKSPACE_ROOT}}"
+            },
+            "command": "{{MAKE}} CONF_NAME={{CONF_NAME}} exploded-image",
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "Make 'jdk'",
+            "type": "shell",
+            "options": {
+                "env": {
+                    "PATH": "{{PATH}}"
+                },
+                "cwd": "{{WORKSPACE_ROOT}}"
+            },
+            "command": "{{MAKE}} CONF_NAME={{CONF_NAME}} jdk",
+            "problemMatcher": ["$gcc"]
+        }
+    ]
+}

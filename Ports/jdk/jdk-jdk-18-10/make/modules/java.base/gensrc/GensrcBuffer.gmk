@@ -1,0 +1,382 @@
+#
+# Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+GENSRC_BUFFER :=
+
+GENSRC_BUFFER_DST := $(SUPPORT_OUTPUTDIR)/gensrc/java.base/java/nio
+
+GENSRC_BUFFER_SRC := $(TOPDIR)/src/java.base/share/classes/java/nio
+
+###
+
+$(GENSRC_BUFFER_DST)/_the.buffer.dir:
+	$(call LogInfo, Generating buffer classes)
+	$(call MakeDir, $(@D))
+	$(TOUCH) $@
+
+define fixRw
+  $1_RW := $2
+  $1_rwkey := rw
+  ifeq (R, $2)
+    $1_rwkey := ro
+  endif
+endef
+
+define typesAndBits
+  # param 1 target
+  # param 2 type
+  # param 3 BO
+  $1_a := a
+  $1_A := A
+
+  $1_type := $2
+
+  ifeq ($2, byte)
+    $1_x        := b
+    $1_Type     := Byte
+    $1_fulltype := byte
+    $1_Fulltype := Byte
+    $1_category := integralType
+    $1_LBPV     := 0
+  endif
+
+  ifeq ($2, char)
+    $1_x        := c
+    $1_Type     := Char
+    $1_fulltype := character
+    $1_Fulltype := Character
+    $1_category := integralType
+    $1_streams  := streamableType
+    $1_streamtype := int
+    $1_Streamtype := Int
+    $1_LBPV     := 1
+  endif
+
+  ifeq ($2, short)
+    $1_x        := s
+    $1_Type     := Short
+    $1_fulltype := short
+    $1_Fulltype := Short
+    $1_category := integralType
+    $1_LBPV     := 1
+  endif
+
+  ifeq ($2, int)
+    $1_a        := an
+    $1_A        := An
+    $1_x        := i
+    $1_Type     := Int
+    $1_fulltype := integer
+    $1_Fulltype := Integer
+    $1_category := integralType
+    $1_LBPV     := 2
+  endif
+
+  ifeq ($2, long)
+    $1_x        := l
+    $1_Type     := Long
+    $1_fulltype := long
+    $1_Fulltype := Long
+    $1_category := integralType
+    $1_LBPV     := 3
+  endif
+
+  ifeq ($2, float)
+    $1_x        := f
+    $1_Type     := Float
+    $1_fulltype := float
+    $1_Fulltype := Float
+    $1_category := floatingPointType
+    $1_LBPV     := 2
+  endif
+
+  ifeq ($2, double)
+    $1_x        := d
+    $1_Type     := Double
+    $1_fulltype := double
+    $1_Fulltype := Double
+    $1_category := floatingPointType
+    $1_LBPV     := 3
+  endif
+
+  $1_Swaptype := $$($1_Type)
+  $1_memtype := $2
+  $1_Memtype := $$($1_Type)
+
+  ifeq ($2, float)
+    $1_memtype := int
+    $1_Memtype := Int
+    ifneq ($3, U)
+      $1_Swaptype := Int
+      $1_fromBits := Float.intBitsToFloat
+      $1_toBits   := Float.floatToRawIntBits
+    endif
+  endif
+
+  ifeq ($2, double)
+    $1_memtype := long
+    $1_Memtype := Long
+    ifneq ($3, U)
+      $1_Swaptype := Long
+      $1_fromBits := Double.longBitsToDouble
+      $1_toBits   := Double.doubleToRawLongBits
+    endif
+  endif
+
+  ifeq ($3, S)
+    $1_swap := Bits.swap
+  endif
+endef
+
+define genBinOps
+  # param 1 target
+  # param 2 type
+  # param 3 BO
+  # param 4 RW
+  # param 5 nbytes
+  # param 6 nbytesButOne
+  $(call typesAndBits,$1,$2,$3)
+  $(call fixRw,$1,$4)
+  $1_nbytes := $5
+  $1_nbytesButOne := $6
+  $1_CMD := $(TOOL_SPP) \
+    -Dtype=$$($1_type) \
+    -DType=$$($1_Type) \
+    -Dfulltype=$$($1_fulltype) \
+    -Dmemtype=$$($1_memtype) \
+    -DMemtype=$$($1_Memtype) \
+    -DfromBits=$$($1_fromBits) \
+    -DtoBits=$$($1_toBits) \
+    -DLG_BYTES_PER_VALUE=$$($1_LBPV) \
+    -DBYTES_PER_VALUE="(1 << $$($1_LBPV))" \
+    -Dnbytes=$$($1_nbytes) \
+    -DnbytesButOne=$$($1_nbytesButOne) \
+    -DRW=$$($1_RW) \
+    -K$$($1_rwkey) \
+    -Da=$$($1_a) \
+    -be
+endef
+
+define SetupGenBuffer
+  # param 1 is for output file
+  # param 2 is template dependency
+  # param 3-9 are named args.
+  #   type :=
+  #   BIN :=
+  #   RW := Mutability (R)ead-only (W)ritable
+  #   BO := (U)nswapped/(S)wapped/(L)ittle/(B)ig
+  #
+  $(if $3,$1_$(strip $3))
+  $(if $4,$1_$(strip $4))
+  $(if $5,$1_$(strip $5))
+  $(if $6,$1_$(strip $6))
+  $(if $7,$1_$(strip $7))
+  $(if $8,$1_$(strip $8))
+  $(if $9,$1_$(strip $9))
+  $(if $(10),$1_$(strip $(10)))
+  $(if $(11),$1_$(strip $(11)))
+  $(if $(12),$1_$(strip $(12)))
+  $(if $(13),$1_$(strip $(13)))
+  $(if $(14),$1_$(strip $(14)))
+  $(foreach i,3 4 5 6 7 8 9 10 11 12 13 14 15,$(if $($i),$1_$(strip $($i)))$(NEWLINE))
+  $(call LogSetupMacroEntry,SetupGenBuffer($1),$2,$3,$4,$5,$6,$7,$8,$9,$(10),$(11),$(12),$(13),$(14),$(15))
+  $(if $(16),$(error Internal makefile error: Too many arguments to SetupGenBuffer, please update GensrcBuffer.gmk))
+
+  $(call fixRw,$1,$$($1_RW))
+  $(call typesAndBits,$1,$$($1_type),$$($1_BO))
+
+  $1_DST := $(GENSRC_BUFFER_DST)/$1.java
+  $1_SRC := $(GENSRC_BUFFER_SRC)/$(strip $2).java.template
+  $1_SRC_BIN := $(GENSRC_BUFFER_SRC)/$(strip $2)-bin.java.template
+
+  $1_DEP := $$($1_SRC)
+  ifneq ($$($1_BIN), 1)
+    $1_DEP := $$($1_SRC)
+    $1_OUT := $$($1_DST)
+  else
+    $1_DEP += $$($1_SRC) $$($1_SRC_BIN)
+    $1_OUT := $(GENSRC_BUFFER_DST)/$1.binop.0.java
+  endif
+
+  ifeq ($$($1_BIN), 1)
+    $(call genBinOps,$1_char,char,$$($1_BO),$$($1_RW),two,one)
+    $(call genBinOps,$1_short,short,$$($1_BO),$$($1_RW),two,one)
+    $(call genBinOps,$1_int,int,$$($1_BO),$$($1_RW),four,three)
+    $(call genBinOps,$1_long,long,$$($1_BO),$$($1_RW),eight,seven)
+    $(call genBinOps,$1_float,float,$$($1_BO),$$($1_RW),four,three)
+    $(call genBinOps,$1_double,double,$$($1_BO),$$($1_RW),eight,seven)
+  endif
+
+  $$($1_DST): $$($1_DEP) $(GENSRC_BUFFER_DST)/_the.buffer.dir
+	$(RM) $$($1_OUT).tmp
+	$(TOOL_SPP) -i$$($1_SRC) -o$$($1_OUT).tmp \
+	    -K$$($1_type) \
+	    -K$$($1_category) \
+	    -K$$($1_streams) \
+	    -Dtype=$$($1_type) \
+	    -DType=$$($1_Type) \
+	    -Dfulltype=$$($1_fulltype) \
+	    -DFulltype=$$($1_Fulltype) \
+	    -Dstreamtype=$$($1_streamtype) \
+	    -DStreamtype=$$($1_Streamtype) \
+	    -Dx=$$($1_x) \
+	    -Dmemtype=$$($1_memtype) \
+	    -DMemtype=$$($1_Memtype) \
+	    -DSwaptype=$$($1_Swaptype) \
+	    -DfromBits=$$($1_fromBits) \
+	    -DtoBits=$$($1_toBits) \
+	    -DLG_BYTES_PER_VALUE=$$($1_LBPV) \
+	    -DBYTES_PER_VALUE="(1 << $$($1_LBPV))" \
+	    -DBO=$$($1_BO) \
+	    -Dswap=$$($1_swap) \
+	    -DRW=$$($1_RW) \
+	    -K$$($1_rwkey) \
+	    -Da=$$($1_a) \
+	    -DA=$$($1_A) \
+	    -Kbo$$($1_BO)
+	$(MV) $$($1_OUT).tmp $$($1_OUT)
+        # Do the extra bin thing
+        ifeq ($$($1_BIN), 1)
+	  $(SED) -e '/#BIN/,$$$$d' < $$($1_OUT) > $$($1_DST).tmp
+	  $(RM) $$($1_OUT)
+	  $$($1_char_CMD) -i$$($1_SRC_BIN) -o$$($1_DST).tmp
+	  $$($1_short_CMD) -i$$($1_SRC_BIN) -o$$($1_DST).tmp
+	  $$($1_int_CMD) -i$$($1_SRC_BIN) -o$$($1_DST).tmp
+	  $$($1_long_CMD) -i$$($1_SRC_BIN) -o$$($1_DST).tmp
+	  $$($1_float_CMD) -i$$($1_SRC_BIN) -o$$($1_DST).tmp
+	  $$($1_double_CMD) -i$$($1_SRC_BIN) -o$$($1_DST).tmp
+	  $(PRINTF) "}\n" >> $$($1_DST).tmp
+	  mv $$($1_DST).tmp $$($1_DST)
+        endif
+
+  GENSRC_BUFFER += $$($1_DST)
+
+endef
+
+###
+
+X_BUF := X-Buffer
+
+$(eval $(call SetupGenBuffer,ByteBuffer,  $(X_BUF), type:=byte, BIN:=1))
+$(eval $(call SetupGenBuffer,CharBuffer,  $(X_BUF), type:=char))
+$(eval $(call SetupGenBuffer,ShortBuffer, $(X_BUF), type:=short))
+$(eval $(call SetupGenBuffer,IntBuffer,   $(X_BUF), type:=int))
+$(eval $(call SetupGenBuffer,LongBuffer,  $(X_BUF), type:=long))
+$(eval $(call SetupGenBuffer,FloatBuffer, $(X_BUF), type:=float))
+$(eval $(call SetupGenBuffer,DoubleBuffer,$(X_BUF), type:=double))
+
+# Buffers whose contents are heap-allocated
+#
+HEAP_X_BUF := Heap-X-Buffer
+
+$(eval $(call SetupGenBuffer,HeapByteBuffer,   $(HEAP_X_BUF), type:=byte))
+$(eval $(call SetupGenBuffer,HeapByteBufferR,  $(HEAP_X_BUF), type:=byte, RW:=R))
+$(eval $(call SetupGenBuffer,HeapCharBuffer,   $(HEAP_X_BUF), type:=char))
+$(eval $(call SetupGenBuffer,HeapCharBufferR,  $(HEAP_X_BUF), type:=char, RW:=R))
+$(eval $(call SetupGenBuffer,HeapShortBuffer,  $(HEAP_X_BUF), type:=short))
+$(eval $(call SetupGenBuffer,HeapShortBufferR, $(HEAP_X_BUF), type:=short, RW:=R))
+$(eval $(call SetupGenBuffer,HeapIntBuffer,    $(HEAP_X_BUF), type:=int))
+$(eval $(call SetupGenBuffer,HeapIntBufferR,   $(HEAP_X_BUF), type:=int, RW:=R))
+$(eval $(call SetupGenBuffer,HeapLongBuffer,   $(HEAP_X_BUF), type:=long))
+$(eval $(call SetupGenBuffer,HeapLongBufferR,  $(HEAP_X_BUF), type:=long, RW:=R))
+$(eval $(call SetupGenBuffer,HeapFloatBuffer,  $(HEAP_X_BUF), type:=float))
+$(eval $(call SetupGenBuffer,HeapFloatBufferR, $(HEAP_X_BUF), type:=float, RW:=R))
+$(eval $(call SetupGenBuffer,HeapDoubleBuffer, $(HEAP_X_BUF), type:=double))
+$(eval $(call SetupGenBuffer,HeapDoubleBufferR,$(HEAP_X_BUF), type:=double, RW:=R))
+
+# Direct byte buffer
+#
+DIRECT_X_BUF := Direct-X-Buffer
+
+$(eval $(call SetupGenBuffer,DirectByteBuffer, $(DIRECT_X_BUF), type:=byte, BIN:=1))
+$(eval $(call SetupGenBuffer,DirectByteBufferR,$(DIRECT_X_BUF), type:=byte, BIN:=1, RW:=R))
+
+# Unswapped views of direct byte buffers
+#
+$(eval $(call SetupGenBuffer,DirectCharBufferU,   $(DIRECT_X_BUF), type:=char, BO:=U))
+$(eval $(call SetupGenBuffer,DirectCharBufferRU,  $(DIRECT_X_BUF), type:=char, RW:=R, BO:=U))
+$(eval $(call SetupGenBuffer,DirectShortBufferU,  $(DIRECT_X_BUF), type:=short, BO:=U))
+$(eval $(call SetupGenBuffer,DirectShortBufferRU, $(DIRECT_X_BUF), type:=short, RW:=R, BO:=U))
+$(eval $(call SetupGenBuffer,DirectIntBufferU,    $(DIRECT_X_BUF), type:=int, BO:=U))
+$(eval $(call SetupGenBuffer,DirectIntBufferRU,   $(DIRECT_X_BUF), type:=int, RW:=R, BO:=U))
+$(eval $(call SetupGenBuffer,DirectLongBufferU,   $(DIRECT_X_BUF), type:=long, BO:=U))
+$(eval $(call SetupGenBuffer,DirectLongBufferRU,  $(DIRECT_X_BUF), type:=long, RW:=R, BO:=U))
+$(eval $(call SetupGenBuffer,DirectFloatBufferU,  $(DIRECT_X_BUF), type:=float, BO:=U))
+$(eval $(call SetupGenBuffer,DirectFloatBufferRU, $(DIRECT_X_BUF), type:=float, RW:=R, BO:=U))
+$(eval $(call SetupGenBuffer,DirectDoubleBufferU, $(DIRECT_X_BUF), type:=double, BO:=U))
+$(eval $(call SetupGenBuffer,DirectDoubleBufferRU,$(DIRECT_X_BUF), type:=double, RW:=R, BO:=U))
+
+# Swapped views of direct byte buffers
+#
+$(eval $(call SetupGenBuffer,DirectCharBufferS,   $(DIRECT_X_BUF), type:=char, BO:=S))
+$(eval $(call SetupGenBuffer,DirectCharBufferRS,  $(DIRECT_X_BUF), type:=char, RW:=R, BO:=S))
+$(eval $(call SetupGenBuffer,DirectShortBufferS,  $(DIRECT_X_BUF), type:=short, BO:=S))
+$(eval $(call SetupGenBuffer,DirectShortBufferRS, $(DIRECT_X_BUF), type:=short, RW:=R, BO:=S))
+$(eval $(call SetupGenBuffer,DirectIntBufferS,    $(DIRECT_X_BUF), type:=int, BO:=S))
+$(eval $(call SetupGenBuffer,DirectIntBufferRS,   $(DIRECT_X_BUF), type:=int, RW:=R, BO:=S))
+$(eval $(call SetupGenBuffer,DirectLongBufferS,   $(DIRECT_X_BUF), type:=long, BO:=S))
+$(eval $(call SetupGenBuffer,DirectLongBufferRS,  $(DIRECT_X_BUF), type:=long, RW:=R, BO:=S))
+$(eval $(call SetupGenBuffer,DirectFloatBufferS,  $(DIRECT_X_BUF), type:=float, BO:=S))
+$(eval $(call SetupGenBuffer,DirectFloatBufferRS, $(DIRECT_X_BUF), type:=float, RW:=R, BO:=S))
+$(eval $(call SetupGenBuffer,DirectDoubleBufferS, $(DIRECT_X_BUF), type:=double, BO:=S))
+$(eval $(call SetupGenBuffer,DirectDoubleBufferRS,$(DIRECT_X_BUF), type:=double, RW:=R, BO:=S))
+
+# Big-endian views of byte buffers
+#
+BYTE_X_BUF := ByteBufferAs-X-Buffer
+
+$(eval $(call SetupGenBuffer,ByteBufferAsCharBufferB,   $(BYTE_X_BUF), type:=char, BO:=B))
+$(eval $(call SetupGenBuffer,ByteBufferAsCharBufferRB,  $(BYTE_X_BUF), type:=char, RW:=R, BO:=B))
+$(eval $(call SetupGenBuffer,ByteBufferAsShortBufferB,  $(BYTE_X_BUF), type:=short, BO:=B))
+$(eval $(call SetupGenBuffer,ByteBufferAsShortBufferRB, $(BYTE_X_BUF), type:=short, RW:=R, BO:=B))
+$(eval $(call SetupGenBuffer,ByteBufferAsIntBufferB,    $(BYTE_X_BUF), type:=int, BO:=B))
+$(eval $(call SetupGenBuffer,ByteBufferAsIntBufferRB,   $(BYTE_X_BUF), type:=int, RW:=R, BO:=B))
+$(eval $(call SetupGenBuffer,ByteBufferAsLongBufferB,   $(BYTE_X_BUF), type:=long, BO:=B))
+$(eval $(call SetupGenBuffer,ByteBufferAsLongBufferRB,  $(BYTE_X_BUF), type:=long, RW:=R, BO:=B))
+$(eval $(call SetupGenBuffer,ByteBufferAsFloatBufferB,  $(BYTE_X_BUF), type:=float, BO:=B))
+$(eval $(call SetupGenBuffer,ByteBufferAsFloatBufferRB, $(BYTE_X_BUF), type:=float, RW:=R, BO:=B))
+$(eval $(call SetupGenBuffer,ByteBufferAsDoubleBufferB, $(BYTE_X_BUF), type:=double, BO:=B))
+$(eval $(call SetupGenBuffer,ByteBufferAsDoubleBufferRB,$(BYTE_X_BUF), type:=double, RW:=R, BO:=B))
+
+# Little-endian views of byte buffers
+#
+$(eval $(call SetupGenBuffer,ByteBufferAsCharBufferL,   $(BYTE_X_BUF), type:=char, BO:=L))
+$(eval $(call SetupGenBuffer,ByteBufferAsCharBufferRL,  $(BYTE_X_BUF), type:=char, RW:=R, BO:=L))
+$(eval $(call SetupGenBuffer,ByteBufferAsShortBufferL,  $(BYTE_X_BUF), type:=short, BO:=L))
+$(eval $(call SetupGenBuffer,ByteBufferAsShortBufferRL, $(BYTE_X_BUF), type:=short, RW:=R, BO:=L))
+$(eval $(call SetupGenBuffer,ByteBufferAsIntBufferL,    $(BYTE_X_BUF), type:=int, BO:=L))
+$(eval $(call SetupGenBuffer,ByteBufferAsIntBufferRL,   $(BYTE_X_BUF), type:=int, RW:=R, BO:=L))
+$(eval $(call SetupGenBuffer,ByteBufferAsLongBufferL,   $(BYTE_X_BUF), type:=long, BO:=L))
+$(eval $(call SetupGenBuffer,ByteBufferAsLongBufferRL,  $(BYTE_X_BUF), type:=long, RW:=R, BO:=L))
+$(eval $(call SetupGenBuffer,ByteBufferAsFloatBufferL,  $(BYTE_X_BUF), type:=float, BO:=L))
+$(eval $(call SetupGenBuffer,ByteBufferAsFloatBufferRL, $(BYTE_X_BUF), type:=float, RW:=R, BO:=L))
+$(eval $(call SetupGenBuffer,ByteBufferAsDoubleBufferL, $(BYTE_X_BUF), type:=double, BO:=L))
+$(eval $(call SetupGenBuffer,ByteBufferAsDoubleBufferRL,$(BYTE_X_BUF), type:=double, RW:=R, BO:=L))
+
+###
+
+$(GENSRC_BUFFER): $(BUILD_TOOLS_JDK)
+
+TARGETS += $(GENSRC_BUFFER)

@@ -1,0 +1,119 @@
+#
+# Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include GensrcCommonJdk.gmk
+
+include gensrc/GensrcLocaleData.gmk
+include gensrc/GensrcCharacterData.gmk
+include gensrc/GensrcMisc.gmk
+include gensrc/GensrcCharsetMapping.gmk
+include gensrc/GensrcCharsetCoder.gmk
+include gensrc/GensrcBuffer.gmk
+include gensrc/GensrcExceptions.gmk
+include gensrc/GensrcVarHandles.gmk
+include gensrc/GensrcModuleLoaderMap.gmk
+include gensrc/GensrcEmojiData.gmk
+include gensrc/GensrcScopedMemoryAccess.gmk
+
+# GensrcLocaleData.gmk does not set TARGETS, so we must choose which targets
+# to include.
+TARGETS += $(GENSRC_BASELOCALEDATA)
+
+################################################################################
+
+CLDR_DATA_DIR := $(TOPDIR)/make/data/cldr/common
+GENSRC_DIR := $(SUPPORT_OUTPUTDIR)/gensrc/java.base
+CLDR_GEN_DONE := $(GENSRC_DIR)/_cldr-gensrc.marker
+TZ_DATA_DIR := $(TOPDIR)/make/data/tzdata
+ZONENAME_TEMPLATE := $(TOPDIR)/src/java.base/share/classes/java/time/format/ZoneName.java.template
+
+$(CLDR_GEN_DONE): $(wildcard $(CLDR_DATA_DIR)/dtd/*.dtd) \
+    $(wildcard $(CLDR_DATA_DIR)/main/en*.xml) \
+    $(wildcard $(CLDR_DATA_DIR)/supplemental/*.xml) \
+    $(wildcard $(TZ_DATA_DIR)/*) \
+    $(ZONENAME_TEMPLATE) \
+    $(BUILD_TOOLS_JDK)
+	$(call MakeDir, $(GENSRC_DIR))
+	$(call LogInfo, Processing CLDR data for java.base)
+	$(call ExecuteWithLog, $@, \
+	    $(TOOL_CLDRCONVERTER) -base $(CLDR_DATA_DIR) \
+	    -baselocales "en-US" \
+	    -o $(GENSRC_DIR) \
+	    -basemodule \
+	    -zntempfile $(ZONENAME_TEMPLATE) \
+	    -tzdatadir $(TZ_DATA_DIR))
+	$(TOUCH) $@
+
+TARGETS += $(CLDR_GEN_DONE)
+
+################################################################################
+
+include GensrcProperties.gmk
+
+$(eval $(call SetupCompileProperties, LIST_RESOURCE_BUNDLE, \
+    SRC_DIRS := $(TOPDIR)/src/java.base/share/classes/sun/launcher/resources, \
+    CLASS := ListResourceBundle, \
+))
+
+$(eval $(call SetupCompileProperties, SUN_UTIL, \
+    SRC_DIRS := $(TOPDIR)/src/java.base/share/classes/sun/util/resources, \
+    CLASS := sun.util.resources.LocaleNamesBundle, \
+))
+
+TARGETS += $(LIST_RESOURCE_BUNDLE) $(SUN_UTIL)
+
+# Some resources bundles are already present as java files but still need to be
+# copied to zh_HK locale.
+$(eval $(call SetupCopy-zh_HK,COPY_ZH_HK, \
+    $(addprefix $(TOPDIR)/src/java.base/share/classes/, \
+        sun/security/util/AuthResources_zh_TW.java \
+        sun/security/util/Resources_zh_TW.java)))
+
+TARGETS += $(COPY_ZH_HK)
+
+################################################################################
+
+GENSRC_LSREQUIVMAPS := $(SUPPORT_OUTPUTDIR)/gensrc/java.base/sun/util/locale/LocaleEquivalentMaps.java
+
+$(GENSRC_LSREQUIVMAPS): $(TOPDIR)/make/data/lsrdata/language-subtag-registry.txt $(BUILD_TOOLS_JDK)
+	$(call MakeDir, $(@D))
+	$(TOOL_GENERATELSREQUIVMAPS) $< $@
+
+TARGETS += $(GENSRC_LSREQUIVMAPS)
+
+################################################################################
+
+INTPOLY_GEN_DONE := $(GENSRC_DIR)/_intpoly-gensrc.marker
+INTPOLY_HEADER := $(TOPDIR)/make/jdk/src/classes/build/tools/intpoly/header.txt
+$(INTPOLY_GEN_DONE): $(INTPLOY_HEADER) $(BUILD_TOOLS_JDK)
+	$(call MakeDir, $(GENSRC_DIR))
+	$(call LogInfo, Generating fixed-field math classes for java.base)
+	$(call ExecuteWithLog, $@, \
+	    $(TOOL_INTPOLY) \
+	    $(INTPOLY_HEADER) \
+	    $(GENSRC_DIR)) $(LOG_DEBUG)
+	$(TOUCH) $@
+
+TARGETS += $(INTPOLY_GEN_DONE)

@@ -1,0 +1,2 @@
+BoxedArray.java:13:22: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Integer[], int[])
+1 error

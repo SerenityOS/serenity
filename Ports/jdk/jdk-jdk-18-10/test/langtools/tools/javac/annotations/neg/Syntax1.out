@@ -1,0 +1,4 @@
+Syntax1.java:17:20: compiler.err.annotation.value.must.be.name.value
+Syntax1.java:17:40: compiler.err.annotation.value.must.be.name.value
+Syntax1.java:17:1: compiler.err.annotation.missing.default.value: java.lang.annotation.Target, value
+3 errors

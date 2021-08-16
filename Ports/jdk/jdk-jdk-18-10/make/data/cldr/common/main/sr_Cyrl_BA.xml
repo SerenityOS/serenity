@@ -1,0 +1,1805 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="sr"/>
+		<script type="Cyrl"/>
+		<territory type="BA"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ar_001" draft="contributed">савремени стандардни арапски</language>
+			<language type="arn" draft="contributed">мапудунгун</language>
+			<language type="be" draft="contributed">бјелоруски</language>
+			<language type="bm" draft="contributed">бамананкан</language>
+			<language type="bn" draft="contributed">бангла</language>
+			<language type="de" draft="contributed">њемачки</language>
+			<language type="en_GB">енглески (Велика Британија)</language>
+			<language type="es_ES">шпански (Европа)</language>
+			<language type="fa_AF" draft="contributed">дари</language>
+			<language type="gsw">њемачки (Швајцарска)</language>
+			<language type="ht" draft="contributed">хаићански креолски</language>
+			<language type="lo" draft="contributed">лаошки</language>
+			<language type="lrc">сјеверни лури</language>
+			<language type="moh" draft="contributed">мохок</language>
+			<language type="nd">сјеверни ндебеле</language>
+			<language type="nds" draft="contributed">нискоњемачки</language>
+			<language type="nqo" draft="contributed">н’ко</language>
+			<language type="pt_PT" draft="contributed">португалски (Португал)</language>
+			<language type="se">сјеверни сами</language>
+			<language type="shi" draft="contributed">јужни шилха</language>
+			<language type="si" draft="contributed">синхалски</language>
+			<language type="sw_CD" draft="contributed">кисвахили</language>
+			<language type="tzm" draft="contributed">централноатласки тамашек</language>
+			<language type="xh" draft="contributed">исикоса</language>
+			<language type="zgh" draft="contributed">стандардни марокански тамашек</language>
+			<language type="zh_Hans" draft="contributed">поједностављени кинески</language>
+			<language type="zh_Hant" draft="contributed">традиционални кинески</language>
+			<language type="zu" draft="contributed">исизулу</language>
+		</languages>
+		<territories>
+			<territory type="001" draft="contributed">свијет</territory>
+			<territory type="003" draft="contributed">Сјеверноамерички континент</territory>
+			<territory type="015" draft="contributed">Сјеверна Африка</territory>
+			<territory type="019" draft="contributed">Сјеверна и Јужна Америка</territory>
+			<territory type="021" draft="contributed">Сјеверна Америка</territory>
+			<territory type="154" draft="contributed">Сјеверна Европа</territory>
+			<territory type="AC" draft="contributed">острво Асенсион</territory>
+			<territory type="BY" draft="contributed">Бјелорусија</territory>
+			<territory type="CC">Кокосова (Килинг) острва</territory>
+			<territory type="CG" draft="contributed">Конго</territory>
+			<territory type="CP" draft="contributed">острво Клипертон</territory>
+			<territory type="CV" draft="contributed">Кабо Верде</territory>
+			<territory type="CZ" draft="contributed">Чешка Република</territory>
+			<territory type="DE" draft="contributed">Њемачка</territory>
+			<territory type="FK" alt="variant" draft="contributed">Фолкландска (Малвинска) острва</territory>
+			<territory type="GS" draft="contributed">Јужна Џорџија и Јужна Сендвичка острва</territory>
+			<territory type="GU">Гвам</territory>
+			<territory type="HK" draft="contributed">Хонгконг (САО Кине)</territory>
+			<territory type="HM">острво Херд и острва Макдоналд</territory>
+			<territory type="KN" draft="contributed">Свети Китс и Невис</territory>
+			<territory type="KP">Сјеверна Кореја</territory>
+			<territory type="MK" draft="contributed">Сјеверна Македонија</territory>
+			<territory type="MO" draft="contributed">САР Макао</territory>
+			<territory type="MP">Сјеверна Маријанска острва</territory>
+			<territory type="NF">острво Норфок</territory>
+			<territory type="NU">Нијуе</territory>
+			<territory type="PM" draft="contributed">Свети Пјер и Микелон</territory>
+			<territory type="PS" draft="contributed">палестинске територије</territory>
+			<territory type="RE" draft="contributed">Реунион</territory>
+			<territory type="UM">Спољна острва САД</territory>
+			<territory type="VC" draft="contributed">Свети Винсент и Гренадини</territory>
+			<territory type="VG" draft="contributed">Британска Дјевичанска Острва</territory>
+			<territory type="VI" draft="contributed">Америчка Дјевичанска Острва</territory>
+		</territories>
+		<keys>
+			<key type="collation" draft="contributed">редослијед сортирања</key>
+			<key type="ms" draft="contributed">систем мјерних јединица</key>
+		</keys>
+		<types>
+			<type key="collation" type="ducet" draft="contributed">подразумијевани Unicode редослијед сортирања</type>
+			<type key="collation" type="search" draft="contributed">претрага опште намјене</type>
+			<type key="collation" type="standard" draft="contributed">стандардни редослијед сортирања</type>
+			<type key="numbers" type="mymr" draft="contributed">мјанмарске цифре</type>
+		</types>
+	</localeDisplayNames>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateTimeFormats>
+					<intervalFormats>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d" draft="contributed">E, d. MMM – E, d. MMM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E, d. MMM – E, d. MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="M" draft="contributed">d.M.y. – d.M.y. GGGGG</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<days>
+					<dayContext type="format">
+						<dayWidth type="wide">
+							<day type="sun" draft="contributed">недјеља</day>
+							<day type="mon">понедјељак</day>
+							<day type="tue" draft="contributed">уторак</day>
+							<day type="wed" draft="contributed">сриједа</day>
+							<day type="thu" draft="contributed">четвртак</day>
+							<day type="fri" draft="contributed">петак</day>
+							<day type="sat" draft="contributed">субота</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun" draft="contributed">нед</day>
+							<day type="mon" draft="contributed">пон</day>
+							<day type="tue">уто</day>
+							<day type="wed">сри</day>
+							<day type="thu" draft="contributed">чет</day>
+							<day type="fri" draft="contributed">пет</day>
+							<day type="sat" draft="contributed">суб</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun" draft="contributed">недјеља</day>
+							<day type="mon">понедјељак</day>
+							<day type="tue" draft="contributed">уторак</day>
+							<day type="wed" draft="contributed">сриједа</day>
+							<day type="thu" draft="contributed">четвртак</day>
+							<day type="fri" draft="contributed">петак</day>
+							<day type="sat" draft="contributed">субота</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="midnight" draft="contributed">поноћ</dayPeriod>
+							<dayPeriod type="am" draft="contributed">прије подне</dayPeriod>
+							<dayPeriod type="noon" draft="contributed">подне</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">по подне</dayPeriod>
+							<dayPeriod type="morning1" draft="contributed">јутро</dayPeriod>
+							<dayPeriod type="afternoon1" draft="contributed">по под.</dayPeriod>
+							<dayPeriod type="evening1" draft="contributed">вече</dayPeriod>
+							<dayPeriod type="night1">ноћу</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="midnight" draft="contributed">поноћ</dayPeriod>
+							<dayPeriod type="noon" draft="contributed">подне</dayPeriod>
+							<dayPeriod type="morning1" draft="contributed">јутро</dayPeriod>
+							<dayPeriod type="afternoon1" draft="contributed">по под.</dayPeriod>
+							<dayPeriod type="evening1" draft="contributed">вече</dayPeriod>
+							<dayPeriod type="night1" draft="contributed">ноћ</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am" draft="contributed">прије подне</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">по подне</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am" draft="contributed">прије подне</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">по подне</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am" draft="contributed">а</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">p</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am" draft="contributed">прије подне</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">по подне</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0" draft="contributed">прије нове ере</era>
+						<era type="1" alt="variant" draft="contributed">нове ере</era>
+					</eraNames>
+				</eras>
+				<dateTimeFormats>
+					<intervalFormats>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d" draft="contributed">MM-dd – MM-dd</greatestDifference>
+							<greatestDifference id="M" draft="contributed">MM-dd – MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d" draft="contributed">E, MM-dd – E, MM-dd</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E, MM-dd – E, MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M" draft="contributed">y-MM – y-MM</greatestDifference>
+							<greatestDifference id="y" draft="contributed">y-MM – y-MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d" draft="contributed">y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="M" draft="contributed">y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="y" draft="contributed">y-MM-dd – y-MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d" draft="contributed">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="y" draft="contributed">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="year">
+				<relative type="-1" draft="contributed">прошле године</relative>
+				<relative type="0" draft="contributed">ове године</relative>
+				<relative type="1" draft="contributed">сљедеће године</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} године</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} године</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} година</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-short">
+				<relative type="-1" draft="contributed">прошле год.</relative>
+				<relative type="0" draft="contributed">ове год.</relative>
+				<relative type="1" draft="contributed">сљедеће год.</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} год.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} год.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} год.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-narrow">
+				<relative type="-1" draft="contributed">прошле г.</relative>
+				<relative type="0" draft="contributed">ове г.</relative>
+				<relative type="1" draft="contributed">сљедеће г.</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} г.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} г.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} г.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter">
+				<relative type="-1" draft="contributed">прошлог квартала</relative>
+				<relative type="0" draft="contributed">овог квартала</relative>
+				<relative type="1" draft="contributed">сљедећег квартала</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} квартала</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} квартала</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} квартала</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} кв.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} кв.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} кв.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} кв.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} кв.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} кв.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month">
+				<displayName draft="contributed">мјесец</displayName>
+				<relative type="-1" draft="contributed">прошлог мјесеца</relative>
+				<relative type="0" draft="contributed">овог мјесеца</relative>
+				<relative type="1" draft="contributed">сљедећег мјесеца</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one" draft="contributed">за {0} мјесец</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">за {0} мјесеца</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">за {0} мјесеци</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} мјесеца</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} мјесеца</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} мјесеци</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month-short">
+				<displayName draft="contributed">мјес.</displayName>
+				<relative type="-1" draft="contributed">прошлог мјес.</relative>
+				<relative type="0" draft="contributed">овог мјес.</relative>
+				<relative type="1" draft="contributed">сљедећег мјес.</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one" draft="contributed">за {0} мјес.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">за {0} мјес.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">за {0} мјес.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} мјес.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} мјес.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} мјес.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month-narrow">
+				<relative type="-1" draft="contributed">прошлог м.</relative>
+				<relative type="0" draft="contributed">овог м.</relative>
+				<relative type="1" draft="contributed">сљедећег м.</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} м.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} м.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} м.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week">
+				<displayName draft="contributed">недјеља</displayName>
+				<relative type="-1" draft="contributed">претходне недеље</relative>
+				<relative type="0" draft="contributed">ове недјеље</relative>
+				<relative type="1" draft="contributed">наредне недеље</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one" draft="contributed">за {0} недјељу</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">за {0} недјеље</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">за {0} недјеља</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} недјеље</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} недјеље</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} недјеља</relativeTimePattern>
+				</relativeTime>
+				<relativePeriod draft="contributed">недјеља која почиње {0}.</relativePeriod>
+			</field>
+			<field type="week-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} нед.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} нед.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} нед.</relativeTimePattern>
+				</relativeTime>
+				<relativePeriod draft="contributed">недјеља која почиње {0}.</relativePeriod>
+			</field>
+			<field type="week-narrow">
+				<relative type="-1" draft="contributed">прошле н.</relative>
+				<relative type="0" draft="contributed">ове н.</relative>
+				<relative type="1" draft="contributed">сљедеће н.</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} н.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} н.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} н.</relativeTimePattern>
+				</relativeTime>
+				<relativePeriod draft="contributed">недјеља која почиње {0}.</relativePeriod>
+			</field>
+			<field type="weekOfMonth">
+				<displayName draft="contributed">недјеља у мјесецу</displayName>
+			</field>
+			<field type="weekOfMonth-short">
+				<displayName draft="contributed">нед. у мјес.</displayName>
+			</field>
+			<field type="weekOfMonth-narrow">
+				<displayName draft="contributed">нед. у мјес.</displayName>
+			</field>
+			<field type="day">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} дана</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} дана</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} дана</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} д.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} д.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} д.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} д.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} д.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} д.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="weekday">
+				<displayName draft="contributed">дан у недјељи</displayName>
+			</field>
+			<field type="weekday-short">
+				<displayName draft="contributed">дан у недјељи</displayName>
+			</field>
+			<field type="weekday-narrow">
+				<displayName draft="contributed">дан у недјељи</displayName>
+			</field>
+			<field type="weekdayOfMonth">
+				<displayName draft="contributed">дан у мјесецу</displayName>
+			</field>
+			<field type="weekdayOfMonth-short">
+				<displayName draft="contributed">дан у мјесецу</displayName>
+			</field>
+			<field type="weekdayOfMonth-narrow">
+				<displayName draft="contributed">дан у мјесецу</displayName>
+			</field>
+			<field type="sun">
+				<relative type="-1" draft="contributed">прошле недјеље</relative>
+				<relative type="0" draft="contributed">у недјељу</relative>
+				<relative type="1" draft="contributed">сљедеће недјеље</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one" draft="contributed">за {0} недјељу</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">за {0} недјеље</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">за {0} недјеља</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} недјеље</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} недјеље</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} недјеља</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sun-short">
+				<relative type="-1" draft="contributed">пр. нед.</relative>
+				<relative type="0" draft="contributed">у нед</relative>
+				<relative type="1" draft="contributed">сљ. нед.</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one" draft="contributed">за {0} недјељу</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">за {0} недјеље</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">за {0} недјеља</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} недјеље</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} недјеље</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} недјеља</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sun-narrow">
+				<relative type="-1" draft="contributed">пр. нед.</relative>
+				<relative type="0" draft="contributed">у нед</relative>
+				<relative type="1" draft="contributed">сљ. нед.</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one" draft="contributed">за {0} недјељу</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">за {0} недјеље</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">за {0} недјеља</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} недјеље</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} недјеље</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} недјеља</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon">
+				<relative type="-1" draft="contributed">прошлог понедјељка</relative>
+				<relative type="0" draft="contributed">у понедјељак</relative>
+				<relative type="1" draft="contributed">сљедећег понедјељка</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one" draft="contributed">за {0} понедјељак</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">за {0} понедјељка</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">за {0} понедјељака</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} понедјељка</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} понедјељка</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} понедјељака</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon-short">
+				<relative type="-1" draft="contributed">прошлог пон</relative>
+				<relative type="0" draft="contributed">у пон</relative>
+				<relative type="1" draft="contributed">сљедећег пон</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one" draft="contributed">за {0} понедјељак</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">за {0} понедјељка</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">за {0} понедјељака</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} понедјељка</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} понедјељка</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} понедјељака</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon-narrow">
+				<relative type="-1" draft="contributed">прошлог пон</relative>
+				<relative type="0" draft="contributed">у пон</relative>
+				<relative type="1" draft="contributed">сљедећег пон</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one" draft="contributed">за {0} понедјељак</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">за {0} понедјељкa</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">за {0} понедјељака</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} понедјељка</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} понедјељка</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} понедјељака</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue">
+				<relative type="-1" draft="contributed">прошлог уторка</relative>
+				<relative type="0" draft="contributed">у уторак</relative>
+				<relative type="1" draft="contributed">сљедећег уторка</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} уторка</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} уторка</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} уторака</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue-short">
+				<relative type="-1" draft="contributed">прошлог уто</relative>
+				<relative type="0" draft="contributed">у уто</relative>
+				<relative type="1" draft="contributed">сљедећег уто</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} уторка</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} уторка</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} уторака</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue-narrow">
+				<relative type="-1" draft="contributed">прошлог уто</relative>
+				<relative type="0" draft="contributed">у уто</relative>
+				<relative type="1" draft="contributed">сљедећег уто</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} уторка</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} уторка</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} уторака</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed">
+				<relative type="-1" draft="contributed">прошле сриједе</relative>
+				<relative type="0" draft="contributed">у сриједу</relative>
+				<relative type="1" draft="contributed">сљедеће сриједе</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one" draft="contributed">за {0} сриједу</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">за {0} сриједе</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">за {0} сриједа</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} сриједе</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} сриједе</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} сриједа</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed-short">
+				<relative type="-1" draft="contributed">прошле сри</relative>
+				<relative type="0" draft="contributed">у сри</relative>
+				<relative type="1" draft="contributed">сљедеће сри</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one" draft="contributed">за {0} сриједу</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">за {0} сриједе</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">за {0} сриједа</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} сриједе</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} сриједе</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} сриједа</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed-narrow">
+				<relative type="-1" draft="contributed">прошле сри</relative>
+				<relative type="0" draft="contributed">у сри</relative>
+				<relative type="1" draft="contributed">сљедеће сри</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one" draft="contributed">за {0} сриједу</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">за {0} сриједе</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">за {0} сриједа</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} сриједе</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} сриједе</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} сриједа</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu">
+				<relative type="-1" draft="contributed">прошлог четвртка</relative>
+				<relative type="0" draft="contributed">у четвртак</relative>
+				<relative type="1" draft="contributed">сљедећег четвртка</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} четвртка</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} четвртка</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} четвртака</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu-short">
+				<relative type="-1" draft="contributed">прошлог чет</relative>
+				<relative type="0" draft="contributed">у чет</relative>
+				<relative type="1" draft="contributed">сљедећег чет</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} четвртка</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} четвртка</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} четвртака</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu-narrow">
+				<relative type="-1" draft="contributed">прошлог чет</relative>
+				<relative type="0" draft="contributed">у чет</relative>
+				<relative type="1" draft="contributed">сљедећег чет</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} четвртка</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} четвртка</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} четвртака</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri">
+				<relative type="-1" draft="contributed">прошлог петка</relative>
+				<relative type="0" draft="contributed">у петак</relative>
+				<relative type="1" draft="contributed">сљедећег петка</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} петка</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} петка</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} петака</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri-short">
+				<relative type="-1" draft="contributed">прошлог пет</relative>
+				<relative type="0" draft="contributed">у пет</relative>
+				<relative type="1" draft="contributed">сљедећег пет</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} петка</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} петка</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} петака</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri-narrow">
+				<relative type="-1" draft="contributed">прошлог пет</relative>
+				<relative type="0" draft="contributed">у пет</relative>
+				<relative type="1" draft="contributed">сљедећег пет</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} петка</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} петка</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} петака</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat">
+				<relative type="-1" draft="contributed">прошле суботе</relative>
+				<relative type="0" draft="contributed">у суботу</relative>
+				<relative type="1" draft="contributed">сљедеће суботе</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} суботе</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} суботе</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} субота</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat-short">
+				<relative type="-1" draft="contributed">прошле суб</relative>
+				<relative type="0" draft="contributed">у суб</relative>
+				<relative type="1" draft="contributed">сљедеће суб</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} суботе</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} суботе</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} субота</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat-narrow">
+				<relative type="-1" draft="contributed">прошле суб</relative>
+				<relative type="0" draft="contributed">у суб</relative>
+				<relative type="1" draft="contributed">сљедеће суб</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} суботе</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} суботе</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} субота</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="dayperiod-short">
+				<displayName draft="contributed">прије подне/по подне</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName draft="contributed">прије подне/по подне</displayName>
+			</field>
+			<field type="dayperiod-narrow">
+				<displayName draft="contributed">прије подне/по подне</displayName>
+			</field>
+			<field type="hour">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} сата</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} сата</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} сати</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="hour-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} ч.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} ч.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} ч.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="hour-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} ч.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} ч.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} ч.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} минута</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} минута</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} минута</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} мин.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} мин.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} мин.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} мин.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} мин.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} мин.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} секунде</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} секунде</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} секунди</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} сек.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} сек.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} сек.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">прије {0} с.</relativeTimePattern>
+					<relativeTimePattern count="few" draft="contributed">прије {0} с.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">прије {0} с.</relativeTimePattern>
+				</relativeTime>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<regionFormat type="daylight" draft="contributed">{0}, љетње вријеме</regionFormat>
+			<regionFormat type="standard" draft="contributed">{0}, стандардно вријеме</regionFormat>
+			<zone type="Etc/UTC">
+				<long>
+					<standard draft="contributed">Координисано универзално вријеме</standard>
+				</long>
+			</zone>
+			<zone type="Antarctica/DumontDUrville">
+				<exemplarCity draft="contributed">Димон д’Ирвил</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Macquarie">
+				<exemplarCity draft="contributed">Маквори</exemplarCity>
+			</zone>
+			<zone type="America/St_Barthelemy">
+				<exemplarCity draft="contributed">Сен Бартелеми</exemplarCity>
+			</zone>
+			<zone type="America/Swift_Current">
+				<exemplarCity draft="contributed">Свифт Карент</exemplarCity>
+			</zone>
+			<zone type="America/Regina">
+				<exemplarCity draft="contributed">Реџајна</exemplarCity>
+			</zone>
+			<zone type="America/Resolute">
+				<exemplarCity draft="contributed">Резолут</exemplarCity>
+			</zone>
+			<zone type="America/St_Johns">
+				<exemplarCity draft="contributed">Сент Џонс</exemplarCity>
+			</zone>
+			<zone type="Europe/London">
+				<long>
+					<daylight draft="contributed">Британија, љетње вријеме</daylight>
+				</long>
+			</zone>
+			<zone type="America/Scoresbysund">
+				<exemplarCity draft="contributed">Итокортормит</exemplarCity>
+			</zone>
+			<zone type="America/Port-au-Prince">
+				<exemplarCity draft="contributed">Порт-о-Пренс</exemplarCity>
+			</zone>
+			<zone type="Europe/Dublin">
+				<long>
+					<daylight draft="contributed">Ирска, стандардно вријеме</daylight>
+				</long>
+			</zone>
+			<zone type="Pacific/Niue">
+				<exemplarCity draft="contributed">Нијуе</exemplarCity>
+			</zone>
+			<zone type="America/Puerto_Rico">
+				<exemplarCity draft="contributed">Порторико</exemplarCity>
+			</zone>
+			<zone type="Arctic/Longyearbyen">
+				<exemplarCity draft="contributed">Лонгјир</exemplarCity>
+			</zone>
+			<zone type="America/Port_of_Spain">
+				<exemplarCity draft="contributed">Порт ов Спејн</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/Beulah">
+				<exemplarCity draft="contributed">Бјула, Сјеверна Дакота</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/New_Salem">
+				<exemplarCity draft="contributed">Нови Салем, Сјеверна Дакота</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/Center">
+				<exemplarCity draft="contributed">Центар, Сјеверна Дакота</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Vincennes">
+				<exemplarCity draft="contributed">Винсенс, Индијана</exemplarCity>
+			</zone>
+			<zone type="America/Indianapolis">
+				<exemplarCity draft="contributed">Индијанаполис</exemplarCity>
+			</zone>
+			<zone type="America/Louisville">
+				<exemplarCity draft="contributed">Луивил</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Vevay">
+				<exemplarCity draft="contributed">Виви, Индијана</exemplarCity>
+			</zone>
+			<zone type="America/St_Thomas">
+				<exemplarCity draft="contributed">Сент Томас</exemplarCity>
+			</zone>
+			<metazone type="Afghanistan">
+				<long>
+					<standard draft="contributed">Авганистан вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Central">
+				<long>
+					<standard draft="contributed">Централно-афричко вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Eastern">
+				<long>
+					<standard draft="contributed">Источно-афричко вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Southern">
+				<long>
+					<standard draft="contributed">Јужно-афричко вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Western">
+				<long>
+					<generic draft="contributed">Западно-афричко вријеме</generic>
+					<standard draft="contributed">Западно-афричко стандардно вријеме</standard>
+					<daylight draft="contributed">Западно-афричко љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Alaska">
+				<long>
+					<generic draft="contributed">Аљаска</generic>
+					<standard draft="contributed">Аљаска, стандардно вријеме</standard>
+					<daylight draft="contributed">Аљаска, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Amazon">
+				<long>
+					<generic draft="contributed">Амазон вријеме</generic>
+					<standard draft="contributed">Амазон, стандардно вријеме</standard>
+					<daylight draft="contributed">Амазон, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Central">
+				<long>
+					<generic draft="contributed">Сјеверноамеричко централно вријеме</generic>
+					<standard draft="contributed">Сјеверноамеричко централно стандардно вријеме</standard>
+					<daylight draft="contributed">Сјеверноамеричко централно љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic draft="contributed">Сјеверноамеричко источно вријеме</generic>
+					<standard draft="contributed">Сјеверноамеричко источно стандардно вријеме</standard>
+					<daylight draft="contributed">Сјеверноамеричко источно љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic draft="contributed">Сјеверноамеричко планинско вријеме</generic>
+					<standard draft="contributed">Сјеверноамеричко планинско стандардно вријеме</standard>
+					<daylight draft="contributed">Сјеверноамеричко планинско љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic draft="contributed">Сјеверноамеричко пацифичко вријеме</generic>
+					<standard draft="contributed">Сјеверноамеричко пацифичко стандардно вријеме</standard>
+					<daylight draft="contributed">Сјеверноамеричко пацифичко летње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Apia">
+				<long>
+					<generic draft="contributed">Апија вријеме</generic>
+					<standard draft="contributed">Апија, стандардно вријеме</standard>
+					<daylight draft="contributed">Апија, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Arabian">
+				<long>
+					<generic draft="contributed">Арабијско вријеме</generic>
+					<standard draft="contributed">Арабијско стандардно вријеме</standard>
+					<daylight draft="contributed">Арабијско љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina">
+				<long>
+					<generic draft="contributed">Аргентина вријеме</generic>
+					<standard draft="contributed">Аргентина, стандардно вријеме</standard>
+					<daylight draft="contributed">Аргентина, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina_Western">
+				<long>
+					<generic draft="contributed">Западна Аргентина вријеме</generic>
+					<standard draft="contributed">Западна Аргентина, стандардно вријеме</standard>
+					<daylight draft="contributed">Западна Аргентина, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Armenia">
+				<long>
+					<generic draft="contributed">Јерменија вријеме</generic>
+					<standard draft="contributed">Јерменија, стандардно вријеме</standard>
+					<daylight draft="contributed">Јерменија, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<generic draft="contributed">Атлантско вријеме</generic>
+					<standard draft="contributed">Атлантско стандардно вријеме</standard>
+					<daylight draft="contributed">Атлантско љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Central">
+				<long>
+					<generic draft="contributed">Аустралијско централно вријеме</generic>
+					<standard draft="contributed">Аустралијско централно стандардно вријеме</standard>
+					<daylight draft="contributed">Аустралијско централно љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_CentralWestern">
+				<long>
+					<generic draft="contributed">Аустралијско централно западно вријеме</generic>
+					<standard draft="contributed">Аустралијско централно западно стандардно вријеме</standard>
+					<daylight draft="contributed">Аустралијско централно западно љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Eastern">
+				<long>
+					<generic draft="contributed">Аустралијско источно вријеме</generic>
+					<standard draft="contributed">Аустралијско источно стандардно вријеме</standard>
+					<daylight draft="contributed">Аустралијско источно љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Western">
+				<long>
+					<generic draft="contributed">Аустралијско западно вријеме</generic>
+					<standard draft="contributed">Аустралијско западно стандардно вријеме</standard>
+					<daylight draft="contributed">Аустралијско западно љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azerbaijan">
+				<long>
+					<generic draft="contributed">Азербејџан вријеме</generic>
+					<standard draft="contributed">Азербејџан, стандардно вријеме</standard>
+					<daylight draft="contributed">Азербејџан, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azores">
+				<long>
+					<generic draft="contributed">Азори вријеме</generic>
+					<standard draft="contributed">Азори, стандардно вријеме</standard>
+					<daylight draft="contributed">Азори, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bangladesh">
+				<long>
+					<generic draft="contributed">Бангладеш вријеме</generic>
+					<standard draft="contributed">Бангладеш, стандардно вријеме</standard>
+					<daylight draft="contributed">Бангладеш, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bhutan">
+				<long>
+					<standard draft="contributed">Бутан вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Bolivia">
+				<long>
+					<standard draft="contributed">Боливија вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Brasilia">
+				<long>
+					<generic draft="contributed">Бразилија вријеме</generic>
+					<standard draft="contributed">Бразилија, стандардно вријеме</standard>
+					<daylight draft="contributed">Бразилија, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Brunei">
+				<long>
+					<standard draft="contributed">Брунеј Дарусалум вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Cape_Verde">
+				<long>
+					<generic draft="contributed">Зеленортска Острва вријеме</generic>
+					<standard draft="contributed">Зеленортска Острва, стандардно вријеме</standard>
+					<daylight draft="contributed">Зеленортска Острва, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chamorro">
+				<long>
+					<standard draft="contributed">Чаморо вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Chatham">
+				<long>
+					<generic draft="contributed">Чатам вријеме</generic>
+					<standard draft="contributed">Чатам, стандардно вријеме</standard>
+					<daylight draft="contributed">Чатам, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chile">
+				<long>
+					<generic draft="contributed">Чиле вријеме</generic>
+					<standard draft="contributed">Чиле, стандардно вријеме</standard>
+					<daylight draft="contributed">Чиле, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="China">
+				<long>
+					<generic draft="contributed">Кина вријеме</generic>
+					<standard draft="contributed">Кинеско стандардно вријеме</standard>
+					<daylight draft="contributed">Кина, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Choibalsan">
+				<long>
+					<generic draft="contributed">Чојбалсан вријеме</generic>
+					<standard draft="contributed">Чојбалсан, стандардно вријеме</standard>
+					<daylight draft="contributed">Чојбалсан, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Christmas">
+				<long>
+					<standard draft="contributed">Божићно острво вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Cocos">
+				<long>
+					<standard draft="contributed">Кокосова (Килинг) острва вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Colombia">
+				<long>
+					<generic draft="contributed">Колумбија вријеме</generic>
+					<standard draft="contributed">Колумбија, стандардно вријеме</standard>
+					<daylight draft="contributed">Колумбија, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cook">
+				<long>
+					<generic draft="contributed">Кукова Острва вријеме</generic>
+					<standard draft="contributed">Кукова Острва, стандардно вријеме</standard>
+					<daylight draft="contributed">Кукова Острва, полуљетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cuba">
+				<long>
+					<generic draft="contributed">Куба</generic>
+					<standard draft="contributed">Куба, стандардно вријеме</standard>
+					<daylight draft="contributed">Куба, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Davis">
+				<long>
+					<standard draft="contributed">Дејвис вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="DumontDUrville">
+				<long>
+					<standard draft="contributed">Димон д’Ирвил вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="East_Timor">
+				<long>
+					<standard draft="contributed">Источни Тимор вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Easter">
+				<long>
+					<generic draft="contributed">Ускршња острва вријеме</generic>
+					<standard draft="contributed">Ускршња острва, стандардно вријеме</standard>
+					<daylight draft="contributed">Ускршња острва, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Ecuador">
+				<long>
+					<standard draft="contributed">Еквадор вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic draft="contributed">Средњоевропско вријеме</generic>
+					<standard draft="contributed">Средњоевропско стандардно вријеме</standard>
+					<daylight draft="contributed">Средњоевропско љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic draft="contributed">Источноевропско вријеме</generic>
+					<standard draft="contributed">Источноевропско стандардно вријеме</standard>
+					<daylight draft="contributed">Источноевропско љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic draft="contributed">Западноевропско вријеме</generic>
+					<standard draft="contributed">Западноевропско стандардно вријеме</standard>
+					<daylight draft="contributed">Западноевропско љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Falkland">
+				<long>
+					<generic draft="contributed">Фолкландска Острва вријеме</generic>
+					<standard draft="contributed">Фолкландска Острва, стандардно вријеме</standard>
+					<daylight draft="contributed">Фолкландска Острва, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Fiji">
+				<long>
+					<generic draft="contributed">Фиџи вријеме</generic>
+					<standard draft="contributed">Фиџи, стандардно вријеме</standard>
+					<daylight draft="contributed">Фиџи, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="French_Guiana">
+				<long>
+					<standard draft="contributed">Француска Гвајана вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="French_Southern">
+				<long>
+					<standard draft="contributed">Француско јужно и антарктичко вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Galapagos">
+				<long>
+					<standard draft="contributed">Галапагос вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Gambier">
+				<long>
+					<standard draft="contributed">Гамбије вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Georgia">
+				<long>
+					<generic draft="contributed">Грузија вријеме</generic>
+					<standard draft="contributed">Грузија, стандардно вријеме</standard>
+					<daylight draft="contributed">Грузија, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gilbert_Islands">
+				<long>
+					<standard draft="contributed">Гилбертова острва вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="GMT">
+				<long>
+					<standard draft="contributed">Средње вријеме по Гриничу</standard>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Eastern">
+				<long>
+					<generic draft="contributed">Источни Гренланд</generic>
+					<standard draft="contributed">Источни Гренланд, стандардно вријеме</standard>
+					<daylight draft="contributed">Источни Гренланд, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Western">
+				<long>
+					<generic draft="contributed">Западни Гренланд</generic>
+					<standard draft="contributed">Западни Гренланд, стандардно вријеме</standard>
+					<daylight draft="contributed">Западни Гренланд, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gulf">
+				<long>
+					<standard draft="contributed">Заливско вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Guyana">
+				<long>
+					<standard draft="contributed">Гвајана вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Hawaii_Aleutian">
+				<long>
+					<generic draft="contributed">Хавајско-алеутско вријеме</generic>
+					<standard draft="contributed">Хавајско-алеутско стандардно вријеме</standard>
+					<daylight draft="contributed">Хавајско-алеутско љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hong_Kong">
+				<long>
+					<generic draft="contributed">Хонг Конг вријеме</generic>
+					<standard draft="contributed">Хонг Конг, стандардно вријеме</standard>
+					<daylight draft="contributed">Хонг Конг, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hovd">
+				<long>
+					<generic draft="contributed">Ховд вријеме</generic>
+					<standard draft="contributed">Ховд, стандардно вријеме</standard>
+					<daylight draft="contributed">Ховд, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="India">
+				<long>
+					<standard draft="contributed">Индијско стандардно вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Indian_Ocean">
+				<long>
+					<standard draft="contributed">Индијско океанско вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Indochina">
+				<long>
+					<standard draft="contributed">Индокина вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Central">
+				<long>
+					<standard draft="contributed">Централно-индонезијско вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Eastern">
+				<long>
+					<standard draft="contributed">Источно-индонезијско вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Western">
+				<long>
+					<standard draft="contributed">Западно-индонезијско вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Iran">
+				<long>
+					<generic draft="contributed">Иран вријеме</generic>
+					<standard draft="contributed">Иран, стандардно вријеме</standard>
+					<daylight draft="contributed">Иран, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Irkutsk">
+				<long>
+					<generic draft="contributed">Иркуцк вријеме</generic>
+					<standard draft="contributed">Иркуцк, стандардно вријеме</standard>
+					<daylight draft="contributed">Иркуцк, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Israel">
+				<long>
+					<generic draft="contributed">Израелско вријеме</generic>
+					<standard draft="contributed">Израелско стандардно вријеме</standard>
+					<daylight draft="contributed">Израелско љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Japan">
+				<long>
+					<generic draft="contributed">Јапанско вријеме</generic>
+					<standard draft="contributed">Јапанско стандардно вријеме</standard>
+					<daylight draft="contributed">Јапанско љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Eastern">
+				<long>
+					<standard draft="contributed">Источно-казахстанско вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Western">
+				<long>
+					<standard draft="contributed">Западно-казахстанско вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Korea">
+				<long>
+					<generic draft="contributed">Корејско вријеме</generic>
+					<standard draft="contributed">Корејско стандардно вријеме</standard>
+					<daylight draft="contributed">Корејско љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kosrae">
+				<long>
+					<standard draft="contributed">Кошре вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Krasnoyarsk">
+				<long>
+					<generic draft="contributed">Краснојарск вријеме</generic>
+					<standard draft="contributed">Краснојарск, стандардно вријеме</standard>
+					<daylight draft="contributed">Краснојарск, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kyrgystan">
+				<long>
+					<standard draft="contributed">Киргистан вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Line_Islands">
+				<long>
+					<standard draft="contributed">Линијска острва вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Lord_Howe">
+				<long>
+					<generic draft="contributed">Лорд Хов вријеме</generic>
+					<standard draft="contributed">Лорд Хов, стандардно вријеме</standard>
+					<daylight draft="contributed">Лорд Хов, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Macquarie">
+				<long>
+					<standard draft="contributed">острво Маквори вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Magadan">
+				<long>
+					<generic draft="contributed">Магадан вријеме</generic>
+					<standard draft="contributed">Магадан, стандардно вријеме</standard>
+					<daylight draft="contributed">Магадан, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Malaysia">
+				<long>
+					<standard draft="contributed">Малезија вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Maldives">
+				<long>
+					<standard draft="contributed">Малдиви вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Marquesas">
+				<long>
+					<standard draft="contributed">Маркиз вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Marshall_Islands">
+				<long>
+					<standard draft="contributed">Маршалска Острва вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Mauritius">
+				<long>
+					<generic draft="contributed">Маурицијус вријеме</generic>
+					<standard draft="contributed">Маурицијус, стандардно вријеме</standard>
+					<daylight draft="contributed">Маурицијус, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mawson">
+				<long>
+					<standard draft="contributed">Мосон вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Northwest">
+				<long>
+					<generic draft="contributed">Сјеверозападни Мексико</generic>
+					<standard draft="contributed">Сјеверозападни Мексико, стандардно вријеме</standard>
+					<daylight draft="contributed">Сјеверозападни Мексико, летње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Pacific">
+				<long>
+					<generic draft="contributed">Мексички Пацифик</generic>
+					<standard draft="contributed">Мексички Пацифик, стандардно вријеме</standard>
+					<daylight draft="contributed">Мексички Пацифик, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mongolia">
+				<long>
+					<generic draft="contributed">Улан Батор вријеме</generic>
+					<standard draft="contributed">Улан Батор, стандардно вријеме</standard>
+					<daylight draft="contributed">Улан Батор, љетње вријееме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Moscow">
+				<long>
+					<generic draft="contributed">Москва вријеме</generic>
+					<standard draft="contributed">Москва, стандардно вријеме</standard>
+					<daylight draft="contributed">Москва, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Myanmar">
+				<long>
+					<standard draft="contributed">Мјанмар вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Nauru">
+				<long>
+					<standard draft="contributed">Науру вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Nepal">
+				<long>
+					<standard draft="contributed">Непал вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="New_Caledonia">
+				<long>
+					<generic draft="contributed">Нова Каледонија вријеме</generic>
+					<standard draft="contributed">Нова Каледонија, стандардно вријеме</standard>
+					<daylight draft="contributed">Нова Каледонија, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="New_Zealand">
+				<long>
+					<generic draft="contributed">Нови Зеланд вријеме</generic>
+					<standard draft="contributed">Нови Зеланд, стандардно вријеме</standard>
+					<daylight draft="contributed">Нови Зеланд, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Newfoundland">
+				<long>
+					<generic draft="contributed">Њуфаундленд</generic>
+					<standard draft="contributed">Њуфаундленд, стандардно вријеме</standard>
+					<daylight draft="contributed">Њуфаундленд, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Niue">
+				<long>
+					<standard draft="contributed">Нијуе вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Norfolk">
+				<long>
+					<generic draft="contributed">острво Норфолк вријеме</generic>
+					<standard draft="contributed">острво Норфолк, стандардно вријеме</standard>
+					<daylight draft="contributed">острво Норфолк, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Noronha">
+				<long>
+					<generic draft="contributed">Фернандо де Нороња вријеме</generic>
+					<standard draft="contributed">Фернандо де Нороња, стандардно вријеме</standard>
+					<daylight draft="contributed">Фернандо де Нороња, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Novosibirsk">
+				<long>
+					<generic draft="contributed">Новосибирск вријеме</generic>
+					<standard draft="contributed">Новосибирск, стандардно вријеме</standard>
+					<daylight draft="contributed">Новосибирск, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Omsk">
+				<long>
+					<generic draft="contributed">Омск вријеме</generic>
+					<standard draft="contributed">Омск, стандардно вријеме</standard>
+					<daylight draft="contributed">Омск, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pakistan">
+				<long>
+					<generic draft="contributed">Пакистан вријеме</generic>
+					<standard draft="contributed">Пакистан, стандардно вријеме</standard>
+					<daylight draft="contributed">Пакистан, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Palau">
+				<long>
+					<standard draft="contributed">Палау вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Papua_New_Guinea">
+				<long>
+					<standard draft="contributed">Папуа Нова Гвинеја вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Paraguay">
+				<long>
+					<generic draft="contributed">Парагвај вријеме</generic>
+					<standard draft="contributed">Парагвај, стандардно вријеме</standard>
+					<daylight draft="contributed">Парагвај, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Peru">
+				<long>
+					<generic draft="contributed">Перу вријеме</generic>
+					<standard draft="contributed">Перу, стандардно вријеме</standard>
+					<daylight draft="contributed">Перу, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Philippines">
+				<long>
+					<generic draft="contributed">Филипини вријеме</generic>
+					<standard draft="contributed">Филипини, стандардно вријеме</standard>
+					<daylight draft="contributed">Филипини, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Phoenix_Islands">
+				<long>
+					<standard draft="contributed">Феникс острва вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Pierre_Miquelon">
+				<long>
+					<generic draft="contributed">Сен Пјер и Микелон</generic>
+					<standard draft="contributed">Сен Пјер и Микелон, стандардно вријеме</standard>
+					<daylight draft="contributed">Сен Пјер и Микелон, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pitcairn">
+				<long>
+					<standard draft="contributed">Питкерн вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Ponape">
+				<long>
+					<standard draft="contributed">Понпеј вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Pyongyang">
+				<long>
+					<standard draft="contributed">Пјонгјаншко вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Reunion">
+				<long>
+					<standard draft="contributed">Реунион вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Rothera">
+				<long>
+					<standard draft="contributed">Ротера вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Sakhalin">
+				<long>
+					<generic draft="contributed">Сахалин вријеме</generic>
+					<standard draft="contributed">Сахалин, стандардно вријеме</standard>
+					<daylight draft="contributed">Сахалин, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Samoa">
+				<long>
+					<generic draft="contributed">Самоа вријеме</generic>
+					<standard draft="contributed">Самоа, стандардно вријеме</standard>
+					<daylight draft="contributed">Самоа, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Seychelles">
+				<long>
+					<standard draft="contributed">Сејшели вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Singapore">
+				<long>
+					<standard draft="contributed">Сингапур, стандардно вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Solomon">
+				<long>
+					<standard draft="contributed">Соломонска Острва вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="South_Georgia">
+				<long>
+					<standard draft="contributed">Јужна Џорџија вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Suriname">
+				<long>
+					<standard draft="contributed">Суринам вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Syowa">
+				<long>
+					<standard draft="contributed">Шова вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Tahiti">
+				<long>
+					<standard draft="contributed">Тахити вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Taipei">
+				<long>
+					<generic draft="contributed">Тајпеј вријеме</generic>
+					<standard draft="contributed">Тајпеј, стандардно вријеме</standard>
+					<daylight draft="contributed">Тајпеј, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Tajikistan">
+				<long>
+					<standard draft="contributed">Таџикистан вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Tokelau">
+				<long>
+					<standard draft="contributed">Токелау вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Tonga">
+				<long>
+					<generic draft="contributed">Тонга вријеме</generic>
+					<standard draft="contributed">Тонга, стандардно вријеме</standard>
+					<daylight draft="contributed">Тонга, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Truk">
+				<long>
+					<standard draft="contributed">Чук вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Turkmenistan">
+				<long>
+					<generic draft="contributed">Туркменистан вријеме</generic>
+					<standard draft="contributed">Туркменистан, стандардно вријеме</standard>
+					<daylight draft="contributed">Туркменистан, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Tuvalu">
+				<long>
+					<standard draft="contributed">Тувалу вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Uruguay">
+				<long>
+					<generic draft="contributed">Уругвај вријеме</generic>
+					<standard draft="contributed">Уругвај, стандардно вријеме</standard>
+					<daylight draft="contributed">Уругвај, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Uzbekistan">
+				<long>
+					<generic draft="contributed">Узбекистан вријеме</generic>
+					<standard draft="contributed">Узбекистан, стандардно вријеме</standard>
+					<daylight draft="contributed">Узбекистан, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Vanuatu">
+				<long>
+					<generic draft="contributed">Вануату вријеме</generic>
+					<standard draft="contributed">Вануату, стандардно вријеме</standard>
+					<daylight draft="contributed">Вануату, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Venezuela">
+				<long>
+					<standard draft="contributed">Венецуела вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Vladivostok">
+				<long>
+					<generic draft="contributed">Владивосток вријеме</generic>
+					<standard draft="contributed">Владивосток, стандардно вријеме</standard>
+					<daylight draft="contributed">Владивосток, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Volgograd">
+				<long>
+					<generic draft="contributed">Волгоград вријеме</generic>
+					<standard draft="contributed">Волгоград, стандардно вријеме</standard>
+					<daylight draft="contributed">Волгоград, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Vostok">
+				<long>
+					<standard draft="contributed">Восток вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Wake">
+				<long>
+					<standard draft="contributed">острво Вејк вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Wallis">
+				<long>
+					<standard draft="contributed">острва Валис и Футуна вријеме</standard>
+				</long>
+			</metazone>
+			<metazone type="Yakutsk">
+				<long>
+					<generic draft="contributed">Јакутск вријеме</generic>
+					<standard draft="contributed">Јакутск, стандардно вријеме</standard>
+					<daylight draft="contributed">Јакутск, љетње вријеме</daylight>
+				</long>
+			</metazone>
+			<metazone type="Yekaterinburg">
+				<long>
+					<generic draft="contributed">Јекатеринбург вријеме</generic>
+					<standard draft="contributed">Јекатеринбург, стандардно вријеме</standard>
+					<daylight draft="contributed">Јекатеринбург, љетње вријеме</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<currencies>
+			<currency type="BAM">
+				<displayName draft="contributed">Босанскохерцеговачка конвертибилна марка</displayName>
+				<displayName count="one" draft="contributed">босанскохерцеговачка конвертибилна марка</displayName>
+				<displayName count="few" draft="contributed">босанскохерцеговачке конвертибилне маркe</displayName>
+				<displayName count="other" draft="contributed">босанскохерцеговачких конвертибилних марака</displayName>
+			</currency>
+			<currency type="BYN">
+				<displayName draft="contributed">Бјелоруска рубља</displayName>
+				<displayName count="one" draft="contributed">бјелоруска рубља</displayName>
+				<displayName count="few" draft="contributed">бјелоруске рубље</displayName>
+				<displayName count="other" draft="contributed">бјелоруских рубљи</displayName>
+			</currency>
+			<currency type="KPW">
+				<displayName draft="contributed">Сјевернокорејски вон</displayName>
+				<displayName count="one" draft="contributed">сјевернокорејски вон</displayName>
+				<displayName count="few" draft="contributed">сјевернокорејска вона</displayName>
+				<displayName count="other" draft="contributed">сјевернокорејских вона</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<compoundUnit type="1024p8">
+				<unitPrefixPattern draft="contributed">јоби{0}</unitPrefixPattern>
+			</compoundUnit>
+			<unit type="duration-century">
+				<displayName draft="contributed">вијекови</displayName>
+				<unitPattern count="one" draft="contributed">{0} вијек</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} вијека</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} вијекова</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="contributed">мјесеци</displayName>
+				<unitPattern count="one" draft="contributed">{0} мјесец</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} мјесеца</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} мјесеци</unitPattern>
+				<perUnitPattern draft="contributed">{0} мјесечно</perUnitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName draft="contributed">недјеље</displayName>
+				<unitPattern count="one" draft="contributed">{0} недјеља</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} недјеље</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} недјеља</unitPattern>
+				<perUnitPattern draft="contributed">{0} недјељно</perUnitPattern>
+			</unit>
+			<unit type="length-light-year">
+				<displayName draft="contributed">свјетлосне године</displayName>
+				<unitPattern count="one" draft="contributed">{0} свјетлосна година</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} свјетлосне године</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} свјетлосних година</unitPattern>
+			</unit>
+			<unit type="mass-grain">
+				<displayName draft="contributed">гран</displayName>
+				<unitPattern count="one" draft="contributed">{0} гран</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} грана</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} гранова</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="duration-month">
+				<displayName draft="contributed">мјесеци</displayName>
+				<unitPattern count="one" draft="contributed">{0} мјес.</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} мјес.</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} мјес.</unitPattern>
+			</unit>
+			<unit type="length-light-year">
+				<displayName draft="contributed">свјетлосне год.</displayName>
+			</unit>
+			<unit type="mass-grain">
+				<displayName draft="contributed">гран</displayName>
+				<unitPattern count="one" draft="contributed">{0} гран</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} грана</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} гранова</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon">
+				<displayName draft="contributed">dstspn</displayName>
+				<unitPattern count="one" draft="contributed">{0} dstspn</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} dstspn</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} dstspn</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="narrow">
+			<unit type="volume-barrel">
+				<displayName draft="contributed">bbl</displayName>
+				<unitPattern count="one" draft="contributed">{0}bbl</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} bbl</unitPattern>
+				<unitPattern count="other" draft="contributed">{0}bbl</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon">
+				<displayName draft="contributed">д. каш.</displayName>
+				<unitPattern count="one" draft="contributed">{0} д. каш.</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} д. каш.</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} д. каш.</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon-imperial">
+				<displayName draft="contributed">и. д. к.</displayName>
+				<unitPattern count="one" draft="contributed">{0} и. д. к.</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} и. д. к.</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} и. д. к.</unitPattern>
+			</unit>
+		</unitLength>
+	</units>
+	<characterLabels>
+		<characterLabel type="body" draft="contributed">тијело</characterLabel>
+		<characterLabel type="bullets_stars" draft="contributed">Знакови за набрајање/звјездице</characterLabel>
+		<characterLabel type="downwards_arrows" draft="contributed">Стрелице надоље</characterLabel>
+		<characterLabel type="downwards_upwards_arrows" draft="contributed">Стрелице надоље и нагоре</characterLabel>
+		<characterLabel type="leftwards_arrows" draft="contributed">Стрелице налијево</characterLabel>
+		<characterLabel type="leftwards_rightwards_arrows" draft="contributed">Стрелице налијево и надесно</characterLabel>
+		<characterLabel type="place" draft="contributed">мјесто</characterLabel>
+		<characterLabel type="travel_places" draft="contributed">Путовања и мјеста</characterLabel>
+		<characterLabel type="weather" draft="contributed">вријеме</characterLabel>
+	</characterLabels>
+	<typographicNames>
+		<styleName type="slnt" subtype="-12" draft="contributed">нагнут улијево</styleName>
+		<styleName type="wght" subtype="200" draft="contributed">екстрасвијетао</styleName>
+		<styleName type="wght" subtype="200" alt="ultra" draft="contributed">ултрасвијетао</styleName>
+		<styleName type="wght" subtype="300" draft="contributed">свијетао</styleName>
+		<styleName type="wght" subtype="350" draft="contributed">полусвијетао</styleName>
+	</typographicNames>
+</ldml>

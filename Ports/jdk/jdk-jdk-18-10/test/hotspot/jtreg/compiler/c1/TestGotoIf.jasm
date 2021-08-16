@@ -1,0 +1,171 @@
+/*
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+public class compiler/c1/TestGotoIf version 52:0 {
+    public Field f1:"I";
+    public Field f2:"I";
+    public static Field i:"I";
+
+    Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    public Method test1:"()I" stack 3 locals 1 {
+        aload_0;
+        getfield Field f1:"I";
+        aload_0;
+        getfield Field f2:"I";
+        iconst_1;
+        isub;
+        // Without the fix, if got eliminated by CEE
+        if_icmpgt Null;
+        iconst_1;
+      Return: stack_frame_type stack1;
+      stack_map int;
+        ireturn;
+      Null: stack_frame_type same;
+        iconst_0;
+        goto Return; // Backbranch (t_goto) with safepoint
+    }
+
+    public Method test2:"()I" stack 3 locals 1 {
+        aload_0;
+        getfield Field f1:"I";
+        aload_0;
+        getfield Field f2:"I";
+        iconst_1;
+        isub;
+        goto Skip;
+      Return: stack_frame_type full;
+      stack_map int;
+        ireturn;
+      Skip: stack_frame_type full;
+      stack_map int, int;
+        // Without the fix, if got eliminated by CEE
+        if_icmpgt Null;
+        iconst_1;
+        goto Return; // Backbranch (f_goto) with safepoint
+      Null: stack_frame_type full;
+      stack_map;
+        iconst_0;
+        goto Return; // Backbranch (t_goto) with safepoint
+    }
+
+    public Method test3:"()I" stack 3 locals 1 {
+        aload_0;
+        getfield Field f1:"I";
+        aload_0;
+        getfield Field f2:"I";
+        iconst_1;
+        isub;
+        goto Skip;
+      Return: stack_frame_type full;
+      stack_map int;
+        ireturn;
+      Null: stack_frame_type full;
+      stack_map;
+        iconst_0;
+        goto Return; // Backbranch (t_goto) with safepoint
+      Skip: stack_frame_type full;
+      stack_map int, int;
+        // If will be eliminated by CEE
+        if_icmpgt Null; // Backbranch (if) with safepoint
+        iconst_1;
+        goto Return; // Backbranch (f_goto) with safepoint
+    }
+
+    public Method test4:"()I" stack 3 locals 1 {
+        aload_0;
+        getfield Field f1:"I";
+        aload_0;
+        getfield Field f2:"I";
+        iconst_1;
+        isub;
+        goto Skip;
+      Null: stack_frame_type full;
+      stack_map;
+        iconst_0;
+      Return: stack_frame_type full;
+      stack_map int;
+        ireturn; 
+      Skip: stack_frame_type full;
+      stack_map int, int;
+        // If will be eliminated by CEE
+        if_icmpgt Null; // Backbranch (if) with safepoint
+        iconst_1;
+        goto Return; // Backbranch (f_goto) with safepoint
+    }
+
+    public Method test5:"()I" stack 3 locals 2 {
+        aload_0;
+        getfield Field f1:"I";
+        aload_0;
+        getfield Field f2:"I";
+        iconst_1;
+        isub;
+        goto Skip;
+      Null: stack_frame_type full;
+      stack_map;
+        iconst_0;
+        goto Return;
+      Skip: stack_frame_type full;
+      stack_map int, int;
+        // If will be eliminated by CEE
+        if_icmpgt Null; // Backbranch (if) with safepoint
+        iconst_1;
+      Return: stack_frame_type full;
+      stack_map int;
+        ireturn; 
+    }
+
+    public Method test6:"()I" stack 4 locals 1 {
+        getstatic Field i:"I";
+      Loop: stack_frame_type full;
+      stack_map int;
+        // Decrement i and exit loop if < 0
+        iconst_0;
+        getstatic Field i:"I";
+        iconst_1;
+        isub;
+        dup;
+        putstatic Field i:"I";
+        if_icmpgt Exit;
+
+        iconst_1;
+        // Without the fix, if got eliminated by CEE
+        if_icmpgt Null;
+        iconst_1;
+        goto Loop; // Backbranch (f_goto) with safepoint
+      Null: stack_frame_type same;
+        iconst_0;
+        goto Loop; // Backbranch (t_goto) with safepoint
+
+      Exit: stack_frame_type full;
+      stack_map int;
+        iconst_0;
+        ireturn; 
+    }
+}

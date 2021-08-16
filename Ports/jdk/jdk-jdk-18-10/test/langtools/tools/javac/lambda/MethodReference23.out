@@ -1,0 +1,6 @@
+MethodReference23.java:52:19: compiler.err.invalid.mref: kindname.constructor, (compiler.misc.cant.access.inner.cls.constr: Inner1, MethodReference23, MethodReference23)
+MethodReference23.java:53:16: compiler.err.invalid.mref: kindname.constructor, (compiler.misc.cant.access.inner.cls.constr: Inner1, , MethodReference23)
+MethodReference23.java:57:19: compiler.err.invalid.mref: kindname.constructor, (compiler.misc.cant.access.inner.cls.constr: Inner1, , MethodReference23)
+MethodReference23.java:58:16: compiler.err.invalid.mref: kindname.constructor, (compiler.misc.cant.access.inner.cls.constr: Inner1, , MethodReference23)
+MethodReference23.java:72:9: compiler.err.ref.ambiguous: call3, kindname.method, call3(MethodReference23.SAM21), MethodReference23, kindname.method, call3(MethodReference23.SAM22), MethodReference23
+5 errors

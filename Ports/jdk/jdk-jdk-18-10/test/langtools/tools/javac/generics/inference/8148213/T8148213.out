@@ -1,0 +1,5 @@
+T8148213.java:28:14: compiler.warn.unchecked.meth.invocation.applied: kindname.method, n, T8148213.R<E>, T8148213.R, kindname.interface, T8148213.T
+T8148213.java:28:18: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), T8148213.R, T8148213.R<E>
+- compiler.err.warnings.and.werror
+1 error
+2 warnings

@@ -1,0 +1,18 @@
+    static $type$[] [[TEST]]($type$[] a, $type$[] b, int origin, int idx) {
+        $type$[] res = new $type$[SPECIES.length()];
+        for (int i = 0, j = 0; i < SPECIES.length(); i++){
+            if(i+origin < SPECIES.length())
+                res[i] = a[idx+i+origin];
+            else {
+                res[i] = b[idx+j];
+                j++;
+            }
+        }
+        return res;
+    }
+
+    @Test(dataProvider = "$type$BinaryOpProvider")
+    static void [[TEST]]$vectorteststype$Binary(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb) {
+[[KERNEL]]
+        assertArraysEquals(r, a, b, origin, $vectorteststype$::[[TEST]]);
+    }

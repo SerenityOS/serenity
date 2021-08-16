@@ -1,0 +1,2 @@
+Manifest-version: 1.0
+Specification-Version: 1.4

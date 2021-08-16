@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration version="2.0">
+    <event name="com.oracle.jdk.JVMInformation">
+      <setting name="enabled">true</setting>
+      <setting name="period">everyChunk</setting>
+    </event> 
+</configuration>    

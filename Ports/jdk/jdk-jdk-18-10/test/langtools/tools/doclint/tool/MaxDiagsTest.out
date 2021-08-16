@@ -1,0 +1,14 @@
+MaxDiagsTest.java:14: warning: no comment
+public class MaxDiagsTest {
+       ^
+MaxDiagsTest.java:16: error: invalid entity &#0;
+     * &#0; &#0; &#0; &#0;
+       ^
+MaxDiagsTest.java:16: error: invalid entity &#0;
+     * &#0; &#0; &#0; &#0;
+            ^
+MaxDiagsTest.java:21: warning: no @param for a1
+    public int warnings(int a1, int a2) throws Exception { return 0; }
+               ^
+2 errors
+2 warnings

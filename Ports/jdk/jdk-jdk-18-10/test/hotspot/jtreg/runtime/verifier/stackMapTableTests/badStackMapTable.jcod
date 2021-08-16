@@ -1,0 +1,206 @@
+/*
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+// This .jcod test was derived from the following Java program.  In the .jcod
+// file, The first opcode was changed to an illegal value to cause a 'bad
+// instruction' VerifyError exception.  Also, the stack map table was changed
+// so that it contains an illegal verification type.  The error occurred when
+// the verifier tried to print the stack map table as part of the 'bad
+// instruction' VerifyError exception.
+//
+//   public class badStackMapTabe extends java.lang.Throwable {
+//
+//       public static void m(int I, String s, long l, Object o) {
+//            try {
+//                if (I == l) {
+//                    System.out.println("x");
+//                }
+//            } catch (Exception e) {
+//                System.out.println("y");
+//            }
+//       }
+//
+//       public static void main(String argv[]) {
+//           badStackMapTabe.m(5, "hi", 6, "x");
+//       }
+//   }
+
+
+class badStackMapTable {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [42] { // Constant Pool
+    ; // first element is empty
+    Method #12 #24; // #1     at 0x0A
+    Field #25 #26; // #2     at 0x0F
+    String #27; // #3     at 0x14
+    Method #28 #29; // #4     at 0x17
+    class #30; // #5     at 0x1C
+    String #31; // #6     at 0x1F
+    String #32; // #7     at 0x22
+    long 0x0000000000000006;; // #8     at 0x25
+    Method #11 #33; // #10     at 0x2E
+    class #34; // #11     at 0x33
+    class #35; // #12     at 0x36
+    Utf8 "<init>"; // #13     at 0x39
+    Utf8 "()V"; // #14     at 0x42
+    Utf8 "Code"; // #15     at 0x48
+    Utf8 "LineNumberTable"; // #16     at 0x4F
+    Utf8 "m"; // #17     at 0x61
+    Utf8 "(ILjava/lang/String;JLjava/lang/Object;)V"; // #18     at 0x65
+    Utf8 "StackMapTable"; // #19     at 0x91
+    Utf8 "main"; // #20     at 0xA1
+    Utf8 "([Ljava/lang/String;)V"; // #21     at 0xA8
+    Utf8 "SourceFile"; // #22     at 0xC1
+    Utf8 "badStackMapTable.java"; // #23     at 0xCE
+    NameAndType #13 #14; // #24     at 0xDA
+    class #36; // #25     at 0xDF
+    NameAndType #37 #38; // #26     at 0xE2
+    Utf8 "x"; // #27     at 0xE7
+    class #39; // #28     at 0xEB
+    NameAndType #40 #41; // #29     at 0xEE
+    Utf8 "java/lang/Exception"; // #30     at 0xF3
+    Utf8 "y"; // #31     at 0x0109
+    Utf8 "hi"; // #32     at 0x010D
+    NameAndType #17 #18; // #33     at 0x0112
+    Utf8 "badStackMapTable"; // #34     at 0x0117
+    Utf8 "java/lang/Throwable"; // #35     at 0x011E
+    Utf8 "java/lang/System"; // #36     at 0x0134
+    Utf8 "out"; // #37     at 0x0147
+    Utf8 "Ljava/io/PrintStream;"; // #38     at 0x014D
+    Utf8 "java/io/PrintStream"; // #39     at 0x0165
+    Utf8 "println"; // #40     at 0x017B
+    Utf8 "(Ljava/lang/String;)V"; // #41     at 0x0185
+  } // Constant Pool
+
+  0x0021; // access [ ACC_PUBLIC ACC_SUPER ]
+  #11;// this_cpx
+  #12;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [3] { // methods
+    { // Member at 0x01A9
+      0x0001; // access
+      #13; // name_cpx
+      #14; // sig_cpx
+      [1] { // Attributes
+        Attr(#15, 29) { // Code at 0x01B1
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#16, 6) { // LineNumberTable at 0x01C8
+              [1] { // LineNumberTable
+                0  1; //  at 0x01D4
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x01D4
+      0x0009; // access
+      #17; // name_cpx
+      #18; // sig_cpx
+      [1] { // Attributes
+        Attr(#15, 95) { // Code at 0x01DC
+          4; // max_stack
+          6; // max_locals
+          Bytes[29]{
+            0xF88520949A000BB2; // Create an illegal opcode by changing 0x1A to 0xF8
+            0x00021203B60004A7;
+            0x000D3A05B2000212;
+            0x06B60004B1;
+          };
+          [1] { // Traps
+            0 15 18 5; //  at 0x0211
+          } // end Traps
+          [2] { // Attributes
+            Attr(#16, 26) { // LineNumberTable at 0x0213
+              [6] { // LineNumberTable
+                0  5; //  at 0x021F
+                7  6; //  at 0x0223
+                15  10; //  at 0x0227
+                18  8; //  at 0x022B
+                20  9; //  at 0x022F
+                28  11; //  at 0x0233
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#19, 8) { // StackMapTable at 0x0233
+              [3] { //
+                15b; // same_frame
+                66b, [1]z{9b,5}; // Create an invalid verification type by changing 7b to 9b
+                9b; // same_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0241
+      0x0009; // access
+      #20; // name_cpx
+      #21; // sig_cpx
+      [1] { // Attributes
+        Attr(#15, 40) { // Code at 0x0249
+          5; // max_stack
+          1; // max_locals
+          Bytes[12]{
+            0x0812071400081203;
+            0xB8000AB1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#16, 10) { // LineNumberTable at 0x0267
+              [2] { // LineNumberTable
+                0  14; //  at 0x0273
+                11  15; //  at 0x0277
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [1] { // Attributes
+    Attr(#22, 2) { // SourceFile at 0x0279
+      #23;
+    } // end SourceFile
+  } // Attributes
+} // end class badStackMapTable

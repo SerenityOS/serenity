@@ -1,0 +1,8 @@
+
+grant {
+  permission java.util.PropertyPermission "*", "read";
+  permission javax.management.MBeanServerPermission "createMBeanServer";
+  permission javax.management.MBeanPermission "javax.management.loading.MLet#-[-]", "instantiate";
+  permission javax.management.MBeanPermission "javax.management.loading.MLet#-[MLetTest:name=MLetMBean]", "registerMBean";
+  permission java.lang.RuntimePermission "createClassLoader";
+};

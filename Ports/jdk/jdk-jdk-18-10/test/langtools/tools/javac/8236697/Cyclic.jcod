@@ -1,0 +1,29 @@
+class Cyclic {
+  0xCAFEBABE;
+  0; // minor version
+  57; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    class #2; // #1
+    Utf8 "Cyclic"; // #2
+    class #4; // #3
+    Utf8 "java/lang/Object"; // #4
+  } // Constant Pool
+
+  0x0600; // access
+  #1;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+    #1;
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class Cyclic

@@ -1,0 +1,2 @@
+T8016177b.java:31:19: compiler.err.ref.ambiguous: id2, kindname.method, <U,V>id2(T8016177b.Function<U,V>), T8016177b, kindname.method, <U>id2(T8016177b.ToIntFunction<U>), T8016177b
+1 error

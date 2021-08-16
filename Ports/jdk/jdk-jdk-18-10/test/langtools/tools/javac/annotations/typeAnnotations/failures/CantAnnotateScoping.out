@@ -1,0 +1,14 @@
+CantAnnotateScoping.java:66:18: compiler.err.doesnt.exist: java.XXX
+CantAnnotateScoping.java:38:14: compiler.err.cant.type.annotate.scoping.1: @TA
+CantAnnotateScoping.java:40:19: compiler.err.cant.type.annotate.scoping.1: @TA
+CantAnnotateScoping.java:47:13: compiler.err.cant.type.annotate.scoping.1: @TA
+CantAnnotateScoping.java:56:32: compiler.err.cant.type.annotate.scoping: @TA,@TA2
+CantAnnotateScoping.java:61:19: compiler.err.cant.type.annotate.scoping.1: @DA
+CantAnnotateScoping.java:70:19: compiler.err.cant.type.annotate.scoping.1: @TA
+CantAnnotateScoping.java:61:11: compiler.err.annotation.type.not.applicable
+CantAnnotateScoping.java:66:11: compiler.err.annotation.type.not.applicable
+CantAnnotateScoping.java:42:39: compiler.err.cant.type.annotate.scoping: @TA,@DA,@TA2
+CantAnnotateScoping.java:42:25: compiler.err.annotation.type.not.applicable
+CantAnnotateScoping.java:44:43: compiler.err.cant.type.annotate.scoping: @TA,@DA
+CantAnnotateScoping.java:44:34: compiler.err.annotation.type.not.applicable
+13 errors

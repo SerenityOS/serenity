@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" xml:base="http://local/base/dtd/">
+    <public publicId="-//REMOTE//DTD ALICE DOCALICE XML//EN" uri="docAlicePub.dtd" />
+    <public publicId="-//REMOTE//DTD BOB DOCBOB :: + : / ; ' ? # %//EN" uri="docBobPub.dtd" />
+</catalog>

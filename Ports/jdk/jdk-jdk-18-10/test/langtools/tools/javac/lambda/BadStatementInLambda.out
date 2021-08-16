@@ -1,0 +1,4 @@
+BadStatementInLambda.java:16:21: compiler.err.not.stmt
+BadStatementInLambda.java:17:21: compiler.err.not.stmt
+BadStatementInLambda.java:18:23: compiler.err.not.stmt
+3 errors

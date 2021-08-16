@@ -1,0 +1,129 @@
+/*
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+// This class contains a bad element_tag in an element_value structure for a
+// RuntimeVisibleAnnotation at line 91.  The bad element tag should be ignored
+// by the class file parser.
+class badAnnotTag {
+  0xCAFEBABE;
+  0; // minor version
+  52; // version
+  [19] { // Constant Pool
+    ; // first element is empty
+    class #16; // #1     at 0x0A
+    class #17; // #2     at 0x0D
+    class #18; // #3     at 0x10
+    Utf8 "value"; // #4     at 0x13
+    Utf8 "()Ljava/lang/String;"; // #5     at 0x1B
+    Utf8 "SourceFile"; // #6     at 0x32
+    Utf8 "badAnnotTag.java"; // #7     at 0x3F
+    Utf8 "RuntimeVisibleAnnotations"; // #8     at 0x50
+    Utf8 "Ljava/lang/annotation/Target;"; // #9     at 0x6C
+    Utf8 "Ljava/lang/annotation/ElementType;"; // #10     at 0x8C
+    Utf8 "TYPE_USE"; // #11     at 0xB1
+    Utf8 "TYPE_PARAMETER"; // #12     at 0xBC
+    Utf8 "Ljava/lang/annotation/Retention;"; // #13     at 0xCD
+    Utf8 "Ljava/lang/annotation/RetentionPolicy;"; // #14     at 0xF0
+    Utf8 "RUNTIME"; // #15     at 0x0119
+    Utf8 "badAnnotTag"; // #16     at 0x0123
+    Utf8 "java/lang/Object"; // #17     at 0x0127
+    Utf8 "java/lang/annotation/Annotation"; // #18     at 0x013A
+  } // Constant Pool
+
+  0x2600; // access
+  #1;// this_cpx
+  #2;// super_cpx
+
+  [1] { // Interfaces
+    #3;
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [1] { // methods
+    { // Member at 0x016A
+      0x0401; // access
+      #4; // name_cpx
+      #5; // sig_cpx
+      [0] { // Attributes
+      } // Attributes
+    } // Member
+  } // methods
+
+  [2] { // Attributes
+    Attr(#6, 2) { // SourceFile at 0x0174
+      #7;
+    } // end SourceFile
+    ;
+    Attr(#8, 32) { // RuntimeVisibleAnnotations at 0x017C
+      [2] { // annotations
+        {  //  annotation
+          #9;
+          [1] { // element_value_pairs
+            {  //  element value pair
+              #4;
+              {  //  element_value
+                '[';
+                [2] { // array_value
+                  {  //  element_value
+                    'd'; // * illegal value *, correct value is 'e'
+                    {  //  enum_const_value
+                      #10;
+                      #11;
+                    }  //  enum_const_value
+                  }  //  element_value
+                  ;
+                  {  //  element_value
+                    'e';
+                    {  //  enum_const_value
+                      #10;
+                      #12;
+                    }  //  enum_const_value
+                  }  //  element_value
+                }  //  array_value
+              }  //  element_value
+            }  //  element value pair
+          }  //  element_value_pairs
+        }  //  annotation
+        ;
+        {  //  annotation
+          #13;
+          [1] { // element_value_pairs
+            {  //  element value pair
+              #4;
+              {  //  element_value
+                'e';
+                {  //  enum_const_value
+                  #14;
+                  #15;
+                }  //  enum_const_value
+              }  //  element_value
+            }  //  element value pair
+          }  //  element_value_pairs
+        }  //  annotation
+      }
+    } // end RuntimeVisibleAnnotations
+  } // Attributes
+} // end class badAnnotTag

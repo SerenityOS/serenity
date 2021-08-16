@@ -1,0 +1,3 @@
+PrimitiveTypeBoxingTest.java:19:9: compiler.err.cant.apply.symbol: kindname.method, m1, PrimitiveTypeBoxingTest.F<Z>,Z, @12,int, kindname.class, PrimitiveTypeBoxingTest, (compiler.misc.incompatible.bounds: Z, (compiler.misc.upper.bounds: java.lang.Long,java.lang.Object), (compiler.misc.lower.bounds: java.lang.Integer))
+PrimitiveTypeBoxingTest.java:20:9: compiler.err.cant.apply.symbol: kindname.method, m2, Z,PrimitiveTypeBoxingTest.F<Z>, int,@16, kindname.class, PrimitiveTypeBoxingTest, (compiler.misc.incompatible.bounds: Z, (compiler.misc.upper.bounds: java.lang.Long,java.lang.Object), (compiler.misc.lower.bounds: java.lang.Integer))
+2 errors

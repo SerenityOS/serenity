@@ -1,0 +1,2 @@
+BadStatementInLambda02.java:16:42: compiler.err.cant.resolve.location: kindname.class, NonExistentClass, , , (compiler.misc.location: kindname.class, BadStatementInLambda02, null)
+1 error

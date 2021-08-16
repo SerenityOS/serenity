@@ -1,0 +1,10 @@
+UnknownTagTest.java:12: error: unknown tag: unknown
+ * This is an <unknown> tag.
+              ^
+UnknownTagTest.java:13: error: unknown tag: unknown
+ * This is an <unknown a=b> tag with attributes.
+              ^
+UnknownTagTest.java:14: error: unknown tag: unknown
+ * This is an <unknown/> self-closing tag.
+              ^
+3 errors

@@ -1,0 +1,47 @@
+EXPECT_START
+DocComment[DOC_COMMENT, pos:0
+  preamble: 6
+    Comment[COMMENT, pos:0, <!--_/nodynamiccopyright/_-->]
+    StartElement[START_ELEMENT, pos:30
+      name:HTML
+      attributes: empty
+    ]
+    StartElement[START_ELEMENT, pos:37
+      name:HEAD
+      attributes: empty
+    ]
+    EndElement[END_ELEMENT, pos:44, HEAD]
+    StartElement[START_ELEMENT, pos:52
+      name:BODY
+      attributes: 1
+        Attribute[ATTRIBUTE, pos:58
+          name: lang
+          vkind: DOUBLE
+          value: 1
+            Text[TEXT, pos:64, en]
+        ]
+    ]
+    StartElement[START_ELEMENT, pos:69
+      name:main
+      attributes: 1
+        Attribute[ATTRIBUTE, pos:75
+          name: role
+          vkind: DOUBLE
+          value: 1
+            Text[TEXT, pos:81, main]
+        ]
+    ]
+  firstSentence: 1
+    Text[TEXT, pos:88, This_is_the_content.]
+  body: empty
+  block tags: 1
+    Since[SINCE, pos:109
+      body: 1
+        Text[TEXT, pos:116, 1.0]
+    ]
+  postamble: 3
+    EndElement[END_ELEMENT, pos:120, main]
+    EndElement[END_ELEMENT, pos:127, BODY]
+    EndElement[END_ELEMENT, pos:135, HTML]
+]
+EXPECT_END

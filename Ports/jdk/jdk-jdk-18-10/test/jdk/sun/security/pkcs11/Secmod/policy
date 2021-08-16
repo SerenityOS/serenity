@@ -1,0 +1,6 @@
+grant {
+    permission java.security.SecurityPermission "authProvider.*";
+    permission java.io.FilePermission "${test.src}/-", "read";
+    permission java.io.FilePermission "${pkcs11test.nss.db}/-", "read";
+    permission java.io.FilePermission "${pkcs11test.nss.libdir}/-", "read";
+};

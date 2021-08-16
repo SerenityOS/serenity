@@ -1,0 +1,220 @@
+/*
+ * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+//   NestMembers attribute is modified to contain P2.PackagedNestHost2.Member
+
+class P1/PackagedNestHost {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #7 #22; // #1
+    Method #3 #23; // #2
+    class #25; // #3
+    Method #3 #22; // #4
+    Field #3 #26; // #5
+    class #27; // #6
+    class #28; // #7
+    class #29; // #8
+    Utf8 "Member"; // #9
+    Utf8 "InnerClasses"; // #10
+    Utf8 "<init>"; // #11
+    Utf8 "()V"; // #12
+    Utf8 "Code"; // #13
+    Utf8 "LineNumberTable"; // #14
+    Utf8 "doInvoke"; // #15
+    Utf8 "doConstruct"; // #16
+    Utf8 "doGetField"; // #17
+    Utf8 "doPutField"; // #18
+    Utf8 "SourceFile"; // #19
+    Utf8 "PackagedNestHost.java"; // #20
+    Utf8 "NestMembers"; // #21
+    NameAndType #11 #12; // #22
+    NameAndType #30 #12; // #23
+    class #31; // #24
+    Utf8 "P2/PackagedNestHost2$Member"; // #25
+    NameAndType #32 #33; // #26
+    Utf8 "P1/PackagedNestHost"; // #27
+    Utf8 "java/lang/Object"; // #28
+    Utf8 "P1/PackagedNestHost$Member"; // #29
+    Utf8 "m"; // #30
+    Utf8 "P2/PackagedNestHost2"; // #31
+    Utf8 "f"; // #32
+    Utf8 "I"; // #33
+  } // Constant Pool
+
+  0x0021; // access
+  #6;// this_cpx
+  #7;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #11; // name_cpx
+      #12; // sig_cpx
+      [] { // Attributes
+        Attr(#13) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#14) { // LineNumberTable
+              [] { // LineNumberTable
+                0  31;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #15; // name_cpx
+      #12; // sig_cpx
+      [] { // Attributes
+        Attr(#13) { // Code
+          0; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xB80002B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#14) { // LineNumberTable
+              [] { // LineNumberTable
+                0  47;
+                3  48;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #16; // name_cpx
+      #12; // sig_cpx
+      [] { // Attributes
+        Attr(#13) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xBB000359B700044B;
+            0xB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#14) { // LineNumberTable
+              [] { // LineNumberTable
+                0  51;
+                8  52;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #17; // name_cpx
+      #12; // sig_cpx
+      [] { // Attributes
+        Attr(#13) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xB200053BB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#14) { // LineNumberTable
+              [] { // LineNumberTable
+                0  55;
+                4  56;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #18; // name_cpx
+      #12; // sig_cpx
+      [] { // Attributes
+        Attr(#13) { // Code
+          1; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0x102AB30005B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#14) { // LineNumberTable
+              [] { // LineNumberTable
+                0  59;
+                5  60;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#19) { // SourceFile
+      #20;
+    } // end SourceFile
+    ;
+    Attr(#21) { // NestMembers
+      0x00010003; // modified - #3
+    } // end NestMembers
+    ;
+    Attr(#10) { // InnerClasses
+      [] { // InnerClasses
+        #8 #6 #9 9;
+        #3 #24 #9 9;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class P1/PackagedNestHost

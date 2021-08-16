@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<persons>
+    <person>
+        <full_name>Hege Refsnes</full_name>
+        <!-- Error: child_name expected here -->
+    </person>
+    <person>
+        <full_name>Hege Refsnes Jr.</full_name>
+        <!-- Error: Only 5 child_name allowed -->
+        <child_name>Jim</child_name>
+        <child_name>Hege</child_name>
+        <child_name>Stale</child_name>
+        <child_name>Sheldon</child_name>
+        <child_name>Penny</child_name>
+        <child_name>John</child_name>
+    </person>
+</persons>

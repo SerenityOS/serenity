@@ -1,0 +1,5 @@
+T6404756.java:10:28: compiler.warn.deprecated.annotation.has.no.effect: kindname.variable
+T6404756.java:10:34: compiler.warn.has.been.deprecated: foo, Foo
+- compiler.err.warnings.and.werror
+1 error
+2 warnings

@@ -1,0 +1,151 @@
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] r = fr.apply(SPECIES.length());
+
+        for (int ic = 0; ic < INVOC_COUNT; ic++) {
+            for (int i = 0; i < a.length; i += SPECIES.length()) {
+                $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+                int num_lanes = SPECIES.length();
+                \/\/ Manually unroll because full unroll happens after intrinsification.
+                \/\/ Unroll is needed because get intrinsic requires for index to be a known constant.
+                if (num_lanes == 1) {
+                    r[i]=av.lane(0);
+                } else if (num_lanes == 2) {
+                    r[i]=av.lane(0);
+                    r[i+1]=av.lane(1);
+                } else if (num_lanes == 4) {
+                    r[i]=av.lane(0);
+                    r[i+1]=av.lane(1);
+                    r[i+2]=av.lane(2);
+                    r[i+3]=av.lane(3);
+                } else if (num_lanes == 8) {
+                    r[i]=av.lane(0);
+                    r[i+1]=av.lane(1);
+                    r[i+2]=av.lane(2);
+                    r[i+3]=av.lane(3);
+                    r[i+4]=av.lane(4);
+                    r[i+5]=av.lane(5);
+                    r[i+6]=av.lane(6);
+                    r[i+7]=av.lane(7);
+                } else if (num_lanes == 16) {
+                    r[i]=av.lane(0);
+                    r[i+1]=av.lane(1);
+                    r[i+2]=av.lane(2);
+                    r[i+3]=av.lane(3);
+                    r[i+4]=av.lane(4);
+                    r[i+5]=av.lane(5);
+                    r[i+6]=av.lane(6);
+                    r[i+7]=av.lane(7);
+                    r[i+8]=av.lane(8);
+                    r[i+9]=av.lane(9);
+                    r[i+10]=av.lane(10);
+                    r[i+11]=av.lane(11);
+                    r[i+12]=av.lane(12);
+                    r[i+13]=av.lane(13);
+                    r[i+14]=av.lane(14);
+                    r[i+15]=av.lane(15);
+                } else if (num_lanes == 32) {
+                    r[i]=av.lane(0);
+                    r[i+1]=av.lane(1);
+                    r[i+2]=av.lane(2);
+                    r[i+3]=av.lane(3);
+                    r[i+4]=av.lane(4);
+                    r[i+5]=av.lane(5);
+                    r[i+6]=av.lane(6);
+                    r[i+7]=av.lane(7);
+                    r[i+8]=av.lane(8);
+                    r[i+9]=av.lane(9);
+                    r[i+10]=av.lane(10);
+                    r[i+11]=av.lane(11);
+                    r[i+12]=av.lane(12);
+                    r[i+13]=av.lane(13);
+                    r[i+14]=av.lane(14);
+                    r[i+15]=av.lane(15);
+                    r[i+16]=av.lane(16);
+                    r[i+17]=av.lane(17);
+                    r[i+18]=av.lane(18);
+                    r[i+19]=av.lane(19);
+                    r[i+20]=av.lane(20);
+                    r[i+21]=av.lane(21);
+                    r[i+22]=av.lane(22);
+                    r[i+23]=av.lane(23);
+                    r[i+24]=av.lane(24);
+                    r[i+25]=av.lane(25);
+                    r[i+26]=av.lane(26);
+                    r[i+27]=av.lane(27);
+                    r[i+28]=av.lane(28);
+                    r[i+29]=av.lane(29);
+                    r[i+30]=av.lane(30);
+                    r[i+31]=av.lane(31);
+                } else if (num_lanes == 64) {
+                    r[i]=av.lane(0);
+                    r[i+1]=av.lane(1);
+                    r[i+2]=av.lane(2);
+                    r[i+3]=av.lane(3);
+                    r[i+4]=av.lane(4);
+                    r[i+5]=av.lane(5);
+                    r[i+6]=av.lane(6);
+                    r[i+7]=av.lane(7);
+                    r[i+8]=av.lane(8);
+                    r[i+9]=av.lane(9);
+                    r[i+10]=av.lane(10);
+                    r[i+11]=av.lane(11);
+                    r[i+12]=av.lane(12);
+                    r[i+13]=av.lane(13);
+                    r[i+14]=av.lane(14);
+                    r[i+15]=av.lane(15);
+                    r[i+16]=av.lane(16);
+                    r[i+17]=av.lane(17);
+                    r[i+18]=av.lane(18);
+                    r[i+19]=av.lane(19);
+                    r[i+20]=av.lane(20);
+                    r[i+21]=av.lane(21);
+                    r[i+22]=av.lane(22);
+                    r[i+23]=av.lane(23);
+                    r[i+24]=av.lane(24);
+                    r[i+25]=av.lane(25);
+                    r[i+26]=av.lane(26);
+                    r[i+27]=av.lane(27);
+                    r[i+28]=av.lane(28);
+                    r[i+29]=av.lane(29);
+                    r[i+30]=av.lane(30);
+                    r[i+31]=av.lane(31);
+                    r[i+32]=av.lane(32);
+                    r[i+33]=av.lane(33);
+                    r[i+34]=av.lane(34);
+                    r[i+35]=av.lane(35);
+                    r[i+36]=av.lane(36);
+                    r[i+37]=av.lane(37);
+                    r[i+38]=av.lane(38);
+                    r[i+39]=av.lane(39);
+                    r[i+40]=av.lane(40);
+                    r[i+41]=av.lane(41);
+                    r[i+42]=av.lane(42);
+                    r[i+43]=av.lane(43);
+                    r[i+44]=av.lane(44);
+                    r[i+45]=av.lane(45);
+                    r[i+46]=av.lane(46);
+                    r[i+47]=av.lane(47);
+                    r[i+48]=av.lane(48);
+                    r[i+49]=av.lane(49);
+                    r[i+50]=av.lane(50);
+                    r[i+51]=av.lane(51);
+                    r[i+52]=av.lane(52);
+                    r[i+53]=av.lane(53);
+                    r[i+54]=av.lane(54);
+                    r[i+55]=av.lane(55);
+                    r[i+56]=av.lane(56);
+                    r[i+57]=av.lane(57);
+                    r[i+58]=av.lane(58);
+                    r[i+59]=av.lane(59);
+                    r[i+60]=av.lane(60);
+                    r[i+61]=av.lane(61);
+                    r[i+62]=av.lane(62);
+                    r[i+63]=av.lane(63);
+                } else {
+                    for (int j = 0; j < SPECIES.length(); j++) {
+                        r[i+j]=av.lane(j);
+                    }
+                }
+            }
+        }
+

@@ -1,0 +1,8 @@
+<test xmlns="http://openjdk_java_net/test.xml" 
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+      xsi:schemaLocation="JDK8176447a.xsd">
+    <innerObject>
+        <innerInnerObject test-unique-attribute="1" />
+        <innerInnerObject test-unique-attribute="1" />
+    </innerObject>
+</test>

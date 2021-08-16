@@ -1,0 +1,62 @@
+<!--
+ Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+
+<html>
+<head>
+<title> MultiDisplayTest </title>
+</head>
+<body>
+<applet code="MultiDisplayTest.class" width=100 height=30></applet>
+
+This test is for OS X or Windows only.
+For other OSes please simply push "Pass".
+
+The test requires two-display configuration, where
+
+- 1st display is operating in HiDPI mode;
+- 2nd display is non-HiDPI.
+
+In other cases please simply push "Pass".
+
+
+To run test please push "Start".
+
+Then drag parent / child to different displays and check
+that the proper image is shown for every window
+(must be "black 1x" for non-HiDPI and "blue 2x" for HiDPI).
+
+Please try to drag both parent and child,
+do it fast several times and check if no artefacts occur.
+
+Try to switch display resolution (high to low and back).
+
+For Mac OS X please check also the behavior for
+translucent windows appearing on the 2nd (non-active) display
+and Mission Control behavior.
+
+Close the windows.
+
+In case if no issues occur please push "Pass", otherwise "Fail".
+
+</body>
+</html>

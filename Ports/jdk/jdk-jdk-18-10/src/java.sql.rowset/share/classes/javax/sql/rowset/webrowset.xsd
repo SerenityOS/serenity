@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ Copyright (c) 2003, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+
+<!-- WebRowSet XML Schema by Jonathan Bruce (Sun Microsystems Inc.) -->
+<xs:schema targetNamespace="http://java.sun.com/xml/ns/jdbc" xmlns:wrs="http://java.sun.com/xml/ns/jdbc" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+	
+	<xs:element name="webRowSet">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="wrs:properties"/>
+				<xs:element ref="wrs:metadata"/>
+				<xs:element ref="wrs:data"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	
+	<xs:element name="columnValue" type="xs:anyType"/>
+	<xs:element name="updateValue" type="xs:anyType"/>
+	
+	<xs:element name="properties">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="command" type="xs:string"/>
+				<xs:element name="concurrency" type="xs:string"/>
+				<xs:element name="datasource" type="xs:string"/>
+				<xs:element name="escape-processing" type="xs:string"/>
+				<xs:element name="fetch-direction" type="xs:string"/>
+				<xs:element name="fetch-size" type="xs:string"/>
+				<xs:element name="isolation-level" type="xs:string"/>
+				<xs:element name="key-columns">
+					<xs:complexType>
+						<xs:sequence minOccurs="0" maxOccurs="unbounded">
+							<xs:element name="column" type="xs:string"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="map">
+					<xs:complexType>
+						<xs:sequence minOccurs="0" maxOccurs="unbounded">
+							<xs:element name="type" type="xs:string"/>
+							<xs:element name="class" type="xs:string"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="max-field-size" type="xs:string"/>
+				<xs:element name="max-rows" type="xs:string"/>
+				<xs:element name="query-timeout" type="xs:string"/>
+				<xs:element name="read-only" type="xs:string"/>
+				<xs:element name="rowset-type" type="xs:string"/>
+				<xs:element name="show-deleted" type="xs:string"/>
+				<xs:element name="table-name" type="xs:string"/>
+				<xs:element name="url" type="xs:string"/>
+				<xs:element name="sync-provider">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="sync-provider-name" type="xs:string"/>
+							<xs:element name="sync-provider-vendor" type="xs:string"/>
+							<xs:element name="sync-provider-version" type="xs:string"/>
+							<xs:element name="sync-provider-grade" type="xs:string"/>
+							<xs:element name="data-source-lock" type="xs:string"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="metadata">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="column-count" type="xs:string"/>
+				<xs:choice>
+					<xs:element name="column-definition" minOccurs="0" maxOccurs="unbounded">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="column-index" type="xs:string"/>
+								<xs:element name="auto-increment" type="xs:string"/>
+								<xs:element name="case-sensitive" type="xs:string"/>
+								<xs:element name="currency" type="xs:string"/>
+								<xs:element name="nullable" type="xs:string"/>
+								<xs:element name="signed" type="xs:string"/>
+								<xs:element name="searchable" type="xs:string"/>
+								<xs:element name="column-display-size" type="xs:string"/>
+								<xs:element name="column-label" type="xs:string"/>
+								<xs:element name="column-name" type="xs:string"/>
+								<xs:element name="schema-name" type="xs:string"/>
+								<xs:element name="column-precision" type="xs:string"/>
+								<xs:element name="column-scale" type="xs:string"/>
+								<xs:element name="table-name" type="xs:string"/>
+								<xs:element name="catalog-name" type="xs:string"/>
+								<xs:element name="column-type" type="xs:string"/>
+								<xs:element name="column-type-name" type="xs:string"/>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+				</xs:choice>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="data">
+		<xs:complexType>
+			<xs:sequence minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="currentRow" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence minOccurs="0" maxOccurs="unbounded">
+							<xs:element ref="wrs:columnValue"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="insertRow" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:choice minOccurs="0" maxOccurs="unbounded">
+							<xs:element ref="wrs:columnValue"/>
+							<xs:element ref="wrs:updateValue"/>
+						</xs:choice>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="deleteRow" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence minOccurs="0" maxOccurs="unbounded">
+							<xs:element ref="wrs:columnValue"/>
+							<xs:element ref="wrs:updateValue"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="modifyRow" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence minOccurs="0" maxOccurs="unbounded">
+							<xs:element ref="wrs:columnValue"/>
+							<xs:element ref="wrs:updateValue"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

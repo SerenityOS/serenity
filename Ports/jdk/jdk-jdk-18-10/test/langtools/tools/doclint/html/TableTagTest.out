@@ -1,0 +1,22 @@
+TableTagsTest.java:37: error: attribute not supported in HTML5: summary
+     *  <table summary="abc"> <tr> <td> </table>
+               ^
+TableTagsTest.java:38: error: attribute not supported in HTML5: summary
+     *  <table summary="abc"> <tr> <th> </table>
+               ^
+TableTagsTest.java:40: error: attribute not supported in HTML5: summary
+     *  <table summary="abc"> <thead> <tr> </thead> <tr> <td> </table>
+               ^
+TableTagsTest.java:41: error: attribute not supported in HTML5: summary
+     *  <table summary="abc"> <tbody> <tr> <td> </tbody> </table>
+               ^
+TableTagsTest.java:42: error: attribute not supported in HTML5: summary
+     *  <table summary="abc"> <tr> <td> <tfoot> <tr> </tfoot></table>
+               ^
+TableTagsTest.java:43: error: attribute not supported in HTML5: summary
+     *  <table summary="abc" width="50%"> <tr> <td> <tfoot> <tr> </tfoot></table>
+               ^
+TableTagsTest.java:43: error: attribute not supported in HTML5: width
+     *  <table summary="abc" width="50%"> <tr> <td> <tfoot> <tr> </tfoot></table>
+                             ^
+7 errors

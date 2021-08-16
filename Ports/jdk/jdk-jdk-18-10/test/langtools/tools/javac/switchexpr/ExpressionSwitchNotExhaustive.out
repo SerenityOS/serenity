@@ -1,0 +1,4 @@
+ExpressionSwitchNotExhaustive.java:10:16: compiler.err.not.exhaustive
+ExpressionSwitchNotExhaustive.java:16:16: compiler.err.not.exhaustive
+ExpressionSwitchNotExhaustive.java:29:23: compiler.err.var.might.not.have.been.initialized: s
+3 errors

@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Class-Path: zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.ja
+ r zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz
+ .jar xx.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.j
+ ar zzzzzzz.jar xx.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar
+  zzzzzzz.jar zzzzzzz.jar xx.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar z
+ zzzzzz.jar zzzzzzz.jar zzzzzzz.jar xx.jar zzzzzzz.jar zzzzzzz.jar zzz
+ zzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar xx.jar zzzzzzz.jar zzzzz
+ zz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar xx.jar zzzzzzz
+ .jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar xx.j
+ ar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzz
+ z.jar xx.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.
+ jar zzzzzzz.jar xx.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.ja
+ r zzzzzzz.jar zzzzzzz.jar xx.jar zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar 
+ zzzzzzz.jar zzzzzzz.jar zzzzzzz.jar xx.jar cpattr2.jar cpattr1_long.j
+ ar
+Created-By: 1.9.0-internal (Oracle Corporation)
+

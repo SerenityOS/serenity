@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Foo xmlns:bar="urn:bar" xmlns="urn:foo" xml:space="preserve">
+  <dsig:Signature xmlns:dsig="http://www.w3.org/2000/09/xmldsig#">
+    <dsig:SignedInfo>
+      <dsig:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+      <dsig:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#dsa-sha1" />
+      <dsig:Reference URI="#xpointer(id('to-be-signed'))">
+        <dsig:Transforms>
+          <dsig:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+        </dsig:Transforms>
+        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+        <dsig:DigestValue>7yOTjUu+9oEhShgyIIXDLjQ08aY=</dsig:DigestValue>
+      </dsig:Reference>
+      <dsig:Reference URI="#xpointer(id('to-be-signed'))">
+        <dsig:Transforms>
+          <dsig:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#">
+            <InclusiveNamespaces xmlns="http://www.w3.org/2001/10/xml-exc-c14n#" PrefixList="bar #default" />
+          </dsig:Transform>
+        </dsig:Transforms>
+        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+        <dsig:DigestValue>09xMy0RTQM1Q91demYe/0F6AGXo=</dsig:DigestValue>
+      </dsig:Reference>
+      <dsig:Reference URI="#xpointer(id('to-be-signed'))">
+        <dsig:Transforms>
+          <dsig:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#WithComments" />
+        </dsig:Transforms>
+        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+        <dsig:DigestValue>ZQH+SkCN8c5y0feAr+aRTZDwyvY=</dsig:DigestValue>
+      </dsig:Reference>
+      <dsig:Reference URI="#xpointer(id('to-be-signed'))">
+        <dsig:Transforms>
+          <dsig:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#WithComments">
+            <InclusiveNamespaces xmlns="http://www.w3.org/2001/10/xml-exc-c14n#" PrefixList="bar #default" />
+          </dsig:Transform>
+        </dsig:Transforms>
+        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+        <dsig:DigestValue>a1cTqBgbqpUt6bMJN4C6zFtnoyo=</dsig:DigestValue>
+      </dsig:Reference>
+    </dsig:SignedInfo>
+    <dsig:SignatureValue>
+      Kv1e7Kjhz4gFtOZKgvC5cLYtMQNIn99fyLBa6D//bBokTxTUEkMwaA==
+    </dsig:SignatureValue>
+    <dsig:KeyInfo>
+      <dsig:KeyValue>
+        <dsig:DSAKeyValue>
+          <dsig:P>
+            8FkJgwdyizV5Vd0m6DA/DZsdweJdnkueYVUd7L8aA4JpZxrlCI/M7mDE/OGhEhgB
+            nFzSTrBjSFpT7DG66uy7oJeE+RgkXO7EWWOEglMPwaZgGgi1oZarv95VOx3uO8W8
+            L7+S/3AuHNUZQD4b5bpdYAmjXFwz6dl0mKiXAvVuP9E=
+          </dsig:P>
+          <dsig:Q>
+            mFf8DiMVNFXy0vag9oNGNW/g4u0=
+          </dsig:Q>
+          <dsig:G>
+            g8gRdNlq9EOTR2TjmVApqCAZAq3jEjOIxXbs8JBiZ+U7dV9geeXEy13GbYoP23Qr
+            apZQo+35diw+cMYPHjN+iUCwUkiGWv7/piAK+Ootfw03etL8XiVWjtL5NBof2CNp
+            wmAw7mrwmNG092y1e6HXSGMMZpaoth/P8xhsxCQsqI8=
+          </dsig:G>
+          <dsig:Y>
+            j0V14dc/I+okDAeG4ZbWUzb3HTFkEOC6feOMo5Dk218GcPqEKroVHaDBF9CmRV1v
+            B8MUOExB+6ZNHfcs5Vaw0HVn62YiEBzrmKikx6SxO4Dg9L8I5WbHn37vxUKvHs8r
+            7+rma3kpZQftTMiBpJ8XK8Z6jg8VhuJqo9yZZO+p3I0=
+          </dsig:Y>
+        </dsig:DSAKeyValue>
+      </dsig:KeyValue>
+    </dsig:KeyInfo>
+    <dsig:Object Id="to-be-signed">
+      <bar:Baz>
+        <!--  comment -->
+      </bar:Baz>
+    </dsig:Object>
+  </dsig:Signature>
+</Foo>

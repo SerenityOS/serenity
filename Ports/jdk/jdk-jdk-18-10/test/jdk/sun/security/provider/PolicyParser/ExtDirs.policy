@@ -1,0 +1,4 @@
+grant codebase "${java.ext.dirs}" {
+    permission java.util.PropertyPermission "user.name", "read";
+    permission java.util.PropertyPermission "user.home", "read";
+};

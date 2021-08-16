@@ -1,0 +1,3 @@
+T7007615.java:21:14: compiler.err.name.clash.same.erasure.no.override: foo, java.lang.Number, T6985719a.DX, foo, java.lang.Integer, T6985719a.AX
+T7007615.java:22:14: compiler.err.name.clash.same.erasure.no.override: bar, T6985719a.BX<?>, T6985719a.DX, bar, T6985719a.BX, T6985719a.BX
+2 errors

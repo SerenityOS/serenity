@@ -1,0 +1,2 @@
+BadMethodCall.java:15:50: compiler.err.cant.apply.symbol: kindname.method, id, java.util.List<I>, java.lang.String, kindname.class, BadMethodCall, (compiler.misc.infer.no.conforming.assignment.exists: I, (compiler.misc.inconvertible.types: java.lang.String, java.util.List<I>))
+1 error

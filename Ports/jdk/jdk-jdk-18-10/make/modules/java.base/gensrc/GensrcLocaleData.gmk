@@ -1,0 +1,153 @@
+#
+# Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# Scan for all locale resources and extract for which locales there exists
+# resources. Then put this meta information about existing (supported?) locales
+# into LocaleDataMetaInfo.java
+
+# First go look for all locale files
+LOCALE_FILES := $(call FindFiles, \
+    $(TOPDIR)/src/$(MODULE)/share/classes/sun/text/resources \
+    $(TOPDIR)/src/$(MODULE)/share/classes/sun/util/resources, \
+    FormatData_*.java FormatData_*.properties \
+    CollationData_*.java CollationData_*.properties \
+    TimeZoneNames_*.java TimeZoneNames_*.properties \
+    LocaleNames_*.java LocaleNames_*.properties \
+    CurrencyNames_*.java CurrencyNames_*.properties \
+    CalendarData_*.java CalendarData_*.properties \
+    BreakIteratorInfo_*.java BreakIteratorRules_*.java)
+
+# Then translate the locale files into for example: FormatData_sv
+LOCALE_RESOURCES := $(sort $(subst .properties,,$(subst .java,,$(notdir $(LOCALE_FILES)))))
+
+# Include the list of resources found during the previous compile.
+-include $(SUPPORT_OUTPUTDIR)/gensrc/$(MODULE)/_the.locale_resources
+
+MISSING_RESOURCES := $(filter-out $(LOCALE_RESOURCES), $(PREV_LOCALE_RESOURCES))
+NEW_RESOURCES := $(filter-out $(PREV_LOCALE_RESOURCES), $(LOCALE_RESOURCES))
+
+ifneq (, $(MISSING_RESOURCES)$(NEW_RESOURCES))
+  # There is a difference in the number of supported resources. Trigger a regeneration.
+  ifeq ($(MODULE), java.base)
+    $(shell $(RM) $(SUPPORT_OUTPUTDIR)/gensrc/java.base/sun/util/locale/provider/BaseLocaleDataMetaInfo.java \
+        $(SUPPORT_OUTPUTDIR)/gensrc/java.base/sun/util/cldr/CLDRBaseLocaleDataMetaInfo.java)
+  endif
+  ifeq ($(MODULE), jdk.localedata)
+    $(shell $(RM) $(SUPPORT_OUTPUTDIR)/gensrc/jdk.localedata/sun/util/resources/provider/NonBaseLocaleDataMetaInfo.java \
+        $(SUPPORT_OUTPUTDIR)/gensrc/jdk.localedata/sun/util/resources/cldr/provider/CLDRLocaleDataMetaInfo_jdk_localedata.java)
+  endif
+endif
+
+# The base locales
+BASE_LOCALES := en en-US
+
+# Locales that don't have any resource files should be included here.
+ALL_NON_BASE_LOCALES := ja-JP-JP th-TH-TH
+
+SED_BASEARGS := -e 's|$(HASH)warn This file is preprocessed before being compiled|// -- This file was mechanically generated: Do not edit! -- //|g'
+SED_NONBASEARGS := $(SED_BASEARGS)
+
+# Fill in the languages and package names
+SED_BASEARGS += -e 's/$(HASH)Lang$(HASH)/Base/' \
+    -e 's/$(HASH)Package$(HASH)/sun.util.locale.provider/'
+SED_NONBASEARGS += -e 's/$(HASH)Lang$(HASH)/NonBase/' \
+    -e 's/$(HASH)Package$(HASH)/sun.util.resources.provider/'
+
+# This macro creates a sed expression that substitues for example:
+# #FormatData_Locales# with: en-US locales.
+define CaptureLocale
+  $1_LOCALES := $$(subst _,-,$$(filter-out $1, $$(subst $1_,,$$(filter $1_%, $(LOCALE_RESOURCES)))))
+  $1_BASE_LOCALES := $$(filter $(BASE_LOCALES), $$($1_LOCALES))
+  $1_NON_BASE_LOCALES := $$(filter-out $(BASE_LOCALES), $$($1_LOCALES))
+
+  # Special handling for Chinese locales to include implicit scripts
+  $1_NON_BASE_LOCALES := $$(subst zh-CN,zh-CN$$(SPACE)zh-Hans-CN, $$($1_NON_BASE_LOCALES))
+  $1_NON_BASE_LOCALES := $$(subst zh-SG,zh-SG$$(SPACE)zh-Hans-SG, $$($1_NON_BASE_LOCALES))
+  $1_NON_BASE_LOCALES := $$(subst zh-HK,zh-HK$$(SPACE)zh-Hant-HK, $$($1_NON_BASE_LOCALES))
+  $1_NON_BASE_LOCALES := $$(subst zh-MO,zh-MO$$(SPACE)zh-Hant-MO, $$($1_NON_BASE_LOCALES))
+  $1_NON_BASE_LOCALES := $$(subst zh-TW,zh-TW$$(SPACE)zh-Hant-TW, $$($1_NON_BASE_LOCALES))
+
+# Adding implict locales nb nn-NO and nb-NO
+  $1_NON_BASE_LOCALES += nb  nn-NO  nb-NO
+  $1_NON_BASE_LOCALES := $$(sort $$($1_NON_BASE_LOCALES))
+
+  ALL_BASE_LOCALES += $$($1_BASE_LOCALES)
+  ALL_NON_BASE_LOCALES += $$($1_NON_BASE_LOCALES)
+
+  # Don't sed in a space if there are no locales.
+  SED_BASEARGS += -e 's/$$(HASH)$1_Locales$$(HASH)/$$(if $$($1_BASE_LOCALES),$$(SPACE)$$($1_BASE_LOCALES),)/g'
+  SED_NONBASEARGS += -e 's/$$(HASH)$1_Locales$$(HASH)/$$(if $$($1_NON_BASE_LOCALES),$$(SPACE)$$($1_NON_BASE_LOCALES),)/g'
+endef
+
+#sun.text.resources.FormatData
+$(eval $(call CaptureLocale,FormatData))
+
+#sun.text.resources.CollationData
+$(eval $(call CaptureLocale,CollationData))
+
+#sun.text.resources.BreakIteratorInfo
+$(eval $(call CaptureLocale,BreakIteratorInfo))
+
+#sun.text.resources.BreakIteratorRules
+$(eval $(call CaptureLocale,BreakIteratorRules))
+
+#sun.util.resources.TimeZoneNames
+$(eval $(call CaptureLocale,TimeZoneNames))
+
+#sun.util.resources.LocaleNames
+$(eval $(call CaptureLocale,LocaleNames))
+
+#sun.util.resources.CurrencyNames
+$(eval $(call CaptureLocale,CurrencyNames))
+
+#sun.util.resources.CalendarData
+$(eval $(call CaptureLocale,CalendarData))
+
+SED_BASEARGS += -e 's/$(HASH)AvailableLocales_Locales$(HASH)/$(sort $(ALL_BASE_LOCALES))/g'
+SED_NONBASEARGS += -e 's/$(HASH)AvailableLocales_Locales$(HASH)/$(sort $(ALL_NON_BASE_LOCALES))/g'
+
+$(SUPPORT_OUTPUTDIR)/gensrc/java.base/sun/util/locale/provider/BaseLocaleDataMetaInfo.java: \
+    $(TOPDIR)/src/java.base/share/classes/sun/util/locale/provider/LocaleDataMetaInfo-XLocales.java.template
+	$(call LogInfo, Creating sun/util/locale/provider/BaseLocaleDataMetaInfo.java from $(words $(LOCALE_RESOURCES)) found resources)
+	$(call MakeTargetDir)
+	$(PRINTF) "PREV_LOCALE_RESOURCES:=$(LOCALE_RESOURCES)" \
+	    > $(SUPPORT_OUTPUTDIR)/gensrc/java.base/_the.locale_resources
+	$(SED) $(SED_BASEARGS) $< > $@
+
+$(SUPPORT_OUTPUTDIR)/gensrc/jdk.localedata/sun/util/resources/provider/NonBaseLocaleDataMetaInfo.java: \
+    $(TOPDIR)/src/java.base/share/classes/sun/util/locale/provider/LocaleDataMetaInfo-XLocales.java.template
+	$(call LogInfo, Creating sun/util/resources/provider/NonBaseLocaleDataMetaInfo.java from $(words $(LOCALE_RESOURCES)) found resources)
+	$(call MakeTargetDir)
+	$(PRINTF) "PREV_LOCALE_RESOURCES:=$(LOCALE_RESOURCES)" \
+	    > $(SUPPORT_OUTPUTDIR)/gensrc/jdk.localedata/_the.locale_resources
+	$(SED) $(SED_NONBASEARGS) $< > $@
+
+GENSRC_BASELOCALEDATA := $(SUPPORT_OUTPUTDIR)/gensrc/java.base/sun/util/locale/provider/BaseLocaleDataMetaInfo.java
+GENSRC_LOCALEDATA := $(SUPPORT_OUTPUTDIR)/gensrc/jdk.localedata/sun/util/resources/provider/NonBaseLocaleDataMetaInfo.java
+
+################################################################################
+
+# This file is included twice, by java.base and jdk.localedata. The includer must
+# add either GENSRC_BASELOCALEDATA or GENSRC_LOCALEDATA to TARGETS.

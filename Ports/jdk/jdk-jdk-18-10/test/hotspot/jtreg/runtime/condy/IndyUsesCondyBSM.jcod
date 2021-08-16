@@ -1,0 +1,335 @@
+/*
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ * This test contains a CONSTANT_InvokeDynamic_info structure whose bootstrap_method_attr_index
+ * points to a BSM for an CONSTANT_Dynamic.  Both the condy & indy point at element 0 in the
+ * bootstrap methods array.  BootstrapMethodError expected.
+ */
+
+/*
+class IndyUsesCondyBSM {
+    IndyUsesCondyBSM() { }
+    public static Object Condybsm(java.lang.invoke.MethodHandles$Lookup, java.lang.String, java.lang.Class) {
+        System.out.println("In Condybsm");
+        return String(0);
+    }
+    public static int foo() {
+        System.out.println("In Indybsm target CallSite method foo");
+        return 100;
+    }
+    public static MethodHandle MH_foo() {
+        // Constructs a MethodHandle for foo
+        Lookup lookup = MethodHandles.lookup();
+        MethodType mt = MethodType.methodType(int.class);
+        return lookup.findStatic(IndyUsesCondyBSM.class, "foo", mt);
+    }
+    public static CallSite Indybsm(java.lang.invoke.MethodHandles$Lookup, java.lang.String, java.lang.invoke.MethodType) {
+        return new CallSite(IndyUsesCondyBSM.MH_foo());
+    }
+    public static int m() {
+        // ldc_w dynamic where the BSM = slot #0 in the BootstrapMethods array is IndyUsesCondyBSM.Condybsm() -> succeeds
+        // invokedynamic where the BSM = slot #0 in the BootstrapMethods array is IndyUsesCondyBSM.Condybsm()  -> receives a BootstrapMethodError 
+        return Callsite.foo();
+    }
+    public static void main(String[] args) {
+        IndyUsesCondyBSM.m();
+        return;
+   }
+
+BootstrapMethods:
+  0: #65 REF_invokeStatic IndyUsesCondyBSM.Condybsm:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
+    Method arguments:
+  1: #74 REF_invokeStatic IndyUsesCondyBSM.Indybsm:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+}
+*/
+
+class IndyUsesCondyBSM {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [88] { // Constant Pool
+    ; // first element is empty
+    String #48; // #1     at 0x0A
+    String #49; // #2     at 0x0D
+    String #56; // #3     at 0x10
+    String #58; // #4     at 0x13
+    class #51; // #5     at 0x16
+    Method #62 #20; // #6     at 0x19
+    InvokeDynamic 0s #53; // #7     at 0x1E
+    Method #5 #71; // #8     at 0x23
+    Method #26 #47; // #9     at 0x28
+    Field #21 #86; // #10     at 0x2D
+    Method #28 #75; // #11     at 0x32
+    Field #61 #82; // #12     at 0x37
+    Method #18 #36; // #13     at 0x3C
+    Method #29 #46; // #14     at 0x41
+    Method #57 #87; // #15     at 0x46
+    Method #5 #73; // #16     at 0x4B
+    Dynamic 0s #23; // #17     at 0x50
+    class #80; // #18     at 0x55
+    Utf8 "java/io/PrintStream"; // #19     at 0x58
+    NameAndType #81 #59; // #20     at 0x6E
+    class #85; // #21     at 0x73
+    Utf8 "java/lang/invoke/MethodType"; // #22     at 0x76
+    NameAndType #31 #77; // #23     at 0x94
+    Utf8 "m"; // #24     at 0x99
+    Utf8 "java/lang/invoke/MethodHandles$Lookup"; // #25     at 0x9D
+    class #19; // #26     at 0xC5
+    Utf8 "SourceFile"; // #27     at 0xC8
+    class #22; // #28     at 0xD5
+    class #25; // #29     at 0xD8
+    Utf8 "IndyUsesCondyBSM.jasm"; // #30     at 0xDB
+    Utf8 "name"; // #31     at 0xF3
+    Utf8 "Indybsm"; // #32     at 0xFA
+    Utf8 "findStatic"; // #33     at 0x0104
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;"; // #34     at 0x0111
+    Utf8 "()Ljava/lang/invoke/MethodHandles$Lookup;"; // #35     at 0x0172
+    NameAndType #81 #66; // #36     at 0x019E
+    Utf8 "MH_foo"; // #37     at 0x01A3
+    Method #5 #84; // #38     at 0x01AC
+    Utf8 "Code"; // #39     at 0x01B1
+    Utf8 "lookup"; // #40     at 0x01B8
+    Utf8 "([Ljava/lang/String;)V"; // #41     at 0x01C1
+    Utf8 "out"; // #42     at 0x01DA
+    Utf8 "BootstrapMethods"; // #43     at 0x01E0
+    Utf8 "(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;"; // #44     at 0x01F3
+    Utf8 "Ljava/lang/Class;"; // #45     at 0x0257
+    NameAndType #33 #44; // #46     at 0x026B
+    NameAndType #52 #63; // #47     at 0x0270
+    Utf8 "0"; // #48     at 0x0275
+    Utf8 "In Condybsm"; // #49     at 0x0279
+    Utf8 "java/lang/invoke/MethodHandles"; // #50     at 0x0287
+    Utf8 "IndyUsesCondyBSM"; // #51     at 0x02A8
+    Utf8 "println"; // #52     at 0x02BB
+    NameAndType #58 #67; // #53     at 0x02C5
+    Utf8 "java/lang/Object"; // #54     at 0x02CA
+    Utf8 "java/lang/System"; // #55     at 0x02DD
+    Utf8 "In Indybsm target CallSite method foo"; // #56     at 0x02F0
+    class #50; // #57     at 0x0318
+    Utf8 "foo"; // #58     at 0x031B
+    Utf8 "()V"; // #59     at 0x0321
+    Utf8 "()Ljava/lang/invoke/MethodHandle;"; // #60     at 0x0327
+    class #55; // #61     at 0x034B
+    class #54; // #62     at 0x034E
+    Utf8 "(Ljava/lang/String;)V"; // #63     at 0x0351
+    Utf8 "main"; // #64     at 0x0369
+    MethodHandle 6b #79; // #65     at 0x0370
+    Utf8 "(Ljava/lang/invoke/MethodHandle;)V"; // #66     at 0x0374
+    Utf8 "()I"; // #67     at 0x0399
+    Utf8 "(Ljava/lang/Class;)Ljava/lang/invoke/MethodType;"; // #68     at 0x039F
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;"; // #69     at 0x03D2
+    Utf8 "Condybsm"; // #70     at 0x0448
+    NameAndType #37 #60; // #71     at 0x0453
+    NameAndType #70 #34; // #72     at 0x0458
+    NameAndType #24 #67; // #73     at 0x045D
+    MethodHandle 6b #38; // #74     at 0x0462
+    NameAndType #78 #68; // #75     at 0x0466
+    Utf8 "Ljava/io/PrintStream;"; // #76     at 0x046B
+    Utf8 "Ljava/lang/Object;"; // #77     at 0x0483
+    Utf8 "methodType"; // #78     at 0x0498
+    Method #5 #72; // #79     at 0x04A5
+    Utf8 "java/lang/invoke/ConstantCallSite"; // #80     at 0x04AA
+    Utf8 "<init>"; // #81     at 0x04CE
+    NameAndType #42 #76; // #82     at 0x04D7
+    Utf8 "TYPE"; // #83     at 0x04DC
+    NameAndType #32 #69; // #84     at 0x04E3
+    Utf8 "java/lang/Integer"; // #85     at 0x04E8
+    NameAndType #83 #45; // #86     at 0x04FC
+    NameAndType #40 #35; // #87     at 0x0501
+  } // Constant Pool
+
+  0x0000; // access [ ]
+  #5;// this_cpx
+  #62;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [7] { // methods
+    { // Member at 0x0512
+      0x0001; // access
+      #81; // name_cpx
+      #59; // sig_cpx
+      [1] { // Attributes
+        Attr(#39, 17) { // Code at 0x051A
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70006B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0531
+      0x0009; // access
+      #70; // name_cpx
+      #34; // sig_cpx
+      [1] { // Attributes
+        Attr(#39, 23) { // Code at 0x0539
+          2; // max_stack
+          3; // max_locals
+          Bytes[11]{
+            0xB2000C1202B60009;
+            0x1201B0;
+          }
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0556
+      0x0009; // access
+      #58; // name_cpx
+      #67; // sig_cpx
+      [1] { // Attributes
+        Attr(#39, 23) { // Code at 0x055E
+          2; // max_stack
+          0; // max_locals
+          Bytes[11]{
+            0xB2000C1203B60009;
+            0x1064AC;
+          }
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x057B
+      0x0009; // access
+      #37; // name_cpx
+      #60; // sig_cpx
+      [1] { // Attributes
+        Attr(#39, 29) { // Code at 0x0583
+          4; // max_stack
+          0; // max_locals
+          Bytes[17]{
+            0xB8000F12051204B2;
+            0x000AB8000BB6000E;
+            0xB0;
+          }
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x05A6
+      0x0009; // access
+      #32; // name_cpx
+      #69; // sig_cpx
+      [1] { // Attributes
+        Attr(#39, 23) { // Code at 0x05AE
+          3; // max_stack
+          3; // max_locals
+          Bytes[11]{
+            0xBB001259B80008B7;
+            0x000DB0;
+          }
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x05CB
+      0x0009; // access
+      #24; // name_cpx
+      #67; // sig_cpx
+      [1] { // Attributes
+        Attr(#39, 21) { // Code at 0x05D3
+          2; // max_stack
+          0; // max_locals
+          Bytes[9]{
+            0x130011BA00070000;
+            0xAC;
+          }
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x05EE
+      0x0009; // access
+      #64; // name_cpx
+      #41; // sig_cpx
+      [1] { // Attributes
+        Attr(#39, 16) { // Code at 0x05F6
+          1; // max_stack
+          1; // max_locals
+          Bytes[4]{
+            0xB80010B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [2] { // Attributes
+    Attr(#27, 2) { // SourceFile at 0x060E
+      #30;
+    } // end SourceFile
+    ;
+    Attr(#43, 10) { // BootstrapMethods at 0x0616
+      [2] { // bootstrap_methods
+        {  //  bootstrap_method
+          #65; // bootstrap_method_ref
+          [0] { // bootstrap_arguments
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #74; // bootstrap_method_ref
+          [0] { // bootstrap_arguments
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+      }
+    } // end BootstrapMethods
+  } // Attributes
+} // end class IndyUsesCondyBSM

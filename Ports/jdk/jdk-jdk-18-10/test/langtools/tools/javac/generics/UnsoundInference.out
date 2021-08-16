@@ -1,0 +1,2 @@
+UnsoundInference.java:18:9: compiler.err.cant.apply.symbol: kindname.method, transferBug, Var[],java.util.Collection<Var>, java.lang.Object[],java.util.ArrayList<java.lang.String>, kindname.class, UnsoundInference, (compiler.misc.incompatible.bounds: Var, (compiler.misc.eq.bounds: java.lang.String), (compiler.misc.lower.bounds: java.lang.Object))
+1 error

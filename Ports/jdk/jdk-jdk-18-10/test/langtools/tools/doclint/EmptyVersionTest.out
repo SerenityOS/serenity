@@ -1,0 +1,4 @@
+EmptyVersionTest.java:13: warning: no description for @version
+    /** @version */
+        ^
+1 warning

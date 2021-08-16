@@ -1,0 +1,3 @@
+package-info.java:5:12: compiler.warn.has.been.deprecated: pack.DeprecatedClass, pack
+package-info.java:2:2: compiler.warn.has.been.deprecated: pack.DeprecatedClass, pack
+2 warnings

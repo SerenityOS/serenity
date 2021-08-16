@@ -1,0 +1,64 @@
+<!doctype html public "-//IETF//DTD HTML/EN">
+<html>
+<head>
+<!--
+ 
+
+ Copyright (c) 2004, 2007, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+
+
+-->
+</head>
+<body bgcolor="white">
+<p>
+Provides classes for monitoring instrumented HotSpot Java Virtual Machines.
+</p>
+<p>
+The classes in this package provide abstractions for:
+</p>
+<p>
+<ul>
+   <li><p>Identifying monitorable hosts and Java Virtual Machines.</p></li>
+   <li><p>Monitoring the creation and destruction of instrumented
+          Java Virtual Machines on local and remote hosts.</p></li>
+   <li><p>Discovering and Monitoring instrumentation exported by an
+          instrumented Java Virtual Machine.</p></li>
+</ul>
+</p>
+<p>
+The {@link sun.jvmstat.monitor.MonitoredHost} class provides the
+interface to acquire concrete implementations for discovering instrumented
+Java Virtual Machines on a specific host. It serves a factory for creating
+MonitoredHost instances for specific hosts and for creating
+{@link sun.jvmstat.monitor.MonitoredVm} instances for specific
+instrumented Java Virtual Machines on those hosts.
+</p>
+<p>
+The {@link sun.jvmstat.monitor.MonitoredVm} instances provide an
+interface for discovery of instrumentation objects and the
+{@link sun.jvmstat.monitor.Monitor} interfaces provide a mechanism
+for monitoring the instrumentation exported by a JVM.
+</p>
+</body>
+</html>

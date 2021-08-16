@@ -1,0 +1,16 @@
+T6881115.java:14:30: compiler.err.duplicate.annotation.member.value: b2, B
+T6881115.java:14:19: compiler.err.annotation.missing.default.value: B, b1
+T6881115.java:15:26: compiler.err.annotation.missing.default.value.1: B, b1,b2
+T6881115.java:15:41: compiler.err.duplicate.annotation.member.value: b2, B
+T6881115.java:15:30: compiler.err.annotation.missing.default.value: B, b1
+T6881115.java:23:19: compiler.err.duplicate.annotation.member.value: b2, B
+T6881115.java:23:8: compiler.err.annotation.missing.default.value: B, b1
+T6881115.java:24:13: compiler.err.annotation.missing.default.value.1: B, b1,b2
+T6881115.java:24:28: compiler.err.duplicate.annotation.member.value: b2, B
+T6881115.java:24:17: compiler.err.annotation.missing.default.value: B, b1
+T6881115.java:25:34: compiler.err.duplicate.annotation.member.value: b2, B
+T6881115.java:25:23: compiler.err.annotation.missing.default.value: B, b1
+T6881115.java:26:28: compiler.err.annotation.missing.default.value.1: B, b1,b2
+T6881115.java:26:43: compiler.err.duplicate.annotation.member.value: b2, B
+T6881115.java:26:32: compiler.err.annotation.missing.default.value: B, b1
+15 errors

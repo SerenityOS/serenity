@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<persons>
+    <person>
+        <full_name>Hege Refsnes</full_name>
+        <!-- Error: Expected at least 3 child_name -->
+        <child_name>Hege</child_name>
+        <child_name>Stale</child_name>
+    </person>
+</persons>

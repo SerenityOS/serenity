@@ -1,0 +1,114 @@
+#
+# Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+################################################################################
+# This makefile is called from Main.gmk, through a macro in MakeHelpers.gmk
+# and wraps calls to makefiles for specific modules and build phases. Having
+# this wrapper reduces the need for boilerplate code. It also provides
+# opportunity for automatic copying of files to an interim exploded runnable
+# image.
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+
+# All makefiles should add the targets to be built to this variable.
+TARGETS :=
+
+# Include the file being wrapped.
+include $(MAKEFILE_PREFIX).gmk
+
+# Setup copy rules from the modules directories to the jdk image directory.
+ifeq ($(call isTargetOs, windows), true)
+  TO_BIN_FILTER := %$(SHARED_LIBRARY_SUFFIX) %.diz %.pdb %.map
+
+  $(eval $(call SetupCopyFiles, COPY_LIBS_TO_BIN, \
+      SRC := $(SUPPORT_OUTPUTDIR)/modules_libs/$(MODULE), \
+      DEST := $(JDK_OUTPUTDIR)/bin, \
+      FILES := $(filter $(TO_BIN_FILTER), \
+          $(filter $(SUPPORT_OUTPUTDIR)/modules_libs/$(MODULE)/%, \
+          $(TARGETS))), \
+  ))
+
+  $(eval $(call SetupCopyFiles, COPY_LIBS_TO_LIB, \
+      SRC := $(SUPPORT_OUTPUTDIR)/modules_libs/$(MODULE), \
+      DEST := $(JDK_OUTPUTDIR)/lib, \
+      FILES := $(filter-out $(TO_BIN_FILTER), \
+          $(filter $(SUPPORT_OUTPUTDIR)/modules_libs/$(MODULE)/%, \
+          $(TARGETS))), \
+  ))
+
+else
+  $(eval $(call SetupCopyFiles, COPY_LIBS_TO_LIB, \
+      SRC := $(SUPPORT_OUTPUTDIR)/modules_libs/$(MODULE), \
+      DEST := $(JDK_OUTPUTDIR)/lib, \
+      FILES := $(filter %$(SHARED_LIBRARY_SUFFIX), \
+          $(filter $(SUPPORT_OUTPUTDIR)/modules_libs/$(MODULE)/%, \
+          $(TARGETS))), \
+  ))
+  $(eval $(call SetupCopyFiles, LINK_LIBS_TO_LIB, \
+      SRC := $(SUPPORT_OUTPUTDIR)/modules_libs/$(MODULE), \
+      DEST := $(JDK_OUTPUTDIR)/lib, \
+      FILES := $(filter-out %$(SHARED_LIBRARY_SUFFIX), \
+          $(filter $(SUPPORT_OUTPUTDIR)/modules_libs/$(MODULE)/%, \
+          $(TARGETS))), \
+      MACRO := link-file-relative, \
+      LOG_ACTION := Creating symlink, \
+  ))
+endif
+
+$(eval $(call SetupCopyFiles, COPY_INCLUDE, \
+    SRC := $(SUPPORT_OUTPUTDIR)/modules_include/$(MODULE), \
+    DEST := $(JDK_OUTPUTDIR)/include, \
+    FILES := $(filter $(SUPPORT_OUTPUTDIR)/modules_include/$(MODULE)/%, \
+        $(TARGETS)), \
+))
+
+$(eval $(call SetupCopyFiles, COPY_CMDS, \
+    SRC := $(SUPPORT_OUTPUTDIR)/modules_cmds/$(MODULE), \
+    DEST := $(JDK_OUTPUTDIR)/bin, \
+    FILES := $(filter $(SUPPORT_OUTPUTDIR)/modules_cmds/$(MODULE)/%, $(TARGETS)), \
+))
+
+$(eval $(call SetupCopyFiles, COPY_MAN, \
+    SRC := $(SUPPORT_OUTPUTDIR)/modules_man/$(MODULE), \
+    DEST := $(JDK_OUTPUTDIR)/man, \
+    FILES := $(filter $(SUPPORT_OUTPUTDIR)/modules_man/$(MODULE)/%, $(TARGETS)), \
+))
+
+$(eval $(call SetupCopyFiles, COPY_CONF, \
+    SRC := $(SUPPORT_OUTPUTDIR)/modules_conf/$(MODULE), \
+    DEST := $(JDK_OUTPUTDIR)/conf, \
+    FILES := $(filter $(SUPPORT_OUTPUTDIR)/modules_conf/$(MODULE)/%, \
+        $(TARGETS)), \
+))
+
+ifeq ($(GENERATE_COMPILE_COMMANDS_ONLY), true)
+  all: $(filter $(MAKESUPPORT_OUTPUTDIR)/compile-commands/%, $(TARGETS))
+else
+  all: $(TARGETS) $(COPY_LIBS_TO_BIN) $(COPY_LIBS_TO_LIB) \
+      $(COPY_INCLUDE) $(COPY_CMDS) $(COPY_MAN) $(COPY_CONF) $(LINK_LIBS_TO_LIB)
+endif

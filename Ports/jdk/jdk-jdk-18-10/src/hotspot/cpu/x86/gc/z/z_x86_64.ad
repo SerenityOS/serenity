@@ -1,0 +1,159 @@
+//
+// Copyright (c) 2015, 2021, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+
+source_hpp %{
+
+#include "gc/shared/gc_globals.hpp"
+#include "gc/z/c2/zBarrierSetC2.hpp"
+#include "gc/z/zThreadLocalData.hpp"
+
+%}
+
+source %{
+
+#include "c2_intelJccErratum_x86.hpp"
+
+static void z_load_barrier(MacroAssembler& _masm, const MachNode* node, Address ref_addr, Register ref, Register tmp, uint8_t barrier_data) {
+  if (barrier_data == ZLoadBarrierElided) {
+    return;			// Elided.
+  }
+  ZLoadBarrierStubC2* const stub = ZLoadBarrierStubC2::create(node, ref_addr, ref, tmp, barrier_data);
+  {
+    IntelJccErratumAlignment intel_alignment(_masm, 10 /* jcc_size */);
+    __ testptr(ref, Address(r15_thread, ZThreadLocalData::address_bad_mask_offset()));
+    __ jcc(Assembler::notZero, *stub->entry());
+  }
+  __ bind(*stub->continuation());
+}
+
+static void z_load_barrier_cmpxchg(MacroAssembler& _masm, const MachNode* node, Address ref_addr, Register ref, Register tmp, Label& good) {
+  ZLoadBarrierStubC2* const stub = ZLoadBarrierStubC2::create(node, ref_addr, ref, tmp, ZLoadBarrierStrong);
+  {
+    IntelJccErratumAlignment intel_alignment(_masm, 10 /* jcc_size */);
+    __ testptr(ref, Address(r15_thread, ZThreadLocalData::address_bad_mask_offset()));
+    __ jcc(Assembler::zero, good);
+  }
+  {
+    IntelJccErratumAlignment intel_alignment(_masm, 5 /* jcc_size */);
+    __ jmp(*stub->entry());
+  }
+  __ bind(*stub->continuation());
+}
+
+%}
+
+// Load Pointer
+instruct zLoadP(rRegP dst, memory mem, rFlagsReg cr)
+%{
+  predicate(UseZGC && n->as_Load()->barrier_data() != 0);
+  match(Set dst (LoadP mem));
+  effect(KILL cr, TEMP dst);
+
+  ins_cost(125);
+
+  format %{ "movq     $dst, $mem" %}
+
+  ins_encode %{
+    __ movptr($dst$$Register, $mem$$Address);
+    z_load_barrier(_masm, this, $mem$$Address, $dst$$Register, noreg /* tmp */, barrier_data());
+  %}
+
+  ins_pipe(ialu_reg_mem);
+%}
+
+instruct zCompareAndExchangeP(memory mem, rax_RegP oldval, rRegP newval, rRegP tmp, rFlagsReg cr) %{
+  match(Set oldval (CompareAndExchangeP mem (Binary oldval newval)));
+  predicate(UseZGC && n->as_LoadStore()->barrier_data() == ZLoadBarrierStrong);
+  effect(KILL cr, TEMP tmp);
+
+  format %{ "lock\n\t"
+            "cmpxchgq $newval, $mem" %}
+
+  ins_encode %{
+    if (barrier_data() != ZLoadBarrierElided) { // barrier could be elided by ZBarrierSetC2::analyze_dominating_barriers()
+      __ movptr($tmp$$Register, $oldval$$Register);
+    }
+    __ lock();
+    __ cmpxchgptr($newval$$Register, $mem$$Address);
+
+    if (barrier_data() != ZLoadBarrierElided) {
+      Label good;
+      z_load_barrier_cmpxchg(_masm, this, $mem$$Address, $oldval$$Register, $tmp$$Register, good);
+      __ movptr($oldval$$Register, $tmp$$Register);
+      __ lock();
+      __ cmpxchgptr($newval$$Register, $mem$$Address);
+      __ bind(good);
+    }
+  %}
+
+  ins_pipe(pipe_cmpxchg);
+%}
+
+instruct zCompareAndSwapP(rRegI res, memory mem, rRegP newval, rRegP tmp, rFlagsReg cr, rax_RegP oldval) %{
+  match(Set res (CompareAndSwapP mem (Binary oldval newval)));
+  match(Set res (WeakCompareAndSwapP mem (Binary oldval newval)));
+  predicate(UseZGC && n->as_LoadStore()->barrier_data() == ZLoadBarrierStrong);
+  effect(KILL cr, KILL oldval, TEMP tmp);
+
+  format %{ "lock\n\t"
+            "cmpxchgq $newval, $mem\n\t"
+            "sete     $res\n\t"
+            "movzbl   $res, $res" %}
+
+  ins_encode %{
+    if (barrier_data() != ZLoadBarrierElided) { // barrier could be elided by ZBarrierSetC2::analyze_dominating_barriers()
+      __ movptr($tmp$$Register, $oldval$$Register);
+    }
+    __ lock();
+    __ cmpxchgptr($newval$$Register, $mem$$Address);
+
+    if (barrier_data() != ZLoadBarrierElided) {
+      Label good;
+      z_load_barrier_cmpxchg(_masm, this, $mem$$Address, $oldval$$Register, $tmp$$Register, good);
+      __ movptr($oldval$$Register, $tmp$$Register);
+      __ lock();
+      __ cmpxchgptr($newval$$Register, $mem$$Address);
+      __ bind(good);
+      __ cmpptr($tmp$$Register, $oldval$$Register);
+    }
+    __ setb(Assembler::equal, $res$$Register);
+    __ movzbl($res$$Register, $res$$Register);
+  %}
+
+  ins_pipe(pipe_cmpxchg);
+%}
+
+instruct zXChgP(memory mem, rRegP newval, rFlagsReg cr) %{
+  match(Set newval (GetAndSetP mem newval));
+  predicate(UseZGC && n->as_LoadStore()->barrier_data() != 0);
+  effect(KILL cr);
+
+  format %{ "xchgq    $newval, $mem" %}
+
+  ins_encode %{
+    __ xchgptr($newval$$Register, $mem$$Address);
+    z_load_barrier(_masm, this, Address(noreg, 0), $newval$$Register, noreg /* tmp */, barrier_data());
+  %}
+
+  ins_pipe(pipe_cmpxchg);
+%}

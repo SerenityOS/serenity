@@ -1,0 +1,135 @@
+uri <> localName <document> qName <document>
+length: 0
+
+uri <> localName <person> qName <person>
+length: 1
+For index = 0
+getLocalName <pnumber>
+getQName <pnumber>
+getType <ID>
+getURI <>
+getValue <a1>
+
+Using localName, qname and uri pertaining to index = 0
+getIndex(qName) <0>
+getIndex(uri, localName) <0>
+getType(qName) <ID>
+getType(uri, localName) <ID>
+getValue(qName) <a1>
+getValue(uri, localName) <a1>
+
+
+uri <> localName <person> qName <person>
+length: 1
+For index = 0
+getLocalName <pnumber>
+getQName <pnumber>
+getType <ID>
+getURI <>
+getValue <a2>
+
+Using localName, qname and uri pertaining to index = 0
+getIndex(qName) <0>
+getIndex(uri, localName) <0>
+getType(qName) <ID>
+getType(uri, localName) <ID>
+getValue(qName) <a2>
+getValue(uri, localName) <a2>
+
+
+uri <> localName <person> qName <person>
+length: 3
+For index = 0
+getLocalName <pnumber>
+getQName <pnumber>
+getType <ID>
+getURI <>
+getValue <a3>
+
+Using localName, qname and uri pertaining to index = 0
+getIndex(qName) <0>
+getIndex(uri, localName) <0>
+getType(qName) <ID>
+getType(uri, localName) <ID>
+getValue(qName) <a3>
+getValue(uri, localName) <a3>
+
+For index = 1
+getLocalName <mother>
+getQName <mother>
+getType <IDREF>
+getURI <>
+getValue <a1>
+
+Using localName, qname and uri pertaining to index = 1
+getIndex(qName) <1>
+getIndex(uri, localName) <1>
+getType(qName) <IDREF>
+getType(uri, localName) <IDREF>
+getValue(qName) <a1>
+getValue(uri, localName) <a1>
+
+For index = 2
+getLocalName <father>
+getQName <father>
+getType <IDREF>
+getURI <>
+getValue <a2>
+
+Using localName, qname and uri pertaining to index = 2
+getIndex(qName) <2>
+getIndex(uri, localName) <2>
+getType(qName) <IDREF>
+getType(uri, localName) <IDREF>
+getValue(qName) <a2>
+getValue(uri, localName) <a2>
+
+
+uri <> localName <person> qName <person>
+length: 3
+For index = 0
+getLocalName <pnumber>
+getQName <pnumber>
+getType <ID>
+getURI <>
+getValue <a4>
+
+Using localName, qname and uri pertaining to index = 0
+getIndex(qName) <0>
+getIndex(uri, localName) <0>
+getType(qName) <ID>
+getType(uri, localName) <ID>
+getValue(qName) <a4>
+getValue(uri, localName) <a4>
+
+For index = 1
+getLocalName <mother>
+getQName <mother>
+getType <IDREF>
+getURI <>
+getValue <a1>
+
+Using localName, qname and uri pertaining to index = 1
+getIndex(qName) <1>
+getIndex(uri, localName) <1>
+getType(qName) <IDREF>
+getType(uri, localName) <IDREF>
+getValue(qName) <a1>
+getValue(uri, localName) <a1>
+
+For index = 2
+getLocalName <father>
+getQName <father>
+getType <IDREF>
+getURI <>
+getValue <a2>
+
+Using localName, qname and uri pertaining to index = 2
+getIndex(qName) <2>
+getIndex(uri, localName) <2>
+getType(qName) <IDREF>
+getType(uri, localName) <IDREF>
+getValue(qName) <a2>
+getValue(uri, localName) <a2>
+
+

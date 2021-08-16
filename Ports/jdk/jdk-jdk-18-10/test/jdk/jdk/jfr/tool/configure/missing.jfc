@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <configuration version="2.0" label="Test missing reference">
+
+    <event name="com.example.Tiger">
+      <setting name="enabled" control="tigre">false</setting>
+    </event>
+
+    <event name="com.example.Cactus">
+      <setting name="threshold">0 s</setting>
+    </event>
+
+    <control>
+      <selection name="tiger" label="Tiger" default="true">
+        <option name="true" label="True">true</option>
+        <option name="false" label="False">false</option>
+      </selection>
+    </control>
+
+</configuration>

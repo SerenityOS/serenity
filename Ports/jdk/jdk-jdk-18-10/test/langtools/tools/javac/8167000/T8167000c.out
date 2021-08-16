@@ -1,0 +1,4 @@
+T8167000c.java:19:27: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.Throwable
+- compiler.note.unchecked.filename: T8167000c.java
+- compiler.note.unchecked.recompile
+1 error

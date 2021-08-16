@@ -1,0 +1,2 @@
+Conditional.java:16:38: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.util.List<? extends java.lang.Object>, java.util.List<java.lang.String>)
+1 error

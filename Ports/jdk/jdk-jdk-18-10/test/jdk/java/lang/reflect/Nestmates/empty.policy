@@ -1,0 +1,5 @@
+// A deliberately empty policy file for use with jtreg.
+// Setting othervm/java.security.policy=empty.policy
+// causes jtreg to run under the default system policy
+// and default security manager, with the addition of
+// the permissions jtreg itself needs to run.

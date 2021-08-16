@@ -1,0 +1,3 @@
+MethodReference55.java:13:11: compiler.err.prob.found.req: (compiler.misc.invalid.mref: kindname.method, (compiler.misc.bad.static.method.in.bound.lookup: kindname.method, m(java.lang.Object)))
+MethodReference55.java:16:9: compiler.err.cant.apply.symbol: kindname.method, g, MethodReference55.V, @11, kindname.class, MethodReference55<X>, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.invalid.mref: kindname.method, (compiler.misc.bad.static.method.in.bound.lookup: kindname.method, m(java.lang.Object))))
+2 errors

@@ -1,0 +1,1697 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE supplementalData SYSTEM "../../common/dtd/ldmlSupplemental.dtd">
+<!--
+Copyright © 1991-2014 Unicode, Inc.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+For terms of use, see http://www.unicode.org/copyright.html
+-->
+
+<supplementalData>
+    <version number="$Revision$"/>
+    <metadata>
+        <serialElements>
+            attributeValues attributes base comment context exception extend i ic languageMatch last_non_ignorable last_secondary_ignorable last_tertiary_ignorable optimize p pc pluralRule rbnfrule reset rules ruleset s sc settings substitute suppress_contractions suppression t tRule tc variable x
+        </serialElements>
+        <suppress>
+            <attributes attribute="_q"/>
+            <attributes element="collation" attribute="type" attributeValue="standard"/>
+            <attributes element="currency" attribute="type" attributeValue="standard"/>
+            <attributes element="dateFormat" attribute="type" attributeValue="standard"/>
+            <attributes element="dateTimeFormat" attribute="type" attributeValue="standard"/>
+            <attributes element="decimalFormat" attribute="type" attributeValue="standard"/>
+            <attributes element="ldml" attribute="version"/>
+            <attributes element="orientation" attribute="characters" attributeValue="left-to-right"/>
+            <attributes element="orientation" attribute="lines" attributeValue="top-to-bottom"/>
+            <attributes element="pattern" attribute="type" attributeValue="standard"/>
+            <attributes element="percentFormat" attribute="type" attributeValue="standard"/>
+            <attributes element="scientificFormat" attribute="type" attributeValue="standard"/>
+            <attributes element="timeFormat" attribute="type" attributeValue="standard"/>
+            <attributes element="weekendEnd" attribute="time" attributeValue="24:00"/>
+            <attributes element="weekendStart" attribute="time" attributeValue="00:00"/>
+        </suppress>
+        <alias>
+            <!-- legacy language tags (marked as “Type: grandfathered” in BCP 47) -->
+            <languageAlias type="art_lojban" replacement="jbo" reason="deprecated"/> <!-- Lojban -->
+            <languageAlias type="i_ami" replacement="ami" reason="deprecated"/> <!-- Amis -->
+            <languageAlias type="i_bnn" replacement="bnn" reason="deprecated"/> <!-- Bunun -->
+            <languageAlias type="i_hak" replacement="hak" reason="deprecated"/> <!-- Hakka -->
+            <languageAlias type="i_klingon" replacement="tlh" reason="deprecated"/> <!-- Klingon -->
+            <languageAlias type="i_lux" replacement="lb" reason="deprecated"/> <!-- Luxembourgish -->
+            <languageAlias type="i_navajo" replacement="nv" reason="deprecated"/> <!-- Navajo -->
+            <languageAlias type="i_pwn" replacement="pwn" reason="deprecated"/> <!-- Paiwan -->
+            <languageAlias type="i_tao" replacement="tao" reason="deprecated"/> <!-- Tao -->
+            <languageAlias type="i_tay" replacement="tay" reason="deprecated"/> <!-- Tayal -->
+            <languageAlias type="i_tsu" replacement="tsu" reason="deprecated"/> <!-- Tsou -->
+            <languageAlias type="no_bok" replacement="nb" reason="deprecated"/> <!-- Norwegian Bokmal -->
+            <languageAlias type="no_nyn" replacement="nn" reason="deprecated"/> <!-- Norwegian Nynorsk -->
+            <languageAlias type="sgn_BE_FR" replacement="sfb" reason="deprecated"/> <!-- Belgian-French Sign Language -->
+            <languageAlias type="sgn_BE_NL" replacement="vgt" reason="deprecated"/> <!-- Belgian-Flemish Sign Language -->
+            <languageAlias type="sgn_CH_DE" replacement="sgg" reason="deprecated"/> <!-- Swiss German Sign Language -->
+            <languageAlias type="zh_guoyu" replacement="zh" reason="deprecated"/> <!-- Mandarin or Standard Chinese -->
+            <languageAlias type="zh_hakka" replacement="hak" reason="deprecated"/> <!-- Hakka -->
+            <languageAlias type="zh_min_nan" replacement="nan" reason="deprecated"/> <!-- Minnan, Hokkien, Amoy, Taiwanese, Southern Min, Southern Fujian, Hoklo, Southern Fukien, Ho-lo -->
+            <languageAlias type="zh_xiang" replacement="hsn" reason="deprecated"/> <!-- Xiang or Hunanese -->
+            <languageAlias type="en_GB_oed" replacement="en_GB_oxendict" reason="deprecated"/>  <!-- English, Oxford English Dictionary spelling -->
+            
+            <!-- deprecated iso codes -->
+            <languageAlias type="in" replacement="id" reason="deprecated"/> <!-- Indonesian -->
+            <languageAlias type="iw" replacement="he" reason="deprecated"/> <!-- Hebrew -->
+            <languageAlias type="ji" replacement="yi" reason="deprecated"/> <!-- Yiddish -->
+            <languageAlias type="jw" replacement="jv" reason="deprecated"/> <!-- Javanese -->
+            <languageAlias type="mo" replacement="ro" reason="deprecated"/> <!-- Moldovan -->
+            <languageAlias type="scc" replacement="sr" reason="deprecated"/> <!-- Serbian --> 
+            <languageAlias type="scr" replacement="hr" reason="deprecated"/> <!-- Croatian -->
+			<languageAlias type="aam" replacement="aas" reason="deprecated"/> <!-- Aramanik -->
+			<languageAlias type="adp" replacement="dz" reason="deprecated"/> <!-- Adap -->
+			<languageAlias type="aue" replacement="ktz" reason="deprecated"/> <!-- ǂKxʼauǁʼein -->
+			<languageAlias type="ayx" replacement="nun" reason="deprecated"/> <!-- Ayi [China] -->
+			<languageAlias type="bgm" replacement="bcg" reason="deprecated"/> <!-- Baga Mboteni -->
+			<languageAlias type="bjd" replacement="drl" reason="deprecated"/> <!-- Bandjigali -->
+			<languageAlias type="ccq" replacement="rki" reason="deprecated"/> <!-- Chaungtha -->
+			<languageAlias type="cjr" replacement="mom" reason="deprecated"/> <!-- Chorotega -->
+			<languageAlias type="cka" replacement="cmr" reason="deprecated"/> <!-- Khumi Awa Chin -->
+			<languageAlias type="cmk" replacement="xch" reason="deprecated"/> <!-- Chimakum -->
+			<languageAlias type="coy" replacement="pij" reason="deprecated"/> <!-- Coyaima -->
+			<languageAlias type="cqu" replacement="quh" reason="deprecated"/> <!-- Chilean Quechua -->
+			<languageAlias type="drh" replacement="mn" reason="deprecated"/> <!-- Darkhat -->
+			<languageAlias type="drw" replacement="fa_AF" reason="deprecated"/> <!-- Darwazi -->
+			<languageAlias type="gav" replacement="dev" reason="deprecated"/> <!-- Gabutamon -->
+			<languageAlias type="gfx" replacement="vaj" reason="deprecated"/> <!-- Mangetti Dune ǃXung -->
+			<languageAlias type="ggn" replacement="gvr" reason="deprecated"/> <!-- Eastern Gurung -->
+			<languageAlias type="gti" replacement="nyc" reason="deprecated"/> <!-- Gbati-ri -->
+			<languageAlias type="guv" replacement="duz" reason="deprecated"/> <!-- Gey -->
+			<languageAlias type="hrr" replacement="jal" reason="deprecated"/> <!-- Horuru -->
+			<languageAlias type="ibi" replacement="opa" reason="deprecated"/> <!-- Ibilo -->
+			<languageAlias type="ilw" replacement="gal" reason="deprecated"/> <!-- Talur -->
+			<languageAlias type="jeg" replacement="oyb" reason="deprecated"/> <!-- Jeng -->
+			<languageAlias type="kgc" replacement="tdf" reason="deprecated"/> <!-- Kasseng -->
+			<languageAlias type="kgh" replacement="kml" reason="deprecated"/> <!-- Upper Tanudan Kalinga -->
+			<languageAlias type="koj" replacement="kwv" reason="deprecated"/> <!-- Sara Dunjo -->
+			<languageAlias type="krm" replacement="bmf" reason="deprecated"/> <!-- Krim -->
+			<languageAlias type="ktr" replacement="dtp" reason="deprecated"/> <!-- Kota Marudu Tinagas -->
+			<languageAlias type="kvs" replacement="gdj" reason="deprecated"/> <!-- Kunggara -->
+			<languageAlias type="kwq" replacement="yam" reason="deprecated"/> <!-- Kwak -->
+			<languageAlias type="kxe" replacement="tvd" reason="deprecated"/> <!-- Kakihum -->
+			<languageAlias type="kzj" replacement="dtp" reason="deprecated"/> <!-- Coastal Kadazan -->
+			<languageAlias type="kzt" replacement="dtp" reason="deprecated"/> <!-- Tambunan Dusun -->
+			<languageAlias type="lii" replacement="raq" reason="deprecated"/> <!-- Lingkhim -->
+			<languageAlias type="lmm" replacement="rmx" reason="deprecated"/> <!-- Lamam -->
+			<languageAlias type="meg" replacement="cir" reason="deprecated"/> <!-- Mea -->
+			<languageAlias type="mst" replacement="mry" reason="deprecated"/> <!-- Cataelano Mandaya -->
+			<languageAlias type="mwj" replacement="vaj" reason="deprecated"/> <!-- Maligo -->
+			<languageAlias type="myt" replacement="mry" reason="deprecated"/> <!-- Sangab Mandaya -->
+			<languageAlias type="nad" replacement="xny" reason="deprecated"/> <!-- Nijadali -->
+			<languageAlias type="ncp" replacement="kdz" reason="deprecated"/> <!-- Ndaktup -->
+			<languageAlias type="nnx" replacement="ngv" reason="deprecated"/> <!-- Ngong -->
+			<languageAlias type="nts" replacement="pij" reason="deprecated"/> <!-- Natagaimas -->
+			<languageAlias type="oun" replacement="vaj" reason="deprecated"/> <!-- ǃOǃung -->
+			<languageAlias type="pcr" replacement="adx" reason="deprecated"/> <!-- Panang -->
+			<languageAlias type="pmc" replacement="huw" reason="deprecated"/> <!-- Palumata -->
+			<languageAlias type="pmu" replacement="phr" reason="deprecated"/> <!-- Mirpur Panjabi -->
+			<languageAlias type="ppa" replacement="bfy" reason="deprecated"/> <!-- Pao -->
+			<languageAlias type="ppr" replacement="lcq" reason="deprecated"/> <!-- Piru -->
+			<languageAlias type="pry" replacement="prt" reason="deprecated"/> <!-- Pray 3 -->
+			<languageAlias type="puz" replacement="pub" reason="deprecated"/> <!-- Purum Naga -->
+			<languageAlias type="sca" replacement="hle" reason="deprecated"/> <!-- Sansu -->
+			<languageAlias type="skk" replacement="oyb" reason="deprecated"/> <!-- Sok -->
+			<languageAlias type="tdu" replacement="dtp" reason="deprecated"/> <!-- Tempasuk Dusun -->
+			<languageAlias type="thc" replacement="tpo" reason="deprecated"/> <!-- Tai Hang Tong -->
+			<languageAlias type="thx" replacement="oyb" reason="deprecated"/> <!-- The -->
+			<languageAlias type="tie" replacement="ras" reason="deprecated"/> <!-- Tingal -->
+			<languageAlias type="tkk" replacement="twm" reason="deprecated"/> <!-- Takpa -->
+			<languageAlias type="tlw" replacement="weo" reason="deprecated"/> <!-- South Wemale -->
+			<languageAlias type="tmp" replacement="tyj" reason="deprecated"/> <!-- Tai Mène -->
+			<languageAlias type="tne" replacement="kak" reason="deprecated"/> <!-- Tinoc Kallahan -->
+			<languageAlias type="tnf" replacement="fa_AF" reason="deprecated"/> <!-- Tangshewi -->
+			<languageAlias type="tsf" replacement="taj" reason="deprecated"/> <!-- Southwestern Tamang -->
+			<languageAlias type="uok" replacement="ema" reason="deprecated"/> <!-- Uokha -->
+			<languageAlias type="xba" replacement="cax" reason="deprecated"/> <!-- Kamba [Brazil] -->
+			<languageAlias type="xia" replacement="acn" reason="deprecated"/> <!-- Xiandao -->
+			<languageAlias type="xkh" replacement="waw" reason="deprecated"/> <!-- Karahawyana -->
+			<languageAlias type="xsj" replacement="suj" reason="deprecated"/> <!-- Subi -->
+			<languageAlias type="ybd" replacement="rki" reason="deprecated"/> <!-- Yangbye -->
+			<languageAlias type="yma" replacement="lrr" reason="deprecated"/> <!-- Yamphe -->
+			<languageAlias type="ymt" replacement="mtm" reason="deprecated"/> <!-- Mator-Taygi-Karagas -->
+			<languageAlias type="yos" replacement="zom" reason="deprecated"/> <!-- Yos -->
+			<languageAlias type="yuu" replacement="yug" reason="deprecated"/> <!-- Yugh -->
+			<languageAlias type="asd" replacement="snz" reason="deprecated"/> <!-- Asas ⇒ Kou -->
+			<languageAlias type="dit" replacement="dif" reason="deprecated"/> <!-- Diyari ⇒ Dieri -->
+			<languageAlias type="llo" replacement="ngt" reason="deprecated"/> <!-- Khlor ⇒ Kriang -->
+			<languageAlias type="myd" replacement="aog" reason="deprecated"/> <!-- Maramba ⇒ Angoram -->
+			<languageAlias type="nns" replacement="nbr" reason="deprecated"/> <!-- Ningye ⇒ Numana -->
+			<!-- miscellaneous deprecated -->
+			<languageAlias type="agp" replacement="apf" reason="deprecated"/>  <!-- Paranan -->
+			<languageAlias type="ais" replacement="ami" reason="deprecated"/>  <!-- Nataoran Amis -->
+			<languageAlias type="baz" replacement="nvo" reason="deprecated"/>  <!-- Tunen -->
+			<languageAlias type="bhk" replacement="fbl" reason="deprecated"/>  <!-- Albay Bicolano -->
+			<languageAlias type="bjq" replacement="bzc" reason="deprecated"/>  <!-- Southern Betsimisaraka Malagasy -->
+			<languageAlias type="bkb" replacement="ebk" reason="deprecated"/>  <!-- Finallig -->
+			<languageAlias type="btb" replacement="beb" reason="deprecated"/>  <!-- Beti (Cameroon) -->
+			<languageAlias type="daf" replacement="dnj" reason="deprecated"/>  <!-- Dan -->
+			<languageAlias type="dap" replacement="njz" reason="deprecated"/>  <!-- Nisi (India) -->
+			<languageAlias type="djl" replacement="dze" reason="deprecated"/>  <!-- Djiwarli -->
+			<languageAlias type="dkl" replacement="aqd" reason="deprecated"/>  <!-- Kolum So Dogon -->
+			<languageAlias type="dud" replacement="uth" reason="deprecated"/>  <!-- Hun-Saare -->
+			<languageAlias type="duj" replacement="dwu" reason="deprecated"/>  <!-- Dhuwal -->
+			<languageAlias type="dwl" replacement="dbt" reason="deprecated"/>  <!-- Walo Kumbe Dogon -->
+			<languageAlias type="elp" replacement="amq" reason="deprecated"/>  <!-- Elpaputih -->
+			<languageAlias type="gbc" replacement="wny" reason="deprecated"/>  <!-- Garawa -->
+			<languageAlias type="ggo" replacement="esg" reason="deprecated"/>  <!-- Southern Gondi -->
+			<languageAlias type="ggr" replacement="gtu" reason="deprecated"/>  <!-- Aghu Tharnggalu -->
+			<languageAlias type="gio" replacement="aou" reason="deprecated"/>  <!-- Gelao -->
+			<languageAlias type="ill" replacement="ilm" reason="deprecated"/>  <!-- Iranun -->
+			<languageAlias type="izi" replacement="eza" reason="deprecated"/>  <!-- Izi-Ezaa-Ikwo-Mgbo -->
+			<languageAlias type="jar" replacement="jgk" reason="deprecated"/>  <!-- Jarawa (Nigeria) -->
+			<languageAlias type="kdv" replacement="zkd" reason="deprecated"/>  <!-- Kado -->
+			<languageAlias type="kgd" replacement="ncq" reason="deprecated"/>  <!-- Kataang -->
+			<languageAlias type="kpp" replacement="jkm" reason="deprecated"/>  <!-- Paku Karen -->
+			<languageAlias type="kzh" replacement="dgl" reason="deprecated"/>  <!-- Kenuzi-Dongola -->
+			<languageAlias type="leg" replacement="enl" reason="deprecated"/>  <!-- Lengua -->
+			<languageAlias type="mgx" replacement="jbk" reason="deprecated"/>  <!-- Omati -->
+			<languageAlias type="mnt" replacement="wnn" reason="deprecated"/>  <!-- Maykulan -->
+			<languageAlias type="mof" replacement="xnt" reason="deprecated"/>  <!-- Mohegan-Montauk-Narragansett -->
+			<languageAlias type="mwd" replacement="dmw" reason="deprecated"/>  <!-- Mudbura -->
+			<languageAlias type="nbf" replacement="nru" reason="deprecated"/>  <!-- Naxi -->
+			<languageAlias type="nbx" replacement="ekc" reason="deprecated"/>  <!-- Ngura -->
+			<languageAlias type="nln" replacement="azd" reason="deprecated"/>  <!-- Durango Nahuatl -->
+			<languageAlias type="nlr" replacement="nrk" reason="deprecated"/>  <!-- Ngarla -->
+			<languageAlias type="noo" replacement="dtd" reason="deprecated"/>  <!-- Nootka -->
+			<languageAlias type="rmr" replacement="emx" reason="deprecated"/>  <!-- Caló -->
+			<languageAlias type="sap" replacement="aqt" reason="deprecated"/>  <!-- Sanapaná -->
+			<languageAlias type="sgl" replacement="isk" reason="deprecated"/>  <!-- Sanglechi-Ishkashimi -->
+			<languageAlias type="sul" replacement="sgd" reason="deprecated"/>  <!-- Surigaonon -->
+			<languageAlias type="sum" replacement="ulw" reason="deprecated"/>  <!-- Sumo-Mayangna -->
+			<languageAlias type="tgg" replacement="bjp" reason="deprecated"/>  <!-- Tangga -->
+			<languageAlias type="tid" replacement="itd" reason="deprecated"/>  <!-- Tidong -->
+			<languageAlias type="unp" replacement="wro" reason="deprecated"/>  <!-- Worora -->
+			<languageAlias type="wgw" replacement="wgb" reason="deprecated"/>  <!-- Wagawaga -->
+			<languageAlias type="wit" replacement="nol" reason="deprecated"/>  <!-- Wintu -->
+			<languageAlias type="wiw" replacement="nwo" reason="deprecated"/>  <!-- Wirangu -->
+			<languageAlias type="yen" replacement="ynq" reason="deprecated"/>  <!-- Yendang -->
+			<languageAlias type="yiy" replacement="yrm" reason="deprecated"/>  <!-- Yir Yoront -->
+			<languageAlias type="drr" replacement="kzk" reason="deprecated"/> <!-- Dororo ⇒ Kazukuru -->
+			<languageAlias type="gli" replacement="kzk" reason="deprecated"/> <!-- Guliguli ⇒ Kazukuru -->
+			<languageAlias type="kxl" replacement="kru" reason="deprecated"/> <!-- Nepali Kurux ⇒ Kurukh -->
+			<languageAlias type="nxu" replacement="bpp" reason="deprecated"/> <!-- Narau ⇒ Kaure -->
+			<languageAlias type="thw" replacement="ola" reason="deprecated"/> <!-- Thudam ⇒ Walungge -->
+			<languageAlias type="xrq" replacement="dmw" reason="deprecated"/> <!-- Karranga ⇒ Mudburra -->
+			<languageAlias type="zir" replacement="scv" reason="deprecated"/> <!-- Ziriya ⇒ Sheni -->
+			<!-- miscellaneous deprecated -->
+
+			<!-- redundant deprecated -->
+            <languageAlias type="sgn_BR" replacement="bzs" reason="deprecated"/> <!-- Brazilian Sign Language -->
+            <languageAlias type="sgn_CO" replacement="csn" reason="deprecated"/> <!-- Colombian Sign Language -->
+            <languageAlias type="sgn_DE" replacement="gsg" reason="deprecated"/> <!-- German Sign Language -->
+            <languageAlias type="sgn_DK" replacement="dsl" reason="deprecated"/> <!-- Danish Sign Language -->
+            <languageAlias type="sgn_FR" replacement="fsl" reason="deprecated"/> <!-- French Sign Language -->
+            <languageAlias type="sgn_GB" replacement="bfi" reason="deprecated"/> <!-- British Sign Language -->
+            <languageAlias type="sgn_GR" replacement="gss" reason="deprecated"/> <!-- Greek Sign Language -->
+            <languageAlias type="sgn_IE" replacement="isg" reason="deprecated"/> <!-- Irish Sign Language -->
+            <languageAlias type="sgn_IT" replacement="ise" reason="deprecated"/> <!-- Italian Sign Language -->
+            <languageAlias type="sgn_JP" replacement="jsl" reason="deprecated"/> <!-- Japanese Sign Language -->
+            <languageAlias type="sgn_MX" replacement="mfs" reason="deprecated"/> <!-- Mexican Sign Language -->
+            <languageAlias type="sgn_NI" replacement="ncs" reason="deprecated"/> <!-- Nicaraguan Sign Language -->
+            <languageAlias type="sgn_NL" replacement="dse" reason="deprecated"/> <!-- Dutch Sign Language -->
+            <languageAlias type="sgn_NO" replacement="nsi" reason="deprecated"/> <!-- Norwegian Sign Language -->
+            <languageAlias type="sgn_PT" replacement="psr" reason="deprecated"/> <!-- Portuguese Sign Language -->
+            <languageAlias type="sgn_SE" replacement="swl" reason="deprecated"/> <!-- Swedish Sign Language -->
+            <languageAlias type="sgn_US" replacement="ase" reason="deprecated"/> <!-- American Sign Language -->
+            <languageAlias type="sgn_ZA" replacement="sfs" reason="deprecated"/> <!-- South African Sign Language -->
+
+			<languageAlias type="sgn_ES" replacement="ssp" reason="deprecated"/>  <!-- Spanish Sign Language -->
+			<languageAlias type="zh_cmn" replacement="zh" reason="deprecated"/>  <!-- Mandarin Chinese -->
+			<languageAlias type="zh_cmn_Hans" replacement="zh_Hans" reason="deprecated"/>  <!-- Mandarin Chinese (Simplified) -->
+			<languageAlias type="zh_cmn_Hant" replacement="zh_Hant" reason="deprecated"/>  <!-- Mandarin Chinese (Traditional) -->
+			<languageAlias type="zh_gan" replacement="gan" reason="deprecated"/>  <!-- Kan or Gan -->
+			<languageAlias type="zh_wuu" replacement="wuu" reason="deprecated"/>  <!-- Shanghainese or Wu -->
+			<languageAlias type="zh_yue" replacement="yue" reason="deprecated"/>  <!-- Cantonese -->
+			
+			<!-- miscellaneous deprecated -->
+            <languageAlias type="no_bokmal" replacement="nb" reason="deprecated"/>
+            <languageAlias type="no_nynorsk" replacement="nn" reason="deprecated"/>
+            <languageAlias type="aa_saaho" replacement="ssy" reason="deprecated"/>
+            <!-- legacy use -->
+            <languageAlias type="sh" replacement="sr_Latn" reason="legacy"/> <!-- Serbo-Croatian -->
+            <languageAlias type="cnr" replacement="sr_ME" reason="legacy"/> <!-- Montenegrin -->
+            <languageAlias type="tl" replacement="fil" reason="legacy"/> <!-- Tagalog -->
+            <!-- macrolanguages -->
+			<languageAlias type="aju" replacement="jrb" reason="macrolanguage"/> <!-- Moroccan Judeo-Arabic ⇒ Judeo-Arabic -->
+			<languageAlias type="als" replacement="sq" reason="macrolanguage"/> <!-- Albanian, Tosk ⇒ Albanian -->
+			<languageAlias type="arb" replacement="ar" reason="macrolanguage"/> <!-- Standard Arabic ⇒ Arabic -->
+			<languageAlias type="ayr" replacement="ay" reason="macrolanguage"/> <!-- Aymara, Central ⇒ Aymara -->
+			<languageAlias type="azj" replacement="az" reason="macrolanguage"/> <!-- Azerbaijani, North ⇒ Azerbaijani -->
+			<languageAlias type="bcc" replacement="bal" reason="macrolanguage"/> <!-- Balochi, Southern ⇒ Baluchi -->
+			<languageAlias type="bcl" replacement="bik" reason="macrolanguage"/> <!-- Bicolano, Central ⇒ Bikol -->
+			<languageAlias type="bxk" replacement="luy" reason="macrolanguage"/> <!-- Lubukusu ⇒ Luyia -->
+			<languageAlias type="bxr" replacement="bua" reason="macrolanguage"/> <!-- Buriat, Russia ⇒ Buriat -->
+			<languageAlias type="cld" replacement="syr" reason="macrolanguage"/> <!-- Chaldean Neo-Aramaic ⇒ Syriac -->
+			<languageAlias type="cmn" replacement="zh" reason="macrolanguage"/> <!-- Mandarin Chinese ⇒ Chinese -->
+			<languageAlias type="cwd" replacement="cr" reason="macrolanguage"/> <!-- Cree, Woods ⇒ Cree -->
+			<languageAlias type="dgo" replacement="doi" reason="macrolanguage"/> <!-- Dogri ⇒ Dogri (macrolanguage) -->
+			<languageAlias type="dhd" replacement="mwr" reason="macrolanguage"/> <!-- Dhundari ⇒ Marwari -->
+			<languageAlias type="dik" replacement="din" reason="macrolanguage"/> <!-- Southwestern Dinka ⇒ Dinka -->
+			<languageAlias type="diq" replacement="zza" reason="macrolanguage"/> <!-- Dimli ⇒ Zaza -->
+			<languageAlias type="lbk" replacement="bnc" reason="macrolanguage"/> <!-- Central Bontok ⇒ Bontok -->
+			<languageAlias type="ekk" replacement="et" reason="macrolanguage"/> <!-- Standard Estonian ⇒ Estonian -->
+			<languageAlias type="emk" replacement="man" reason="macrolanguage"/> <!-- Maninkakan, Eastern ⇒ Mandingo -->
+			<languageAlias type="esk" replacement="ik" reason="macrolanguage"/> <!-- Northwest Alaska Inupiatun ⇒ Inupiaq -->
+			<languageAlias type="fat" replacement="ak" reason="macrolanguage"/> <!-- Fanti ⇒ Akan -->
+			<languageAlias type="fuc" replacement="ff" reason="macrolanguage"/> <!-- Pular ⇒ Fulah -->
+			<languageAlias type="gaz" replacement="om" reason="macrolanguage"/> <!-- Oromo, West Central ⇒ Oromo -->
+			<languageAlias type="gbo" replacement="grb" reason="macrolanguage"/> <!-- Northern Grebo ⇒ Grebo -->
+			<languageAlias type="gno" replacement="gon" reason="macrolanguage"/> <!-- Northern Gondi ⇒ Gondi -->
+			<languageAlias type="gug" replacement="gn" reason="macrolanguage"/> <!-- Paraguayan Guarani ⇒ Guarani -->
+			<languageAlias type="gya" replacement="gba" reason="macrolanguage"/> <!-- Northwest Gbaya ⇒ Gbaya (Central African Republic) -->
+			<languageAlias type="hdn" replacement="hai" reason="macrolanguage"/> <!-- Northern Haida ⇒ Haida -->
+			<languageAlias type="hea" replacement="hmn" reason="macrolanguage"/> <!-- Northern Qiandong Miao ⇒ Hmong -->
+			<languageAlias type="ike" replacement="iu" reason="macrolanguage"/> <!-- Eastern Canadian Inuktitut ⇒ Inuktitut -->
+			<languageAlias type="kmr" replacement="ku" reason="macrolanguage"/> <!-- Northern Kurdish ⇒ Kurdish -->
+			<languageAlias type="knc" replacement="kr" reason="macrolanguage"/> <!-- Central Kanuri ⇒ Kanuri -->
+			<languageAlias type="kng" replacement="kg" reason="macrolanguage"/> <!-- Koongo ⇒ Kongo -->
+			<languageAlias type="knn" replacement="kok" reason="macrolanguage"/> <!-- Konkani (individual language) ⇒ Konkani -->
+			<languageAlias type="kpv" replacement="kv" reason="macrolanguage"/> <!-- Komi-Zyrian ⇒ Komi -->
+			<languageAlias type="lvs" replacement="lv" reason="macrolanguage"/> <!-- Standard Latvian ⇒ Latvian -->
+			<languageAlias type="mhr" replacement="chm" reason="macrolanguage"/> <!-- Mari, Eastern ⇒ Mari (Russia) -->
+			<languageAlias type="mup" replacement="raj" reason="macrolanguage"/> <!-- Malvi ⇒ Rajasthani -->
+			<languageAlias type="khk" replacement="mn" reason="macrolanguage"/> <!-- Halh Mongolian [mainly in Cyrillic] ⇒ Mongolian -->
+			<languageAlias type="npi" replacement="ne" reason="macrolanguage"/> <!-- Nepali (Individual language) ⇒ Nepali -->
+			<languageAlias type="ojg" replacement="oj" reason="macrolanguage"/> <!-- Ojibwa, Eastern ⇒ Ojibwa -->
+			<languageAlias type="ory" replacement="or" reason="macrolanguage"/> <!-- Oriya (Individual language) ⇒ Oriya -->
+			<languageAlias type="pbu" replacement="ps" reason="macrolanguage"/> <!-- Pashto, Northern ⇒ Pushto -->
+			<languageAlias type="pes" replacement="fa" reason="macrolanguage"/> <!-- Western Farsi ⇒ Persian -->
+			<languageAlias type="plt" replacement="mg" reason="macrolanguage"/> <!-- Malagasy, Plateau ⇒ Malagasy -->
+			<languageAlias type="pnb" replacement="lah" reason="macrolanguage"/> <!-- Western Panjabi ⇒ Lahnda -->
+			<languageAlias type="quz" replacement="qu" reason="macrolanguage"/> <!-- Quechua, Cusco ⇒ Quechua -->
+			<languageAlias type="rmy" replacement="rom" reason="macrolanguage"/> <!-- Romani, Vlax ⇒ Romany -->
+			<languageAlias type="spy" replacement="kln" reason="macrolanguage"/> <!-- Sabaot ⇒ Kalenjin -->
+			<languageAlias type="src" replacement="sc" reason="macrolanguage"/> <!-- Sardinian, Logudorese ⇒ Sardinian -->
+			<languageAlias type="swh" replacement="sw" reason="macrolanguage"/> <!-- Swahili (individual language) ⇒ Swahili -->
+			<languageAlias type="ttq" replacement="tmh" reason="macrolanguage"/> <!-- Tamajaq, Tawallammat ⇒ Tamashek -->
+			<languageAlias type="tw" replacement="ak" reason="macrolanguage"/> <!-- Twi ⇒ Akan -->
+			<languageAlias type="umu" replacement="del" reason="macrolanguage"/> <!-- Munsee ⇒ Delaware -->
+			<languageAlias type="uzn" replacement="uz" reason="macrolanguage"/> <!-- Northern Uzbek ⇒ Uzbek -->
+			<languageAlias type="xpe" replacement="kpe" reason="macrolanguage"/> <!-- Kpelle, Liberia ⇒ Kpelle -->
+			<languageAlias type="xsl" replacement="den" reason="macrolanguage"/> <!-- Slavey, South ⇒ Slave (Athapascan) -->
+			<languageAlias type="ydd" replacement="yi" reason="macrolanguage"/> <!-- Yiddish, Eastern ⇒ Yiddish -->
+			<languageAlias type="zai" replacement="zap" reason="macrolanguage"/> <!-- Zapotec, Isthmus ⇒ Zapotec -->
+			<languageAlias type="zsm" replacement="ms" reason="macrolanguage"/> <!-- Standard Malay ⇒ Malay -->
+			<languageAlias type="zyb" replacement="za" reason="macrolanguage"/> <!-- Yongbei Zhuang ⇒ Zhuang -->
+			<languageAlias type="him" replacement="srx" reason="macrolanguage"/> <!-- Himachali ⇒ Sirmauri (= Pahari, Himachali) -->
+			<languageAlias type="mnk" replacement="man" reason="macrolanguage"/> <!-- Mandinka ⇒ Mandingo -->
+			<languageAlias type="bh" replacement="bho" reason="macrolanguage"/> <!-- Bihari ⇒ Bhojpuri -->
+
+			<languageAlias type="prs" replacement="fa_AF" reason="overlong"/> <!-- Dari ⇒ Farsi (Afganistan) -->
+			<languageAlias type="swc" replacement="sw_CD" reason="overlong"/> <!-- Congo Swahili ⇒ Swahili (Congo - Kinshasa) -->
+			<!-- incorrect three-letter language codes -->
+            <!-- start of data generated with CountItems tool per http://sites.google.com/site/cldr/development/updating-codes/update-languagescriptregion-subtags -->
+			<languageAlias type="aar" replacement="aa" reason="overlong"/> <!-- [Afar] -->
+			<languageAlias type="abk" replacement="ab" reason="overlong"/> <!-- [Abkhazian] -->
+			<languageAlias type="ave" replacement="ae" reason="overlong"/> <!-- [Avestan] -->
+			<languageAlias type="afr" replacement="af" reason="overlong"/> <!-- [Afrikaans] -->
+			<languageAlias type="aka" replacement="ak" reason="overlong"/> <!-- [Akan] -->
+			<languageAlias type="amh" replacement="am" reason="overlong"/> <!-- [Amharic] -->
+			<languageAlias type="arg" replacement="an" reason="overlong"/> <!-- [Aragonese] -->
+			<languageAlias type="ara" replacement="ar" reason="overlong"/> <!-- [Arabic] -->
+			<languageAlias type="asm" replacement="as" reason="overlong"/> <!-- [Assamese] -->
+			<languageAlias type="ava" replacement="av" reason="overlong"/> <!-- [Avaric] -->
+			<languageAlias type="aym" replacement="ay" reason="overlong"/> <!-- [Aymara] -->
+			<languageAlias type="aze" replacement="az" reason="overlong"/> <!-- [Azerbaijani] -->
+			<languageAlias type="bak" replacement="ba" reason="overlong"/> <!-- [Bashkir] -->
+			<languageAlias type="bel" replacement="be" reason="overlong"/> <!-- [Belarusian] -->
+			<languageAlias type="bul" replacement="bg" reason="overlong"/> <!-- [Bulgarian] -->
+			<languageAlias type="bih" replacement="bho" reason="overlong"/> <!-- [Bihari] -->
+			<languageAlias type="bis" replacement="bi" reason="overlong"/> <!-- [Bislama] -->
+			<languageAlias type="bam" replacement="bm" reason="overlong"/> <!-- [Bambara] -->
+			<languageAlias type="ben" replacement="bn" reason="overlong"/> <!-- [Bengali] -->
+			<languageAlias type="bod" replacement="bo" reason="overlong"/> <!-- [Tibetan] -->
+			<languageAlias type="bre" replacement="br" reason="overlong"/> <!-- [Breton] -->
+			<languageAlias type="bos" replacement="bs" reason="overlong"/> <!-- [Bosnian] -->
+			<languageAlias type="cat" replacement="ca" reason="overlong"/> <!-- [Catalan, Valencian] -->
+			<languageAlias type="che" replacement="ce" reason="overlong"/> <!-- [Chechen] -->
+			<languageAlias type="cha" replacement="ch" reason="overlong"/> <!-- [Chamorro] -->
+			<languageAlias type="cos" replacement="co" reason="overlong"/> <!-- [Corsican] -->
+			<languageAlias type="cre" replacement="cr" reason="overlong"/> <!-- [Cree] -->
+			<languageAlias type="ces" replacement="cs" reason="overlong"/> <!-- [Czech] -->
+			<languageAlias type="chu" replacement="cu" reason="overlong"/> <!-- [Church Slavic, Church Slavonic, Old Bulgarian, Old Church Slavonic, Old Slavonic] -->
+			<languageAlias type="chv" replacement="cv" reason="overlong"/> <!-- [Chuvash] -->
+			<languageAlias type="cym" replacement="cy" reason="overlong"/> <!-- [Welsh] -->
+			<languageAlias type="dan" replacement="da" reason="overlong"/> <!-- [Danish] -->
+			<languageAlias type="deu" replacement="de" reason="overlong"/> <!-- [German] -->
+			<languageAlias type="div" replacement="dv" reason="overlong"/> <!-- [Dhivehi, Divehi, Maldivian] -->
+			<languageAlias type="dzo" replacement="dz" reason="overlong"/> <!-- [Dzongkha] -->
+			<languageAlias type="ewe" replacement="ee" reason="overlong"/> <!-- [Ewe] -->
+			<languageAlias type="ell" replacement="el" reason="overlong"/> <!-- [Modern Greek (1453-)] -->
+			<languageAlias type="eng" replacement="en" reason="overlong"/> <!-- [English] -->
+			<languageAlias type="epo" replacement="eo" reason="overlong"/> <!-- [Esperanto] -->
+			<languageAlias type="spa" replacement="es" reason="overlong"/> <!-- [Spanish, Castilian] -->
+			<languageAlias type="est" replacement="et" reason="overlong"/> <!-- [Estonian] -->
+			<languageAlias type="eus" replacement="eu" reason="overlong"/> <!-- [Basque] -->
+			<languageAlias type="fas" replacement="fa" reason="overlong"/> <!-- [Persian] -->
+			<languageAlias type="ful" replacement="ff" reason="overlong"/> <!-- [Fulah] -->
+			<languageAlias type="fin" replacement="fi" reason="overlong"/> <!-- [Finnish] -->
+			<languageAlias type="fij" replacement="fj" reason="overlong"/> <!-- [Fijian] -->
+			<languageAlias type="fao" replacement="fo" reason="overlong"/> <!-- [Faroese] -->
+			<languageAlias type="fra" replacement="fr" reason="overlong"/> <!-- [French] -->
+			<languageAlias type="fry" replacement="fy" reason="overlong"/> <!-- [Western Frisian] -->
+			<languageAlias type="gle" replacement="ga" reason="overlong"/> <!-- [Irish] -->
+			<languageAlias type="gla" replacement="gd" reason="overlong"/> <!-- [Scottish Gaelic, Gaelic] -->
+			<languageAlias type="glg" replacement="gl" reason="overlong"/> <!-- [Galician] -->
+			<languageAlias type="grn" replacement="gn" reason="overlong"/> <!-- [Guarani] -->
+			<languageAlias type="guj" replacement="gu" reason="overlong"/> <!-- [Gujarati] -->
+			<languageAlias type="glv" replacement="gv" reason="overlong"/> <!-- [Manx] -->
+			<languageAlias type="hau" replacement="ha" reason="overlong"/> <!-- [Hausa] -->
+			<languageAlias type="heb" replacement="he" reason="overlong"/> <!-- [Hebrew] -->
+			<languageAlias type="hin" replacement="hi" reason="overlong"/> <!-- [Hindi] -->
+			<languageAlias type="hmo" replacement="ho" reason="overlong"/> <!-- [Hiri Motu] -->
+			<languageAlias type="hrv" replacement="hr" reason="overlong"/> <!-- [Croatian] -->
+			<languageAlias type="hat" replacement="ht" reason="overlong"/> <!-- [Haitian, Haitian Creole] -->
+			<languageAlias type="hun" replacement="hu" reason="overlong"/> <!-- [Hungarian] -->
+			<languageAlias type="hye" replacement="hy" reason="overlong"/> <!-- [Armenian] -->
+			<languageAlias type="her" replacement="hz" reason="overlong"/> <!-- [Herero] -->
+			<languageAlias type="ina" replacement="ia" reason="overlong"/> <!-- [Interlingua (International Auxiliary Language Association)] -->
+			<languageAlias type="ind" replacement="id" reason="overlong"/> <!-- [Indonesian] -->
+			<languageAlias type="ile" replacement="ie" reason="overlong"/> <!-- [Interlingue, Occidental] -->
+			<languageAlias type="ibo" replacement="ig" reason="overlong"/> <!-- [Igbo] -->
+			<languageAlias type="iii" replacement="ii" reason="overlong"/> <!-- [Sichuan Yi, Nuosu] -->
+			<languageAlias type="ipk" replacement="ik" reason="overlong"/> <!-- [Inupiaq] -->
+			<languageAlias type="ido" replacement="io" reason="overlong"/> <!-- [Ido] -->
+			<languageAlias type="isl" replacement="is" reason="overlong"/> <!-- [Icelandic] -->
+			<languageAlias type="ita" replacement="it" reason="overlong"/> <!-- [Italian] -->
+			<languageAlias type="iku" replacement="iu" reason="overlong"/> <!-- [Inuktitut] -->
+			<languageAlias type="jpn" replacement="ja" reason="overlong"/> <!-- [Japanese] -->
+			<languageAlias type="jav" replacement="jv" reason="overlong"/> <!-- [Javanese] -->
+			<languageAlias type="kat" replacement="ka" reason="overlong"/> <!-- [Georgian] -->
+			<languageAlias type="kon" replacement="kg" reason="overlong"/> <!-- [Kongo] -->
+			<languageAlias type="kik" replacement="ki" reason="overlong"/> <!-- [Kikuyu, Gikuyu] -->
+			<languageAlias type="kua" replacement="kj" reason="overlong"/> <!-- [Kuanyama, Kwanyama] -->
+			<languageAlias type="kaz" replacement="kk" reason="overlong"/> <!-- [Kazakh] -->
+			<languageAlias type="kal" replacement="kl" reason="overlong"/> <!-- [Kalaallisut, Greenlandic] -->
+			<languageAlias type="khm" replacement="km" reason="overlong"/> <!-- [Central Khmer] -->
+			<languageAlias type="kan" replacement="kn" reason="overlong"/> <!-- [Kannada] -->
+			<languageAlias type="kor" replacement="ko" reason="overlong"/> <!-- [Korean] -->
+			<languageAlias type="kau" replacement="kr" reason="overlong"/> <!-- [Kanuri] -->
+			<languageAlias type="kas" replacement="ks" reason="overlong"/> <!-- [Kashmiri] -->
+			<languageAlias type="kur" replacement="ku" reason="overlong"/> <!-- [Kurdish] -->
+			<languageAlias type="kom" replacement="kv" reason="overlong"/> <!-- [Komi] -->
+			<languageAlias type="cor" replacement="kw" reason="overlong"/> <!-- [Cornish] -->
+			<languageAlias type="kir" replacement="ky" reason="overlong"/> <!-- [Kirghiz, Kyrgyz] -->
+			<languageAlias type="lat" replacement="la" reason="overlong"/> <!-- [Latin] -->
+			<languageAlias type="ltz" replacement="lb" reason="overlong"/> <!-- [Luxembourgish, Letzeburgesch] -->
+			<languageAlias type="lug" replacement="lg" reason="overlong"/> <!-- [Ganda] -->
+			<languageAlias type="lim" replacement="li" reason="overlong"/> <!-- [Limburgan, Limburger, Limburgish] -->
+			<languageAlias type="lin" replacement="ln" reason="overlong"/> <!-- [Lingala] -->
+			<languageAlias type="lao" replacement="lo" reason="overlong"/> <!-- [Lao] -->
+			<languageAlias type="lit" replacement="lt" reason="overlong"/> <!-- [Lithuanian] -->
+			<languageAlias type="lub" replacement="lu" reason="overlong"/> <!-- [Luba-Katanga] -->
+			<languageAlias type="lav" replacement="lv" reason="overlong"/> <!-- [Latvian] -->
+			<languageAlias type="mlg" replacement="mg" reason="overlong"/> <!-- [Malagasy] -->
+			<languageAlias type="mah" replacement="mh" reason="overlong"/> <!-- [Marshallese] -->
+			<languageAlias type="mri" replacement="mi" reason="overlong"/> <!-- [Maori] -->
+			<languageAlias type="mkd" replacement="mk" reason="overlong"/> <!-- [Macedonian] -->
+			<languageAlias type="mal" replacement="ml" reason="overlong"/> <!-- [Malayalam] -->
+			<languageAlias type="mon" replacement="mn" reason="overlong"/> <!-- [Mongolian] -->
+			<languageAlias type="mol" replacement="ro" reason="overlong"/> <!-- [Moldavian] -->
+			<languageAlias type="mar" replacement="mr" reason="overlong"/> <!-- [Marathi] -->
+			<languageAlias type="msa" replacement="ms" reason="overlong"/> <!-- [Malay (macrolanguage)] -->
+			<languageAlias type="mlt" replacement="mt" reason="overlong"/> <!-- [Maltese] -->
+			<languageAlias type="mya" replacement="my" reason="overlong"/> <!-- [Burmese] -->
+			<languageAlias type="nau" replacement="na" reason="overlong"/> <!-- [Nauru] -->
+			<languageAlias type="nob" replacement="nb" reason="overlong"/> <!-- [Norwegian Bokmål] -->
+			<languageAlias type="nde" replacement="nd" reason="overlong"/> <!-- [North Ndebele] -->
+			<languageAlias type="nep" replacement="ne" reason="overlong"/> <!-- [Nepali (macrolanguage)] -->
+			<languageAlias type="ndo" replacement="ng" reason="overlong"/> <!-- [Ndonga] -->
+			<languageAlias type="nld" replacement="nl" reason="overlong"/> <!-- [Dutch, Flemish] -->
+			<languageAlias type="nno" replacement="nn" reason="overlong"/> <!-- [Norwegian Nynorsk] -->
+			<languageAlias type="nor" replacement="no" reason="overlong"/> <!-- [Norwegian] -->
+			<languageAlias type="nbl" replacement="nr" reason="overlong"/> <!-- [South Ndebele] -->
+			<languageAlias type="nav" replacement="nv" reason="overlong"/> <!-- [Navajo, Navaho] -->
+			<languageAlias type="nya" replacement="ny" reason="overlong"/> <!-- [Nyanja, Chewa, Chichewa] -->
+			<languageAlias type="oci" replacement="oc" reason="overlong"/> <!-- [Occitan (post 1500)] -->
+			<languageAlias type="oji" replacement="oj" reason="overlong"/> <!-- [Ojibwa] -->
+			<languageAlias type="orm" replacement="om" reason="overlong"/> <!-- [Oromo] -->
+			<languageAlias type="ori" replacement="or" reason="overlong"/> <!-- [Oriya (macrolanguage)] -->
+			<languageAlias type="oss" replacement="os" reason="overlong"/> <!-- [Ossetian, Ossetic] -->
+			<languageAlias type="pan" replacement="pa" reason="overlong"/> <!-- [Panjabi, Punjabi] -->
+			<languageAlias type="pli" replacement="pi" reason="overlong"/> <!-- [Pali] -->
+			<languageAlias type="pol" replacement="pl" reason="overlong"/> <!-- [Polish] -->
+			<languageAlias type="pus" replacement="ps" reason="overlong"/> <!-- [Pushto, Pashto] -->
+			<languageAlias type="por" replacement="pt" reason="overlong"/> <!-- [Portuguese] -->
+			<languageAlias type="que" replacement="qu" reason="overlong"/> <!-- [Quechua] -->
+			<languageAlias type="roh" replacement="rm" reason="overlong"/> <!-- [Romansh] -->
+			<languageAlias type="run" replacement="rn" reason="overlong"/> <!-- [Rundi] -->
+			<languageAlias type="ron" replacement="ro" reason="overlong"/> <!-- [Romanian, Moldavian, Moldovan] -->
+			<languageAlias type="rus" replacement="ru" reason="overlong"/> <!-- [Russian] -->
+			<languageAlias type="kin" replacement="rw" reason="overlong"/> <!-- [Kinyarwanda] -->
+			<languageAlias type="san" replacement="sa" reason="overlong"/> <!-- [Sanskrit] -->
+			<languageAlias type="srd" replacement="sc" reason="overlong"/> <!-- [Sardinian] -->
+			<languageAlias type="snd" replacement="sd" reason="overlong"/> <!-- [Sindhi] -->
+			<languageAlias type="sme" replacement="se" reason="overlong"/> <!-- [Northern Sami] -->
+			<languageAlias type="sag" replacement="sg" reason="overlong"/> <!-- [Sango] -->
+			<languageAlias type="hbs" replacement="sr_Latn" reason="overlong"/> <!-- [Serbo-Croatian] -->
+			<languageAlias type="sin" replacement="si" reason="overlong"/> <!-- [Sinhala, Sinhalese] -->
+			<languageAlias type="slk" replacement="sk" reason="overlong"/> <!-- [Slovak] -->
+			<languageAlias type="slv" replacement="sl" reason="overlong"/> <!-- [Slovenian] -->
+			<languageAlias type="smo" replacement="sm" reason="overlong"/> <!-- [Samoan] -->
+			<languageAlias type="sna" replacement="sn" reason="overlong"/> <!-- [Shona] -->
+			<languageAlias type="som" replacement="so" reason="overlong"/> <!-- [Somali] -->
+			<languageAlias type="sqi" replacement="sq" reason="overlong"/> <!-- [Albanian] -->
+			<languageAlias type="srp" replacement="sr" reason="overlong"/> <!-- [Serbian] -->
+			<languageAlias type="ssw" replacement="ss" reason="overlong"/> <!-- [Swati] -->
+			<languageAlias type="sot" replacement="st" reason="overlong"/> <!-- [Southern Sotho] -->
+			<languageAlias type="sun" replacement="su" reason="overlong"/> <!-- [Sundanese] -->
+			<languageAlias type="swe" replacement="sv" reason="overlong"/> <!-- [Swedish] -->
+			<languageAlias type="swa" replacement="sw" reason="overlong"/> <!-- [Swahili (macrolanguage)] -->
+			<languageAlias type="tam" replacement="ta" reason="overlong"/> <!-- [Tamil] -->
+			<languageAlias type="tel" replacement="te" reason="overlong"/> <!-- [Telugu] -->
+			<languageAlias type="tgk" replacement="tg" reason="overlong"/> <!-- [Tajik] -->
+			<languageAlias type="tha" replacement="th" reason="overlong"/> <!-- [Thai] -->
+			<languageAlias type="tir" replacement="ti" reason="overlong"/> <!-- [Tigrinya] -->
+			<languageAlias type="tuk" replacement="tk" reason="overlong"/> <!-- [Turkmen] -->
+			<languageAlias type="tgl" replacement="fil" reason="overlong"/> <!-- [Tagalog] -->
+			<languageAlias type="tsn" replacement="tn" reason="overlong"/> <!-- [Tswana] -->
+			<languageAlias type="ton" replacement="to" reason="overlong"/> <!-- [Tonga (Tonga Islands)] -->
+			<languageAlias type="tur" replacement="tr" reason="overlong"/> <!-- [Turkish] -->
+			<languageAlias type="tso" replacement="ts" reason="overlong"/> <!-- [Tsonga] -->
+			<languageAlias type="tat" replacement="tt" reason="overlong"/> <!-- [Tatar] -->
+			<languageAlias type="twi" replacement="ak" reason="overlong"/> <!-- [Twi] -->
+			<languageAlias type="tah" replacement="ty" reason="overlong"/> <!-- [Tahitian] -->
+			<languageAlias type="uig" replacement="ug" reason="overlong"/> <!-- [Uighur, Uyghur] -->
+			<languageAlias type="ukr" replacement="uk" reason="overlong"/> <!-- [Ukrainian] -->
+			<languageAlias type="urd" replacement="ur" reason="overlong"/> <!-- [Urdu] -->
+			<languageAlias type="uzb" replacement="uz" reason="overlong"/> <!-- [Uzbek] -->
+			<languageAlias type="ven" replacement="ve" reason="overlong"/> <!-- [Venda] -->
+			<languageAlias type="vie" replacement="vi" reason="overlong"/> <!-- [Vietnamese] -->
+			<languageAlias type="vol" replacement="vo" reason="overlong"/> <!-- [Volapük] -->
+			<languageAlias type="wln" replacement="wa" reason="overlong"/> <!-- [Walloon] -->
+			<languageAlias type="wol" replacement="wo" reason="overlong"/> <!-- [Wolof] -->
+			<languageAlias type="xho" replacement="xh" reason="overlong"/> <!-- [Xhosa] -->
+			<languageAlias type="yid" replacement="yi" reason="overlong"/> <!-- [Yiddish] -->
+			<languageAlias type="yor" replacement="yo" reason="overlong"/> <!-- [Yoruba] -->
+			<languageAlias type="zha" replacement="za" reason="overlong"/> <!-- [Zhuang, Chuang] -->
+			<languageAlias type="zho" replacement="zh" reason="overlong"/> <!-- [Chinese] -->
+			<languageAlias type="zul" replacement="zu" reason="overlong"/> <!-- [Zulu] -->
+			<!-- Bibliographic -->
+			<languageAlias type="alb" replacement="sq" reason="bibliographic"/> <!-- [Albanian] -->
+			<languageAlias type="arm" replacement="hy" reason="bibliographic"/> <!-- [Armenian] -->
+			<languageAlias type="baq" replacement="eu" reason="bibliographic"/> <!-- [Basque] -->
+			<languageAlias type="bur" replacement="my" reason="bibliographic"/> <!-- [Burmese] -->
+			<languageAlias type="chi" replacement="zh" reason="bibliographic"/> <!-- [Chinese] -->
+			<languageAlias type="cze" replacement="cs" reason="bibliographic"/> <!-- [Czech] -->
+			<languageAlias type="dut" replacement="nl" reason="bibliographic"/> <!-- [Dutch, Flemish] -->
+			<languageAlias type="fre" replacement="fr" reason="bibliographic"/> <!-- [French] -->
+			<languageAlias type="geo" replacement="ka" reason="bibliographic"/> <!-- [Georgian] -->
+			<languageAlias type="ger" replacement="de" reason="bibliographic"/> <!-- [German] -->
+			<languageAlias type="gre" replacement="el" reason="bibliographic"/> <!-- [Modern Greek (1453-)] -->
+			<languageAlias type="ice" replacement="is" reason="bibliographic"/> <!-- [Icelandic] -->
+			<languageAlias type="mac" replacement="mk" reason="bibliographic"/> <!-- [Macedonian] -->
+			<languageAlias type="mao" replacement="mi" reason="bibliographic"/> <!-- [Maori] -->
+			<languageAlias type="may" replacement="ms" reason="bibliographic"/> <!-- [Malay (macrolanguage)] -->
+			<languageAlias type="per" replacement="fa" reason="bibliographic"/> <!-- [Persian] -->
+			<languageAlias type="rum" replacement="ro" reason="bibliographic"/> <!-- [Romanian, Moldavian, Moldovan] -->
+			<languageAlias type="slo" replacement="sk" reason="bibliographic"/> <!-- [Slovak] -->
+			<languageAlias type="tib" replacement="bo" reason="bibliographic"/> <!-- [Tibetan] -->
+			<languageAlias type="wel" replacement="cy" reason="bibliographic"/> <!-- [Welsh] -->
+            <!-- end of data generated with CountItems tool per http://sites.google.com/site/cldr/development/updating-codes/update-languagescriptregion-subtags -->
+			<languageAlias type="cel_gaulish" replacement="xtg" reason="legacy"/> <!-- irregular bcp47 code -->
+			<languageAlias type="i_default" replacement="en_x_i_default" reason="legacy"/> <!-- irregular bcp47 code -->
+			<languageAlias type="i_enochian" replacement="und_x_i_enochian" reason="legacy"/> <!-- irregular bcp47 code -->
+			<languageAlias type="i_mingo" replacement="see_x_i_mingo" reason="legacy"/> <!-- irregular bcp47 code -->
+			<languageAlias type="zh_min" replacement="nan_x_zh_min" reason="legacy"/> <!-- irregular bcp47 code -->
+			
+			<languageAlias type="und_aaland" replacement="und_AX" reason="deprecated"/>
+			<languageAlias type="hy_arevmda" replacement="hyw" reason="deprecated"/>
+			<languageAlias type="und_arevmda" replacement="und" reason="deprecated"/>
+			<languageAlias type="und_arevela" replacement="und" reason="deprecated"/>
+			<languageAlias type="und_lojban" replacement="und" reason="deprecated"/>
+			<languageAlias type="und_saaho" replacement="und" reason="deprecated"/>
+			<languageAlias type="und_bokmal" replacement="und" reason="deprecated"/>
+			<languageAlias type="und_nynorsk" replacement="und" reason="deprecated"/>
+			<languageAlias type="und_hakka" replacement="und" reason="deprecated"/>
+			<languageAlias type="und_xiang" replacement="und" reason="deprecated"/>
+			<languageAlias type="und_hepburn_heploc" replacement="und_alalc97" reason="deprecated"/>
+			
+            <!-- scripts -->
+            <scriptAlias type="Qaai" replacement="Zinh" reason="deprecated"/>
+            <!-- deprecated ISO territories in 3066 + CLDR ones (older deprecated ISO codes -->
+            <territoryAlias type="AN" replacement="CW SX BQ" reason="deprecated"/> <!-- Netherlands Antilles Curaçao largest, then Sint Martin, then BQ -->
+            <territoryAlias type="BU" replacement="MM" reason="deprecated"/> <!-- Burma -->
+            <territoryAlias type="CS" replacement="RS ME" reason="deprecated"/> <!-- Serbia & Montenegro -->
+            <territoryAlias type="CT" replacement="KI" reason="deprecated"/> <!-- CLDR: Canton and Enderbury Islands -->
+            <territoryAlias type="DD" replacement="DE" reason="deprecated"/> <!-- German Democratic Republic -->
+            <territoryAlias type="DY" replacement="BJ" reason="deprecated"/> <!-- CLDR:Benin -->
+            <territoryAlias type="FQ" replacement="AQ TF" reason="deprecated"/> <!-- CLDR: French Southern and Antarctic Territories (now split between AQ and TF) -->
+            <territoryAlias type="FX" replacement="FR" reason="deprecated"/> <!-- Metropolitan France -->
+            <territoryAlias type="HV" replacement="BF" reason="deprecated"/> <!-- CLDR:Burkina Faso -->
+            <territoryAlias type="JT" replacement="UM" reason="deprecated"/> <!-- CLDR: Johnston Island -->
+            <territoryAlias type="MI" replacement="UM" reason="deprecated"/> <!-- CLDR: Midway Islands -->
+            <territoryAlias type="NH" replacement="VU" reason="deprecated"/> <!-- CLDR:Vanuatu -->
+            <territoryAlias type="NQ" replacement="AQ" reason="deprecated"/> <!-- CLDR: Dronning Maud Land -->
+            <territoryAlias type="NT" replacement="SA IQ" reason="deprecated"/> <!-- Neutral Zone -->
+            <territoryAlias type="PC" replacement="FM MH MP PW" reason="deprecated"/> <!-- CLDR: Pacific Islands Trust Territory (divided into FM, MH, MP, and PW) -->
+            <territoryAlias type="PU" replacement="UM" reason="deprecated"/> <!-- CLDR: U.S. Miscellaneous Pacific Islands -->
+            <territoryAlias type="PZ" replacement="PA" reason="deprecated"/> <!-- CLDR: Panama Canal Zone -->
+            <territoryAlias type="QU" replacement="EU" reason="deprecated"/> <!-- CLDR: European Union -->
+            <territoryAlias type="RH" replacement="ZW" reason="deprecated"/> <!-- CLDR:Zimbabwe -->
+            <territoryAlias type="SU" replacement="RU AM AZ BY EE GE KZ KG LV LT MD TJ TM UA UZ" reason="deprecated"/> <!-- Union of Soviet Socialist Republics -->
+            <territoryAlias type="TP" replacement="TL" reason="deprecated"/> <!-- East Timor -->
+            <territoryAlias type="UK" replacement="GB" reason="deprecated"/> <!-- CLDR: Great Britain -->
+            <territoryAlias type="VD" replacement="VN" reason="deprecated"/> <!-- CLDR: North Vietnam -->
+            <territoryAlias type="WK" replacement="UM" reason="deprecated"/> <!-- CLDR: Wake Island -->
+            <territoryAlias type="YD" replacement="YE" reason="deprecated"/> <!-- Yemen, Democratic -->
+            <territoryAlias type="YU" replacement="RS ME" reason="deprecated"/> <!-- Yugoslavia -->
+            <territoryAlias type="ZR" replacement="CD" reason="deprecated"/> <!-- Zaire -->
+            <territoryAlias type="062" replacement="034 143" reason="deprecated"/> <!-- South-Central Asia -->
+            <territoryAlias type="172" replacement="RU AM AZ BY GE KG KZ MD TJ TM UA UZ" reason="deprecated"/> <!-- 172 not part of BCP47 -->
+            <territoryAlias type="200" replacement="CZ SK" reason="deprecated"/> <!-- Czechoslovakia -->
+            <territoryAlias type="230" replacement="ET" reason="deprecated"/> <!-- Ethiopia (pre-1993) -->
+            <territoryAlias type="280" replacement="DE" reason="deprecated"/> <!-- West Germany (pre-1990) -->
+            <territoryAlias type="532" replacement="CW SX BQ" reason="deprecated"/> <!-- Netherlands Antilles (pre-1986) -->
+            <territoryAlias type="582" replacement="FM MH MP PW" reason="deprecated"/> <!-- Pacific Islands (Trust Territory - pre-1991) -->
+            <territoryAlias type="736" replacement="SD" reason="deprecated"/> <!-- Sudan (pre-2011) -->
+            <territoryAlias type="830" replacement="JE GG" reason="deprecated"/> <!-- Channel Islands -->
+            <territoryAlias type="886" replacement="YE" reason="deprecated"/> <!-- Yemen (pre-1990) -->
+            <territoryAlias type="890" replacement="RS ME SI HR MK BA" reason="deprecated"/> <!-- Yugoslavia (pre-1992) -->
+            <!-- 3-letter ISO code values -->
+            <!-- start of data generated with CountItems tool per http://sites.google.com/site/cldr/development/updating-codes/update-languagescriptregion-subtags -->
+			<territoryAlias type="AAA" replacement="AA" reason="overlong"/> <!-- null -->
+			<territoryAlias type="ASC" replacement="AC" reason="overlong"/> <!-- Ascension Island -->
+			<territoryAlias type="AND" replacement="AD" reason="overlong"/> <!-- Andorra -->
+			<territoryAlias type="ARE" replacement="AE" reason="overlong"/> <!-- United Arab Emirates -->
+			<territoryAlias type="AFG" replacement="AF" reason="overlong"/> <!-- Afghanistan -->
+			<territoryAlias type="ATG" replacement="AG" reason="overlong"/> <!-- Antigua & Barbuda -->
+			<territoryAlias type="AIA" replacement="AI" reason="overlong"/> <!-- Anguilla -->
+			<territoryAlias type="ALB" replacement="AL" reason="overlong"/> <!-- Albania -->
+			<territoryAlias type="ARM" replacement="AM" reason="overlong"/> <!-- Armenia -->
+			<territoryAlias type="ANT" replacement="CW SX BQ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="AGO" replacement="AO" reason="overlong"/> <!-- Angola -->
+			<territoryAlias type="ATA" replacement="AQ" reason="overlong"/> <!-- Antarctica -->
+			<territoryAlias type="ARG" replacement="AR" reason="overlong"/> <!-- Argentina -->
+			<territoryAlias type="ASM" replacement="AS" reason="overlong"/> <!-- American Samoa -->
+			<territoryAlias type="AUT" replacement="AT" reason="overlong"/> <!-- Austria -->
+			<territoryAlias type="AUS" replacement="AU" reason="overlong"/> <!-- Australia -->
+			<territoryAlias type="ABW" replacement="AW" reason="overlong"/> <!-- Aruba -->
+			<territoryAlias type="ALA" replacement="AX" reason="overlong"/> <!-- Åland Islands -->
+			<territoryAlias type="AZE" replacement="AZ" reason="overlong"/> <!-- Azerbaijan -->
+			<territoryAlias type="BIH" replacement="BA" reason="overlong"/> <!-- Bosnia & Herzegovina -->
+			<territoryAlias type="BRB" replacement="BB" reason="overlong"/> <!-- Barbados -->
+			<territoryAlias type="BGD" replacement="BD" reason="overlong"/> <!-- Bangladesh -->
+			<territoryAlias type="BEL" replacement="BE" reason="overlong"/> <!-- Belgium -->
+			<territoryAlias type="BFA" replacement="BF" reason="overlong"/> <!-- Burkina Faso -->
+			<territoryAlias type="BGR" replacement="BG" reason="overlong"/> <!-- Bulgaria -->
+			<territoryAlias type="BHR" replacement="BH" reason="overlong"/> <!-- Bahrain -->
+			<territoryAlias type="BDI" replacement="BI" reason="overlong"/> <!-- Burundi -->
+			<territoryAlias type="BEN" replacement="BJ" reason="overlong"/> <!-- Benin -->
+			<territoryAlias type="BLM" replacement="BL" reason="overlong"/> <!-- St. Barthélemy -->
+			<territoryAlias type="BMU" replacement="BM" reason="overlong"/> <!-- Bermuda -->
+			<territoryAlias type="BRN" replacement="BN" reason="overlong"/> <!-- Brunei -->
+			<territoryAlias type="BOL" replacement="BO" reason="overlong"/> <!-- Bolivia -->
+			<territoryAlias type="BES" replacement="BQ" reason="overlong"/> <!-- Caribbean Netherlands -->
+			<territoryAlias type="BRA" replacement="BR" reason="overlong"/> <!-- Brazil -->
+			<territoryAlias type="BHS" replacement="BS" reason="overlong"/> <!-- Bahamas -->
+			<territoryAlias type="BTN" replacement="BT" reason="overlong"/> <!-- Bhutan -->
+			<territoryAlias type="BUR" replacement="MM" reason="overlong"/> <!-- Myanmar (Burma) -->
+			<territoryAlias type="BVT" replacement="BV" reason="overlong"/> <!-- Bouvet Island -->
+			<territoryAlias type="BWA" replacement="BW" reason="overlong"/> <!-- Botswana -->
+			<territoryAlias type="BLR" replacement="BY" reason="overlong"/> <!-- Belarus -->
+			<territoryAlias type="BLZ" replacement="BZ" reason="overlong"/> <!-- Belize -->
+			<territoryAlias type="CAN" replacement="CA" reason="overlong"/> <!-- Canada -->
+			<territoryAlias type="CCK" replacement="CC" reason="overlong"/> <!-- Cocos (Keeling) Islands -->
+			<territoryAlias type="COD" replacement="CD" reason="overlong"/> <!-- Congo - Kinshasa -->
+			<territoryAlias type="CAF" replacement="CF" reason="overlong"/> <!-- Central African Republic -->
+			<territoryAlias type="COG" replacement="CG" reason="overlong"/> <!-- Congo - Brazzaville -->
+			<territoryAlias type="CHE" replacement="CH" reason="overlong"/> <!-- Switzerland -->
+			<territoryAlias type="CIV" replacement="CI" reason="overlong"/> <!-- Côte d’Ivoire -->
+			<territoryAlias type="COK" replacement="CK" reason="overlong"/> <!-- Cook Islands -->
+			<territoryAlias type="CHL" replacement="CL" reason="overlong"/> <!-- Chile -->
+			<territoryAlias type="CMR" replacement="CM" reason="overlong"/> <!-- Cameroon -->
+			<territoryAlias type="CHN" replacement="CN" reason="overlong"/> <!-- China -->
+			<territoryAlias type="COL" replacement="CO" reason="overlong"/> <!-- Colombia -->
+			<territoryAlias type="CPT" replacement="CP" reason="overlong"/> <!-- Clipperton Island -->
+			<territoryAlias type="CRI" replacement="CR" reason="overlong"/> <!-- Costa Rica -->
+			<territoryAlias type="SCG" replacement="RS ME" reason="overlong"/> <!-- null -->
+			<territoryAlias type="CUB" replacement="CU" reason="overlong"/> <!-- Cuba -->
+			<territoryAlias type="CPV" replacement="CV" reason="overlong"/> <!-- Cape Verde -->
+			<territoryAlias type="CUW" replacement="CW" reason="overlong"/> <!-- Curaçao -->
+			<territoryAlias type="CXR" replacement="CX" reason="overlong"/> <!-- Christmas Island -->
+			<territoryAlias type="CYP" replacement="CY" reason="overlong"/> <!-- Cyprus -->
+			<territoryAlias type="CZE" replacement="CZ" reason="overlong"/> <!-- Czechia -->
+			<territoryAlias type="DDR" replacement="DE" reason="overlong"/> <!-- Germany -->
+			<territoryAlias type="DEU" replacement="DE" reason="overlong"/> <!-- Germany -->
+			<territoryAlias type="DGA" replacement="DG" reason="overlong"/> <!-- Diego Garcia -->
+			<territoryAlias type="DJI" replacement="DJ" reason="overlong"/> <!-- Djibouti -->
+			<territoryAlias type="DNK" replacement="DK" reason="overlong"/> <!-- Denmark -->
+			<territoryAlias type="DMA" replacement="DM" reason="overlong"/> <!-- Dominica -->
+			<territoryAlias type="DOM" replacement="DO" reason="overlong"/> <!-- Dominican Republic -->
+			<territoryAlias type="DZA" replacement="DZ" reason="overlong"/> <!-- Algeria -->
+			<territoryAlias type="ECU" replacement="EC" reason="overlong"/> <!-- Ecuador -->
+			<territoryAlias type="EST" replacement="EE" reason="overlong"/> <!-- Estonia -->
+			<territoryAlias type="EGY" replacement="EG" reason="overlong"/> <!-- Egypt -->
+			<territoryAlias type="ESH" replacement="EH" reason="overlong"/> <!-- Western Sahara -->
+			<territoryAlias type="ERI" replacement="ER" reason="overlong"/> <!-- Eritrea -->
+			<territoryAlias type="ESP" replacement="ES" reason="overlong"/> <!-- Spain -->
+			<territoryAlias type="ETH" replacement="ET" reason="overlong"/> <!-- Ethiopia -->
+			<territoryAlias type="FIN" replacement="FI" reason="overlong"/> <!-- Finland -->
+			<territoryAlias type="FJI" replacement="FJ" reason="overlong"/> <!-- Fiji -->
+			<territoryAlias type="FLK" replacement="FK" reason="overlong"/> <!-- Falkland Islands -->
+			<territoryAlias type="FSM" replacement="FM" reason="overlong"/> <!-- Micronesia -->
+			<territoryAlias type="FRO" replacement="FO" reason="overlong"/> <!-- Faroe Islands -->
+			<territoryAlias type="FRA" replacement="FR" reason="overlong"/> <!-- France -->
+			<territoryAlias type="FXX" replacement="FR" reason="overlong"/> <!-- France -->
+			<territoryAlias type="GAB" replacement="GA" reason="overlong"/> <!-- Gabon -->
+			<territoryAlias type="GBR" replacement="GB" reason="overlong"/> <!-- United Kingdom -->
+			<territoryAlias type="GRD" replacement="GD" reason="overlong"/> <!-- Grenada -->
+			<territoryAlias type="GEO" replacement="GE" reason="overlong"/> <!-- Georgia -->
+			<territoryAlias type="GUF" replacement="GF" reason="overlong"/> <!-- French Guiana -->
+			<territoryAlias type="GGY" replacement="GG" reason="overlong"/> <!-- Guernsey -->
+			<territoryAlias type="GHA" replacement="GH" reason="overlong"/> <!-- Ghana -->
+			<territoryAlias type="GIB" replacement="GI" reason="overlong"/> <!-- Gibraltar -->
+			<territoryAlias type="GRL" replacement="GL" reason="overlong"/> <!-- Greenland -->
+			<territoryAlias type="GMB" replacement="GM" reason="overlong"/> <!-- Gambia -->
+			<territoryAlias type="GIN" replacement="GN" reason="overlong"/> <!-- Guinea -->
+			<territoryAlias type="GLP" replacement="GP" reason="overlong"/> <!-- Guadeloupe -->
+			<territoryAlias type="GNQ" replacement="GQ" reason="overlong"/> <!-- Equatorial Guinea -->
+			<territoryAlias type="GRC" replacement="GR" reason="overlong"/> <!-- Greece -->
+			<territoryAlias type="SGS" replacement="GS" reason="overlong"/> <!-- South Georgia & South Sandwich Islands -->
+			<territoryAlias type="GTM" replacement="GT" reason="overlong"/> <!-- Guatemala -->
+			<territoryAlias type="GUM" replacement="GU" reason="overlong"/> <!-- Guam -->
+			<territoryAlias type="GNB" replacement="GW" reason="overlong"/> <!-- Guinea-Bissau -->
+			<territoryAlias type="GUY" replacement="GY" reason="overlong"/> <!-- Guyana -->
+			<territoryAlias type="HKG" replacement="HK" reason="overlong"/> <!-- Hong Kong SAR China -->
+			<territoryAlias type="HMD" replacement="HM" reason="overlong"/> <!-- Heard & McDonald Islands -->
+			<territoryAlias type="HND" replacement="HN" reason="overlong"/> <!-- Honduras -->
+			<territoryAlias type="HRV" replacement="HR" reason="overlong"/> <!-- Croatia -->
+			<territoryAlias type="HTI" replacement="HT" reason="overlong"/> <!-- Haiti -->
+			<territoryAlias type="HUN" replacement="HU" reason="overlong"/> <!-- Hungary -->
+			<territoryAlias type="IDN" replacement="ID" reason="overlong"/> <!-- Indonesia -->
+			<territoryAlias type="IRL" replacement="IE" reason="overlong"/> <!-- Ireland -->
+			<territoryAlias type="ISR" replacement="IL" reason="overlong"/> <!-- Israel -->
+			<territoryAlias type="IMN" replacement="IM" reason="overlong"/> <!-- Isle of Man -->
+			<territoryAlias type="IND" replacement="IN" reason="overlong"/> <!-- India -->
+			<territoryAlias type="IOT" replacement="IO" reason="overlong"/> <!-- British Indian Ocean Territory -->
+			<territoryAlias type="IRQ" replacement="IQ" reason="overlong"/> <!-- Iraq -->
+			<territoryAlias type="IRN" replacement="IR" reason="overlong"/> <!-- Iran -->
+			<territoryAlias type="ISL" replacement="IS" reason="overlong"/> <!-- Iceland -->
+			<territoryAlias type="ITA" replacement="IT" reason="overlong"/> <!-- Italy -->
+			<territoryAlias type="JEY" replacement="JE" reason="overlong"/> <!-- Jersey -->
+			<territoryAlias type="JAM" replacement="JM" reason="overlong"/> <!-- Jamaica -->
+			<territoryAlias type="JOR" replacement="JO" reason="overlong"/> <!-- Jordan -->
+			<territoryAlias type="JPN" replacement="JP" reason="overlong"/> <!-- Japan -->
+			<territoryAlias type="KEN" replacement="KE" reason="overlong"/> <!-- Kenya -->
+			<territoryAlias type="KGZ" replacement="KG" reason="overlong"/> <!-- Kyrgyzstan -->
+			<territoryAlias type="KHM" replacement="KH" reason="overlong"/> <!-- Cambodia -->
+			<territoryAlias type="KIR" replacement="KI" reason="overlong"/> <!-- Kiribati -->
+			<territoryAlias type="COM" replacement="KM" reason="overlong"/> <!-- Comoros -->
+			<territoryAlias type="KNA" replacement="KN" reason="overlong"/> <!-- St. Kitts & Nevis -->
+			<territoryAlias type="PRK" replacement="KP" reason="overlong"/> <!-- North Korea -->
+			<territoryAlias type="KOR" replacement="KR" reason="overlong"/> <!-- South Korea -->
+			<territoryAlias type="KWT" replacement="KW" reason="overlong"/> <!-- Kuwait -->
+			<territoryAlias type="CYM" replacement="KY" reason="overlong"/> <!-- Cayman Islands -->
+			<territoryAlias type="KAZ" replacement="KZ" reason="overlong"/> <!-- Kazakhstan -->
+			<territoryAlias type="LAO" replacement="LA" reason="overlong"/> <!-- Laos -->
+			<territoryAlias type="LBN" replacement="LB" reason="overlong"/> <!-- Lebanon -->
+			<territoryAlias type="LCA" replacement="LC" reason="overlong"/> <!-- St. Lucia -->
+			<territoryAlias type="LIE" replacement="LI" reason="overlong"/> <!-- Liechtenstein -->
+			<territoryAlias type="LKA" replacement="LK" reason="overlong"/> <!-- Sri Lanka -->
+			<territoryAlias type="LBR" replacement="LR" reason="overlong"/> <!-- Liberia -->
+			<territoryAlias type="LSO" replacement="LS" reason="overlong"/> <!-- Lesotho -->
+			<territoryAlias type="LTU" replacement="LT" reason="overlong"/> <!-- Lithuania -->
+			<territoryAlias type="LUX" replacement="LU" reason="overlong"/> <!-- Luxembourg -->
+			<territoryAlias type="LVA" replacement="LV" reason="overlong"/> <!-- Latvia -->
+			<territoryAlias type="LBY" replacement="LY" reason="overlong"/> <!-- Libya -->
+			<territoryAlias type="MAR" replacement="MA" reason="overlong"/> <!-- Morocco -->
+			<territoryAlias type="MCO" replacement="MC" reason="overlong"/> <!-- Monaco -->
+			<territoryAlias type="MDA" replacement="MD" reason="overlong"/> <!-- Moldova -->
+			<territoryAlias type="MNE" replacement="ME" reason="overlong"/> <!-- Montenegro -->
+			<territoryAlias type="MAF" replacement="MF" reason="overlong"/> <!-- St. Martin -->
+			<territoryAlias type="MDG" replacement="MG" reason="overlong"/> <!-- Madagascar -->
+			<territoryAlias type="MHL" replacement="MH" reason="overlong"/> <!-- Marshall Islands -->
+			<territoryAlias type="MKD" replacement="MK" reason="overlong"/> <!-- Macedonia -->
+			<territoryAlias type="MLI" replacement="ML" reason="overlong"/> <!-- Mali -->
+			<territoryAlias type="MMR" replacement="MM" reason="overlong"/> <!-- Myanmar (Burma) -->
+			<territoryAlias type="MNG" replacement="MN" reason="overlong"/> <!-- Mongolia -->
+			<territoryAlias type="MAC" replacement="MO" reason="overlong"/> <!-- Macau SAR China -->
+			<territoryAlias type="MNP" replacement="MP" reason="overlong"/> <!-- Northern Mariana Islands -->
+			<territoryAlias type="MTQ" replacement="MQ" reason="overlong"/> <!-- Martinique -->
+			<territoryAlias type="MRT" replacement="MR" reason="overlong"/> <!-- Mauritania -->
+			<territoryAlias type="MSR" replacement="MS" reason="overlong"/> <!-- Montserrat -->
+			<territoryAlias type="MLT" replacement="MT" reason="overlong"/> <!-- Malta -->
+			<territoryAlias type="MUS" replacement="MU" reason="overlong"/> <!-- Mauritius -->
+			<territoryAlias type="MDV" replacement="MV" reason="overlong"/> <!-- Maldives -->
+			<territoryAlias type="MWI" replacement="MW" reason="overlong"/> <!-- Malawi -->
+			<territoryAlias type="MEX" replacement="MX" reason="overlong"/> <!-- Mexico -->
+			<territoryAlias type="MYS" replacement="MY" reason="overlong"/> <!-- Malaysia -->
+			<territoryAlias type="MOZ" replacement="MZ" reason="overlong"/> <!-- Mozambique -->
+			<territoryAlias type="NAM" replacement="NA" reason="overlong"/> <!-- Namibia -->
+			<territoryAlias type="NCL" replacement="NC" reason="overlong"/> <!-- New Caledonia -->
+			<territoryAlias type="NER" replacement="NE" reason="overlong"/> <!-- Niger -->
+			<territoryAlias type="NFK" replacement="NF" reason="overlong"/> <!-- Norfolk Island -->
+			<territoryAlias type="NGA" replacement="NG" reason="overlong"/> <!-- Nigeria -->
+			<territoryAlias type="NIC" replacement="NI" reason="overlong"/> <!-- Nicaragua -->
+			<territoryAlias type="NLD" replacement="NL" reason="overlong"/> <!-- Netherlands -->
+			<territoryAlias type="NOR" replacement="NO" reason="overlong"/> <!-- Norway -->
+			<territoryAlias type="NPL" replacement="NP" reason="overlong"/> <!-- Nepal -->
+			<territoryAlias type="NRU" replacement="NR" reason="overlong"/> <!-- Nauru -->
+			<territoryAlias type="NTZ" replacement="SA IQ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="NIU" replacement="NU" reason="overlong"/> <!-- Niue -->
+			<territoryAlias type="NZL" replacement="NZ" reason="overlong"/> <!-- New Zealand -->
+			<territoryAlias type="OMN" replacement="OM" reason="overlong"/> <!-- Oman -->
+			<territoryAlias type="PAN" replacement="PA" reason="overlong"/> <!-- Panama -->
+			<territoryAlias type="PER" replacement="PE" reason="overlong"/> <!-- Peru -->
+			<territoryAlias type="PYF" replacement="PF" reason="overlong"/> <!-- French Polynesia -->
+			<territoryAlias type="PNG" replacement="PG" reason="overlong"/> <!-- Papua New Guinea -->
+			<territoryAlias type="PHL" replacement="PH" reason="overlong"/> <!-- Philippines -->
+			<territoryAlias type="PAK" replacement="PK" reason="overlong"/> <!-- Pakistan -->
+			<territoryAlias type="POL" replacement="PL" reason="overlong"/> <!-- Poland -->
+			<territoryAlias type="SPM" replacement="PM" reason="overlong"/> <!-- St. Pierre & Miquelon -->
+			<territoryAlias type="PCN" replacement="PN" reason="overlong"/> <!-- Pitcairn Islands -->
+			<territoryAlias type="PRI" replacement="PR" reason="overlong"/> <!-- Puerto Rico -->
+			<territoryAlias type="PSE" replacement="PS" reason="overlong"/> <!-- Palestinian Territories -->
+			<territoryAlias type="PRT" replacement="PT" reason="overlong"/> <!-- Portugal -->
+			<territoryAlias type="PLW" replacement="PW" reason="overlong"/> <!-- Palau -->
+			<territoryAlias type="PRY" replacement="PY" reason="overlong"/> <!-- Paraguay -->
+			<territoryAlias type="QAT" replacement="QA" reason="overlong"/> <!-- Qatar -->
+			<territoryAlias type="QMM" replacement="QM" reason="overlong"/> <!-- null -->
+			<territoryAlias type="QNN" replacement="QN" reason="overlong"/> <!-- null -->
+			<territoryAlias type="QPP" replacement="QP" reason="overlong"/> <!-- null -->
+			<territoryAlias type="QQQ" replacement="QQ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="QRR" replacement="QR" reason="overlong"/> <!-- null -->
+			<territoryAlias type="QSS" replacement="QS" reason="overlong"/> <!-- null -->
+			<territoryAlias type="QTT" replacement="QT" reason="overlong"/> <!-- null -->
+			<territoryAlias type="QUU" replacement="EU" reason="overlong"/> <!-- European Union -->
+			<territoryAlias type="QVV" replacement="QV" reason="overlong"/> <!-- null -->
+			<territoryAlias type="QWW" replacement="QW" reason="overlong"/> <!-- null -->
+			<territoryAlias type="QXX" replacement="QX" reason="overlong"/> <!-- null -->
+			<territoryAlias type="QYY" replacement="QY" reason="overlong"/> <!-- null -->
+			<territoryAlias type="QZZ" replacement="QZ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="REU" replacement="RE" reason="overlong"/> <!-- Réunion -->
+			<territoryAlias type="ROU" replacement="RO" reason="overlong"/> <!-- Romania -->
+			<territoryAlias type="SRB" replacement="RS" reason="overlong"/> <!-- Serbia -->
+			<territoryAlias type="RUS" replacement="RU" reason="overlong"/> <!-- Russia -->
+			<territoryAlias type="RWA" replacement="RW" reason="overlong"/> <!-- Rwanda -->
+			<territoryAlias type="SAU" replacement="SA" reason="overlong"/> <!-- Saudi Arabia -->
+			<territoryAlias type="SLB" replacement="SB" reason="overlong"/> <!-- Solomon Islands -->
+			<territoryAlias type="SYC" replacement="SC" reason="overlong"/> <!-- Seychelles -->
+			<territoryAlias type="SDN" replacement="SD" reason="overlong"/> <!-- Sudan -->
+			<territoryAlias type="SWE" replacement="SE" reason="overlong"/> <!-- Sweden -->
+			<territoryAlias type="SGP" replacement="SG" reason="overlong"/> <!-- Singapore -->
+			<territoryAlias type="SHN" replacement="SH" reason="overlong"/> <!-- St. Helena -->
+			<territoryAlias type="SVN" replacement="SI" reason="overlong"/> <!-- Slovenia -->
+			<territoryAlias type="SJM" replacement="SJ" reason="overlong"/> <!-- Svalbard & Jan Mayen -->
+			<territoryAlias type="SVK" replacement="SK" reason="overlong"/> <!-- Slovakia -->
+			<territoryAlias type="SLE" replacement="SL" reason="overlong"/> <!-- Sierra Leone -->
+			<territoryAlias type="SMR" replacement="SM" reason="overlong"/> <!-- San Marino -->
+			<territoryAlias type="SEN" replacement="SN" reason="overlong"/> <!-- Senegal -->
+			<territoryAlias type="SOM" replacement="SO" reason="overlong"/> <!-- Somalia -->
+			<territoryAlias type="SUR" replacement="SR" reason="overlong"/> <!-- Suriname -->
+			<territoryAlias type="SSD" replacement="SS" reason="overlong"/> <!-- South Sudan -->
+			<territoryAlias type="STP" replacement="ST" reason="overlong"/> <!-- São Tomé & Príncipe -->
+			<territoryAlias type="SUN" replacement="RU AM AZ BY EE GE KZ KG LV LT MD TJ TM UA UZ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="SLV" replacement="SV" reason="overlong"/> <!-- El Salvador -->
+			<territoryAlias type="SXM" replacement="SX" reason="overlong"/> <!-- Sint Maarten -->
+			<territoryAlias type="SYR" replacement="SY" reason="overlong"/> <!-- Syria -->
+			<territoryAlias type="SWZ" replacement="SZ" reason="overlong"/> <!-- Swaziland -->
+			<territoryAlias type="TAA" replacement="TA" reason="overlong"/> <!-- Tristan da Cunha -->
+			<territoryAlias type="TCA" replacement="TC" reason="overlong"/> <!-- Turks & Caicos Islands -->
+			<territoryAlias type="TCD" replacement="TD" reason="overlong"/> <!-- Chad -->
+			<territoryAlias type="ATF" replacement="TF" reason="overlong"/> <!-- French Southern Territories -->
+			<territoryAlias type="TGO" replacement="TG" reason="overlong"/> <!-- Togo -->
+			<territoryAlias type="THA" replacement="TH" reason="overlong"/> <!-- Thailand -->
+			<territoryAlias type="TJK" replacement="TJ" reason="overlong"/> <!-- Tajikistan -->
+			<territoryAlias type="TKL" replacement="TK" reason="overlong"/> <!-- Tokelau -->
+			<territoryAlias type="TLS" replacement="TL" reason="overlong"/> <!-- Timor-Leste -->
+			<territoryAlias type="TKM" replacement="TM" reason="overlong"/> <!-- Turkmenistan -->
+			<territoryAlias type="TUN" replacement="TN" reason="overlong"/> <!-- Tunisia -->
+			<territoryAlias type="TON" replacement="TO" reason="overlong"/> <!-- Tonga -->
+			<territoryAlias type="TMP" replacement="TL" reason="overlong"/> <!-- Timor-Leste -->
+			<territoryAlias type="TUR" replacement="TR" reason="overlong"/> <!-- Turkey -->
+			<territoryAlias type="TTO" replacement="TT" reason="overlong"/> <!-- Trinidad & Tobago -->
+			<territoryAlias type="TUV" replacement="TV" reason="overlong"/> <!-- Tuvalu -->
+			<territoryAlias type="TWN" replacement="TW" reason="overlong"/> <!-- Taiwan -->
+			<territoryAlias type="TZA" replacement="TZ" reason="overlong"/> <!-- Tanzania -->
+			<territoryAlias type="UKR" replacement="UA" reason="overlong"/> <!-- Ukraine -->
+			<territoryAlias type="UGA" replacement="UG" reason="overlong"/> <!-- Uganda -->
+			<territoryAlias type="UMI" replacement="UM" reason="overlong"/> <!-- U.S. Outlying Islands -->
+			<territoryAlias type="USA" replacement="US" reason="overlong"/> <!-- United States -->
+			<territoryAlias type="URY" replacement="UY" reason="overlong"/> <!-- Uruguay -->
+			<territoryAlias type="UZB" replacement="UZ" reason="overlong"/> <!-- Uzbekistan -->
+			<territoryAlias type="VAT" replacement="VA" reason="overlong"/> <!-- Vatican City -->
+			<territoryAlias type="VCT" replacement="VC" reason="overlong"/> <!-- St. Vincent & Grenadines -->
+			<territoryAlias type="VEN" replacement="VE" reason="overlong"/> <!-- Venezuela -->
+			<territoryAlias type="VGB" replacement="VG" reason="overlong"/> <!-- British Virgin Islands -->
+			<territoryAlias type="VIR" replacement="VI" reason="overlong"/> <!-- U.S. Virgin Islands -->
+			<territoryAlias type="VNM" replacement="VN" reason="overlong"/> <!-- Vietnam -->
+			<territoryAlias type="VUT" replacement="VU" reason="overlong"/> <!-- Vanuatu -->
+			<territoryAlias type="WLF" replacement="WF" reason="overlong"/> <!-- Wallis & Futuna -->
+			<territoryAlias type="WSM" replacement="WS" reason="overlong"/> <!-- Samoa -->
+			<territoryAlias type="XAA" replacement="XA" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XBB" replacement="XB" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XCC" replacement="XC" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XDD" replacement="XD" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XEE" replacement="XE" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XFF" replacement="XF" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XGG" replacement="XG" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XHH" replacement="XH" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XII" replacement="XI" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XJJ" replacement="XJ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XKK" replacement="XK" reason="overlong"/> <!-- Kosovo -->
+			<territoryAlias type="XLL" replacement="XL" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XMM" replacement="XM" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XNN" replacement="XN" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XOO" replacement="XO" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XPP" replacement="XP" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XQQ" replacement="XQ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XRR" replacement="XR" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XSS" replacement="XS" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XTT" replacement="XT" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XUU" replacement="XU" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XVV" replacement="XV" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XWW" replacement="XW" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XXX" replacement="XX" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XYY" replacement="XY" reason="overlong"/> <!-- null -->
+			<territoryAlias type="XZZ" replacement="XZ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="YMD" replacement="YE" reason="overlong"/> <!-- Yemen -->
+			<territoryAlias type="YEM" replacement="YE" reason="overlong"/> <!-- Yemen -->
+			<territoryAlias type="MYT" replacement="YT" reason="overlong"/> <!-- Mayotte -->
+			<territoryAlias type="YUG" replacement="RS ME" reason="overlong"/> <!-- null -->
+			<territoryAlias type="ZAF" replacement="ZA" reason="overlong"/> <!-- South Africa -->
+			<territoryAlias type="ZMB" replacement="ZM" reason="overlong"/> <!-- Zambia -->
+			<territoryAlias type="ZAR" replacement="CD" reason="overlong"/> <!-- Congo - Kinshasa -->
+			<territoryAlias type="ZWE" replacement="ZW" reason="overlong"/> <!-- Zimbabwe -->
+			<territoryAlias type="ZZZ" replacement="ZZ" reason="overlong"/> <!-- Unknown Region -->
+			<territoryAlias type="958" replacement="AA" reason="overlong"/> <!-- null -->
+			<territoryAlias type="020" replacement="AD" reason="overlong"/> <!-- Andorra -->
+			<territoryAlias type="784" replacement="AE" reason="overlong"/> <!-- United Arab Emirates -->
+			<territoryAlias type="004" replacement="AF" reason="overlong"/> <!-- Afghanistan -->
+			<territoryAlias type="028" replacement="AG" reason="overlong"/> <!-- Antigua & Barbuda -->
+			<territoryAlias type="660" replacement="AI" reason="overlong"/> <!-- Anguilla -->
+			<territoryAlias type="008" replacement="AL" reason="overlong"/> <!-- Albania -->
+			<territoryAlias type="051" replacement="AM" reason="overlong"/> <!-- Armenia -->
+			<territoryAlias type="530" replacement="CW SX BQ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="024" replacement="AO" reason="overlong"/> <!-- Angola -->
+			<territoryAlias type="010" replacement="AQ" reason="overlong"/> <!-- Antarctica -->
+			<territoryAlias type="032" replacement="AR" reason="overlong"/> <!-- Argentina -->
+			<territoryAlias type="016" replacement="AS" reason="overlong"/> <!-- American Samoa -->
+			<territoryAlias type="040" replacement="AT" reason="overlong"/> <!-- Austria -->
+			<territoryAlias type="036" replacement="AU" reason="overlong"/> <!-- Australia -->
+			<territoryAlias type="533" replacement="AW" reason="overlong"/> <!-- Aruba -->
+			<territoryAlias type="248" replacement="AX" reason="overlong"/> <!-- Åland Islands -->
+			<territoryAlias type="031" replacement="AZ" reason="overlong"/> <!-- Azerbaijan -->
+			<territoryAlias type="070" replacement="BA" reason="overlong"/> <!-- Bosnia & Herzegovina -->
+			<territoryAlias type="052" replacement="BB" reason="overlong"/> <!-- Barbados -->
+			<territoryAlias type="050" replacement="BD" reason="overlong"/> <!-- Bangladesh -->
+			<territoryAlias type="056" replacement="BE" reason="overlong"/> <!-- Belgium -->
+			<territoryAlias type="854" replacement="BF" reason="overlong"/> <!-- Burkina Faso -->
+			<territoryAlias type="100" replacement="BG" reason="overlong"/> <!-- Bulgaria -->
+			<territoryAlias type="048" replacement="BH" reason="overlong"/> <!-- Bahrain -->
+			<territoryAlias type="108" replacement="BI" reason="overlong"/> <!-- Burundi -->
+			<territoryAlias type="204" replacement="BJ" reason="overlong"/> <!-- Benin -->
+			<territoryAlias type="652" replacement="BL" reason="overlong"/> <!-- St. Barthélemy -->
+			<territoryAlias type="060" replacement="BM" reason="overlong"/> <!-- Bermuda -->
+			<territoryAlias type="096" replacement="BN" reason="overlong"/> <!-- Brunei -->
+			<territoryAlias type="068" replacement="BO" reason="overlong"/> <!-- Bolivia -->
+			<territoryAlias type="535" replacement="BQ" reason="overlong"/> <!-- Caribbean Netherlands -->
+			<territoryAlias type="076" replacement="BR" reason="overlong"/> <!-- Brazil -->
+			<territoryAlias type="044" replacement="BS" reason="overlong"/> <!-- Bahamas -->
+			<territoryAlias type="064" replacement="BT" reason="overlong"/> <!-- Bhutan -->
+			<territoryAlias type="104" replacement="MM" reason="overlong"/> <!-- Myanmar (Burma) -->
+			<territoryAlias type="074" replacement="BV" reason="overlong"/> <!-- Bouvet Island -->
+			<territoryAlias type="072" replacement="BW" reason="overlong"/> <!-- Botswana -->
+			<territoryAlias type="112" replacement="BY" reason="overlong"/> <!-- Belarus -->
+			<territoryAlias type="084" replacement="BZ" reason="overlong"/> <!-- Belize -->
+			<territoryAlias type="124" replacement="CA" reason="overlong"/> <!-- Canada -->
+			<territoryAlias type="166" replacement="CC" reason="overlong"/> <!-- Cocos (Keeling) Islands -->
+			<territoryAlias type="180" replacement="CD" reason="overlong"/> <!-- Congo - Kinshasa -->
+			<territoryAlias type="140" replacement="CF" reason="overlong"/> <!-- Central African Republic -->
+			<territoryAlias type="178" replacement="CG" reason="overlong"/> <!-- Congo - Brazzaville -->
+			<territoryAlias type="756" replacement="CH" reason="overlong"/> <!-- Switzerland -->
+			<territoryAlias type="384" replacement="CI" reason="overlong"/> <!-- Côte d’Ivoire -->
+			<territoryAlias type="184" replacement="CK" reason="overlong"/> <!-- Cook Islands -->
+			<territoryAlias type="152" replacement="CL" reason="overlong"/> <!-- Chile -->
+			<territoryAlias type="120" replacement="CM" reason="overlong"/> <!-- Cameroon -->
+			<territoryAlias type="156" replacement="CN" reason="overlong"/> <!-- China -->
+			<territoryAlias type="170" replacement="CO" reason="overlong"/> <!-- Colombia -->
+			<territoryAlias type="188" replacement="CR" reason="overlong"/> <!-- Costa Rica -->
+			<territoryAlias type="891" replacement="RS ME" reason="overlong"/> <!-- null -->
+			<territoryAlias type="192" replacement="CU" reason="overlong"/> <!-- Cuba -->
+			<territoryAlias type="132" replacement="CV" reason="overlong"/> <!-- Cape Verde -->
+			<territoryAlias type="531" replacement="CW" reason="overlong"/> <!-- Curaçao -->
+			<territoryAlias type="162" replacement="CX" reason="overlong"/> <!-- Christmas Island -->
+			<territoryAlias type="196" replacement="CY" reason="overlong"/> <!-- Cyprus -->
+			<territoryAlias type="203" replacement="CZ" reason="overlong"/> <!-- Czechia -->
+			<territoryAlias type="278" replacement="DE" reason="overlong"/> <!-- Germany -->
+			<territoryAlias type="276" replacement="DE" reason="overlong"/> <!-- Germany -->
+			<territoryAlias type="262" replacement="DJ" reason="overlong"/> <!-- Djibouti -->
+			<territoryAlias type="208" replacement="DK" reason="overlong"/> <!-- Denmark -->
+			<territoryAlias type="212" replacement="DM" reason="overlong"/> <!-- Dominica -->
+			<territoryAlias type="214" replacement="DO" reason="overlong"/> <!-- Dominican Republic -->
+			<territoryAlias type="012" replacement="DZ" reason="overlong"/> <!-- Algeria -->
+			<territoryAlias type="218" replacement="EC" reason="overlong"/> <!-- Ecuador -->
+			<territoryAlias type="233" replacement="EE" reason="overlong"/> <!-- Estonia -->
+			<territoryAlias type="818" replacement="EG" reason="overlong"/> <!-- Egypt -->
+			<territoryAlias type="732" replacement="EH" reason="overlong"/> <!-- Western Sahara -->
+			<territoryAlias type="232" replacement="ER" reason="overlong"/> <!-- Eritrea -->
+			<territoryAlias type="724" replacement="ES" reason="overlong"/> <!-- Spain -->
+			<territoryAlias type="231" replacement="ET" reason="overlong"/> <!-- Ethiopia -->
+			<territoryAlias type="246" replacement="FI" reason="overlong"/> <!-- Finland -->
+			<territoryAlias type="242" replacement="FJ" reason="overlong"/> <!-- Fiji -->
+			<territoryAlias type="238" replacement="FK" reason="overlong"/> <!-- Falkland Islands -->
+			<territoryAlias type="583" replacement="FM" reason="overlong"/> <!-- Micronesia -->
+			<territoryAlias type="234" replacement="FO" reason="overlong"/> <!-- Faroe Islands -->
+			<territoryAlias type="250" replacement="FR" reason="overlong"/> <!-- France -->
+			<territoryAlias type="249" replacement="FR" reason="overlong"/> <!-- France -->
+			<territoryAlias type="266" replacement="GA" reason="overlong"/> <!-- Gabon -->
+			<territoryAlias type="826" replacement="GB" reason="overlong"/> <!-- United Kingdom -->
+			<territoryAlias type="308" replacement="GD" reason="overlong"/> <!-- Grenada -->
+			<territoryAlias type="268" replacement="GE" reason="overlong"/> <!-- Georgia -->
+			<territoryAlias type="254" replacement="GF" reason="overlong"/> <!-- French Guiana -->
+			<territoryAlias type="831" replacement="GG" reason="overlong"/> <!-- Guernsey -->
+			<territoryAlias type="288" replacement="GH" reason="overlong"/> <!-- Ghana -->
+			<territoryAlias type="292" replacement="GI" reason="overlong"/> <!-- Gibraltar -->
+			<territoryAlias type="304" replacement="GL" reason="overlong"/> <!-- Greenland -->
+			<territoryAlias type="270" replacement="GM" reason="overlong"/> <!-- Gambia -->
+			<territoryAlias type="324" replacement="GN" reason="overlong"/> <!-- Guinea -->
+			<territoryAlias type="312" replacement="GP" reason="overlong"/> <!-- Guadeloupe -->
+			<territoryAlias type="226" replacement="GQ" reason="overlong"/> <!-- Equatorial Guinea -->
+			<territoryAlias type="300" replacement="GR" reason="overlong"/> <!-- Greece -->
+			<territoryAlias type="239" replacement="GS" reason="overlong"/> <!-- South Georgia & South Sandwich Islands -->
+			<territoryAlias type="320" replacement="GT" reason="overlong"/> <!-- Guatemala -->
+			<territoryAlias type="316" replacement="GU" reason="overlong"/> <!-- Guam -->
+			<territoryAlias type="624" replacement="GW" reason="overlong"/> <!-- Guinea-Bissau -->
+			<territoryAlias type="328" replacement="GY" reason="overlong"/> <!-- Guyana -->
+			<territoryAlias type="344" replacement="HK" reason="overlong"/> <!-- Hong Kong SAR China -->
+			<territoryAlias type="334" replacement="HM" reason="overlong"/> <!-- Heard & McDonald Islands -->
+			<territoryAlias type="340" replacement="HN" reason="overlong"/> <!-- Honduras -->
+			<territoryAlias type="191" replacement="HR" reason="overlong"/> <!-- Croatia -->
+			<territoryAlias type="332" replacement="HT" reason="overlong"/> <!-- Haiti -->
+			<territoryAlias type="348" replacement="HU" reason="overlong"/> <!-- Hungary -->
+			<territoryAlias type="360" replacement="ID" reason="overlong"/> <!-- Indonesia -->
+			<territoryAlias type="372" replacement="IE" reason="overlong"/> <!-- Ireland -->
+			<territoryAlias type="376" replacement="IL" reason="overlong"/> <!-- Israel -->
+			<territoryAlias type="833" replacement="IM" reason="overlong"/> <!-- Isle of Man -->
+			<territoryAlias type="356" replacement="IN" reason="overlong"/> <!-- India -->
+			<territoryAlias type="086" replacement="IO" reason="overlong"/> <!-- British Indian Ocean Territory -->
+			<territoryAlias type="368" replacement="IQ" reason="overlong"/> <!-- Iraq -->
+			<territoryAlias type="364" replacement="IR" reason="overlong"/> <!-- Iran -->
+			<territoryAlias type="352" replacement="IS" reason="overlong"/> <!-- Iceland -->
+			<territoryAlias type="380" replacement="IT" reason="overlong"/> <!-- Italy -->
+			<territoryAlias type="832" replacement="JE" reason="overlong"/> <!-- Jersey -->
+			<territoryAlias type="388" replacement="JM" reason="overlong"/> <!-- Jamaica -->
+			<territoryAlias type="400" replacement="JO" reason="overlong"/> <!-- Jordan -->
+			<territoryAlias type="392" replacement="JP" reason="overlong"/> <!-- Japan -->
+			<territoryAlias type="404" replacement="KE" reason="overlong"/> <!-- Kenya -->
+			<territoryAlias type="417" replacement="KG" reason="overlong"/> <!-- Kyrgyzstan -->
+			<territoryAlias type="116" replacement="KH" reason="overlong"/> <!-- Cambodia -->
+			<territoryAlias type="296" replacement="KI" reason="overlong"/> <!-- Kiribati -->
+			<territoryAlias type="174" replacement="KM" reason="overlong"/> <!-- Comoros -->
+			<territoryAlias type="659" replacement="KN" reason="overlong"/> <!-- St. Kitts & Nevis -->
+			<territoryAlias type="408" replacement="KP" reason="overlong"/> <!-- North Korea -->
+			<territoryAlias type="410" replacement="KR" reason="overlong"/> <!-- South Korea -->
+			<territoryAlias type="414" replacement="KW" reason="overlong"/> <!-- Kuwait -->
+			<territoryAlias type="136" replacement="KY" reason="overlong"/> <!-- Cayman Islands -->
+			<territoryAlias type="398" replacement="KZ" reason="overlong"/> <!-- Kazakhstan -->
+			<territoryAlias type="418" replacement="LA" reason="overlong"/> <!-- Laos -->
+			<territoryAlias type="422" replacement="LB" reason="overlong"/> <!-- Lebanon -->
+			<territoryAlias type="662" replacement="LC" reason="overlong"/> <!-- St. Lucia -->
+			<territoryAlias type="438" replacement="LI" reason="overlong"/> <!-- Liechtenstein -->
+			<territoryAlias type="144" replacement="LK" reason="overlong"/> <!-- Sri Lanka -->
+			<territoryAlias type="430" replacement="LR" reason="overlong"/> <!-- Liberia -->
+			<territoryAlias type="426" replacement="LS" reason="overlong"/> <!-- Lesotho -->
+			<territoryAlias type="440" replacement="LT" reason="overlong"/> <!-- Lithuania -->
+			<territoryAlias type="442" replacement="LU" reason="overlong"/> <!-- Luxembourg -->
+			<territoryAlias type="428" replacement="LV" reason="overlong"/> <!-- Latvia -->
+			<territoryAlias type="434" replacement="LY" reason="overlong"/> <!-- Libya -->
+			<territoryAlias type="504" replacement="MA" reason="overlong"/> <!-- Morocco -->
+			<territoryAlias type="492" replacement="MC" reason="overlong"/> <!-- Monaco -->
+			<territoryAlias type="498" replacement="MD" reason="overlong"/> <!-- Moldova -->
+			<territoryAlias type="499" replacement="ME" reason="overlong"/> <!-- Montenegro -->
+			<territoryAlias type="663" replacement="MF" reason="overlong"/> <!-- St. Martin -->
+			<territoryAlias type="450" replacement="MG" reason="overlong"/> <!-- Madagascar -->
+			<territoryAlias type="584" replacement="MH" reason="overlong"/> <!-- Marshall Islands -->
+			<territoryAlias type="807" replacement="MK" reason="overlong"/> <!-- Macedonia -->
+			<territoryAlias type="466" replacement="ML" reason="overlong"/> <!-- Mali -->
+			<territoryAlias type="496" replacement="MN" reason="overlong"/> <!-- Mongolia -->
+			<territoryAlias type="446" replacement="MO" reason="overlong"/> <!-- Macau SAR China -->
+			<territoryAlias type="580" replacement="MP" reason="overlong"/> <!-- Northern Mariana Islands -->
+			<territoryAlias type="474" replacement="MQ" reason="overlong"/> <!-- Martinique -->
+			<territoryAlias type="478" replacement="MR" reason="overlong"/> <!-- Mauritania -->
+			<territoryAlias type="500" replacement="MS" reason="overlong"/> <!-- Montserrat -->
+			<territoryAlias type="470" replacement="MT" reason="overlong"/> <!-- Malta -->
+			<territoryAlias type="480" replacement="MU" reason="overlong"/> <!-- Mauritius -->
+			<territoryAlias type="462" replacement="MV" reason="overlong"/> <!-- Maldives -->
+			<territoryAlias type="454" replacement="MW" reason="overlong"/> <!-- Malawi -->
+			<territoryAlias type="484" replacement="MX" reason="overlong"/> <!-- Mexico -->
+			<territoryAlias type="458" replacement="MY" reason="overlong"/> <!-- Malaysia -->
+			<territoryAlias type="508" replacement="MZ" reason="overlong"/> <!-- Mozambique -->
+			<territoryAlias type="516" replacement="NA" reason="overlong"/> <!-- Namibia -->
+			<territoryAlias type="540" replacement="NC" reason="overlong"/> <!-- New Caledonia -->
+			<territoryAlias type="562" replacement="NE" reason="overlong"/> <!-- Niger -->
+			<territoryAlias type="574" replacement="NF" reason="overlong"/> <!-- Norfolk Island -->
+			<territoryAlias type="566" replacement="NG" reason="overlong"/> <!-- Nigeria -->
+			<territoryAlias type="558" replacement="NI" reason="overlong"/> <!-- Nicaragua -->
+			<territoryAlias type="528" replacement="NL" reason="overlong"/> <!-- Netherlands -->
+			<territoryAlias type="578" replacement="NO" reason="overlong"/> <!-- Norway -->
+			<territoryAlias type="524" replacement="NP" reason="overlong"/> <!-- Nepal -->
+			<territoryAlias type="520" replacement="NR" reason="overlong"/> <!-- Nauru -->
+			<territoryAlias type="536" replacement="SA IQ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="570" replacement="NU" reason="overlong"/> <!-- Niue -->
+			<territoryAlias type="554" replacement="NZ" reason="overlong"/> <!-- New Zealand -->
+			<territoryAlias type="512" replacement="OM" reason="overlong"/> <!-- Oman -->
+			<territoryAlias type="591" replacement="PA" reason="overlong"/> <!-- Panama -->
+			<territoryAlias type="604" replacement="PE" reason="overlong"/> <!-- Peru -->
+			<territoryAlias type="258" replacement="PF" reason="overlong"/> <!-- French Polynesia -->
+			<territoryAlias type="598" replacement="PG" reason="overlong"/> <!-- Papua New Guinea -->
+			<territoryAlias type="608" replacement="PH" reason="overlong"/> <!-- Philippines -->
+			<territoryAlias type="586" replacement="PK" reason="overlong"/> <!-- Pakistan -->
+			<territoryAlias type="616" replacement="PL" reason="overlong"/> <!-- Poland -->
+			<territoryAlias type="666" replacement="PM" reason="overlong"/> <!-- St. Pierre & Miquelon -->
+			<territoryAlias type="612" replacement="PN" reason="overlong"/> <!-- Pitcairn Islands -->
+			<territoryAlias type="630" replacement="PR" reason="overlong"/> <!-- Puerto Rico -->
+			<territoryAlias type="275" replacement="PS" reason="overlong"/> <!-- Palestinian Territories -->
+			<territoryAlias type="620" replacement="PT" reason="overlong"/> <!-- Portugal -->
+			<territoryAlias type="585" replacement="PW" reason="overlong"/> <!-- Palau -->
+			<territoryAlias type="600" replacement="PY" reason="overlong"/> <!-- Paraguay -->
+			<territoryAlias type="634" replacement="QA" reason="overlong"/> <!-- Qatar -->
+			<territoryAlias type="959" replacement="QM" reason="overlong"/> <!-- null -->
+			<territoryAlias type="960" replacement="QN" reason="overlong"/> <!-- null -->
+			<territoryAlias type="962" replacement="QP" reason="overlong"/> <!-- null -->
+			<territoryAlias type="963" replacement="QQ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="964" replacement="QR" reason="overlong"/> <!-- null -->
+			<territoryAlias type="965" replacement="QS" reason="overlong"/> <!-- null -->
+			<territoryAlias type="966" replacement="QT" reason="overlong"/> <!-- null -->
+			<territoryAlias type="967" replacement="EU" reason="overlong"/> <!-- European Union -->
+			<territoryAlias type="968" replacement="QV" reason="overlong"/> <!-- null -->
+			<territoryAlias type="969" replacement="QW" reason="overlong"/> <!-- null -->
+			<territoryAlias type="970" replacement="QX" reason="overlong"/> <!-- null -->
+			<territoryAlias type="971" replacement="QY" reason="overlong"/> <!-- null -->
+			<territoryAlias type="972" replacement="QZ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="638" replacement="RE" reason="overlong"/> <!-- Réunion -->
+			<territoryAlias type="642" replacement="RO" reason="overlong"/> <!-- Romania -->
+			<territoryAlias type="688" replacement="RS" reason="overlong"/> <!-- Serbia -->
+			<territoryAlias type="643" replacement="RU" reason="overlong"/> <!-- Russia -->
+			<territoryAlias type="646" replacement="RW" reason="overlong"/> <!-- Rwanda -->
+			<territoryAlias type="682" replacement="SA" reason="overlong"/> <!-- Saudi Arabia -->
+			<territoryAlias type="090" replacement="SB" reason="overlong"/> <!-- Solomon Islands -->
+			<territoryAlias type="690" replacement="SC" reason="overlong"/> <!-- Seychelles -->
+			<territoryAlias type="729" replacement="SD" reason="overlong"/> <!-- Sudan -->
+			<territoryAlias type="752" replacement="SE" reason="overlong"/> <!-- Sweden -->
+			<territoryAlias type="702" replacement="SG" reason="overlong"/> <!-- Singapore -->
+			<territoryAlias type="654" replacement="SH" reason="overlong"/> <!-- St. Helena -->
+			<territoryAlias type="705" replacement="SI" reason="overlong"/> <!-- Slovenia -->
+			<territoryAlias type="744" replacement="SJ" reason="overlong"/> <!-- Svalbard & Jan Mayen -->
+			<territoryAlias type="703" replacement="SK" reason="overlong"/> <!-- Slovakia -->
+			<territoryAlias type="694" replacement="SL" reason="overlong"/> <!-- Sierra Leone -->
+			<territoryAlias type="674" replacement="SM" reason="overlong"/> <!-- San Marino -->
+			<territoryAlias type="686" replacement="SN" reason="overlong"/> <!-- Senegal -->
+			<territoryAlias type="706" replacement="SO" reason="overlong"/> <!-- Somalia -->
+			<territoryAlias type="740" replacement="SR" reason="overlong"/> <!-- Suriname -->
+			<territoryAlias type="728" replacement="SS" reason="overlong"/> <!-- South Sudan -->
+			<territoryAlias type="678" replacement="ST" reason="overlong"/> <!-- São Tomé & Príncipe -->
+			<territoryAlias type="810" replacement="RU AM AZ BY EE GE KZ KG LV LT MD TJ TM UA UZ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="222" replacement="SV" reason="overlong"/> <!-- El Salvador -->
+			<territoryAlias type="534" replacement="SX" reason="overlong"/> <!-- Sint Maarten -->
+			<territoryAlias type="760" replacement="SY" reason="overlong"/> <!-- Syria -->
+			<territoryAlias type="748" replacement="SZ" reason="overlong"/> <!-- Swaziland -->
+			<territoryAlias type="796" replacement="TC" reason="overlong"/> <!-- Turks & Caicos Islands -->
+			<territoryAlias type="148" replacement="TD" reason="overlong"/> <!-- Chad -->
+			<territoryAlias type="260" replacement="TF" reason="overlong"/> <!-- French Southern Territories -->
+			<territoryAlias type="768" replacement="TG" reason="overlong"/> <!-- Togo -->
+			<territoryAlias type="764" replacement="TH" reason="overlong"/> <!-- Thailand -->
+			<territoryAlias type="762" replacement="TJ" reason="overlong"/> <!-- Tajikistan -->
+			<territoryAlias type="772" replacement="TK" reason="overlong"/> <!-- Tokelau -->
+			<territoryAlias type="626" replacement="TL" reason="overlong"/> <!-- Timor-Leste -->
+			<territoryAlias type="795" replacement="TM" reason="overlong"/> <!-- Turkmenistan -->
+			<territoryAlias type="788" replacement="TN" reason="overlong"/> <!-- Tunisia -->
+			<territoryAlias type="776" replacement="TO" reason="overlong"/> <!-- Tonga -->
+			<territoryAlias type="792" replacement="TR" reason="overlong"/> <!-- Turkey -->
+			<territoryAlias type="780" replacement="TT" reason="overlong"/> <!-- Trinidad & Tobago -->
+			<territoryAlias type="798" replacement="TV" reason="overlong"/> <!-- Tuvalu -->
+			<territoryAlias type="158" replacement="TW" reason="overlong"/> <!-- Taiwan -->
+			<territoryAlias type="834" replacement="TZ" reason="overlong"/> <!-- Tanzania -->
+			<territoryAlias type="804" replacement="UA" reason="overlong"/> <!-- Ukraine -->
+			<territoryAlias type="800" replacement="UG" reason="overlong"/> <!-- Uganda -->
+			<territoryAlias type="581" replacement="UM" reason="overlong"/> <!-- U.S. Outlying Islands -->
+			<territoryAlias type="840" replacement="US" reason="overlong"/> <!-- United States -->
+			<territoryAlias type="858" replacement="UY" reason="overlong"/> <!-- Uruguay -->
+			<territoryAlias type="860" replacement="UZ" reason="overlong"/> <!-- Uzbekistan -->
+			<territoryAlias type="336" replacement="VA" reason="overlong"/> <!-- Vatican City -->
+			<territoryAlias type="670" replacement="VC" reason="overlong"/> <!-- St. Vincent & Grenadines -->
+			<territoryAlias type="862" replacement="VE" reason="overlong"/> <!-- Venezuela -->
+			<territoryAlias type="092" replacement="VG" reason="overlong"/> <!-- British Virgin Islands -->
+			<territoryAlias type="850" replacement="VI" reason="overlong"/> <!-- U.S. Virgin Islands -->
+			<territoryAlias type="704" replacement="VN" reason="overlong"/> <!-- Vietnam -->
+			<territoryAlias type="548" replacement="VU" reason="overlong"/> <!-- Vanuatu -->
+			<territoryAlias type="876" replacement="WF" reason="overlong"/> <!-- Wallis & Futuna -->
+			<territoryAlias type="882" replacement="WS" reason="overlong"/> <!-- Samoa -->
+			<territoryAlias type="973" replacement="XA" reason="overlong"/> <!-- null -->
+			<territoryAlias type="974" replacement="XB" reason="overlong"/> <!-- null -->
+			<territoryAlias type="975" replacement="XC" reason="overlong"/> <!-- null -->
+			<territoryAlias type="976" replacement="XD" reason="overlong"/> <!-- null -->
+			<territoryAlias type="977" replacement="XE" reason="overlong"/> <!-- null -->
+			<territoryAlias type="978" replacement="XF" reason="overlong"/> <!-- null -->
+			<territoryAlias type="979" replacement="XG" reason="overlong"/> <!-- null -->
+			<territoryAlias type="980" replacement="XH" reason="overlong"/> <!-- null -->
+			<territoryAlias type="981" replacement="XI" reason="overlong"/> <!-- null -->
+			<territoryAlias type="982" replacement="XJ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="983" replacement="XK" reason="overlong"/> <!-- Kosovo -->
+			<territoryAlias type="984" replacement="XL" reason="overlong"/> <!-- null -->
+			<territoryAlias type="985" replacement="XM" reason="overlong"/> <!-- null -->
+			<territoryAlias type="986" replacement="XN" reason="overlong"/> <!-- null -->
+			<territoryAlias type="987" replacement="XO" reason="overlong"/> <!-- null -->
+			<territoryAlias type="988" replacement="XP" reason="overlong"/> <!-- null -->
+			<territoryAlias type="989" replacement="XQ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="990" replacement="XR" reason="overlong"/> <!-- null -->
+			<territoryAlias type="991" replacement="XS" reason="overlong"/> <!-- null -->
+			<territoryAlias type="992" replacement="XT" reason="overlong"/> <!-- null -->
+			<territoryAlias type="993" replacement="XU" reason="overlong"/> <!-- null -->
+			<territoryAlias type="994" replacement="XV" reason="overlong"/> <!-- null -->
+			<territoryAlias type="995" replacement="XW" reason="overlong"/> <!-- null -->
+			<territoryAlias type="996" replacement="XX" reason="overlong"/> <!-- null -->
+			<territoryAlias type="997" replacement="XY" reason="overlong"/> <!-- null -->
+			<territoryAlias type="998" replacement="XZ" reason="overlong"/> <!-- null -->
+			<territoryAlias type="720" replacement="YE" reason="overlong"/> <!-- Yemen -->
+			<territoryAlias type="887" replacement="YE" reason="overlong"/> <!-- Yemen -->
+			<territoryAlias type="175" replacement="YT" reason="overlong"/> <!-- Mayotte -->
+			<territoryAlias type="710" replacement="ZA" reason="overlong"/> <!-- South Africa -->
+			<territoryAlias type="894" replacement="ZM" reason="overlong"/> <!-- Zambia -->
+			<territoryAlias type="716" replacement="ZW" reason="overlong"/> <!-- Zimbabwe -->
+			<territoryAlias type="999" replacement="ZZ" reason="overlong"/> <!-- Unknown Region -->
+            <!-- end of data generated with CountItems tool per http://sites.google.com/site/cldr/development/updating-codes/update-languagescriptregion-subtags -->
+
+			<subdivisionAlias type="fi01" replacement="AX" reason="overlong"/> <!-- Åland Islands -->
+			<subdivisionAlias type="frcp" replacement="CP" reason="overlong"/> <!-- Clipperton Island -->
+			<subdivisionAlias type="frgf" replacement="GF" reason="overlong"/> <!-- French Guiana -->
+			<subdivisionAlias type="frmq" replacement="MQ" reason="overlong"/> <!-- Martinique -->
+			<subdivisionAlias type="shta" replacement="TA" reason="overlong"/> <!-- Tristan da Cunha -->
+
+			<!-- start of data generated with GenerateSubdivisions -->
+			<subdivisionAlias type="frbl" replacement="BL" reason="overlong"/> <!-- St. Barthélemy => St. Barthélemy -->
+			<subdivisionAlias type="frgp" replacement="GP" reason="overlong"/> <!-- Guadeloupe => Guadeloupe -->
+			<subdivisionAlias type="frmf" replacement="MF" reason="overlong"/> <!-- St. Martin => St. Martin -->
+			<subdivisionAlias type="frnc" replacement="NC" reason="overlong"/> <!-- New Caledonia => New Caledonia -->
+			<subdivisionAlias type="frpf" replacement="PF" reason="overlong"/> <!-- French Polynesia => French Polynesia -->
+			<subdivisionAlias type="frpm" replacement="PM" reason="overlong"/> <!-- St. Pierre & Miquelon => St. Pierre & Miquelon -->
+			<subdivisionAlias type="frre" replacement="RE" reason="overlong"/> <!-- Réunion => Réunion -->
+			<subdivisionAlias type="frtf" replacement="TF" reason="overlong"/> <!-- French Southern Territories => French Southern Territories -->
+			<subdivisionAlias type="frwf" replacement="WF" reason="overlong"/> <!-- Wallis & Futuna => Wallis & Futuna -->
+			<subdivisionAlias type="fryt" replacement="YT" reason="overlong"/> <!-- Mayotte => Mayotte -->
+			<subdivisionAlias type="nlaw" replacement="AW" reason="overlong"/> <!-- Aruba => Aruba -->
+			<subdivisionAlias type="nlcw" replacement="CW" reason="overlong"/> <!-- Curaçao => Curaçao -->
+			<subdivisionAlias type="nlsx" replacement="SX" reason="overlong"/> <!-- Sint Maarten => Sint Maarten -->
+			<subdivisionAlias type="usas" replacement="AS" reason="overlong"/> <!-- American Samoa => American Samoa -->
+			<subdivisionAlias type="usgu" replacement="GU" reason="overlong"/> <!-- Guam => Guam -->
+			<subdivisionAlias type="usmp" replacement="MP" reason="overlong"/> <!-- Northern Mariana Islands => Northern Mariana Islands -->
+			<subdivisionAlias type="uspr" replacement="PR" reason="overlong"/> <!-- Puerto Rico => Puerto Rico -->
+			<subdivisionAlias type="usum" replacement="UM" reason="overlong"/> <!-- U.S. Outlying Islands => U.S. Outlying Islands -->
+			<subdivisionAlias type="usvi" replacement="VI" reason="overlong"/> <!-- U.S. Virgin Islands => U.S. Virgin Islands -->
+			<!-- <subdivisionAlias type="albr" replacement="al?" reason="deprecated"/> <!- - Berat => ?? -->
+			<!-- <subdivisionAlias type="albu" replacement="al?" reason="deprecated"/> <!- - Bulqizë => ?? -->
+			<!-- <subdivisionAlias type="aldi" replacement="al?" reason="deprecated"/> <!- - Dibër => ?? -->
+			<!-- <subdivisionAlias type="aldl" replacement="al?" reason="deprecated"/> <!- - Delvinë => ?? -->
+			<!-- <subdivisionAlias type="aldr" replacement="al?" reason="deprecated"/> <!- - Durrës => ?? -->
+			<!-- <subdivisionAlias type="aldv" replacement="al?" reason="deprecated"/> <!- - Devoll => ?? -->
+			<!-- <subdivisionAlias type="alel" replacement="al?" reason="deprecated"/> <!- - Elbasan => ?? -->
+			<!-- <subdivisionAlias type="aler" replacement="al?" reason="deprecated"/> <!- - Kolonjë => ?? -->
+			<!-- <subdivisionAlias type="alfr" replacement="al?" reason="deprecated"/> <!- - Fier => ?? -->
+			<!-- <subdivisionAlias type="algj" replacement="al?" reason="deprecated"/> <!- - Gjirokastër => ?? -->
+			<!-- <subdivisionAlias type="algr" replacement="al?" reason="deprecated"/> <!- - Gramsh => ?? -->
+			<!-- <subdivisionAlias type="alha" replacement="al?" reason="deprecated"/> <!- - Has => ?? -->
+			<!-- <subdivisionAlias type="alka" replacement="al?" reason="deprecated"/> <!- - Kavajë => ?? -->
+			<!-- <subdivisionAlias type="alkb" replacement="al?" reason="deprecated"/> <!- - Kurbin => ?? -->
+			<!-- <subdivisionAlias type="alkc" replacement="al?" reason="deprecated"/> <!- - Kuçovë => ?? -->
+			<!-- <subdivisionAlias type="alko" replacement="al?" reason="deprecated"/> <!- - Korçë => ?? -->
+			<!-- <subdivisionAlias type="alkr" replacement="al?" reason="deprecated"/> <!- - Krujë => ?? -->
+			<!-- <subdivisionAlias type="alku" replacement="al?" reason="deprecated"/> <!- - Kukës => ?? -->
+			<!-- <subdivisionAlias type="allb" replacement="al?" reason="deprecated"/> <!- - Librazhd => ?? -->
+			<!-- <subdivisionAlias type="alle" replacement="al?" reason="deprecated"/> <!- - Lezhë => ?? -->
+			<!-- <subdivisionAlias type="allu" replacement="al?" reason="deprecated"/> <!- - Lushnjë => ?? -->
+			<!-- <subdivisionAlias type="almk" replacement="al?" reason="deprecated"/> <!- - Mallakastër => ?? -->
+			<!-- <subdivisionAlias type="almm" replacement="al?" reason="deprecated"/> <!- - Malësi e Madhe => ?? -->
+			<!-- <subdivisionAlias type="almr" replacement="al?" reason="deprecated"/> <!- - Mirditë => ?? -->
+			<!-- <subdivisionAlias type="almt" replacement="al?" reason="deprecated"/> <!- - Mat => ?? -->
+			<!-- <subdivisionAlias type="alpg" replacement="al?" reason="deprecated"/> <!- - Pogradec => ?? -->
+			<!-- <subdivisionAlias type="alpq" replacement="al?" reason="deprecated"/> <!- - Peqin => ?? -->
+			<!-- <subdivisionAlias type="alpr" replacement="al?" reason="deprecated"/> <!- - Përmet => ?? -->
+			<!-- <subdivisionAlias type="alpu" replacement="al?" reason="deprecated"/> <!- - Pukë => ?? -->
+			<!-- <subdivisionAlias type="alsh" replacement="al?" reason="deprecated"/> <!- - Shkodër => ?? -->
+			<!-- <subdivisionAlias type="alsk" replacement="al?" reason="deprecated"/> <!- - Skrapar => ?? -->
+			<!-- <subdivisionAlias type="alsr" replacement="al?" reason="deprecated"/> <!- - Sarandë => ?? -->
+			<!-- <subdivisionAlias type="alte" replacement="al?" reason="deprecated"/> <!- - Tepelenë => ?? -->
+			<!-- <subdivisionAlias type="altp" replacement="al?" reason="deprecated"/> <!- - Tropojë => ?? -->
+			<!-- <subdivisionAlias type="altr" replacement="al?" reason="deprecated"/> <!- - Tirana => ?? -->
+			<!-- <subdivisionAlias type="alvl" replacement="al?" reason="deprecated"/> <!- - Vlorë => ?? -->
+			<!-- <subdivisionAlias type="ba01" replacement="ba?" reason="deprecated"/> <!- - Una-Sana => ?? -->
+			<!-- <subdivisionAlias type="ba02" replacement="ba?" reason="deprecated"/> <!- - Posavina => ?? -->
+			<!-- <subdivisionAlias type="ba03" replacement="ba?" reason="deprecated"/> <!- - Tuzlanski => ?? -->
+			<!-- <subdivisionAlias type="ba04" replacement="ba?" reason="deprecated"/> <!- - Zenica-Doboj => ?? -->
+			<!-- <subdivisionAlias type="ba05" replacement="ba?" reason="deprecated"/> <!- - Bosnian Podrinje => ?? -->
+			<!-- <subdivisionAlias type="ba06" replacement="ba?" reason="deprecated"/> <!- - Central Bosnia => ?? -->
+			<!-- <subdivisionAlias type="ba07" replacement="ba?" reason="deprecated"/> <!- - Herzegovina-Neretva => ?? -->
+			<!-- <subdivisionAlias type="ba08" replacement="ba?" reason="deprecated"/> <!- - West Herzegovina => ?? -->
+			<!-- <subdivisionAlias type="ba09" replacement="ba?" reason="deprecated"/> <!- - Sarajevo => ?? -->
+			<!-- <subdivisionAlias type="ba10" replacement="ba?" reason="deprecated"/> <!- - Livanjski => ?? -->
+			<!-- <subdivisionAlias type="bh16" replacement="bh?" reason="deprecated"/> <!- - Central => ?? -->
+			<!-- <subdivisionAlias type="cdbn" replacement="cd?" reason="deprecated"/> <!- - Bandundu => ?? -->
+			<!-- <subdivisionAlias type="cdka" replacement="cd?" reason="deprecated"/> <!- - Katanga => ?? -->
+			<!-- <subdivisionAlias type="cdkw" replacement="cd?" reason="deprecated"/> <!- - Kasaï-Occidental => ?? -->
+			<!-- <subdivisionAlias type="cdor" replacement="cd?" reason="deprecated"/> <!- - Orientale => ?? -->
+			<!-- <subdivisionAlias type="ci01" replacement="ci?" reason="deprecated"/> <!- - Lagunes => ?? -->
+			<!-- <subdivisionAlias type="ci02" replacement="ci?" reason="deprecated"/> <!- - Haut-Sassandra => ?? -->
+			<!-- <subdivisionAlias type="ci03" replacement="ci?" reason="deprecated"/> <!- - Savanes² => ?? -->
+			<!-- <subdivisionAlias type="ci04" replacement="ci?" reason="deprecated"/> <!- - Vallée du Bandama => ?? -->
+			<!-- <subdivisionAlias type="ci05" replacement="ci?" reason="deprecated"/> <!- - Moyen-Comoé => ?? -->
+			<!-- <subdivisionAlias type="ci06" replacement="ci?" reason="deprecated"/> <!- - Dix-Huit Montagnes => ?? -->
+			<!-- <subdivisionAlias type="ci07" replacement="ci?" reason="deprecated"/> <!- - Lacs => ?? -->
+			<!-- <subdivisionAlias type="ci08" replacement="ci?" reason="deprecated"/> <!- - Zanzan => ?? -->
+			<!-- <subdivisionAlias type="ci09" replacement="ci?" reason="deprecated"/> <!- - Bas-Sassandra => ?? -->
+			<!-- <subdivisionAlias type="ci10" replacement="ci?" reason="deprecated"/> <!- - Denguélé => ?? -->
+			<!-- <subdivisionAlias type="ci11" replacement="ci?" reason="deprecated"/> <!- - N’zi-Comoé => ?? -->
+			<!-- <subdivisionAlias type="ci12" replacement="ci?" reason="deprecated"/> <!- - Marahoué => ?? -->
+			<!-- <subdivisionAlias type="ci13" replacement="ci?" reason="deprecated"/> <!- - Sud-Comoé => ?? -->
+			<!-- <subdivisionAlias type="ci14" replacement="ci?" reason="deprecated"/> <!- - Worodougou => ?? -->
+			<!-- <subdivisionAlias type="ci15" replacement="ci?" reason="deprecated"/> <!- - Sud-Bandama => ?? -->
+			<!-- <subdivisionAlias type="ci16" replacement="ci?" reason="deprecated"/> <!- - Agnéby => ?? -->
+			<!-- <subdivisionAlias type="ci17" replacement="ci?" reason="deprecated"/> <!- - Bafing => ?? -->
+			<!-- <subdivisionAlias type="ci18" replacement="ci?" reason="deprecated"/> <!- - Fromager => ?? -->
+			<!-- <subdivisionAlias type="ci19" replacement="ci?" reason="deprecated"/> <!- - Moyen-Cavally => ?? -->
+			<subdivisionAlias type="cn11" replacement="cnbj" reason="deprecated"/> <!-- ??? => Beijing -->
+			<subdivisionAlias type="cn12" replacement="cntj" reason="deprecated"/> <!-- ??? => Tianjin -->
+			<subdivisionAlias type="cn13" replacement="cnhe" reason="deprecated"/> <!-- ??? => Hebei -->
+			<subdivisionAlias type="cn14" replacement="cnsx" reason="deprecated"/> <!-- ??? => Shanxi -->
+			<subdivisionAlias type="cn15" replacement="cnmn" reason="deprecated"/> <!-- ??? => ??? -->
+			<subdivisionAlias type="cn21" replacement="cnln" reason="deprecated"/> <!-- ??? => Liaoning -->
+			<subdivisionAlias type="cn22" replacement="cnjl" reason="deprecated"/> <!-- ??? => Jilin -->
+			<subdivisionAlias type="cn23" replacement="cnhl" reason="deprecated"/> <!-- ??? => Heilongjiang -->
+			<subdivisionAlias type="cn31" replacement="cnsh" reason="deprecated"/> <!-- ??? => Shanghai -->
+			<subdivisionAlias type="cn32" replacement="cnjs" reason="deprecated"/> <!-- ??? => Jiangsu -->
+			<subdivisionAlias type="cn33" replacement="cnzj" reason="deprecated"/> <!-- ??? => Zhejiang -->
+			<subdivisionAlias type="cn34" replacement="cnah" reason="deprecated"/> <!-- ??? => Anhui -->
+			<subdivisionAlias type="cn35" replacement="cnfj" reason="deprecated"/> <!-- ??? => Fujian -->
+			<subdivisionAlias type="cn36" replacement="cnjx" reason="deprecated"/> <!-- ??? => Jiangxi -->
+			<subdivisionAlias type="cn37" replacement="cnsd" reason="deprecated"/> <!-- ??? => Shandong -->
+			<subdivisionAlias type="cn41" replacement="cnha" reason="deprecated"/> <!-- ??? => Henan -->
+			<subdivisionAlias type="cn42" replacement="cnhb" reason="deprecated"/> <!-- ??? => Hubei -->
+			<subdivisionAlias type="cn43" replacement="cnhn" reason="deprecated"/> <!-- ??? => Hunan -->
+			<subdivisionAlias type="cn44" replacement="cngd" reason="deprecated"/> <!-- ??? => Guangdong -->
+			<subdivisionAlias type="cn45" replacement="cngx" reason="deprecated"/> <!-- ??? => Guangxi -->
+			<subdivisionAlias type="cn46" replacement="cnhi" reason="deprecated"/> <!-- ??? => Hainan -->
+			<subdivisionAlias type="cn50" replacement="cncq" reason="deprecated"/> <!-- ??? => Chongqing -->
+			<subdivisionAlias type="cn51" replacement="cnsc" reason="deprecated"/> <!-- ??? => Sichuan -->
+			<subdivisionAlias type="cn52" replacement="cngz" reason="deprecated"/> <!-- ??? => Guizhou -->
+			<subdivisionAlias type="cn53" replacement="cnyn" reason="deprecated"/> <!-- ??? => Yunnan -->
+			<subdivisionAlias type="cn54" replacement="cnxz" reason="deprecated"/> <!-- ??? => Tibet -->
+			<subdivisionAlias type="cn61" replacement="cnsn" reason="deprecated"/> <!-- ??? => Shaanxi -->
+			<subdivisionAlias type="cn62" replacement="cngs" reason="deprecated"/> <!-- ??? => Gansu -->
+			<subdivisionAlias type="cn63" replacement="cnqh" reason="deprecated"/> <!-- ??? => Qinghai -->
+			<subdivisionAlias type="cn64" replacement="cnnx" reason="deprecated"/> <!-- ??? => Ningxia -->
+			<subdivisionAlias type="cn65" replacement="cnxj" reason="deprecated"/> <!-- ??? => Xinjiang -->
+			<subdivisionAlias type="cn71" replacement="TW" reason="overlong"/> <!-- Taiwan => Taiwan -->
+			<subdivisionAlias type="cn91" replacement="HK" reason="overlong"/> <!-- Hong Kong SAR China => Hong Kong SAR China -->
+			<subdivisionAlias type="cn92" replacement="MO" reason="overlong"/> <!-- Macao SAR China => Macao SAR China -->
+			<subdivisionAlias type="cz10a" replacement="cz110" reason="deprecated"/> <!-- ??? => Prague 10 -->
+			<subdivisionAlias type="cz10b" replacement="cz111" reason="deprecated"/> <!-- ??? => Prague 11 -->
+			<subdivisionAlias type="cz10c" replacement="cz112" reason="deprecated"/> <!-- ??? => Prague 12 -->
+			<subdivisionAlias type="cz10d" replacement="cz113" reason="deprecated"/> <!-- ??? => Prague 13 -->
+			<subdivisionAlias type="cz10e" replacement="cz114" reason="deprecated"/> <!-- ??? => Prague 14 -->
+			<subdivisionAlias type="cz10f" replacement="cz115" reason="deprecated"/> <!-- ??? => Prague 15 -->
+			<!-- <subdivisionAlias type="cz101" replacement="cz?" reason="deprecated"/> <!- - Prague 1 => ?? -->
+			<!-- <subdivisionAlias type="cz102" replacement="cz?" reason="deprecated"/> <!- - Prague 2 => ?? -->
+			<!-- <subdivisionAlias type="cz103" replacement="cz?" reason="deprecated"/> <!- - Prague 3 => ?? -->
+			<!-- <subdivisionAlias type="cz104" replacement="cz?" reason="deprecated"/> <!- - Prague 4 => ?? -->
+			<!-- <subdivisionAlias type="cz105" replacement="cz?" reason="deprecated"/> <!- - Prague 5 => ?? -->
+			<!-- <subdivisionAlias type="cz106" replacement="cz?" reason="deprecated"/> <!- - Prague 6 => ?? -->
+			<!-- <subdivisionAlias type="cz107" replacement="cz?" reason="deprecated"/> <!- - Prague 7 => ?? -->
+			<!-- <subdivisionAlias type="cz108" replacement="cz?" reason="deprecated"/> <!- - Prague 8 => ?? -->
+			<!-- <subdivisionAlias type="cz109" replacement="cz?" reason="deprecated"/> <!- - Prague 9 => ?? -->
+			<!-- <subdivisionAlias type="cz110" replacement="cz?" reason="deprecated"/> <!- - Prague 10 => ?? -->
+			<!-- <subdivisionAlias type="cz111" replacement="cz?" reason="deprecated"/> <!- - Prague 11 => ?? -->
+			<!-- <subdivisionAlias type="cz112" replacement="cz?" reason="deprecated"/> <!- - Prague 12 => ?? -->
+			<!-- <subdivisionAlias type="cz113" replacement="cz?" reason="deprecated"/> <!- - Prague 13 => ?? -->
+			<!-- <subdivisionAlias type="cz114" replacement="cz?" reason="deprecated"/> <!- - Prague 14 => ?? -->
+			<!-- <subdivisionAlias type="cz115" replacement="cz?" reason="deprecated"/> <!- - Prague 15 => ?? -->
+			<!-- <subdivisionAlias type="cz116" replacement="cz?" reason="deprecated"/> <!- - Prague 16 => ?? -->
+			<!-- <subdivisionAlias type="cz117" replacement="cz?" reason="deprecated"/> <!- - Prague 17 => ?? -->
+			<!-- <subdivisionAlias type="cz118" replacement="cz?" reason="deprecated"/> <!- - Prague 18 => ?? -->
+			<!-- <subdivisionAlias type="cz119" replacement="cz?" reason="deprecated"/> <!- - Prague 19 => ?? -->
+			<!-- <subdivisionAlias type="cz120" replacement="cz?" reason="deprecated"/> <!- - Prague 20 => ?? -->
+			<!-- <subdivisionAlias type="cz121" replacement="cz?" reason="deprecated"/> <!- - Prague 21 => ?? -->
+			<!-- <subdivisionAlias type="cz122" replacement="cz?" reason="deprecated"/> <!- - Prague 22 => ?? -->
+			<subdivisionAlias type="cz611" replacement="cz663" reason="deprecated"/> <!-- ??? => ??? -->
+			<subdivisionAlias type="cz612" replacement="cz632" reason="deprecated"/> <!-- ??? => Jihlava -->
+			<subdivisionAlias type="cz613" replacement="cz633" reason="deprecated"/> <!-- ??? => Pelhřimov -->
+			<subdivisionAlias type="cz614" replacement="cz634" reason="deprecated"/> <!-- ??? => Třebíč -->
+			<subdivisionAlias type="cz615" replacement="cz635" reason="deprecated"/> <!-- ??? => Žďár nad Sázavou -->
+			<subdivisionAlias type="cz621" replacement="cz641" reason="deprecated"/> <!-- ??? => Blansko -->
+			<subdivisionAlias type="cz622" replacement="cz642" reason="deprecated"/> <!-- ??? => Brno-město -->
+			<subdivisionAlias type="cz623" replacement="cz643" reason="deprecated"/> <!-- ??? => Brno-venkov -->
+			<subdivisionAlias type="cz624" replacement="cz644" reason="deprecated"/> <!-- ??? => Břeclav -->
+			<!-- <subdivisionAlias type="cz625" replacement="cz?" reason="deprecated"/> <!- - ??? => ?? -->
+			<subdivisionAlias type="cz626" replacement="cz646" reason="deprecated"/> <!-- ??? => Vyškov -->
+			<subdivisionAlias type="cz627" replacement="cz647" reason="deprecated"/> <!-- ??? => Znojmo -->
+			<subdivisionAlias type="czjc" replacement="cz31" reason="deprecated"/> <!-- ??? => Jihočeský -->
+			<subdivisionAlias type="czjm" replacement="cz64" reason="deprecated"/> <!-- ??? => Jihomoravský -->
+			<subdivisionAlias type="czka" replacement="cz41" reason="deprecated"/> <!-- ??? => Karlovarský -->
+			<subdivisionAlias type="czkr" replacement="cz52" reason="deprecated"/> <!-- ??? => Královéhradecký -->
+			<subdivisionAlias type="czli" replacement="cz51" reason="deprecated"/> <!-- ??? => Liberecký -->
+			<subdivisionAlias type="czmo" replacement="cz80" reason="deprecated"/> <!-- ??? => Moravskoslezský -->
+			<subdivisionAlias type="czol" replacement="cz71" reason="deprecated"/> <!-- ??? => Olomoucký -->
+			<subdivisionAlias type="czpa" replacement="cz53" reason="deprecated"/> <!-- ??? => Pardubický -->
+			<subdivisionAlias type="czpl" replacement="cz32" reason="deprecated"/> <!-- ??? => Plzeňský -->
+			<subdivisionAlias type="czpr" replacement="cz10" reason="deprecated"/> <!-- ??? => Prague, Hlavní mešto -->
+			<subdivisionAlias type="czst" replacement="cz20" reason="deprecated"/> <!-- ??? => Středočeský -->
+			<subdivisionAlias type="czus" replacement="cz42" reason="deprecated"/> <!-- ??? => Ústecký -->
+			<subdivisionAlias type="czvy" replacement="cz63" reason="deprecated"/> <!-- ??? => Vysočina -->
+			<subdivisionAlias type="czzl" replacement="cz72" reason="deprecated"/> <!-- ??? => Zlínský -->
+			<subdivisionAlias type="fra" replacement="frges" reason="deprecated"/> <!-- ??? => Grand-Est -->
+			<subdivisionAlias type="frb" replacement="frnaq" reason="deprecated"/> <!-- ??? => Nouvelle-Aquitaine -->
+			<subdivisionAlias type="frc" replacement="frara" reason="deprecated"/> <!-- ??? => Auvergne-Rhône-Alpes -->
+			<subdivisionAlias type="frd" replacement="frbfc" reason="deprecated"/> <!-- ??? => Burgundy-Franche-Comté -->
+			<subdivisionAlias type="fre" replacement="frbre" reason="deprecated"/> <!-- ??? => Brittany -->
+			<subdivisionAlias type="frf" replacement="frcvl" reason="deprecated"/> <!-- ??? => Centre-Val de Loire -->
+			<subdivisionAlias type="frg" replacement="frges" reason="deprecated"/> <!-- ??? => Grand-Est -->
+			<subdivisionAlias type="frh" replacement="frcor" reason="deprecated"/> <!-- ??? => Corsica -->
+			<subdivisionAlias type="fri" replacement="frbfc" reason="deprecated"/> <!-- ??? => Burgundy-Franche-Comté -->
+			<subdivisionAlias type="frj" replacement="fridf" reason="deprecated"/> <!-- ??? => Île-de-France² -->
+			<subdivisionAlias type="frk" replacement="frocc" reason="deprecated"/> <!-- ??? => Occitanie -->
+			<subdivisionAlias type="frl" replacement="frnaq" reason="deprecated"/> <!-- ??? => Nouvelle-Aquitaine -->
+			<subdivisionAlias type="frm" replacement="frges" reason="deprecated"/> <!-- ??? => Grand-Est -->
+			<subdivisionAlias type="frn" replacement="frocc" reason="deprecated"/> <!-- ??? => Occitanie -->
+			<subdivisionAlias type="fro" replacement="frhdf" reason="deprecated"/> <!-- ??? => Hauts-de-France -->
+			<subdivisionAlias type="frp" replacement="frnor" reason="deprecated"/> <!-- ??? => Normandie -->
+			<subdivisionAlias type="frq" replacement="frnor" reason="deprecated"/> <!-- ??? => Normandie -->
+			<subdivisionAlias type="frr" replacement="frpdl" reason="deprecated"/> <!-- ??? => Pays-de-la-Loire -->
+			<subdivisionAlias type="frs" replacement="frhdf" reason="deprecated"/> <!-- ??? => Hauts-de-France -->
+			<subdivisionAlias type="frt" replacement="frnaq" reason="deprecated"/> <!-- ??? => Nouvelle-Aquitaine -->
+			<subdivisionAlias type="fru" replacement="frpac" reason="deprecated"/> <!-- ??? => Provence-Alpes-Côte-d’Azur -->
+			<subdivisionAlias type="frv" replacement="frara" reason="deprecated"/> <!-- ??? => Auvergne-Rhône-Alpes -->
+			<!-- <subdivisionAlias type="gbant" replacement="gb?" reason="deprecated"/> <!- - Antrim => ?? -->
+			<!-- <subdivisionAlias type="gbard" replacement="gb?" reason="deprecated"/> <!- - Ards => ?? -->
+			<!-- <subdivisionAlias type="gbarm" replacement="gb?" reason="deprecated"/> <!- - Armagh => ?? -->
+			<!-- <subdivisionAlias type="gbbla" replacement="gb?" reason="deprecated"/> <!- - Ballymena => ?? -->
+			<!-- <subdivisionAlias type="gbbly" replacement="gb?" reason="deprecated"/> <!- - Ballymoney => ?? -->
+			<!-- <subdivisionAlias type="gbbnb" replacement="gb?" reason="deprecated"/> <!- - Banbridge => ?? -->
+			<!-- <subdivisionAlias type="gbcgv" replacement="gb?" reason="deprecated"/> <!- - Craigavon => ?? -->
+			<!-- <subdivisionAlias type="gbckf" replacement="gb?" reason="deprecated"/> <!- - Carrickfergus => ?? -->
+			<!-- <subdivisionAlias type="gbckt" replacement="gb?" reason="deprecated"/> <!- - Cookstown => ?? -->
+			<!-- <subdivisionAlias type="gbclr" replacement="gb?" reason="deprecated"/> <!- - Coleraine => ?? -->
+			<!-- <subdivisionAlias type="gbcsr" replacement="gb?" reason="deprecated"/> <!- - Castlereagh => ?? -->
+			<!-- <subdivisionAlias type="gbdgn" replacement="gb?" reason="deprecated"/> <!- - Dungannon and South Tyrone => ?? -->
+			<!-- <subdivisionAlias type="gbdow" replacement="gb?" reason="deprecated"/> <!- - Down => ?? -->
+			<!-- <subdivisionAlias type="gbdry" replacement="gb?" reason="deprecated"/> <!- - Derry => ?? -->
+			<!-- <subdivisionAlias type="gbeaw" replacement="gb?" reason="deprecated"/> <!- - England and Wales => ?? -->
+			<!-- <subdivisionAlias type="gbeng" replacement="gb?" reason="deprecated"/> <!- - England => ?? -->
+			<!-- <subdivisionAlias type="gbfer" replacement="gb?" reason="deprecated"/> <!- - Fermanagh => ?? -->
+			<!-- <subdivisionAlias type="gbgbn" replacement="gb?" reason="deprecated"/> <!- - Great Britain => ?? -->
+			<!-- <subdivisionAlias type="gblmv" replacement="gb?" reason="deprecated"/> <!- - Limavady => ?? -->
+			<!-- <subdivisionAlias type="gblrn" replacement="gb?" reason="deprecated"/> <!- - Larne => ?? -->
+			<!-- <subdivisionAlias type="gblsb" replacement="gb?" reason="deprecated"/> <!- - Lisburn => ?? -->
+			<!-- <subdivisionAlias type="gbmft" replacement="gb?" reason="deprecated"/> <!- - Magherafelt => ?? -->
+			<!-- <subdivisionAlias type="gbmyl" replacement="gb?" reason="deprecated"/> <!- - Moyle => ?? -->
+			<!-- <subdivisionAlias type="gbndn" replacement="gb?" reason="deprecated"/> <!- - North Down => ?? -->
+			<!-- <subdivisionAlias type="gbnir" replacement="gb?" reason="deprecated"/> <!- - Northern Ireland => ?? -->
+			<!-- <subdivisionAlias type="gbnta" replacement="gb?" reason="deprecated"/> <!- - Newtownabbey => ?? -->
+			<!-- <subdivisionAlias type="gbnym" replacement="gb?" reason="deprecated"/> <!- - Newry and Mourne => ?? -->
+			<!-- <subdivisionAlias type="gbomh" replacement="gb?" reason="deprecated"/> <!- - Omagh => ?? -->
+			<!-- <subdivisionAlias type="gbsct" replacement="gb?" reason="deprecated"/> <!- - Scotland => ?? -->
+			<!-- <subdivisionAlias type="gbstb" replacement="gb?" reason="deprecated"/> <!- - Strabane => ?? -->
+			<!-- <subdivisionAlias type="gbukm" replacement="gb?" reason="deprecated"/> <!- - United Kingdom => ?? -->
+			<!-- <subdivisionAlias type="gbwls" replacement="gb?" reason="deprecated"/> <!- - Wales => ?? -->
+			<!-- <subdivisionAlias type="ghba" replacement="gh?" reason="deprecated"/> <!- - Brong-Ahafo => ?? -->
+			<!-- <subdivisionAlias type="glqa" replacement="gl?" reason="deprecated"/> <!- - Qaasuitsup => ?? -->
+			<!-- <subdivisionAlias type="gr01" replacement="gr?" reason="deprecated"/> <!- - Aetolia-Acarnania => ?? -->
+			<!-- <subdivisionAlias type="gr03" replacement="gr?" reason="deprecated"/> <!- - Boeotia => ?? -->
+			<!-- <subdivisionAlias type="gr04" replacement="gr?" reason="deprecated"/> <!- - Euboea => ?? -->
+			<!-- <subdivisionAlias type="gr05" replacement="gr?" reason="deprecated"/> <!- - Evritania => ?? -->
+			<!-- <subdivisionAlias type="gr06" replacement="gr?" reason="deprecated"/> <!- - Phthiotis => ?? -->
+			<!-- <subdivisionAlias type="gr07" replacement="gr?" reason="deprecated"/> <!- - Phocis => ?? -->
+			<!-- <subdivisionAlias type="gr11" replacement="gr?" reason="deprecated"/> <!- - Argolis => ?? -->
+			<!-- <subdivisionAlias type="gr12" replacement="gr?" reason="deprecated"/> <!- - Arcadia => ?? -->
+			<!-- <subdivisionAlias type="gr13" replacement="gr?" reason="deprecated"/> <!- - Achaea => ?? -->
+			<!-- <subdivisionAlias type="gr14" replacement="gr?" reason="deprecated"/> <!- - Ilia => ?? -->
+			<!-- <subdivisionAlias type="gr15" replacement="gr?" reason="deprecated"/> <!- - Corinthia => ?? -->
+			<!-- <subdivisionAlias type="gr16" replacement="gr?" reason="deprecated"/> <!- - Laconia => ?? -->
+			<!-- <subdivisionAlias type="gr17" replacement="gr?" reason="deprecated"/> <!- - Messenia => ?? -->
+			<!-- <subdivisionAlias type="gr21" replacement="gr?" reason="deprecated"/> <!- - Zakynthos => ?? -->
+			<!-- <subdivisionAlias type="gr22" replacement="gr?" reason="deprecated"/> <!- - Corfu => ?? -->
+			<!-- <subdivisionAlias type="gr23" replacement="gr?" reason="deprecated"/> <!- - Kefalonia => ?? -->
+			<!-- <subdivisionAlias type="gr24" replacement="gr?" reason="deprecated"/> <!- - Lefkada => ?? -->
+			<!-- <subdivisionAlias type="gr31" replacement="gr?" reason="deprecated"/> <!- - Arta => ?? -->
+			<!-- <subdivisionAlias type="gr32" replacement="gr?" reason="deprecated"/> <!- - Thesprotia => ?? -->
+			<!-- <subdivisionAlias type="gr33" replacement="gr?" reason="deprecated"/> <!- - Ioannina => ?? -->
+			<!-- <subdivisionAlias type="gr34" replacement="gr?" reason="deprecated"/> <!- - Preveza => ?? -->
+			<!-- <subdivisionAlias type="gr41" replacement="gr?" reason="deprecated"/> <!- - Karditsa => ?? -->
+			<!-- <subdivisionAlias type="gr42" replacement="gr?" reason="deprecated"/> <!- - Larissa => ?? -->
+			<!-- <subdivisionAlias type="gr43" replacement="gr?" reason="deprecated"/> <!- - Magnesia => ?? -->
+			<!-- <subdivisionAlias type="gr44" replacement="gr?" reason="deprecated"/> <!- - Trikala => ?? -->
+			<!-- <subdivisionAlias type="gr51" replacement="gr?" reason="deprecated"/> <!- - Grevena => ?? -->
+			<!-- <subdivisionAlias type="gr52" replacement="gr?" reason="deprecated"/> <!- - Drama => ?? -->
+			<!-- <subdivisionAlias type="gr53" replacement="gr?" reason="deprecated"/> <!- - Imathia => ?? -->
+			<!-- <subdivisionAlias type="gr54" replacement="gr?" reason="deprecated"/> <!- - Thessaloniki => ?? -->
+			<!-- <subdivisionAlias type="gr55" replacement="gr?" reason="deprecated"/> <!- - Kavala => ?? -->
+			<!-- <subdivisionAlias type="gr56" replacement="gr?" reason="deprecated"/> <!- - Kastoria => ?? -->
+			<!-- <subdivisionAlias type="gr57" replacement="gr?" reason="deprecated"/> <!- - Kilkis => ?? -->
+			<!-- <subdivisionAlias type="gr58" replacement="gr?" reason="deprecated"/> <!- - Kozani => ?? -->
+			<!-- <subdivisionAlias type="gr59" replacement="gr?" reason="deprecated"/> <!- - Pella => ?? -->
+			<!-- <subdivisionAlias type="gr61" replacement="gr?" reason="deprecated"/> <!- - Pieria => ?? -->
+			<!-- <subdivisionAlias type="gr62" replacement="gr?" reason="deprecated"/> <!- - Serres => ?? -->
+			<!-- <subdivisionAlias type="gr63" replacement="gr?" reason="deprecated"/> <!- - Florina => ?? -->
+			<!-- <subdivisionAlias type="gr64" replacement="gr?" reason="deprecated"/> <!- - Chalkidiki => ?? -->
+			<!-- <subdivisionAlias type="gr71" replacement="gr?" reason="deprecated"/> <!- - Evros => ?? -->
+			<!-- <subdivisionAlias type="gr72" replacement="gr?" reason="deprecated"/> <!- - Xanthi => ?? -->
+			<!-- <subdivisionAlias type="gr73" replacement="gr?" reason="deprecated"/> <!- - Rhodope => ?? -->
+			<!-- <subdivisionAlias type="gr81" replacement="gr?" reason="deprecated"/> <!- - Dodecanese => ?? -->
+			<!-- <subdivisionAlias type="gr82" replacement="gr?" reason="deprecated"/> <!- - Cyclades => ?? -->
+			<!-- <subdivisionAlias type="gr83" replacement="gr?" reason="deprecated"/> <!- - Lesbos => ?? -->
+			<!-- <subdivisionAlias type="gr84" replacement="gr?" reason="deprecated"/> <!- - Samos => ?? -->
+			<!-- <subdivisionAlias type="gr85" replacement="gr?" reason="deprecated"/> <!- - Chios => ?? -->
+			<!-- <subdivisionAlias type="gr91" replacement="gr?" reason="deprecated"/> <!- - Heraklion region => ?? -->
+			<!-- <subdivisionAlias type="gr92" replacement="gr?" reason="deprecated"/> <!- - Lasithi => ?? -->
+			<!-- <subdivisionAlias type="gr93" replacement="gr?" reason="deprecated"/> <!- - Rethymno => ?? -->
+			<!-- <subdivisionAlias type="gr94" replacement="gr?" reason="deprecated"/> <!- - Chania => ?? -->
+			<!-- <subdivisionAlias type="gra1" replacement="gr?" reason="deprecated"/> <!- - Attica Department => ?? -->
+			<!-- <subdivisionAlias type="is0" replacement="is?" reason="deprecated"/> <!- - Reykjavík => ?? -->
+			<!-- <subdivisionAlias type="itao" replacement="it?" reason="deprecated"/> <!- - Aosta => ?? -->
+			<!-- <subdivisionAlias type="itci" replacement="it?" reason="deprecated"/> <!- - Carbonia-Iglesias => ?? -->
+			<!-- <subdivisionAlias type="itgo" replacement="it?" reason="deprecated"/> <!- - Gorizia => ?? -->
+			<!-- <subdivisionAlias type="itog" replacement="it?" reason="deprecated"/> <!- - Ogliastra => ?? -->
+			<!-- <subdivisionAlias type="itot" replacement="it?" reason="deprecated"/> <!- - Olbia-Tempio => ?? -->
+			<!-- <subdivisionAlias type="itpn" replacement="it?" reason="deprecated"/> <!- - Pordenone => ?? -->
+			<!-- <subdivisionAlias type="itts" replacement="it?" reason="deprecated"/> <!- - Trieste => ?? -->
+			<!-- <subdivisionAlias type="itud" replacement="it?" reason="deprecated"/> <!- - Udine => ?? -->
+			<!-- <subdivisionAlias type="itvs" replacement="it?" reason="deprecated"/> <!- - Medio Campidano => ?? -->
+			<subdivisionAlias type="laxn" replacement="laxs" reason="deprecated"/> <!-- ??? => Xaisomboun -->
+			<subdivisionAlias type="lud" replacement="lucl ludi lurd luvd luwi" reason="deprecated"/> <!-- ??? => Clervaux, Diekirch, Redange, Vianden, Wiltz -->
+			<subdivisionAlias type="lug" replacement="luec lugr lurm" reason="deprecated"/> <!-- ??? => Echternach, Grevenmacher, Remich -->
+			<subdivisionAlias type="lul" replacement="luca lues lulu lume" reason="deprecated"/> <!-- ??? => Capellen, Esch-sur-Alzette, Luxembourg, Mersch -->
+			<!-- <subdivisionAlias type="ma13" replacement="ma?" reason="deprecated"/> <!- - Souss-Massa-Drâa => ?? -->
+			<!-- <subdivisionAlias type="ma14" replacement="ma?" reason="deprecated"/> <!- - Guelmim-Es Semara => ?? -->
+			<!-- <subdivisionAlias type="ma15" replacement="ma?" reason="deprecated"/> <!- - Laâyoune-Boujdour-Sakia El Hamra => ?? -->
+			<!-- <subdivisionAlias type="ma16" replacement="ma?" reason="deprecated"/> <!- - Oued Ed-Dahab-Lagouira => ?? -->
+			<!-- <subdivisionAlias type="mammd" replacement="ma?" reason="deprecated"/> <!- - Marrakech-Medina => ?? -->
+			<!-- <subdivisionAlias type="mammn" replacement="ma?" reason="deprecated"/> <!- - Marrakech-Menara => ?? -->
+			<!-- <subdivisionAlias type="masyb" replacement="ma?" reason="deprecated"/> <!- - Sidi Youssef Ben Ali => ?? -->
+			<!-- <subdivisionAlias type="mk01" replacement="mk?" reason="deprecated"/> <!- - Aerodrom => ?? -->
+			<!-- <subdivisionAlias type="mk02" replacement="mk?" reason="deprecated"/> <!- - Aračinovo => ?? -->
+			<!-- <subdivisionAlias type="mk03" replacement="mk?" reason="deprecated"/> <!- - Berovo => ?? -->
+			<!-- <subdivisionAlias type="mk04" replacement="mk?" reason="deprecated"/> <!- - Bitola => ?? -->
+			<!-- <subdivisionAlias type="mk05" replacement="mk?" reason="deprecated"/> <!- - Bogdanci => ?? -->
+			<!-- <subdivisionAlias type="mk06" replacement="mk?" reason="deprecated"/> <!- - Bogovinje => ?? -->
+			<!-- <subdivisionAlias type="mk07" replacement="mk?" reason="deprecated"/> <!- - Bosilovo => ?? -->
+			<!-- <subdivisionAlias type="mk08" replacement="mk?" reason="deprecated"/> <!- - Brvenica => ?? -->
+			<!-- <subdivisionAlias type="mk09" replacement="mk?" reason="deprecated"/> <!- - Butel => ?? -->
+			<!-- <subdivisionAlias type="mk10" replacement="mk?" reason="deprecated"/> <!- - Valandovo => ?? -->
+			<!-- <subdivisionAlias type="mk11" replacement="mk?" reason="deprecated"/> <!- - Vasilevo => ?? -->
+			<!-- <subdivisionAlias type="mk12" replacement="mk?" reason="deprecated"/> <!- - Vevčani => ?? -->
+			<!-- <subdivisionAlias type="mk13" replacement="mk?" reason="deprecated"/> <!- - Veles => ?? -->
+			<!-- <subdivisionAlias type="mk14" replacement="mk?" reason="deprecated"/> <!- - Vinica => ?? -->
+			<!-- <subdivisionAlias type="mk15" replacement="mk?" reason="deprecated"/> <!- - Vraneštica => ?? -->
+			<!-- <subdivisionAlias type="mk16" replacement="mk?" reason="deprecated"/> <!- - Vrapčište => ?? -->
+			<!-- <subdivisionAlias type="mk17" replacement="mk?" reason="deprecated"/> <!- - Gazi Baba => ?? -->
+			<!-- <subdivisionAlias type="mk18" replacement="mk?" reason="deprecated"/> <!- - Gevgelija => ?? -->
+			<!-- <subdivisionAlias type="mk19" replacement="mk?" reason="deprecated"/> <!- - Gostivar => ?? -->
+			<!-- <subdivisionAlias type="mk20" replacement="mk?" reason="deprecated"/> <!- - Gradsko => ?? -->
+			<!-- <subdivisionAlias type="mk21" replacement="mk?" reason="deprecated"/> <!- - Debar => ?? -->
+			<!-- <subdivisionAlias type="mk22" replacement="mk?" reason="deprecated"/> <!- - Debarca => ?? -->
+			<!-- <subdivisionAlias type="mk23" replacement="mk?" reason="deprecated"/> <!- - Delčevo => ?? -->
+			<!-- <subdivisionAlias type="mk24" replacement="mk?" reason="deprecated"/> <!- - Demir Kapija => ?? -->
+			<!-- <subdivisionAlias type="mk25" replacement="mk?" reason="deprecated"/> <!- - Demir Hisar => ?? -->
+			<!-- <subdivisionAlias type="mk26" replacement="mk?" reason="deprecated"/> <!- - Dojran => ?? -->
+			<!-- <subdivisionAlias type="mk27" replacement="mk?" reason="deprecated"/> <!- - Dolneni => ?? -->
+			<!-- <subdivisionAlias type="mk28" replacement="mk?" reason="deprecated"/> <!- - Drugovo => ?? -->
+			<!-- <subdivisionAlias type="mk29" replacement="mk?" reason="deprecated"/> <!- - Gjorče Petrov => ?? -->
+			<!-- <subdivisionAlias type="mk30" replacement="mk?" reason="deprecated"/> <!- - Želino => ?? -->
+			<!-- <subdivisionAlias type="mk31" replacement="mk?" reason="deprecated"/> <!- - Zajas => ?? -->
+			<!-- <subdivisionAlias type="mk32" replacement="mk?" reason="deprecated"/> <!- - Zelenikovo => ?? -->
+			<!-- <subdivisionAlias type="mk33" replacement="mk?" reason="deprecated"/> <!- - Zrnovci => ?? -->
+			<!-- <subdivisionAlias type="mk34" replacement="mk?" reason="deprecated"/> <!- - Ilinden => ?? -->
+			<!-- <subdivisionAlias type="mk35" replacement="mk?" reason="deprecated"/> <!- - Jegunovce => ?? -->
+			<!-- <subdivisionAlias type="mk36" replacement="mk?" reason="deprecated"/> <!- - Kavadarci => ?? -->
+			<!-- <subdivisionAlias type="mk37" replacement="mk?" reason="deprecated"/> <!- - Karbinci => ?? -->
+			<!-- <subdivisionAlias type="mk38" replacement="mk?" reason="deprecated"/> <!- - Karpoš => ?? -->
+			<!-- <subdivisionAlias type="mk39" replacement="mk?" reason="deprecated"/> <!- - Kisela Voda => ?? -->
+			<!-- <subdivisionAlias type="mk40" replacement="mk?" reason="deprecated"/> <!- - Kičevo => ?? -->
+			<!-- <subdivisionAlias type="mk41" replacement="mk?" reason="deprecated"/> <!- - Konče => ?? -->
+			<!-- <subdivisionAlias type="mk42" replacement="mk?" reason="deprecated"/> <!- - Kočani => ?? -->
+			<!-- <subdivisionAlias type="mk43" replacement="mk?" reason="deprecated"/> <!- - Kratovo => ?? -->
+			<!-- <subdivisionAlias type="mk44" replacement="mk?" reason="deprecated"/> <!- - Kriva Palanka => ?? -->
+			<!-- <subdivisionAlias type="mk45" replacement="mk?" reason="deprecated"/> <!- - Krivogaštani => ?? -->
+			<!-- <subdivisionAlias type="mk46" replacement="mk?" reason="deprecated"/> <!- - Kruševo => ?? -->
+			<!-- <subdivisionAlias type="mk47" replacement="mk?" reason="deprecated"/> <!- - Kumanovo => ?? -->
+			<!-- <subdivisionAlias type="mk48" replacement="mk?" reason="deprecated"/> <!- - Lipkovo => ?? -->
+			<!-- <subdivisionAlias type="mk49" replacement="mk?" reason="deprecated"/> <!- - Lozovo => ?? -->
+			<!-- <subdivisionAlias type="mk50" replacement="mk?" reason="deprecated"/> <!- - Mavrovo and Rostuša => ?? -->
+			<!-- <subdivisionAlias type="mk51" replacement="mk?" reason="deprecated"/> <!- - Makedonska Kamenica => ?? -->
+			<!-- <subdivisionAlias type="mk52" replacement="mk?" reason="deprecated"/> <!- - Makedonski Brod => ?? -->
+			<!-- <subdivisionAlias type="mk53" replacement="mk?" reason="deprecated"/> <!- - Mogila => ?? -->
+			<!-- <subdivisionAlias type="mk54" replacement="mk?" reason="deprecated"/> <!- - Negotino => ?? -->
+			<!-- <subdivisionAlias type="mk55" replacement="mk?" reason="deprecated"/> <!- - Novaci => ?? -->
+			<!-- <subdivisionAlias type="mk56" replacement="mk?" reason="deprecated"/> <!- - Novo Selo => ?? -->
+			<!-- <subdivisionAlias type="mk57" replacement="mk?" reason="deprecated"/> <!- - Oslomej => ?? -->
+			<!-- <subdivisionAlias type="mk58" replacement="mk?" reason="deprecated"/> <!- - Ohrid => ?? -->
+			<!-- <subdivisionAlias type="mk59" replacement="mk?" reason="deprecated"/> <!- - Petrovec => ?? -->
+			<!-- <subdivisionAlias type="mk60" replacement="mk?" reason="deprecated"/> <!- - Pehčevo => ?? -->
+			<!-- <subdivisionAlias type="mk61" replacement="mk?" reason="deprecated"/> <!- - Plasnica => ?? -->
+			<!-- <subdivisionAlias type="mk62" replacement="mk?" reason="deprecated"/> <!- - Prilep => ?? -->
+			<!-- <subdivisionAlias type="mk63" replacement="mk?" reason="deprecated"/> <!- - Probištip => ?? -->
+			<!-- <subdivisionAlias type="mk64" replacement="mk?" reason="deprecated"/> <!- - Radoviš => ?? -->
+			<!-- <subdivisionAlias type="mk65" replacement="mk?" reason="deprecated"/> <!- - Rankovce => ?? -->
+			<!-- <subdivisionAlias type="mk66" replacement="mk?" reason="deprecated"/> <!- - Resen => ?? -->
+			<!-- <subdivisionAlias type="mk67" replacement="mk?" reason="deprecated"/> <!- - Rosoman => ?? -->
+			<!-- <subdivisionAlias type="mk68" replacement="mk?" reason="deprecated"/> <!- - Saraj => ?? -->
+			<!-- <subdivisionAlias type="mk69" replacement="mk?" reason="deprecated"/> <!- - Sveti Nikole => ?? -->
+			<!-- <subdivisionAlias type="mk70" replacement="mk?" reason="deprecated"/> <!- - Sopište => ?? -->
+			<!-- <subdivisionAlias type="mk71" replacement="mk?" reason="deprecated"/> <!- - Staro Nagoričane => ?? -->
+			<!-- <subdivisionAlias type="mk72" replacement="mk?" reason="deprecated"/> <!- - Struga => ?? -->
+			<!-- <subdivisionAlias type="mk73" replacement="mk?" reason="deprecated"/> <!- - Strumica => ?? -->
+			<!-- <subdivisionAlias type="mk74" replacement="mk?" reason="deprecated"/> <!- - Studeničani => ?? -->
+			<!-- <subdivisionAlias type="mk75" replacement="mk?" reason="deprecated"/> <!- - Tearce => ?? -->
+			<!-- <subdivisionAlias type="mk76" replacement="mk?" reason="deprecated"/> <!- - Tetovo => ?? -->
+			<!-- <subdivisionAlias type="mk77" replacement="mk?" reason="deprecated"/> <!- - Centar => ?? -->
+			<!-- <subdivisionAlias type="mk78" replacement="mk?" reason="deprecated"/> <!- - Centar Župa => ?? -->
+			<!-- <subdivisionAlias type="mk79" replacement="mk?" reason="deprecated"/> <!- - Čair => ?? -->
+			<!-- <subdivisionAlias type="mk80" replacement="mk?" reason="deprecated"/> <!- - Čaška => ?? -->
+			<!-- <subdivisionAlias type="mk81" replacement="mk?" reason="deprecated"/> <!- - Češinovo-Obleševo => ?? -->
+			<!-- <subdivisionAlias type="mk82" replacement="mk?" reason="deprecated"/> <!- - Čučer-Sandevo => ?? -->
+			<!-- <subdivisionAlias type="mk83" replacement="mk?" reason="deprecated"/> <!- - Štip => ?? -->
+			<!-- <subdivisionAlias type="mk84" replacement="mk?" reason="deprecated"/> <!- - Šuto Orizari => ?? -->
+			<!-- <subdivisionAlias type="mk85" replacement="mk?" reason="deprecated"/> <!- - Skopje => ?? -->
+			<subdivisionAlias type="mrnkc" replacement="mr13 mr14 mr15" reason="deprecated"/> <!-- ??? => Nouakchott Ouest, Nouakchott Nord, Nouakchott Sud -->
+			<!-- <subdivisionAlias type="mvce" replacement="mv?" reason="deprecated"/> <!- - Central Province => ?? -->
+			<!-- <subdivisionAlias type="mvnc" replacement="mv?" reason="deprecated"/> <!- - North Central Province => ?? -->
+			<!-- <subdivisionAlias type="mvno" replacement="mv?" reason="deprecated"/> <!- - North Province => ?? -->
+			<!-- <subdivisionAlias type="mvsc" replacement="mv?" reason="deprecated"/> <!- - South Central Province => ?? -->
+			<!-- <subdivisionAlias type="mvsu" replacement="mv?" reason="deprecated"/> <!- - South Province => ?? -->
+			<!-- <subdivisionAlias type="mvun" replacement="mv?" reason="deprecated"/> <!- - Upper North Province => ?? -->
+			<!-- <subdivisionAlias type="mvus" replacement="mv?" reason="deprecated"/> <!- - Upper South Province => ?? -->
+			<!-- <subdivisionAlias type="mxdif" replacement="mx?" reason="deprecated"/> <!- - Mexico City => ?? -->
+			<!-- <subdivisionAlias type="no16" replacement="no?" reason="deprecated"/> <!- - Sør-Trøndelag => ?? -->
+			<!-- <subdivisionAlias type="no17" replacement="no?" reason="deprecated"/> <!- - Nord-Trøndelag => ?? -->
+			<subdivisionAlias type="no23" replacement="no50" reason="deprecated"/> <!-- Trøndelag => Trøndelag -->
+			<subdivisionAlias type="nzn" replacement="nzauk nzbop nzgis nzhkb nzmwt nzntl nztki nzwgn nzwko" reason="deprecated"/> <!-- ??? => Auckland, Bay of Plenty, Gisborne, Hawke’s Bay, Manawatu-Wanganui, Northland, Taranaki, Wellington, Waikato -->
+			<subdivisionAlias type="nzs" replacement="nzcan nzmbh nznsn nzota nzstl nztas nzwtc" reason="deprecated"/> <!-- ??? => Canterbury, Marl, Nelson, Otago, Southland, Tasman, West Coast -->
+			<subdivisionAlias type="omba" replacement="ombj ombs" reason="deprecated"/> <!-- ??? => Janub al Batinah, Shamal al Batinah -->
+			<subdivisionAlias type="omsh" replacement="omsj omss" reason="deprecated"/> <!-- ??? => Janub ash Sharqiyah, Shamal ash Sharqiyah -->
+			<!-- <subdivisionAlias type="pkta" replacement="pk?" reason="deprecated"/> <!- - Federally Administered Tribal Areas => ?? -->
+			<subdivisionAlias type="plds" replacement="pl02" reason="deprecated"/> <!-- ??? => Lower Silesia -->
+			<subdivisionAlias type="plkp" replacement="pl04" reason="deprecated"/> <!-- ??? => Kuyavia-Pomerania -->
+			<subdivisionAlias type="pllb" replacement="pl08" reason="deprecated"/> <!-- ??? => Lubusz -->
+			<subdivisionAlias type="plld" replacement="pl10" reason="deprecated"/> <!-- ??? => Łódź -->
+			<subdivisionAlias type="pllu" replacement="pl06" reason="deprecated"/> <!-- ??? => Lublin -->
+			<subdivisionAlias type="plma" replacement="pl12" reason="deprecated"/> <!-- ??? => Lesser Poland -->
+			<subdivisionAlias type="plmz" replacement="pl14" reason="deprecated"/> <!-- ??? => Mazovia -->
+			<subdivisionAlias type="plop" replacement="pl16" reason="deprecated"/> <!-- ??? => Opole -->
+			<subdivisionAlias type="plpd" replacement="pl20" reason="deprecated"/> <!-- ??? => Podlachia -->
+			<subdivisionAlias type="plpk" replacement="pl18" reason="deprecated"/> <!-- ??? => Subcarpathia -->
+			<subdivisionAlias type="plpm" replacement="pl22" reason="deprecated"/> <!-- ??? => Pomerania -->
+			<subdivisionAlias type="plsk" replacement="pl26" reason="deprecated"/> <!-- ??? => Holy Cross -->
+			<subdivisionAlias type="plsl" replacement="pl24" reason="deprecated"/> <!-- ??? => Silesia -->
+			<subdivisionAlias type="plwn" replacement="pl28" reason="deprecated"/> <!-- ??? => Warmia-Masuria -->
+			<subdivisionAlias type="plwp" replacement="pl30" reason="deprecated"/> <!-- ??? => Greater Poland -->
+			<subdivisionAlias type="plzp" replacement="pl32" reason="deprecated"/> <!-- ??? => West Pomerania -->
+			<subdivisionAlias type="tteto" replacement="tttob" reason="deprecated"/> <!-- ??? => Tobago -->
+			<subdivisionAlias type="ttrcm" replacement="ttmrc" reason="deprecated"/> <!-- ??? => Mayaro-Rio Claro -->
+			<subdivisionAlias type="ttwto" replacement="tttob" reason="deprecated"/> <!-- ??? => Tobago -->
+			<subdivisionAlias type="twkhq" replacement="twkhh" reason="deprecated"/> <!-- ??? => Kaohsiung -->
+			<subdivisionAlias type="twtnq" replacement="twtnn" reason="deprecated"/> <!-- ??? => Tainan -->
+			<subdivisionAlias type="twtpq" replacement="twnwt" reason="deprecated"/> <!-- ??? => New Taipei -->
+			<subdivisionAlias type="twtxq" replacement="twtxg" reason="deprecated"/> <!-- ??? => Taichung -->
+			<!-- <subdivisionAlias type="zagt" replacement="za?" reason="deprecated"/> <!- - Gauteng => ?? -->
+			<!-- <subdivisionAlias type="zanl" replacement="za?" reason="deprecated"/> <!- - KwaZulu-Natal => ?? -->
+			<!-- end of data generated with GenerateSubdivisions -->
+
+			<!-- Curated subdivision data, if any -->	
+						
+			
+            <!-- variants -->
+            <variantAlias type="polytoni" replacement="polyton" reason="deprecated"/>
+			<variantAlias type="heploc" replacement="alalc97" reason="deprecated"/> <!-- heploc -->
+            <zoneAlias type="Africa/Timbuktu" replacement="Africa/Bamako" reason="deprecated"/>          
+            <zoneAlias type="Pacific/Yap" replacement="Pacific/Truk" reason="deprecated"/>          
+            <zoneAlias type="Europe/Belfast" replacement="Europe/London" reason="deprecated"/>
+            <zoneAlias type="SystemV/AST4ADT" replacement="America/Halifax" reason="deprecated"/>
+            <zoneAlias type="SystemV/EST5EDT" replacement="America/New_York" reason="deprecated"/>
+            <zoneAlias type="SystemV/CST6CDT" replacement="America/Chicago" reason="deprecated"/>
+            <zoneAlias type="SystemV/MST7MDT" replacement="America/Denver" reason="deprecated"/>
+            <zoneAlias type="SystemV/PST8PDT" replacement="America/Los_Angeles" reason="deprecated"/>
+            <zoneAlias type="SystemV/YST9YDT" replacement="America/Anchorage" reason="deprecated"/>
+            <zoneAlias type="SystemV/AST4" replacement="America/Puerto_Rico" reason="deprecated"/>
+            <zoneAlias type="SystemV/EST5" replacement="America/Indianapolis" reason="deprecated"/>
+            <zoneAlias type="EST" replacement="America/Indianapolis" reason="deprecated"/>
+            <zoneAlias type="SystemV/CST6" replacement="America/Regina" reason="deprecated"/>
+            <zoneAlias type="SystemV/MST7" replacement="America/Phoenix" reason="deprecated"/>
+            <zoneAlias type="MST" replacement="America/Phoenix" reason="deprecated"/>
+            <zoneAlias type="SystemV/PST8" replacement="Pacific/Pitcairn" reason="deprecated"/>
+            <zoneAlias type="SystemV/YST9" replacement="Pacific/Gambier" reason="deprecated"/>
+            <zoneAlias type="SystemV/HST10" replacement="Pacific/Honolulu" reason="deprecated"/>
+            <zoneAlias type="HST" replacement="Pacific/Honolulu" reason="deprecated"/>       
+            <zoneAlias type="Atlantic/Jan_Mayen" replacement="Europe/Oslo" reason="deprecated"/>
+            <zoneAlias type="America/Shiprock" replacement="America/Denver" reason="deprecated"/>
+            <zoneAlias type="Antarctica/South_Pole" replacement="Pacific/Auckland" reason="deprecated"/>
+            <zoneAlias type="America/Montreal" replacement="America/Toronto" reason="deprecated"/>
+            <zoneAlias type="Asia/Chongqing" replacement="Asia/Shanghai" reason="deprecated"/>
+            <zoneAlias type="Asia/Harbin" replacement="Asia/Shanghai" reason="deprecated"/>
+            <zoneAlias type="Asia/Kashgar" replacement="Asia/Urumqi" reason="deprecated"/>
+        </alias>
+		<defaultContent locales="
+			aa_ET af_ZA agq_CM ak_GH am_ET an_ES ar_001 arn_CL as_IN asa_TZ ast_ES
+			az_Arab_IR az_Cyrl_AZ az_Latn az_Latn_AZ
+			ba_RU bas_CM be_BY bem_ZM bez_TZ bg_BG bgn_PK blt_VN bm_ML bm_Nkoo_ML bn_BD
+			bo_CN br_FR brx_IN bs_Cyrl_BA bs_Latn bs_Latn_BA bss_CM byn_ER
+			ca_ES cad_US cch_NG ccp_BD ce_RU ceb_PH cgg_UG chr_US cic_US ckb_IQ co_FR cs_CZ
+			cu_RU cv_RU cy_GB
+			da_DK dav_KE de_DE dje_NE doi_IN dsb_DE dua_CM dv_MV dyo_SN dz_BT
+			ebu_KE ee_GH el_GR en_Dsrt_US en_US eo_001 es_ES et_EE eu_ES ewo_CM
+			fa_IR ff_Adlm_GN ff_Latn ff_Latn_SN fi_FI fil_PH fo_FO fr_FR fur_IT fy_NL
+			ga_IE gaa_GH gd_GB gez_ET gl_ES gn_PY gsw_CH gu_IN guz_KE gv_IM
+			ha_Arab_NG ha_NG haw_US he_IL hi_IN hi_Latn_IN hr_HR hsb_DE hu_HU hy_AM
+			ia_001 id_ID ife_TG ig_NG ii_CN io_001 is_IS it_IT iu_CA iu_Latn_CA
+			ja_JP jbo_001 jgo_CM jmc_TZ jv_ID
+			ka_GE kab_DZ kaj_NG kam_KE kcg_NG kde_TZ kea_CV ken_CM kgp_BR khq_ML ki_KE
+			kk_KZ kkj_CM kl_GL kln_KE km_KH kn_IN ko_KR kok_IN kpe_LR ks_Arab ks_Arab_IN
+			ks_Deva_IN ksb_TZ ksf_CM ksh_DE ku_TR kw_GB ky_KG
+			la_VA lag_TZ lb_LU lg_UG lij_IT lkt_US ln_CD lo_LA lrc_IR lt_LT lu_CD luo_KE
+			luy_KE lv_LV
+			mai_IN mas_KE mer_KE mfe_MU mg_MG mgh_MZ mgo_CM mi_NZ mk_MK ml_IN mn_MN
+			mn_Mong_CN mni_Beng mni_Beng_IN mni_Mtei_IN moh_CA mr_IN ms_Arab_MY ms_MY mt_MT
+			mua_CM mus_US my_MM myv_RU mzn_IR
+			naq_NA nb nb_NO nd_ZW nds_DE ne_NP nl_NL nmg_CM nn_NO nnh_CM nqo_GN nr_ZA nso_ZA nus_SS
+			nv_US ny_MW nyn_UG
+			oc_FR om_ET or_IN os_GE osa_US
+			pa_Arab_PK pa_Guru pa_Guru_IN pcm_NG pl_PL prg_001 ps_AF pt_BR
+			qu_PE quc_GT
+			rm_CH rn_BI ro_RO rof_TZ ru_RU rw_RW rwk_TZ
+			sa_IN sah_RU saq_KE sat_Deva_IN sat_Olck sat_Olck_IN sbp_TZ sc_IT scn_IT
+			sd_Arab sd_Arab_PK sd_Deva_IN sdh_IR se_NO seh_MZ ses_ML sg_CF shi_Latn_MA
+			shi_Tfng shi_Tfng_MA si_LK sid_ET sk_SK sl_SI sma_SE smj_SE smn_FI sms_FI sn_ZW
+			so_SO sq_AL sr_Cyrl sr_Cyrl_RS sr_Latn_RS ss_ZA ssy_ER st_ZA su_Latn su_Latn_ID
+			sv_SE sw_TZ syr_IQ szl_PL
+			ta_IN te_IN teo_UG tg_TJ th_TH ti_ET tig_ER tk_TM tn_ZA to_TO tr_TR trv_TW
+			trw_PK ts_ZA tt_RU twq_NE tzm_MA
+			ug_CN uk_UA ur_PK uz_Arab_AF uz_Cyrl_UZ uz_Latn uz_Latn_UZ
+			vai_Latn_LR vai_Vaii vai_Vaii_LR ve_ZA vi_VN vo_001 vun_TZ
+			wa_BE wae_CH wal_ET wbp_AU wo_SN
+			xh_ZA xog_UG
+			yav_CM yi_001 yo_NG yue_Hans_CN yue_Hant yue_Hant_HK
+			zgh_MA zh_Hans zh_Hans_CN zh_Hant_TW zu_ZA"
+		/>
+    </metadata>
+</supplementalData>

@@ -1,0 +1,724 @@
+/*
+ * Copyright (c) 1998, 2003, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+options {
+  JAVA_UNICODE_ESCAPE = true;
+  STATIC = false;
+}
+
+PARSER_BEGIN(ExpressionParser)
+
+package com.sun.tools.example.debug.expr;
+
+import com.sun.jdi.*;
+import java.util.Stack;
+import java.util.List;
+import java.util.ArrayList;
+
+public class ExpressionParser {    
+
+  Stack stack = new Stack();    
+  VirtualMachine vm = null;
+  GetFrame frameGetter = null;
+  private static GetFrame lastFrameGetter;
+  private static LValue lastLValue;
+
+  LValue peek() {
+    return (LValue)stack.peek();
+  }
+
+  LValue pop() {
+    return (LValue)stack.pop();
+  }
+
+  void push(LValue lval) {
+    stack.push(lval);
+  }
+
+  public static Value getMassagedValue() throws ParseException {
+        return lastLValue.getMassagedValue(lastFrameGetter);
+  }
+
+  public interface GetFrame {
+        StackFrame get() throws IncompatibleThreadStateException;
+  }
+
+  public static Value evaluate(String expr, VirtualMachine vm, 
+                               GetFrame frameGetter) throws ParseException,
+                                            InvocationException, 
+					    InvalidTypeException,
+					    ClassNotLoadedException,
+					    IncompatibleThreadStateException {
+        // TODO StringBufferInputStream is deprecated.
+        java.io.InputStream in = new java.io.StringBufferInputStream(expr);
+        ExpressionParser parser = new ExpressionParser(in);
+        parser.vm = vm;
+        parser.frameGetter = frameGetter;
+	Value value = null;
+        parser.Expression();
+	lastFrameGetter = frameGetter;
+	lastLValue = parser.pop();
+	return lastLValue.getValue();
+  }
+
+  public static void main(String args[]) {
+    ExpressionParser parser;
+    System.out.print("Java Expression Parser:  ");
+    if (args.length == 0) {
+      System.out.println("Reading from standard input . . .");
+      parser = new ExpressionParser(System.in);
+    } else if (args.length == 1) {
+      System.out.println("Reading from file " + args[0] + " . . .");
+      try {
+        parser = new ExpressionParser(new java.io.FileInputStream(args[0]));
+      } catch (java.io.FileNotFoundException e) {
+        System.out.println("Java Parser Version 1.0.2:  File " + 
+                           args[0] + " not found.");
+        return;
+      }
+    } else {
+      System.out.println("Usage is one of:");
+      System.out.println("         java ExpressionParser < inputfile");
+      System.out.println("OR");
+      System.out.println("         java ExpressionParser inputfile");
+      return;
+    }
+    try {
+        parser.Expression();
+        System.out.print("Java Expression Parser:  ");
+        System.out.println("Java program parsed successfully.");
+    } catch (ParseException e) {
+        System.out.print("Java Expression Parser:  ");
+        System.out.println("Encountered errors during parse.");
+    }
+  }
+
+}
+
+PARSER_END(ExpressionParser)
+
+
+SKIP : /* WHITE SPACE */
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+SPECIAL_TOKEN : /* COMMENTS */
+{
+  <SINGLE_LINE_COMMENT: "//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+| <FORMAL_COMMENT: "/**" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+| <MULTI_LINE_COMMENT: "/*" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+}
+
+TOKEN : /* RESERVED WORDS AND LITERALS */
+{
+  < ABSTRACT: "abstract" >
+| < BOOLEAN: "boolean" >
+| < BREAK: "break" >
+| < BYTE: "byte" >
+| < CASE: "case" >
+| < CATCH: "catch" >
+| < CHAR: "char" >
+| < CLASS: "class" >
+| < CONST: "const" >
+| < CONTINUE: "continue" >
+| < _DEFAULT: "default" >
+| < DO: "do" >
+| < DOUBLE: "double" >
+| < ELSE: "else" >
+| < EXTENDS: "extends" >
+| < FALSE: "false" >
+| < FINAL: "final" >
+| < FINALLY: "finally" >
+| < FLOAT: "float" >
+| < FOR: "for" >
+| < GOTO: "goto" >
+| < IF: "if" >
+| < IMPLEMENTS: "implements" >
+| < IMPORT: "import" >
+| < INSTANCEOF: "instanceof" >
+| < INT: "int" >
+| < INTERFACE: "interface" >
+| < LONG: "long" >
+| < NATIVE: "native" >
+| < NEW: "new" >
+| < NULL: "null" >
+| < PACKAGE: "package">
+| < PRIVATE: "private" >
+| < PROTECTED: "protected" >
+| < PUBLIC: "public" >
+| < RETURN: "return" >
+| < SHORT: "short" >
+| < STATIC: "static" >
+| < SUPER: "super" >
+| < SWITCH: "switch" >
+| < SYNCHRONIZED: "synchronized" >
+| < THIS: "this" >
+| < THROW: "throw" >
+| < THROWS: "throws" >
+| < TRANSIENT: "transient" >
+| < TRUE: "true" >
+| < TRY: "try" >
+| < VOID: "void" >
+| < VOLATILE: "volatile" >
+| < WHILE: "while" >
+}
+
+TOKEN : /* LITERALS */
+{
+  <
+    INTEGER_LITERAL:
+        <DECIMAL_LITERAL> (["l","L"])?
+      | <HEX_LITERAL> (["l","L"])?
+      | <OCTAL_LITERAL> (["l","L"])?
+  >
+|
+  < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
+|
+  < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+|
+  < #OCTAL_LITERAL: "0" (["0"-"7"])* >
+|
+  < FLOATING_POINT_LITERAL:
+        (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["f","F","d","D"])?
+      | "." (["0"-"9"])+ (<EXPONENT>)? (["f","F","d","D"])?
+      | (["0"-"9"])+ <EXPONENT> (["f","F","d","D"])?
+      | (["0"-"9"])+ (<EXPONENT>)? ["f","F","d","D"]
+  >
+|
+  < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+|
+  < CHARACTER_LITERAL:
+      "'"
+      (   (~["'","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )
+      "'"
+  >
+|
+  < STRING_LITERAL:
+      "\""
+      (   (~["\"","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )*
+      "\""
+  >
+}
+
+TOKEN : /* IDENTIFIERS */
+{
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+|
+  < #LETTER:
+      [
+       "\u0024",
+       "\u0041"-"\u005a",
+       "\u005f",
+       "\u0061"-"\u007a",
+       "\u00c0"-"\u00d6",
+       "\u00d8"-"\u00f6",
+       "\u00f8"-"\u00ff",
+       "\u0100"-"\u1fff",
+       "\u3040"-"\u318f",
+       "\u3300"-"\u337f",
+       "\u3400"-"\u3d2d",
+       "\u4e00"-"\u9fff",
+       "\uf900"-"\ufaff"
+      ]
+  >
+|
+  < #DIGIT:
+      [
+       "\u0030"-"\u0039",
+       "\u0660"-"\u0669",
+       "\u06f0"-"\u06f9",
+       "\u0966"-"\u096f",
+       "\u09e6"-"\u09ef",
+       "\u0a66"-"\u0a6f",
+       "\u0ae6"-"\u0aef",
+       "\u0b66"-"\u0b6f",
+       "\u0be7"-"\u0bef",
+       "\u0c66"-"\u0c6f",
+       "\u0ce6"-"\u0cef",
+       "\u0d66"-"\u0d6f",
+       "\u0e50"-"\u0e59",
+       "\u0ed0"-"\u0ed9",
+       "\u1040"-"\u1049"
+      ]
+  >
+}
+
+TOKEN : /* SEPARATORS */
+{
+  < LPAREN: "(" >
+| < RPAREN: ")" >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
+| < LBRACKET: "[" >
+| < RBRACKET: "]" >
+| < SEMICOLON: ";" >
+| < COMMA: "," >
+| < DOT: "." >
+}
+
+TOKEN : /* OPERATORS */
+{
+  < ASSIGN: "=" >
+| < GT: ">" >
+| < LT: "<" >
+| < BANG: "!" >
+| < TILDE: "~" >
+| < HOOK: "?" >
+| < COLON: ":" >
+| < EQ: "==" >
+| < LE: "<=" >
+| < GE: ">=" >
+| < NE: "!=" >
+| < SC_OR: "||" >
+| < SC_AND: "&&" >
+| < INCR: "++" >
+| < DECR: "--" >
+| < PLUS: "+" >
+| < MINUS: "-" >
+| < STAR: "*" >
+| < SLASH: "/" >
+| < BIT_AND: "&" >
+| < BIT_OR: "|" >
+| < XOR: "^" >
+| < REM: "%" >
+| < LSHIFT: "<<" >
+| < RSIGNEDSHIFT: ">>" >
+| < RUNSIGNEDSHIFT: ">>>" >
+| < PLUSASSIGN: "+=" >
+| < MINUSASSIGN: "-=" >
+| < STARASSIGN: "*=" >
+| < SLASHASSIGN: "/=" >
+| < ANDASSIGN: "&=" >
+| < ORASSIGN: "|=" >
+| < XORASSIGN: "^=" >
+| < REMASSIGN: "%=" >
+| < LSHIFTASSIGN: "<<=" >
+| < RSIGNEDSHIFTASSIGN: ">>=" >
+| < RUNSIGNEDSHIFTASSIGN: ">>>=" >
+}
+
+
+/*****************************************
+ * THE JAVA LANGUAGE GRAMMAR STARTS HERE *
+ *****************************************/
+
+/*
+ * Type, name and expression syntax follows.
+ */
+
+void Type() :
+{}
+{
+  ( PrimitiveType() | Name() ) ( "[" "]" )*
+}
+
+void PrimitiveType() :
+{}
+{
+  "boolean"
+|
+  "char"
+|
+  "byte"
+|
+  "short"
+|
+  "int"
+|
+  "long"
+|
+  "float"
+|
+  "double"
+}
+
+
+String Name() :
+{StringBuffer sb = new StringBuffer();}
+{
+  <IDENTIFIER> { sb.append(token); }
+  ( LOOKAHEAD(2) "." <IDENTIFIER> { sb.append('.'); sb.append(token); }
+  )*
+        { return sb.toString(); }
+}
+
+void NameList() :
+{}
+{
+  Name()
+  ( "," Name()
+  )*
+}
+
+
+/*
+ * Expression syntax follows.
+ */
+
+void Expression() :
+{}
+{
+  LOOKAHEAD( PrimaryExpression() AssignmentOperator() )
+  Assignment()
+|
+  ConditionalExpression()
+}
+
+void Assignment() :
+{}
+{
+  PrimaryExpression() AssignmentOperator() Expression()
+        { LValue exprVal = pop(); pop().setValue(exprVal); push(exprVal);}
+}
+
+void AssignmentOperator() :
+{}
+{
+  "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>=" | ">>>=" | "&=" | "^=" | "|="
+}
+
+void ConditionalExpression() :
+{}
+{
+  ConditionalOrExpression() 
+        [ "?" Expression() ":" ConditionalExpression() 
+                { LValue falseBranch = pop(); LValue trueBranch = pop(); 
+                  Value cond = pop().interiorGetValue();
+                  if (cond instanceof BooleanValue) {
+                        push(((BooleanValue)cond).booleanValue()? 
+                                        trueBranch : falseBranch);
+                  } else {
+                        throw new ParseException("Condition must be boolean");
+                  }
+                }
+        ]
+}
+
+void ConditionalOrExpression() :
+{}
+{
+  ConditionalAndExpression() 
+        ( "||" ConditionalAndExpression() 
+                        { throw new ParseException("operation not yet supported"); }
+        )*
+}
+
+void ConditionalAndExpression() :
+{}
+{
+  InclusiveOrExpression() 
+        ( "&&" InclusiveOrExpression() 
+                        { throw new ParseException("operation not yet supported"); }
+        )*
+}
+
+void InclusiveOrExpression() :
+{}
+{
+  ExclusiveOrExpression() 
+        ( "|" ExclusiveOrExpression() 
+                        { throw new ParseException("operation not yet supported"); }
+        )*
+}
+
+void ExclusiveOrExpression() :
+{}
+{
+  AndExpression() 
+        ( "^" AndExpression() 
+                        { throw new ParseException("operation not yet supported"); }
+        )*
+}
+
+void AndExpression() :
+{}
+{
+  EqualityExpression() 
+        ( "&" EqualityExpression() 
+                        { throw new ParseException("operation not yet supported"); }
+        )*
+}
+
+void EqualityExpression() :
+{Token tok;}
+{
+  InstanceOfExpression() 
+        ( ( tok = "==" | tok = "!=" ) InstanceOfExpression() 
+                { LValue left = pop(); 
+                  push( LValue.booleanOperation(vm, tok, pop(), left) ); }
+        )*
+}
+
+void InstanceOfExpression() :
+{}
+{
+  RelationalExpression() 
+        [ "instanceof" Type() 
+                        { throw new ParseException("operation not yet supported"); }
+        ]
+}
+
+void RelationalExpression() :
+{Token tok;}
+{
+  ShiftExpression() 
+        ( ( tok = "<" | tok = ">" | tok = "<=" | tok = ">=" ) ShiftExpression()
+                { LValue left = pop(); 
+                  push( LValue.booleanOperation(vm, tok, pop(), left) ); }
+         )*
+}
+
+void ShiftExpression() :
+{}
+{
+  AdditiveExpression() 
+        ( ( "<<" | ">>" | ">>>" ) AdditiveExpression() 
+                        { throw new ParseException("operation not yet supported"); }
+        )*
+}
+
+void AdditiveExpression() :
+{Token tok;}
+{
+  MultiplicativeExpression() 
+        ( ( tok = "+" | tok = "-" ) MultiplicativeExpression() 
+                { LValue left = pop(); 
+                  push( LValue.operation(vm, tok, pop(), left, frameGetter) ); }
+        )*
+}
+
+void MultiplicativeExpression() :
+{Token tok;}
+{
+  UnaryExpression() 
+        ( ( tok = "*" | tok = "/" | tok = "%" ) UnaryExpression()
+                { LValue left = pop(); 
+                  push( LValue.operation(vm, tok, pop(), left, frameGetter) ); }
+        )*
+}
+
+void UnaryExpression() :
+{Token tok;}
+{
+  ( tok = "+" | tok = "-" ) UnaryExpression()
+                { push( LValue.operation(vm, tok, pop(), frameGetter) ); }
+|
+  PreIncrementExpression()
+|
+  PreDecrementExpression()
+|
+  UnaryExpressionNotPlusMinus()
+}
+
+void PreIncrementExpression() :
+{}
+{
+  "++" PrimaryExpression()
+                        { throw new ParseException("operation not yet supported"); }
+}
+
+void PreDecrementExpression() :
+{}
+{
+  "--" PrimaryExpression()
+                        { throw new ParseException("operation not yet supported"); }
+}
+
+void UnaryExpressionNotPlusMinus() :
+{Token tok;}
+{
+  ( tok = "~" | tok = "!" ) UnaryExpression()
+                { push( LValue.operation(vm, tok, pop(), frameGetter) ); }
+|
+  LOOKAHEAD( CastLookahead() )
+  CastExpression()
+|
+  PostfixExpression()
+}
+
+// This production is to determine lookahead only.  The LOOKAHEAD specifications
+// below are not used, but they are there just to indicate that we know about
+// this.
+void CastLookahead() :
+{}
+{
+  LOOKAHEAD(2)
+  "(" PrimitiveType()
+|
+  LOOKAHEAD("(" Name() "[")
+  "(" Name() "[" "]"
+|
+  "(" Name() ")" ( "~" | "!" | "(" | <IDENTIFIER> | "this" | "super" | "new" | Literal() )
+}
+
+void PostfixExpression() :
+{}
+{
+  PrimaryExpression() 
+        [ "++" | "--" 
+                        { throw new ParseException("operation not yet supported"); }
+        ]
+}
+
+void CastExpression() :
+{}
+{
+  LOOKAHEAD(2)
+  "(" PrimitiveType() ( "[" "]" )* ")" UnaryExpression()
+|
+  "(" Name() ( "[" "]" )* ")" UnaryExpressionNotPlusMinus()
+}
+
+void PrimaryExpression() :
+{}
+{
+  PrimaryPrefix() ( PrimarySuffix() )*
+}
+
+void PrimaryPrefix() :
+{String name;}
+{
+  Literal()
+|
+  name = Name()
+                        { push(LValue.makeName(vm, frameGetter, name)); }
+|
+  "this"
+                        { push(LValue.makeThisObject(vm, frameGetter, token)); }
+|
+  "super" "." <IDENTIFIER>
+                        { throw new ParseException("operation not yet supported"); }
+|
+  "(" Expression() ")"
+|
+  AllocationExpression()
+}
+
+void PrimarySuffix() :
+{List argList;}
+{
+  "[" Expression() "]"  
+                        { LValue index = pop();
+                          push(pop().arrayElementLValue(index)); }
+|
+  "." <IDENTIFIER>
+                        { push(pop().memberLValue(frameGetter, token.image)); }
+|
+  argList = Arguments()
+                        { peek().invokeWith(argList); }
+}
+
+void Literal() :
+{}
+{
+  <INTEGER_LITERAL>
+                        { push(LValue.makeInteger(vm, token)); }
+|
+  <FLOATING_POINT_LITERAL>
+                        { push(LValue.makeFloat(vm, token)); }
+|
+  <CHARACTER_LITERAL>
+                        { push(LValue.makeCharacter(vm, token)); }
+|
+  <STRING_LITERAL>
+                        { push(LValue.makeString(vm, token)); }
+|
+  BooleanLiteral()
+                        { push(LValue.makeBoolean(vm, token)); }
+|
+  NullLiteral()
+                        { push(LValue.makeNull(vm, token)); }
+}
+
+void BooleanLiteral() :
+{}
+{
+  "true" 
+|
+  "false"
+}
+
+void NullLiteral() :
+{}
+{
+  "null"
+}
+
+List Arguments() :
+{List argList = new ArrayList();}
+{
+  "(" [ ArgumentList(argList) ] ")"
+  { return argList; }
+}
+
+void ArgumentList(List argList) :
+{}
+{
+  Expression() {argList.add(pop().interiorGetValue());}
+  ( "," Expression() {argList.add(pop().interiorGetValue());} )*
+}
+
+void AllocationExpression() :
+{List argList; String className;}
+{
+  LOOKAHEAD(2)
+  "new" PrimitiveType() ArrayDimensions()
+|
+  "new" className = Name() ( argList = Arguments() 
+                        { push(LValue.makeNewObject(vm, frameGetter, className, argList)); }
+                           | ArrayDimensions() 
+                        { throw new ParseException("operation not yet supported"); }
+			   )
+}
+
+/*
+ * The second LOOKAHEAD specification below is to parse to PrimarySuffix
+ * if there is an expression between the "[...]".
+ */
+void ArrayDimensions() :
+{}
+{
+  ( LOOKAHEAD(2) "[" Expression() "]" )+ ( LOOKAHEAD(2) "[" "]" )*
+}
+

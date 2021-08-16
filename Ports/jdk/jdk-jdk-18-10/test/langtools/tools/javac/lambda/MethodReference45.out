@@ -1,0 +1,2 @@
+MethodReference45.java:38:9: compiler.err.ref.ambiguous: g2, kindname.method, g2(MethodReference45.SAM1), MethodReference45, kindname.method, g2(MethodReference45.SAM2), MethodReference45
+1 error

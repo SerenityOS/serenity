@@ -1,0 +1,3 @@
+IncorrectMsgQualifiedReceiverTest.java:9:91: compiler.err.this.as.identifier
+IncorrectMsgQualifiedReceiverTest.java:10:91: compiler.err.this.as.identifier
+2 errors

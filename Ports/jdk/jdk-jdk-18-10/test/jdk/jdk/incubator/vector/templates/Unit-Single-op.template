@@ -1,0 +1,12 @@
+    static $type$[] [[TEST]]($type$ val) {
+        $type$[] res = new $type$[SPECIES.length()];
+        res[0] = val;
+
+        return res;
+    }
+
+    @Test(dataProvider = "$type$UnaryOpProvider")
+    static void [[TEST]]$vectorteststype$(IntFunction<$type$[]> fa) {
+[[KERNEL]]
+        assertArraysEquals(r, a, $vectorteststype$::[[TEST]]);
+    }

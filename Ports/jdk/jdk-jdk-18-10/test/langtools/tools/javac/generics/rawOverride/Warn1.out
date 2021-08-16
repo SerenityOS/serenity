@@ -1,0 +1,4 @@
+Warn1.java:19:22: compiler.warn.override.unchecked.ret: (compiler.misc.unchecked.implement: get(java.lang.Class), AttributeSet1Impl, <T>get(java.lang.Class<T>), AttributeSet1), Attribute, Attribute<T>
+- compiler.err.warnings.and.werror
+1 error
+1 warning

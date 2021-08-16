@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<xsd:schema xmlns:ipm="http://unique/test"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+targetNamespace="http://unique/test"
+elementFormDefault="qualified">
+
+<xsd:element name="root">
+    <xsd:complexType>
+        <xsd:sequence>
+            <xsd:element ref="ipm:node" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <xsd:unique name="uniqueNode">
+        <xsd:selector xpath="ipm:node"/>
+        <xsd:field xpath="@name"/>
+        <xsd:field xpath="ipm:module/@name"/>
+    </xsd:unique>
+</xsd:element>
+
+<xsd:element name="node">
+    <xsd:complexType>
+        <xsd:sequence>
+            <xsd:element name="module" minOccurs="0" maxOccurs="1">
+                <xsd:complexType>
+                    <xsd:attribute name="name" type="xsd:string"/>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+        <xsd:attribute name="name" type="xsd:string"/>
+    </xsd:complexType>
+</xsd:element>
+
+</xsd:schema>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="en"/>
+		<territory type="NZ"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="mi">Māori</language>
+		</languages>
+	</localeDisplayNames>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d/MM/y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d/MM/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="yyyyMd">d/MM/y G</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d" draft="contributed">d/MM – d/MM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">d/MM – d/MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d" draft="contributed">E, d/MM – E, d/MM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E, d/MM – E, d/MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d" draft="contributed">E, d – E, d MMM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E, d MMM – E, d MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M" draft="contributed">MM/y – MM/y G</greatestDifference>
+							<greatestDifference id="y" draft="contributed">MM/y – MM/y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d" draft="contributed">d/MM/y – d/MM/y G</greatestDifference>
+							<greatestDifference id="M" draft="contributed">d/MM/y – d/MM/y G</greatestDifference>
+							<greatestDifference id="y" draft="contributed">d/MM/y – d/MM/y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d" draft="contributed">E, d/MM/y – E, d/MM/y G</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E, d/MM/y – E, d/MM/y G</greatestDifference>
+							<greatestDifference id="y" draft="contributed">E, d/MM/y – E, d/MM/y G</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<dateFormats>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d/MM/y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d/MM/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="yMd">d/MM/y</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d" draft="contributed">d/MM – d/MM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">d/MM – d/MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d" draft="contributed">E, d/MM – E, d/MM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E, d/MM – E, d/MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d" draft="contributed">E, d – E, d MMM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E, d MMM – E, d MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d" draft="contributed">d/MM/y – d/MM/y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">d/MM/y – d/MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">d/MM/y – d/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d" draft="contributed">E, d/MM/y – E, d/MM/y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E, d/MM/y – E, d/MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">E, d/MM/y – E, d/MM/y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<timeZoneNames>
+			<metazone type="Australia_Central">
+				<short>
+					<generic>ACT</generic>
+					<standard>ACST</standard>
+					<daylight>ACDT</daylight>
+				</short>
+			</metazone>
+			<metazone type="Australia_CentralWestern">
+				<short>
+					<generic>ACWT</generic>
+					<standard>ACWST</standard>
+					<daylight>ACWDT</daylight>
+				</short>
+			</metazone>
+			<metazone type="Australia_Eastern">
+				<short>
+					<generic>AET</generic>
+					<standard>AEST</standard>
+					<daylight>AEDT</daylight>
+				</short>
+			</metazone>
+			<metazone type="Australia_Western">
+				<short>
+					<generic>AWT</generic>
+					<standard>AWST</standard>
+					<daylight>AWDT</daylight>
+				</short>
+			</metazone>
+			<metazone type="Chatham">
+				<short>
+					<generic>CHAT</generic>
+					<standard>CHAST</standard>
+					<daylight>CHADT</daylight>
+				</short>
+			</metazone>
+			<metazone type="Lord_Howe">
+				<short>
+					<generic>LHT</generic>
+					<standard>LHST</standard>
+					<daylight>LHDT</daylight>
+				</short>
+			</metazone>
+			<metazone type="New_Zealand">
+				<short>
+					<generic>NZT</generic>
+					<standard>NZST</standard>
+					<daylight>NZDT</daylight>
+				</short>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<currencies>
+			<currency type="NZD">
+				<symbol>$</symbol>
+			</currency>
+		</currencies>
+	</numbers>
+</ldml>

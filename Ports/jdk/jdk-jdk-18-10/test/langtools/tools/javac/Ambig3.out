@@ -1,0 +1,3 @@
+Ambig3.java:14:14: compiler.err.name.clash.same.erasure: check(E), check(T)
+Ambig3.java:20:1: compiler.err.concrete.inheritance.conflict: check(E), Test<java.lang.String,java.lang.String>, check(T), Test<java.lang.String,java.lang.String>, Test<java.lang.String,java.lang.String>
+2 errors

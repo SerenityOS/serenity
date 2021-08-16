@@ -1,0 +1,9 @@
+    static $type$ [[TEST]]_unary($type$ a, $type$ b) {
+        return ($type$)([[TEST_OP]]);
+    }
+
+    @Test(dataProvider = "$type$BinaryOpProvider")
+    static void [[TEST]]$vectorteststype$Shift(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb) {
+[[KERNEL]]
+        assertShiftArraysEquals(r, a, b, $vectorteststype$::[[TEST]]_unary);
+    }

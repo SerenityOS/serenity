@@ -1,0 +1,2 @@
+Neg18.java:14:21: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: pkg.Neg18_01), (compiler.misc.inaccessible.varargs.type: pkg.Neg18_01.PkgPrivate, kindname.class, Neg18))
+1 error

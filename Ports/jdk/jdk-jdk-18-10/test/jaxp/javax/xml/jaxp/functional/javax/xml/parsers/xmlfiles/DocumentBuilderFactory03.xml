@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!DOCTYPE document [
+	<!ENTITY ws "Wiliam SHAkespeare">
+	<!ELEMENT document (name)>
+	<!ELEMENT title (#PCDATA)>
+]>
+<document>
+	<title>&ws;</title>
+</document>

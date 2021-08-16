@@ -1,0 +1,229 @@
+/*
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+package vm.mlvm.indy.func.java.rawRetypes;
+
+import java.lang.invoke.CallSite;
+import java.lang.invoke.ConstantCallSite;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+
+ public class INDIFY_Test6998541 {
+     private static final int N = 100000;
+
+#
+# String[] types = new String[] { "void", "boolean", "byte", "char", "short", "int", "long", "float", "double" };
+#
+# String[][] primTypes = new String[][] {
+# new String[] { "boolean", "Boolean", "false" },
+# new String[] { "byte", "Byte", "0" },
+# new String[] { "char", "Character", "0" },
+# new String[] { "short", "Short", "0" },
+# new String[] { "int", "Integer", "0" },
+# new String[] { "long", "Long", "0L" },
+# new String[] { "float", "Float", "0f" },
+# new String[] { "double", "Double", "0d" }
+# };
+#
+
+     public static void main(String[] args) throws Throwable {
+#
+# for ( String[] t : primTypes ) {
+#
+         @("do" + t[0]) ();
+#
+# }
+#
+     }
+
+#
+# for ( String[] t : primTypes ) {
+#
+     private static void @("do" + t[0]) () throws Throwable {
+         System.out.println(@("\"do" + t[0] + "\""));
+
+#     if ( t[0].equals("boolean") ) {
+#
+         for (int i = 0; i < N; i++ ) {
+             @(t[0])2prim(false);
+             @(t[0])2prim(true);
+#
+#     } else {
+#
+         @(t[0]) x = @(t[1]).MIN_VALUE;
+         @(t[0]) D = @(t[1]).MAX_VALUE / (N / 2);
+         for (int i = 0; i < N; i++, x += D) {
+#
+             @(t[0])2prim(x);
+
+#         if ( t[0].equals("int") ) {
+             void2prim(x);
+             prim2void(x);
+             prim2prim(x);
+#         }
+#     }
+
+#
+         }
+     }
+# }
+#
+
+     private static void void2prim(int i) throws Throwable {
+#
+# for ( String[] t : primTypes ) {
+#
+         assertEquals(        @(t[2]), (@(t[0])) INDY_@(t[0])_foo_void().invokeExact());  // void -> @(t[0])
+#
+# }
+#
+     }
+
+#
+# for ( String[] f : primTypes ) {
+#
+     private static void @(f[0])2prim(@(f[0]) x) throws Throwable {
+#        if ( f[0].equals("boolean") ) {
+         int i = x ? 1 : 0;
+#        } else {
+         @(f[0]) i = x;
+#        }
+#
+#     for ( String[] t : primTypes ) {
+#        if ( t[0].equals("boolean") ) {
+#        if ( f[0].equals("boolean") ) {
+             boolean z = x;
+#        } else {
+             boolean z = (x != 0);
+#        }
+         assertEquals(z, (@(t[0])) INDY_@(t[0])_foo_@(f[0])().invokeExact(x));  // @(f[0]) -> @(t[0])
+#          } else {
+         assertEquals((@(t[0])) i, (@(t[0])) INDY_@(t[0])_foo_@(f[0])().invokeExact(x));  // @(f[0]) -> @(t[0])
+#          }
+#     }
+#
+     }
+#
+# }
+#
+
+     private static void prim2void(int x) throws Throwable {
+#
+# for ( String[] f : primTypes ) {
+#        if ( f[0].equals("boolean") ) {
+             boolean z = (x != 0);
+              INDY_void_foo_@(f[0])().invokeExact(z);  // @(f[0]) -> void
+#        } else {
+              INDY_void_foo_@(f[0])().invokeExact((@(f[0])) x);  // @(f[0]) -> void
+#        }
+# }
+#
+     }
+
+     private static void void2void() throws Throwable {
+         INDY_void_foo_void().invokeExact();  // void  -> void
+     }
+
+     private static void prim2prim(int x) throws Throwable {
+#
+# for ( String[] f : primTypes ) {
+#        if ( f[0].equals("boolean") ) {
+         boolean z = (x != 0);
+         assertEquals(         z, (@(f[0])) INDY_@(f[0])_spread_@(f[0])().invokeExact(z));  // spread: @(f[0]) -> @(f[0])
+#        } else {
+         assertEquals((@(f[0])) x, (@(f[0])) INDY_@(f[0])_spread_@(f[0])().invokeExact((@(f[0])) x));  // spread: @(f[0]) -> @(f[0])
+#        }
+# }
+     }
+
+     private static void assertEquals(Object o, Object o2) {
+         if (!o.equals(o2))
+             throw new AssertionError("expected: " + o + ", found: " + o2);
+     }
+
+#
+# String[] names = new String[] { "foo", "spread" };
+#
+# for ( String ret : types ) {
+#     for ( String arg : types ) {
+#
+#          String argParam, argTypeParam, methodTypeArg;
+#          if ( ! arg.equals("void") ) {
+#              argParam = "x";
+#              argTypeParam = arg + " x";
+#              methodTypeArg = ", " + arg + ".class";
+#          } else {
+#              argTypeParam = argParam = methodTypeArg = "";
+#          }
+#
+#          for ( String name : names ) {
+#             String methodName = "INDY_" + ret + "_" + name + "_"  + arg;
+#             String wrapperName = "indyWrapper_" + ret + "_" + name;
+
+    private static MethodHandle @methodName;
+    private static MethodHandle @methodName () throws Throwable {
+        if ( @methodName != null ) return @methodName;
+        return ((CallSite) MH_bootstrap().invokeWithArguments(
+                    MethodHandles.lookup(),
+                    @("\"" + name + "\""),
+                    MethodType.methodType(@ret .class @methodTypeArg))).dynamicInvoker();
+    }
+
+#
+#           }
+#       }
+# }
+#
+
+
+    private static MethodType MT_bootstrap () { return MethodType.methodType(CallSite.class, MethodHandles.Lookup.class, String.class, MethodType.class); }
+
+    private static MethodHandle MH_bootstrap () throws Throwable {
+        return MethodHandles.lookup().findStatic(INDIFY_Test6998541.class, "bootstrap", MT_bootstrap());
+    }
+
+     private static CallSite bootstrap(MethodHandles.Lookup declaring, String name, MethodType methodType) throws Throwable {
+         MethodHandles.Lookup lookup = MethodHandles.lookup();
+         MethodHandle mh;
+         if (methodType.parameterCount() == 0) {
+             mh = lookup.findStatic(INDIFY_Test6998541.class, "identity", MethodType.methodType(void.class));
+         } else {
+             Class<?> type = methodType.parameterType(0);
+             mh = lookup.findStatic(INDIFY_Test6998541.class, "identity", MethodType.methodType(type, type));
+
+             if ("spread".equals(name)) {
+                 int paramCount = mh.type().parameterCount();
+                 mh = mh.asSpreader(Object[].class, paramCount).asCollector(Object[].class, paramCount);
+             }
+         }
+         mh = mh.asType(methodType);
+         return new ConstantCallSite(mh);
+     }
+
+# for ( String t : types ) {
+#    if ( t.equals("void") ) continue;
+     private static @t identity(@t v) { return v; }
+# }
+     private static void identity() {}
+}

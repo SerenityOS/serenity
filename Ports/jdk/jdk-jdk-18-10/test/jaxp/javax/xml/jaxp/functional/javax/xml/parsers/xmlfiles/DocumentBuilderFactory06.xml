@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!DOCTYPE note [
+<!ELEMENT note    (#PCDATA|to|with|ar:from|br:from|heading|body)*>
+<!ELEMENT to      (sender)>
+<!ELEMENT sender (#PCDATA)>
+<!ELEMENT with      (message)>
+<!ELEMENT message (#PCDATA)>
+<!ELEMENT ar:from    (tab)>
+<!ELEMENT tab (#PCDATA)>
+<!ELEMENT br:from    (#PCDATA)>
+<!ELEMENT heading (#PCDATA)>
+<!ELEMENT body    (#PCDATA)>
+<!ATTLIST note xmlns:ar CDATA #IMPLIED>
+<!ATTLIST note xmlns:br CDATA #IMPLIED>
+]>
+<note xmlns:ar="http://www.xml.com/books"
+      xmlns:br="http://www.abc.com">
+<to>
+
+<!--This is with whitespace-->
+<sender>John</sender>
+
+</to>
+<with>   <message>with whitespace</message>   </with>
+<ar:from>	<tab>Jani</tab></ar:from>
+<br:from>Next</br:from>
+<heading>Reminder</heading>
+<body> weekend!</body>
+</note> 

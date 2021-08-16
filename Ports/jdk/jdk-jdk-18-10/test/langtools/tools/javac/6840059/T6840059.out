@@ -1,0 +1,2 @@
+T6840059.java:15:9: compiler.err.cant.apply.symbol: kindname.constructor, T6840059, java.lang.Integer, java.lang.String, kindname.class, T6840059, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Integer))
+1 error

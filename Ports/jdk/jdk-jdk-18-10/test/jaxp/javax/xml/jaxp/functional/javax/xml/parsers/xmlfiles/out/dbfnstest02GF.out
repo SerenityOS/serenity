@@ -1,0 +1,79 @@
+startDocument...
+startPrefixMapping...
+prefix: <> uri: <http://www.w3.org/TR/REC-html40>
+startPrefixMapping...
+prefix: <b> uri: <urn:BooksAreUs.org:BookInfo>
+startElement...
+namespaceURI: <http://www.w3.org/TR/REC-html40> localName: <html> qName: <html> Number of Attributes: <2> Line# <0>
+characters...length is:3
+<
+  >
+startElement...
+namespaceURI: <http://www.w3.org/TR/REC-html40> localName: <head> qName: <head> Number of Attributes: <0> Line# <0>
+characters...length is:5
+<
+    >
+startElement...
+namespaceURI: <http://www.w3.org/TR/REC-html40> localName: <title> qName: <title> Number of Attributes: <0> Line# <0>
+characters...length is:10
+<Typography>
+endElement...
+namespaceURI: <http://www.w3.org/TR/REC-html40> localName: <title> qName: <title>
+characters...length is:3
+<
+  >
+endElement...
+namespaceURI: <http://www.w3.org/TR/REC-html40> localName: <head> qName: <head>
+characters...length is:4
+<
+
+  >
+startElement...
+namespaceURI: <http://www.w3.org/TR/REC-html40> localName: <body> qName: <body> Number of Attributes: <0> Line# <0>
+characters...length is:5
+<
+    >
+startElement...
+namespaceURI: <http://www.w3.org/TR/REC-html40> localName: <p> qName: <p> Number of Attributes: <0> Line# <0>
+characters...length is:77
+< Welcome to the world of typography! Here is a book that you may find useful.>
+endElement...
+namespaceURI: <http://www.w3.org/TR/REC-html40> localName: <p> qName: <p>
+characters...length is:5
+<
+    >
+startElement...
+namespaceURI: <urn:BooksAreUs.org:BookInfo> localName: <title> qName: <b:title> Number of Attributes: <1> Line# <0>
+characters...length is:18
+<Digital Typography>
+endElement...
+namespaceURI: <urn:BooksAreUs.org:BookInfo> localName: <title> qName: <b:title>
+characters...length is:6
+< 
+    >
+startElement...
+namespaceURI: <urn:BooksAreUs.org:BookInfo> localName: <author> qName: <b:author> Number of Attributes: <0> Line# <0>
+characters...length is:12
+<Donald Knuth>
+endElement...
+namespaceURI: <urn:BooksAreUs.org:BookInfo> localName: <author> qName: <b:author>
+characters...length is:5
+<
+    >
+processingInstruction...target:<netscape> data: <http://www.hotmail.com>
+characters...length is:3
+<
+  >
+endElement...
+namespaceURI: <http://www.w3.org/TR/REC-html40> localName: <body> qName: <body>
+characters...length is:2
+<
+
+>
+endElement...
+namespaceURI: <http://www.w3.org/TR/REC-html40> localName: <html> qName: <html>
+endPrefixMapping...
+prefix: <b>
+endPrefixMapping...
+prefix: <>
+endDocument...

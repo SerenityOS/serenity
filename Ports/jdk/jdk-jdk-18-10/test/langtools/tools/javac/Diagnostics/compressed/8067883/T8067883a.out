@@ -1,0 +1,6 @@
+T8067883.java:15:17: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.util.List<java.lang.Integer>, java.util.List<java.lang.String>)
+T8067883.java:16:9: compiler.err.cant.apply.symbol: kindname.method, m, java.util.List<Z>,java.util.List<java.lang.String>, int,java.util.List<java.lang.Integer>, kindname.class, T8067883, (compiler.misc.infer.no.conforming.assignment.exists: Z, (compiler.misc.inconvertible.types: int, java.util.List<Z>))
+T8067883.java:20:25: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.util.List<java.lang.Integer>, java.util.List<java.lang.String>)
+T8067883.java:21:9: compiler.err.cant.apply.diamond.1: (compiler.misc.diamond: T8067883.Box), (compiler.misc.infer.no.conforming.assignment.exists: X, (compiler.misc.inconvertible.types: int, java.util.List<X>))
+- compiler.note.compressed.diags
+4 errors

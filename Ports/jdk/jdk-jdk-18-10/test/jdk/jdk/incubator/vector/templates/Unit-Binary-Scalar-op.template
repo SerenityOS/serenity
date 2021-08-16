@@ -1,0 +1,4 @@
+
+    static $type$ [[TEST]]($type$ a, $type$ b) {
+        return ($type$)([[TEST_OP]]);
+    }

@@ -1,0 +1,2 @@
+InaccessibleMref01.java:14:17: compiler.err.prob.found.req: (compiler.misc.invalid.mref: kindname.method, (compiler.misc.not.def.public.cant.access: m(), p1.C))
+1 error

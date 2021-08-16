@@ -1,0 +1,5 @@
+Deprecation.java:11:1: compiler.warn.missing.deprecated.annotation
+- compiler.err.warnings.and.werror
+Deprecation.java:14:17: compiler.warn.has.been.deprecated: A, compiler.misc.unnamed.package
+1 error
+2 warnings

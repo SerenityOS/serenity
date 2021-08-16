@@ -1,0 +1,5 @@
+DeprecatedYES.java:12:10: compiler.warn.missing.deprecated.annotation
+- compiler.err.warnings.and.werror
+DeprecatedYES.java:18:10: compiler.warn.has.been.deprecated: foo(), A
+1 error
+2 warnings

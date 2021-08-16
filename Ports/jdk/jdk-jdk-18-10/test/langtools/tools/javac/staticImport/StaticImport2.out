@@ -1,0 +1,2 @@
+StaticImport2.java:24:17: compiler.err.ref.ambiguous: K, kindname.variable, K, p.B, kindname.variable, K, p.A
+1 error

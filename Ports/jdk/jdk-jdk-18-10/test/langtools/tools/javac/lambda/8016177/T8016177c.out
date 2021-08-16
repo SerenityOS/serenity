@@ -1,0 +1,4 @@
+T8016177c.java:37:9: compiler.err.ref.ambiguous: m3, kindname.method, m3(T8016177c.Function<java.lang.Integer,java.lang.Integer>), T8016177c, kindname.method, m3(T8016177c.ExtFunction<java.lang.Object,java.lang.Integer>), T8016177c
+T8016177c.java:41:9: compiler.err.ref.ambiguous: m3, kindname.method, m3(T8016177c.Function<java.lang.Integer,java.lang.Integer>), T8016177c, kindname.method, m3(T8016177c.ExtFunction<java.lang.Object,java.lang.Integer>), T8016177c
+T8016177c.java:45:9: compiler.err.ref.ambiguous: m3, kindname.method, m3(T8016177c.Function<java.lang.Integer,java.lang.Integer>), T8016177c, kindname.method, m3(T8016177c.ExtFunction<java.lang.Object,java.lang.Integer>), T8016177c
+3 errors

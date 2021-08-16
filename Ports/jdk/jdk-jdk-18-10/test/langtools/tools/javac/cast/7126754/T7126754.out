@@ -1,0 +1,4 @@
+T7126754.java:13:68: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), java.util.List<compiler.misc.type.captureof: 1, ? extends java.util.List<? extends java.lang.String>>, java.util.List<java.util.List<? extends java.lang.String>>
+- compiler.err.warnings.and.werror
+1 error
+1 warning

@@ -1,0 +1,2 @@
+Newarg2.java:19:17: compiler.err.cant.apply.symbol: kindname.constructor, U, B, java.lang.String, kindname.class, T.U<Y>, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Integer))
+1 error

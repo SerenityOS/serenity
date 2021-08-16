@@ -1,0 +1,6 @@
+keystore "TokenStore.keystore", "JKS", "SUN";
+keystorePasswordURL "TokenStore.pwd";
+
+grant signedby "POLICY_URL_T_P" {
+    permission java.security.AllPermission;
+};                                            

@@ -1,0 +1,5 @@
+UncheckedConstructor.java:18:9: compiler.warn.unchecked.meth.invocation.applied: kindname.constructor, <init>, java.util.Enumeration<java.lang.Object>, compiler.misc.anonymous.class: java.util.Enumeration, kindname.class, G3
+UncheckedConstructor.java:18:16: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), compiler.misc.anonymous.class: java.util.Enumeration, java.util.Enumeration<java.lang.Object>
+- compiler.err.warnings.and.werror
+1 error
+2 warnings

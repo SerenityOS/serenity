@@ -1,0 +1,72 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 1174535938 (0x4601ff02)
+        Signature Algorithm: dsaWithSHA1
+        Issuer: C=EA, ST=Moon, L=Backside, O=A-B-C, OU=Office, CN=Me
+        Validity
+            Not Before: Mar 22 03:58:58 2007 GMT
+            Not After : Jun 20 03:58:58 2007 GMT
+        Subject: C=EA, ST=Moon, L=Backside, O=A-B-C, OU=Office, CN=Me
+        Subject Public Key Info:
+            Public Key Algorithm: dsaEncryption
+            DSA Public Key:
+                pub:
+                    00:c5:ce:e8:be:f0:de:27:9c:88:92:21:28:cf:a5:
+                    38:8d:c1:5f:e5:90:d2:0b:ea:d4:12:ca:86:b8:04:
+                    57:1d:41:74:3e:52:2d:87:b8:76:7b:d2:95:d7:67:
+                    30:76:35:47:fb:e9:86:bf:05:3f:9b:f2:6e:3a:96:
+                    9a:58:e1:05:44:78:02:31:ee:5f:67:6c:44:d2:95:
+                    8f:72:62:a4:3e:27:1c:f3:94:8a:1e:0b:98:4c:c0:
+                    9c:f4:3d:17:6d:36:e4:a0:12:04:01:e4:38:9e:bd:
+                    86:99:7b:84:43:9b:58:68:ef:ce:3d:85:e3:93:d1:
+                    1f:1a:18:a4:1e:59:ca:80:2e
+                P:
+                    00:fd:7f:53:81:1d:75:12:29:52:df:4a:9c:2e:ec:
+                    e4:e7:f6:11:b7:52:3c:ef:44:00:c3:1e:3f:80:b6:
+                    51:26:69:45:5d:40:22:51:fb:59:3d:8d:58:fa:bf:
+                    c5:f5:ba:30:f6:cb:9b:55:6c:d7:81:3b:80:1d:34:
+                    6f:f2:66:60:b7:6b:99:50:a5:a4:9f:9f:e8:04:7b:
+                    10:22:c2:4f:bb:a9:d7:fe:b7:c6:1b:f8:3b:57:e7:
+                    c6:a8:a6:15:0f:04:fb:83:f6:d3:c5:1e:c3:02:35:
+                    54:13:5a:16:91:32:f6:75:f3:ae:2b:61:d7:2a:ef:
+                    f2:22:03:19:9d:d1:48:01:c7
+                Q:
+                    00:97:60:50:8f:15:23:0b:cc:b2:92:b9:82:a2:eb:
+                    84:0b:f0:58:1c:f5
+                G:
+                    00:f7:e1:a0:85:d6:9b:3d:de:cb:bc:ab:5c:36:b8:
+                    57:b9:79:94:af:bb:fa:3a:ea:82:f9:57:4c:0b:3d:
+                    07:82:67:51:59:57:8e:ba:d4:59:4f:e6:71:07:10:
+                    81:80:b4:49:16:71:23:e8:4c:28:16:13:b7:cf:09:
+                    32:8c:c8:a6:e1:3c:16:7a:8b:54:7c:8d:28:e0:a3:
+                    ae:1e:2b:b3:a6:75:91:6e:a3:7f:0b:fa:21:35:62:
+                    f1:fb:62:7a:01:24:3b:cc:a4:f1:be:a8:51:90:89:
+                    a8:83:df:e1:5a:e5:9f:06:92:8b:66:5e:80:7b:55:
+                    25:64:01:4c:3b:fe:cf:49:2a
+        X509v3 extensions:
+            X509v3 Subject Key Identifier:
+                ED:BF:8A:CA:57:05:ED:5C:9A:72:65:69:6C:C1:02:F8:30:02:A4:6B
+    Signature Algorithm: dsaWithSHA1
+        30:2d:02:15:00:85:38:a6:79:d4:70:c8:e1:d8:25:2f:87:f0:
+        74:3d:26:59:4c:71:ef:02:14:15:32:10:1d:c0:d1:ce:18:f4:
+        8b:ea:c0:8b:d7:da:ba:52:3a:0d:f7
+-----BEGIN CERTIFICATE-----
+MIIDGDCCAtWgAwIBAgIERgH/AjALBgcqhkjOOAQDBQAwXTELMAkGA1UEBhMCRUEx
+DTALBgNVBAgTBE1vb24xETAPBgNVBAcTCEJhY2tzaWRlMQ4wDAYDVQQKEwVBLUIt
+QzEPMA0GA1UECxMGT2ZmaWNlMQswCQYDVQQDEwJNZTAeFw0wNzAzMjIwMzU4NTha
+Fw0wNzA2MjAwMzU4NThaMF0xCzAJBgNVBAYTAkVBMQ0wCwYDVQQIEwRNb29uMREw
+DwYDVQQHEwhCYWNrc2lkZTEOMAwGA1UEChMFQS1CLUMxDzANBgNVBAsTBk9mZmlj
+ZTELMAkGA1UEAxMCTWUwggG4MIIBLAYHKoZIzjgEATCCAR8CgYEA/X9TgR11EilS
+30qcLuzk5/YRt1I870QAwx4/gLZRJmlFXUAiUftZPY1Y+r/F9bow9subVWzXgTuA
+HTRv8mZgt2uZUKWkn5/oBHsQIsJPu6nX/rfGG/g7V+fGqKYVDwT7g/bTxR7DAjVU
+E1oWkTL2dfOuK2HXKu/yIgMZndFIAccCFQCXYFCPFSMLzLKSuYKi64QL8Fgc9QKB
+gQD34aCF1ps93su8q1w2uFe5eZSvu/o66oL5V0wLPQeCZ1FZV4661FlP5nEHEIGA
+tEkWcSPoTCgWE7fPCTKMyKbhPBZ6i1R8jSjgo64eK7OmdZFuo38L+iE1YvH7YnoB
+JDvMpPG+qFGQiaiD3+Fa5Z8GkotmXoB7VSVkAUw7/s9JKgOBhQACgYEAxc7ovvDe
+J5yIkiEoz6U4jcFf5ZDSC+rUEsqGuARXHUF0PlIth7h2e9KV12cwdjVH++mGvwU/
+m/JuOpaaWOEFRHgCMe5fZ2xE0pWPcmKkPicc85SKHguYTMCc9D0XbTbkoBIEAeQ4
+nr2GmXuEQ5tYaO/OPYXjk9EfGhikHlnKgC6jITAfMB0GA1UdDgQWBBTtv4rKVwXt
+XJpyZWlswQL4MAKkazALBgcqhkjOOAQDBQADMAAwLQIVAIU4pnnUcMjh2CUvh/B0
+PSZZTHHvAhQVMhAdwNHOGPSL6sCL19q6UjoN9w==
+-----END CERTIFICATE-----

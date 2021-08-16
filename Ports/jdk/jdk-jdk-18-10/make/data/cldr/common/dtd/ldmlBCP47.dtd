@@ -1,0 +1,86 @@
+<!--
+Copyright © 2003-2019 Unicode, Inc. and others. All rights reserved. Distributed under the Terms of Use in http://www.unicode.org/copyright.html.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of the Unicode data files and any associated documentation (the "Data Files") or Unicode software and any associated documentation (the "Software") to deal in the Data Files or Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, and/or sell copies of the Data Files or Software, and to permit persons to whom the Data Files or Software are furnished to do so, provided that (a) the above copyright notice(s) and this permission notice appear with all copies of the Data Files or Software, (b) both the above copyright notice(s) and this permission notice appear in associated documentation, and (c) there is clear notice in each modified Data File or in the Software as well as in the documentation associated with the Data File(s) or Software that the data or software has been modified.
+
+THE DATA FILES AND SOFTWARE ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THE DATA FILES OR SOFTWARE.
+
+Except as contained in this notice, the name of a copyright holder shall not be used in advertising or otherwise to promote the sale, use or other dealings in these Data Files or Software without prior written authorization of the copyright holder.
+$Revision$
+-->
+
+<!ELEMENT ldmlBCP47 ( version, generation?, cldrVersion?, keyword*, attribute* ) >
+
+<!ELEMENT version EMPTY >
+    <!--@METADATA-->
+<!ATTLIST version number CDATA #REQUIRED >
+	<!--@MATCH:regex/\$Revision.*\$-->
+    <!--@METADATA-->
+<!ATTLIST version cldrVersion CDATA #FIXED "39" >
+	<!--@MATCH:version-->
+    <!--@VALUE-->
+
+<!ELEMENT generation EMPTY >
+    <!--@METADATA-->
+    <!--@DEPRECATED-->
+<!ATTLIST generation date CDATA #REQUIRED >
+    <!--@METADATA-->
+    <!--@DEPRECATED-->
+
+<!ELEMENT cldrVersion EMPTY >
+    <!--@DEPRECATED-->
+<!ATTLIST cldrVersion version CDATA #REQUIRED >
+    <!--@METADATA-->
+    <!--@DEPRECATED-->
+
+<!ELEMENT keyword ( key* ) >
+
+<!ELEMENT key ( type* ) >
+<!ATTLIST key extension NMTOKEN #IMPLIED >
+	<!--@MATCH:any-->
+<!ATTLIST key name NMTOKEN #REQUIRED >
+	<!--@MATCH:regex/[a-z0-9]{2}-->
+<!ATTLIST key description CDATA #IMPLIED >
+	<!--@MATCH:any-->
+    <!--@VALUE-->
+<!ATTLIST key deprecated (true | false) "false" >
+    <!--@VALUE-->
+<!ATTLIST key preferred NMTOKEN #IMPLIED >
+    <!--@VALUE-->
+<!ATTLIST key alias NMTOKEN #IMPLIED >
+	<!--@MATCH:any-->
+    <!--@VALUE-->
+<!ATTLIST key valueType (single | multiple | incremental | any) #IMPLIED >
+    <!--@VALUE-->
+<!ATTLIST key since CDATA #IMPLIED >
+	<!--@MATCH:version-->
+    <!--@METADATA-->
+
+<!ELEMENT type EMPTY >
+<!ATTLIST type name NMTOKEN #REQUIRED >
+	<!--@MATCH:any-->
+<!ATTLIST type description CDATA #REQUIRED >
+	<!--@MATCH:any-->
+    <!--@VALUE-->
+<!ATTLIST type deprecated (true | false) "false" >
+    <!--@VALUE-->
+<!ATTLIST type preferred NMTOKEN #IMPLIED >
+	<!--@MATCH:bcp47/anyvalue-->
+    <!--@VALUE-->
+<!ATTLIST type alias CDATA #IMPLIED >
+	<!--@MATCH:any-->
+    <!--@VALUE-->
+<!ATTLIST type since CDATA #IMPLIED >
+	<!--@MATCH:version-->
+    <!--@METADATA-->
+
+<!ELEMENT attribute EMPTY >
+<!ATTLIST attribute name NMTOKEN #REQUIRED >
+<!ATTLIST attribute description CDATA #REQUIRED >
+    <!--@VALUE-->
+<!ATTLIST attribute deprecated (true | false) "false" >
+    <!--@VALUE-->
+<!ATTLIST attribute preferred NMTOKEN #IMPLIED >
+    <!--@VALUE-->
+<!ATTLIST attribute since CDATA #IMPLIED >
+    <!--@METADATA-->

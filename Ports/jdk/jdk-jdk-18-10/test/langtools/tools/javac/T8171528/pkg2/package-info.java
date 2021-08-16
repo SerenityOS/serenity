@@ -1,0 +1,3 @@
+/* /nodynamiccopyright/ */
+@Deprecated
+package test;

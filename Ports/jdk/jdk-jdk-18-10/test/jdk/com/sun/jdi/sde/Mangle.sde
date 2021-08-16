@@ -1,0 +1,21 @@
+SMAP
+Mangle.java
+XYZ
+*S XYZ
+*F
++ 1 Mangle.xyz
+database14
+2 Incl.xyz
+*L
+200#2:5,2
+210#1:7
+217,2:8
+*S Rats
+*F
+0 Mangle.rats
++ 2 Incl.rats
+bleep:bleep:Incl.rats
+*L
+1000:4
+1111#2,2:5,2
+*E

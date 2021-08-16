@@ -1,0 +1,2 @@
+BoundClassError.java:9:31: compiler.err.cant.inherit.diff.arg: java.lang.Comparable, BoundClassError, java.lang.String
+1 error

@@ -1,0 +1,5 @@
+BadTest.java:19:50: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: List<java.lang.Object>, List<Cell<java.lang.String>>)
+BadTest.java:23:48: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: List<java.lang.Object>, List<java.lang.String>)
+BadTest.java:24:54: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: List<java.lang.Object>, List<Cell<java.lang.String>>)
+BadTest.java:26:38: compiler.err.feature.not.supported.in.source.plural: (compiler.misc.feature.reifiable.types.instanceof), 15, 16
+4 errors

@@ -1,0 +1,2 @@
+InvalidMethodTypeUse.java:20:15: compiler.err.invalid.repeatable.annotation.not.applicable.in.context: InvalidMethodTypeUse.TC
+1 error

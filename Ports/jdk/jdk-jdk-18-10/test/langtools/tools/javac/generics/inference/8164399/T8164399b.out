@@ -1,0 +1,2 @@
+T8164399b.java:17:10: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.Throwable&java.lang.Runnable
+1 error

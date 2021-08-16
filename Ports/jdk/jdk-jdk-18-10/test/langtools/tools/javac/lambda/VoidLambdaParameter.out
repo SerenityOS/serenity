@@ -1,0 +1,5 @@
+VoidLambdaParameter.java:7:19: compiler.err.void.not.allowed.here
+VoidLambdaParameter.java:7:18: compiler.err.prob.found.req: (compiler.misc.incompatible.arg.types.in.lambda)
+VoidLambdaParameter.java:8:12: compiler.err.void.not.allowed.here
+VoidLambdaParameter.java:10:23: compiler.err.void.not.allowed.here
+4 errors

@@ -1,0 +1,5 @@
+grant {
+     // The stock JDK allows for 128 bit AES.
+     // Grant up to 192 bits, but no further.
+     permission javax.crypto.CryptoPermission "AES", 192;
+};

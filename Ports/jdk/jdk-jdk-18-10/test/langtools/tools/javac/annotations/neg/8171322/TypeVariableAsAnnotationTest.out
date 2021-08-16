@@ -1,0 +1,3 @@
+TypeVariableAsAnnotationTest.java:10:33: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Override, java.lang.annotation.Annotation)
+TypeVariableAsAnnotationTest.java:10:55: compiler.err.cant.resolve.location: kindname.class, XXX, , , (compiler.misc.location: kindname.class, TypeVariableAsAnnotationTest<Override>, null)
+2 errors

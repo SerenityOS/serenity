@@ -1,0 +1,7 @@
+SelfInitializerInLambdaTesta.java:10:48: compiler.err.illegal.self.ref
+SelfInitializerInLambdaTesta.java:15:28: compiler.err.illegal.self.ref
+SelfInitializerInLambdaTesta.java:21:32: compiler.err.illegal.self.ref
+SelfInitializerInLambdaTesta.java:26:28: compiler.err.illegal.self.ref
+SelfInitializerInLambdaTesta.java:34:32: compiler.err.illegal.self.ref
+SelfInitializerInLambdaTesta.java:39:32: compiler.err.illegal.self.ref
+6 errors

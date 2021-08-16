@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document>
+  <ToBeSigned>
+    <!-- comment -->
+    <Data />
+    <NotToBeSigned>
+      <ReallyToBeSigned>
+        <!-- comment -->
+        <Data />
+      </ReallyToBeSigned>
+    </NotToBeSigned>
+  </ToBeSigned>
+  <ToBeSigned>
+    <Data />
+    <NotToBeSigned>
+      <Data />
+    </NotToBeSigned>
+  </ToBeSigned>
+  <dsig:Signature xmlns:dsig="http://www.w3.org/2000/09/xmldsig#">
+    <dsig:SignedInfo>
+      <dsig:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+      <dsig:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#dsa-sha1" />
+      <dsig:Reference URI="">
+        <dsig:Transforms>
+          <dsig:Transform Algorithm="http://www.w3.org/2002/06/xmldsig-filter2">
+            <XPath xmlns="http://www.w3.org/2002/06/xmldsig-filter2" Filter="intersect"> //ToBeSigned </XPath>
+            <XPath xmlns="http://www.w3.org/2002/06/xmldsig-filter2" Filter="subtract"> //NotToBeSigned </XPath>
+            <XPath xmlns="http://www.w3.org/2002/06/xmldsig-filter2" Filter="union"> //ReallyToBeSigned </XPath>
+          </dsig:Transform>
+        </dsig:Transforms>
+        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+        <dsig:DigestValue>p6/HaYIdxbEdYX8/8zNfjED4H5Y=</dsig:DigestValue>
+      </dsig:Reference>
+      <dsig:Reference URI="#signature-value">
+        <dsig:Transforms>
+          <dsig:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+          <dsig:Transform Algorithm="http://www.w3.org/2002/06/xmldsig-filter2">
+            <XPath xmlns="http://www.w3.org/2002/06/xmldsig-filter2" Filter="union"> /</XPath>
+          </dsig:Transform>
+        </dsig:Transforms>
+        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+        <dsig:DigestValue>2jmj7l5rSw0yVb/vlWAYkK/YBwk=</dsig:DigestValue>
+      </dsig:Reference>
+    </dsig:SignedInfo>
+    <dsig:SignatureValue Id="signature-value">
+      Ft7PdmEYSC8GwxffIa4xiobr1iEaUf3LGNfPLiQnJBJI/1Cp5WiEiQ==
+    </dsig:SignatureValue>
+    <dsig:KeyInfo>
+      <dsig:KeyValue>
+        <dsig:DSAKeyValue>
+          <dsig:P>
+            3eOeAvqnEyFpW+uTSgrdj7YLjaTkpyHecKFIoLu8QZNkGTQI1ciITBH0lqfIkdCH
+            Si8fiUC3DTq3J9FsJef4YVtDF7JpUvHTOQqtq7Zgx6KC8Wxkz6rQCxOr7F0ApOYi
+            89zLRoe4MkDGe6ux0+WtyOTQoVIGNTDDUFXrUQNbLrE=
+          </dsig:P>
+          <dsig:Q>hDLcFK0GO/Hz1arxOOvsgM/VLyU=</dsig:Q>
+          <dsig:G>
+            nnx7hbdWozGbtnFgnbFnopfRl7XRacpkPJRGf5P2IUgVspEUSUoN6i1fDBfBg43z
+            Kt7dlEaQL7b5+JTZt3MhZNPosxsgxVuT7Ts/g5k7EnpdYv0a5hw5Bw29fjbGHfgM
+            8d2rhd2Ui0xHbk0D451nhLxVWulviOSPhzKKvXrbySA=
+          </dsig:G>
+          <dsig:Y>
+            cfYpihpAQeepbNFS4MAbQRhdXpDi5wLrwxE5hIvoYqo1L8BQVu8fY1TFAPtoae1i
+            Bg/GIJyP3iLfyuBJaDvJJLP30wBH9i/s5J3656PevpOVdTfi777Fi9Gj6y/ib2Vv
+            +OZfJkkp4L50+p5TUhPmQLJtREsgtl+tnIOyJT++G9U=
+          </dsig:Y>
+        </dsig:DSAKeyValue>
+      </dsig:KeyValue>
+      <dsig:X509Data>
+        <dsig:X509SubjectName>
+          CN=Merlin Hughes,OU=X/Secure,O=Baltimore Technologies Ltd.,ST=Dublin,C=IE
+        </dsig:X509SubjectName>
+        <dsig:X509IssuerSerial>
+          <dsig:X509IssuerName>
+            CN=Transient CA,OU=X/Secure,O=Baltimore Technologies Ltd.,ST=Dublin,C=IE
+          </dsig:X509IssuerName>
+          <dsig:X509SerialNumber>1017788370348</dsig:X509SerialNumber>
+        </dsig:X509IssuerSerial>
+        <dsig:X509Certificate>
+          MIIDUDCCAxCgAwIBAgIGAOz46g2sMAkGByqGSM44BAMwbjELMAkGA1UEBhMCSUUx
+          DzANBgNVBAgTBkR1YmxpbjEkMCIGA1UEChMbQmFsdGltb3JlIFRlY2hub2xvZ2ll
+          cyBMdGQuMREwDwYDVQQLEwhYL1NlY3VyZTEVMBMGA1UEAxMMVHJhbnNpZW50IENB
+          MB4XDTAyMDQwMjIyNTkzMFoXDTEyMDQwMjIxNTkyNVowbzELMAkGA1UEBhMCSUUx
+          DzANBgNVBAgTBkR1YmxpbjEkMCIGA1UEChMbQmFsdGltb3JlIFRlY2hub2xvZ2ll
+          cyBMdGQuMREwDwYDVQQLEwhYL1NlY3VyZTEWMBQGA1UEAxMNTWVybGluIEh1Z2hl
+          czCCAbcwggEsBgcqhkjOOAQBMIIBHwKBgQDd454C+qcTIWlb65NKCt2PtguNpOSn
+          Id5woUigu7xBk2QZNAjVyIhMEfSWp8iR0IdKLx+JQLcNOrcn0Wwl5/hhW0MXsmlS
+          8dM5Cq2rtmDHooLxbGTPqtALE6vsXQCk5iLz3MtGh7gyQMZ7q7HT5a3I5NChUgY1
+          MMNQVetRA1susQIVAIQy3BStBjvx89Wq8Tjr7IDP1S8lAoGBAJ58e4W3VqMxm7Zx
+          YJ2xZ6KX0Ze10WnKZDyURn+T9iFIFbKRFElKDeotXwwXwYON8yre3ZRGkC+2+fiU
+          2bdzIWTT6LMbIMVbk+07P4OZOxJ6XWL9GuYcOQcNvX42xh34DPHdq4XdlItMR25N
+          A+OdZ4S8VVrpb4jkj4cyir1628kgA4GEAAKBgHH2KYoaQEHnqWzRUuDAG0EYXV6Q
+          4ucC68MROYSL6GKqNS/AUFbvH2NUxQD7aGntYgYPxiCcj94i38rgSWg7ySSz99MA
+          R/Yv7OSd+uej3r6TlXU34u++xYvRo+sv4m9lb/jmXyZJKeC+dPqeU1IT5kCybURL
+          ILZfrZyDsiU/vhvVozowODAOBgNVHQ8BAf8EBAMCB4AwEQYDVR0OBAoECIatY7SE
+          lXEOMBMGA1UdIwQMMAqACIOGPkB2MuKTMAkGByqGSM44BAMDLwAwLAIUSvT02iQj
+          Q5da4Wpe0Bvs7GuCcVsCFCEcQpbjUfnxXFXNWiFyQ49ZrWqn
+        </dsig:X509Certificate>
+        <dsig:X509Certificate>
+          MIIDSzCCAwugAwIBAgIGAOz46fwJMAkGByqGSM44BAMwbjELMAkGA1UEBhMCSUUx
+          DzANBgNVBAgTBkR1YmxpbjEkMCIGA1UEChMbQmFsdGltb3JlIFRlY2hub2xvZ2ll
+          cyBMdGQuMREwDwYDVQQLEwhYL1NlY3VyZTEVMBMGA1UEAxMMVHJhbnNpZW50IENB
+          MB4XDTAyMDQwMjIyNTkyNVoXDTEyMDQwMjIxNTkyNVowbjELMAkGA1UEBhMCSUUx
+          DzANBgNVBAgTBkR1YmxpbjEkMCIGA1UEChMbQmFsdGltb3JlIFRlY2hub2xvZ2ll
+          cyBMdGQuMREwDwYDVQQLEwhYL1NlY3VyZTEVMBMGA1UEAxMMVHJhbnNpZW50IENB
+          MIIBtzCCASwGByqGSM44BAEwggEfAoGBAN3jngL6pxMhaVvrk0oK3Y+2C42k5Kch
+          3nChSKC7vEGTZBk0CNXIiEwR9JanyJHQh0ovH4lAtw06tyfRbCXn+GFbQxeyaVLx
+          0zkKrau2YMeigvFsZM+q0AsTq+xdAKTmIvPcy0aHuDJAxnursdPlrcjk0KFSBjUw
+          w1BV61EDWy6xAhUAhDLcFK0GO/Hz1arxOOvsgM/VLyUCgYEAnnx7hbdWozGbtnFg
+          nbFnopfRl7XRacpkPJRGf5P2IUgVspEUSUoN6i1fDBfBg43zKt7dlEaQL7b5+JTZ
+          t3MhZNPosxsgxVuT7Ts/g5k7EnpdYv0a5hw5Bw29fjbGHfgM8d2rhd2Ui0xHbk0D
+          451nhLxVWulviOSPhzKKvXrbySADgYQAAoGAfag+HCABIJadDD9Aarhgc2QR3Lp7
+          PpMOh0lAwLiIsvkO4UlbeOS0IJC8bcqLjM1fVw6FGSaxmq+4y1ag2m9k6IdE0Qh5
+          NxB/xFkmdwqXFRIJVp44OeUygB47YK76NmUIYG3DdfiPPU3bqzjvtOtETiCHvo25
+          4D6UjwPpYErXRUajNjA0MA4GA1UdDwEB/wQEAwICBDAPBgNVHRMECDAGAQH/AgEA
+          MBEGA1UdDgQKBAiDhj5AdjLikzAJBgcqhkjOOAQDAy8AMCwCFELu0nuweqW7Wf0s
+          gk/CAGGL0BGKAhRNdgQGr5iyZKoH4oqPm0VJ9TjXLg==
+        </dsig:X509Certificate>
+      </dsig:X509Data>
+    </dsig:KeyInfo>
+  </dsig:Signature>
+</Document>

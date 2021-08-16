@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?><countries>
+    <country name="France">
+        <city>Paris</city>
+        <city>Nice</city>
+        <city>Lyon</city>
+    </country>
+    <country name="Italia">
+        <city>Roma</city>
+        <city>Milano</city>
+        <city>Firenze</city>
+        <city>Napoli</city>
+    </country>
+    <country name="Espana">
+        <city>Madrid</city>
+        <city>Barcelona</city>
+    </country>
+</countries>

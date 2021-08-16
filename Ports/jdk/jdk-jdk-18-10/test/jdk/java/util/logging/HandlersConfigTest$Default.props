@@ -1,0 +1,6 @@
+# mandatory Default properties...
+
+.level= INFO
+handlers=HandlersConfigTest$ConfiguredHandler
+
+java.util.logging.MemoryHandler.target=HandlersConfigTest$ConfiguredHandler

@@ -1,0 +1,5 @@
+QualifiedAccess_3.java:39:11: compiler.err.not.def.public.cant.access: pack1.P1.Foo, pack1.P1
+QualifiedAccess_3.java:40:21: compiler.err.not.def.access.class.intf.cant.access: length, Array
+QualifiedAccess_3.java:43:14: compiler.err.not.def.access.class.intf.cant.access: privatei, pack1.P2
+QualifiedAccess_3.java:44:34: compiler.err.not.def.access.class.intf.cant.access: privatei, pack1.P2
+4 errors

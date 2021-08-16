@@ -1,0 +1,126 @@
+/*
+ * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+/*
+ * @test
+ * @bug 8154587
+ * @summary Check that invokeinterface calls the right hashCode() method when
+ *          there is both a local method named hashCode() and a default method
+ *          named hashCode().
+ * @compile DefaultHashCode.jasm
+ * @run main DefaultHashCode
+ */
+
+// The below .jasm code implements the following java code:
+//
+// public class DefaultHashCode {
+//
+//     interface I2 {
+//         default int hashCode() {
+//             return 5;
+//         }
+//     }
+//
+//     static class C implements I2 {
+//         public int hashCode() {
+//             return 4;
+//         }
+//     }
+//
+//     static int test(I2 i) { return i.hashCode(); }
+//
+//     public static void main(String[] args) {
+//         if (test(new C()) != 4) {
+//             throw new RuntimeException("Wrong hashCode() function called");
+//         }
+//     }
+// }
+
+
+interface  DefaultHashCode$I2 version 53:0 {
+
+    public Method hashCode:"()I" stack 1 locals 1 {
+        iconst_5;
+        ireturn;
+    }
+
+    static abstract interface InnerClass I2=class DefaultHashCode$I2 of class DefaultHashCode;
+
+} // end Class DefaultHashCode$I2
+
+
+super class DefaultHashCode$C implements DefaultHashCode$I2 version 53:0 {
+
+    Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial    Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    public Method hashCode:"()I" stack 1 locals 1 {
+        iconst_4;
+        ireturn;
+    }
+
+    static InnerClass C=class DefaultHashCode$C of class DefaultHashCode;
+    static abstract interface InnerClass I2=class DefaultHashCode$I2 of class DefaultHashCode;
+
+} // end Class DefaultHashCode$C
+
+
+super public class DefaultHashCode version 53:0 {
+
+    public Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial    Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    static Method test:"(LDefaultHashCode$I2;)I" stack 1 locals 1 {
+        aload_0;
+        invokeinterface InterfaceMethod DefaultHashCode$I2.hashCode:"()I",  1;
+        ireturn;
+    }
+
+    public static Method main:"([Ljava/lang/String;)V" stack 3 locals 1 {
+        new    class DefaultHashCode$C;
+        dup;
+        invokespecial    Method DefaultHashCode$C."<init>":"()V";
+        invokestatic    Method test:"(LDefaultHashCode$I2;)I";
+        iconst_4;
+        if_icmpeq    L24;
+        new    class java/lang/RuntimeException;
+        dup;
+        ldc    String "Wrong hashCode() function called";
+        invokespecial    Method java/lang/RuntimeException."<init>":"(Ljava/lang/String;)V";
+        athrow;
+      L24:    stack_frame_type same;
+        return;
+    }
+
+    static InnerClass C=class DefaultHashCode$C of class DefaultHashCode;
+    static abstract interface InnerClass I2=class DefaultHashCode$I2 of class DefaultHashCode;
+
+} // end Class DefaultHashCode
+

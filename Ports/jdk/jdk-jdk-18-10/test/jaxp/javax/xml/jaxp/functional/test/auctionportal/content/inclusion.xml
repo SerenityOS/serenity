@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<activities xmlns:xi="http://www.w3.org/2001/XInclude" >
+    <xi:include href="activity.xml" parse="xml" />
+</activities>
+

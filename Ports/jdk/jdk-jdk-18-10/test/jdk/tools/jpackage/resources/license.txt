@@ -1,0 +1,1 @@
+jpackage test license file (just some sample text).

@@ -1,0 +1,3 @@
+A.java:10:9: compiler.warn.has.been.deprecated: A1, compiler.misc.unnamed.package
+- compiler.note.deprecated.plural.additional
+1 warning

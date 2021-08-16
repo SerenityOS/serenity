@@ -1,0 +1,3 @@
+NameCollision.java:13:31: compiler.err.intf.expected.here
+NameCollision.java:13:5: compiler.err.cyclic.inheritance: NameCollision.Runnable
+2 errors

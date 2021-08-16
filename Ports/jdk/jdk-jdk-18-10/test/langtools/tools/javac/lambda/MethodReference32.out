@@ -1,0 +1,7 @@
+MethodReference32.java:17:45: compiler.warn.unchecked.varargs.non.reifiable.type: java.util.List<java.lang.Integer>
+MethodReference32.java:18:40: compiler.warn.unchecked.varargs.non.reifiable.type: java.util.List<java.lang.Integer>
+MethodReference32.java:20:14: compiler.warn.unchecked.generic.array.creation: java.util.List<java.lang.Integer>[]
+MethodReference32.java:21:14: compiler.warn.unchecked.generic.array.creation: java.util.List<java.lang.Integer>[]
+- compiler.err.warnings.and.werror
+1 error
+4 warnings

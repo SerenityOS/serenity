@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Class-Path: cpattr3.jar cpattr5_123456789_223456789_323456789_42345678
+ 9_523456789_623456789.jar
+Created-By: 1.9.0-internal (Oracle Corporation)

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This catalog doesn't define the correct naming space -->
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog1">
+    <system systemId="http://remote/dtd/alice/docAlice.dtd" uri="http://local/dtd/docAliceSysWrongNS.dtd" />
+    <uri name="http://remote/dtd/alice/docAlice.dtd" uri="http://local/dtd/docAliceURIWrongNS.dtd" />
+</catalog>

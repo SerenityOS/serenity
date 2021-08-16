@@ -1,0 +1,7 @@
+TwrAndLambda.java:31:14: compiler.err.prob.found.req: (compiler.misc.try.not.applicable.to.type: (compiler.misc.inconvertible.types: java.lang.Runnable, java.lang.AutoCloseable))
+TwrAndLambda.java:33:14: compiler.err.prob.found.req: (compiler.misc.try.not.applicable.to.type: (compiler.misc.inconvertible.types: java.lang.Runnable, java.lang.AutoCloseable))
+TwrAndLambda.java:35:14: compiler.err.prob.found.req: (compiler.misc.try.not.applicable.to.type: (compiler.misc.inconvertible.types: java.lang.Runnable, java.lang.AutoCloseable))
+TwrAndLambda.java:43:10: compiler.err.cant.apply.symbol: kindname.method, m, java.lang.AutoCloseable, java.lang.Runnable, kindname.interface, TwrAndLambda.I, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.Runnable, java.lang.AutoCloseable))
+TwrAndLambda.java:44:10: compiler.err.cant.apply.symbol: kindname.method, m, java.lang.AutoCloseable, java.lang.Runnable, kindname.interface, TwrAndLambda.I, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.Runnable, java.lang.AutoCloseable))
+TwrAndLambda.java:45:10: compiler.err.cant.apply.symbol: kindname.method, m, java.lang.AutoCloseable, java.lang.Runnable, kindname.interface, TwrAndLambda.I, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.Runnable, java.lang.AutoCloseable))
+6 errors

@@ -1,0 +1,2 @@
+ExplicitlyFinalEnum2.java:9:7: compiler.err.mod.not.allowed.here: final
+1 error

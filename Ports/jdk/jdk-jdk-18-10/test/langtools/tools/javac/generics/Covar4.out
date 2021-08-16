@@ -1,0 +1,2 @@
+Covar4.java:15:20: compiler.err.override.incompatible.ret: (compiler.misc.cant.override: f(), Covar4.B1, f(), Covar4.A1), int, long
+1 error

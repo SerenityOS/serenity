@@ -1,0 +1,3 @@
+T8010387.java:12:9: compiler.err.cant.apply.symbol: kindname.method, m, T8010387.F<? extends X>, compiler.misc.anonymous.class: T8010387.F<P>, kindname.class, T8010387<X>, (compiler.misc.infer.no.conforming.assignment.exists: T, (compiler.misc.inconvertible.types: compiler.misc.anonymous.class: T8010387.F<P>, T8010387.F<? extends X>))
+- compiler.misc.where.description.typevar.1: X,P,T,{(compiler.misc.where.typevar: X, java.lang.Object, kindname.class, T8010387),(compiler.misc.where.typevar: P, java.lang.Object, kindname.method, <P>test()),(compiler.misc.where.typevar: T, java.lang.Object, kindname.method, <T>m(T8010387.F<? extends X>))}
+1 error

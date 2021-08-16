@@ -1,0 +1,110 @@
+<html>
+<head>
+<title>
+Debugging transported core dumps
+</title>
+</head>
+<body>
+<h1>Debugging transported core dumps</h1>
+
+<p>
+When a core dump is moved to a machine different from the one where it was
+produced ("transported core dump"), debuggers (dbx, gdb, windbg or SA) do not
+always successfully open the dump. This is due to kernel, library (shared
+objects or DLLs) mismatch between core dump machine and debugger machine.
+</p>
+
+<p>
+In most platforms, core dumps do not contain text (a.k.a) Code pages.
+There pages are to be read from executable and shared objects (or DLLs).
+Therefore it is important to have matching executable and shared object
+files in debugger machine. 
+</p>
+
+<h3>Solaris transported core dumps</h3>
+
+<p>
+Debuggers on Solaris (and Linux) use two addtional shared objects
+<b>rtld_db.so</b> and <b>libthread_db.so</b>. rtld_db.so is used to
+read information on shared objects from the core dump. libthread_db.so
+is used to get information on threads from the core dump. rtld_db.so
+evolves along with rtld.so (the runtime linker library) and libthread_db.so
+evolves along with libthread.so (user land multithreading library). 
+Hence, debugger machine should have right version of rtld_db.so and
+libthread_db.so to open the core dump successfully. More details on
+these debugger libraries can be found in 
+<a href="http://docs.sun.com/app/docs/doc/817-1984/">
+Solaris Linkers and Libraries Guide - 817-1984</a>
+</p>
+
+<h3>Solaris SA against transported core dumps</h3>
+
+<p>
+With transported core dumps, you may get "rtld_db failures" or
+"libthread_db failures" or SA may just throw some other error
+(hotspot symbol is missing) when opening the core dump. 
+Enviroment variable <b>LIBSAPROC_DEBUG</b> may be set to any value
+to debug such scenarios. With this env. var set, SA prints many
+messages in standard error which can be useful for further debugging.
+SA on Solaris uses <b>libproc.so</b> library. This library also
+prints debug messages with env. var <b>LIBPROC_DEBUG</b>. But,
+setting LIBSAPROC_DEBUG results in setting LIBPROC_DEBUG as well.
+</p>
+<p>
+The best possible way to debug a transported core dump is to match the
+debugger machine to that of core dump machine. i.e., have same Kernel
+and libthread patch level between the machines. mdb (Solaris modular
+debugger) may be used to find the Kernel patch level of core dump
+machine and debugger machine may be brought to the same level.
+</p>
+<p>
+If the matching machine is "far off" in your network, then
+<ul>
+<li>consider using rlogin and <a href="clhsdb.html">CLHSDB - SA command line HSDB interface</a> or
+<li>use SA remote debugging and debug the core from core machine remotely.
+</ul>
+</p>
+
+<p>
+But, it may not be feasible to find matching machine to debug. 
+If so, you can copy all application shared objects (and libthread_db.so, if needed) from the core dump 
+machine into your debugger machine's directory, say, /export/applibs. Now, set <b>SA_ALTROOT</b> 
+environment variable to point to /export/applibs directory. Note that /export/applibs should either 
+contain matching 'full path' of libraries. i.e., /usr/lib/libthread_db.so from core 
+machine should be under /export/applibs/use/lib directory and /use/java/jre/lib/sparc/client/libjvm.so 
+from core machine should be under /export/applibs/use/java/jre/lib/sparc/client so on or /export/applibs 
+should just contain libthread_db.so, libjvm.so etc. directly. 
+</p>
+
+<p>
+Support for transported core dumps is <b>not</b> built into the standard version of libproc.so. You need to
+set <b>LD_LIBRARY_PATH</b> env var to point to the path of a specially built version of libproc.so. 
+Note that this version of libproc.so has a special symbol to support transported core dump debugging. 
+In future, we may get this feature built into standard libproc.so -- if that happens, this step (of 
+setting LD_LIBRARY_PATH) can be skipped.
+</p>
+
+<h3>Ignoring libthread_db.so failures</h3>
+<p>
+If you are okay with missing thread related information, you can set 
+<b>SA_IGNORE_THREADDB</b> environment variable to any value. With this
+set, SA ignores libthread_db failure, but you won't be able to get any
+thread related information. But, you would be able to use SA and get
+other information.
+</p>
+
+<h3>Linux SA against transported core dumps</h3>
+<p>
+On Linux, SA parses core and shared library ELF files. SA <b>does not</b> use
+libthread_db.so or rtld_db.so for core dump debugging (although 
+libthread_db.so is used for live process debugging). But, you
+may still face problems with transported core dumps, because matching shared
+objects may not be in the path(s) specified in core dump file. To
+workaround this, you can define environment variable <b>SA_ALTROOT</b>
+to be the directory where shared libraries are kept. The semantics of
+this env. variable is same as that for Solaris (please refer above).
+</p>
+
+
+</body>
+</html>

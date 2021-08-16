@@ -1,0 +1,2 @@
+InvalidAnonymous.java:10:13: compiler.err.cant.resolve.location: kindname.class, Undefined, , , (compiler.misc.location: kindname.class, InvalidAnonymous, null)
+1 error

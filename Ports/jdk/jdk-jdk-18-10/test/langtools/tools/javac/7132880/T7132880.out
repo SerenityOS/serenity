@@ -1,0 +1,4 @@
+T7132880.java:23:12: compiler.err.cant.apply.symbol: kindname.method, m1, java.lang.Integer, java.lang.String, kindname.class, Outer.Inner1, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Integer))
+T7132880.java:33:12: compiler.err.cant.apply.symbols: kindname.method, m1, java.lang.String,{(compiler.misc.inapplicable.method: kindname.method, Outer.Inner2, m1(java.lang.Integer), (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Integer))),(compiler.misc.inapplicable.method: kindname.method, Outer.Inner2, m1(java.lang.Double), (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Double)))}
+T7132880.java:43:12: compiler.err.ref.ambiguous: m2, kindname.method, m2(java.lang.Object,int), Outer.Inner3, kindname.method, m2(int,java.lang.Object), Outer.Inner3
+3 errors

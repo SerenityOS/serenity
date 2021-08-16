@@ -1,0 +1,5 @@
+WarnSerializableLambdaTestb.java:36:40: compiler.warn.access.to.member.from.serializable.element: j
+WarnSerializableLambdaTestb.java:50:25: compiler.warn.access.to.member.from.serializable.element: r
+- compiler.err.warnings.and.werror
+1 error
+2 warnings

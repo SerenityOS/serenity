@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="es"/>
+		<territory type="PY"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ace" draft="contributed">acehnés</language>
+			<language type="arp" draft="contributed">arapaho</language>
+			<language type="bho" draft="contributed">bhojpuri</language>
+			<language type="eu" draft="contributed">euskera</language>
+			<language type="grc" draft="contributed">griego antiguo</language>
+			<language type="lo" draft="contributed">lao</language>
+			<language type="nso" draft="contributed">sotho septentrional</language>
+			<language type="pa" draft="contributed">punyabí</language>
+			<language type="ss" draft="contributed">siswati</language>
+			<language type="sw" draft="contributed">suajili</language>
+			<language type="sw_CD" draft="contributed">suajili del Congo</language>
+			<language type="tn" draft="contributed">setswana</language>
+			<language type="wo" draft="contributed">wolof</language>
+			<language type="zgh" draft="contributed">tamazight marroquí estándar</language>
+		</languages>
+		<territories>
+			<territory type="BA" draft="contributed">Bosnia y Herzegovina</territory>
+			<territory type="GB" alt="short" draft="contributed">RU</territory>
+			<territory type="TA" draft="contributed">Tristán de Acuña</territory>
+			<territory type="UM" draft="contributed">Islas menores alejadas de EE. UU.</territory>
+		</territories>
+	</localeDisplayNames>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1" draft="contributed">ene.</month>
+							<month type="2" draft="contributed">feb.</month>
+							<month type="3" draft="contributed">mar.</month>
+							<month type="4" draft="contributed">abr.</month>
+							<month type="5" draft="contributed">may.</month>
+							<month type="6" draft="contributed">jun.</month>
+							<month type="7" draft="contributed">jul.</month>
+							<month type="8" draft="contributed">ago.</month>
+							<month type="9" draft="contributed">sept.</month>
+							<month type="10" draft="contributed">oct.</month>
+							<month type="11" draft="contributed">nov.</month>
+							<month type="12" draft="contributed">dic.</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1" draft="contributed">ene.</month>
+							<month type="2" draft="contributed">feb.</month>
+							<month type="3" draft="contributed">mar.</month>
+							<month type="4" draft="contributed">abr.</month>
+							<month type="5" draft="contributed">may.</month>
+							<month type="6" draft="contributed">jun.</month>
+							<month type="7" draft="contributed">jul.</month>
+							<month type="8" draft="contributed">ago.</month>
+							<month type="9" draft="contributed">sept.</month>
+							<month type="10" draft="contributed">oct.</month>
+							<month type="11" draft="contributed">nov.</month>
+							<month type="12" draft="contributed">dic.</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="short">
+							<day type="sun" draft="contributed">do</day>
+							<day type="mon" draft="contributed">lu</day>
+							<day type="tue" draft="contributed">ma</day>
+							<day type="wed" draft="contributed">mi</day>
+							<day type="thu" draft="contributed">ju</day>
+							<day type="fri" draft="contributed">vi</day>
+							<day type="sat" draft="contributed">sa</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="short">
+							<day type="sun" draft="contributed">Do</day>
+							<day type="mon" draft="contributed">Lu</day>
+							<day type="tue" draft="contributed">Ma</day>
+							<day type="wed" draft="contributed">Mi</day>
+							<day type="thu" draft="contributed">Ju</day>
+							<day type="fri" draft="contributed">Vi</day>
+							<day type="sat" draft="contributed">Sa</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<dayPeriods>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="noon" draft="contributed">m.</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<dateTimeFormats>
+					<intervalFormats>
+						<intervalFormatItem id="h">
+							<greatestDifference id="a" draft="contributed">h a 'a' h a</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h 'a' h a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="a" draft="contributed">h:mm a 'a' h:mm a</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h:mm 'a' h:mm a</greatestDifference>
+							<greatestDifference id="m" draft="contributed">h:mm 'a' h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d" draft="contributed">d/M 'al' d/M</greatestDifference>
+							<greatestDifference id="M" draft="contributed">d/M 'al' d/M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d" draft="contributed">d/M/y 'al' d/M/y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">d/M/y 'al' d/M/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">d/M/y 'al' d/M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M" draft="contributed">MMM 'a' MMM y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">MMM 'de' y 'a' MMM 'de' y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="M" draft="contributed">d 'de' MMM 'al' d 'de' MMM 'de' y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M" draft="contributed">MMMM 'a' MMMM 'de' y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">MMMM 'de' y 'a' MMMM 'de' y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="sun-narrow">
+				<relative type="-1" draft="contributed">el dom. pasado</relative>
+				<relative type="0" draft="contributed">este dom.</relative>
+				<relative type="1" draft="contributed">el próximo dom.</relative>
+			</field>
+			<field type="mon-narrow">
+				<relative type="-1" draft="contributed">el lun. pasado</relative>
+				<relative type="0" draft="contributed">este lun.</relative>
+				<relative type="1" draft="contributed">el próximo lun.</relative>
+			</field>
+			<field type="tue-narrow">
+				<relative type="-1" draft="contributed">el mar. pasado</relative>
+				<relative type="0" draft="contributed">este mar.</relative>
+				<relative type="1" draft="contributed">el próximo mar.</relative>
+			</field>
+			<field type="second-short">
+				<displayName draft="contributed">seg.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one" draft="contributed">dentro de {0} seg.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">dentro de {0} seg.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">hace {0} seg.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">hace {0} seg.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="one" draft="contributed">dentro de {0} seg.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">dentro de {0} seg.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one" draft="contributed">hace {0} seg.</relativeTimePattern>
+					<relativeTimePattern count="other" draft="contributed">hace {0} seg.</relativeTimePattern>
+				</relativeTime>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group>.</group>
+		</symbols>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤ #,##0.00;¤ -#,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="PYG">
+				<symbol>Gs.</symbol>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="duration-year">
+				<perUnitPattern draft="contributed">{0}/año</perUnitPattern>
+			</unit>
+			<unit type="electric-ampere">
+				<displayName draft="contributed">amperios</displayName>
+				<unitPattern count="one" draft="contributed">{0} amperio</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} amperios</unitPattern>
+			</unit>
+			<unit type="electric-milliampere">
+				<displayName draft="contributed">miliamperios</displayName>
+				<unitPattern count="one" draft="contributed">{0} miliamperio</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} miliamperios</unitPattern>
+			</unit>
+			<unit type="electric-ohm">
+				<unitPattern count="one">{0} ohmio</unitPattern>
+				<unitPattern count="other">{0} ohmios</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="duration-year">
+				<displayName draft="contributed">años</displayName>
+				<unitPattern count="one" draft="contributed">{0} año</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} años</unitPattern>
+				<perUnitPattern draft="contributed">{0}/año</perUnitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="contributed">meses</displayName>
+				<unitPattern count="one" draft="contributed">{0} mes</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} meses</unitPattern>
+				<perUnitPattern draft="contributed">{0}/mes</perUnitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="contributed">días</displayName>
+				<unitPattern count="one" draft="contributed">{0} día</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} días</unitPattern>
+				<perUnitPattern draft="contributed">{0}/día</perUnitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName draft="contributed">seg.</displayName>
+				<unitPattern count="one" draft="contributed">{0} seg.</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} seg.</unitPattern>
+				<perUnitPattern draft="contributed">{0}/seg.</perUnitPattern>
+			</unit>
+			<unit type="electric-volt">
+				<displayName draft="contributed">voltios</displayName>
+			</unit>
+			<unit type="power-watt">
+				<displayName draft="contributed">vatios</displayName>
+			</unit>
+		</unitLength>
+		<unitLength type="narrow">
+			<unit type="duration-year">
+				<displayName draft="contributed">año</displayName>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="contributed">mes</displayName>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="contributed">día</displayName>
+			</unit>
+		</unitLength>
+	</units>
+	<listPatterns>
+		<listPattern type="unit-short">
+			<listPatternPart type="end" draft="contributed">{0} y {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+</ldml>

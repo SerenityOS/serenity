@@ -1,0 +1,28 @@
+RepeatingTypeAnnotations.java:16:25: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:18:25: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:19:25: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:27:31: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:29:24: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:38:21: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:40:38: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:42:24: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:49:21: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:54:28: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:56:21: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:56:36: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:58:19: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:63:19: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:63:34: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:66:18: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:66:33: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:70:19: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:70:35: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:74:19: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:74:34: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:88:37: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:88:26: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:88:56: compiler.err.duplicate.annotation.missing.container: TA
+RepeatingTypeAnnotations.java:88:72: compiler.err.duplicate.annotation.missing.container: TA
+- compiler.note.unchecked.filename: RepeatingTypeAnnotations.java
+- compiler.note.unchecked.recompile
+25 errors

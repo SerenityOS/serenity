@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:element name="doc">
+<xs:complexType>
+<xs:sequence>
+<xs:element name="value" maxOccurs='unbounded'>
+ <xs:simpleType>
+  <xs:restriction base="xs:string">
+   <xs:pattern value="[\w]"/>
+  </xs:restriction>
+ </xs:simpleType>
+</xs:element>
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+</xs:schema>

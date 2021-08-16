@@ -1,0 +1,84 @@
+#  diff of
+#          03AE34B0.TPMAP110 (b2c)
+#          03AE34B0.UPMAP120 (c2b)
+#  (1) removed "redundant" entries
+#     5C	005C
+#     7E	007E
+#  (2) have following "incompatible" entries compared
+#      to existing/old mappings
+#
+#   (a) c->b only don't exist in old table
+#   2015    815c    2014
+#   2225    8161    2016
+#   6805    8df2    67f5
+#   8346    8c74    834a
+#   ff0d    817c    2212
+#   ff5e    8160    301c
+#   ffe4    fa55    a6
+#
+#   (b) c->b only don't exist in new table
+#   551e    90e4    8749
+#   6d00    93c0    6d9c
+#   6f1e    91cb    9a28
+#   70ff    8ba0    4fa0
+#   8741    88a0    5516
+#   8f91    fa59    2116
+#   92ca    8a9a    565b
+#
+#   Warning: to compatible, added (b) into c2b table
+#
+90e4    551e
+93c0    6d00
+91cb    6f1e
+8ba0    70ff
+88a0    8741
+fa59    8f91
+8a9a    92ca
+#
+#
+#
+815C	2015
+8160	FF5E
+8161	2225
+817C	FF0D
+88A0	555E
+898B	7130
+89A8	9DD7
+8A9A	5699
+8BA0	4FE0
+8BEB	8EC0
+8C71	7E6B
+8C74	8346
+8CB2	9E7C
+8D8D	9EB4
+8DF2	6805
+8EC6	5C62
+8F4A	7E61
+8FD3	8523
+8FDD	91AC
+90E4	87EC
+917E	6414
+9189	7626
+91CB	9A52
+925C	7C1E
+92CD	6451
+9355	5861
+935E	985A
+9398	79B1
+93C0	7006
+9458	56CA
+948D	525D
+94AC	6F51
+94AE	91B1
+966A	9830
+96CB	9EB5
+9789	840A
+9858	881F
+9BA0	5C5B
+9DB7	6522
+9E94	688E
+E379	7E48
+E445	8141
+E8F6	9839
+FA55	FFE4
+FA59	F86F

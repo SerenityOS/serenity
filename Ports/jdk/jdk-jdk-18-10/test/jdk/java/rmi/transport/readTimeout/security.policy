@@ -1,0 +1,10 @@
+grant {
+    // Take this out once we can specify -Djava.security.debug on
+    // the run line and figure out what else is needed
+    permission java.security.AllPermission;
+
+    permission java.net.SocketPermission "*:1024-65535", "connect,listen";
+    permission java.util.PropertyPermission "http.proxyHost", "write";
+    permission java.util.PropertyPermission "http.proxyPort", "write";
+    permission java.lang.RuntimePermission "setFactory";
+};

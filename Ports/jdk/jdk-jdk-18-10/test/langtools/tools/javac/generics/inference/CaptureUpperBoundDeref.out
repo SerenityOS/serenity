@@ -1,0 +1,2 @@
+CaptureUpperBoundDeref.java:20:19: compiler.err.cant.resolve.location.args: kindname.method, substring, , int, (compiler.misc.location: kindname.class, java.lang.Object, null)
+1 error

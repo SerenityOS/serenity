@@ -1,0 +1,424 @@
+/*
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ * In this case, the signature for the fieldRef for str is missing its closing ';'.
+ *  public class BadFieldRef {
+ *      static String str = new String("Hi");
+ *      public static void m(String argv[]) {
+ *          System.out.println(str);
+ *      }
+ *  }
+*/
+class BadFieldRef {
+  0xCAFEBABE;
+  0; // minor version
+  57; // version
+  [38] { // Constant Pool
+    ; // first element is empty
+    Method #9 #21; // #1     at 0x0A
+    Field #22 #23; // #2     at 0x0F
+    Field #8 #24; // #3     at 0x14
+    Method #25 #26; // #4     at 0x19
+    class #27; // #5     at 0x1E
+    String #28; // #6     at 0x21
+    Method #5 #29; // #7     at 0x24
+    class #30; // #8     at 0x29
+    class #31; // #9     at 0x2C
+    Utf8 "str"; // #10     at 0x2F
+    Utf8 "Ljava/lang/String"; // #11     at 0x35  // Missing closing ';' !!
+    Utf8 "<init>"; // #12     at 0x4A
+    Utf8 "()V"; // #13     at 0x53
+    Utf8 "Code"; // #14     at 0x59
+    Utf8 "LineNumberTable"; // #15     at 0x60
+    Utf8 "m"; // #16     at 0x72
+    Utf8 "([Ljava/lang/String;)V"; // #17     at 0x76
+    Utf8 "<clinit>"; // #18     at 0x8F
+    Utf8 "SourceFile"; // #19     at 0x9A
+    Utf8 "BadFieldRef.java"; // #20     at 0xA7
+    NameAndType #12 #13; // #21     at 0xBA
+    class #32; // #22     at 0xBF
+    NameAndType #33 #34; // #23     at 0xC2
+    NameAndType #10 #11; // #24     at 0xC7
+    class #35; // #25     at 0xCC
+    NameAndType #36 #37; // #26     at 0xCF
+    Utf8 "java/lang/String"; // #27     at 0xD4
+    Utf8 "Hi"; // #28     at 0xE7
+    NameAndType #12 #37; // #29     at 0xEC
+    Utf8 "BadFieldRef"; // #30     at 0xF1
+    Utf8 "java/lang/Object"; // #31     at 0xFF
+    Utf8 "java/lang/System"; // #32     at 0x0112
+    Utf8 "out"; // #33     at 0x0125
+    Utf8 "Ljava/io/PrintStream;"; // #34     at 0x012B
+    Utf8 "java/io/PrintStream"; // #35     at 0x0143
+    Utf8 "println"; // #36     at 0x0159
+    Utf8 "(Ljava/lang/String;)V"; // #37     at 0x0163
+  } // Constant Pool
+
+  0x0021; // access [ ACC_PUBLIC ACC_SUPER ]
+  #8;// this_cpx
+  #9;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [1] { // fields
+    { // Member at 0x0185
+      0x0008; // access
+      #10; // name_cpx
+      #11; // sig_cpx
+      [0] { // Attributes
+      } // Attributes
+    } // Member
+  } // fields
+
+  [3] { // methods
+    { // Member at 0x018F
+      0x0001; // access
+      #12; // name_cpx
+      #13; // sig_cpx
+      [1] { // Attributes
+        Attr(#14, 29) { // Code at 0x0197
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#15, 6) { // LineNumberTable at 0x01AE
+              [1] { // LineNumberTable
+                0  1; //  at 0x01BA
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x01BA
+      0x0009; // access
+      #16; // name_cpx
+      #17; // sig_cpx
+      [1] { // Attributes
+        Attr(#14, 38) { // Code at 0x01C2
+          2; // max_stack
+          1; // max_locals
+          Bytes[10]{
+            0xB20002B20003B600;
+            0x04B1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#15, 10) { // LineNumberTable at 0x01DE
+              [2] { // LineNumberTable
+                0  6; //  at 0x01EA
+                9  7; //  at 0x01EE
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x01EE
+      0x0008; // access
+      #18; // name_cpx
+      #13; // sig_cpx
+      [1] { // Attributes
+        Attr(#14, 37) { // Code at 0x01F6
+          3; // max_stack
+          0; // max_locals
+          Bytes[13]{
+            0xBB0005591206B700;
+            0x07B30003B1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#15, 6) { // LineNumberTable at 0x0215
+              [1] { // LineNumberTable
+                0  3; //  at 0x0221
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [1] { // Attributes
+    Attr(#19, 2) { // SourceFile at 0x0223
+      #20;
+    } // end SourceFile
+  } // Attributes
+} // end class BadFieldRef
+
+
+
+/*
+ * In this case, the signature for the methodRef has an illegal embedded ';'.
+ *  public class BadMethodRef {
+ *      public static void main(java.la;ng.String argv[]) throws Throwable {
+ *          System.out.println(" World");
+ *      }
+ *  }
+*/
+class BadMethodRef {
+  0xCAFEBABE;
+  0; // minor version
+  57; // version
+  [32] { // Constant Pool
+    ; // first element is empty
+    Method #6 #17; // #1     at 0x0A
+    Field #18 #19; // #2     at 0x0F
+    String #20; // #3     at 0x14
+    Method #21 #22; // #4     at 0x17
+    class #23; // #5     at 0x1C
+    class #24; // #6     at 0x1F
+    Utf8 "<init>"; // #7     at 0x22
+    Utf8 "()V"; // #8     at 0x2B
+    Utf8 "Code"; // #9     at 0x31
+    Utf8 "LineNumberTable"; // #10     at 0x38
+    Utf8 "main"; // #11     at 0x4A
+    Utf8 "([Ljava/lang/String;)V"; // #12     at 0x51
+    Utf8 "Exceptions"; // #13     at 0x6A
+    class #25; // #14     at 0x77
+    Utf8 "SourceFile"; // #15     at 0x7A
+    Utf8 "BadMethodRef.java"; // #16     at 0x87
+    NameAndType #7 #8; // #17     at 0x9B
+    class #26; // #18     at 0xA0
+    NameAndType #27 #28; // #19     at 0xA3
+    Utf8 " World"; // #20     at 0xA8
+    class #29; // #21     at 0xB1
+    NameAndType #30 #31; // #22     at 0xB4
+    Utf8 "BadMethodRef"; // #23     at 0xB9
+    Utf8 "java/lang/Object"; // #24     at 0xC8
+    Utf8 "java/lang/Throwable"; // #25     at 0xDB
+    Utf8 "java/lang/System"; // #26     at 0xF1
+    Utf8 "out"; // #27     at 0x0104
+    Utf8 "Ljava/io/PrintStream;"; // #28     at 0x010A
+    Utf8 "java/io/PrintStream"; // #29     at 0x0122
+    Utf8 "println"; // #30     at 0x0138
+    Utf8 "(Ljava/la;ng/String;)V"; // #31     at 0x0142 // Illegal "la;ng"
+  } // Constant Pool
+
+  0x0021; // access [ ACC_PUBLIC ACC_SUPER ]
+  #5;// this_cpx
+  #6;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [2] { // methods
+    { // Member at 0x0166
+      0x0001; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [1] { // Attributes
+        Attr(#9, 29) { // Code at 0x016E
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 6) { // LineNumberTable at 0x0185
+              [1] { // LineNumberTable
+                0  1; //  at 0x0191
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0191
+      0x0009; // access
+      #11; // name_cpx
+      #12; // sig_cpx
+      [2] { // Attributes
+        Attr(#9, 37) { // Code at 0x0199
+          2; // max_stack
+          1; // max_locals
+          Bytes[9]{
+            0xB200021203B60004;
+            0xB1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 10) { // LineNumberTable at 0x01B4
+              [2] { // LineNumberTable
+                0  4; //  at 0x01C0
+                8  5; //  at 0x01C4
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+        ;
+        Attr(#13, 4) { // Exceptions at 0x01C4
+          [1] { // Exceptions
+            #14; //  at 0x01CE
+          }
+        } // end Exceptions
+      } // Attributes
+    } // Member
+  } // methods
+
+  [1] { // Attributes
+    Attr(#15, 2) { // SourceFile at 0x01D0
+      #16;
+    } // end SourceFile
+  } // Attributes
+} // end class BadMethodRef
+
+
+/*
+ * In this case, the signature for myMethod has an illegal embedded '['.
+ *  public class BadMethodSig {
+ *      public static void myMethod(Str[ing argv[]) throws Throwable {
+ *          System.out.println(" World");
+ *      }
+ *  }
+*/
+class BadMethodSig {
+  0xCAFEBABE;
+  0; // minor version
+  57; // version
+  [32] { // Constant Pool
+    ; // first element is empty
+    Method #6 #17; // #1     at 0x0A
+    Field #18 #19; // #2     at 0x0F
+    String #20; // #3     at 0x14
+    Method #21 #22; // #4     at 0x17
+    class #23; // #5     at 0x1C
+    class #24; // #6     at 0x1F
+    Utf8 "<init>"; // #7     at 0x22
+    Utf8 "()V"; // #8     at 0x2B
+    Utf8 "Code"; // #9     at 0x31
+    Utf8 "LineNumberTable"; // #10     at 0x38
+    Utf8 "myMethod"; // #11     at 0x4A
+    Utf8 "([Ljava/lang/Str[ing;)V"; // #12     at 0x55  // Illegal "Str[ing"
+    Utf8 "Exceptions"; // #13     at 0x6E
+    class #25; // #14     at 0x7B
+    Utf8 "SourceFile"; // #15     at 0x7E
+    Utf8 "BadMethodSig.java"; // #16     at 0x8B
+    NameAndType #7 #8; // #17     at 0x9F
+    class #26; // #18     at 0xA4
+    NameAndType #27 #28; // #19     at 0xA7
+    Utf8 " World"; // #20     at 0xAC
+    class #29; // #21     at 0xB5
+    NameAndType #30 #31; // #22     at 0xB8
+    Utf8 "BadMethodSig"; // #23     at 0xBD
+    Utf8 "java/lang/Object"; // #24     at 0xCC
+    Utf8 "java/lang/Throwable"; // #25     at 0xDF
+    Utf8 "java/lang/System"; // #26     at 0xF5
+    Utf8 "out"; // #27     at 0x0108
+    Utf8 "Ljava/io/PrintStream;"; // #28     at 0x010E
+    Utf8 "java/io/PrintStream"; // #29     at 0x0126
+    Utf8 "println"; // #30     at 0x013C
+    Utf8 "(Ljava/lang/String;)V"; // #31     at 0x0146
+  } // Constant Pool
+
+  0x0021; // access [ ACC_PUBLIC ACC_SUPER ]
+  #5;// this_cpx
+  #6;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [2] { // methods
+    { // Member at 0x016A
+      0x0001; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [1] { // Attributes
+        Attr(#9, 29) { // Code at 0x0172
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 6) { // LineNumberTable at 0x0189
+              [1] { // LineNumberTable
+                0  1; //  at 0x0195
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0195
+      0x0009; // access
+      #11; // name_cpx
+      #12; // sig_cpx
+      [2] { // Attributes
+        Attr(#9, 37) { // Code at 0x019D
+          2; // max_stack
+          1; // max_locals
+          Bytes[9]{
+            0xB200021203B60004;
+            0xB1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 10) { // LineNumberTable at 0x01B8
+              [2] { // LineNumberTable
+                0  4; //  at 0x01C4
+                8  5; //  at 0x01C8
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+        ;
+        Attr(#13, 4) { // Exceptions at 0x01C8
+          [1] { // Exceptions
+            #14; //  at 0x01D2
+          }
+        } // end Exceptions
+      } // Attributes
+    } // Member
+  } // methods
+
+  [1] { // Attributes
+    Attr(#15, 2) { // SourceFile at 0x01D4
+      #16;
+    } // end SourceFile
+  } // Attributes
+} // end class BadMethodSig

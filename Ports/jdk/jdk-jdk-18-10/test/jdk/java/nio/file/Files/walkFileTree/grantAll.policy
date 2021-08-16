@@ -1,0 +1,5 @@
+// policy file that grants read access to source directory and all descendants
+grant {
+    permission java.io.FilePermission "${test.src}", "read";
+    permission java.io.FilePermission "${test.src}${file.separator}-", "read";
+};

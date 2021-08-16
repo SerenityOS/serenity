@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="importNS" xmlns:imp="importNS">
+	<xsd:element name="sid" type="xsd:string"/>
+	<xsd:element name="iid1">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="iid2" type="xsd:string" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

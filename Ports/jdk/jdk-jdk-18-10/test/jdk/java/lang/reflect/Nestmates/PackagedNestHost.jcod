@@ -1,0 +1,136 @@
+/*
+ * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+//   NestMembers attribute is modified to contain P2.PackagedNestHost2.Member
+
+class P1/PackagedNestHost {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #4 #16; // #1
+    Method #17 #18; // #2
+    class #19; // #3
+    class #20; // #4
+    class #21; // #5
+    Utf8 "Member"; // #6
+    Utf8 "InnerClasses"; // #7
+    Utf8 "<init>"; // #8
+    Utf8 "()V"; // #9
+    Utf8 "Code"; // #10
+    Utf8 "LineNumberTable"; // #11
+    Utf8 "doAccess"; // #12
+    Utf8 "SourceFile"; // #13
+    Utf8 "PackagedNestHost.java"; // #14
+    Utf8 "NestMembers"; // #15
+    NameAndType #8 #9; // #16
+    class #23; // #17
+    NameAndType #24 #9; // #18
+    Utf8 "P1/PackagedNestHost"; // #19
+    Utf8 "java/lang/Object"; // #20
+    Utf8 "P1/PackagedNestHost$Member"; // #21
+    class #25; // #22
+    Utf8 "P2/PackagedNestHost2$Member"; // #23
+    Utf8 "m"; // #24
+    Utf8 "P2/PackagedNestHost2"; // #25
+  } // Constant Pool
+
+  0x0021; // access
+  #3;// this_cpx
+  #4;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #8; // name_cpx
+      #9; // sig_cpx
+      [] { // Attributes
+        Attr(#10) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#11) { // LineNumberTable
+              [] { // LineNumberTable
+                0  31;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #12; // name_cpx
+      #9; // sig_cpx
+      [] { // Attributes
+        Attr(#10) { // Code
+          0; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xB80002B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#11) { // LineNumberTable
+              [] { // LineNumberTable
+                0  44;
+                3  45;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#13) { // SourceFile
+      #14;
+    } // end SourceFile
+    ;
+    Attr(#15) { // NestMembers
+      0x00010011;  // modified - #17
+    } // end NestMembers
+    ;
+    Attr(#7) { // InnerClasses
+      [] { // InnerClasses
+        #5 #3 #6 9;
+        #17 #22 #6 9;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class P1/PackagedNestHost

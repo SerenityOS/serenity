@@ -1,0 +1,8 @@
+/*
+ *
+ * @bug  4408997
+ * Used by GetInstance test.
+ */
+grant {
+    permission java.security.SecurityPermission "putProviderProperty.StubProvider";
+};

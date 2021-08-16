@@ -1,0 +1,7 @@
+TypeUseTargetNeg.java:16:1: compiler.err.invalid.repeatable.annotation.incompatible.target: FooContainer, Foo
+TypeUseTargetNeg.java:36:1: compiler.err.invalid.repeatable.annotation.incompatible.target: BarContainer, Bar
+TypeUseTargetNeg.java:54:1: compiler.err.invalid.repeatable.annotation.incompatible.target: BazContainer, Baz
+TypeUseTargetNeg.java:71:1: compiler.err.invalid.repeatable.annotation.incompatible.target: QuxContainer, Qux
+TypeUseTargetNeg.java:81:1: compiler.err.invalid.repeatable.annotation.incompatible.target: QuuxContainer, Quux
+TypeUseTargetNeg.java:92:1: compiler.err.invalid.repeatable.annotation.incompatible.target: QuuuxContainer, Quuux
+6 errors

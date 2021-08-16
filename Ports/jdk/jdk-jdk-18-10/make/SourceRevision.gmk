@@ -1,0 +1,163 @@
+#
+# Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include $(SPEC)
+include MakeBase.gmk
+
+$(eval $(call IncludeCustomExtension, SourceRevision-pre.gmk))
+
+################################################################################
+# Keep track of what source revision is used to create the build, by creating
+# a tracker file in the output directory. This tracker file is included in the
+# source image, and can be used to recreate the source revision used.
+#
+# We're either building directly from an SCM repository, and if so, use the
+# current revision from that SCM. Otherwise, we are building from a source
+# bundle. As a part of creating this source bundle, the current SCM revisions of
+# all repos will be stored in a file in the top dir, which is then used when
+# creating the tracker file.
+
+STORED_SOURCE_REVISION := $(TOPDIR)/.src-rev
+
+USE_SCM := false
+ifneq ($(and $(HG), $(wildcard $(TOPDIR)/.hg)), )
+  USE_SCM := true
+  SCM_DIR := .hg
+  ID_COMMAND := $(PRINTF) "hg:%s" "$$($(HG) id -i)"
+else ifneq ($(and $(GIT), $(wildcard $(TOPDIR)/.git)), )
+  USE_SCM := true
+  SCM_DIR := .git
+  ID_COMMAND := $(PRINTF) "git:%s%s\n" \
+      "$$(git log -n1 --format=%H | cut -c1-12)" \
+      "$$(if test -n "$$(git status --porcelain)"; then printf '+'; fi)"
+endif
+
+ifeq ($(USE_SCM), true)
+
+  # Verify that the entire forest is consistent
+  $(foreach repo, $(call FindAllReposRel), \
+    $(if $(wildcard $(TOPDIR)/$(repo)/$(SCM_DIR)),, \
+        $(error Inconsistent revision control: $(repo) is missing $(SCM_DIR) directory)) \
+  )
+
+  # Replace "." with "_top" and "/" with "-"
+  MakeFilenameFromRepo = \
+      $(strip $(subst .,top, $(subst /,-, $1)))
+
+  ################################################################################
+  # SetupGetRevisionForRepo defines a make rule for creating a file containing
+  # the name of the repository and the output of the scm command for that
+  # repository.
+  #
+  # Argument 1 is the relative path to the repository from the top dir.
+  #
+  SetupGetRevisionForRepo = $(NamedParamsMacroTemplate)
+  define SetupGetRevisionForRepoBody
+    $1_REPO_PATH :=  $$(TOPDIR)/$$(strip $1)
+    $1_FILENAME := $$(call MakeFilenameFromRepo, $1)
+
+    $$(SUPPORT_OUTPUTDIR)/src-rev/$$($1_FILENAME): FRC
+	$$(call MakeDir, $$(@D))
+	$$(ECHO) $$(strip $1):`$$(CD) $$($1_REPO_PATH) && $$(ID_COMMAND)` > $$@
+
+    REPO_REVISIONS += $$(SUPPORT_OUTPUTDIR)/src-rev/$$($1_FILENAME)
+  endef
+
+  # Setup rules for all repos. This makes sure all the "hg id" calls are made
+  # in parallel.
+  $(foreach repo, $(call FindAllReposRel), \
+    $(eval $(call SetupGetRevisionForRepo, $(repo))) \
+  )
+
+  # Create a complete source revision output file from all repos
+  # Param 1: The output file
+  define CreateSourceRevisionFile
+    $1: $$(REPO_REVISIONS)
+	$$(call MakeDir, $$(@D))
+	$$(ECHO) `$$(CAT) $$(REPO_REVISIONS)` > $$@.tmp
+	if [ ! -f $$@ ] || [ "`$$(CAT) $$@`" != "`$$(CAT) $$@.tmp`" ]; then \
+	  $$(MV) $$@.tmp $$@ ; \
+	else \
+	  $$(RM) $$@.tmp ; \
+	fi
+  endef
+
+  $(eval $(call CreateSourceRevisionFile, $(STORED_SOURCE_REVISION)))
+
+  scm-store-source-revision: $(STORED_SOURCE_REVISION)
+
+  $(eval $(call CreateSourceRevisionFile, $(SOURCE_REVISION_TRACKER)))
+
+  scm-create-source-revision-tracker: $(SOURCE_REVISION_TRACKER)
+
+  STORE_SOURCE_REVISION_TARGET := scm-store-source-revision
+  CREATE_SOURCE_REVISION_TRACKER_TARGET := scm-create-source-revision-tracker
+
+  .PHONY: scm-store-source-revision scm-create-source-revision-tracker
+
+else
+  # Not using any SCM
+
+  ifneq ($(wildcard $(STORED_SOURCE_REVISION)), )
+    # We have a stored source revision (.src-rev)
+
+    src-store-source-revision:
+	$(call LogInfo, No SCM configuration present$(COMMA) not updating .src-rev)
+
+    $(SOURCE_REVISION_TRACKER): $(STORED_SOURCE_REVISION)
+	$(install-file)
+
+    src-create-source-revision-tracker: $(SOURCE_REVISION_TRACKER)
+  else
+    # We don't have a stored source revision. Can't do anything, really.
+
+    src-store-source-revision:
+	$(call LogWarn, Error: No SCM configuration present$(COMMA) cannot create .src-rev)
+	exit 2
+
+    src-create-source-revision-tracker:
+	$(call LogWarn, Warning: No SCM configuration present and no .src-rev)
+  endif
+
+  STORE_SOURCE_REVISION_TARGET := src-store-source-revision
+  CREATE_SOURCE_REVISION_TRACKER_TARGET := src-create-source-revision-tracker
+
+  .PHONY: src-store-source-revision src-create-source-revision-tracker
+
+endif
+
+################################################################################
+
+$(eval $(call IncludeCustomExtension, SourceRevision-post.gmk))
+
+################################################################################
+
+store-source-revision: $(STORE_SOURCE_REVISION_TARGET)
+
+create-source-revision-tracker: $(CREATE_SOURCE_REVISION_TRACKER_TARGET)
+
+FRC: # Force target
+
+.PHONY: store-source-revision create-source-revision-tracker

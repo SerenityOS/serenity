@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Created-By: 1.9.0-internal (Oracle Corporation)
+
+Name: foo/
+Sealed: true
+

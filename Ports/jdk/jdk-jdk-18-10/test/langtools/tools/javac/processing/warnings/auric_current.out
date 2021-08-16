@@ -1,0 +1,6 @@
+- compiler.warn.proc.duplicate.supported.annotation: Quux, TestRepeatedItemsRuntime
+- compiler.warn.proc.malformed.supported.string: &&&/foo.Bar, TestRepeatedItemsRuntime
+- compiler.warn.proc.duplicate.supported.annotation: foo.Bar, TestRepeatedItemsRuntime
+- compiler.warn.proc.redundant.types.with.wildcard: TestRepeatedItemsRuntime
+- compiler.warn.proc.duplicate.option.name: foo, TestRepeatedItemsRuntime
+5 warnings

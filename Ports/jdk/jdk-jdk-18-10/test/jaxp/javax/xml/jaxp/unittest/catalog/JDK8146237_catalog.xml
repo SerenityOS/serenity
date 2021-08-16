@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog prefer="public" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+
+    <public publicId="-//FOO//DTD XML Dummy V0.0//EN"
+            uri="dummy.dtd"/>
+</catalog> 
+

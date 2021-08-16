@@ -1,0 +1,4 @@
+- compiler.warn.proc.messager: Duplicate annotation type ``foo/Baz'' for processor TestRepeatedSupportedItems in its @SupportedAnnotationTypesannotation.
+- compiler.warn.proc.messager: Duplicate annotation type ``Baz'' for processor TestRepeatedSupportedItems in its @SupportedAnnotationTypesannotation.
+- compiler.warn.proc.messager: Duplicate option value ``Foo'' for processor TestRepeatedSupportedItems in its @SupportedOptionsannotation.
+3 warnings

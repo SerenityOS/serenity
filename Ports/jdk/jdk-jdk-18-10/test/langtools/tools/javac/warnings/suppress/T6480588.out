@@ -1,0 +1,19 @@
+T6480588.java:16:24: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6480588.java:16:51: compiler.warn.has.been.deprecated: DeprecatedInterface, compiler.misc.unnamed.package
+T6480588.java:15:2: compiler.warn.has.been.deprecated: DeprecatedAnnotation, compiler.misc.unnamed.package
+T6480588.java:18:12: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6480588.java:18:65: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6480588.java:17:6: compiler.warn.has.been.deprecated: DeprecatedAnnotation, compiler.misc.unnamed.package
+T6480588.java:18:35: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6480588.java:19:9: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6480588.java:19:34: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6480588.java:21:9: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6480588.java:21:25: compiler.warn.deprecated.annotation.has.no.effect: kindname.variable
+T6480588.java:21:35: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6480588.java:30:5: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6480588.java:29:6: compiler.warn.has.been.deprecated: DeprecatedAnnotation, compiler.misc.unnamed.package
+T6480588.java:30:33: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6480588.java:33:25: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6480588.java:33:52: compiler.warn.has.been.deprecated: DeprecatedInterface, compiler.misc.unnamed.package
+T6480588.java:32:6: compiler.warn.has.been.deprecated: DeprecatedAnnotation, compiler.misc.unnamed.package
+18 warnings

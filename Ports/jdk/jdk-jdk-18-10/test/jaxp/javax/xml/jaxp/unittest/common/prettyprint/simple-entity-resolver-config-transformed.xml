@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?><catalog prefer="system" xml:base="schemas" xmlns="xmlns:xml:catalog"><system systemId="http://www.example.test/oracle/schema/example1.xsd" uri="META-INF/example1.xsd" />
+<system systemId="http://www.example.test/oracle/schema/example2.xsd" uri="META-INF/example2.xsd" />
+</catalog>

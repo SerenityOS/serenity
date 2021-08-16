@@ -1,0 +1,2 @@
+BadTest4.java:38:17: compiler.err.cant.apply.symbol: kindname.method, f, A,B, java.lang.Integer,java.lang.Number, kindname.class, BadTest4.Main, (compiler.misc.inferred.do.not.conform.to.upper.bounds: java.lang.Number, java.lang.Integer)
+1 error

@@ -1,0 +1,3 @@
+NPEDueToErroneousLambdaTest.java:22:33: compiler.err.override.meth.doesnt.throw: (compiler.misc.cant.implement: apply(NPEDueToErroneousLambdaTest.A), compiler.misc.anonymous.class: NPEDueToErroneousLambdaTest$1, apply(T), java.util.function.Function), java.lang.Exception
+NPEDueToErroneousLambdaTest.java:24:32: compiler.err.cant.apply.symbol: kindname.method, t, java.util.function.Function<? super I,? extends O>, java.util.function.Function<java.lang.Boolean,NPEDueToErroneousLambdaTest.S>,compiler.misc.type.null, kindname.class, NPEDueToErroneousLambdaTest, (compiler.misc.infer.arg.length.mismatch: I,O)
+2 errors

@@ -1,0 +1,5 @@
+Test.java:12:58: compiler.err.proc.messager: compiler.misc.crules.should.not.use.eager.string.evaluation
+Test.java:27:49: compiler.err.proc.messager: compiler.misc.crules.should.not.use.lazy.string.evaluation
+Test.java:30:49: compiler.err.proc.messager: compiler.misc.crules.should.not.use.lazy.string.evaluation
+Test.java:33:49: compiler.err.proc.messager: compiler.misc.crules.should.not.use.lazy.string.evaluation
+4 errors

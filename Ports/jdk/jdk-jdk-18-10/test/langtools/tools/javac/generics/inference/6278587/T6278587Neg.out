@@ -1,0 +1,2 @@
+T6278587Neg.java:18:10: compiler.err.prob.found.req: (compiler.misc.inferred.do.not.conform.to.lower.bounds: T, T6278587Neg.C)
+1 error

@@ -1,0 +1,2 @@
+ErasureClashCrash.java:14:16: compiler.err.name.clash.same.erasure.no.override: compareTo, java.lang.Object, ErasureClashCrash, compareTo, ErasureClashCrash, Compar
+1 error

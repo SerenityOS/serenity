@@ -1,0 +1,2 @@
+CyclicAnnotation.java:13:11: compiler.err.cyclic.annotation.element: Baz
+1 error

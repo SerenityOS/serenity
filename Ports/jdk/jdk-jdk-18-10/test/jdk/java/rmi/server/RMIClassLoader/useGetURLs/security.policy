@@ -1,0 +1,18 @@
+/*
+ * security policy used by the test process
+ */
+
+grant {
+  // the test needs to move classfiles out of its classpath
+  permission java.io.FilePermission "${test.classes}", "read,write,delete";
+  permission java.io.FilePermission "${test.classes}${/}-", "read,write,delete";
+
+  // test needs to install class files
+  permission java.io.FilePermission ".", "read,write,delete";
+  permission java.io.FilePermission ".${/}-", "read,write,delete";
+
+  // used by TestLibrary to determine test environment 
+  permission java.util.PropertyPermission "test.*", "read";
+  permission java.util.PropertyPermission "user.dir", "read";
+  permission java.util.PropertyPermission "java.home", "read";
+};

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ns1:getSedansResponse xmlns:ns1="http://server.type_substitution.fromjava/">
+    <return xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns1:toyota">
+        <make>Toyota</make><model>Camry</model><year>1998</year><color>white</color>
+    </return>
+    <!-- specify wrong xsi type to introduce a validation error -->
+    <return xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns1:car">
+        <make>Toyota</make><model>Corolla</model><year>1999</year><color>red</color>
+    </return>
+</ns1:getSedansResponse>

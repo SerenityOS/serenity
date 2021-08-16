@@ -1,0 +1,8 @@
+Unchecked.java:16:9: compiler.warn.raw.class.use: java.util.List, java.util.List<E>
+Unchecked.java:17:14: compiler.warn.unchecked.call.mbr.of.raw.type: add(E), java.util.List
+Unchecked.java:26:9: compiler.warn.raw.class.use: java.util.List, java.util.List<E>
+Unchecked.java:35:9: compiler.warn.raw.class.use: java.util.List, java.util.List<E>
+Unchecked.java:46:21: compiler.warn.raw.class.use: java.util.List, java.util.List<E>
+Unchecked.java:57:9: compiler.warn.raw.class.use: java.util.List, java.util.List<E>
+Unchecked.java:58:14: compiler.warn.unchecked.call.mbr.of.raw.type: add(E), java.util.List
+7 warnings

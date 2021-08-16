@@ -1,0 +1,9 @@
+/*
+ * security policy used by the test process
+ * must allow file reads so that jtreg itself can run
+ */
+
+grant {
+  // standard test activation permissions
+  permission java.io.FilePermission "*", "read";
+};

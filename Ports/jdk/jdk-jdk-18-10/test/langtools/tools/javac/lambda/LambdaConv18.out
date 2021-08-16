@@ -1,0 +1,3 @@
+LambdaConv18.java:18:5: compiler.err.cant.resolve.location: kindname.class, NonExistent, , , (compiler.misc.location: kindname.class, LambdaConv18, null)
+LambdaConv18.java:18:26: compiler.err.cant.resolve.location: kindname.class, NonExistent, , , (compiler.misc.location: kindname.class, LambdaConv18, null)
+2 errors

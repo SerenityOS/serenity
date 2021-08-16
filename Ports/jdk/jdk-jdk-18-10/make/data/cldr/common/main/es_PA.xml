@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="es"/>
+		<territory type="PA"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ace" draft="contributed">acehnés</language>
+			<language type="arp" draft="contributed">arapaho</language>
+			<language type="bho" draft="contributed">bhojpuri</language>
+			<language type="eu" draft="contributed">euskera</language>
+			<language type="grc" draft="contributed">griego antiguo</language>
+			<language type="lo" draft="contributed">lao</language>
+			<language type="nso" draft="contributed">sotho septentrional</language>
+			<language type="pa" draft="contributed">punyabí</language>
+			<language type="ss" draft="contributed">siswati</language>
+			<language type="sw" draft="contributed">suajili</language>
+			<language type="sw_CD" draft="contributed">suajili del Congo</language>
+			<language type="tn" draft="contributed">setswana</language>
+			<language type="wo" draft="contributed">wolof</language>
+			<language type="zgh" draft="contributed">tamazight marroquí estándar</language>
+		</languages>
+		<territories>
+			<territory type="BA" draft="contributed">Bosnia y Herzegovina</territory>
+			<territory type="GB" alt="short" draft="contributed">RU</territory>
+			<territory type="TA" draft="contributed">Tristán de Acuña</territory>
+			<territory type="UM" draft="contributed">Islas menores alejadas de EE. UU.</territory>
+		</territories>
+	</localeDisplayNames>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>MM/dd/y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>MM/dd/yy GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Md">MM/dd</dateFormatItem>
+						<dateFormatItem id="MEd">E, MM/dd</dateFormatItem>
+						<dateFormatItem id="yM">MM/y</dateFormatItem>
+						<dateFormatItem id="yMd">MM/dd/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E MM/dd/y</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback draft="contributed">{0} a el {1}</intervalFormatFallback>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="h" draft="unconfirmed">h:mm–h:mm a</greatestDifference>
+							<greatestDifference id="m" draft="unconfirmed">h:mm–h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hm">
+							<greatestDifference id="H" draft="unconfirmed">HH:mm–HH:mm</greatestDifference>
+							<greatestDifference id="m" draft="unconfirmed">HH:mm–HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="h" draft="unconfirmed">h:mm–h:mm a v</greatestDifference>
+							<greatestDifference id="m" draft="unconfirmed">h:mm–h:mm a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H" draft="unconfirmed">HH:mm–HH:mm v</greatestDifference>
+							<greatestDifference id="m" draft="unconfirmed">HH:mm–HH:mm v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="M" draft="contributed">d 'de' MMM 'al' d 'de' MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d" draft="contributed">E d 'al' E d 'de' MMM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E d 'de' MMM 'al' E d 'de' MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y" draft="contributed">y–y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M" draft="contributed">MMM–MMM 'de' y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">MMM 'de' y 'a' MMM 'de' y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d" draft="contributed">d–d 'de' MMM 'de' y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">d 'de' MMM 'al' d 'de' MMM 'de' y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">d 'de' MMM 'de' y 'al' d 'de' MMM 'de' y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d" draft="contributed">E d 'al' E d 'de' MMM 'de' y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E d 'de' MMM 'al' E d 'de' MMM 'de' y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">E d 'de' MMM 'de' y 'al' E d 'de' MMM 'de' y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="wide">
+							<quarter type="1">1er. trimestre</quarter>
+							<quarter type="2">2do. trimestre</quarter>
+							<quarter type="3">3er. trimestre</quarter>
+							<quarter type="4">4.º trimestre</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="wide">
+							<quarter type="1">1er. trimestre</quarter>
+							<quarter type="2">2do. trimestre</quarter>
+							<quarter type="3">3er. trimestre</quarter>
+							<quarter type="4">4.º trimestre</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="noon">mediodía</dayPeriod>
+							<dayPeriod type="morning1">de la madrugada</dayPeriod>
+							<dayPeriod type="morning2">de la mañana</dayPeriod>
+							<dayPeriod type="evening1">de la tarde</dayPeriod>
+							<dayPeriod type="night1">de la noche</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="noon">mediodía</dayPeriod>
+							<dayPeriod type="morning1">de la madrugada</dayPeriod>
+							<dayPeriod type="morning2">de la mañana</dayPeriod>
+							<dayPeriod type="evening1">de la tarde</dayPeriod>
+							<dayPeriod type="night1">de la noche</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<dateFormats>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>MM/dd/y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>MM/dd/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern draft="contributed">h:mm:ss a zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern draft="contributed">h:mm:ss a z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern draft="contributed">h:mm:ss a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern draft="contributed">h:mm a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Md">MM/dd</dateFormatItem>
+						<dateFormatItem id="MEd">E, MM/dd</dateFormatItem>
+						<dateFormatItem id="yM">MM/y</dateFormatItem>
+						<dateFormatItem id="yMd">MM/dd/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E MM/dd/y</dateFormatItem>
+						<dateFormatItem id="yMMM" draft="contributed">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd" draft="contributed">d MMM y</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="M" draft="contributed">d 'de' MMM 'al' d 'de' MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d" draft="contributed">E d 'al' E d 'de' MMM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E d 'de' MMM 'al' E d 'de' MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M" draft="contributed">MM/y – MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">MM/y – MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="y" draft="contributed">MMM 'de' y 'a' MMM 'de' y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="M" draft="contributed">d 'de' MMM 'al' d 'de' MMM 'de' y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">d 'de' MMM 'de' y 'al' d 'de' MMM 'de' y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d" draft="contributed">E d 'al' E d 'de' MMM 'de' y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E d 'de' MMM 'al' E d 'de' MMM 'de' y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">E d 'de' MMM 'de' y 'al' E d 'de' MMM 'de' y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+	</dates>
+	<numbers>
+		<currencies>
+			<currency type="PAB">
+				<symbol>B/.</symbol>
+			</currency>
+		</currencies>
+	</numbers>
+</ldml>

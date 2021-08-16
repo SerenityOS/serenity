@@ -1,0 +1,54 @@
+#
+# Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+ifeq ($(JVM_VARIANT), )
+  $(error This makefile must be called with JVM_VARIANT set)
+endif
+
+JVM_VARIANT_OUTPUTDIR := $(HOTSPOT_OUTPUTDIR)/variant-$(JVM_VARIANT)
+JVM_OUTPUTDIR := $(JVM_VARIANT_OUTPUTDIR)/libjvm
+JVM_SUPPORT_DIR := $(JVM_VARIANT_OUTPUTDIR)/support
+
+DTRACE_SUPPORT_DIR := $(JVM_SUPPORT_DIR)/dtrace
+
+LIB_OUTPUTDIR := $(call FindLibDirForModule, java.base)
+ifneq ($(filter client minimal, $(JVM_VARIANT)), )
+  JVM_VARIANT_SUBDIR := $(JVM_VARIANT)
+else
+  # Use 'server' as default target directory name for all other variants.
+  JVM_VARIANT_SUBDIR := server
+endif
+JVM_LIB_OUTPUTDIR := $(LIB_OUTPUTDIR)/$(JVM_VARIANT_SUBDIR)
+
+################################################################################
+
+# Test if a feature is available in the present build of JVM_VARIANT. Will return
+# 'true' or 'false'.
+# $1 - the feature to test for
+check-jvm-feature = \
+  $(strip \
+    $(if $(filter-out $(VALID_JVM_FEATURES), $1), \
+      $(error Internal error: Invalid feature tested: $1)) \
+    $(if $(filter $1, $(JVM_FEATURES_$(JVM_VARIANT))), true, false))

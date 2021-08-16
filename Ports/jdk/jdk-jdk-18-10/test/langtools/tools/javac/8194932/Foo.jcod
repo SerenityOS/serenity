@@ -1,0 +1,115 @@
+class Foo {
+  0xCAFEBABE;
+  0; // minor version
+  52; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #4 #14; // #1
+    String #15; // #2
+    class #16; // #3
+    class #17; // #4
+    Utf8 "<init>"; // #5
+    Utf8 "()V"; // #6
+    Utf8 "Code"; // #7
+    Utf8 "LineNumberTable"; // #8
+    Utf8 "m"; // #9
+    Utf8 "m2"; // #10
+    Utf8 "()Ljava/lang/String;"; // #11
+    Utf8 "SourceFile"; // #12
+    Utf8 "Foo.java"; // #13
+    NameAndType #5 #6; // #14
+    Utf8 "Hello"; // #15
+    Utf8 "Foo"; // #16
+    Utf8 "java/lang/Object"; // #17
+  } // Constant Pool
+
+  0x0020; // access
+  #3;// this_cpx
+  #4;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#8) { // LineNumberTable
+              [] { // LineNumberTable
+                0  1;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0000; // access
+      #9; // name_cpx
+      #6; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          0; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#8) { // LineNumberTable
+              [] { // LineNumberTable
+                0  2;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0000; // access
+      #9; // name_cpx
+      #11; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x1202B0;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#8) { // LineNumberTable
+              [] { // LineNumberTable
+                0  3;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#12) { // SourceFile
+      #13;
+    } // end SourceFile
+  } // Attributes
+} // end class Foo

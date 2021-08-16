@@ -1,0 +1,5 @@
+T7086586.java:14:28: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: compiler.misc.type.captureof: 1, ?, java.lang.String)
+T7086586.java:15:28: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: compiler.misc.type.captureof: 1, ?, java.lang.Number)
+T7086586.java:16:31: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: compiler.misc.type.captureof: 1, ?, java.lang.Exception)
+T7086586.java:17:13: compiler.err.cant.resolve.location.args: kindname.method, nonExistentMethod, , , (compiler.misc.location: kindname.interface, java.util.List<compiler.misc.type.captureof: 1, ?>, null)
+4 errors

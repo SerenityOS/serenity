@@ -1,0 +1,2 @@
+EqualsHashCodeWarningTest.java:52:1: compiler.warn.override.equals.but.not.hashcode: DoWarnMe
+1 warning

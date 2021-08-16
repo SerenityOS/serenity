@@ -1,0 +1,3 @@
+module myapp {
+    requires somelib;
+}

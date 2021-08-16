@@ -1,0 +1,2 @@
+MethodRefStuckParenthesized.java:25:5: compiler.err.cant.apply.symbol: kindname.method, f, MethodRefStuckParenthesized.I, MethodRefStuckParenthesized.J, kindname.class, MethodRefStuckParenthesized, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.infer.no.conforming.instance.exists: X, MethodRefStuckParenthesized.J, MethodRefStuckParenthesized.I))
+1 error

@@ -1,0 +1,8 @@
+package-info.java:10:9: compiler.warn.deprecated.annotation.has.no.effect: kindname.package
+- compiler.err.warnings.and.werror
+package-info.java:14:30: compiler.warn.deprecated.annotation.has.no.effect: kindname.variable
+package-info.java:16:25: compiler.warn.deprecated.annotation.has.no.effect: kindname.variable
+package-info.java:18:51: compiler.warn.deprecated.annotation.has.no.effect: kindname.variable
+package-info.java:20:40: compiler.warn.deprecated.annotation.has.no.effect: kindname.variable
+1 error
+5 warnings

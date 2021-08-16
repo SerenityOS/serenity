@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE vxml PUBLIC "-//W3C//DTD VOICEXML 2.0//EN" "vxml.dtd">
+
+<vxml version="2.0"
+	xmlns="http://www.w3.org/2001/vxml"
+	xml:lang="en-US">
+
+	<form>
+		<field name="selection">
+			<prompt>
+				Please choose News, Weather, or Sports.
+			</prompt>
+			
+			<grammar type="application/x-nuance-gsl">
+				[ news weather sports ]
+			</grammar>
+		</field>
+
+		<block>
+			<submit next="select.jsp"/>
+			<prompt>Form is being submited.</prompt>
+		</block>
+	</form>
+
+</vxml>

@@ -1,0 +1,2 @@
+T7177306e.java:16:8: compiler.err.cant.apply.symbol: kindname.method, m, java.util.List<U>, java.util.List<java.util.List<?>>, kindname.class, T7177306e, (compiler.misc.inferred.do.not.conform.to.eq.bounds: java.lang.Object, compiler.misc.type.captureof: 1, ?)
+1 error

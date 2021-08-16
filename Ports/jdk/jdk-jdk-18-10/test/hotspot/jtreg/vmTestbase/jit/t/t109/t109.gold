@@ -1,0 +1,3 @@
+java.lang.ArithmeticException: / by zero
+        at jit.t.t109.t109.doit(t109.java:69)
+        at jit.t.t109.t109.main(t109.java:57)

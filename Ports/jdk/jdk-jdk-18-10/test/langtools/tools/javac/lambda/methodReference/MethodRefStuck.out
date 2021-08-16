@@ -1,0 +1,2 @@
+MethodRefStuck.java:15:18: compiler.err.cant.apply.symbol: kindname.constructor, I, boolean, java.util.Optional<java.lang.Boolean>, kindname.class, MethodRefStuck.I, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.infer.no.conforming.instance.exists: U, java.util.Optional<U>, boolean))
+1 error

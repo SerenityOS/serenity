@@ -1,0 +1,3 @@
+T7102515.java:9:41: compiler.err.operator.cant.be.applied.1: +, T7102515, T7102515
+T7102515.java:10:32: compiler.err.operator.cant.be.applied: ++, T7102515
+2 errors

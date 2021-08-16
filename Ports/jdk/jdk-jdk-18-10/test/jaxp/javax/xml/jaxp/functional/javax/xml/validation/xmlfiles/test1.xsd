@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:element name="address">
+<xs:complexType>
+<xs:sequence>
+  <xs:element name="street" type="xs:string"/>
+  <xs:element name="city" type="xs:string"/>
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+</xs:schema>

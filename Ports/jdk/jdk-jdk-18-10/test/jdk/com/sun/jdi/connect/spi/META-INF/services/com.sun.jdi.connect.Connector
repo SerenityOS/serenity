@@ -1,0 +1,2 @@
+# -- used by test/com/sun/jdi/connect/spi/DebugUsingCustomConnector.java
+SimpleLaunchingConnector

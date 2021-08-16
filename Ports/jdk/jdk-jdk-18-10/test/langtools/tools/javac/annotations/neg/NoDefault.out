@@ -1,0 +1,3 @@
+NoDefault.java:8:17: compiler.err.mod.not.allowed.here: default
+NoDefault.java:8:21: compiler.err.intf.meth.cant.have.body
+2 errors

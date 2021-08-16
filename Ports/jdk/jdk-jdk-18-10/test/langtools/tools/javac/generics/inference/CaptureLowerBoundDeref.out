@@ -1,0 +1,2 @@
+CaptureLowerBoundDeref.java:22:19: compiler.err.cant.apply.symbol: kindname.method, take, compiler.misc.type.captureof: 1, ?, java.lang.Object, kindname.interface, CaptureLowerBoundDeref.K<T>, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.Object, compiler.misc.type.captureof: 1, ?))
+1 error

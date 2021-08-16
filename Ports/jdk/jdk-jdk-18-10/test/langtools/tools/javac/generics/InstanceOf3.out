@@ -1,0 +1,2 @@
+InstanceOf3.java:12:32: compiler.err.feature.not.supported.in.source.plural: (compiler.misc.feature.reifiable.types.instanceof), 15, 16
+1 error

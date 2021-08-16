@@ -1,0 +1,3 @@
+T8019480.java:21:34: compiler.err.cant.apply.symbols: kindname.method, add, java.lang.Object,{(compiler.misc.inapplicable.method: kindname.method, java.util.List, add(U), (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.Object, U))),(compiler.misc.inapplicable.method: kindname.method, java.util.List, add(int,U), (compiler.misc.arg.length.mismatch))}
+T8019480.java:21:46: compiler.err.report.access: clone(), protected, java.lang.Object
+2 errors

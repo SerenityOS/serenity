@@ -1,0 +1,151 @@
+# This file is UTF-8 encoded.
+#
+# Test                  Expected        Expected
+# String                Public Suffix   Registered Domain
+#
+
+# ac
+foo.ac                  ac              foo.ac
+www.foo.ac              ac              foo.ac
+com.ac                  com.ac          null
+www.foo.com.ac          com.ac          foo.com.ac
+www.foo.mil.ac          mil.ac          foo.mil.ac
+ac                      ac              null
+
+# Will not match anything in the public suffix list
+biff.barr               null            null
+
+# aero
+www.site.gliding.aero   gliding.aero    site.gliding.aero
+media.aero              media.aero      null
+foo.media.aero          media.aero      foo.media.aero
+www.bar.aero            aero            bar.aero
+
+# aq: domain with only one entry
+aq                      aq              null
+foo.aq                  aq              foo.aq
+www.foo.aq              aq              foo.aq
+
+# arpa:
+1.2.3.4.in-addr.arpa    in-addr.arpa    4.in-addr.arpa
+arpa                    arpa            null
+
+# au
+au                      au              null
+com.au                  com.au          null
+site.com.au             com.au          site.com.au
+foo.act.edu.au          act.edu.au      foo.act.edu.au
+w.foo.act.edu.au        act.edu.au      foo.act.edu.au
+www.site.act.au         act.au          site.act.au
+
+# bd consists of only one wildcard
+bd                      null            null
+foo.bd                  foo.bd          null
+site.foo.bd             foo.bd          site.foo.bd
+w.site.foo.bd           foo.bd          site.foo.bd
+
+# bg has single-letter and single-digit labels
+bg                      bg              null
+site.bg                 bg              site.bg
+site.1.bg               1.bg            site.1.bg
+site.z.bg               z.bg            site.z.bg
+w.site.z.bg             z.bg            site.z.bg
+
+# biz
+biz                     biz             null
+site.biz                biz             site.biz
+w.site.biz              biz             site.biz
+
+# cn (unicode)
+#
+foo.mil.cn              mil.cn          foo.mil.cn
+w.foo.mil.cn            mil.cn          foo.mil.cn
+foo.公司.cn             公司.cn         foo.公司.cn
+w.foo.公司.cn           公司.cn         foo.公司.cn
+
+# com
+www.foo.com             com             foo.com
+z.www.foo.com           com             foo.com
+com                     com             null
+ar.com                  ar.com          null
+site.ar.com             ar.com          site.ar.com
+w.site.ar.com           ar.com          site.ar.com
+
+# fj (no longer *.fj)
+foo.gov.fj              gov.fj          foo.gov.fj
+foo.fj                  fj              foo.fj
+
+# ie
+www.foo.ie              ie              foo.ie
+www.foo.gov.ie          gov.ie          foo.gov.ie
+
+# it has a large number of entries
+www.gr.it               gr.it           www.gr.it
+www.blahblahblah.it     it              blahblahblah.it
+
+# jp has a large number of entries, including wildcard and exception rules
+jp                      jp              null
+foo.jp                  jp              foo.jp
+ac.jp                   ac.jp           null
+foo.ac.jp               ac.jp           foo.ac.jp
+w.foo.ac.jp             ac.jp           foo.ac.jp
+foo.tokyo.jp            tokyo.jp        foo.tokyo.jp
+w.foo.tokyo.jp          tokyo.jp        foo.tokyo.jp
+p.w.foo.tokyo.jp        tokyo.jp        foo.tokyo.jp
+metro.tokyo.jp          tokyo.jp        metro.tokyo.jp
+w.metro.tokyo.jp        tokyo.jp        metro.tokyo.jp
+foo.kawasaki.jp         foo.kawasaki.jp    null
+w.foo.kawasaki.jp          foo.kawasaki.jp    w.foo.kawasaki.jp
+p.w.foo.kawasaki.jp        foo.kawasaki.jp    w.foo.kawasaki.jp
+city.kawasaki.jp           kawasaki.jp        city.kawasaki.jp
+w.city.kawasaki.jp         kawasaki.jp        city.kawasaki.jp
+
+# kw
+www.example.kw          kw              example.kw
+www.example.com.kw      com.kw          example.com.kw
+
+# no (three level public prefixes)
+foo.no                  no              foo.no
+w.foo.no                no              foo.no
+foo.gs.mr.no            gs.mr.no        foo.gs.mr.no
+w.foo.gs.mr.no          gs.mr.no        foo.gs.mr.no
+w.ålgård.no             ålgård.no       w.ålgård.no
+
+# tr
+tr                      tr            	null
+foo.tr                  tr          	foo.tr
+site.foo.tr             tr              foo.tr
+www.site.foo.tr         tr              foo.tr
+w.www.site.foo.tr       tr          	foo.tr
+nic.tr                  tr              nic.tr
+tsk.tr                  tsk.tr          null
+one.tsk.tr              tsk.tr          one.tsk.tr
+two.one.tsk.tr          tsk.tr          one.tsk.tr
+
+# uk
+foo.uk                  uk          	foo.uk
+site.foo.uk             uk          	foo.uk
+w.site.foo.uk           uk              foo.uk
+foo.sch.uk              foo.sch.uk      null
+s.foo.sch.uk            foo.sch.uk      s.foo.sch.uk
+w.s.foo.sch.uk          foo.sch.uk      s.foo.sch.uk
+www.nhs.uk              nhs.uk          www.nhs.uk
+www.nls.uk              uk              nls.uk
+
+# us
+site.fl.us              fl.us           site.fl.us
+w.site.fl.us            fl.us           site.fl.us
+foo.us                  us              foo.us
+s.k12.ak.us             k12.ak.us       s.k12.ak.us
+w.s.k12.ak.us           k12.ak.us       s.k12.ak.us
+w.s.k12.oh.us           k12.oh.us       s.k12.oh.us
+s.k12.oh.us             k12.oh.us       s.k12.oh.us
+s.pvt.k12.ma.us         pvt.k12.ma.us   s.pvt.k12.ma.us
+w.s.pvt.k12.ma.us       pvt.k12.ma.us   s.pvt.k12.ma.us
+
+# السعودية
+السعودية                السعودية        null
+foo.السعودية            السعودية        foo.السعودية
+w.foo.السعودية          السعودية        foo.السعودية
+
+## END

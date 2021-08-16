@@ -1,0 +1,142 @@
+/* 
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+
+1. Useful API:
+
+  XWindowPeer.isModalBlocked()
+    Checks if this window is blocked by any modal dialog
+    For common component peers use getToplevelXWindow().isModalBlocked()
+
+  XWindowPeer.setModalBlocked(Dialog blocker, boolean blocked)
+    Implementation of WindoePeer.setModalBlocked() method
+    Marks this window blocked/unblocked and adds/removes it
+      from transient_for chain (see below)
+    Don't call this method directly, it should be used from shared
+      code only
+
+  XWindowPeer.addToTransientFors()
+  XWindowPeer.removeFromTransientFors()
+    See below
+
+2. Filtering mouse events
+
+  Mouse events are filtered in the shared code. See
+    java.awt.ModalFilter class for details
+
+3. Filtering key events
+
+  Key events are filtering by preventing the blocked windows
+    to get native focus. All the AWT windows use global active focus
+    input model (see ICCCM for details) and listens to WM_TAKE_FOCUS
+    protocol. If the window manager asks AWT to set focus on the
+    blocked window, in XDecoratedPeer.handleWmTakeFocus() method we
+    set the focus to the window's blocker.
+
+4. Z-order
+
+  According to the Modality spec any modal dialog should be always on
+    top of its blocked windows. It is implemented with using
+    WM_TRANSIENT_FOR hint.
+
+  WM_TRANSIENT_FOR is used to mark one window to be a child of another
+    one, in particular for any kind of dialogs. When a modal dialog
+    is shown it temporary becomes a child of all its blocked windows
+    and thus remains on top of them.
+
+  WM_TRANSIENT_FOR value is a single window, so we can't directly make
+    a dialog be a child of several other windows. It is implemented
+    as a "transient_for chain": all the blocked windows are arranged
+    into a chain, each next window is transient for the prev.
+
+  The chain is stored in XWindowPeer's fields 'prevTransientFor' and
+    'nextTransientFor'. If window is not blocked both of these fields
+    are set to null.
+
+  However, the value of WM_TRANSIENT_FOR hint and prevTransientFor
+    may differ sometimes. This happens when two windows are in
+    different window states, usually NormalState and IconifiedState.
+    Some window managers don't allow a dialog to be visible is its
+    parent window is iconified. The situation is even worse: we
+    don't receive any notifications when the dialog is iconified
+    together with its parent frame.
+
+  Thus we need to track all the window's state changes. Also, for
+    any window state (NormalState, IconifiedState, WithdrawnState)
+    a distinct chain is tracked. Below is a brief example.
+
+  Let's consider two frames F1 and F2 and two modeless dialogs D1
+    (with F1 as a parent) and D2 (F2). Their Z-order is:
+    F1 - D1 - F2 - D2 (D1 is above F1, F2 is above D1, etc). Then
+    a modal dialog D3 is shown and all these four windows become
+    blocked by it. Transient_for chain is constructed in the
+    following way: F1 - D2 - F2 - D2 - D3. Respectively, F2
+    temporarily becomes a child of D1 (WM_TRANSIENT_FOR hint is
+    set to F2 with a value of D1), etc.
+
+  Then F1 is iconified (some window managers allow this action).
+    F1.nextTransientFor and D1.prevTransientFor aren't changed,
+    however the values of WM_TRANSIENT_FOR hint for them are
+    changed: hint value for F1 is set to None, and hint value for
+    D1 is set to None.
+
+  Let's iconify another window, F2. prev/nextTransientFor field
+    values aren't changed again, but WM_TRANSIENT_FOR hint is:
+    the value for D2 is D1, the value for F2 is F1 (both are
+    iconified).
+
+  When either F1 or F2 is restored, the value for its hint is
+    restored according to the value stored in prevTransientFor
+    and nextTransientFor fields.
+
+  Note that some window managers don't allow iconifying for
+    those windows that are children of some other toplevel. That
+    is any dialog can't be iconified and any blocked window
+    that is not the first in the transient_for chain too.
+
+  All the updates of the hint's value is performed in the
+    XWindowPeer.setToplevelTransientFor() method.
+
+5. Multiscreen
+
+  All the problems with WM_TRANSIENT_FOR hint and different
+    window states can be applied to different X screens (if
+    Xinerama is off). For example, some window managers ignore
+    the hint if window and transient_for window are on different
+    screens.
+
+  That leads to us to track a separate transient_for chain for
+    every screen in the system, as well as for every window
+    state. See XWindowPeer.updateTransientFor() for details.
+
+6. See also
+
+  Some examples how transient_for chain is constructed and
+    destructed can be found in JavaDoc comments for the
+    following methods: XWindowPeer.addToTransientFors(),
+    XWindowPeer.removeFromTransientFors(),
+    XWindowPeer.setToplevelTransientFor(),
+    XWindowPeer.stateChanged().
+

@@ -1,0 +1,2 @@
+T6762569b.java:13:9: compiler.err.cant.apply.symbol: kindname.method, m, T,java.util.List<? super java.util.List<T>>, java.lang.String,java.util.List<compiler.misc.type.captureof: 1, ? super java.util.List<? extends java.lang.Number>>, kindname.class, T6762569b, (compiler.misc.incompatible.bounds: T, (compiler.misc.upper.bounds: java.lang.Number,java.lang.Object), (compiler.misc.lower.bounds: java.lang.String))
+1 error

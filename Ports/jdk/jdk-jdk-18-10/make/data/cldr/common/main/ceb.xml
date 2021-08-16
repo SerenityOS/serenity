@@ -1,0 +1,4468 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+
+the U.S. and other countries. CLDR data files are interpreted according to
+the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ceb"/>
+	</identity>
+	<localeDisplayNames>
+		<localeDisplayPattern>
+			<localePattern>{0} ({1})</localePattern>
+			<localeSeparator>{0}, {1}</localeSeparator>
+			<localeKeyTypePattern>{0}: {1}</localeKeyTypePattern>
+		</localeDisplayPattern>
+		<languages>
+			<language type="ar">Arabic</language>
+			<language type="ar_001">Modernong Tamdanang Arabic</language>
+			<language type="bn">Bangla</language>
+			<language type="ceb">Binisaya</language>
+			<language type="de">Aleman</language>
+			<language type="de_AT">Austriano nga Aleman</language>
+			<language type="de_CH">Taas nga Aleman sa Switzerland</language>
+			<language type="en">Ingles</language>
+			<language type="en_AU">Ingles sa Australia</language>
+			<language type="en_CA">Ingles sa Canada</language>
+			<language type="en_GB">Britanikong Ingles</language>
+			<language type="en_GB" alt="short">Ingles sa UK</language>
+			<language type="en_US">Ingles sa Amerika</language>
+			<language type="en_US" alt="short">Ingles sa US</language>
+			<language type="es">Espanyol</language>
+			<language type="es_419">Espanyol sa Latin Amerika</language>
+			<language type="es_ES">Espanyol sa Europe</language>
+			<language type="es_MX">Espanyol sa Mexico</language>
+			<language type="fr">Pranses</language>
+			<language type="fr_CA">Pranses sa Canada</language>
+			<language type="fr_CH">Pranses sa Switzerland</language>
+			<language type="hi">Hindi</language>
+			<language type="id">Indonesian</language>
+			<language type="it">Italiano</language>
+			<language type="ja">Hinapon</language>
+			<language type="ko">Korean</language>
+			<language type="nl">Dutch</language>
+			<language type="nl_BE">Flemish</language>
+			<language type="pl">Polish</language>
+			<language type="pt">Portuguese</language>
+			<language type="pt_BR">Brazilyanong Portuguese</language>
+			<language type="pt_PT">Portuguese sa Europe</language>
+			<language type="ru">Ruso</language>
+			<language type="th">Thai</language>
+			<language type="tr">Turkish</language>
+			<language type="und">Wala Mailhing Lengguwahe</language>
+			<language type="zh">Inintsik</language>
+			<language type="zh" alt="menu">Inintsik, Mandarin</language>
+			<language type="zh_Hans">Pinasimpleng Inintsik</language>
+			<language type="zh_Hans" alt="long">Pinasimpleng Mandarin nga Inintsik</language>
+			<language type="zh_Hant">Tradisyonal nga Ininstsik</language>
+			<language type="zh_Hant" alt="long">Tradisyonal nga Mandarin nga Inintsik</language>
+		</languages>
+		<scripts>
+			<script type="Arab">Arabo</script>
+			<script type="Cyrl">Sirilisko</script>
+			<script type="Hans">Pinasimple</script>
+			<script type="Hans" alt="stand-alone">Pinasimpleng Han</script>
+			<script type="Hant">Tradisyonal</script>
+			<script type="Hant" alt="stand-alone">Tradisyonal nga Han</script>
+			<script type="Jpan">Hinapon</script>
+			<script type="Kore">Korean</script>
+			<script type="Latn">Latin</script>
+			<script type="Zxxx">Dili Sinulat</script>
+			<script type="Zzzz">Wala Mailhing Script</script>
+		</scripts>
+		<territories>
+			<territory type="001">Kalibutan</territory>
+			<territory type="002">Africa</territory>
+			<territory type="003">Amihanang Amerika</territory>
+			<territory type="005">South America</territory>
+			<territory type="009">Oceania</territory>
+			<territory type="011">Western Africa</territory>
+			<territory type="013">Central America</territory>
+			<territory type="014">Eastern Africa</territory>
+			<territory type="015">Northern Africa</territory>
+			<territory type="017">Middle Africa</territory>
+			<territory type="018">Southern Africa</territory>
+			<territory type="019">Mga Amerika</territory>
+			<territory type="021">Northern America</territory>
+			<territory type="029">Caribbean</territory>
+			<territory type="030">Eastern Asia</territory>
+			<territory type="034">Southern Asia</territory>
+			<territory type="035">Southeast Asia</territory>
+			<territory type="039">Southern Europe</territory>
+			<territory type="053">Australasia</territory>
+			<territory type="054">Melanesia</territory>
+			<territory type="057">Micronesian Region</territory>
+			<territory type="061">Polynesia</territory>
+			<territory type="142">Asya</territory>
+			<territory type="143">Central Asia</territory>
+			<territory type="145">Western Asia</territory>
+			<territory type="150">Europe</territory>
+			<territory type="151">Eastern Europe</territory>
+			<territory type="154">Northern Europe</territory>
+			<territory type="155">Western Europe</territory>
+			<territory type="202">Sub-Saharan Africa</territory>
+			<territory type="419">Latin America</territory>
+			<territory type="AC">Ascension Island</territory>
+			<territory type="AD">Andorra</territory>
+			<territory type="AE">United Arab Emirates</territory>
+			<territory type="AF">Afghanistan</territory>
+			<territory type="AG">Antigua &amp; Barbuda</territory>
+			<territory type="AI">Anguilla</territory>
+			<territory type="AL">Albania</territory>
+			<territory type="AM">Armenia</territory>
+			<territory type="AO">Angola</territory>
+			<territory type="AQ">Antarctica</territory>
+			<territory type="AR">Argentina</territory>
+			<territory type="AS">American Samoa</territory>
+			<territory type="AT">Austria</territory>
+			<territory type="AU">Australia</territory>
+			<territory type="AW">Aruba</territory>
+			<territory type="AX">Aland Islands</territory>
+			<territory type="AZ">Azerbaijan</territory>
+			<territory type="BA">Bosnia &amp; Herzegovina</territory>
+			<territory type="BB">Barbados</territory>
+			<territory type="BD">Bangladesh</territory>
+			<territory type="BE">Belgium</territory>
+			<territory type="BF">Burkina Faso</territory>
+			<territory type="BG">Bulgaria</territory>
+			<territory type="BH">Bahrain</territory>
+			<territory type="BI">Burundi</territory>
+			<territory type="BJ">Benin</territory>
+			<territory type="BL">St. Barthelemy</territory>
+			<territory type="BM">Bermuda</territory>
+			<territory type="BN">Brunei</territory>
+			<territory type="BO">Bolivia</territory>
+			<territory type="BQ">Caribbean Netherlands</territory>
+			<territory type="BR">Brazil</territory>
+			<territory type="BS">Bahamas</territory>
+			<territory type="BT">Bhutan</territory>
+			<territory type="BV">Bouvet Island</territory>
+			<territory type="BW">Botswana</territory>
+			<territory type="BY">Belarus</territory>
+			<territory type="BZ">Belize</territory>
+			<territory type="CA">Canada</territory>
+			<territory type="CC">Cocos (Keeling) Islands</territory>
+			<territory type="CD">Congo - Kinshasa</territory>
+			<territory type="CD" alt="variant">Congo (DRC)</territory>
+			<territory type="CF">Central African Republic</territory>
+			<territory type="CG">Congo - Brazzaville</territory>
+			<territory type="CG" alt="variant">Congo (Republika)</territory>
+			<territory type="CH">Switzerland</territory>
+			<territory type="CI">Cote d’Ivoire</territory>
+			<territory type="CI" alt="variant">Ivory Coast</territory>
+			<territory type="CK">Cook Islands</territory>
+			<territory type="CL">Chile</territory>
+			<territory type="CM">Cameroon</territory>
+			<territory type="CN">Tsina</territory>
+			<territory type="CO">Colombia</territory>
+			<territory type="CP">Clipperton Island</territory>
+			<territory type="CR">Costa Rica</territory>
+			<territory type="CU">Cuba</territory>
+			<territory type="CV">Cape Verde</territory>
+			<territory type="CW">Curacao</territory>
+			<territory type="CX">Christmas Island</territory>
+			<territory type="CY">Cyprus</territory>
+			<territory type="CZ">Czechia</territory>
+			<territory type="CZ" alt="variant">Czech Republic</territory>
+			<territory type="DE">Alemanya</territory>
+			<territory type="DG">Diego Garcia</territory>
+			<territory type="DJ">Djibouti</territory>
+			<territory type="DK">Denmark</territory>
+			<territory type="DM">Dominica</territory>
+			<territory type="DO">Dominican Republic</territory>
+			<territory type="DZ">Algeria</territory>
+			<territory type="EA">Ceuta &amp; Melilla</territory>
+			<territory type="EC">Ecuador</territory>
+			<territory type="EE">Estonia</territory>
+			<territory type="EG">Egypt</territory>
+			<territory type="EH">Western Sahara</territory>
+			<territory type="ER">Eritrea</territory>
+			<territory type="ES">Espanya</territory>
+			<territory type="ET">Ethiopia</territory>
+			<territory type="EU">European Union</territory>
+			<territory type="EZ">Eurozone</territory>
+			<territory type="FI">Finland</territory>
+			<territory type="FJ">Fiji</territory>
+			<territory type="FK">Falkland Islands</territory>
+			<territory type="FK" alt="variant">Falkland Islands (Islas Malvinas)</territory>
+			<territory type="FM">Micronesia</territory>
+			<territory type="FO">Faroe Islands</territory>
+			<territory type="FR">Pransya</territory>
+			<territory type="GA">Gabon</territory>
+			<territory type="GB">United Kingdom</territory>
+			<territory type="GB" alt="short">UK</territory>
+			<territory type="GD">Grenada</territory>
+			<territory type="GE">Georgia</territory>
+			<territory type="GF">French Guiana</territory>
+			<territory type="GG">Guernsey</territory>
+			<territory type="GH">Ghana</territory>
+			<territory type="GI">Gibraltar</territory>
+			<territory type="GL">Greenland</territory>
+			<territory type="GM">Gambia</territory>
+			<territory type="GN">Guinea</territory>
+			<territory type="GP">Guadeloupe</territory>
+			<territory type="GQ">Equatorial Guinea</territory>
+			<territory type="GR">Greece</territory>
+			<territory type="GS">South Georgia &amp; South Sandwich Islands</territory>
+			<territory type="GT">Guatemala</territory>
+			<territory type="GU">Guam</territory>
+			<territory type="GW">Guinea-Bissau</territory>
+			<territory type="GY">Guyana</territory>
+			<territory type="HK">Hong Kong SAR China</territory>
+			<territory type="HK" alt="short">Hong Kong</territory>
+			<territory type="HM">Heard &amp; McDonald Islands</territory>
+			<territory type="HN">Honduras</territory>
+			<territory type="HR">Croatia</territory>
+			<territory type="HT">Haiti</territory>
+			<territory type="HU">Hungary</territory>
+			<territory type="IC">Canary Islands</territory>
+			<territory type="ID">Indonesia</territory>
+			<territory type="IE">Ireland</territory>
+			<territory type="IL">Israel</territory>
+			<territory type="IM">Isle of Man</territory>
+			<territory type="IN">India</territory>
+			<territory type="IO">British Indian Ocean Territory</territory>
+			<territory type="IQ">Iraq</territory>
+			<territory type="IR">Iran</territory>
+			<territory type="IS">Iceland</territory>
+			<territory type="IT">Italya</territory>
+			<territory type="JE">Jersey</territory>
+			<territory type="JM">Jamaica</territory>
+			<territory type="JO">Jordan</territory>
+			<territory type="JP">Japan</territory>
+			<territory type="KE">Kenya</territory>
+			<territory type="KG">Kyrgyzstan</territory>
+			<territory type="KH">Cambodia</territory>
+			<territory type="KI">Kiribati</territory>
+			<territory type="KM">Comoros</territory>
+			<territory type="KN">St. Kitts &amp; Nevis</territory>
+			<territory type="KP">North Korea</territory>
+			<territory type="KR">South Korea</territory>
+			<territory type="KW">Kuwait</territory>
+			<territory type="KY">Cayman Islands</territory>
+			<territory type="KZ">Kazakhstan</territory>
+			<territory type="LA">Laos</territory>
+			<territory type="LB">Lebanon</territory>
+			<territory type="LC">St. Lucia</territory>
+			<territory type="LI">Liechtenstein</territory>
+			<territory type="LK">Sri Lanka</territory>
+			<territory type="LR">Liberia</territory>
+			<territory type="LS">Lesotho</territory>
+			<territory type="LT">Lithuania</territory>
+			<territory type="LU">Luxembourg</territory>
+			<territory type="LV">Latvia</territory>
+			<territory type="LY">Libya</territory>
+			<territory type="MA">Morocco</territory>
+			<territory type="MC">Monaco</territory>
+			<territory type="MD">Moldova</territory>
+			<territory type="ME">Montenegro</territory>
+			<territory type="MF">St. Martin</territory>
+			<territory type="MG">Madagascar</territory>
+			<territory type="MH">Marshall Islands</territory>
+			<territory type="MK">North Macedonia</territory>
+			<territory type="ML">Mali</territory>
+			<territory type="MM">Myanmar (Burma)</territory>
+			<territory type="MN">Mongolia</territory>
+			<territory type="MO">Macao SAR China</territory>
+			<territory type="MO" alt="short">Macao</territory>
+			<territory type="MP">Northern Mariana Islands</territory>
+			<territory type="MQ">Martinique</territory>
+			<territory type="MR">Mauritania</territory>
+			<territory type="MS">Montserrat</territory>
+			<territory type="MT">Malta</territory>
+			<territory type="MU">Mauritius</territory>
+			<territory type="MV">Maldives</territory>
+			<territory type="MW">Malawi</territory>
+			<territory type="MX">Mexico</territory>
+			<territory type="MY">Malaysia</territory>
+			<territory type="MZ">Mozambique</territory>
+			<territory type="NA">Namibia</territory>
+			<territory type="NC">New Caledonia</territory>
+			<territory type="NE">Niger</territory>
+			<territory type="NF">Norfolk Island</territory>
+			<territory type="NG">Nigeria</territory>
+			<territory type="NI">Nicaragua</territory>
+			<territory type="NL">Netherlands</territory>
+			<territory type="NO">Norway</territory>
+			<territory type="NP">Nepal</territory>
+			<territory type="NR">Nauru</territory>
+			<territory type="NU">Niue</territory>
+			<territory type="NZ">New Zealand</territory>
+			<territory type="OM">Oman</territory>
+			<territory type="PA">Panama</territory>
+			<territory type="PE">Peru</territory>
+			<territory type="PF">French Polynesia</territory>
+			<territory type="PG">Papua New Guinea</territory>
+			<territory type="PH">Pilipinas</territory>
+			<territory type="PK">Pakistan</territory>
+			<territory type="PL">Poland</territory>
+			<territory type="PM">St. Pierre &amp; Miquelon</territory>
+			<territory type="PN">Pitcairn Islands</territory>
+			<territory type="PR">Puerto Rico</territory>
+			<territory type="PS">Palestinian Territories</territory>
+			<territory type="PS" alt="short">Palestine</territory>
+			<territory type="PT">Portugal</territory>
+			<territory type="PW">Palau</territory>
+			<territory type="PY">Paraguay</territory>
+			<territory type="QA">Qatar</territory>
+			<territory type="QO">Outlying Oceania</territory>
+			<territory type="RE">Reunion</territory>
+			<territory type="RO">Romania</territory>
+			<territory type="RS">Serbia</territory>
+			<territory type="RU">Russia</territory>
+			<territory type="RW">Rwanda</territory>
+			<territory type="SA">Saudi Arabia</territory>
+			<territory type="SB">Solomon Islands</territory>
+			<territory type="SC">Seychelles</territory>
+			<territory type="SD">Sudan</territory>
+			<territory type="SE">Sweden</territory>
+			<territory type="SG">Singapore</territory>
+			<territory type="SH">St. Helena</territory>
+			<territory type="SI">Slovenia</territory>
+			<territory type="SJ">Svalbard &amp; Jan Mayen</territory>
+			<territory type="SK">Slovakia</territory>
+			<territory type="SL">Sierra Leone</territory>
+			<territory type="SM">San Marino</territory>
+			<territory type="SN">Senegal</territory>
+			<territory type="SO">Somalia</territory>
+			<territory type="SR">Suriname</territory>
+			<territory type="SS">South Sudan</territory>
+			<territory type="ST">Sao Tome &amp; Principe</territory>
+			<territory type="SV">El Salvador</territory>
+			<territory type="SX">Sint Maarten</territory>
+			<territory type="SY">Syria</territory>
+			<territory type="SZ">Eswatini</territory>
+			<territory type="SZ" alt="variant">Swaziland</territory>
+			<territory type="TA">Tristan da Cunha</territory>
+			<territory type="TC">Turks &amp; Caicos Islands</territory>
+			<territory type="TD">Chad</territory>
+			<territory type="TF">French Southern Territories</territory>
+			<territory type="TG">Togo</territory>
+			<territory type="TH">Thailand</territory>
+			<territory type="TJ">Tajikistan</territory>
+			<territory type="TK">Tokelau</territory>
+			<territory type="TL">Timor-Leste</territory>
+			<territory type="TL" alt="variant">East Timor</territory>
+			<territory type="TM">Turkmenistan</territory>
+			<territory type="TN">Tunisia</territory>
+			<territory type="TO">Tonga</territory>
+			<territory type="TR">Turkey</territory>
+			<territory type="TT">Trinidad &amp; Tobago</territory>
+			<territory type="TV">Tuvalu</territory>
+			<territory type="TW">Taiwan</territory>
+			<territory type="TZ">Tanzania</territory>
+			<territory type="UA">Ukraine</territory>
+			<territory type="UG">Uganda</territory>
+			<territory type="UM">U.S. Outlying Islands</territory>
+			<territory type="UN">Hiniusang Kanasoran</territory>
+			<territory type="US">Estados Unidos</territory>
+			<territory type="US" alt="short">US</territory>
+			<territory type="UY">Uruguay</territory>
+			<territory type="UZ">Uzbekistan</territory>
+			<territory type="VA">Vatican City</territory>
+			<territory type="VC">St. Vincent &amp; Grenadines</territory>
+			<territory type="VE">Venezuela</territory>
+			<territory type="VG">British Virgin Islands</territory>
+			<territory type="VI">U.S. Virgin Islands</territory>
+			<territory type="VN">Vietnam</territory>
+			<territory type="VU">Vanuatu</territory>
+			<territory type="WF">Wallis &amp; Futuna</territory>
+			<territory type="WS">Samoa</territory>
+			<territory type="XA">Pseudo-Accents</territory>
+			<territory type="XB">Pseudo-Bidi</territory>
+			<territory type="XK">Kosovo</territory>
+			<territory type="YE">Yemen</territory>
+			<territory type="YT">Mayotte</territory>
+			<territory type="ZA">South Africa</territory>
+			<territory type="ZM">Zambia</territory>
+			<territory type="ZW">Zimbabwe</territory>
+			<territory type="ZZ">Wala Mailhing Rehiyon</territory>
+		</territories>
+		<types>
+			<type key="calendar" type="gregorian">Gregorian nga Kalendaryo</type>
+			<type key="calendar" type="iso8601">Kalendaryo sa ISO-8601</type>
+			<type key="collation" type="standard">Tamdanang Paagi sa Paghan-ay</type>
+			<type key="numbers" type="latn">Mga Western Digit</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">Metric</measurementSystemName>
+			<measurementSystemName type="UK">UK</measurementSystemName>
+			<measurementSystemName type="US">US</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language">Lengguwahe: {0}</codePattern>
+			<codePattern type="script">Script: {0}</codePattern>
+			<codePattern type="territory">Rehiyon: {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<layout>
+		<orientation>
+			<characterOrder>left-to-right</characterOrder>
+			<lineOrder>top-to-bottom</lineOrder>
+		</orientation>
+	</layout>
+	<characters>
+		<exemplarCharacters>[a b d e g h i k l m n o p r s t u w y]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[c f j ñ q v x z]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]</exemplarCharacters>
+		<exemplarCharacters type="punctuation" draft="contributed">[\- ‑ , ; \: ! ? . … ' ‘ ’ &quot; “ ” ( ) \[ \] @ * / \&amp; # ′ ″]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart>“</quotationStart>
+		<quotationEnd>”</quotationEnd>
+		<alternateQuotationStart>‘</alternateQuotationStart>
+		<alternateQuotationEnd>’</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, MMMM d, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>MMMM d, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>MMM d, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>M/d/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} 'sa' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} 'sa' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="Ed">d E</dateFormatItem>
+						<dateFormatItem id="Ehm">E h:mm a</dateFormatItem>
+						<dateFormatItem id="Ehms">E h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Gy">y G</dateFormatItem>
+						<dateFormatItem id="GyMMM">MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMd">MMM d, y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E, MMM d, y G</dateFormatItem>
+						<dateFormatItem id="Md">M/d</dateFormatItem>
+						<dateFormatItem id="MEd">E, M/d</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
+						<dateFormatItem id="y">y G</dateFormatItem>
+						<dateFormatItem id="yyyy">y G</dateFormatItem>
+						<dateFormatItem id="yyyyM">M/y GGGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMd">M/d/y GGGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMEd">E, M/d/y GGGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMMM">MMM y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMd">MMM d, y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMEd">E, MMM d, y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMM">MMMM y G</dateFormatItem>
+						<dateFormatItem id="yyyyQQQ">QQQ y G</dateFormatItem>
+						<dateFormatItem id="yyyyQQQQ">QQQQ y G</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d">d – d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Gy">
+							<greatestDifference id="G">y G – y G</greatestDifference>
+							<greatestDifference id="y">y – y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="GyM">
+							<greatestDifference id="G">M/y GGGGG – M/y GGGGG</greatestDifference>
+							<greatestDifference id="M">M/y – M/y GGGGG</greatestDifference>
+							<greatestDifference id="y">M/y – M/y GGGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="GyMd">
+							<greatestDifference id="d">M/d/y – M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="G">M/d/y GGGGG – M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="M">M/d/y – M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="y">M/d/y – M/d/y GGGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="GyMEd">
+							<greatestDifference id="d">E, M/d/y – E, M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="G">E, M/d/y GGGGG – E, M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="M">E, M/d/y – E, M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="y">E, M/d/y – E, M/d/y GGGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="GyMMM">
+							<greatestDifference id="G">MMM y G – MMM y G</greatestDifference>
+							<greatestDifference id="M">MMM – MMM y G</greatestDifference>
+							<greatestDifference id="y">MMM y – MMM y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="GyMMMd">
+							<greatestDifference id="d">MMM d – d, y G</greatestDifference>
+							<greatestDifference id="G">MMM d, y G – MMM d, y G</greatestDifference>
+							<greatestDifference id="M">MMM d – MMM d, y G</greatestDifference>
+							<greatestDifference id="y">MMM d, y – MMM d, y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="GyMMMEd">
+							<greatestDifference id="d">E, MMM d – E, MMM d, y G</greatestDifference>
+							<greatestDifference id="G">E, MMM d, y G – E, MMM d, y G</greatestDifference>
+							<greatestDifference id="M">E, MMM d – E, MMM d, y G</greatestDifference>
+							<greatestDifference id="y">E, MMM d, y – E, MMM d, y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M">M – M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">M/d – M/d</greatestDifference>
+							<greatestDifference id="M">M/d – M/d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">E, M/d – E, M/d</greatestDifference>
+							<greatestDifference id="M">E, M/d – E, M/d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M">MMM – MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">MMM d – d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">E, MMM d – E, MMM d</greatestDifference>
+							<greatestDifference id="M">E, MMM d – E, MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y">y – y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">M/y – M/y GGGGG</greatestDifference>
+							<greatestDifference id="y">M/y – M/y GGGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">M/d/y – M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="M">M/d/y – M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="y">M/d/y – M/d/y GGGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">E, M/d/y – E, M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="M">E, M/d/y – E, M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="y">E, M/d/y – E, M/d/y GGGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M">MMM – MMM y G</greatestDifference>
+							<greatestDifference id="y">MMM y – MMM y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">MMM d – d, y G</greatestDifference>
+							<greatestDifference id="M">MMM d – MMM d, y G</greatestDifference>
+							<greatestDifference id="y">MMM d, y – MMM d, y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">E, MMM d – E, MMM d, y G</greatestDifference>
+							<greatestDifference id="M">E, MMM d – E, MMM d, y G</greatestDifference>
+							<greatestDifference id="y">E, MMM d, y – E, MMM d, y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M">MMMM – MMMM y G</greatestDifference>
+							<greatestDifference id="y">MMMM y – MMMM y G</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">Ene</month>
+							<month type="2">Peb</month>
+							<month type="3">Mar</month>
+							<month type="4">Abr</month>
+							<month type="5">May</month>
+							<month type="6">Hun</month>
+							<month type="7">Hul</month>
+							<month type="8">Ago</month>
+							<month type="9">Set</month>
+							<month type="10">Okt</month>
+							<month type="11">Nob</month>
+							<month type="12">Dis</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">E</month>
+							<month type="2">P</month>
+							<month type="3">M</month>
+							<month type="4">A</month>
+							<month type="5">M</month>
+							<month type="6">H</month>
+							<month type="7">H</month>
+							<month type="8">A</month>
+							<month type="9">S</month>
+							<month type="10">O</month>
+							<month type="11">N</month>
+							<month type="12">D</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Enero</month>
+							<month type="2">Pebrero</month>
+							<month type="3">Marso</month>
+							<month type="4">Abril</month>
+							<month type="5">Mayo</month>
+							<month type="6">Hunyo</month>
+							<month type="7">Hulyo</month>
+							<month type="8">Agosto</month>
+							<month type="9">Setyembre</month>
+							<month type="10">Oktubre</month>
+							<month type="11">Nobyembre</month>
+							<month type="12">Disyembre</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">Ene</month>
+							<month type="2">Peb</month>
+							<month type="3">Mar</month>
+							<month type="4">Abr</month>
+							<month type="5">May</month>
+							<month type="6">Hun</month>
+							<month type="7">Hul</month>
+							<month type="8">Ago</month>
+							<month type="9">Set</month>
+							<month type="10">Okt</month>
+							<month type="11">Nob</month>
+							<month type="12">Dis</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">E</month>
+							<month type="2">P</month>
+							<month type="3">M</month>
+							<month type="4">A</month>
+							<month type="5">M</month>
+							<month type="6">H</month>
+							<month type="7">H</month>
+							<month type="8">A</month>
+							<month type="9">S</month>
+							<month type="10">O</month>
+							<month type="11">N</month>
+							<month type="12">D</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Enero</month>
+							<month type="2">Pebrero</month>
+							<month type="3">Marso</month>
+							<month type="4">Abril</month>
+							<month type="5">Mayo</month>
+							<month type="6">Hunyo</month>
+							<month type="7">Hulyo</month>
+							<month type="8">Agosto</month>
+							<month type="9">Setyembre</month>
+							<month type="10">Oktubre</month>
+							<month type="11">Nobyembre</month>
+							<month type="12">Disyembre</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Dom</day>
+							<day type="mon">Lun</day>
+							<day type="tue">Mar</day>
+							<day type="wed">Miy</day>
+							<day type="thu">Huw</day>
+							<day type="fri">Biy</day>
+							<day type="sat">Sab</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">D</day>
+							<day type="mon">L</day>
+							<day type="tue">M</day>
+							<day type="wed">M</day>
+							<day type="thu">H</day>
+							<day type="fri">B</day>
+							<day type="sat">S</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">Dom</day>
+							<day type="mon">Lun</day>
+							<day type="tue">Mar</day>
+							<day type="wed">Miy</day>
+							<day type="thu">Huw</day>
+							<day type="fri">Biy</day>
+							<day type="sat">Sab</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Domingo</day>
+							<day type="mon">Lunes</day>
+							<day type="tue">Martes</day>
+							<day type="wed">Miyerkules</day>
+							<day type="thu">Huwebes</day>
+							<day type="fri">Biyernes</day>
+							<day type="sat">Sabado</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">Dom</day>
+							<day type="mon">Lun</day>
+							<day type="tue">Mar</day>
+							<day type="wed">Miy</day>
+							<day type="thu">Huw</day>
+							<day type="fri">Biy</day>
+							<day type="sat">Sab</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">D</day>
+							<day type="mon">L</day>
+							<day type="tue">M</day>
+							<day type="wed">M</day>
+							<day type="thu">H</day>
+							<day type="fri">B</day>
+							<day type="sat">S</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">Q1</quarter>
+							<quarter type="2">Q2</quarter>
+							<quarter type="3">Q3</quarter>
+							<quarter type="4">Q4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">unang quarter</quarter>
+							<quarter type="2">ika-2 nga quarter</quarter>
+							<quarter type="3">ika-3 nga quarter</quarter>
+							<quarter type="4">ika-4 nga quarter</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">Q1</quarter>
+							<quarter type="2">Q2</quarter>
+							<quarter type="3">Q3</quarter>
+							<quarter type="4">Q4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">unang quarter</quarter>
+							<quarter type="2">ika-2 nga quarter</quarter>
+							<quarter type="3">ika-3 nga quarter</quarter>
+							<quarter type="4">ika-4 nga quarter</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">a</dayPeriod>
+							<dayPeriod type="pm">p</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">AM</dayPeriod>
+							<dayPeriod type="pm">PM</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">Sa Wala Pa Si Kristo</era>
+						<era type="0" alt="variant">Wala Pa ang Komong Panahon</era>
+						<era type="1">Anno Domini</era>
+						<era type="1" alt="variant">Komong Panahon</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">BC</era>
+						<era type="0" alt="variant">BCE</era>
+						<era type="1">AD</era>
+						<era type="1" alt="variant">CE</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, MMMM d, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>MMMM d, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>MMM d, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>M/d/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>h:mm:ss a zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>h:mm:ss a z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>h:mm:ss a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>h:mm a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} 'sa' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} 'sa' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="Bh">h B</dateFormatItem>
+						<dateFormatItem id="Bhm">h:mm B</dateFormatItem>
+						<dateFormatItem id="Bhms">h:mm:ss B</dateFormatItem>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="E">ccc</dateFormatItem>
+						<dateFormatItem id="EBhm">E h:mm B</dateFormatItem>
+						<dateFormatItem id="EBhms">E h:mm:ss B</dateFormatItem>
+						<dateFormatItem id="Ed">d E</dateFormatItem>
+						<dateFormatItem id="Ehm">E h:mm a</dateFormatItem>
+						<dateFormatItem id="EHm">E HH:mm</dateFormatItem>
+						<dateFormatItem id="Ehms">E h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="EHms">E HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="Gy">y G</dateFormatItem>
+						<dateFormatItem id="GyMMM">MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMd">MMM d, y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E, MMM d, y G</dateFormatItem>
+						<dateFormatItem id="h">h a</dateFormatItem>
+						<dateFormatItem id="H">HH</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="hmsv">h:mm:ss a v</dateFormatItem>
+						<dateFormatItem id="Hmsv">HH:mm:ss v</dateFormatItem>
+						<dateFormatItem id="hmv">h:mm a v</dateFormatItem>
+						<dateFormatItem id="Hmv">HH:mm v</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">M/d</dateFormatItem>
+						<dateFormatItem id="MEd">E, M/d</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="one">'semana' W 'sa' MMMM</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="other">'semana' W 'sa' MMMM</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMd">M/d/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, M/d/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">MMM d, y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, MMM d, y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+						<dateFormatItem id="yw" count="one">'semana' w 'sa' Y</dateFormatItem>
+						<dateFormatItem id="yw" count="other">'semana' w 'sa' Y</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d">d – d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Gy">
+							<greatestDifference id="G">y G – y G</greatestDifference>
+							<greatestDifference id="y">y – y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="GyM">
+							<greatestDifference id="G">M/y GGGGG – M/y GGGGG</greatestDifference>
+							<greatestDifference id="M">M/y – M/y GGGGG</greatestDifference>
+							<greatestDifference id="y">M/y – M/y GGGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="GyMd">
+							<greatestDifference id="d">M/d/y – M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="G">M/d/y GGGGG – M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="M">M/d/y – M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="y">M/d/y – M/d/y GGGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="GyMEd">
+							<greatestDifference id="d">E, M/d/y – E, M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="G">E, M/d/y GGGGG – E, M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="M">E, M/d/y – E, M/d/y GGGGG</greatestDifference>
+							<greatestDifference id="y">E, M/d/y – E, M/d/y GGGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="GyMMM">
+							<greatestDifference id="G">MMM y G – MMM y G</greatestDifference>
+							<greatestDifference id="M">MMM – MMM y G</greatestDifference>
+							<greatestDifference id="y">MMM y – MMM y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="GyMMMd">
+							<greatestDifference id="d">MMM d – d, y G</greatestDifference>
+							<greatestDifference id="G">MMM d, y G – MMM d, y G</greatestDifference>
+							<greatestDifference id="M">MMM d – MMM d, y G</greatestDifference>
+							<greatestDifference id="y">MMM d, y – MMM d, y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="GyMMMEd">
+							<greatestDifference id="d">E, MMM d – E, MMM d, y G</greatestDifference>
+							<greatestDifference id="G">E, MMM d, y G – E, MMM d, y G</greatestDifference>
+							<greatestDifference id="M">E, MMM d – E, MMM d, y G</greatestDifference>
+							<greatestDifference id="y">E, MMM d, y – E, MMM d, y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="h">
+							<greatestDifference id="h">h – h a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="H">
+							<greatestDifference id="H">HH – HH</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="h">h:mm – h:mm a</greatestDifference>
+							<greatestDifference id="m">h:mm – h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hm">
+							<greatestDifference id="H">HH:mm – HH:mm</greatestDifference>
+							<greatestDifference id="m">HH:mm – HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="h">h:mm – h:mm a v</greatestDifference>
+							<greatestDifference id="m">h:mm – h:mm a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H">HH:mm – HH:mm v</greatestDifference>
+							<greatestDifference id="m">HH:mm – HH:mm v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="h">h – h a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H">HH – HH v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M">M – M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">M/d – M/d</greatestDifference>
+							<greatestDifference id="M">M/d – M/d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">E, M/d – E, M/d</greatestDifference>
+							<greatestDifference id="M">E, M/d – E, M/d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M">MMM – MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">MMM d – d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">E, MMM d – E, MMM d</greatestDifference>
+							<greatestDifference id="M">E, MMM d – E, MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y">y – y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">M/y – M/y</greatestDifference>
+							<greatestDifference id="y">M/y – M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">M/d/y – M/d/y</greatestDifference>
+							<greatestDifference id="M">M/d/y – M/d/y</greatestDifference>
+							<greatestDifference id="y">M/d/y – M/d/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">E, M/d/y – E, M/d/y</greatestDifference>
+							<greatestDifference id="M">E, M/d/y – E, M/d/y</greatestDifference>
+							<greatestDifference id="y">E, M/d/y – E, M/d/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M">MMM – MMM y</greatestDifference>
+							<greatestDifference id="y">MMM y – MMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">MMM d – d, y</greatestDifference>
+							<greatestDifference id="M">MMM d – MMM d, y</greatestDifference>
+							<greatestDifference id="y">MMM d, y – MMM d, y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">E, MMM d – E, MMM d, y</greatestDifference>
+							<greatestDifference id="M">E, MMM d – E, MMM d, y</greatestDifference>
+							<greatestDifference id="y">E, MMM d, y – E, MMM d, y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M">MMMM – MMMM y</greatestDifference>
+							<greatestDifference id="y">MMMM y – MMMM y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>panahon</displayName>
+			</field>
+			<field type="year">
+				<displayName>tuig</displayName>
+				<relative type="-1">miaging tuig</relative>
+				<relative type="0">karong tuiga</relative>
+				<relative type="1">sunod nga tuig</relative>
+			</field>
+			<field type="year-short">
+				<relative type="-1">miaging tuig</relative>
+				<relative type="0">karong tuiga</relative>
+				<relative type="1">sunod nga tuig</relative>
+			</field>
+			<field type="year-narrow">
+				<relative type="-1">miaging tuig</relative>
+				<relative type="0">karong tuiga</relative>
+				<relative type="1">sunod nga tuig</relative>
+			</field>
+			<field type="quarter">
+				<displayName>quarter</displayName>
+			</field>
+			<field type="quarter-short">
+				<displayName>qtr.</displayName>
+			</field>
+			<field type="quarter-narrow">
+				<displayName>qtr.</displayName>
+			</field>
+			<field type="month">
+				<displayName>buwan</displayName>
+				<relative type="-1">miaging buwan</relative>
+				<relative type="0">karong buwana</relative>
+				<relative type="1">sunod nga buwan</relative>
+			</field>
+			<field type="month-short">
+				<displayName>buwan</displayName>
+				<relative type="-1">miaging buwan</relative>
+				<relative type="0">karong buwana</relative>
+				<relative type="1">sunod nga buwan</relative>
+			</field>
+			<field type="month-narrow">
+				<displayName>buwan</displayName>
+				<relative type="-1">miaging buwan</relative>
+				<relative type="0">karong buwana</relative>
+				<relative type="1">sunod nga buwan</relative>
+			</field>
+			<field type="week">
+				<displayName>semana</displayName>
+				<relative type="-1">miaging semana</relative>
+				<relative type="0">karong semanaha</relative>
+				<relative type="1">sunod nga semana</relative>
+				<relativePeriod>ang semana sa {0}</relativePeriod>
+			</field>
+			<field type="week-short">
+				<displayName>semana</displayName>
+				<relative type="-1">miaging semana</relative>
+				<relative type="0">karong semanaha</relative>
+				<relative type="1">sunod nga semana</relative>
+				<relativePeriod>ang semana sa {0}</relativePeriod>
+			</field>
+			<field type="week-narrow">
+				<displayName>semana</displayName>
+				<relative type="-1">miaging semana</relative>
+				<relative type="0">karong semanaha</relative>
+				<relative type="1">sunod nga semana</relative>
+				<relativePeriod>ang semana sa {0}</relativePeriod>
+			</field>
+			<field type="day">
+				<displayName>adlaw</displayName>
+				<relative type="-1">gahapon</relative>
+				<relative type="0">karong adlawa</relative>
+				<relative type="1">ugma</relative>
+			</field>
+			<field type="day-short">
+				<displayName>adlaw</displayName>
+				<relative type="-1">gahapon</relative>
+				<relative type="0">karong adlawa</relative>
+				<relative type="1">ugma</relative>
+			</field>
+			<field type="day-narrow">
+				<displayName>adlaw</displayName>
+				<relative type="-1">gahapon</relative>
+				<relative type="0">karong adlawa</relative>
+				<relative type="1">ugma</relative>
+			</field>
+			<field type="weekday">
+				<displayName>adlaw sa semana</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>AM/PM</displayName>
+			</field>
+			<field type="hour">
+				<displayName>oras</displayName>
+			</field>
+			<field type="hour-short">
+				<displayName>oras</displayName>
+			</field>
+			<field type="hour-narrow">
+				<displayName>oras</displayName>
+			</field>
+			<field type="minute">
+				<displayName>minuto</displayName>
+			</field>
+			<field type="minute-short">
+				<displayName>minuto</displayName>
+			</field>
+			<field type="minute-narrow">
+				<displayName>minuto</displayName>
+			</field>
+			<field type="second">
+				<displayName>segundo</displayName>
+			</field>
+			<field type="second-short">
+				<displayName>segundo</displayName>
+			</field>
+			<field type="second-narrow">
+				<displayName>segundo</displayName>
+			</field>
+			<field type="zone">
+				<displayName>time zone</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<hourFormat>+HH:mm;-HH:mm</hourFormat>
+			<gmtFormat>GMT {0}</gmtFormat>
+			<gmtZeroFormat>GMT</gmtZeroFormat>
+			<regionFormat>{0} Oras</regionFormat>
+			<regionFormat type="daylight">{0} Oras sa Tag-init</regionFormat>
+			<regionFormat type="standard">{0} Tamdanang Oras</regionFormat>
+			<fallbackFormat>{1} {0}</fallbackFormat>
+			<zone type="Etc/UTC">
+				<long>
+					<standard>Gikoordinar nga Kinatibuk-ang Oras</standard>
+				</long>
+			</zone>
+			<zone type="Etc/Unknown">
+				<exemplarCity>Wala Mailhing Lungsod</exemplarCity>
+			</zone>
+			<zone type="Europe/London">
+				<long>
+					<daylight>Oras sa Tag-init sa British</daylight>
+				</long>
+			</zone>
+			<zone type="Europe/Dublin">
+				<long>
+					<daylight>Tamdanang Oras sa Irish</daylight>
+				</long>
+			</zone>
+			<zone type="Asia/Saigon">
+				<exemplarCity>Siyudad sa Ho Chi Minh</exemplarCity>
+			</zone>
+			<metazone type="Afghanistan">
+				<long>
+					<standard>Oras sa Afghanistan</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Central">
+				<long>
+					<standard>Oras sa Central Africa</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Eastern">
+				<long>
+					<standard>Oras sa East Africa</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Southern">
+				<long>
+					<standard>Tamdanang Oras sa South Africa</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Western">
+				<long>
+					<generic>Oras sa West Africa</generic>
+					<standard>Tamdanang Oras sa West Africa</standard>
+					<daylight>Oras sa Tag-init sa West Africa</daylight>
+				</long>
+			</metazone>
+			<metazone type="Alaska">
+				<long>
+					<generic>Oras sa Alaska</generic>
+					<standard>Tamdanang Oras sa Alaska</standard>
+					<daylight>Oras sa Tag-init sa Alaska</daylight>
+				</long>
+			</metazone>
+			<metazone type="Amazon">
+				<long>
+					<generic>Oras sa Amazon</generic>
+					<standard>Tamdanang Oras sa Amazon</standard>
+					<daylight>Oras sa Tag-init sa Amazon</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Central">
+				<long>
+					<generic>Sentrong Oras</generic>
+					<standard>Sentong Tamdanan nga Oras</standard>
+					<daylight>Sentrong Oras sa Tag-init</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic>Oras sa Sidlakan</generic>
+					<standard>Tamdanan nga Oras sa Sidlakan</standard>
+					<daylight>Oras sa Tag-init sa Sidlakan</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic>Oras sa Kabukiran</generic>
+					<standard>Tamdanang Oras sa Kabukiran</standard>
+					<daylight>Oras sa Tag-init sa Kabukiran</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic>Oras sa Pasipiko</generic>
+					<standard>Tamdanang Oras sa Pasipiko</standard>
+					<daylight>Oras sa Tag-init sa Pasipiko</daylight>
+				</long>
+			</metazone>
+			<metazone type="Apia">
+				<long>
+					<generic>Oras sa Apia</generic>
+					<standard>Tamdanang Oras sa Apia</standard>
+					<daylight>Oras sa Tag-init sa Apia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Arabian">
+				<long>
+					<generic>Oras sa Arabia</generic>
+					<standard>Tamdanang Oras sa Arabia</standard>
+					<daylight>Oras sa Tag-init sa Arabia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina">
+				<long>
+					<generic>Oras sa Argentina</generic>
+					<standard>Tamdanang Oras sa Argentina</standard>
+					<daylight>Oras sa Tag-init sa Argentina</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina_Western">
+				<long>
+					<generic>Oras sa Western Argentina</generic>
+					<standard>Tamdanang Oras sa Western Argentina</standard>
+					<daylight>Oras sa Tag-init sa Western Argentina</daylight>
+				</long>
+			</metazone>
+			<metazone type="Armenia">
+				<long>
+					<generic>Oras sa Armenia</generic>
+					<standard>Tamdanang Oras sa Armenia</standard>
+					<daylight>Oras sa Tag-init sa Armenia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<generic>Oras sa Atlantiko</generic>
+					<standard>Tamdanang Oras sa Atlantiko</standard>
+					<daylight>Oras sa Tag-init sa Atlantiko</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Central">
+				<long>
+					<generic>Oras sa Central Australia</generic>
+					<standard>Tamdanang Oras sa Central Australia</standard>
+					<daylight>Oras sa Tag-init sa Central Australia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_CentralWestern">
+				<long>
+					<generic>Oras sa Central Western Australia</generic>
+					<standard>Tamdanang Oras sa Central Western Australia</standard>
+					<daylight>Oras sa Tag-init sa Central Western Australia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Eastern">
+				<long>
+					<generic>Oras sa Eastern Australia</generic>
+					<standard>Tamdanang Oras sa Eastern Australia</standard>
+					<daylight>Oras sa Tag-init sa Eastern Australia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Western">
+				<long>
+					<generic>Oras sa Western Australia</generic>
+					<standard>Tamdanang Oras sa Western Australia</standard>
+					<daylight>Oras sa Tag-init sa Western Australia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azerbaijan">
+				<long>
+					<generic>Oras sa Azerbaijan</generic>
+					<standard>Tamdanang Oras sa Azerbaijan</standard>
+					<daylight>Oras sa Tag-init sa Azerbaijan</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azores">
+				<long>
+					<generic>Oras sa Azores</generic>
+					<standard>Tamdanang Oras sa Azores</standard>
+					<daylight>Oras sa Tag-init sa Azores</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bangladesh">
+				<long>
+					<generic>Oras sa Bangladesh</generic>
+					<standard>Tamdanang Oras sa Bangladesh</standard>
+					<daylight>Oras sa Tag-init sa Bangladesh</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bhutan">
+				<long>
+					<standard>Oras sa Bhutan</standard>
+				</long>
+			</metazone>
+			<metazone type="Bolivia">
+				<long>
+					<standard>Oras sa Bolivia</standard>
+				</long>
+			</metazone>
+			<metazone type="Brasilia">
+				<long>
+					<generic>Oras sa Brasilia</generic>
+					<standard>Tamdanang Oras sa Brasilia</standard>
+					<daylight>Oras sa Tag-init sa Brasilia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Brunei">
+				<long>
+					<standard>Oras sa Brunei Darussalam</standard>
+				</long>
+			</metazone>
+			<metazone type="Cape_Verde">
+				<long>
+					<generic>Oras sa Cape Verde</generic>
+					<standard>Tamdanang Oras sa Cape Verde</standard>
+					<daylight>Oras sa Tag-init sa Cape Verde</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chamorro">
+				<long>
+					<standard>Tamdanang Oras sa Chamorro</standard>
+				</long>
+			</metazone>
+			<metazone type="Chatham">
+				<long>
+					<generic>Oras sa Chatham</generic>
+					<standard>Tamdanang Oras sa Chatham</standard>
+					<daylight>Oras sa Tag-init sa Chatham</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chile">
+				<long>
+					<generic>Oras sa Chile</generic>
+					<standard>Tamdanang Oras sa Chile</standard>
+					<daylight>Oras sa Tag-init sa Chile</daylight>
+				</long>
+			</metazone>
+			<metazone type="China">
+				<long>
+					<generic>Oras sa Tsina</generic>
+					<standard>Tamdanang Oras sa Tsina</standard>
+					<daylight>Oras sa Tag-init sa Tsina</daylight>
+				</long>
+			</metazone>
+			<metazone type="Choibalsan">
+				<long>
+					<generic>Oras sa Choibalsan</generic>
+					<standard>Tamdanang Oras sa Choibalsan</standard>
+					<daylight>Oras sa Tag-init sa Choibalsan</daylight>
+				</long>
+			</metazone>
+			<metazone type="Christmas">
+				<long>
+					<standard>Oras sa Christmas Island</standard>
+				</long>
+			</metazone>
+			<metazone type="Cocos">
+				<long>
+					<standard>Oras sa Cocos Islands</standard>
+				</long>
+			</metazone>
+			<metazone type="Colombia">
+				<long>
+					<generic>Oras sa Colombia</generic>
+					<standard>Tamdanang Oras sa Colombia</standard>
+					<daylight>Oras sa Tag-init sa Colombia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cook">
+				<long>
+					<generic>Oras sa Cook Islands</generic>
+					<standard>Tamdanang Oras sa Cook Islands</standard>
+					<daylight>Katungang Oras sa Tag-init sa Cook Islands</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cuba">
+				<long>
+					<generic>Oras sa Cuba</generic>
+					<standard>Tamdanang Oras sa Cuba</standard>
+					<daylight>Oras sa Tag-init sa Cuba</daylight>
+				</long>
+			</metazone>
+			<metazone type="Davis">
+				<long>
+					<standard>Oras sa Davis</standard>
+				</long>
+			</metazone>
+			<metazone type="DumontDUrville">
+				<long>
+					<standard>Oras sa Dumont-d’Urville</standard>
+				</long>
+			</metazone>
+			<metazone type="East_Timor">
+				<long>
+					<standard>Oras sa East Timor</standard>
+				</long>
+			</metazone>
+			<metazone type="Easter">
+				<long>
+					<generic>Oras sa Easter Island</generic>
+					<standard>Tamdanang Oras sa Easter Island</standard>
+					<daylight>Oras sa Tag-init sa Easter Island</daylight>
+				</long>
+			</metazone>
+			<metazone type="Ecuador">
+				<long>
+					<standard>Oras sa Ecuador</standard>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>Oras sa Central Europe</generic>
+					<standard>Tamdanang Oras sa Central Europe</standard>
+					<daylight>Oras sa Tag-init sa Central Europe</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic>Oras sa Eastern Europe</generic>
+					<standard>Tamdanang Oras sa Eastern Europe</standard>
+					<daylight>Oras sa Tag-init sa Eastern Europe</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Further_Eastern">
+				<long>
+					<standard>Oras sa Further-eastern Europe</standard>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>Oras sa Western Europe</generic>
+					<standard>Tamdanang Oras sa Western Europe</standard>
+					<daylight>Oras sa Tag-init sa Western Europe</daylight>
+				</long>
+			</metazone>
+			<metazone type="Falkland">
+				<long>
+					<generic>Oras sa Falkland Islands</generic>
+					<standard>Tamdanang Oras sa Falkland Islands</standard>
+					<daylight>Oras sa Tag-init sa Falkland Islands</daylight>
+				</long>
+			</metazone>
+			<metazone type="Fiji">
+				<long>
+					<generic>Oras sa Fiji</generic>
+					<standard>Tamdanang Oras sa Fiji</standard>
+					<daylight>Oras sa Tag-init sa Fiji</daylight>
+				</long>
+			</metazone>
+			<metazone type="French_Guiana">
+				<long>
+					<standard>Oras sa French Guiana</standard>
+				</long>
+			</metazone>
+			<metazone type="French_Southern">
+				<long>
+					<standard>Oras sa French Southern ug Antarctic</standard>
+				</long>
+			</metazone>
+			<metazone type="Galapagos">
+				<long>
+					<standard>Oras sa Galapagos</standard>
+				</long>
+			</metazone>
+			<metazone type="Gambier">
+				<long>
+					<standard>Oras sa Gambier</standard>
+				</long>
+			</metazone>
+			<metazone type="Georgia">
+				<long>
+					<generic>Oras sa Georgia</generic>
+					<standard>Tamdanang Oras sa Georgia</standard>
+					<daylight>Oras sa Tag-init sa Georgia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gilbert_Islands">
+				<long>
+					<standard>Oras sa Gilbert Islands</standard>
+				</long>
+			</metazone>
+			<metazone type="GMT">
+				<long>
+					<standard>Oras sa Greenwich Mean</standard>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Eastern">
+				<long>
+					<generic>Oras sa East Greenland</generic>
+					<standard>Tamdanang Oras sa East Greenland</standard>
+					<daylight>Oras sa Tag-init sa East Greenland</daylight>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Western">
+				<long>
+					<generic>Oras sa West Greenland</generic>
+					<standard>Tamdanang Oras sa West Greenland</standard>
+					<daylight>Oras sa Tag-init sa West Greenland</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gulf">
+				<long>
+					<standard>Tamdanang Oras sa Gulf</standard>
+				</long>
+			</metazone>
+			<metazone type="Guyana">
+				<long>
+					<standard>Oras sa Guyana</standard>
+				</long>
+			</metazone>
+			<metazone type="Hawaii_Aleutian">
+				<long>
+					<generic>Oras sa Hawaii-Aleutian</generic>
+					<standard>Tamdanang Oras sa Hawaii-Aleutian</standard>
+					<daylight>Oras sa Tag-init sa Hawaii-Aleutian</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hong_Kong">
+				<long>
+					<generic>Oras sa Hong Kong</generic>
+					<standard>Tamdanang Oras sa Hong Kong</standard>
+					<daylight>Oras sa Tag-init sa Hong Kong</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hovd">
+				<long>
+					<generic>Oras sa Hovd</generic>
+					<standard>Tamdanang Oras sa Hovd</standard>
+					<daylight>Oras sa Tag-init sa Hovd</daylight>
+				</long>
+			</metazone>
+			<metazone type="India">
+				<long>
+					<standard>Tamdanang Oras sa India</standard>
+				</long>
+			</metazone>
+			<metazone type="Indian_Ocean">
+				<long>
+					<standard>Oras sa Indian Ocean</standard>
+				</long>
+			</metazone>
+			<metazone type="Indochina">
+				<long>
+					<standard>Oras sa Indochina</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Central">
+				<long>
+					<standard>Oras sa Central Indonesia</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Eastern">
+				<long>
+					<standard>Oras sa Eastern Indonesia</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Western">
+				<long>
+					<standard>Oras sa Western Indonesia</standard>
+				</long>
+			</metazone>
+			<metazone type="Iran">
+				<long>
+					<generic>Oras sa Iran</generic>
+					<standard>Tamdanang Oras sa Iran</standard>
+					<daylight>Oras sa Tag-init sa Iran</daylight>
+				</long>
+			</metazone>
+			<metazone type="Irkutsk">
+				<long>
+					<generic>Oras sa Irkutsk</generic>
+					<standard>Tamdanang Oras sa Irkutsk</standard>
+					<daylight>Oras sa Tag-init sa Irkutsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Israel">
+				<long>
+					<generic>Oras sa Israel</generic>
+					<standard>Tamdanang Oras sa Israel</standard>
+					<daylight>Oras sa Tag-init sa Israel</daylight>
+				</long>
+			</metazone>
+			<metazone type="Japan">
+				<long>
+					<generic>Oras sa Japan</generic>
+					<standard>Tamdanang Oras sa Japan</standard>
+					<daylight>Oras sa Adlawan sa Japan</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Eastern">
+				<long>
+					<standard>Oras sa East Kazakhstan</standard>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Western">
+				<long>
+					<standard>Oras sa West Kazakhstan</standard>
+				</long>
+			</metazone>
+			<metazone type="Korea">
+				<long>
+					<generic>Oras sa Korea</generic>
+					<standard>Tamdanang Oras sa Korea</standard>
+					<daylight>Oras sa Tag-init sa Korea</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kosrae">
+				<long>
+					<standard>Oras sa Kosrae</standard>
+				</long>
+			</metazone>
+			<metazone type="Krasnoyarsk">
+				<long>
+					<generic>Oras sa Krasnoyarsk</generic>
+					<standard>Tamdanang Oras sa Krasnoyarsk</standard>
+					<daylight>Oras sa Tag-init sa Krasnoyarsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kyrgystan">
+				<long>
+					<standard>Oras sa Kyrgyzstan</standard>
+				</long>
+			</metazone>
+			<metazone type="Line_Islands">
+				<long>
+					<standard>Oras sa Line Islands</standard>
+				</long>
+			</metazone>
+			<metazone type="Lord_Howe">
+				<long>
+					<generic>Oras sa Lord Howe</generic>
+					<standard>Tamdanang Oras sa Lord Howe</standard>
+					<daylight>Oras sa Tag-init sa Lord Howe</daylight>
+				</long>
+			</metazone>
+			<metazone type="Macquarie">
+				<long>
+					<standard>Oras sa Macquarie Island</standard>
+				</long>
+			</metazone>
+			<metazone type="Magadan">
+				<long>
+					<generic>Oras sa Magadan</generic>
+					<standard>Tamdanang Oras sa Magadan</standard>
+					<daylight>Oras sa Tag-init sa Magadan</daylight>
+				</long>
+			</metazone>
+			<metazone type="Malaysia">
+				<long>
+					<standard>Oras sa Malaysia</standard>
+				</long>
+			</metazone>
+			<metazone type="Maldives">
+				<long>
+					<standard>Oras sa Maldives</standard>
+				</long>
+			</metazone>
+			<metazone type="Marquesas">
+				<long>
+					<standard>Oras sa Marquesas</standard>
+				</long>
+			</metazone>
+			<metazone type="Marshall_Islands">
+				<long>
+					<standard>Oras sa Marshall Islands</standard>
+				</long>
+			</metazone>
+			<metazone type="Mauritius">
+				<long>
+					<generic>Oras sa Mauritius</generic>
+					<standard>Tamdanang Oras sa Mauritius</standard>
+					<daylight>Oras sa Tag-init sa Mauritius</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mawson">
+				<long>
+					<standard>Oras sa Mawson</standard>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Northwest">
+				<long>
+					<generic>Oras sa Northwest Mexico</generic>
+					<standard>Tamdanang Oras sa Northwest Mexico</standard>
+					<daylight>Oras sa Tag-init sa Northwest Mexico</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Pacific">
+				<long>
+					<generic>Oras sa Mexican Pacific</generic>
+					<standard>Tamdanang Oras sa Mexican Pacific</standard>
+					<daylight>Oras sa Tag-init sa Mexican Pacific</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mongolia">
+				<long>
+					<generic>Oras sa Ulaanbaatar</generic>
+					<standard>Tamdanang Oras sa Ulaanbaatar</standard>
+					<daylight>Oras sa Tag-init sa Ulaanbaatar</daylight>
+				</long>
+			</metazone>
+			<metazone type="Moscow">
+				<long>
+					<generic>Oras sa Moscow</generic>
+					<standard>Tamdanang Oras sa Moscow</standard>
+					<daylight>Oras sa Tag-init sa Moscow</daylight>
+				</long>
+			</metazone>
+			<metazone type="Myanmar">
+				<long>
+					<standard>Oras sa Myanmar</standard>
+				</long>
+			</metazone>
+			<metazone type="Nauru">
+				<long>
+					<standard>Oras sa Nauru</standard>
+				</long>
+			</metazone>
+			<metazone type="Nepal">
+				<long>
+					<standard>Oras sa Nepal</standard>
+				</long>
+			</metazone>
+			<metazone type="New_Caledonia">
+				<long>
+					<generic>Oras sa New Caledonia</generic>
+					<standard>Tamdanang Oras sa New Caledonia</standard>
+					<daylight>Oras sa Tag-init sa New Caledonia</daylight>
+				</long>
+			</metazone>
+			<metazone type="New_Zealand">
+				<long>
+					<generic>Oras sa New Zealand</generic>
+					<standard>Tamdanang Oras sa New Zealand</standard>
+					<daylight>Oras sa Tag-init sa New Zealand</daylight>
+				</long>
+			</metazone>
+			<metazone type="Newfoundland">
+				<long>
+					<generic>Oras sa Newfoundland</generic>
+					<standard>Tamdanang Oras sa Newfoundland</standard>
+					<daylight>Oras sa Tag-init sa Newfoundland</daylight>
+				</long>
+			</metazone>
+			<metazone type="Niue">
+				<long>
+					<standard>Oras sa Niue</standard>
+				</long>
+			</metazone>
+			<metazone type="Norfolk">
+				<long>
+					<generic>Oras sa Norfolk Island</generic>
+					<standard>Tamdanang Oras sa Norfolk Island</standard>
+					<daylight>Oras sa Tag-init sa Norfolk Island</daylight>
+				</long>
+			</metazone>
+			<metazone type="Noronha">
+				<long>
+					<generic>Oras sa Fernando de Noronha</generic>
+					<standard>Tamdanang Oras sa Fernando de Noronha</standard>
+					<daylight>Oras sa Tag-init sa Fernando de Noronha</daylight>
+				</long>
+			</metazone>
+			<metazone type="Novosibirsk">
+				<long>
+					<generic>Oras sa Novosibirsk</generic>
+					<standard>Tamdanang Oras sa Novosibirsk</standard>
+					<daylight>Oras sa Tag-init sa Novosibirsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Omsk">
+				<long>
+					<generic>Oras sa Omsk</generic>
+					<standard>Tamdanang Oras sa Omsk</standard>
+					<daylight>Oras sa Tag-init sa Omsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pakistan">
+				<long>
+					<generic>Oras sa Pakistan</generic>
+					<standard>Tamdanang Oras sa Pakistan</standard>
+					<daylight>Oras sa Tag-init sa Pakistan</daylight>
+				</long>
+			</metazone>
+			<metazone type="Palau">
+				<long>
+					<standard>Oras sa Palau</standard>
+				</long>
+			</metazone>
+			<metazone type="Papua_New_Guinea">
+				<long>
+					<standard>Oras sa Papua New Guinea</standard>
+				</long>
+			</metazone>
+			<metazone type="Paraguay">
+				<long>
+					<generic>Oras sa Paraguay</generic>
+					<standard>Tamdanang Oras sa Paraguay</standard>
+					<daylight>Oras sa Tag-init sa Paraguay</daylight>
+				</long>
+			</metazone>
+			<metazone type="Peru">
+				<long>
+					<generic>Oras sa Peru</generic>
+					<standard>Tamdanang Oras sa Peru</standard>
+					<daylight>Oras sa Tag-init sa Peru</daylight>
+				</long>
+			</metazone>
+			<metazone type="Philippines">
+				<long>
+					<generic>Oras sa Pilipinas</generic>
+					<standard>Tamdanang Oras sa Pilipinas</standard>
+					<daylight>Oras sa Tag-init sa Pilipinas</daylight>
+				</long>
+			</metazone>
+			<metazone type="Phoenix_Islands">
+				<long>
+					<standard>Oras sa Phoenix Islands</standard>
+				</long>
+			</metazone>
+			<metazone type="Pierre_Miquelon">
+				<long>
+					<generic>Oras sa St. Pierre &amp; Miquelon</generic>
+					<standard>Tamdanang Oras sa St. Pierre &amp; Miquelon</standard>
+					<daylight>Oras sa Tag-init sa St.Pierre &amp; Miquelon</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pitcairn">
+				<long>
+					<standard>Oras sa Pitcairn</standard>
+				</long>
+			</metazone>
+			<metazone type="Ponape">
+				<long>
+					<standard>Oras sa Ponape</standard>
+				</long>
+			</metazone>
+			<metazone type="Pyongyang">
+				<long>
+					<standard>Oras sa Pyongyang</standard>
+				</long>
+			</metazone>
+			<metazone type="Reunion">
+				<long>
+					<standard>Oras sa Reunion</standard>
+				</long>
+			</metazone>
+			<metazone type="Rothera">
+				<long>
+					<standard>Oras sa Rothera</standard>
+				</long>
+			</metazone>
+			<metazone type="Sakhalin">
+				<long>
+					<generic>Oras sa Sakhalin</generic>
+					<standard>Tamdanang Oras sa Sakhalin</standard>
+					<daylight>Oras sa Tag-init sa Sakhalin</daylight>
+				</long>
+			</metazone>
+			<metazone type="Samoa">
+				<long>
+					<generic>Oras sa Samoa</generic>
+					<standard>Tamdanang Oras sa Samoa</standard>
+					<daylight>Oras sa Tag-init sa Samoa</daylight>
+				</long>
+			</metazone>
+			<metazone type="Seychelles">
+				<long>
+					<standard>Oras sa Seychelles</standard>
+				</long>
+			</metazone>
+			<metazone type="Singapore">
+				<long>
+					<standard>Tamdanang Oras sa Singapore</standard>
+				</long>
+			</metazone>
+			<metazone type="Solomon">
+				<long>
+					<standard>Oras sa Solomon Islands</standard>
+				</long>
+			</metazone>
+			<metazone type="South_Georgia">
+				<long>
+					<standard>Oras sa South Georgia</standard>
+				</long>
+			</metazone>
+			<metazone type="Suriname">
+				<long>
+					<standard>Oras sa Suriname</standard>
+				</long>
+			</metazone>
+			<metazone type="Syowa">
+				<long>
+					<standard>Oras sa Syowa</standard>
+				</long>
+			</metazone>
+			<metazone type="Tahiti">
+				<long>
+					<standard>Oras sa Tahiti</standard>
+				</long>
+			</metazone>
+			<metazone type="Taipei">
+				<long>
+					<generic>Oras sa Taipei</generic>
+					<standard>Tamdanang Oras sa Taipei</standard>
+					<daylight>Oras sa Tag-init sa Taipei</daylight>
+				</long>
+			</metazone>
+			<metazone type="Tajikistan">
+				<long>
+					<standard>Oras sa Tajikistan</standard>
+				</long>
+			</metazone>
+			<metazone type="Tokelau">
+				<long>
+					<standard>Oras sa Tokelau</standard>
+				</long>
+			</metazone>
+			<metazone type="Tonga">
+				<long>
+					<generic>Oras sa Tonga</generic>
+					<standard>Tamdanang Oras sa Tonga</standard>
+					<daylight>Oras sa Tag-init sa Tonga</daylight>
+				</long>
+			</metazone>
+			<metazone type="Truk">
+				<long>
+					<standard>Oras sa Chuuk</standard>
+				</long>
+			</metazone>
+			<metazone type="Turkmenistan">
+				<long>
+					<generic>Oras sa Turkmenistan</generic>
+					<standard>Tamdanang Oras sa Turkmenistan</standard>
+					<daylight>Oras sa Tag-init sa Turkmenistan</daylight>
+				</long>
+			</metazone>
+			<metazone type="Tuvalu">
+				<long>
+					<standard>Oras sa Tuvalu</standard>
+				</long>
+			</metazone>
+			<metazone type="Uruguay">
+				<long>
+					<generic>Oras sa Uruguay</generic>
+					<standard>Tamdanang Oras sa Uruguay</standard>
+					<daylight>Oras sa Tag-init sa Uruguay</daylight>
+				</long>
+			</metazone>
+			<metazone type="Uzbekistan">
+				<long>
+					<generic>Oras sa Uzbekistan</generic>
+					<standard>Tamdanang Oras sa Uzbekistan</standard>
+					<daylight>Oras sa Tag-init sa Uzbekistan</daylight>
+				</long>
+			</metazone>
+			<metazone type="Vanuatu">
+				<long>
+					<generic>Oras sa Vanuatu</generic>
+					<standard>Tamdanang Oras sa Vanuatu</standard>
+					<daylight>Oras sa Tag-init sa Vanuatu</daylight>
+				</long>
+			</metazone>
+			<metazone type="Venezuela">
+				<long>
+					<standard>Oras sa Venezuela</standard>
+				</long>
+			</metazone>
+			<metazone type="Vladivostok">
+				<long>
+					<generic>Oras sa Vladivostok</generic>
+					<standard>Tamdanang Oras sa Vladivostok</standard>
+					<daylight>Oras sa Tag-init sa Vladivostok</daylight>
+				</long>
+			</metazone>
+			<metazone type="Volgograd">
+				<long>
+					<generic>Oras sa Volgograd</generic>
+					<standard>Tamdanang Oras sa Volgograd</standard>
+					<daylight>Oras sa Tag-init sa Volgograd</daylight>
+				</long>
+			</metazone>
+			<metazone type="Vostok">
+				<long>
+					<standard>Oras sa Vostok</standard>
+				</long>
+			</metazone>
+			<metazone type="Wake">
+				<long>
+					<standard>Oras sa Wake Island</standard>
+				</long>
+			</metazone>
+			<metazone type="Wallis">
+				<long>
+					<standard>Oras sa Wallis &amp; Futuna</standard>
+				</long>
+			</metazone>
+			<metazone type="Yakutsk">
+				<long>
+					<generic>Oras sa Yakutsk</generic>
+					<standard>Tamdanang Oras sa Yakutsk</standard>
+					<daylight>Oras sa Tag-init sa Yakutsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Yekaterinburg">
+				<long>
+					<generic>Oras sa Yekaterinburg</generic>
+					<standard>Tamdanang Oras sa Yekaterinburg</standard>
+					<daylight>Oras sa Tag-init sa Yekaterinburg</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<decimal>.</decimal>
+			<group>,</group>
+			<percentSign>%</percentSign>
+			<plusSign>+</plusSign>
+			<minusSign>-</minusSign>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<scientificFormats numberSystem="latn">
+			<scientificFormatLength>
+				<scientificFormat>
+					<pattern>#E0</pattern>
+				</scientificFormat>
+			</scientificFormatLength>
+		</scientificFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤#,##0.00</pattern>
+				</currencyFormat>
+				<currencyFormat type="accounting">
+					<pattern>¤#,##0.00;(¤#,##0.00)</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<unitPattern count="one">{1} {0}</unitPattern>
+			<unitPattern count="other">{1} {0}</unitPattern>
+		</currencyFormats>
+		<currencies>
+			<currency type="AED">
+				<displayName>United Arab Emirates Dirham</displayName>
+				<displayName count="one">UAE dirham</displayName>
+				<displayName count="other">Mga UAE dirham</displayName>
+			</currency>
+			<currency type="AFN">
+				<displayName>Afghan Afghani</displayName>
+				<displayName count="one">Afghan Afghani</displayName>
+				<displayName count="other">Mga Afghan Afghani</displayName>
+			</currency>
+			<currency type="ALL">
+				<displayName>Albanian Lek</displayName>
+				<displayName count="one">Albanian lek</displayName>
+				<displayName count="other">Albanian leke</displayName>
+			</currency>
+			<currency type="AMD">
+				<displayName>Armenian Dram</displayName>
+				<displayName count="one">Armenian dram</displayName>
+				<displayName count="other">Mga Armenian dram</displayName>
+			</currency>
+			<currency type="ANG">
+				<displayName>Netherlands Antillean Guilder</displayName>
+				<displayName count="one">Netherlands Antillean guilder</displayName>
+				<displayName count="other">Mga Netherlands Antillean guilder</displayName>
+			</currency>
+			<currency type="AOA">
+				<displayName>Angolan Kwanza</displayName>
+				<displayName count="one">Angolan kwanza</displayName>
+				<displayName count="other">Mga Angolan kwanza</displayName>
+			</currency>
+			<currency type="ARS">
+				<displayName>Argentine Peso</displayName>
+				<displayName count="one">Argentine peso</displayName>
+				<displayName count="other">Mga Argentine peso</displayName>
+			</currency>
+			<currency type="AUD">
+				<displayName>Australian Dollar</displayName>
+				<displayName count="one">Australian dollar</displayName>
+				<displayName count="other">Mga Australian dollar</displayName>
+			</currency>
+			<currency type="AWG">
+				<displayName>Aruban Florin</displayName>
+				<displayName count="one">Aruban florin</displayName>
+				<displayName count="other">Aruban florin</displayName>
+			</currency>
+			<currency type="AZN">
+				<displayName>Azerbaijani Manat</displayName>
+				<displayName count="one">Azerbaijani manat</displayName>
+				<displayName count="other">Mga Azerbaijani manat</displayName>
+			</currency>
+			<currency type="BAM">
+				<displayName>Bosnia-Herzegovina Convertible Mark</displayName>
+				<displayName count="one">Bosnia-Herzegovina convertible mark</displayName>
+				<displayName count="other">Mga Bosnia-Herzegovina convertible mark</displayName>
+			</currency>
+			<currency type="BBD">
+				<displayName>Barbadian Dollar</displayName>
+				<displayName count="one">Barbadian dollar</displayName>
+				<displayName count="other">Mga Barbadian dollar</displayName>
+			</currency>
+			<currency type="BDT">
+				<displayName>Bangladeshi Taka</displayName>
+				<displayName count="one">Bangladeshi taka</displayName>
+				<displayName count="other">Mga Bangladeshi taka</displayName>
+			</currency>
+			<currency type="BGN">
+				<displayName>Bulgarian Lev</displayName>
+				<displayName count="one">Bulgarian lev</displayName>
+				<displayName count="other">Bulgarian leva</displayName>
+			</currency>
+			<currency type="BHD">
+				<displayName>Bahraini Dinar</displayName>
+				<displayName count="one">Bahraini dinar</displayName>
+				<displayName count="other">Mga Bahraini dinar</displayName>
+			</currency>
+			<currency type="BIF">
+				<displayName>Burundian Franc</displayName>
+				<displayName count="one">Burundian franc</displayName>
+				<displayName count="other">Mga Burundian franc</displayName>
+			</currency>
+			<currency type="BMD">
+				<displayName>Bermudan Dollar</displayName>
+				<displayName count="one">Bermudan dollar</displayName>
+				<displayName count="other">Mga Bermudan dollar</displayName>
+			</currency>
+			<currency type="BND">
+				<displayName>Brunei Dollar</displayName>
+				<displayName count="one">Brunei dollar</displayName>
+				<displayName count="other">Mga Brunei dollar</displayName>
+			</currency>
+			<currency type="BOB">
+				<displayName>Bolivian Boliviano</displayName>
+				<displayName count="one">Bolivian boliviano</displayName>
+				<displayName count="other">Mga Bolivian boliviano</displayName>
+			</currency>
+			<currency type="BRL">
+				<displayName>Brazilian Real</displayName>
+				<displayName count="one">Brazilian real</displayName>
+				<displayName count="other">Mga Brazilian real</displayName>
+			</currency>
+			<currency type="BSD">
+				<displayName>Bahamian Dollar</displayName>
+				<displayName count="one">Bahamian dollar</displayName>
+				<displayName count="other">Mga Bahamian dollar</displayName>
+			</currency>
+			<currency type="BTN">
+				<displayName>Bhutanese Ngultrum</displayName>
+				<displayName count="one">Bhutanese ngultrum</displayName>
+				<displayName count="other">Mga Bhutanese ngultrum</displayName>
+			</currency>
+			<currency type="BWP">
+				<displayName>Botswanan Pula</displayName>
+				<displayName count="one">Botswanan pula</displayName>
+				<displayName count="other">Mga Botswanan pula</displayName>
+			</currency>
+			<currency type="BYN">
+				<displayName>Belarusian Ruble</displayName>
+				<displayName count="one">Belarusian ruble</displayName>
+				<displayName count="other">Mga Belarusian ruble</displayName>
+			</currency>
+			<currency type="BZD">
+				<displayName>Belize Dollar</displayName>
+				<displayName count="one">Belize dollar</displayName>
+				<displayName count="other">Mga Belize dollar</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName>Canadian Dollar</displayName>
+				<displayName count="one">Canadian dollar</displayName>
+				<displayName count="other">Mga Canadian dollar</displayName>
+			</currency>
+			<currency type="CDF">
+				<displayName>Congolese Franc</displayName>
+				<displayName count="one">Congolese franc</displayName>
+				<displayName count="other">Mga Congolese franc</displayName>
+			</currency>
+			<currency type="CHF">
+				<displayName>Swiss Franc</displayName>
+				<displayName count="one">Swiss franc</displayName>
+				<displayName count="other">Mga Swiss franc</displayName>
+			</currency>
+			<currency type="CLP">
+				<displayName>Chilean Peso</displayName>
+				<displayName count="one">Chilean peso</displayName>
+				<displayName count="other">Mga Chilean peso</displayName>
+			</currency>
+			<currency type="CNH">
+				<displayName>Chinese Yuan (layo sa baybayon)</displayName>
+				<displayName count="one">Chinese yuan (layo sa baybayon)</displayName>
+				<displayName count="other">Chinese yuan (layo sa baybayon)</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>Chinese Yuan</displayName>
+				<displayName count="one">Chinese yuan</displayName>
+				<displayName count="other">Chinese yuan</displayName>
+			</currency>
+			<currency type="COP">
+				<displayName>Colombian Peso</displayName>
+				<displayName count="one">Colombian peso</displayName>
+				<displayName count="other">Mga Colombian peso</displayName>
+			</currency>
+			<currency type="CRC">
+				<displayName>Costa Rican Colon</displayName>
+				<displayName count="one">Costa Rican colon</displayName>
+				<displayName count="other">Mga Costa Rican colon</displayName>
+			</currency>
+			<currency type="CUC">
+				<displayName>Cuban Convertible Peso</displayName>
+				<displayName count="one">Cuban convertible peso</displayName>
+				<displayName count="other">Mga Cuban convertible peso</displayName>
+			</currency>
+			<currency type="CUP">
+				<displayName>Cuban Peso</displayName>
+				<displayName count="one">Cuban peso</displayName>
+				<displayName count="other">Mga Cuban peso</displayName>
+			</currency>
+			<currency type="CVE">
+				<displayName>Cape Verdean Escudo</displayName>
+				<displayName count="one">Cape Verdean escudo</displayName>
+				<displayName count="other">Mga Cape Verdean escudo</displayName>
+			</currency>
+			<currency type="CZK">
+				<displayName>Czech Koruna</displayName>
+				<displayName count="one">Czech koruna</displayName>
+				<displayName count="other">Mga Czech koruna</displayName>
+			</currency>
+			<currency type="DJF">
+				<displayName>Djiboutian Franc</displayName>
+				<displayName count="one">Djiboutian franc</displayName>
+				<displayName count="other">Mga Djiboutian franc</displayName>
+			</currency>
+			<currency type="DKK">
+				<displayName>Danish Krone</displayName>
+				<displayName count="one">Danish krone</displayName>
+				<displayName count="other">Danish kroner</displayName>
+			</currency>
+			<currency type="DOP">
+				<displayName>Dominican Peso</displayName>
+				<displayName count="one">Dominican peso</displayName>
+				<displayName count="other">Mga Dominican peso</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName>Algerian Dinar</displayName>
+				<displayName count="one">Algerian dinar</displayName>
+				<displayName count="other">Mga Algerian dinar</displayName>
+			</currency>
+			<currency type="EGP">
+				<displayName>Egyptian Pound</displayName>
+				<displayName count="one">Egyptian pound</displayName>
+				<displayName count="other">Mga Egyptian pound</displayName>
+			</currency>
+			<currency type="ERN">
+				<displayName>Eritrean Nakfa</displayName>
+				<displayName count="one">Eritrean nakfa</displayName>
+				<displayName count="other">Mga Eritrean nakfa</displayName>
+			</currency>
+			<currency type="ETB">
+				<displayName>Ethiopian Birr</displayName>
+				<displayName count="one">Ethiopian birr</displayName>
+				<displayName count="other">Mga Ethiopian birr</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>Euro</displayName>
+				<displayName count="one">euro</displayName>
+				<displayName count="other">mga euro</displayName>
+			</currency>
+			<currency type="FJD">
+				<displayName>Fijian Dollar</displayName>
+				<displayName count="one">Fijian dollar</displayName>
+				<displayName count="other">Mga Fijian dollar</displayName>
+			</currency>
+			<currency type="FKP">
+				<displayName>Falkland Islands Pound</displayName>
+				<displayName count="one">Falkland Islands pound</displayName>
+				<displayName count="other">Mga Falkland Islands pound</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>British Pound</displayName>
+				<displayName count="one">British pound</displayName>
+				<displayName count="other">Mga British pound</displayName>
+			</currency>
+			<currency type="GEL">
+				<displayName>Georgian Lari</displayName>
+				<displayName count="one">Georgian lari</displayName>
+				<displayName count="other">Mga Georgian lari</displayName>
+			</currency>
+			<currency type="GHS">
+				<displayName>Ghanaian Cedi</displayName>
+				<displayName count="one">Ghanaian cedi</displayName>
+				<displayName count="other">Mga Ghanaian cedi</displayName>
+			</currency>
+			<currency type="GIP">
+				<displayName>Gibraltar Pound</displayName>
+				<displayName count="one">Gibraltar pound</displayName>
+				<displayName count="other">Mga Gibraltar pound</displayName>
+			</currency>
+			<currency type="GMD">
+				<displayName>Gambian Dalasi</displayName>
+				<displayName count="one">Gambian dalasi</displayName>
+				<displayName count="other">Mga Gambian dalasi</displayName>
+			</currency>
+			<currency type="GNF">
+				<displayName>Guinean Franc</displayName>
+				<displayName count="one">Guinean franc</displayName>
+				<displayName count="other">Mga Guinean franc</displayName>
+			</currency>
+			<currency type="GTQ">
+				<displayName>Guatemalan Quetzal</displayName>
+				<displayName count="one">Guatemalan quetzal</displayName>
+				<displayName count="other">Mga Guatemalan quetzal</displayName>
+			</currency>
+			<currency type="GYD">
+				<displayName>Guyanaese Dollar</displayName>
+				<displayName count="one">Guyanaese dollar</displayName>
+				<displayName count="other">Mga Guyanaese dollar</displayName>
+			</currency>
+			<currency type="HKD">
+				<displayName>Hong Kong Dollar</displayName>
+				<displayName count="one">Hong Kong dollar</displayName>
+				<displayName count="other">Mga Hong Kong dollar</displayName>
+			</currency>
+			<currency type="HNL">
+				<displayName>Honduran Lempira</displayName>
+				<displayName count="one">Honduran lempira</displayName>
+				<displayName count="other">Mga Honduran lempira</displayName>
+			</currency>
+			<currency type="HRK">
+				<displayName>Croatian Kuna</displayName>
+				<displayName count="one">Croatian kuna</displayName>
+				<displayName count="other">Mga Croatian kuna</displayName>
+			</currency>
+			<currency type="HTG">
+				<displayName>Haitian Gourde</displayName>
+				<displayName count="one">Haitian gourde</displayName>
+				<displayName count="other">Mga Haitian gourde</displayName>
+			</currency>
+			<currency type="HUF">
+				<displayName>Hungarian Forint</displayName>
+				<displayName count="one">Hungarian forint</displayName>
+				<displayName count="other">Mga Hungarian forint</displayName>
+			</currency>
+			<currency type="IDR">
+				<displayName>Indonesian Rupiah</displayName>
+				<displayName count="one">Indonesian rupiah</displayName>
+				<displayName count="other">Mga Indonesian rupiah</displayName>
+			</currency>
+			<currency type="ILS">
+				<displayName>Israeli New Shekel</displayName>
+				<displayName count="one">Israeli new shekel</displayName>
+				<displayName count="other">Mga Israeli new shekel</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName>Indian Rupee</displayName>
+				<displayName count="one">Indian rupee</displayName>
+				<displayName count="other">Mga Indian rupee</displayName>
+			</currency>
+			<currency type="IQD">
+				<displayName>Iraqi Dinar</displayName>
+				<displayName count="one">Iraqi dinar</displayName>
+				<displayName count="other">Mga Iraqi dinar</displayName>
+			</currency>
+			<currency type="IRR">
+				<displayName>Iranian Rial</displayName>
+				<displayName count="one">Iranian rial</displayName>
+				<displayName count="other">Mga Iranian rial</displayName>
+			</currency>
+			<currency type="ISK">
+				<displayName>Icelandic Krona</displayName>
+				<displayName count="one">Icelandic krona</displayName>
+				<displayName count="other">Icelandic kronur</displayName>
+			</currency>
+			<currency type="JMD">
+				<displayName>Jamaican Dollar</displayName>
+				<displayName count="one">Jamaican dollar</displayName>
+				<displayName count="other">Mga Jamaican dollar</displayName>
+			</currency>
+			<currency type="JOD">
+				<displayName>Jordanian Dinar</displayName>
+				<displayName count="one">Jordanian dinar</displayName>
+				<displayName count="other">Mga Jordanian dinar</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>Japanese Yen</displayName>
+				<displayName count="one">Japanese yen</displayName>
+				<displayName count="other">Japanese yen</displayName>
+			</currency>
+			<currency type="KES">
+				<displayName>Kenyan Shilling</displayName>
+				<displayName count="one">Kenyan shilling</displayName>
+				<displayName count="other">Mga Kenyan shilling</displayName>
+			</currency>
+			<currency type="KGS">
+				<displayName>Kyrgystani Som</displayName>
+				<displayName count="one">Kyrgystani som</displayName>
+				<displayName count="other">Mga Kyrgystani som</displayName>
+			</currency>
+			<currency type="KHR">
+				<displayName>Cambodian Riel</displayName>
+				<displayName count="one">Cambodian riel</displayName>
+				<displayName count="other">Mga Cambodian riel</displayName>
+			</currency>
+			<currency type="KMF">
+				<displayName>Comorian Franc</displayName>
+				<displayName count="one">Comorian franc</displayName>
+				<displayName count="other">Mga Comorian franc</displayName>
+			</currency>
+			<currency type="KPW">
+				<displayName>North Korean Won</displayName>
+				<displayName count="one">North Korean won</displayName>
+				<displayName count="other">North Korean won</displayName>
+			</currency>
+			<currency type="KRW">
+				<displayName>South Korean Won</displayName>
+				<displayName count="one">South Korean won</displayName>
+				<displayName count="other">South Korean won</displayName>
+			</currency>
+			<currency type="KWD">
+				<displayName>Kuwaiti Dinar</displayName>
+				<displayName count="one">Kuwaiti dinar</displayName>
+				<displayName count="other">Mga Kuwaiti dinar</displayName>
+			</currency>
+			<currency type="KYD">
+				<displayName>Cayman Islands Dollar</displayName>
+				<displayName count="one">Cayman Islands dollar</displayName>
+				<displayName count="other">Mga Cayman Islands dollar</displayName>
+			</currency>
+			<currency type="KZT">
+				<displayName>Kazakhstani Tenge</displayName>
+				<displayName count="one">Kazakhstani tenge</displayName>
+				<displayName count="other">Mga Kazakhstani tenge</displayName>
+			</currency>
+			<currency type="LAK">
+				<displayName>Laotian Kip</displayName>
+				<displayName count="one">Laotian kip</displayName>
+				<displayName count="other">Mga Laotian kip</displayName>
+			</currency>
+			<currency type="LBP">
+				<displayName>Lebanese Pound</displayName>
+				<displayName count="one">Lebanese pound</displayName>
+				<displayName count="other">Mga Lebanese pound</displayName>
+			</currency>
+			<currency type="LKR">
+				<displayName>Sri Lankan Rupee</displayName>
+				<displayName count="one">Sri Lankan rupee</displayName>
+				<displayName count="other">Mga Sri Lankan rupee</displayName>
+			</currency>
+			<currency type="LRD">
+				<displayName>Liberian Dollar</displayName>
+				<displayName count="one">Liberian dollar</displayName>
+				<displayName count="other">Mga Liberian dollar</displayName>
+			</currency>
+			<currency type="LYD">
+				<displayName>Libyan Dinar</displayName>
+				<displayName count="one">Libyan dinar</displayName>
+				<displayName count="other">Mga Libyan dinar</displayName>
+			</currency>
+			<currency type="MAD">
+				<displayName>Moroccan Dirham</displayName>
+				<displayName count="one">Moroccan dirham</displayName>
+				<displayName count="other">Mga Moroccan dirham</displayName>
+			</currency>
+			<currency type="MDL">
+				<displayName>Moldovan Leu</displayName>
+				<displayName count="one">Moldovan leu</displayName>
+				<displayName count="other">Moldovan lei</displayName>
+			</currency>
+			<currency type="MGA">
+				<displayName>Malagasy Ariary</displayName>
+				<displayName count="one">Malagasy ariary</displayName>
+				<displayName count="other">Mga Malagasy ariary</displayName>
+			</currency>
+			<currency type="MKD">
+				<displayName>Macedonian Denar</displayName>
+				<displayName count="one">Macedonian denar</displayName>
+				<displayName count="other">Macedonian denari</displayName>
+			</currency>
+			<currency type="MMK">
+				<displayName>Myanmar Kyat</displayName>
+				<displayName count="one">Myanmar kyat</displayName>
+				<displayName count="other">Mga Myanmar kyat</displayName>
+			</currency>
+			<currency type="MNT">
+				<displayName>Mongolian Tugrik</displayName>
+				<displayName count="one">Mongolian tugrik</displayName>
+				<displayName count="other">Mga Mongolian tugrik</displayName>
+			</currency>
+			<currency type="MOP">
+				<displayName>Macanese Pataca</displayName>
+				<displayName count="one">Macanese pataca</displayName>
+				<displayName count="other">Mga Macanese pataca</displayName>
+			</currency>
+			<currency type="MRU">
+				<displayName>Mauritanian Ouguiya</displayName>
+				<displayName count="one">Mauritanian ouguiya</displayName>
+				<displayName count="other">Mga Mauritanian ouguiya</displayName>
+			</currency>
+			<currency type="MUR">
+				<displayName>Mauritian Rupee</displayName>
+				<displayName count="one">Mauritian rupee</displayName>
+				<displayName count="other">Mga Mauritian rupee</displayName>
+			</currency>
+			<currency type="MVR">
+				<displayName>Maldivian Rufiyaa</displayName>
+				<displayName count="one">Maldivian rufiyaa</displayName>
+				<displayName count="other">Mga Maldivian rufiyaa</displayName>
+			</currency>
+			<currency type="MWK">
+				<displayName>Malawian Kwacha</displayName>
+				<displayName count="one">Malawian kwacha</displayName>
+				<displayName count="other">Mga Malawian kwacha</displayName>
+			</currency>
+			<currency type="MXN">
+				<displayName>Mexican Peso</displayName>
+				<displayName count="one">Mexican peso</displayName>
+				<displayName count="other">Mga Mexican peso</displayName>
+			</currency>
+			<currency type="MYR">
+				<displayName>Malaysian Ringgit</displayName>
+				<displayName count="one">Mga Malaysian ringgit</displayName>
+				<displayName count="other">Mga Malaysian ringgit</displayName>
+			</currency>
+			<currency type="MZN">
+				<displayName>Mozambican Metical</displayName>
+				<displayName count="one">Mozambican metical</displayName>
+				<displayName count="other">Mga Mozambican metical</displayName>
+			</currency>
+			<currency type="NAD">
+				<displayName>Namibian Dollar</displayName>
+				<displayName count="one">Namibian dollar</displayName>
+				<displayName count="other">Mga Namibian dollar</displayName>
+			</currency>
+			<currency type="NGN">
+				<displayName>Nigerian Naira</displayName>
+				<displayName count="one">Nigerian naira</displayName>
+				<displayName count="other">Mga Nigerian naira</displayName>
+			</currency>
+			<currency type="NIO">
+				<displayName>Nicaraguan Cordoba</displayName>
+				<displayName count="one">Nicaraguan cordoba</displayName>
+				<displayName count="other">Mga Nicaraguan cordoba</displayName>
+			</currency>
+			<currency type="NOK">
+				<displayName>Norwegian Krone</displayName>
+				<displayName count="one">Norwegian krone</displayName>
+				<displayName count="other">Norwegian kroner</displayName>
+			</currency>
+			<currency type="NPR">
+				<displayName>Nepalese Rupee</displayName>
+				<displayName count="one">Nepalese rupee</displayName>
+				<displayName count="other">Mga Nepalese rupee</displayName>
+			</currency>
+			<currency type="NZD">
+				<displayName>New Zealand Dollar</displayName>
+				<displayName count="one">New Zealand dollar</displayName>
+				<displayName count="other">Mga New Zealand dollar</displayName>
+			</currency>
+			<currency type="OMR">
+				<displayName>Omani Rial</displayName>
+				<displayName count="one">Omani rial</displayName>
+				<displayName count="other">Mga Omani rial</displayName>
+			</currency>
+			<currency type="PAB">
+				<displayName>Panamanian Balboa</displayName>
+				<displayName count="one">Panamanian balboa</displayName>
+				<displayName count="other">Mga Panamanian balboa</displayName>
+			</currency>
+			<currency type="PEN">
+				<displayName>Peruvian Sol</displayName>
+				<displayName count="one">Peruvian sol</displayName>
+				<displayName count="other">Mga Peruvian sole</displayName>
+			</currency>
+			<currency type="PGK">
+				<displayName>Papua New Guinean Kina</displayName>
+				<displayName count="one">Papua New Guinean kina</displayName>
+				<displayName count="other">Papua New Guinean kina</displayName>
+			</currency>
+			<currency type="PHP">
+				<displayName>Philippine Piso</displayName>
+				<displayName count="one">Philippine piso</displayName>
+				<displayName count="other">Mga Philippine piso</displayName>
+				<symbol draft="contributed">₱</symbol>
+			</currency>
+			<currency type="PKR">
+				<displayName>Pakistani Rupee</displayName>
+				<displayName count="one">Pakistani rupee</displayName>
+				<displayName count="other">Mga Pakistani rupee</displayName>
+			</currency>
+			<currency type="PLN">
+				<displayName>Polish Zloty</displayName>
+				<displayName count="one">Polish zloty</displayName>
+				<displayName count="other">Mga Polish zloty</displayName>
+			</currency>
+			<currency type="PYG">
+				<displayName>Paraguayan Guarani</displayName>
+				<displayName count="one">Paraguayan guarani</displayName>
+				<displayName count="other">Mga Paraguayan guarani</displayName>
+			</currency>
+			<currency type="QAR">
+				<displayName>Qatari Rial</displayName>
+				<displayName count="one">Qatari rial</displayName>
+				<displayName count="other">Mga Qatari rial</displayName>
+			</currency>
+			<currency type="RON">
+				<displayName>Romanian Leu</displayName>
+				<displayName count="one">Romanian leu</displayName>
+				<displayName count="other">Romanian lei</displayName>
+			</currency>
+			<currency type="RSD">
+				<displayName>Serbian Dinar</displayName>
+				<displayName count="one">Serbian dinar</displayName>
+				<displayName count="other">Mga Serbian dinar</displayName>
+			</currency>
+			<currency type="RUB">
+				<displayName>Russian Ruble</displayName>
+				<displayName count="one">Russian ruble</displayName>
+				<displayName count="other">Mga Russian ruble</displayName>
+			</currency>
+			<currency type="RWF">
+				<displayName>Rwandan Franc</displayName>
+				<displayName count="one">Rwandan franc</displayName>
+				<displayName count="other">Mga Rwandan franc</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName>Saudi Riyal</displayName>
+				<displayName count="one">Saudi riyal</displayName>
+				<displayName count="other">Mga Saudi riyal</displayName>
+			</currency>
+			<currency type="SBD">
+				<displayName>Solomon Islands Dollar</displayName>
+				<displayName count="one">Solomon Islands dollar</displayName>
+				<displayName count="other">Mga Solomon Islands dollar</displayName>
+			</currency>
+			<currency type="SCR">
+				<displayName>Seychellois Rupee</displayName>
+				<displayName count="one">Seychellois rupee</displayName>
+				<displayName count="other">Mga Seychellois rupee</displayName>
+			</currency>
+			<currency type="SDG">
+				<displayName>Sudanese Pound</displayName>
+				<displayName count="one">Sudanese pound</displayName>
+				<displayName count="other">Mga Sudanese pound</displayName>
+			</currency>
+			<currency type="SEK">
+				<displayName>Swedish Krona</displayName>
+				<displayName count="one">Swedish krona</displayName>
+				<displayName count="other">Swedish kronor</displayName>
+			</currency>
+			<currency type="SGD">
+				<displayName>Singapore Dollar</displayName>
+				<displayName count="one">Singapore dollar</displayName>
+				<displayName count="other">Mga Singapore dollar</displayName>
+			</currency>
+			<currency type="SHP">
+				<displayName>St. Helena Pound</displayName>
+				<displayName count="one">St. Helena pound</displayName>
+				<displayName count="other">Mga St. Helena pound</displayName>
+			</currency>
+			<currency type="SLL">
+				<displayName>Sierra Leonean Leone</displayName>
+				<displayName count="one">Sierra Leonean leone</displayName>
+				<displayName count="other">Mga Sierra Leonean leone</displayName>
+			</currency>
+			<currency type="SOS">
+				<displayName>Somali Shilling</displayName>
+				<displayName count="one">Somali shilling</displayName>
+				<displayName count="other">Mga Somali shilling</displayName>
+			</currency>
+			<currency type="SRD">
+				<displayName>Surinamese Dollar</displayName>
+				<displayName count="one">Surinamese dollar</displayName>
+				<displayName count="other">Mga Surinamese dollar</displayName>
+			</currency>
+			<currency type="SSP">
+				<displayName>South Sudanese Pound</displayName>
+				<displayName count="one">South Sudanese pound</displayName>
+				<displayName count="other">Mga South Sudanese pound</displayName>
+			</currency>
+			<currency type="STN">
+				<displayName>Sao Tome &amp; Principe Dobra</displayName>
+				<displayName count="one">Sao Tome &amp; Principe dobra</displayName>
+				<displayName count="other">Mga Sao Tome &amp; Principe dobra</displayName>
+			</currency>
+			<currency type="SYP">
+				<displayName>Syrian Pound</displayName>
+				<displayName count="one">Syrian pound</displayName>
+				<displayName count="other">Mga Syrian pound</displayName>
+			</currency>
+			<currency type="SZL">
+				<displayName>Swazi Lilangeni</displayName>
+				<displayName count="one">Swazi lilangeni</displayName>
+				<displayName count="other">Swazi emalangeni</displayName>
+			</currency>
+			<currency type="THB">
+				<displayName>Thai Baht</displayName>
+				<displayName count="one">Thai baht</displayName>
+				<displayName count="other">Thai baht</displayName>
+			</currency>
+			<currency type="TJS">
+				<displayName>Tajikistani Somoni</displayName>
+				<displayName count="one">Tajikistani somoni</displayName>
+				<displayName count="other">Mga Tajikistani somoni</displayName>
+			</currency>
+			<currency type="TMT">
+				<displayName>Turkmenistani Manat</displayName>
+				<displayName count="one">Turkmenistani manat</displayName>
+				<displayName count="other">Turkmenistani manat</displayName>
+			</currency>
+			<currency type="TND">
+				<displayName>Tunisian Dinar</displayName>
+				<displayName count="one">Tunisian dinar</displayName>
+				<displayName count="other">Mga Tunisian dinar</displayName>
+			</currency>
+			<currency type="TOP">
+				<displayName>Tongan Paʻanga</displayName>
+				<displayName count="one">Tongan paʻanga</displayName>
+				<displayName count="other">Tongan paʻanga</displayName>
+			</currency>
+			<currency type="TRY">
+				<displayName>Turkish Lira</displayName>
+				<displayName count="one">Turkish lira</displayName>
+				<displayName count="other">Turkish Lira</displayName>
+			</currency>
+			<currency type="TTD">
+				<displayName>Trinidad &amp; Tobago Dollar</displayName>
+				<displayName count="one">Trinidad &amp; Tobago dollar</displayName>
+				<displayName count="other">Mga Trinidad &amp; Tobago dollar</displayName>
+			</currency>
+			<currency type="TWD">
+				<displayName>New Taiwan Dollar</displayName>
+				<displayName count="one">New Taiwan dollar</displayName>
+				<displayName count="other">Mga New Taiwan dollar</displayName>
+			</currency>
+			<currency type="TZS">
+				<displayName>Tanzanian Shilling</displayName>
+				<displayName count="one">Tanzanian shilling</displayName>
+				<displayName count="other">Mga Tanzanian shilling</displayName>
+			</currency>
+			<currency type="UAH">
+				<displayName>Ukrainian Hryvnia</displayName>
+				<displayName count="one">Ukrainian hryvnia</displayName>
+				<displayName count="other">Mga Ukrainian hryvnia</displayName>
+			</currency>
+			<currency type="UGX">
+				<displayName>Ugandan Shilling</displayName>
+				<displayName count="one">Ugandan shilling</displayName>
+				<displayName count="other">Mga Ugandan shilling</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>US Dollar</displayName>
+				<displayName count="one">US dollar</displayName>
+				<displayName count="other">Mga US dollar</displayName>
+				<symbol draft="contributed">US $</symbol>
+			</currency>
+			<currency type="UYU">
+				<displayName>Uruguayan Peso</displayName>
+				<displayName count="one">Uruguayan peso</displayName>
+				<displayName count="other">Mga Uruguayan peso</displayName>
+			</currency>
+			<currency type="UZS">
+				<displayName>Uzbekistani Som</displayName>
+				<displayName count="one">Uzbekistani som</displayName>
+				<displayName count="other">Uzbekistani som</displayName>
+			</currency>
+			<currency type="VES">
+				<displayName>Venezuelan Bolivar</displayName>
+				<displayName count="one">Venezuelan bolivar</displayName>
+				<displayName count="other">Mga Venezuelan bolivar</displayName>
+			</currency>
+			<currency type="VND">
+				<displayName>Vietnamese Dong</displayName>
+				<displayName count="one">Vietnamese dong</displayName>
+				<displayName count="other">Vietnamese dong</displayName>
+			</currency>
+			<currency type="VUV">
+				<displayName>Vanuatu Vatu</displayName>
+				<displayName count="one">Vanuatu vatu</displayName>
+				<displayName count="other">Mga Vanuatu vatu</displayName>
+			</currency>
+			<currency type="WST">
+				<displayName>Samoan Tala</displayName>
+				<displayName count="one">Samoan tala</displayName>
+				<displayName count="other">Samoan tala</displayName>
+			</currency>
+			<currency type="XAF">
+				<displayName>Central African CFA Franc</displayName>
+				<displayName count="one">Central African CFA franc</displayName>
+				<displayName count="other">Mga Central African CFA franc</displayName>
+			</currency>
+			<currency type="XCD">
+				<displayName>East Caribbean Dollar</displayName>
+				<displayName count="one">East Caribbean dollar</displayName>
+				<displayName count="other">Mga East Caribbean dollar</displayName>
+			</currency>
+			<currency type="XOF">
+				<displayName>West African CFA Franc</displayName>
+				<displayName count="one">West African CFA franc</displayName>
+				<displayName count="other">Mga West African CFA franc</displayName>
+			</currency>
+			<currency type="XPF">
+				<displayName>CFP Franc</displayName>
+				<displayName count="one">CFP franc</displayName>
+				<displayName count="other">Mga CFP franc</displayName>
+			</currency>
+			<currency type="XXX">
+				<displayName>Wala Nailhi nga Kwarta</displayName>
+				<displayName count="one">(wala mailhi nga yunit sa kwarta)</displayName>
+				<displayName count="other">(wala mailhi nga kwarta)</displayName>
+			</currency>
+			<currency type="YER">
+				<displayName>Yemeni Rial</displayName>
+				<displayName count="one">Yemeni rial</displayName>
+				<displayName count="other">Mga Yemeni rial</displayName>
+			</currency>
+			<currency type="ZAR">
+				<displayName>South African Rand</displayName>
+				<displayName count="one">South African rand</displayName>
+				<displayName count="other">South African rand</displayName>
+			</currency>
+			<currency type="ZMW">
+				<displayName>Zambian Kwacha</displayName>
+				<displayName count="one">Zambian kwacha</displayName>
+				<displayName count="other">Mga Zambian kwacha</displayName>
+			</currency>
+		</currencies>
+		<miscPatterns numberSystem="latn">
+			<pattern type="atLeast">{0}+</pattern>
+		</miscPatterns>
+		<minimalPairs>
+			<pluralMinimalPairs count="one" draft="contributed">{0} ka adlaw</pluralMinimalPairs>
+			<pluralMinimalPairs count="other" draft="contributed">{0} ka mga adlaw</pluralMinimalPairs>
+			<ordinalMinimalPairs ordinal="other">Adto sa ika-{0} nga tuo.</ordinalMinimalPairs>
+		</minimalPairs>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<compoundUnit type="10p-1">
+				<unitPrefixPattern>deci{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-2">
+				<unitPrefixPattern>centi{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-3">
+				<unitPrefixPattern>milli{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-6">
+				<unitPrefixPattern>micro{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-9">
+				<unitPrefixPattern>nano{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-12">
+				<unitPrefixPattern>pico{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-15">
+				<unitPrefixPattern>femto{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-18">
+				<unitPrefixPattern>atto{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-21">
+				<unitPrefixPattern>zepto{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-24">
+				<unitPrefixPattern>yocto{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p1">
+				<unitPrefixPattern>deka{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p2">
+				<unitPrefixPattern>hecto{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p3">
+				<unitPrefixPattern>kilo{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p6">
+				<unitPrefixPattern>mega{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p9">
+				<unitPrefixPattern>giga{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p12">
+				<unitPrefixPattern>tera{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p15">
+				<unitPrefixPattern>peta{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p18">
+				<unitPrefixPattern>exa{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p21">
+				<unitPrefixPattern>zetta{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p24">
+				<unitPrefixPattern>yotta{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p1">
+				<unitPrefixPattern>kibi{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p2">
+				<unitPrefixPattern>mebi{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p3">
+				<unitPrefixPattern>gibi{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p4">
+				<unitPrefixPattern>tebi{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p5">
+				<unitPrefixPattern>pebi{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p6">
+				<unitPrefixPattern>exbi{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p7">
+				<unitPrefixPattern>zebi{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p8">
+				<unitPrefixPattern>yobe{0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="per">
+				<compoundUnitPattern>{0} kada {1}</compoundUnitPattern>
+			</compoundUnit>
+			<compoundUnit type="power2">
+				<compoundUnitPattern1>square {0}</compoundUnitPattern1>
+				<compoundUnitPattern1 count="one">square {0}</compoundUnitPattern1>
+				<compoundUnitPattern1 count="other">square {0}</compoundUnitPattern1>
+			</compoundUnit>
+			<compoundUnit type="power3">
+				<compoundUnitPattern1>cubic {0}</compoundUnitPattern1>
+				<compoundUnitPattern1 count="one">cubic {0}</compoundUnitPattern1>
+				<compoundUnitPattern1 count="other">cubic {0}</compoundUnitPattern1>
+			</compoundUnit>
+			<unit type="acceleration-g-force">
+				<unitPattern count="one">{0} g-force</unitPattern>
+				<unitPattern count="other">{0} g-force</unitPattern>
+			</unit>
+			<unit type="acceleration-meter-per-square-second">
+				<displayName>mga metro kada segundo kwadrado</displayName>
+				<unitPattern count="one">{0} ka metro kada segundo kwadrado</unitPattern>
+				<unitPattern count="other">{0} ka mga metro kada segundo kwadrado</unitPattern>
+			</unit>
+			<unit type="angle-revolution">
+				<displayName>rebolusyon</displayName>
+				<unitPattern count="one">{0} ka rebolusyon</unitPattern>
+				<unitPattern count="other">{0} ka mga rebolusyon</unitPattern>
+			</unit>
+			<unit type="angle-radian">
+				<displayName>mga radian</displayName>
+				<unitPattern count="one">{0} ka radian</unitPattern>
+				<unitPattern count="other">{0} ka mga radian</unitPattern>
+			</unit>
+			<unit type="angle-degree">
+				<displayName>mga degree</displayName>
+				<unitPattern count="one">{0} ka degree</unitPattern>
+				<unitPattern count="other">{0} ka mga degree</unitPattern>
+			</unit>
+			<unit type="angle-arc-minute">
+				<displayName>mga arcminute</displayName>
+				<unitPattern count="one">{0} ka arcminute</unitPattern>
+				<unitPattern count="other">{0} ka mga arcminute</unitPattern>
+			</unit>
+			<unit type="angle-arc-second">
+				<displayName>mga arcsecond</displayName>
+				<unitPattern count="one">{0} ka arcsecond</unitPattern>
+				<unitPattern count="other">{0} ka mga arcsecond</unitPattern>
+			</unit>
+			<unit type="area-square-kilometer">
+				<displayName>mga square kilometer</displayName>
+				<unitPattern count="one">{0} ka kilometro kwadrado</unitPattern>
+				<unitPattern count="other">{0} ka mga kilometro kwadrado</unitPattern>
+				<perUnitPattern>{0} kada kilometro kwadrado</perUnitPattern>
+			</unit>
+			<unit type="area-hectare">
+				<displayName>mga ektarya</displayName>
+				<unitPattern count="one">{0} ka ektarya</unitPattern>
+				<unitPattern count="other">{0} ka mga ektarya</unitPattern>
+			</unit>
+			<unit type="area-square-meter">
+				<displayName>mga metro kwadrado</displayName>
+				<unitPattern count="one">{0} ka metro kwadrado</unitPattern>
+				<unitPattern count="other">{0} ka mga metro kwadrado</unitPattern>
+				<perUnitPattern>{0} kada metro kwadrado</perUnitPattern>
+			</unit>
+			<unit type="area-square-centimeter">
+				<displayName>mga centimetro kwadrado</displayName>
+				<unitPattern count="one">{0} ka sentimetro kwadrado</unitPattern>
+				<unitPattern count="other">{0} ka mga sentimetro kwadrado</unitPattern>
+				<perUnitPattern>{0} kada sentimetro kwadrado</perUnitPattern>
+			</unit>
+			<unit type="area-square-mile">
+				<displayName>mga milya kwadrado</displayName>
+				<unitPattern count="one">{0} ka milya kwadrado</unitPattern>
+				<unitPattern count="other">{0} ka mga milya kwadrado</unitPattern>
+				<perUnitPattern>{0} kada milya kwadrado</perUnitPattern>
+			</unit>
+			<unit type="area-acre">
+				<displayName>mga acre</displayName>
+				<unitPattern count="one">{0} ka acre</unitPattern>
+				<unitPattern count="other">{0} ka mga acre</unitPattern>
+			</unit>
+			<unit type="area-square-yard">
+				<displayName>mga square yard</displayName>
+				<unitPattern count="one">{0} ka square yard</unitPattern>
+				<unitPattern count="other">{0} ka mga square yard</unitPattern>
+			</unit>
+			<unit type="area-square-foot">
+				<displayName>mga square foot</displayName>
+				<unitPattern count="one">{0} ka square foot</unitPattern>
+				<unitPattern count="other">{0} ka mga square foot</unitPattern>
+			</unit>
+			<unit type="area-square-inch">
+				<displayName>mga square inch</displayName>
+				<unitPattern count="one">{0} ka mga square inch</unitPattern>
+				<unitPattern count="other">{0} ka square inch</unitPattern>
+				<perUnitPattern>{0} kada square inch</perUnitPattern>
+			</unit>
+			<unit type="area-dunam">
+				<displayName>mga dunam</displayName>
+				<unitPattern count="one">{0} ka dunam</unitPattern>
+				<unitPattern count="other">{0} ka mga dunam</unitPattern>
+			</unit>
+			<unit type="concentr-karat">
+				<displayName>mga karat</displayName>
+				<unitPattern count="one">{0} ka karat</unitPattern>
+				<unitPattern count="other">{0} ka mga karat</unitPattern>
+			</unit>
+			<unit type="concentr-milligram-ofglucose-per-deciliter">
+				<displayName>mga milligram kada deciliter</displayName>
+				<unitPattern count="one">{0} ka milligram kada deciliter</unitPattern>
+				<unitPattern count="other">{0} ka mga milligram kada deciliter</unitPattern>
+			</unit>
+			<unit type="concentr-millimole-per-liter">
+				<displayName>mga millimole kada litro</displayName>
+				<unitPattern count="one">{0} ka millimole kada litro</unitPattern>
+				<unitPattern count="other">{0} ka mga millimole kada litro</unitPattern>
+			</unit>
+			<unit type="concentr-permillion">
+				<displayName>mga part per million</displayName>
+				<unitPattern count="one">{0} ka part per million</unitPattern>
+				<unitPattern count="other">{0} ka mga part per million</unitPattern>
+			</unit>
+			<unit type="concentr-percent">
+				<displayName>porsyento</displayName>
+				<unitPattern count="one">{0} ka porsyento</unitPattern>
+				<unitPattern count="other">{0} ka porsyento</unitPattern>
+			</unit>
+			<unit type="concentr-permille">
+				<displayName>permille</displayName>
+				<unitPattern count="one">{0} ka permille</unitPattern>
+				<unitPattern count="other">{0} ka permille</unitPattern>
+			</unit>
+			<unit type="concentr-permyriad">
+				<displayName>permyriad</displayName>
+				<unitPattern count="one">{0} ka permyriad</unitPattern>
+				<unitPattern count="other">{0} ka permyriad</unitPattern>
+			</unit>
+			<unit type="concentr-mole">
+				<displayName>mga mole</displayName>
+				<unitPattern count="one">{0} ka mole</unitPattern>
+				<unitPattern count="other">{0} ka mga mole</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-kilometer">
+				<displayName>mga litro kada kilometro</displayName>
+				<unitPattern count="one">{0} litro kada kilometro</unitPattern>
+				<unitPattern count="other">{0} ka mga litro kada kilometro</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-100-kilometer">
+				<displayName>mga litro kada 100 kilometro</displayName>
+				<unitPattern count="one">{0} ka litro kada 100 kilometro</unitPattern>
+				<unitPattern count="other">{0} ka litro kada 100 kilometro</unitPattern>
+			</unit>
+			<unit type="consumption-mile-per-gallon">
+				<displayName>mga milya kada gallon</displayName>
+				<unitPattern count="one">{0} ka milya kada gallon</unitPattern>
+				<unitPattern count="other">{0} ka mga milya kada gallon</unitPattern>
+			</unit>
+			<unit type="consumption-mile-per-gallon-imperial">
+				<displayName>mga milya kada Imp. gallon</displayName>
+				<unitPattern count="one">{0} ka milya kada Imp. gallon</unitPattern>
+				<unitPattern count="other">{0} ka mga milya kada Imp. gallon</unitPattern>
+			</unit>
+			<unit type="digital-petabyte">
+				<displayName>mga petabyte</displayName>
+				<unitPattern count="one">{0} ka petabyte</unitPattern>
+				<unitPattern count="other">{0} ka mga petabyte</unitPattern>
+			</unit>
+			<unit type="digital-terabyte">
+				<displayName>mga terabyte</displayName>
+				<unitPattern count="one">{0} ka terabyte</unitPattern>
+				<unitPattern count="other">{0} ka mga terabyte</unitPattern>
+			</unit>
+			<unit type="digital-terabit">
+				<displayName>mga terabit</displayName>
+				<unitPattern count="one">{0} ka terabit</unitPattern>
+				<unitPattern count="other">{0} ka mga terabit</unitPattern>
+			</unit>
+			<unit type="digital-gigabyte">
+				<displayName>mga gigabyte</displayName>
+				<unitPattern count="one">{0} ka gigabyte</unitPattern>
+				<unitPattern count="other">{0} ka mga gigabyte</unitPattern>
+			</unit>
+			<unit type="digital-gigabit">
+				<displayName>mga gigabit</displayName>
+				<unitPattern count="one">{0} ka gigabit</unitPattern>
+				<unitPattern count="other">{0} ka mga gigabit</unitPattern>
+			</unit>
+			<unit type="digital-megabyte">
+				<displayName>mga megabyte</displayName>
+				<unitPattern count="one">{0} ka megabyte</unitPattern>
+				<unitPattern count="other">{0} ka mga megabyte</unitPattern>
+			</unit>
+			<unit type="digital-megabit">
+				<displayName>mga megabit</displayName>
+				<unitPattern count="one">{0} ka megabit</unitPattern>
+				<unitPattern count="other">{0} ka mga megabit</unitPattern>
+			</unit>
+			<unit type="digital-kilobyte">
+				<displayName>mga kilobyte</displayName>
+				<unitPattern count="one">{0} ka kilobyte</unitPattern>
+				<unitPattern count="other">{0} ka mga kilobyte</unitPattern>
+			</unit>
+			<unit type="digital-kilobit">
+				<displayName>mga kilobit</displayName>
+				<unitPattern count="one">{0} ka kilobit</unitPattern>
+				<unitPattern count="other">{0} ka mga kilobit</unitPattern>
+			</unit>
+			<unit type="digital-byte">
+				<displayName>mga byte</displayName>
+				<unitPattern count="one">{0} ka byte</unitPattern>
+				<unitPattern count="other">{0} ka mga byte</unitPattern>
+			</unit>
+			<unit type="digital-bit">
+				<displayName>mga bit</displayName>
+				<unitPattern count="one">{0} ka bit</unitPattern>
+				<unitPattern count="other">{0} ka mga bit</unitPattern>
+			</unit>
+			<unit type="duration-century">
+				<displayName>mga siglo</displayName>
+				<unitPattern count="one">{0} ka siglo</unitPattern>
+				<unitPattern count="other">{0} ka mga siglo</unitPattern>
+			</unit>
+			<unit type="duration-decade">
+				<displayName>mga dekada</displayName>
+				<unitPattern count="one">{0} ka dekada</unitPattern>
+				<unitPattern count="other">{0} ka mga dekada</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<displayName>mga tuig</displayName>
+				<unitPattern count="one">{0} ka tuig</unitPattern>
+				<unitPattern count="other">{0} ka mga tuig</unitPattern>
+				<perUnitPattern>{0} kada tuig</perUnitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>mga buwan</displayName>
+				<unitPattern count="one">{0} ka buwan</unitPattern>
+				<unitPattern count="other">{0} ka mga buwan</unitPattern>
+				<perUnitPattern>{0} kada buwan</perUnitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName>mga semana</displayName>
+				<unitPattern count="one">{0} ka semana</unitPattern>
+				<unitPattern count="other">{0} ka mga semana</unitPattern>
+				<perUnitPattern>{0} kada semana</perUnitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName>mga adlaw</displayName>
+				<unitPattern count="one">{0} ka adlaw</unitPattern>
+				<unitPattern count="other">{0} ka mga adlaw</unitPattern>
+				<perUnitPattern>{0} kada adlaw</perUnitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName>mga oras</displayName>
+				<unitPattern count="one">{0} ka oras</unitPattern>
+				<unitPattern count="other">{0} ka mga oras</unitPattern>
+				<perUnitPattern>{0} kada oras</perUnitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>mga minuto</displayName>
+				<unitPattern count="one">{0} ka minuto</unitPattern>
+				<unitPattern count="other">{0} ka mga minuto</unitPattern>
+				<perUnitPattern>{0} kada minuto</perUnitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName>mga segundo</displayName>
+				<unitPattern count="one">{0} ka segundo</unitPattern>
+				<unitPattern count="other">{0} ka mga segundo</unitPattern>
+				<perUnitPattern>{0} kada segundo</perUnitPattern>
+			</unit>
+			<unit type="duration-millisecond">
+				<displayName>mga millisecond</displayName>
+				<unitPattern count="one">{0} ka millisecond</unitPattern>
+				<unitPattern count="other">{0} ka mga millisecond</unitPattern>
+			</unit>
+			<unit type="duration-microsecond">
+				<displayName>mga microsecond</displayName>
+				<unitPattern count="one">{0} ka microsecond</unitPattern>
+				<unitPattern count="other">{0} ka mga microsecond</unitPattern>
+			</unit>
+			<unit type="duration-nanosecond">
+				<displayName>mga nanosecond</displayName>
+				<unitPattern count="one">{0} ka nanosecond</unitPattern>
+				<unitPattern count="other">{0} ka mga nanosecond</unitPattern>
+			</unit>
+			<unit type="electric-ampere">
+				<displayName>mga ampere</displayName>
+				<unitPattern count="one">{0} ka ampere</unitPattern>
+				<unitPattern count="other">{0} ka mga ampere</unitPattern>
+			</unit>
+			<unit type="electric-milliampere">
+				<displayName>mga milliampere</displayName>
+				<unitPattern count="one">{0} milliampere</unitPattern>
+				<unitPattern count="other">{0} ka mga milliampere</unitPattern>
+			</unit>
+			<unit type="electric-ohm">
+				<displayName>mga ohm</displayName>
+				<unitPattern count="one">{0} ka ohm</unitPattern>
+				<unitPattern count="other">{0} ka mga ohm</unitPattern>
+			</unit>
+			<unit type="electric-volt">
+				<displayName>mga boltahe</displayName>
+				<unitPattern count="one">{0} ka boltahe</unitPattern>
+				<unitPattern count="other">{0} ka mga boltahe</unitPattern>
+			</unit>
+			<unit type="energy-kilocalorie">
+				<displayName>mga kilocalorie</displayName>
+				<unitPattern count="one">{0} ka kilocalorie</unitPattern>
+				<unitPattern count="other">{0} ka mga kilocalorie</unitPattern>
+			</unit>
+			<unit type="energy-calorie">
+				<displayName>mga calorie</displayName>
+				<unitPattern count="one">{0} ka calorie</unitPattern>
+				<unitPattern count="other">{0} ka mga calorie</unitPattern>
+			</unit>
+			<unit type="energy-foodcalorie">
+				<displayName>mga Calorie</displayName>
+				<unitPattern count="one">{0} ka Calorie</unitPattern>
+				<unitPattern count="other">{0} ka mga Calorie</unitPattern>
+			</unit>
+			<unit type="energy-kilojoule">
+				<displayName>mga kilojoule</displayName>
+				<unitPattern count="one">{0} ka kilojoule</unitPattern>
+				<unitPattern count="other">{0} ka mga kilojoule</unitPattern>
+			</unit>
+			<unit type="energy-joule">
+				<displayName>mga joule</displayName>
+				<unitPattern count="one">{0} ka joule</unitPattern>
+				<unitPattern count="other">{0} ka mga joule</unitPattern>
+			</unit>
+			<unit type="energy-kilowatt-hour">
+				<displayName>mga kilowatt-hour</displayName>
+				<unitPattern count="one">{0} ka kilowatt hour</unitPattern>
+				<unitPattern count="other">{0} ka mga kilowatt-hour</unitPattern>
+			</unit>
+			<unit type="energy-electronvolt">
+				<displayName>mga electronvolt</displayName>
+				<unitPattern count="one">{0} ka electronvolt</unitPattern>
+				<unitPattern count="other">{0} ka mga electronvolt</unitPattern>
+			</unit>
+			<unit type="energy-british-thermal-unit">
+				<displayName>Mga British thermal unit</displayName>
+				<unitPattern count="one">{0} ka British thermal unit</unitPattern>
+				<unitPattern count="other">{0} ka mga British thermal unit</unitPattern>
+			</unit>
+			<unit type="energy-therm-us">
+				<displayName>Mga US therm</displayName>
+				<unitPattern count="one">{0} ka US therm</unitPattern>
+				<unitPattern count="other">{0} ka mga US therm</unitPattern>
+			</unit>
+			<unit type="force-pound-force">
+				<displayName>mga pound sa puwersa</displayName>
+				<unitPattern count="one">{0} ka pound sa puwersa</unitPattern>
+				<unitPattern count="other">{0} ka mga pound sa puwersa</unitPattern>
+			</unit>
+			<unit type="force-newton">
+				<displayName>mga newton</displayName>
+				<unitPattern count="one">{0} ka newton</unitPattern>
+				<unitPattern count="other">{0} ka mga newton</unitPattern>
+			</unit>
+			<unit type="frequency-gigahertz">
+				<displayName>gigahertz</displayName>
+				<unitPattern count="one">{0} gigahertz</unitPattern>
+				<unitPattern count="other">{0} gigahertz</unitPattern>
+			</unit>
+			<unit type="frequency-megahertz">
+				<displayName>megahertz</displayName>
+				<unitPattern count="one">{0} megahertz</unitPattern>
+				<unitPattern count="other">{0} megahertz</unitPattern>
+			</unit>
+			<unit type="frequency-kilohertz">
+				<displayName>kilohertz</displayName>
+				<unitPattern count="one">{0} kilohertz</unitPattern>
+				<unitPattern count="other">{0} kilohertz</unitPattern>
+			</unit>
+			<unit type="frequency-hertz">
+				<displayName>hertz</displayName>
+				<unitPattern count="one">{0} hertz</unitPattern>
+				<unitPattern count="other">{0} hertz</unitPattern>
+			</unit>
+			<unit type="graphics-em">
+				<displayName>typographic em</displayName>
+				<unitPattern count="one">{0} ka em</unitPattern>
+				<unitPattern count="other">{0} ka mga em</unitPattern>
+			</unit>
+			<unit type="graphics-pixel">
+				<displayName>mga pixel</displayName>
+				<unitPattern count="one">{0} ka pixel</unitPattern>
+				<unitPattern count="other">{0} ka mga pixel</unitPattern>
+			</unit>
+			<unit type="graphics-megapixel">
+				<displayName>mga megapixel</displayName>
+				<unitPattern count="one">{0} ka megapixel</unitPattern>
+				<unitPattern count="other">{0} ka mga megapixel</unitPattern>
+			</unit>
+			<unit type="graphics-pixel-per-centimeter">
+				<displayName>mga pixel kada sentimetro</displayName>
+				<unitPattern count="one">{0} ka pixel kada sentimetro</unitPattern>
+				<unitPattern count="other">{0} ka mga pixel kada sentimetro</unitPattern>
+			</unit>
+			<unit type="graphics-pixel-per-inch">
+				<displayName>mga pixel kada pulgada</displayName>
+				<unitPattern count="one">{0} ka pixel kada pulgada</unitPattern>
+				<unitPattern count="other">{0} ka mga pixel kada pulgada</unitPattern>
+			</unit>
+			<unit type="graphics-dot-per-centimeter">
+				<displayName>mga dot kada sentimetro</displayName>
+				<unitPattern count="one">{0} ka dot kada sentimetro</unitPattern>
+				<unitPattern count="other">{0} ka mga dot kada sentimetro</unitPattern>
+			</unit>
+			<unit type="graphics-dot-per-inch">
+				<displayName>mga dot kada pulgada</displayName>
+				<unitPattern count="one">{0} ka dot kada pulgada</unitPattern>
+				<unitPattern count="other">{0} ka mga dot kada pulgada</unitPattern>
+			</unit>
+			<unit type="graphics-dot">
+				<unitPattern count="one">{0} dot</unitPattern>
+				<unitPattern count="other">{0} px</unitPattern>
+			</unit>
+			<unit type="length-earth-radius">
+				<displayName>radyus sa yuta</displayName>
+				<unitPattern count="one">{0} ka radyus sa yuta</unitPattern>
+				<unitPattern count="other">{0} ka radyus sa yuta</unitPattern>
+			</unit>
+			<unit type="length-kilometer">
+				<displayName>mga kilometro</displayName>
+				<unitPattern count="one">{0} ka kilometro</unitPattern>
+				<unitPattern count="other">{0} ka mga kilometro</unitPattern>
+				<perUnitPattern>{0} kada kilometro</perUnitPattern>
+			</unit>
+			<unit type="length-meter">
+				<displayName>mga metro</displayName>
+				<unitPattern count="one">{0} ka metro</unitPattern>
+				<unitPattern count="other">{0} ka mga metro</unitPattern>
+				<perUnitPattern>{0} kada metro</perUnitPattern>
+			</unit>
+			<unit type="length-decimeter">
+				<displayName>mga decimeter</displayName>
+				<unitPattern count="one">{0} ka decimeter</unitPattern>
+				<unitPattern count="other">{0} ka mga decimeter</unitPattern>
+			</unit>
+			<unit type="length-centimeter">
+				<displayName>mga sentimetro</displayName>
+				<unitPattern count="one">{0} ka sentimetro</unitPattern>
+				<unitPattern count="other">{0} ka mga sentimetro</unitPattern>
+				<perUnitPattern>{0} kada sentimetro</perUnitPattern>
+			</unit>
+			<unit type="length-millimeter">
+				<displayName>mga millimetro</displayName>
+				<unitPattern count="one">{0} ka millimetro</unitPattern>
+				<unitPattern count="other">{0} ka millimetro</unitPattern>
+			</unit>
+			<unit type="length-micrometer">
+				<displayName>mga micrometer</displayName>
+				<unitPattern count="one">{0} ka micrometer</unitPattern>
+				<unitPattern count="other">{0} ka mga micrometer</unitPattern>
+			</unit>
+			<unit type="length-nanometer">
+				<displayName>mga nanometer</displayName>
+				<unitPattern count="one">{0} ka nanometer</unitPattern>
+				<unitPattern count="other">{0} ka mga nanometer</unitPattern>
+			</unit>
+			<unit type="length-picometer">
+				<displayName>mga picometer</displayName>
+				<unitPattern count="one">{0} ka picometer</unitPattern>
+				<unitPattern count="other">{0} ka mga picometer</unitPattern>
+			</unit>
+			<unit type="length-mile">
+				<displayName>mga milya</displayName>
+				<unitPattern count="one">{0} ka milya</unitPattern>
+				<unitPattern count="other">{0} ka mga milya</unitPattern>
+			</unit>
+			<unit type="length-yard">
+				<displayName>mga yarda</displayName>
+				<unitPattern count="one">{0} ka yarda</unitPattern>
+				<unitPattern count="other">{0} ka mga yarda</unitPattern>
+			</unit>
+			<unit type="length-foot">
+				<displayName>mga piye</displayName>
+				<unitPattern count="one">{0} ka piye</unitPattern>
+				<unitPattern count="other">{0} ka mga piye</unitPattern>
+				<perUnitPattern>{0} kada piye</perUnitPattern>
+			</unit>
+			<unit type="length-inch">
+				<displayName>mga pulgada</displayName>
+				<unitPattern count="one">{0} ka pulgada</unitPattern>
+				<unitPattern count="other">{0} ka pulgada</unitPattern>
+				<perUnitPattern>{0} kada pulgada</perUnitPattern>
+			</unit>
+			<unit type="length-parsec">
+				<displayName>mga parsec</displayName>
+				<unitPattern count="one">{0} ka parsec</unitPattern>
+				<unitPattern count="other">{0} ka mga parsec</unitPattern>
+			</unit>
+			<unit type="length-light-year">
+				<displayName>mga light year</displayName>
+				<unitPattern count="one">{0} ka light year</unitPattern>
+				<unitPattern count="other">{0} ka mga light year</unitPattern>
+			</unit>
+			<unit type="length-astronomical-unit">
+				<displayName>mga astronomical unit</displayName>
+				<unitPattern count="one">{0} ka astronomical unit</unitPattern>
+				<unitPattern count="other">{0} ka mga astronomical unit</unitPattern>
+			</unit>
+			<unit type="length-nautical-mile">
+				<displayName>mga nautical mile</displayName>
+				<unitPattern count="one">{0} ka nautical mile</unitPattern>
+				<unitPattern count="other">{0} ka mga nautical mile</unitPattern>
+			</unit>
+			<unit type="length-mile-scandinavian">
+				<displayName>mile-scandinavian</displayName>
+				<unitPattern count="one">{0} ka mile-scandinavian</unitPattern>
+				<unitPattern count="other">{0} ka mile-scandinavian</unitPattern>
+			</unit>
+			<unit type="length-point">
+				<displayName>mga point</displayName>
+				<unitPattern count="one">{0} ka point</unitPattern>
+				<unitPattern count="other">{0} ka mga point</unitPattern>
+			</unit>
+			<unit type="length-solar-radius">
+				<displayName>mga solar radius</displayName>
+				<unitPattern count="one">{0} ka solar radius</unitPattern>
+				<unitPattern count="other">{0} ka mga solar radius</unitPattern>
+			</unit>
+			<unit type="light-lux">
+				<displayName>lux</displayName>
+				<unitPattern count="one">{0} lux</unitPattern>
+				<unitPattern count="other">{0} lux</unitPattern>
+			</unit>
+			<unit type="light-candela">
+				<displayName>candela</displayName>
+				<unitPattern count="one">{0} ka candela</unitPattern>
+				<unitPattern count="other">{0} ka candela</unitPattern>
+			</unit>
+			<unit type="light-lumen">
+				<displayName>lumen</displayName>
+				<unitPattern count="one">{0} ka lumen</unitPattern>
+				<unitPattern count="other">{0} ka lumen</unitPattern>
+			</unit>
+			<unit type="light-solar-luminosity">
+				<displayName>mga solar luminosity</displayName>
+				<unitPattern count="one">{0} ka solar luminosity</unitPattern>
+				<unitPattern count="other">{0}ka mga solar luminosity</unitPattern>
+			</unit>
+			<unit type="mass-metric-ton">
+				<displayName>mga metrikong tonelada</displayName>
+				<unitPattern count="one">{0} ka metrikong tonelada</unitPattern>
+				<unitPattern count="other">{0} ka mga metrikong tonelada</unitPattern>
+			</unit>
+			<unit type="mass-kilogram">
+				<displayName>mga kilogramo</displayName>
+				<unitPattern count="one">{0} ka kilogramo</unitPattern>
+				<unitPattern count="other">{0} ka mga kilogramo</unitPattern>
+				<perUnitPattern>{0} kada kilogramo</perUnitPattern>
+			</unit>
+			<unit type="mass-gram">
+				<displayName>mga gramo</displayName>
+				<unitPattern count="one">{0} ka gramo</unitPattern>
+				<unitPattern count="other">{0} ka mga gramo</unitPattern>
+				<perUnitPattern>{0} kada gramo</perUnitPattern>
+			</unit>
+			<unit type="mass-milligram">
+				<displayName>mga milligram</displayName>
+				<unitPattern count="one">{0} ka milligram</unitPattern>
+				<unitPattern count="other">{0} ka mga milligram</unitPattern>
+			</unit>
+			<unit type="mass-microgram">
+				<displayName>mga microgram</displayName>
+				<unitPattern count="one">{0} ka microgram</unitPattern>
+				<unitPattern count="other">{0} ka mga microgram</unitPattern>
+			</unit>
+			<unit type="mass-ton">
+				<displayName>mga tonelada</displayName>
+				<unitPattern count="one">{0} ka tonelada</unitPattern>
+				<unitPattern count="other">{0} ka mga tonelada</unitPattern>
+			</unit>
+			<unit type="mass-pound">
+				<displayName>mga pound</displayName>
+				<unitPattern count="one">{0} ka pound</unitPattern>
+				<unitPattern count="other">{0} ka mga pound</unitPattern>
+				<perUnitPattern>{0} kada pound</perUnitPattern>
+			</unit>
+			<unit type="mass-ounce">
+				<displayName>mga ounce</displayName>
+				<unitPattern count="one">{0} ka ounce</unitPattern>
+				<unitPattern count="other">{0} ka mga ounce</unitPattern>
+				<perUnitPattern>{0} kada ounce</perUnitPattern>
+			</unit>
+			<unit type="mass-ounce-troy">
+				<displayName>mga troy ounce</displayName>
+				<unitPattern count="one">{0} ka troy ounce</unitPattern>
+				<unitPattern count="other">{0} ka mga troy ounce</unitPattern>
+			</unit>
+			<unit type="mass-carat">
+				<displayName>mga carat</displayName>
+				<unitPattern count="one">{0} ka carat</unitPattern>
+				<unitPattern count="other">{0} ka mga carat</unitPattern>
+			</unit>
+			<unit type="mass-dalton">
+				<displayName>mga dalton</displayName>
+				<unitPattern count="one">{0} ka dalton</unitPattern>
+				<unitPattern count="other">{0} ka mga dalton</unitPattern>
+			</unit>
+			<unit type="mass-earth-mass">
+				<displayName>mga mass sa Earth</displayName>
+				<unitPattern count="one">{0} ka mass sa Earth</unitPattern>
+				<unitPattern count="other">{0} ka mga mass sa Earth</unitPattern>
+			</unit>
+			<unit type="mass-solar-mass">
+				<displayName>mga solar mass</displayName>
+				<unitPattern count="one">{0} ka solar mass</unitPattern>
+				<unitPattern count="other">{0} ka mga solar mass</unitPattern>
+			</unit>
+			<unit type="mass-grain">
+				<unitPattern count="one">{0} ka grain</unitPattern>
+				<unitPattern count="other">{0} ka grain</unitPattern>
+			</unit>
+			<unit type="power-gigawatt">
+				<displayName>mga gigawatt</displayName>
+				<unitPattern count="one">{0} ka gigawatt</unitPattern>
+				<unitPattern count="other">{0} ka mga gigawatt</unitPattern>
+			</unit>
+			<unit type="power-megawatt">
+				<displayName>mga megawatt</displayName>
+				<unitPattern count="one">{0} ka megawatt</unitPattern>
+				<unitPattern count="other">{0} ka mga megawatt</unitPattern>
+			</unit>
+			<unit type="power-kilowatt">
+				<displayName>mga kilowatt</displayName>
+				<unitPattern count="one">{0} ka kilowatt</unitPattern>
+				<unitPattern count="other">{0} ka mga kilowatt</unitPattern>
+			</unit>
+			<unit type="power-watt">
+				<displayName>mga watt</displayName>
+				<unitPattern count="one">{0} ka watt</unitPattern>
+				<unitPattern count="other">{0} ka mga watt</unitPattern>
+			</unit>
+			<unit type="power-milliwatt">
+				<displayName>mga milliwatt</displayName>
+				<unitPattern count="one">{0} ka milliwatt</unitPattern>
+				<unitPattern count="other">{0} ka mga milliwatt</unitPattern>
+			</unit>
+			<unit type="power-horsepower">
+				<displayName>horsepower</displayName>
+				<unitPattern count="one">{0} ka horsepower</unitPattern>
+				<unitPattern count="other">{0} ka horsepower</unitPattern>
+			</unit>
+			<unit type="pressure-millimeter-ofhg">
+				<displayName>mga millimetro sa mercury</displayName>
+				<unitPattern count="one">{0} ka millimetro sa mercury</unitPattern>
+				<unitPattern count="other">{0} ka mga millimetro sa mercury</unitPattern>
+			</unit>
+			<unit type="pressure-pound-force-per-square-inch">
+				<displayName>mga pound kada kuwadradong pulgada</displayName>
+				<unitPattern count="one">{0} ka pound kada kuwadradong pulgada</unitPattern>
+				<unitPattern count="other">{0} ka mga pound kada kuwadradong pulgada</unitPattern>
+			</unit>
+			<unit type="pressure-inch-ofhg">
+				<displayName>mga inch sa mercury</displayName>
+				<unitPattern count="one">{0} ka inch sa mercury</unitPattern>
+				<unitPattern count="other">{0} ka mga pulgada sa mercury</unitPattern>
+			</unit>
+			<unit type="pressure-bar">
+				<displayName>mga bar</displayName>
+				<unitPattern count="one">{0} ka bar</unitPattern>
+				<unitPattern count="other">{0} ka mga bar</unitPattern>
+			</unit>
+			<unit type="pressure-millibar">
+				<displayName>mga millibar</displayName>
+				<unitPattern count="one">{0} ka millibar</unitPattern>
+				<unitPattern count="other">{0} ka mga millibar</unitPattern>
+			</unit>
+			<unit type="pressure-atmosphere">
+				<displayName>mga atmosphere</displayName>
+				<unitPattern count="one">{0} ka atmosphere</unitPattern>
+				<unitPattern count="other">{0} ka mga atmosphere</unitPattern>
+			</unit>
+			<unit type="pressure-pascal">
+				<displayName>mga pascal</displayName>
+				<unitPattern count="one">{0} ka pascal</unitPattern>
+				<unitPattern count="other">{0} ka mga pascal</unitPattern>
+			</unit>
+			<unit type="pressure-hectopascal">
+				<displayName>mga hectopascal</displayName>
+				<unitPattern count="one">{0} ka hectopascal</unitPattern>
+				<unitPattern count="other">{0} ka mga hectopascal</unitPattern>
+			</unit>
+			<unit type="pressure-kilopascal">
+				<displayName>mga kilopascal</displayName>
+				<unitPattern count="one">{0} ka kilopascal</unitPattern>
+				<unitPattern count="other">{0} ka mga kilopascal</unitPattern>
+			</unit>
+			<unit type="pressure-megapascal">
+				<displayName>mga megapascal</displayName>
+				<unitPattern count="one">{0} ka megapascal</unitPattern>
+				<unitPattern count="other">{0} ka mga megapascal</unitPattern>
+			</unit>
+			<unit type="speed-kilometer-per-hour">
+				<displayName>mga kilometro kada oras</displayName>
+				<unitPattern count="one">{0} ka kilometro kada oras</unitPattern>
+				<unitPattern count="other">{0} ka mga kilometro kada oras</unitPattern>
+			</unit>
+			<unit type="speed-meter-per-second">
+				<displayName>mga metro kada segundo</displayName>
+				<unitPattern count="one">{0} ka metro kada segundo</unitPattern>
+				<unitPattern count="other">{0} ka mga metro kada segundo</unitPattern>
+			</unit>
+			<unit type="speed-mile-per-hour">
+				<displayName>mga milya kada oras</displayName>
+				<unitPattern count="one">{0} ka milya kada oras</unitPattern>
+				<unitPattern count="other">{0} ka mga milya kada oras</unitPattern>
+			</unit>
+			<unit type="speed-knot">
+				<displayName>mga knot</displayName>
+				<unitPattern count="one">{0} ka knot</unitPattern>
+				<unitPattern count="other">{0} ka mga knot</unitPattern>
+			</unit>
+			<unit type="temperature-celsius">
+				<displayName>mga degree Celsius</displayName>
+				<unitPattern count="one">{0} ka degree Celsius</unitPattern>
+				<unitPattern count="other">{0} degree Celsius</unitPattern>
+			</unit>
+			<unit type="temperature-fahrenheit">
+				<displayName>mga degree Fahrenheit</displayName>
+				<unitPattern count="one">{0} degree Fahrenheit</unitPattern>
+				<unitPattern count="other">{0} degree Fahrenheit</unitPattern>
+			</unit>
+			<unit type="temperature-kelvin">
+				<displayName>mga kelvin</displayName>
+				<unitPattern count="one">{0} ka kelvin</unitPattern>
+				<unitPattern count="other">{0} ka mga kelvin</unitPattern>
+			</unit>
+			<unit type="torque-pound-force-foot">
+				<displayName>pound-feet</displayName>
+				<unitPattern count="one">{0} ka pound-force-foot</unitPattern>
+				<unitPattern count="other">{0} ka mga pound-force-foot</unitPattern>
+			</unit>
+			<unit type="torque-newton-meter">
+				<displayName>mga newton-meter</displayName>
+				<unitPattern count="one">{0} N⋅m</unitPattern>
+				<unitPattern count="other">{0} ka mga newton-meter</unitPattern>
+			</unit>
+			<unit type="volume-cubic-kilometer">
+				<displayName>mga cubic kilometer</displayName>
+				<unitPattern count="one">{0} ka cubic kilometer</unitPattern>
+				<unitPattern count="other">{0} ka mga cubic kilometer</unitPattern>
+			</unit>
+			<unit type="volume-cubic-meter">
+				<displayName>mga cubic meter</displayName>
+				<unitPattern count="one">{0} ka cubic meter</unitPattern>
+				<unitPattern count="other">{0} ka mga cubic meter</unitPattern>
+				<perUnitPattern>{0} kada cubic meter</perUnitPattern>
+			</unit>
+			<unit type="volume-cubic-centimeter">
+				<displayName>mga cubic centimeter</displayName>
+				<unitPattern count="one">{0} ka cubic centimeter</unitPattern>
+				<unitPattern count="other">{0} ka mga cubic centimeter</unitPattern>
+				<perUnitPattern>{0} kada cubic centimeter</perUnitPattern>
+			</unit>
+			<unit type="volume-cubic-mile">
+				<displayName>mga cubic mile</displayName>
+				<unitPattern count="one">{0} ka cubic mile</unitPattern>
+				<unitPattern count="other">{0} ka mga cubic mile</unitPattern>
+			</unit>
+			<unit type="volume-cubic-yard">
+				<displayName>mga cubic yard</displayName>
+				<unitPattern count="one">{0} ka cubic yard</unitPattern>
+				<unitPattern count="other">{0} ka mga cubic yard</unitPattern>
+			</unit>
+			<unit type="volume-cubic-foot">
+				<displayName>mga cubic foot</displayName>
+				<unitPattern count="one">{0} ka cubic foot</unitPattern>
+				<unitPattern count="other">{0} ka mga cubic foot</unitPattern>
+			</unit>
+			<unit type="volume-cubic-inch">
+				<displayName>mga cubic inch</displayName>
+				<unitPattern count="one">{0} ka cubic inch</unitPattern>
+				<unitPattern count="other">{0} ka mga cubic inch</unitPattern>
+			</unit>
+			<unit type="volume-megaliter">
+				<displayName>mga megaliter</displayName>
+				<unitPattern count="one">{0} ka megaliter</unitPattern>
+				<unitPattern count="other">{0} ka mga megaliter</unitPattern>
+			</unit>
+			<unit type="volume-hectoliter">
+				<displayName>mga hectoliter</displayName>
+				<unitPattern count="one">{0} ka hectoliter</unitPattern>
+				<unitPattern count="other">{0} ka mga hectoliter</unitPattern>
+			</unit>
+			<unit type="volume-liter">
+				<displayName>mga litro</displayName>
+				<unitPattern count="one">{0} ka litro</unitPattern>
+				<unitPattern count="other">{0} ka mga litro</unitPattern>
+				<perUnitPattern>{0} kada litro</perUnitPattern>
+			</unit>
+			<unit type="volume-deciliter">
+				<displayName>mga deciliter</displayName>
+				<unitPattern count="one">{0} ka deciliter</unitPattern>
+				<unitPattern count="other">{0} ka mga deciliter</unitPattern>
+			</unit>
+			<unit type="volume-centiliter">
+				<displayName>mga centiliter</displayName>
+				<unitPattern count="one">{0} ka centiliter</unitPattern>
+				<unitPattern count="other">{0} ka mga centiliter</unitPattern>
+			</unit>
+			<unit type="volume-milliliter">
+				<displayName>mga milliliter</displayName>
+				<unitPattern count="one">{0} ka milliliter</unitPattern>
+				<unitPattern count="other">{0} ka mga milliliter</unitPattern>
+			</unit>
+			<unit type="volume-pint-metric">
+				<displayName>mga metric pint</displayName>
+				<unitPattern count="one">{0} ka metric pint</unitPattern>
+				<unitPattern count="other">{0} ka mga metric pint</unitPattern>
+			</unit>
+			<unit type="volume-cup-metric">
+				<displayName>mga metric cup</displayName>
+				<unitPattern count="one">{0} ka metric cup</unitPattern>
+				<unitPattern count="other">{0} ka metric cup</unitPattern>
+			</unit>
+			<unit type="volume-acre-foot">
+				<displayName>mga acre-foot</displayName>
+				<unitPattern count="one">{0} ka acre-foot</unitPattern>
+				<unitPattern count="other">{0} ka mga acre-foot</unitPattern>
+			</unit>
+			<unit type="volume-gallon">
+				<displayName>mga gallon</displayName>
+				<unitPattern count="one">{0} ka gallon</unitPattern>
+				<unitPattern count="other">{0} ka mga gallon</unitPattern>
+				<perUnitPattern>{0} kada gallon</perUnitPattern>
+			</unit>
+			<unit type="volume-gallon-imperial">
+				<displayName>mga Imp. gallon</displayName>
+				<unitPattern count="one">{0} ka Imp. gallon</unitPattern>
+				<unitPattern count="other">{0} ka mga Imp. gallon</unitPattern>
+				<perUnitPattern>{0} kada Imp. gallon</perUnitPattern>
+			</unit>
+			<unit type="volume-quart">
+				<displayName>mga quart</displayName>
+				<unitPattern count="one">{0} ka quart</unitPattern>
+				<unitPattern count="other">{0} ka mga quart</unitPattern>
+			</unit>
+			<unit type="volume-pint">
+				<displayName>mga pint</displayName>
+				<unitPattern count="one">{0} ka pint</unitPattern>
+				<unitPattern count="other">{0} ka mga pint</unitPattern>
+			</unit>
+			<unit type="volume-cup">
+				<displayName>mga tasa</displayName>
+				<unitPattern count="one">{0} ka tasa</unitPattern>
+				<unitPattern count="other">{0} ka mga tasa</unitPattern>
+			</unit>
+			<unit type="volume-fluid-ounce">
+				<displayName>mga fluid ounce</displayName>
+				<unitPattern count="one">{0} ka fluid ounce</unitPattern>
+				<unitPattern count="other">{0} ka mga fluid ounce</unitPattern>
+			</unit>
+			<unit type="volume-fluid-ounce-imperial">
+				<displayName>mga Imp. fluid ounce</displayName>
+				<unitPattern count="one">{0} ka Imp. fluid ounce</unitPattern>
+				<unitPattern count="other">{0} ka mga Imp. fluid ounce</unitPattern>
+			</unit>
+			<unit type="volume-tablespoon">
+				<displayName>mga kutsara</displayName>
+				<unitPattern count="one">{0} ka kutsara</unitPattern>
+				<unitPattern count="other">{0} ka kutsara</unitPattern>
+			</unit>
+			<unit type="volume-teaspoon">
+				<displayName>mga kutsarita</displayName>
+				<unitPattern count="one">{0} ka kutsarita</unitPattern>
+				<unitPattern count="other">{0} ka mga kutsarita</unitPattern>
+			</unit>
+			<unit type="volume-barrel">
+				<displayName>mga barrel</displayName>
+				<unitPattern count="one">{0} ka barrel</unitPattern>
+				<unitPattern count="other">{0} ka mga barrel</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon">
+				<displayName>kutsarang panghinam-is</displayName>
+				<unitPattern count="one">{0} ka kutsarang panghinam-is</unitPattern>
+				<unitPattern count="other">{0} ka kutsarang panghinam-is</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon-imperial">
+				<displayName>Imp. nga kutsarang panghinam-is</displayName>
+				<unitPattern count="one">{0} ka Imp. nga kutsarang panghinam-is</unitPattern>
+				<unitPattern count="other">{0} ka Imp. nga kutsarang panghinam-is</unitPattern>
+			</unit>
+			<unit type="volume-drop">
+				<unitPattern count="one">{0} ka drop</unitPattern>
+				<unitPattern count="other">{0} ka drop</unitPattern>
+			</unit>
+			<unit type="volume-dram">
+				<displayName>dram</displayName>
+				<unitPattern count="one">{0} ka dram</unitPattern>
+				<unitPattern count="other">{0} ka dram</unitPattern>
+			</unit>
+			<unit type="volume-jigger">
+				<unitPattern count="one">{0} ka jigger</unitPattern>
+				<unitPattern count="other">{0} ka jigger</unitPattern>
+			</unit>
+			<unit type="volume-pinch">
+				<unitPattern count="one">{0} ka pinch</unitPattern>
+				<unitPattern count="other">{0} ka pinch</unitPattern>
+			</unit>
+			<unit type="volume-quart-imperial">
+				<displayName>Imp. quart</displayName>
+				<unitPattern count="one">{0} ka Imp. quart</unitPattern>
+				<unitPattern count="other">{0} ka Imp. quart</unitPattern>
+			</unit>
+			<coordinateUnit>
+				<displayName>cardinal nga direksyon</displayName>
+				<coordinateUnitPattern type="east">{0} sidlakan</coordinateUnitPattern>
+				<coordinateUnitPattern type="north">{0} amihanan</coordinateUnitPattern>
+				<coordinateUnitPattern type="south">{0} habagatan</coordinateUnitPattern>
+				<coordinateUnitPattern type="west">{0} kasadpan</coordinateUnitPattern>
+			</coordinateUnit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="acceleration-meter-per-square-second">
+				<displayName>mga metro/sec²</displayName>
+			</unit>
+			<unit type="angle-radian">
+				<displayName>mga radian</displayName>
+			</unit>
+			<unit type="angle-degree">
+				<displayName>mga degree</displayName>
+				<unitPattern count="one">{0} deg</unitPattern>
+				<unitPattern count="other">{0} deg</unitPattern>
+			</unit>
+			<unit type="angle-arc-minute">
+				<displayName>mga arcmin</displayName>
+				<unitPattern count="one">{0} ka arcmin</unitPattern>
+				<unitPattern count="other">{0} ka mga arcmin</unitPattern>
+			</unit>
+			<unit type="angle-arc-second">
+				<displayName>mga arcsec</displayName>
+				<unitPattern count="one">{0} ka arcsec</unitPattern>
+				<unitPattern count="other">{0} ka mga arcsec</unitPattern>
+			</unit>
+			<unit type="area-hectare">
+				<displayName>mga ektarya</displayName>
+			</unit>
+			<unit type="area-square-meter">
+				<displayName>mga metro²</displayName>
+			</unit>
+			<unit type="area-square-mile">
+				<displayName>mga milya kwadrado</displayName>
+				<unitPattern count="one">{0} sq mi</unitPattern>
+				<unitPattern count="other">{0} sq mi</unitPattern>
+			</unit>
+			<unit type="area-acre">
+				<displayName>mga acre</displayName>
+			</unit>
+			<unit type="area-square-yard">
+				<displayName>mga yard²</displayName>
+			</unit>
+			<unit type="area-square-foot">
+				<displayName>mga sq foot</displayName>
+				<unitPattern count="one">{0} sq ft</unitPattern>
+				<unitPattern count="other">{0} sq ft</unitPattern>
+			</unit>
+			<unit type="area-square-inch">
+				<displayName>mga inch²</displayName>
+			</unit>
+			<unit type="area-dunam">
+				<displayName>mga dunam</displayName>
+				<unitPattern count="one">{0} ka dunam</unitPattern>
+				<unitPattern count="other">{0} ka dunam</unitPattern>
+			</unit>
+			<unit type="concentr-karat">
+				<displayName>mga karat</displayName>
+			</unit>
+			<unit type="concentr-milligram-ofglucose-per-deciliter">
+				<unitPattern count="one">{0} mg/dL</unitPattern>
+				<unitPattern count="other">{0} mg/dL</unitPattern>
+			</unit>
+			<unit type="concentr-millimole-per-liter">
+				<displayName>millimol/litro</displayName>
+			</unit>
+			<unit type="concentr-permillion">
+				<displayName>mga part/million</displayName>
+			</unit>
+			<unit type="concentr-percent">
+				<displayName>porsyento</displayName>
+			</unit>
+			<unit type="concentr-permille">
+				<displayName>permille</displayName>
+			</unit>
+			<unit type="concentr-permyriad">
+				<displayName>permyriad</displayName>
+			</unit>
+			<unit type="concentr-mole">
+				<displayName>mole</displayName>
+				<unitPattern count="one">{0} mol</unitPattern>
+				<unitPattern count="other">{0} mol</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-kilometer">
+				<displayName>mga litro/km</displayName>
+			</unit>
+			<unit type="consumption-liter-per-100-kilometer">
+				<displayName>L/100 km</displayName>
+				<unitPattern count="one">{0} L/100 km</unitPattern>
+				<unitPattern count="other">{0} L/100 km</unitPattern>
+			</unit>
+			<unit type="consumption-mile-per-gallon">
+				<displayName>mga milya/gal</displayName>
+				<unitPattern count="one">{0} mpg</unitPattern>
+				<unitPattern count="other">{0} mpg</unitPattern>
+			</unit>
+			<unit type="consumption-mile-per-gallon-imperial">
+				<displayName>mga milya/gal Imp.</displayName>
+				<unitPattern count="one">{0} mpg Imp.</unitPattern>
+				<unitPattern count="other">{0} mpg Imp.</unitPattern>
+			</unit>
+			<unit type="digital-petabyte">
+				<displayName>PByte</displayName>
+			</unit>
+			<unit type="digital-terabyte">
+				<displayName>TByte</displayName>
+			</unit>
+			<unit type="digital-terabit">
+				<displayName>Tbit</displayName>
+			</unit>
+			<unit type="digital-gigabyte">
+				<displayName>GByte</displayName>
+			</unit>
+			<unit type="digital-gigabit">
+				<displayName>Gbit</displayName>
+			</unit>
+			<unit type="digital-megabyte">
+				<displayName>MByte</displayName>
+			</unit>
+			<unit type="digital-megabit">
+				<displayName>Mbit</displayName>
+			</unit>
+			<unit type="digital-kilobyte">
+				<displayName>kByte</displayName>
+			</unit>
+			<unit type="digital-kilobit">
+				<displayName>kbit</displayName>
+			</unit>
+			<unit type="digital-byte">
+				<unitPattern count="one">{0} ka byte</unitPattern>
+				<unitPattern count="other">{0} ka byte</unitPattern>
+			</unit>
+			<unit type="digital-bit">
+				<unitPattern count="one">{0} ka bit</unitPattern>
+				<unitPattern count="other">{0} ka bit</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<displayName>mga tuig</displayName>
+				<unitPattern count="one">{0} ka tuig</unitPattern>
+				<unitPattern count="other">{0} ka tuig</unitPattern>
+				<perUnitPattern>{0}/tuig</perUnitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>mga buwan</displayName>
+				<unitPattern count="one">{0} ka buwan</unitPattern>
+				<unitPattern count="other">{0} ka buwan</unitPattern>
+				<perUnitPattern>{0}/buwan</perUnitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName>mga semana</displayName>
+				<unitPattern count="one">{0} ka semana</unitPattern>
+				<unitPattern count="other">{0} ka semana</unitPattern>
+				<perUnitPattern>{0}/semana</perUnitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName>mga adlaw</displayName>
+				<unitPattern count="one">{0} ka adlaw</unitPattern>
+				<unitPattern count="other">{0} ka adlaw</unitPattern>
+				<perUnitPattern>{0}/adlaw</perUnitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName>mga oras</displayName>
+				<unitPattern count="one">{0} ka oras</unitPattern>
+				<unitPattern count="other">{0} ka oras</unitPattern>
+				<perUnitPattern>{0}/oras</perUnitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>mga minuto</displayName>
+				<unitPattern count="one">{0} ka minuto</unitPattern>
+				<unitPattern count="other">{0} ka minuto</unitPattern>
+				<perUnitPattern>{0}/minuto</perUnitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName>mga segundo</displayName>
+				<unitPattern count="one">{0} ka segundo</unitPattern>
+				<unitPattern count="other">{0} ka segundo</unitPattern>
+				<perUnitPattern>{0}/segundo</perUnitPattern>
+			</unit>
+			<unit type="duration-millisecond">
+				<displayName>mga millisec</displayName>
+			</unit>
+			<unit type="duration-microsecond">
+				<displayName>μsecs</displayName>
+			</unit>
+			<unit type="duration-nanosecond">
+				<displayName>mga nanosec</displayName>
+			</unit>
+			<unit type="electric-ampere">
+				<displayName>mga amp</displayName>
+			</unit>
+			<unit type="electric-milliampere">
+				<displayName>mga milliamp</displayName>
+				<unitPattern count="one">{0} mA</unitPattern>
+				<unitPattern count="other">{0} mA</unitPattern>
+			</unit>
+			<unit type="electric-ohm">
+				<displayName>mga ohm</displayName>
+				<unitPattern count="one">{0} Ω</unitPattern>
+				<unitPattern count="other">{0} Ω</unitPattern>
+			</unit>
+			<unit type="electric-volt">
+				<displayName>mga boltahe</displayName>
+			</unit>
+			<unit type="energy-kilojoule">
+				<displayName>kilojoule</displayName>
+			</unit>
+			<unit type="energy-joule">
+				<displayName>mga joule</displayName>
+			</unit>
+			<unit type="energy-kilowatt-hour">
+				<displayName>kW-hour</displayName>
+			</unit>
+			<unit type="energy-electronvolt">
+				<displayName>electronvolt</displayName>
+			</unit>
+			<unit type="energy-british-thermal-unit">
+				<displayName>BTU</displayName>
+			</unit>
+			<unit type="energy-therm-us">
+				<unitPattern count="one">{0} ka US therm</unitPattern>
+				<unitPattern count="other">{0} ka mga US therm</unitPattern>
+			</unit>
+			<unit type="force-pound-force">
+				<displayName>pound-force</displayName>
+			</unit>
+			<unit type="force-newton">
+				<displayName>newton</displayName>
+			</unit>
+			<unit type="frequency-megahertz">
+				<displayName>MHz</displayName>
+			</unit>
+			<unit type="graphics-em">
+				<unitPattern count="one">{0} ka em</unitPattern>
+				<unitPattern count="other">{0} ka em</unitPattern>
+			</unit>
+			<unit type="graphics-pixel">
+				<displayName>mga pixel</displayName>
+			</unit>
+			<unit type="graphics-megapixel">
+				<displayName>mga megapixel</displayName>
+			</unit>
+			<unit type="length-meter">
+				<displayName>m</displayName>
+			</unit>
+			<unit type="length-micrometer">
+				<displayName>mga μmeter</displayName>
+			</unit>
+			<unit type="length-mile">
+				<displayName>mga milya</displayName>
+			</unit>
+			<unit type="length-yard">
+				<displayName>mga yarda</displayName>
+			</unit>
+			<unit type="length-foot">
+				<displayName>mga piye</displayName>
+			</unit>
+			<unit type="length-inch">
+				<displayName>mga pulgada</displayName>
+			</unit>
+			<unit type="length-parsec">
+				<displayName>mga parsec</displayName>
+			</unit>
+			<unit type="length-light-year">
+				<displayName>mga light yr</displayName>
+			</unit>
+			<unit type="length-point">
+				<displayName>mga point</displayName>
+			</unit>
+			<unit type="length-solar-radius">
+				<displayName>mga solar radius</displayName>
+			</unit>
+			<unit type="light-lux">
+				<displayName>lux</displayName>
+			</unit>
+			<unit type="light-solar-luminosity">
+				<displayName>mga solar luminosity</displayName>
+			</unit>
+			<unit type="mass-gram">
+				<displayName>mga gramo</displayName>
+			</unit>
+			<unit type="mass-ton">
+				<displayName>mga tonelada</displayName>
+			</unit>
+			<unit type="mass-pound">
+				<displayName>mga pound</displayName>
+			</unit>
+			<unit type="mass-ounce-troy">
+				<displayName>oz troy</displayName>
+			</unit>
+			<unit type="mass-carat">
+				<displayName>mga carat</displayName>
+			</unit>
+			<unit type="mass-dalton">
+				<displayName>mga dalton</displayName>
+			</unit>
+			<unit type="mass-earth-mass">
+				<displayName>mga mass sa Earth</displayName>
+			</unit>
+			<unit type="mass-solar-mass">
+				<displayName>mga solar mass</displayName>
+			</unit>
+			<unit type="power-watt">
+				<displayName>mga watt</displayName>
+			</unit>
+			<unit type="pressure-millimeter-ofhg">
+				<displayName>mmHg</displayName>
+				<unitPattern count="one">{0} mmHg</unitPattern>
+				<unitPattern count="other">{0} mmHg</unitPattern>
+			</unit>
+			<unit type="pressure-bar">
+				<unitPattern count="one">{0} ka bar</unitPattern>
+				<unitPattern count="other">{0} ka bar</unitPattern>
+			</unit>
+			<unit type="pressure-millibar">
+				<unitPattern count="one">{0} ka mbar</unitPattern>
+				<unitPattern count="other">{0} ka mbar</unitPattern>
+			</unit>
+			<unit type="speed-kilometer-per-hour">
+				<displayName>km/oras</displayName>
+			</unit>
+			<unit type="speed-meter-per-second">
+				<displayName>mga metro/seg</displayName>
+			</unit>
+			<unit type="speed-mile-per-hour">
+				<displayName>mga milya/oras</displayName>
+				<unitPattern count="one">{0} mph</unitPattern>
+				<unitPattern count="other">{0} mph</unitPattern>
+			</unit>
+			<unit type="temperature-celsius">
+				<displayName>deg. C</displayName>
+			</unit>
+			<unit type="temperature-fahrenheit">
+				<displayName>deg. F</displayName>
+			</unit>
+			<unit type="volume-cubic-yard">
+				<displayName>mga yard³</displayName>
+			</unit>
+			<unit type="volume-cubic-foot">
+				<displayName>mga foot³</displayName>
+			</unit>
+			<unit type="volume-cubic-inch">
+				<displayName>mga inch³</displayName>
+			</unit>
+			<unit type="volume-liter">
+				<displayName>mga litro</displayName>
+				<unitPattern count="one">{0} L</unitPattern>
+				<unitPattern count="other">{0} L</unitPattern>
+				<perUnitPattern>{0}/L</perUnitPattern>
+			</unit>
+			<unit type="volume-acre-foot">
+				<displayName>acre ft</displayName>
+			</unit>
+			<unit type="volume-gallon">
+				<displayName>gal</displayName>
+				<unitPattern count="one">{0} gal</unitPattern>
+				<unitPattern count="other">{0} gal</unitPattern>
+				<perUnitPattern>{0}/gal US</perUnitPattern>
+			</unit>
+			<unit type="volume-quart">
+				<displayName>qts</displayName>
+			</unit>
+			<unit type="volume-pint">
+				<displayName>mga pint</displayName>
+			</unit>
+			<unit type="volume-cup">
+				<displayName>mga tasa</displayName>
+			</unit>
+			<unit type="volume-fluid-ounce">
+				<displayName>fl oz</displayName>
+				<unitPattern count="one">{0} fl oz</unitPattern>
+				<unitPattern count="other">{0} fl oz</unitPattern>
+			</unit>
+			<unit type="volume-fluid-ounce-imperial">
+				<displayName>Imp. fl oz</displayName>
+				<unitPattern count="one">{0} fl oz Imp.</unitPattern>
+				<unitPattern count="other">{0} fl oz Imp.</unitPattern>
+			</unit>
+			<unit type="volume-teaspoon">
+				<displayName>kutsarita</displayName>
+				<unitPattern count="one">{0} ka kutsarita</unitPattern>
+				<unitPattern count="other">{0} ka kutsarita</unitPattern>
+			</unit>
+			<unit type="volume-barrel">
+				<displayName>barrel</displayName>
+			</unit>
+			<unit type="volume-drop">
+				<unitPattern count="one">{0} ka drop</unitPattern>
+				<unitPattern count="other">{0} ka drop</unitPattern>
+			</unit>
+			<unit type="volume-dram">
+				<unitPattern count="one">{0} ka dram fl</unitPattern>
+				<unitPattern count="other">{0} ka dram fl</unitPattern>
+			</unit>
+			<unit type="volume-jigger">
+				<unitPattern count="one">{0} ka jigger</unitPattern>
+				<unitPattern count="other">{0} ka jigger</unitPattern>
+			</unit>
+			<unit type="volume-pinch">
+				<unitPattern count="one">{0} ka pinch</unitPattern>
+				<unitPattern count="other">{0} ka pinch</unitPattern>
+			</unit>
+			<coordinateUnit>
+				<displayName>direksyon</displayName>
+				<coordinateUnitPattern type="east">{0} E</coordinateUnitPattern>
+				<coordinateUnitPattern type="north">{0} N</coordinateUnitPattern>
+				<coordinateUnitPattern type="south">{0} S</coordinateUnitPattern>
+				<coordinateUnitPattern type="west">{0} W</coordinateUnitPattern>
+			</coordinateUnit>
+		</unitLength>
+		<unitLength type="narrow">
+			<unit type="concentr-percent">
+				<displayName>%</displayName>
+			</unit>
+			<unit type="consumption-liter-per-100-kilometer">
+				<displayName>L/100km</displayName>
+				<unitPattern count="one">{0}L/100km</unitPattern>
+				<unitPattern count="other">{0}L/100km</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<displayName>tuig</displayName>
+				<unitPattern count="one">{0} ka tuig</unitPattern>
+				<unitPattern count="other">{0} ka tuig</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>buwan</displayName>
+				<unitPattern count="one">{0} buwan</unitPattern>
+				<unitPattern count="other">{0} buwan</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName>semana</displayName>
+				<unitPattern count="one">{0} semana</unitPattern>
+				<unitPattern count="other">{0}w</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName>adlaw</displayName>
+				<unitPattern count="one">{0} adlaw</unitPattern>
+				<unitPattern count="other">{0} adlaw</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName>oras</displayName>
+				<unitPattern count="one">{0} ka oras</unitPattern>
+				<unitPattern count="other">{0} ka oras</unitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>minuto</displayName>
+				<unitPattern count="one">{0} minuto</unitPattern>
+				<unitPattern count="other">{0} minuto</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName>segundo</displayName>
+				<unitPattern count="one">{0}segundo</unitPattern>
+				<unitPattern count="other">{0}segundo</unitPattern>
+			</unit>
+			<unit type="duration-millisecond">
+				<displayName>msec</displayName>
+				<unitPattern count="one">{0}ms</unitPattern>
+				<unitPattern count="other">{0}ms</unitPattern>
+			</unit>
+			<unit type="length-kilometer">
+				<unitPattern count="one">{0}km</unitPattern>
+				<unitPattern count="other">{0}km</unitPattern>
+			</unit>
+			<unit type="length-meter">
+				<displayName>m</displayName>
+				<unitPattern count="one">{0}m</unitPattern>
+				<unitPattern count="other">{0}m</unitPattern>
+			</unit>
+			<unit type="length-centimeter">
+				<unitPattern count="one">{0}cm</unitPattern>
+				<unitPattern count="other">{0}cm</unitPattern>
+			</unit>
+			<unit type="length-millimeter">
+				<unitPattern count="one">{0}mm</unitPattern>
+				<unitPattern count="other">{0}mm</unitPattern>
+			</unit>
+			<unit type="mass-kilogram">
+				<unitPattern count="one">{0}kg</unitPattern>
+				<unitPattern count="other">{0}kg</unitPattern>
+			</unit>
+			<unit type="mass-gram">
+				<displayName>gramo</displayName>
+			</unit>
+			<unit type="speed-kilometer-per-hour">
+				<displayName>km/hr</displayName>
+				<unitPattern count="one">{0}km/h</unitPattern>
+				<unitPattern count="other">{0}km/h</unitPattern>
+			</unit>
+			<unit type="temperature-celsius">
+				<displayName>°C</displayName>
+			</unit>
+			<unit type="volume-liter">
+				<displayName>litro</displayName>
+				<unitPattern count="one">{0}L</unitPattern>
+				<unitPattern count="other">{0}L</unitPattern>
+			</unit>
+			<coordinateUnit>
+				<displayName>direksyon</displayName>
+				<coordinateUnitPattern type="east">{0}E</coordinateUnitPattern>
+				<coordinateUnitPattern type="north">{0}N</coordinateUnitPattern>
+				<coordinateUnitPattern type="south">{0}S</coordinateUnitPattern>
+				<coordinateUnitPattern type="west">{0}W</coordinateUnitPattern>
+			</coordinateUnit>
+		</unitLength>
+		<durationUnit type="hm">
+			<durationUnitPattern>h:mm</durationUnitPattern>
+		</durationUnit>
+		<durationUnit type="hms">
+			<durationUnitPattern>h:mm:ss</durationUnitPattern>
+		</durationUnit>
+		<durationUnit type="ms">
+			<durationUnitPattern>m:ss</durationUnitPattern>
+		</durationUnit>
+	</units>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0}, ug {1}</listPatternPart>
+			<listPatternPart type="2">{0} ug {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="or">
+			<listPatternPart type="end">{0}, o {1}</listPatternPart>
+			<listPatternPart type="2">{0} o {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="or-narrow">
+			<listPatternPart type="end">{0}, o {1}</listPatternPart>
+			<listPatternPart type="2">{0} o {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="or-short">
+			<listPatternPart type="end">{0}, o {1}</listPatternPart>
+			<listPatternPart type="2">{0} o {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="standard-narrow">
+			<listPatternPart type="end">{0}, {1}</listPatternPart>
+			<listPatternPart type="2">{0}, {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="standard-short">
+			<listPatternPart type="end">{0}, ug {1}</listPatternPart>
+			<listPatternPart type="2">{0} ug {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="unit">
+			<listPatternPart type="end">{0}, {1}</listPatternPart>
+			<listPatternPart type="2">{0}, {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="unit-narrow">
+			<listPatternPart type="start">{0} {1}</listPatternPart>
+			<listPatternPart type="middle">{0} {1}</listPatternPart>
+			<listPatternPart type="end">{0} {1}</listPatternPart>
+			<listPatternPart type="2">{0} {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="unit-short">
+			<listPatternPart type="end">{0}, {1}</listPatternPart>
+			<listPatternPart type="2">{0}, {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<yesstr>oo:o</yesstr>
+			<nostr>dili:d</nostr>
+		</messages>
+	</posix>
+</ldml>

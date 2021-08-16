@@ -1,0 +1,4 @@
+T6557182.java:12:56: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T, java.lang.Comparable<java.lang.Integer>)
+T6557182.java:16:56: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), T, java.lang.Comparable<java.lang.Integer>
+1 error
+1 warning

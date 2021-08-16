@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+OpenIDE-Module: com.sun.hotspot.igv.graal
+OpenIDE-Module-Layer: com/sun/hotspot/igv/graal/layer.xml
+OpenIDE-Module-Localizing-Bundle: com/sun/hotspot/igv/graal/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

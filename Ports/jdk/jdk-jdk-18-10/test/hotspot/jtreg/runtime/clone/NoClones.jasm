@@ -1,0 +1,133 @@
+/*
+ * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+/*
+ * @test
+ * @bug 8154587
+ * @summary Check that a NoSuchMethodError exception gets thrown if invokeinterface
+ *          calls clone() and there is no public implementation of clone().
+ * @compile NoClones.jasm
+ * @run main NoClones
+ */
+
+// The below .jasm code implements the following java code:
+//
+// interface I1 { }
+//
+//
+// public class NoClones {
+//
+//    interface I2 extends I1 { }
+//
+//    static class C implements I2 { }
+//
+//    static Object test(I2 i) { return i.clone(); }
+//
+//    public static void main(String[] args) {
+//        try {
+//            String s = (String)test(new C());
+//            throw new RuntimeException("Expected NSME not thrown");
+//        } catch (java.lang.NoSuchMethodError e) {
+//            if (!e.toString().contains("I2.clone")) {
+//                throw new RuntimeException("Wrong NoSuchMethodError exception thrown");
+//            }
+//        }
+//    }
+// }
+
+
+interface I1 version 53:0 { } // end Class I1
+
+
+interface  NoClones$I2 implements I1 version 53:0 {
+
+    static abstract interface InnerClass I2=class NoClones$I2 of class NoClones;
+
+} // end Class NoClones$I2
+
+
+super class NoClones$C implements NoClones$I2 version 53:0 {
+
+    Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial    Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    static InnerClass C=class NoClones$C of class NoClones;
+    static abstract interface InnerClass I2=class NoClones$I2 of class NoClones;
+
+} // end Class NoClones$C
+
+
+super public class NoClones version 53:0 {
+
+    public Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial    Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    static Method test:"(LNoClones$I2;)Ljava/lang/Object;" stack 1 locals 1 {
+        aload_0;
+        invokeinterface    InterfaceMethod NoClones$I2.clone:"()Ljava/lang/Object;",  1;
+        areturn;
+    }
+
+    public static Method main:"([Ljava/lang/String;)V" stack 3 locals 2 {
+        try t0;
+        new    class NoClones$C;
+        dup;
+        invokespecial    Method NoClones$C."<init>":"()V";
+        invokestatic    Method test:"(LNoClones$I2;)Ljava/lang/Object;";
+        checkcast    class java/lang/String;
+        astore_1;
+        new    class java/lang/RuntimeException;
+        dup;
+        ldc    String "Expected NSME not thrown";
+        invokespecial    Method java/lang/RuntimeException."<init>":"(Ljava/lang/String;)V";
+        athrow;
+        endtry t0;
+        catch t0 java/lang/NoSuchMethodError;
+        stack_frame_type stack1;
+        stack_map class java/lang/NoSuchMethodError;
+        astore_1;
+        aload_1;
+        invokevirtual    Method java/lang/NoSuchMethodError.toString:"()Ljava/lang/String;";
+        ldc    String "I2.clone";
+        invokevirtual    Method java/lang/String.contains:"(Ljava/lang/CharSequence;)Z";
+        ifne    L47;
+        new    class java/lang/RuntimeException;
+        dup;
+        ldc    String "Wrong NoSuchMethodError exception thrown";
+        invokespecial    Method java/lang/RuntimeException."<init>":"(Ljava/lang/String;)V";
+        athrow;
+      L47:  stack_frame_type same;
+        return;
+    }
+
+    static InnerClass C=class NoClones$C of class NoClones;
+    static abstract interface InnerClass I2=class NoClones$I2 of class NoClones;
+
+} // end Class NoClones

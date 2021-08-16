@@ -1,0 +1,29 @@
+    @Test(dataProvider = "$type$TernaryOpProvider")
+    static void [[TEST]]$vectorteststype$BroadcastSmokeTest(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb, IntFunction<$type$[]> fc) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] b = fb.apply(SPECIES.length());
+        $type$[] c = fc.apply(SPECIES.length());
+        $type$[] r = fr.apply(SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            $abstractvectortype$ bv = $abstractvectortype$.fromArray(SPECIES, b, i);
+            av.lanewise(VectorOperators.[[TEST]], bv, c[i]).intoArray(r, i);
+        }
+        assertBroadcastArraysEquals(r, a, b, c, $vectorteststype$::[[TEST]]);
+    }
+
+    @Test(dataProvider = "$type$TernaryOpProvider")
+    static void [[TEST]]$vectorteststype$AltBroadcastSmokeTest(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb, IntFunction<$type$[]> fc) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] b = fb.apply(SPECIES.length());
+        $type$[] c = fc.apply(SPECIES.length());
+        $type$[] r = fr.apply(SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            $abstractvectortype$ cv = $abstractvectortype$.fromArray(SPECIES, c, i);
+            av.lanewise(VectorOperators.[[TEST]], b[i], cv).intoArray(r, i);
+        }
+        assertAltBroadcastArraysEquals(r, a, b, c, $vectorteststype$::[[TEST]]);
+    }

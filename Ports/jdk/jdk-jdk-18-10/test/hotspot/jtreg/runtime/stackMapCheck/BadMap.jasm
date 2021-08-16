@@ -1,0 +1,152 @@
+ /*
+  * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+  *
+  * This code is free software; you can redistribute it and/or modify it
+  * under the terms of the GNU General Public License version 2 only, as
+  * published by the Free Software Foundation.
+  *
+  * This code is distributed in the hope that it will be useful, but WITHOUT
+  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+  * version 2 for more details (a copy is included in the LICENSE file that
+  * accompanied this code).
+  *
+  * You should have received a copy of the GNU General Public License version
+  * 2 along with this work; if not, write to the Free Software Foundation,
+  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+  *
+  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+  * or visit www.oracle.com if you need additional information or have any
+  * questions.
+  *
+  */
+
+/*
+ * This class should throw VerifyError because the StackMap for bytecode index
+ * 45 (astore_2, line 123) is incorrect. The stack maps for bytecode indexes 45
+ * and 49 (astore, line 133) do not match because 45 does not supply enough
+ * locals to satisfy 49.
+ *
+ * The astore_2 bytecode at bytecode index 45 changes the type state,
+ * preventing the stackmap mismatch.  But, if the incoming type state is used,
+ * as required by JVM Spec 8, then the verifier will detected the stackmap
+ * mismatch, and throw VerifyError.
+ */
+
+super public class BadMap
+    version 51:0
+{
+
+
+public Method "<init>":"()V"
+    stack 1 locals 1
+{
+        aload_0;
+        invokespecial    Method java/lang/Object."<init>":"()V";
+        return;
+}
+
+public static Method main:"([Ljava/lang/String;)V"
+    throws java/lang/Throwable
+    stack 0 locals 1
+{
+        return;
+}
+
+public static Method foo:"()V"
+    stack 3 locals 5
+{
+        iconst_0;
+        ifne    L5;
+        nop;
+        try t7;
+    L5:    stack_frame_type full;
+        aconst_null;
+        dup;
+        astore_0;
+        astore_1;
+        try t0;
+        aconst_null;
+        astore_0;
+        endtry t0;
+        goto    L19;
+        catch t0 java/io/IOException;
+        stack_frame_type full;
+        locals_map class java/lang/Object, null;
+        stack_map class java/io/IOException;
+        astore_2;
+        aconst_null;
+        dup;
+        astore_1;
+        astore_0;
+        try t1;
+    L19:    stack_frame_type full;
+        locals_map class java/lang/Object, class java/lang/Object;
+        aconst_null;
+        astore_2;
+        endtry t1;
+        aload_1;
+        ifnonnull    L37;
+        nop;
+        goto    L37;
+        catch t1 #0;
+        catch t2 #0;
+        try t2;
+        stack_frame_type full;
+        locals_map class java/lang/Object, class java/lang/Object;
+        stack_map class java/lang/Throwable;
+        astore_3;
+        endtry t2;
+        aload_1;
+        ifnonnull    L35;
+        nop;
+    L35:    stack_frame_type full;
+        locals_map class java/lang/Object, class java/lang/Object, bogus, class java/lang/Throwable;
+        aload_3;
+        athrow;
+        try t3, t4;
+    L37:    stack_frame_type full;
+        locals_map class java/lang/Object, class java/lang/Object, class java/lang/Object;
+        aload_1;
+        ifnonnull    L42;
+        nop;
+        endtry t3, t4;
+    L42:    stack_frame_type full;
+        locals_map class java/lang/Object, class java/lang/Object, class java/lang/Object;
+        goto    L54;
+        catch t3 java/lang/Exception;
+        try t5;
+        stack_frame_type full;
+        locals_map class java/lang/Object, class java/lang/Object;
+        stack_map class java/lang/Exception;
+        astore_2;   // astore_2, at bci 45, that changes the type state.
+        endtry t5;
+        goto    L54;
+        catch t4 #0;
+        catch t5 #0;
+        catch t6 #0;
+        try t6;
+        stack_frame_type full;
+        locals_map class java/lang/Object, class java/lang/Object, class java/lang/Object;
+        stack_map class java/lang/Throwable;
+        astore    4;
+        endtry t6;
+        aload    4;
+        athrow;
+    L54:    stack_frame_type full;
+        locals_map class java/lang/Object, class java/lang/Object, class java/lang/Object;
+        goto    L57;
+    L57:    stack_frame_type full;
+        locals_map class java/lang/Object, class java/lang/Object, class java/lang/Object;
+        nop;
+        endtry t7;
+        return;
+        catch t7 #0;
+        stack_frame_type full;
+        stack_map class java/lang/Throwable;
+        nop;
+        athrow;
+}
+
+} // end Class BadMap

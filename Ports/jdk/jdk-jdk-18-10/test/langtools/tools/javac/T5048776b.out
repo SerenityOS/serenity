@@ -1,0 +1,3 @@
+T5048776.java:12:10: compiler.warn.override.varargs.missing: (compiler.misc.varargs.override: foo(java.lang.Object...), A1a, foo(java.lang.Object[]), A1)
+T5048776.java:20:10: compiler.warn.override.varargs.extra: (compiler.misc.varargs.override: foo(java.lang.Object[]), A2a, foo(java.lang.Object...), A2)
+2 warnings

@@ -1,0 +1,4 @@
+A.java:10:9: compiler.warn.has.been.deprecated: A1, compiler.misc.unnamed.package
+A.java:10:21: compiler.warn.has.been.deprecated: A1, compiler.misc.unnamed.package
+- compiler.note.deprecated.filename: B.java
+2 warnings

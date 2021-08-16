@@ -1,0 +1,345 @@
+/*
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+// This test was generated from this source and then modified:
+//    record recordNames(int x, String y) {}
+
+// This test has an old class file version so its badly formed Record
+// attribute should be ignored.
+class oldRecordAttribute {
+  0xCAFEBABE;
+  0; // minor version
+  58; // version
+  [69] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1     at 0x0A
+    class #4; // #2     at 0x0F
+    NameAndType #5 #6; // #3     at 0x12
+    Utf8 "java/lang/Record"; // #4     at 0x17
+    Utf8 "<init>"; // #5     at 0x2A
+    Utf8 "()V"; // #6     at 0x33
+    Field #8 #9; // #7     at 0x39
+    class #10; // #8     at 0x3E
+    NameAndType #11 #12; // #9     at 0x41
+    Utf8 "oldRecordAttribute"; // #10     at 0x46
+    Utf8 "x"; // #11     at 0x56
+    Utf8 "I"; // #12     at 0x5A
+    Field #8 #14; // #13     at 0x5E
+    NameAndType #15 #16; // #14     at 0x63
+    Utf8 "y"; // #15     at 0x68
+    Utf8 "Ljava/lang/String;"; // #16     at 0x6C
+    InvokeDynamic 0s #18; // #17     at 0x81
+    NameAndType #19 #20; // #18     at 0x86
+    Utf8 "toString"; // #19     at 0x8B
+    Utf8 "(LoldRecordAttribute;)Ljava/lang/String;"; // #20     at 0x96
+    InvokeDynamic 0s #22; // #21     at 0xBC
+    NameAndType #23 #24; // #22     at 0xC1
+    Utf8 "hashCode"; // #23     at 0xC6
+    Utf8 "(LoldRecordAttribute;)I"; // #24     at 0xD1
+    InvokeDynamic 0s #26; // #25     at 0xE6
+    NameAndType #27 #28; // #26     at 0xEB
+    Utf8 "equals"; // #27     at 0xF0
+    Utf8 "(LoldRecordAttribute;Ljava/lang/Object;)Z"; // #28     at 0xF9
+    Dynamic 1s #30; // #29     at 0x0120
+    NameAndType #31 #32; // #30     at 0x0125
+    Utf8 "\\%pattern\\%recordExample\\%(ILjava\\|lang\\|String\\?)"; // #31     at 0x012A
+    Utf8 "Ljava/lang/runtime/PatternHandle;"; // #32     at 0x015F
+    Utf8 "(ILjava/lang/String;)V"; // #33     at 0x0183
+    Utf8 "Code"; // #34     at 0x019C
+    Utf8 "LineNumberTable"; // #35     at 0x01A3
+    Utf8 "MethodParameters"; // #36     at 0x01B5
+    Utf8 "()Ljava/lang/String;"; // #37     at 0x01C8
+    Utf8 "()I"; // #38     at 0x01DF
+    Utf8 "(Ljava/lang/Object;)Z"; // #39     at 0x01E5
+    Utf8 "()Ljava/lang/runtime/PatternHandle;"; // #40     at 0x01FD
+    Utf8 "SourceFile"; // #41     at 0x0223
+    Utf8 "oldRecordAttribute.java"; // #42     at 0x0230
+    Utf8 "Record"; // #43     at 0x0245
+    Utf8 "BootstrapMethods"; // #44     at 0x024E
+    MethodHandle 6b #46; // #45     at 0x0261
+    Method #47 #48; // #46     at 0x0265
+    class #49; // #47     at 0x026A
+    NameAndType #50 #51; // #48     at 0x026D
+    Utf8 "java/lang/runtime/ObjectMethods"; // #49     at 0x0272
+    Utf8 "bootstrap"; // #50     at 0x029A
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;"; // #51     at 0x02A6
+    String #53; // #52     at 0x035A
+    Utf8 "x;y"; // #53     at 0x035D
+    MethodHandle 1b #7; // #54     at 0x0363
+    MethodHandle 1b #13; // #55     at 0x0367
+    MethodHandle 6b #57; // #56     at 0x036B
+    Method #58 #59; // #57     at 0x036F
+    class #60; // #58     at 0x0374
+    NameAndType #61 #62; // #59     at 0x0377
+    Utf8 "java/lang/runtime/PatternHandles"; // #60     at 0x037C
+    Utf8 "ofLazyProjection"; // #61     at 0x039F
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;Ljava/lang/Class;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/runtime/PatternHandle;"; // #62     at 0x03B2
+    Utf8 "InnerClasses"; // #63     at 0x0453
+    class #65; // #64     at 0x0462
+    Utf8 "java/lang/invoke/MethodHandles$Lookup"; // #65     at 0x0465
+    class #67; // #66     at 0x048D
+    Utf8 "java/lang/invoke/MethodHandles"; // #67     at 0x0490
+    Utf8 "Lookup"; // #68     at 0x04B1
+  } // Constant Pool
+
+  0x0030; // access [ ACC_SUPER ACC_FINAL ]
+  #8;// this_cpx
+  #2;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [2] { // fields
+    { // Member at 0x04C4
+      0x8012; // access
+      #11; // name_cpx
+      #12; // sig_cpx
+      [0] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x04CC
+      0x8012; // access
+      #15; // name_cpx
+      #16; // sig_cpx
+      [0] { // Attributes
+      } // Attributes
+    } // Member
+  } // fields
+
+  [7] { // methods
+    { // Member at 0x04D6
+      0x0001; // access
+      #5; // name_cpx
+      #33; // sig_cpx
+      [2] { // Attributes
+        Attr(#34, 39) { // Code at 0x04DE
+          2; // max_stack
+          3; // max_locals
+          Bytes[15]{
+            0x2AB700012A1BB500;
+            0x072A2CB5000DB1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#35, 6) { // LineNumberTable at 0x04FF
+              [1] { // LineNumberTable
+                0  1; //  at 0x050B
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+        ;
+        Attr(#36, 9) { // MethodParameters at 0x050B
+          0x02000B8000000F80;
+          0x00;
+        } // end MethodParameters
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x051A
+      0x8001; // access
+      #19; // name_cpx
+      #37; // sig_cpx
+      [1] { // Attributes
+        Attr(#34, 31) { // Code at 0x0522
+          1; // max_stack
+          1; // max_locals
+          Bytes[7]{
+            0x2ABA00110000B0;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#35, 6) { // LineNumberTable at 0x053B
+              [1] { // LineNumberTable
+                0  1; //  at 0x0547
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0547
+      0x8011; // access
+      #23; // name_cpx
+      #38; // sig_cpx
+      [1] { // Attributes
+        Attr(#34, 31) { // Code at 0x054F
+          1; // max_stack
+          1; // max_locals
+          Bytes[7]{
+            0x2ABA00150000AC;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#35, 6) { // LineNumberTable at 0x0568
+              [1] { // LineNumberTable
+                0  1; //  at 0x0574
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0574
+      0x8011; // access
+      #27; // name_cpx
+      #39; // sig_cpx
+      [1] { // Attributes
+        Attr(#34, 32) { // Code at 0x057C
+          2; // max_stack
+          2; // max_locals
+          Bytes[8]{
+            0x2A2BBA00190000AC;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#35, 6) { // LineNumberTable at 0x0596
+              [1] { // LineNumberTable
+                0  1; //  at 0x05A2
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x05A2
+      0x8001; // access
+      #11; // name_cpx
+      #38; // sig_cpx
+      [1] { // Attributes
+        Attr(#34, 29) { // Code at 0x05AA
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB40007AC;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#35, 6) { // LineNumberTable at 0x05C1
+              [1] { // LineNumberTable
+                0  1; //  at 0x05CD
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x05CD
+      0x8001; // access
+      #15; // name_cpx
+      #37; // sig_cpx
+      [1] { // Attributes
+        Attr(#34, 29) { // Code at 0x05D5
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB4000DB0;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#35, 6) { // LineNumberTable at 0x05EC
+              [1] { // LineNumberTable
+                0  1; //  at 0x05F8
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x05F8
+      0x0009; // access
+      #31; // name_cpx
+      #40; // sig_cpx
+      [1] { // Attributes
+        Attr(#34, 27) { // Code at 0x0600
+          1; // max_stack
+          0; // max_locals
+          Bytes[3]{
+            0x121DB0;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#35, 6) { // LineNumberTable at 0x0615
+              [1] { // LineNumberTable
+                0  1; //  at 0x0621
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [4] { // Attributes
+    Attr(#41, 2) { // SourceFile at 0x0623
+      #42;
+    } // end SourceFile
+    ;
+    Attr(#43, 12) { // Record at 0x062B // Length should be 14
+      0x0002000B000C0000;
+      0x000F0010;      // Attribute_count field was removed
+    } // end Record
+    ;
+    Attr(#44, 24) { // BootstrapMethods at 0x063F
+      [2] { // bootstrap_methods
+        {  //  bootstrap_method
+          #45; // bootstrap_method_ref
+          [4] { // bootstrap_arguments
+            #8; //  at 0x064D
+            #52; //  at 0x064F
+            #54; //  at 0x0651
+            #55; //  at 0x0653
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #56; // bootstrap_method_ref
+          [3] { // bootstrap_arguments
+            #8; //  at 0x0659
+            #54; //  at 0x065B
+            #55; //  at 0x065D
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+      }
+    } // end BootstrapMethods
+    ;
+    Attr(#63, 10) { // InnerClasses at 0x065D
+      [1] { // InnerClasses
+        #64 #66 #68 25; //  at 0x066D
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class oldRecordAttribute

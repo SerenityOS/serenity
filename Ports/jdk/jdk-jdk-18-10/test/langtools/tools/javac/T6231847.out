@@ -1,0 +1,9 @@
+T6231847.java:14:21: compiler.err.anon.class.impl.intf.no.typeargs
+T6231847.java:15:30: compiler.err.anon.class.impl.intf.no.args
+T6231847.java:16:16: compiler.err.anon.class.impl.intf.no.qual.for.new
+T6231847.java:17:16: compiler.err.anon.class.impl.intf.no.qual.for.new
+T6231847.java:17:41: compiler.err.anon.class.impl.intf.no.args
+T6231847.java:17:23: compiler.err.anon.class.impl.intf.no.typeargs
+T6231847.java:18:16: compiler.err.qualified.new.of.static.class: T6231847.T6231847C
+T6231847.java:18:34: compiler.err.illegal.qual.not.icls: T6231847.T6231847C
+8 errors

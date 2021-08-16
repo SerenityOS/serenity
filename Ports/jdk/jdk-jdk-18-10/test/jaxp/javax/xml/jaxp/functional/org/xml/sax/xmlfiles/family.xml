@@ -1,0 +1,14 @@
+<?xml version="1.0" standalone="yes" ?>
+<!DOCTYPE document [
+    <!ELEMENT document (person*)>
+    <!ELEMENT person (#PCDATA)>
+    <!ATTLIST person pnumber ID #REQUIRED>
+    <!ATTLIST person father IDREF #IMPLIED>
+    <!ATTLIST person mother IDREF #IMPLIED>
+]>
+<document>
+    <person pnumber="a1">Susan</person>
+    <person pnumber="a2">Jack</person>
+    <person pnumber="a3" mother="a1" father="a2">Chelsea</person>
+    <person pnumber="a4" mother="a1" father="a2">David</person>
+</document>

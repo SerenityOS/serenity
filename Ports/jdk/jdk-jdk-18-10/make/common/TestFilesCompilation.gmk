@@ -1,0 +1,116 @@
+#
+# Copyright (c) 2015, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+ifndef _TEST_FILES_COMPILATION_GMK
+_TEST_FILES_COMPILATION_GMK := 1
+
+ifeq (,$(_MAKEBASE_GMK))
+  $(error You must include MakeBase.gmk prior to including TestFilesCompilation.gmk)
+endif
+
+
+include NativeCompilation.gmk
+
+# Setup make rules for creating a set of native test files (libraries or
+# executables). This will locate native files matching a certain pattern,
+# and compile these into libraries or executables.
+#
+# Parameter 1 is the name of the rule. This name is used as variable prefix,
+# and the targets generated are listed in a variable by that name.
+#
+# Remaining parameters are named arguments. These include:
+#   TYPE Must be either PROGRAM or LIBRARY.
+#   SOURCE_DIRS A list of source directories to search
+#   OUTPUT_DIR Where to put the resulting files
+#   EXCLUDE A list of filenames to exclude from compilation
+SetupTestFilesCompilation = $(NamedParamsMacroTemplate)
+define SetupTestFilesCompilationBody
+
+  # Check for duplicate base file names. That would have failed later anyhow, but
+  # this gives a better error message.
+  $1_DUPLICATED_NAMES := $$(call dups, $$(notdir $$($1_FILE_LIST)))
+  ifneq ($$($1_DUPLICATED_NAMES), )
+    $$(error There are duplicate test file names for $1: $$($1_DUPLICATED_NAMES))
+  endif
+
+  # The list to depend on starts out empty
+  $1 :=
+  ifeq ($$($1_TYPE), LIBRARY)
+    $1_PREFIX = lib
+    $1_OUTPUT_SUBDIR := lib
+    $1_BASE_CFLAGS := $(CFLAGS_JDKLIB)
+    $1_BASE_CXXFLAGS := $(CXXFLAGS_JDKLIB)
+    ifeq ($(call isTargetOs, windows), false)
+	$1_LDFLAGS := $(LDFLAGS_JDKLIB) $$(call SET_SHARED_LIBRARY_ORIGIN) -pthread
+    else
+	$1_LDFLAGS := $(LDFLAGS_JDKLIB) $$(call SET_SHARED_LIBRARY_ORIGIN)
+    endif
+    $1_COMPILATION_TYPE := LIBRARY
+  else ifeq ($$($1_TYPE), PROGRAM)
+    $1_PREFIX = exe
+    $1_OUTPUT_SUBDIR := bin
+    $1_BASE_CFLAGS := $(CFLAGS_JDKEXE)
+    $1_BASE_CXXFLAGS := $(CXXFLAGS_JDKEXE)
+    $1_LDFLAGS := $(LDFLAGS_JDKEXE) $(LDFLAGS_TESTEXE)
+    $1_COMPILATION_TYPE := EXECUTABLE
+  else
+    $$(error Unknown type: $$($1_TYPE))
+  endif
+
+  # Locate all files with the matching prefix
+  $1_FILE_LIST := \
+      $$(call FindFiles, $$($1_SOURCE_DIRS), $$($1_PREFIX)*.c $$($1_PREFIX)*.cpp $$($1_PREFIX)*.m)
+
+  $1_EXCLUDE_PATTERN := $$(addprefix %/, $$($1_EXCLUDE))
+  $1_FILTERED_FILE_LIST := $$(filter-out $$($1_EXCLUDE_PATTERN), $$($1_FILE_LIST))
+
+  # Setup a compilation for each and every one of them
+  $$(foreach file, $$($1_FILTERED_FILE_LIST),\
+    $$(eval name := $$(strip $$(basename $$(notdir $$(file))))) \
+    $$(eval unprefixed_name := $$(patsubst $$($1_PREFIX)%, %, $$(name))) \
+    $$(eval $$(call SetupNativeCompilation, BUILD_TEST_$$(name), \
+        NAME := $$(unprefixed_name), \
+        TYPE := $$($1_COMPILATION_TYPE), \
+        EXTRA_FILES := $$(file), \
+        OBJECT_DIR := $$($1_OUTPUT_DIR)/support/$$(name), \
+        OUTPUT_DIR := $$($1_OUTPUT_DIR)/$$($1_OUTPUT_SUBDIR), \
+        CFLAGS := $$($1_BASE_CFLAGS) $$($1_CFLAGS) $$($1_CFLAGS_$$(name)), \
+        CXXFLAGS := $$($1_BASE_CXXFLAGS) $$($1_CFLAGS) $$($1_CFLAGS_$$(name)), \
+        LDFLAGS := $$($1_LDFLAGS) $$($1_LDFLAGS_$$(name)), \
+        DISABLED_WARNINGS_gcc := format undef unused-function unused-value, \
+        DISABLED_WARNINGS_clang := undef format-nonliteral \
+            missing-field-initializers sometimes-uninitialized, \
+        LIBS := $$($1_LIBS_$$(name)), \
+        TOOLCHAIN := $(if $$(filter %.cpp, $$(file)), TOOLCHAIN_LINK_CXX, TOOLCHAIN_DEFAULT), \
+        OPTIMIZATION := $$(if $$($1_OPTIMIZATION_$$(name)),$$($1_OPTIMIZATION_$$(name)),LOW), \
+        COPY_DEBUG_SYMBOLS := false, \
+        STRIP_SYMBOLS := $$(if $$($1_STRIP_SYMBOLS_$$(name)),$$($1_STRIP_SYMBOLS_$$(name)),false), \
+    )) \
+    $$(eval $1 += $$(BUILD_TEST_$$(name)) )  \
+  )
+
+endef
+
+endif # _TEST_FILES_COMPILATION_GMK

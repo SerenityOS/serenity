@@ -1,0 +1,115 @@
+<html>
+<body>
+
+This is a multi-stage test.  For each instruction, make sure the output
+from keytool is correct (you can read everything in english fine).
+
+<ol>
+<li>    rm ~/.keystore
+        If you are on a Windows platform, delete the .keystore file in
+        your home directory.
+<li>	keytool -help
+<li>	keytool -genkey -keyalg DSA -v -keysize 512
+	Enter "a" for the keystore password.  Check error (password too short).
+	Enter "password" for the keystore password.
+        Re-enter "password" to confirm.
+	Hit 'return' for "first and last name", "organizational unit",
+	"organization", "City", "State", and "Country Code".
+	Type "yes" when they ask you if everything is correct.
+	Type 'return' for new key password.
+<li>	keytool -list -v -storepass password
+<li>	keytool -list -v
+	Type "a" for the keystore password.
+	Check error (wrong keystore password).
+<li>	keytool -genkey -keyalg DSA -v -keysize 512
+	Enter "password" as the password.
+	Check error (alias 'mykey' already exists).
+<li>	keytool -genkey -keyalg DSA -v -keysize 512 -alias mykey2 -storepass password
+	Hit 'return' for "first and last name", "organizational unit",
+	"organization", "City", "State", and "Country Code".
+	Type "yes" when they ask you if everything is correct.
+	Type 'return' for new key password.
+<li>	keytool -list -v
+	Type 'password' for the store password.
+<li>	keytool -keypasswd -v -alias mykey2 -storepass password
+	Type "a" for the new key password.
+	Type "aaaaaa" for the new key password.
+	Type "bbbbbb" when re-entering the new key password.
+	Type "a" for the new key password.
+	Check Error (too many failures).
+<li>	keytool -keypasswd -v -alias mykey2 -storepass password
+	Type "aaaaaa" for the new key password.
+	Type "aaaaaa" when re-entering the new key password.
+<li>	keytool -selfcert -v -alias mykey -storepass password
+<li>	keytool -list -v -storepass password
+<li>	keytool -export -v -alias mykey -file /tmp/cert -storepass password
+<li>	keytool -import -v -file /tmp/cert -storepass password
+	Check error (Certificate reply and cert are the same)
+<li>	keytool -printcert -file /tmp/cert
+<li>	keytool -list -storepass password -addprovider SUN
+</ol>
+
+Error tests
+
+<ol>
+<li>	keytool -storepasswd -storepass password -new abc
+	Check error (password too short)
+<!--li>	keytool -list -storetype PKCS11
+	Check error (-keystore must be NONE)-->
+<li>	keytool -storepasswd -storetype PKCS11 -keystore NONE
+	Check error (unsupported operation)
+<li>	keytool -keypasswd -storetype PKCS11 -keystore NONE
+	Check error (unsupported operation)
+<li>	keytool -list -protected -storepass password
+	Check error (password can not be specified with -protected)
+<li>	keytool -keypasswd -protected -keypass password
+	Check error (password can not be specified with -protected)
+<li>	keytool -keypasswd -protected -new password
+	Check error (password can not be specified with -protected)
+</ol>
+
+MSCAPI tests (Only run on Windows)
+
+<ol>
+    <li>keytool -storetype Windows-MY -list
+    should list entries (may be 0) without asking for password
+    should not show ****** WARNING WARNING WARNING ****** lines
+    <li>keytool -storetype Windows-MY -list -keystore NONE
+    should list entries without asking for password
+    <li>keytool -storetype Windows-MY -list -keystore other
+    Error: storetype must be NONE
+    <li>keytool -storetype Windows-MY -list -storepass changeit
+    Error: storepass cannot be specfied
+    <li>keytool -storetype Windows-MY -list -storepasswd
+    Error: storepasswd not supported
+</ol>
+
+PKCS#11 tests
+
+<ol>
+<li>	sccs edit cert8.db key3.db
+
+<li>	keytool -keystore NONE -storepass test12 -storetype PKCS11 -providerName SunPKCS11-nss -addprovider SunPKCS11 -providerArg p11-nss.txt -genkey -alias genkey -dname cn=genkey -keysize 512 -keyalg rsa
+<li>	keytool -keystore NONE -storepass test12 -storetype PKCS11 -providerName SunPKCS11-nss -addprovider SunPKCS11 -providerArg p11-nss.txt -list
+<li>	keytool -keystore NONE -storepass test12 -storetype PKCS11 -providerName SunPKCS11-nss -addprovider SunPKCS11 -providerArg p11-nss.txt -list -alias genkey
+<li>	keytool -keystore NONE -storepass test12 -storetype PKCS11 -providerName SunPKCS11-nss -addprovider SunPKCS11 -providerArg p11-nss.txt -certreq -alias genkey -file genkey.certreq
+<li>	keytool -keystore NONE -storepass test12 -storetype PKCS11 -providerName SunPKCS11-nss -addprovider SunPKCS11 -providerArg p11-nss.txt -export -alias genkey -file genkey.cert
+<li>	keytool -printcert -file genkey.cert
+<li>	keytool -keystore NONE -storepass test12 -storetype PKCS11 -providerName SunPKCS11-nss -addprovider SunPKCS11 -providerArg p11-nss.txt -selfcert -alias genkey -dname cn=selfCert
+
+<li>	keytool -keystore NONE -storepass test12 -storetype PKCS11 -providerName SunPKCS11-nss -addprovider SunPKCS11 -providerArg p11-nss.txt -list -alias genkey -v
+(check that cert subject DN is [cn=selfCert])
+
+<li>	keytool -keystore NONE -storepass test12 -storetype PKCS11 -providerName SunPKCS11-nss -addprovider SunPKCS11 -providerArg p11-nss.txt -delete -alias genkey
+<li>	keytool -keystore NONE -storepass test12 -storetype PKCS11 -providerName SunPKCS11-nss -addprovider SunPKCS11 -providerArg p11-nss.txt -list
+(check for empty database listing)
+
+<li>	sccs unedit cert8.db key3.db
+
+</ol>
+
+If all the output (english) is correct, then the test passed.
+Otherwise, the test failed.
+
+</body>
+</html>

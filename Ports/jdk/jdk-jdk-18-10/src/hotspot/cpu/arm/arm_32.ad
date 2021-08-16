@@ -1,0 +1,592 @@
+//
+// Copyright (c) 2008, 2013, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+
+// ARM Architecture Description File
+
+//----------REGISTER DEFINITION BLOCK------------------------------------------
+// This information is used by the matcher and the register allocator to
+// describe individual registers and classes of registers within the target
+// archtecture.
+register %{
+//----------Architecture Description Register Definitions----------------------
+// General Registers
+// "reg_def"  name ( register save type, C convention save type,
+//                   ideal register type, encoding, vm name );
+// Register Save Types:
+//
+// NS  = No-Save:       The register allocator assumes that these registers
+//                      can be used without saving upon entry to the method, &
+//                      that they do not need to be saved at call sites.
+//
+// SOC = Save-On-Call:  The register allocator assumes that these registers
+//                      can be used without saving upon entry to the method,
+//                      but that they must be saved at call sites.
+//
+// SOE = Save-On-Entry: The register allocator assumes that these registers
+//                      must be saved before using them upon entry to the
+//                      method, but they do not need to be saved at call
+//                      sites.
+//
+// AS  = Always-Save:   The register allocator assumes that these registers
+//                      must be saved before using them upon entry to the
+//                      method, & that they must be saved at call sites.
+//
+// Ideal Register Type is used to determine how to save & restore a
+// register.  Op_RegI will get spilled with LoadI/StoreI, Op_RegP will get
+// spilled with LoadP/StoreP.  If the register supports both, use Op_RegI.
+//
+// The encoding number is the actual bit-pattern placed into the opcodes.
+
+
+// ----------------------------
+// Integer/Long Registers
+// ----------------------------
+
+reg_def R_R0 (SOC, SOC, Op_RegI,  0,  R(0)->as_VMReg());
+reg_def R_R1 (SOC, SOC, Op_RegI,  1,  R(1)->as_VMReg());
+reg_def R_R2 (SOC, SOC, Op_RegI,  2,  R(2)->as_VMReg());
+reg_def R_R3 (SOC, SOC, Op_RegI,  3,  R(3)->as_VMReg());
+reg_def R_R4 (SOC, SOE, Op_RegI,  4,  R(4)->as_VMReg());
+reg_def R_R5 (SOC, SOE, Op_RegI,  5,  R(5)->as_VMReg());
+reg_def R_R6 (SOC, SOE, Op_RegI,  6,  R(6)->as_VMReg());
+reg_def R_R7 (SOC, SOE, Op_RegI,  7,  R(7)->as_VMReg());
+reg_def R_R8 (SOC, SOE, Op_RegI,  8,  R(8)->as_VMReg());
+reg_def R_R9 (SOC, SOE, Op_RegI,  9,  R(9)->as_VMReg());
+reg_def R_R10(NS,  SOE, Op_RegI, 10, R(10)->as_VMReg());
+reg_def R_R11(NS,  SOE, Op_RegI, 11, R(11)->as_VMReg());
+reg_def R_R12(SOC, SOC, Op_RegI, 12, R(12)->as_VMReg());
+reg_def R_R13(NS,  NS,  Op_RegI, 13, R(13)->as_VMReg());
+reg_def R_R14(SOC, SOC, Op_RegI, 14, R(14)->as_VMReg());
+reg_def R_R15(NS,  NS,  Op_RegI, 15, R(15)->as_VMReg());
+
+// ----------------------------
+// Float/Double Registers
+// ----------------------------
+
+// Float Registers
+
+reg_def R_S0 ( SOC, SOC, Op_RegF,  0, S0->as_VMReg());
+reg_def R_S1 ( SOC, SOC, Op_RegF,  1, S1_reg->as_VMReg());
+reg_def R_S2 ( SOC, SOC, Op_RegF,  2, S2_reg->as_VMReg());
+reg_def R_S3 ( SOC, SOC, Op_RegF,  3, S3_reg->as_VMReg());
+reg_def R_S4 ( SOC, SOC, Op_RegF,  4, S4_reg->as_VMReg());
+reg_def R_S5 ( SOC, SOC, Op_RegF,  5, S5_reg->as_VMReg());
+reg_def R_S6 ( SOC, SOC, Op_RegF,  6, S6_reg->as_VMReg());
+reg_def R_S7 ( SOC, SOC, Op_RegF,  7, S7->as_VMReg());
+reg_def R_S8 ( SOC, SOC, Op_RegF,  8, S8->as_VMReg());
+reg_def R_S9 ( SOC, SOC, Op_RegF,  9, S9->as_VMReg());
+reg_def R_S10( SOC, SOC, Op_RegF, 10,S10->as_VMReg());
+reg_def R_S11( SOC, SOC, Op_RegF, 11,S11->as_VMReg());
+reg_def R_S12( SOC, SOC, Op_RegF, 12,S12->as_VMReg());
+reg_def R_S13( SOC, SOC, Op_RegF, 13,S13->as_VMReg());
+reg_def R_S14( SOC, SOC, Op_RegF, 14,S14->as_VMReg());
+reg_def R_S15( SOC, SOC, Op_RegF, 15,S15->as_VMReg());
+reg_def R_S16( SOC, SOE, Op_RegF, 16,S16->as_VMReg());
+reg_def R_S17( SOC, SOE, Op_RegF, 17,S17->as_VMReg());
+reg_def R_S18( SOC, SOE, Op_RegF, 18,S18->as_VMReg());
+reg_def R_S19( SOC, SOE, Op_RegF, 19,S19->as_VMReg());
+reg_def R_S20( SOC, SOE, Op_RegF, 20,S20->as_VMReg());
+reg_def R_S21( SOC, SOE, Op_RegF, 21,S21->as_VMReg());
+reg_def R_S22( SOC, SOE, Op_RegF, 22,S22->as_VMReg());
+reg_def R_S23( SOC, SOE, Op_RegF, 23,S23->as_VMReg());
+reg_def R_S24( SOC, SOE, Op_RegF, 24,S24->as_VMReg());
+reg_def R_S25( SOC, SOE, Op_RegF, 25,S25->as_VMReg());
+reg_def R_S26( SOC, SOE, Op_RegF, 26,S26->as_VMReg());
+reg_def R_S27( SOC, SOE, Op_RegF, 27,S27->as_VMReg());
+reg_def R_S28( SOC, SOE, Op_RegF, 28,S28->as_VMReg());
+reg_def R_S29( SOC, SOE, Op_RegF, 29,S29->as_VMReg());
+reg_def R_S30( SOC, SOE, Op_RegF, 30,S30->as_VMReg());
+reg_def R_S31( SOC, SOE, Op_RegF, 31,S31->as_VMReg());
+
+// Double Registers
+// The rules of ADL require that double registers be defined in pairs.
+// Each pair must be two 32-bit values, but not necessarily a pair of
+// single float registers.  In each pair, ADLC-assigned register numbers
+// must be adjacent, with the lower number even.  Finally, when the
+// CPU stores such a register pair to memory, the word associated with
+// the lower ADLC-assigned number must be stored to the lower address.
+
+reg_def R_D16 (SOC, SOC, Op_RegD, 32, D16->as_VMReg());
+reg_def R_D16x(SOC, SOC, Op_RegD,255, D16->as_VMReg()->next());
+reg_def R_D17 (SOC, SOC, Op_RegD, 34, D17->as_VMReg());
+reg_def R_D17x(SOC, SOC, Op_RegD,255, D17->as_VMReg()->next());
+reg_def R_D18 (SOC, SOC, Op_RegD, 36, D18->as_VMReg());
+reg_def R_D18x(SOC, SOC, Op_RegD,255, D18->as_VMReg()->next());
+reg_def R_D19 (SOC, SOC, Op_RegD, 38, D19->as_VMReg());
+reg_def R_D19x(SOC, SOC, Op_RegD,255, D19->as_VMReg()->next());
+reg_def R_D20 (SOC, SOC, Op_RegD, 40, D20->as_VMReg());
+reg_def R_D20x(SOC, SOC, Op_RegD,255, D20->as_VMReg()->next());
+reg_def R_D21 (SOC, SOC, Op_RegD, 42, D21->as_VMReg());
+reg_def R_D21x(SOC, SOC, Op_RegD,255, D21->as_VMReg()->next());
+reg_def R_D22 (SOC, SOC, Op_RegD, 44, D22->as_VMReg());
+reg_def R_D22x(SOC, SOC, Op_RegD,255, D22->as_VMReg()->next());
+reg_def R_D23 (SOC, SOC, Op_RegD, 46, D23->as_VMReg());
+reg_def R_D23x(SOC, SOC, Op_RegD,255, D23->as_VMReg()->next());
+reg_def R_D24 (SOC, SOC, Op_RegD, 48, D24->as_VMReg());
+reg_def R_D24x(SOC, SOC, Op_RegD,255, D24->as_VMReg()->next());
+reg_def R_D25 (SOC, SOC, Op_RegD, 50, D25->as_VMReg());
+reg_def R_D25x(SOC, SOC, Op_RegD,255, D25->as_VMReg()->next());
+reg_def R_D26 (SOC, SOC, Op_RegD, 52, D26->as_VMReg());
+reg_def R_D26x(SOC, SOC, Op_RegD,255, D26->as_VMReg()->next());
+reg_def R_D27 (SOC, SOC, Op_RegD, 54, D27->as_VMReg());
+reg_def R_D27x(SOC, SOC, Op_RegD,255, D27->as_VMReg()->next());
+reg_def R_D28 (SOC, SOC, Op_RegD, 56, D28->as_VMReg());
+reg_def R_D28x(SOC, SOC, Op_RegD,255, D28->as_VMReg()->next());
+reg_def R_D29 (SOC, SOC, Op_RegD, 58, D29->as_VMReg());
+reg_def R_D29x(SOC, SOC, Op_RegD,255, D29->as_VMReg()->next());
+reg_def R_D30 (SOC, SOC, Op_RegD, 60, D30->as_VMReg());
+reg_def R_D30x(SOC, SOC, Op_RegD,255, D30->as_VMReg()->next());
+reg_def R_D31 (SOC, SOC, Op_RegD, 62, D31->as_VMReg());
+reg_def R_D31x(SOC, SOC, Op_RegD,255, D31->as_VMReg()->next());
+
+// ----------------------------
+// Special Registers
+// Condition Codes Flag Registers
+reg_def APSR (SOC, SOC,  Op_RegFlags, 0, VMRegImpl::Bad());
+reg_def FPSCR(SOC, SOC,  Op_RegFlags, 0, VMRegImpl::Bad());
+
+// ----------------------------
+// Specify the enum values for the registers.  These enums are only used by the
+// OptoReg "class". We can convert these enum values at will to VMReg when needed
+// for visibility to the rest of the vm. The order of this enum influences the
+// register allocator so having the freedom to set this order and not be stuck
+// with the order that is natural for the rest of the vm is worth it.
+
+// registers in that order so that R11/R12 is an aligned pair that can be used for longs
+alloc_class chunk0(
+                   R_R4, R_R5, R_R6, R_R7, R_R8, R_R9, R_R11, R_R12, R_R10, R_R13, R_R14, R_R15, R_R0, R_R1, R_R2, R_R3);
+
+// Note that a register is not allocatable unless it is also mentioned
+// in a widely-used reg_class below.
+
+alloc_class chunk1(
+                   R_S16, R_S17, R_S18, R_S19, R_S20, R_S21, R_S22, R_S23,
+                   R_S24, R_S25, R_S26, R_S27, R_S28, R_S29, R_S30, R_S31,
+                   R_S0,  R_S1,  R_S2,  R_S3,  R_S4,  R_S5,  R_S6,  R_S7,
+                   R_S8,  R_S9,  R_S10, R_S11, R_S12, R_S13, R_S14, R_S15,
+                   R_D16, R_D16x,R_D17, R_D17x,R_D18, R_D18x,R_D19, R_D19x,
+                   R_D20, R_D20x,R_D21, R_D21x,R_D22, R_D22x,R_D23, R_D23x,
+                   R_D24, R_D24x,R_D25, R_D25x,R_D26, R_D26x,R_D27, R_D27x,
+                   R_D28, R_D28x,R_D29, R_D29x,R_D30, R_D30x,R_D31, R_D31x
+);
+
+alloc_class chunk2(APSR, FPSCR);
+
+//----------Architecture Description Register Classes--------------------------
+// Several register classes are automatically defined based upon information in
+// this architecture description.
+// 1) reg_class inline_cache_reg           ( as defined in frame section )
+// 2) reg_class stack_slots( /* one chunk of stack-based "registers" */ )
+//
+
+// ----------------------------
+// Integer Register Classes
+// ----------------------------
+// Exclusions from i_reg:
+// SP (R13), PC (R15)
+// R10: reserved by HotSpot to the TLS register (invariant within Java)
+reg_class int_reg(R_R0, R_R1, R_R2, R_R3, R_R4, R_R5, R_R6, R_R7, R_R8, R_R9, R_R11, R_R12, R_R14);
+
+reg_class R0_regI(R_R0);
+reg_class R1_regI(R_R1);
+reg_class R2_regI(R_R2);
+reg_class R3_regI(R_R3);
+reg_class R12_regI(R_R12);
+
+// ----------------------------
+// Pointer Register Classes
+// ----------------------------
+reg_class ptr_reg(R_R0, R_R1, R_R2, R_R3, R_R4, R_R5, R_R6, R_R7, R_R8, R_R9, R_R11, R_R12, R_R14);
+// Special class for storeP instructions, which can store SP or RPC to TLS.
+// It is also used for memory addressing, allowing direct TLS addressing.
+reg_class sp_ptr_reg(R_R0, R_R1, R_R2, R_R3, R_R4, R_R5, R_R6, R_R7, R_R8, R_R9, R_R11, R_R12, R_R14, R_R10 /* TLS*/, R_R13 /* SP*/);
+
+#define R_Ricklass R_R8
+#define R_Rthread  R_R10
+#define R_Rexception_obj R_R4
+
+// Other special pointer regs
+reg_class R0_regP(R_R0);
+reg_class R1_regP(R_R1);
+reg_class R2_regP(R_R2);
+reg_class R4_regP(R_R4);
+reg_class R8_regP(R_R8);
+reg_class R9_regP(R_R9);
+reg_class R12_regP(R_R12);
+reg_class Rexception_regP(R_Rexception_obj);
+reg_class Ricklass_regP(R_Ricklass);
+reg_class Rthread_regP(R_Rthread);
+reg_class IP_regP(R_R12);
+reg_class SP_regP(R_R13);
+reg_class LR_regP(R_R14);
+
+reg_class FP_regP(R_R11);
+
+// ----------------------------
+// Long Register Classes
+// ----------------------------
+reg_class long_reg (             R_R0,R_R1, R_R2,R_R3, R_R4,R_R5, R_R6,R_R7, R_R8,R_R9, R_R11,R_R12);
+// for ldrexd, strexd: first reg of pair must be even
+reg_class long_reg_align (       R_R0,R_R1, R_R2,R_R3, R_R4,R_R5, R_R6,R_R7, R_R8,R_R9);
+
+reg_class R0R1_regL(R_R0,R_R1);
+reg_class R2R3_regL(R_R2,R_R3);
+
+// ----------------------------
+// Special Class for Condition Code Flags Register
+reg_class int_flags(APSR);
+reg_class float_flags(FPSCR);
+
+
+// ----------------------------
+// Float Point Register Classes
+// ----------------------------
+// Skip S14/S15, they are reserved for mem-mem copies
+reg_class sflt_reg(R_S0, R_S1, R_S2, R_S3, R_S4, R_S5, R_S6, R_S7, R_S8, R_S9, R_S10, R_S11, R_S12, R_S13,
+                   R_S16, R_S17, R_S18, R_S19, R_S20, R_S21, R_S22, R_S23, R_S24, R_S25, R_S26, R_S27, R_S28, R_S29, R_S30, R_S31);
+
+// Paired floating point registers--they show up in the same order as the floats,
+// but they are used with the "Op_RegD" type, and always occur in even/odd pairs.
+reg_class dflt_reg(R_S0,R_S1, R_S2,R_S3, R_S4,R_S5, R_S6,R_S7, R_S8,R_S9, R_S10,R_S11, R_S12,R_S13,
+                   R_S16,R_S17, R_S18,R_S19, R_S20,R_S21, R_S22,R_S23, R_S24,R_S25, R_S26,R_S27, R_S28,R_S29, R_S30,R_S31,
+                   R_D16,R_D16x, R_D17,R_D17x, R_D18,R_D18x, R_D19,R_D19x, R_D20,R_D20x, R_D21,R_D21x, R_D22,R_D22x,
+                   R_D23,R_D23x, R_D24,R_D24x, R_D25,R_D25x, R_D26,R_D26x, R_D27,R_D27x, R_D28,R_D28x, R_D29,R_D29x,
+                   R_D30,R_D30x, R_D31,R_D31x);
+
+reg_class dflt_low_reg(R_S0,R_S1, R_S2,R_S3, R_S4,R_S5, R_S6,R_S7, R_S8,R_S9, R_S10,R_S11, R_S12,R_S13,
+                       R_S16,R_S17, R_S18,R_S19, R_S20,R_S21, R_S22,R_S23, R_S24,R_S25, R_S26,R_S27, R_S28,R_S29, R_S30,R_S31);
+
+
+reg_class actual_dflt_reg %{
+  if (VM_Version::has_vfp3_32()) {
+    return DFLT_REG_mask();
+  } else {
+    return DFLT_LOW_REG_mask();
+  }
+%}
+
+reg_class S0_regF(R_S0);
+reg_class D0_regD(R_S0,R_S1);
+reg_class D1_regD(R_S2,R_S3);
+reg_class D2_regD(R_S4,R_S5);
+reg_class D3_regD(R_S6,R_S7);
+reg_class D4_regD(R_S8,R_S9);
+reg_class D5_regD(R_S10,R_S11);
+reg_class D6_regD(R_S12,R_S13);
+reg_class D7_regD(R_S14,R_S15);
+
+reg_class D16_regD(R_D16,R_D16x);
+reg_class D17_regD(R_D17,R_D17x);
+reg_class D18_regD(R_D18,R_D18x);
+reg_class D19_regD(R_D19,R_D19x);
+reg_class D20_regD(R_D20,R_D20x);
+reg_class D21_regD(R_D21,R_D21x);
+reg_class D22_regD(R_D22,R_D22x);
+reg_class D23_regD(R_D23,R_D23x);
+reg_class D24_regD(R_D24,R_D24x);
+reg_class D25_regD(R_D25,R_D25x);
+reg_class D26_regD(R_D26,R_D26x);
+reg_class D27_regD(R_D27,R_D27x);
+reg_class D28_regD(R_D28,R_D28x);
+reg_class D29_regD(R_D29,R_D29x);
+reg_class D30_regD(R_D30,R_D30x);
+reg_class D31_regD(R_D31,R_D31x);
+
+reg_class vectorx_reg(R_S0,R_S1,R_S2,R_S3, R_S4,R_S5,R_S6,R_S7,
+                      R_S8,R_S9,R_S10,R_S11, /* skip S14/S15 */
+                      R_S16,R_S17,R_S18,R_S19, R_S20,R_S21,R_S22,R_S23,
+                      R_S24,R_S25,R_S26,R_S27, R_S28,R_S29,R_S30,R_S31,
+                      R_D16,R_D16x,R_D17,R_D17x, R_D18,R_D18x,R_D19,R_D19x,
+                      R_D20,R_D20x,R_D21,R_D21x, R_D22,R_D22x,R_D23,R_D23x,
+                      R_D24,R_D24x,R_D25,R_D25x, R_D26,R_D26x,R_D27,R_D27x,
+                      R_D28,R_D28x,R_D29,R_D29x, R_D30,R_D30x,R_D31,R_D31x);
+
+%}
+
+source_hpp %{
+// FIXME
+const MachRegisterNumbers R_mem_copy_lo_num = R_S14_num;
+const MachRegisterNumbers R_mem_copy_hi_num = R_S15_num;
+const FloatRegister Rmemcopy = S14;
+const MachRegisterNumbers R_hf_ret_lo_num = R_S0_num;
+const MachRegisterNumbers R_hf_ret_hi_num = R_S1_num;
+
+const MachRegisterNumbers R_Ricklass_num = R_R8_num;
+const MachRegisterNumbers R_Rmethod_num  = R_R9_num;
+
+#define LDR_DOUBLE "FLDD"
+#define LDR_FLOAT  "FLDS"
+#define STR_DOUBLE "FSTD"
+#define STR_FLOAT  "FSTS"
+#define LDR_64     "LDRD"
+#define STR_64     "STRD"
+#define LDR_32     "LDR"
+#define STR_32     "STR"
+#define MOV_DOUBLE "FCPYD"
+#define MOV_FLOAT  "FCPYS"
+#define FMSR       "FMSR"
+#define FMRS       "FMRS"
+#define LDREX      "ldrex "
+#define STREX      "strex "
+
+#define str_64     strd
+#define ldr_64     ldrd
+#define ldr_32     ldr
+#define ldrex      ldrex
+#define strex      strex
+
+static inline bool is_memoryD(int offset) {
+  return offset < 1024 && offset > -1024;
+}
+
+static inline bool is_memoryfp(int offset) {
+  return offset < 1024 && offset > -1024;
+}
+
+static inline bool is_memoryI(int offset) {
+  return offset < 4096 && offset > -4096;
+}
+
+static inline bool is_memoryP(int offset) {
+  return offset < 4096 && offset > -4096;
+}
+
+static inline bool is_memoryHD(int offset) {
+  return offset < 256 && offset > -256;
+}
+
+static inline bool is_aimm(int imm) {
+  return AsmOperand::is_rotated_imm(imm);
+}
+
+static inline bool is_limmI(jint imm) {
+  return AsmOperand::is_rotated_imm(imm);
+}
+
+static inline bool is_limmI_low(jint imm, int n) {
+  int imml = imm & right_n_bits(n);
+  return is_limmI(imml) || is_limmI(imm);
+}
+
+static inline int limmI_low(jint imm, int n) {
+  int imml = imm & right_n_bits(n);
+  return is_limmI(imml) ? imml : imm;
+}
+
+%}
+
+source %{
+
+// Given a register encoding, produce a Integer Register object
+static Register reg_to_register_object(int register_encoding) {
+  assert(R0->encoding() == R_R0_enc && R15->encoding() == R_R15_enc, "right coding");
+  return as_Register(register_encoding);
+}
+
+// Given a register encoding, produce a single-precision Float Register object
+static FloatRegister reg_to_FloatRegister_object(int register_encoding) {
+  assert(S0->encoding() == R_S0_enc && S31->encoding() == R_S31_enc, "right coding");
+  return as_FloatRegister(register_encoding);
+}
+
+void Compile::pd_compiler2_init() {
+  // Umimplemented
+}
+
+// Location of compiled Java return values.  Same as C
+OptoRegPair c2::return_value(int ideal_reg) {
+  assert( ideal_reg >= Op_RegI && ideal_reg <= Op_RegL, "only return normal values" );
+#ifndef __ABI_HARD__
+  static int lo[Op_RegL+1] = { 0, 0, OptoReg::Bad, R_R0_num,     R_R0_num,     R_R0_num,     R_R0_num, R_R0_num };
+  static int hi[Op_RegL+1] = { 0, 0, OptoReg::Bad, OptoReg::Bad, OptoReg::Bad, OptoReg::Bad, R_R1_num, R_R1_num };
+#else
+  static int lo[Op_RegL+1] = { 0, 0, OptoReg::Bad, R_R0_num,     R_R0_num,     R_hf_ret_lo_num,  R_hf_ret_lo_num, R_R0_num };
+  static int hi[Op_RegL+1] = { 0, 0, OptoReg::Bad, OptoReg::Bad, OptoReg::Bad, OptoReg::Bad,     R_hf_ret_hi_num, R_R1_num };
+#endif
+  return OptoRegPair( hi[ideal_reg], lo[ideal_reg]);
+}
+
+// !!!!! Special hack to get all type of calls to specify the byte offset
+//       from the start of the call to the point where the return address
+//       will point.
+
+int MachCallStaticJavaNode::ret_addr_offset() {
+  bool far = (_method == NULL) ? maybe_far_call(this) : !cache_reachable();
+  return ((far ? 3 : 1) + (_method_handle_invoke ? 1 : 0)) *
+    NativeInstruction::instruction_size;
+}
+
+int MachCallDynamicJavaNode::ret_addr_offset() {
+  bool far = !cache_reachable();
+  // mov_oop is always 2 words
+  return (2 + (far ? 3 : 1)) * NativeInstruction::instruction_size;
+}
+
+int MachCallRuntimeNode::ret_addr_offset() {
+  // bl or movw; movt; blx
+  bool far = maybe_far_call(this);
+  return (far ? 3 : 1) * NativeInstruction::instruction_size;
+}
+
+int MachCallNativeNode::ret_addr_offset() {
+  Unimplemented();
+  return -1;
+}
+%}
+
+// The intptr_t operand types, defined by textual substitution.
+// (Cf. opto/type.hpp.  This lets us avoid many, many other ifdefs.)
+#define immX      immI
+#define immXRot   immIRot
+#define iRegX     iRegI
+#define aimmX     aimmI
+#define limmX     limmI
+#define immX10x2  immI10x2
+#define LShiftX   LShiftI
+#define shimmX    immU5
+
+// Compatibility interface
+#define aimmP     immPRot
+#define immIMov   immIRot
+
+#define store_RegL     iRegL
+#define store_RegLd    iRegLd
+#define store_RegI     iRegI
+#define store_ptr_RegP iRegP
+
+//----------ATTRIBUTES---------------------------------------------------------
+//----------Operand Attributes-------------------------------------------------
+op_attrib op_cost(1);          // Required cost attribute
+
+//----------OPERANDS-----------------------------------------------------------
+// Operand definitions must precede instruction definitions for correct parsing
+// in the ADLC because operands constitute user defined types which are used in
+// instruction definitions.
+
+//----------Simple Operands----------------------------------------------------
+// Immediate Operands
+
+operand immIRot() %{
+  predicate(AsmOperand::is_rotated_imm(n->get_int()));
+  match(ConI);
+
+  op_cost(0);
+  // formats are generated automatically for constants and base registers
+  format %{ %}
+  interface(CONST_INTER);
+%}
+
+operand immIRotn() %{
+  predicate(n->get_int() != 0 && AsmOperand::is_rotated_imm(~n->get_int()));
+  match(ConI);
+
+  op_cost(0);
+  // formats are generated automatically for constants and base registers
+  format %{ %}
+  interface(CONST_INTER);
+%}
+
+operand immIRotneg() %{
+  // if AsmOperand::is_rotated_imm() is true for this constant, it is
+  // a immIRot and an optimal instruction combination exists to handle the
+  // constant as an immIRot
+  predicate(!AsmOperand::is_rotated_imm(n->get_int()) && AsmOperand::is_rotated_imm(-n->get_int()));
+  match(ConI);
+
+  op_cost(0);
+  // formats are generated automatically for constants and base registers
+  format %{ %}
+  interface(CONST_INTER);
+%}
+
+// Non-negative integer immediate that is encodable using the rotation scheme,
+// and that when expanded fits in 31 bits.
+operand immU31Rot() %{
+  predicate((0 <= n->get_int()) && AsmOperand::is_rotated_imm(n->get_int()));
+  match(ConI);
+
+  op_cost(0);
+  // formats are generated automatically for constants and base registers
+  format %{ %}
+  interface(CONST_INTER);
+%}
+
+operand immPRot() %{
+  predicate(n->get_ptr() == 0 || (AsmOperand::is_rotated_imm(n->get_ptr()) && ((ConPNode*)n)->type()->reloc() == relocInfo::none));
+
+  match(ConP);
+
+  op_cost(0);
+  // formats are generated automatically for constants and base registers
+  format %{ %}
+  interface(CONST_INTER);
+%}
+
+operand immLlowRot() %{
+  predicate(n->get_long() >> 32 == 0 && AsmOperand::is_rotated_imm((int)n->get_long()));
+  match(ConL);
+  op_cost(0);
+
+  format %{ %}
+  interface(CONST_INTER);
+%}
+
+operand immLRot2() %{
+  predicate(AsmOperand::is_rotated_imm((int)(n->get_long() >> 32)) &&
+            AsmOperand::is_rotated_imm((int)(n->get_long())));
+  match(ConL);
+  op_cost(0);
+
+  format %{ %}
+  interface(CONST_INTER);
+%}
+
+// Integer Immediate: 12-bit - for addressing mode
+operand immI12() %{
+  predicate((-4096 < n->get_int()) && (n->get_int() < 4096));
+  match(ConI);
+  op_cost(0);
+
+  format %{ %}
+  interface(CONST_INTER);
+%}
+
+// Integer Immediate: 10-bit disp and disp+4 - for addressing float pair
+operand immI10x2() %{
+  predicate((-1024 < n->get_int()) && (n->get_int() < 1024 - 4));
+  match(ConI);
+  op_cost(0);
+
+  format %{ %}
+  interface(CONST_INTER);
+%}
+
+// Integer Immediate: 12-bit disp and disp+4 - for addressing word pair
+operand immI12x2() %{
+  predicate((-4096 < n->get_int()) && (n->get_int() < 4096 - 4));
+  match(ConI);
+  op_cost(0);
+
+  format %{ %}
+  interface(CONST_INTER);
+%}

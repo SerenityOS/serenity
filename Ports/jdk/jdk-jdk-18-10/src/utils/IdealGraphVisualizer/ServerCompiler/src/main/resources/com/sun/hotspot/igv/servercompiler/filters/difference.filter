@@ -1,0 +1,4 @@
+colorize("state", "same", white);
+colorize("state", "changed", orange);
+colorize("state", "new", green);
+colorize("state", "deleted", red);

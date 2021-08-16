@@ -1,0 +1,673 @@
+#
+# Copyright (c) 2014, 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include UtilsForTests.gmk
+
+THIS_FILE := $(TOPDIR)/test/make/TestMakeBase.gmk
+DEPS := $(THIS_FILE) \
+    $(TOPDIR)/make/common/MakeBase.gmk \
+    #
+
+OUTPUT_DIR := $(TESTMAKE_OUTPUTDIR)/make-base
+$(call MakeDir, $(OUTPUT_DIR))
+
+################################################################################
+# Escape $
+ifneq ($(call EscapeDollar, foo$$bar), foo\$$bar)
+  $(error EscapeDollar failed $(call EscapeDollar, foo$$bar) foo\$$bar)
+endif
+
+ESCAPE_DOLLAR_DIR := $(OUTPUT_DIR)/escape-dollar
+
+$(ESCAPE_DOLLAR_DIR)/_escape_dollar: $(DEPS)
+	$(RM) -r $(@D)
+	$(MKDIR) -p $(@D)
+	$(ECHO) foo\$$bar > $(@D)/file1
+	$(ECHO) $(call EscapeDollar, foo$$bar) > $(@D)/file2
+	$(ECHO) $(call EscapeDollar, foo\$$bar) > $(@D)/file3
+	$(DIFF) $(@D)/file1 $(@D)/file2
+	$(DIFF) $(@D)/file1 $(@D)/file3
+	$(TOUCH) $@
+
+TEST_TARGETS += $(ESCAPE_DOLLAR_DIR)/_escape_dollar
+
+################################################################################
+# Test containing and not-containing
+
+CONT_LIST := foo bar baz foobar foobaz
+
+# Param 1 - string to look for
+# Param 2 - expected result
+define TestContaining
+  value := $$(call containing, $1, $(CONT_LIST))
+  ifneq ($$(value), $2)
+    $$(info (call containing, $1, $(CONT_LIST)))
+    $$(error result >$$(value)<, expected >$2<)
+  endif
+endef
+
+$(eval $(call TestContaining,bar,bar foobar))
+$(eval $(call TestContaining,foo bar,foo bar foobar foobaz))
+
+# Param 1 - string to look for
+# Param 2 - expected result
+define TestNotContaining
+  value := $$(call not-containing, $1, $(CONT_LIST))
+  ifneq ($$(value), $2)
+    $$(info (call not-containing, $1, $(CONT_LIST)))
+    $$(error result >$$(value)<, expected >$2<)
+  endif
+endef
+
+$(eval $(call TestNotContaining,bar,foo baz foobaz))
+$(eval $(call TestNotContaining,foo bar,baz))
+
+################################################################################
+# Test Equals
+
+EQUALS_VALUE1 := value1$(SPACE)
+EQUALS_VALUE2 := value2
+EQUALS_EMPTY :=
+
+ifneq ($(call equals, $(EQUALS_VALUE1), $(EQUALS_VALUE2)), )
+  $(error The strings >$(EQUALS_VALUE1)< and >$(EQUALS_VALUE2)< are equal)
+endif
+
+ifeq ($(call equals, $(EQUALS_VALUE1), $(EQUALS_VALUE1)), )
+  $(error The strings >$(EQUALS_VALUE1)< and >$(EQUALS_VALUE1)< are not equal)
+endif
+
+ifeq ($(call equals, $(EQUALS_EMPTY), $(EQUALS_EMPTY)), )
+  $(error The strings >$(EQUALS_EMPTY)< and >$(EQUALS_EMPTY)< are not equal)
+endif
+
+ifneq ($(call equals, $(EQUALS_EMPTY), $(EQUALS_VALUE2)), )
+  $(error The strings >$(EQUALS_EMPTY)< and >$(EQUALS_VALUE2)< are equal)
+endif
+
+ifneq ($(call equals, $(EQUALS_VALUE2), $(EQUALS_EMPTY)), )
+  $(error The strings >$(EQUALS_VALUE2)< and >$(EQUALS_EMPTY)< are equal)
+endif
+
+################################################################################
+# Test boolean operators
+
+$(eval $(call assert-equals, $(call And,  true  true  true ), true))
+$(eval $(call assert-equals, $(call And,  true  false true ), false))
+$(eval $(call assert-equals, $(call And,  false false false ), false))
+$(eval $(call assert-equals, $(call And, true), true))
+$(eval $(call assert-equals, $(call And, false), false))
+$(eval $(call assert-equals, $(call And,    ), true))
+
+$(eval $(call assert-equals, $(call Or,  true  true  true ), true))
+$(eval $(call assert-equals, $(call Or,  true  false true ), true))
+$(eval $(call assert-equals, $(call Or,  false false false ), false))
+$(eval $(call assert-equals, $(call Or, true), true))
+$(eval $(call assert-equals, $(call Or, false), false))
+$(eval $(call assert-equals, $(call Or,    ), false))
+
+# We cannot catch $(error) while testing, but you can enable this manually
+# by uncommenting and watch make fails.
+#$(eval $(call assert-equals, $(call And,  non-boolean  ), $(error ...)))
+#$(eval $(call assert-equals, $(call Or,  non-boolean  ), $(error ...)))
+
+################################################################################
+# Test remove-prefixes
+
+$(call AssertEquals, \
+    $(call remove-prefixes, pre, prefix postfix), fix postfix, \
+    Prefixes not properly removed)
+
+$(call AssertEquals, \
+    $(call remove-prefixes, pre post, prefix postfix), fix fix, \
+    Prefixes not properly removed)
+
+################################################################################
+# Test ShellQuote
+
+SHELL_QUOTE_VALUE := foo '""' "''" bar
+SHELL_QUOTE_RESULT := $(shell $(ECHO) $(call ShellQuote, \
+    $(SHELL_QUOTE_VALUE)))
+
+ifneq ($(SHELL_QUOTE_VALUE), $(SHELL_QUOTE_RESULT))
+  $(error Expected: >$(SHELL_QUOTE_VALUE)< - Result: >$(SHELL_QUOTE_RESULT)<)
+endif
+
+################################################################################
+# Test read and write to file
+
+READ_WRITE_FILE := $(OUTPUT_DIR)/read-write
+READ_WRITE_VALUE := foo '""' "''" \t\n\\ bar
+$(call WriteFile, $(READ_WRITE_VALUE), $(READ_WRITE_FILE))
+READ_WRITE_RESULT := $(call ReadFile, $(READ_WRITE_FILE))
+
+ifneq ($(READ_WRITE_VALUE), $(READ_WRITE_RESULT))
+  $(error Expected: >$(READ_WRITE_VALUE)< - Result: >$(READ_WRITE_RESULT)<)
+endif
+
+################################################################################
+# Test creating dependencies on make variables
+
+VARDEP_DIR := $(OUTPUT_DIR)/vardep
+VARDEP_SRC_FILE := $(VARDEP_DIR)/src-file
+VARDEP_TARGET_FILE := $(VARDEP_DIR)/target-file
+VARDEP_FLAG_FILE := $(VARDEP_DIR)/flag-file
+
+$(VARDEP_SRC_FILE):
+	$(MKDIR) -p $(@D)
+	$(ECHO) "some string XXX" > $@
+
+$(VARDEP_TARGET_FILE): $(VARDEP_SRC_FILE) \
+    $(call DependOnVariable, VARDEP_TEST_VAR)
+	$(MKDIR) -p $(@D)
+	$(SED) -e 's/XXX/$(VARDEP_TEST_VAR)/g' $< > $@
+	$(TOUCH) $(VARDEP_FLAG_FILE)
+
+test-vardep:
+	$(RM) $(VARDEP_SRC_FILE) $(VARDEP_TARGET_FILE) $(VARDEP_FLAG_FILE)
+        #
+        # Simply create the target file and verify that it has the correct value
+        #
+	$(MAKE) -f $(THIS_FILE) VARDEP_TEST_VAR=value1 $(VARDEP_TARGET_FILE)
+	$(PRINTF) "Expecting value1: %s\n" "`$(CAT) $(VARDEP_DIR)/target-file`"
+	test "some string value1" = "`$(CAT) $(VARDEP_DIR)/target-file`"
+	test -e $(VARDEP_FLAG_FILE)
+        #
+        # Make the target file again and verify that the value is updated with
+        # the new value
+        #
+	$(SLEEP_ON_MAC)
+	$(MAKE) -f $(THIS_FILE) VARDEP_TEST_VAR=value2 $(VARDEP_TARGET_FILE)
+	$(PRINTF) "Expecting value2: %s\n" "`$(CAT) $(VARDEP_DIR)/target-file`"
+	test "some string value2" = "`$(CAT) $(VARDEP_DIR)/target-file`"
+	test -e $(VARDEP_FLAG_FILE)
+        #
+        # Make the target again with the same value and verify that the recipe
+        # was never run by checking that the flag file was not recreated
+        #
+	$(SLEEP_ON_MAC)
+	$(RM) $(VARDEP_FLAG_FILE)
+	$(MAKE) -f $(THIS_FILE) VARDEP_TEST_VAR=value2 $(VARDEP_TARGET_FILE)
+	$(PRINTF) "Expecting value2: %s\n" "`$(CAT) $(VARDEP_DIR)/target-file`"
+	test "some string value2" = "`$(CAT) $(VARDEP_DIR)/target-file`"
+	test ! -e $(VARDEP_FLAG_FILE)
+        #
+        # Test running with spaces at the end and the middle of the value
+        # and verify that the file isn't rewritten the second time
+        #
+	$(MAKE) -f $(THIS_FILE) VARDEP_TEST_VAR="value3  foo " $(VARDEP_TARGET_FILE)
+	$(RM) $(VARDEP_FLAG_FILE)
+	$(MAKE) -f $(THIS_FILE) VARDEP_TEST_VAR="value3 foo" $(VARDEP_TARGET_FILE)
+	test ! -e $(VARDEP_FLAG_FILE)
+	$(MAKE) -f $(THIS_FILE) VARDEP_TEST_VAR=" value3  foo" $(VARDEP_TARGET_FILE)
+	test ! -e $(VARDEP_FLAG_FILE)
+        #
+        # Test including some problematic characters
+	$(MAKE) -f $(THIS_FILE) VARDEP_TEST_VAR='value4 \$$ORIGIN' $(VARDEP_TARGET_FILE)
+	$(RM) $(VARDEP_FLAG_FILE)
+	$(MAKE) -f $(THIS_FILE) VARDEP_TEST_VAR='value4 \$$ORIGIN' $(VARDEP_TARGET_FILE)
+	test ! -e $(VARDEP_FLAG_FILE)
+        #
+        # Test having the variable be empty, first from scratch, with even
+        # the vardep file deleted.
+	$(SLEEP_ON_MAC)
+	$(RM) $(VARDEP_FLAG_FILE) $(VARDEP_TARGET_FILE) \
+	    $(call DependOnVariableFileName,VARDEP_TEST_VAR)
+	$(MAKE) -f $(THIS_FILE) VARDEP_TEST_VAR="" $(VARDEP_TARGET_FILE)
+	$(PRINTF) "Expecting '': %s\n" "`$(CAT) $(VARDEP_DIR)/target-file`"
+	test "some string " = "`$(CAT) $(VARDEP_DIR)/target-file`"
+	test -e $(VARDEP_FLAG_FILE)
+        #
+        # Then rebuild with same empty value, nothing should happen
+	$(SLEEP_ON_MAC)
+	$(RM) $(VARDEP_FLAG_FILE)
+	$(MAKE) -f $(THIS_FILE) VARDEP_TEST_VAR="" $(VARDEP_TARGET_FILE)
+	$(PRINTF) "Expecting '': %s\n" "`$(CAT) $(VARDEP_DIR)/target-file`"
+	test "some string " = "`$(CAT) $(VARDEP_DIR)/target-file`"
+	test ! -e $(VARDEP_FLAG_FILE)
+        #
+        # Try setting a value again and verify that the target gets rebuilt
+	$(SLEEP_ON_MAC)
+	$(MAKE) -f $(THIS_FILE) VARDEP_TEST_VAR=value2 $(VARDEP_TARGET_FILE)
+	$(PRINTF) "Expecting value2: %s\n" "`$(CAT) $(VARDEP_DIR)/target-file`"
+	test "some string value2" = "`$(CAT) $(VARDEP_DIR)/target-file`"
+	test -e $(VARDEP_FLAG_FILE)
+
+# Test specifying a specific value file to store variable in
+VARDEP_VALUE_FILE := $(VARDEP_DIR)/value-file
+VARDEP_TEST_VAR2 := value3
+
+VARDEP_RETURN_VALUE := $(call DependOnVariable, VARDEP_TEST_VAR2, $(VARDEP_VALUE_FILE))
+$(call AssertEquals, $(VARDEP_RETURN_VALUE), $(VARDEP_VALUE_FILE), \
+    Wrong filename returned)
+-include $(VARDEP_VALUE_FILE)
+$(call AssertEquals, $(VARDEP_TEST_VAR2_old), $(VARDEP_TEST_VAR2), \
+    Wrong contents in vardeps file)
+
+# Test with a variable value containing some problematic characters
+VARDEP_TEST_VAR3 := foo '""' "''" bar \$$ORIGIN &\#x00a9
+VARDEP_VALUE_FILE := $(call DependOnVariable, VARDEP_TEST_VAR3)
+-include $(VARDEP_VALUE_FILE)
+$(call AssertEquals, $(call EscapeHash,$(VARDEP_TEST_VAR3_old)), \
+    $(call EscapeHash,$(VARDEP_TEST_VAR3)), \
+    Wrong contents in vardep file)
+
+TEST_TARGETS += test-vardep
+
+################################################################################
+# Test sequence
+
+ifneq ($(call sequence, 1, 1), 1)
+  $(error Sequence 1, 1 should be "1", but was $(call sequence, 1, 1))
+endif
+
+ifneq ($(call sequence, 2, 3), 2 3)
+  $(error Sequence 2, 3 should be "2 3", but was $(call sequence, 2, 3))
+endif
+
+ifneq ($(call sequence, 4, 9), 4 5 6 7 8 9)
+  $(error Sequence 4, 9 should be "4 5 6 7 8 9", but was $(call sequence, 4, 9))
+endif
+
+ifneq ($(call sequence, 5, 15), 5 6 7 8 9 10 11 12 13 14 15)
+  $(error Sequence 5, 15 should be "5 6 7 8 9 10 11 12 13 14 15", \
+      but was $(call sequence, 5, 15))
+endif
+
+################################################################################
+# Test that PathList is safe when called multiple nested times.
+
+PATHLIST_INPUT := foo bar baz
+
+$(call AssertEquals, \
+    $(call PathList, $(call PathList, $(PATHLIST_INPUT))), \
+    $(call PathList, $(PATHLIST_INPUT)), \
+    PathList call not safe for calling twice, \
+)
+
+################################################################################
+# Test FindCommonPathPrefix
+
+$(call AssertEquals, \
+    $(call FindCommonPathPrefix, /foo/bar/baz, /foo/bar/banan), \
+    /foo/bar, \
+    FindCommonPathPrefix, \
+)
+
+$(call AssertEquals, \
+    $(call FindCommonPathPrefix, /foo/bar/baz, /foo/bar), \
+    /foo/bar, \
+    FindCommonPathPrefix, \
+)
+
+$(call AssertEquals, \
+    $(call FindCommonPathPrefix, /foo/bar/baz, /foo/bar/), \
+    /foo/bar, \
+    FindCommonPathPrefix, \
+)
+
+$(call AssertEquals, \
+    $(call FindCommonPathPrefix, foo/bar/baz, foo/bar/banan), \
+    foo/bar, \
+    FindCommonPathPrefix, \
+)
+
+$(call AssertEquals, \
+    $(call FindCommonPathPrefix, foo/bar/baz, /foo/bar/banan), \
+    , \
+    FindCommonPathPrefix, \
+)
+
+$(call AssertEquals, \
+    $(call FindCommonPathPrefix, /foo/bar/, /foo/bar), \
+    /foo/bar, \
+    FindCommonPathPrefix, \
+)
+
+$(call AssertEquals, \
+    $(call FindCommonPathPrefix, /fo oo/bar1/, /fo oo/bar2), \
+    /fo oo, \
+    FindCommonPathPrefix, \
+)
+
+################################################################################
+# RelativePath
+
+$(call AssertEquals, \
+    $(call RelativePath, foo/bar/baz, foo/bar/banan), \
+    ../baz, \
+    RelativePath, \
+)
+
+$(call AssertEquals, \
+    $(call RelativePath, foo/bar/baz/banan/kung, foo/bar/banan/kung), \
+    ../../baz/banan/kung, \
+    RelativePath, \
+)
+
+$(call AssertEquals, \
+    $(call RelativePath, /foo/bar/baz/banan/kung, /foo/bar/banan/kung/), \
+    ../../baz/banan/kung, \
+    RelativePath, \
+)
+
+$(call AssertEquals, \
+    $(call RelativePath, /foo/bar/baz/banan/kung, /foo/bar/baz), \
+    banan/kung, \
+    RelativePath, \
+)
+
+$(call AssertEquals, \
+    $(call RelativePath, /foo/bar/baz/banan/kung, /foo/bar/baz/), \
+    banan/kung, \
+    RelativePath, \
+)
+
+$(call AssertEquals, \
+    $(call RelativePath, /foo/bar, /foo/bar/baz), \
+    .., \
+    RelativePath, \
+)
+
+$(call AssertEquals, \
+    $(call RelativePath, /foo/bar/baz/, /foo/bar/baz), \
+    ., \
+    RelativePath, \
+)
+
+$(call AssertEquals, \
+    $(call RelativePath, /fo oo/bar/baz/ban an, /fo oo/bar/), \
+    baz/ban an, \
+    RelativePath, \
+)
+
+$(call AssertEquals, \
+    $(call RelativePath, /foo/ba rr/ba zz, /foo/ba rr/banan), \
+    ../ba zz, \
+    RelativePath, \
+)
+
+$(call AssertEquals, \
+    $(call RelativePath, /foo, /bar), \
+    ../foo, \
+    RelativePath, \
+)
+
+################################################################################
+# Test ParseKeywordVariable
+
+KWBASE := APA=banan;GURKA=tomat;COUNT=1%202%203%204%205;SUM=1+2+3+4+5;MANY_WORDS=I have the best words.
+
+$(eval $(call ParseKeywordVariable, KWBASE, \
+    SINGLE_KEYWORDS := APA GURKA SUM, \
+    STRING_KEYWORDS := COUNT MANY_WORDS, \
+))
+
+$(call AssertEquals, \
+    $(KWBASE_APA), \
+    banan, \
+    ParseKeywordVariable failed to parse APA, \
+)
+
+$(call AssertEquals, \
+    $(KWBASE_COUNT), \
+    1 2 3 4 5, \
+    ParseKeywordVariable failed to parse COUNT, \
+)
+
+$(call AssertEquals, \
+    $(KWBASE_SUM), \
+    1+2+3+4+5, \
+    ParseKeywordVariable failed to parse SUM, \
+)
+
+$(call AssertEquals, \
+    $(KWBASE_MANY_WORDS), \
+    I have the best words., \
+    ParseKeywordVariable failed to parse MANY_WORDS, \
+)
+
+# Simulate variable set from command line by using "override"
+override KWBASE_WEIRD_GURKA := paprika
+KWBASE_WEIRD := ;;APA=banan;;;GURKA=apelsin;APA=skansen;;
+
+$(eval $(call ParseKeywordVariable, KWBASE_WEIRD, \
+    SINGLE_KEYWORDS := APA GURKA SUM, \
+    STRING_KEYWORDS := COUNT, \
+))
+
+$(call AssertEquals, \
+    $(KWBASE_WEIRD_APA), \
+    skansen, \
+    ParseKeywordVariable failed to overwrite APA, \
+)
+
+$(call AssertEquals, \
+    $(KWBASE_WEIRD_GURKA), \
+    paprika, \
+    ParseKeywordVariable failed to preserve GURKA, \
+)
+
+################################################################################
+# Test recursive wildcard
+
+A_FOOBAR := $(OUTPUT_DIR)/wildcard/a/foo.bar
+A_B_DOOBAR := $(OUTPUT_DIR)/wildcard/a/b/doo.bar
+A_B_FOOBAR := $(OUTPUT_DIR)/wildcard/a/b/foo.bar
+A_B_FOOBAZ := $(OUTPUT_DIR)/wildcard/a/b/foo.baz
+X_Y_FOOBAR := $(OUTPUT_DIR)/wildcard/x/y/foo.bar
+X_Y_FOOBAZ := $(OUTPUT_DIR)/wildcard/x/y/foo.baz
+X_Y_FOODOLLAR := $(OUTPUT_DIR)/wildcard/x/y/foo$$foo
+
+$(call MakeDir, $(OUTPUT_DIR)/wildcard/a/b)
+$(call MakeDir, $(OUTPUT_DIR)/wildcard/x/y)
+$(shell $(TOUCH) $(A_FOOBAR) $(A_B_FOOBAR) $(A_B_DOOBAR) $(A_B_FOOBAZ) \
+    $(X_Y_FOOBAR) $(X_Y_FOOBAZ) $(call ShellQuote, $(X_Y_FOODOLLAR)))
+
+ifeq ($(RWILDCARD_WORKS), true)
+  $(call AssertEquals, \
+      $(sort $(call rwildcard, $(OUTPUT_DIR)/wildcard, *.bar)), \
+      $(sort $(A_B_DOOBAR) $(A_B_FOOBAR) $(A_FOOBAR) $(X_Y_FOOBAR)), \
+      Wrong files returned from rwildcard, \
+  )
+
+  $(call AssertEquals, \
+      $(sort $(call rwildcard, $(OUTPUT_DIR)/wildcard, doo.*)), \
+      $(A_B_DOOBAR), \
+      Wrong files returned from rwildcard, \
+  )
+
+  $(call AssertEquals, \
+      $(sort $(call rwildcard, $(OUTPUT_DIR)/wildcard, *.bar *.baz)), \
+      $(sort $(A_B_DOOBAR) $(A_FOOBAR) $(A_B_FOOBAR) $(A_B_FOOBAZ) \
+      $(X_Y_FOOBAR) $(X_Y_FOOBAZ)), \
+      Wrong files returned from rwildcard, \
+  )
+
+  $(call AssertEquals, \
+      $(sort $(call WildcardFindFiles, $(OUTPUT_DIR)/wildcard)), \
+      $(sort $(A_B_DOOBAR) $(A_FOOBAR) $(A_B_FOOBAR) $(A_B_FOOBAZ) \
+      $(X_Y_FOOBAR) $(X_Y_FOOBAZ) $(X_Y_FOODOLLAR)), \
+      Wrong files returned from WildcardFindFiles, \
+  )
+
+  $(call AssertEquals, \
+      $(sort $(call WildcardFindFiles, $(OUTPUT_DIR)/wildcard/x/y)), \
+      $(sort $(X_Y_FOOBAR) $(X_Y_FOOBAZ) $(X_Y_FOODOLLAR)), \
+      Wrong files returned from WildcardFindFiles, \
+  )
+
+  $(call AssertEquals, \
+      $(sort $(call WildcardFindFiles, $(OUTPUT_DIR)/wildcard/a/b $(OUTPUT_DIR)/wildcard/x)), \
+      $(sort $(A_B_DOOBAR) $(A_B_FOOBAR) $(A_B_FOOBAZ) \
+      $(X_Y_FOOBAR) $(X_Y_FOOBAZ) $(X_Y_FOODOLLAR)), \
+      Wrong files returned from WildcardFindFiles, \
+  )
+endif
+
+$(call AssertEquals, \
+    $(sort $(call ShellFindFiles, $(OUTPUT_DIR)/wildcard)), \
+    $(sort $(A_B_DOOBAR) $(A_FOOBAR) $(A_B_FOOBAR) $(A_B_FOOBAZ) \
+    $(X_Y_FOOBAR) $(X_Y_FOOBAZ) $(X_Y_FOODOLLAR)), \
+    Wrong files returned from ShellFindFiles, \
+)
+
+$(call AssertEquals, \
+    $(sort $(call ShellFindFiles, $(OUTPUT_DIR)/wildcard/x/y)), \
+    $(sort $(X_Y_FOOBAR) $(X_Y_FOOBAZ) $(X_Y_FOODOLLAR)), \
+    Wrong files returned from ShellFindFiles, \
+)
+
+$(call AssertEquals, \
+    $(sort $(call ShellFindFiles, $(OUTPUT_DIR)/wildcard/a/b $(OUTPUT_DIR)/wildcard/x)), \
+    $(sort $(A_B_DOOBAR) $(A_B_FOOBAR) $(A_B_FOOBAZ) \
+    $(X_Y_FOOBAR) $(X_Y_FOOBAZ) $(X_Y_FOODOLLAR)), \
+    Wrong files returned from ShellFindFiles, \
+)
+
+$(call AssertEquals, \
+    $(sort $(call ShellFindFiles, $(OUTPUT_DIR)/wildcard, *.bar)), \
+    $(sort $(A_B_DOOBAR) $(A_B_FOOBAR) $(A_FOOBAR) $(X_Y_FOOBAR)), \
+    Wrong files returned from ShellFindFiles, \
+)
+
+$(call AssertEquals, \
+    $(sort $(call ShellFindFiles, $(OUTPUT_DIR)/wildcard, doo.*)), \
+    $(A_B_DOOBAR), \
+    Wrong files returned from ShellFindFiles, \
+)
+
+$(call AssertEquals, \
+    $(sort $(call ShellFindFiles, $(OUTPUT_DIR)/wildcard, *.bar *.baz)), \
+    $(sort $(A_B_DOOBAR) $(A_FOOBAR) $(A_B_FOOBAR) $(A_B_FOOBAZ) \
+    $(X_Y_FOOBAR) $(X_Y_FOOBAZ)), \
+    Wrong files returned from ShellFindFiles, \
+)
+
+################################################################################
+
+$(call AssertEquals, \
+    $(sort $(call CacheFindFiles, $(OUTPUT_DIR)/wildcard/a/b)), \
+    $(sort $(A_B_DOOBAR) $(A_B_FOOBAR) $(A_B_FOOBAZ)), \
+    CacheFindFiles test 1, \
+)
+$(call FillFindCache, $(OUTPUT_DIR)/wildcard/a/b)
+$(call AssertEquals, \
+    $(CacheFindFiles_CACHED_DIRS), $(OUTPUT_DIR)/wildcard/a/b, \
+    Wrong files in find cache dirs, \
+)
+$(call AssertEquals, \
+    $(sort $(CacheFindFiles_CACHED_FILES)), \
+    $(sort $(A_B_DOOBAR) $(A_B_FOOBAR) $(A_B_FOOBAZ)), \
+    Wrong files in find cache files, \
+)
+$(call AssertEquals, \
+    $(sort $(call CacheFindFiles, $(OUTPUT_DIR)/wildcard/a/b)), \
+    $(sort $(A_B_DOOBAR) $(A_B_FOOBAR) $(A_B_FOOBAZ)), \
+    CacheFindFiles test 1, \
+)
+
+$(call AssertEquals, \
+    $(sort $(call CacheFindFiles, $(OUTPUT_DIR)/wildcard/a)), \
+    $(sort $(A_B_DOOBAR) $(A_B_FOOBAR) $(A_B_FOOBAZ) $(A_FOOBAR)), \
+    CacheFindFiles test 2, \
+)
+$(call FillFindCache, $(OUTPUT_DIR)/wildcard/a)
+$(call AssertEquals, \
+    $(CacheFindFiles_CACHED_DIRS), \
+    $(OUTPUT_DIR)/wildcard/a/b $(OUTPUT_DIR)/wildcard/a, \
+    Wrong files in find cache dirs, \
+)
+$(call AssertEquals, \
+    $(sort $(CacheFindFiles_CACHED_FILES)), \
+    $(sort $(A_B_DOOBAR) $(A_B_FOOBAR) $(A_B_FOOBAZ) $(A_FOOBAR)), \
+    Wrong files in find cache files, \
+)
+$(call AssertEquals, \
+    $(words $(CacheFindFiles_CACHED_FILES)), 4, \
+    Wrong files in find cache files >$(CacheFindFiles_CACHED_FILES)<, \
+)
+$(call AssertEquals, \
+    $(sort $(call CacheFindFiles, $(OUTPUT_DIR)/wildcard/a)), \
+    $(sort $(A_B_DOOBAR) $(A_B_FOOBAR) $(A_B_FOOBAZ) $(A_FOOBAR)), \
+    CacheFindFiles test 2, \
+)
+
+$(call AssertEquals, \
+    $(sort $(call CacheFindFiles, $(OUTPUT_DIR)/wildcard/x)), \
+    $(sort $(X_Y_FOOBAR) $(X_Y_FOOBAZ) $(X_Y_FOODOLLAR)), \
+    CacheFindFiles test 3, \
+)
+$(call FillFindCache, $(OUTPUT_DIR)/wildcard/x)
+$(call AssertEquals, \
+    $(CacheFindFiles_CACHED_DIRS), \
+    $(OUTPUT_DIR)/wildcard/a/b $(OUTPUT_DIR)/wildcard/a $(OUTPUT_DIR)/wildcard/x, \
+    Wrong files in find cache dirs, \
+)
+$(call AssertEquals, \
+    $(sort $(CacheFindFiles_CACHED_FILES)), \
+    $(sort $(A_B_DOOBAR) $(A_B_FOOBAR) $(A_B_FOOBAZ) $(A_FOOBAR) \
+        $(X_Y_FOOBAR) $(X_Y_FOOBAZ) $(X_Y_FOODOLLAR)), \
+    Wrong files in find cache files, \
+)
+$(call AssertEquals, \
+    $(words $(CacheFindFiles_CACHED_FILES)), 7, \
+    Wrong files in find cache files, \
+)
+$(call AssertEquals, \
+    $(sort $(call CacheFindFiles, $(OUTPUT_DIR)/wildcard/x)), \
+    $(sort $(X_Y_FOOBAR) $(X_Y_FOOBAZ) $(X_Y_FOODOLLAR)), \
+    CacheFindFiles test 3, \
+)
+
+$(call AssertEquals, \
+    $(sort $(call CacheFindFiles, $(OUTPUT_DIR)/wildcard/x/y)), \
+    $(sort $(X_Y_FOOBAR) $(X_Y_FOOBAZ) $(X_Y_FOODOLLAR)), \
+    CacheFindFiles test 4, \
+)
+$(call FillFindCache, $(OUTPUT_DIR)/wildcard/x/y)
+$(call AssertEquals, \
+    $(CacheFindFiles_CACHED_DIRS), \
+    $(OUTPUT_DIR)/wildcard/a/b $(OUTPUT_DIR)/wildcard/a $(OUTPUT_DIR)/wildcard/x, \
+    Wrong files in find cache dirs, \
+)
+$(call AssertEquals, \
+    $(sort $(CacheFindFiles_CACHED_FILES)), \
+    $(sort $(A_B_DOOBAR) $(A_B_FOOBAR) $(A_B_FOOBAZ) $(A_FOOBAR) \
+        $(X_Y_FOOBAR) $(X_Y_FOOBAZ) $(X_Y_FOODOLLAR)), \
+    Wrong files in find cache files, \
+)
+$(call AssertEquals, \
+    $(words $(CacheFindFiles_CACHED_FILES)), 7, \
+    Wrong files in find cache files, \
+)
+
+################################################################################
+
+all: $(TEST_TARGETS)

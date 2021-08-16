@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    
+    <xsd:element name="graphDocument">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="properties" type="propertiesType" minOccurs="0" maxOccurs="1" />
+                <xsd:element name="group" type="groupType" minOccurs="0" maxOccurs="unbounded" />
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:complexType name="groupType">
+        <xsd:sequence>
+            <xsd:element name="properties" type="propertiesType" minOccurs="0" maxOccurs="1" />
+            <xsd:element name="assembly" type="assemblyType" minOccurs="0" maxOccurs="1" />
+            <xsd:element name="method" type="methodType" minOccurs="0" maxOccurs="1" />
+            <xsd:choice minOccurs="0" maxOccurs="unbounded" >
+                <xsd:element name="graph" type="graphType" />
+                <xsd:element name="group" type="groupType" />
+            </xsd:choice>
+        </xsd:sequence>
+        <xsd:attribute name="difference" use="optional" />
+    </xsd:complexType>
+    
+    <xsd:complexType name="propertiesType">
+        <xsd:sequence>
+            <xsd:element name="p" minOccurs="0" maxOccurs="unbounded">
+                <xsd:complexType>
+                    <xsd:simpleContent>
+                        <xsd:extension base="xsd:string">
+                            <xsd:attribute name="name" use="required" />
+                        </xsd:extension>
+                    </xsd:simpleContent>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:complexType>
+    
+    <xsd:simpleType name="assemblyType">
+        <xsd:restriction base="xsd:string" />
+    </xsd:simpleType>
+    
+    <xsd:complexType name="methodType">
+        <xsd:all>
+            <xsd:element name="properties" type="propertiesType" minOccurs="0" maxOccurs="1" />
+            <xsd:element name="bytecodes" minOccurs="0" maxOccurs="1">
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:string" />
+                </xsd:simpleType>
+            </xsd:element>
+            <xsd:element name="inlined" minOccurs="0" maxOccurs="1">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="method" type="methodType" minOccurs="0" maxOccurs="unbounded" />
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:all>
+        <xsd:attribute name="bci" type="xsd:int" use="required" />
+        <xsd:attribute name="shortName" type="xsd:string" use="required" />
+        <xsd:attribute name="name" type="xsd:string" use="required" />
+    </xsd:complexType>
+    
+    <xsd:complexType name="graphType">
+        <xsd:sequence>
+            <xsd:element name="properties" type="propertiesType" minOccurs="0" maxOccurs="1" />
+            
+            <xsd:element name="nodes" minOccurs="0" maxOccurs="1">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                            <xsd:element name="node" type="nodeType" />
+                            <xsd:element name="removeNode" type="nodeRefType" />
+                        </xsd:choice>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            
+            <xsd:element name="edges" minOccurs="0" maxOccurs="1">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                            <xsd:element name="edge" type="edgeType" />
+                            <xsd:element name="removeEdge" type="edgeType" />
+                        </xsd:choice>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            
+            <xsd:element name="controlFlow" type="controlFlowType" minOccurs="0" maxOccurs="1" />
+        </xsd:sequence>
+        
+        <xsd:attribute name="name" use="optional" />
+    </xsd:complexType>
+    
+    <xsd:complexType name="nodeType">
+        <xsd:sequence>
+            <xsd:element name="properties" type="propertiesType" minOccurs="0" maxOccurs="1" />
+        </xsd:sequence>
+        <xsd:attribute name="id" type="xsd:int" use="required" />
+    </xsd:complexType>
+    
+    <xsd:complexType name="nodeRefType">
+        <xsd:attribute name="id" type="xsd:int" use="required" />
+    </xsd:complexType>
+    
+    <xsd:complexType name="edgeType">
+        <xsd:attribute name="from" type="xsd:int" use="required" />
+        <xsd:attribute name="to" type="xsd:int" use="required" />
+        <xsd:attribute name="label" type="xsd:string" use="optional" />
+        <xsd:attribute name="type" type="xsd:string" use="optional" />
+        <xsd:attribute name="fromIndex" type="xsd:int" use="optional" />
+        
+        <!-- These are aliases and should be mutually exclusive -->
+        <xsd:attribute name="toIndex" type="xsd:int" use="optional" />
+        <xsd:attribute name="index" type="xsd:int" use="optional" />
+    </xsd:complexType>
+    
+    <xsd:complexType name="controlFlowType">
+        <xsd:sequence>
+            <xsd:element name="block" type="blockType" minOccurs="0" maxOccurs="unbounded" />
+        </xsd:sequence>
+    </xsd:complexType>
+    
+    <xsd:complexType name="blockType">
+        <xsd:all>
+            <xsd:element name="successors" minOccurs="0" maxOccurs="1">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="successor" minOccurs="0" maxOccurs="unbounded">
+                            <xsd:complexType>
+                                <xsd:attribute name="name" type="xsd:string" use="required" />
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="nodes" minOccurs="0" maxOccurs="1">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="node" type="nodeRefType" minOccurs="0" maxOccurs="unbounded" />
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>    
+        </xsd:all>
+        
+        <xsd:attribute name="name" type="xsd:string" use="required" />
+    </xsd:complexType>
+</xsd:schema>

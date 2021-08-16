@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<user xmlns="http://www.hibid.com/useraccount"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.hibid.com/useraccount userDetails.xsd  http://www.hibid.com/useraccount userAddress.xsd">
+  <Name>Bob </Name>
+  <addresses>
+    <homeAddress>
+      <StreetInfo>555 Beverly Hills Rd
+      </StreetInfo>
+    </homeAddress>
+  </addresses>
+
+</user>

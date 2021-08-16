@@ -1,0 +1,253 @@
+#
+# Copyright (c) 2018, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+ifndef _JDK_NATIVE_COMPILATION_GMK
+_JDK_NATIVE_COMPILATION_GMK := 1
+
+ifeq ($(_MAKEBASE_GMK), )
+  $(error You must include MakeBase.gmk prior to including JdkNativeCompilation.gmk)
+endif
+
+include NativeCompilation.gmk
+
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, common/JdkNativeCompilation.gmk))
+
+FindSrcDirsForLib += \
+  $(call uniq, $(wildcard \
+      $(TOPDIR)/src/$(strip $1)/$(OPENJDK_TARGET_OS)/native/lib$(strip $2) \
+      $(TOPDIR)/src/$(strip $1)/$(OPENJDK_TARGET_OS_TYPE)/native/lib$(strip $2) \
+      $(TOPDIR)/src/$(strip $1)/share/native/lib$(strip $2)))
+
+FindSrcDirsForComponent += \
+  $(call uniq, $(wildcard \
+      $(TOPDIR)/src/$(strip $1)/$(OPENJDK_TARGET_OS)/native/$(strip $2) \
+      $(TOPDIR)/src/$(strip $1)/$(OPENJDK_TARGET_OS_TYPE)/native/$(strip $2) \
+      $(TOPDIR)/src/$(strip $1)/share/native/$(strip $2)))
+
+# Find a library. Used for declaring dependencies on libraries in different
+# modules.
+# Param 1 - module name
+# Param 2 - library name
+# Param 3 - optional subdir for library
+FindLib = \
+    $(call FindLibDirForModule, \
+        $(strip $1))$(strip $3)/$(LIBRARY_PREFIX)$(strip $2)$(SHARED_LIBRARY_SUFFIX)
+
+# Find a static library
+# Param 1 - module name
+# Param 2 - library name
+# Param 3 - optional subdir for library
+FindStaticLib = \
+    $(addprefix $(SUPPORT_OUTPUTDIR)/native/, \
+        $(strip $1)$(strip $3)/$(LIBRARY_PREFIX)$(strip $2)$(STATIC_LIBRARY_SUFFIX))
+
+# If only generating compile_commands.json, make these return empty to avoid
+# declaring dependencies.
+ifeq ($(GENERATE_COMPILE_COMMANDS_ONLY), true)
+  FindLib =
+  FindStaticLib =
+endif
+# If building static versions of libraries, make these return empty to avoid
+# declaring dependencies.
+ifeq ($(STATIC_LIBS), true)
+  FindLib =
+  FindStaticLib =
+endif
+
+# Returns the module specific java header dir if it exists.
+# Param 1 - module name
+GetJavaHeaderDir = \
+  $(if $(strip $1),$(wildcard $(SUPPORT_OUTPUTDIR)/headers/$(strip $1)))
+
+# Process a dir description such as "java.base:headers" into a set of proper absolute paths.
+ProcessDir = \
+  $(if $(findstring :, $1), \
+    $(call FindSrcDirsForComponent, $(firstword $(subst :, , $1)), $(lastword $(subst :, , $1))) \
+  , \
+    $(if $(filter /%, $1), \
+      $1 \
+    , \
+      $(call FindSrcDirsForComponent, $(MODULE), $1) \
+    ) \
+  )
+
+GLOBAL_VERSION_INFO_RESOURCE := $(TOPDIR)/src/java.base/windows/native/common/version.rc
+
+JDK_RCFLAGS=$(RCFLAGS) \
+    -D"JDK_VERSION_STRING=$(VERSION_STRING)" \
+    -D"JDK_COMPANY=$(COMPANY_NAME)" \
+    -D"JDK_VER=$(VERSION_NUMBER_FOUR_POSITIONS)" \
+    -D"JDK_COPYRIGHT=Copyright \xA9 $(COPYRIGHT_YEAR)" \
+    -D"JDK_NAME=$(JDK_RC_NAME) $(VERSION_SHORT)" \
+    -D"JDK_FVER=$(subst .,$(COMMA),$(VERSION_NUMBER_FOUR_POSITIONS))"
+
+# Setup make rules for creating a native shared library with suitable defaults
+# for the OpenJDK project.
+#
+# Parameter 1 is the name of the rule. This name is used as variable prefix,
+# and the targets generated are listed in a variable by that name.
+#
+# Remaining parameters are named arguments. These are all passed on to
+# SetupNativeCompilation, except for
+#   EXTRA_RCFLAGS -- additional RCFLAGS to append.
+#   EXTRA_HEADER_DIRS -- additional directories to look for headers in
+#   EXTRA_SRC -- additional directories to look for source in
+#   EXCLUDE_SRC_PATTERNS -- exclude source dirs matching these patterns from
+#     appearing in SRC.
+#   HEADERS_FROM_SRC -- if false, does not add source dirs automatically as
+#     header include dirs. (Defaults to true.)
+#   SRC -- this is passed on, but preprocessed to accept source dir designations
+#   RC_FILEDESC -- override the default FILEDESC for Windows version.rc
+#     such as "java.base:headers".
+SetupJdkLibrary = $(NamedParamsMacroTemplate)
+define SetupJdkLibraryBody
+  ifeq ($$($1_OUTPUT_DIR), )
+    ifneq ($$(MODULE), )
+      $1_OUTPUT_DIR := $$(call FindLibDirForModule, $$(MODULE))
+    else
+      $$(error Must specify OUTPUT_DIR in a MODULE free context)
+    endif
+  endif
+
+  ifeq ($$($1_OBJECT_DIR), )
+    ifneq ($$(MODULE), )
+      $1_OBJECT_DIR := $$(SUPPORT_OUTPUTDIR)/native/$$(MODULE)/lib$$($1_NAME)
+    else
+      $$(error Must specify OBJECT_DIR in a MODULE free context)
+    endif
+  endif
+
+  ifeq ($$($1_SRC), )
+    ifneq ($$(MODULE), )
+      $1_SRC := $$(call FindSrcDirsForLib, $$(MODULE), $$($1_NAME))
+    else
+      $$(error Must specify SRC in a MODULE free context)
+    endif
+  else
+    $1_SRC := $$(foreach dir, $$($1_SRC), $$(call ProcessDir, $$(dir)))
+  endif
+  ifneq ($$($1_EXTRA_SRC), )
+    $1_SRC += $$(foreach dir, $$($1_EXTRA_SRC), $$(call ProcessDir, $$(dir)))
+  endif
+
+  ifneq ($$($1_EXCLUDE_SRC_PATTERNS), )
+    $1_SRC_WITHOUT_WORKSPACE_ROOT := $$(patsubst $$(WORKSPACE_ROOT)/%, %, $$($1_SRC))
+    $1_EXCLUDE_SRC := $$(addprefix %, $$(call containing, $$($1_EXCLUDE_SRC_PATTERNS), \
+        $$($1_SRC_WITHOUT_WORKSPACE_ROOT)))
+    $1_SRC := $$(filter-out $$($1_EXCLUDE_SRC), $$($1_SRC))
+  endif
+
+  ifeq ($$($1_VERSIONINFO_RESOURCE), )
+    $1_VERSIONINFO_RESOURCE := $$(GLOBAL_VERSION_INFO_RESOURCE)
+  endif
+
+  ifeq ($$($1_RC_FILEDESC), )
+    $1_RC_FILEDESC := $(JDK_RC_NAME) binary
+  endif
+
+  $1_RCFLAGS := $(JDK_RCFLAGS) \
+      -D"JDK_FILEDESC=$$(strip $$($1_RC_FILEDESC))" \
+      -D"JDK_FNAME=$$($1_NAME).dll" \
+      -D"JDK_INTERNAL_NAME=$$($1_NAME)" \
+      -D"JDK_FTYPE=0x2L" \
+      -I$(TOPDIR)/src/java.base/windows/native/common \
+      $$($1_EXTRA_RCFLAGS)
+
+  ifneq ($$($1_HEADERS_FROM_SRC), false)
+    $1_SRC_HEADER_FLAGS := $$(addprefix -I, $$(wildcard $$($1_SRC)))
+  endif
+
+  # Add the module specific java header dir
+  $1_SRC_HEADER_FLAGS += $$(addprefix -I, $$(call GetJavaHeaderDir, $$(MODULE)))
+
+  ifneq ($$($1_EXTRA_HEADER_DIRS), )
+    $1_PROCESSED_EXTRA_HEADER_DIRS := $$(foreach dir, $$($1_EXTRA_HEADER_DIRS), \
+        $$(call ProcessDir, $$(dir)))
+    $1_EXTRA_HEADER_FLAGS := $$(addprefix -I, $$($1_PROCESSED_EXTRA_HEADER_DIRS))
+  endif
+
+  ifneq ($$($1_CFLAGS), )
+    $1_CFLAGS += $$($1_SRC_HEADER_FLAGS) $$($1_EXTRA_HEADER_FLAGS)
+  endif
+  ifneq ($$($1_CXXFLAGS), )
+    $1_CXXFLAGS += $$($1_SRC_HEADER_FLAGS) $$($1_EXTRA_HEADER_FLAGS)
+  endif
+  ifeq ($$($1_CFLAGS)$$($1_CXXFLAGS), )
+    $1_CFLAGS += $$($1_SRC_HEADER_FLAGS) $$($1_EXTRA_HEADER_FLAGS)
+  endif
+
+  # Since we reuse the rule name ($1), all our arguments will pass through.
+  # We lose in transparency, but gain in brevity in this call...
+  $$(eval $$(call SetupNativeCompilation, $1, ))
+endef
+
+# Setup make rules for creating a native executable with suitable defaults for
+# the OpenJDK project.
+#
+# Parameter 1 is the name of the rule. This name is used as variable prefix,
+# and the targets generated are listed in a variable by that name.
+#
+# Remaining parameters are named arguments. These are all passed on to
+# SetupNativeCompilation, except for
+#   EXTRA_RCFLAGS -- additional RCFLAGS to append.
+SetupJdkExecutable = $(NamedParamsMacroTemplate)
+define SetupJdkExecutableBody
+  $1_TYPE := EXECUTABLE
+
+  ifeq ($$($1_OUTPUT_DIR), )
+    ifneq ($$(MODULE), )
+      $1_OUTPUT_DIR := $$(call FindExecutableDirForModule, $$(MODULE))
+    else
+      $$(error Must specify OUTPUT_DIR in a MODULE free context)
+    endif
+  endif
+
+  ifeq ($$($1_OBJECT_DIR), )
+    ifneq ($$(MODULE), )
+      $1_OBJECT_DIR := $$(SUPPORT_OUTPUTDIR)/native/$$(MODULE)/$$($1_NAME)
+    else
+      $$(error Must specify OBJECT_DIR in a MODULE free context)
+    endif
+  endif
+
+  ifeq ($$($1_VERSIONINFO_RESOURCE), )
+    $1_VERSIONINFO_RESOURCE := $$(GLOBAL_VERSION_INFO_RESOURCE)
+  endif
+
+  $1_RCFLAGS := $(JDK_RCFLAGS) \
+      -D"JDK_FILEDESC=$(JDK_RC_NAME) binary" \
+      -D"JDK_FNAME=$$($1_NAME).exe" \
+      -D"JDK_INTERNAL_NAME=$$($1_NAME)" \
+      -D"JDK_FTYPE=0x1L" \
+      -I$(TOPDIR)/src/java.base/windows/native/common \
+      $$($1_EXTRA_RCFLAGS)
+
+  # Since we reuse the rule name ($1), all our arguments will pass through.
+  # We lose in transparency, but gain in brevity in this call...
+  $$(eval $$(call SetupNativeCompilation, $1))
+endef
+
+endif # _JDK_NATIVE_COMPILATION_GMK

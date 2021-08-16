@@ -1,0 +1,5 @@
+EffectivelyFinal_neg.java:17:17: compiler.err.cant.ref.non.effectively.final.var: s2, (compiler.misc.lambda)
+EffectivelyFinal_neg.java:18:36: compiler.err.cant.ref.non.effectively.final.var: n, (compiler.misc.lambda)
+EffectivelyFinal_neg.java:19:36: compiler.err.cant.ref.non.effectively.final.var: s, (compiler.misc.lambda)
+EffectivelyFinal_neg.java:20:17: compiler.err.cant.ref.non.effectively.final.var: s, (compiler.misc.lambda)
+4 errors

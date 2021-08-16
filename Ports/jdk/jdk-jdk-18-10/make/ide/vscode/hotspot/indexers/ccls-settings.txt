@@ -1,0 +1,28 @@
+		// Configure cpptools IntelliSense
+		"C_Cpp.intelliSenseCachePath": "{{OUTPUTDIR}}/.vscode",
+		"C_Cpp.default.compileCommands": "{{OUTPUTDIR}}/compile_commands.json",
+		"C_Cpp.default.cppStandard": "c++14",
+		"C_Cpp.default.compilerPath": "{{COMPILER}}",
+
+		// Configure ccls
+		"ccls.misc.compilationDatabaseDirectory": "{{TOPDIR_RELATIVE}}",
+		"ccls.cache.hierarchicalPath": true,
+		"ccls.cache.directory": "{{OUTPUTDIR}}/.vscode/ccls",
+
+		// Avoid issues with precompiled headers
+		"ccls.clang.excludeArgs": [
+			// Windows / MSVC
+			"-Fp{{OUTPUTDIR}}/hotspot/variant-server/libjvm/objs/BUILD_LIBJVM.pch",
+			"-Fp{{OUTPUTDIR}}/hotspot/variant-server/libjvm/gtest/objs/BUILD_GTEST_LIBJVM.pch",
+			"-Yuprecompiled.hpp",
+			// MacOS / clang
+			"{{OUTPUTDIR}}/hotspot/variant-server/libjvm/objs/precompiled/precompiled.hpp.pch",
+			"{{OUTPUTDIR}}/hotspot/variant-server/libjvm/gtest/objs/precompiled/precompiled.hpp.pch",
+			"-include-pch"
+		],
+
+		// Disable conflicting features from cpptools
+		"C_Cpp.autocomplete": "Disabled",
+		"C_Cpp.errorSquiggles": "Disabled",
+		"C_Cpp.formatting": "Disabled",
+		"C_Cpp.intelliSenseEngine": "Disabled",

@@ -1,0 +1,3 @@
+java.lang.Throwable
+        at jit.t.t112.t112.doit(t112.java:68)
+        at jit.t.t112.t112.main(t112.java:57)

@@ -1,0 +1,17 @@
+round: 1
+round: 2
+
+public class T {
+
+  public T();
+
+  public void test();
+}
+round: 3
+
+public class T {
+
+  public T();
+
+  public void test();
+}

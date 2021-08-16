@@ -1,0 +1,8 @@
+T8202372.java:26:13: compiler.err.cant.apply.symbol: kindname.method, addVoid, T8202372.VoidFunc, @22, kindname.class, T8202372, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.stat.expr.expected))
+T8202372.java:27:13: compiler.err.cant.apply.symbol: kindname.method, addVoid, T8202372.VoidFunc, @22, kindname.class, T8202372, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.unexpected.ret.val)))
+T8202372.java:35:13: compiler.err.cant.apply.symbol: kindname.method, addNonVoid, T8202372.NonVoidFunc, @25, kindname.class, T8202372, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.missing.ret.val: java.lang.String)))
+T8202372.java:36:13: compiler.err.cant.apply.symbol: kindname.method, addNonVoid, T8202372.NonVoidFunc, @25, kindname.class, T8202372, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.missing.ret.val)))
+T8202372.java:40:13: compiler.err.cant.apply.symbol: kindname.method, addParam, T8202372.ParamFunc, @23, kindname.class, T8202372, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.arg.types.in.lambda))
+T8202372.java:42:13: compiler.err.cant.apply.symbol: kindname.method, addParam, T8202372.ParamFunc, @23, kindname.class, T8202372, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.arg.types.in.lambda))
+T8202372.java:43:13: compiler.err.cant.apply.symbol: kindname.method, addParam, T8202372.ParamFunc, @23, kindname.class, T8202372, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.arg.types.in.lambda))
+7 errors

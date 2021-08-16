@@ -1,0 +1,13 @@
+Processor Test matches [java.base/java.lang.Override] and returns true.
+- compiler.note.proc.messager: round 1
+Processor Test matches [] and returns true.
+- compiler.note.proc.messager: round 2
+Processor Test matches [] and returns true.
+- compiler.note.proc.messager: round 3
+Processor Test matches [] and returns true.
+- compiler.note.proc.messager: round 4
+- compiler.note.proc.messager: round 5
+- compiler.warn.proc.messager: last round
+- compiler.err.warnings.and.werror
+1 error
+1 warning

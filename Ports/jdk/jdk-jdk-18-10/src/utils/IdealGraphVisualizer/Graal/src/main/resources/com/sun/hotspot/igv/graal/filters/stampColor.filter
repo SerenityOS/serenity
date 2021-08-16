@@ -1,0 +1,16 @@
+var red =  new java.awt.Color(240, 59, 32);
+var orange = new java.awt.Color(254, 178, 76);
+var yellow = new java.awt.Color(255, 237, 160);
+var middleBlue = new java.awt.Color(100, 147, 224);
+var lightGreen = new java.awt.Color(173, 221, 142);
+var lightBlue = new java.awt.Color(200, 200, 250);
+var gray = new java.awt.Color(220, 220, 220);
+var violet = new java.awt.Color(201, 148, 199);
+
+colorize("stamp", ".*", white);
+colorize("stamp", "void", gray);
+colorize("stamp", "a.*", yellow);
+colorize("stamp", "a#.*", orange);
+colorize("stamp", "a!.*", red);
+colorize("stamp", "i.*", middleBlue);
+colorize("stamp", "f.*", lightGreen);

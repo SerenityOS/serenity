@@ -1,0 +1,74 @@
+###########################################################################
+#
+# Copyright (c) 2015, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+###########################################################################
+
+###########################################################################
+#
+# javadoc
+
+###########################################################################
+#
+# jshell
+
+jdk/jshell/UserJdiUserRemoteTest.java                                           8173079    linux-all
+jdk/jshell/UserInputTest.java                                                   8169536    generic-all
+jdk/jshell/ToolBasicTest.java                                                   8265357    macosx-aarch64
+
+###########################################################################
+#
+# javac
+
+tools/javac/annotations/typeAnnotations/failures/CantAnnotatePackages.java      8057679    generic-all    clarify error messages trying to annotate scoping
+tools/javac/annotations/typeAnnotations/failures/CantAnnotateScoping.java       8057679    generic-all    clarify error messages trying to annotate scoping
+tools/javac/annotations/typeAnnotations/failures/CantAnnotateStaticClass2.java  8057679,8057683    generic-all    clarify error messages and improve ordering of errors with type annotations
+tools/javac/annotations/typeAnnotations/failures/CantAnnotateStaticClass3.java  8057679,8057683    generic-all    clarify error messages and improve ordering of errors with type annotations
+tools/javac/annotations/typeAnnotations/newlocations/RepeatingTypeAnnotations.java 8057683 generic-all    improve ordering of errors with type annotations
+tools/javac/annotations/typeAnnotations/referenceinfos/Lambda.java              8057687    generic-all    emit correct byte code an attributes for type annotations
+tools/javac/annotations/typeAnnotations/referenceinfos/NestedTypes.java         8057687    generic-all    emit correct byte code an attributes for type annotations
+tools/javac/warnings/suppress/TypeAnnotations.java                              8057683    generic-all    improve ordering of errors with type annotations
+tools/javac/modules/SourceInSymlinkTest.java                                    8180263    windows-all    fails when run on a subst drive
+
+###########################################################################
+#
+# javap
+
+tools/javap/output/RepeatingTypeAnnotations.java                                8057687    generic-all    emit correct byte code an attributes for type annotations
+tools/javap/T6587786.java                                                       8195589    generic-all    T6587786.java failed after JDK-8189997
+
+###########################################################################
+#
+# sjavac
+
+tools/sjavac/IncCompileFullyQualifiedRef.java                                   8152055    generic-all    Requires dependency code to deal with in-method dependencies.
+tools/sjavac/IncCompileWithChanges.java                                         8152055    generic-all    Requires dependency code to deal with in-method dependencies.
+
+tools/sjavac/ApiExtraction.java                                                 8158002    generic-all    Requires investigation
+tools/sjavac/IgnoreSymbolFile.java                                              8158002    generic-all    Requires investigation
+tools/sjavac/ClasspathDependencies.java                                         8158002    generic-all    Requires investigation
+
+
+###########################################################################
+#
+# jdeps
+

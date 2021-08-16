@@ -1,0 +1,3 @@
+Neg07.java:16:12: compiler.err.override.incompatible.ret: (compiler.misc.cant.implement: m(), Neg07.C1, m(), Neg07.I), void, int
+Neg07.java:19:21: compiler.err.override.incompatible.ret: (compiler.misc.cant.implement: m(), Neg07.C3, m(), Neg07.I), void, int
+2 errors

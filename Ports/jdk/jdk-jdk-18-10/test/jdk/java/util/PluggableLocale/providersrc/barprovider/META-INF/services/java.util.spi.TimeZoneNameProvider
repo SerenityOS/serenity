@@ -1,0 +1,8 @@
+#
+#
+#
+# fully-qualified name of the java.util.spi.TimeZoneNameProvider
+# implementation class
+#
+com.bar.TimeZoneNameProviderImpl
+com.bar.GenericTimeZoneNameProviderImpl

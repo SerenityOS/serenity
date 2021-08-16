@@ -1,0 +1,5 @@
+grant {
+    permission java.io.FilePermission "C:\\temp\\*", "read";
+    permission java.io.FilePermission "C:\\temp", "read,write,delete";
+    permission java.util.PropertyPermission "*", "read";
+};

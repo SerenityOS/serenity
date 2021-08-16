@@ -1,0 +1,3 @@
+Enum2.java:10:29: compiler.err.cant.inherit.from.final: Enum2.e1
+Enum2.java:10:12: compiler.err.enum.types.not.extensible
+2 errors

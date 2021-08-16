@@ -1,0 +1,4 @@
+EnumMembersOrder.java:11:16: compiler.err.expected: ')'
+EnumMembersOrder.java:11:18: compiler.err.expected3: ',', '}', ';'
+EnumMembersOrder.java:11:20: compiler.err.enum.constant.expected
+3 errors

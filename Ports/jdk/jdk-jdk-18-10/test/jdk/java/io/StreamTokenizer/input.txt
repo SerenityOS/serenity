@@ -1,0 +1,10 @@
+/* Error1: not recognizing slashStar comment */
+
+/* Error2 : not recognizing
+ * Error2: slashStar
+ * Error2: comments
+ */
+
+// Error3: not recognizing slashSlash comments
+
+/ Error4: not recognizing slash comments

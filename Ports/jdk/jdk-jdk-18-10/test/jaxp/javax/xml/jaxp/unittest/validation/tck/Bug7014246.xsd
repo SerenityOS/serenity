@@ -1,0 +1,13 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" >
+<xs:simpleType name="base">
+	<xs:restriction base="xs:time">
+		<xs:maxInclusive value="12:00:00-10:00"/>
+	</xs:restriction>
+</xs:simpleType>
+<xs:simpleType name="derived">
+	<xs:restriction base="base">
+		<xs:maxInclusive value="12:00:00-14:00"/>
+	</xs:restriction>
+</xs:simpleType>
+</xs:schema>
+

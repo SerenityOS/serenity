@@ -1,0 +1,3 @@
+InvalidExpression1.java:14:59: compiler.err.not.stmt
+InvalidExpression1.java:15:68: compiler.err.expected: ';'
+2 errors

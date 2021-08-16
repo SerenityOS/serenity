@@ -1,0 +1,4 @@
+package-info.java:13:7: compiler.err.proc.messager: anchor already defined: "here"
+package-info.java:14:7: compiler.err.proc.messager: attribute not supported in HTML5: name
+package-info.java:15:7: compiler.err.proc.messager: attribute not supported in HTML5: name
+3 errors

@@ -1,0 +1,9 @@
+grant {
+    permission java.security.SecurityPermission "getPolicy";
+};
+
+grant	codebase "http://emailaddress",
+	principal javax.security.auth.x500.X500Principal
+                "1.2.840.113549.1.9.1=#0c0864756b654073756e" {
+    permission java.security.SecurityPermission "EMAILADDRESS";
+};

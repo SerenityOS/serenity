@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" xml:base="http://local/base/dtd/">
+    <delegateURI uriStartString="http://remote/dtd/alice/" catalog="delegateURI-alice.xml" />
+    <uriSuffix uriSuffix="docAlice.dtd" uri="docAliceUS.dtd" />
+    <rewriteURI uriStartString="http://remote/dtd/alice/" rewritePrefix="http://local/base/ru/" />
+    <uri name="http://remote/dtd/uri/alice/docAlice.dtd" uri="docAliceURI.dtd" />
+
+    <delegateURI uriStartString="http://remote/dtd/bob/" catalog="delegateURI-bob.xml" />
+    <uriSuffix uriSuffix="docBob.dtd" uri="docBobUS.dtd" />
+    <rewriteURI uriStartString="http://remote/dtd/bob/" rewritePrefix="http://local/base/dtd/ru/" />
+
+    <delegateURI uriStartString="http://remote/dtd/carl/" catalog="delegateURI-carl.xml" />
+    <uriSuffix uriSuffix="docCarl.dtd" uri="docCarlUS.dtd" />
+</catalog>

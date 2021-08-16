@@ -1,0 +1,3 @@
+VERSION: 1.0
+@SECTION: String
+26: shared_string_from_MyInner

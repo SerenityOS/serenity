@@ -1,0 +1,23 @@
+    @Test(dataProvider = "$type$CompareOpMaskProvider")
+    static void [[TEST]]$vectorteststype$Masked(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb,
+                                                IntFunction<boolean[]> fm) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] b = fb.apply(SPECIES.length());
+        boolean[] mask = fm.apply(SPECIES.length());
+
+        VectorMask<$Wideboxtype$> vmask = VectorMask.fromArray(SPECIES, mask, 0);
+
+        for (int ic = 0; ic < INVOC_COUNT; ic++) {
+            for (int i = 0; i < a.length; i += SPECIES.length()) {
+                $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+                $abstractvectortype$ bv = $abstractvectortype$.fromArray(SPECIES, b, i);
+                VectorMask<$Wideboxtype$> mv = av.compare(VectorOperators.[[TEST]], bv, vmask);
+
+                // Check results as part of computation.
+                for (int j = 0; j < SPECIES.length(); j++) {
+                    Assert.assertEquals(mv.laneIsSet(j), mask[j] && [[TEST_OP]](a[i + j], b[i + j]));
+                }
+            }
+        }
+    }
+

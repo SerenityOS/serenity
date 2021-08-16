@@ -1,0 +1,5 @@
+ConditionalWithVoid.java:12:71: compiler.err.void.not.allowed.here
+ConditionalWithVoid.java:14:53: compiler.err.void.not.allowed.here
+ConditionalWithVoid.java:16:82: compiler.err.void.not.allowed.here
+ConditionalWithVoid.java:18:64: compiler.err.void.not.allowed.here
+4 errors

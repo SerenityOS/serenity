@@ -1,0 +1,8 @@
+grant {
+    permission java.util.PropertyPermission "java.util.logging.config.file", "write";
+    permission java.util.PropertyPermission "test.src", "read";
+    permission java.util.PropertyPermission "java.util.logging.manager", "read";
+    permission java.lang.RuntimePermission "setContextClassLoader";
+    permission java.lang.RuntimePermission "shutdownHooks";
+    permission java.util.logging.LoggingPermission "control";
+};

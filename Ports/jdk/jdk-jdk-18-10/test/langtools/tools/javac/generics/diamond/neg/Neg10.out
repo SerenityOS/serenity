@@ -1,0 +1,2 @@
+Neg10.java:17:22: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Neg10.Foo<java.lang.Integer>, Neg10.Foo<java.lang.Number>)
+1 error

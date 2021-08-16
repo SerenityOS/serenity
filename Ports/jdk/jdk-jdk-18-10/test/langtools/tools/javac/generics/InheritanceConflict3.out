@@ -1,0 +1,3 @@
+InheritanceConflict3.java:14:10: compiler.err.name.clash.same.erasure: f(java.lang.Object), f(T)
+InheritanceConflict3.java:17:1: compiler.err.concrete.inheritance.conflict: f(java.lang.Object), inheritance.conflict3.X1, f(T), inheritance.conflict3.X1, inheritance.conflict3.X1
+2 errors

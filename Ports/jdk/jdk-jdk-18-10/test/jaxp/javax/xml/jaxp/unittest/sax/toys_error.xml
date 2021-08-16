@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE toys  [
+<!ENTITY   % external SYSTEM "externalDTD.dtd">
+%external;
+<!ELEMENT toys (toy*)>
+<!ELEMENT toy (name,price)>
+<!ATTLIST toy id CDATA #REQUIRED>
+<!ENTITY name1 "toy1's name">
+]>
+
+
+
+<!--
+    Document   : toys.xml
+    Created on : August 21, 2012
+    Author     : Patrick Zhang
+    Description: Sample test file for org.xml.sax.ext.DefaultHandler2
+-->
+
+<ns1:toys xmlns:ns1="http://ns1.java.com">
+	<![CDATA[<greeting>Hello</greeting>]]>
+    <toy id="1">	
+        <name>&name1;</name>
+        <price>98470</price>
+    </toy>
+    <toy id="2">
+        <name>&name3;</name>
+        <price>345</price>
+    </toy>         
+</ns1:toys>
+

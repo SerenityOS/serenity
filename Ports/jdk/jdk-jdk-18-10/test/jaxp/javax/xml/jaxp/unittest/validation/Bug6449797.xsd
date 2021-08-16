@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://ttri.ossj/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:complexType name="troubleTicketValueImpl">
+    <xs:complexContent>
+      <xs:extension base="ns3:attributeAccessImpl" xmlns:ns3="http://ttri.ossj/">
+        <xs:sequence>
+          <xs:element name="accountOwner" type="ns3:personReachImpl" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="attributeAccessImpl" abstract="true"/>
+
+  <xs:complexType name="personReachImpl">
+    <xs:sequence>
+      <xs:element name="email" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

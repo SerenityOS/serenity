@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ha"/>
+		<territory type="NE"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ar_001">Larabci Asali Na Zamani</language>
+			<language type="de_AT">Jamusanci Ostiriya</language>
+			<language type="de_CH">Jamusanci Suwizalan</language>
+			<language type="en_AU">Turanci Ostareliya</language>
+			<language type="en_CA">Turanci Kanada</language>
+			<language type="en_GB">Turanci Biritaniya</language>
+			<language type="en_GB" alt="short">Turancin Ingila</language>
+			<language type="en_US">Turanci Amirka</language>
+			<language type="en_US" alt="short">Turancin Amurka</language>
+			<language type="es_419">Sifaniyancin Latin Amirka</language>
+			<language type="es_ES">Sifaniyanci Turai</language>
+			<language type="es_MX">Sifaniyanci Mesiko</language>
+			<language type="fr_CA">Farasanci Kanada</language>
+			<language type="fr_CH">Farasanci Suwizalan</language>
+			<language type="pt_BR">Harshen Potugis na Birazil</language>
+			<language type="pt_PT">Potugis Ƙasashen Turai</language>
+			<language type="zh_Hans">Sauƙaƙaƙƙen Sinanci</language>
+			<language type="zh_Hant">Sinanci na gargajiya</language>
+		</languages>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters type="auxiliary">[á à â é è ê í ì î ó ò ô p q {r\u0303} ú ù û v x {ʼy}]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B Ɓ C D Ɗ E F G H I J K Ƙ L M N O P Q R S T U V W X Y Ƴ Z]</exemplarCharacters>
+	</characters>
+</ldml>

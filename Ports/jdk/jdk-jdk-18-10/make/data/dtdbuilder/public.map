@@ -1,0 +1,12 @@
+-- ISO latin 1 entity set for HTML -- 
+PUBLIC	"-//W3C//ENTITIES Latin 1//EN//HTML"            HTMLlat1.sgml
+
+-- Mathematical, Greek and Symbolic characters for HTML --
+PUBLIC	"-//W3C//ENTITIES Symbols//EN//HTML"            HTMLsymbol.sgml
+
+-- Special characters for HTML --
+PUBLIC	"-//W3C//ENTITIES Special//EN//HTML"            HTMLspecial.sgml
+
+-- HotJava - 3.2+ support --
+PUBLIC  "-//HotJava//DTD HotJava 1.0 HTML 3.2 Draft 19960821//EN"   html32.dtd
+

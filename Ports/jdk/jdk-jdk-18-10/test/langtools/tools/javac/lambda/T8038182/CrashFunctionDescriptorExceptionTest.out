@@ -1,0 +1,2 @@
+CrashFunctionDescriptorExceptionTest.java:12:13: compiler.err.prob.found.req: (compiler.misc.no.suitable.functional.intf.inst: CrashFunctionDescriptorExceptionTest.I<CrashFunctionDescriptorExceptionTest.B>)
+1 error

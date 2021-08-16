@@ -1,0 +1,31 @@
+var red =  new java.awt.Color(240, 59, 32);
+var orange = new java.awt.Color(254, 178, 76);
+var yellow = new java.awt.Color(255, 237, 160);
+var middleBlue = new java.awt.Color(100, 147, 224);
+var lightGreen = new java.awt.Color(173, 221, 142);
+var lightBlue = new java.awt.Color(200, 200, 250);
+var gray = new java.awt.Color(220, 220, 220);
+var violet = new java.awt.Color(201, 148, 199);
+var black = new java.awt.Color(0, 0, 0);
+
+colorize("category", "controlSink", red);
+colorize("category", "controlSplit", red);
+colorize("category", "merge", red);
+colorize("category", "begin", orange);
+colorize("category", "end", orange);
+colorize("category", "fixed", yellow);
+colorize("category", "state", lightGreen);
+colorize("category", "phi", middleBlue);
+colorize("category", "proxy", middleBlue);
+colorize("category", "floating", lightBlue);
+colorize("class", "ConstantLocationNode", gray);
+colorize("class", "ParameterNode", gray);
+colorize("class", "ConstantNode", gray);
+colorize("class", "GuardNode", violet);
+colorize("class", "BlackholeNode", black);
+
+var f = new com.sun.hotspot.igv.graal.filters.GraalEdgeColorFilter();
+f.setUsageColor("Successor", red);
+f.setUsageColor("Value", blue);
+f.setUsageColor("Memory", new Color(0.0, 0.5, 0.0));
+f.apply(graph);

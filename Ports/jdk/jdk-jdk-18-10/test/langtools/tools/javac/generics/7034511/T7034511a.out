@@ -1,0 +1,2 @@
+T7034511a.java:18:14: compiler.err.cant.apply.symbol: kindname.method, foo, compiler.misc.type.captureof: 1, ?[], java.lang.String[], kindname.interface, T7034511a.A<T>, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.String[], compiler.misc.type.captureof: 1, ?[]))
+1 error

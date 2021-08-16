@@ -1,0 +1,13 @@
+<!ELEMENT document ANY>
+<!ELEMENT title (#PCDATA)>
+<!ELEMENT publisher (#PCDATA)>
+<!ELEMENT book (#PCDATA)>
+<!ELEMENT bookurn (#PCDATA)>
+<!ELEMENT xmlns:pages (#PCDATA)>
+<!ATTLIST book price CDATA "$100">
+<!ATTLIST book author CDATA "Herold">
+<!ATTLIST book number ID #REQUIRED>
+<!ATTLIST bookurn xmlns CDATA "10">
+<!ATTLIST bookurn xmlns:isbn CDATA "10">
+<!ENTITY mkm "I am Krishna">
+<!ENTITY km "I am KrishnaMohan">

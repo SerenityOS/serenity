@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.1//EN" "http://www.netbeans.org/dtds/filesystem-1_1.dtd">
+<filesystem>
+      <folder name="Filters">
+        <file name="Color by category" url="filters/color.filter">
+            <attr name="enabled" boolvalue="true"/>
+        </file>
+        <file name="Color by execution frequency" url="filters/colorFrequency.filter">
+            <attr name="enabled" boolvalue="false"/>
+            <attr name="after" stringvalue="Color by category"/>
+        </file>
+        <file name="Simplify graph" url="filters/structural.filter">
+            <attr name="enabled" boolvalue="false"/>
+            <attr name="after" stringvalue="Color by execution frequency"/>
+        </file>
+        <file name="Hide data subgraph" url="filters/hideData.filter">
+            <attr name="enabled" boolvalue="false"/>
+            <attr name="after" stringvalue="Simplify graph"/>
+        </file>
+        <file name="Hide memory subgraph" url="filters/hideMemory.filter">
+            <attr name="enabled" boolvalue="false"/>
+            <attr name="after" stringvalue="Hide data subgraph"/>
+        </file>
+        <file name="Hide control subgraph" url="filters/hideControl.filter">
+            <attr name="enabled" boolvalue="false"/>
+            <attr name="after" stringvalue="Hide memory subgraph"/>
+        </file>
+        <file name="Hide mixed subgraph" url="filters/hideMixed.filter">
+            <attr name="enabled" boolvalue="false"/>
+            <attr name="after" stringvalue="Hide control subgraph"/>
+        </file>
+        <file name="Hide other subgraph" url="filters/hideOther.filter">
+            <attr name="enabled" boolvalue="false"/>
+            <attr name="after" stringvalue="Hide mixed subgraph"/>
+        </file>
+        <file name="Show control flow only" url="filters/onlyControlFlow.filter">
+            <attr name="enabled" boolvalue="false"/>
+            <attr name="after" stringvalue="Hide other subgraph"/>
+        </file>
+        <file name="Hide data edges" url="filters/hideDataEdges.filter">
+            <attr name="enabled" boolvalue="false"/>
+            <attr name="after" stringvalue="Show control flow only"/>
+        </file>
+        <file name="Hide memory edges" url="filters/hideMemoryEdges.filter">
+            <attr name="enabled" boolvalue="false"/>
+            <attr name="after" stringvalue="Hide data edges"/>
+        </file>
+        <file name="Hide control edges" url="filters/hideControlEdges.filter">
+            <attr name="enabled" boolvalue="false"/>
+            <attr name="after" stringvalue="Hide memory edges"/>
+        </file>
+        <file name="Hide mixed edges" url="filters/hideMixedEdges.filter">
+            <attr name="enabled" boolvalue="false"/>
+            <attr name="after" stringvalue="Hide control edges"/>
+        </file>
+        <file name="Hide other edges" url="filters/hideOtherEdges.filter">
+            <attr name="enabled" boolvalue="false"/>
+            <attr name="after" stringvalue="Hide mixed edges"/>
+        </file>
+    </folder>
+</filesystem>

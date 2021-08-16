@@ -1,0 +1,62 @@
+#
+# Copyright (c) 2015, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include JavaCompilation.gmk
+
+TARGETS :=
+
+TEST_LIB_SOURCE_DIR := $(TOPDIR)/test/lib
+TEST_LIB_SUPPORT := $(SUPPORT_OUTPUTDIR)/test/lib
+
+$(eval $(call SetupJavaCompilation, BUILD_WB_JAR, \
+    TARGET_RELEASE := $(TARGET_RELEASE_NEWJDK_UPGRADED), \
+    SRC := $(TEST_LIB_SOURCE_DIR)/sun, \
+    BIN := $(TEST_LIB_SUPPORT)/wb_classes, \
+    JAR := $(TEST_LIB_SUPPORT)/wb.jar, \
+))
+
+TARGETS += $(BUILD_WB_JAR)
+
+$(eval $(call SetupJavaCompilation, BUILD_TEST_LIB_JAR, \
+    TARGET_RELEASE := $(TARGET_RELEASE_NEWJDK_UPGRADED), \
+    SRC := $(TEST_LIB_SOURCE_DIR), \
+    EXCLUDES := jdk/test/lib/containers jdk/test/lib/security, \
+    BIN := $(TEST_LIB_SUPPORT)/test-lib_classes, \
+    HEADERS := $(TEST_LIB_SUPPORT)/test-lib_headers, \
+    JAR := $(TEST_LIB_SUPPORT)/test-lib.jar, \
+    DISABLED_WARNINGS := try deprecation rawtypes unchecked serial cast, \
+))
+
+TARGETS += $(BUILD_TEST_LIB_JAR)
+
+##########################################################################################
+
+all: $(TARGETS)
+
+.PHONY: default all

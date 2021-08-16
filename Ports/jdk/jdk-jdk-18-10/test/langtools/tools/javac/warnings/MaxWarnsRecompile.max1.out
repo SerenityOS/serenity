@@ -1,0 +1,3 @@
+MaxWarnsRecompile.java:11:3: compiler.warn.raw.class.use: java.util.List, java.util.List<E>
+1 warning
+only showing the first 1 warnings, of 4 total; use -Xmaxwarns if you would like to see more

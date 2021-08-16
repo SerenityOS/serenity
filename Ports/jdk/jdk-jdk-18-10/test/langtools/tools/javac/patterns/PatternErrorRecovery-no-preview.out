@@ -1,0 +1,3 @@
+PatternErrorRecovery.java:12:18: compiler.err.preview.feature.disabled.plural: (compiler.misc.feature.pattern.switch)
+PatternErrorRecovery.java:11:18: compiler.err.const.expr.req
+2 errors

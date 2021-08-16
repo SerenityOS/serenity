@@ -1,0 +1,11 @@
+UnescapedOrUnknownEntity.java:16: error: semicolon missing
+ * L&F
+    ^
+UnescapedOrUnknownEntity.java:17: error: semicolon missing
+ * Drag&Drop
+       ^
+UnescapedOrUnknownEntity.java:18: error: bad HTML entity
+ * if (a & b);
+         ^
+3 errors
+

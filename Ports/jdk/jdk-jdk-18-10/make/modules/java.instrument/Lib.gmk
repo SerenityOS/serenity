@@ -1,0 +1,69 @@
+#
+# Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include LibCommon.gmk
+
+################################################################################
+
+ifeq ($(call isTargetOs, windows), true)
+  # equivalent of strcasecmp is stricmp on Windows
+  LIBINSTRUMENT_CFLAGS := -Dstrcasecmp=stricmp
+  WINDOWS_JLI_LIB := $(SUPPORT_OUTPUTDIR)/native/java.base/libjli/jli.lib
+endif
+
+$(eval $(call SetupJdkLibrary, BUILD_LIBINSTRUMENT, \
+    NAME := instrument, \
+    OPTIMIZATION := LOW, \
+    CFLAGS := $(CFLAGS_JDKLIB) $(LIBINSTRUMENT_CFLAGS), \
+    CFLAGS_debug := -DJPLIS_LOGGING, \
+    CFLAGS_release := -DNO_JPLIS_LOGGING, \
+    DISABLED_WARNINGS_gcc := unused-function, \
+    EXTRA_HEADER_DIRS := java.base:libjli, \
+    LDFLAGS := $(LDFLAGS_JDKLIB) \
+        $(call SET_SHARED_LIBRARY_ORIGIN) \
+        $(LIBINSTRUMENT_LDFLAGS), \
+    LDFLAGS_linux := -L$(call FindLibDirForModule, java.base), \
+    LDFLAGS_macosx := -L$(call FindLibDirForModule, java.base), \
+    LDFLAGS_aix := -L$(SUPPORT_OUTPUTDIR)/native/java.base, \
+    LIBS := $(JDKLIB_LIBS), \
+    LIBS_unix := -ljava -ljvm $(LIBZ_LIBS), \
+    LIBS_linux := -ljli $(LIBDL), \
+    LIBS_aix := -liconv -ljli_static $(LIBDL), \
+    LIBS_macosx := -ljli -liconv -framework Cocoa -framework Security \
+        -framework ApplicationServices, \
+    LIBS_windows := jvm.lib $(WIN_JAVA_LIB) advapi32.lib \
+        $(WINDOWS_JLI_LIB), \
+))
+
+ifeq ($(call isTargetOs, aix), true)
+  $(BUILD_LIBINSTRUMENT): $(call FindStaticLib, java.base, jli_static)
+else
+  $(BUILD_LIBINSTRUMENT): $(call FindLib, java.base, jli)
+endif
+$(BUILD_LIBINSTRUMENT): $(call FindLib, java.base, java)
+
+TARGETS += $(BUILD_LIBINSTRUMENT)
+
+################################################################################

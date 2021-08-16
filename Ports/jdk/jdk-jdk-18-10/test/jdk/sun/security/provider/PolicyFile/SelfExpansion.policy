@@ -1,0 +1,10 @@
+grant {
+    permission javax.security.auth.AuthPermission "modifyPrincipals";
+    permission javax.security.auth.AuthPermission "modifyPrivateCredentials";
+    permission javax.security.auth.AuthPermission "doAsPrivileged";
+    permission javax.security.auth.AuthPermission "getSubject";
+};
+
+grant principal javax.security.auth.x500.X500Principal "CN=test" {
+    permission javax.security.auth.PrivateCredentialPermission "java.lang.String ${{self}}", "read";
+};

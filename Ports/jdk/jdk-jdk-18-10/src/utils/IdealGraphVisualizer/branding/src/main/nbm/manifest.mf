@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+OpenIDE-Module-Localizing-Bundle: com/sun/hotspot/igv/branding/Bundle.properties
+AutoUpdate-Essential-Module: true

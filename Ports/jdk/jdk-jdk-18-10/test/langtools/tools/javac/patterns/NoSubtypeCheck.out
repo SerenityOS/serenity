@@ -1,0 +1,7 @@
+NoSubtypeCheck.java:10:24: compiler.err.instanceof.pattern.no.subtype: java.lang.Object, java.lang.Object
+NoSubtypeCheck.java:12:24: compiler.err.instanceof.pattern.no.subtype: java.lang.String, java.lang.Object
+NoSubtypeCheck.java:13:24: compiler.err.instanceof.pattern.no.subtype: java.lang.String, java.lang.String
+NoSubtypeCheck.java:14:24: compiler.err.instanceof.pattern.no.subtype: NoSubtypeCheck.List<java.lang.String>, NoSubtypeCheck.List<java.lang.String>
+NoSubtypeCheck.java:16:22: compiler.err.cant.resolve.location: kindname.variable, undef, , , (compiler.misc.location: kindname.class, NoSubtypeCheck, null)
+NoSubtypeCheck.java:17:35: compiler.err.cant.resolve.location: kindname.class, Undef, , , (compiler.misc.location: kindname.class, NoSubtypeCheck, null)
+6 errors

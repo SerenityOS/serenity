@@ -1,0 +1,208 @@
+#! /usr/bin/bash
+
+# ATTENTION:
+#
+# Please read spnegoReadme first to setup the testing
+# environment needed
+
+# the following ENV should be adjusted to match your environment
+WWW_REALM=JSL.BEIJING
+WWW_KDC=jsl-bjlab1.jsl.beijing
+WWW_URL=http://jsl-bjlab1.jsl.beijing/1.txt
+
+PROXY_REALM=JSLDUBLIN.IRELAND.SUN.COM
+PROXY_KDC=anchor.jsldublin.ireland.sun.com
+PROXY_URL=http://sceri.prc.sun.com/~ww155710/1.txt
+PROXY_PARA="-Dhttp.proxyHost=anchor.jsldublin.ireland.sun.com -Dhttp.proxyPort=8080"
+
+GOOD_PASS='-Duser=olala -Dpass=1q2w#E$R'
+GOOD_KPASS='-Dkuser=olala -Dkpass=1q2w#E$R'
+BAD_PASS='-Duser=olala -Dpass=false'
+BAD_KPASS='-Dkuser=olala -Dkpass=false'
+
+WWW_TAB=www.tab
+PROXY_TAB=proxy.tab
+TAB_PATH=/tmp/krb5cc_156710
+
+FILE_CONTENT=content_of_web_file
+
+# these ENV determines how much to show in terminal. don't edit
+EXTRA_LOG="-Djava.util.logging.config.file=spnegoLog.properties -Dshowhint"
+
+ANY_EXCEPTION='Exception'
+IO_EXCEPTION='java.io.IOException'
+PROTO_EXCEPTION='java.net.ProtocolException'
+HEADER_200='HTTP/1.1 200'
+
+# a java run
+function runonce {
+  echo Testing $AUTH_TYPE-$TEST_NAME ...
+  java -Djava.security.krb5.realm=$USE_REALM \
+     -Djava.security.krb5.kdc=$USE_KDC \
+     -Djava.security.auth.login.config=spnegoLogin.conf \
+     -Dhttp.maxRedirects=2 \
+     $AUTH_PREF \
+     $EXTRA_PARA \
+     $EXTRA_LOG \
+     $USER_PASS \
+     $KUSER_PASS \
+     WebGet $USE_URL 2> err.log > out.log
+  if [ "$HAS_CACHE" = true ]; then
+     grep -i 'PROVIDING Kerberos' out.log && exit $LINENO
+  else
+     grep -i 'PROVIDING Kerberos' out.log > /dev/null || echo '....has not query Kerberos user/pass'
+  fi
+}
+
+function testsuite {
+
+    # normal runs
+    USER_PASS=$GOOD_PASS
+    KUSER_PASS=$GOOD_KPASS
+
+    TEST_NAME=Authenticate
+    AUTH_PREF=
+    runonce
+    grep -i "$FILE_CONTENT" out.log > /dev/null || exit $LINENO
+    grep -i "$HEADER_40X" err.log > /dev/null  || exit $LINENO
+    grep -i "$AUTH_RESPONSE" err.log > /dev/null  || exit $LINENO
+    grep -i "$AUTH_NEG_REQUEST" err.log > /dev/null  || exit $LINENO
+    grep -i "$HEADER_200" err.log > /dev/null  || exit $LINENO
+    grep -i "$ANY_EXCEPTION" err.log > /dev/null && exit $LINENO
+
+    TEST_NAME="Authenticate with Negotiate"
+    AUTH_PREF=-Dhttp.auth.preference=Negotiate
+    runonce
+    # first 40X and ask for authen i author-neg and 200 and success
+    grep -i "$FILE_CONTENT" out.log > /dev/null || exit $LINENO
+    grep -i "$HEADER_40X" err.log > /dev/null  || exit $LINENO
+    grep -i "$AUTH_RESPONSE" err.log > /dev/null  || exit $LINENO
+    grep -i "$AUTH_NEG_REQUEST" err.log > /dev/null  || exit $LINENO
+    grep -i "$HEADER_200" err.log > /dev/null  || exit $LINENO
+    grep -i "$ANY_EXCEPTION" err.log > /dev/null && exit $LINENO
+
+    TEST_NAME="Authenticate with Kerberos"
+    AUTH_PREF=-Dhttp.auth.preference=Kerberos
+    runonce
+    # first 40X and ask for authen i author-neg and 200 and success
+    grep -i "$FILE_CONTENT" out.log > /dev/null || exit $LINENO
+    grep -i "$HEADER_40X" err.log > /dev/null  || exit $LINENO
+    grep -i "$AUTH_RESPONSE" err.log > /dev/null  || exit $LINENO
+    grep -i "$AUTH_NEG_REQUEST" err.log > /dev/null  || exit $LINENO
+    grep -i "$HEADER_200" err.log > /dev/null  || exit $LINENO
+    grep -i "$ANY_EXCEPTION" err.log > /dev/null && exit $LINENO
+
+    TEST_NAME="Authenticate with Basic"
+    AUTH_PREF=-Dhttp.auth.preference=Basic
+    runonce
+    # first 40X and ask for authen i author-basic and 200 and success
+    grep -i "$FILE_CONTENT" out.log > /dev/null || exit $LINENO
+    grep -i "$HEADER_40X" err.log > /dev/null  || exit $LINENO
+    grep -i "$AUTH_RESPONSE" err.log > /dev/null  || exit $LINENO
+    grep -i "$AUTH_BASIC_REQUEST" err.log > /dev/null  || exit $LINENO
+    grep -i "$HEADER_200" err.log > /dev/null  || exit $LINENO
+    grep -i "$ANY_EXCEPTION" err.log > /dev/null && exit $LINENO
+
+    if [ "$HAS_CACHE" = true ]; then
+        echo 'Skip bad kpass test if HAS_CACHE is true'
+    else
+        # bad kpass should fallback to basic
+
+        TEST_NAME="Authenticate fallback"
+        KUSER_PASS=$BAD_KPASS
+        AUTH_PREF=
+        runonce
+        # first 40X and ask for authen i cannot author-neg but can author-basic and 200 and success
+        grep -i "$FILE_CONTENT" out.log > /dev/null || exit $LINENO
+        grep -i "$HEADER_40X" err.log > /dev/null  || exit $LINENO
+        grep -i "$AUTH_RESPONSE" err.log > /dev/null  || exit $LINENO
+        grep -i "$AUTH_NEG_REQUEST" err.log > /dev/null  && exit $LINENO
+        grep -i "$AUTH_BASIC_REQUEST" err.log > /dev/null  || exit $LINENO
+        grep -i "$HEADER_200" err.log > /dev/null  || exit $LINENO
+        grep -i "$ANY_EXCEPTION" err.log > /dev/null && exit $LINENO
+
+        # auth.pref given, does not fallback
+
+        TEST_NAME="Authenticate no fallback"
+        KUSER_PASS=$BAD_KPASS
+        AUTH_PREF=-Dhttp.auth.preference=Negotiate
+        runonce # will fail
+        # first 40X and ask for authen i cannot author-neg and fail with IO_EXCEPTION
+        grep -i "$FILE_CONTENT" out.log > /dev/null && exit $LINENO
+        grep -i "$HEADER_40X" err.log > /dev/null  || exit $LINENO
+        grep -i "$AUTH_ANY_REQUEST" err.log > /dev/null  && exit $LINENO
+        grep -i "$IO_EXCEPTION" err.log > /dev/null || exit $LINENO
+
+        # bad kpass fallback to basic, but bad pass
+        TEST_NAME="Authenticate fallback but still cannot go on"
+        KUSER_PASS=$BAD_KPASS
+        USER_PASS=$BAD_PASS
+        AUTH_PREF=
+        runonce # will fail
+        # first 40X and ask for authen i cannot author-neg and author-basic again and again and fail with PROTO_EXCEPTION
+        grep -i "$FILE_CONTENT" out.log > /dev/null && exit $LINENO
+        grep -i "$HEADER_40X" err.log > /dev/null  || exit $LINENO
+        grep -i "$AUTH_NEG_REQUEST" err.log > /dev/null  && exit $LINENO
+        grep -i "$AUTH_BASIC_REQUEST" err.log > /dev/null  || exit $LINENO
+        grep -i "$PROTO_EXCEPTION" err.log > /dev/null || exit $LINENO
+    fi
+}
+
+function testWWW {
+
+    # WWW Part
+    AUTH_TYPE=WWW
+    USE_REALM=$WWW_REALM
+    USE_KDC=$WWW_KDC
+    USE_URL=$WWW_URL
+    EXTRA_PARA=
+
+    HEADER_40X='HTTP/1.1 401'
+    AUTH_RESPONSE='WWW-Authenticate:'
+    AUTH_NEG_REQUEST='{Authorization: Negotiate'
+    AUTH_BASIC_REQUEST='{Authorization: Basic'
+    AUTH_ANY_REQUEST='{Authorization:'
+
+    testsuite
+
+    echo Pass WWW
+}
+
+function testProxy {
+
+    # Proxy Part
+    AUTH_TYPE=Proxy
+    USE_REALM=$PROXY_REALM
+    USE_KDC=$PROXY_KDC
+    USE_URL=$PROXY_URL
+    EXTRA_PARA=$PROXY_PARA
+
+    HEADER_40X='HTTP/1.1 407'
+    AUTH_RESPONSE='Proxy-Authenticate:'
+    AUTH_NEG_REQUEST='{Proxy-Authorization: Negotiate'
+    AUTH_BASIC_REQUEST='{Proxy-Authorization: Basic'
+    AUTH_ANY_REQUEST='{Proxy-Authorization:'
+
+    testsuite
+
+    echo Pass Proxy
+}
+
+HAS_CACHE='false'
+kdestroy
+testWWW
+testProxy
+
+HAS_CACHE='true'
+#kinit for WWW_REALM
+cp $WWW_TAB $TAB_PATH
+testWWW
+#kinit for PRXY_REALM
+cp $PROXY_TAB $TAB_PATH
+testProxy
+
+kdestroy
+rm err.log
+rm out.log
+
+exit 0

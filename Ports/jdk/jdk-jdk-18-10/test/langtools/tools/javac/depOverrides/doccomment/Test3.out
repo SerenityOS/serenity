@@ -1,0 +1,3 @@
+Test3.java:11:14: compiler.warn.missing.deprecated.annotation
+Test3.java:18:1: compiler.warn.has.been.deprecated: m(), LibInterface
+2 warnings

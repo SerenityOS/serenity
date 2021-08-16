@@ -1,0 +1,7 @@
+T8175317.java:15:10: compiler.warn.unchecked.meth.invocation.applied: kindname.method, m, java.util.function.Supplier<java.util.List<java.lang.String>>, java.util.function.Supplier<java.util.List<java.lang.String>>, kindname.class, T8175317
+T8175317.java:19:42: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.util.List, java.util.List<java.lang.String>
+T8175317.java:23:10: compiler.warn.unchecked.meth.invocation.applied: kindname.method, m, java.util.function.Supplier<java.util.List<java.lang.String>>, java.util.function.Supplier<java.util.List<java.lang.String>>, kindname.class, T8175317
+T8175317.java:27:36: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.util.List, java.util.List<java.lang.String>
+- compiler.err.warnings.and.werror
+1 error
+4 warnings

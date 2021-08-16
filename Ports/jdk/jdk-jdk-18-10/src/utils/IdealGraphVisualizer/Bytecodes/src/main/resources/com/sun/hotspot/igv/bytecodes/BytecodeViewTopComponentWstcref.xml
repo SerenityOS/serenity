@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tc-ref PUBLIC "-//NetBeans//DTD Top Component in Mode Properties 2.0//EN" "http://www.netbeans.org/dtds/tc-ref2_0.dtd">
+<tc-ref version="2.0" >
+    <module name="com.sun.hotspot.igv.bytecodes" spec="1.0"/>
+    <tc-id id="BytecodeViewTopComponent"/>
+    <state opened="true"/>
+</tc-ref>

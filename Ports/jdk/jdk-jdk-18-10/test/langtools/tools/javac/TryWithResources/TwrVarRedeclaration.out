@@ -1,0 +1,4 @@
+TwrVarRedeclaration.java:14:33: compiler.err.already.defined: kindname.variable, r, kindname.method, main(java.lang.String...)
+TwrVarRedeclaration.java:18:20: compiler.err.already.defined: kindname.variable, r, kindname.method, main(java.lang.String...)
+TwrVarRedeclaration.java:23:23: compiler.err.already.defined: kindname.variable, r, kindname.method, main(java.lang.String...)
+3 errors

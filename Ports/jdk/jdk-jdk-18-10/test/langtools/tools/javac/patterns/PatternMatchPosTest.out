@@ -1,0 +1,14 @@
+- compiler.note.proc.messager: (o instanceof String s)
+- compiler.note.proc.messager: o instanceof String s
+- compiler.note.proc.messager: o
+- compiler.note.proc.messager: String s
+- compiler.note.proc.messager: String s
+- compiler.note.proc.messager: String
+- compiler.note.proc.messager: (o instanceof java.lang.String s)
+- compiler.note.proc.messager: o instanceof java.lang.String s
+- compiler.note.proc.messager: o
+- compiler.note.proc.messager: java.lang.String s
+- compiler.note.proc.messager: java.lang.String s
+- compiler.note.proc.messager: java.lang.String
+- compiler.note.proc.messager: java.lang
+- compiler.note.proc.messager: java

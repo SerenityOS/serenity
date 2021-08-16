@@ -1,0 +1,3 @@
+ImpossibleTypeTest.java:14:13: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Integer, java.lang.String)
+ImpossibleTypeTest.java:17:26: compiler.err.cant.resolve.location: kindname.class, Undefined, , , (compiler.misc.location: kindname.class, ImpossibleTypeTest, null)
+2 errors

@@ -1,0 +1,2 @@
+Neg21.java:13:28: compiler.err.cant.apply.diamond.1: (compiler.misc.diamond: Neg21.A), (compiler.misc.diamond.invalid.arg: java.lang.Object&java.io.Serializable&java.lang.Cloneable, (compiler.misc.diamond: Neg21.A))
+1 error

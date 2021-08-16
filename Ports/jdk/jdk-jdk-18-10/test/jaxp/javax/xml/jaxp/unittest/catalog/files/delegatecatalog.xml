@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog
+  xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+
+    <public publicId="-//W3C//DTD XHTML 1.0 Strict//EN" 
+            uri="catalog/xhtml1-strict.dtd"/>
+
+    <systemSuffix systemIdSuffix="html1-strict.dtd"
+                  uri="file:///share/mirrors/w3c/xhtml1/xhtml1-strict.dtd"/>
+
+    <public publicId="-//OPENJDK//XML CATALOG DTD//1.0" uri="public.dtd"/>
+    
+    <system systemId="http://openjdk.java.net/xml/catalog/dtd/system.dtd" uri="system.dtd"/>
+    
+    <rewriteSystem systemIdStartString="http://openjdk.java.net/" 
+                   rewritePrefix="/C:/cygwin/home/huizwang/openjdk/jdk9-dev/jaxp1/" />
+    
+    <rewriteSystem systemIdStartString="http://openjdk.java.net/xml/catalog/dtd/" 
+                   rewritePrefix="/C:/cygwin/home/huizwang/openjdk/jdk9-dev/jaxp1/jaxp-ri/src/unit-test/acatalogapi/" />
+    
+    <public publicId="-//JAVASE//XML CATALOG DTD//DELEGATEPULIC" uri="delegatepublic.dtd"/>
+    
+    <system systemId="http://java.com/xml/catalog/dtd/delegatesystem.dtd" uri="delegatesystem.dtd"/>
+    
+</catalog>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="sr"/>
+		<script type="Latn"/>
+		<territory type="XK"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="bm" draft="contributed">bamanankan</language>
+			<language type="bn" draft="contributed">bangla</language>
+			<language type="ff" draft="contributed">fulah</language>
+			<language type="gsw" draft="contributed">švajcarski nemački</language>
+			<language type="ht" draft="contributed">haićanski kreolski</language>
+			<language type="lo" draft="contributed">laoški</language>
+			<language type="moh" draft="contributed">mohok</language>
+			<language type="nqo" draft="contributed">n’ko</language>
+			<language type="shi" draft="contributed">južni šilha</language>
+			<language type="si" draft="contributed">sinhalski</language>
+			<language type="tzm" draft="contributed">centralnoatlaski tamašek</language>
+			<language type="xh" draft="contributed">isikosa</language>
+			<language type="zgh" draft="contributed">standardni marokanski tamašek</language>
+			<language type="zu" draft="contributed">isizulu</language>
+		</languages>
+		<territories>
+			<territory type="CG" draft="contributed">Kongo</territory>
+			<territory type="CV" draft="contributed">Kabo Verde</territory>
+			<territory type="CZ" draft="contributed">Češka Republika</territory>
+			<territory type="HK" draft="contributed">SAR Hongkong</territory>
+			<territory type="KN" draft="contributed">Sveti Kits i Nevis</territory>
+			<territory type="MO" draft="contributed">SAR Makao</territory>
+			<territory type="PM" draft="contributed">Sveti Pjer i Mikelon</territory>
+			<territory type="RE" draft="contributed">Reunion</territory>
+			<territory type="UM" draft="contributed">Manja udaljena ostrva SAD</territory>
+			<territory type="VC" draft="contributed">Sveti Vinsent i Grenadini</territory>
+		</territories>
+	</localeDisplayNames>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateTimeFormats>
+					<intervalFormats>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d" draft="contributed">E, d – E, d. MMM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E, d. MMM – E, d. MMM</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="3" draft="contributed">mart</month>
+							<month type="5" draft="contributed">maj</month>
+							<month type="6" draft="contributed">jun</month>
+							<month type="7" draft="contributed">jul</month>
+							<month type="9">sept</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="3" draft="contributed">mart</month>
+							<month type="5" draft="contributed">maj</month>
+							<month type="6" draft="contributed">jun</month>
+							<month type="7" draft="contributed">jul</month>
+							<month type="9">sept</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="midnight" draft="contributed">ponoć</dayPeriod>
+							<dayPeriod type="noon" draft="contributed">podne</dayPeriod>
+							<dayPeriod type="morning1" draft="contributed">jutro</dayPeriod>
+							<dayPeriod type="afternoon1" draft="contributed">po pod.</dayPeriod>
+							<dayPeriod type="evening1" draft="contributed">uveče</dayPeriod>
+							<dayPeriod type="night1" draft="contributed">noću</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="midnight" draft="contributed">ponoć</dayPeriod>
+							<dayPeriod type="noon" draft="contributed">podne</dayPeriod>
+							<dayPeriod type="morning1" draft="contributed">jutro</dayPeriod>
+							<dayPeriod type="afternoon1" draft="contributed">po pod.</dayPeriod>
+							<dayPeriod type="evening1" draft="contributed">veče</dayPeriod>
+							<dayPeriod type="night1" draft="contributed">noć</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am" draft="contributed">a</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">p</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+			</calendar>
+		</calendars>
+	</dates>
+</ldml>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding = "utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.hibid.com/useraccount"
+           xmlns="http://www.hibid.com/useraccount"
+           xmlns:user="http://www.hibid.com/useraccount" elementFormDefault="qualified" >
+
+        <xs:include schemaLocation="userAddress.xsd"/>
+
+        <xs:simpleType name="charType">
+           <xs:restriction base="xs:NCName">
+              <xs:minLength value="1" />
+              <xs:maxLength value="1" />
+           </xs:restriction>
+        </xs:simpleType>
+
+        <xs:simpleType name="_2CharsType">
+           <xs:restriction base="xs:string">
+              <xs:length value="2" fixed="true"/>
+           </xs:restriction>
+        </xs:simpleType>
+
+        <xs:simpleType name="_3digits">
+           <xs:restriction base="xs:string">
+              <xs:pattern value="[0-9]{3}" />
+           </xs:restriction>
+        </xs:simpleType>
+
+        <xs:simpleType name="_7digits">
+           <xs:restriction base="xs:string">
+              <xs:pattern value="[0-9]{7}" />
+           </xs:restriction>
+        </xs:simpleType>
+
+        <xs:complexType name="EmptyElement" />
+
+
+        <!-- *************************************
+             ***       phone number type      ****
+             *************************************
+        -->
+        <xs:complexType name="international_AreaCode_Type">
+           <xs:sequence>
+              <xs:element name="countryCode" type="_3digits"/>
+              <xs:element name="areaCode" type="_3digits"/>
+           </xs:sequence>
+        </xs:complexType>
+
+        <xs:complexType name="us_AreaCode_Type">
+           <xs:sequence>
+              <xs:element name="areaCode" type="_3digits"/>
+           </xs:sequence>
+        </xs:complexType>
+
+        <xs:complexType name="us_phonenumber_type">
+           <xs:complexContent>
+              <xs:extension base="us_AreaCode_Type">
+                 <xs:sequence>
+                    <xs:element name="localNumber" type="_7digits"/>
+                 </xs:sequence>
+              </xs:extension>
+           </xs:complexContent>
+        </xs:complexType>
+
+        <xs:complexType name="international_phonenumber_type">
+           <xs:complexContent>
+              <xs:extension base="international_AreaCode_Type">
+                 <xs:sequence>
+                    <xs:element name="localNumber" type="_7digits"/>
+                 </xs:sequence>
+              </xs:extension>
+           </xs:complexContent>
+        </xs:complexType>
+
+        <!-- *************************************
+             ***       address type             ****
+             *************************************
+        -->
+        <xs:simpleType name="stateAbrvType">
+           <xs:restriction base="_2CharsType">
+              <xs:pattern value="[A-Z]" />
+           </xs:restriction>
+        </xs:simpleType>
+
+        <xs:simpleType name="us_zipCodeType">
+           <xs:restriction base="xs:string">
+              <xs:pattern value="[0-9]{5}(-[0-9]{4})?" />
+           </xs:restriction>
+        </xs:simpleType>
+
+        <xs:simpleType name="state.zip_type">
+           <xs:union memberTypes="stateAbrvType us_zipCodeType"/>
+        </xs:simpleType>
+
+        <xs:simpleType name="CityInfo_type">
+           <xs:restriction base="xs:normalizedString">
+              <xs:whiteSpace value="collapse" />
+           </xs:restriction>
+        </xs:simpleType>
+
+
+        <!-- *************************************
+             ***       user             ****
+             *************************************
+        -->
+        <xs:element name="user">
+           <xs:complexType>
+              <xs:sequence>
+		 <xs:element name="Name" type="xs:string" minOccurs="0" />
+		 
+
+		 <xs:element name="addresses">
+		    <xs:complexType>
+	               <xs:sequence>
+		          <xs:element name="homeAddress" type="AddressType"/>
+	               </xs:sequence>
+	            </xs:complexType>
+	         </xs:element>
+             </xs:sequence>
+
+
+	   </xs:complexType>
+  	</xs:element>
+</xs:schema>

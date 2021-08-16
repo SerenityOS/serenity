@@ -1,0 +1,105 @@
+#
+# Copyright (c) 2015, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# This spec file is used to compile a BUILD_JDK while cross compiling. The
+# BUILD_JDK runs on the build/host platform and is of the same version as
+# the main build.
+
+# First include the real base spec.gmk file
+include @SPEC@
+
+CC := @BUILD_CC@
+CXX := @BUILD_CXX@
+# Ideally this should be probed by configure but that is tricky to implement,
+# and this should work in most cases.
+CPP := @BUILD_CC@ -E
+LD := @BUILD_LD@
+LDCXX := @BUILD_LDCXX@
+AS := @BUILD_AS@
+NM := @BUILD_NM@
+AR := @BUILD_AR@
+OBJCOPY := @BUILD_OBJCOPY@
+STRIP := @BUILD_STRIP@
+SYSROOT_CFLAGS := @BUILD_SYSROOT_CFLAGS@
+SYSROOT_LDFLAGS := @BUILD_SYSROOT_LDFLAGS@
+
+# These directories should not be moved to BUILDJDK_OUTPUTDIR
+HOTSPOT_OUTPUTDIR := $(patsubst $(OUTPUTDIR)%,$(BUILDJDK_OUTPUTDIR)%,$(HOTSPOT_OUTPUTDIR))
+BUILDTOOLS_OUTPUTDIR := $(patsubst $(OUTPUTDIR)%,$(BUILDJDK_OUTPUTDIR)%,$(BUILDTOOLS_OUTPUTDIR))
+SUPPORT_OUTPUTDIR := $(patsubst $(OUTPUTDIR)%,$(BUILDJDK_OUTPUTDIR)%,$(SUPPORT_OUTPUTDIR))
+JDK_OUTPUTDIR := $(patsubst $(OUTPUTDIR)%,$(BUILDJDK_OUTPUTDIR)%,$(JDK_OUTPUTDIR))
+IMAGES_OUTPUTDIR := $(patsubst $(OUTPUTDIR)%,$(BUILDJDK_OUTPUTDIR)%,$(IMAGES_OUTPUTDIR))
+
+OPENJDK_BUILD_CPU_LEGACY := @OPENJDK_BUILD_CPU_LEGACY@
+OPENJDK_BUILD_CPU_LEGACY_LIB := @OPENJDK_BUILD_CPU_LEGACY_LIB@
+OPENJDK_BUILD_LIBC := @OPENJDK_BUILD_LIBC@
+OPENJDK_TARGET_CPU := @OPENJDK_BUILD_CPU@
+OPENJDK_TARGET_CPU_ARCH := @OPENJDK_BUILD_CPU_ARCH@
+OPENJDK_TARGET_CPU_BITS := @OPENJDK_BUILD_CPU_BITS@
+OPENJDK_TARGET_CPU_ENDIAN := @OPENJDK_BUILD_CPU_ENDIAN@
+OPENJDK_TARGET_CPU_LEGACY := @OPENJDK_BUILD_CPU_LEGACY@
+OPENJDK_TARGET_LIBC := @OPENJDK_BUILD_LIBC@
+OPENJDK_TARGET_OS_INCLUDE_SUBDIR := @OPENJDK_BUILD_OS_INCLUDE_SUBDIR@
+
+HOTSPOT_TARGET_OS := @HOTSPOT_BUILD_OS@
+HOTSPOT_TARGET_OS_TYPE := @HOTSPOT_BUILD_OS_TYPE@
+HOTSPOT_TARGET_CPU := @HOTSPOT_BUILD_CPU@
+HOTSPOT_TARGET_CPU_ARCH := @HOTSPOT_BUILD_CPU_ARCH@
+HOTSPOT_TARGET_CPU_DEFINE := @HOTSPOT_BUILD_CPU_DEFINE@
+HOTSPOT_TARGET_LIBC := @HOTSPOT_BUILD_LIBC@
+
+CFLAGS_JDKLIB := @OPENJDK_BUILD_CFLAGS_JDKLIB@
+CXXFLAGS_JDKLIB := @OPENJDK_BUILD_CXXFLAGS_JDKLIB@
+LDFLAGS_JDKLIB := @OPENJDK_BUILD_LDFLAGS_JDKLIB@
+CFLAGS_JDKEXE := @OPENJDK_BUILD_CFLAGS_JDKEXE@
+CXXFLAGS_JDKEXE := @OPENJDK_BUILD_CXXFLAGS_JDKEXE@
+LDFLAGS_JDKEXE := @OPENJDK_BUILD_LDFLAGS_JDKEXE@
+
+JVM_CFLAGS := @OPENJDK_BUILD_JVM_CFLAGS@
+JVM_LDFLAGS := @OPENJDK_BUILD_JVM_LDFLAGS@
+JVM_ASFLAGS := @OPENJDK_BUILD_JVM_ASFLAGS@
+JVM_LIBS := @OPENJDK_BUILD_JVM_LIBS@
+
+FDLIBM_CFLAGS := @OPENJDK_BUILD_FDLIBM_CFLAGS@
+
+INTERIM_LANGTOOLS_ARGS := $(subst $(OUTPUTDIR),$(BUILDJDK_OUTPUTDIR),$(INTERIM_LANGTOOLS_ARGS))
+
+# The compiler for the build platform is likely not warning compatible with the official
+# compiler.
+WARNINGS_AS_ERRORS := false
+DISABLE_WARNING_PREFIX := @BUILD_CC_DISABLE_WARNING_PREFIX@
+
+# Save speed and disk space by not enabling debug symbols for the buildjdk
+ENABLE_DEBUG_SYMBOLS := false
+
+JVM_VARIANTS := server
+JVM_VARIANT_MAIN := server
+JVM_FEATURES_server := cds compiler1 compiler2 g1gc serialgc
+
+# Some users still set EXTRA_*FLAGS on the make command line. Must
+# make sure to override that when building buildjdk.
+override EXTRA_CFLAGS :=
+override EXTRA_CXXFLAGS :=
+override EXTRA_LDFLAGS :=

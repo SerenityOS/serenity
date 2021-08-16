@@ -1,0 +1,11 @@
+grant {
+    permission java.lang.RuntimePermission "setSecurityManager";
+    permission java.lang.RuntimePermission "getBootLayer";
+    permission java.lang.RuntimePermission "getClassLoader";
+    permission java.io.FilePermission "mods1", "read";
+    permission java.io.FilePermission "mods2", "read";
+    // only grant access to p1.* classes
+    // no access to p1.internal.* and p2.* classes
+    permission java.io.FilePermission "mods1/p1/*", "read";
+    permission java.util.PropertyPermission "user.dir", "read";
+};

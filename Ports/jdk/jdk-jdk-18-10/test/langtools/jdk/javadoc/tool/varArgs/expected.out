@@ -1,0 +1,4 @@
+interface pkg1.A
+  name: A / pkg1.A / pkg1.A
+  methods:
+    void m1(int, String...)

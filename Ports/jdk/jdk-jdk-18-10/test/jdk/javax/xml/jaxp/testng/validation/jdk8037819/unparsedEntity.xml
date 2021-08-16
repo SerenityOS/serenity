@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<!DOCTYPE personnel SYSTEM "unparsedEntity.dtd">
+<A attr="blah" unparsedEntityAttr="myUnparsedEntity">
+</A>

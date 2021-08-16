@@ -1,0 +1,2 @@
+BadExpressionLambda.java:19:31: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.conditional.target.cant.be.void))
+1 error

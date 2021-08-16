@@ -1,0 +1,252 @@
+/*
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ * This test contains a ldc2_w instruction of a condy which returns a loadable float
+ * constant.  VerifyError expected.
+ */
+class CondyBadLDC2_W
+	version 55:0
+{
+
+public Method "<init>":"()V"
+	stack 1 locals 1
+{
+		aload_0;
+		invokespecial	Method java/lang/Object."<init>":"()V";
+		return;
+}
+
+public static Method intConversion:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;I)Ljava/lang/Object;"
+	throws java/lang/Throwable
+	stack 4 locals 6
+{
+		aload_1;
+		astore	4;
+		iconst_m1;
+		istore	5;
+		aload	4;
+		invokevirtual	Method java/lang/String.hashCode:"()I";
+		lookupswitch{ //11
+		-2001159796: L238;
+		-1538095928: L272;
+		-891985903: L255;
+		66: L108;
+		67: L124;
+		68: L140;
+		70: L156;
+		73: L172;
+		74: L188;
+		83: L204;
+		90: L221;
+		default: L286 };
+	L108:	stack_frame_type append;
+		locals_map class java/lang/String, int;
+		aload	4;
+		ldc	String "B";
+		invokevirtual	Method java/lang/String.equals:"(Ljava/lang/Object;)Z";
+		ifeq	L286;
+		iconst_0;
+		istore	5;
+		goto	L286;
+	L124:	stack_frame_type same;
+		aload	4;
+		ldc	String "C";
+		invokevirtual	Method java/lang/String.equals:"(Ljava/lang/Object;)Z";
+		ifeq	L286;
+		iconst_1;
+		istore	5;
+		goto	L286;
+	L140:	stack_frame_type same;
+		aload	4;
+		ldc	String "D";
+		invokevirtual	Method java/lang/String.equals:"(Ljava/lang/Object;)Z";
+		ifeq	L286;
+		iconst_2;
+		istore	5;
+		goto	L286;
+	L156:	stack_frame_type same;
+		aload	4;
+		ldc	String "F";
+		invokevirtual	Method java/lang/String.equals:"(Ljava/lang/Object;)Z";
+		ifeq	L286;
+		iconst_3;
+		istore	5;
+		goto	L286;
+	L172:	stack_frame_type same;
+		aload	4;
+		ldc	String "I";
+		invokevirtual	Method java/lang/String.equals:"(Ljava/lang/Object;)Z";
+		ifeq	L286;
+		iconst_4;
+		istore	5;
+		goto	L286;
+	L188:	stack_frame_type same;
+		aload	4;
+		ldc	String "J";
+		invokevirtual	Method java/lang/String.equals:"(Ljava/lang/Object;)Z";
+		ifeq	L286;
+		iconst_5;
+		istore	5;
+		goto	L286;
+	L204:	stack_frame_type same;
+		aload	4;
+		ldc	String "S";
+		invokevirtual	Method java/lang/String.equals:"(Ljava/lang/Object;)Z";
+		ifeq	L286;
+		bipush	6;
+		istore	5;
+		goto	L286;
+	L221:	stack_frame_type same;
+		aload	4;
+		ldc	String "Z";
+		invokevirtual	Method java/lang/String.equals:"(Ljava/lang/Object;)Z";
+		ifeq	L286;
+		bipush	7;
+		istore	5;
+		goto	L286;
+	L238:	stack_frame_type same;
+		aload	4;
+		ldc	String "nullRef";
+		invokevirtual	Method java/lang/String.equals:"(Ljava/lang/Object;)Z";
+		ifeq	L286;
+		bipush	8;
+		istore	5;
+		goto	L286;
+	L255:	stack_frame_type same;
+		aload	4;
+		ldc	String "string";
+		invokevirtual	Method java/lang/String.equals:"(Ljava/lang/Object;)Z";
+		ifeq	L286;
+		bipush	9;
+		istore	5;
+		goto	L286;
+	L272:	stack_frame_type same;
+		aload	4;
+		ldc	String "stringArray";
+		invokevirtual	Method java/lang/String.equals:"(Ljava/lang/Object;)Z";
+		ifeq	L286;
+		bipush	10;
+		istore	5;
+	L286:	stack_frame_type same;
+		iload	5;
+		tableswitch{ //0 to 10
+		0: L348;
+		1: L354;
+		2: L360;
+		3: L366;
+		4: L372;
+		5: L377;
+		6: L383;
+		7: L389;
+		8: L402;
+		9: L404;
+		10: L407;
+		default: L422 };
+	L348:	stack_frame_type same;
+		iload_3;
+		i2b;
+		invokestatic	Method java/lang/Byte.valueOf:"(B)Ljava/lang/Byte;";
+		areturn;
+	L354:	stack_frame_type same;
+		iload_3;
+		i2c;
+		invokestatic	Method java/lang/Character.valueOf:"(C)Ljava/lang/Character;";
+		areturn;
+	L360:	stack_frame_type same;
+		iload_3;
+		i2d;
+		invokestatic	Method java/lang/Double.valueOf:"(D)Ljava/lang/Double;";
+		areturn;
+	L366:	stack_frame_type same;
+		iload_3;
+		i2f;
+		invokestatic	Method java/lang/Float.valueOf:"(F)Ljava/lang/Float;";
+		areturn;
+	L372:	stack_frame_type same;
+		iload_3;
+		invokestatic	Method java/lang/Integer.valueOf:"(I)Ljava/lang/Integer;";
+		areturn;
+	L377:	stack_frame_type same;
+		iload_3;
+		i2l;
+		invokestatic	Method java/lang/Long.valueOf:"(J)Ljava/lang/Long;";
+		areturn;
+	L383:	stack_frame_type same;
+		iload_3;
+		i2s;
+		invokestatic	Method java/lang/Short.valueOf:"(S)Ljava/lang/Short;";
+		areturn;
+	L389:	stack_frame_type same;
+		iload_3;
+		ifle	L397;
+		iconst_1;
+		goto	L398;
+	L397:	stack_frame_type same;
+		iconst_0;
+	L398:	stack_frame_type stack1;
+		stack_map int;
+		invokestatic	Method java/lang/Boolean.valueOf:"(Z)Ljava/lang/Boolean;";
+		areturn;
+	L402:	stack_frame_type same;
+		aconst_null;
+		areturn;
+	L404:	stack_frame_type same;
+		ldc	String "string";
+		areturn;
+	L407:	stack_frame_type same;
+		iconst_2;
+		anewarray	class java/lang/String;
+		dup;
+		iconst_0;
+		ldc	String "string";
+		aastore;
+		dup;
+		iconst_1;
+		ldc	String "string";
+		aastore;
+		areturn;
+	L422:	stack_frame_type same;
+		new	class java/lang/BootstrapMethodError;
+		dup;
+		ldc	String "Failure to generate a dynamic constant";
+		invokespecial	Method java/lang/BootstrapMethodError."<init>":"(Ljava/lang/String;)V";
+		athrow;
+}
+
+public static Method F:"()F"
+	stack 1 locals 0
+{
+                // VerifyError, ldc2_w of a float, should be ldc
+		ldc2_w	Dynamic REF_invokeStatic:CondyBadLDC2_W.intConversion:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;I)Ljava/lang/Object;":F:"F" int 2147483647;
+		freturn;
+}
+
+public static Method main:"([Ljava/lang/String;)V"
+	stack 1 locals 1
+{
+		invokestatic	Method F:"()F";
+		return;
+}
+
+} // end Class CondyBadLDC2_W

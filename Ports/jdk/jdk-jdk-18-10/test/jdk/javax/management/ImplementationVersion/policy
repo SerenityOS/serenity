@@ -1,0 +1,5 @@
+grant codebase "file:${test.classes}" {
+  permission java.util.PropertyPermission "java.runtime.version", "read";
+  permission javax.management.MBeanServerPermission "createMBeanServer";
+  permission javax.management.MBeanPermission "javax.management.MBeanServerDelegate#ImplementationVersion[JMImplementation:type=MBeanServerDelegate]", "getAttribute";
+};

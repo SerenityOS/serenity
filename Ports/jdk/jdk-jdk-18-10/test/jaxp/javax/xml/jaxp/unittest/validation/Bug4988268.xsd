@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+            targetNamespace="http://xsdtesting" 
+            xmlns:x="http://xsdtesting" 
+            elementFormDefault="qualified">
+        <xsd:group name="G">
+                <xsd:all>
+                        <xsd:element name="a1"/>
+                        <xsd:element name="a2"/>
+                </xsd:all>
+        </xsd:group>
+        <xsd:element name="doc">
+                <xsd:complexType>
+                        <xsd:group ref="x:G" minOccurs="0"/>
+                </xsd:complexType>
+        </xsd:element>
+</xsd:schema>

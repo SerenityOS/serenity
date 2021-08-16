@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" elementFormDefault="unqualified" attributeFormDefault="unqualified" version="1.0">
+    <xs:element name="recording">
+        <xs:complexType>
+            <xs:sequence minOccurs="0" maxOccurs="1">
+                <xs:element name="events">
+                    <xs:complexType>
+                        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                            <xs:element name="event" type="eventType" />
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="eventType">
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+            <xs:choice>
+                <xs:element name="struct" nillable="true" type="structType" />
+                <xs:element name="array" nillable="true" type="arrayType" />
+                <xs:element name="value" nillable="true" type="valueType" />
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute use="required" name="type" type="xs:string" />
+    </xs:complexType>
+    <xs:complexType name="structType">
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+            <xs:choice>
+                <xs:element name="struct" nillable="true" type="structType" />
+                <xs:element name="array" nillable="true" type="arrayType" />
+                <xs:element name="value" nillable="true" type="valueType" />
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute use="required" name="name" type="xs:string" />
+    </xs:complexType>
+    <xs:complexType name="arrayType">
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+            <xs:choice>
+                <xs:element name="struct" nillable="true" type="structElement" />
+                <xs:element name="array" nillable="true" type="arrayElement" />
+                <xs:element name="value" nillable="true" type="valueElement" />
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute use="required" name="size" type="xs:int" />
+        <xs:attribute use="required" name="name" type="xs:string" />
+    </xs:complexType>
+    <xs:complexType name="valueType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute use="required" name="name" type="xs:string" />
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="structElement">
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+            <xs:choice>
+                <xs:element name="struct" nillable="true" type="structType" />
+                <xs:element name="array" nillable="true" type="arrayType" />
+                <xs:element name="value" nillable="true" type="valueType" />
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute use="required" name="index" type="xs:int" />
+    </xs:complexType>
+    <xs:complexType name="arrayElement">
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+            <xs:choice>
+                <xs:element name="value" nillable="true" type="valueType" />
+                <xs:element name="array" nillable="true" type="arrayType" />
+                <xs:element name="struct" nillable="true" type="structType" />
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute use="required" name="index" type="xs:int" />
+    </xs:complexType>
+    <xs:complexType name="valueElement">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute use="required" name="index" type="xs:int" />
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+</xs:schema>

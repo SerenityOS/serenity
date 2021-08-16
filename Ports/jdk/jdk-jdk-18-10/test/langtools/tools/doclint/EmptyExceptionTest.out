@@ -1,0 +1,4 @@
+EmptyExceptionTest.java:13: warning: no description for @exception
+    /** @exception NullPointerException */
+        ^
+1 warning

@@ -1,0 +1,6 @@
+Manifest-version: 1.0
+Main-Class: org.netbeans.jemmy.JemmyProperties
+Jemmy-MajorVersion: 3.0
+Jemmy-MinorVersion: 11.0
+Jemmy-Build: @BUILD_NUMBER@
+

@@ -1,0 +1,84 @@
+#
+# Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include CopyCommon.gmk
+include Modules.gmk
+
+################################################################################
+
+$(CONF_DST_DIR)/sound.properties: $(TOPDIR)/src/java.desktop/share/conf/sound.properties
+	$(call install-file)
+
+TARGETS += $(CONF_DST_DIR)/sound.properties
+
+################################################################################
+#
+# Copy property files from sun/print to LIB_DST_DIR
+#
+PSFONTPROPFILE_SRC_DIR := $(TOPDIR)/src/java.desktop/share/conf
+PSFONTPROPFILE_SRCS := $(wildcard $(PSFONTPROPFILE_SRC_DIR)/psfont*.properties*)
+PSFONTPROPFILE_TARGET_FILES := $(subst $(PSFONTPROPFILE_SRC_DIR),$(LIB_DST_DIR),$(PSFONTPROPFILE_SRCS))
+
+$(LIB_DST_DIR)/%: $(PSFONTPROPFILE_SRC_DIR)/%
+	$(call install-file)
+
+TARGETS += $(PSFONTPROPFILE_TARGET_FILES)
+
+################################################################################
+#
+# Copy and filter the legal files depending on what 3rd party components are
+# bundled or linked from the OS.
+#
+ifeq ($(USE_EXTERNAL_LIBJPEG), true)
+  LEGAL_EXCLUDES += jpeg.md
+endif
+
+ifeq ($(USE_EXTERNAL_LIBGIF), true)
+  LEGAL_EXCLUDES += giflib.md
+endif
+
+ifeq ($(USE_EXTERNAL_LIBPNG), true)
+  LEGAL_EXCLUDES += libpng.md
+endif
+
+ifeq ($(USE_EXTERNAL_LCMS), true)
+  LEGAL_EXCLUDES += lcms.md
+endif
+
+ifeq ($(FREETYPE_TO_USE), system)
+  LEGAL_EXCLUDES += freetype.md
+endif
+
+ifeq ($(USE_EXTERNAL_HARFBUZZ), true)
+  LEGAL_EXCLUDES += harfbuzz.md
+endif
+
+$(eval $(call SetupCopyLegalFiles, COPY_LEGAL, \
+    EXCLUDES := $(LEGAL_EXCLUDES), \
+))
+
+TARGETS += $(COPY_LEGAL)
+
+################################################################################

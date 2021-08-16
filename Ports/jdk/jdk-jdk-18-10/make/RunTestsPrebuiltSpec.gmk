@@ -1,0 +1,181 @@
+#
+# Copyright (c) 2017, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+################################################################################
+# Fake minimalistic spec file for RunTestsPrebuilt.gmk.
+################################################################################
+
+# Make sure all shell commands are executed with the C locale
+export LC_ALL := C
+
+define VerifyVariable
+  ifeq ($$($1), )
+    $$(info Error: Variable $1 is missing, needed by RunTestPrebuiltSpec.gmk)
+    $$(error Cannot continue.)
+  else
+    ifneq ($$(findstring $$(LOG_LEVEL), debug trace), )
+      $$(info Prebuilt variable $1=$$($1))
+    endif
+  endif
+endef
+
+# It is the responsibility of the file including us to have set these up.
+# Verify that this is correct.
+$(eval $(call VerifyVariable,SPEC))
+$(eval $(call VerifyVariable,TOPDIR))
+$(eval $(call VerifyVariable,OUTPUTDIR))
+$(eval $(call VerifyVariable,BOOT_JDK))
+$(eval $(call VerifyVariable,JT_HOME))
+$(eval $(call VerifyVariable,JDK_IMAGE_DIR))
+$(eval $(call VerifyVariable,TEST_IMAGE_DIR))
+$(eval $(call VerifyVariable,MAKE))
+$(eval $(call VerifyVariable,BASH))
+
+################################################################################
+# The "human readable" name of this configuration
+CONF_NAME := run-test-prebuilt
+
+# Number of parallel jobs to use for compilation
+JOBS ?= $(NUM_CORES)
+TEST_JOBS ?= 0
+
+# Use hard-coded values for java flags (one size, fits all!)
+JAVA_FLAGS := -Duser.language=en -Duser.country=US
+JAVA_FLAGS_BIG := -Xms64M -Xmx1600M
+JAVA_FLAGS_SMALL := -XX:+UseSerialGC -Xms32M -Xmx512M -XX:TieredStopAtLevel=1
+BUILDJDK_JAVA_FLAGS_SMALL := -Xms32M -Xmx512M -XX:TieredStopAtLevel=1
+BUILD_JAVA_FLAGS := $(JAVA_FLAGS_BIG)
+
+################################################################################
+# Hard-coded values copied from spec.gmk.in.
+X:=
+SPACE:=$(X) $(X)
+COMMA:=,
+MAKE_ARGS = $(MAKE_LOG_FLAGS) -r -R -I $(TOPDIR)/make/common SPEC=$(SPEC) \
+    MAKE_LOG_FLAGS="$(MAKE_LOG_FLAGS)" LOG_LEVEL=$(LOG_LEVEL)
+BASH_ARGS := -o pipefail -e
+SHELL := $(BASH) $(BASH_ARGS)
+
+################################################################################
+# Set some reasonable defaults for features
+DEBUG_LEVEL := release
+HOTSPOT_DEBUG_LEVEL := release
+BUILD_FAILURE_HANDLER := true
+
+################################################################################
+# Alias some paths (that should not really be used) to our JDK image under test.
+SUPPORT_OUTPUTDIR := $(OUTPUTDIR)/support
+BUILDTOOLS_OUTPUTDIR := $(OUTPUTDIR)/buildtools
+HOTSPOT_OUTPUTDIR := $(OUTPUTDIR)/hotspot
+JDK_OUTPUTDIR := $(OUTPUTDIR)/jdk
+IMAGES_OUTPUTDIR := $(OUTPUTDIR)/images
+BUNDLES_OUTPUTDIR := $(OUTPUTDIR)/bundles
+TESTMAKE_OUTPUTDIR := $(OUTPUTDIR)/test-make
+MAKESUPPORT_OUTPUTDIR := $(OUTPUTDIR)/make-support
+BUILDJDK_OUTPUTDIR := $(OUTPUTDIR)/buildjdk
+
+JRE_IMAGE_DIR := $(JDK_IMAGE_DIR)
+
+################################################################################
+# Assume build platform is same as target platform
+OPENJDK_BUILD_OS := $(OPENJDK_TARGET_OS)
+OPENJDK_BUILD_OS_TYPE := $(OPENJDK_TARGET_OS_TYPE)
+OPENJDK_BUILD_OS_ENV := $(OPENJDK_TARGET_OS_ENV)
+
+OPENJDK_BUILD_CPU := $(OPENJDK_TARGET_CPU)
+OPENJDK_BUILD_CPU_ARCH := $(OPENJDK_TARGET_CPU_ARCH)
+OPENJDK_BUILD_CPU_BITS := $(OPENJDK_TARGET_CPU_BITS)
+OPENJDK_BUILD_CPU_ENDIAN := $(OPENJDK_TARGET_CPU_ENDIAN)
+
+################################################################################
+# Java executable definitions
+JAVA_CMD := $(BOOT_JDK)/bin/java
+JAVAC_CMD := $(BOOT_JDK)/bin/javac
+JAR_CMD := $(BOOT_JDK)/bin/jar
+JLINK_CMD := $(JDK_OUTPUTDIR)/bin/jlink
+JMOD_CMD := $(JDK_OUTPUTDIR)/bin/jmod
+
+JAVA := $(FIXPATH) $(JAVA_CMD) $(JAVA_FLAGS_BIG) $(JAVA_FLAGS)
+JAVA_SMALL := $(FIXPATH) $(JAVA_CMD) $(JAVA_FLAGS_SMALL) $(JAVA_FLAGS)
+JAVAC := $(FIXPATH) $(JAVAC_CMD)
+JAR := $(FIXPATH) $(JAR_CMD)
+JLINK := $(FIXPATH) $(JLINK_CMD)
+JMOD := $(FIXPATH) $(JMOD_CMD)
+
+BUILD_JAVA := $(JDK_IMAGE_DIR)/bin/JAVA
+################################################################################
+# Some common tools. Assume most common name and no path.
+AWK := awk
+BASENAME := basename
+CAT := cat
+CD := cd
+CHMOD := chmod
+CP := cp
+CUT := cut
+DATE := date
+DIFF := diff
+DIRNAME := dirname
+FIND := find
+FIND_DELETE := -delete
+ECHO := echo
+EGREP := grep -E
+FGREP := grep -F
+GREP := grep
+GZIP := gzip
+HEAD := head
+LS := ls
+LN := ln
+MIG := mig
+MKDIR := mkdir
+MV := mv
+NICE := nice
+PATCH := patch
+PRINTF := printf
+RM := rm -f
+RMDIR := rmdir
+SED := sed
+SH := sh
+SORT := sort
+TAR := tar
+TAIL := tail
+TEE := tee
+TR := tr
+TOUCH := touch
+WC := wc
+XARGS := xargs
+ZIPEXE := zip
+UNZIP := unzip
+EXPR := expr
+FILE := file
+HG := hg
+ULIMIT := ulimit
+
+ifeq ($(OPENJDK_BUILD_OS), windows)
+  PATHTOOL := cygpath
+endif
+
+################################################################################
+# Simple macros from spec.gmk.in
+SHARED_LIBRARY=$(LIBRARY_PREFIX)$1$(SHARED_LIBRARY_SUFFIX)

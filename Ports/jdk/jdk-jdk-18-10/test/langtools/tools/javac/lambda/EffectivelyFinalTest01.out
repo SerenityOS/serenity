@@ -1,0 +1,6 @@
+EffectivelyFinalTest.java:25:47: compiler.err.var.might.not.have.been.initialized: y
+EffectivelyFinalTest.java:39:47: compiler.err.cant.ref.non.effectively.final.var: y, (compiler.misc.inner.cls)
+EffectivelyFinalTest.java:43:45: compiler.err.cant.ref.non.effectively.final.var: x, (compiler.misc.inner.cls)
+EffectivelyFinalTest.java:48:45: compiler.err.cant.ref.non.effectively.final.var: x, (compiler.misc.inner.cls)
+EffectivelyFinalTest.java:53:45: compiler.err.cant.ref.non.effectively.final.var: y, (compiler.misc.inner.cls)
+5 errors

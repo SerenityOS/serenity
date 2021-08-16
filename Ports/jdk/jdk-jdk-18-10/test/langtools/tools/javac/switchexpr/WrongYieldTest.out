@@ -1,0 +1,29 @@
+WrongYieldTest.java:16:11: compiler.err.restricted.type.not.allowed: yield, 14
+WrongYieldTest.java:22:5: compiler.err.restricted.type.not.allowed.here: yield
+WrongYieldTest.java:100:15: compiler.err.restricted.type.not.allowed.here: yield
+WrongYieldTest.java:113:9: compiler.err.invalid.yield
+WrongYieldTest.java:123:9: compiler.err.invalid.yield
+WrongYieldTest.java:128:9: compiler.err.invalid.yield
+WrongYieldTest.java:138:9: compiler.err.invalid.yield
+WrongYieldTest.java:143:22: compiler.err.invalid.yield
+WrongYieldTest.java:192:24: compiler.err.invalid.yield
+WrongYieldTest.java:204:18: compiler.err.restricted.type.not.allowed.here: yield
+WrongYieldTest.java:11:24: compiler.err.illegal.ref.to.restricted.type: yield
+WrongYieldTest.java:72:9: compiler.err.no.switch.expression
+WrongYieldTest.java:72:15: compiler.err.cant.resolve.location: kindname.variable, y1, , , (compiler.misc.location: kindname.class, t.WrongYieldTest, null)
+WrongYieldTest.java:76:9: compiler.err.no.switch.expression
+WrongYieldTest.java:79:9: compiler.err.no.switch.expression
+WrongYieldTest.java:79:15: compiler.err.cant.resolve.location: kindname.variable, y2, , , (compiler.misc.location: kindname.class, t.WrongYieldTest, null)
+WrongYieldTest.java:79:24: compiler.err.illegal.ref.to.restricted.type: yield
+WrongYieldTest.java:93:32: compiler.err.illegal.ref.to.restricted.type: yield
+WrongYieldTest.java:97:25: compiler.err.illegal.ref.to.restricted.type: yield
+WrongYieldTest.java:100:30: compiler.err.illegal.ref.to.restricted.type: yield
+WrongYieldTest.java:103:23: compiler.err.illegal.ref.to.restricted.type: yield
+WrongYieldTest.java:103:39: compiler.err.illegal.ref.to.restricted.type: yield
+WrongYieldTest.java:118:9: compiler.err.no.switch.expression.qualify
+WrongYieldTest.java:133:9: compiler.err.no.switch.expression
+WrongYieldTest.java:133:17: compiler.err.cant.deref: int
+WrongYieldTest.java:178:9: compiler.err.no.switch.expression
+WrongYieldTest.java:179:9: compiler.err.no.switch.expression
+WrongYieldTest.java:193:24: compiler.err.illegal.ref.to.restricted.type: yield
+28 errors

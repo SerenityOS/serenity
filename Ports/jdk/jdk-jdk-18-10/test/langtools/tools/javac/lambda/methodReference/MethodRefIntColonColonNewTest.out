@@ -1,0 +1,3 @@
+MethodRefIntColonColonNewTest.java:17:35: compiler.err.type.found.req: int, (compiler.misc.type.req.class.array)
+MethodRefIntColonColonNewTest.java:18:10: compiler.err.cant.apply.symbol: kindname.method, m, java.lang.Object, compiler.misc.no.args, kindname.interface, MethodRefIntColonColonNewTest.SAM<T>, (compiler.misc.arg.length.mismatch)
+2 errors

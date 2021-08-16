@@ -1,0 +1,28 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE document SYSTEM "DocumentBuilderImpl02.dtd">
+<document>
+
+        Publishers of the Music of New York Women Composers
+
+        <title>The Publishers </title>
+
+        <publisher>
+        Alfred Publishing
+        &w;
+        15535 Morrison
+        South Oaks CA 91403
+        </publisher>
+
+        <book price="$100" author = "Herold" number = "no_11">
+                eXtensible Markup Language
+        </book>
+
+        <bookurn xmlns='urn:loc.gov:books'
+                   xmlns:isbn='urn:ISBN:0-395-36341-6'/>
+       
+
+        Publishers are not noted in report by time.
+
+</document>
+
+

@@ -1,0 +1,6 @@
+OPTIONS:shuffle
+nsk.jdi.ObjectReference.referringObjects.referringObjects003.referringObjects003
+nsk.jdi.ObjectReference.referringObjects.referringObjects004.referringObjects004
+nsk.jdi.ReferenceType.instances.instances003.instances003 -testClassNames java.lang.String:nsk.share.jdi.TestClass1:boolean[]
+nsk.jdi.VirtualMachine.instanceCounts.instancecounts001.instancecounts001 
+nsk.jdi.VirtualMachine.instanceCounts.instancecounts001.instancecounts001 -forceGC

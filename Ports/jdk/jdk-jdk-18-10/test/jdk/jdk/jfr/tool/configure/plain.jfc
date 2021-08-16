@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration version="2.0" label="Test plain">
+
+    <event name="com.example.Tiger">
+      <setting name="enabled">false</setting>
+      <setting name="stackTrace">false</setting>
+    </event>
+
+    <event name="com.example.Lion">
+      <setting name="enabled">false</setting>
+      <setting name="stackTrace">true</setting>
+    </event>
+   
+
+</configuration>

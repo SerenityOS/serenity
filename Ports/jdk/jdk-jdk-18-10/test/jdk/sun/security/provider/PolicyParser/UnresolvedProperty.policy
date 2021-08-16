@@ -1,0 +1,10 @@
+// @test
+// @author Gary Ellison
+// @bug 4219343
+// @summary Property Expansion error test
+//
+
+grant {
+    permission java.security.SecurityPermission "getPolicy";
+    permission java.io.FilePermission "${bogus.propertyName}/-", "read";
+};

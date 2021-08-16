@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+if [ ! -d "INSTALL_LOCATION" ]
+then
+    mkdir -p "INSTALL_LOCATION"
+fi
+
+exit 0

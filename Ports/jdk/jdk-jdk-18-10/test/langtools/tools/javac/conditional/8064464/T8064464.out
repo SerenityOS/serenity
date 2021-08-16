@@ -1,0 +1,3 @@
+T8064464.java:20:5: compiler.err.ref.ambiguous: f, kindname.method, f(java.lang.Object), T8064464, kindname.method, f(int), T8064464
+T8064464.java:21:5: compiler.err.ref.ambiguous: f, kindname.method, f(java.lang.Object), T8064464, kindname.method, f(int), T8064464
+2 errors

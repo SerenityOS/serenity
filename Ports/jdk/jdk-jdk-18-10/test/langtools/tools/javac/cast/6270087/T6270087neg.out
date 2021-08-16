@@ -1,0 +1,2 @@
+T6270087neg.java:13:29: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6270087neg.Foo<V>, T6270087neg.Foo<U>)
+1 error

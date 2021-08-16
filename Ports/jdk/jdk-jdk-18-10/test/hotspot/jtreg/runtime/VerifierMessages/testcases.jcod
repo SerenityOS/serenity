@@ -1,0 +1,4185 @@
+/*
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+class A/case65_super {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #12; // #1
+    class #13; // #2
+    class #14; // #3
+    Utf8 "foo"; // #4
+    Utf8 "I"; // #5
+    Utf8 "<init>"; // #6
+    Utf8 "()V"; // #7
+    Utf8 "Code"; // #8
+    Utf8 "LineNumberTable"; // #9
+    Utf8 "SourceFile"; // #10
+    Utf8 "case65_super.java"; // #11
+    NameAndType #6 #7; // #12
+    Utf8 "A/case65_super"; // #13
+    Utf8 "java/lang/Object"; // #14
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+    { // Member
+      0x0004; // access
+      #4; // name_cpx
+      #5; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #6; // name_cpx
+      #7; // sig_cpx
+      [] { // Attributes
+        Attr(#8) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#9) { // LineNumberTable
+              [] { // LineNumberTable
+                0  4;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#10) { // SourceFile
+      #11;
+    } // end SourceFile
+  } // Attributes
+} // end class A/case65_super
+
+class A/case69_super {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #7; // #1
+    class #8; // #2
+    class #9; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    NameAndType #4 #5; // #7
+    Utf8 "A/case69_super"; // #8
+    Utf8 "java/lang/Object"; // #9
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0004; // access
+      #4; // name_cpx
+      #5; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class A/case69_super
+
+class A/case76_super {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #7; // #1
+    class #8; // #2
+    class #9; // #3
+    Utf8 "f"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    NameAndType #4 #5; // #7
+    Utf8 "A/case76_super"; // #8
+    Utf8 "java/lang/Object"; // #9
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0004; // access
+      #4; // name_cpx
+      #5; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class A/case76_super
+
+class B/case65_peer {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #10; // #1
+    class #11; // #2
+    class #12; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "LineNumberTable"; // #7
+    Utf8 "SourceFile"; // #8
+    Utf8 "case65_peer.java"; // #9
+    NameAndType #4 #5; // #10
+    Utf8 "B/case65_peer"; // #11
+    Utf8 "A/case65_super"; // #12
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #4; // name_cpx
+      #5; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#7) { // LineNumberTable
+              [] { // LineNumberTable
+                0  4;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#8) { // SourceFile
+      #9;
+    } // end SourceFile
+  } // Attributes
+} // end class B/case65_peer
+
+class case00 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case00"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x57AC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case00
+
+class case01 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case01"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x030B60AC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case01
+
+class case02 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case02"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2DAC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case02
+
+class case03 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case03"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x1AAC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case03
+
+class case04 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case04"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x26AC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case04
+
+class case05 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case05"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          4; // max_locals
+          Bytes[]{
+            0x2A4C26AC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case05
+
+class case07 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case07"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x033EAC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case07
+
+class case08 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case08"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x0E4AAC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case08
+
+class case09 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case09"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x0303AC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case09
+
+class case10 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case10"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x0E0EAC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case10
+
+class case11 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case11"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x57AC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case11
+
+class case12 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #5 #12; // #1
+    Field #13 #14; // #2
+    Method #13 #15; // #3
+    class #16; // #4
+    class #17; // #5
+    Utf8 "<init>"; // #6
+    Utf8 "()V"; // #7
+    Utf8 "Code"; // #8
+    Utf8 "f"; // #9
+    Utf8 "()I"; // #10
+    Utf8 "StackMapTable"; // #11
+    NameAndType #6 #7; // #12
+    class #18; // #13
+    NameAndType #19 #20; // #14
+    NameAndType #21 #22; // #15
+    Utf8 "case12"; // #16
+    Utf8 "java/lang/Object"; // #17
+    Utf8 "java/lang/Boolean"; // #18
+    Utf8 "TRUE"; // #19
+    Utf8 "Ljava/lang/Boolean;"; // #20
+    Utf8 "booleanValue"; // #21
+    Utf8 "()Z"; // #22
+  } // Constant Pool
+
+  0x0021; // access
+  #4;// this_cpx
+  #5;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #9; // name_cpx
+      #10; // sig_cpx
+      [] { // Attributes
+        Attr(#8) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xB20002B600039900;
+            0x0703A7000404AC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#11) { // StackMapTable
+              [] { // 
+                62b; // same_frame
+                64b, []z{I}; // same_locals_1_stack_item_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case12
+
+class case13 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #5 #12; // #1
+    Field #13 #14; // #2
+    Method #13 #15; // #3
+    class #16; // #4
+    class #17; // #5
+    Utf8 "<init>"; // #6
+    Utf8 "()V"; // #7
+    Utf8 "Code"; // #8
+    Utf8 "f"; // #9
+    Utf8 "()I"; // #10
+    Utf8 "StackMapTable"; // #11
+    NameAndType #6 #7; // #12
+    class #18; // #13
+    NameAndType #19 #20; // #14
+    NameAndType #21 #22; // #15
+    Utf8 "case13"; // #16
+    Utf8 "java/lang/Object"; // #17
+    Utf8 "java/lang/Boolean"; // #18
+    Utf8 "TRUE"; // #19
+    Utf8 "Ljava/lang/Boolean;"; // #20
+    Utf8 "booleanValue"; // #21
+    Utf8 "()Z"; // #22
+  } // Constant Pool
+
+  0x0021; // access
+  #4;// this_cpx
+  #5;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #9; // name_cpx
+      #10; // sig_cpx
+      [] { // Attributes
+        Attr(#8) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xB20002B600039900;
+            0x0703A7000404AC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#11) { // StackMapTable
+              [] { // 
+                14b; // same_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case13
+
+class case14 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #5 #12; // #1
+    Field #13 #14; // #2
+    Method #13 #15; // #3
+    class #16; // #4
+    class #17; // #5
+    Utf8 "<init>"; // #6
+    Utf8 "()V"; // #7
+    Utf8 "Code"; // #8
+    Utf8 "f"; // #9
+    Utf8 "()I"; // #10
+    Utf8 "StackMapTable"; // #11
+    NameAndType #6 #7; // #12
+    class #18; // #13
+    NameAndType #19 #20; // #14
+    NameAndType #21 #22; // #15
+    Utf8 "case14"; // #16
+    Utf8 "java/lang/Object"; // #17
+    Utf8 "java/lang/Boolean"; // #18
+    Utf8 "TRUE"; // #19
+    Utf8 "Ljava/lang/Boolean;"; // #20
+    Utf8 "booleanValue"; // #21
+    Utf8 "()Z"; // #22
+  } // Constant Pool
+
+  0x0021; // access
+  #4;// this_cpx
+  #5;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #9; // name_cpx
+      #10; // sig_cpx
+      [] { // Attributes
+        Attr(#8) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xB20002B600039900;
+            0x0703A7000404AC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#11) { // StackMapTable
+              [] { // 
+                77b, []z{I}; // same_locals_1_stack_item_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case14
+
+class case15 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #2 #10; // #1
+    class #11; // #2
+    class #12; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    Utf8 "StackMapTable"; // #9
+    NameAndType #4 #5; // #10
+    Utf8 "java/lang/Object"; // #11
+    Utf8 "case15"; // #12
+  } // Constant Pool
+
+  0x0021; // access
+  #3;// this_cpx
+  #2;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          2; // max_stack
+          2; // max_locals
+          Bytes[]{
+            0xBB00024CA7FFFC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#9) { // StackMapTable
+              [] { // 
+                0b; // same_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case15
+
+class case17 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case17"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A032E;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case17
+
+class case18 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case18"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A0333;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case18
+
+class case19 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case19"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A0334;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case19
+
+class case20 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case20"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A0335;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case20
+
+class case21 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case21"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A032F;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case21
+
+class case22 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case22"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A0330;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case22
+
+class case23 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case23"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A0331;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case23
+
+class case24 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case24"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A0332;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case24
+
+class case25 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case25"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          3; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A03034F;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case25
+
+class case26 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case26"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          3; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A030354;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case26
+
+class case27 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case27"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          3; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A030355;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case27
+
+class case28 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case28"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          3; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A030356;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case28
+
+class case29 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case29"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          4; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A030950;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case29
+
+class case30 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case30"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          3; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A030B51;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case30
+
+class case31 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case31"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          4; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A030E52;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case31
+
+class case32 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case32"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          3; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A030153;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case32
+
+class case39 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case39"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xB1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case39
+
+class case40 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #7; // #1
+    class #8; // #2
+    class #9; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    NameAndType #4 #5; // #7
+    Utf8 "case40"; // #8
+    Utf8 "java/lang/Object"; // #9
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #4; // name_cpx
+      #5; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xB1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case40
+
+class case41 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Utf8 "[I"; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    class #1; // #9
+    Utf8 "case41"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xBB0009;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case41
+
+class case42 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case42"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2ABE;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case42
+
+class case43 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case43"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xC5000201;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case43
+
+class case44 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case44"; // #10
+    Utf8 "java/lang/Object"; // #11
+    class #13; // #12
+    Utf8 "[Lcase44;"; // #13
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xC5000C00;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case44
+
+class case45 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case45"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xA80000;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case45
+
+class case46 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case46"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2A;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case46
+
+class case47 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case47"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xCA;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case47
+
+class case48 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case48"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xD4;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case48
+
+class case49 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #4 #12; // #1
+    class #13; // #2
+    class #14; // #3
+    class #15; // #4
+    Utf8 "<init>"; // #5
+    Utf8 "()V"; // #6
+    Utf8 "Code"; // #7
+    Utf8 "f"; // #8
+    Utf8 "()I"; // #9
+    Utf8 "StackMapTable"; // #10
+    class #13; // #11
+    NameAndType #5 #6; // #12
+    Utf8 "java/lang/Throwable"; // #13
+    Utf8 "case49"; // #14
+    Utf8 "java/lang/Object"; // #15
+  } // Constant Pool
+
+  0x0021; // access
+  #3;// this_cpx
+  #4;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #8; // name_cpx
+      #9; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          1; // max_stack
+          2; // max_locals
+          Bytes[]{
+            0x03AC4C02AC;
+          }
+          [] { // Traps
+            0 1 2 3;
+          } // end Traps
+          [] { // Attributes
+            Attr(#10) { // StackMapTable
+              [] { // 
+                66b, []z{O,11}; // same_locals_1_stack_item_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case49
+
+class case50 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #4 #11; // #1
+    Method #4 #12; // #2
+    class #13; // #3
+    class #14; // #4
+    Utf8 "<init>"; // #5
+    Utf8 "()V"; // #6
+    Utf8 "Code"; // #7
+    Utf8 "f"; // #8
+    Utf8 "()I"; // #9
+    Utf8 "StackMapTable"; // #10
+    NameAndType #5 #6; // #11
+    NameAndType #15 #9; // #12
+    Utf8 "case50"; // #13
+    Utf8 "java/lang/Object"; // #14
+    Utf8 "hashCode"; // #15
+  } // Constant Pool
+
+  0x0021; // access
+  #3;// this_cpx
+  #4;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #8; // name_cpx
+      #9; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB6000257000003;
+            0xA700092AB6000204;
+            0x60AC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#10) { // StackMapTable
+              [] { // 
+                12b; // same_frame
+                68b, []z{I}; // same_locals_1_stack_item_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case50
+
+class case51 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case51"; // #10
+    Utf8 "java/lang/Object"; // #11
+    Utf8 "StackMapTable"; // #12
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x03AC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#12) { // StackMapTable
+              [] { // 
+                1b; // same_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case51
+
+class case52 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #4 #11; // #1
+    Method #4 #12; // #2
+    class #13; // #3
+    class #14; // #4
+    Utf8 "<init>"; // #5
+    Utf8 "()V"; // #6
+    Utf8 "Code"; // #7
+    Utf8 "f"; // #8
+    Utf8 "()I"; // #9
+    Utf8 "StackMapTable"; // #10
+    NameAndType #5 #6; // #11
+    NameAndType #15 #9; // #12
+    Utf8 "case52"; // #13
+    Utf8 "java/lang/Object"; // #14
+    Utf8 "hashCode"; // #15
+  } // Constant Pool
+
+  0x0021; // access
+  #3;// this_cpx
+  #4;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #8; // name_cpx
+      #9; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB6000257000003;
+            0xA700092AB6000204;
+            0x60AC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#10) { // StackMapTable
+              [] { // 
+                81b, []z{I}; // same_locals_1_stack_item_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case52
+
+class case53 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #4 #12; // #1
+    class #13; // #2
+    class #14; // #3
+    class #15; // #4
+    Utf8 "<init>"; // #5
+    Utf8 "()V"; // #6
+    Utf8 "Code"; // #7
+    Utf8 "f"; // #8
+    Utf8 "()I"; // #9
+    Utf8 "StackMapTable"; // #10
+    class #13; // #11
+    NameAndType #5 #6; // #12
+    Utf8 "java/lang/Exception"; // #13
+    Utf8 "case53"; // #14
+    Utf8 "java/lang/Object"; // #15
+  } // Constant Pool
+
+  0x0021; // access
+  #3;// this_cpx
+  #4;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #8; // name_cpx
+      #9; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          1; // max_stack
+          2; // max_locals
+          Bytes[]{
+            0x04AC4C03AC;
+          }
+          [] { // Traps
+            0 1 2 2;
+          } // end Traps
+          [] { // Attributes
+            Attr(#10) { // StackMapTable
+              [] { // 
+                255b, 2, []{O,11}, []{O,11}; // full_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case53
+
+class case54 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case54"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x1228;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case54
+
+class case55 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case55"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x1209;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case55
+
+class case56 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case56"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xC00009;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case56
+
+class case58 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #4 #11; // #1
+    Method #4 #12; // #2
+    class #13; // #3
+    class #14; // #4
+    Utf8 "<init>"; // #5
+    Utf8 "()V"; // #6
+    Utf8 "Code"; // #7
+    Utf8 "f"; // #8
+    Utf8 "()I"; // #9
+    Utf8 "StackMapTable"; // #10
+    NameAndType #5 #6; // #11
+    NameAndType #15 #9; // #12
+    Utf8 "case58"; // #13
+    Utf8 "java/lang/Object"; // #14
+    Utf8 "hashCode"; // #15
+  } // Constant Pool
+
+  0x0021; // access
+  #3;// this_cpx
+  #4;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #8; // name_cpx
+      #9; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB60002AA000001;
+            0x0000002800000000;
+            0x0000000300000020;
+            0x0000002200000024;
+            0x0000002603AC04AC;
+            0x05AC06AC07AC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#10) { // StackMapTable
+              [] { // 
+                36b; // same_frame
+                1b; // same_frame
+                1b; // same_frame
+                1b; // same_frame
+                1b; // same_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case58
+
+class case59 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #4 #11; // #1
+    Method #4 #12; // #2
+    class #13; // #3
+    class #14; // #4
+    Utf8 "<init>"; // #5
+    Utf8 "()V"; // #6
+    Utf8 "Code"; // #7
+    Utf8 "f"; // #8
+    Utf8 "()I"; // #9
+    Utf8 "StackMapTable"; // #10
+    NameAndType #5 #6; // #11
+    NameAndType #15 #9; // #12
+    Utf8 "case59"; // #13
+    Utf8 "java/lang/Object"; // #14
+    Utf8 "hashCode"; // #15
+  } // Constant Pool
+
+  0x0021; // access
+  #3;// this_cpx
+  #4;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #8; // name_cpx
+      #9; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB60002AA000000;
+            0x0000002800000003;
+            0x0000000000000020;
+            0x0000002200000024;
+            0x0000002603AC04AC;
+            0x05AC06AC07AC;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#10) { // StackMapTable
+              [] { // 
+                36b; // same_frame
+                1b; // same_frame
+                1b; // same_frame
+                1b; // same_frame
+                1b; // same_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case59
+
+class case62 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case62"; // #10
+    Utf8 "java/lang/Object"; // #11
+    Utf8 "StackMapTable"; // #12
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x03AB000000000000;
+            0x0000000200000004;
+            0x0000000000000000;
+            0x00000000000000;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#12) { // StackMapTable
+              [] { // 
+                65b, []z{I}; // same_locals_1_stack_item_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case62
+
+class case64 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case64"; // #10
+    Utf8 "java/lang/Object"; // #11
+    Field #2 #13; // #12
+    NameAndType #14 #15; // #13
+    Utf8 "foo"; // #14
+    Utf8 "I"; // #15
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+    { // Member
+      0x0001; // access
+      #14; // name_cpx
+      #15; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xBB000359B7000103;
+            0xB5000C;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case64
+
+class case65 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #6 #14; // #1
+    class #15; // #2
+    Method #2 #14; // #3
+    Field #6 #16; // #4
+    class #17; // #5
+    class #18; // #6
+    Utf8 "<init>"; // #7
+    Utf8 "()V"; // #8
+    Utf8 "Code"; // #9
+    Utf8 "LineNumberTable"; // #10
+    Utf8 "foo"; // #11
+    Utf8 "SourceFile"; // #12
+    Utf8 "case65.java"; // #13
+    NameAndType #7 #8; // #14
+    Utf8 "B/case65_peer"; // #15
+    NameAndType #11 #19; // #16
+    Utf8 "case65"; // #17
+    Utf8 "A/case65_super"; // #18
+    Utf8 "I"; // #19
+  } // Constant Pool
+
+  0x0021; // access
+  #5;// this_cpx
+  #6;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#9) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#10) { // LineNumberTable
+              [] { // LineNumberTable
+                0  2;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0001; // access
+      #11; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#9) { // Code
+          2; // max_stack
+          2; // max_locals
+          Bytes[]{
+            0xBB000259B700034C;
+            0x2B07B50004B1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#10) { // LineNumberTable
+              [] { // LineNumberTable
+                0  4;
+                8  5;
+                13  6;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#12) { // SourceFile
+      #13;
+    } // end SourceFile
+  } // Attributes
+} // end class case65
+
+class case66 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #13 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case66"; // #10
+    Utf8 "java/lang/Object"; // #11
+    Utf8 "java/lang/String"; // #12
+    class #12; // #13
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #4; // name_cpx
+      #5; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case66
+
+class case68 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #2 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case68"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xBB0003B70001;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case68
+
+class case69 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #10; // #1
+    class #11; // #2
+    class #12; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "LineNumberTable"; // #7
+    Utf8 "SourceFile"; // #8
+    Utf8 "case69.java"; // #9
+    NameAndType #4 #5; // #10
+    Utf8 "case69"; // #11
+    Utf8 "A/case69_super"; // #12
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #4; // name_cpx
+      #5; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xBB0003B70001B1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#7) { // LineNumberTable
+              [] { // LineNumberTable
+                0  2;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#8) { // SourceFile
+      #9;
+    } // end SourceFile
+  } // Attributes
+} // end class case69
+
+class case70 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case70"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case70
+
+class case71 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    InterfaceMethod #2 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #7 #8; // #9
+    Utf8 "case71"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB900010000;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case71
+
+class case72 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    InterfaceMethod #2 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #7 #8; // #9
+    Utf8 "case72"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB900010101;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case72
+
+class case73 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    InvokeDynamic 0s #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #7 #5; // #9
+    Utf8 "case73"; // #10
+    Utf8 "java/lang/Object"; // #11
+    Utf8 "BootstrapMethods"; // #12
+    MethodHandle 5b #14; // #13
+    Method #2 #9; // #14
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xBA00010100;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#12) { // BootstrapMethods
+      [] { // bootstrap_methods
+        {  //  bootstrap_method
+          #13; // bootstrap_method_ref
+          [] { // bootstrap_arguments
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+      }
+    } // end BootstrapMethods
+  } // Attributes
+} // end class case73
+
+class case74 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case74"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB60001;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case74
+
+class case75 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #12 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #7 #5; // #9
+    Utf8 "case75"; // #10
+    Utf8 "java/lang/Object"; // #11
+    class #13; // #12
+    Utf8 "java/lang/String"; // #13
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case75
+
+class case76 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #10; // #1
+    class #11; // #2
+    class #12; // #3
+    Utf8 "f"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "LineNumberTable"; // #7
+    Utf8 "SourceFile"; // #8
+    Utf8 "case69.java"; // #9
+    NameAndType #4 #5; // #10
+    Utf8 "case76"; // #11
+    Utf8 "A/case76_super"; // #12
+    Method #3 #14; // #13
+    NameAndType #15 #5; // #14
+    Utf8 "<init>"; // #15
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #4; // name_cpx
+      #5; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xBB000359B7000DB6;
+            0x0001B1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#7) { // LineNumberTable
+              [] { // LineNumberTable
+                0  2;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#8) { // SourceFile
+      #9;
+    } // end SourceFile
+  } // Attributes
+} // end class case76
+
+class case78 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case78"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xBC03;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case78
+
+class case79 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case79"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xB1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case79
+
+class case80 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case80"; // #10
+    Utf8 "java/lang/Object"; // #11
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x0BAE;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case80
+
+class case81 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #9; // #1
+    class #10; // #2
+    class #11; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "f"; // #7
+    Utf8 "()I"; // #8
+    NameAndType #4 #5; // #9
+    Utf8 "case81"; // #10
+    Utf8 "java/lang/Object"; // #11
+    Utf8 "StackMapTable"; // #12
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #4; // name_cpx
+      #5; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x00B1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#12) { // StackMapTable
+              [] { // 
+                255b, 1, []{B}, []{}; // full_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+  } // Attributes
+} // end class case81
+

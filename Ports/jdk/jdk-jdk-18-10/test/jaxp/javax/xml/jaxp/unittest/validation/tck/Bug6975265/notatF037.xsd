@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:element name="foo">
+		<xsd:key name="bar">
+			<xsd:notation name="jpeg" public="image/jpeg" system="viewer.exe"/>
+			<xsd:selector xpath="//"/>
+			<xsd:field/>
+		</xsd:key>
+	</xsd:element>
+</xsd:schema>

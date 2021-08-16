@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<test:root xmlns:test="test"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="test Bug4991946.xsd"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+   <child xsi:type="xsd:string">123</child>
+</test:root>

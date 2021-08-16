@@ -1,0 +1,54 @@
+#
+# Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+################################################################################
+# Gensrc support for dtrace. The files generated here are included by dtrace.hpp
+
+ifeq ($(call check-jvm-feature, dtrace), true)
+
+  ifeq ($(call isTargetOs, macosx), true)
+    DTRACE_CPP_FLAGS := -D_LP64 -x c
+  else ifeq ($(call isTargetOs, linux), true)
+    DTRACE_CPP_FLAGS := -x c
+  endif
+
+  DTRACE_SOURCE_DIR := $(TOPDIR)/src/hotspot/os/posix/dtrace
+  DTRACE_GENSRC_DIR := $(JVM_VARIANT_OUTPUTDIR)/gensrc/dtracefiles
+
+  # Make sure we run our selected compiler for preprocessing instead of letting
+  # the dtrace tool pick it on it's own.
+  $(DTRACE_GENSRC_DIR)/%.h: $(DTRACE_SOURCE_DIR)/%.d
+	$(call LogInfo, Generating dtrace header file $(@F))
+	$(call MakeDir, $(@D) $(DTRACE_SUPPORT_DIR))
+	$(call ExecuteWithLog, $(DTRACE_SUPPORT_DIR)/$(@F).d, \
+	    ($(CPP) $(DTRACE_CPP_FLAGS) $< > $(DTRACE_SUPPORT_DIR)/$(@F).d))
+	$(call ExecuteWithLog, $@, $(DTRACE) $(DTRACE_FLAGS) -h -o $@ -s $(DTRACE_SUPPORT_DIR)/$(@F).d)
+
+  # Process all .d files in DTRACE_SOURCE_DIR. They are:
+  # hotspot_jni.d hotspot.d hs_private.d
+  TARGETS += $(patsubst $(DTRACE_SOURCE_DIR)/%.d, \
+      $(DTRACE_GENSRC_DIR)/%.h, $(wildcard $(DTRACE_SOURCE_DIR)/*.d))
+
+endif

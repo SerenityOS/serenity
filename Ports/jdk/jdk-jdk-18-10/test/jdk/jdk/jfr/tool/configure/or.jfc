@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration version="2.0" label="Test or">
+
+    <event name="season.Spring">
+      <setting name="enabled" control="spring">unknown</setting>
+    </event>
+
+    <control>
+      <text name="month" label="Month">January</text>
+      
+      <condition name="spring" true="true" false="false">
+        <or>
+           <test name="month" operator="equal" value="March"/>
+           <test name="month" operator="equal" value="April"/>
+           <test name="month" operator="equal" value="May"/>
+        </or>
+      </condition>
+    </control>
+
+</configuration>

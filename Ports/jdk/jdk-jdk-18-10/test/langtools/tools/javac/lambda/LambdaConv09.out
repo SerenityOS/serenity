@@ -1,0 +1,5 @@
+LambdaConv09.java:42:19: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: LambdaConv09.Foo1, (compiler.misc.no.abstracts: kindname.interface, LambdaConv09.Foo1))
+LambdaConv09.java:43:19: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: LambdaConv09.Foo2, (compiler.misc.no.abstracts: kindname.interface, LambdaConv09.Foo2))
+LambdaConv09.java:44:19: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: LambdaConv09.Foo3, (compiler.misc.no.abstracts: kindname.interface, LambdaConv09.Foo3))
+LambdaConv09.java:46:19: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: LambdaConv09.Foo5, (compiler.misc.no.abstracts: kindname.interface, LambdaConv09.Foo5))
+4 errors

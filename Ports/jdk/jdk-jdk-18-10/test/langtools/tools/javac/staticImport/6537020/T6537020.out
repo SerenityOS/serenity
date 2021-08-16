@@ -1,0 +1,2 @@
+T6537020.java:25:16: compiler.err.ref.ambiguous: s, kindname.variable, s, p.T6537020.A, kindname.variable, s, p.T6537020.B
+1 error

@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE  catalogtest  PUBLIC  "-//OPENJDK//XML CATALOG DTD//REWRITE"  
+     "http://openjdk_java_net/rewritesystem.dtd">
+     
+<catalogtest>Test &rewritesystem; entry</catalogtest>

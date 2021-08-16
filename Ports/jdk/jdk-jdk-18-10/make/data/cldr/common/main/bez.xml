@@ -1,0 +1,800 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="bez"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ak">Hiakan</language>
+			<language type="am">Hiamhari</language>
+			<language type="ar">Hiharabu</language>
+			<language type="be">Hibelarusi</language>
+			<language type="bez">Hibena</language>
+			<language type="bg">Hibulgaria</language>
+			<language type="bn">Hibangla</language>
+			<language type="cs">Hicheki</language>
+			<language type="de">Hijerumani</language>
+			<language type="el">Higiriki</language>
+			<language type="en">Hiingereza</language>
+			<language type="es">Hihispania</language>
+			<language type="fa">Hiajemi</language>
+			<language type="fr">Hifaransa</language>
+			<language type="ha">Hihausa</language>
+			<language type="hi">Hihindi</language>
+			<language type="hu">Hihungari</language>
+			<language type="id">Hiindonesia</language>
+			<language type="ig">Hiibo</language>
+			<language type="it">Hiitaliano</language>
+			<language type="ja">Hijapani</language>
+			<language type="jv">Hijava</language>
+			<language type="km">Hikambodia</language>
+			<language type="ko">Hikorea</language>
+			<language type="ms">Himalesia</language>
+			<language type="my">Hiburma</language>
+			<language type="ne">Hinepali</language>
+			<language type="nl">Hiholanzi</language>
+			<language type="pa">Hipunjabi</language>
+			<language type="pl">Hipolandi</language>
+			<language type="pt">Hileno</language>
+			<language type="ro">Hilomania</language>
+			<language type="ru">Hilusi</language>
+			<language type="rw">Hinyarwanda</language>
+			<language type="so">Hisomali</language>
+			<language type="sv">Hiswidi</language>
+			<language type="ta">Hitamil</language>
+			<language type="th">Hitailand</language>
+			<language type="tr">Hituluki</language>
+			<language type="uk">Hiukrania</language>
+			<language type="ur">Hiurdu</language>
+			<language type="vi">Hivietinamu</language>
+			<language type="yo">Hiyoruba</language>
+			<language type="zh">Hichina</language>
+			<language type="zu">Hizulu</language>
+		</languages>
+		<territories>
+			<territory type="AD">Huandola</territory>
+			<territory type="AE">Hufalme dza Hihalabu</territory>
+			<territory type="AF">Huafuganistani</territory>
+			<territory type="AG">Huantigua na Hubarubuda</territory>
+			<territory type="AI">Huanguila</territory>
+			<territory type="AL">Hualbania</territory>
+			<territory type="AM">Huamenia</territory>
+			<territory type="AO">Huangola</territory>
+			<territory type="AR">Huajendina</territory>
+			<territory type="AS">Husamoa ya Humalekani</territory>
+			<territory type="AT">Huastlia</territory>
+			<territory type="AU">Huaustlalia</territory>
+			<territory type="AW">Hualuba</territory>
+			<territory type="AZ">Huazabajani</territory>
+			<territory type="BA">Hubosinia na Huhezegovina</territory>
+			<territory type="BB">Hubabadosi</territory>
+			<territory type="BD">Hubangaladeshi</territory>
+			<territory type="BE">Huubelgiji</territory>
+			<territory type="BF">Hubukinafaso</territory>
+			<territory type="BG">Hubulgaria</territory>
+			<territory type="BH">Hubahaleni</territory>
+			<territory type="BI">Huburundi</territory>
+			<territory type="BJ">Hubenini</territory>
+			<territory type="BM">Hubelmuda</territory>
+			<territory type="BN">Hubrunei</territory>
+			<territory type="BO">Hubolivia</territory>
+			<territory type="BR">Hublazili</territory>
+			<territory type="BS">Hubahama</territory>
+			<territory type="BT">Hubutani</territory>
+			<territory type="BW">Hubotiswana</territory>
+			<territory type="BY">Hubelalusi</territory>
+			<territory type="BZ">Hubelize</territory>
+			<territory type="CA">Hukanada</territory>
+			<territory type="CD">Ijamhuri ya Hidemokrasi ya Hukongo</territory>
+			<territory type="CF">Ijamhuri ya Afrika ya Pagati</territory>
+			<territory type="CG">Hukongo</territory>
+			<territory type="CH">Huuswisi</territory>
+			<territory type="CI">Hukodivaa</territory>
+			<territory type="CK">Ifisima fya Kook</territory>
+			<territory type="CL">Huchile</territory>
+			<territory type="CM">Hukameruni</territory>
+			<territory type="CN">Huchina</territory>
+			<territory type="CO">Hukolombia</territory>
+			<territory type="CR">Hukostarika</territory>
+			<territory type="CU">Hukuba</territory>
+			<territory type="CV">Hukepuvede</territory>
+			<territory type="CY">Hukuprosi</territory>
+			<territory type="CZ">Ijamhuri ya Cheki</territory>
+			<territory type="DE">Huujerumani</territory>
+			<territory type="DJ">Hujibuti</territory>
+			<territory type="DK">Hudenmaki</territory>
+			<territory type="DM">Hudominika</territory>
+			<territory type="DO">Ijamhuri ya Hudominika</territory>
+			<territory type="DZ">Hualjelia</territory>
+			<territory type="EC">Huekwado</territory>
+			<territory type="EE">Huestonia</territory>
+			<territory type="EG">Humisri</territory>
+			<territory type="ER">Hueritrea</territory>
+			<territory type="ES">Huhispania</territory>
+			<territory type="ET">Huuhabeshi</territory>
+			<territory type="FI">Huufini</territory>
+			<territory type="FJ">Hufiji</territory>
+			<territory type="FK">Ifisima fya Falkland</territory>
+			<territory type="FM">Humikronesia</territory>
+			<territory type="FR">Huufaransa</territory>
+			<territory type="GA">Hugaboni</territory>
+			<territory type="GB">Huuingereza</territory>
+			<territory type="GD">Hugrenada</territory>
+			<territory type="GE">Hujojia</territory>
+			<territory type="GF">Hugwiyana ya Huufaransa</territory>
+			<territory type="GH">Hughana</territory>
+			<territory type="GI">Hujiblalta</territory>
+			<territory type="GL">Hujinlandi</territory>
+			<territory type="GM">Hugambia</territory>
+			<territory type="GN">Hujine</territory>
+			<territory type="GP">Hugwadelupe</territory>
+			<territory type="GQ">Huginekweta</territory>
+			<territory type="GR">Huugiliki</territory>
+			<territory type="GT">Hugwatemala</territory>
+			<territory type="GU">Hugwam</territory>
+			<territory type="GW">Huginebisau</territory>
+			<territory type="GY">Huguyana</territory>
+			<territory type="HN">Huhondulasi</territory>
+			<territory type="HR">Hukorasia</territory>
+			<territory type="HT">Huhaiti</territory>
+			<territory type="HU">Huhungalia</territory>
+			<territory type="ID">Huindonesia</territory>
+			<territory type="IE">Huayalandi</territory>
+			<territory type="IL">Huislaheli</territory>
+			<territory type="IN">Huindia</territory>
+			<territory type="IO">Ulubali lwa Hubahari ya Hindi lwa Huingereza</territory>
+			<territory type="IQ">Huilaki</territory>
+			<territory type="IR">Huuajemi</territory>
+			<territory type="IS">Huaislandi</territory>
+			<territory type="IT">Huitalia</territory>
+			<territory type="JM">Hujamaika</territory>
+			<territory type="JO">Huyolodani</territory>
+			<territory type="JP">Hujapani</territory>
+			<territory type="KE">Hukenya</territory>
+			<territory type="KG">Hukiligizistani</territory>
+			<territory type="KH">Hukambodia</territory>
+			<territory type="KI">Hukilibati</territory>
+			<territory type="KM">Hukomoro</territory>
+			<territory type="KN">Husantakitzi na Hunevis</territory>
+			<territory type="KP">Hukolea Kaskazini</territory>
+			<territory type="KR">Hukolea Kusini</territory>
+			<territory type="KW">Hukuwaiti</territory>
+			<territory type="KY">Ifisima fya Kayman</territory>
+			<territory type="KZ">Hukazakistani</territory>
+			<territory type="LA">Hulaosi</territory>
+			<territory type="LB">Hulebanoni</territory>
+			<territory type="LC">Husantalusia</territory>
+			<territory type="LI">Hulishenteni</territory>
+			<territory type="LK">Husirilanka</territory>
+			<territory type="LR">Hulibelia</territory>
+			<territory type="LS">Hulesoto</territory>
+			<territory type="LT">Hulitwania</territory>
+			<territory type="LU">Hulasembagi</territory>
+			<territory type="LV">Hulativia</territory>
+			<territory type="LY">Hulibiya</territory>
+			<territory type="MA">Humoloko</territory>
+			<territory type="MC">Humonako</territory>
+			<territory type="MD">Humoldova</territory>
+			<territory type="MG">Hubukini</territory>
+			<territory type="MH">Ifisima fya Marshal</territory>
+			<territory type="ML">Humali</territory>
+			<territory type="MM">Humyama</territory>
+			<territory type="MN">Humongolia</territory>
+			<territory type="MP">Ifisima fya Mariana fya Hukaskazini</territory>
+			<territory type="MQ">Humartiniki</territory>
+			<territory type="MR">Humolitania</territory>
+			<territory type="MS">Humontserrati</territory>
+			<territory type="MT">Humalta</territory>
+			<territory type="MU">Humolisi</territory>
+			<territory type="MV">Humodivu</territory>
+			<territory type="MW">Humalawi</territory>
+			<territory type="MX">Humeksiko</territory>
+			<territory type="MY">Humalesia</territory>
+			<territory type="MZ">Humusumbiji</territory>
+			<territory type="NA">Hunamibia</territory>
+			<territory type="NC">Hunyukaledonia</territory>
+			<territory type="NE">Hunijeli</territory>
+			<territory type="NF">Ihisima sha Norfok</territory>
+			<territory type="NG">Hunijelia</territory>
+			<territory type="NI">Hunikaragwa</territory>
+			<territory type="NL">Huuholanzi</territory>
+			<territory type="NO">Hunolwe</territory>
+			<territory type="NP">Hunepali</territory>
+			<territory type="NR">Hunauru</territory>
+			<territory type="NU">Huniue</territory>
+			<territory type="NZ">Hunyuzilandi</territory>
+			<territory type="OM">Huomani</territory>
+			<territory type="PA">Hupanama</territory>
+			<territory type="PE">Hupelu</territory>
+			<territory type="PF">Hupolinesia ya Huufaransa</territory>
+			<territory type="PG">Hupapua</territory>
+			<territory type="PH">Hufilipino</territory>
+			<territory type="PK">Hupakistani</territory>
+			<territory type="PL">Hupolandi</territory>
+			<territory type="PM">Husantapieri na Humikeloni</territory>
+			<territory type="PN">Hupitkaini</territory>
+			<territory type="PR">Hupwetoriko</territory>
+			<territory type="PS">Ulubali lwa Magharibi nu Gaza wa Hupalestina</territory>
+			<territory type="PT">Huuleno</territory>
+			<territory type="PW">Hupalau</territory>
+			<territory type="PY">Hupalagwai</territory>
+			<territory type="QA">Hukatali</territory>
+			<territory type="RE">Huliyunioni</territory>
+			<territory type="RO">Hulomania</territory>
+			<territory type="RU">Huulusi</territory>
+			<territory type="RW">Hulwanda</territory>
+			<territory type="SA">Husaudi</territory>
+			<territory type="SB">Ifisima fya Solomon</territory>
+			<territory type="SC">Hushelisheli</territory>
+			<territory type="SD">Husudani</territory>
+			<territory type="SE">Huuswidi</territory>
+			<territory type="SG">Husingapoo</territory>
+			<territory type="SH">Husantahelena</territory>
+			<territory type="SI">Huslovenia</territory>
+			<territory type="SK">Huslovakia</territory>
+			<territory type="SL">Husiela Lioni</territory>
+			<territory type="SM">Husamalino</territory>
+			<territory type="SN">Husenegali</territory>
+			<territory type="SO">Husomalia</territory>
+			<territory type="SR">Husurinamu</territory>
+			<territory type="ST">Husaotome na Huprinsipe</territory>
+			<territory type="SV">Huelsavado</territory>
+			<territory type="SY">Husilia</territory>
+			<territory type="SZ">Huuswazi</territory>
+			<territory type="TC">Ifisima fya Turki na Kaiko</territory>
+			<territory type="TD">Huchadi</territory>
+			<territory type="TG">Hutogo</territory>
+			<territory type="TH">Hutailandi</territory>
+			<territory type="TJ">Hutajikistani</territory>
+			<territory type="TK">Hutokelau</territory>
+			<territory type="TL">Hutimori ya Mashariki</territory>
+			<territory type="TM">Huuturukimenistani</territory>
+			<territory type="TN">Hutunisia</territory>
+			<territory type="TO">Hutonga</territory>
+			<territory type="TR">Huuturuki</territory>
+			<territory type="TT">Hutrinad na Hutobago</territory>
+			<territory type="TV">Hutuvalu</territory>
+			<territory type="TW">Hutaiwani</territory>
+			<territory type="TZ">Hutanzania</territory>
+			<territory type="UA">Huukraini</territory>
+			<territory type="UG">Huuganda</territory>
+			<territory type="US">Humalekani</territory>
+			<territory type="UY">Huulugwai</territory>
+			<territory type="UZ">Huuzibekistani</territory>
+			<territory type="VA">Huvatikani</territory>
+			<territory type="VC">Husantavisenti na Hugrenadini</territory>
+			<territory type="VE">Huvenezuela</territory>
+			<territory type="VG">Ifisima fya Virgin fya Huingereza</territory>
+			<territory type="VI">Ifisima fya Virgin fya Humelekani</territory>
+			<territory type="VN">Huvietinamu</territory>
+			<territory type="VU">Huvanuatu</territory>
+			<territory type="WF">Huwalis na Hufutuna</territory>
+			<territory type="WS">Husamoa</territory>
+			<territory type="YE">Huyemeni</territory>
+			<territory type="YT">Humayotte</territory>
+			<territory type="ZA">Huafrika iya Hukusini</territory>
+			<territory type="ZM">Huzambia</territory>
+			<territory type="ZW">Huzimbabwe</territory>
+		</territories>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a b c d e f g h i j k l m n o p q r s t u v w y z]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[x]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B C D E F G H I J K L M N O P Q R S T U V W Y Z]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart>“</quotationStart>
+		<quotationEnd>”</quotationEnd>
+		<alternateQuotationStart>‘</alternateQuotationStart>
+		<alternateQuotationEnd>’</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd/MM/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">M/d</dateFormatItem>
+						<dateFormatItem id="MEd">E, M/d</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="MMMMEd">E, MMMM d</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMd">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, M/d/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, MMM d, y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">Hut</month>
+							<month type="2">Vil</month>
+							<month type="3">Dat</month>
+							<month type="4">Tai</month>
+							<month type="5">Han</month>
+							<month type="6">Sit</month>
+							<month type="7">Sab</month>
+							<month type="8">Nan</month>
+							<month type="9">Tis</month>
+							<month type="10">Kum</month>
+							<month type="11">Kmj</month>
+							<month type="12">Kmb</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">pa mwedzi gwa hutala</month>
+							<month type="2">pa mwedzi gwa wuvili</month>
+							<month type="3">pa mwedzi gwa wudatu</month>
+							<month type="4">pa mwedzi gwa wutai</month>
+							<month type="5">pa mwedzi gwa wuhanu</month>
+							<month type="6">pa mwedzi gwa sita</month>
+							<month type="7">pa mwedzi gwa saba</month>
+							<month type="8">pa mwedzi gwa nane</month>
+							<month type="9">pa mwedzi gwa tisa</month>
+							<month type="10">pa mwedzi gwa kumi</month>
+							<month type="11">pa mwedzi gwa kumi na moja</month>
+							<month type="12">pa mwedzi gwa kumi na mbili</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="narrow">
+							<month type="1">H</month>
+							<month type="2">V</month>
+							<month type="3">D</month>
+							<month type="4">T</month>
+							<month type="5">H</month>
+							<month type="6">S</month>
+							<month type="7">S</month>
+							<month type="8">N</month>
+							<month type="9">T</month>
+							<month type="10">K</month>
+							<month type="11">K</month>
+							<month type="12">K</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Mul</day>
+							<day type="mon">Vil</day>
+							<day type="tue">Hiv</day>
+							<day type="wed">Hid</day>
+							<day type="thu">Hit</day>
+							<day type="fri">Hih</day>
+							<day type="sat">Lem</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">pa mulungu</day>
+							<day type="mon">pa shahuviluha</day>
+							<day type="tue">pa hivili</day>
+							<day type="wed">pa hidatu</day>
+							<day type="thu">pa hitayi</day>
+							<day type="fri">pa hihanu</day>
+							<day type="sat">pa shahulembela</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="narrow">
+							<day type="sun">M</day>
+							<day type="mon">J</day>
+							<day type="tue">H</day>
+							<day type="wed">H</day>
+							<day type="thu">H</day>
+							<day type="fri">W</day>
+							<day type="sat">J</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">L1</quarter>
+							<quarter type="2">L2</quarter>
+							<quarter type="3">L3</quarter>
+							<quarter type="4">L4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">Lobo 1</quarter>
+							<quarter type="2">Lobo 2</quarter>
+							<quarter type="3">Lobo 3</quarter>
+							<quarter type="4">Lobo 4</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">pamilau</dayPeriod>
+							<dayPeriod type="pm">pamunyi</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">pamilau</dayPeriod>
+							<dayPeriod type="pm">pamunyi</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">Kabla ya Mtwaa</era>
+						<era type="1">Baada ya Mtwaa</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">KM</era>
+						<era type="1">BM</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd/MM/y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">M/d</dateFormatItem>
+						<dateFormatItem id="MEd">E, M/d</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="MMMMEd">E, MMMM d</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMd">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, M/d/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, MMM d, y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>Amajira</displayName>
+			</field>
+			<field type="year">
+				<displayName>Mwaha</displayName>
+			</field>
+			<field type="month">
+				<displayName>Mwedzi</displayName>
+			</field>
+			<field type="week">
+				<displayName>Mlungu gumamfu</displayName>
+			</field>
+			<field type="day">
+				<displayName>Sihu</displayName>
+				<relative type="-1">Igolo</relative>
+				<relative type="0">Neng’u ni</relative>
+				<relative type="1">Hilawu</relative>
+			</field>
+			<field type="weekday">
+				<displayName>Sihudza kasi</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>Lwamelau</displayName>
+			</field>
+			<field type="hour">
+				<displayName>Saa</displayName>
+			</field>
+			<field type="minute">
+				<displayName>Dakika</displayName>
+			</field>
+			<field type="second">
+				<displayName>Sekunde</displayName>
+			</field>
+			<field type="zone">
+				<displayName>Amajira ga saa</displayName>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>#,##0.00¤</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="one" draft="provisional">0K¤</pattern>
+					<pattern type="1000" count="other" draft="provisional">0K¤</pattern>
+					<pattern type="10000" count="one" draft="provisional">00K¤</pattern>
+					<pattern type="10000" count="other" draft="provisional">00K¤</pattern>
+					<pattern type="100000" count="one" draft="provisional">000K¤</pattern>
+					<pattern type="100000" count="other" draft="provisional">000K¤</pattern>
+					<pattern type="1000000" count="one" draft="provisional">0M¤</pattern>
+					<pattern type="1000000" count="other" draft="provisional">0M¤</pattern>
+					<pattern type="10000000" count="one" draft="provisional">00M¤</pattern>
+					<pattern type="10000000" count="other" draft="provisional">00M¤</pattern>
+					<pattern type="100000000" count="one" draft="provisional">000M¤</pattern>
+					<pattern type="100000000" count="other" draft="provisional">000M¤</pattern>
+					<pattern type="1000000000" count="one" draft="provisional">0G¤</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">0G¤</pattern>
+					<pattern type="10000000000" count="one" draft="provisional">00G¤</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">00G¤</pattern>
+					<pattern type="100000000000" count="one" draft="provisional">000G¤</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">000G¤</pattern>
+					<pattern type="1000000000000" count="one" draft="provisional">0T¤</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">0T¤</pattern>
+					<pattern type="10000000000000" count="one" draft="provisional">00T¤</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">00T¤</pattern>
+					<pattern type="100000000000000" count="one" draft="provisional">000T¤</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">000T¤</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="AED">
+				<displayName>Lupila lwa Hufalme dza Huhihalabu</displayName>
+			</currency>
+			<currency type="AOA">
+				<displayName>Lupila lwa Huangola</displayName>
+			</currency>
+			<currency type="AUD">
+				<displayName>Lupila lwa Huaustlalia</displayName>
+			</currency>
+			<currency type="BHD">
+				<displayName>Lupila lwa Hubahareni</displayName>
+			</currency>
+			<currency type="BIF">
+				<displayName>Lupila lwa Huburundi</displayName>
+			</currency>
+			<currency type="BWP">
+				<displayName>Lupila lwa Hubotswana</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName>Lupila lwa Hukanada</displayName>
+			</currency>
+			<currency type="CDF">
+				<displayName>Lupila lwa Hukongo</displayName>
+			</currency>
+			<currency type="CHF">
+				<displayName>Lupila lwa Huuswisi</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>Lupila lwa Huchina</displayName>
+			</currency>
+			<currency type="CVE">
+				<displayName>Lupila lwa Hukepuvede</displayName>
+			</currency>
+			<currency type="DJF">
+				<displayName>Lupila lwa Hujibuti</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName>Lupila lwa Hualjelia</displayName>
+			</currency>
+			<currency type="EGP">
+				<displayName>Lupila lwa Humisri</displayName>
+			</currency>
+			<currency type="ERN">
+				<displayName>Lupila lwa Hueritrea</displayName>
+			</currency>
+			<currency type="ETB">
+				<displayName>Lupila lwa Huuhabeshi</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>Lupila lwa Yulo</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>Lupila lwa Huuingereza</displayName>
+			</currency>
+			<currency type="GHC">
+				<displayName>Lupila lwa Hughana</displayName>
+			</currency>
+			<currency type="GMD">
+				<displayName>Lupila lwa Hugambia</displayName>
+			</currency>
+			<currency type="GNS">
+				<displayName>Lupila lwa Hujine</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName>Lupila lwa Huindia</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>Lupila lwa Hijapani</displayName>
+			</currency>
+			<currency type="KES">
+				<displayName>Shilingi ya Hukenya</displayName>
+			</currency>
+			<currency type="KMF">
+				<displayName>Lupila lwa Hukomoro</displayName>
+			</currency>
+			<currency type="LRD">
+				<displayName>Lupila lwa Hulibelia</displayName>
+			</currency>
+			<currency type="LSL">
+				<displayName>Lupila lwa Hulesoto</displayName>
+			</currency>
+			<currency type="LYD">
+				<displayName>Lupila lwa Hulibya</displayName>
+			</currency>
+			<currency type="MAD">
+				<displayName>Lupila lwa Humoloko</displayName>
+			</currency>
+			<currency type="MGA">
+				<displayName>Lupila lwa Hubukini</displayName>
+			</currency>
+			<currency type="MRO">
+				<displayName>Lupila lwa Humolitania (1973–2017)</displayName>
+			</currency>
+			<currency type="MRU">
+				<displayName>Lupila lwa Humolitania</displayName>
+			</currency>
+			<currency type="MUR">
+				<displayName>Lupila lwa Humolisi</displayName>
+			</currency>
+			<currency type="MWK">
+				<displayName>Lupila lwa Humalawi</displayName>
+			</currency>
+			<currency type="MZM">
+				<displayName>Lupila lwa Humsumbiji</displayName>
+			</currency>
+			<currency type="NAD">
+				<displayName>Lupila lwa Hunamibia</displayName>
+			</currency>
+			<currency type="NGN">
+				<displayName>Lupila lwa Hunijelia</displayName>
+			</currency>
+			<currency type="RWF">
+				<displayName>Lupila lwa Hurwanda</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName>Lupila lwa Husaudi</displayName>
+			</currency>
+			<currency type="SCR">
+				<displayName>Lupila lwa Hushelisheli</displayName>
+			</currency>
+			<currency type="SDG">
+				<displayName>Lupila lwa Husudani</displayName>
+			</currency>
+			<currency type="SHP">
+				<displayName>Lupila lwa Husantahelena</displayName>
+			</currency>
+			<currency type="SLL">
+				<displayName>Lupila lwa Lioni</displayName>
+			</currency>
+			<currency type="SOS">
+				<displayName>Lupila lwa Husomalia</displayName>
+			</currency>
+			<currency type="STD">
+				<displayName>Lupila lwa Husaotome na Huprinisipe (1977–2017)</displayName>
+			</currency>
+			<currency type="STN">
+				<displayName>Lupila lwa Husaotome na Huprinisipe</displayName>
+			</currency>
+			<currency type="SZL">
+				<displayName>Lupila lwa Lilangeni</displayName>
+			</currency>
+			<currency type="TND">
+				<displayName>Lupila lwa Hutunisia</displayName>
+			</currency>
+			<currency type="TZS">
+				<displayName>Shilingi ya Hutanzania</displayName>
+				<symbol>TSh</symbol>
+			</currency>
+			<currency type="UGX">
+				<displayName>Shilingi ya Huuganda</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>Lupila lwa Humalekani</displayName>
+			</currency>
+			<currency type="XAF">
+				<displayName>Lupila lwa CFA BEAC</displayName>
+			</currency>
+			<currency type="XOF">
+				<displayName>Lupila lwa CFA BCEAO</displayName>
+			</currency>
+			<currency type="ZAR">
+				<displayName>Lupila lwa Huafriaka ya Hukusini</displayName>
+			</currency>
+			<currency type="ZMK">
+				<displayName>Lupila lwa Huzambia (1968–2012)</displayName>
+			</currency>
+			<currency type="ZMW">
+				<displayName>Lupila lwa Huzambia</displayName>
+			</currency>
+			<currency type="ZWD">
+				<displayName>Lupila lwa Huzimbabwe</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<posix>
+		<messages>
+			<yesstr>Eeh:E</yesstr>
+			<nostr>Sio ewo:S</nostr>
+		</messages>
+	</posix>
+</ldml>

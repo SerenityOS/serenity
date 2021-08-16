@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog
+  xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+
+    <rewriteSystem systemIdStartString="http://remote.com/dtd"
+                   rewritePrefix="file:///share/docbook/docbook/pass"/> 
+
+    <rewriteURI uriStartString="http://remote.com/import" rewritePrefix="file:///local/import" />
+    
+</catalog>
+

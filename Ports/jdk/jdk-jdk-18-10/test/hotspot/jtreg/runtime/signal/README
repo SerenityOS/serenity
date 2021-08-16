@@ -1,0 +1,56 @@
+Copyright (c) 2008, 2020, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+
+Briefly, the tests cover the following scenarios:
+1. prepre
+   set signal handlers -> create JVM -> send signals -> destroy JVM -> check signal handlers were called
+
+2. prepost
+   set signal handlers -> create JVM -> destroy JVM -> send signals  -> check signal handlers were called
+
+3. postpre
+   create JVM ->set signal handlers -> send signals -> destroy JVM -> check signal handlers were called
+
+4. postpost
+   create JVM -> set signal handlers -> destroy JVM -> send signals  -> check signal handlers were called
+
+There is one more scenario called 'nojvm'.
+In this case no jvm is created, so pure signal testing is done.
+
+Signal handlers don't do anything, so the only fact that signal handler was called is checked.
+Also 2 different ways of setting signal handlers are tested: sigaction, sigset.
+
+For 'postpre' and 'postpro' libjsig.so is used to chain signal handlers behind VM installed ones.
+
+=> Current tests cover the following cases (don't count 'nojvm' scenario):
+1. Support for pre-installed signal handlers when the HotSpot VM is created.
+2. Support for signal handler installation after the HotSpot VM is created inside JNI code
+
+
+Notes:
+
+SIGQUIT, SIGTERM, SIGINT, and SIGHUP signals cannot be chained.
+If the application needs to handle these signals, the -Xrs option needs
+to be specified. So, test these signals only with -Xrs flag.
+
+On Linux and Mac OS X, SIGUSR2 is used to implement suspend and resume. So,
+don't test SIGUSR2 on Linux and Mac OS X.

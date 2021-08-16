@@ -1,0 +1,64 @@
+/*
+ * Copyright (c) 2008, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+/*
+variation of:
+	class VerifyInitLocal2N extends VerifyInitLocal {
+	  private boolean isfalse;
+	  private boolean verified;
+	  public VerifyInitLocal2N() { verified = !isfalse; }
+	  public boolean verify() { return verified; }
+	}
+*/
+
+super class jit/verifier/VerifyInitLocal/VerifyInitLocal2N
+	extends jit/verifier/VerifyInitLocal/VerifyInitLocal
+{
+
+private Field isfalse:Z;
+private Field verified:Z;
+
+public Method "<init>":"()V"
+	stack 3 locals 1
+{
+		// Early initialization of local field must not include a read:
+		aload_0;
+		aload_0;
+		getfield	Field isfalse:"Z";   //BAD
+		iconst_1;
+		ixor;
+		putfield	Field verified:"Z";
+
+		aload_0;
+		invokespecial	Method jit/verifier/VerifyInitLocal/VerifyInitLocal."<init>":"()V";
+		return;
+}
+
+public Method verify:"()Z"
+	stack 1 locals 1
+{
+		aload_0;
+		getfield	Field verified:"Z";
+		ireturn;
+}
+
+} // end Class VerifyInitLocal2N

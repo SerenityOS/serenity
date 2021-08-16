@@ -1,0 +1,1623 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ckb"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="aa">ئەفار</language>
+			<language type="ab">ئەبخازی</language>
+			<language type="ace">ئاچەیی</language>
+			<language type="ada">دانگمێ</language>
+			<language type="ady">ئادیگی</language>
+			<language type="af">ئەفریکانس</language>
+			<language type="agq">ئاگێم</language>
+			<language type="ain">ئاینوو</language>
+			<language type="ak">ئاکان</language>
+			<language type="ale">ئالیوت</language>
+			<language type="alt">ئاڵتایی باشوور</language>
+			<language type="am">ئەمھەری</language>
+			<language type="an">ئاراگۆنی</language>
+			<language type="anp">ئەنگیکا</language>
+			<language type="ar">عەرەبی</language>
+			<language type="ar_001">عەرەبیی ستاندارد</language>
+			<language type="arn">ماپووچە</language>
+			<language type="arp">ئاراپاهۆ</language>
+			<language type="as">ئاسامی</language>
+			<language type="asa">ئاسوو</language>
+			<language type="ast">ئاستۆری</language>
+			<language type="av">ئەڤاری</language>
+			<language type="awa">ئاوادهی</language>
+			<language type="ay">ئایمارا</language>
+			<language type="az">ئازەربایجانی</language>
+			<language type="az_Arab">ئازەربایجانی باشووری</language>
+			<language type="ba">باشکیەر</language>
+			<language type="ban">بالی</language>
+			<language type="bas">باسا</language>
+			<language type="be">بیلاڕووسی</language>
+			<language type="bem">بێمبا</language>
+			<language type="bez">بێنا</language>
+			<language type="bg">بۆلگاری</language>
+			<language type="bho">بوجپووری</language>
+			<language type="bi">بیسلاما</language>
+			<language type="bin">بینی</language>
+			<language type="bla">سیکسیکا</language>
+			<language type="bm">بامبارا</language>
+			<language type="bn">بەنگلادێشی</language>
+			<language type="bo">تەبەتی</language>
+			<language type="br">برێتونی</language>
+			<language type="brx">بۆدۆ</language>
+			<language type="bs">بۆسنی</language>
+			<language type="bug">بووگی</language>
+			<language type="byn">بلین</language>
+			<language type="ca">كاتالۆنی</language>
+			<language type="ce">چیچانی</language>
+			<language type="ceb">سێبوانۆ</language>
+			<language type="cgg">کیگا</language>
+			<language type="ch">چامۆرۆ</language>
+			<language type="chk">چووکی</language>
+			<language type="chm">ماری</language>
+			<language type="cho">چۆکتاو</language>
+			<language type="chr">چێرۆکی</language>
+			<language type="chy">شایان</language>
+			<language type="ckb">کوردیی ناوەندی</language>
+			<language type="co">کۆرسیکی</language>
+			<language type="crs">فەرەنسیی سیشێلی</language>
+			<language type="cs">چێکی</language>
+			<language type="cu">سلاویی کلیسەیی</language>
+			<language type="cv">چووڤاشی</language>
+			<language type="cy">وێلزی</language>
+			<language type="da">دانماركی</language>
+			<language type="dak">داکۆتایی</language>
+			<language type="dar">دارگینی</language>
+			<language type="dav">تایتا</language>
+			<language type="de">ئەڵمانی</language>
+			<language type="dgr">دۆگریب</language>
+			<language type="dje">زارما</language>
+			<language type="dsb">سربیی خوارین</language>
+			<language type="dua">دووالا</language>
+			<language type="dv">دیڤێهی</language>
+			<language type="dyo">جۆلافۆنی</language>
+			<language type="dz">دزوونگخا</language>
+			<language type="dzg">دازا</language>
+			<language type="ebu">ئێمبوو</language>
+			<language type="ee">ئێوێیی</language>
+			<language type="efi">ئێفیک</language>
+			<language type="eka">ئێکاجووک</language>
+			<language type="el">یۆنانی</language>
+			<language type="en">ئینگلیزی</language>
+			<language type="en_AU">ئینگلیزیی ئۆسترالیایی</language>
+			<language type="en_CA">ئینگلیزیی کەنەدایی</language>
+			<language type="en_GB">ئینگلیزیی بریتانیایی</language>
+			<language type="en_GB" alt="short">ئینگلیزی (GB)</language>
+			<language type="en_US">ئینگلیزیی ئەمەریکایی</language>
+			<language type="en_US" alt="short">ئینگلیزیی ئەمەریکایی</language>
+			<language type="eo">ئێسپیرانتۆ</language>
+			<language type="es">ئیسپانی</language>
+			<language type="et">ئیستۆنی</language>
+			<language type="eu">باسکی</language>
+			<language type="ewo">ئێوۆندۆ</language>
+			<language type="fa">فارسی</language>
+			<language type="ff">فوولایی</language>
+			<language type="fi">فینلەندی</language>
+			<language type="fil">فیلیپینی</language>
+			<language type="fj">فیجی</language>
+			<language type="fo">فەرۆیی</language>
+			<language type="fon">فۆنی</language>
+			<language type="fr">فەرەنسی</language>
+			<language type="fur">فریئوولی</language>
+			<language type="fy">فریسیی ڕۆژاوا</language>
+			<language type="ga">ئیرلەندی</language>
+			<language type="gaa">گایی</language>
+			<language type="gd">گه‌لیكی سكۆتله‌ندی</language>
+			<language type="gez">گیزی</language>
+			<language type="gil">گیلبێرتی</language>
+			<language type="gl">گالیسی</language>
+			<language type="gn">گووارانی</language>
+			<language type="gor">گۆرۆنتالی</language>
+			<language type="gsw">ئەڵمانیی سویسڕا</language>
+			<language type="gu">گوجاراتی</language>
+			<language type="guz">گووسی</language>
+			<language type="gv">مانکی</language>
+			<language type="gwi">گویچین</language>
+			<language type="ha">هائووسا</language>
+			<language type="haw">هاوایی</language>
+			<language type="he">عیبری</language>
+			<language type="hi">هیندی</language>
+			<language type="hil">هیلیگاینۆن</language>
+			<language type="hmn">همۆنگ</language>
+			<language type="hr">كرواتی</language>
+			<language type="hsb">سربیی سەروو</language>
+			<language type="ht">کریولی هائیتی</language>
+			<language type="hu">هەنگاری</language>
+			<language type="hup">هووپا</language>
+			<language type="hy">ئەرمەنی</language>
+			<language type="hz">هێرێرۆ</language>
+			<language type="ia">ئینترلینگووا</language>
+			<language type="iba">ئیبان</language>
+			<language type="ibb">ئیبیبۆ</language>
+			<language type="id">ئیندۆنیزی</language>
+			<language type="ie" draft="unconfirmed">ئینتەرلیگ</language>
+			<language type="ig">ئیگبۆ</language>
+			<language type="ii">سیچوان یی</language>
+			<language type="ilo">ئیلۆکۆ</language>
+			<language type="inh">ئینگووش</language>
+			<language type="io">ئیدۆ</language>
+			<language type="is">ئیسلەندی</language>
+			<language type="it">ئیتالی</language>
+			<language type="iu">ئینوکتیتوت</language>
+			<language type="ja">ژاپۆنی</language>
+			<language type="jbo">لۆژبان</language>
+			<language type="jgo">نگۆمبا</language>
+			<language type="jmc">ماچامێ</language>
+			<language type="jv">جاڤایی</language>
+			<language type="ka">گۆرجستانی</language>
+			<language type="kab">کبائیلی</language>
+			<language type="kac">کاچین</language>
+			<language type="kaj">کیجوو</language>
+			<language type="kam">کامبا</language>
+			<language type="kbd">کاباردی</language>
+			<language type="kcg">تیاپ</language>
+			<language type="kde">ماکۆندە</language>
+			<language type="kea">کابووڤێردیانۆ</language>
+			<language type="kfo">کۆرۆ</language>
+			<language type="kha">کهاسی</language>
+			<language type="khq">کۆیرا چینی</language>
+			<language type="ki">کیکوویوو</language>
+			<language type="kj">کوانیاما</language>
+			<language type="kk">کازاخی</language>
+			<language type="kkj">کاکۆ</language>
+			<language type="kl">کالالیسووت</language>
+			<language type="kln">کالێنجین</language>
+			<language type="km">خمێر</language>
+			<language type="kmb">کیمبووندوو</language>
+			<language type="kn">کاننادا</language>
+			<language type="ko">كۆری</language>
+			<language type="kok">کۆنکانی</language>
+			<language type="kpe">کپێلێ</language>
+			<language type="kr">کانووری</language>
+			<language type="krc">کاراچای بالکار</language>
+			<language type="krl">کارێلی</language>
+			<language type="kru">کوورووخ</language>
+			<language type="ks">کەشمیری</language>
+			<language type="ksb">شامابالا</language>
+			<language type="ksf">بافیا</language>
+			<language type="ksh">کۆلۆنی</language>
+			<language type="ku">کوردی</language>
+			<language type="kum">کوومیک</language>
+			<language type="kv">کۆمی</language>
+			<language type="kw">کۆڕنی</language>
+			<language type="ky">كرگیزی</language>
+			<language type="la">لاتینی</language>
+			<language type="lad">لادینۆ</language>
+			<language type="lag">لانگی</language>
+			<language type="lb">لوکسەمبورگی</language>
+			<language type="lez">لەزگی</language>
+			<language type="lg">گاندا</language>
+			<language type="li">لیمبورگی</language>
+			<language type="lkt">لاکۆتا</language>
+			<language type="ln">لينگالا</language>
+			<language type="lo">لائۆیی</language>
+			<language type="loz">لۆزی</language>
+			<language type="lrc">لوڕیی باکوور</language>
+			<language type="lt">لیتوانی</language>
+			<language type="lu">لووبا کاتانگا</language>
+			<language type="lua">لووبا لوولووا</language>
+			<language type="lun">لووندا</language>
+			<language type="luo">لووئۆ</language>
+			<language type="lus">میزۆ</language>
+			<language type="luy">لوویا</language>
+			<language type="lv">لێتۆنی</language>
+			<language type="mad">مادووری</language>
+			<language type="mag">ماگاهی</language>
+			<language type="mai">مائیتیلی</language>
+			<language type="mak">ماکاسار</language>
+			<language type="mas">ماسایی</language>
+			<language type="mdf">مۆکشا</language>
+			<language type="men">مێندێ</language>
+			<language type="mer">مێروو</language>
+			<language type="mfe">مۆریسی</language>
+			<language type="mg">مالاگاسی</language>
+			<language type="mgh">ماخوامیتۆ</language>
+			<language type="mgo">مێتە</language>
+			<language type="mh">مارشاڵی</language>
+			<language type="mi">مائۆری</language>
+			<language type="mic">میکماک</language>
+			<language type="min">مینانکاباو</language>
+			<language type="mk">ماكێدۆنی</language>
+			<language type="ml">مالایالام</language>
+			<language type="mn">مەنگۆلی</language>
+			<language type="mni">مانیپووری</language>
+			<language type="moh">مۆهاوک</language>
+			<language type="mos">مۆسی</language>
+			<language type="mr">ماراتی</language>
+			<language type="ms">مالیزی</language>
+			<language type="mt">ماڵتی</language>
+			<language type="mua">موندانگ</language>
+			<language type="mul">چەند زمان</language>
+			<language type="mus">کریک</language>
+			<language type="mwl">میراندی</language>
+			<language type="my">میانماری</language>
+			<language type="myv">ئێرزیا</language>
+			<language type="mzn">مازەندەرانی</language>
+			<language type="na">نائوروو</language>
+			<language type="nap">ناپۆلی</language>
+			<language type="naq">ناما</language>
+			<language type="nb">نەرویژیی بۆکمال</language>
+			<language type="nd">ئندێبێلێی باکوور</language>
+			<language type="ne">نیپالی</language>
+			<language type="new">نێواری</language>
+			<language type="ng">ندۆنگا</language>
+			<language type="nia">نیاس</language>
+			<language type="niu">نیئوویی</language>
+			<language type="nl">هۆڵەندی</language>
+			<language type="nl_BE">فلێمی</language>
+			<language type="nmg">کواسیۆ</language>
+			<language type="nn">نەرویژیی نینۆرسک</language>
+			<language type="nnh">نگیمبوون</language>
+			<language type="no">نۆروێژی</language>
+			<language type="nog">نۆگای</language>
+			<language type="nqo">نکۆ</language>
+			<language type="nr">ئندێبێلێی باشوور</language>
+			<language type="nso">سۆتۆی باکوور</language>
+			<language type="nus">نوێر</language>
+			<language type="nv">ناڤاجۆ</language>
+			<language type="ny">نیانجا</language>
+			<language type="nyn">نیانکۆلێ</language>
+			<language type="oc">ئۆکسیتانی</language>
+			<language type="om">ئۆرۆمۆ</language>
+			<language type="or">ئۆدیا</language>
+			<language type="os">ئۆسێتی</language>
+			<language type="pa">پەنجابی</language>
+			<language type="pag">پانگاسینان</language>
+			<language type="pam">پامپانگا</language>
+			<language type="pap">پاپیامێنتۆ</language>
+			<language type="pau">پالائوویی</language>
+			<language type="pcm">پیجینی نیجریا</language>
+			<language type="pl">پۆڵەندی</language>
+			<language type="prg">پڕووسی</language>
+			<language type="ps">پەشتوو</language>
+			<language type="pt">پورتوگالی</language>
+			<language type="qu">کێچوا</language>
+			<language type="quc">کیچەیی</language>
+			<language type="rap">ڕاپانوویی</language>
+			<language type="rar">ڕاڕۆتۆنگان</language>
+			<language type="rm">ڕۆمانش</language>
+			<language type="rn">ڕووندی</language>
+			<language type="ro">ڕۆمانی</language>
+			<language type="ro_MD">مۆڵداڤی</language>
+			<language type="rof">ڕۆمبۆ</language>
+			<language type="ru">ڕووسی</language>
+			<language type="rup">ئارمۆمانی</language>
+			<language type="rw">کینیارواندا</language>
+			<language type="rwk">ڕوا</language>
+			<language type="sa">سانسکريت</language>
+			<language type="sad">سانداوێ</language>
+			<language type="sah">ساخا</language>
+			<language type="saq">سامبووروو</language>
+			<language type="sat">سانتالی</language>
+			<language type="sba">نگامبای</language>
+			<language type="sbp">سانگوو</language>
+			<language type="sc">ساردینی</language>
+			<language type="scn">سیسیلی</language>
+			<language type="sco">سکۆتس</language>
+			<language type="sd">سيندی</language>
+			<language type="sdh">کوردیی باشووری</language>
+			<language type="se">سامیی باکوور</language>
+			<language type="seh">سێنا</language>
+			<language type="ses">کۆیرابۆرۆ سێنی</language>
+			<language type="sg">سانگۆ</language>
+			<language type="sh" draft="unconfirmed">سێربۆكرواتی</language>
+			<language type="shi">شیلها</language>
+			<language type="shn">شان</language>
+			<language type="si">سینهالی</language>
+			<language type="sk">سلۆڤاكی</language>
+			<language type="sl">سلۆڤێنی</language>
+			<language type="sm">سامۆیی</language>
+			<language type="sma">سامیی باشوور</language>
+			<language type="smj">لوولێ سامی</language>
+			<language type="smn">ئیناری سامی</language>
+			<language type="sms">سامیی سکۆڵت</language>
+			<language type="sn">شۆنا</language>
+			<language type="snk">سۆنینکێ</language>
+			<language type="so">سۆمالی</language>
+			<language type="sq">ئەڵبانی</language>
+			<language type="sr">سربی</language>
+			<language type="srn">سرانان تۆنگۆ</language>
+			<language type="ss">سواتی</language>
+			<language type="ssy">ساهۆ</language>
+			<language type="st">سۆتۆی باشوور</language>
+			<language type="su">سوندانی</language>
+			<language type="suk">سووکووما</language>
+			<language type="sv">سویدی</language>
+			<language type="sw">سواهیلی</language>
+			<language type="sw_CD">سواهیلیی کۆنگۆ</language>
+			<language type="swb">کۆمۆری</language>
+			<language type="syr">سریانی</language>
+			<language type="ta">تامیلی</language>
+			<language type="te">تێلووگوو</language>
+			<language type="tem">تیمنێ</language>
+			<language type="teo">تێسوو</language>
+			<language type="tet">تێتووم</language>
+			<language type="tg">تاجیکی</language>
+			<language type="th">تایلەندی</language>
+			<language type="ti">تیگرینیا</language>
+			<language type="tig">تیگرێ</language>
+			<language type="tk">تورکمانی</language>
+			<language type="tlh">كلینگۆن</language>
+			<language type="tn">تسوانا</language>
+			<language type="to">تۆنگان</language>
+			<language type="tpi">تۆکپیسین</language>
+			<language type="tr">تورکی</language>
+			<language type="trv">تارۆکۆ</language>
+			<language type="ts">تسۆنگا</language>
+			<language type="tt">تاتاری</language>
+			<language type="tum">تومبووکا</language>
+			<language type="tvl">تووڤالوو</language>
+			<language type="tw" draft="unconfirmed">توی</language>
+			<language type="twq">تاساواک</language>
+			<language type="ty">تاهیتی</language>
+			<language type="tyv">تووڤینی</language>
+			<language type="tzm">ئەمازیغی ناوەڕاست</language>
+			<language type="udm">ئوودموورت</language>
+			<language type="ug">ئۆیخۆری</language>
+			<language type="uk">ئۆكراینی</language>
+			<language type="umb">ئومبووندوو</language>
+			<language type="und">زمانی نەناسراو</language>
+			<language type="ur">ئۆردوو</language>
+			<language type="uz">ئوزبەکی</language>
+			<language type="vai">ڤایی</language>
+			<language type="ve">ڤێندا</language>
+			<language type="vi">ڤیەتنامی</language>
+			<language type="vo">ڤۆلاپووک</language>
+			<language type="vun">ڤوونجوو</language>
+			<language type="wa">والوون</language>
+			<language type="wae">والسێر</language>
+			<language type="wal">وۆلایتا</language>
+			<language type="war">وارای</language>
+			<language type="wo">وۆلۆف</language>
+			<language type="xal">کالمیک</language>
+			<language type="xh">سسوسا</language>
+			<language type="xog">سۆگا</language>
+			<language type="yav">یانگبێن</language>
+			<language type="ybb">یێمبا</language>
+			<language type="yi">ییدیش</language>
+			<language type="yo">یۆرووبا</language>
+			<language type="yue">کانتۆنی</language>
+			<language type="zgh">ئەمازیغیی مەغریب</language>
+			<language type="zh">چینی</language>
+			<language type="zh_Hans">چینی (چینیی ئاسانکراو)</language>
+			<language type="zh_Hant">چینی (چینیی دێرین)</language>
+			<language type="zu">زوولوو</language>
+			<language type="zun">زوونی</language>
+			<language type="zxx">هیچ ناوەرۆکی زمانی نیە</language>
+			<language type="zza">زازا</language>
+		</languages>
+		<scripts>
+			<script type="Arab">عەرەبی</script>
+			<script type="Armn">ئەرمەنی</script>
+			<script type="Beng">بەنگالی</script>
+			<script type="Bopo">بۆپۆمۆفۆ</script>
+			<script type="Brai">برەیل</script>
+			<script type="Cyrl">سریلیک</script>
+			<script type="Deva">دەڤەناگەری</script>
+			<script type="Ethi">ئەتیۆپیک</script>
+			<script type="Geor">گورجی</script>
+			<script type="Grek">یۆنانی</script>
+			<script type="Gujr">گوجەراتی</script>
+			<script type="Guru">گورموکھی</script>
+			<script type="Hanb">هان لەگەڵ بۆپۆمۆفۆ</script>
+			<script type="Hang">ھانگول</script>
+			<script type="Hani">ھان</script>
+			<script type="Hans">ئاسانکراو</script>
+			<script type="Hans" alt="stand-alone">هانی ئاسانکراو</script>
+			<script type="Hant">دێرین</script>
+			<script type="Hant" alt="stand-alone">هانی دێرین</script>
+			<script type="Hebr">عیبری</script>
+			<script type="Hira">ھیراگانا</script>
+			<script type="Hrkt">ژاپۆنیی بڕگەیی</script>
+			<script type="Jamo">جامۆ</script>
+			<script type="Jpan">ژاپۆنی</script>
+			<script type="Kana">کاتاکانا</script>
+			<script type="Khmr">خمێر</script>
+			<script type="Knda">کاننادا</script>
+			<script type="Kore">کۆری</script>
+			<script type="Laoo">لائۆ</script>
+			<script type="Latn">لاتینی</script>
+			<script type="Mlym">مالایالام</script>
+			<script type="Mong">مەنگۆلی</script>
+			<script type="Mymr">میانمار</script>
+			<script type="Orya">ئۆدیا</script>
+			<script type="Sinh">سینھالا</script>
+			<script type="Taml">تامیلی</script>
+			<script type="Telu">تێلووگوو</script>
+			<script type="Thaa">تانا</script>
+			<script type="Thai">تایلەندی</script>
+			<script type="Tibt">تەبەتی</script>
+			<script type="Zmth">نیشانەی بیرکاری</script>
+			<script type="Zsye">ئیمۆجی</script>
+			<script type="Zsym">هێماکان</script>
+			<script type="Zxxx">نەنووسراو</script>
+			<script type="Zyyy">باو</script>
+			<script type="Zzzz">خەتی نەناسراو</script>
+		</scripts>
+		<territories>
+			<territory type="001">جیهان</territory>
+			<territory type="002">ئەفریقا</territory>
+			<territory type="003">ئەمەریکای باکوور</territory>
+			<territory type="005">ئەمەریکای باشوور</territory>
+			<territory type="009">ئۆقیانووسیا</territory>
+			<territory type="011">ڕۆژاوای ئەفریقا</territory>
+			<territory type="013">ئەمریکای ناوەڕاست</territory>
+			<territory type="014">ڕۆژھەڵاتی ئەفریقا</territory>
+			<territory type="015">باکووری ئەفریقا</territory>
+			<territory type="017">ناوەڕاستی ئەفریقا</territory>
+			<territory type="018">باشووری ئەفریقا</territory>
+			<territory type="019">ئەمەریکای باکوور و باشوور</territory>
+			<territory type="021">ئەمریکای باکوور</territory>
+			<territory type="029">کاریبی</territory>
+			<territory type="030">ڕۆژهەڵاتی ئاسیا</territory>
+			<territory type="034">باشووری ئاسیا</territory>
+			<territory type="035">باشووری ڕۆژھەڵاتی ئاسیا</territory>
+			<territory type="039">باشووری ئەورووپا</territory>
+			<territory type="053">ئۆسترالیا</territory>
+			<territory type="054">میلانێزیا</territory>
+			<territory type="057">ناوچەی مایکرۆنیزیا</territory>
+			<territory type="061">پۆلینیزیا</territory>
+			<territory type="142">ئاسیا</territory>
+			<territory type="143">ناوەڕاستی ئاسیا</territory>
+			<territory type="145">ڕۆژاوای ئاسیا</territory>
+			<territory type="150">ئەورووپا</territory>
+			<territory type="151">ڕۆژهەڵاتی ئەورووپا</territory>
+			<territory type="154">باکووری ئەورووپا</territory>
+			<territory type="155">ڕۆژاوای ئەورووپا</territory>
+			<territory type="202">ئەفریقای ژێر سەحرا</territory>
+			<territory type="419">ئەمەریکای لاتین</territory>
+			<territory type="AC">دوورگەی ئاسینسیۆن</territory>
+			<territory type="AD">ئاندۆرا</territory>
+			<territory type="AE">میرنشینە یەکگرتووە عەرەبییەکان</territory>
+			<territory type="AF">ئەفغانستان</territory>
+			<territory type="AG">ئانتیگوا و باربودا</territory>
+			<territory type="AI">ئانگویلا</territory>
+			<territory type="AL">ئەڵبانیا</territory>
+			<territory type="AM">ئەرمەنستان</territory>
+			<territory type="AO">ئەنگۆلا</territory>
+			<territory type="AQ">ئانتارکتیکا</territory>
+			<territory type="AR">ئەرژەنتین</territory>
+			<territory type="AS">ساموای ئەمەریکایی</territory>
+			<territory type="AT">نەمسا</territory>
+			<territory type="AU">ئوسترالیا</territory>
+			<territory type="AW">ئارووبا</territory>
+			<territory type="AX">دوورگەکانی ئالاند</territory>
+			<territory type="AZ">ئازەربایجان</territory>
+			<territory type="BA">بۆسنیا و ھەرزەگۆڤینا</territory>
+			<territory type="BB">باربادۆس</territory>
+			<territory type="BD">بەنگلادیش</territory>
+			<territory type="BE">بەلژیک</territory>
+			<territory type="BF">بورکینافاسۆ</territory>
+			<territory type="BG">بولگاریا</territory>
+			<territory type="BH">بەحرەین</territory>
+			<territory type="BI">بوروندی</territory>
+			<territory type="BJ">بێنین</territory>
+			<territory type="BL">سەن بارتێلێمی</territory>
+			<territory type="BM">بێرموودا</territory>
+			<territory type="BN">بروونای</territory>
+			<territory type="BO">بۆلیڤیا</territory>
+			<territory type="BQ">دوورگە کاریبیەکانی هۆڵەندا</territory>
+			<territory type="BR">برازیل</territory>
+			<territory type="BS">بەھاما</territory>
+			<territory type="BT">بووتان</territory>
+			<territory type="BV">دوورگەی بووڤێ</territory>
+			<territory type="BW">بۆتسوانا</territory>
+			<territory type="BY">بیلاڕووس</territory>
+			<territory type="BZ">بەلیز</territory>
+			<territory type="CA">کەنەدا</territory>
+			<territory type="CC">دوورگەکانی کیلینگ</territory>
+			<territory type="CD">کۆنگۆ کینشاسا</territory>
+			<territory type="CD" alt="variant">کۆماری دیموکراتیی کۆنگۆ</territory>
+			<territory type="CF">کۆماری ئەفریقای ناوەڕاست</territory>
+			<territory type="CG">کۆنگۆ برازاڤیل</territory>
+			<territory type="CG" alt="variant">کۆماری کۆنگۆ</territory>
+			<territory type="CH">سویسڕا</territory>
+			<territory type="CI">کۆتدیڤوار</territory>
+			<territory type="CK">دوورگەکانی کوک</territory>
+			<territory type="CL">چیلی</territory>
+			<territory type="CM">کامیرۆن</territory>
+			<territory type="CN">چین</territory>
+			<territory type="CO">کۆلۆمبیا</territory>
+			<territory type="CP">دوورگەی کلیپێرتۆن</territory>
+			<territory type="CR">کۆستاریکا</territory>
+			<territory type="CU">کووبا</territory>
+			<territory type="CV">کەیپڤەرد</territory>
+			<territory type="CW">کوراچاو</territory>
+			<territory type="CX">دوورگەی کریسمس</territory>
+			<territory type="CY">قیبرس</territory>
+			<territory type="CZ">کۆماری چیک</territory>
+			<territory type="DE">ئەڵمانیا</territory>
+			<territory type="DG">دیەگۆ گارسیا</territory>
+			<territory type="DJ">جیبووتی</territory>
+			<territory type="DK">دانمارک</territory>
+			<territory type="DM">دۆمینیکا</territory>
+			<territory type="DO">کۆماری دۆمینیکا</territory>
+			<territory type="DZ">جەزایر</territory>
+			<territory type="EA">سێئووتا و مێلییا</territory>
+			<territory type="EC">ئیکوادۆر</territory>
+			<territory type="EE">ئیستۆنیا</territory>
+			<territory type="EG">میسر</territory>
+			<territory type="EH">سەحرای ڕۆژاوا</territory>
+			<territory type="ER">ئەریتریا</territory>
+			<territory type="ES">ئیسپانیا</territory>
+			<territory type="ET">ئەتیۆپیا</territory>
+			<territory type="EU">یەکێتیی ئەورووپا</territory>
+			<territory type="EZ">ناوچەی یۆرۆ</territory>
+			<territory type="FI">فینلاند</territory>
+			<territory type="FJ">فیجی</territory>
+			<territory type="FK">دوورگەکانی مالڤیناس (دوورگەکانی فاڵکلاند)</territory>
+			<territory type="FM">مایکرۆنیزیا</territory>
+			<territory type="FO">دوورگەکانی فارەو</territory>
+			<territory type="FR">فەڕەنسا</territory>
+			<territory type="GA">گابۆن</territory>
+			<territory type="GB">شانشینی یەکگرتوو</territory>
+			<territory type="GD">گرینادا</territory>
+			<territory type="GE">گورجستان</territory>
+			<territory type="GF">گیانای فەرەنسا</territory>
+			<territory type="GG">گێرنزی</territory>
+			<territory type="GH">غەنا</territory>
+			<territory type="GI">گیبرالتار</territory>
+			<territory type="GL">گرینلاند</territory>
+			<territory type="GM">گامبیا</territory>
+			<territory type="GN">گینێ</territory>
+			<territory type="GP">گوادێلۆپ</territory>
+			<territory type="GQ">گینێی ئیستوایی</territory>
+			<territory type="GR">یۆنان</territory>
+			<territory type="GS">دوورگەکانی جۆرجیا و ساندویچی باشوور</territory>
+			<territory type="GT">گواتیمالا</territory>
+			<territory type="GU">گوام</territory>
+			<territory type="GW">گینێ بیساو</territory>
+			<territory type="GY">گویانا</territory>
+			<territory type="HK">هۆنگ کۆنگ</territory>
+			<territory type="HM">دوورگەکانی هێرد و مەکدانڵد</territory>
+			<territory type="HN">ھۆندووراس</territory>
+			<territory type="HR">کرۆواتیا</territory>
+			<territory type="HT">ھایتی</territory>
+			<territory type="HU">هەنگاریا</territory>
+			<territory type="IC">دوورگەکانی کەناری</territory>
+			<territory type="ID">ئیندۆنیزیا</territory>
+			<territory type="IE">ئیرلەند</territory>
+			<territory type="IL">ئیسرائیل</territory>
+			<territory type="IM">دوورگەی مان</territory>
+			<territory type="IN">ھیندستان</territory>
+			<territory type="IO">ھەرێمی بەریتانی لە ئۆقیانووسی ھیند</territory>
+			<territory type="IQ">عێراق</territory>
+			<territory type="IR">ئێران</territory>
+			<territory type="IS">ئایسلەند</territory>
+			<territory type="IT">ئیتالیا</territory>
+			<territory type="JE">جێرسی</territory>
+			<territory type="JM">جامایکا</territory>
+			<territory type="JO">ئوردن</territory>
+			<territory type="JP">ژاپۆن</territory>
+			<territory type="KE">کینیا</territory>
+			<territory type="KG">کرگیزستان</territory>
+			<territory type="KH">کەمبۆدیا</territory>
+			<territory type="KI">کیریباس</territory>
+			<territory type="KM">دوورگەکانی کۆمۆر</territory>
+			<territory type="KN">سەن کیتس و نیڤیس</territory>
+			<territory type="KP">کۆریای باکوور</territory>
+			<territory type="KR">کۆریای باشوور</territory>
+			<territory type="KW">کوەیت</territory>
+			<territory type="KY">دوورگەکانی کایمان</territory>
+			<territory type="KZ">کازاخستان</territory>
+			<territory type="LA">لاوس</territory>
+			<territory type="LB">لوبنان</territory>
+			<territory type="LC">سەن لووسیا</territory>
+			<territory type="LI">لیختنشتاین</territory>
+			<territory type="LK">سریلانکا</territory>
+			<territory type="LR">لیبەریا</territory>
+			<territory type="LS">لەسۆتۆ</territory>
+			<territory type="LT">لیتوانایا</territory>
+			<territory type="LU">لوکسەمبورگ</territory>
+			<territory type="LV">لاتڤیا</territory>
+			<territory type="LY">لیبیا</territory>
+			<territory type="MA">مەغریب</territory>
+			<territory type="MC">مۆناکۆ</territory>
+			<territory type="MD">مۆلدۆڤا</territory>
+			<territory type="ME">مۆنتینیگرۆ</territory>
+			<territory type="MF">سەن مارتین</territory>
+			<territory type="MG">ماداگاسکار</territory>
+			<territory type="MH">دوورگەکانی مارشاڵ</territory>
+			<territory type="MK">مەکدۆنیای باکوور</territory>
+			<territory type="ML">مالی</territory>
+			<territory type="MM">میانمار</territory>
+			<territory type="MN">مەنگۆلیا</territory>
+			<territory type="MO">ماکائۆ</territory>
+			<territory type="MP">دوورگەکانی ماریانای باکوور</territory>
+			<territory type="MQ">مارتینیک</territory>
+			<territory type="MR">مۆریتانیا</territory>
+			<territory type="MS">مۆنتسێرات</territory>
+			<territory type="MT">ماڵتا</territory>
+			<territory type="MU">مووریتیووس</territory>
+			<territory type="MV">مالدیڤ</territory>
+			<territory type="MW">مالاوی</territory>
+			<territory type="MX">مەکسیک</territory>
+			<territory type="MY">مالیزیا</territory>
+			<territory type="MZ">مۆزامبیک</territory>
+			<territory type="NA">نامیبیا</territory>
+			<territory type="NC">نیووکالێدۆنیا</territory>
+			<territory type="NE">نیجەر</territory>
+			<territory type="NF">دوورگەی نۆرفۆڵک</territory>
+			<territory type="NG">نیجریا</territory>
+			<territory type="NI">نیکاراگوا</territory>
+			<territory type="NL">ھۆڵەندا</territory>
+			<territory type="NO">نۆرویژ</territory>
+			<territory type="NP">نیپال</territory>
+			<territory type="NR">نائوروو</territory>
+			<territory type="NU">نیووئی</territory>
+			<territory type="NZ">نیوزیلاند</territory>
+			<territory type="OM">عومان</territory>
+			<territory type="PA">پاناما</territory>
+			<territory type="PE">پێروو</territory>
+			<territory type="PF">پۆلینیسیای فەرەنسا</territory>
+			<territory type="PG">پاپوا گینێی نوێ</territory>
+			<territory type="PH">فلیپین</territory>
+			<territory type="PK">پاکستان</territory>
+			<territory type="PL">پۆڵەندا</territory>
+			<territory type="PM">سەن پیێر و میکێلۆن</territory>
+			<territory type="PN">دوورگەکانی پیتکەرن</territory>
+			<territory type="PR">پۆرتۆڕیکۆ</territory>
+			<territory type="PS">ناوچە فەلەستینیەکان</territory>
+			<territory type="PS" alt="short">فەلەستین</territory>
+			<territory type="PT">پورتوگال</territory>
+			<territory type="PW">پالاو</territory>
+			<territory type="PY">پاراگوای</territory>
+			<territory type="QA">قەتەر</territory>
+			<territory type="QO">دەرەوەی ئۆقیانووسیا</territory>
+			<territory type="RE">ڕییوونیەن</territory>
+			<territory type="RO">ڕۆمانیا</territory>
+			<territory type="RS">سربیا</territory>
+			<territory type="RU">ڕووسیا</territory>
+			<territory type="RW">ڕواندا</territory>
+			<territory type="SA">عەرەبستانی سەعوودی</territory>
+			<territory type="SB">دوورگەکانی سلێمان</territory>
+			<territory type="SC">سیشێل</territory>
+			<territory type="SD">سوودان</territory>
+			<territory type="SE">سوید</territory>
+			<territory type="SG">سینگاپور</territory>
+			<territory type="SH">سەن هێلێنا</territory>
+			<territory type="SI">سلۆڤێنیا</territory>
+			<territory type="SJ">سڤالبارد و یان مایەن</territory>
+			<territory type="SK">سلۆڤاکیا</territory>
+			<territory type="SL">سیەرالیۆن</territory>
+			<territory type="SM">سان مارینۆ</territory>
+			<territory type="SN">سێنێگاڵ</territory>
+			<territory type="SO">سۆمالیا</territory>
+			<territory type="SR">سورینام</territory>
+			<territory type="SS">سوودانی باشوور</territory>
+			<territory type="ST">ساوتۆمێ و پرینسیپی</territory>
+			<territory type="SV">ئێلسالڤادۆر</territory>
+			<territory type="SX">سینت مارتن</territory>
+			<territory type="SY">سووریا</territory>
+			<territory type="SZ">سوازیلاند</territory>
+			<territory type="TA">تریستێن دا کوونا</territory>
+			<territory type="TC">دوورگەکانی تورکس و کایکۆس</territory>
+			<territory type="TD">چاد</territory>
+			<territory type="TF">هەرێمە باشووریەکانی فەرەنسا</territory>
+			<territory type="TG">تۆگۆ</territory>
+			<territory type="TH">تایلەند</territory>
+			<territory type="TJ">تاجیکستان</territory>
+			<territory type="TK">تۆکێلاو</territory>
+			<territory type="TL">تیمۆری ڕۆژھەڵات</territory>
+			<territory type="TM">تورکمانستان</territory>
+			<territory type="TN">توونس</territory>
+			<territory type="TO">تۆنگا</territory>
+			<territory type="TR">تورکیا</territory>
+			<territory type="TT">ترینیداد و تۆباگو</territory>
+			<territory type="TV">تووڤالوو</territory>
+			<territory type="TW">تایوان</territory>
+			<territory type="TZ">تانزانیا</territory>
+			<territory type="UA">ئۆکرانیا</territory>
+			<territory type="UG">ئوگاندا</territory>
+			<territory type="UM">دوورگەکانی دەرەوەی ئەمریکا</territory>
+			<territory type="UN">نەتەوە یەکگرتووەکان</territory>
+			<territory type="US">ویلایەتە یەکگرتووەکان</territory>
+			<territory type="UY">ئوروگوای</territory>
+			<territory type="UZ">ئوزبەکستان</territory>
+			<territory type="VA">ڤاتیکان</territory>
+			<territory type="VC">سەینت ڤینسەنت و گرینادینز</territory>
+			<territory type="VE">ڤەنزوێلا</territory>
+			<territory type="VG">دوورگەکانی ڤیرجنی بەریتانیا</territory>
+			<territory type="VI">دوورگەکانی ڤیرجنی ئەمەریکا</territory>
+			<territory type="VN">ڤیەتنام</territory>
+			<territory type="VU">ڤانوواتوو</territory>
+			<territory type="WF">والیس و فوتونا</territory>
+			<territory type="WS">ساموا</territory>
+			<territory type="XK">کۆسۆڤۆ</territory>
+			<territory type="YE">یەمەن</territory>
+			<territory type="YT">مایۆت</territory>
+			<territory type="ZA">ئەفریقای باشوور</territory>
+			<territory type="ZM">زامبیا</territory>
+			<territory type="ZW">زیمبابوی</territory>
+			<territory type="ZZ">ناوچەی نەناسراو</territory>
+		</territories>
+		<keys>
+			<key type="calendar" draft="unconfirmed">ڕۆژژمێر</key>
+			<key type="collation" draft="unconfirmed">ڕیزبەندی</key>
+			<key type="currency" draft="unconfirmed">دراو</key>
+			<key type="numbers" draft="unconfirmed">ژمارەکان</key>
+		</keys>
+		<types>
+			<type key="calendar" type="chinese" draft="unconfirmed">ڕۆژژمێری چینی</type>
+			<type key="calendar" type="gregorian" draft="unconfirmed">ڕۆژژمێری زاینیی</type>
+			<type key="calendar" type="hebrew" draft="unconfirmed">ڕۆژژمێری عیبری</type>
+			<type key="calendar" type="indian" draft="unconfirmed">ڕۆژژمێری نەتەوەیی ھیندی</type>
+			<type key="calendar" type="islamic" draft="unconfirmed">ڕۆژژمێری کۆچیی مانگی</type>
+			<type key="calendar" type="iso8601" draft="unconfirmed">ISO-8601 ڕۆژژمێری</type>
+			<type key="calendar" type="persian" draft="unconfirmed">ڕۆژژمێری کۆچیی ھەتاوی</type>
+			<type key="collation" type="standard" draft="unconfirmed">ڕیزکردنی داواکری ستاندارد</type>
+			<type key="numbers" type="arab" draft="unconfirmed">ژمارە عەربی-ھیندییەکان</type>
+			<type key="numbers" type="gujr" draft="unconfirmed">ژمارە گوجەراتییەکان</type>
+			<type key="numbers" type="khmr" draft="unconfirmed">ژمارە خمێرییەکان</type>
+			<type key="numbers" type="latn" draft="unconfirmed">ژمارە ڕۆژاوایییەکان</type>
+			<type key="numbers" type="mymr" draft="unconfirmed">ژمارە میانمارییەکان</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric" draft="unconfirmed">مەتریک</measurementSystemName>
+			<measurementSystemName type="UK" draft="unconfirmed">بەڕیتانی</measurementSystemName>
+			<measurementSystemName type="US" draft="unconfirmed">ئەمەریکی</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language" draft="unconfirmed">زمان: {0}</codePattern>
+			<codePattern type="script" draft="unconfirmed">نووسە:{0}</codePattern>
+			<codePattern type="territory" draft="unconfirmed">ناوچە: {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<layout>
+		<orientation>
+			<characterOrder>right-to-left</characterOrder>
+		</orientation>
+	</layout>
+	<characters>
+		<exemplarCharacters>[ئ ا ب پ ت ج چ ح خ د ر ز ڕ ژ س ش ع غ ف ڤ ق ک گ ل ڵ م ن ھ ە و ۆ ی ێ]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[\u200E\u200F \u064B \u064C \u064D \u064E \u064F \u0650 \u0651 \u0652 ء آ أ ؤ إ ة ث ذ ص ض ط ظ ك ه ى ي]</exemplarCharacters>
+		<exemplarCharacters type="index" draft="unconfirmed">[ئ ا ب پ ت ج چ ح خ د ر ز ڕ ژ س ش ع غ ف ڤ ق ک گ ل ڵ م ن ھ ە و ۆ ی ێ]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\u200E\u200F \- ‑ , ٫ ٬ . % ٪ ‰ ؉ + 0٠ 1١ 2٢ 3٣ 4٤ 5٥ 6٦ 7٧ 8٨ 9٩]</exemplarCharacters>
+		<moreInformation draft="unconfirmed">؟</moreInformation>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>G y MMMM d, EEEE</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>dی MMMMی y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>G y MMM d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>GGGGG y-MM-dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="E">ccc</dateFormatItem>
+						<dateFormatItem id="Ed">E dھەم</dateFormatItem>
+						<dateFormatItem id="Gy">G y</dateFormatItem>
+						<dateFormatItem id="GyMMM">G y MMM</dateFormatItem>
+						<dateFormatItem id="GyMMMd">G y MMM d</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">G y MMM d, E</dateFormatItem>
+						<dateFormatItem id="h" draft="unconfirmed">hی a</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">MM-dd</dateFormatItem>
+						<dateFormatItem id="MEd">E، M/d</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">dی MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E، dی MMM</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="y">G y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMd">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E، d/M/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMMی y</dateFormatItem>
+						<dateFormatItem id="yMMMd">dی MMMی y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E، dی MMMی y</dateFormatItem>
+						<dateFormatItem id="yyyy">G y</dateFormatItem>
+						<dateFormatItem id="yyyyM">GGGGG y-MM</dateFormatItem>
+						<dateFormatItem id="yyyyMd">GGGGG y-MM-dd</dateFormatItem>
+						<dateFormatItem id="yyyyMEd">GGGGG y-MM-dd, E</dateFormatItem>
+						<dateFormatItem id="yyyyMMM">G y MMM</dateFormatItem>
+						<dateFormatItem id="yyyyMMMd">G y MMM d</dateFormatItem>
+						<dateFormatItem id="yyyyMMMEd">G y MMM d, E</dateFormatItem>
+						<dateFormatItem id="yyyyMMMM">G y MMMM</dateFormatItem>
+						<dateFormatItem id="yyyyQQQ">G y QQQ</dateFormatItem>
+						<dateFormatItem id="yyyyQQQQ">G y QQQQ</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d">d–d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M">MM–MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">MM-dd – MM-dd</greatestDifference>
+							<greatestDifference id="M">MM-dd – MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">E، M/d – E، M/d</greatestDifference>
+							<greatestDifference id="M">E، M/d – E، M/d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M">MMM–MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">d–dی MMM</greatestDifference>
+							<greatestDifference id="M">MMM d – MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">E، dی MMM – E، dی MMM</greatestDifference>
+							<greatestDifference id="M">MMM d, E – MMM d, E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y">G y–y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">GGGGG y-MM – y-MM</greatestDifference>
+							<greatestDifference id="y">GGGGG y-MM – y-MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">GGGGG y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="M">GGGGG y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="y">d/M/y – d/M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">E، d/M/y – E، d/M/y</greatestDifference>
+							<greatestDifference id="M">E، d/M/y – E، d/M/y</greatestDifference>
+							<greatestDifference id="y">E، d/M/y – E، d/M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M">MMM–MMMی y</greatestDifference>
+							<greatestDifference id="y">MMMی y – MMMی y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">d–dی MMMی y</greatestDifference>
+							<greatestDifference id="M">dی MMM – dی MMMی y</greatestDifference>
+							<greatestDifference id="y">dی MMMMی y – dی MMMMی y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">G y MMM d, E – MMM d, E</greatestDifference>
+							<greatestDifference id="M">G y MMM d, E – MMM d, E</greatestDifference>
+							<greatestDifference id="y">G y MMM d, E – y MMM d, E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M">G y MMMM–MMMM</greatestDifference>
+							<greatestDifference id="y">G y MMMM – y MMMM</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">کانوونی دووەم</month>
+							<month type="2">شوبات</month>
+							<month type="3">ئازار</month>
+							<month type="4">نیسان</month>
+							<month type="5">ئایار</month>
+							<month type="6">حوزەیران</month>
+							<month type="7">تەمووز</month>
+							<month type="8">ئاب</month>
+							<month type="9">ئەیلوول</month>
+							<month type="10">تشرینی یەکەم</month>
+							<month type="11">تشرینی دووەم</month>
+							<month type="12">کانونی یەکەم</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">ک</month>
+							<month type="2">ش</month>
+							<month type="3">ئ</month>
+							<month type="4">ن</month>
+							<month type="5">ئ</month>
+							<month type="6">ح</month>
+							<month type="7">ت</month>
+							<month type="8">ئ</month>
+							<month type="9">ئ</month>
+							<month type="10">ت</month>
+							<month type="11">ت</month>
+							<month type="12">ک</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">کانوونی دووەم</month>
+							<month type="2">شوبات</month>
+							<month type="3">ئازار</month>
+							<month type="4">نیسان</month>
+							<month type="5">ئایار</month>
+							<month type="6">حوزەیران</month>
+							<month type="7">تەمووز</month>
+							<month type="8">ئاب</month>
+							<month type="9">ئەیلوول</month>
+							<month type="10">تشرینی یەکەم</month>
+							<month type="11">تشرینی دووەم</month>
+							<month type="12">کانونی یەکەم</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">کانوونی دووەم</month>
+							<month type="2">شوبات</month>
+							<month type="3">ئازار</month>
+							<month type="4">نیسان</month>
+							<month type="5">ئایار</month>
+							<month type="6">حوزەیران</month>
+							<month type="7">تەمووز</month>
+							<month type="8">ئاب</month>
+							<month type="9">ئەیلوول</month>
+							<month type="10">تشرینی یەکەم</month>
+							<month type="11">تشرینی دووەم</month>
+							<month type="12">کانونی یەکەم</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">ک</month>
+							<month type="2">ش</month>
+							<month type="3">ئ</month>
+							<month type="4">ن</month>
+							<month type="5">ئ</month>
+							<month type="6">ح</month>
+							<month type="7">ت</month>
+							<month type="8">ئ</month>
+							<month type="9">ئ</month>
+							<month type="10">ت</month>
+							<month type="11">ت</month>
+							<month type="12">ک</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">کانوونی دووەم</month>
+							<month type="2">شوبات</month>
+							<month type="3">ئازار</month>
+							<month type="4">نیسان</month>
+							<month type="5">ئایار</month>
+							<month type="6">حوزەیران</month>
+							<month type="7">تەمووز</month>
+							<month type="8">ئاب</month>
+							<month type="9">ئەیلوول</month>
+							<month type="10">تشرینی یەکەم</month>
+							<month type="11">تشرینی دووەم</month>
+							<month type="12">کانونی یەکەم</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">یەکشەممە</day>
+							<day type="mon">دووشەممە</day>
+							<day type="tue">سێشەممە</day>
+							<day type="wed">چوارشەممە</day>
+							<day type="thu">پێنجشەممە</day>
+							<day type="fri">ھەینی</day>
+							<day type="sat">شەممە</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">ی</day>
+							<day type="mon">د</day>
+							<day type="tue">س</day>
+							<day type="wed">چ</day>
+							<day type="thu">پ</day>
+							<day type="fri">ھ</day>
+							<day type="sat">ش</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">١ش</day>
+							<day type="mon">٢ش</day>
+							<day type="tue">٣ش</day>
+							<day type="wed">٤ش</day>
+							<day type="thu">٥ش</day>
+							<day type="fri">ھ</day>
+							<day type="sat">ش</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">یەکشەممە</day>
+							<day type="mon">دووشەممە</day>
+							<day type="tue">سێشەممە</day>
+							<day type="wed">چوارشەممە</day>
+							<day type="thu">پێنجشەممە</day>
+							<day type="fri">ھەینی</day>
+							<day type="sat">شەممە</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">یەکشەممە</day>
+							<day type="mon">دووشەممە</day>
+							<day type="tue">سێشەممە</day>
+							<day type="wed">چوارشەممە</day>
+							<day type="thu">پێنجشەممە</day>
+							<day type="fri">ھەینی</day>
+							<day type="sat">شەممە</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">ی</day>
+							<day type="mon">د</day>
+							<day type="tue">س</day>
+							<day type="wed">چ</day>
+							<day type="thu">پ</day>
+							<day type="fri">ھ</day>
+							<day type="sat">ش</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">١ش</day>
+							<day type="mon">٢ش</day>
+							<day type="tue">٣ش</day>
+							<day type="wed">٤ش</day>
+							<day type="thu">٥ش</day>
+							<day type="fri">ھ</day>
+							<day type="sat">ش</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">یەکشەممە</day>
+							<day type="mon">دووشەممە</day>
+							<day type="tue">سێشەممە</day>
+							<day type="wed">چوارشەممە</day>
+							<day type="thu">پێنجشەممە</day>
+							<day type="fri">ھەینی</day>
+							<day type="sat">شەممە</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">چ١</quarter>
+							<quarter type="2">چ٢</quarter>
+							<quarter type="3">چ٣</quarter>
+							<quarter type="4">چ٤</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">١</quarter>
+							<quarter type="2">٢</quarter>
+							<quarter type="3">٣</quarter>
+							<quarter type="4">٤</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">چارەکی یەکەم</quarter>
+							<quarter type="2">چارەکی دووەم</quarter>
+							<quarter type="3">چارەکی سێەم</quarter>
+							<quarter type="4">چارەکی چوارەم</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">چ١</quarter>
+							<quarter type="2">چ٢</quarter>
+							<quarter type="3">چ٣</quarter>
+							<quarter type="4">چ٤</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">١</quarter>
+							<quarter type="2">٢</quarter>
+							<quarter type="3">٣</quarter>
+							<quarter type="4">٤</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">چارەکی یەکەم</quarter>
+							<quarter type="2">چارەکی دووەم</quarter>
+							<quarter type="3">چارەکی سێەم</quarter>
+							<quarter type="4">چارەکی چوارەم</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">ب.ن</dayPeriod>
+							<dayPeriod type="pm">د.ن</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">ب.ن</dayPeriod>
+							<dayPeriod type="pm">د.ن</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">ب.ن</dayPeriod>
+							<dayPeriod type="pm">د.ن</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">ب.ن</dayPeriod>
+							<dayPeriod type="pm">د.ن</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">ب.ن</dayPeriod>
+							<dayPeriod type="pm">د.ن</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">ب.ن</dayPeriod>
+							<dayPeriod type="pm">د.ن</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">پێش زایین</era>
+						<era type="0" alt="variant">BCE</era>
+						<era type="1">زایینی</era>
+						<era type="1" alt="variant">CE</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">پێش زایین</era>
+						<era type="0" alt="variant">BCE</era>
+						<era type="1">زایینی</era>
+						<era type="1" alt="variant">CE</era>
+					</eraAbbr>
+					<eraNarrow>
+						<era type="0" draft="unconfirmed">پ.ن</era>
+						<era type="1" draft="unconfirmed">ز</era>
+					</eraNarrow>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>y MMMM d, EEEE</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>dی MMMMی y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>y MMM d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>y-MM-dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>h:mm:ss a zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>h:mm:ss a z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>h:mm:ss a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>h:mm a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="E">ccc</dateFormatItem>
+						<dateFormatItem id="Ed">E dھەم</dateFormatItem>
+						<dateFormatItem id="Ehm">E h:mm a</dateFormatItem>
+						<dateFormatItem id="EHm">E HH:mm</dateFormatItem>
+						<dateFormatItem id="Ehms">E h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="EHms">E HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="Gy">G y</dateFormatItem>
+						<dateFormatItem id="GyMMM">G y MMM</dateFormatItem>
+						<dateFormatItem id="GyMMMd">G y MMM d</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">G y MMM d, E</dateFormatItem>
+						<dateFormatItem id="h">hی a</dateFormatItem>
+						<dateFormatItem id="H">HH</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="hmsv">h:mm:ss a v</dateFormatItem>
+						<dateFormatItem id="Hmsv">HH:mm:ss v</dateFormatItem>
+						<dateFormatItem id="hmv">h:mm a v</dateFormatItem>
+						<dateFormatItem id="Hmv">HH:mm v</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">MM-dd</dateFormatItem>
+						<dateFormatItem id="MEd">E، M/d</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">dی MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E، dی MMM</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="one">هەفتەی W ی MMMM</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="other">هەفتەی W ی MMMM</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMd">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E، d/M/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMMی y</dateFormatItem>
+						<dateFormatItem id="yMMMd">dی MMMی y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E، dی MMMی y</dateFormatItem>
+						<dateFormatItem id="yMMMM">y MMMM</dateFormatItem>
+						<dateFormatItem id="yQQQ">y QQQ</dateFormatItem>
+						<dateFormatItem id="yQQQQ">y QQQQ</dateFormatItem>
+						<dateFormatItem id="yw" count="one">هەفتەی w ی Y</dateFormatItem>
+						<dateFormatItem id="yw" count="other">هەفتەی w ی Y</dateFormatItem>
+					</availableFormats>
+					<appendItems>
+						<appendItem request="Timezone">{0} {1}</appendItem>
+					</appendItems>
+					<intervalFormats>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d" draft="unconfirmed">E، M/d – E، M/d</greatestDifference>
+							<greatestDifference id="M" draft="unconfirmed">E، M/d – E، M/d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M" draft="unconfirmed">MMM–MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d" draft="unconfirmed">d–dی MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d" draft="unconfirmed">E، dی MMM – E، dی MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="y" draft="unconfirmed">d/M/y – d/M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d" draft="unconfirmed">E، d/M/y – E، d/M/y</greatestDifference>
+							<greatestDifference id="M" draft="unconfirmed">E، d/M/y – E، d/M/y</greatestDifference>
+							<greatestDifference id="y" draft="unconfirmed">E، d/M/y – E، d/M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M" draft="unconfirmed">MMM–MMMی y</greatestDifference>
+							<greatestDifference id="y" draft="unconfirmed">MMMی y – MMMی y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d" draft="unconfirmed">d–dی MMMی y</greatestDifference>
+							<greatestDifference id="M" draft="unconfirmed">dی MMM – dی MMMی y</greatestDifference>
+							<greatestDifference id="y" draft="unconfirmed">dی MMMMی y – dی MMMMی y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="persian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1" draft="unconfirmed">خاکەلێوە</month>
+							<month type="2" draft="unconfirmed">بانەمەڕ</month>
+							<month type="3" draft="unconfirmed">جۆزەردان</month>
+							<month type="4" draft="unconfirmed">پووشپەڕ</month>
+							<month type="5" draft="unconfirmed">گەلاوێژ</month>
+							<month type="6" draft="unconfirmed">خەرمانان</month>
+							<month type="7" draft="unconfirmed">ڕەزبەر</month>
+							<month type="8" draft="unconfirmed">خەزەڵوەر</month>
+							<month type="9" draft="unconfirmed">سەرماوەز</month>
+							<month type="10" draft="unconfirmed">بەفرانبار</month>
+							<month type="11" draft="unconfirmed">ڕێبەندان</month>
+							<month type="12" draft="unconfirmed">رەشەمێ</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1" draft="unconfirmed">خاکەلێوە</month>
+							<month type="2" draft="unconfirmed">بانەمەڕ</month>
+							<month type="3" draft="unconfirmed">جۆزەردان</month>
+							<month type="4" draft="unconfirmed">پووشپەڕ</month>
+							<month type="5" draft="unconfirmed">گەلاوێژ</month>
+							<month type="6" draft="unconfirmed">خەرمانان</month>
+							<month type="7" draft="unconfirmed">ڕەزبەر</month>
+							<month type="8" draft="unconfirmed">خەزەڵوەر</month>
+							<month type="9" draft="unconfirmed">سەرماوەز</month>
+							<month type="10" draft="unconfirmed">بەفرانبار</month>
+							<month type="11" draft="unconfirmed">ڕێبەندان</month>
+							<month type="12" draft="unconfirmed">رەشەمێ</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1" draft="unconfirmed">خاکەلێوە</month>
+							<month type="2" draft="unconfirmed">بانەمەڕ</month>
+							<month type="3" draft="unconfirmed">جۆزەردان</month>
+							<month type="4" draft="unconfirmed">پووشپەڕ</month>
+							<month type="5" draft="unconfirmed">گەلاوێژ</month>
+							<month type="6" draft="unconfirmed">خەرمانان</month>
+							<month type="7" draft="unconfirmed">ڕەزبەر</month>
+							<month type="8" draft="unconfirmed">خەزەڵوەر</month>
+							<month type="9" draft="unconfirmed">سەرماوەز</month>
+							<month type="10" draft="unconfirmed">بەفرانبار</month>
+							<month type="11" draft="unconfirmed">ڕێبەندان</month>
+							<month type="12" draft="unconfirmed">رەشەمێ</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1" draft="unconfirmed">خاکەلێوە</month>
+							<month type="2" draft="unconfirmed">بانەمەڕ</month>
+							<month type="3" draft="unconfirmed">جۆزەردان</month>
+							<month type="4" draft="unconfirmed">پووشپەڕ</month>
+							<month type="5" draft="unconfirmed">گەلاوێژ</month>
+							<month type="6" draft="unconfirmed">خەرمانان</month>
+							<month type="7" draft="unconfirmed">ڕەزبەر</month>
+							<month type="8" draft="unconfirmed">خەزەڵوەر</month>
+							<month type="9" draft="unconfirmed">سەرماوەز</month>
+							<month type="10" draft="unconfirmed">بەفرانبار</month>
+							<month type="11" draft="unconfirmed">ڕێبەندان</month>
+							<month type="12" draft="unconfirmed">رەشەمێ</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName draft="unconfirmed">دەم</displayName>
+			</field>
+			<field type="year">
+				<displayName draft="unconfirmed">ساڵ</displayName>
+				<relative type="-1" draft="unconfirmed">ساڵێ پێسوو</relative>
+				<relative type="0" draft="unconfirmed">ئەم ساڵ</relative>
+				<relative type="1" draft="unconfirmed">ساڵی داهاتوو</relative>
+			</field>
+			<field type="quarter">
+				<displayName draft="unconfirmed">چارەگ</displayName>
+			</field>
+			<field type="month">
+				<displayName draft="unconfirmed">مانگ</displayName>
+				<relative type="-1" draft="unconfirmed">مانگی پێشوو</relative>
+				<relative type="0" draft="unconfirmed">ئەم مانگە</relative>
+				<relative type="1" draft="unconfirmed">مانگی داهاتوو</relative>
+			</field>
+			<field type="month-short">
+				<relative type="-1" draft="unconfirmed">مانگی پێشوو</relative>
+				<relative type="0" draft="unconfirmed">ئەم مانگە</relative>
+				<relative type="1" draft="unconfirmed">مانگی داهاتوو</relative>
+			</field>
+			<field type="week">
+				<displayName draft="unconfirmed">ھەفتە</displayName>
+				<relative type="-1" draft="unconfirmed">هەفتەی پێشوو</relative>
+				<relative type="0" draft="unconfirmed">ئەم هەفتەیە</relative>
+				<relative type="1" draft="unconfirmed">هەفتەی داهاتوو</relative>
+				<relativePeriod draft="unconfirmed">هەفتەی {0}</relativePeriod>
+			</field>
+			<field type="day">
+				<displayName draft="unconfirmed">ڕۆژ</displayName>
+				<relative type="-1" draft="unconfirmed">دوێنێ</relative>
+				<relative type="0" draft="unconfirmed">ئەمڕۆ</relative>
+				<relative type="1" draft="unconfirmed">سبەی</relative>
+			</field>
+			<field type="weekday">
+				<displayName draft="unconfirmed">ڕۆژی ھەفتە</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName draft="unconfirmed">پ.ن/د.ن</displayName>
+			</field>
+			<field type="hour">
+				<displayName draft="unconfirmed">کاتژمێر</displayName>
+			</field>
+			<field type="minute">
+				<displayName draft="unconfirmed">خولەک</displayName>
+			</field>
+			<field type="second">
+				<displayName draft="unconfirmed">چرکە</displayName>
+			</field>
+			<field type="zone">
+				<displayName draft="unconfirmed">کاتی هەرێمی</displayName>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>arab</defaultNumberingSystem>
+		<otherNumberingSystems>
+			<native>arab</native>
+		</otherNumberingSystems>
+		<minimumGroupingDigits draft="contributed">1</minimumGroupingDigits>
+		<symbols numberSystem="arab">
+			<decimal>٫</decimal>
+			<group>٬</group>
+			<percentSign>٪</percentSign>
+			<plusSign>‏+</plusSign>
+			<minusSign>‏-</minusSign>
+			<exponential>اس</exponential>
+			<superscriptingExponent>×</superscriptingExponent>
+			<perMille>؉</perMille>
+			<infinity>∞</infinity>
+			<nan>NaN</nan>
+		</symbols>
+		<symbols numberSystem="latn">
+			<decimal>.</decimal>
+			<group>,</group>
+			<percentSign>%</percentSign>
+			<plusSign>‎+</plusSign>
+			<minusSign>-</minusSign>
+			<exponential>E</exponential>
+			<superscriptingExponent>×</superscriptingExponent>
+			<perMille>‰</perMille>
+			<infinity>∞</infinity>
+			<nan>NaN</nan>
+		</symbols>
+		<decimalFormats numberSystem="arab">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<scientificFormats numberSystem="arab">
+			<scientificFormatLength>
+				<scientificFormat>
+					<pattern>#E0</pattern>
+				</scientificFormat>
+			</scientificFormatLength>
+		</scientificFormats>
+		<scientificFormats numberSystem="latn">
+			<scientificFormatLength>
+				<scientificFormat>
+					<pattern>#E0</pattern>
+				</scientificFormat>
+			</scientificFormatLength>
+		</scientificFormats>
+		<percentFormats numberSystem="arab">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern>#,##0 %</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<percentFormats numberSystem="latn">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern>#,##0%</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<currencyFormats numberSystem="arab">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>#,##0.00 ¤</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤ #,##0.00</pattern>
+				</currencyFormat>
+				<currencyFormat type="accounting">
+					<pattern>¤ #,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<unitPattern count="one">{0} {1}</unitPattern>
+			<unitPattern count="other">{0} {1}</unitPattern>
+		</currencyFormats>
+		<currencies>
+			<currency type="AFN">
+				<displayName draft="unconfirmed">ئەفغانیی ئەفغانستان</displayName>
+			</currency>
+			<currency type="BHD">
+				<displayName draft="unconfirmed">دیناری بەحرەینی</displayName>
+			</currency>
+			<currency type="BZD">
+				<displayName draft="unconfirmed">دۆلاری بەلیزی</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName draft="unconfirmed">دۆلاری کەنەدی</displayName>
+				<displayName count="one" draft="unconfirmed">دۆلاری کەنەدی</displayName>
+				<displayName count="other" draft="unconfirmed">دۆلاری کەنەدی</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName draft="unconfirmed">دیناری جەزائیری</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName draft="unconfirmed">یورۆ</displayName>
+			</currency>
+			<currency type="IQD">
+				<displayName draft="unconfirmed">دیناری عێراقی</displayName>
+				<symbol>د.ع.‏</symbol>
+			</currency>
+			<currency type="IRR">
+				<displayName draft="unconfirmed">ڕیاڵی ئێرانی</displayName>
+			</currency>
+			<currency type="JOD">
+				<displayName draft="unconfirmed">دیناری ئوردنی</displayName>
+			</currency>
+			<currency type="KWD">
+				<displayName draft="unconfirmed">دیناری کووەیتی</displayName>
+			</currency>
+			<currency type="OMR">
+				<displayName draft="unconfirmed">ڕیاڵی عومانی</displayName>
+			</currency>
+			<currency type="QAR">
+				<displayName draft="unconfirmed">ڕیاڵی قەتەری</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName draft="unconfirmed">ڕیاڵی سەعوودی</displayName>
+			</currency>
+			<currency type="TND">
+				<displayName draft="unconfirmed">دیناری توونس</displayName>
+			</currency>
+			<currency type="TRY">
+				<displayName draft="unconfirmed">لیرەی تورکیا</displayName>
+			</currency>
+			<currency type="TTD">
+				<displayName draft="unconfirmed">دۆلاری ترینیداد و تۆباگۆ</displayName>
+			</currency>
+			<currency type="XAU">
+				<displayName draft="unconfirmed">زێڕ</displayName>
+			</currency>
+		</currencies>
+		<miscPatterns numberSystem="latn">
+			<pattern type="atLeast">≥{0}</pattern>
+			<pattern type="range">{0}–{1}</pattern>
+		</miscPatterns>
+	</numbers>
+	<posix>
+		<messages>
+			<yesstr draft="unconfirmed">بەڵێ:ب</yesstr>
+			<nostr draft="unconfirmed">نەخێر:ن</nostr>
+		</messages>
+	</posix>
+</ldml>

@@ -1,0 +1,5 @@
+grant {
+  permission java.lang.RuntimePermission "selectorProvider";
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.nio.ch";
+  permission java.net.SocketPermission "*:1024-", "listen,resolve,connect,accept";
+};

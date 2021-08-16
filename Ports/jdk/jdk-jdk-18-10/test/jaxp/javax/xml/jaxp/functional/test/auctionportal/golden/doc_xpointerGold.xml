@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?><document xmlns:xi="http://www.w3.org/2001/XInclude">
+	<p>The following is the source of the "tasks.xml" resource:</p>
+	<example><owner xml:base="tasks.xml">Jane Doe</owner></example>
+</document>

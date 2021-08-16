@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Premain-Class: TransformerAgent
+Agent-Class: TransformerAgent
+Can-Retransform-Classes: true
+Can-Redefine-Classes: false

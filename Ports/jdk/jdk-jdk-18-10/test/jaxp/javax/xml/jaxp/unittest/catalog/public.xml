@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!-- make java.net java123.net to make sure no system match -->
+<!DOCTYPE  catalogtest  PUBLIC  "-//OPENJDK//XML CATALOG DTD//1.0"  
+     "http://openjdk.java123.net/catalog/public.dtd">
+
+<catalogtest>Test &public; entry</catalogtest>

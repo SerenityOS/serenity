@@ -1,0 +1,2 @@
+NullInErrorMessageTest.java:26:40: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.infer.no.conforming.assignment.exists: U, (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.not.a.functional.intf.1: java.util.concurrent.CompletionStage, (compiler.misc.incompatible.abstracts: kindname.interface, java.util.concurrent.CompletionStage)))))
+1 error

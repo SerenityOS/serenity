@@ -1,0 +1,11 @@
+keystore "file:first.jks";
+keystorePasswordURL "file:keypass";
+
+grant signedBy "first" {
+    permission java.lang.RuntimePermission "setIO";
+};
+
+grant signedBy "second" {
+    permission java.lang.RuntimePermission "setFactory";
+};
+

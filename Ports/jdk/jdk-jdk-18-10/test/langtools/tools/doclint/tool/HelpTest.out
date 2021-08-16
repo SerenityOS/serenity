@@ -1,0 +1,50 @@
+Usage:
+    doclint [options] source-files...
+
+Options:
+  -Xmsgs  
+    Same as -Xmsgs:all
+  -Xmsgs:values
+    Specify categories of issues to be checked, where 'values'
+    is a comma-separated list of any of the following:
+      reference      show places where comments contain incorrect
+                     references to Java source code elements
+      syntax         show basic syntax errors within comments
+      html           show issues with HTML tags and attributes
+      accessibility  show issues for accessibility
+      missing        show issues with missing documentation
+      all            all of the above
+    Precede a value with '-' to negate it
+    Categories may be qualified by one of:
+      /public /protected /package /private
+    For positive categories (not beginning with '-')
+    the qualifier applies to that access level and above.
+    For negative categories (beginning with '-')
+    the qualifier applies to that access level and below.
+    If a qualifier is missing, the category applies to
+    all access levels.
+    For example, -Xmsgs:all,-syntax/private
+    This will enable all messages, except syntax errors
+    in the doc comments of private methods.
+    If no -Xmsgs options are provided, the default is
+    equivalent to -Xmsgs:all/protected, meaning that
+    all messages are reported for protected and public
+    declarations only. 
+  -XcheckPackage:<packages>
+    Enable or disable checks in specific packages.
+    <packages> is a comma separated list of package specifiers.
+    Package specifier is either a qualified name of a package
+    or a package name prefix followed by '.*', which expands to
+    all sub-packages of the given package. Prefix the package specifier
+    with '-' to disable checks for the specified packages.
+  -stats
+    Report statistics on the reported issues.
+  -h -help --help -usage -?
+    Show this message.
+
+The following javac options are also supported
+  -bootclasspath, -classpath, -cp, -sourcepath, -Xmaxerrs, -Xmaxwarns
+
+To run doclint on part of a project, put the compiled classes for your
+project on the classpath (or bootclasspath), then specify the source files
+to be checked on the command line.

@@ -1,0 +1,3 @@
+ErroneousAnnotations.java:10:2: compiler.err.cant.resolve: kindname.class, Undefined, , 
+ErroneousAnnotations.java:12:6: compiler.err.cant.resolve.location: kindname.class, Undefined, , , (compiler.misc.location: kindname.class, ErroneousAnnotations, null)
+2 errors

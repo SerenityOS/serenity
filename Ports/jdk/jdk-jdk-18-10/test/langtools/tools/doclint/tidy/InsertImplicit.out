@@ -1,0 +1,7 @@
+InsertImplicit.java:14: error: unexpected end tag: </p>
+ * </p>
+   ^
+InsertImplicit.java:15: error: block element not allowed within inline element <i>: blockquote
+ * <i> <blockquote> abc </blockquote> </i>
+       ^
+2 errors

@@ -1,0 +1,319 @@
+/*
+ * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ *
+ * The following is a java-source of this file:
+ *
+ *package nsk.jvmti.IsFieldSynthetic;
+ *
+ *public class isfldsin003a {
+ *
+ *    native static int check(Class cls);
+ *
+ *    public static int check() {
+ *        return check(InnerClass.class);
+ *    }
+ *
+ *    class InnerClass {
+ *        int fld;
+ *    }
+ *}
+ */
+
+class nsk/jvmti/IsFieldSynthetic/isfldsin003a {
+  0xCAFEBABE;
+  0; // minor version
+  48; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #30 #31; // #1
+    class #32; // #2
+    class #33; // #3
+    Method #3 #34; // #4
+    Method #3 #35; // #5
+    Method #12 #34; // #6
+    Field #11 #36; // #7
+    String #37; // #8
+    Method #11 #38; // #9
+    Method #11 #39; // #10
+    class #40; // #11
+    class #41; // #12
+    class #42; // #13
+    Utf8 "InnerClass"; // #14
+    Utf8 "InnerClasses"; // #15
+    Utf8 "class$nsk$jvmti$IsFieldSynthetic$isfldsin003a$InnerClass"; // #16
+    Utf8 "Ljava/lang/Class;"; // #17
+    Utf8 "Synthetic"; // #18
+    Utf8 "<init>"; // #19
+    Utf8 "()V"; // #20
+    Utf8 "Code"; // #21
+    Utf8 "LineNumberTable"; // #22
+    Utf8 "check"; // #23
+    Utf8 "(Ljava/lang/Class;)I"; // #24
+    Utf8 "()I"; // #25
+    Utf8 "class$"; // #26
+    Utf8 "(Ljava/lang/String;)Ljava/lang/Class;"; // #27
+    Utf8 "SourceFile"; // #28
+    Utf8 "isfldsin003a.java"; // #29
+    class #43; // #30
+    NameAndType #44 #27; // #31
+    Utf8 "java/lang/ClassNotFoundException"; // #32
+    Utf8 "java/lang/NoClassDefFoundError"; // #33
+    NameAndType #19 #20; // #34
+    NameAndType #45 #46; // #35
+    NameAndType #16 #17; // #36
+    Utf8 "nsk.jvmti.IsFieldSynthetic.isfldsin003a$InnerClass"; // #37
+    NameAndType #26 #27; // #38
+    NameAndType #23 #24; // #39
+    Utf8 "nsk/jvmti/IsFieldSynthetic/isfldsin003a"; // #40
+    Utf8 "java/lang/Object"; // #41
+    Utf8 "nsk/jvmti/IsFieldSynthetic/isfldsin003a$InnerClass"; // #42
+    Utf8 "java/lang/Class"; // #43
+    Utf8 "forName"; // #44
+    Utf8 "initCause"; // #45
+    Utf8 "(Ljava/lang/Throwable;)Ljava/lang/Throwable;"; // #46
+  } // Constant Pool
+
+  0x0021; // access
+  #11;// this_cpx
+  #12;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+    { // Member
+      0x0008; // access
+      #16; // name_cpx
+      #17; // sig_cpx
+      [] { // Attributes
+        Attr(#18) { // Synthetic
+        } // end Synthetic
+      } // Attributes
+    } // Member
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #19; // name_cpx
+      #20; // sig_cpx
+      [] { // Attributes
+        Attr(#21) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70006B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#22) { // LineNumberTable
+              [] { // LineNumberTable
+                0  7;
+                4  15;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0108; // access
+      #23; // name_cpx
+      #24; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #23; // name_cpx
+      #25; // sig_cpx
+      [] { // Attributes
+        Attr(#21) { // Code
+          2; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xB20007C7000F1208;
+            0xB8000959B30007A7;
+            0x0006B20007B8000A;
+            0xAC;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#22) { // LineNumberTable
+              [] { // LineNumberTable
+                0  12;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0008; // access
+      #26; // name_cpx
+      #27; // sig_cpx
+      [] { // Attributes
+        Attr(#21) { // Code
+          2; // max_stack
+          2; // max_locals
+          Bytes[]{
+            0x2AB80001B04CBB00;
+            0x0359B700042BB600;
+            0x05BF;
+          };
+          [] { // Traps
+            0 4 5 2;
+          } // end Traps
+          [] { // Attributes
+            Attr(#22) { // LineNumberTable
+              [] { // LineNumberTable
+                0  12;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+        ;
+        Attr(#18) { // Synthetic
+        } // end Synthetic
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#28) { // SourceFile
+      #29;
+    } // end SourceFile
+    ;
+    Attr(#15) { // InnerClasses
+      [] { // InnerClasses
+        #13 #11 #14 0;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class nsk/jvmti/IsFieldSynthetic/isfldsin003a
+
+class nsk/jvmti/IsFieldSynthetic/isfldsin003a$InnerClass {
+  0xCAFEBABE;
+  0; // minor version
+  48; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Field #3 #16; // #1
+    Method #4 #17; // #2
+    class #19; // #3
+    class #22; // #4
+    Utf8 "fld"; // #5
+    Utf8 "I"; // #6
+    Utf8 "this$0"; // #7
+    Utf8 "Lnsk/jvmti/IsFieldSynthetic/isfldsin003a;"; // #8
+    Utf8 "Synthetic"; // #9
+    Utf8 "<init>"; // #10
+    Utf8 "(Lnsk/jvmti/IsFieldSynthetic/isfldsin003a;)V"; // #11
+    Utf8 "Code"; // #12
+    Utf8 "LineNumberTable"; // #13
+    Utf8 "SourceFile"; // #14
+    Utf8 "isfldsin003a.java"; // #15
+    NameAndType #7 #8; // #16
+    NameAndType #10 #23; // #17
+    class #24; // #18
+    Utf8 "nsk/jvmti/IsFieldSynthetic/isfldsin003a$InnerClass"; // #19
+    Utf8 "InnerClass"; // #20
+    Utf8 "InnerClasses"; // #21
+    Utf8 "java/lang/Object"; // #22
+    Utf8 "()V"; // #23
+    Utf8 "nsk/jvmti/IsFieldSynthetic/isfldsin003a"; // #24
+  } // Constant Pool
+
+  0x0020; // access
+  #3;// this_cpx
+  #4;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+    { // Member
+      0x0000; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0012; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#9) { // Synthetic
+        } // end Synthetic
+      } // Attributes
+    } // Member
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #10; // name_cpx
+      #11; // sig_cpx
+      [] { // Attributes
+        Attr(#12) { // Code
+          2; // max_stack
+          2; // max_locals
+          Bytes[]{
+            0x2A2BB500012AB700;
+            0x02B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#13) { // LineNumberTable
+              [] { // LineNumberTable
+                0  15;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#14) { // SourceFile
+      #15;
+    } // end SourceFile
+    ;
+    Attr(#21) { // InnerClasses
+      [] { // InnerClasses
+        #3 #18 #20 0;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class nsk/jvmti/IsFieldSynthetic/isfldsin003a$InnerClass

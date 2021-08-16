@@ -1,0 +1,12 @@
+T6747671.java:19:6: compiler.warn.raw.class.use: T6747671.A.X, T6747671<E>.A<X>.X
+T6747671.java:20:6: compiler.warn.raw.class.use: T6747671.A.Z, T6747671<E>.A<X>.Z<Y>
+T6747671.java:23:13: compiler.warn.raw.class.use: T6747671.B, T6747671.B<X>
+T6747671.java:27:14: compiler.warn.raw.class.use: T6747671.B, T6747671.B<X>
+T6747671.java:27:7: compiler.warn.raw.class.use: T6747671.B, T6747671.B<X>
+T6747671.java:29:28: compiler.warn.raw.class.use: T6747671.B, T6747671.B<X>
+T6747671.java:32:9: compiler.warn.raw.class.use: T6747671.A, T6747671<E>.A<X>
+T6747671.java:32:20: compiler.warn.raw.class.use: T6747671.A, T6747671<E>.A<X>
+T6747671.java:33:16: compiler.warn.raw.class.use: T6747671.A.Z, T6747671<E>.A<X>.Z<Y>
+T6747671.java:36:9: compiler.warn.raw.class.use: T6747671.B, T6747671.B<X>
+T6747671.java:36:27: compiler.warn.raw.class.use: T6747671.B, T6747671.B<X>
+11 warnings

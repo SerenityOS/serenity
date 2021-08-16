@@ -1,0 +1,2 @@
+C.java:5:8: compiler.err.does.not.override.abstract: p1.C, f(java.lang.String), p1.B
+1 error

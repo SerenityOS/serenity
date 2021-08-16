@@ -1,0 +1,33 @@
+
+// should be granted
+grant principal com.sun.security.auth.UnixPrincipal "1",
+    principal Comparator$PCompare2 "2" {
+    permission java.util.PropertyPermission "foo", "read";
+};
+
+// should be granted
+grant principal Comparator$PCompare1 "1",
+    principal com.sun.security.auth.NTUserPrincipal "4" {
+    permission java.util.PropertyPermission "bar", "read";
+};
+
+// should be granted
+grant principal com.sun.security.auth.UnixPrincipal "1",
+    principal javax.security.auth.x500.X500Principal "cn=x500",
+    principal Comparator$PCompare2 "2" {
+    permission java.util.PropertyPermission "hello", "read";
+};
+
+// should be granted
+grant principal Comparator$PCompare1 "1",
+    principal com.sun.security.auth.NTUserPrincipal "4",
+    principal javax.security.auth.x500.X500Principal "cn=x500" {
+    permission java.util.PropertyPermission "world", "read";
+};
+
+// should not be granted
+grant principal Comparator$PCompare1 "1",
+    principal Comparator$PCompare3 "3" {
+    permission java.util.PropertyPermission "foobar", "read";
+};
+

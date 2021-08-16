@@ -1,0 +1,6 @@
+Test4.java:15:1: compiler.err.name.clash.same.erasure.no.override: m, java.util.Set<java.lang.String>, B, m, java.util.Set<java.lang.Integer>, A
+Test4.java:17:1: compiler.err.name.clash.same.erasure.no.override: m, java.util.Set<?>, C, m, java.util.Set<java.lang.Integer>, A
+Test4.java:23:1: compiler.err.name.clash.same.erasure.no.override: m, java.util.Set<java.lang.Number>, D, m, java.util.Set<java.lang.Integer>, A
+Test4.java:25:1: compiler.err.name.clash.same.erasure.no.override: m, java.util.Set<T>, D, m, java.util.Set<?>, C
+Test4.java:29:1: compiler.err.name.clash.same.erasure.no.override: m, java.util.Set<T>, E, m, java.util.Set<T>, D
+5 errors

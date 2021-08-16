@@ -1,0 +1,13 @@
+MostSpecific03.java:26:9: compiler.err.ref.ambiguous: m, kindname.method, m(Test.IntMapper...), Test, kindname.method, m(Test.LongMapper...), Test
+MostSpecific03.java:33:9: compiler.err.ref.ambiguous: m, kindname.method, m(Test.IntMapper...), Test, kindname.method, m(Test.LongMapper...), Test
+MostSpecific03.java:34:9: compiler.err.ref.ambiguous: m, kindname.method, m(Test.IntMapper...), Test, kindname.method, m(Test.LongMapper...), Test
+MostSpecific03.java:35:9: compiler.err.ref.ambiguous: m, kindname.method, m(Test.IntMapper...), Test, kindname.method, m(Test.LongMapper...), Test
+MostSpecific03.java:42:9: compiler.err.ref.ambiguous: m2, kindname.method, m2(Test.IntMapper,Test.IntMapper...), Test, kindname.method, m2(Test.LongMapper...), Test
+MostSpecific03.java:48:9: compiler.err.ref.ambiguous: m2, kindname.method, m2(Test.IntMapper,Test.IntMapper...), Test, kindname.method, m2(Test.LongMapper...), Test
+MostSpecific03.java:49:9: compiler.err.ref.ambiguous: m2, kindname.method, m2(Test.IntMapper,Test.IntMapper...), Test, kindname.method, m2(Test.LongMapper...), Test
+MostSpecific03.java:50:9: compiler.err.ref.ambiguous: m2, kindname.method, m2(Test.IntMapper,Test.IntMapper...), Test, kindname.method, m2(Test.LongMapper...), Test
+MostSpecific03.java:51:9: compiler.err.ref.ambiguous: m2, kindname.method, m2(Test.IntMapper,Test.IntMapper...), Test, kindname.method, m2(Test.LongMapper...), Test
+MostSpecific03.java:52:9: compiler.err.ref.ambiguous: m2, kindname.method, m2(Test.IntMapper,Test.IntMapper...), Test, kindname.method, m2(Test.LongMapper...), Test
+MostSpecific03.java:53:9: compiler.err.ref.ambiguous: m2, kindname.method, m2(Test.IntMapper,Test.IntMapper...), Test, kindname.method, m2(Test.LongMapper...), Test
+MostSpecific03.java:54:9: compiler.err.ref.ambiguous: m2, kindname.method, m2(Test.IntMapper,Test.IntMapper...), Test, kindname.method, m2(Test.LongMapper...), Test
+12 errors

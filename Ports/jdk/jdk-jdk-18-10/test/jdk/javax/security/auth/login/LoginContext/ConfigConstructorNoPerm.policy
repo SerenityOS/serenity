@@ -1,0 +1,3 @@
+grant {
+    permission javax.security.auth.AuthPermission "createLoginContext.goToOther";
+};

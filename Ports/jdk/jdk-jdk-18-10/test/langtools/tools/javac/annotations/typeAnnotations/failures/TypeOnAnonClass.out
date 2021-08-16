@@ -1,0 +1,2 @@
+TypeOnAnonClass.java:13:40: compiler.err.annotation.type.not.applicable.to.type: X
+1 error

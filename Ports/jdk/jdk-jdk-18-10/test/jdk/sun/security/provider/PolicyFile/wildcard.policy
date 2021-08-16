@@ -1,0 +1,7 @@
+grant principal javax.security.auth.x500.X500Principal * {
+  permission java.util.PropertyPermission "user.home", "read";
+};
+
+grant {
+  permission javax.security.auth.AuthPermission "doAsPrivileged";
+};

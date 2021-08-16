@@ -1,0 +1,5 @@
+DeprecationSE8Test.java:42:34: compiler.warn.has.been.deprecated: DeprecationSE8Test(), DeprecationSE8Test
+DeprecationSE8Test.java:43:9: compiler.warn.has.been.deprecated: DeprecationSE8Test(), DeprecationSE8Test
+DeprecationSE8Test.java:44:27: compiler.warn.has.been.deprecated: foo(), DeprecationSE8Test
+DeprecationSE8Test.java:45:34: compiler.warn.has.been.deprecated: foo(), DeprecationSE8Test
+4 warnings

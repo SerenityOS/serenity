@@ -1,0 +1,604 @@
+Copyright (c) 2008, 2018, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+* common/ArrayBounds
+
+Checks whether the compiler makes incorrect array bounds removal optimizations.
+
+* common/ArrayTests
+
+Checks whether array stores and reads are correct for integral types and floating points.
+
+* common/bounds
+
+Makes sure that array bounds checking is enabled with the JIT on
+
+* common/CEETest
+
+Checks whether comparision operations work properly.
+
+* common/collapse
+
+Checks constatnt propagation facilities of the JIT compiler.
+
+* common/CondExpr
+
+Checks that code for conditional expressions is generated properly.
+
+* common/deoptimization/test01
+* common/deoptimization/test02
+* common/deoptimization/test03
+* common/deoptimization/test04
+* common/deoptimization/test05
+* common/deoptimization/test06
+* common/deoptimization/test07
+* common/deoptimization/test08
+
+Check compiler deoptimization facilities.
+
+* common/DivTest
+
+Checks some special cases of divide operation.
+
+* common/exception
+
+This JIT buster test checks to see if a JIT doing register allocation
+on a machine with a callees saves ABI for non-volatile registers can
+get the exception handling correct. Intel and PowerPC are both such
+machines.
+
+* common/exceptiontest
+
+Does exactly the same as common/exception
+
+* common/ExcOpt
+
+Tests exception handler inside optimizable loop and around it.
+
+* common/FPCompare/TestFPBinop
+
+Tests floating point binary operations.
+
+* common/FPCompare/TestFPCompare
+
+Test of floating point comparison.
+
+* common/gen_math/Filtering
+* common/gen_math/Loops_1
+* common/gen_math/Loops_2
+* common/gen_math/Loops_3
+* common/gen_math/Loops_4
+* common/gen_math/Loops_5
+* common/gen_math/Loops_6
+* common/gen_math/Loops_7
+* common/gen_math/Matrix_3d
+* common/gen_math/Summ
+
+These tests check math preciction stuff.
+
+* common/gen_math/ShortCircuitTest
+
+A complete set of tests for the binary Java operators {&&, ||, &, |} to
+ensure that (C-style) short circuit evaluation is used where required, and
+also is not used where prohibited.  Checks has been constructed carefully to
+be independent of the operators under scrutiny, so that passing these tests
+constitutes validation of those operators.
+
+* common/graph
+
+The test checks the dynamic class creation and method invokation reflection features. A number of threads is created. They call
+methods dynamically and recursively. Also, exceptions, thrown from the dynamically called methods are checked.
+
+* common/inittest
+
+Checks correctness of class initialization order.
+
+* common/inittest2
+
+Checks that JIT doesn't perform an initialization of class which is never used.
+
+* common/inline001
+
+This test is valid in JDK 1.1.4 and in prior JDKs.  It
+ceased to work in JDK 1.2e.  The test relied on the JIT
+to inline some final methods and to never inline non-final
+methods.
+
+* common/inline002
+
+Look for inlined final methods in java.Math.  Do this by comparing
+execution times against estimates of call overheads for various
+method signatures.
+
+The current (08/04/97) list of inlined methods is short:
+    abs(float)
+    abs(double)
+    sqrt(double)  [i386 only]
+If new methods are inlined or dropped from the list of inlined
+codes, record this fact by changing the value of an element of the
+array expectInline.  This is done in the method result().
+
+This test will fail if the JIT is disabled.  There are two modes
+of operation.  The first is to merely record a pass/fail for each
+method tested.  This output should be machine independent and
+suitable for a golden file.
+  java -Djava.compiler=sunwjit inline002
+The other mode is a report generation mode.  It reports the
+number of iterations, call overhead in nanoseconds, and a judgement
+as to whether a method was inlined or not.
+  java -Djava.compiler=sunwjit inline002 -report
+
+* common/inline003
+* common/inline004
+
+Check inlining of final methods.
+
+* common/inline005
+
+Checks correctness of evaluation order in inlined math functions (?).
+
+* common/inline006
+* common/inline007
+
+Checks access to final class fields.
+
+* common/JITSuite
+
+Does exactly the same as common/inittest2
+
+* common/jtest
+
+Does some client-server communications via sockets. Not actually a JIT test!
+
+* common/Linpack
+
+Math presiction test.
+
+* common/loops/arg01
+* common/loops/arg03
+
+Fill arrays in a loops and then makes a number of checks (?)
+
+* common/loops/arg04
+
+Checks correctness of interprocedural data flow analysis, tests for recognition of
+loop independent dependences between statements in mutually exclusive regions, checks
+global data flow analysis.
+
+* common/loops/arg05
+
+Checks loop vectorization stuff.
+
+* common/loops/arg06
+
+Checks statement reordering, loop distribution, partial loop vectorization, recurrence
+in the middle of the loop.
+
+* common/loops/arg07
+
+Checks loop interchange, node splitting.
+
+* common/loops/arg08
+
+Checks scalar and array expansion.
+
+* common/loops/arg09
+
+Checks scalar and array expansion, control flow (loop with independent conditional).
+
+* common/loops/arg10
+
+Some control flow-related checks.
+
+* common/loops/dec01
+* common/loops/dec02
+* common/loops/dec03
+* common/loops/dec04
+* common/loops/dec05
+* common/loops/dec06
+* common/loops/dec07
+* common/loops/dec08
+* common/loops/dec09
+* common/loops/dec10
+* common/loops/dec11
+
+Some aritmetic operations within loops and a number of comparisions (?).
+
+* common/loops/fuse1
+* common/loops/fuse10
+* common/loops/fuse101
+* common/loops/fuse102
+* common/loops/fuse103
+* common/loops/fuse105
+* common/loops/fuse106
+* common/loops/fuse108
+* common/loops/fuse11
+* common/loops/fuse111
+* common/loops/fuse113
+* common/loops/fuse116
+* common/loops/fuse117
+* common/loops/fuse12
+* common/loops/fuse13
+* common/loops/fuse14
+* common/loops/fuse16
+* common/loops/fuse17
+* common/loops/fuse18
+* common/loops/fuse2
+* common/loops/fuse3
+* common/loops/fuse4
+* common/loops/fuse5
+* common/loops/fuse6
+* common/loops/fuse8
+
+Check correctness of loop fusion.
+
+* common/loops/fuse107
+* common/loops/fuse109
+* common/loops/fuse15
+* common/loops/fuse19
+* common/loops/fuse7
+* common/loops/fuse9
+
+Construct a number of loops and make some calculations. These tests seems to be
+incomplete (incorrectly translated from Fortran).
+
+* common/loops/private1
+
+Single dimensional private array, with no carried dependence in the inner
+loop - simple subscripts.
+
+* common/loops/private2
+
+Single dimensional private array, with no carried dependence in the inner
+loop - non-simple subscripts (test incomplete).
+
+* common/loops/private3
+
+Single dimensional private array, with no carried dependence
+in the inner loop  (test incomplete).
+
+* common/loops/private4
+
+Loop with condionals, both arms of the conditional cover the entire array
+which is private.
+
+* common/loops/private5
+
+Single dimensional private array, 2 inner loops; all uses of array in the 2nd loop are
+covered by defs in the 1st one.
+
+* common/loops/private6
+
+Single dimensional private array; all uses of array in the inner loop are
+covered by defs in the outer one.
+
+* common/loops/private7
+
+Single dimensional private array, 3 inner loops; all uses of array in the 3rd loop are
+covered by defs in the 1st and 2nd one.
+
+* common/loops/private8
+
+Single dimensional private array, 3 inner loops; the defs of array in the 2nd loop cover
+all the defs and uses within loops 2 and 3.
+
+* common/loops/private9
+
+Single dimensional private array, the two loops effectively cover the array.
+
+* common/loops/private10
+
+Single dimensional private array, the two asignments to the array in the inner loop
+effectively cover the entire array.
+
+* common/loops/private104
+
+Loop with condionals. Both arms of the conditional cover the entire array.
+
+* common/loops/private105
+
+Single dimensional private array, 2 inner loops; all uses of array in the 2nd loop are
+covered by defs in the 1st one.
+
+* common/loops/private107
+
+Single dimensional private array, 3 inner loops; all uses of array in the 3rd loop are
+covered by defs in the 1st and 2nd one.
+
+* common/loops/private109
+
+Single dimensional private array, the two loops effectively cover the array.
+
+* common/loops/private11
+
+The two loops each cover disjoint triangular regions of the array. Together they
+cover the entire array.
+
+* common/loops/private110
+
+Single dimensional private array, the two asignments to the array in the inner loop
+effectively cover the entire array.
+
+* common/loops/private111
+
+The two loops each cover disjoint triangular regions of the array. Together they
+cover the entire array.
+
+* common/loops/private112
+* common/loops/private113
+* common/loops/private12
+* common/loops/private13
+
+Private array sections. Even though only a portion of the array is covered by the
+definitions, but the uses are covered entirely by the defs in the array.
+
+* common/loops/private117
+
+Single dimensional private array, 2 inner loops; all uses of array in the 2nd loop are
+covered by defs in the 1st one.
+
+* common/loops/private118
+
+Two dimensional private array and some loop unrolling made by hand.
+
+* common/loops/private119
+
+Two dimensional private array.
+
+* common/loops/private120
+
+Loop peeling before and after the loop.
+
+* common/loops/private122
+
+Two dimensional private array.
+
+* common/loops/private123
+
+Single dimensional private array; even though not all elements of the array are modified
+in the inner loop, and all uses of array are covered.
+
+* common/loops/private124
+
+Two dimensional private array. Loop with condionals; both arms of the conditional cover
+the entire array, there are uses in the either arm the are entirely covered.
+
+* common/loops/private125
+
+Two dimensional private array. Loop with condionals; the uses of the array outside the
+conditional are not guaranteed to be covered entirely.
+
+* common/loops/private126
+
+Two dimensional array. Here array is not private, as one element is not covered in the loop.
+
+* common/loops/private128
+
+Two and single dimensional arrays.
+
+* common/loops/private130
+
+2 two dimensional and 1 single dimension array.
+
+* common/loops/private133
+
+Single dimensional private array, 2 inner loops.
+
+* common/loops/private14
+
+This is an involved test. The first j loop covers 1..m elements of the
+1..n array. Since overindexing is prohibited, the compiler should assume
+that 1..m is a subset of 1..n. In the k loop first m uses of the array
+a() are covered by defs in the j loop. The next m+1..n iterations of the
+loop do not have any uncovered uses. Therefore the array a() ought to be
+a private array.
+
+* common/loops/private15
+
+Similar to common/loops/private14, but uses no conditionals.
+
+* common/loops/private17
+
+Single dimensional array, assuming no overindexing.
+
+* common/loops/private18
+* common/loops/private19
+* common/loops/private20
+* common/loops/private22
+
+Single dimensional private array, 3 inner loops.
+
+* common/loops/private21
+
+3 inner loops, the 1st and 2nd loop together cover the entire array, and all the uses
+of the array in the 3rd loop are covered.
+
+* common/loops/private23
+
+Private array, even though not all elements of the array are modified in inner loop,
+and all uses of the array are covered.
+
+* common/loops/private24
+
+Conditional inside the loop, 2 inner loops in both arms.
+
+* common/loops/private25
+
+Conditional inside the loop, inner loops in both arms and one inner loop after
+the conditional.
+
+* common/loops/private26
+* common/loops/private27
+* common/loops/private28
+
+Single dimensional private array, 3 inner loops.
+
+* common/loops/private29
+
+Single dimensional private array, 2 inner loops.
+
+* common/loops/private30
+
+Conditional inside the loop, inner loops in both arms and one inner loop before
+the conditional.
+
+* common/loops/private31
+
+Conditional inside the loop, inner loop in both arms.
+
+* common/loops/private32
+
+2 loops, inner loop inside the 2nd one.
+
+* common/loops/private33
+
+Single dimensional private array, 2 inner loops.
+
+* common/misctests/classes
+
+No test found!
+
+* common/misctests/clss14702
+
+Checks that NullPointerException is thrown.
+
+* common/misctests/FileViewer
+
+Not a JIT test!
+
+* common/misctests/Foo
+
+Does nothing.
+
+* common/misctests/fpustack
+
+Not a JIT test!
+
+* common/misctests/Jdk116JitProblem
+
+The test illustrates a problem with the new JDK 1.1.6 JIT. The JIT compiler
+included with JDK 1.1.6 takes forever to compile the transform() method, thereby
+hanging up the virtual machine.
+
+* common/misctests/JitBug
+
+Symantec's JIT seems to optimize away important code. The test compiled using
+the standard javac, demonstrates a bug in the JIT on NT4/sp3.
+
+* common/misctests/JitBug1
+
+Demonstrates yet another JIT bug.
+
+* common/misctests/JitTest
+
+Tests equals() method.
+
+* common/misctests/NoHeader
+
+Not a JIT test!
+
+* common/misctests/noop
+
+Not a JIT test!
+
+* common/misctests/Pi
+
+Not a JIT test!
+
+* common/misctests/putfield00802
+
+Tests NullPointerException. Should be removed (common/misctests/clss14702 is a better test).
+
+* common/misctests/t5
+
+Not a JIT test!
+
+* common/misctests/testbug
+
+If this test is run under JRE 1.1.6, it gets the following error: "A nonfatal internal
+JIT (3.00.039(x)) error 'Unuse_LRU' hasoccu4rred in: 'testbug.dk ([BI)V': Interpreting method."
+
+* common/misctests/whet
+
+Not a JIT test!
+
+* common/misctests/test.java
+
+Not a JIT test!
+
+* common/overflow
+
+Test StackOverflowException.
+
+* common/pat001
+
+Tests arithmetic series.
+
+* common/Peano
+
+Computes factorials by using the Peano axioms only. Not a test!
+
+* common/PrintProperties
+* common/PrintThis
+
+Not a JIT test!
+
+* common/Robert
+
+Tests some exception stuff
+
+* common/Sleeper
+
+Not a JIT test!
+
+* common/tXXX
+
+Do some arithmetic operations, but do not actually report results. Should be removed.
+
+* common/testForBugs/4427606/TestDivByZero
+
+Tests correctness of division by zero handling.
+
+* common/testForBugs/4427606/Security
+* common/testForBugs/4446672/TestThreadStart.java
+
+Not a JIT test!
+
+* common/testForBugs/CrashC1
+
+Test for bug in C1.
+
+* common/wide
+* common/too_wide
+
+Check for intermediate results that are too wide.
+
+* common/TsdCase
+
+performance benchmarks. Not a test!
+
+* common/verifier/VerifyInitLocal
+
+Makes sure verifier allows initialization of local fields.
+
+* common/verifier/VerifyMergeStack
+
+Makes sure verifier fails when two distinct types meet on operand stack.

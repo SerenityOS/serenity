@@ -1,0 +1,2 @@
+CheckWellFormednessIntersectionTypesTest.java:29:49: compiler.err.prob.found.req: (compiler.misc.no.suitable.functional.intf.inst: java.lang.Object&CheckWellFormednessIntersectionTypesTest.SAM<CheckWellFormednessIntersectionTypesTest.X1,java.lang.Object,CheckWellFormednessIntersectionTypesTest.X3>&CheckWellFormednessIntersectionTypesTest.I<java.lang.Object>)
+1 error

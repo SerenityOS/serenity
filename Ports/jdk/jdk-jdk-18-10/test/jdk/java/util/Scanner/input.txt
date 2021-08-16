@@ -1,0 +1,438 @@
+# Data for fromFileTest
+14343441
+24134342
+34324233
+43234234
+53423425
+63424326
+74324337
+
+
+# Data for usage case 1
+23.4 Frank 34.8 -9.0
+2.333 6.75 Joe -2
+3.3 -888.8 -16.00 Mary
+Michelle -5 -5.5 -5.555
+
+
+# Data for usage case 2
+cat-9-dog-6-pig-2--5-
+
+
+# Data for usage case 3
+    /**
+     * Returns the next string in the input that matches the specified pattern. 
+     * This method may block while waiting for input 
+     * to scan, even if a previous invocation of {@link #hasNext(Pattern)} 
+     * returned <code>true</code>. If the match is successful, the scanner 
+     * advances past the input that matched the pattern. 
+     *
+     * @param pattern the pattern to scan for
+     * @return the next token
+     * @throws NoSuchElementException if no more tokens are available
+     * @throws IllegalStateException if this scanner is closed
+     */
+
+
+# Data for usage case 4
+<html>
+<body bgcolor="#EEEEEE">
+<title>Source Directory</title>
+<center><h1>tiger</h1></center>
+<p>
+Parent workspace is /java/jdk/1.5/ws/integration/TL/j2se <br>
+Child  workspace is /export/tiger <br>
+<hr>
+<code>
+<p>
+<a href=make/java/java/mapfile-vers.diff.html>Diffs</a>
+<a href=make/java/java/mapfile-vers.sdiff.html>Sdiffs</a>
+<a href=make/java/java/mapfile-vers-.html>Old</a>
+<a href=make/java/java/mapfile-vers.html>New</a>
+<b>make/java/java/mapfile-vers</b><p>
+<ul> 
+<li><a href=http://example.com/cgi-bin/bugtraq_showbug?bugid=4904881>4904881</a>: JVM crash during java.io.File.deleteOnExit()<br>
+</ul>
+<p>
+<a href=src/share/classes/java/lang/Shutdown.java.diff.html>Diffs</a>
+<a href=src/share/classes/java/lang/Shutdown.java.sdiff.html>Sdiffs</a>
+<a href=src/share/classes/java/lang/Shutdown.java-.html>Old</a>
+<a href=src/share/classes/java/lang/Shutdown.java.html>New</a>
+<b>src/share/classes/java/lang/Shutdown.java</b><p>
+<ul>
+<li><a href=http://example.com/cgi-bin/bugtraq_showbug?bugid=4904881>4904881</a>: JVM crash during java.io.File.deleteOnExit()<br>
+</ul>
+<p>
+<a href=src/share/native/java/lang/Shutdown.c.diff.html>Diffs</a>
+<a href=src/share/native/java/lang/Shutdown.c.sdiff.html>Sdiffs</a>
+<a href=src/share/native/java/lang/Shutdown.c-.html>Old</a>
+<a href=src/share/native/java/lang/Shutdown.c.html>New</a>
+<b>src/share/native/java/lang/Shutdown.c</b><p>
+<ul>
+<li><a href=http://example.com/cgi-bin/bugtraq_showbug?bugid=4904881>4904881</a>: JVM crash during java.io.File.deleteOnExit()<br>
+</ul>
+</code>
+<p>
+</font>
+</html>
+
+# Data for usage case 5
+
+# This is the main Samba configuration file. You should read the
+# smb.conf(5) manual page in order to understand the options listed
+# here. Samba has a huge number of configurable options (perhaps too
+# many!) most of which are not shown in this example
+#
+# Any line which starts with a ; (semi-colon) or a # (hash)
+# is a comment and is ignored. In this example we will use a #
+# for commentry and a ; for parts of the config file that you
+# may wish to enable
+#
+# NOTE: Whenever you modify this file you should run the command "testparm"
+# to check that you have not many any basic syntactic errors.
+#
+#======================= Global Settings =====================================
+[global]
+
+##
+## Basic Server Settings
+##
+
+	# workgroup = NT-Domain-Name or Workgroup-Name, eg: REDHAT4
+	workgroup = MYGROUP
+
+	# server string is the equivalent of the NT Description field
+	server string = Samba Server
+
+	# This option is important for security. It allows you to restrict
+	# connections to machines which are on your local network. The
+	# following example restricts access to two C class networks and
+	# the "loopback" interface. For more examples of the syntax see
+	# the smb.conf man page
+	; hosts allow = 192.168.1. 192.168.2.0./24 192.168.3.0/255.255.255.0 127.0.0.1
+
+	# Uncomment this if you want a guest account, you must add this to /etc/passwd
+	# otherwise the user "nobody" is used
+	; guest account = pcguest
+
+	# this tells Samba to use a separate log file for each machine
+	# that connects
+	log file = /usr/local/samba/var/log.%m
+
+	# How much information do you want to see in the logs?
+	# default is only to log critical messages
+	; log level = 1
+
+	# Put a capping on the size of the log files (in Kb).
+	max log size = 50
+
+	# Security mode. Most people will want user level security. See
+	# security_level.txt for details.
+	security = user
+
+	# Using the following line enables you to customise your configuration
+	# on a per machine basis. The %m gets replaced with the netbios name
+	# of the machine that is connecting.
+	# Note: Consider carefully the location in the configuration file of
+	#       this line.  The included file is read at that point.
+	;   include = /usr/local/samba/lib/smb.conf.%m
+
+	# Most people will find that this option gives better performance.
+	# See speed.txt and the manual pages for details
+	# You may want to add the following on a Linux system:
+	#         SO_RCVBUF=8192 SO_SNDBUF=8192
+	; socket options = TCP_NODELAY
+
+	# Configure Samba to use multiple interfaces
+	# If you have multiple network interfaces and want to limit smbd will
+	# use, list the ones desired here.  Otherwise smbd & nmbd will bind to all
+	# active interfaces on the system.  See the man page for details.
+	;   interfaces = 192.168.12.2/24 192.168.13.2/24
+
+	# Should smbd report that it has MS-DFS Capabilities? Only available
+	# if --with-msdfs was passed to ./configure
+	; host msdfs = yes
+
+##
+## Network Browsing
+##
+	# set local master to no if you don't want Samba to become a master
+	# browser on your network. Otherwise the normal election rules apply
+	; local master = no
+
+	# OS Level determines the precedence of this server in master browser
+	# elections. The default value (20) should be reasonable
+	; os level = 20
+
+	# Domain Master specifies Samba to be the Domain Master Browser. This
+	# allows Samba to collate browse lists between subnets. Don't use this
+	# if you already have a Windows NT domain controller doing this job
+	; domain master = yes
+
+	# Preferred Master causes Samba to force a local browser election on startup
+	# and gives it a slightly higher chance of winning the election
+	; preferred master = yes
+
+
+##
+## WINS & Name Resolution
+##
+	# Windows Internet Name Serving Support Section:
+	# WINS Support - Tells the NMBD component of Samba to enable it's WINS Server
+	; wins support = yes
+
+	# WINS Server - Tells the NMBD components of Samba to be a WINS Client
+	#	Note: Samba can be either a WINS Server, or a WINS Client, but NOT both
+	; wins server = w.x.y.z
+
+	# WINS Proxy - Tells Samba to answer name resolution queries on
+	# behalf of a non WINS capable client, for this to work there must be
+	# at least one	WINS Server on the network. The default is NO.
+	; wins proxy = yes
+
+	# DNS Proxy - tells Samba whether or not to try to resolve NetBIOS names
+	# via DNS nslookups.
+	dns proxy = no
+
+
+##
+## Passwords & Authentication
+##
+	# Use password server option only with security = server
+	# The argument list may include:
+	#   password server = My_PDC_Name [My_BDC_Name] [My_Next_BDC_Name]
+	# or to auto-locate the domain controller/s
+	;   password server = *
+	;   password server = <NT-Server-Name>
+
+	# You may wish to use password encryption. Please read
+	# ENCRYPTION.txt, Win95.txt and WinNT.txt in the Samba documentation.
+	# Do not enable this option unless you have read those documents
+	;  encrypt passwords = yes
+
+	# Should smbd obey the session and account lines in /etc/pam.d/samba ?
+	# only available if --with-pam was used at compile time
+	; obey pam restrictions = yes
+
+	# When using encrypted passwords, Samba can synchronize the local
+	# UNIX password as well.  You will also need the "passwd chat" parameters
+	; unix password sync = yes
+
+	# how should smbd talk to the local system when changing a UNIX
+	# password?  See smb.conf(5) for details
+	; passwd chat = <custom chat string>
+
+	# This is only available if you compiled Samba to include --with-pam
+	# Use PAM for changing the password
+	; pam password change = yes
+
+##
+## Domain Control
+##
+	# Enable this if you want Samba act as a domain controller.
+	# make sure you have read the Samba-PDC-HOWTO included in the documentation
+	# before enabling this parameter
+	;   domain logons = yes
+
+	# if you enable domain logons then you may want a per-machine or
+	# per user logon script
+	# run a specific logon batch file per workstation (machine)
+	; logon script = %m.bat
+	# run a specific logon batch file per username
+	; logon script = %U.bat
+
+	# Where to store roving profiles (only for Win95 and WinNT)
+	#        %L substitutes for this servers netbios name, %U is username
+	#        You must uncomment the [Profiles] share below
+	; logon path = \\%L\Profiles\%U
+
+	# UNC path specifying the network location of the user's home directory
+	# only used when acting as a DC for WinNT/2k/XP.  Ignored by Win9x clients
+	; logon home = \\%L\%U
+
+	# What drive should the "logon home" be mounted at upon login ?
+	# only used when acting as a DC for WinNT/2k/XP.  Ignored by Win9x clients
+	; logon drive = H:
+
+##
+## Printing
+##
+
+	# If you want to automatically load your printer list rather
+	# than setting them up individually then you'll need this
+	load printers = yes
+
+	# you may wish to override the location of the printcap file
+	; printcap name = /etc/printcap
+
+	# on SystemV system setting printcap name to lpstat should allow
+	# you to automatically obtain a printer list from the SystemV spool
+	# system
+	; printcap name = lpstat
+
+	# It should not be necessary to specify the print system type unless
+	# it is non-standard. Currently supported print systems include:
+	# bsd, sysv, plp, lprng, aix, hpux, qnx
+	; printing = bsd
+
+	# Enable this to make Samba 2.2 behavior just like Samba 2.0
+	# not recommended nuless you are sure of what you are doing
+	; disable spoolss = yes
+
+	# list of users and groups which should be able to remotely manage
+	# printer drivers installed on the server
+	; printer admin = root, +ntadmin
+
+
+##
+## Winbind
+##
+
+	# specify the uid range which can be used by winbindd
+	# to allocate uids for Windows users as necessary
+	; winbind uid = 10000-65000
+
+	# specify the uid range which can be used by winbindd
+	# to allocate uids for Windows users as necessary
+	; winbind gid = 10000-65000
+
+	# Define a home directory to be given to passwd(5) style entries
+	# generated by libnss_winbind.so.  You can use variables here
+	; winbind template homedir = /home/%D/%U
+
+	# Specify a shell for all winbind user entries return by the
+	# libnss_winbind.so library.
+	; winbind template shell = /bin/sh
+
+	# What character should be used to separate the DOMAIN and Username
+	# for a Windows user.  The default is DOMAIN\user, but many people
+	# prefer DOMAIN+user
+	; winbind separator = +
+
+
+#============================ Share Definitions ==============================
+[homes]
+     comment = Home Directories
+     browseable = no
+     writable = yes
+     valid users = %S
+
+# Un-comment the following and create the netlogon directory for Domain Logons
+; [netlogon]
+;    comment = Network Logon Service
+;    path = /usr/local/samba/lib/netlogon
+;    guest ok = yes
+;    writable = no
+;    share modes = no
+
+
+# Un-comment the following to provide a specific roving profile share
+# the default is to use the user's home directory
+;[Profiles]
+;    path = /usr/local/samba/profiles
+;    browseable = no
+;    guest ok = yes
+
+
+# NOTE: If you have a BSD-style print system there is no need to
+# specifically define each individual printer
+[printers]
+   comment = All Printers
+   path = /usr/spool/samba
+   browseable = no
+   # Set public = yes to allow user 'guest account' to print
+   guest ok = no
+   writable = no
+   printable = yes
+
+# This one is useful for people to share files
+#[tmp]
+#   comment = Temporary file space
+#   path = /tmp
+#   read only = no
+#   public = yes
+
+
+# MS-DFS support is only available if Samba was compiled to
+# include --with-msdfs
+;[dfsroot]
+;   dfs root = yes
+
+
+# A publicly accessible directory, but read only, except for people in
+# the "staff" group
+;[public]
+;   comment = Public Stuff
+;   path = /home/samba
+;   public = yes
+;   writable = yes
+;   printable = no
+;   write list = @staff
+
+
+##
+## Other examples.
+##
+
+# A private printer, usable only by fred. Spool data will be placed in fred's
+# home directory. Note that fred must have write access to the spool directory,
+# wherever it is.
+#[fredsprn]
+#   comment = Fred's Printer
+#   valid users = fred
+#   path = /homes/fred
+#   printer = freds_printer
+#   public = no
+#   writable = no
+#   printable = yes
+
+# A private directory, usable only by fred. Note that fred requires write
+# access to the directory.
+#[fredsdir]
+#   comment = Fred's Service
+#   path = /usr/somewhere/private
+#   valid users = fred
+#   public = no
+#   writable = yes
+#   printable = no
+
+# a service which has a different directory for each machine that connects
+# this allows you to tailor configurations to incoming machines. You could
+# also use the %U option to tailor it by user name.
+# The %m gets replaced with the machine name that is connecting.
+#[pchome]
+#  comment = PC Directories
+#  path = /usr/pc/%m
+#  public = no
+#  writable = yes
+
+# A publicly accessible directory, read/write to all users. Note that all files
+# created in the directory by users will be owned by the default user, so
+# any user with access can delete any other user's files. Obviously this
+# directory must be writable by the default user. Another user could of course
+# be specified, in which case all files would be owned by that user instead.
+#[public]
+#   path = /usr/somewhere/else/public
+#   public = yes
+#   only guest = yes
+#   writable = yes
+#   printable = no
+
+# The following two entries demonstrate how to share a directory so that two
+# users can place files there that will be owned by the specific users. In this
+# setup, the directory should be writable by both users and should have the
+# sticky bit set on it to prevent abuse. Obviously this could be extended to
+# as many users as required.
+#[myshare]
+#   comment = Mary's and Fred's stuff
+#   path = /usr/somewhere/shared
+#   valid users = mary fred
+#   public = no
+#   writable = yes
+#   printable = no
+#   create mask = 0765
+
+
+
+
+# Data for usage case 6

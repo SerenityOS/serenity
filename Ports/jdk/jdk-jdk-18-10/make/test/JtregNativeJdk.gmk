@@ -1,0 +1,138 @@
+#
+# Copyright (c) 2015, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+################################################################################
+# This file builds the native component of the JTReg tests for JDK.
+# It also covers the test-image part, where the built files are copied to the
+# test image.
+################################################################################
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include TestFilesCompilation.gmk
+
+$(eval $(call IncludeCustomExtension, test/JtregNativeJdk.gmk))
+
+################################################################################
+# Targets for building the native tests themselves.
+################################################################################
+
+# This might have been added to by a custom extension.
+BUILD_JDK_JTREG_NATIVE_SRC += $(TOPDIR)/test/jdk
+
+BUILD_JDK_JTREG_OUTPUT_DIR := $(OUTPUTDIR)/support/test/jdk/jtreg/native
+
+BUILD_JDK_JTREG_IMAGE_DIR := $(TEST_IMAGE_DIR)/jdk/jtreg
+
+BUILD_JDK_JTREG_EXECUTABLES_CFLAGS_exeJliLaunchTest := \
+    -I$(TOPDIR)/src/java.base/share/native/libjli \
+    -I$(TOPDIR)/src/java.base/$(OPENJDK_TARGET_OS_TYPE)/native/libjli \
+    -I$(TOPDIR)/src/java.base/$(OPENJDK_TARGET_OS)/native/libjli
+
+BUILD_JDK_JTREG_LIBRARIES_LDFLAGS_libAsyncStackWalk := $(LIBCXX)
+
+# Platform specific setup
+ifeq ($(call isTargetOs, windows), true)
+  BUILD_JDK_JTREG_EXCLUDE += libDirectIO.c libInheritedChannel.c exelauncher.c
+
+  WIN_LIB_JAVA := $(SUPPORT_OUTPUTDIR)/native/java.base/libjava/java.lib
+  BUILD_JDK_JTREG_LIBRARIES_LIBS_libstringPlatformChars := $(WIN_LIB_JAVA)
+  WIN_LIB_JLI := $(SUPPORT_OUTPUTDIR)/native/java.base/libjli/jli.lib
+  BUILD_JDK_JTREG_EXECUTABLES_LIBS_exeJliLaunchTest := $(WIN_LIB_JLI)
+  BUILD_JDK_JTREG_EXECUTABLES_LIBS_exeCallerAccessTest := jvm.lib
+  BUILD_JDK_JTREG_EXECUTABLES_LIBS_exerevokeall := advapi32.lib
+  BUILD_JDK_JTREG_LIBRARIES_CFLAGS_libAsyncStackWalk := /EHsc
+else
+  BUILD_JDK_JTREG_LIBRARIES_LIBS_libstringPlatformChars := -ljava
+  BUILD_JDK_JTREG_LIBRARIES_LIBS_libDirectIO := -ljava
+  BUILD_JDK_JTREG_EXCLUDE += exerevokeall.c
+  ifeq ($(call isTargetOs, linux), true)
+    BUILD_JDK_JTREG_LIBRARIES_LIBS_libInheritedChannel := -ljava
+    BUILD_JDK_JTREG_EXECUTABLES_LIBS_exelauncher := -ldl
+  endif
+  BUILD_JDK_JTREG_EXECUTABLES_LIBS_exeJliLaunchTest := -ljli
+  BUILD_JDK_JTREG_EXECUTABLES_LIBS_exeCallerAccessTest := -ljvm
+endif
+
+ifeq ($(call isTargetOs, macosx), true)
+  BUILD_JDK_JTREG_EXCLUDE += exelauncher.c
+  BUILD_JDK_JTREG_LIBRARIES_LIBS_libTestMainKeyWindow := \
+      -framework Cocoa
+  BUILD_JDK_JTREG_EXECUTABLES_LIBS_exeJniInvocationTest := -ljli
+  BUILD_JDK_JTREG_LIBRARIES_LIBS_libTestDynamicStore := \
+      -framework Cocoa -framework SystemConfiguration
+else
+  BUILD_JDK_JTREG_EXCLUDE += libTestMainKeyWindow.m
+  BUILD_JDK_JTREG_EXCLUDE += exeJniInvocationTest.c
+  BUILD_JDK_JTREG_EXCLUDE += libTestDynamicStore.m
+endif
+
+ifeq ($(call isTargetOs, linux), true)
+  # Unconditionally compile with debug symbols and don't ever perform
+  # stripping during the test libraries' build.
+  BUILD_JDK_JTREG_LIBRARIES_CFLAGS_libFib := -g
+  BUILD_JDK_JTREG_LIBRARIES_STRIP_SYMBOLS_libFib := false
+endif
+
+# This evaluation is expensive and should only be done if this target was
+# explicitly called.
+ifneq ($(filter build-test-jdk-jtreg-native, $(MAKECMDGOALS)), )
+  $(eval $(call SetupTestFilesCompilation, BUILD_JDK_JTREG_LIBRARIES, \
+      TYPE := LIBRARY, \
+      SOURCE_DIRS := $(BUILD_JDK_JTREG_NATIVE_SRC), \
+      OUTPUT_DIR := $(BUILD_JDK_JTREG_OUTPUT_DIR), \
+      EXCLUDE := $(BUILD_JDK_JTREG_EXCLUDE), \
+  ))
+
+  $(eval $(call SetupTestFilesCompilation, BUILD_JDK_JTREG_EXECUTABLES, \
+      TYPE := PROGRAM, \
+      SOURCE_DIRS := $(BUILD_JDK_JTREG_NATIVE_SRC), \
+      OUTPUT_DIR := $(BUILD_JDK_JTREG_OUTPUT_DIR), \
+      EXCLUDE := $(BUILD_JDK_JTREG_EXCLUDE), \
+  ))
+endif
+
+build-test-jdk-jtreg-native: $(BUILD_JDK_JTREG_LIBRARIES) $(BUILD_JDK_JTREG_EXECUTABLES)
+
+################################################################################
+# Targets for building test-image.
+################################################################################
+
+# Copy to jdk jtreg test image
+$(eval $(call SetupCopyFiles,COPY_JDK_JTREG_NATIVE, \
+    SRC := $(BUILD_JDK_JTREG_OUTPUT_DIR), \
+    DEST := $(TEST_IMAGE_DIR)/jdk/jtreg/native, \
+    FILES := $(wildcard $(addprefix $(BUILD_JDK_JTREG_OUTPUT_DIR), /bin/* /lib/*)), \
+    FLATTEN := true, \
+))
+
+test-image-jdk-jtreg-native: $(COPY_JDK_JTREG_NATIVE)
+
+all: build-test-jdk-jtreg-native
+test-image: test-image-jdk-jtreg-native
+
+.PHONY: default all build-test-jdk-jtreg-native test-image-jdk-jtreg-native test-image

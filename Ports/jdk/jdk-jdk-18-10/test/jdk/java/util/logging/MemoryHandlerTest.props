@@ -1,0 +1,9 @@
+.level= INFO
+MemoryHandlerTest$CustomMemoryHandler.push=WARNING
+MemoryHandlerTest$CustomMemoryHandlerNoTarget.push=WARNING
+MemoryHandlerTest$CustomMemoryHandler.target=MemoryHandlerTest$CustomTargetHandler
+handlers=java.util.logging.ConsoleHandler,MemoryHandlerTest$CustomMemoryHandler,MemoryHandlerTest$CustomMemoryHandlerNoTarget
+java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
+java.util.logging.ConsoleHandler.level = INFO
+java.util.logging.MemoryHandler.target=MemoryHandlerTest$SimpleTargetHandler
+java.util.logging.MemoryHandler.push = INFO

@@ -1,0 +1,9 @@
+CyclicInheritance.java:15:1: compiler.err.cyclic.inheritance: C1
+CyclicInheritance.java:17:1: compiler.err.cyclic.inheritance: C11
+CyclicInheritance.java:20:1: compiler.err.cyclic.inheritance: I1
+CyclicInheritance.java:22:1: compiler.err.cyclic.inheritance: I11
+CyclicInheritance.java:27:1: compiler.err.cyclic.inheritance: C211
+CyclicInheritance.java:31:1: compiler.err.cyclic.inheritance: C212
+CyclicInheritance.java:36:1: compiler.err.cyclic.inheritance: C221
+CyclicInheritance.java:40:1: compiler.err.cyclic.inheritance: C222
+8 errors

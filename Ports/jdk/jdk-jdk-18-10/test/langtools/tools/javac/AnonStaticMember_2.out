@@ -1,0 +1,4 @@
+- compiler.warn.source.no.system.modules.path: 15
+AnonStaticMember_2.java:13:21: compiler.err.icls.cant.have.static.decl: compiler.misc.anonymous.class: AnonStaticMember_2$1
+1 error
+1 warning

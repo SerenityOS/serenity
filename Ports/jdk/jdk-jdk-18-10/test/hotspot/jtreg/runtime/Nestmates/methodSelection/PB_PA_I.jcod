@@ -1,0 +1,135 @@
+// rename m -> bad_m; real_m -> m
+
+class TestInterfaceMethodSelection$PB_PA_I {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #5 #17; // #1
+    String #18; // #2
+    String #19; // #3
+    class #20; // #4
+    class #22; // #5
+    Utf8 "<init>"; // #6
+    Utf8 "()V"; // #7
+    Utf8 "Code"; // #8
+    Utf8 "LineNumberTable"; // #9
+    Utf8 "bad_m"; // #10    - modified
+    Utf8 "()Ljava/lang/String;"; // #11
+    Utf8 "m"; // #12    - modified
+    Utf8 "SourceFile"; // #13
+    Utf8 "TestInterfaceMethodSelection.java"; // #14
+    Utf8 "NestHost"; // #15
+    class #24; // #16
+    NameAndType #6 #7; // #17
+    Utf8 "Should not see this"; // #18
+    Utf8 "PB_PA_I"; // #19
+    Utf8 "TestInterfaceMethodSelection$PB_PA_I"; // #20
+    Utf8 "InnerClasses"; // #21
+    Utf8 "TestInterfaceMethodSelection$PA_I"; // #22
+    Utf8 "PA_I"; // #23
+    Utf8 "TestInterfaceMethodSelection"; // #24
+  } // Constant Pool
+
+  0x0020; // access
+  #4;// this_cpx
+  #5;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #6; // name_cpx
+      #7; // sig_cpx
+      [] { // Attributes
+        Attr(#8) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#9) { // LineNumberTable
+              [] { // LineNumberTable
+                0  132;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0001; // access
+      #10; // name_cpx
+      #11; // sig_cpx
+      [] { // Attributes
+        Attr(#8) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x1202B0;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#9) { // LineNumberTable
+              [] { // LineNumberTable
+                0  133;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0002; // access
+      #12; // name_cpx
+      #11; // sig_cpx
+      [] { // Attributes
+        Attr(#8) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x1203B0;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#9) { // LineNumberTable
+              [] { // LineNumberTable
+                0  134;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#13) { // SourceFile
+      #14;
+    } // end SourceFile
+    ;
+    Attr(#15) { // NestHost
+      0x0010;
+    } // end NestHost
+    ;
+    Attr(#21) { // InnerClasses
+      [] { // InnerClasses
+        #4 #16 #19 8;
+        #5 #16 #23 8;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class TestInterfaceMethodSelection$PB_PA_I

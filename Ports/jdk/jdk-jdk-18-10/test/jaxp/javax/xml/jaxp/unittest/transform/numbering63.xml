@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<doc>
+  <title>Test for source tree numbering</title>
+  <a>
+      <title>Level A</title>
+    <b>
+      <title>Level B</title>
+    </b>
+    <b>
+      <title>Level B</title>
+      <c>
+        <title>Level C</title>
+      </c>
+    </b>
+    <b>
+      <title>Level B</title>
+      <c>
+        <title>Level C</title>
+        <d>
+          <title>Level D</title>
+        </d>
+      </c>
+    </b>
+  </a>
+  <a>
+    <title>Level A</title>
+    <b>
+      <title>Level B</title>
+      <c>
+        <title>Level C</title>
+        <d>
+          <title>Level D</title>
+          <e>
+            <title>Level E</title>
+          </e>
+        </d>
+      </c>
+    </b>
+  </a>
+  <a>
+    <title>Level A</title>
+    <b>
+      <title>Level B</title>
+      <c>
+        <title>Level C</title>
+        <d>
+          <title>Level D</title>
+          <e>
+            <title>Level E</title>
+          </e>
+        </d>
+        <d>
+          <title>Level D</title>
+          <e>
+            <title>Level E</title>
+          </e>
+        </d>
+      </c>
+      <c>
+        <title>Level C</title>
+        <d>
+          <title>Level D</title>
+        </d>
+      </c>
+    </b>
+    <b>
+      <title>Level B</title>
+    </b>
+  </a>
+</doc>

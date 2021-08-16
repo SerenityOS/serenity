@@ -1,0 +1,18 @@
+
+// should be granted
+grant principal com.sun.security.auth.UnixPrincipal "1" {
+    permission java.util.PropertyPermission "foo", "read";
+};
+
+// should be granted
+grant principal javax.security.auth.x500.X500Principal "cn=2",
+    principal com.sun.security.auth.NTUserPrincipal "2" {
+    permission java.util.PropertyPermission "bar", "read";
+};
+
+// should not be granted
+grant principal javax.security.auth.x500.X500Principal "cn=2",
+    principal com.sun.security.auth.UnixPrincipal "1" {
+    permission java.util.PropertyPermission "foobar", "read";
+};
+

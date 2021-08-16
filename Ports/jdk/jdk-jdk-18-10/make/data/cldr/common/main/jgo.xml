@@ -1,0 +1,668 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="jgo"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ar">Alâbɛ</language>
+			<language type="de">Njáman</language>
+			<language type="el">Ŋgɛlɛ̂k</language>
+			<language type="en">Aŋgɛlúshi</language>
+			<language type="fr">Fɛlánci</language>
+			<language type="jgo">Ndaꞌa</language>
+			<language type="und">cú-pʉɔ yi pɛ́ ká kɛ́ jí</language>
+			<language type="zh">Shinwâ</language>
+		</languages>
+		<scripts>
+			<script type="Latn">mík -ŋwaꞌnɛ yi ɛ́ líŋɛ́nɛ Latɛ̂ŋ</script>
+			<script type="Zxxx">ntúu yi pɛ́ ká ŋwaꞌnε</script>
+			<script type="Zzzz">ntɛ-ŋwaꞌnɛ yí pɛ́ ká kɛ́ jí</script>
+		</scripts>
+		<territories>
+			<territory type="001">Mbí</territory>
+			<territory type="002">Afɛlîk</territory>
+			<territory type="019">Amɛlîk</territory>
+			<territory type="142">Azî</territory>
+			<territory type="150">Ʉlôp</territory>
+			<territory type="AO">Aŋgɔ́la</territory>
+			<territory type="AR">Ajɛntîn</territory>
+			<territory type="BF">Mbulukína Fásɔ</territory>
+			<territory type="BI">Mbulundí</territory>
+			<territory type="BJ">Mbɛnɛ̂ŋ</territory>
+			<territory type="BO">Mbɔlivî</territory>
+			<territory type="BR">Mbɛlazîl</territory>
+			<territory type="BW">Mbɔtswána</territory>
+			<territory type="CA">Kanadâ</territory>
+			<territory type="CD">Kɔ́ŋgɔ-Kinshása</territory>
+			<territory type="CG">Kɔ́ŋgɔ-Mbɛlazavîl</territory>
+			<territory type="CH">Sẅísɛ</territory>
+			<territory type="CI">Kɔ́t Ndivwâ</territory>
+			<territory type="CL">Cíllɛ</territory>
+			<territory type="CM">Kamɛlûn</territory>
+			<territory type="CN">Shîn</territory>
+			<territory type="CO">Kɔllɔmbî</territory>
+			<territory type="CU">Kúba</territory>
+			<territory type="DE">Njáman</territory>
+			<territory type="DJ">Njimbúti</territory>
+			<territory type="DZ">Aljɛlî</territory>
+			<territory type="EC">Ɛkwandɔ̂</territory>
+			<territory type="EG">Ɛjíptɛ</territory>
+			<territory type="ER">Ɛlitɛlɛ́ya</territory>
+			<territory type="ES">Ɛspániya</territory>
+			<territory type="ET">Ɛtiyɔpî</territory>
+			<territory type="FR">Fɛlánci</territory>
+			<territory type="GA">Ŋgabɔ̂ŋ</territory>
+			<territory type="GH">Ŋgána</territory>
+			<territory type="GM">Ŋgambî</territory>
+			<territory type="GN">Ŋginɛ̂</territory>
+			<territory type="GQ">Ŋginɛ̂ Ɛkwatɔliyâl</territory>
+			<territory type="GR">Ŋgɛlɛ̂k</territory>
+			<territory type="GW">Ŋginɛ̂ Mbisáwu</territory>
+			<territory type="IL">Islayɛ̂l</territory>
+			<territory type="IN">Ándɛ</territory>
+			<territory type="IQ">Ilâk</territory>
+			<territory type="IT">Italî</territory>
+			<territory type="JP">Japɔ̂n</territory>
+			<territory type="KE">Kɛ́nya</territory>
+			<territory type="KM">Kɔmɔ́lɔshi</territory>
+			<territory type="LR">Libɛrî</territory>
+			<territory type="LS">Lɛsɔ́tɔ</territory>
+			<territory type="LY">Libî</territory>
+			<territory type="MA">Mɔlɔ̂k</territory>
+			<territory type="MG">Mándaŋgasɛkâ</territory>
+			<territory type="ML">Malî</territory>
+			<territory type="MR">Mɔlitanî</territory>
+			<territory type="MW">Maláwi</territory>
+			<territory type="MX">Mɛksîk</territory>
+			<territory type="MZ">Mɔzambîk</territory>
+			<territory type="NA">Namimbî</territory>
+			<territory type="NE">Nijɛ̂</territory>
+			<territory type="NG">Ninjɛliyâ</territory>
+			<territory type="NO">Nɔlɛvɛ́jɛ</territory>
+			<territory type="PE">Pɛlû</territory>
+			<territory type="RE">Lɛ́uniyɔ̂n</territory>
+			<territory type="RS">Sɛlɛbî</territory>
+			<territory type="RU">Lusî</territory>
+			<territory type="RW">Luwánda</territory>
+			<territory type="SC">Pɛsɛ́shɛl</territory>
+			<territory type="SD">Sundân</territory>
+			<territory type="SL">Siyɛ́la Lɛɔ̂n</territory>
+			<territory type="SN">Sɛnɛgâl</territory>
+			<territory type="SO">Sɔmalî</territory>
+			<territory type="ST">Sáwɔŋ Tɔmɛ́ nɛ́ Pɛlínsipɛ</territory>
+			<territory type="SZ">Swazilân</territory>
+			<territory type="TD">Cât</territory>
+			<territory type="TG">Tɔ́ŋgɔ</territory>
+			<territory type="TN">Tunizî</territory>
+			<territory type="TZ">Tanzanî</territory>
+			<territory type="UG">Uŋgánda</territory>
+			<territory type="VE">Vɛnɛzwɛ́la</territory>
+			<territory type="YT">Mayɔ̂t</territory>
+			<territory type="ZM">Zambî</territory>
+			<territory type="ZW">Zimbámbwɛ</territory>
+			<territory type="ZZ">ŋgɔŋ yi pɛ́ ká kɛ́ jʉɔ</territory>
+		</territories>
+		<keys>
+			<key type="currency">Ŋkáp</key>
+			<key type="numbers">Pɛnɔ́mba</key>
+		</keys>
+		<types>
+			<type key="calendar" type="gregorian">mɛlɛ́ꞌ-mɛkát</type>
+			<type key="numbers" type="latn">pɛnɔ́mba</type>
+		</types>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a á â ǎ b c d ɛ {ɛ\u0301} {ɛ\u0300} {ɛ\u0302} {ɛ\u030C} {ɛ\u0304} f g h i í î ǐ j k l m ḿ {m\u0300} {m\u0304} n ń ǹ {n\u0304} ŋ {ŋ\u0301} {ŋ\u0300} {ŋ\u0304} ɔ {ɔ\u0301} {ɔ\u0302} {ɔ\u030C} p {pf} s {sh} t {ts} u ú û ǔ ʉ {ʉ\u0301} {ʉ\u0302} {ʉ\u030C} {ʉ\u0308} v w ẅ y z ꞌ]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[e o q r x]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B C D Ɛ F G H I J K L M N Ŋ Ɔ P {Pf} S {Sh} T {Ts} U Ʉ {Ʉ\u0308} V W Ẅ Y Z Ꞌ]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+		<exemplarCharacters type="punctuation">[\- ‑ , ; \: ! ? . ‹ › « »]</exemplarCharacters>
+		<moreInformation>?</moreInformation>
+	</characters>
+	<delimiters>
+		<quotationStart>«</quotationStart>
+		<quotationEnd>»</quotationEnd>
+		<alternateQuotationStart>‹</alternateQuotationStart>
+		<alternateQuotationEnd>›</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, G y MMMM dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>G y MMMM d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>G y MMM d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>GGGGG y-MM-dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="Ed">E d</dateFormatItem>
+						<dateFormatItem id="Md">d.M</dateFormatItem>
+						<dateFormatItem id="MEd">E, d.M</dateFormatItem>
+						<dateFormatItem id="yyyyMd">M.d.y G</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">Nduŋmbi Saŋ</month>
+							<month type="2">Pɛsaŋ Pɛ́pá</month>
+							<month type="3">Pɛsaŋ Pɛ́tát</month>
+							<month type="4">Pɛsaŋ Pɛ́nɛ́kwa</month>
+							<month type="5">Pɛsaŋ Pataa</month>
+							<month type="6">Pɛsaŋ Pɛ́nɛ́ntúkú</month>
+							<month type="7">Pɛsaŋ Saambá</month>
+							<month type="8">Pɛsaŋ Pɛ́nɛ́fɔm</month>
+							<month type="9">Pɛsaŋ Pɛ́nɛ́pfúꞋú</month>
+							<month type="10">Pɛsaŋ Nɛgɛ́m</month>
+							<month type="11">Pɛsaŋ Ntsɔ̌pmɔ́</month>
+							<month type="12">Pɛsaŋ Ntsɔ̌ppá</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">1</month>
+							<month type="2">2</month>
+							<month type="3">3</month>
+							<month type="4">4</month>
+							<month type="5">5</month>
+							<month type="6">6</month>
+							<month type="7">7</month>
+							<month type="8">8</month>
+							<month type="9">9</month>
+							<month type="10">10</month>
+							<month type="11">11</month>
+							<month type="12">12</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Nduŋmbi Saŋ</month>
+							<month type="2">Pɛsaŋ Pɛ́pá</month>
+							<month type="3">Pɛsaŋ Pɛ́tát</month>
+							<month type="4">Pɛsaŋ Pɛ́nɛ́kwa</month>
+							<month type="5">Pɛsaŋ Pataa</month>
+							<month type="6">Pɛsaŋ Pɛ́nɛ́ntúkú</month>
+							<month type="7">Pɛsaŋ Saambá</month>
+							<month type="8">Pɛsaŋ Pɛ́nɛ́fɔm</month>
+							<month type="9">Pɛsaŋ Pɛ́nɛ́pfúꞋú</month>
+							<month type="10">Pɛsaŋ Nɛgɛ́m</month>
+							<month type="11">Pɛsaŋ Ntsɔ̌pmɔ́</month>
+							<month type="12">Pɛsaŋ Ntsɔ̌ppá</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">Nduŋmbi Saŋ</month>
+							<month type="2">Pɛsaŋ Pɛ́pá</month>
+							<month type="3">Pɛsaŋ Pɛ́tát</month>
+							<month type="4">Pɛsaŋ Pɛ́nɛ́kwa</month>
+							<month type="5">Pɛsaŋ Pataa</month>
+							<month type="6">Pɛsaŋ Pɛ́nɛ́ntúkú</month>
+							<month type="7">Pɛsaŋ Saambá</month>
+							<month type="8">Pɛsaŋ Pɛ́nɛ́fɔm</month>
+							<month type="9">Pɛsaŋ Pɛ́nɛ́pfúꞋú</month>
+							<month type="10">Pɛsaŋ Nɛgɛ́m</month>
+							<month type="11">Pɛsaŋ Ntsɔ̌pmɔ́</month>
+							<month type="12">Pɛsaŋ Ntsɔ̌ppá</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">1</month>
+							<month type="2">2</month>
+							<month type="3">3</month>
+							<month type="4">4</month>
+							<month type="5">5</month>
+							<month type="6">6</month>
+							<month type="7">7</month>
+							<month type="8">8</month>
+							<month type="9">9</month>
+							<month type="10">10</month>
+							<month type="11">11</month>
+							<month type="12">12</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Nduŋmbi Saŋ</month>
+							<month type="2">Pɛsaŋ Pɛ́pá</month>
+							<month type="3">Pɛsaŋ Pɛ́tát</month>
+							<month type="4">Pɛsaŋ Pɛ́nɛ́kwa</month>
+							<month type="5">Pɛsaŋ Pataa</month>
+							<month type="6">Pɛsaŋ Pɛ́nɛ́ntúkú</month>
+							<month type="7">Pɛsaŋ Saambá</month>
+							<month type="8">Pɛsaŋ Pɛ́nɛ́fɔm</month>
+							<month type="9">Pɛsaŋ Pɛ́nɛ́pfúꞋú</month>
+							<month type="10">Pɛsaŋ Nɛgɛ́m</month>
+							<month type="11">Pɛsaŋ Ntsɔ̌pmɔ́</month>
+							<month type="12">Pɛsaŋ Ntsɔ̌ppá</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Sɔ́ndi</day>
+							<day type="mon">Mɔ́ndi</day>
+							<day type="tue">Ápta Mɔ́ndi</day>
+							<day type="wed">Wɛ́nɛsɛdɛ</day>
+							<day type="thu">Tɔ́sɛdɛ</day>
+							<day type="fri">Fɛlâyɛdɛ</day>
+							<day type="sat">Sásidɛ</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">Sɔ́</day>
+							<day type="mon">Mɔ́</day>
+							<day type="tue">ÁM</day>
+							<day type="wed">Wɛ́</day>
+							<day type="thu">Tɔ́</day>
+							<day type="fri">Fɛ</day>
+							<day type="sat">Sá</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Sɔ́ndi</day>
+							<day type="mon">Mɔ́ndi</day>
+							<day type="tue">Ápta Mɔ́ndi</day>
+							<day type="wed">Wɛ́nɛsɛdɛ</day>
+							<day type="thu">Tɔ́sɛdɛ</day>
+							<day type="fri">Fɛlâyɛdɛ</day>
+							<day type="sat">Sásidɛ</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">Sɔ́ndi</day>
+							<day type="mon">Mɔ́ndi</day>
+							<day type="tue">Ápta Mɔ́ndi</day>
+							<day type="wed">Wɛ́nɛsɛdɛ</day>
+							<day type="thu">Tɔ́sɛdɛ</day>
+							<day type="fri">Fɛlâyɛdɛ</day>
+							<day type="sat">Sásidɛ</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">Sɔ́</day>
+							<day type="mon">Mɔ́</day>
+							<day type="tue">ÁM</day>
+							<day type="wed">Wɛ́</day>
+							<day type="thu">Tɔ́</day>
+							<day type="fri">Fɛ</day>
+							<day type="sat">Sá</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Sɔ́ndi</day>
+							<day type="mon">Mɔ́ndi</day>
+							<day type="tue">Ápta Mɔ́ndi</day>
+							<day type="wed">Wɛ́nɛsɛdɛ</day>
+							<day type="thu">Tɔ́sɛdɛ</day>
+							<day type="fri">Fɛlâyɛdɛ</day>
+							<day type="sat">Sásidɛ</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">mbaꞌmbaꞌ</dayPeriod>
+							<dayPeriod type="pm">ŋka mbɔ́t nji</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">mbaꞌmbaꞌ</dayPeriod>
+							<dayPeriod type="pm">ŋka mbɔ́t nji</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">tsɛttsɛt mɛŋguꞌ mi ɛ́ lɛɛnɛ Kɛlísɛtɔ gɔ ńɔ́</era>
+						<era type="1">tsɛttsɛt mɛŋguꞌ mi ɛ́ fúnɛ Kɛlísɛtɔ tɔ́ mɔ́</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">BCE</era>
+						<era type="1">CE</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, y MMMM dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>y MMMM d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>y MMM d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>y-MM-dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="Ed">E d</dateFormatItem>
+						<dateFormatItem id="Md">d.M</dateFormatItem>
+						<dateFormatItem id="MEd">E, d.M</dateFormatItem>
+						<dateFormatItem id="yMd">M.d.y</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="year">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">Nǔu ŋguꞋ {0}</relativeTimePattern>
+					<relativeTimePattern count="other">Nǔu ŋguꞋ {0}</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">Ɛ́gɛ́ mɔ́ ŋguꞋ {0}</relativeTimePattern>
+					<relativeTimePattern count="other">Ɛ́gɛ́ mɔ́ ŋguꞋ {0}</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">Nǔu {0} saŋ</relativeTimePattern>
+					<relativeTimePattern count="other">Nǔu {0} saŋ</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">ɛ́ gɛ́ mɔ́ pɛsaŋ {0}</relativeTimePattern>
+					<relativeTimePattern count="other">ɛ́ gɛ́ mɔ́ pɛsaŋ {0}</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">Nǔu ŋgap-mbi {0}</relativeTimePattern>
+					<relativeTimePattern count="other">Nǔu ŋgap-mbi {0}</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">Ɛ́ gɛ́ mɔ {0} ŋgap-mbi</relativeTimePattern>
+					<relativeTimePattern count="other">Ɛ́ gɛ́ mɔ {0} ŋgap-mbi</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day">
+				<relative type="-1">yesterday</relative>
+				<relative type="0">lɔꞋɔ</relative>
+				<relative type="1">tomorrow</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">Nǔu lɛ́Ꞌ {0}</relativeTimePattern>
+					<relativeTimePattern count="other">Nǔu lɛ́Ꞌ {0}</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">Ɛ́ gɛ́ mɔ́ lɛ́Ꞌ {0}</relativeTimePattern>
+					<relativeTimePattern count="other">Ɛ́ gɛ́ mɔ́ lɛ́Ꞌ {0}</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="hour">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">nǔu háwa {0}</relativeTimePattern>
+					<relativeTimePattern count="other">nǔu háwa {0}</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">ɛ́ gɛ mɔ́ {0} háwa</relativeTimePattern>
+					<relativeTimePattern count="other">ɛ́ gɛ mɔ́ {0} háwa</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">nǔu {0} minút</relativeTimePattern>
+					<relativeTimePattern count="other">nǔu {0} minút</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">ɛ́ gɛ́ mɔ́ minút {0}</relativeTimePattern>
+					<relativeTimePattern count="other">ɛ́ gɛ́ mɔ́ minút {0}</relativeTimePattern>
+				</relativeTime>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<hourFormat>+HH:mm;-HH:mm</hourFormat>
+			<gmtFormat>GMT{0}</gmtFormat>
+			<gmtZeroFormat>GMT</gmtZeroFormat>
+			<regionFormat>{0}</regionFormat>
+			<fallbackFormat>{1} ({0})</fallbackFormat>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>latn</defaultNumberingSystem>
+		<otherNumberingSystems>
+			<native>latn</native>
+		</otherNumberingSystems>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group>.</group>
+			<list>;</list>
+			<percentSign>%</percentSign>
+			<plusSign>+</plusSign>
+			<minusSign>-</minusSign>
+			<exponential>E</exponential>
+			<perMille>‰</perMille>
+			<infinity>∞</infinity>
+			<nan>NaN</nan>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<scientificFormats numberSystem="latn">
+			<scientificFormatLength>
+				<scientificFormat>
+					<pattern>#E0</pattern>
+				</scientificFormat>
+			</scientificFormatLength>
+		</scientificFormats>
+		<percentFormats numberSystem="latn">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern>#,##0%</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤ #,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="one" draft="provisional">¤ 0K</pattern>
+					<pattern type="1000" count="other" draft="provisional">¤ 0K</pattern>
+					<pattern type="10000" count="one" draft="provisional">¤ 00K</pattern>
+					<pattern type="10000" count="other" draft="provisional">¤ 00K</pattern>
+					<pattern type="100000" count="one" draft="provisional">¤ 000K</pattern>
+					<pattern type="100000" count="other" draft="provisional">¤ 000K</pattern>
+					<pattern type="1000000" count="one" draft="provisional">¤ 0M</pattern>
+					<pattern type="1000000" count="other" draft="provisional">¤ 0M</pattern>
+					<pattern type="10000000" count="one" draft="provisional">¤ 00M</pattern>
+					<pattern type="10000000" count="other" draft="provisional">¤ 00M</pattern>
+					<pattern type="100000000" count="one" draft="provisional">¤ 000M</pattern>
+					<pattern type="100000000" count="other" draft="provisional">¤ 000M</pattern>
+					<pattern type="1000000000" count="one" draft="provisional">¤ 0G</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">¤ 0G</pattern>
+					<pattern type="10000000000" count="one" draft="provisional">¤ 00G</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">¤ 00G</pattern>
+					<pattern type="100000000000" count="one" draft="provisional">¤ 000G</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">¤ 000G</pattern>
+					<pattern type="1000000000000" count="one" draft="provisional">¤ 0T</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">¤ 0T</pattern>
+					<pattern type="10000000000000" count="one" draft="provisional">¤ 00T</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">¤ 00T</pattern>
+					<pattern type="100000000000000" count="one" draft="provisional">¤ 000T</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">¤ 000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="CAD">
+				<displayName>Ndɔ́la-Kanandâ</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>Ʉ́lɔ</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>Ndɔ́la-Amɛlîk</displayName>
+			</currency>
+			<currency type="XAF">
+				<displayName>Fɛlâŋ</displayName>
+				<symbol>FCFA</symbol>
+			</currency>
+			<currency type="XXX">
+				<displayName>ntɛ-ŋkáp yi pɛ́ ká kɛ́ jínɛ</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="duration-year">
+				<displayName draft="provisional">ŋguꞋ</displayName>
+				<unitPattern count="one">ŋguꞋ {0}</unitPattern>
+				<unitPattern count="other">ŋguꞋ {0}</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="provisional">pɛsaŋ</displayName>
+				<unitPattern count="one">pɛsaŋ {0}</unitPattern>
+				<unitPattern count="other">pɛsaŋ {0}</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="provisional">lɛ́Ꞌ</displayName>
+				<unitPattern count="one">{0} lɛ́Ꞌ</unitPattern>
+				<unitPattern count="other">{0} lɛ́Ꞌ</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName draft="provisional">háwa</displayName>
+				<unitPattern count="one">{0} háwa</unitPattern>
+				<unitPattern count="other">{0} háwa</unitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName draft="provisional">minút</displayName>
+				<unitPattern count="one">{0} minút</unitPattern>
+				<unitPattern count="other">{0} minút</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="duration-year">
+				<displayName draft="provisional">ŋguꞋ</displayName>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="provisional">pɛsaŋ</displayName>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="provisional">lɛ́Ꞌ</displayName>
+			</unit>
+			<unit type="duration-hour">
+				<displayName draft="provisional">háwa</displayName>
+			</unit>
+			<unit type="duration-minute">
+				<displayName draft="provisional">minút</displayName>
+			</unit>
+		</unitLength>
+	</units>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="start">{0}, ŋ́gɛ {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, ŋ́gɛ {1}</listPatternPart>
+			<listPatternPart type="end">{0}, ḿbɛn ŋ́gɛ {1}</listPatternPart>
+			<listPatternPart type="2">{0} pɔp {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<yesstr>ɔ́ŋ:ɔ́</yesstr>
+			<nostr>ŋgáŋ:ŋ</nostr>
+		</messages>
+	</posix>
+</ldml>

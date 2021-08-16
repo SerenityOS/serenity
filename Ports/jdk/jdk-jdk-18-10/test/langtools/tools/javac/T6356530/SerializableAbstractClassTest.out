@@ -1,0 +1,4 @@
+SerializableAbstractClassTest.java:8:10: compiler.warn.missing.SVUID: SerializableAbstractClassTest
+- compiler.err.warnings.and.werror
+1 error
+1 warning

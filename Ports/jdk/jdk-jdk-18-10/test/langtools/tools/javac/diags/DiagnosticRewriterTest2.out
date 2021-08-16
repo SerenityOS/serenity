@@ -1,0 +1,4 @@
+DiagnosticRewriterTest2.java:15:15: compiler.err.prob.found.req: (compiler.misc.possible.loss.of.precision: long, int)
+DiagnosticRewriterTest2.java:16:13: compiler.err.cant.apply.symbol: kindname.method, m, int, compiler.misc.no.args, kindname.class, DiagnosticRewriterTest2, (compiler.misc.arg.length.mismatch)
+- compiler.note.compressed.diags
+2 errors

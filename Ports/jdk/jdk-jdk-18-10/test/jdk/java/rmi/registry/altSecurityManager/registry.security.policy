@@ -1,0 +1,8 @@
+grant {
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.rmi.registry";
+  permission java.util.PropertyPermission "env.class.path", "read";
+  permission java.io.FilePermission ".", "read";
+  permission java.util.PropertyPermission "user.dir", "read";
+  permission java.lang.RuntimePermission "createClassLoader";
+  permission java.lang.RuntimePermission "setContextClassLoader";
+};

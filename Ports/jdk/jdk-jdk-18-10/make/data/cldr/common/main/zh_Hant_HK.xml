@@ -1,0 +1,3043 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="zh"/>
+		<script type="Hant"/>
+		<territory type="HK"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="aa">阿法爾文</language>
+			<language type="az">阿塞拜疆文</language>
+			<language type="az" alt="short">阿塞拜疆文</language>
+			<language type="az_Arab">南阿塞拜疆文</language>
+			<language type="ba">巴什基爾文</language>
+			<language type="br">布里多尼文</language>
+			<language type="bs">波斯尼亞文</language>
+			<language type="ca">加泰隆尼亞文</language>
+			<language type="crh">克里米亞韃靼文</language>
+			<language type="crs">塞舌爾克里奧爾法文</language>
+			<language type="de_AT">奧地利德文</language>
+			<language type="de_CH">瑞士德語</language>
+			<language type="den">斯拉夫文</language>
+			<language type="en_AU">澳洲英文</language>
+			<language type="en_CA">加拿大英文</language>
+			<language type="en_GB">英國英文</language>
+			<language type="en_GB" alt="short">英式英文</language>
+			<language type="en_US">美國英文</language>
+			<language type="en_US" alt="short">美式英文</language>
+			<language type="eo">世界語</language>
+			<language type="es_419">拉丁美洲西班牙文</language>
+			<language type="es_ES">歐洲西班牙文</language>
+			<language type="es_MX">墨西哥西班牙文</language>
+			<language type="fa_AF">達利文</language>
+			<language type="fr_CA">加拿大法文</language>
+			<language type="fr_CH">瑞士法文</language>
+			<language type="gil">吉爾伯特文</language>
+			<language type="gl">加里西亞文</language>
+			<language type="gsw">瑞士德文</language>
+			<language type="hmn">苗語</language>
+			<language type="hr">克羅地亞文</language>
+			<language type="it">意大利文</language>
+			<language type="jpr">猶太波斯文</language>
+			<language type="ka">格魯吉亞文</language>
+			<language type="kiu">扎扎其文</language>
+			<language type="kn">坎納達文</language>
+			<language type="kri">克裡奧爾文</language>
+			<language type="lo">老撾文</language>
+			<language type="luo">盧歐文</language>
+			<language type="mfe">毛里裘斯克里奧爾文</language>
+			<language type="mg">馬拉加斯文</language>
+			<language type="ml">馬拉雅拉姆文</language>
+			<language type="mt">馬耳他文</language>
+			<language type="nl_BE">比利時荷蘭文</language>
+			<language type="nqo">西非書面語言（N’ko）</language>
+			<language type="or">奧里雅文</language>
+			<language type="pcm">尼日利亞皮欽文</language>
+			<language type="ps" alt="variant">普什圖語</language>
+			<language type="pt_BR">巴西葡萄牙文</language>
+			<language type="pt_PT">歐洲葡萄牙文</language>
+			<language type="ro_MD">摩爾多瓦羅馬尼亞文</language>
+			<language type="rup">阿羅馬尼亞語</language>
+			<language type="rw">盧旺達文</language>
+			<language type="sl">斯洛文尼亞文</language>
+			<language type="sn">修納文</language>
+			<language type="so">索馬里文</language>
+			<language type="sw_CD">剛果史瓦希里文</language>
+			<language type="syr">敍利亞文</language>
+			<language type="ta">泰米爾文</language>
+			<language type="tn">突尼西亞文</language>
+			<language type="to">湯加文</language>
+			<language type="ug" alt="variant">維吾爾語</language>
+			<language type="ur">烏爾都文</language>
+			<language type="wbp">瓦爾皮里文</language>
+			<language type="yue">廣東話</language>
+			<language type="zgh">摩洛哥標準塔馬齊格特文</language>
+		</languages>
+		<scripts>
+			<script type="Cyrl">西里爾文</script>
+			<script type="Ethi">埃塞俄比亞文</script>
+			<script type="Geor">格魯吉亞文</script>
+			<script type="Guru">古木基文</script>
+			<script type="Hans">簡體字</script>
+			<script type="Hant">繁體字</script>
+			<script type="Knda">坎納達文</script>
+			<script type="Laoo">老撾文</script>
+			<script type="Latn">拉丁字母</script>
+			<script type="Mlym">馬拉雅拉姆文</script>
+			<script type="Newa" draft="contributed">尼瓦爾文</script>
+			<script type="Orya">奧里雅文</script>
+			<script type="Sinh">僧伽羅文</script>
+			<script type="Taml">泰米爾文</script>
+			<script type="Thaa">它拿字母</script>
+		</scripts>
+		<territories>
+			<territory type="013">中美洲</territory>
+			<territory type="029">加勒比</territory>
+			<territory type="053">澳大拉西亞</territory>
+			<territory type="061">波利尼西亞</territory>
+			<territory type="AE">阿拉伯聯合酋長國</territory>
+			<territory type="AG">安提瓜和巴布達</territory>
+			<territory type="AW">阿魯巴</territory>
+			<territory type="AZ">亞塞拜疆</territory>
+			<territory type="BA">波斯尼亞和黑塞哥維那</territory>
+			<territory type="BB">巴巴多斯</territory>
+			<territory type="BF">布基納法索</territory>
+			<territory type="BI">布隆迪</territory>
+			<territory type="BJ">貝寧</territory>
+			<territory type="BL">聖巴泰勒米</territory>
+			<territory type="BV">鮑威特島</territory>
+			<territory type="BW">博茨瓦納</territory>
+			<territory type="BZ">伯利茲</territory>
+			<territory type="CC">科科斯 (基林) 群島</territory>
+			<territory type="CI">科特迪瓦</territory>
+			<territory type="CP">克里珀頓島</territory>
+			<territory type="CR">哥斯達黎加</territory>
+			<territory type="CV">佛得角</territory>
+			<territory type="CY">塞浦路斯</territory>
+			<territory type="DJ">吉布提</territory>
+			<territory type="DO">多米尼加共和國</territory>
+			<territory type="EC">厄瓜多爾</territory>
+			<territory type="ER">厄立特里亞</territory>
+			<territory type="ET">埃塞俄比亞</territory>
+			<territory type="GA">加蓬</territory>
+			<territory type="GD">格林納達</territory>
+			<territory type="GE">格魯吉亞</territory>
+			<territory type="GH">加納</territory>
+			<territory type="GM">岡比亞</territory>
+			<territory type="GS">南佐治亞島與南桑威奇群島</territory>
+			<territory type="GT">危地馬拉</territory>
+			<territory type="GW">幾內亞比紹</territory>
+			<territory type="GY">圭亞那</territory>
+			<territory type="HK" alt="short">中國香港</territory>
+			<territory type="HN">洪都拉斯</territory>
+			<territory type="HR">克羅地亞</territory>
+			<territory type="IM">馬恩島</territory>
+			<territory type="IT">意大利</territory>
+			<territory type="KE">肯尼亞</territory>
+			<territory type="KM">科摩羅</territory>
+			<territory type="KN">聖基茨和尼維斯</territory>
+			<territory type="LA">老撾</territory>
+			<territory type="LC">聖盧西亞</territory>
+			<territory type="LI">列支敦士登</territory>
+			<territory type="LR">利比里亞</territory>
+			<territory type="LS">萊索托</territory>
+			<territory type="ME">黑山</territory>
+			<territory type="ML">馬里</territory>
+			<territory type="MO" alt="short">中國澳門</territory>
+			<territory type="MR">毛里塔尼亞</territory>
+			<territory type="MS">蒙特塞拉特</territory>
+			<territory type="MT">馬耳他</territory>
+			<territory type="MU">毛里裘斯</territory>
+			<territory type="MV">馬爾代夫</territory>
+			<territory type="MW">馬拉維</territory>
+			<territory type="MZ">莫桑比克</territory>
+			<territory type="NE">尼日爾</territory>
+			<territory type="NG">尼日利亞</territory>
+			<territory type="NR">瑙魯</territory>
+			<territory type="PF">法屬波利尼西亞</territory>
+			<territory type="PG">巴布亞新幾內亞</territory>
+			<territory type="PN">皮特凱恩島</territory>
+			<territory type="PS">巴勒斯坦領土</territory>
+			<territory type="QA">卡塔爾</territory>
+			<territory type="RW">盧旺達</territory>
+			<territory type="SA">沙地阿拉伯</territory>
+			<territory type="SB">所羅門群島</territory>
+			<territory type="SC">塞舌爾</territory>
+			<territory type="SI">斯洛文尼亞</territory>
+			<territory type="SJ">斯瓦爾巴特群島及揚馬延島</territory>
+			<territory type="SL">塞拉利昂</territory>
+			<territory type="SO">索馬里</territory>
+			<territory type="SR">蘇里南</territory>
+			<territory type="ST">聖多美和普林西比</territory>
+			<territory type="SZ">斯威士蘭</territory>
+			<territory type="TC">特克斯和凱科斯群島</territory>
+			<territory type="TD">乍得</territory>
+			<territory type="TF">法屬南部領地</territory>
+			<territory type="TO">湯加</territory>
+			<territory type="TT">千里達和多巴哥</territory>
+			<territory type="TV">圖瓦盧</territory>
+			<territory type="TZ">坦桑尼亞</territory>
+			<territory type="VC">聖文森特和格林納丁斯</territory>
+			<territory type="VG">英屬維爾京群島</territory>
+			<territory type="VI">美屬維爾京群島</territory>
+			<territory type="VU">瓦努阿圖</territory>
+			<territory type="YE">也門</territory>
+			<territory type="YT">馬約特</territory>
+			<territory type="ZM">贊比亞</territory>
+			<territory type="ZW">津巴布韋</territory>
+		</territories>
+		<variants>
+			<variant type="1901" draft="contributed">傳統德國拼字法</variant>
+			<variant type="1996">1996 德國拼字法</variant>
+			<variant type="REVISED" draft="contributed">已修訂拼字法</variant>
+			<variant type="SCOTLAND" draft="contributed">蘇格蘭標準英語</variant>
+		</variants>
+		<keys>
+			<key type="ms">度量衡系統</key>
+			<key type="x">專用區</key>
+		</keys>
+		<types>
+			<type key="calendar" type="ethiopic">埃塞俄比亞曆</type>
+			<type key="calendar" type="ethiopic-amete-alem" draft="contributed">埃塞俄比亞阿美德阿萊姆曆</type>
+			<type key="collation" type="big5han">繁體中文排序 (Big5)</type>
+			<type key="collation" type="dictionary" draft="contributed">詞典排序</type>
+			<type key="collation" type="gb2312han">簡體中文排序 (GB2312)</type>
+			<type key="collation" type="reformed" draft="contributed">改革版排序</type>
+			<type key="ms" type="uksystem">英制</type>
+			<type key="ms" type="ussystem">美制</type>
+			<type key="numbers" type="deva">天城體數字</type>
+			<type key="numbers" type="ethi">埃塞俄比亞數字</type>
+			<type key="numbers" type="geor">格魯吉亞數字</type>
+			<type key="numbers" type="knda">卡納達數字</type>
+			<type key="numbers" type="laoo">老撾數字</type>
+			<type key="numbers" type="mlym">馬拉雅拉姆數字</type>
+			<type key="numbers" type="orya">奧里亞數字</type>
+			<type key="numbers" type="taml">泰米爾數字</type>
+			<type key="numbers" type="tamldec">泰米爾數字</type>
+		</types>
+	</localeDisplayNames>
+	<characters>
+		<ellipsis type="final">{0}⋯</ellipsis>
+		<ellipsis type="initial">⋯{0}</ellipsis>
+		<ellipsis type="medial">{0}⋯{1}</ellipsis>
+		<ellipsis type="word-final">{0}⋯</ellipsis>
+		<ellipsis type="word-initial">⋯{0}</ellipsis>
+		<ellipsis type="word-medial">{0}⋯{1}</ellipsis>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="buddhist">
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Md" draft="contributed">M-d</dateFormatItem>
+						<dateFormatItem id="MEd" draft="contributed">M-d（E）</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="chinese">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">正月</month>
+							<month type="2">二月</month>
+							<month type="3">三月</month>
+							<month type="4">四月</month>
+							<month type="5">五月</month>
+							<month type="6">六月</month>
+							<month type="7">七月</month>
+							<month type="8">八月</month>
+							<month type="9">九月</month>
+							<month type="10">十月</month>
+							<month type="11">十一月</month>
+							<month type="12">十二月</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">正</month>
+							<month type="2">二</month>
+							<month type="3">三</month>
+							<month type="4">四</month>
+							<month type="5">五</month>
+							<month type="6">六</month>
+							<month type="7">七</month>
+							<month type="8">八</month>
+							<month type="9">九</month>
+							<month type="10">十</month>
+							<month type="11">十一</month>
+							<month type="12">十二</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">正月</month>
+							<month type="2">二月</month>
+							<month type="3">三月</month>
+							<month type="4">四月</month>
+							<month type="5">五月</month>
+							<month type="6">六月</month>
+							<month type="7">七月</month>
+							<month type="8">八月</month>
+							<month type="9">九月</month>
+							<month type="10">十月</month>
+							<month type="11">十一月</month>
+							<month type="12">十二月</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">正月</month>
+							<month type="2">二月</month>
+							<month type="3">三月</month>
+							<month type="4">四月</month>
+							<month type="5">五月</month>
+							<month type="6">六月</month>
+							<month type="7">七月</month>
+							<month type="8">八月</month>
+							<month type="9">九月</month>
+							<month type="10">十月</month>
+							<month type="11">十一月</month>
+							<month type="12">十二月</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">正</month>
+							<month type="2">二</month>
+							<month type="3">三</month>
+							<month type="4">四</month>
+							<month type="5">五</month>
+							<month type="6">六</month>
+							<month type="7">七</month>
+							<month type="8">八</month>
+							<month type="9">九</month>
+							<month type="10">十</month>
+							<month type="11">十一</month>
+							<month type="12">十二</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">正月</month>
+							<month type="2">二月</month>
+							<month type="3">三月</month>
+							<month type="4">四月</month>
+							<month type="5">五月</month>
+							<month type="6">六月</month>
+							<month type="7">七月</month>
+							<month type="8">八月</month>
+							<month type="9">九月</month>
+							<month type="10">十月</month>
+							<month type="11">十一月</month>
+							<month type="12">十二月</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>U（r）年MMMdEEEE</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>U（r）年MMMd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>U年MMMd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>U/M/d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="Ed">d日E</dateFormatItem>
+						<dateFormatItem id="H">HH</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>Gy年M月d日EEEE</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>Gy年M月d日</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>Gy年M月d日</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>Gy/M/d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="Ed">d日E</dateFormatItem>
+						<dateFormatItem id="Gy">Gy年</dateFormatItem>
+						<dateFormatItem id="GyMMM">Gy年M月</dateFormatItem>
+						<dateFormatItem id="GyMMMd">Gy年M月d日</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">Gy年M月d日E</dateFormatItem>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">d/M（E）</dateFormatItem>
+						<dateFormatItem id="MMMEd">M月d日E</dateFormatItem>
+						<dateFormatItem id="y">Gy年</dateFormatItem>
+						<dateFormatItem id="yyyy">Gy年</dateFormatItem>
+						<dateFormatItem id="yyyyM">Gy/M</dateFormatItem>
+						<dateFormatItem id="yyyyMd">Gy/M/d</dateFormatItem>
+						<dateFormatItem id="yyyyMEd">Gy/M/dE</dateFormatItem>
+						<dateFormatItem id="yyyyMMM">Gy年M月</dateFormatItem>
+						<dateFormatItem id="yyyyMMMd">Gy年M月d日</dateFormatItem>
+						<dateFormatItem id="yyyyMMMEd">Gy年M月d日E</dateFormatItem>
+						<dateFormatItem id="yyyyMMMM">Gy年M月</dateFormatItem>
+						<dateFormatItem id="yyyyQQQ">Gy年QQQ</dateFormatItem>
+						<dateFormatItem id="yyyyQQQQ">Gy年QQQQ</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">d/M 至 d/M</greatestDifference>
+							<greatestDifference id="M">d/M 至 d/M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">d/M（E） 至 d/M（E）</greatestDifference>
+							<greatestDifference id="M">d/M（E） 至 d/M（E）</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y">Gy年至y年</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">Gy/M至y/M</greatestDifference>
+							<greatestDifference id="y">Gy/M至y/M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">Gy/M/d至y/M/d</greatestDifference>
+							<greatestDifference id="M">Gy/M/d至y/M/d</greatestDifference>
+							<greatestDifference id="y">Gy/M/d至y/M/d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">Gy/M/dE至y/M/dE</greatestDifference>
+							<greatestDifference id="M">Gy/M/dE至y/M/dE</greatestDifference>
+							<greatestDifference id="y">Gy/M/dE至y/M/dE</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M">Gy年M月至M月</greatestDifference>
+							<greatestDifference id="y">Gy年M月至y年M月</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">Gy年M月d日至d日</greatestDifference>
+							<greatestDifference id="M">Gy年M月d日至M月d日</greatestDifference>
+							<greatestDifference id="y">Gy年M月d日至y年M月d日</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">Gy年M月d日E至d日E</greatestDifference>
+							<greatestDifference id="M">Gy年M月d日E至M月d日E</greatestDifference>
+							<greatestDifference id="y">Gy年M月d日E至y年M月d日E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M">Gy年M月至M月</greatestDifference>
+							<greatestDifference id="y">Gy年M月至y年M月</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">Q1</quarter>
+							<quarter type="2">Q2</quarter>
+							<quarter type="3">Q3</quarter>
+							<quarter type="4">Q4</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">Q1</quarter>
+							<quarter type="2">Q2</quarter>
+							<quarter type="3">Q3</quarter>
+							<quarter type="4">Q4</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="midnight">午夜</dayPeriod>
+							<dayPeriod type="morning1">早上</dayPeriod>
+							<dayPeriod type="morning2">上午</dayPeriod>
+							<dayPeriod type="afternoon1">中午</dayPeriod>
+							<dayPeriod type="afternoon2">下午</dayPeriod>
+							<dayPeriod type="evening1">晚上</dayPeriod>
+							<dayPeriod type="night1">凌晨</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="midnight">午夜</dayPeriod>
+							<dayPeriod type="morning1">早上</dayPeriod>
+							<dayPeriod type="morning2">上午</dayPeriod>
+							<dayPeriod type="afternoon1">中午</dayPeriod>
+							<dayPeriod type="afternoon2">下午</dayPeriod>
+							<dayPeriod type="evening1">晚上</dayPeriod>
+							<dayPeriod type="night1">凌晨</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="midnight">午夜</dayPeriod>
+							<dayPeriod type="morning1">早上</dayPeriod>
+							<dayPeriod type="morning2">上午</dayPeriod>
+							<dayPeriod type="afternoon1">中午</dayPeriod>
+							<dayPeriod type="afternoon2">下午</dayPeriod>
+							<dayPeriod type="evening1">晚上</dayPeriod>
+							<dayPeriod type="night1">凌晨</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="morning1">早上</dayPeriod>
+							<dayPeriod type="morning2">上午</dayPeriod>
+							<dayPeriod type="afternoon1">中午</dayPeriod>
+							<dayPeriod type="afternoon2">下午</dayPeriod>
+							<dayPeriod type="evening1">晚上</dayPeriod>
+							<dayPeriod type="night1">凌晨</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="morning1">早上</dayPeriod>
+							<dayPeriod type="morning2">上午</dayPeriod>
+							<dayPeriod type="afternoon1">中午</dayPeriod>
+							<dayPeriod type="afternoon2">下午</dayPeriod>
+							<dayPeriod type="evening1">晚上</dayPeriod>
+							<dayPeriod type="night1">凌晨</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="morning1">早上</dayPeriod>
+							<dayPeriod type="morning2">上午</dayPeriod>
+							<dayPeriod type="afternoon1">中午</dayPeriod>
+							<dayPeriod type="afternoon2">下午</dayPeriod>
+							<dayPeriod type="evening1">晚上</dayPeriod>
+							<dayPeriod type="night1">凌晨</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">公元前</era>
+						<era type="1">公元</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">公元前</era>
+						<era type="1">公元</era>
+					</eraAbbr>
+					<eraNarrow>
+						<era type="0" draft="contributed">公元前</era>
+						<era type="1" draft="contributed">公元</era>
+					</eraNarrow>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>y年M月d日EEEE</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>y年M月d日</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>y年M月d日</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d/M/y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>ah:mm:ss [zzzz]</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>ah:mm:ss [z]</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>ah:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>ah:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="GyMMMEd">Gy年M月d日E</dateFormatItem>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">d/M（E）</dateFormatItem>
+						<dateFormatItem id="MMdd">dd/MM</dateFormatItem>
+						<dateFormatItem id="MMMEd">M月d日E</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="other">M月第W週</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMd">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">d/M/y（E）</dateFormatItem>
+						<dateFormatItem id="yMM">MM/y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">y年M月d日E</dateFormatItem>
+						<dateFormatItem id="yw" count="other">Y年第w週</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">d/M 至 d/M</greatestDifference>
+							<greatestDifference id="M">d/M 至 d/M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">d/M（E） 至 d/M（E）</greatestDifference>
+							<greatestDifference id="M">d/M（E） 至 d/M（E）</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">M/y 至 M/y</greatestDifference>
+							<greatestDifference id="y">M/y 至 M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">d/M/y 至 d/M/y</greatestDifference>
+							<greatestDifference id="M">d/M/y 至 d/M/y</greatestDifference>
+							<greatestDifference id="y">d/M/y 至 d/M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">d/M/y（E） 至 d/M/y（E）</greatestDifference>
+							<greatestDifference id="M">d/M/y（E） 至 d/M/y（E）</greatestDifference>
+							<greatestDifference id="y">d/M/y（E） 至 d/M/y（E）</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="roc">
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Ed">d日E</dateFormatItem>
+						<dateFormatItem id="Md">d-M</dateFormatItem>
+						<dateFormatItem id="MEd">d-M（E）</dateFormatItem>
+						<dateFormatItem id="yyyyMEd">Gy/M/dE</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="year">
+				<relative type="-1">上年</relative>
+				<relative type="0">今年</relative>
+				<relative type="1">下年</relative>
+			</field>
+			<field type="year-short">
+				<relative type="-1">上年</relative>
+				<relative type="0">今年</relative>
+				<relative type="1">下年</relative>
+			</field>
+			<field type="year-narrow">
+				<relative type="-1">上年</relative>
+				<relative type="0">今年</relative>
+				<relative type="1">下年</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0}年後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0}年前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter">
+				<relative type="-1">上一季</relative>
+				<relative type="0">今季</relative>
+				<relative type="1">下一季</relative>
+			</field>
+			<field type="quarter-short">
+				<relative type="-1">上季</relative>
+				<relative type="0">今季</relative>
+				<relative type="1">下季</relative>
+			</field>
+			<field type="quarter-narrow">
+				<relative type="-1">上季</relative>
+				<relative type="0">今季</relative>
+				<relative type="1">下季</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">+{0}Q</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">-{0}Q</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0}個月後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0}個月前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week">
+				<displayName>星期</displayName>
+				<relative type="-1">上星期</relative>
+				<relative type="0">本星期</relative>
+				<relative type="1">下星期</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 星期後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 星期前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week-short">
+				<displayName>星期</displayName>
+				<relative type="-1">上星期</relative>
+				<relative type="0">本星期</relative>
+				<relative type="1">下星期</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 星期後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 星期前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week-narrow">
+				<relative type="-1">上星期</relative>
+				<relative type="0">本星期</relative>
+				<relative type="1">下星期</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0}星期後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0}星期前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day">
+				<relative type="-2">前日</relative>
+				<relative type="-1">昨日</relative>
+				<relative type="0">今日</relative>
+				<relative type="1">明日</relative>
+				<relative type="2">後日</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 日後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 日前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day-short">
+				<relative type="-2">前日</relative>
+				<relative type="-1">昨日</relative>
+				<relative type="0">今日</relative>
+				<relative type="1">明日</relative>
+				<relative type="2">後日</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 日後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 日前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day-narrow">
+				<relative type="-2">前日</relative>
+				<relative type="-1">昨日</relative>
+				<relative type="0">今日</relative>
+				<relative type="1">明日</relative>
+				<relative type="2">後日</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0}日後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0}日前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="weekday">
+				<displayName>星期幾</displayName>
+			</field>
+			<field type="weekday-short">
+				<displayName>星期幾</displayName>
+			</field>
+			<field type="weekday-narrow">
+				<displayName>星期幾</displayName>
+			</field>
+			<field type="sun">
+				<relative type="-1">上星期日</relative>
+				<relative type="0">本星期日</relative>
+				<relative type="1">下星期日</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期日後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期日前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sun-short">
+				<relative type="-1">上星期日</relative>
+				<relative type="0">本星期日</relative>
+				<relative type="1">下星期日</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期日後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期日前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sun-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期日後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期日前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon">
+				<relative type="-1">上星期一</relative>
+				<relative type="0">本星期一</relative>
+				<relative type="1">下星期一</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期一後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期一前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon-short">
+				<relative type="-1">上星期一</relative>
+				<relative type="0">本星期一</relative>
+				<relative type="1">下星期一</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期一後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期一前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期一後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期一前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue">
+				<relative type="-1">上星期二</relative>
+				<relative type="0">本星期二</relative>
+				<relative type="1">下星期二</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期二後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期二前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue-short">
+				<relative type="-1">上星期二</relative>
+				<relative type="0">本星期二</relative>
+				<relative type="1">下星期二</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期二後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期二前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期二後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期二前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed">
+				<relative type="-1">上星期三</relative>
+				<relative type="0">本星期三</relative>
+				<relative type="1">下星期三</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期三後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期三前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed-short">
+				<relative type="-1">上星期三</relative>
+				<relative type="0">本星期三</relative>
+				<relative type="1">下星期三</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期三後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期三前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期三後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期三前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu">
+				<relative type="-1">上星期四</relative>
+				<relative type="0">本星期四</relative>
+				<relative type="1">下星期四</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期四後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期四前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu-short">
+				<relative type="-1">上星期四</relative>
+				<relative type="0">本星期四</relative>
+				<relative type="1">下星期四</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期四後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期四前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期四後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期四前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri">
+				<relative type="-1">上星期五</relative>
+				<relative type="0">本星期五</relative>
+				<relative type="1">下星期五</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期五後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期五前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri-short">
+				<relative type="-1">上星期五</relative>
+				<relative type="0">本星期五</relative>
+				<relative type="1">下星期五</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期五後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期五前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期五後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期五前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat">
+				<relative type="-1">上星期六</relative>
+				<relative type="0">本星期六</relative>
+				<relative type="1">下星期六</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期六後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期六前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat-short">
+				<relative type="-1">上星期六</relative>
+				<relative type="0">本星期六</relative>
+				<relative type="1">下星期六</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期六後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期六前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0} 個星期六後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} 個星期六前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="hour">
+				<relative type="0">這個小時</relative>
+			</field>
+			<field type="hour-short">
+				<relative type="0">這個小時</relative>
+			</field>
+			<field type="hour-narrow">
+				<displayName>時</displayName>
+				<relative type="0">這個小時</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0}小時後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0}小時前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute">
+				<relative type="0">這分鐘</relative>
+			</field>
+			<field type="minute-short">
+				<relative type="0">這分鐘</relative>
+			</field>
+			<field type="minute-narrow">
+				<displayName>分</displayName>
+				<relative type="0">這分鐘</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0}分後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0}分前</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0}秒後</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0}秒前</relativeTimePattern>
+				</relativeTime>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<regionFormat type="daylight">{0}夏令時間</regionFormat>
+			<regionFormat type="standard">{0}標準時間</regionFormat>
+			<zone type="America/Antigua">
+				<exemplarCity>安提瓜</exemplarCity>
+			</zone>
+			<zone type="America/Anguilla">
+				<exemplarCity>安圭拉</exemplarCity>
+			</zone>
+			<zone type="Asia/Yerevan">
+				<exemplarCity>埃里温</exemplarCity>
+			</zone>
+			<zone type="Africa/Luanda">
+				<exemplarCity>盧安達</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Rothera">
+				<exemplarCity>羅瑟拉站</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Palmer">
+				<exemplarCity>帕爾默</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Troll">
+				<exemplarCity>特羅爾站</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Syowa">
+				<exemplarCity>昭和站</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Mawson">
+				<exemplarCity>莫森站</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Davis">
+				<exemplarCity>戴維斯站</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Casey">
+				<exemplarCity>凱西站</exemplarCity>
+			</zone>
+			<zone type="Antarctica/DumontDUrville">
+				<exemplarCity>杜蒙迪維爾站</exemplarCity>
+			</zone>
+			<zone type="Antarctica/McMurdo">
+				<exemplarCity>麥克默多站</exemplarCity>
+			</zone>
+			<zone type="America/Argentina/La_Rioja">
+				<exemplarCity>拉里奧哈</exemplarCity>
+			</zone>
+			<zone type="America/Cordoba">
+				<exemplarCity>科爾多瓦</exemplarCity>
+			</zone>
+			<zone type="Pacific/Pago_Pago">
+				<exemplarCity>帕果帕果</exemplarCity>
+			</zone>
+			<zone type="Australia/Perth">
+				<exemplarCity>珀斯</exemplarCity>
+			</zone>
+			<zone type="Australia/Adelaide">
+				<exemplarCity>阿德萊德</exemplarCity>
+			</zone>
+			<zone type="Australia/Currie">
+				<exemplarCity>卡里</exemplarCity>
+			</zone>
+			<zone type="Australia/Hobart">
+				<exemplarCity>荷伯特</exemplarCity>
+			</zone>
+			<zone type="Australia/Sydney">
+				<exemplarCity>悉尼</exemplarCity>
+			</zone>
+			<zone type="Australia/Brisbane">
+				<exemplarCity>布里斯本</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Macquarie">
+				<exemplarCity>麥夸里</exemplarCity>
+			</zone>
+			<zone type="America/Aruba">
+				<exemplarCity>阿魯巴</exemplarCity>
+			</zone>
+			<zone type="Europe/Sarajevo">
+				<exemplarCity>薩拉熱窩</exemplarCity>
+			</zone>
+			<zone type="America/Barbados">
+				<exemplarCity>巴巴多斯</exemplarCity>
+			</zone>
+			<zone type="America/St_Barthelemy">
+				<exemplarCity>聖巴泰勒米</exemplarCity>
+			</zone>
+			<zone type="America/Rio_Branco">
+				<exemplarCity>里約布蘭科</exemplarCity>
+			</zone>
+			<zone type="America/Porto_Velho">
+				<exemplarCity>韋柳港</exemplarCity>
+			</zone>
+			<zone type="America/Boa_Vista">
+				<exemplarCity>博阿維斯塔</exemplarCity>
+			</zone>
+			<zone type="America/Cuiaba">
+				<exemplarCity>庫亞巴</exemplarCity>
+			</zone>
+			<zone type="America/Campo_Grande">
+				<exemplarCity>大坎普</exemplarCity>
+			</zone>
+			<zone type="America/Araguaina">
+				<exemplarCity>阿拉瓜伊納</exemplarCity>
+			</zone>
+			<zone type="America/Bahia">
+				<exemplarCity>巴希雅</exemplarCity>
+			</zone>
+			<zone type="America/Fortaleza">
+				<exemplarCity>福塔萊薩</exemplarCity>
+			</zone>
+			<zone type="America/Maceio">
+				<exemplarCity>馬塞約</exemplarCity>
+			</zone>
+			<zone type="America/Recife">
+				<exemplarCity>累西腓</exemplarCity>
+			</zone>
+			<zone type="America/Noronha">
+				<exemplarCity>諾羅尼亞</exemplarCity>
+			</zone>
+			<zone type="America/Nassau">
+				<exemplarCity>拿騷</exemplarCity>
+			</zone>
+			<zone type="America/Belize">
+				<exemplarCity>伯利茲</exemplarCity>
+			</zone>
+			<zone type="America/Whitehorse">
+				<exemplarCity>白馬市</exemplarCity>
+			</zone>
+			<zone type="America/Inuvik">
+				<exemplarCity>伊努維克</exemplarCity>
+			</zone>
+			<zone type="America/Dawson_Creek">
+				<exemplarCity>道森灣</exemplarCity>
+			</zone>
+			<zone type="America/Yellowknife">
+				<exemplarCity>黃刀鎮</exemplarCity>
+			</zone>
+			<zone type="America/Edmonton">
+				<exemplarCity>愛民頓</exemplarCity>
+			</zone>
+			<zone type="America/Thunder_Bay">
+				<exemplarCity>雷灣</exemplarCity>
+			</zone>
+			<zone type="America/Nipigon">
+				<exemplarCity>尼皮貢</exemplarCity>
+			</zone>
+			<zone type="America/Halifax">
+				<exemplarCity>哈利法克斯</exemplarCity>
+			</zone>
+			<zone type="America/Glace_Bay">
+				<exemplarCity>格萊斯灣</exemplarCity>
+			</zone>
+			<zone type="America/St_Johns">
+				<exemplarCity>聖約翰斯</exemplarCity>
+			</zone>
+			<zone type="Indian/Cocos">
+				<exemplarCity>可可斯群島</exemplarCity>
+			</zone>
+			<zone type="Africa/Kinshasa">
+				<exemplarCity>金沙薩</exemplarCity>
+			</zone>
+			<zone type="Africa/Bangui">
+				<exemplarCity>班基</exemplarCity>
+			</zone>
+			<zone type="Africa/Abidjan">
+				<exemplarCity>阿比贊</exemplarCity>
+			</zone>
+			<zone type="America/Santiago">
+				<exemplarCity>聖地亞哥</exemplarCity>
+			</zone>
+			<zone type="America/Costa_Rica">
+				<exemplarCity>哥斯達黎加</exemplarCity>
+			</zone>
+			<zone type="America/Havana">
+				<exemplarCity>夏灣拿</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Cape_Verde">
+				<exemplarCity>佛得角</exemplarCity>
+			</zone>
+			<zone type="Asia/Nicosia">
+				<exemplarCity>尼科西亞</exemplarCity>
+			</zone>
+			<zone type="Africa/Djibouti">
+				<exemplarCity>吉布提</exemplarCity>
+			</zone>
+			<zone type="America/Santo_Domingo">
+				<exemplarCity>聖多明各</exemplarCity>
+			</zone>
+			<zone type="Africa/Asmera">
+				<exemplarCity>阿斯馬拉</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Canary">
+				<exemplarCity>加那利</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Stanley">
+				<exemplarCity>史丹利</exemplarCity>
+			</zone>
+			<zone type="Pacific/Kosrae">
+				<exemplarCity>科斯雷</exemplarCity>
+			</zone>
+			<zone type="Africa/Libreville">
+				<exemplarCity>利布維</exemplarCity>
+			</zone>
+			<zone type="America/Grenada">
+				<exemplarCity>格林納達</exemplarCity>
+			</zone>
+			<zone type="America/Cayenne">
+				<exemplarCity>卡宴</exemplarCity>
+			</zone>
+			<zone type="Europe/Guernsey">
+				<exemplarCity>根西島</exemplarCity>
+			</zone>
+			<zone type="America/Thule">
+				<exemplarCity>圖勒</exemplarCity>
+			</zone>
+			<zone type="Africa/Conakry">
+				<exemplarCity>科納克里</exemplarCity>
+			</zone>
+			<zone type="America/Guadeloupe">
+				<exemplarCity>瓜德羅普</exemplarCity>
+			</zone>
+			<zone type="America/Guatemala">
+				<exemplarCity>危地馬拉</exemplarCity>
+			</zone>
+			<zone type="America/Guyana">
+				<exemplarCity>圭亞那</exemplarCity>
+			</zone>
+			<zone type="America/Tegucigalpa">
+				<exemplarCity>特古西加爾巴</exemplarCity>
+			</zone>
+			<zone type="Europe/Zagreb">
+				<exemplarCity>薩格勒布</exemplarCity>
+			</zone>
+			<zone type="Asia/Makassar">
+				<exemplarCity>錫江</exemplarCity>
+			</zone>
+			<zone type="Asia/Jayapura">
+				<exemplarCity>查雅普拉</exemplarCity>
+			</zone>
+			<zone type="Europe/Isle_of_Man">
+				<exemplarCity>馬恩島</exemplarCity>
+			</zone>
+			<zone type="Indian/Chagos">
+				<exemplarCity>查戈斯群島</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Reykjavik">
+				<exemplarCity>雷克雅未克</exemplarCity>
+			</zone>
+			<zone type="Africa/Nairobi">
+				<exemplarCity>內羅畢</exemplarCity>
+			</zone>
+			<zone type="Asia/Bishkek">
+				<exemplarCity>比斯凱克</exemplarCity>
+			</zone>
+			<zone type="Pacific/Enderbury">
+				<exemplarCity>恩德伯里島</exemplarCity>
+			</zone>
+			<zone type="Indian/Comoro">
+				<exemplarCity>科摩羅</exemplarCity>
+			</zone>
+			<zone type="America/St_Lucia">
+				<exemplarCity>聖盧西亞</exemplarCity>
+			</zone>
+			<zone type="Europe/Vaduz">
+				<exemplarCity>華杜茲</exemplarCity>
+			</zone>
+			<zone type="Asia/Colombo">
+				<exemplarCity>科倫坡</exemplarCity>
+			</zone>
+			<zone type="Africa/Maseru">
+				<exemplarCity>馬塞魯</exemplarCity>
+			</zone>
+			<zone type="Europe/Chisinau">
+				<exemplarCity>基希訥烏</exemplarCity>
+			</zone>
+			<zone type="Europe/Podgorica">
+				<exemplarCity>波德戈里察</exemplarCity>
+			</zone>
+			<zone type="Indian/Antananarivo">
+				<exemplarCity>安塔那那利佛</exemplarCity>
+			</zone>
+			<zone type="Pacific/Kwajalein">
+				<exemplarCity>瓜加林環礁</exemplarCity>
+			</zone>
+			<zone type="Pacific/Majuro">
+				<exemplarCity>馬久羅</exemplarCity>
+			</zone>
+			<zone type="Europe/Skopje">
+				<exemplarCity>斯科普里</exemplarCity>
+			</zone>
+			<zone type="America/Martinique">
+				<exemplarCity>馬提尼克</exemplarCity>
+			</zone>
+			<zone type="Africa/Nouakchott">
+				<exemplarCity>努瓦克肖特</exemplarCity>
+			</zone>
+			<zone type="America/Montserrat">
+				<exemplarCity>蒙塞拉特島</exemplarCity>
+			</zone>
+			<zone type="Europe/Malta">
+				<exemplarCity>馬耳他</exemplarCity>
+			</zone>
+			<zone type="Indian/Mauritius">
+				<exemplarCity>毛里裘斯</exemplarCity>
+			</zone>
+			<zone type="Indian/Maldives">
+				<exemplarCity>馬爾代夫</exemplarCity>
+			</zone>
+			<zone type="America/Tijuana">
+				<exemplarCity>蒂華納</exemplarCity>
+			</zone>
+			<zone type="America/Chihuahua">
+				<exemplarCity>芝娃娃</exemplarCity>
+			</zone>
+			<zone type="America/Bahia_Banderas">
+				<exemplarCity>巴伊亞德班德拉斯</exemplarCity>
+			</zone>
+			<zone type="America/Monterrey">
+				<exemplarCity>蒙特雷</exemplarCity>
+			</zone>
+			<zone type="America/Mexico_City">
+				<exemplarCity>墨西哥城</exemplarCity>
+			</zone>
+			<zone type="Africa/Windhoek">
+				<exemplarCity>溫特和克</exemplarCity>
+			</zone>
+			<zone type="Pacific/Noumea">
+				<exemplarCity>努美阿</exemplarCity>
+			</zone>
+			<zone type="Africa/Lagos">
+				<exemplarCity>拉各斯</exemplarCity>
+			</zone>
+			<zone type="America/Managua">
+				<exemplarCity>馬那瓜</exemplarCity>
+			</zone>
+			<zone type="Pacific/Nauru">
+				<exemplarCity>瑙魯</exemplarCity>
+			</zone>
+			<zone type="Pacific/Chatham">
+				<exemplarCity>查塔姆</exemplarCity>
+			</zone>
+			<zone type="Asia/Muscat">
+				<exemplarCity>馬斯喀特</exemplarCity>
+			</zone>
+			<zone type="Pacific/Marquesas">
+				<exemplarCity>馬克薩斯群島</exemplarCity>
+			</zone>
+			<zone type="Pacific/Gambier">
+				<exemplarCity>甘比爾</exemplarCity>
+			</zone>
+			<zone type="Pacific/Bougainville">
+				<exemplarCity>布干維爾島</exemplarCity>
+			</zone>
+			<zone type="Asia/Karachi">
+				<exemplarCity>卡拉奇</exemplarCity>
+			</zone>
+			<zone type="America/Miquelon">
+				<exemplarCity>密克隆</exemplarCity>
+			</zone>
+			<zone type="Pacific/Pitcairn">
+				<exemplarCity>皮特康群島</exemplarCity>
+			</zone>
+			<zone type="Asia/Gaza">
+				<exemplarCity>加沙</exemplarCity>
+			</zone>
+			<zone type="Asia/Hebron">
+				<exemplarCity>希伯侖</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Madeira">
+				<exemplarCity>馬德拉島</exemplarCity>
+			</zone>
+			<zone type="America/Asuncion">
+				<exemplarCity>阿松森</exemplarCity>
+			</zone>
+			<zone type="Asia/Qatar">
+				<exemplarCity>卡塔爾</exemplarCity>
+			</zone>
+			<zone type="Indian/Reunion">
+				<exemplarCity>留尼旺</exemplarCity>
+			</zone>
+			<zone type="Europe/Belgrade">
+				<exemplarCity>貝爾格萊德</exemplarCity>
+			</zone>
+			<zone type="Asia/Yekaterinburg">
+				<exemplarCity>葉卡捷琳堡</exemplarCity>
+			</zone>
+			<zone type="Asia/Irkutsk">
+				<exemplarCity>伊爾庫茨克</exemplarCity>
+			</zone>
+			<zone type="Asia/Yakutsk">
+				<exemplarCity>雅庫茨克</exemplarCity>
+			</zone>
+			<zone type="Asia/Anadyr">
+				<exemplarCity>阿納德爾</exemplarCity>
+			</zone>
+			<zone type="Asia/Riyadh">
+				<exemplarCity>利雅得</exemplarCity>
+			</zone>
+			<zone type="Pacific/Guadalcanal">
+				<exemplarCity>瓜達爾卡納爾島</exemplarCity>
+			</zone>
+			<zone type="Europe/Ljubljana">
+				<exemplarCity>盧布爾雅那</exemplarCity>
+			</zone>
+			<zone type="Arctic/Longyearbyen">
+				<exemplarCity>朗伊爾城</exemplarCity>
+			</zone>
+			<zone type="Europe/Bratislava">
+				<exemplarCity>伯拉第斯拉瓦</exemplarCity>
+			</zone>
+			<zone type="Africa/Mogadishu">
+				<exemplarCity>摩加迪沙</exemplarCity>
+			</zone>
+			<zone type="Indian/Kerguelen">
+				<exemplarCity>凱爾蓋朗群島</exemplarCity>
+			</zone>
+			<zone type="Asia/Dushanbe">
+				<exemplarCity>杜尚別</exemplarCity>
+			</zone>
+			<zone type="Pacific/Fakaofo">
+				<exemplarCity>法考福環礁</exemplarCity>
+			</zone>
+			<zone type="Asia/Ashgabat">
+				<exemplarCity>阿什哈巴德</exemplarCity>
+			</zone>
+			<zone type="Pacific/Tongatapu">
+				<exemplarCity>湯加塔布島</exemplarCity>
+			</zone>
+			<zone type="Africa/Dar_es_Salaam">
+				<exemplarCity>達累斯薩拉姆</exemplarCity>
+			</zone>
+			<zone type="Europe/Uzhgorod">
+				<exemplarCity>烏日哥羅德</exemplarCity>
+			</zone>
+			<zone type="Pacific/Wake">
+				<exemplarCity>威克島</exemplarCity>
+			</zone>
+			<zone type="America/Adak">
+				<exemplarCity>埃達克</exemplarCity>
+			</zone>
+			<zone type="Pacific/Johnston">
+				<exemplarCity>約翰斯頓環礁</exemplarCity>
+			</zone>
+			<zone type="America/Anchorage">
+				<exemplarCity>安克雷奇</exemplarCity>
+			</zone>
+			<zone type="America/Yakutat">
+				<exemplarCity>亞庫塔特</exemplarCity>
+			</zone>
+			<zone type="America/Boise">
+				<exemplarCity>博伊西</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/Beulah">
+				<exemplarCity>北達科他州比尤拉</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/New_Salem">
+				<exemplarCity>北達科他州新薩勒姆</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/Center">
+				<exemplarCity>北達科他州中心市</exemplarCity>
+			</zone>
+			<zone type="America/Menominee">
+				<exemplarCity>梅諾米尼</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Vincennes">
+				<exemplarCity>印第安納州溫森斯</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Petersburg">
+				<exemplarCity>印第安納州彼得堡</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Tell_City">
+				<exemplarCity>印第安納州特爾城</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Knox">
+				<exemplarCity>印第安納州諾克斯</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Winamac">
+				<exemplarCity>印第安納州威納馬克</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Marengo">
+				<exemplarCity>印第安納州馬倫哥</exemplarCity>
+			</zone>
+			<zone type="America/Indianapolis">
+				<exemplarCity>印第安納波利斯</exemplarCity>
+			</zone>
+			<zone type="America/Louisville">
+				<exemplarCity>路易維爾</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Vevay">
+				<exemplarCity>印第安納州韋韋</exemplarCity>
+			</zone>
+			<zone type="America/Montevideo">
+				<exemplarCity>蒙得維的亞</exemplarCity>
+			</zone>
+			<zone type="America/St_Vincent">
+				<exemplarCity>聖文森特</exemplarCity>
+			</zone>
+			<zone type="America/Caracas">
+				<exemplarCity>加拉加斯</exemplarCity>
+			</zone>
+			<zone type="Indian/Mayotte">
+				<exemplarCity>馬約特</exemplarCity>
+			</zone>
+			<zone type="Africa/Johannesburg">
+				<exemplarCity>約翰內斯堡</exemplarCity>
+			</zone>
+			<zone type="Africa/Lusaka">
+				<exemplarCity>盧薩卡</exemplarCity>
+			</zone>
+			<metazone type="Africa_Southern">
+				<long>
+					<standard>南非時間</standard>
+				</long>
+			</metazone>
+			<metazone type="America_Central">
+				<long>
+					<generic>北美中部時間</generic>
+					<standard>北美中部標準時間</standard>
+					<daylight>北美中部夏令時間</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic>北美東部時間</generic>
+					<standard>北美東部標準時間</standard>
+					<daylight>北美東部夏令時間</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic>北美山區時間</generic>
+					<standard>北美山區標準時間</standard>
+					<daylight>北美山區夏令時間</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic>北美太平洋時間</generic>
+					<standard>北美太平洋標準時間</standard>
+					<daylight>北美太平洋夏令時間</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azerbaijan">
+				<long>
+					<generic>亞塞拜疆時間</generic>
+					<standard>亞塞拜疆標準時間</standard>
+					<daylight>亞塞拜疆夏令時間</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cape_Verde">
+				<long>
+					<generic>佛得角時間</generic>
+					<standard>佛得角標準時間</standard>
+					<daylight>佛得角夏令時間</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cocos">
+				<long>
+					<standard>可可斯群島時間</standard>
+				</long>
+			</metazone>
+			<metazone type="DumontDUrville">
+				<long>
+					<standard>迪蒙迪維爾時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Ecuador">
+				<long>
+					<standard>厄瓜多爾時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Galapagos">
+				<long>
+					<standard>加拉帕戈群島時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Georgia">
+				<long>
+					<generic>格魯吉亞時間</generic>
+					<standard>格魯吉亞標準時間</standard>
+					<daylight>格魯吉亞夏令時間</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gulf">
+				<long>
+					<standard>波斯灣海域時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Guyana">
+				<long>
+					<standard>圭亞那時間</standard>
+				</long>
+			</metazone>
+			<metazone type="India">
+				<long>
+					<standard>印度時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Irkutsk">
+				<long>
+					<generic>伊爾庫茨克時間</generic>
+					<standard>伊爾庫茨克標準時間</standard>
+					<daylight>伊爾庫茨克夏令時間</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kosrae">
+				<long>
+					<standard>科斯雷時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Macquarie">
+				<long>
+					<standard>麥夸里群島時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Maldives">
+				<long>
+					<standard>馬爾代夫時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Marquesas">
+				<long>
+					<standard>馬克薩斯時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Mauritius">
+				<long>
+					<generic>毛里裘斯時間</generic>
+					<standard>毛里裘斯標準時間</standard>
+					<daylight>毛里裘斯夏令時間</daylight>
+				</long>
+			</metazone>
+			<metazone type="Nauru">
+				<long>
+					<standard>瑙魯時間</standard>
+				</long>
+			</metazone>
+			<metazone type="New_Caledonia">
+				<long>
+					<generic>新喀里多尼亞時間</generic>
+					<standard>新喀里多尼亞標準時間</standard>
+					<daylight>新喀里多尼亞夏令時間</daylight>
+				</long>
+			</metazone>
+			<metazone type="Noronha">
+				<long>
+					<generic>費爾南多迪諾羅尼亞時間</generic>
+					<standard>費爾南多迪諾羅尼亞標準時間</standard>
+					<daylight>費爾南多迪諾羅尼亞夏令時間</daylight>
+				</long>
+			</metazone>
+			<metazone type="Papua_New_Guinea">
+				<long>
+					<standard>巴布亞新畿內亞時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Pitcairn">
+				<long>
+					<standard>皮特康時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Seychelles">
+				<long>
+					<standard>塞舌爾時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Singapore">
+				<long>
+					<standard>新加坡時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Solomon">
+				<long>
+					<standard>所羅門群島時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Suriname">
+				<long>
+					<standard>蘇里南時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Tonga">
+				<long>
+					<generic>湯加時間</generic>
+					<standard>湯加標準時間</standard>
+					<daylight>湯加夏令時間</daylight>
+				</long>
+			</metazone>
+			<metazone type="Tuvalu">
+				<long>
+					<standard>圖瓦盧時間</standard>
+				</long>
+			</metazone>
+			<metazone type="Vanuatu">
+				<long>
+					<generic>瓦努阿圖時間</generic>
+					<standard>瓦努阿圖標準時間</standard>
+					<daylight>瓦努阿圖夏令時間</daylight>
+				</long>
+			</metazone>
+			<metazone type="Yakutsk">
+				<long>
+					<generic>雅庫茨克時間</generic>
+					<standard>雅庫茨克標準時間</standard>
+					<daylight>雅庫茨克夏令時間</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength type="short">
+				<decimalFormat>
+					<pattern type="1000" count="other">0K</pattern>
+					<pattern type="10000" count="other">00K</pattern>
+					<pattern type="100000" count="other">000K</pattern>
+					<pattern type="1000000" count="other">0M</pattern>
+					<pattern type="10000000" count="other">00M</pattern>
+					<pattern type="100000000" count="other">000M</pattern>
+					<pattern type="1000000000" count="other">0B</pattern>
+					<pattern type="10000000000" count="other">00B</pattern>
+					<pattern type="100000000000" count="other">000B</pattern>
+					<pattern type="1000000000000" count="other">0T</pattern>
+					<pattern type="10000000000000" count="other">00T</pattern>
+					<pattern type="100000000000000" count="other">000T</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="other">¤0K</pattern>
+					<pattern type="10000" count="other">¤00K</pattern>
+					<pattern type="100000" count="other">¤000K</pattern>
+					<pattern type="1000000" count="other">¤0M</pattern>
+					<pattern type="10000000" count="other">¤00M</pattern>
+					<pattern type="100000000" count="other">¤000M</pattern>
+					<pattern type="1000000000" count="other">¤0B</pattern>
+					<pattern type="10000000000" count="other">¤00B</pattern>
+					<pattern type="100000000000" count="other">¤000B</pattern>
+					<pattern type="1000000000000" count="other">¤0T</pattern>
+					<pattern type="10000000000000" count="other">¤00T</pattern>
+					<pattern type="100000000000000" count="other">¤000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="AED">
+				<displayName>阿拉伯聯合酋長國迪爾汗</displayName>
+				<displayName count="other">阿拉伯聯合酋長國迪爾汗</displayName>
+			</currency>
+			<currency type="AUD">
+				<displayName>澳元</displayName>
+				<displayName count="other">澳元</displayName>
+			</currency>
+			<currency type="AWG">
+				<displayName>阿魯巴盾</displayName>
+				<displayName count="other">阿魯巴盾</displayName>
+			</currency>
+			<currency type="AZN">
+				<displayName>亞塞拜疆馬納特</displayName>
+				<displayName count="other">亞塞拜疆馬納特</displayName>
+			</currency>
+			<currency type="BAD">
+				<displayName draft="contributed">波斯尼亞-赫塞哥維納第納爾</displayName>
+			</currency>
+			<currency type="BAM">
+				<displayName>波斯尼亞-赫塞哥維納可轉換馬克</displayName>
+				<displayName count="other">波斯尼亞-赫塞哥維納可轉換馬克</displayName>
+			</currency>
+			<currency type="BBD">
+				<displayName>巴巴多斯元</displayName>
+				<displayName count="other">巴巴多斯元</displayName>
+			</currency>
+			<currency type="BEC">
+				<displayName draft="contributed">比利時法郎（可兌換）</displayName>
+				<displayName count="other" draft="contributed">比利時法郎（可兌換）</displayName>
+			</currency>
+			<currency type="BIF">
+				<displayName>布隆迪法郎</displayName>
+				<displayName count="other">布隆迪法郎</displayName>
+			</currency>
+			<currency type="BMD">
+				<displayName>百慕達元</displayName>
+				<displayName count="other">百慕達元</displayName>
+			</currency>
+			<currency type="BWP">
+				<displayName>博茨瓦納普拉</displayName>
+				<displayName count="other">博茨瓦納普拉</displayName>
+			</currency>
+			<currency type="BZD">
+				<displayName>伯利茲元</displayName>
+				<displayName count="other">伯利茲元</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName>加拿大元</displayName>
+				<displayName count="other">加拿大元</displayName>
+			</currency>
+			<currency type="CRC">
+				<displayName>哥斯達黎加科郎</displayName>
+				<displayName count="other">哥斯達黎加科郎</displayName>
+			</currency>
+			<currency type="CVE">
+				<displayName>佛得角埃斯庫多</displayName>
+				<displayName count="other">佛得角埃斯庫多</displayName>
+			</currency>
+			<currency type="DJF">
+				<displayName>吉布提法郎</displayName>
+				<displayName count="other">吉布提法郎</displayName>
+			</currency>
+			<currency type="DOP">
+				<displayName>多米尼加披索</displayName>
+				<displayName count="other">多米尼加披索</displayName>
+			</currency>
+			<currency type="ETB">
+				<displayName>埃塞俄比亞比爾</displayName>
+				<displayName count="other">埃塞俄比亞比爾</displayName>
+			</currency>
+			<currency type="GEL">
+				<displayName>格魯吉亞拉里</displayName>
+				<displayName count="other">格魯吉亞拉里</displayName>
+			</currency>
+			<currency type="GHS">
+				<displayName>加納塞地</displayName>
+				<displayName count="other">加納塞地</displayName>
+			</currency>
+			<currency type="GMD">
+				<displayName>岡比亞達拉西</displayName>
+				<displayName count="other">岡比亞達拉西</displayName>
+			</currency>
+			<currency type="GTQ">
+				<displayName>危地馬拉格查爾</displayName>
+				<displayName count="other">危地馬拉格查爾</displayName>
+			</currency>
+			<currency type="HKD">
+				<displayName>港元</displayName>
+				<displayName count="other">港元</displayName>
+			</currency>
+			<currency type="HRK">
+				<displayName>克羅地亞庫納</displayName>
+				<displayName count="other">克羅地亞庫納</displayName>
+			</currency>
+			<currency type="ITL">
+				<displayName draft="contributed">意大利里拉</displayName>
+			</currency>
+			<currency type="KES">
+				<displayName>肯雅先令</displayName>
+				<displayName count="other">肯雅先令</displayName>
+			</currency>
+			<currency type="KHR">
+				<displayName>柬埔寨里爾</displayName>
+				<displayName count="other">柬埔寨里爾</displayName>
+			</currency>
+			<currency type="KPW">
+				<displayName>北韓圜</displayName>
+				<displayName count="other">北韓圜</displayName>
+			</currency>
+			<currency type="KRW">
+				<symbol draft="contributed">₩</symbol>
+			</currency>
+			<currency type="KYD">
+				<displayName count="other">開曼群島美元</displayName>
+			</currency>
+			<currency type="KZT">
+				<displayName>哈薩克坦吉</displayName>
+				<displayName count="other">哈薩克坦吉</displayName>
+			</currency>
+			<currency type="LAK">
+				<displayName>老撾基普</displayName>
+				<displayName count="other">老撾基普</displayName>
+			</currency>
+			<currency type="LRD">
+				<displayName>利比利亞元</displayName>
+				<displayName count="other">利比利亞元</displayName>
+			</currency>
+			<currency type="LTL">
+				<displayName count="other">立陶宛里塔</displayName>
+			</currency>
+			<currency type="MDL">
+				<displayName>摩爾多瓦列伊</displayName>
+				<displayName count="other">摩爾多瓦列伊</displayName>
+			</currency>
+			<currency type="MRO">
+				<displayName>毛里塔尼亞烏吉亞 (1973–2017)</displayName>
+				<displayName count="other">毛里塔尼亞烏吉亞 (1973–2017)</displayName>
+			</currency>
+			<currency type="MRU">
+				<displayName>毛里塔尼亞烏吉亞</displayName>
+				<displayName count="other">毛里塔尼亞烏吉亞</displayName>
+			</currency>
+			<currency type="MUR">
+				<displayName>毛里裘斯盧布</displayName>
+				<displayName count="other">毛里裘斯盧布</displayName>
+			</currency>
+			<currency type="MVR">
+				<displayName>馬爾代夫盧非亞</displayName>
+				<displayName count="other">馬爾代夫盧非亞</displayName>
+			</currency>
+			<currency type="MZN">
+				<displayName>莫桑比克梅蒂卡爾</displayName>
+				<displayName count="other">莫桑比克梅蒂卡爾</displayName>
+			</currency>
+			<currency type="NGN">
+				<displayName>尼日利亞奈拉</displayName>
+				<displayName count="other">尼日利亞奈拉</displayName>
+			</currency>
+			<currency type="NZD">
+				<displayName>紐西蘭元</displayName>
+				<displayName count="other">紐西蘭元</displayName>
+			</currency>
+			<currency type="OMR">
+				<displayName>阿曼里奧</displayName>
+				<displayName count="other">阿曼里奧</displayName>
+			</currency>
+			<currency type="PGK">
+				<displayName>巴布亞新幾內亞基那</displayName>
+				<displayName count="other">巴布亞新幾內亞基那</displayName>
+			</currency>
+			<currency type="QAR">
+				<displayName>卡塔爾里亞爾</displayName>
+				<displayName count="other">卡塔爾里亞爾</displayName>
+			</currency>
+			<currency type="RSD">
+				<displayName>塞爾維亞第納爾</displayName>
+				<displayName count="other">塞爾維亞第納爾</displayName>
+			</currency>
+			<currency type="RWF">
+				<displayName>盧旺達法郎</displayName>
+				<displayName count="other">盧旺達法郎</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName>沙特阿拉伯里亞爾</displayName>
+				<displayName count="other">沙特阿拉伯里亞爾</displayName>
+			</currency>
+			<currency type="SBD">
+				<displayName>所羅門群島元</displayName>
+				<displayName count="other">所羅門群島元</displayName>
+			</currency>
+			<currency type="SCR">
+				<displayName>塞舌爾盧比</displayName>
+				<displayName count="other">塞舌爾盧比</displayName>
+			</currency>
+			<currency type="SGD">
+				<displayName>新加坡元</displayName>
+				<displayName count="other">新加坡元</displayName>
+			</currency>
+			<currency type="SLL">
+				<displayName>塞拉利昂利昂</displayName>
+				<displayName count="other">塞拉利昂利昂</displayName>
+			</currency>
+			<currency type="SOS">
+				<displayName>索馬里先令</displayName>
+				<displayName count="other">索馬里先令</displayName>
+			</currency>
+			<currency type="SRD">
+				<displayName>蘇里南元</displayName>
+				<displayName count="other">蘇里南元</displayName>
+			</currency>
+			<currency type="STD">
+				<displayName>聖多美和普林西比多布拉 (1977–2017)</displayName>
+				<displayName count="other">聖多美和普林西比多布拉 (1977–2017)</displayName>
+			</currency>
+			<currency type="STN">
+				<displayName>聖多美和普林西比多布拉</displayName>
+				<displayName count="other">聖多美和普林西比多布拉</displayName>
+			</currency>
+			<currency type="SYP">
+				<displayName>敍利亞鎊</displayName>
+				<displayName count="other">敍利亞鎊</displayName>
+			</currency>
+			<currency type="SZL">
+				<displayName>斯威士蘭里朗吉尼</displayName>
+				<displayName count="other">斯威士蘭里朗吉尼</displayName>
+			</currency>
+			<currency type="TOP">
+				<displayName>湯加潘加</displayName>
+				<displayName count="other">湯加潘加</displayName>
+			</currency>
+			<currency type="TTD">
+				<displayName>千里達和多巴哥元</displayName>
+				<displayName count="other">千里達和多巴哥元</displayName>
+			</currency>
+			<currency type="TWD">
+				<symbol>NT$</symbol>
+			</currency>
+			<currency type="TZS">
+				<displayName>坦桑尼亞先令</displayName>
+				<displayName count="other">坦桑尼亞先令</displayName>
+			</currency>
+			<currency type="VUV">
+				<displayName>瓦努阿圖瓦圖</displayName>
+				<displayName count="other">瓦努阿圖瓦圖</displayName>
+			</currency>
+			<currency type="XAF">
+				<displayName>中非法郎</displayName>
+				<displayName count="other">中非法郎</displayName>
+			</currency>
+			<currency type="XCD">
+				<displayName>東加勒比元</displayName>
+				<displayName count="other">東加勒比元</displayName>
+			</currency>
+			<currency type="XOF">
+				<displayName>多哥非洲共同體法郎</displayName>
+				<displayName count="other">西非法郎</displayName>
+			</currency>
+			<currency type="XPF">
+				<displayName>太平洋法郎</displayName>
+				<displayName count="other">太平洋法郎</displayName>
+			</currency>
+			<currency type="YER">
+				<displayName>也門里雅</displayName>
+				<displayName count="other">也門里雅</displayName>
+			</currency>
+			<currency type="ZMW">
+				<displayName>贊比亞克瓦查</displayName>
+				<displayName count="other">贊比亞克瓦查</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<compoundUnit type="10p-1">
+				<unitPrefixPattern>{0} 分米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-2">
+				<unitPrefixPattern>{0} 厘米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-3">
+				<unitPrefixPattern>{0} 毫米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-9">
+				<unitPrefixPattern>{0} 納米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-21">
+				<unitPrefixPattern>{0} 介米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-24">
+				<unitPrefixPattern>{0} 攸米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p6">
+				<unitPrefixPattern>{0} 百萬米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p21">
+				<unitPrefixPattern>{0} 澤米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="per">
+				<compoundUnitPattern>{0}每{1}</compoundUnitPattern>
+			</compoundUnit>
+			<compoundUnit type="power2">
+				<compoundUnitPattern1 count="other">{0}二次方</compoundUnitPattern1>
+			</compoundUnit>
+			<compoundUnit type="power3">
+				<compoundUnitPattern1 count="other">{0}三次方</compoundUnitPattern1>
+			</compoundUnit>
+			<unit type="acceleration-meter-per-square-second">
+				<displayName>米/平方秒</displayName>
+				<unitPattern count="other">{0} 米/平方秒</unitPattern>
+			</unit>
+			<unit type="angle-revolution">
+				<displayName>周</displayName>
+				<unitPattern count="other">{0} 周</unitPattern>
+			</unit>
+			<unit type="angle-degree">
+				<displayName>度</displayName>
+			</unit>
+			<unit type="area-square-kilometer">
+				<perUnitPattern>{0} 每平方公里</perUnitPattern>
+			</unit>
+			<unit type="area-square-meter">
+				<displayName>平方米</displayName>
+				<unitPattern count="other">{0} 平方米</unitPattern>
+				<perUnitPattern>{0} 每平方米</perUnitPattern>
+			</unit>
+			<unit type="area-square-centimeter">
+				<displayName>平方厘米</displayName>
+				<unitPattern count="other">{0} 平方厘米</unitPattern>
+				<perUnitPattern>{0} 每平方厘米</perUnitPattern>
+			</unit>
+			<unit type="area-square-mile">
+				<perUnitPattern>{0} 每平方英里</perUnitPattern>
+			</unit>
+			<unit type="area-square-foot">
+				<displayName>平方呎</displayName>
+				<unitPattern count="other">{0} 平方呎</unitPattern>
+			</unit>
+			<unit type="area-square-inch">
+				<displayName>平方吋</displayName>
+				<unitPattern count="other">{0} 平方吋</unitPattern>
+				<perUnitPattern>{0} 每平方吋</perUnitPattern>
+			</unit>
+			<unit type="concentr-millimole-per-liter">
+				<displayName>每公升毫摩爾</displayName>
+				<unitPattern count="other">每公升 {0} 毫摩爾</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-kilometer">
+				<displayName>公升/公里</displayName>
+				<unitPattern count="other">{0} 公升/公里</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-100-kilometer">
+				<displayName>公升/100公里</displayName>
+			</unit>
+			<unit type="consumption-mile-per-gallon">
+				<displayName>英里/加侖</displayName>
+				<unitPattern count="other">{0} 英里/加侖</unitPattern>
+			</unit>
+			<unit type="digital-byte">
+				<displayName>位元組</displayName>
+				<unitPattern count="other">{0} 位元組</unitPattern>
+			</unit>
+			<unit type="digital-bit">
+				<displayName>位元</displayName>
+				<unitPattern count="other">{0} 個位元</unitPattern>
+			</unit>
+			<unit type="duration-century">
+				<unitPattern count="other">{0} 世紀</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<perUnitPattern>{0} 每年</perUnitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>個月</displayName>
+				<perUnitPattern>{0} 每個月</perUnitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName>星期</displayName>
+				<unitPattern count="other">{0} 星期</unitPattern>
+				<perUnitPattern>{0} 每星期</perUnitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName>日</displayName>
+				<unitPattern count="other">{0} 日</unitPattern>
+				<perUnitPattern>{0} 每日</perUnitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<perUnitPattern>{0} 每小時</perUnitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<perUnitPattern>{0} 每分鐘</perUnitPattern>
+			</unit>
+			<unit type="duration-second">
+				<perUnitPattern>{0}每秒</perUnitPattern>
+			</unit>
+			<unit type="duration-nanosecond">
+				<displayName>納秒</displayName>
+				<unitPattern count="other">{0} 納秒</unitPattern>
+			</unit>
+			<unit type="energy-kilocalorie">
+				<displayName>千卡</displayName>
+				<unitPattern count="other">{0} 千卡</unitPattern>
+			</unit>
+			<unit type="energy-foodcalorie">
+				<unitPattern count="other">{0} 卡路里</unitPattern>
+			</unit>
+			<unit type="energy-british-thermal-unit">
+				<displayName>英制熱量單位</displayName>
+				<unitPattern count="other">{0} 英制熱量單位</unitPattern>
+			</unit>
+			<unit type="length-kilometer">
+				<perUnitPattern>{0} 每公里</perUnitPattern>
+			</unit>
+			<unit type="length-meter">
+				<displayName>米</displayName>
+				<unitPattern count="other">{0} 米</unitPattern>
+				<perUnitPattern>{0} 每米</perUnitPattern>
+			</unit>
+			<unit type="length-decimeter">
+				<displayName>分米</displayName>
+				<unitPattern count="other">{0} 分米</unitPattern>
+			</unit>
+			<unit type="length-centimeter">
+				<displayName>厘米</displayName>
+				<unitPattern count="other">{0} 厘米</unitPattern>
+				<perUnitPattern>{0} 每厘米</perUnitPattern>
+			</unit>
+			<unit type="length-millimeter">
+				<displayName>毫米</displayName>
+				<unitPattern count="other">{0} 毫米</unitPattern>
+			</unit>
+			<unit type="length-nanometer">
+				<displayName>納米</displayName>
+				<unitPattern count="other">{0} 納米</unitPattern>
+			</unit>
+			<unit type="length-foot">
+				<displayName>呎</displayName>
+				<unitPattern count="other">{0} 呎</unitPattern>
+				<perUnitPattern>{0} 每呎</perUnitPattern>
+			</unit>
+			<unit type="length-inch">
+				<displayName>吋</displayName>
+				<unitPattern count="other">{0} 吋</unitPattern>
+				<perUnitPattern>{0} 每吋</perUnitPattern>
+			</unit>
+			<unit type="length-point">
+				<unitPattern count="other">{0} pt</unitPattern>
+			</unit>
+			<unit type="light-candela">
+				<displayName>坎德拉</displayName>
+				<unitPattern count="other">{0} 坎德拉</unitPattern>
+			</unit>
+			<unit type="mass-kilogram">
+				<perUnitPattern>{0} 每公斤</perUnitPattern>
+			</unit>
+			<unit type="mass-gram">
+				<perUnitPattern>{0} 每克</perUnitPattern>
+			</unit>
+			<unit type="mass-pound">
+				<perUnitPattern>{0} 每磅</perUnitPattern>
+			</unit>
+			<unit type="mass-ounce">
+				<displayName>安士</displayName>
+				<unitPattern count="other">{0} 安士</unitPattern>
+				<perUnitPattern>{0} 每安士</perUnitPattern>
+			</unit>
+			<unit type="mass-ounce-troy">
+				<displayName>金衡安士</displayName>
+				<unitPattern count="other">{0} 金衡安士</unitPattern>
+			</unit>
+			<unit type="mass-dalton">
+				<displayName>道爾頓</displayName>
+				<unitPattern count="other">{0} 道爾頓</unitPattern>
+			</unit>
+			<unit type="mass-grain">
+				<displayName>格令</displayName>
+				<unitPattern count="other">{0}格令</unitPattern>
+			</unit>
+			<unit type="power-megawatt">
+				<displayName>兆瓦</displayName>
+				<unitPattern count="other">{0} 兆瓦</unitPattern>
+			</unit>
+			<unit type="power-kilowatt">
+				<displayName>千瓦</displayName>
+				<unitPattern count="other">{0} 千瓦</unitPattern>
+			</unit>
+			<unit type="power-milliwatt">
+				<displayName>毫瓦</displayName>
+				<unitPattern count="other">{0} 毫瓦</unitPattern>
+			</unit>
+			<unit type="power-horsepower">
+				<displayName>匹</displayName>
+				<unitPattern count="other">{0} 匹</unitPattern>
+			</unit>
+			<unit type="pressure-pound-force-per-square-inch">
+				<displayName>磅/平方吋</displayName>
+				<unitPattern count="other">{0} 磅/平方吋</unitPattern>
+			</unit>
+			<unit type="pressure-inch-ofhg">
+				<displayName>英吋汞柱</displayName>
+				<unitPattern count="other">{0} 英吋汞柱</unitPattern>
+			</unit>
+			<unit type="pressure-hectopascal">
+				<displayName>百帕斯卡</displayName>
+				<unitPattern count="other">{0} 百帕斯卡</unitPattern>
+			</unit>
+			<unit type="pressure-megapascal">
+				<displayName>兆帕斯卡</displayName>
+				<unitPattern count="other">{0} 兆帕斯卡</unitPattern>
+			</unit>
+			<unit type="speed-kilometer-per-hour">
+				<displayName>公里每小時</displayName>
+			</unit>
+			<unit type="speed-meter-per-second">
+				<displayName>米/秒</displayName>
+				<unitPattern count="other">{0} 米/秒</unitPattern>
+			</unit>
+			<unit type="speed-mile-per-hour">
+				<displayName>英里每小時</displayName>
+			</unit>
+			<unit type="temperature-celsius">
+				<displayName>攝氏度</displayName>
+			</unit>
+			<unit type="temperature-fahrenheit">
+				<displayName>華氏度</displayName>
+			</unit>
+			<unit type="temperature-kelvin">
+				<displayName>開爾文</displayName>
+				<unitPattern count="other">{0} 開爾文</unitPattern>
+			</unit>
+			<unit type="torque-pound-force-foot">
+				<displayName>磅尺</displayName>
+				<unitPattern count="other">{0} 磅尺</unitPattern>
+			</unit>
+			<unit type="volume-cubic-meter">
+				<displayName>立方米</displayName>
+				<unitPattern count="other">{0} 立方米</unitPattern>
+				<perUnitPattern>{0} 每立方米</perUnitPattern>
+			</unit>
+			<unit type="volume-cubic-centimeter">
+				<displayName>立方厘米</displayName>
+				<unitPattern count="other">{0} 立方厘米</unitPattern>
+				<perUnitPattern>{0} 每立方厘米</perUnitPattern>
+			</unit>
+			<unit type="volume-cubic-foot">
+				<displayName>立方呎</displayName>
+				<unitPattern count="other">{0} 立方呎</unitPattern>
+			</unit>
+			<unit type="volume-cubic-inch">
+				<displayName>立方吋</displayName>
+				<unitPattern count="other">{0} 立方吋</unitPattern>
+			</unit>
+			<unit type="volume-liter">
+				<perUnitPattern>{0} 每公升</perUnitPattern>
+			</unit>
+			<unit type="volume-centiliter">
+				<displayName>厘升</displayName>
+				<unitPattern count="other">{0} 厘升</unitPattern>
+			</unit>
+			<unit type="volume-cup-metric">
+				<unitPattern count="other">{0} 公制量杯</unitPattern>
+			</unit>
+			<unit type="volume-acre-foot">
+				<displayName>英畝呎</displayName>
+				<unitPattern count="other">{0} 英畝呎</unitPattern>
+			</unit>
+			<unit type="volume-gallon">
+				<perUnitPattern>{0} 每加侖</perUnitPattern>
+			</unit>
+			<unit type="volume-cup">
+				<unitPattern count="other">{0} 量杯</unitPattern>
+			</unit>
+			<unit type="volume-fluid-ounce">
+				<displayName>液安士</displayName>
+				<unitPattern count="other">{0} 液安士</unitPattern>
+			</unit>
+			<unit type="volume-fluid-ounce-imperial">
+				<displayName>英制液安士</displayName>
+				<unitPattern count="other">{0} 英制液安士</unitPattern>
+			</unit>
+			<coordinateUnit>
+				<coordinateUnitPattern type="east">東經 {0}</coordinateUnitPattern>
+				<coordinateUnitPattern type="north">北緯 {0}</coordinateUnitPattern>
+				<coordinateUnitPattern type="south">南緯 {0}</coordinateUnitPattern>
+				<coordinateUnitPattern type="west">西經 {0}</coordinateUnitPattern>
+			</coordinateUnit>
+		</unitLength>
+		<unitLength type="short">
+			<compoundUnit type="10p-1">
+				<unitPrefixPattern>{0} 分米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-2">
+				<unitPrefixPattern>{0} 厘米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-3">
+				<unitPrefixPattern>{0} 毫米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-9">
+				<unitPrefixPattern>{0} 納米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-21">
+				<unitPrefixPattern>{0} 介米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-24">
+				<unitPrefixPattern>{0} 攸米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p6">
+				<unitPrefixPattern>{0} 百萬米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p21">
+				<unitPrefixPattern>{0} 澤米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p1">
+				<unitPrefixPattern>{0} 千位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p2">
+				<unitPrefixPattern>{0} 百萬位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p3">
+				<unitPrefixPattern>{0} 吉位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p4">
+				<unitPrefixPattern>{0} 兆位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p5">
+				<unitPrefixPattern>{0} 拍位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p6">
+				<unitPrefixPattern>{0} 艾位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p7">
+				<unitPrefixPattern>{0} 皆位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p8">
+				<unitPrefixPattern>{0} 佑位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="times">
+				<compoundUnitPattern>{0}⋅{1}</compoundUnitPattern>
+			</compoundUnit>
+			<unit type="acceleration-g-force">
+				<unitPattern count="other">{0} G</unitPattern>
+			</unit>
+			<unit type="acceleration-meter-per-square-second">
+				<displayName>米每平方秒</displayName>
+				<unitPattern count="other">{0} 米每平方秒</unitPattern>
+			</unit>
+			<unit type="angle-revolution">
+				<displayName>周</displayName>
+				<unitPattern count="other">{0} 周</unitPattern>
+			</unit>
+			<unit type="angle-degree">
+				<displayName>度</displayName>
+			</unit>
+			<unit type="angle-arc-minute">
+				<displayName>分</displayName>
+				<unitPattern count="other">{0} 分</unitPattern>
+			</unit>
+			<unit type="angle-arc-second">
+				<unitPattern count="other">{0} 秒</unitPattern>
+			</unit>
+			<unit type="area-square-kilometer">
+				<perUnitPattern>{0} 每平方公里</perUnitPattern>
+			</unit>
+			<unit type="area-square-meter">
+				<displayName>平方米</displayName>
+				<unitPattern count="other">{0} 平方米</unitPattern>
+				<perUnitPattern>{0} 每平方米</perUnitPattern>
+			</unit>
+			<unit type="area-square-centimeter">
+				<displayName>平方厘米</displayName>
+				<unitPattern count="other">{0} 平方厘米</unitPattern>
+				<perUnitPattern>{0} 每平方厘米</perUnitPattern>
+			</unit>
+			<unit type="area-square-mile">
+				<perUnitPattern>{0} 每平方英里</perUnitPattern>
+			</unit>
+			<unit type="area-square-foot">
+				<displayName>平方呎</displayName>
+				<unitPattern count="other">{0} 平方呎</unitPattern>
+			</unit>
+			<unit type="area-square-inch">
+				<displayName>平方吋</displayName>
+				<unitPattern count="other">{0} 平方吋</unitPattern>
+				<perUnitPattern>{0} 每平方吋</perUnitPattern>
+			</unit>
+			<unit type="concentr-millimole-per-liter">
+				<displayName>毫摩爾/公升</displayName>
+				<unitPattern count="other">{0} 毫摩爾/公升</unitPattern>
+			</unit>
+			<unit type="concentr-permillion">
+				<unitPattern count="other">{0} ppm</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-kilometer">
+				<unitPattern count="other">{0} 升每公里</unitPattern>
+			</unit>
+			<unit type="consumption-mile-per-gallon">
+				<unitPattern count="other">{0} 英里每加侖</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<perUnitPattern>{0} 每年</perUnitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>個月</displayName>
+				<perUnitPattern>{0} 每月</perUnitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName>星期</displayName>
+				<unitPattern count="other">{0} 星期</unitPattern>
+				<perUnitPattern>{0} 每週</perUnitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName>日</displayName>
+				<unitPattern count="other">{0} 日</unitPattern>
+				<perUnitPattern>{0} 每日</perUnitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<perUnitPattern>{0} 每小時</perUnitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<perUnitPattern>{0} 每分鐘</perUnitPattern>
+			</unit>
+			<unit type="duration-second">
+				<perUnitPattern>{0}每秒</perUnitPattern>
+			</unit>
+			<unit type="duration-nanosecond">
+				<displayName>納秒</displayName>
+				<unitPattern count="other">{0} 納秒</unitPattern>
+			</unit>
+			<unit type="energy-foodcalorie">
+				<displayName>千卡</displayName>
+				<unitPattern count="other">{0} 千卡</unitPattern>
+			</unit>
+			<unit type="energy-kilojoule">
+				<displayName>千焦</displayName>
+			</unit>
+			<unit type="energy-joule">
+				<unitPattern count="other">{0} 焦耳</unitPattern>
+			</unit>
+			<unit type="graphics-em">
+				<displayName>em</displayName>
+				<unitPattern count="other">{0} em</unitPattern>
+			</unit>
+			<unit type="graphics-pixel">
+				<displayName>px</displayName>
+				<unitPattern count="other">{0} px</unitPattern>
+			</unit>
+			<unit type="graphics-megapixel">
+				<displayName>MP</displayName>
+				<unitPattern count="other">{0} MP</unitPattern>
+			</unit>
+			<unit type="graphics-pixel-per-centimeter">
+				<displayName>ppcm</displayName>
+				<unitPattern count="other">{0} ppcm</unitPattern>
+			</unit>
+			<unit type="graphics-pixel-per-inch">
+				<displayName>ppi</displayName>
+				<unitPattern count="other">{0} ppi</unitPattern>
+			</unit>
+			<unit type="graphics-dot-per-centimeter">
+				<displayName>dpcm</displayName>
+				<unitPattern count="other">{0} dpcm</unitPattern>
+			</unit>
+			<unit type="graphics-dot-per-inch">
+				<displayName>dpi</displayName>
+				<unitPattern count="other">{0} dpi</unitPattern>
+			</unit>
+			<unit type="length-kilometer">
+				<perUnitPattern>{0} 每公里</perUnitPattern>
+			</unit>
+			<unit type="length-meter">
+				<displayName>米</displayName>
+				<unitPattern count="other">{0} 米</unitPattern>
+				<perUnitPattern>{0} 每米</perUnitPattern>
+			</unit>
+			<unit type="length-decimeter">
+				<displayName>分米</displayName>
+				<unitPattern count="other">{0} 分米</unitPattern>
+			</unit>
+			<unit type="length-centimeter">
+				<displayName>厘米</displayName>
+				<unitPattern count="other">{0} 厘米</unitPattern>
+				<perUnitPattern>{0} 每厘米</perUnitPattern>
+			</unit>
+			<unit type="length-millimeter">
+				<displayName>毫米</displayName>
+				<unitPattern count="other">{0} 毫米</unitPattern>
+			</unit>
+			<unit type="length-nanometer">
+				<displayName>納米</displayName>
+				<unitPattern count="other">{0} 納米</unitPattern>
+			</unit>
+			<unit type="length-mile">
+				<displayName>哩</displayName>
+				<unitPattern count="other">{0} 哩</unitPattern>
+			</unit>
+			<unit type="length-foot">
+				<displayName>呎</displayName>
+				<perUnitPattern>{0} 每呎</perUnitPattern>
+			</unit>
+			<unit type="length-inch">
+				<displayName>吋</displayName>
+				<perUnitPattern>{0} 每吋</perUnitPattern>
+			</unit>
+			<unit type="length-nautical-mile">
+				<displayName>浬</displayName>
+				<unitPattern count="other">{0} 浬</unitPattern>
+			</unit>
+			<unit type="length-point">
+				<unitPattern count="other">{0} pt</unitPattern>
+			</unit>
+			<unit type="light-candela">
+				<displayName>坎德拉</displayName>
+				<unitPattern count="other">{0} 坎德拉</unitPattern>
+			</unit>
+			<unit type="mass-kilogram">
+				<perUnitPattern>{0} 每公斤</perUnitPattern>
+			</unit>
+			<unit type="mass-gram">
+				<perUnitPattern>{0} 每克</perUnitPattern>
+			</unit>
+			<unit type="mass-pound">
+				<perUnitPattern>{0} 每磅</perUnitPattern>
+			</unit>
+			<unit type="mass-ounce">
+				<displayName>安士</displayName>
+				<unitPattern count="other">{0} 安士</unitPattern>
+				<perUnitPattern>{0} 每安士</perUnitPattern>
+			</unit>
+			<unit type="mass-ounce-troy">
+				<displayName>金衡安士</displayName>
+				<unitPattern count="other">{0} 金衡安士</unitPattern>
+			</unit>
+			<unit type="mass-grain">
+				<displayName>格令</displayName>
+				<unitPattern count="other">{0} 格令</unitPattern>
+			</unit>
+			<unit type="power-megawatt">
+				<displayName>兆瓦</displayName>
+				<unitPattern count="other">{0} 兆瓦</unitPattern>
+			</unit>
+			<unit type="power-watt">
+				<displayName>瓦</displayName>
+			</unit>
+			<unit type="pressure-pound-force-per-square-inch">
+				<displayName>磅每平方吋</displayName>
+				<unitPattern count="other">{0} 磅每平方吋</unitPattern>
+			</unit>
+			<unit type="pressure-inch-ofhg">
+				<displayName>英吋汞柱</displayName>
+				<unitPattern count="other">{0} 英吋汞柱</unitPattern>
+			</unit>
+			<unit type="speed-kilometer-per-hour">
+				<displayName>公里每小時</displayName>
+				<unitPattern count="other">{0} 公里每小時</unitPattern>
+			</unit>
+			<unit type="speed-meter-per-second">
+				<displayName>米每秒</displayName>
+				<unitPattern count="other">{0} 米/秒</unitPattern>
+			</unit>
+			<unit type="speed-mile-per-hour">
+				<displayName>英里每小時</displayName>
+				<unitPattern count="other">{0} 英里每小時</unitPattern>
+			</unit>
+			<unit type="temperature-celsius">
+				<displayName>°C</displayName>
+			</unit>
+			<unit type="temperature-fahrenheit">
+				<displayName>°F</displayName>
+			</unit>
+			<unit type="volume-cubic-meter">
+				<displayName>立方米</displayName>
+				<unitPattern count="other">{0} 立方米</unitPattern>
+				<perUnitPattern>{0} 每立方米</perUnitPattern>
+			</unit>
+			<unit type="volume-cubic-centimeter">
+				<displayName>立方厘米</displayName>
+				<unitPattern count="other">{0} 立方厘米</unitPattern>
+				<perUnitPattern>{0} 每立方厘米</perUnitPattern>
+			</unit>
+			<unit type="volume-cubic-foot">
+				<displayName>立方呎</displayName>
+				<unitPattern count="other">{0} 立方呎</unitPattern>
+			</unit>
+			<unit type="volume-cubic-inch">
+				<displayName>立方吋</displayName>
+				<unitPattern count="other">{0} 立方吋</unitPattern>
+			</unit>
+			<unit type="volume-liter">
+				<displayName>升</displayName>
+				<perUnitPattern>{0} 每升</perUnitPattern>
+			</unit>
+			<unit type="volume-centiliter">
+				<displayName>厘升</displayName>
+				<unitPattern count="other">{0} 厘升</unitPattern>
+			</unit>
+			<unit type="volume-cup-metric">
+				<unitPattern count="other">{0} 公制量杯</unitPattern>
+			</unit>
+			<unit type="volume-acre-foot">
+				<displayName>英畝呎</displayName>
+				<unitPattern count="other">{0} 英畝呎</unitPattern>
+			</unit>
+			<unit type="volume-gallon">
+				<perUnitPattern>{0} 每加侖</perUnitPattern>
+			</unit>
+			<unit type="volume-cup">
+				<unitPattern count="other">{0} 量杯</unitPattern>
+			</unit>
+			<unit type="volume-fluid-ounce">
+				<displayName>液安士</displayName>
+				<unitPattern count="other">{0} 液安士</unitPattern>
+			</unit>
+			<unit type="volume-fluid-ounce-imperial">
+				<displayName>英制液安士</displayName>
+				<unitPattern count="other">{0} 英制液安士</unitPattern>
+			</unit>
+			<coordinateUnit>
+				<coordinateUnitPattern type="east">{0} 東</coordinateUnitPattern>
+				<coordinateUnitPattern type="north">{0} 北</coordinateUnitPattern>
+				<coordinateUnitPattern type="south">{0} 南</coordinateUnitPattern>
+				<coordinateUnitPattern type="west">{0} 西</coordinateUnitPattern>
+			</coordinateUnit>
+		</unitLength>
+		<unitLength type="narrow">
+			<compoundUnit type="10p-1">
+				<unitPrefixPattern>{0} 分米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-2">
+				<unitPrefixPattern>{0} 厘米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-3">
+				<unitPrefixPattern>{0} 毫米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-9">
+				<unitPrefixPattern>{0} 納米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-21">
+				<unitPrefixPattern>{0} 介米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p-24">
+				<unitPrefixPattern>{0} 攸米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p6">
+				<unitPrefixPattern>{0} 百萬米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="10p21">
+				<unitPrefixPattern>{0} 澤米</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p1">
+				<unitPrefixPattern>{0} 千位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p2">
+				<unitPrefixPattern>{0} 百萬位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p3">
+				<unitPrefixPattern>{0} 吉位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p4">
+				<unitPrefixPattern>{0} 兆位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p5">
+				<unitPrefixPattern>{0} 拍位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p6">
+				<unitPrefixPattern>{0} 艾位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p7">
+				<unitPrefixPattern>{0} 皆位元組</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p8">
+				<unitPrefixPattern>{0} 佑位元組</unitPrefixPattern>
+			</compoundUnit>
+			<unit type="acceleration-meter-per-square-second">
+				<displayName>米每平方秒</displayName>
+			</unit>
+			<unit type="angle-revolution">
+				<displayName>周</displayName>
+				<unitPattern count="other">{0} 周</unitPattern>
+			</unit>
+			<unit type="angle-degree">
+				<displayName>度</displayName>
+			</unit>
+			<unit type="area-square-kilometer">
+				<perUnitPattern>{0} 每平方公里</perUnitPattern>
+			</unit>
+			<unit type="area-square-meter">
+				<displayName>平方米</displayName>
+				<perUnitPattern>{0} 每平方米</perUnitPattern>
+			</unit>
+			<unit type="area-square-centimeter">
+				<displayName>平方厘米</displayName>
+				<perUnitPattern>{0} 每平方厘米</perUnitPattern>
+			</unit>
+			<unit type="area-square-mile">
+				<unitPattern count="other">{0}mi²</unitPattern>
+				<perUnitPattern>{0} 每平方英里</perUnitPattern>
+			</unit>
+			<unit type="area-square-foot">
+				<displayName>平方呎</displayName>
+				<unitPattern count="other">{0}ft²</unitPattern>
+			</unit>
+			<unit type="area-square-inch">
+				<displayName>平方吋</displayName>
+				<perUnitPattern>{0} 每平方吋</perUnitPattern>
+			</unit>
+			<unit type="concentr-millimole-per-liter">
+				<displayName draft="contributed">毫摩爾/公升</displayName>
+			</unit>
+			<unit type="concentr-permillion">
+				<unitPattern count="other">{0} ppm</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-100-kilometer">
+				<unitPattern count="other">{0}L/100km</unitPattern>
+			</unit>
+			<unit type="duration-century">
+				<unitPattern count="other" draft="contributed">{0}世紀</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<unitPattern count="other">{0}年</unitPattern>
+				<perUnitPattern>{0} 每年</perUnitPattern>
+			</unit>
+			<unit type="duration-month">
+				<unitPattern count="other">{0}個月</unitPattern>
+				<perUnitPattern>{0} 每月</perUnitPattern>
+			</unit>
+			<unit type="duration-week">
+				<unitPattern count="other">{0}週</unitPattern>
+				<perUnitPattern draft="contributed">{0} 每星期</perUnitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName>日</displayName>
+				<unitPattern count="other">{0}日</unitPattern>
+				<perUnitPattern>{0} 每日</perUnitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<unitPattern count="other">{0}小時</unitPattern>
+				<perUnitPattern>{0} 每小時</perUnitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>分</displayName>
+				<unitPattern count="other">{0}分</unitPattern>
+				<perUnitPattern>{0} 每分鐘</perUnitPattern>
+			</unit>
+			<unit type="duration-second">
+				<unitPattern count="other">{0}秒</unitPattern>
+			</unit>
+			<unit type="duration-millisecond">
+				<unitPattern count="other">{0}毫秒</unitPattern>
+			</unit>
+			<unit type="duration-nanosecond">
+				<displayName>納秒</displayName>
+			</unit>
+			<unit type="energy-kilojoule">
+				<displayName>千焦</displayName>
+			</unit>
+			<unit type="length-kilometer">
+				<perUnitPattern draft="contributed">{0} 每公里</perUnitPattern>
+			</unit>
+			<unit type="length-meter">
+				<displayName>米</displayName>
+				<unitPattern count="other">{0}米</unitPattern>
+				<perUnitPattern draft="contributed">{0} 每米</perUnitPattern>
+			</unit>
+			<unit type="length-decimeter">
+				<displayName draft="contributed">分米</displayName>
+			</unit>
+			<unit type="length-centimeter">
+				<displayName>厘米</displayName>
+				<unitPattern count="other">{0}厘米</unitPattern>
+				<perUnitPattern draft="contributed">{0} 每厘米</perUnitPattern>
+			</unit>
+			<unit type="length-millimeter">
+				<displayName>毫米</displayName>
+				<unitPattern count="other">{0}毫米</unitPattern>
+			</unit>
+			<unit type="length-nanometer">
+				<displayName draft="contributed">納米</displayName>
+			</unit>
+			<unit type="length-mile">
+				<displayName draft="contributed">哩</displayName>
+			</unit>
+			<unit type="length-foot">
+				<displayName draft="contributed">呎</displayName>
+				<perUnitPattern draft="contributed">{0} 每呎</perUnitPattern>
+			</unit>
+			<unit type="length-inch">
+				<displayName draft="contributed">吋</displayName>
+				<perUnitPattern draft="contributed">{0} 每吋</perUnitPattern>
+			</unit>
+			<unit type="length-nautical-mile">
+				<displayName draft="contributed">浬</displayName>
+			</unit>
+			<unit type="length-point">
+				<displayName draft="contributed">pt</displayName>
+				<unitPattern count="other" draft="contributed">{0} pt</unitPattern>
+			</unit>
+			<unit type="mass-kilogram">
+				<perUnitPattern>{0} 每公斤</perUnitPattern>
+			</unit>
+			<unit type="mass-gram">
+				<perUnitPattern>{0} 每克</perUnitPattern>
+			</unit>
+			<unit type="mass-pound">
+				<perUnitPattern>{0} 每磅</perUnitPattern>
+			</unit>
+			<unit type="mass-ounce">
+				<displayName>安士</displayName>
+				<unitPattern count="other">{0} 安士</unitPattern>
+				<perUnitPattern>{0} 每安士</perUnitPattern>
+			</unit>
+			<unit type="mass-ounce-troy">
+				<displayName>金衡安士</displayName>
+			</unit>
+			<unit type="power-megawatt">
+				<displayName>兆瓦</displayName>
+			</unit>
+			<unit type="power-watt">
+				<displayName>瓦</displayName>
+			</unit>
+			<unit type="pressure-pound-force-per-square-inch">
+				<displayName>磅每平方吋</displayName>
+			</unit>
+			<unit type="pressure-inch-ofhg">
+				<displayName>英吋汞柱</displayName>
+				<unitPattern count="other">{0}″ Hg</unitPattern>
+			</unit>
+			<unit type="speed-kilometer-per-hour">
+				<unitPattern count="other">{0}kph</unitPattern>
+			</unit>
+			<unit type="speed-meter-per-second">
+				<displayName>米每秒</displayName>
+				<unitPattern count="other">{0}m/s</unitPattern>
+			</unit>
+			<unit type="speed-mile-per-hour">
+				<displayName>英里每小時</displayName>
+				<unitPattern count="other">{0}mph</unitPattern>
+			</unit>
+			<unit type="temperature-fahrenheit">
+				<displayName>°F</displayName>
+			</unit>
+			<unit type="volume-cubic-meter">
+				<displayName>立方米</displayName>
+			</unit>
+			<unit type="volume-cubic-centimeter">
+				<displayName>立方厘米</displayName>
+				<perUnitPattern>{0} 每立方厘米</perUnitPattern>
+			</unit>
+			<unit type="volume-cubic-mile">
+				<unitPattern count="other">{0}mi³</unitPattern>
+			</unit>
+			<unit type="volume-cubic-foot">
+				<displayName>立方呎</displayName>
+			</unit>
+			<unit type="volume-cubic-inch">
+				<displayName>立方吋</displayName>
+			</unit>
+			<unit type="volume-liter">
+				<displayName>升</displayName>
+				<perUnitPattern>{0} 每升</perUnitPattern>
+			</unit>
+			<unit type="volume-centiliter">
+				<displayName draft="contributed">厘升</displayName>
+			</unit>
+			<unit type="volume-cup-metric">
+				<unitPattern count="other">{0} 量杯</unitPattern>
+			</unit>
+			<unit type="volume-acre-foot">
+				<displayName>英畝呎</displayName>
+			</unit>
+			<unit type="volume-gallon">
+				<perUnitPattern>{0} 每加侖</perUnitPattern>
+			</unit>
+			<coordinateUnit>
+				<coordinateUnitPattern type="east">{0}E</coordinateUnitPattern>
+				<coordinateUnitPattern type="north">{0}N</coordinateUnitPattern>
+				<coordinateUnitPattern type="south">{0}S</coordinateUnitPattern>
+				<coordinateUnitPattern type="west">{0}W</coordinateUnitPattern>
+			</coordinateUnit>
+		</unitLength>
+	</units>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="end">{0}及{1}</listPatternPart>
+			<listPatternPart type="2">{0}及{1}</listPatternPart>
+		</listPattern>
+		<listPattern type="standard-short">
+			<listPatternPart type="end">{0}及{1}</listPatternPart>
+			<listPatternPart type="2">{0}及{1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<characterLabels>
+		<characterLabelPattern type="enclosed">{0} — 包含</characterLabelPattern>
+		<characterLabelPattern type="historic">{0} — 舊式</characterLabelPattern>
+		<characterLabelPattern type="miscellaneous">{0} — 雜項</characterLabelPattern>
+		<characterLabelPattern type="scripts">書寫體 — {0}</characterLabelPattern>
+		<characterLabel type="arrows">箭嘴</characterLabel>
+		<characterLabel type="downwards_arrows">左右箭嘴</characterLabel>
+		<characterLabel type="downwards_upwards_arrows">上下箭嘴</characterLabel>
+		<characterLabel type="leftwards_arrows">向左箭嘴</characterLabel>
+		<characterLabel type="leftwards_rightwards_arrows">左右箭嘴</characterLabel>
+		<characterLabel type="rightwards_arrows">向右箭嘴</characterLabel>
+		<characterLabel type="upwards_arrows">向上箭嘴</characterLabel>
+	</characterLabels>
+	<typographicNames>
+		<styleName type="slnt" subtype="-12">左斜體</styleName>
+		<featureName type="afrc">垂直分數</featureName>
+		<featureName type="dlig">可選用連字</featureName>
+		<featureName type="frac">斜線分數</featureName>
+		<featureName type="tnum">表格式數字</featureName>
+	</typographicNames>
+</ldml>

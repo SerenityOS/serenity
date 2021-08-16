@@ -1,0 +1,2 @@
+PrivateStaticImport.java:18:17: compiler.err.cant.resolve.location: kindname.variable, FOO_VALUE, , , (compiler.misc.location: kindname.class, psi.Bar, null)
+1 error

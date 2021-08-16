@@ -1,0 +1,137 @@
+#
+# Configuration file for serialization benchmarks
+#
+
+# Warmup (Time class descriptor reads/writes)
+# Arguments: <tree depth> <# batches> <# cycles per batch>
+0.0 "Warmup" bench.serial.SmallObjTrees 6 100 100
+
+# Time object stream construction
+# Arguments: <# repetitions>
+1.0 "Object stream construction" bench.serial.Cons 100000
+
+# Time boolean reads/writes
+# Arguments: <# batches> <# cycles per batch>
+1.0 "Booleans" bench.serial.Booleans 250 5000
+
+# Time byte reads/writes
+# Arguments: <# batches> <# cycles per batch>
+1.0 "Bytes" bench.serial.Bytes 250 5000
+
+# Time char reads/writes
+# Arguments: <# batches> <# cycles per batch>
+1.0 "Chars" bench.serial.Chars 250 5000
+
+# Time short reads/writes
+# Arguments: <# batches> <# cycles per batch>
+1.0 "Shorts" bench.serial.Shorts 250 5000
+
+# Time int reads/writes
+# Arguments: <# batches> <# cycles per batch>
+1.0 "Ints" bench.serial.Ints 250 5000
+
+# Time long reads/writes
+# Arguments: <# batches> <# cycles per batch>
+1.0 "Longs" bench.serial.Longs 250 5000
+
+# Time float reads/writes
+# Arguments: <# batches> <# cycles per batch>
+1.0 "Floats" bench.serial.Floats 250 5000
+
+# Time double reads/writes
+# Arguments: <# batches> <# cycles per batch>
+1.0 "Doubles" bench.serial.Doubles 250 5000
+
+# Time boolean array reads/writes
+# Arguments: <array size> <# batches> <# cycles per batch>
+1.0 "Boolean arrays" bench.serial.BooleanArrays 250 50 50
+
+# Time byte array reads/writes
+# Arguments: <array size> <# batches> <# cycles per batch>
+1.0 "Byte arrays" bench.serial.ByteArrays 250 50 50
+
+# Time char array reads/writes
+# Arguments: <array size> <# batches> <# cycles per batch>
+1.0 "Char arrays" bench.serial.CharArrays 250 50 50
+
+# Time short array reads/writes
+# Arguments: <array size> <# batches> <# cycles per batch>
+1.0 "Short arrays" bench.serial.ShortArrays 250 50 50
+
+# Time int array reads/writes
+# Arguments: <array size> <# batches> <# cycles per batch>
+1.0 "Int arrays" bench.serial.IntArrays 250 50 50
+
+# Time long array reads/writes
+# Arguments: <array size> <# batches> <# cycles per batch>
+1.0 "Long arrays" bench.serial.LongArrays 250 50 50
+
+# Time float array reads/writes
+# Arguments: <array size> <# batches> <# cycles per batch>
+1.0 "Float arrays" bench.serial.FloatArrays 250 50 50
+
+# Time double array reads/writes
+# Arguments: <array size> <# batches> <# cycles per batch>
+1.0 "Double arrays" bench.serial.DoubleArrays 250 50 50
+
+# Time short string reads/writes
+# Arguments: <string length> <# batches> <# cycles per batch>
+1.0 "Short strings" bench.serial.Strings 5 500 500
+
+# Time long string reads/writes
+# Arguments: <string length> <# batches> <# cycles per batch>
+1.0 "Long strings" bench.serial.Strings 150 50 50
+
+# Time object array reads/writes
+# Arguments: <array size> <# batches> <# cycles per batch>
+1.0 "Object arrays" bench.serial.ObjArrays 50 50 50
+
+# Time object tree reads/writes
+# Arguments: <tree depth> <# batches> <# cycles per batch>
+1.0 "Object trees" bench.serial.ObjTrees 3 50 500
+
+# Time externalizable-object tree reads/writes
+# Arguments: <tree depth> <# batches> <# cycles per batch>
+1.0 "Externalizable-object trees" bench.serial.ExternObjTrees 3 50 500
+
+# Time object tree reads/writes with custom writeObject/readObject methods
+# Arguments: <tree depth> <# batches> <# cycles per batch>
+1.0 "read/writeObject trees" bench.serial.CustomObjTrees 3 50 500
+
+# Time object tree reads/writes using defaultWriteObject/defaultReadObject
+# Arguments: <tree depth> <# batches> <# cycles per batch>
+1.0 "defaultRead/WriteObject trees" bench.serial.CustomDefaultObjTrees 3 50 500
+
+# Time GetField/PutField API
+# Arguments: <tree depth> <# batches> <# cycles per batch>
+1.0 "GetField/PutField trees" bench.serial.GetPutFieldTrees 3 50 500
+
+# Time replaceable-object tree reads/writes
+# Arguments: <tree depth> <# batches> <# cycles per batch>
+1.0 "writeReplace/readResolve trees" bench.serial.ReplaceTrees 3 5000 1
+
+# Time small-object tree reads/writes
+# Arguments: <tree depth> <# batches> <# cycles per batch>
+1.0 "Small-object trees" bench.serial.SmallObjTrees 3 50 50
+
+# Time repeated object reads/writes
+# Arguments: <# objects> <# batches>
+1.0 "Repeated objects" bench.serial.RepeatObjs 500 5000
+
+# Time class descriptor reads/writes
+# Arguments: <# cycles>
+1.0 "Class descriptors" bench.serial.ClassDesc 10000
+
+#
+# NOTE: the following two benchmarks should be commented out unless you are
+# running Java 2 version 1.3 or higher.
+#
+
+# Time proxy class descriptor reads/writes
+# Arguments: <# cycles>
+1.0 "Proxy class descriptors" bench.serial.ProxyClassDesc 10000
+
+# Time proxy array reads/writes
+# Arguments: <array size> <# batches> <# cycles per batch>
+1.0 "Proxy arrays" bench.serial.ProxyArrays 50 50 50
+

@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<menubar>
+	<menu>
+		<id>file</id>
+		<item>
+			<id>exit</id>
+			<method>doExit 0</method>
+			<type>all</type>
+		</item>
+	</menu>
+	<menu>
+		<id>edit</id>
+		<item>
+			<id>prefs</id>
+			<method>showPrefsWindow 0</method>
+			<type>all</type>
+		</item>
+	</menu>
+</menubar>
+

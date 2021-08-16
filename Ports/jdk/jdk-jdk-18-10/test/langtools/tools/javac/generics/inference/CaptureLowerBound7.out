@@ -1,0 +1,2 @@
+CaptureLowerBound.java:17:7: compiler.err.cant.apply.symbol: kindname.method, m, CaptureLowerBound.I<? extends X,X>, CaptureLowerBound.C<compiler.misc.type.captureof: 1, ?>, kindname.class, CaptureLowerBound, (compiler.misc.inferred.do.not.conform.to.lower.bounds: compiler.misc.type.captureof: 1, ?, java.lang.Object)
+1 error

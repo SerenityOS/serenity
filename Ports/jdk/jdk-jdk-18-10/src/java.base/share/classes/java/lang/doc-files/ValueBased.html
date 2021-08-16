@@ -1,0 +1,73 @@
+<!doctype html>
+<!--
+ Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+<html lang="en">
+<head>
+  <title>Value-based Classes</title>
+  <link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<h1 id="ValueBased">{@index "Value-based Classes"}</h1>
+
+Some classes, such as <code>java.lang.Integer</code> and
+<code>java.time.LocalDate</code>, are <em>value-based</em>.
+A value-based class has the following properties:
+<ul>
+    <li>the class declares only final instance fields (though these may contain references
+        to mutable objects);</li>
+    <li>the class's implementations of <code>equals</code>, <code>hashCode</code>,
+        and <code>toString</code> compute their results solely from the values
+        of the class's instance fields (and the members of the objects they
+        reference), not from the instance's identity;</li>
+    <li>the class's methods treat instances as <em>freely substitutable</em>
+        when equal, meaning that interchanging any two instances <code>x</code> and
+        <code>y</code> that are equal according to <code>equals()</code> produces no
+        visible change in the behavior of the class's methods;</li>
+    <li>the class performs no synchronization using an instance's monitor;</li>
+    <li>the class does not declare (or has deprecated any) accessible constructors;</li>
+    <li>the class does not provide any instance creation mechanism that promises
+        a unique identity on each method call&mdash;in particular, any factory
+        method's contract must allow for the possibility that if two independently-produced
+        instances are equal according to <code>equals()</code>, they may also be
+        equal according to <code>==</code>;</li>
+    <li>the class is final, and extends either <code>Object</code> or a hierarchy of
+        abstract classes that declare no instance fields or instance initializers
+        and whose constructors are empty.</li>
+</ul>
+
+<p>When two instances of a value-based class are equal (according to `equals`), a program
+    should not attempt to distinguish between their identities, whether directly via reference
+    equality or indirectly via an appeal to synchronization, identity hashing,
+    serialization, or any other identity-sensitive mechanism.</p>
+
+<p>Synchronization on instances of value-based classes is strongly discouraged,
+    because the programmer cannot guarantee exclusive ownership of the
+    associated monitor.</p>
+
+<p>Identity-related behavior of value-based classes may change in a future release.
+    For example, synchronization may fail.</p>
+
+</body>
+</html>

@@ -1,0 +1,2 @@
+TestCore.class:-:-: compiler.warn.annotation.method.not.found.reason: test.annotation.TestAnnotation, test, (compiler.misc.class.file.not.found: test.annotation.TestAnnotation)
+1 warning

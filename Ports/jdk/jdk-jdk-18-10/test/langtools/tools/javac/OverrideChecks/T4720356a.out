@@ -1,0 +1,2 @@
+T4720356a.java:16:16: compiler.err.override.incompatible.ret: (compiler.misc.cant.override: m(), p1.T4720356c, m(), p1.T4720356a), int, void
+1 error

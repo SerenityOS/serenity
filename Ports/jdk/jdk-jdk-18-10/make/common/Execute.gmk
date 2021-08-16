@@ -1,0 +1,198 @@
+#
+# Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+ifeq (,$(_MAKEBASE_GMK))
+  $(error You must include MakeBase.gmk prior to including Execute.gmk)
+endif
+
+################################################################################
+#
+# Code for handling the SetupExecute macro.
+#
+################################################################################
+
+
+################################################################################
+# Setup make rules for executing an arbitrary command.
+#
+# Parameter 1 is the name of the rule. This name is used as variable prefix,
+# and the targets generated are listed in a variable by that name.
+#
+# You need to specify a COMMAND, the actual command line to execute. You are
+# strongly recommended to provide a INFO with the text to display for LOG=info
+# on what operation is performed. You can use DEPS to provide additional
+# dependencies for your command to run. You can optionally include a PRE_COMMAND
+# and a POST_COMMAND, intended for simple pre- and post-processing. The latter
+# might be e.g. a mv from a temporary file to the final destination, the former
+# e.g. a simple sed replacement on the input file. If the operations are
+# unrelated to the main COMMAND, this is not a suitable solution.
+#
+# If your command outputs a variety of files, or if it's really a single file
+# but you don't really care about the output from the perspective, you can just
+# supply an OUTPUT_DIR. You are supposed to make sure the command creates files
+# in this directory (which will be created for you if it does not exist), but
+# this can't be enforced by SetupExecute. Additional support files (like logs
+# and markers) are created in this directory. If you want support files in a
+# separate directory (e.g. if you're targeting an OUTPUT_DIR in the image
+# directly), you can specify a SUPPORT_DIR. If your command outputs only a
+# single file, you can get rid of the marker files (but not the log files) by
+# specifying OUTPUT_FILE. Note that if you specify an OUTPUT_FILE, support log
+# files will be placed in the same directory as the OUTPUT_FILE. If you do not
+# want that, use SUPPORT_DIR as well.
+#
+# After the call to SetupExecute, $1 will contain references to all generated
+# files (that make knows about), and $1_TARGET will contain a reference to the
+# final target (that is OUTPUT_FILE if it exists, or the $1_exec.marker file
+# otherwise).
+#
+# All the above keep functioning as expected even if PRE_COMMAND and
+# POST_COMMAND are given. One special case worth noting is that if OUTPUT_FILE
+# and POST_COMMAND is both given, the actual OUTPUT_FILE is considered to be a
+# result of running the POST_COMMAND.
+#
+# Remaining parameters are named arguments. These include:
+#   COMMAND     : The command to execute
+#   PRE_COMMAND : A helper command to execute before COMMAND
+#   POST_COMMAND: A helper command to execute after COMMAND
+#   OUTPUT_DIR  : The directory that will contain the result from the command
+#   OUTPUT_FILE : Use this if the command results in a single output file
+#   SUPPORT_DIR : Where to store generated support files
+#   INFO        : Message to display at LOG=info level when running command (optional)
+#   WARN        : Message to display at LOG=warn level when running command (optional)
+#   DEPS        : Dependencies for the execution to take place
+#
+
+# Setup make rules for copying files, with an option to do more complex
+SetupExecute = $(NamedParamsMacroTemplate)
+define SetupExecuteBody
+  ifeq ($$($1_COMMAND), )
+    $$(error COMMAND is missing in SetupExecute $1)
+  endif
+
+  ifneq ($$($1_OUTPUT_FILE), )
+    ifneq ($$($1_OUTPUT_DIR), )
+      $$(error Cannot specify both OUTPUT_DIR and OUTPUT_FILE in SetupExecute $1)
+    endif
+    # We need to know output dir since we will make sure it is created.
+    $1_OUTPUT_DIR := $$(patsubst %/,%, $$(dir $$($1_OUTPUT_FILE)))
+    ifeq ($$($1_SUPPORT_DIR), )
+      # If support dir is not given, use base dir of output file.
+      $1_SUPPORT_DIR := $$($1_OUTPUT_DIR)
+    endif
+  else ifneq ($$($1_OUTPUT_DIR), )
+    ifeq ($$($1_SUPPORT_DIR), )
+      # If support dir is not given, use output dir.
+      $1_SUPPORT_DIR := $$($1_OUTPUT_DIR)
+    endif
+  else
+    $$(error OUTPUT_DIR or OUTPUT_FILE is required in SetupExecute $1)
+  endif
+
+  $1_BASE := $$($1_SUPPORT_DIR)/_$1
+  $1_PRE_MARKER := $$($1_BASE)_pre.marker
+  $1_EXEC_MARKER := $$($1_BASE)_exec.marker
+  $1_POST_MARKER := $$($1_BASE)_post.marker
+
+  ifeq ($$($1_OUTPUT_FILE), )
+    # No specified output file, use markers everywhere
+    $1_EXEC_RESULT := $$($1_EXEC_MARKER)
+    ifeq ($$($1_POST_COMMAND), )
+      $1_FINAL_RESULT := $$($1_EXEC_MARKER)
+    else
+      $1_FINAL_RESULT := $$($1_POST_MARKER)
+    endif
+
+  else
+    # If we have a single output file, we don't need a separate marker
+
+    ifeq ($$($1_POST_COMMAND), )
+      $1_EXEC_RESULT := $$($1_OUTPUT_FILE)
+      $1_FINAL_RESULT := $$($1_EXEC_RESULT)
+    else
+      $1_EXEC_RESULT := $$($1_EXEC_MARKER)
+      $1_FINAL_RESULT := $$($1_OUTPUT_FILE)
+    endif
+
+  endif
+
+  ifeq ($$($1_INFO)$$($1_WARN), )
+    # If neither info nor warn is provided, add basic info text.
+    $1_INFO := Running commands for $1
+  endif
+
+  ifneq ($$($1_PRE_COMMAND), )
+
+    $$($1_PRE_MARKER): $$($1_DEPS)
+        ifneq ($$($1_WARN), )
+	  $$(call LogWarn, $$($1_WARN))
+        endif
+        ifneq ($$($1_INFO), )
+	  $$(call LogInfo, $$($1_INFO))
+        endif
+	$$(call MakeDir, $$($1_SUPPORT_DIR) $$($1_OUTPUT_DIR))
+	$$(call ExecuteWithLog, $$($1_BASE)_pre, \
+	    $$($1_PRE_COMMAND))
+	$$(TOUCH) $$@
+
+    $$($1_EXEC_RESULT): $$($1_PRE_MARKER)
+	$$(call ExecuteWithLog, $$($1_BASE)_exec, \
+	    $$($1_COMMAND))
+        ifeq ($$($1_EXEC_RESULT), $$($1_EXEC_MARKER))
+	  $$(TOUCH) $$@
+        endif
+
+    $1 := $$($1_PRE_MARKER) $$($1_EXEC_RESULT)
+  else
+    $$($1_EXEC_RESULT): $$($1_DEPS)
+        ifneq ($$($1_WARN), )
+	  $$(call LogWarn, $$($1_WARN))
+        endif
+        ifneq ($$($1_INFO), )
+	  $$(call LogInfo, $$($1_INFO))
+        endif
+	$$(call MakeDir, $$(call EncodeSpace, $$($1_SUPPORT_DIR)) $$(call EncodeSpace, $$($1_OUTPUT_DIR)))
+	$$(call ExecuteWithLog, $$($1_BASE)_exec, \
+	    $$($1_COMMAND))
+        ifeq ($$($1_EXEC_RESULT), $$($1_EXEC_MARKER))
+	  $$(TOUCH) $$@
+        endif
+
+    $1 := $$($1_EXEC_RESULT)
+  endif
+
+  ifneq ($$($1_POST_COMMAND), )
+
+    $$($1_FINAL_RESULT): $$($1_EXEC_RESULT)
+	$$(call ExecuteWithLog, $$($1_BASE)_post, \
+	    $$($1_POST_COMMAND))
+	$$(TOUCH) $$@
+
+    $1 += $$($1_FINAL_RESULT)
+  endif
+
+  # Export all our generated targets in $1, and the final target in $1_TARGET.
+  $1_TARGET := $$($1_FINAL_RESULT)
+
+endef

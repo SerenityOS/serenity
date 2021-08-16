@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!-- The dtd requires a properties root, but not element -->
+
+<properties>
+<comment>comment</comment>
+    <properties>
+        <entry key="firstKey">value of the first key</entry>
+    </properties>
+</properties>

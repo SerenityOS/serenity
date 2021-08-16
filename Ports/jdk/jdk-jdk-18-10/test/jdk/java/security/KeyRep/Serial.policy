@@ -1,0 +1,3 @@
+grant {
+    // XXX note package access is *not* granted to the 'sun' package
+};

@@ -1,0 +1,62 @@
+class Test4 {
+  0xCAFEBABE;
+  0; // minor version
+  60; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1
+    class #4; // #2
+    NameAndType #5 #6; // #3
+    Utf8 "java/lang/Object"; // #4
+    Utf8 "<init>"; // #5
+    Utf8 "()V"; // #6
+    class #8; // #7
+    Utf8 "Test4"; // #8
+    Utf8 "Code"; // #9
+    Utf8 "LineNumberTable"; // #10
+    Utf8 "SourceFile"; // #11
+    Utf8 "Test4.java"; // #12
+  } // Constant Pool
+
+  0x8021; // access
+  #7;// this_cpx
+  #2;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // Fields
+  } // Fields
+
+  [] { // Methods
+    {  // method
+      0x0001; // access
+      #5; // name_index
+      #6; // descriptor_index
+      [] { // Attributes
+        Attr(#9) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#10) { // LineNumberTable
+              [] { // line_number_table
+                0  1;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    }
+  } // Methods
+
+  [] { // Attributes
+    Attr(#11) { // SourceFile
+      #12;
+    } // end SourceFile
+  } // Attributes
+} // end class Test4

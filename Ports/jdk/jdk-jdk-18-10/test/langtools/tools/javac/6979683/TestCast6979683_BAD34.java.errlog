@@ -1,0 +1,2 @@
+TestCast6979683_BAD34.java:11:49: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Number, boolean)
+1 error

@@ -1,0 +1,2 @@
+BadCovar.java:22:10: compiler.err.types.incompatible: bad.covar.B, bad.covar.A, (compiler.misc.incompatible.diff.ret: f, )
+1 error

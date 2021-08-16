@@ -1,0 +1,2 @@
+UncheckedWarningOnMatchesTest.java:14:13: compiler.err.instanceof.reifiable.not.safe: java.lang.Object, java.util.ArrayList<java.lang.Integer>
+1 error

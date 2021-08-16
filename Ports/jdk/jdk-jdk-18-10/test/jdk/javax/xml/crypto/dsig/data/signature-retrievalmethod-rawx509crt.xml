@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+  <SignedInfo>
+    <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+    <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#dsa-sha1" />
+    <Reference URI="http://www.w3.org/TR/xml-stylesheet">
+      <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+      <DigestValue>60NvZvtdTB+7UnlLp/H24p7h4bs=</DigestValue>
+    </Reference>
+  </SignedInfo>
+  <SignatureValue>
+    SNB5FI193RFXoG2j8Z9bXWgW7BMPICqNob4Hjh08oou4tkhGxz4+pg==
+  </SignatureValue>
+  <KeyInfo>
+    <RetrievalMethod Type="http://www.w3.org/2000/09/xmldsig#rawX509Certificate" URI="certs/balor.crt" />
+  </KeyInfo>
+</Signature>

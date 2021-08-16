@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>自述文件——代码点输入法</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+</head>
+<body>
+<h1>代码点输入法</h1>
+<p>
+代码点输入法是一种简单的输入法，使您可以使用 Unicode 字符的代码点或代码单元值来输入 Unicode 字符。
+</p>
+<p>该输入法接受三种不同的表示法，这三种方法都使用来自字符集 [0-9a-fA-F] 的十六进制数字： <br>
+</p>
+<ul>
+  <li>"\uxxxx"：Java 编程语言的标准 Unicode 换码表示法。此表示法允许输入不超过 U+FFFE
+的代码点；不允许输入非法代码点 U+FFFF。</li>
+  <li>"\Uxxxxxx"：此输入法专用的扩展 Unicode 换码表示法。此表示法允许直接输入任何 Unicode
+代码点，但非法代码点 U+FFFF 除外。大写 "U" 表示后跟六个十六进制数字。"xxxxxx" 必须在 000000 和 10FFFF
+之间。</li>
+  <li>"\uxxxx\uyyyy"：两个连续的标准 Unicode 换码，共同表示 U+10000 和 U+10FFFF
+之间的一个代码点（增补字符）。"xxxx" 必须在 D800 和 DBFF 之间（即高代码值），"yyyy" 必须在 DC00 和 DFFF
+之间（低代码值）。</li>
+</ul>
+一般情况下，输入法仅传递字符而不进行更改。但是，当用户键入 "\"
+时，输入法将进入编写模式。在编写模式下，用户使用上述表示法之一键入所需代码点，然后键入空格字符以转换至相应的 Unicode
+字符并提交。然后输入法将返回到传递模式，直到用户输入另一个 "\" 字符。
+<p>处于编写模式时，用户可以使用左箭头键、右箭头键、Back Space 键和 Delete 键来编辑序列。在编写序列中，只有当 "\u" 或
+"\U" 字符后面未跟有十六进制数字时，才可以将 "\u" 或 "\U" 删除。删除初始的 "\u" 或 "\U" 将使输入法返回至传递模式。
+</p>
+<p>由于初始的 "\" 字符用于启动编写模式，因此为了向文本中添加一个 "\"，用户必须键入两个 "\" 字符。如果已输入初始
+"\"，但下一个字符不是 "u"、"U" 或 "\"，则 "\"
+和随后一个字符将被提交，并且输入法将返回至传递模式。另外，在编写期间的任何时候键入一个新行或制表符都将立即提交当前编写的文本。
+</p>
+<p>输入法是 Java 运行环境的扩展；它们不能作为应用程序运行。要使用某个输入法，您必须将其安装在 JRE
+中，运行支持输入法的应用程序（例如 JFC 演示版 Notepad 和 Stylepad），并选择该输入法。您可以从“<a
+ href="http://javadesktop.org/articles/InputMethod/index.html">在 Java
+平台上使用输入法</a>”中了解有关这些步骤的更多信息，还可以从“<a
+ href="http://java.sun.com/developer/technicalArticles/Intl/Supplementary/index.html">Java
+平台中的增补字符</a>”中了解有关增补字符支持的更多信息。
+</p>
+<p>该输入法要求 JRE 5.0 或更高版本。 <br>
+</p>
+</body>
+</html>

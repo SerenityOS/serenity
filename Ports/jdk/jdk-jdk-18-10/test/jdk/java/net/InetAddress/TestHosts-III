@@ -1,0 +1,11 @@
+# test hosts file for internal NameService
+10.2.3.4  testHost.testDomain
+10.5.6.7        testHost.testDomain
+10.8.9.10
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe80::1 link-local-host
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters

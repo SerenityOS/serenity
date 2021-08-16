@@ -1,0 +1,4 @@
+DepX.java:15:1: compiler.warn.missing.deprecated.annotation
+- compiler.note.deprecated.filename: RefX.java
+- compiler.note.deprecated.recompile
+1 warning

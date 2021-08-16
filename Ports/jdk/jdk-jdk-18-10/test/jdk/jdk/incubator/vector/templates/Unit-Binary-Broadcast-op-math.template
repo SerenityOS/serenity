@@ -1,0 +1,6 @@
+    @Test(dataProvider = "$type$BinaryOpProvider")
+    static void [[TEST]]$vectorteststype$BroadcastSmokeTest(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb) {
+[[KERNEL]]
+        assertBroadcastArraysEqualsWithinOneUlp(r, a, b, $vectorteststype$::[[TEST]], $vectorteststype$::strict[[TEST]]);
+    }
+

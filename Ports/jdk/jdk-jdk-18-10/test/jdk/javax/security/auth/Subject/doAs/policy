@@ -1,0 +1,10 @@
+grant {
+    permission javax.security.auth.AuthPermission "doAs";
+    permission javax.security.auth.AuthPermission "doAsPrivileged";
+    permission java.lang.RuntimePermission "createSecurityManager";
+    permission java.lang.RuntimePermission "setSecurityManager";
+};
+
+grant principal javax.security.auth.x500.X500Principal "CN=joe" {
+    permission java.util.PropertyPermission "foobar", "read";
+};

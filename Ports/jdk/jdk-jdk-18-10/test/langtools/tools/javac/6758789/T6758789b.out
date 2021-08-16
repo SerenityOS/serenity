@@ -1,0 +1,5 @@
+T6758789b.java:16:10: compiler.warn.unchecked.meth.invocation.applied: kindname.method, m, T6758789a.Foo<X>, T6758789a.Foo, kindname.class, T6758789a
+T6758789b.java:16:11: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), T6758789a.Foo, T6758789a.Foo<X>
+- compiler.err.warnings.and.werror
+1 error
+2 warnings

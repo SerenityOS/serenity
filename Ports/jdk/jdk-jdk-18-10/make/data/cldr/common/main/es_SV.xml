@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="es"/>
+		<territory type="SV"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ace" draft="contributed">acehnés</language>
+			<language type="arp" draft="contributed">arapaho</language>
+			<language type="bho" draft="contributed">bhojpuri</language>
+			<language type="grc" draft="contributed">griego antiguo</language>
+			<language type="nso" draft="contributed">sotho septentrional</language>
+			<language type="ss" draft="contributed">siswati</language>
+			<language type="wo" draft="contributed">wolof</language>
+		</languages>
+		<territories>
+			<territory type="UM" draft="contributed">Islas menores alejadas de EE. UU.</territory>
+		</territories>
+	</localeDisplayNames>
+	<dates>
+		<fields>
+			<field type="day">
+				<relative type="-2">antier</relative>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<currencies>
+			<currency type="USD">
+				<symbol>$</symbol>
+			</currency>
+		</currencies>
+	</numbers>
+</ldml>

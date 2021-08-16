@@ -1,0 +1,3 @@
+AnnotationsAndFormalParamsTest.java:9:19: compiler.err.intf.annotation.members.cant.have.params
+AnnotationsAndFormalParamsTest.java:10:44: compiler.err.intf.annotation.members.cant.have.params
+2 errors

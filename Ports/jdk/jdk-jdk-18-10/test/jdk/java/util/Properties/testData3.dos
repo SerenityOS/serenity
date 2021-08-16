@@ -1,0 +1,29 @@
+key1=\
+-monotype-times new roman-regular-r---*-%d-*-*-p-*-iso8859-1, \
+-monotype-times new roman-regular-r-normal--*-%d-*-*-p-*-iso8859-2, \
+-b&h-LucidaBrightLat4-Normal-r-normal--*-%d-*-*-p-*-iso8859-4, \
+-monotype-times-regular-r-normal--*-%d-*-*-p-*-iso8859-5, \
+-monotype-times new roman greek-regular-r-normal--*-%d-*-*-p-*-iso8859-7, \
+-monotype-times-regular-r-normal--*-%d-*-*-p-*-iso8859-9, \
+-monotype-times-regular-r-normal--*-%d-*-*-p-*-iso8859-15, \
+-hanyi-ming-medium-r-normal--*-%d-*-*-m-*-big5-1, \
+-sun-song-medium-r-normal--*-%d-*-*-c-*-gb2312.1980-0, \
+-ricoh-hg gothic b-medium-r-normal--*-%d-*-*-m-*-jisx0201.1976-0, \
+-ricoh-hg gothic b-medium-r-normal-*-*-%d-*-*-m-*-jisx0208.1983-0, \
+-ricoh-heiseimin-w3-r-normal--*-%d-*-*-m-*-jisx0212.1990-0, \
+-hanyang-myeongjo-medium-r-normal--*-%d-*-*-m-*-ksc5601.1992-3
+
+key2=\
+-monotype-times new roman-regular-i---*-%d-*-*-p-*-iso8859-1, \
+-monotype-times new roman-regular-i-normal-italic-*-%d-*-*-p-*-iso8859-2, \
+-b&h-LucidaBrightLat4-normal-i-normal-Italic-*-%d-*-*-p-*-iso8859-4, \
+-monotype-times-regular-i-normal-italic-*-%d-*-*-p-*-iso8859-5, \
+-monotype-times new roman greek-regular-i-normal--*-%d-*-*-p-*-iso8859-7, \
+-monotype-times-regular-i-normal-italic-*-%d-*-*-p-*-iso8859-9, \
+-monotype-times-regular-i-normal--*-%d-*-*-p-*-iso8859-15, \
+-hanyi-ming-medium-r-normal--*-%d-*-*-m-*-big5-1, \
+-sun-song-medium-r-normal--*-%d-*-*-c-*-gb2312.1980-0, \
+-ricoh-hg gothic b-medium-r-normal--*-%d-*-*-m-*-jisx0201.1976-0, \
+-ricoh-hg gothic b-medium-r-normal-*-*-%d-*-*-m-*-jisx0208.1983-0, \
+-ricoh-heiseimin-w3-r-normal--*-%d-*-*-m-*-jisx0212.1990-0, \
+-hanyang-myeongjo-medium-r-normal--*-%d-*-*-m-*-ksc5601.1992-3

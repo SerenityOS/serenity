@@ -1,0 +1,25 @@
+
+    @Test(dataProvider = "$type$UnaryOpShuffleProvider")
+    static void Rearrange$vectorteststype$(IntFunction<$type$[]> fa,
+                                           BiFunction<Integer,Integer,int[]> fs) {
+[[KERNEL]]
+        assertRearrangeArraysEquals(r, a, order, SPECIES.length());
+    }
+
+    @Test(dataProvider = "$type$UnaryOpShuffleMaskProvider")
+    static void Rearrange$vectorteststype$MaskedSmokeTest(IntFunction<$type$[]> fa,
+                                                          BiFunction<Integer,Integer,int[]> fs,
+                                                          IntFunction<boolean[]> fm) {
+        $type$[] a = fa.apply(SPECIES.length());
+        int[] order = fs.apply(a.length, SPECIES.length());
+        $type$[] r = fr.apply(SPECIES.length());
+        boolean[] mask = fm.apply(SPECIES.length());
+        VectorMask<$Wideboxtype$> vmask = VectorMask.fromArray(SPECIES, mask, 0);
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            av.rearrange(VectorShuffle.fromArray(SPECIES, order, i), vmask).intoArray(r, i);
+        }
+
+        assertRearrangeArraysEquals(r, a, order, mask, SPECIES.length());
+    }

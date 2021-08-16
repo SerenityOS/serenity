@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:import schemaLocation="groupA008ea.red"/>
+	<xsd:include schemaLocation="groupA008eb.red"/>
+	<xsd:group name="foo">
+		<xsd:sequence>
+			<xsd:element name="a"/>
+		</xsd:sequence>
+	</xsd:group>
+</xsd:schema>

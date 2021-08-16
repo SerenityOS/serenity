@@ -1,0 +1,58 @@
+
+# Configuration to run unit tests with NSS
+# Marks private and secret keys as sensitive
+
+name = NSS
+
+slot = 1
+
+#showInfo = true
+
+library = ${pkcs11test.nss.lib}
+
+nssArgs = "configdir='${pkcs11test.nss.db}' certPrefix='' keyPrefix='' secmod='secmod.db' flags=readOnly"
+
+disabledMechanisms = {
+  CKM_DSA_SHA224
+  CKM_DSA_SHA256
+  CKM_DSA_SHA384
+  CKM_DSA_SHA512
+  CKM_DSA_SHA3_224
+  CKM_DSA_SHA3_256
+  CKM_DSA_SHA3_384
+  CKM_DSA_SHA3_512
+  CKM_ECDSA_SHA224
+  CKM_ECDSA_SHA256
+  CKM_ECDSA_SHA384
+  CKM_ECDSA_SHA512
+  CKM_ECDSA_SHA3_224
+  CKM_ECDSA_SHA3_256
+  CKM_ECDSA_SHA3_384
+  CKM_ECDSA_SHA3_512
+}
+
+attributes = compatibility
+
+# NSS needs CKA_NETSCAPE_DB for DSA and DH private keys
+# just put an arbitrary value in there to make it happy
+
+attributes(*,CKO_PRIVATE_KEY,CKK_DSA) = {
+  CKA_NETSCAPE_DB = 0h00
+}
+
+attributes(*,CKO_PRIVATE_KEY,CKK_DH) = {
+  CKA_NETSCAPE_DB = 0h00
+}
+
+# Everything above this line (with the exception of the comment at the top) is copy/pasted from p11-nss.txt
+
+# Make all private keys sensitive
+attributes(*,CKO_PRIVATE_KEY,*) = {
+  CKA_SENSITIVE = true
+}
+
+
+# Make all secret keys sensitive
+attributes(*,CKO_SECRET_KEY,*) = {
+  CKA_SENSITIVE = true
+}

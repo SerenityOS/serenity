@@ -1,0 +1,4 @@
+MostSpecific12.java:25:9: compiler.err.ref.ambiguous: m3, kindname.method, <T>m3(MostSpecific12.I<T>), MostSpecific12, kindname.method, <T>m3(MostSpecific12.J<T>), MostSpecific12
+MostSpecific12.java:29:9: compiler.err.ref.ambiguous: m3, kindname.method, <T>m3(MostSpecific12.I<T>), MostSpecific12, kindname.method, <T>m3(MostSpecific12.J<T>), MostSpecific12
+MostSpecific12.java:33:9: compiler.err.ref.ambiguous: m3, kindname.method, <T>m3(MostSpecific12.I<T>), MostSpecific12, kindname.method, <T>m3(MostSpecific12.J<T>), MostSpecific12
+3 errors

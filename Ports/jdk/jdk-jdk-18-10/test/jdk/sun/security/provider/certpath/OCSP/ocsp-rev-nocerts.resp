@@ -1,0 +1,53 @@
+#OCSP Response Data:
+#    OCSP Response Status: successful (0x0)
+#    Response Type: Basic OCSP Response
+#    Version: 1 (0x0)
+#    Responder Id: O = Test, CN = TestOCSP
+#    Produced At: Mar  3 16:55:44 2015 GMT
+#    Responses:
+#    Certificate ID:
+#      Hash Algorithm: sha1
+#      Issuer Name Hash: 1056578B741813261FD9712ADA60077FF7C61E8F
+#      Issuer Key Hash: 9BF984066AFCD2EB0893FBE4EE2FD8C1C2897AA7
+#      Serial Number: 1500
+#    Cert Status: revoked
+#    Revocation Time: Feb 19 15:50:30 2015 GMT
+#    Revocation Reason: keyCompromise (0x1)
+#    This Update: Mar  3 16:55:44 2015 GMT
+#    Next Update: Mar  4 16:55:44 2015 GMT
+#        Response Single Extensions:
+#            Invalidity Date: 
+#                Feb 19 14:00:00 2015 GMT
+#
+#    Response Extensions:
+#        OCSP Nonce: 
+#            0410381EF873C4A3B4C64B22873751071B53
+#    Signature Algorithm: sha1WithRSAEncryption
+#         6d:c6:36:f0:af:7e:a1:7b:43:7c:d6:f6:cb:19:73:6a:e3:1a:
+#         78:4a:03:e3:be:e8:b8:2e:c3:23:00:9b:4e:0a:64:72:31:82:
+#         4e:39:af:c2:0e:00:de:c1:bd:e5:9d:36:c7:5c:6e:5b:8f:17:
+#         2b:66:24:17:2b:6c:06:67:5c:7d:9b:c4:9e:82:bf:5a:a1:be:
+#         a9:df:40:8b:2b:5f:36:87:9c:b0:c8:c5:f0:cc:9a:b4:77:09:
+#         75:0f:a3:ab:9f:63:3d:60:2a:30:65:82:3e:63:d5:67:a4:f1:
+#         1c:5e:40:83:60:c0:53:96:8b:e6:c0:23:63:6c:ef:c5:89:e5:
+#         51:cf:85:4a:19:78:2b:a3:64:fa:64:92:7e:ee:a3:8b:c8:64:
+#         50:43:f1:e6:b5:35:1f:48:c1:a2:63:26:e0:63:32:36:4c:55:
+#         8f:73:64:38:a4:82:c4:d5:a2:ff:53:9e:ba:d5:24:f0:48:ab:
+#         f0:aa:ea:7d:de:f2:3a:7d:1f:95:fa:e8:1d:9d:88:d3:37:fd:
+#         e5:57:6e:c6:f5:42:b0:de:e9:80:07:fc:43:50:40:91:bb:aa:
+#         ff:c2:51:36:b0:eb:6b:49:07:4a:93:bb:40:0b:fa:88:4e:d8:
+#         4f:f4:ac:1c:de:4c:0e:3b:51:27:bf:34:54:48:20:57:7b:5d:
+#         e7:a4:77:ee
+
+MIICLgoBAKCCAicwggIjBgkrBgEFBQcwAQEEggIUMIICEDCB+aEkMCIxDTALBgNV
+BAoMBFRlc3QxETAPBgNVBAMMCFRlc3RPQ1NQGA8yMDE1MDMwMzE2NTU0NFowgZow
+gZcwOzAJBgUrDgMCGgUABBQQVleLdBgTJh/ZcSraYAd/98YejwQUm/mEBmr80usI
+k/vk7i/YwcKJeqcCAhUAoRYYDzIwMTUwMjE5MTU1MDMwWqADCgEBGA8yMDE1MDMw
+MzE2NTU0NFqgERgPMjAxNTAzMDQxNjU1NDRaoRwwGjAYBgNVHRgEERgPMjAxNTAy
+MTkxNDAwMDBaoSMwITAfBgkrBgEFBQcwAQIEEgQQOB74c8SjtMZLIoc3UQcbUzAN
+BgkqhkiG9w0BAQUFAAOCAQEAbcY28K9+oXtDfNb2yxlzauMaeEoD477ouC7DIwCb
+TgpkcjGCTjmvwg4A3sG95Z02x1xuW48XK2YkFytsBmdcfZvEnoK/WqG+qd9Aiytf
+NoecsMjF8MyatHcJdQ+jq59jPWAqMGWCPmPVZ6TxHF5Ag2DAU5aL5sAjY2zvxYnl
+Uc+FShl4K6Nk+mSSfu6ji8hkUEPx5rU1H0jBomMm4GMyNkxVj3NkOKSCxNWi/1Oe
+utUk8Eir8Krqfd7yOn0flfroHZ2I0zf95VduxvVCsN7pgAf8Q1BAkbuq/8JRNrDr
+a0kHSpO7QAv6iE7YT/SsHN5MDjtRJ780VEggV3td56R37g==

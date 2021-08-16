@@ -1,0 +1,4 @@
+- compiler.warn.source.no.system.modules.path: 15
+LocalInterface.java:10:9: compiler.err.intf.not.allowed.here
+1 error
+1 warning

@@ -1,0 +1,2 @@
+IncompleteMessageOverride.java:15:25: compiler.err.override.weaker.access: (compiler.misc.cant.override: m(), Sub, m(), Super), package
+1 error

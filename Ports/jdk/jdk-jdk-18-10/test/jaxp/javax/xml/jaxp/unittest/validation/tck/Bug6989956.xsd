@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <xsd:simpleType name="u1">
+        <xsd:union>
+          <xsd:simpleType>
+            <xsd:restriction base='xsd:nonNegativeInteger'/>
+          </xsd:simpleType>
+          <xsd:simpleType>
+            <xsd:restriction base='xsd:string'>
+              <xsd:enumeration value='x'/>
+              <xsd:enumeration value='y'/>
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:union>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="u3">
+	<xsd:restriction base="u1">
+              <xsd:enumeration value='x'/>
+              <xsd:enumeration value='y'/>
+              <xsd:enumeration value='1'/>
+	</xsd:restriction>
+  </xsd:simpleType>
+  <xsd:element name="root">
+    <xsd:complexType>
+	<xsd:choice maxOccurs="40">
+		<xsd:element name="c" type="u3" minOccurs="0" maxOccurs="100"/>
+	</xsd:choice>
+    </xsd:complexType>
+  </xsd:element>
+
+
+
+</xsd:schema>
+

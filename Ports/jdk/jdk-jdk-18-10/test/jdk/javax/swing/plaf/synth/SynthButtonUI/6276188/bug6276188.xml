@@ -1,0 +1,19 @@
+<synth>
+  <style id="backingStyle">
+    <font name="Dialog" size="12" />
+    
+    <state>
+      <color value="green" type="BACKGROUND" />
+      <color value="black" type="FOREGROUND" />
+    </state>
+  </style>
+  <bind style="backingStyle" type="REGION" key=".*" />
+
+  <style id="buttonStyle">
+    <state value="PRESSED and MOUSE_OVER">
+      <imagePainter method="buttonBackground" path="red.gif" center="true" />
+    </state>
+  </style>
+  <bind style="buttonStyle" type="REGION" key="Button" />
+</synth>
+  

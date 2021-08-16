@@ -1,0 +1,98 @@
+/*
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+module  {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Utf8 "module-info"; // #1
+    class #1; // #2
+    Utf8 "module-info.java"; // #3
+    Utf8 "m"; // #4
+    Module #4; // #5
+    Utf8 "ModuleMainClass"; // #6
+    Utf8 "p/C"; // #7
+    class #7; // #8
+    Utf8 "ModulePackages"; // #9
+    Utf8 "p"; // #10
+    Package #10; // #11
+    Utf8 "java.base"; // #12
+    Module #12; // #13
+    Utf8 "11.0.2"; // #14
+    Utf8 "SourceFile"; // #15
+    Utf8 "Module"; // #16
+  } // Constant Pool
+
+  0x8000; // access
+  #2;// this_cpx
+  #0;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // Fields
+  } // Fields
+
+  [] { // Methods
+  } // Methods
+
+  [] { // Attributes
+    Attr(#15) { // SourceFile
+      #3;
+    } // end SourceFile
+    ;
+    Attr(#16) { // Module
+      #5; // name_index
+      0x0000; // flags
+      #0; // version
+      [] { // requires
+        #13 0x8000 #14;
+      } // requires
+
+      [] { // exports
+      } // exports
+
+      [] { // opens
+      } // opens
+
+      [] { // uses
+      } // uses
+
+      [] { // provides
+      } // provides
+
+    } // end Module
+    ;
+    Attr(#6, 3) { // ModuleMainClass attribute_length 3 instead of 2
+      0x0008;
+    } // end ModuleMainClass
+    ;
+    Attr(#9) { // ModulePackages
+      [] {
+        #11;
+      }
+    } // end ModulePackages
+  } // Attributes
+} // end module m

@@ -1,0 +1,13 @@
+T7030606.java:20:18: compiler.err.cant.resolve.location: kindname.class, NonExistentType, , , (compiler.misc.location: kindname.class, T7030606, null)
+T7030606.java:20:41: compiler.err.multicatch.types.must.be.disjoint: T7030606.E2, T7030606.E1
+T7030606.java:27:18: compiler.err.cant.resolve.location: kindname.class, NonExistentType, , , (compiler.misc.location: kindname.class, T7030606, null)
+T7030606.java:27:41: compiler.err.multicatch.types.must.be.disjoint: T7030606.E2, T7030606.E1
+T7030606.java:34:23: compiler.err.cant.resolve.location: kindname.class, NonExistentType, , , (compiler.misc.location: kindname.class, T7030606, null)
+T7030606.java:34:41: compiler.err.multicatch.types.must.be.disjoint: T7030606.E2, T7030606.E1
+T7030606.java:41:23: compiler.err.cant.resolve.location: kindname.class, NonExistentType, , , (compiler.misc.location: kindname.class, T7030606, null)
+T7030606.java:41:41: compiler.err.multicatch.types.must.be.disjoint: T7030606.E2, T7030606.E1
+T7030606.java:48:23: compiler.err.multicatch.types.must.be.disjoint: T7030606.E2, T7030606.E1
+T7030606.java:48:28: compiler.err.cant.resolve.location: kindname.class, NonExistentType, , , (compiler.misc.location: kindname.class, T7030606, null)
+T7030606.java:55:23: compiler.err.multicatch.types.must.be.disjoint: T7030606.E2, T7030606.E1
+T7030606.java:55:28: compiler.err.cant.resolve.location: kindname.class, NonExistentType, , , (compiler.misc.location: kindname.class, T7030606, null)
+12 errors

@@ -1,0 +1,6 @@
+T8065986a.java:13:25: compiler.err.cant.apply.diamond.1: java.lang.Object, (compiler.misc.diamond.non.generic: java.lang.Object)
+T8065986a.java:17:9: compiler.err.cant.apply.symbol: kindname.constructor, Object, compiler.misc.no.args, java.util.ArrayList<java.lang.Object>, kindname.class, java.lang.Object, (compiler.misc.arg.length.mismatch)
+T8065986a.java:21:9: compiler.err.cant.apply.symbol: kindname.constructor, Object, compiler.misc.no.args, @15, kindname.class, java.lang.Object, (compiler.misc.arg.length.mismatch)
+T8065986a.java:25:9: compiler.err.cant.apply.symbol: kindname.constructor, Object, compiler.misc.no.args, @15, kindname.class, java.lang.Object, (compiler.misc.arg.length.mismatch)
+T8065986a.java:29:9: compiler.err.cant.apply.symbol: kindname.constructor, Object, compiler.misc.no.args, @20, kindname.class, java.lang.Object, (compiler.misc.arg.length.mismatch)
+5 errors

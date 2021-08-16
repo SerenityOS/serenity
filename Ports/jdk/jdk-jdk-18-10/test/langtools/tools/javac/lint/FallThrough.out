@@ -1,0 +1,4 @@
+FallThrough.java:16:9: compiler.warn.possible.fall-through.into.case
+- compiler.err.warnings.and.werror
+1 error
+1 warning

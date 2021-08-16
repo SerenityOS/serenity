@@ -1,0 +1,15 @@
+
+grant {
+
+    permission java.util.PropertyPermission "test.src", "read";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.net.www";
+    permission java.io.FilePermission
+	"${test.src}${/}GetInstanceSecurity.grantedPolicy", "read";
+    permission java.security.SecurityPermission "createPolicy.JavaPolicy";
+    permission java.security.SecurityPermission "setPolicy";
+
+    // do not grant this:
+    //
+    // permission javax.security.auth.AuthPermission
+    //			"createLoginConfiguration.JavaLoginConfig";
+};

@@ -1,0 +1,4 @@
+BadAnnotationRegressionTest.java:39:16: compiler.err.annotation.value.must.be.class.literal
+BadAnnotationRegressionTest.java:41:16: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: int[], int)
+BadAnnotationRegressionTest.java:42:15: compiler.err.enum.annotation.must.be.enum.constant
+3 errors

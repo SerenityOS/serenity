@@ -1,0 +1,307 @@
+# Copyright (c) 2017, 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+
+##### Summary #####
+This test is used to verify the compatibility on jarsigner cross different JDK
+releases. It also can be used to check jar signing (w/ and w/o TSA) and verifying
+on some specific key algorithms and digest algorithms.
+
+##### Output #####
+The test will generate a report, at JTwork/scratch/report.html, to display the
+key parameters for signing and the status of signing and verifying. And it will
+generate another report, at JTwork/scratch/failedReport.html, to collect all of
+failed cases.
+
+Please note that, the test may output a great deal of logs if the jdk list and
+TSA list are big, and that would lead to jtreg output overflow. So, it redirects
+stdout and stderr to file JTwork/scratch/details.out.
+
+##### Report Columns #####
+
+Jarfile
+    The filenames used in the tests
+
+Certificate
+    Certificate identifier. The identifier consists of specific attributes of
+    the certificate. Generally, the naming convention is:
+    KeyAlgorithm_DigestAlgorithm_[KeySize][_Expired]
+
+Signer JDK
+    The JDK version that signs jar.
+
+Signature Algorithm
+    The signature algorithm used to sign the key as in 'keytool -sigalg'.
+
+    Note: The values displayed in this column are specified to jarsigner only
+    in case a test does not work with a default value.
+    In any case the specified value or expected default value is compared in
+    verifying phase against jarsigner's output and the test fails if it does
+    not match.
+
+Jar Digest Algorithm
+    The digest algorithm used to digest the files contained in the JAR file and
+    the manifest and signature files as in 'jarsigner -digestalg'.
+    See also note above about default values for Signature Algorithm.
+
+TSA Digest Algorithm
+    The timestamp digest algorithm used by TSA as in 'jarsigner -tsadigestalg'.
+    Shows no value if no TSA used.
+    See also note above about default values for Signature Algorithm.
+
+TSA
+    TSA URL index. All of TSA URLs and their indices can be found at the top
+    of this report.
+
+Signing Status
+    Signing process result status. The status are the followings:
+    [1]NONE, no action.
+    [2]NORMAL, no any error and warning.
+    [3]WARNING, no any error but some warnings raise.
+    [4]ERROR, some errors raise.
+
+Verifier JDK
+    The JDK version that verifies signed jars.
+
+Verifying Status
+    Verifying process result status. The status are the same as those for
+    "Status of Signing".
+
+Delay Verifying Status
+    Delay verifying process result status. The status are the same as those
+    for "Status of Signing".
+
+Failed
+    It highlights which case fails. The failed cases (rows) are marked with
+    letter X.
+
+##### Usages #####
+jtreg [-options] \
+    -jdk:<path/to/testing/JDK>
+    [-DproxyHost=<host> \
+     -DproxyPort=<port> \
+     -Dteeout=filename \
+     -DtsaListFile=</url/to/tsaListFile> \
+     -DtsaList=</path/to/tsa1#/path/to/tsa2#/path/to/tsa3#...|notsa> \
+     -DjdkListFile=</path/to/jdkListFile> \
+     -DjdkList=</path/to/jdk1#/path/to/jdk2#/path/to/jdk3#...> \
+     -DjavaSecurityFile=</path/to/java/security/properties/file> \
+     -DdelayVerify=<true|false> \
+     -DcertValidity=<[1, 1440]>] \
+    <JDK_REPO>/test/jdk/sun/security/tools/jarsigner/compatibility/Compatibility.java
+
+Besides the common jtreg options, like -jdk, this test introduces a set of
+properties for receiving users' inputs and making the test more flexible. These
+properties are (all to specify after -D as system properties):
+
+proxyHost=<host>
+    This property indicates proxy host.
+
+proxyPort=<port>
+    This property indicates proxy port. The default value is 80.
+
+o=filename
+    Redirects a copy of what is written to stdout into the specified file which
+    allows for observing progress or problems during a longer running test.
+    (Compatibility test replaces System.out to collect the output but even if
+    it didn't jtreg would not print anything until the test would have ended.)
+    Note that relative paths resolve relatively to some temporary working
+    directory created by jtreg. Defaults to JTwork/scratch/details.out.
+    The specified file is not deleted or emptied and the output is appended
+    though jtreg deletes the default file with the whole directory if this
+    option is not specified or the file point into JTwork/scratch.
+    Example (Bash style): tail -F log & jtreg ... -Do=$(pwd)/log ...
+
+tsaListFile=</path/to/tsaListFile>
+    This property indicates a local file, which contains a set of TSA URLs and
+    the supported digest algorithms (by optional parameter digests). The format
+    of the file content looks like the below,
+    http://path/to/tsa1
+    http://path/to/tsa2;digests=SHA-1,SHA-256
+    https://path/to/tsa3
+    ...
+
+    If a TSA line does not list the supported digest algorithms, that means
+    the TSA supports SHA-1, SHA-256 and SHA-512. Because the test only focus
+    on SHA-1, SHA-256 and SHA-512. So, if other digest algorithms, like SHA-224
+    and SHA-384, are listed, they just be ignored.
+
+tsaList=</path/to/tsa1#/path/to/tsa2;digests=SHA-1,SHA-256#...|notsa>
+    This property directly lists a set of TSAs in command. "#" is the delimiter.
+    Note that, if both of tsaListFile and tsaList are specified, only property
+    tsaListFile is selected. If neither of tsaListFile and tsaList is specified,
+    the test fails immediately.
+    If tsaList has a value of "notsa", no tsa is used.
+
+jdkListFile=</path/to/jdkListFile>
+    This property indicates a local file, which contains a set of local JDK
+    paths. The style of the file content looks like the below,
+    /path/to/jdk1
+    /path/to/jdk2
+    /path/to/jdk3
+    ...
+
+jdkList=</path/to/jdk1#/path/to/jdk2#/path/to/jdk3#...>
+    This property directly lists a set of local JDK paths in command. "#" is
+    the delimiter.
+    An element "TEST_JDK" as in
+jdkList=</path/to/jdk1#/path/to/jdk2#TEST_JDK#...>
+    adds the testing JDK, which is specified by jtreg option -jdk, to the jdk
+    list. All signed jars are verified with the current testing JDK, which is
+    specified by jtreg option -jdk, by default in addition to the JDKs given
+    in jdkList but it is not used to also sign jars by default.
+    If neither jdkList nor jdkListFile are specified, the current testing JDK,
+    which is specified by jtreg option -jdk, is used to sign the jars, like:
+jdkList=TEST_JDK
+    Note that, if both of jdkListFile and jdkList are specified, only property
+    jdkListFile is selected. If neither of jdkListFile nor jdkList is specified,
+    the testing JDK, which is specified by jtreg option -jdk, will be used as
+    the only one JDK in the JDK list.
+
+    The testing JDK, which is specified by jtreg option "-jdk", should include
+    the fix for JDK-8163304. Otherwise, the signature algorithm and timestamp
+    digest algorithm cannot be extracted from verification output. And this JDK
+    should support as many as possible signature algorithms. Anyway the latest
+    JDK build is always recommended.
+
+testComprehensiveJarContents=<false|true>
+    If false, all tests are executed with only one typical JAR file. Otherwise,
+    if true, a whole bunch of JAR files with several edge case contents are
+    fed through the tests such as empty manifest or manifests with non-default
+    line breaks. Default is false.
+
+testJarUpdate=<false|true>
+    If false, all tested JAR files are signed with one JDK and verified with
+    each JDK, same or other. If true, in addition, all JAR files are modified
+    after having been signed, and are then each signed again with each JDK and
+    verified each JDK, same or other. Default is false.
+
+strict=<false|true>
+    If true, '-strict' option is specified to jarsigner along with '-verify'.
+    Default is false.
+
+javaSecurityFile=</path/to/java/security/properties/file>
+    This property indicates an alternative java security properties file. The
+    default file is the path of file java.scurity that is distributed with
+    this test.
+
+delayVerify=<true|false>
+    This property indicates if doing an additional verifying after all of valid
+    certificates expire. The default value is false.
+
+expired=<false|true>
+    This property indicates whether or not all tests should be repeated with an
+    expired certificate. Refers to the certificate validity period and not to
+    TSA. The default value is true.
+
+certValidity=<[1, 1440]>
+    This property indicates the remaining validity period in minutes for valid
+    certificates. The value range is [1, 1440]. The default value is 1440.
+    Note that, if delayVerify is false, this property doesn't take effect.
+
+keyAlgs=RSA;1024;2048;#DSA;1024;2048;#EC;384;521;
+    Specifies key algorithms to use in the test. For each key algorithm the
+    sizes it should be tested with can be specified after semicolons and
+    otherwise default values are used. An empty keysize denotes the default
+    keysize and invokes keytool without a keysize specified. On JDK 6 and
+    earlier, EC is not supported and always skipped.
+
+digestAlgs=SHA-1#SHA-256#SHA-384#SHA-512#
+    Specifies the digest algorithms used for both digesting files contained in
+    the JAR file, manifests and signature files as well as certificates (keys)
+    and for TSA.
+    Ignored with TSA for jarsigner versions that don't support '-tsadigestalg'
+    parameter, for digest algorithms specified not to be supported by a TSA
+    server ('digests' sub-option is given to a tsaList item where digest
+    algorithm is not contained in list), or in cases no TSA is used at all
+    ('tsaList=notsa').
+    Note that the same set of digest algorithms is used in all three places
+    (signing the key, digesting the JAR, and for the TSA) and cannot be
+    specified individually except that some TSAs may exclude some digest
+    algorithms.
+
+##### Examples #####
+$ cat /path/to/jdkList
+/path/to/jdk6u171-b05
+/path/to/jdk7u161-b05
+/path/to/jdk8u144-b01
+/path/to/jdk9-179 
+
+$ cat /path/to/tsaList
+http://timestamp.comodoca.com/rfc3161
+http://sha256timestamp.ws.symantec.com/sha256/timestamp
+http://tsa.starfieldtech.com
+http://timestamp.entrust.net/TSS/RFC3161sha1TS;digests=SHA-1,SHA-256
+http://timestamp.entrust.net/TSS/RFC3161sha2TS;digests=SHA-1,SHA-256
+http://rfc3161timestamp.globalsign.com/advanced;digests=SHA-256,SHA-512
+http://rfc3161timestamp.globalsign.com/standard
+http://timestamp.globalsign.com/scripts/timstamp.dll
+http://timestamp.globalsign.com/?signature=sha2;digests=SHA-256,SHA-512
+http://timestamp.digicert.com
+http://time.certum.pl
+http://tsa.swisssign.net
+http://zeitstempel.dfn.de
+https://tsp.iaik.tugraz.at/tsp/TspRequest
+
+$ jtreg -va -nr \
+    -jdk:/path/to/latest/jdk \
+    -DproxyHost=<proxy> -DproxyPort=<port> \
+    -DjdkListFile=/path/to/jdkList \
+    -DtsaListFile=/path/to/tsaList \
+    -DdelayVerify=true -DcertValidity=60 \
+    <JDK_REPO>/test/jdk/sun/security/tools/jarsigner/compatibility/Compatibility.java
+
+The above is a comprehensive usage example. File "jdkList" lists the paths of
+testing JDK builds, and file "tsaList" lists the URLs of TSA services. Some TSAs,
+like http://timestamp.entrust.net/TSS/RFC3161sha1TS, specify the supported digest
+algorithms. Other TSAs, which don't specify parameter digests, are regarded to
+support SHA-1, SHA-256 and SHA-512. The test uses a proxy to access TSA services.
+And it enables delay verifying and set the certificate validity period to 60
+minutes. So, after the first verification is done, the test will wait for all
+of valid certificates expire and then does verification again.
+
+If don't want to provide such JDK list and TSA list files, the test allows to
+specify JDKs and TSAs (via properties jdkList and tsaList respectively) in the
+command directly, like the below style,
+$ jtreg -va -nr \
+    -jdk:/path/to/latest/jdk \
+    -DproxyHost=<proxy> -DproxyPort=<port> \
+    -DjdkList=/path/to/jdk6u171-b05#/path/to/jdk7u161-b05#/path/to/jdk8u144-b01#/path/to/jdk9-179 \
+    -DtsaList=http://timestamp.comodoca.com/rfc3161#http://timestamp.entrust.net/TSS/RFC3161sha1TS;digests=SHA-1,SHA-256 \
+    -DdelayVerify=true -DcertValidity=60 \
+    <JDK_REPO>/test/jdk/sun/security/tools/jarsigner/compatibility/Compatibility.java
+
+Furthermore, here introduces one of the simplest usages. It doesn't specify any
+JDK list, so the testing JDK, which is specified by jtreg option "-jdk", will
+be tested. And it doesn't apply delay verifying, and no proxy is used, and use
+only one TSA. Now, the command is pretty simple and looks like the followings,
+$ jtreg -va -nr \
+    -jdk:/path/to/latest/jdk \
+    -DtsaList=http://timestamp.comodoca.com/rfc3161 \
+    <JDK_REPO>/test/jdk/sun/security/tools/jarsigner/compatibility/Compatibility.java
+
+It also works without a tsaList but not without the tsaList argument present
+in order to prevent it going missing or ignored unnoticed. May be useful for
+local tests but not recommended for real regression tests. Together with other
+arguments, a very short running test could be started for example with:
+$ jtreg -va -nr \
+    -jdk:/path/to/latest/jdk \
+    -DtsaList=notsa "-DkeyAlgs=EC;" -DdigestAlgs=SHA-256 -Dexpired=false
+    <JDK_REPO>/test/jdk/sun/security/tools/jarsigner/compatibility/Compatibility.java

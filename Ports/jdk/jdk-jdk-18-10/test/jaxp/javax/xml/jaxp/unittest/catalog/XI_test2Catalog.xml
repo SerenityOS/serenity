@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!-- comment before root -->
+<!DOCTYPE red SYSTEM "XI_red.dtd">
+<red xmlns:xinclude="http://www.w3.org/2001/XInclude">
+  <blue>
+    <xinclude:include href="XI_utf8Catalog.xml" parse="text"/>
+  </blue>
+</red>
+<!-- comment after root -->
+

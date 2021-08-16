@@ -1,0 +1,2 @@
+ConcreteTest.java:8:18: compiler.err.override.weaker.access: (compiler.misc.cant.implement: perform(), two.ConcreteTest, perform(), one.Test), public
+1 error

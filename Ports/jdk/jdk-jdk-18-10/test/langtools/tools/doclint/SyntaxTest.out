@@ -1,0 +1,5 @@
+SyntaxTest.java:14: error: malformed HTML
+     * a < b
+         ^
+1 error
+

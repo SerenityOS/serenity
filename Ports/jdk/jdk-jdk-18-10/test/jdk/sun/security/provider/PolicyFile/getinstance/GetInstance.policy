@@ -1,0 +1,6 @@
+grant {
+    permission NoArgPermission;
+    permission OneArgPermission "one";
+    permission TwoArgPermission "two", "two";
+    permission TwoArgNullActionsPermission "two";
+};

@@ -1,0 +1,20 @@
+grant {
+  // must allow file reads so that jtreg itself and JFR can run
+  permission java.io.FilePermission "<<ALL FILES>>", "read";
+  // must allow file delete so that JFR can delete repository
+  permission java.io.FilePermission "<<ALL FILES>>", "delete";
+  // must allow file write so that the test can create the recording
+  permission java.io.FilePermission "<<ALL FILES>>", "write";
+
+  // need to be able to create temporary files
+  permission java.util.PropertyPermission "java.io.tmpdir", "read";
+  permission java.util.PropertyPermission "user.dir", "read";
+  
+  // need ManagementPermission to control JFR from the test
+  permission java.lang.management.ManagementPermission "control";
+  permission java.lang.management.ManagementPermission "monitor";
+  
+  // JDK-8019403 - access to sun.security.util, which is needed for creation of temp files, 
+  // is not permitted automatically on solaris
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.security.util";
+};

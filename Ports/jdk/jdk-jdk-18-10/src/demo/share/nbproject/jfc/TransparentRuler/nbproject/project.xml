@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+
+   - Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+
+   - Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+
+   - Neither the name of Oracle nor the names of its
+     contributors may be used to endorse or promote products derived
+     from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+ IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.ant.freeform</type>
+    <configuration>
+        <general-data xmlns="http://www.netbeans.org/ns/freeform-project/1">
+            <name>TransparentRuler</name>
+            <properties>
+                <property-file>user.build.properties</property-file>
+                <property-file>build.properties</property-file>
+                <property name="nbjdk.bootclasspath">${nbjdk.home}/jre/lib/rt.jar</property>
+            </properties>
+            <folders>
+                <source-folder>
+                    <label>JDK Demo</label>
+                    <location>${main.dir}</location>
+                </source-folder>
+                <source-folder>
+                    <label>Sources</label>
+                    <type>java</type>
+                    <location>${src.dir}</location>
+                </source-folder>
+                <build-folder>
+                    <location>${build.dir}</location>
+                </build-folder>
+            </folders>
+            <ide-actions>
+                <action name="build">
+                    <target>jar</target>
+                </action>
+                <action name="clean">
+                    <target>clean</target>
+                </action>
+                <action name="rebuild">
+                    <target>clean</target>
+                    <target>jar</target>
+                </action>
+                <action name="run">
+                    <target>run</target>
+                </action>
+                <action name="javadoc">
+                    <script>nbproject/netbeans-targets.xml</script>
+                    <target>show-javadoc</target>
+                </action>
+                <action name="debug">
+                    <script>nbproject/netbeans-targets.xml</script>
+                    <target>debug</target>
+                </action>
+                <action name="compile.single">
+                    <script>nbproject/file-targets.xml</script>
+                    <target>compile-selected</target>
+                    <context>
+                        <property>includes</property>
+                        <folder>${src.dir}</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path</format>
+                        <arity>
+                            <separated-files>,</separated-files>
+                        </arity>
+                    </context>
+                </action>
+                <action name="run.single">
+                    <target>run</target>
+                    <context>
+                        <property>main.class</property>
+                        <folder>${src.dir}</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.single">
+                    <script>nbproject/netbeans-targets.xml</script>
+                    <target>debug</target>
+                    <context>
+                        <property>main.class</property>
+                        <folder>${src.dir}</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.fix">
+                    <script>nbproject/netbeans-targets.xml</script>
+                    <target>debug-fix</target>
+                    <context>
+                        <property>class</property>
+                        <folder>${src.dir}</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path-noext</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+            </ide-actions>
+            <export>
+                <type>jar</type>
+                <location>${jar}</location>
+                <build-target>jar</build-target>
+                <clean-target>clean</clean-target>
+            </export>
+            <view>
+                <items>
+                    <source-folder style="packages">
+                        <label>Sources</label>
+                        <location>${src.dir}</location>
+                    </source-folder>
+                    <source-file>
+                        <location>${main.dir}/README.txt</location>
+                    </source-file>
+                </items>
+                <context-menu>
+                    <ide-action name="build"/>
+                    <ide-action name="rebuild"/>
+                    <ide-action name="clean"/>
+                    <ide-action name="javadoc"/>
+                    <separator/>
+                    <ide-action name="run"/>
+                    <ide-action name="debug"/>
+                </context-menu>
+            </view>
+            <subprojects/>
+        </general-data>
+        <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/2">
+            <compilation-unit>
+                <package-root>${src.dir}</package-root>
+                <classpath mode="compile">${cp}</classpath>
+                <classpath mode="execute">${run.cp}</classpath>
+                <classpath mode="boot">${nbjdk.bootclasspath}</classpath>
+                <built-to>${classes.dir}</built-to>
+                <built-to>${jar}</built-to>
+                <javadoc-built-to>${javadoc.dir}</javadoc-built-to>
+                <source-level>1.5</source-level>
+            </compilation-unit>
+        </java-data>
+    </configuration>
+</project>

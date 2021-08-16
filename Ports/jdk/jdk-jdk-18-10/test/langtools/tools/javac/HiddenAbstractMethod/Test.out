@@ -1,0 +1,2 @@
+Child.java:5:8: compiler.err.does.not.override.abstract: two.Child, method(), one.Parent
+1 error

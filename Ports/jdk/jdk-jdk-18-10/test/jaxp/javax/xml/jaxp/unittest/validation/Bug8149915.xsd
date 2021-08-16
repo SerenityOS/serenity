@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:annotation>
+   <xs:appinfo>Testapp for XSD annotation issue</xs:appinfo>
+   <xs:documentation xml:lang="en">This is an XSD annotation, just for the sake of it.</xs:documentation>
+</xs:annotation>
+</xs:schema>

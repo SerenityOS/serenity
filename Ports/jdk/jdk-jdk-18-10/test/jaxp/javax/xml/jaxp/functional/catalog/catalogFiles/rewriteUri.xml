@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" xml:base="http://local/base/dtd/">
+    <rewriteURI uriStartString="http://remote/dtd/alice/" rewritePrefix="http://local/dtd/alice/ru/" />
+
+    <rewriteURI uriStartString="http://remote/dtd/bob/" rewritePrefix="bob/ru/" />
+
+    <rewriteURI uriStartString="http://remote/dtd/carl/" rewritePrefix="carl/ru/"
+        xml:base="http://local/carlBase/dtd/" />
+
+    <rewriteURI uriStartString="http://remote/dtd/david/" rewritePrefix="david1/ru/" />
+    <rewriteURI uriStartString="http://remote/dtd/david/" rewritePrefix="david2/ru/" />
+
+    <rewriteURI uriStartString="http://remote/dtd/" rewritePrefix="ella/" />
+    <rewriteURI uriStartString="http://remote/dtd/ella/" rewritePrefix="ella/ru/" />
+</catalog>

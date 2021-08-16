@@ -1,0 +1,5 @@
+var f = new ConnectionFilter("Hide mixed edges");
+f.addRule(new ConnectionFilter.ConnectionStyleRule(new MatcherSelector(new Properties.StringPropertyMatcher("category", "mixed")),
+                                                   white,
+                                                   Connection.ConnectionStyle.INVISIBLE));
+f.apply(graph);

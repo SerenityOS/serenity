@@ -1,0 +1,117 @@
+/*
+ * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+package nsk/jvmti/GetFrameLocation;
+
+/* Reassembled from the following Java pattern:
+ *
+ *  class frameloc001a extends Thread {
+ *      public void meth01(int i) {
+ *      try {
+ *              if (i > 0) {
+ *                  throw new Throwable();
+ *              }
+ *          } catch (Throwable e) {}
+ *      }
+ *      public void run() {
+ *          int local = 2003;
+ *          synchronized (frameloc001.lock1) {
+ *              frameloc001.lock1.notify();
+ *          }
+ *          synchronized (frameloc001.lock2) {
+ *              frameloc001.fld = local;
+ *          }
+ *      }
+ *  }
+ *
+ */
+
+super class frameloc001a extends java/lang/Thread {
+
+	Method "<init>":"()V" stack 1 locals 1 {
+		aload_0;
+		invokespecial	Method java/lang/Thread."<init>":"()V";
+		return;
+	}
+
+	public Method meth01:"(I)V" stack 2 locals 3 {
+	try t0;
+		iload_1;
+		ifle	L12;
+		new	class java/lang/Throwable;
+		dup;
+		invokespecial	Method java/lang/Throwable."<init>":"()V";
+		athrow;
+	endtry t0;
+	L12:	goto	L16;
+	catch t0 java/lang/Throwable;
+		astore_2;	// bci=15, expected to be here
+	L16:	return;
+	}
+
+	public Method run:"()V" stack 1 locals 5 {
+		sipush	2003;
+		istore_1;
+		getstatic	Field frameloc001.lock1:"Ljava/lang/Object;";
+		astore_2;
+		aload_2;
+		monitorenter;
+	try t0;
+		getstatic	Field frameloc001.lock1:"Ljava/lang/Object;";
+		invokevirtual	Method java/lang/Object.notify:"()V";
+		aload_2;
+		monitorexit;
+	endtry t0;
+		goto	L26;
+	catch t0 #0;
+	catch t1 #0;
+	try t1;
+		astore_3;
+		aload_2;
+		monitorexit;
+	endtry t1;
+		aload_3;
+		athrow;
+	L26:	getstatic	Field frameloc001.lock2:"Ljava/lang/Object;";
+		astore_3;
+		aload_3;
+		monitorenter;	// bci=31, expected to be here
+	try t2;
+		iload_1;
+		putstatic	Field frameloc001.fld:"I";
+		aload_3;
+		monitorexit;
+	endtry t2;
+		goto	L48;
+	catch t2 #0;
+	catch t3 #0;
+	try t3;
+		astore	4;
+		aload_3;
+		monitorexit;
+	endtry t3;
+		aload	4;
+		athrow;
+	L48:	return;
+	}
+}

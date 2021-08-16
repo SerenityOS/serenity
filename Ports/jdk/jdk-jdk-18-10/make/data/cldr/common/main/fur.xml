@@ -1,0 +1,1727 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="fur"/>
+	</identity>
+	<localeDisplayNames>
+		<localeDisplayPattern>
+			<localePattern draft="contributed">{0} ({1})</localePattern>
+			<localeSeparator draft="contributed">{0}, {1}</localeSeparator>
+		</localeDisplayPattern>
+		<languages>
+			<language type="aa" draft="contributed">afar</language>
+			<language type="ab" draft="contributed">abcazian</language>
+			<language type="ae" draft="contributed">avestan</language>
+			<language type="af" draft="contributed">afrikaans</language>
+			<language type="am" draft="contributed">amaric</language>
+			<language type="an" draft="contributed">aragonês</language>
+			<language type="ang" draft="contributed">vieri inglês</language>
+			<language type="ar" draft="contributed">arap</language>
+			<language type="arc" draft="contributed">aramaic</language>
+			<language type="as" draft="contributed">assamês</language>
+			<language type="ast" draft="contributed">asturian</language>
+			<language type="av" draft="contributed">avar</language>
+			<language type="ay" draft="contributed">aymarà</language>
+			<language type="az" draft="contributed">azerbaijani</language>
+			<language type="be" draft="contributed">bielorùs</language>
+			<language type="bg" draft="contributed">bulgar</language>
+			<language type="bn" draft="contributed">bengalês</language>
+			<language type="bo" draft="contributed">tibetan</language>
+			<language type="br" draft="contributed">breton</language>
+			<language type="bs" draft="contributed">bosniac</language>
+			<language type="ca" draft="contributed">catalan</language>
+			<language type="ce" draft="contributed">cecen</language>
+			<language type="ch" draft="contributed">chamorro</language>
+			<language type="co" draft="contributed">cors</language>
+			<language type="cop" draft="contributed">coptic</language>
+			<language type="cr" draft="contributed">cree</language>
+			<language type="cs" draft="contributed">cec</language>
+			<language type="cu" draft="contributed">sclâf de glesie</language>
+			<language type="cy" draft="contributed">galês</language>
+			<language type="da" draft="contributed">danês</language>
+			<language type="de" draft="contributed">todesc</language>
+			<language type="de_AT" draft="contributed">todesc de Austrie</language>
+			<language type="de_CH" draft="contributed">alt todesc de Svuizare</language>
+			<language type="den" draft="contributed">sclâf</language>
+			<language type="egy" draft="contributed">vieri egjizian</language>
+			<language type="el" draft="contributed">grêc</language>
+			<language type="en" draft="contributed">inglês</language>
+			<language type="en_AU" draft="contributed">inglês australian</language>
+			<language type="en_CA" draft="contributed">inglês canadês</language>
+			<language type="en_GB" draft="contributed">inglês britanic</language>
+			<language type="en_US" draft="contributed">ingles merecan</language>
+			<language type="eo" draft="contributed">esperanto</language>
+			<language type="es" draft="contributed">spagnûl</language>
+			<language type="es_419" draft="contributed">spagnûl de Americhe Latine</language>
+			<language type="es_ES" draft="contributed">spagnûl iberic</language>
+			<language type="et" draft="contributed">eston</language>
+			<language type="eu" draft="contributed">basc</language>
+			<language type="fa" draft="contributed">persian</language>
+			<language type="ff" draft="contributed">fulah</language>
+			<language type="fi" draft="contributed">finlandês</language>
+			<language type="fil" draft="contributed">filipin</language>
+			<language type="fj" draft="contributed">fizian</language>
+			<language type="fo" draft="contributed">faroês</language>
+			<language type="fr" draft="contributed">francês</language>
+			<language type="fr_CA" draft="contributed">francês dal Canade</language>
+			<language type="fr_CH" draft="contributed">francês de Svuizare</language>
+			<language type="fro" draft="contributed">vieri francês</language>
+			<language type="fur" draft="contributed">furlan</language>
+			<language type="fy" draft="contributed">frisian</language>
+			<language type="ga" draft="contributed">gaelic irlandês</language>
+			<language type="gd" draft="contributed">gaelic scozês</language>
+			<language type="gl" draft="contributed">galizian</language>
+			<language type="gn" draft="contributed">guaranì</language>
+			<language type="got" draft="contributed">gotic</language>
+			<language type="grc" draft="contributed">vieri grêc</language>
+			<language type="gu" draft="contributed">gujarati</language>
+			<language type="gv" draft="contributed">manx</language>
+			<language type="he" draft="contributed">ebraic</language>
+			<language type="hi" draft="contributed">hindi</language>
+			<language type="hr" draft="contributed">cravuat</language>
+			<language type="ht" draft="contributed">haitian</language>
+			<language type="hu" draft="contributed">ongjarês</language>
+			<language type="hy" draft="contributed">armen</language>
+			<language type="id" draft="contributed">indonesian</language>
+			<language type="ig" draft="contributed">igbo</language>
+			<language type="ik" draft="contributed">inupiaq</language>
+			<language type="io" draft="contributed">ido</language>
+			<language type="is" draft="contributed">islandês</language>
+			<language type="it" draft="contributed">talian</language>
+			<language type="iu" draft="contributed">inuktitut</language>
+			<language type="ja" draft="contributed">gjaponês</language>
+			<language type="ka" draft="contributed">gjeorgjian</language>
+			<language type="kk" draft="contributed">kazac</language>
+			<language type="kl" draft="contributed">kalaallisut</language>
+			<language type="km" draft="contributed">khmer</language>
+			<language type="kn" draft="contributed">kannada</language>
+			<language type="ko" draft="contributed">corean</language>
+			<language type="ku" draft="contributed">curd</language>
+			<language type="kw" draft="contributed">cornualiês</language>
+			<language type="la" draft="contributed">latin</language>
+			<language type="lad" draft="contributed">ladin</language>
+			<language type="lb" draft="contributed">lussemburghês</language>
+			<language type="li" draft="contributed">limburghês</language>
+			<language type="ln" draft="contributed">lingala</language>
+			<language type="lo" draft="contributed">lao</language>
+			<language type="lt" draft="contributed">lituan</language>
+			<language type="lv" draft="contributed">leton</language>
+			<language type="mg" draft="contributed">malagasy</language>
+			<language type="mi" draft="contributed">maori</language>
+			<language type="mk" draft="contributed">macedon</language>
+			<language type="ml" draft="contributed">malayalam</language>
+			<language type="mn" draft="contributed">mongul</language>
+			<language type="mr" draft="contributed">marathi</language>
+			<language type="ms" draft="contributed">malês</language>
+			<language type="mt" draft="contributed">maltês</language>
+			<language type="mul" draft="contributed">lenghis multiplis</language>
+			<language type="mwl" draft="contributed">mirandês</language>
+			<language type="nap" draft="contributed">napoletan</language>
+			<language type="nb" draft="contributed">norvegjês bokmål</language>
+			<language type="nd" draft="contributed">ndebele setentrionâl</language>
+			<language type="nds" draft="contributed">bas todesc</language>
+			<language type="ne" draft="contributed">nepalês</language>
+			<language type="nl" draft="contributed">olandês</language>
+			<language type="nl_BE" draft="contributed">flamant</language>
+			<language type="nn" draft="contributed">norvegjês nynorsk</language>
+			<language type="no" draft="contributed">norvegjês</language>
+			<language type="non" draft="contributed">vieri norvegjês</language>
+			<language type="nso" draft="contributed">sotho setentrionâl</language>
+			<language type="nv" draft="contributed">navajo</language>
+			<language type="oc" draft="contributed">ocitan</language>
+			<language type="or" draft="contributed">oriya</language>
+			<language type="os" draft="contributed">osetic</language>
+			<language type="ota" draft="contributed">turc otoman</language>
+			<language type="pa" draft="contributed">punjabi</language>
+			<language type="pap" draft="contributed">papiamento</language>
+			<language type="peo" draft="contributed">vieri persian</language>
+			<language type="pl" draft="contributed">polac</language>
+			<language type="pro" draft="contributed">vieri provenzâl</language>
+			<language type="ps" draft="contributed">pashto</language>
+			<language type="pt" draft="contributed">portughês</language>
+			<language type="pt_BR" draft="contributed">portughês brasilian</language>
+			<language type="pt_PT" draft="contributed">portughês iberic</language>
+			<language type="qu" draft="contributed">quechua</language>
+			<language type="rm" draft="contributed">rumanç</language>
+			<language type="ro" draft="contributed">romen</language>
+			<language type="ro_MD">moldâf</language>
+			<language type="ru" draft="contributed">rus</language>
+			<language type="sa" draft="contributed">sanscrit</language>
+			<language type="sc" draft="contributed">sardegnûl</language>
+			<language type="scn" draft="contributed">sicilian</language>
+			<language type="sco" draft="contributed">scozês</language>
+			<language type="sd" draft="contributed">sindhi</language>
+			<language type="se" draft="contributed">sami setentrionâl</language>
+			<language type="sg" draft="contributed">sango</language>
+			<language type="sga" draft="contributed">vieri irlandês</language>
+			<language type="si" draft="contributed">sinalês</language>
+			<language type="sk" draft="contributed">slovac</language>
+			<language type="sl" draft="contributed">sloven</language>
+			<language type="sm" draft="contributed">samoan</language>
+			<language type="so" draft="contributed">somal</language>
+			<language type="sq" draft="contributed">albanês</language>
+			<language type="sr" draft="contributed">serp</language>
+			<language type="ss" draft="contributed">swati</language>
+			<language type="st" draft="contributed">sotho meridionâl</language>
+			<language type="su" draft="contributed">sundanês</language>
+			<language type="sux" draft="contributed">sumeric</language>
+			<language type="sv" draft="contributed">svedês</language>
+			<language type="sw" draft="contributed">swahili</language>
+			<language type="ta" draft="contributed">tamil</language>
+			<language type="te" draft="contributed">telegu</language>
+			<language type="tet" draft="contributed">tetum</language>
+			<language type="tg" draft="contributed">tagic</language>
+			<language type="th" draft="contributed">thai</language>
+			<language type="tk" draft="contributed">turcmen</language>
+			<language type="tl" draft="contributed">tagalog</language>
+			<language type="tr" draft="contributed">turc</language>
+			<language type="tt" draft="contributed">tartar</language>
+			<language type="ty" draft="contributed">tahitian</language>
+			<language type="ug" draft="contributed">uigur</language>
+			<language type="uk" draft="contributed">ucrain</language>
+			<language type="und" draft="contributed">indeterminade</language>
+			<language type="ur" draft="contributed">urdu</language>
+			<language type="uz" draft="contributed">uzbec</language>
+			<language type="ve" draft="contributed">venda</language>
+			<language type="vi" draft="contributed">vietnamite</language>
+			<language type="wa" draft="contributed">valon</language>
+			<language type="wo" draft="contributed">wolof</language>
+			<language type="xh" draft="contributed">xhosa</language>
+			<language type="yi" draft="contributed">yiddish</language>
+			<language type="yo" draft="contributed">yoruba</language>
+			<language type="zh" draft="contributed">cinês</language>
+			<language type="zh_Hans" draft="contributed">cinês semplificât</language>
+			<language type="zh_Hant" draft="contributed">cinês tradizionâl</language>
+			<language type="zu" draft="contributed">zulu</language>
+		</languages>
+		<scripts>
+			<script type="Arab" draft="contributed">arap</script>
+			<script type="Armn" draft="contributed">armen</script>
+			<script type="Bali" draft="contributed">balinês</script>
+			<script type="Beng" draft="contributed">bengalês</script>
+			<script type="Brai" draft="contributed">Braille</script>
+			<script type="Bugi" draft="contributed">buginês</script>
+			<script type="Cans" draft="contributed">Silabari unificât aborigjens canadês</script>
+			<script type="Copt" draft="contributed">copt</script>
+			<script type="Cprt" draft="contributed">cipriot</script>
+			<script type="Cyrl" draft="contributed">cirilic</script>
+			<script type="Cyrs" draft="contributed">cirilic dal vieri slavonic de glesie</script>
+			<script type="Deva" draft="contributed">devanagari</script>
+			<script type="Egyd" draft="contributed">demotic egjizian</script>
+			<script type="Egyh" draft="contributed">jeratic egjizian</script>
+			<script type="Egyp" draft="contributed">jeroglifics egjizians</script>
+			<script type="Ethi" draft="contributed">etiopic</script>
+			<script type="Geor" draft="contributed">georgjian</script>
+			<script type="Glag" draft="contributed">glagolitic</script>
+			<script type="Goth" draft="contributed">gotic</script>
+			<script type="Grek" draft="contributed">grêc</script>
+			<script type="Gujr" draft="contributed">gujarati</script>
+			<script type="Hani" draft="contributed">han</script>
+			<script type="Hans" draft="contributed">Han semplificât</script>
+			<script type="Hant" draft="contributed">Han tradizionâl</script>
+			<script type="Hebr" draft="contributed">ebreu</script>
+			<script type="Hrkt" draft="contributed">katakana o hiragana</script>
+			<script type="Hung" draft="contributed">vieri ongjarês</script>
+			<script type="Ital" draft="contributed">vieri italic</script>
+			<script type="Java" draft="contributed">gjavanês</script>
+			<script type="Jpan" draft="contributed">gjaponês</script>
+			<script type="Khmr" draft="contributed">khmer</script>
+			<script type="Knda" draft="contributed">kannada</script>
+			<script type="Kore" draft="contributed">corean</script>
+			<script type="Laoo" draft="contributed">lao</script>
+			<script type="Latf" draft="contributed">latin Fraktur</script>
+			<script type="Latg" draft="contributed">latin gaelic</script>
+			<script type="Latn" draft="contributed">latin</script>
+			<script type="Lina" draft="contributed">lineâr A</script>
+			<script type="Linb" draft="contributed">lineâr B</script>
+			<script type="Maya" draft="contributed">jeroglifics Maya</script>
+			<script type="Mlym" draft="contributed">malayalam</script>
+			<script type="Mong" draft="contributed">mongul</script>
+			<script type="Mymr" draft="contributed">myanmar</script>
+			<script type="Orya" draft="contributed">oriya</script>
+			<script type="Runr" draft="contributed">runic</script>
+			<script type="Sinh" draft="contributed">sinhala</script>
+			<script type="Syrc" draft="contributed">siriac</script>
+			<script type="Syre" draft="contributed">siriac Estrangelo</script>
+			<script type="Syrj" draft="contributed">siriac ocidentâl</script>
+			<script type="Syrn" draft="contributed">siriac orientâl</script>
+			<script type="Taml" draft="contributed">tamil</script>
+			<script type="Telu" draft="contributed">telegu</script>
+			<script type="Tglg" draft="contributed">tagalog</script>
+			<script type="Thaa" draft="contributed">thaana</script>
+			<script type="Thai" draft="contributed">thai</script>
+			<script type="Tibt" draft="contributed">tibetan</script>
+			<script type="Ugar" draft="contributed">ugaritic</script>
+			<script type="Xpeo" draft="contributed">vieri persian</script>
+			<script type="Xsux" draft="contributed">cuneiform sumeric-acadic</script>
+			<script type="Zxxx" draft="contributed">codiç pes lenghis no scritis</script>
+			<script type="Zyyy" draft="contributed">comun</script>
+			<script type="Zzzz" draft="contributed">codiç par scrituris no codificadis</script>
+		</scripts>
+		<territories>
+			<territory type="001" draft="contributed">Mont</territory>
+			<territory type="002" draft="contributed">Afriche</territory>
+			<territory type="003" draft="contributed">Americhe dal Nord</territory>
+			<territory type="005" draft="contributed">Americhe meridionâl</territory>
+			<territory type="009" draft="contributed">Oceanie</territory>
+			<territory type="011" draft="contributed">Afriche ocidentâl</territory>
+			<territory type="013" draft="contributed">Americhe centrâl</territory>
+			<territory type="014" draft="contributed">Afriche orientâl</territory>
+			<territory type="015" draft="contributed">Afriche setentrionâl</territory>
+			<territory type="017" draft="contributed">Afriche di mieç</territory>
+			<territory type="018" draft="contributed">Afriche meridionâl</territory>
+			<territory type="019" draft="contributed">Americhis</territory>
+			<territory type="021" draft="contributed">Americhe setentrionâl</territory>
+			<territory type="029" draft="contributed">caraibic</territory>
+			<territory type="030" draft="contributed">Asie orientâl</territory>
+			<territory type="034" draft="contributed">Asie meridionâl</territory>
+			<territory type="035" draft="contributed">Asie sud orientâl</territory>
+			<territory type="039" draft="contributed">Europe meridionâl</territory>
+			<territory type="053" draft="contributed">Australie e Gnove Zelande</territory>
+			<territory type="054" draft="contributed">Melanesie</territory>
+			<territory type="057" draft="contributed">Regjon de Micronesie</territory>
+			<territory type="061" draft="contributed">Polinesie</territory>
+			<territory type="142" draft="contributed">Asie</territory>
+			<territory type="143" draft="contributed">Asie centrâl</territory>
+			<territory type="145" draft="contributed">Asie ocidentâl</territory>
+			<territory type="150" draft="contributed">Europe</territory>
+			<territory type="151" draft="contributed">Europe orientâl</territory>
+			<territory type="154" draft="contributed">Europe setentrionâl</territory>
+			<territory type="155" draft="contributed">Europe ocidentâl</territory>
+			<territory type="419" draft="contributed">Americhe latine</territory>
+			<territory type="AD" draft="contributed">Andorra</territory>
+			<territory type="AE" draft="contributed">Emirâts araps unîts</territory>
+			<territory type="AF" draft="contributed">Afghanistan</territory>
+			<territory type="AG" draft="contributed">Antigua e Barbuda</territory>
+			<territory type="AI" draft="contributed">Anguilla</territory>
+			<territory type="AL" draft="contributed">Albanie</territory>
+			<territory type="AM" draft="contributed">Armenie</territory>
+			<territory type="AO" draft="contributed">Angola</territory>
+			<territory type="AQ" draft="contributed">Antartic</territory>
+			<territory type="AR" draft="contributed">Argjentine</territory>
+			<territory type="AS" draft="contributed">Samoa merecanis</territory>
+			<territory type="AT" draft="contributed">Austrie</territory>
+			<territory type="AU" draft="contributed">Australie</territory>
+			<territory type="AW" draft="contributed">Aruba</territory>
+			<territory type="AX" draft="contributed">Isulis Aland</territory>
+			<territory type="AZ" draft="contributed">Azerbaigian</territory>
+			<territory type="BA" draft="contributed">Bosnie e Ercegovine</territory>
+			<territory type="BB" draft="contributed">Barbados</territory>
+			<territory type="BD" draft="contributed">Bangladesh</territory>
+			<territory type="BE" draft="contributed">Belgjiche</territory>
+			<territory type="BF" draft="contributed">Burkina Faso</territory>
+			<territory type="BG" draft="contributed">Bulgarie</territory>
+			<territory type="BH" draft="contributed">Bahrain</territory>
+			<territory type="BI" draft="contributed">Burundi</territory>
+			<territory type="BJ" draft="contributed">Benin</territory>
+			<territory type="BL" draft="contributed">Sant Barthélemy</territory>
+			<territory type="BM" draft="contributed">Bermuda</territory>
+			<territory type="BN" draft="contributed">Brunei</territory>
+			<territory type="BO" draft="contributed">Bolivie</territory>
+			<territory type="BR" draft="contributed">Brasîl</territory>
+			<territory type="BS" draft="contributed">Bahamas</territory>
+			<territory type="BT" draft="contributed">Bhutan</territory>
+			<territory type="BV" draft="contributed">Isule Bouvet</territory>
+			<territory type="BW" draft="contributed">Botswana</territory>
+			<territory type="BY" draft="contributed">Bielorussie</territory>
+			<territory type="BZ" draft="contributed">Belize</territory>
+			<territory type="CA" draft="contributed">Canade</territory>
+			<territory type="CC" draft="contributed">Isulis Cocos</territory>
+			<territory type="CD" draft="contributed">Republiche Democratiche dal Congo</territory>
+			<territory type="CD" alt="variant" draft="contributed">Congo (RDC)</territory>
+			<territory type="CF" draft="contributed">Republiche centri africane</territory>
+			<territory type="CG" draft="contributed">Congo - Brazzaville</territory>
+			<territory type="CG" alt="variant" draft="contributed">Congo (Republiche)</territory>
+			<territory type="CH" draft="contributed">Svuizare</territory>
+			<territory type="CI" draft="contributed">Cueste di Avoli</territory>
+			<territory type="CK" draft="contributed">Isulis Cook</territory>
+			<territory type="CL" draft="contributed">Cile</territory>
+			<territory type="CM" draft="contributed">Camerun</territory>
+			<territory type="CN" draft="contributed">Cine</territory>
+			<territory type="CO" draft="contributed">Colombie</territory>
+			<territory type="CP" draft="contributed">Isule Clipperton</territory>
+			<territory type="CR" draft="contributed">Costa Rica</territory>
+			<territory type="CU" draft="contributed">Cuba</territory>
+			<territory type="CV" draft="contributed">Cjâf vert</territory>
+			<territory type="CX" draft="contributed">Isule Christmas</territory>
+			<territory type="CY" draft="contributed">Cipri</territory>
+			<territory type="CZ" draft="contributed">Republiche ceche</territory>
+			<territory type="DE" draft="contributed">Gjermanie</territory>
+			<territory type="DG" draft="contributed">Diego Garcia</territory>
+			<territory type="DJ" draft="contributed">Gibuti</territory>
+			<territory type="DK" draft="contributed">Danimarcje</territory>
+			<territory type="DM" draft="contributed">Dominiche</territory>
+			<territory type="DO" draft="contributed">Republiche dominicane</territory>
+			<territory type="DZ" draft="contributed">Alzerie</territory>
+			<territory type="EA" draft="contributed">Ceuta e Melilla</territory>
+			<territory type="EC" draft="contributed">Ecuador</territory>
+			<territory type="EE" draft="contributed">Estonie</territory>
+			<territory type="EG" draft="contributed">Egjit</territory>
+			<territory type="EH" draft="contributed">Sahara ocidentâl</territory>
+			<territory type="ER" draft="contributed">Eritree</territory>
+			<territory type="ES" draft="contributed">Spagne</territory>
+			<territory type="ET" draft="contributed">Etiopie</territory>
+			<territory type="EU" draft="contributed">Union europeane</territory>
+			<territory type="FI" draft="contributed">Finlandie</territory>
+			<territory type="FJ" draft="contributed">Fizi</territory>
+			<territory type="FK" draft="contributed">Isulis Falkland</territory>
+			<territory type="FK" alt="variant" draft="contributed">Isulis Falkland (Isulis Malvinas)</territory>
+			<territory type="FM" draft="contributed">Micronesie</territory>
+			<territory type="FO" draft="contributed">Isulis Faroe</territory>
+			<territory type="FR" draft="contributed">France</territory>
+			<territory type="GA" draft="contributed">Gabon</territory>
+			<territory type="GB" draft="contributed">Ream unît</territory>
+			<territory type="GD" draft="contributed">Grenada</territory>
+			<territory type="GE" draft="contributed">Gjeorgjie</territory>
+			<territory type="GF" draft="contributed">Guiana francês</territory>
+			<territory type="GG" draft="contributed">Guernsey</territory>
+			<territory type="GH" draft="contributed">Ghana</territory>
+			<territory type="GI" draft="contributed">Gjibraltar</territory>
+			<territory type="GL" draft="contributed">Groenlande</territory>
+			<territory type="GM" draft="contributed">Gambia</territory>
+			<territory type="GN" draft="contributed">Guinee</territory>
+			<territory type="GP" draft="contributed">Guadalupe</territory>
+			<territory type="GQ" draft="contributed">Guinee ecuatoriâl</territory>
+			<territory type="GR" draft="contributed">Grecie</territory>
+			<territory type="GS" draft="contributed">Georgia dal Sud e Isulis Sandwich dal Sud</territory>
+			<territory type="GT" draft="contributed">Guatemala</territory>
+			<territory type="GU" draft="contributed">Guam</territory>
+			<territory type="GW" draft="contributed">Guinea-Bissau</territory>
+			<territory type="GY" draft="contributed">Guyana</territory>
+			<territory type="HK" draft="contributed">Regjon aministrative speciâl de Cine di Hong Kong</territory>
+			<territory type="HK" alt="short" draft="contributed">Hong Kong</territory>
+			<territory type="HM" draft="contributed">Isule Heard e Isulis McDonald</territory>
+			<territory type="HN" draft="contributed">Honduras</territory>
+			<territory type="HR" draft="contributed">Cravuazie</territory>
+			<territory type="HT" draft="contributed">Haiti</territory>
+			<territory type="HU" draft="contributed">Ongjarie</territory>
+			<territory type="IC" draft="contributed">Isulis Canariis</territory>
+			<territory type="ID" draft="contributed">Indonesie</territory>
+			<territory type="IE" draft="contributed">Irlande</territory>
+			<territory type="IL" draft="contributed">Israêl</territory>
+			<territory type="IM" draft="contributed">Isule di Man</territory>
+			<territory type="IN" draft="contributed">India</territory>
+			<territory type="IO" draft="contributed">Teritori britanic dal Ocean Indian</territory>
+			<territory type="IQ" draft="contributed">Iraq</territory>
+			<territory type="IR" draft="contributed">Iran</territory>
+			<territory type="IS" draft="contributed">Islande</territory>
+			<territory type="IT" draft="contributed">Italie</territory>
+			<territory type="JE" draft="contributed">Jersey</territory>
+			<territory type="JM" draft="contributed">Gjamaiche</territory>
+			<territory type="JO" draft="contributed">Jordanie</territory>
+			<territory type="JP" draft="contributed">Gjapon</territory>
+			<territory type="KE" draft="contributed">Kenya</territory>
+			<territory type="KG" draft="contributed">Kirghizstan</territory>
+			<territory type="KH" draft="contributed">Camboze</territory>
+			<territory type="KI" draft="contributed">Kiribati</territory>
+			<territory type="KM" draft="contributed">Comoris</territory>
+			<territory type="KN" draft="contributed">San Kitts e Nevis</territory>
+			<territory type="KP" draft="contributed">Coree dal nord</territory>
+			<territory type="KR" draft="contributed">Coree dal sud</territory>
+			<territory type="KW" draft="contributed">Kuwait</territory>
+			<territory type="KY" draft="contributed">Isulis Cayman</territory>
+			<territory type="KZ" draft="contributed">Kazachistan</territory>
+			<territory type="LA" draft="contributed">Laos</territory>
+			<territory type="LB" draft="contributed">Liban</territory>
+			<territory type="LC" draft="contributed">Sante Lusie</territory>
+			<territory type="LI" draft="contributed">Liechtenstein</territory>
+			<territory type="LK" draft="contributed">Sri Lanka</territory>
+			<territory type="LR" draft="contributed">Liberie</territory>
+			<territory type="LS" draft="contributed">Lesotho</territory>
+			<territory type="LT" draft="contributed">Lituanie</territory>
+			<territory type="LU" draft="contributed">Lussemburc</territory>
+			<territory type="LV" draft="contributed">Letonie</territory>
+			<territory type="LY" draft="contributed">Libie</territory>
+			<territory type="MA" draft="contributed">Maroc</territory>
+			<territory type="MC" draft="contributed">Monaco</territory>
+			<territory type="MD" draft="contributed">Moldavie</territory>
+			<territory type="ME" draft="contributed">Montenegro</territory>
+			<territory type="MF" draft="contributed">Sant Martin</territory>
+			<territory type="MG" draft="contributed">Madagascar</territory>
+			<territory type="MH" draft="contributed">Isulis Marshall</territory>
+			<territory type="ML" draft="contributed">Mali</territory>
+			<territory type="MM" draft="contributed">Birmanie</territory>
+			<territory type="MN" draft="contributed">Mongolie</territory>
+			<territory type="MO" draft="contributed">Regjon aministrative speciâl de Cine di Macao</territory>
+			<territory type="MO" alt="short" draft="contributed">Macao</territory>
+			<territory type="MP" draft="contributed">Isulis Mariana dal Nord</territory>
+			<territory type="MQ" draft="contributed">Martiniche</territory>
+			<territory type="MR" draft="contributed">Mauritanie</territory>
+			<territory type="MS" draft="contributed">Montserrat</territory>
+			<territory type="MT" draft="contributed">Malta</territory>
+			<territory type="MU" draft="contributed">Maurizi</territory>
+			<territory type="MV" draft="contributed">Maldivis</territory>
+			<territory type="MW" draft="contributed">Malawi</territory>
+			<territory type="MX" draft="contributed">Messic</territory>
+			<territory type="MY" draft="contributed">Malaysia</territory>
+			<territory type="MZ" draft="contributed">Mozambic</territory>
+			<territory type="NA" draft="contributed">Namibie</territory>
+			<territory type="NC" draft="contributed">Gnove Caledonie</territory>
+			<territory type="NE" draft="contributed">Niger</territory>
+			<territory type="NF" draft="contributed">Isole Norfolk</territory>
+			<territory type="NG" draft="contributed">Nigerie</territory>
+			<territory type="NI" draft="contributed">Nicaragua</territory>
+			<territory type="NL" draft="contributed">Paîs bas</territory>
+			<territory type="NO" draft="contributed">Norvegje</territory>
+			<territory type="NP" draft="contributed">Nepal</territory>
+			<territory type="NR" draft="contributed">Nauru</territory>
+			<territory type="NU" draft="contributed">Niue</territory>
+			<territory type="NZ" draft="contributed">Gnove Zelande</territory>
+			<territory type="OM" draft="contributed">Oman</territory>
+			<territory type="PA" draft="contributed">Panamà</territory>
+			<territory type="PE" draft="contributed">Perù</territory>
+			<territory type="PF" draft="contributed">Polinesie francês</territory>
+			<territory type="PG" draft="contributed">Papue Gnove Guinee</territory>
+			<territory type="PH" draft="contributed">Filipinis</territory>
+			<territory type="PK" draft="contributed">Pakistan</territory>
+			<territory type="PL" draft="contributed">Polonie</territory>
+			<territory type="PM" draft="contributed">San Pierre e Miquelon</territory>
+			<territory type="PN" draft="contributed">Pitcairn</territory>
+			<territory type="PR" draft="contributed">Porto Rico</territory>
+			<territory type="PS" draft="contributed">Teritoris palestinês</territory>
+			<territory type="PT" draft="contributed">Portugal</territory>
+			<territory type="PW" draft="contributed">Palau</territory>
+			<territory type="PY" draft="contributed">Paraguay</territory>
+			<territory type="QA" draft="contributed">Qatar</territory>
+			<territory type="QO" draft="contributed">Oceanie periferiche</territory>
+			<territory type="RE" draft="contributed">Reunion</territory>
+			<territory type="RO" draft="contributed">Romanie</territory>
+			<territory type="RS" draft="contributed">Serbie</territory>
+			<territory type="RU" draft="contributed">Russie</territory>
+			<territory type="RW" draft="contributed">Ruande</territory>
+			<territory type="SA" draft="contributed">Arabie Saudide</territory>
+			<territory type="SB" draft="contributed">Isulis Salomon</territory>
+			<territory type="SC" draft="contributed">Seychelles</territory>
+			<territory type="SD" draft="contributed">Sudan</territory>
+			<territory type="SE" draft="contributed">Svezie</territory>
+			<territory type="SG" draft="contributed">Singapore</territory>
+			<territory type="SH" draft="contributed">Sante Eline</territory>
+			<territory type="SI" draft="contributed">Slovenie</territory>
+			<territory type="SJ" draft="contributed">Svalbard e Jan Mayen</territory>
+			<territory type="SK" draft="contributed">Slovachie</territory>
+			<territory type="SL" draft="contributed">Sierra Leone</territory>
+			<territory type="SM" draft="contributed">San Marin</territory>
+			<territory type="SN" draft="contributed">Senegal</territory>
+			<territory type="SO" draft="contributed">Somalie</territory>
+			<territory type="SR" draft="contributed">Suriname</territory>
+			<territory type="ST" draft="contributed">Sao Tomè e Principe</territory>
+			<territory type="SV" draft="contributed">El Salvador</territory>
+			<territory type="SY" draft="contributed">Sirie</territory>
+			<territory type="SZ" draft="contributed">Swaziland</territory>
+			<territory type="TA" draft="contributed">Tristan da Cunha</territory>
+			<territory type="TC" draft="contributed">Isulis Turks e Caicos</territory>
+			<territory type="TD" draft="contributed">Çad</territory>
+			<territory type="TF" draft="contributed">Teritoris meridionâi francês</territory>
+			<territory type="TG" draft="contributed">Togo</territory>
+			<territory type="TH" draft="contributed">Tailandie</territory>
+			<territory type="TJ" draft="contributed">Tazikistan</territory>
+			<territory type="TK" draft="contributed">Tokelau</territory>
+			<territory type="TL" draft="contributed">Timor orientâl</territory>
+			<territory type="TM" draft="contributed">Turkmenistan</territory>
+			<territory type="TN" draft="contributed">Tunisie</territory>
+			<territory type="TO" draft="contributed">Tonga</territory>
+			<territory type="TR" draft="contributed">Turchie</territory>
+			<territory type="TT" draft="contributed">Trinidad e Tobago</territory>
+			<territory type="TV" draft="contributed">Tuvalu</territory>
+			<territory type="TW" draft="contributed">Taiwan</territory>
+			<territory type="TZ" draft="contributed">Tanzanie</territory>
+			<territory type="UA" draft="contributed">Ucraine</territory>
+			<territory type="UG" draft="contributed">Uganda</territory>
+			<territory type="UM" draft="contributed">Isulis periferichis minôrs dai Stâts Unîts</territory>
+			<territory type="US" draft="contributed">Stâts Unîts</territory>
+			<territory type="UY" draft="contributed">Uruguay</territory>
+			<territory type="UZ" draft="contributed">Uzbechistan</territory>
+			<territory type="VA" draft="contributed">Vatican</territory>
+			<territory type="VC" draft="contributed">San Vincent e lis Grenadinis</territory>
+			<territory type="VE" draft="contributed">Venezuela</territory>
+			<territory type="VG" draft="contributed">Isulis vergjinis britanichis</territory>
+			<territory type="VI" draft="contributed">Isulis vergjinis americanis</territory>
+			<territory type="VN" draft="contributed">Vietnam</territory>
+			<territory type="VU" draft="contributed">Vanuatu</territory>
+			<territory type="WF" draft="contributed">Wallis e Futuna</territory>
+			<territory type="WS" draft="contributed">Samoa</territory>
+			<territory type="YE" draft="contributed">Yemen</territory>
+			<territory type="YT" draft="contributed">Mayotte</territory>
+			<territory type="ZA" draft="contributed">Sud Afriche</territory>
+			<territory type="ZM" draft="contributed">Zambia</territory>
+			<territory type="ZW" draft="contributed">Zimbabwe</territory>
+			<territory type="ZZ" draft="contributed">Regjon no cognossude o no valide</territory>
+		</territories>
+		<variants>
+			<variant type="1901" draft="contributed">Ortografie todescje tradizionâl</variant>
+			<variant type="1994" draft="contributed">Ortografie resiane standard</variant>
+			<variant type="1996" draft="contributed">Ortografie todescje dal 1996</variant>
+			<variant type="AREVELA" draft="contributed">armen orientâl</variant>
+			<variant type="AREVMDA" draft="contributed">armen ocidentâl</variant>
+			<variant type="BISKE" draft="contributed">dialet di San Zorç di Resie</variant>
+			<variant type="LIPAW" draft="contributed">dialet di Lipovaz dal resian</variant>
+			<variant type="NEDIS" draft="contributed">Dialet des valadis dal Nadison</variant>
+			<variant type="NJIVA" draft="contributed">dialet di Gnive</variant>
+			<variant type="OSOJS" draft="contributed">dialet di Oseac</variant>
+			<variant type="POLYTON" draft="contributed">Politoniche</variant>
+			<variant type="REVISED" draft="contributed">Ortografie revisade</variant>
+			<variant type="ROZAJ" draft="contributed">Resian</variant>
+			<variant type="SOLBA" draft="contributed">dialet di Stolvize</variant>
+			<variant type="VALENCIA" draft="contributed">valenzian</variant>
+		</variants>
+		<keys>
+			<key type="calendar" draft="contributed">calendari</key>
+			<key type="collation" draft="contributed">ordenament</key>
+			<key type="currency" draft="contributed">monede</key>
+		</keys>
+		<types>
+			<type key="calendar" type="buddhist" draft="contributed">calendari budist</type>
+			<type key="calendar" type="chinese" draft="contributed">calendari cinês</type>
+			<type key="calendar" type="gregorian" draft="contributed">calendari gregorian</type>
+			<type key="calendar" type="hebrew" draft="contributed">calendari ebreu</type>
+			<type key="calendar" type="indian" draft="contributed">calendari nazionâl indian</type>
+			<type key="calendar" type="islamic" draft="contributed">calendari islamic</type>
+			<type key="calendar" type="islamic-civil" draft="contributed">calendari islamic civîl</type>
+			<type key="calendar" type="japanese" draft="contributed">calendari gjaponês</type>
+			<type key="calendar" type="roc" draft="contributed">calendari de Republiche di Cine</type>
+			<type key="collation" type="big5han" draft="contributed">ordin cinês tradizionâl - Big5</type>
+			<type key="collation" type="ducet" draft="contributed">ordenament predeterminât Unicode</type>
+			<type key="collation" type="gb2312han" draft="contributed">ordin cinês semplificât - GB2312</type>
+			<type key="collation" type="phonebook" draft="contributed">ordin elenc telefonic</type>
+			<type key="collation" type="pinyin" draft="contributed">ordin pinyin</type>
+			<type key="collation" type="search" draft="contributed">ricercje par fins gjenerâi</type>
+			<type key="collation" type="stroke" draft="contributed">ordin segns</type>
+			<type key="collation" type="traditional" draft="contributed">ordin tradizionâl</type>
+			<type key="numbers" type="latn" draft="contributed">numars ocidentâi</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric" draft="contributed">metric</measurementSystemName>
+			<measurementSystemName type="UK" draft="contributed">Ream Unît</measurementSystemName>
+			<measurementSystemName type="US" draft="contributed">USA</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language" draft="contributed">Lenghe: {0}</codePattern>
+			<codePattern type="script" draft="contributed">Scriture: {0}</codePattern>
+			<codePattern type="territory" draft="contributed">Regjon: {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a à â b c ç d e è ê f g h i ì î j k l m n o ò ô p q r s t u ù û v w x y z]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[å č é ë ğ ï ñ ó š ü]</exemplarCharacters>
+		<exemplarCharacters type="index" draft="contributed">[A B C Ç D E F G H I J K L M N O P Q R S T U V W X Y Z]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart draft="contributed">‘</quotationStart>
+		<quotationEnd draft="contributed">’</quotationEnd>
+		<alternateQuotationStart draft="contributed">“</alternateQuotationStart>
+		<alternateQuotationEnd draft="contributed">”</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern draft="contributed">EEEE d 'di' MMMM 'dal' y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern draft="contributed">d 'di' MMMM 'dal' y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern draft="contributed">dd/MM/y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="contributed">dd/MM/yy GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="d" draft="contributed">d</dateFormatItem>
+						<dateFormatItem id="Ed" draft="contributed">d E</dateFormatItem>
+						<dateFormatItem id="Hm" draft="contributed">H:mm</dateFormatItem>
+						<dateFormatItem id="M" draft="contributed">L</dateFormatItem>
+						<dateFormatItem id="Md" draft="contributed">d/M</dateFormatItem>
+						<dateFormatItem id="MEd" draft="contributed">E d/M</dateFormatItem>
+						<dateFormatItem id="MMd" draft="contributed">d/MM</dateFormatItem>
+						<dateFormatItem id="MMM" draft="contributed">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd" draft="contributed">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd" draft="contributed">E d MMM</dateFormatItem>
+						<dateFormatItem id="MMMMd" draft="contributed">d 'di' MMMM</dateFormatItem>
+						<dateFormatItem id="MMMMEd" draft="contributed">E d MMMM</dateFormatItem>
+						<dateFormatItem id="ms" draft="contributed">mm:ss</dateFormatItem>
+						<dateFormatItem id="y" draft="contributed">y</dateFormatItem>
+						<dateFormatItem id="yM" draft="contributed">M/y</dateFormatItem>
+						<dateFormatItem id="yMEd" draft="contributed">E, d/M/y</dateFormatItem>
+						<dateFormatItem id="yMMM" draft="contributed">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd" draft="contributed">E d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMM" draft="contributed">LLLL 'dal' y</dateFormatItem>
+						<dateFormatItem id="yQQQ" draft="contributed">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ" draft="contributed">QQQQ y</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback draft="contributed">{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d" draft="contributed">d–d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="h">
+							<greatestDifference id="a" draft="contributed">h a – h a</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h–h a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="H">
+							<greatestDifference id="H" draft="contributed">HH–HH</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="a" draft="contributed">h:mm a – h:mm a</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h:mm–h:mm a</greatestDifference>
+							<greatestDifference id="m" draft="contributed">h:mm–h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hm">
+							<greatestDifference id="H" draft="contributed">HH:mm–HH:mm</greatestDifference>
+							<greatestDifference id="m" draft="contributed">HH:mm–HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="a" draft="contributed">h:mm a – h:mm a v</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h:mm–h:mm a v</greatestDifference>
+							<greatestDifference id="m" draft="contributed">h:mm–h:mm a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H" draft="contributed">HH:mm–HH:mm v</greatestDifference>
+							<greatestDifference id="m" draft="contributed">HH:mm–HH:mm v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="a" draft="contributed">h a – h a v</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h–h a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H" draft="contributed">HH–HH v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M" draft="contributed">M–M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d" draft="contributed">dd/MM – dd/MM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">dd/MM – dd/MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d" draft="contributed">E dd/MM – E dd/MM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E dd/MM – E dd/MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M" draft="contributed">LLL–LLL</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d" draft="contributed">d–d 'di' MMM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">d 'di' MMM – d 'di' MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d" draft="contributed">E d – E d 'di' MMM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E d 'di' MMM – E d 'di' MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y" draft="contributed">y–y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M" draft="contributed">MM/y – MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">MM/y – MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d" draft="contributed">dd/MM/y – dd/MM/y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">dd/MM/y – dd/MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">dd/MM/y – dd/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d" draft="contributed">E dd/MM/y – E dd/MM/y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E dd/MM/y – E dd/MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">E dd/MM/y – E dd/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M" draft="contributed">MM – MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">MM/y – MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d" draft="contributed">d – d/MM/y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">dd/MM/y – d/MM</greatestDifference>
+							<greatestDifference id="y" draft="contributed">dd/MM/y – dd/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d" draft="contributed">E dd/MM/y – E dd/MM/y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E dd/MM/y – E dd/MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">E dd/MM/y – E dd/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M" draft="contributed">MM – MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">MM/y – MM/y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1" draft="contributed">Zen</month>
+							<month type="2" draft="contributed">Fev</month>
+							<month type="3" draft="contributed">Mar</month>
+							<month type="4" draft="contributed">Avr</month>
+							<month type="5" draft="contributed">Mai</month>
+							<month type="6" draft="contributed">Jug</month>
+							<month type="7" draft="contributed">Lui</month>
+							<month type="8" draft="contributed">Avo</month>
+							<month type="9" draft="contributed">Set</month>
+							<month type="10" draft="contributed">Otu</month>
+							<month type="11" draft="contributed">Nov</month>
+							<month type="12" draft="contributed">Dic</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1" draft="contributed">Z</month>
+							<month type="2" draft="contributed">F</month>
+							<month type="3" draft="contributed">M</month>
+							<month type="4" draft="contributed">A</month>
+							<month type="5" draft="contributed">M</month>
+							<month type="6" draft="contributed">J</month>
+							<month type="7" draft="contributed">L</month>
+							<month type="8" draft="contributed">A</month>
+							<month type="9" draft="contributed">S</month>
+							<month type="10" draft="contributed">O</month>
+							<month type="11" draft="contributed">N</month>
+							<month type="12" draft="contributed">D</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1" draft="contributed">Zenâr</month>
+							<month type="2" draft="contributed">Fevrâr</month>
+							<month type="3" draft="contributed">Març</month>
+							<month type="4" draft="contributed">Avrîl</month>
+							<month type="5" draft="contributed">Mai</month>
+							<month type="6" draft="contributed">Jugn</month>
+							<month type="7" draft="contributed">Lui</month>
+							<month type="8" draft="contributed">Avost</month>
+							<month type="9" draft="contributed">Setembar</month>
+							<month type="10" draft="contributed">Otubar</month>
+							<month type="11" draft="contributed">Novembar</month>
+							<month type="12" draft="contributed">Dicembar</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1" draft="contributed">Zen</month>
+							<month type="2" draft="contributed">Fev</month>
+							<month type="3" draft="contributed">Mar</month>
+							<month type="4" draft="contributed">Avr</month>
+							<month type="5" draft="contributed">Mai</month>
+							<month type="6" draft="contributed">Jug</month>
+							<month type="7" draft="contributed">Lui</month>
+							<month type="8" draft="contributed">Avo</month>
+							<month type="9" draft="contributed">Set</month>
+							<month type="10" draft="contributed">Otu</month>
+							<month type="11" draft="contributed">Nov</month>
+							<month type="12" draft="contributed">Dic</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1" draft="contributed">Z</month>
+							<month type="2" draft="contributed">F</month>
+							<month type="3" draft="contributed">M</month>
+							<month type="4" draft="contributed">A</month>
+							<month type="5" draft="contributed">M</month>
+							<month type="6" draft="contributed">J</month>
+							<month type="7" draft="contributed">L</month>
+							<month type="8" draft="contributed">A</month>
+							<month type="9" draft="contributed">S</month>
+							<month type="10" draft="contributed">O</month>
+							<month type="11" draft="contributed">N</month>
+							<month type="12" draft="contributed">D</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1" draft="contributed">Zenâr</month>
+							<month type="2" draft="contributed">Fevrâr</month>
+							<month type="3" draft="contributed">Març</month>
+							<month type="4" draft="contributed">Avrîl</month>
+							<month type="5" draft="contributed">Mai</month>
+							<month type="6" draft="contributed">Jugn</month>
+							<month type="7" draft="contributed">Lui</month>
+							<month type="8" draft="contributed">Avost</month>
+							<month type="9" draft="contributed">Setembar</month>
+							<month type="10" draft="contributed">Otubar</month>
+							<month type="11" draft="contributed">Novembar</month>
+							<month type="12" draft="contributed">Dicembar</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun" draft="contributed">dom</day>
+							<day type="mon" draft="contributed">lun</day>
+							<day type="tue" draft="contributed">mar</day>
+							<day type="wed" draft="contributed">mie</day>
+							<day type="thu" draft="contributed">joi</day>
+							<day type="fri" draft="contributed">vin</day>
+							<day type="sat" draft="contributed">sab</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun" draft="contributed">D</day>
+							<day type="mon" draft="contributed">L</day>
+							<day type="tue" draft="contributed">M</day>
+							<day type="wed" draft="contributed">M</day>
+							<day type="thu" draft="contributed">J</day>
+							<day type="fri" draft="contributed">V</day>
+							<day type="sat" draft="contributed">S</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun" draft="contributed">domenie</day>
+							<day type="mon" draft="contributed">lunis</day>
+							<day type="tue" draft="contributed">martars</day>
+							<day type="wed" draft="contributed">miercus</day>
+							<day type="thu" draft="contributed">joibe</day>
+							<day type="fri" draft="contributed">vinars</day>
+							<day type="sat" draft="contributed">sabide</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun" draft="contributed">dom</day>
+							<day type="mon" draft="contributed">lun</day>
+							<day type="tue" draft="contributed">mar</day>
+							<day type="wed" draft="contributed">mie</day>
+							<day type="thu" draft="contributed">joi</day>
+							<day type="fri" draft="contributed">vin</day>
+							<day type="sat" draft="contributed">sab</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun" draft="contributed">D</day>
+							<day type="mon" draft="contributed">L</day>
+							<day type="tue" draft="contributed">M</day>
+							<day type="wed" draft="contributed">M</day>
+							<day type="thu" draft="contributed">J</day>
+							<day type="fri" draft="contributed">V</day>
+							<day type="sat" draft="contributed">S</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun" draft="contributed">domenie</day>
+							<day type="mon" draft="contributed">lunis</day>
+							<day type="tue" draft="contributed">martars</day>
+							<day type="wed" draft="contributed">miercus</day>
+							<day type="thu" draft="contributed">joibe</day>
+							<day type="fri" draft="contributed">vinars</day>
+							<day type="sat" draft="contributed">sabide</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1" draft="contributed">T1</quarter>
+							<quarter type="2" draft="contributed">T2</quarter>
+							<quarter type="3" draft="contributed">T3</quarter>
+							<quarter type="4" draft="contributed">T4</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1" draft="contributed">1</quarter>
+							<quarter type="2" draft="contributed">2</quarter>
+							<quarter type="3" draft="contributed">3</quarter>
+							<quarter type="4" draft="contributed">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1" draft="contributed">Prin trimestri</quarter>
+							<quarter type="2" draft="contributed">Secont trimestri</quarter>
+							<quarter type="3" draft="contributed">Tierç trimestri</quarter>
+							<quarter type="4" draft="contributed">Cuart trimestri</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1" draft="contributed">T1</quarter>
+							<quarter type="2" draft="contributed">T2</quarter>
+							<quarter type="3" draft="contributed">T3</quarter>
+							<quarter type="4" draft="contributed">T4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1" draft="contributed">Prin trimestri</quarter>
+							<quarter type="2" draft="contributed">Secont trimestri</quarter>
+							<quarter type="3" draft="contributed">Tierç trimestri</quarter>
+							<quarter type="4" draft="contributed">Cuart trimestri</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am" draft="contributed">a.</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">p.</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am" draft="contributed">a.</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">p.</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraAbbr>
+						<era type="0" draft="contributed">pdC</era>
+						<era type="1" draft="contributed">ddC</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern draft="contributed">EEEE d 'di' MMMM 'dal' y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern draft="contributed">d 'di' MMMM 'dal' y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern draft="contributed">dd/MM/y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="contributed">dd/MM/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern draft="contributed">HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern draft="contributed">HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern draft="contributed">HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern draft="contributed">HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="d" draft="contributed">d</dateFormatItem>
+						<dateFormatItem id="Ed" draft="contributed">d E</dateFormatItem>
+						<dateFormatItem id="Hm" draft="contributed">H:mm</dateFormatItem>
+						<dateFormatItem id="M" draft="contributed">L</dateFormatItem>
+						<dateFormatItem id="Md" draft="contributed">d/M</dateFormatItem>
+						<dateFormatItem id="MEd" draft="contributed">E d/M</dateFormatItem>
+						<dateFormatItem id="MMd" draft="contributed">d/MM</dateFormatItem>
+						<dateFormatItem id="MMM" draft="contributed">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd" draft="contributed">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd" draft="contributed">E d MMM</dateFormatItem>
+						<dateFormatItem id="MMMMd" draft="contributed">d 'di' MMMM</dateFormatItem>
+						<dateFormatItem id="MMMMEd" draft="contributed">E d MMMM</dateFormatItem>
+						<dateFormatItem id="ms" draft="contributed">mm:ss</dateFormatItem>
+						<dateFormatItem id="y" draft="contributed">y</dateFormatItem>
+						<dateFormatItem id="yM" draft="contributed">M/y</dateFormatItem>
+						<dateFormatItem id="yMEd" draft="contributed">E, d/M/y</dateFormatItem>
+						<dateFormatItem id="yMMM" draft="contributed">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd" draft="contributed">E d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMM" draft="contributed">LLLL 'dal' y</dateFormatItem>
+						<dateFormatItem id="yQQQ" draft="contributed">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ" draft="contributed">QQQQ y</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback draft="contributed">{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d" draft="contributed">d–d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="h">
+							<greatestDifference id="a" draft="contributed">h a – h a</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h–h a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="H">
+							<greatestDifference id="H" draft="contributed">HH–HH</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="a" draft="contributed">h:mm a – h:mm a</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h:mm–h:mm a</greatestDifference>
+							<greatestDifference id="m" draft="contributed">h:mm–h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hm">
+							<greatestDifference id="H" draft="contributed">HH:mm–HH:mm</greatestDifference>
+							<greatestDifference id="m" draft="contributed">HH:mm–HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="a" draft="contributed">h:mm a – h:mm a v</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h:mm–h:mm a v</greatestDifference>
+							<greatestDifference id="m" draft="contributed">h:mm–h:mm a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H" draft="contributed">HH:mm–HH:mm v</greatestDifference>
+							<greatestDifference id="m" draft="contributed">HH:mm–HH:mm v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="a" draft="contributed">h a – h a v</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h–h a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H" draft="contributed">HH–HH v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M" draft="contributed">M–M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d" draft="contributed">dd/MM – dd/MM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">dd/MM – dd/MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d" draft="contributed">E dd/MM – E dd/MM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E dd/MM – E dd/MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M" draft="contributed">LLL–LLL</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d" draft="contributed">d–d 'di' MMM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">d 'di' MMM – d 'di' MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d" draft="contributed">E d – E d 'di' MMM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E d 'di' MMM – E d 'di' MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y" draft="contributed">y–y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M" draft="contributed">MM/y – MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">MM/y – MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d" draft="contributed">dd/MM/y – dd/MM/y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">dd/MM/y – dd/MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">dd/MM/y – dd/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d" draft="contributed">E dd/MM/y – E dd/MM/y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E dd/MM/y – E dd/MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">E dd/MM/y – E dd/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M" draft="contributed">MM – MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">MM/y – MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d" draft="contributed">d – d/MM/y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">dd/MM/y – d/MM</greatestDifference>
+							<greatestDifference id="y" draft="contributed">dd/MM/y – dd/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d" draft="contributed">E dd/MM/y – E dd/MM/y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">E dd/MM/y – E dd/MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">E dd/MM/y – E dd/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M" draft="contributed">MM – MM/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">MM/y – MM/y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName draft="contributed">ere</displayName>
+			</field>
+			<field type="year">
+				<displayName draft="contributed">an</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">ca di {0} an</relativeTimePattern>
+					<relativeTimePattern count="other">ca di {0} agns</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} an indaûr</relativeTimePattern>
+					<relativeTimePattern count="other">{0} agns indaûr</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month">
+				<displayName draft="contributed">mês</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">ca di {0} mês</relativeTimePattern>
+					<relativeTimePattern count="other">ca di {0} mês</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} mês indaûr</relativeTimePattern>
+					<relativeTimePattern count="other">{0} mês indaûr</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week">
+				<displayName draft="contributed">setemane</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">ca di {0} setemane</relativeTimePattern>
+					<relativeTimePattern count="other">ca di {0} setemanis</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} setemane indaûr</relativeTimePattern>
+					<relativeTimePattern count="other">{0} setemanis indaûr</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day">
+				<displayName draft="contributed">dì</displayName>
+				<relative type="-2" draft="contributed">îr l’altri</relative>
+				<relative type="-1" draft="contributed">îr</relative>
+				<relative type="0" draft="contributed">vuê</relative>
+				<relative type="1" draft="contributed">doman</relative>
+				<relative type="2" draft="contributed">passantdoman</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">ca di {0} zornade</relativeTimePattern>
+					<relativeTimePattern count="other">ca di {0} zornadis</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} zornade indaûr</relativeTimePattern>
+					<relativeTimePattern count="other">{0} zornadis indaûr</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="weekday">
+				<displayName draft="contributed">dì de setemane</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName draft="contributed">toc dal dì</displayName>
+			</field>
+			<field type="hour">
+				<displayName draft="contributed">ore</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">ca di {0} ore</relativeTimePattern>
+					<relativeTimePattern count="other">ca di {0} oris</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} ore indaûr</relativeTimePattern>
+					<relativeTimePattern count="other">{0} oris indaûr</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute">
+				<displayName draft="contributed">minût</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">ca di {0} minût</relativeTimePattern>
+					<relativeTimePattern count="other">ca di {0} minûts</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} minût indaûr</relativeTimePattern>
+					<relativeTimePattern count="other">{0} minûts indaûr</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second">
+				<displayName draft="contributed">secont</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">ca di {0} secont</relativeTimePattern>
+					<relativeTimePattern count="other">ca di {0} seconts</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} secont indaûr</relativeTimePattern>
+					<relativeTimePattern count="other">{0} seconts indaûr</relativeTimePattern>
+				</relativeTime>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<hourFormat draft="contributed">+HH:mm;-HH:mm</hourFormat>
+			<gmtFormat draft="contributed">GMT{0}</gmtFormat>
+			<fallbackFormat draft="contributed">{1} ({0})</fallbackFormat>
+			<zone type="Etc/Unknown">
+				<exemplarCity draft="contributed">Citât no cognossude</exemplarCity>
+			</zone>
+			<zone type="Europe/Vienna">
+				<exemplarCity draft="contributed">Viene</exemplarCity>
+			</zone>
+			<zone type="America/Sao_Paulo">
+				<exemplarCity draft="contributed">San Pauli dal Brasîl</exemplarCity>
+			</zone>
+			<zone type="Europe/Prague">
+				<exemplarCity draft="contributed">Praghe</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Canary">
+				<exemplarCity draft="contributed">Canariis</exemplarCity>
+			</zone>
+			<zone type="Europe/Luxembourg">
+				<exemplarCity draft="contributed">Lussemburc</exemplarCity>
+			</zone>
+			<zone type="Europe/Malta">
+				<exemplarCity draft="contributed">Malte</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Azores">
+				<exemplarCity draft="contributed">Azoris</exemplarCity>
+			</zone>
+			<zone type="Europe/Lisbon">
+				<exemplarCity draft="contributed">Lisbone</exemplarCity>
+			</zone>
+			<zone type="Europe/Belgrade">
+				<exemplarCity draft="contributed">Belgrât</exemplarCity>
+			</zone>
+			<zone type="Europe/Moscow">
+				<exemplarCity draft="contributed">Mosche</exemplarCity>
+			</zone>
+			<zone type="Europe/Ljubljana">
+				<exemplarCity draft="contributed">Lubiane</exemplarCity>
+			</zone>
+			<zone type="Europe/San_Marino">
+				<exemplarCity draft="contributed">San Marin</exemplarCity>
+			</zone>
+			<zone type="America/New_York">
+				<exemplarCity draft="contributed">Gnove York</exemplarCity>
+			</zone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>Ore de Europe centrâl</generic>
+					<standard>Ore standard de Europe centrâl</standard>
+					<daylight>Ore estive de Europe centrâl</daylight>
+				</long>
+				<short>
+					<generic>CET</generic>
+					<standard>CET</standard>
+					<daylight>CEST</daylight>
+				</short>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic>Ore de Europe orientâl</generic>
+					<standard>Ore standard de Europe orientâl</standard>
+					<daylight>Ore estive de Europe orientâl</daylight>
+				</long>
+				<short>
+					<generic>EET</generic>
+					<standard>EET</standard>
+					<daylight>EEST</daylight>
+				</short>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>Ore de Europe ocidentâl</generic>
+					<standard>Ore standard de Europe ocidentâl</standard>
+					<daylight>Ore estive de Europe ocidentâl</daylight>
+				</long>
+				<short>
+					<generic>WET</generic>
+					<standard>WET</standard>
+					<daylight>WEST</daylight>
+				</short>
+			</metazone>
+			<metazone type="GMT">
+				<short>
+					<standard draft="contributed">GMT</standard>
+				</short>
+			</metazone>
+			<metazone type="Moscow">
+				<long>
+					<generic>Ore di Mosche</generic>
+					<standard>Ore standard di Mosche</standard>
+					<daylight>Ore estive di Mosche</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<decimal draft="contributed">,</decimal>
+			<group draft="contributed">.</group>
+			<list draft="contributed">;</list>
+			<percentSign draft="contributed">%</percentSign>
+			<plusSign draft="contributed">+</plusSign>
+			<minusSign draft="contributed">-</minusSign>
+			<exponential draft="contributed">E</exponential>
+			<perMille draft="contributed">‰</perMille>
+			<infinity draft="contributed">∞</infinity>
+			<nan draft="contributed">NaN</nan>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern draft="contributed">#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<scientificFormats numberSystem="latn">
+			<scientificFormatLength>
+				<scientificFormat>
+					<pattern draft="contributed">#E0</pattern>
+				</scientificFormat>
+			</scientificFormatLength>
+		</scientificFormats>
+		<percentFormats numberSystem="latn">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern draft="contributed">#,##0%</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern draft="contributed">¤ #,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="one" draft="provisional">¤ 0K</pattern>
+					<pattern type="1000" count="other" draft="provisional">¤ 0K</pattern>
+					<pattern type="10000" count="one" draft="provisional">¤ 00K</pattern>
+					<pattern type="10000" count="other" draft="provisional">¤ 00K</pattern>
+					<pattern type="100000" count="one" draft="provisional">¤ 000K</pattern>
+					<pattern type="100000" count="other" draft="provisional">¤ 000K</pattern>
+					<pattern type="1000000" count="one" draft="provisional">¤ 0M</pattern>
+					<pattern type="1000000" count="other" draft="provisional">¤ 0M</pattern>
+					<pattern type="10000000" count="one" draft="provisional">¤ 00M</pattern>
+					<pattern type="10000000" count="other" draft="provisional">¤ 00M</pattern>
+					<pattern type="100000000" count="one" draft="provisional">¤ 000M</pattern>
+					<pattern type="100000000" count="other" draft="provisional">¤ 000M</pattern>
+					<pattern type="1000000000" count="one" draft="provisional">¤ 0G</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">¤ 0G</pattern>
+					<pattern type="10000000000" count="one" draft="provisional">¤ 00G</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">¤ 00G</pattern>
+					<pattern type="100000000000" count="one" draft="provisional">¤ 000G</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">¤ 000G</pattern>
+					<pattern type="1000000000000" count="one" draft="provisional">¤ 0T</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">¤ 0T</pattern>
+					<pattern type="10000000000000" count="one" draft="provisional">¤ 00T</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">¤ 00T</pattern>
+					<pattern type="100000000000000" count="one" draft="provisional">¤ 000T</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">¤ 000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<unitPattern count="one" draft="contributed">{0} {1}</unitPattern>
+			<unitPattern count="other" draft="contributed">{0} {1}</unitPattern>
+		</currencyFormats>
+		<currencies>
+			<currency type="AMD">
+				<displayName draft="contributed">Dram armen</displayName>
+			</currency>
+			<currency type="ARS">
+				<displayName draft="contributed">Peso argjentin</displayName>
+			</currency>
+			<currency type="ATS">
+				<displayName draft="contributed">Selin austriac</displayName>
+			</currency>
+			<currency type="AUD">
+				<displayName draft="contributed">dolar australian</displayName>
+				<displayName count="one" draft="contributed">dolar australian</displayName>
+				<displayName count="other" draft="contributed">dolars australians</displayName>
+			</currency>
+			<currency type="BEF">
+				<displayName draft="contributed">Franc de Belgjiche</displayName>
+			</currency>
+			<currency type="BIF">
+				<displayName draft="contributed">Franc burundês</displayName>
+			</currency>
+			<currency type="BND">
+				<displayName draft="contributed">Dolar dal Brunei</displayName>
+			</currency>
+			<currency type="BRL">
+				<displayName draft="contributed">real brasilian</displayName>
+				<displayName count="one" draft="contributed">real brasilian</displayName>
+				<displayName count="other" draft="contributed">real brasilians</displayName>
+			</currency>
+			<currency type="BYN">
+				<displayName draft="contributed">Rubli bielorùs</displayName>
+			</currency>
+			<currency type="BYR">
+				<displayName draft="contributed">Rubli bielorùs (2000–2016)</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName draft="contributed">dolar canadês</displayName>
+				<displayName count="one" draft="contributed">dolar canadês</displayName>
+				<displayName count="other" draft="contributed">dolars canadês</displayName>
+			</currency>
+			<currency type="CHF">
+				<displayName draft="contributed">franc svuizar</displayName>
+				<displayName count="one" draft="contributed">franc svuizar</displayName>
+				<displayName count="other" draft="contributed">francs svuizars</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName draft="contributed">yuan cinês</displayName>
+				<displayName count="one" draft="contributed">yuan cinês</displayName>
+				<displayName count="other" draft="contributed">yuan cinês</displayName>
+			</currency>
+			<currency type="CSD">
+				<displayName draft="contributed">Vieri dinar serp</displayName>
+			</currency>
+			<currency type="CUP">
+				<displayName draft="contributed">Peso cuban</displayName>
+			</currency>
+			<currency type="CZK">
+				<displayName draft="contributed">Corone de Republiche Ceche</displayName>
+			</currency>
+			<currency type="DEM">
+				<displayName draft="contributed">Marc todesc</displayName>
+			</currency>
+			<currency type="DKK">
+				<displayName draft="contributed">corone danese</displayName>
+				<displayName count="one" draft="contributed">corone danese</displayName>
+				<displayName count="other" draft="contributed">coronis danesis</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName draft="contributed">Dinar algerin</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName draft="contributed">euro</displayName>
+				<displayName count="one" draft="contributed">euro</displayName>
+				<displayName count="other" draft="contributed">euros</displayName>
+			</currency>
+			<currency type="FRF">
+				<displayName draft="contributed">Franc francês</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName draft="contributed">sterline britaniche</displayName>
+				<displayName count="one" draft="contributed">sterline britaniche</displayName>
+				<displayName count="other" draft="contributed">sterlinis britanichis</displayName>
+			</currency>
+			<currency type="HKD">
+				<displayName draft="contributed">dolar di Hong Kong</displayName>
+				<displayName count="one" draft="contributed">dolar di Hong Kong</displayName>
+				<displayName count="other" draft="contributed">dolars di Hong Kong</displayName>
+			</currency>
+			<currency type="HRD">
+				<displayName draft="contributed">Dinar cravuat</displayName>
+			</currency>
+			<currency type="HRK">
+				<displayName draft="contributed">Kuna cravuate</displayName>
+			</currency>
+			<currency type="IDR">
+				<displayName draft="contributed">rupiah indonesiane</displayName>
+				<displayName count="one" draft="contributed">rupiah indonesiane</displayName>
+				<displayName count="other" draft="contributed">rupiah indonesianis</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName draft="contributed">rupie indiane</displayName>
+				<displayName count="one" draft="contributed">rupie indiane</displayName>
+				<displayName count="other" draft="contributed">rupiis indianis</displayName>
+			</currency>
+			<currency type="IRR">
+				<displayName draft="contributed">Rial iranian</displayName>
+			</currency>
+			<currency type="ITL">
+				<displayName draft="contributed">Lire taliane</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName draft="contributed">yen gjaponês</displayName>
+				<displayName count="one" draft="contributed">yen gjaponês</displayName>
+				<displayName count="other" draft="contributed">yen gjaponês</displayName>
+			</currency>
+			<currency type="KRW">
+				<displayName draft="contributed">won de Coree dal Sud</displayName>
+				<displayName count="one" draft="contributed">won de Coree dal Sud</displayName>
+				<displayName count="other" draft="contributed">won de Coree dal Sud</displayName>
+			</currency>
+			<currency type="LVL">
+				<displayName draft="contributed">Lats leton</displayName>
+			</currency>
+			<currency type="MXN">
+				<displayName draft="contributed">peso messican</displayName>
+				<displayName count="one" draft="contributed">peso messican</displayName>
+				<displayName count="other" draft="contributed">pesos messicans</displayName>
+			</currency>
+			<currency type="NAD">
+				<displayName draft="contributed">Dolar namibian</displayName>
+			</currency>
+			<currency type="NIO">
+				<displayName draft="contributed">Córdoba oro nicaraguan</displayName>
+			</currency>
+			<currency type="NOK">
+				<displayName draft="contributed">corone norvegjese</displayName>
+				<displayName count="one" draft="contributed">corone norvegjese</displayName>
+				<displayName count="other" draft="contributed">coronis norvegjesis</displayName>
+			</currency>
+			<currency type="NZD">
+				<displayName draft="contributed">Dollar neozelandês</displayName>
+			</currency>
+			<currency type="PKR">
+				<displayName draft="contributed">Rupie pachistane</displayName>
+			</currency>
+			<currency type="PLN">
+				<displayName draft="contributed">zloty polac</displayName>
+				<displayName count="one" draft="contributed">zloty polac</displayName>
+				<displayName count="other" draft="contributed">zloty polacs</displayName>
+			</currency>
+			<currency type="RSD">
+				<displayName draft="contributed">Dinar serp</displayName>
+			</currency>
+			<currency type="RUB">
+				<displayName draft="contributed">rubli rus</displayName>
+				<displayName count="one" draft="contributed">rubli rus</displayName>
+				<displayName count="other" draft="contributed">rublis rus</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName draft="contributed">riyal de Arabie Saudite</displayName>
+				<displayName count="one" draft="contributed">riyal de Arabie Saudite</displayName>
+				<displayName count="other" draft="contributed">riyals de Arabie Saudite</displayName>
+			</currency>
+			<currency type="SEK">
+				<displayName draft="contributed">corone svedese</displayName>
+				<displayName count="one" draft="contributed">corone svedese</displayName>
+				<displayName count="other" draft="contributed">coronis svedesis</displayName>
+			</currency>
+			<currency type="SIT">
+				<displayName draft="contributed">Talar sloven</displayName>
+			</currency>
+			<currency type="SKK">
+				<displayName draft="contributed">Corone slovache</displayName>
+			</currency>
+			<currency type="THB">
+				<displayName draft="contributed">baht tailandês</displayName>
+				<displayName count="one" draft="contributed">baht tailandês</displayName>
+				<displayName count="other" draft="contributed">baht tailandês</displayName>
+			</currency>
+			<currency type="TRL">
+				<displayName draft="contributed">Viere Lire turche</displayName>
+			</currency>
+			<currency type="TRY">
+				<displayName draft="contributed">lire turche</displayName>
+				<displayName count="one" draft="contributed">lire turche</displayName>
+				<displayName count="other" draft="contributed">liris turchis</displayName>
+			</currency>
+			<currency type="TWD">
+				<displayName draft="contributed">gnûf dolar taiwanês</displayName>
+				<displayName count="one" draft="contributed">gnûf dolar taiwanês</displayName>
+				<displayName count="other" draft="contributed">gnûfs dolars taiwanês</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName draft="contributed">dolar american</displayName>
+				<displayName count="one" draft="contributed">dolar american</displayName>
+				<displayName count="other" draft="contributed">dolars americans</displayName>
+			</currency>
+			<currency type="USN">
+				<displayName draft="contributed">Dolar american (prossime zornade)</displayName>
+			</currency>
+			<currency type="USS">
+				<displayName draft="contributed">Dolar american (stesse zornade)</displayName>
+			</currency>
+			<currency type="XAG">
+				<displayName draft="contributed">Arint</displayName>
+			</currency>
+			<currency type="XAU">
+				<displayName draft="contributed">Aur</displayName>
+			</currency>
+			<currency type="XBA">
+				<displayName draft="contributed">Unitât composite europeane</displayName>
+			</currency>
+			<currency type="XBB">
+				<displayName draft="contributed">Unitât monetarie europeane</displayName>
+			</currency>
+			<currency type="XBC">
+				<displayName draft="contributed">Unitât di acont europeane (XBC)</displayName>
+			</currency>
+			<currency type="XBD">
+				<displayName draft="contributed">Unitât di acont europeane (XBD)</displayName>
+			</currency>
+			<currency type="XDR">
+				<displayName draft="contributed">Dirits speciâi di incas</displayName>
+			</currency>
+			<currency type="XFO">
+				<displayName draft="contributed">Franc aur francês</displayName>
+			</currency>
+			<currency type="XFU">
+				<displayName draft="contributed">Franc UIC francês</displayName>
+			</currency>
+			<currency type="XPD">
+				<displayName draft="contributed">Paladi</displayName>
+			</currency>
+			<currency type="XPT">
+				<displayName draft="contributed">Platin</displayName>
+			</currency>
+			<currency type="XRE">
+				<displayName draft="contributed">fonts RINET</displayName>
+			</currency>
+			<currency type="XTS">
+				<displayName draft="contributed">codiç di verifiche de monede</displayName>
+			</currency>
+			<currency type="XXX">
+				<displayName draft="contributed">Monede no valide o no cognossude</displayName>
+				<displayName count="one" draft="contributed">Monede no valide o no cognossude</displayName>
+				<displayName count="other" draft="contributed">Monedis no validis o no cognossudis</displayName>
+			</currency>
+			<currency type="ZAR">
+				<displayName draft="contributed">rand sudafrican</displayName>
+				<displayName count="one" draft="contributed">rand sudafrican</displayName>
+				<displayName count="other" draft="contributed">rands sudafricans</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="duration-year">
+				<displayName draft="contributed">agns</displayName>
+				<unitPattern count="one">{0} an</unitPattern>
+				<unitPattern count="other">{0} agns</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="contributed">mês</displayName>
+				<unitPattern count="one">{0} mês</unitPattern>
+				<unitPattern count="other">{0} mês</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName draft="contributed">setemanis</displayName>
+				<unitPattern count="one">{0} setemane</unitPattern>
+				<unitPattern count="other">{0} setemanis</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="contributed">zornadis</displayName>
+				<unitPattern count="one">{0} zornade</unitPattern>
+				<unitPattern count="other">{0} zornadis</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName draft="contributed">oris</displayName>
+				<unitPattern count="one">{0} ore</unitPattern>
+				<unitPattern count="other">{0} oris</unitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName draft="contributed">minûts</displayName>
+				<unitPattern count="one">{0} minût</unitPattern>
+				<unitPattern count="other">{0} minûts</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName draft="contributed">seconts</displayName>
+				<unitPattern count="one">{0} secont</unitPattern>
+				<unitPattern count="other">{0} seconts</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="duration-year">
+				<displayName draft="contributed">agns</displayName>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="contributed">mês</displayName>
+			</unit>
+			<unit type="duration-week">
+				<displayName draft="contributed">setemanis</displayName>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="contributed">zornadis</displayName>
+			</unit>
+			<unit type="duration-hour">
+				<displayName draft="contributed">oris</displayName>
+			</unit>
+			<unit type="duration-minute">
+				<displayName draft="contributed">minûts</displayName>
+			</unit>
+			<unit type="duration-second">
+				<displayName draft="contributed">seconts</displayName>
+			</unit>
+		</unitLength>
+	</units>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="end" draft="contributed">{0} e {1}</listPatternPart>
+			<listPatternPart type="2" draft="contributed">{0} e {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<yesstr draft="contributed">sì:si:s</yesstr>
+			<nostr draft="contributed">no:n</nostr>
+		</messages>
+	</posix>
+</ldml>

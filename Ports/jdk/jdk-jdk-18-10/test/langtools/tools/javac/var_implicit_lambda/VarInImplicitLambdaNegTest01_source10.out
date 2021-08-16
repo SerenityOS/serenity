@@ -1,0 +1,6 @@
+- compiler.warn.source.no.system.modules.path: 10
+VarInImplicitLambdaNegTest01.java:12:36: compiler.err.feature.not.supported.in.source.plural: (compiler.misc.feature.var.syntax.in.implicit.lambda), 10, 11
+VarInImplicitLambdaNegTest01.java:15:28: compiler.err.invalid.lambda.parameter.declaration: (compiler.misc.implicit.and.explicit.not.allowed)
+VarInImplicitLambdaNegTest01.java:17:52: compiler.err.restricted.type.not.allowed.here: var
+3 errors
+1 warning

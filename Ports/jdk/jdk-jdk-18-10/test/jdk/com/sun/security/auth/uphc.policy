@@ -1,0 +1,6 @@
+grant {
+   permission java.io.FilePermission "./-", "write";
+   permission javax.security.auth.AuthPermission "modifyPrincipals";
+   permission javax.security.auth.AuthPermission "createLoginContext";
+   permission javax.security.auth.AuthPermission "doAsPrivileged";
+};

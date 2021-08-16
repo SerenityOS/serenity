@@ -1,0 +1,3 @@
+BadConv04.java:19:5: compiler.err.types.incompatible: BadConv04.I2, BadConv04.I1, (compiler.misc.incompatible.diff.ret: m, )
+BadConv04.java:21:13: compiler.err.prob.found.req: (compiler.misc.incompatible.descs.in.functional.intf: kindname.interface, BadConv04.SAM,{(compiler.misc.descriptor: m, , long, ),(compiler.misc.descriptor: m, , int, )})
+2 errors

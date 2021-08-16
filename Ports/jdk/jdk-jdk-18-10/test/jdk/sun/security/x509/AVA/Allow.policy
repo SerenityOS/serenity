@@ -1,0 +1,11 @@
+grant { 
+    // "standard" properies that can be read by anyone
+    // Needed to get access to package private constructor and
+    // to be able to call it.
+
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.security.x509";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.security.util";
+    permission java.lang.RuntimePermission "accessDeclaredMembers";
+    permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+
+};

@@ -1,0 +1,2 @@
+AccessibilityCheck02.java:11:14: compiler.err.override.incompatible.ret: (compiler.misc.cant.override: m(java.lang.String), AccessibilityCheck02, m(java.lang.String), p1.D), int, void
+1 error

@@ -1,0 +1,265 @@
+#
+# Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+################################################################################
+# Build demos for the JDK into $(SUPPORT_OUTPUTDIR)/demos/image.
+################################################################################
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include JavaCompilation.gmk
+include NativeCompilation.gmk
+include TextFileProcessing.gmk
+include ZipArchive.gmk
+
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, CompileDemos-pre.gmk))
+
+# Prepare the find cache.
+DEMO_SRC_DIRS += $(TOPDIR)/src/demo
+
+$(call FillFindCache, $(DEMO_SRC_DIRS))
+
+# Append demo goals to this variable.
+TARGETS =
+
+# The demo structure and contents should really be cleaned up.
+# Now every other demo has its own quirks where to put the
+# READMEs and other files.
+
+DEMO_SHARE_SRC := $(TOPDIR)/src/demo/share
+
+DEMO_MANIFEST := $(SUPPORT_OUTPUTDIR)/demos/java-main-manifest.mf
+
+# This rule will be depended on due to the MANIFEST line in SetupBuildDemo
+# and SetupBuildJvmtiDemo.
+$(eval $(call SetupTextFileProcessing, BUILD_JAVA_MANIFEST, \
+  SOURCE_FILES := $(TOPDIR)/make/data/mainmanifest/manifest.mf, \
+  OUTPUT_FILE := $(DEMO_MANIFEST), \
+  REPLACEMENTS := \
+      @@VERSION_SPECIFICATION@@ => $(VERSION_SPECIFICATION) ; \
+      @@VERSION_SHORT@@ => $(VERSION_SHORT) ; \
+      @@COMPANY_NAME@@ => $(COMPANY_NAME) , \
+))
+
+################################################################################
+# Build normal demos.
+
+COPY_TO_JAR := .html .txt .properties .js .gif .jpg .theme .data .opt .c .h \
+    .png .ttf .xyz .obj README COPYRIGHT
+
+COPY_TO_IMAGE := *.html *.txt *.png *.xml README*
+
+# Setup make rules for building a demo.
+#
+# Parameter 1 is the name of the rule. This name is used as variable prefix,
+# and the targets generated are listed in a variable by that name.
+#
+# Remaining parameters are named arguments. These include:
+# DEMO_SUBDIR   The name of the subdir of the demo, below the demo top dir.
+# EXTRA_SRC_DIR   Additional source directory.
+# SRC_SUB_DIR   Optional subdir to locate source code in
+# SRC_DIR   Alternative source directory to use for the demos.
+# EXCLUDE_FILES   Exclude file list
+# JAR_NAME   Base name of jar file. Defaults to $1.
+# MAIN_CLASS   The main class for the jar. Defaults to $1.
+# EXTRA_COPY_TO_JAR   Additional files to copy to jar (as patterns)
+# EXTRA_COPY_TO_IMAGE   Additional files to copy to images (as wildcards)
+# EXTRA_MANIFEST_ATTR   Extra manifest attribute
+# SKIP_COMPILATION   Skip Java compilation iff true
+# DISABLED_WARNINGS Additional disabled warnings
+SetupBuildDemo = $(NamedParamsMacroTemplate)
+define SetupBuildDemoBody
+  ifeq ($$($1_SRC_DIR), )
+    $1_SRC_DIR := $(DEMO_SHARE_SRC)
+  endif
+
+  $1_SRC_BASE := $$($1_SRC_DIR)/$$($1_DEMO_SUBDIR)/$1
+
+  # In some demos the source is found in a subdir
+  ifneq ($$($1_SRC_SUB_DIR), )
+    $1_MAIN_SRC := $$($1_SRC_BASE)/$$($1_SRC_SUB_DIR)
+  else
+    # for allmost all
+    $1_MAIN_SRC := $$($1_SRC_BASE)
+  endif
+
+  # Default is to use demo name as jar file name.
+  ifeq ($$($1_JAR_NAME), )
+    $1_JAR_NAME := $1
+  endif
+
+  # Default is to use demo name as jar main class.
+  ifeq ($$($1_MAIN_CLASS), )
+    $1_MAIN_CLASS := $1
+  else ifeq ($$($1_MAIN_CLASS), NONE)
+    $1_MAIN_CLASS :=
+    $1_EXTRA_MANIFEST_ATTR += Main-Class: \n
+  endif
+
+  ifneq ($$($1_SKIP_COMPILATION), true)
+    $$(eval $$(call SetupJavaCompilation, BUILD_DEMO_$1, \
+        TARGET_RELEASE := $(TARGET_RELEASE_NEWJDK_UPGRADED), \
+        SRC := $$($1_MAIN_SRC) $$($1_EXTRA_SRC_DIR), \
+        BIN := $(SUPPORT_OUTPUTDIR)/demos/classes/$$($1_DEMO_SUBDIR)/$1, \
+        COPY := $(COPY_TO_JAR) $$($1_EXTRA_COPY_TO_JAR), \
+        JAR := $(SUPPORT_OUTPUTDIR)/demos/image/$$($1_DEMO_SUBDIR)/$1/$$($1_JAR_NAME).jar, \
+        JARMAIN := $$($1_MAIN_CLASS), \
+        MANIFEST := $(DEMO_MANIFEST), \
+        EXTRA_MANIFEST_ATTR := $$($1_EXTRA_MANIFEST_ATTR), \
+        SRCZIP := $(SUPPORT_OUTPUTDIR)/demos/image/$$($1_DEMO_SUBDIR)/$1/src.zip, \
+        EXCLUDE_FILES := $$($1_EXCLUDE_FILES), \
+        DISABLED_WARNINGS := $$($1_DISABLED_WARNINGS), \
+    ))
+
+    $1 += $$(BUILD_DEMO_$1)
+  endif
+
+  # Copy files. Sort is needed to remove duplicates.
+  $1_COPY_FILES := $$(sort $$(wildcard $$(addprefix $$($1_SRC_BASE)/, \
+      $(COPY_TO_IMAGE) $$($1_EXTRA_COPY_TO_IMAGE))))
+  $$(eval $$(call SetupCopyFiles, COPY_DEMO_$1, \
+      SRC :=  $$($1_SRC_BASE), \
+      DEST := $(SUPPORT_OUTPUTDIR)/demos/image/$$($1_DEMO_SUBDIR)/$1, \
+      FILES := $$($1_COPY_FILES), \
+  ))
+
+  $1 += $$(COPY_DEMO_$1)
+
+  TARGETS += $$($1)
+endef
+
+CODEPOINT_SERVICE := java.awt.im.spi.InputMethodDescriptor
+CODEPOINT_METAINF_SERVICE_FILE := \
+    $(SUPPORT_OUTPUTDIR)/demos/classes/jfc/CodePointIM/META-INF/services/$(CODEPOINT_SERVICE)
+
+$(eval $(call SetupBuildDemo, CodePointIM, \
+    DEMO_SUBDIR := jfc, \
+    EXTRA_COPY_TO_JAR := $(CODEPOINT_SERVICE), \
+))
+
+# We also need to copy the CODEPOINT_SERVICE file to the META-INF/services
+# location, and make sure the jar depends on that file to get it included.
+$(CODEPOINT_METAINF_SERVICE_FILE): $(DEMO_SHARE_SRC)/jfc/CodePointIM/$(CODEPOINT_SERVICE)
+	$(call install-file)
+
+$(BUILD_DEMO_CodePointIM_JAR): $(CODEPOINT_METAINF_SERVICE_FILE)
+
+$(eval $(call SetupBuildDemo, FileChooserDemo, \
+    DEMO_SUBDIR := jfc, \
+    DISABLED_WARNINGS := rawtypes deprecation unchecked, \
+))
+
+$(eval $(call SetupBuildDemo, SwingSet2, \
+    DEMO_SUBDIR := jfc, \
+    EXTRA_COPY_TO_JAR := .java, \
+    EXTRA_MANIFEST_ATTR := SplashScreen-Image: resources/images/splash.png, \
+    DISABLED_WARNINGS := rawtypes deprecation unchecked static serial cast, \
+))
+
+$(eval $(call SetupBuildDemo, Font2DTest, \
+    DISABLED_WARNINGS := rawtypes deprecation unchecked serial cast, \
+    DEMO_SUBDIR := jfc, \
+))
+
+$(eval $(call SetupBuildDemo, J2Ddemo, \
+    DEMO_SUBDIR := jfc, \
+    MAIN_CLASS := java2d.J2Ddemo, \
+    DISABLED_WARNINGS := rawtypes deprecation unchecked cast, \
+    JAR_NAME := J2Ddemo, \
+))
+
+$(eval $(call SetupBuildDemo, Metalworks, \
+    DISABLED_WARNINGS := rawtypes unchecked, \
+    DEMO_SUBDIR := jfc, \
+))
+
+$(eval $(call SetupBuildDemo, Notepad, \
+    DISABLED_WARNINGS := rawtypes, \
+    DEMO_SUBDIR := jfc, \
+))
+
+$(eval $(call SetupBuildDemo, Stylepad, \
+    DEMO_SUBDIR := jfc, \
+    DISABLED_WARNINGS := rawtypes unchecked, \
+    EXTRA_SRC_DIR := $(DEMO_SHARE_SRC)/jfc/Notepad, \
+    EXCLUDE_FILES := $(DEMO_SHARE_SRC)/jfc/Notepad/README.txt, \
+))
+
+$(eval $(call SetupBuildDemo, SampleTree, \
+    DEMO_SUBDIR := jfc, \
+))
+
+$(eval $(call SetupBuildDemo, TableExample, \
+    DISABLED_WARNINGS := rawtypes unchecked deprecation, \
+    DEMO_SUBDIR := jfc, \
+))
+
+$(eval $(call SetupBuildDemo, TransparentRuler, \
+    DEMO_SUBDIR := jfc, \
+    MAIN_CLASS := transparentruler.Ruler, \
+))
+
+################################################################################
+# Copy html and README files.
+
+$(SUPPORT_OUTPUTDIR)/demos/image/README: $(DEMO_SHARE_SRC)/README
+	$(call install-file)
+
+TARGETS += $(SUPPORT_OUTPUTDIR)/demos/image/README
+
+################################################################################
+# Copy netbeans project files.
+
+$(SUPPORT_OUTPUTDIR)/demos/image/nbproject/%: $(DEMO_SHARE_SRC)/nbproject/%
+	$(call install-file)
+	$(CHMOD) -f ug+w $@
+
+TARGETS += $(patsubst $(DEMO_SHARE_SRC)/nbproject/%, \
+  $(SUPPORT_OUTPUTDIR)/demos/image/nbproject/%, \
+  $(call FindFiles, $(DEMO_SHARE_SRC)/nbproject))
+
+################################################################################
+
+ifneq ($(filter images, $(MAKECMDGOALS)), )
+  $(eval $(call SetupCopyFiles, COPY_TO_TEST_IMAGE, \
+      SRC := $(SUPPORT_OUTPUTDIR)/demos/image, \
+      DEST := $(TEST_IMAGE_DIR)/jdk/demos, \
+      FILES := $(call FindFiles, $(SUPPORT_OUTPUTDIR)/demos/image), \
+  ))
+
+  IMAGES_TARGETS := $(COPY_TO_TEST_IMAGE)
+endif
+
+################################################################################
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, CompileDemos-post.gmk))
+
+all: $(TARGETS)
+images: $(IMAGES_TARGETS)
+
+.PHONY: all

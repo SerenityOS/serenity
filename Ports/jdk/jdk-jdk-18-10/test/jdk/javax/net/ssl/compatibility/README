@@ -1,0 +1,61 @@
+# Copyright (c) 2017, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+
+##### Summary #####
+This test is used to check the interop compatibility on JSSE among different
+JDK releases. The oldest version supported by the test is JDK 8. Some of Java
+source files, like JdkInfoUtils.java, JdkProcServer.java and JdkProcClient.java,
+use only JDK 8-compliant language features and APIs, in order to allowing
+different JDK releases can load and run associated classes.
+
+##### Usage #####
+jtreg [-options] \
+    [-Dtest.debug=<true|false>] \
+    [-Dtest.jdk.list.file=</path/to/jdkListFile>] \
+    $JDK_WORKSPACE/test/jdk/javax/net/ssl/compatibility/<XXX.java>
+
+Besides the common jtreg options, like -jdk, this test introduces some more
+properties:
+test.debug
+    It indicates if the test enable -Djavax.net.debug=all. This is a boolean
+    property, and the default value is false.
+    It is not mandatory.
+
+test.jdk.list.file
+    It indicate the path of a file, which lists the absolute paths of different
+    JDK builds. If no this property, the current testing JDK, specified by JTREG
+    option -jdk, is used as the testing JDK.
+    It is not mandatory.
+
+##### Usage Examples #####
+$ cat /path/to/jdkList
+/path/to/jdk8
+/path/to/jdk9
+/path/to/jdk10
+
+$ jtreg -jdk:/path/to/latest/jdk \
+    -Ddebug=true \
+    -Dtest.jdk.list.file=/path/to/jdkList \
+    $JDK_WS/jdk/test/javax/net/ssl/compatibility/<XXX.java>
+The above example uses a file "/path/to/jdkList" to contain the paths of local
+different JDK builds through 8 to 10. The execution uses each of JDK builds as
+server and client respectively. And it enables SSL debug flag, and tests the
+full parameter value set.

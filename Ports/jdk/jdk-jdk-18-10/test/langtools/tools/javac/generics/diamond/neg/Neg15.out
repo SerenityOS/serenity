@@ -1,0 +1,4 @@
+Neg15.java:48:28: compiler.err.anonymous.diamond.method.does.not.override.superclass: (compiler.misc.diamond.anonymous.methods.implicitly.override)
+Neg15.java:52:21: compiler.err.anonymous.diamond.method.does.not.override.superclass: (compiler.misc.diamond.anonymous.methods.implicitly.override)
+Neg15.java:56:31: compiler.err.anonymous.diamond.method.does.not.override.superclass: (compiler.misc.diamond.anonymous.methods.implicitly.override)
+3 errors

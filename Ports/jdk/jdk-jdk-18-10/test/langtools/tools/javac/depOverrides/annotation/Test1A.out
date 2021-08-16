@@ -1,0 +1,4 @@
+A.java:13:29: compiler.warn.has.been.deprecated: iDep_aUnd_bInh(), I
+A.java:12:29: compiler.warn.has.been.deprecated: iDep_aUnd_bUnd(), I
+A.java:11:29: compiler.warn.has.been.deprecated: iDep_aUnd_bDep(), I
+3 warnings

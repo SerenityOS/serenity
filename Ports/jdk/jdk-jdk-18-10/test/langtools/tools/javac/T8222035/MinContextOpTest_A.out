@@ -1,0 +1,6 @@
+- compiler.warn.source.no.system.modules.path: 15
+MinContextOpTest.java:16:25: compiler.err.mod.not.allowed.here: static
+MinContextOpTest.java:22:25: compiler.err.mod.not.allowed.here: static
+MinContextOpTest.java:28:34: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.assignment.exists: T,K,V,E, (compiler.misc.inconvertible.types: java.util.function.Function<MinContextOpTest.A.T,MinContextOpTest.A.T>, java.util.function.Function<? super MinContextOpTest.A.T,? extends MinContextOpTest.A.T<?>>))
+3 errors
+1 warning

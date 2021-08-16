@@ -1,0 +1,609 @@
+/*
+ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/* 
+ * This test contains a BootstrapMethods attribute with a fuzzied
+ * attribute_length field that is larger than it should be.  This
+ * should cause a java.lang.ClassFormatError exception to be thrown.
+ */
+class LambdaMath {
+  0xCAFEBABE;
+  0; // minor version
+  52; // version
+  [162] { // Constant Pool
+    ; // first element is empty
+    Method #31 #69; // #1     at 0x0A
+    class #70; // #2     at 0x0F
+    Method #2 #71; // #3     at 0x12
+    Method #72 #73; // #4     at 0x17
+    Field #74 #75; // #5     at 0x1C
+    String #76; // #6     at 0x21
+    Method #77 #78; // #7     at 0x24
+    InvokeDynamic 0s #84; // #8     at 0x29
+    Method #30 #85; // #9     at 0x2E
+    String #86; // #10     at 0x33
+    InvokeDynamic 1s #84; // #11     at 0x36
+    String #88; // #12     at 0x3B
+    InvokeDynamic 2s #84; // #13     at 0x3E
+    String #90; // #14     at 0x43
+    InvokeDynamic 3s #84; // #15     at 0x46
+    String #92; // #16     at 0x4B
+    InvokeDynamic 4s #84; // #17     at 0x4E
+    InterfaceMethod #94 #95; // #18     at 0x53
+    InterfaceMethod #96 #97; // #19     at 0x58
+    InterfaceMethod #96 #98; // #20     at 0x5D
+    InterfaceMethod #99 #100; // #21     at 0x62
+    class #101; // #22     at 0x67
+    Method #22 #69; // #23     at 0x6A
+    Method #22 #102; // #24     at 0x6F
+    String #103; // #25     at 0x74
+    Method #22 #104; // #26     at 0x77
+    Method #22 #105; // #27     at 0x7C
+    class #106; // #28     at 0x81
+    Method #2 #107; // #29     at 0x84
+    class #108; // #30     at 0x89
+    class #109; // #31     at 0x8C
+    Utf8 "<init>"; // #32     at 0x8F
+    Utf8 "()V"; // #33     at 0x98
+    Utf8 "Code"; // #34     at 0x9E
+    Utf8 "LineNumberTable"; // #35     at 0xA5
+    Utf8 "LocalVariableTable"; // #36     at 0xB7
+    Utf8 "this"; // #37     at 0xCC
+    Utf8 "LLambdaMath;"; // #38     at 0xD3
+    Utf8 "main"; // #39     at 0xE2
+    Utf8 "([Ljava/lang/String;)V"; // #40     at 0xE9
+    Utf8 "a"; // #41     at 0x0102
+    Utf8 "[Ljava/lang/String;"; // #42     at 0x0106
+    Utf8 "list"; // #43     at 0x011C
+    Utf8 "Ljava/util/List;"; // #44     at 0x0123
+    Utf8 "LocalVariableTypeTable"; // #45     at 0x0136
+    Utf8 "Ljava/util/List<Ljava/lang/Integer;>;"; // #46     at 0x014F
+    Utf8 "evaluate"; // #47     at 0x0177
+    Utf8 "(Ljava/util/List;Ljava/util/function/Predicate;)V"; // #48     at 0x0182
+    Utf8 "n"; // #49     at 0x01B6
+    Utf8 "Ljava/lang/Integer;"; // #50     at 0x01BA
+    Utf8 "e"; // #51     at 0x01D0
+    Utf8 "Ljava/lang/Throwable;"; // #52     at 0x01D4
+    Utf8 "predicate"; // #53     at 0x01EC
+    Utf8 "Ljava/util/function/PrediCate;"; // #54     at 0x01F8
+    Utf8 "Ljava/util/function/Predicate<Ljava/lang/Integer;>;"; // #55     at 0x0219
+    Utf8 "StackMapTable"; // #56     at 0x024F
+    class #110; // #57     at 0x025F
+    class #106; // #58     at 0x0262
+    Utf8 "Signature"; // #59     at 0x0265
+    Utf8 "(Ljava/util/List<Ljava/lang/Integer;>;Ljava/util/function/Predicate<Ljava/lang/Integer;>;)V"; // #60     at 0x0271
+    Utf8 "lambda$main$4"; // #61     at 0x02CF
+    Utf8 "(Ljava/lang/Integer;)Z"; // #62     at 0x02DF
+    Utf8 "lambda$main$3"; // #63     at 0x02F8
+    Utf8 "lambda$main$2"; // #64     at 0x0308
+    Utf8 "lambda$main$1"; // #65     at 0x0318
+    Utf8 "lambda$main$0"; // #66     at 0x0328
+    Utf8 "SourceFile"; // #67     at 0x0338
+    Utf8 "LambdaMath.java"; // #68     at 0x0345
+    NameAndType #32 #33; // #69     at 0x0357
+    Utf8 "java/lang/Integer"; // #70     at 0x035C
+    NameAndType #111 #112; // #71     at 0x0370
+    class #113; // #72     at 0x0375
+    NameAndType #114 #115; // #73     at 0x0378
+    class #116; // #74     at 0x037D
+    NameAndType #117 #118; // #75     at 0x0380
+    Utf8 "Print all numbers:"; // #76     at 0x0385
+    class #119; // #77     at 0x039A
+    NameAndType #120 #121; // #78     at 0x039D
+    Utf8 "BootstrapMethods"; // #79     at 0x03A2
+    MethodHandle 6b #122; // #80     at 0x03B5
+    MethodType #123; // #81     at 0x03B9
+    MethodHandle 6b #124; // #82     at 0x03BC
+    MethodType #62; // #83     at 0x03C0
+    NameAndType #125 #126; // #84     at 0x03C3
+    NameAndType #47 #48; // #85     at 0x03C8
+    Utf8 "Print no numbers:"; // #86     at 0x03CD
+    MethodHandle 6b #127; // #87     at 0x03E1
+    Utf8 "Print even numbers:"; // #88     at 0x03E5
+    MethodHandle 6b #128; // #89     at 0x03FB
+    Utf8 "Print odd numbers:"; // #90     at 0x03FF
+    MethodHandle 6b #129; // #91     at 0x0414
+    Utf8 "Print numbers greater than 5:"; // #92     at 0x0418
+    MethodHandle 6b #130; // #93     at 0x0438
+    class #131; // #94     at 0x043C
+    NameAndType #132 #133; // #95     at 0x043F
+    class #110; // #96     at 0x0444
+    NameAndType #134 #135; // #97     at 0x0447
+    NameAndType #136 #137; // #98     at 0x044C
+    class #138; // #99     at 0x0451
+    NameAndType #125 #123; // #100     at 0x0454
+    Utf8 "java/lang/StringFuilder"; // #101     at 0x0459
+    NameAndType #139 #140; // #102     at 0x0473
+    Utf8 " "; // #103     at 0x0478
+    NameAndType #139 #141; // #104     at 0x047C
+    NameAndType #142 #143; // #105     at 0x0481
+    Utf8 "java/lang/Throwable"; // #106     at 0x0486
+    NameAndType #144 #145; // #107     at 0x049C
+    Utf8 "LambdaMath"; // #108     at 0x04A1
+    Utf8 "java/lang/Object"; // #109     at 0x04AE
+    Utf8 "java/util/Iterator"; // #110     at 0x04C1
+    Utf8 "valueOf"; // #111     at 0x04D6
+    Utf8 "(I)Ljava/lang/Integer;"; // #112     at 0x04E0
+    Utf8 "java/util/Arrays"; // #113     at 0x04F9
+    Utf8 "asList"; // #114     at 0x050C
+    Utf8 "([Ljava/lang/Object;)Ljava/util/List;"; // #115     at 0x0515
+    Utf8 "java/lang/System"; // #116     at 0x053D
+    Utf8 "out"; // #117     at 0x0550
+    Utf8 "Ljava/io/PrintStream;"; // #118     at 0x0556
+    Utf8 "java/io/PrintStream"; // #119     at 0x056E
+    Utf8 "println"; // #120     at 0x0584
+    Utf8 "(Ljava/lang/String;)V"; // #121     at 0x058E
+    Method #146 #147; // #122     at 0x05A6
+    Utf8 "(Ljava/lang/Object;)Z"; // #123     at 0x05AB
+    Method #30 #148; // #124     at 0x05C3
+    Utf8 "test"; // #125     at 0x05C8
+    Utf8 "()Ljava/util/function/Predicate;"; // #126     at 0x05CF
+    Method #30 #149; // #127     at 0x05F2
+    Method #30 #150; // #128     at 0x05F7
+    Method #30 #151; // #129     at 0x05FC
+    Method #30 #152; // #130     at 0x0601
+    Utf8 "java/util/List"; // #131     at 0x0606
+    Utf8 "iterator"; // #132     at 0x0617
+    Utf8 "()Ljava/util/Iterator;"; // #133     at 0x0622
+    Utf8 "hasNext"; // #134     at 0x063B
+    Utf8 "()Z"; // #135     at 0x0645
+    Utf8 "next"; // #136     at 0x064B
+    Utf8 "()Ljava/lang/Object;"; // #137     at 0x0652
+    Utf8 "java/util/function/Predicate"; // #138     at 0x0669
+    Utf8 "append"; // #139     at 0x0688
+    Utf8 "(Ljava/lang/Object;)Ljava/lang/StringBuilder;"; // #140     at 0x0691
+    Utf8 "(Ljava/lang/String;)Ljava/lang/StringBuilder;"; // #141     at 0x06C1
+    Utf8 "toString"; // #142     at 0x06F1
+    Utf8 "()Ljava/lang/String;"; // #143     at 0x06FC
+    Utf8 "intValue"; // #144     at 0x0713
+    Utf8 "()I"; // #145     at 0x071E
+    class #153; // #146     at 0x0724
+    NameAndType #154 #158; // #147     at 0x0727
+    NameAndType #66 #62; // #148     at 0x072C
+    NameAndType #65 #62; // #149     at 0x0731
+    NameAndType #64 #62; // #150     at 0x0736
+    NameAndType #63 #62; // #151     at 0x073B
+    NameAndType #61 #62; // #152     at 0x0740
+    Utf8 "java/lang/invoke/LambdaMetafactory"; // #153     at 0x0745
+    Utf8 "metafactory"; // #154     at 0x076A
+    class #160; // #155     at 0x0778
+    Utf8 "Lookup"; // #156     at 0x077B
+    Utf8 "InnerClasses"; // #157     at 0x0784
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;"; // #158     at 0x0793
+    class #161; // #159     at 0x0862
+    Utf8 "java/lang/invoke/MethodHandles$Lookup"; // #160     at 0x0865
+    Utf8 "java/lang/invoke/MethodHandles"; // #161     at 0x088D
+  } // Constant Pool
+
+  0x0021; // access
+  #30;// this_cpx
+  #31;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [8] { // methods
+    { // Member at 0x08BA
+      0x0001; // access
+      #32; // name_cpx
+      #33; // sig_cpx
+      [1] { // Attributes
+        Attr(#34, 47) { // Code at 0x08C2
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [2] { // Attributes
+            Attr(#35, 6) { // LineNumberTable at 0x08D9
+              [1] { // LineNumberTable
+                0  5; //  at 0x08E5
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#36, 12) { // LocalVariableTable at 0x08E5
+              [1] { // LocalVariableTable
+                0 5 37 38 0; //  at 0x08F7
+              }
+            } // end LocalVariableTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x08F7
+      0x0009; // access
+      #39; // name_cpx
+      #40; // sig_cpx
+      [1] { // Attributes
+        Attr(#34, 261) { // Code at 0x08FF
+          4; // max_stack
+          2; // max_locals
+          Bytes[147]{
+            0x1007BD0002590304;
+            0xB8000353590405B8;
+            0x000353590506B800;
+            0x0353590607B80003;
+            0x53590708B8000353;
+            0x59081006B8000353;
+            0x5910061007B80003;
+            0x53B800044CB20005;
+            0x1206B600072BBA00;
+            0x080000B80009B200;
+            0x05120AB600072BBA;
+            0x000B0000B80009B2;
+            0x0005120CB600072B;
+            0xBA000D0000B80009;
+            0xB20005120EB60007;
+            0x2BBA000F0000B800;
+            0x09B200051210B600;
+            0x072BBA00110000B8;
+            0x0009B1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [3] { // Attributes
+            Attr(#35, 50) { // LineNumberTable at 0x09A4
+              [12] { // LineNumberTable
+                0  9; //  at 0x09B0
+                61  11; //  at 0x09B4
+                69  12; //  at 0x09B8
+                78  14; //  at 0x09BC
+                86  15; //  at 0x09C0
+                95  17; //  at 0x09C4
+                103  18; //  at 0x09C8
+                112  20; //  at 0x09CC
+                120  21; //  at 0x09D0
+                129  23; //  at 0x09D4
+                137  24; //  at 0x09D8
+                146  26; //  at 0x09DC
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#36, 22) { // LocalVariableTable at 0x09DC
+              [2] { // LocalVariableTable
+                0 147 41 42 0; //  at 0x09EE
+                61 86 43 44 1; //  at 0x09F8
+              }
+            } // end LocalVariableTable
+            ;
+            Attr(#45, 12) { // LocalVariableTypeTable at 0x09F8
+              [1] { // LocalVariableTypeTable
+                61 86 43 46 1; //  at 0x0A0A
+              }
+            } // end LocalVariableTypeTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0A0A
+      0x0009; // access
+      #47; // name_cpx
+      #48; // sig_cpx
+      [2] { // Attributes
+        Attr(#34, 224) { // Code at 0x0A12
+          3; // max_stack
+          4; // max_locals
+          Bytes[69]{
+            0x2AB9001201004D2C;
+            0xB900130100990033;
+            0x2CB900140100C200;
+            0x024E2B2DB9001502;
+            0x0099001CB20005BB;
+            0x001659B700172DB6;
+            0x00181219B6001AB6;
+            0x001BB60007A7FFCA;
+            0xA700044DB1;
+          };
+          [1] { // Traps
+            0 64 67 28; //  at 0x0A6F
+          } // end Traps
+          [4] { // Attributes
+            Attr(#35, 30) { // LineNumberTable at 0x0A71
+              [7] { // LineNumberTable
+                0  30; //  at 0x0A7D
+                26  31; //  at 0x0A81
+                36  32; //  at 0x0A85
+                61  34; //  at 0x0A89
+                64  38; //  at 0x0A8D
+                67  37; //  at 0x0A91
+                68  39; //  at 0x0A95
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#36, 42) { // LocalVariableTable at 0x0A95
+              [4] { // LocalVariableTable
+                26 35 49 50 3; //  at 0x0AA7
+                68 0 51 52 2; //  at 0x0AB1
+                0 69 43 44 0; //  at 0x0ABB
+                0 69 53 54 1; //  at 0x0AC5
+              }
+            } // end LocalVariableTable
+            ;
+            Attr(#45, 22) { // LocalVariableTypeTable at 0x0AC5
+              [2] { // LocalVariableTypeTable
+                0 69 43 46 0; //  at 0x0AD7
+                0 69 53 55 1; //  at 0x0AE1
+              }
+            } // end LocalVariableTypeTable
+            ;
+            Attr(#56, 17) { // StackMapTable at 0x0AE1
+              [5] { // 
+                252b, 7, [1]z{7b,57}; // append_frame 1
+                53b; // same_frame
+                250b, 2; // chop_frame 1
+                66b, [1]z{7b,58}; // same_locals_1_stack_item_frame
+                0b; // same_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+        ;
+        Attr(#59, 2) { // Signature at 0x0AF8
+          #60;
+        } // end Signature
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0B00
+      0x100A; // access
+      #61; // name_cpx
+      #62; // sig_cpx
+      [1] { // Attributes
+        Attr(#34, 67) { // Code at 0x0B08
+          2; // max_stack
+          1; // max_locals
+          Bytes[14]{
+            0x2AB6001D08A40007;
+            0x04A7000403AC;
+          };
+          [0] { // Traps
+          } // end Traps
+          [3] { // Attributes
+            Attr(#35, 6) { // LineNumberTable at 0x0B28
+              [1] { // LineNumberTable
+                0  24; //  at 0x0B34
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#36, 12) { // LocalVariableTable at 0x0B34
+              [1] { // LocalVariableTable
+                0 14 49 50 0; //  at 0x0B46
+              }
+            } // end LocalVariableTable
+            ;
+            Attr(#56, 5) { // StackMapTable at 0x0B46
+              [2] { // 
+                12b; // same_frame
+                64b, [1]z{1b}; // same_locals_1_stack_item_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0B51
+      0x100A; // access
+      #63; // name_cpx
+      #62; // sig_cpx
+      [1] { // Attributes
+        Attr(#34, 69) { // Code at 0x0B59
+          2; // max_stack
+          1; // max_locals
+          Bytes[16]{
+            0x2AB6001D057004A0;
+            0x000704A7000403AC;
+          };
+          [0] { // Traps
+          } // end Traps
+          [3] { // Attributes
+            Attr(#35, 6) { // LineNumberTable at 0x0B7B
+              [1] { // LineNumberTable
+                0  21; //  at 0x0B87
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#36, 12) { // LocalVariableTable at 0x0B87
+              [1] { // LocalVariableTable
+                0 16 49 50 0; //  at 0x0B99
+              }
+            } // end LocalVariableTable
+            ;
+            Attr(#56, 5) { // StackMapTable at 0x0B99
+              [2] { // 
+                14b; // same_frame
+                64b, [1]z{1b}; // same_locals_1_stack_item_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0BA4
+      0x100A; // access
+      #64; // name_cpx
+      #62; // sig_cpx
+      [1] { // Attributes
+        Attr(#34, 68) { // Code at 0x0BAC
+          2; // max_stack
+          1; // max_locals
+          Bytes[15]{
+            0x2AB6001D05709A00;
+            0x0704A7000403AC;
+          };
+          [0] { // Traps
+          } // end Traps
+          [3] { // Attributes
+            Attr(#35, 6) { // LineNumberTable at 0x0BCD
+              [1] { // LineNumberTable
+                0  18; //  at 0x0BD9
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#36, 12) { // LocalVariableTable at 0x0BD9
+              [1] { // LocalVariableTable
+                0 15 49 50 0; //  at 0x0BEB
+              }
+            } // end LocalVariableTable
+            ;
+            Attr(#56, 5) { // StackMapTable at 0x0BEB
+              [2] { // 
+                13b; // same_frame
+                64b, [1]z{1b}; // same_locals_1_stack_item_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0BF6
+      0x100A; // access
+      #65; // name_cpx
+      #62; // sig_cpx
+      [1] { // Attributes
+        Attr(#34, 44) { // Code at 0x0BFE
+          1; // max_stack
+          1; // max_locals
+          Bytes[2]{
+            0x03AC;
+          };
+          [0] { // Traps
+          } // end Traps
+          [2] { // Attributes
+            Attr(#35, 6) { // LineNumberTable at 0x0C12
+              [1] { // LineNumberTable
+                0  15; //  at 0x0C1E
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#36, 12) { // LocalVariableTable at 0x0C1E
+              [1] { // LocalVariableTable
+                0 2 49 50 0; //  at 0x0C30
+              }
+            } // end LocalVariableTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0C30
+      0x100A; // access
+      #66; // name_cpx
+      #62; // sig_cpx
+      [1] { // Attributes
+        Attr(#34, 44) { // Code at 0x0C38
+          1; // max_stack
+          1; // max_locals
+          Bytes[2]{
+            0x04AC;
+          };
+          [0] { // Traps
+          } // end Traps
+          [2] { // Attributes
+            Attr(#35, 6) { // LineNumberTable at 0x0C4C
+              [1] { // LineNumberTable
+                0  12; //  at 0x0C58
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#36, 12) { // LocalVariableTable at 0x0C58
+              [1] { // LocalVariableTable
+                0 2 49 50 0; //  at 0x0C6A
+              }
+            } // end LocalVariableTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [3] { // Attributes
+    Attr(#67, 2) { // SourceFile at 0x0C6C
+      #68;
+    } // end SourceFile
+    ;
+    Attr(#157, 10) { // InnerClasses at 0x0C74
+      [1] { // InnerClasses
+        #155 #159 #156 25; //  at 0x0C84
+      }
+    } // end InnerClasses
+    ;
+    Attr(#79, 52) { // BootstrapMethods at 0x0C84
+      [5] { // bootstrap_methods
+        {  //  bootstrap_method
+          #80; // bootstrap_method_ref
+          [3] { // bootstrap_arguments
+            #81; //  at 0x0C92
+            #82; //  at 0x0C94
+            #83; //  at 0x0C96
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #80; // bootstrap_method_ref
+          [3] { // bootstrap_arguments
+            #81; //  at 0x0C9C
+            #87; //  at 0x0C9E
+            #83; //  at 0x0CA0
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #80; // bootstrap_method_ref
+          [3] { // bootstrap_arguments
+            #81; //  at 0x0CA6
+            #89; //  at 0x0CA8
+            #83; //  at 0x0CAA
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #80; // bootstrap_method_ref
+          [3] { // bootstrap_arguments
+            #81; //  at 0x0CB0
+            #91; //  at 0x0CB2
+            #83; //  at 0x0CB4
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #80; // bootstrap_method_ref
+          [1] { // bootstrap_arguments
+            #81; //  at 0x0CBA
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+      }
+// ======== attribute array started  at 0x0C84 has 4 bytes more:
+      0x005D0053;
+    } // end BootstrapMethods
+  } // Attributes
+} // end class LambdaMath

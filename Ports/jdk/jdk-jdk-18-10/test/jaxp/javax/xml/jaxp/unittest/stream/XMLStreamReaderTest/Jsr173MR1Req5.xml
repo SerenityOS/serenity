@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding ="utf-8"?>
+<foo attr1="bar" xmlns="foo.com" xmlns:pre="somefix"/>

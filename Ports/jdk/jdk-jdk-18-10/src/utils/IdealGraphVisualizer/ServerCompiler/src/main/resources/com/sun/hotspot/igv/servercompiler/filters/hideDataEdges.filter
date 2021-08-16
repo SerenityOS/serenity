@@ -1,0 +1,5 @@
+var f = new ConnectionFilter("Hide data edges");
+f.addRule(new ConnectionFilter.ConnectionStyleRule(new MatcherSelector(new Properties.StringPropertyMatcher("category", "data")),
+                                                   white,
+                                                   Connection.ConnectionStyle.INVISIBLE));
+f.apply(graph);

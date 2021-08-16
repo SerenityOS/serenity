@@ -1,0 +1,2 @@
+Manifest-Version: 1.0
+Agent-Class: nsk.aod.VirtualMachine.VirtualMachine06.VM06Agent01

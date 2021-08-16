@@ -1,0 +1,10 @@
+BindingsTest1Merging.java:17:39: compiler.err.match.binding.exists
+BindingsTest1Merging.java:24:36: compiler.err.match.binding.exists
+BindingsTest1Merging.java:29:21: compiler.err.match.binding.exists
+BindingsTest1Merging.java:34:36: compiler.err.match.binding.exists
+BindingsTest1Merging.java:39:39: compiler.err.match.binding.exists
+BindingsTest1Merging.java:44:21: compiler.err.match.binding.exists
+BindingsTest1Merging.java:50:36: compiler.err.match.binding.exists
+BindingsTest1Merging.java:56:39: compiler.err.match.binding.exists
+BindingsTest1Merging.java:62:42: compiler.err.match.binding.exists
+9 errors

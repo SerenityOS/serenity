@@ -1,0 +1,93 @@
+
+Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+
+
+DESCRIPTION
+
+This is replacement for CompileTheWorld (CTW) written on java. Its purpose is
+to make possible the use of CTW in product builds.
+
+DEPENDENCES
+
+The tool depends on Whitebox API. Assumed, that the sources of whitebox are
+located in '../whitebox' directory.
+
+BUILDING
+
+Simple way to build, just type 'make'.
+
+Makefile uses environment variables 'ALT_BOOTDIR', 'BOOTDIR' as root-dir of jdk
+that will be used for compilation and creating jar.
+
+On successful building 'ctw.jar' will be created.
+
+RUNNING
+
+Since the tool uses WhiteBox API, options 'UnlockDiagnosticVMOptions' and
+'WhiteBoxAPI' should be specified, and 'wb.jar' should be added to
+boot-classpath:
+  $ java -XX:+UnlockDiagnosticVMOptions -XX:+WhiteBoxAPI -Xbootclasspath/a:wb.jar -jar ctw.jar 
+
+Arguments can be paths to '.jar, '.zip', '.lst' files or directories with
+classes, that define which classes will be compiled:
+  - '.jar', '.zip' files and directories are interpreted like in classpath
+(including '<dir>/*' syntax)
+  - '.lst' files -- files with class names (in java notation) to compile.
+CTW will try to find these classes with default class loader, so they should
+be located in classpath.
+
+Without arguments it would work as old version of CTW: all classes in
+boot-classpath will be compiled, excluding classes in 'rt.jar' if 'rt.jar' isn't
+first in boot-classpath.
+
+Due CTW's flags also are not available in product builds, the tool uses
+properties with the same names:
+  - 'CompileTheWorldPreloadClasses' -- type:boolean, default:true, description:
+Preload all classes used by a class before start loading
+  - 'CompileTheWorldStartAt' -- type:long, default:1, description: First class
+to consider
+  - 'CompileTheWorldStopAt' -- type:long, default:Long.MAX_VALUE, description:
+Last class to consider
+
+Also it uses additional properties:
+  - 'sun.hotspot.tools.ctw.verbose' -- type:boolean, default:false,
+description: Verbose output, adds additional information about compilation
+  - 'sun.hotspot.tools.ctw.logfile' -- type:string, default:null,
+description: Path to logfile, if it's null, cout will be used.
+
+EXAMPLES
+
+compile classes from 'rt.jar':
+  $ java -XX:+UnlockDiagnosticVMOptions -XX:+WhiteBoxAPI -Xbootclasspath/a:wb.jar -jar ctw.jar ${JAVA_HOME}/jre/lib/rt.jar
+
+compile classes from all '.jar' in './testjars' directory:
+  $ java -XX:+UnlockDiagnosticVMOptions -XX:+WhiteBoxAPI -Xbootclasspath/a:wb.jar -jar ctw.jar ./testjars/*
+
+compile classes from './build/classes' directory:
+  $ java -XX:+UnlockDiagnosticVMOptions -XX:+WhiteBoxAPI -Xbootclasspath/a:wb.jar -jar ctw.jar ./build/classes
+
+compile only java.lang.String, java.lang.Object classes:
+  $ echo java.lang.String > classes.lst
+  $ echo java.lang.Object >> classes.lst
+  $ java -XX:+UnlockDiagnosticVMOptions -XX:+WhiteBoxAPI -Xbootclasspath/a:wb.jar -jar ctw.jar classes.lst
+

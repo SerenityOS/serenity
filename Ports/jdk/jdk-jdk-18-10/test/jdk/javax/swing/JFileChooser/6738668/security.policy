@@ -1,0 +1,5 @@
+grant {
+    permission java.io.FilePermission "${java.io.tmpdir}${/}temp${/}*", "read";
+    permission java.io.FilePermission "${java.io.tmpdir}${/}temp", "read";
+    permission java.util.PropertyPermission "*", "read";
+};

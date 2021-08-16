@@ -1,0 +1,2 @@
+T5011073.java:15:9: compiler.err.cant.apply.symbol: kindname.method, f, java.util.Set<java.lang.String>,java.lang.Class<java.lang.String>, java.util.Set<java.lang.Integer>,java.lang.Class, kindname.class, T5011073, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.util.Set<java.lang.Integer>, java.util.Set<java.lang.String>))
+1 error

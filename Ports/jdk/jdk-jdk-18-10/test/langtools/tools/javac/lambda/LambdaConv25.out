@@ -1,0 +1,2 @@
+LambdaConv25.java:19:15: compiler.err.prob.found.req: (compiler.misc.invalid.generic.lambda.target: <X>()void, kindname.interface, LambdaConv25.C)
+1 error

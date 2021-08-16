@@ -1,0 +1,8 @@
+#
+#
+#
+# fully-qualified name of the java.util.spi.LocaleNameProvider
+# implementation class
+#
+com.bar.CurrencyNameProviderImpl
+com.bar.CurrencyNameProviderImpl2

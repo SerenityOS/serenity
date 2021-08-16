@@ -1,0 +1,5 @@
+Serial.java:12:12: compiler.warn.missing.SVUID: Serial.Inner
+Serial.java:10:1: compiler.warn.missing.SVUID: Serial
+Serial.java:51:12: compiler.warn.missing.SVUID: Serial3.Inner
+Serial.java:49:1: compiler.warn.missing.SVUID: Serial3
+4 warnings

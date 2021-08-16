@@ -1,0 +1,6 @@
+    @Test(dataProvider = "$type$UnaryOpProvider")
+    static void [[TEST]]Reduce$vectorteststype$(IntFunction<$type$[]> fa) {
+[[KERNEL]]
+        assertReductionArraysEquals(r, ra, a,
+                $vectorteststype$::[[TEST]]Reduce, $vectorteststype$::[[TEST]]ReduceAll);
+    }

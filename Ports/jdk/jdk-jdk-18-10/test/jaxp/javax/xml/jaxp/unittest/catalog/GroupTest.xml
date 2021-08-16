@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog"
+         prefer="system" resolve="strict">
+
+    <uriSuffix uriSuffix="/A/CommonFileA1.xml" uri="localMirrorA/LocalFileA1.xml"/>
+
+    <group>
+        <uriSuffix uriSuffix="/B/CommonFileB1.xml" uri="localMirrorB/LocalFileB1.xml"/>
+        <uriSuffix uriSuffix="/B/CommonFileB2.xml" uri="localMirrorB/LocalFileB2.xml"/>
+    </group>
+
+    <group baseURI="localMirrorC">
+        <uriSuffix uriSuffix="/C/CommonFileC1.xml" uri="LocalFileC1.xml"/>
+        <uriSuffix uriSuffix="/C/CommonFileC2.xml" uri="LocalFileC2.xml"/>
+    </group>
+
+</catalog> 
+

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" defer="false">
+    <delegatePublic publicIdStartString="DELEGATE-DEFER" catalog="bad_cat.xml"/>
+    <!--<nextCatalog catalog="file_cat.xml"/>-->
+</catalog>
+

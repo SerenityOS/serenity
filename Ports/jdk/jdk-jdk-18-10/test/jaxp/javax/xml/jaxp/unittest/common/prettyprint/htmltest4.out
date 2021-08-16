@@ -1,0 +1,10 @@
+<html>
+    <body>
+        <h1>A heading</h1>
+        <p>
+            new paragraph
+            <form>an empty form</form>
+            <a href="test.html">test</a>
+        </p>
+    </body>
+</html>

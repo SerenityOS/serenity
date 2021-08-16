@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Testing the JDK</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="../make/data/docs-resources/resources/jdk-default.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <style type="text/css">pre, code, tt { color: #1d6ae5; }</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Testing the JDK</h1>
+</header>
+<nav id="TOC">
+<ul>
+<li><a href="#using-make-test-the-run-test-framework">Using &quot;make test&quot; (the run-test framework)</a><ul>
+<li><a href="#configuration">Configuration</a></li>
+</ul></li>
+<li><a href="#test-selection">Test selection</a><ul>
+<li><a href="#jtreg">JTReg</a></li>
+<li><a href="#gtest">Gtest</a></li>
+<li><a href="#microbenchmarks">Microbenchmarks</a></li>
+<li><a href="#special-tests">Special tests</a></li>
+</ul></li>
+<li><a href="#test-results-and-summary">Test results and summary</a></li>
+<li><a href="#test-suite-control">Test suite control</a><ul>
+<li><a href="#general-keywords-test_opts">General keywords (TEST_OPTS)</a></li>
+<li><a href="#jtreg-keywords">JTReg keywords</a></li>
+<li><a href="#gtest-keywords">Gtest keywords</a></li>
+<li><a href="#microbenchmark-keywords">Microbenchmark keywords</a></li>
+</ul></li>
+<li><a href="#notes-for-specific-tests">Notes for Specific Tests</a><ul>
+<li><a href="#docker-tests">Docker Tests</a></li>
+<li><a href="#non-us-locale">Non-US locale</a></li>
+<li><a href="#pkcs11-tests">PKCS11 Tests</a></li>
+<li><a href="#client-ui-tests">Client UI Tests</a></li>
+</ul></li>
+</ul>
+</nav>
+<h2 id="using-make-test-the-run-test-framework">Using &quot;make test&quot; (the run-test framework)</h2>
+<p>This new way of running tests is developer-centric. It assumes that you have built a JDK locally and want to test it. Running common test targets is simple, and more complex ad-hoc combination of tests is possible. The user interface is forgiving, and clearly report errors it cannot resolve.</p>
+<p>The main target <code>test</code> uses the jdk-image as the tested product. There is also an alternate target <code>exploded-test</code> that uses the exploded image instead. Not all tests will run successfully on the exploded image, but using this target can greatly improve rebuild times for certain workflows.</p>
+<p>Previously, <code>make test</code> was used to invoke an old system for running tests, and <code>make run-test</code> was used for the new test framework. For backward compatibility with scripts and muscle memory, <code>run-test</code> (and variants like <code>exploded-run-test</code> or <code>run-test-tier1</code>) are kept as aliases.</p>
+<p>Some example command-lines:</p>
+<pre><code>$ make test-tier1
+$ make test-jdk_lang JTREG=&quot;JOBS=8&quot;
+$ make test TEST=jdk_lang
+$ make test-only TEST=&quot;gtest:LogTagSet gtest:LogTagSetDescriptions&quot; GTEST=&quot;REPEAT=-1&quot;
+$ make test TEST=&quot;hotspot:hotspot_gc&quot; JTREG=&quot;JOBS=1;TIMEOUT_FACTOR=8;JAVA_OPTIONS=-XshowSettings -Xlog:gc+ref=debug&quot;
+$ make test TEST=&quot;jtreg:test/hotspot:hotspot_gc test/hotspot/jtreg/native_sanity/JniVersion.java&quot;
+$ make test TEST=&quot;micro:java.lang.reflect&quot; MICRO=&quot;FORK=1;WARMUP_ITER=2&quot;
+$ make exploded-test TEST=tier2</code></pre>
+<h3 id="configuration">Configuration</h3>
+<p>To be able to run JTReg tests, <code>configure</code> needs to know where to find the JTReg test framework. If it is not picked up automatically by configure, use the <code>--with-jtreg=&lt;path to jtreg home&gt;</code> option to point to the JTReg framework. Note that this option should point to the JTReg home, i.e. the top directory, containing <code>lib/jtreg.jar</code> etc. (An alternative is to set the <code>JT_HOME</code> environment variable to point to the JTReg home before running <code>configure</code>.)</p>
+<p>To be able to run microbenchmarks, <code>configure</code> needs to know where to find the JMH dependency. Use <code>--with-jmh=&lt;path to JMH jars&gt;</code> to point to a directory containing the core JMH and transitive dependencies. The recommended dependencies can be retrieved by running <code>sh make/devkit/createJMHBundle.sh</code>, after which <code>--with-jmh=build/jmh/jars</code> should work.</p>
+<h2 id="test-selection">Test selection</h2>
+<p>All functionality is available using the <code>test</code> make target. In this use case, the test or tests to be executed is controlled using the <code>TEST</code> variable. To speed up subsequent test runs with no source code changes, <code>test-only</code> can be used instead, which do not depend on the source and test image build.</p>
+<p>For some common top-level tests, direct make targets have been generated. This includes all JTReg test groups, the hotspot gtest, and custom tests (if present). This means that <code>make test-tier1</code> is equivalent to <code>make test TEST=&quot;tier1&quot;</code>, but the latter is more tab-completion friendly. For more complex test runs, the <code>test TEST=&quot;x&quot;</code> solution needs to be used.</p>
+<p>The test specifications given in <code>TEST</code> is parsed into fully qualified test descriptors, which clearly and unambigously show which tests will be run. As an example, <code>:tier1</code> will expand to <code>jtreg:$(TOPDIR)/test/hotspot/jtreg:tier1 jtreg:$(TOPDIR)/test/jdk:tier1 jtreg:$(TOPDIR)/test/langtools:tier1 jtreg:$(TOPDIR)/test/nashorn:tier1 jtreg:$(TOPDIR)/test/jaxp:tier1</code>. You can always submit a list of fully qualified test descriptors in the <code>TEST</code> variable if you want to shortcut the parser.</p>
+<h3 id="jtreg">JTReg</h3>
+<p>JTReg tests can be selected either by picking a JTReg test group, or a selection of files or directories containing JTReg tests.</p>
+<p>JTReg test groups can be specified either without a test root, e.g. <code>:tier1</code> (or <code>tier1</code>, the initial colon is optional), or with, e.g. <code>hotspot:tier1</code>, <code>test/jdk:jdk_util</code> or <code>$(TOPDIR)/test/hotspot/jtreg:hotspot_all</code>. The test root can be specified either as an absolute path, or a path relative to the JDK top directory, or the <code>test</code> directory. For simplicity, the hotspot JTReg test root, which really is <code>hotspot/jtreg</code> can be abbreviated as just <code>hotspot</code>.</p>
+<p>When specified without a test root, all matching groups from all test roots will be added. Otherwise, only the group from the specified test root will be added.</p>
+<p>Individual JTReg tests or directories containing JTReg tests can also be specified, like <code>test/hotspot/jtreg/native_sanity/JniVersion.java</code> or <code>hotspot/jtreg/native_sanity</code>. Just like for test root selection, you can either specify an absolute path (which can even point to JTReg tests outside the source tree), or a path relative to either the JDK top directory or the <code>test</code> directory. <code>hotspot</code> can be used as an alias for <code>hotspot/jtreg</code> here as well.</p>
+<p>As long as the test groups or test paths can be uniquely resolved, you do not need to enter the <code>jtreg:</code> prefix. If this is not possible, or if you want to use a fully qualified test descriptor, add <code>jtreg:</code>, e.g. <code>jtreg:test/hotspot/jtreg/native_sanity</code>.</p>
+<h3 id="gtest">Gtest</h3>
+<p>Since the Hotspot Gtest suite is so quick, the default is to run all tests. This is specified by just <code>gtest</code>, or as a fully qualified test descriptor <code>gtest:all</code>.</p>
+<p>If you want, you can single out an individual test or a group of tests, for instance <code>gtest:LogDecorations</code> or <code>gtest:LogDecorations.level_test_vm</code>. This can be particularly useful if you want to run a shaky test repeatedly.</p>
+<p>For Gtest, there is a separate test suite for each JVM variant. The JVM variant is defined by adding <code>/&lt;variant&gt;</code> to the test descriptor, e.g. <code>gtest:Log/client</code>. If you specify no variant, gtest will run once for each JVM variant present (e.g. server, client). So if you only have the server JVM present, then <code>gtest:all</code> will be equivalent to <code>gtest:all/server</code>.</p>
+<h3 id="microbenchmarks">Microbenchmarks</h3>
+<p>Which microbenchmarks to run is selected using a regular expression following the <code>micro:</code> test descriptor, e.g., <code>micro:java.lang.reflect</code>. This delegates the test selection to JMH, meaning package name, class name and even benchmark method names can be used to select tests.</p>
+<p>Using special characters like <code>|</code> in the regular expression is possible, but needs to be escaped multiple times: <code>micro:ArrayCopy\\\\\|reflect</code>.</p>
+<h3 id="special-tests">Special tests</h3>
+<p>A handful of odd tests that are not covered by any other testing framework are accessible using the <code>special:</code> test descriptor. Currently, this includes <code>failure-handler</code> and <code>make</code>.</p>
+<ul>
+<li><p>Failure handler testing is run using <code>special:failure-handler</code> or just <code>failure-handler</code> as test descriptor.</p></li>
+<li><p>Tests for the build system, including both makefiles and related functionality, is run using <code>special:make</code> or just <code>make</code> as test descriptor. This is equivalent to <code>special:make:all</code>.</p>
+<p>A specific make test can be run by supplying it as argument, e.g. <code>special:make:idea</code>. As a special syntax, this can also be expressed as <code>make-idea</code>, which allows for command lines as <code>make test-make-idea</code>.</p></li>
+</ul>
+<h2 id="test-results-and-summary">Test results and summary</h2>
+<p>At the end of the test run, a summary of all tests run will be presented. This will have a consistent look, regardless of what test suites were used. This is a sample summary:</p>
+<pre><code>==============================
+Test summary
+==============================
+   TEST                                          TOTAL  PASS  FAIL ERROR
+&gt;&gt; jtreg:jdk/test:tier1                           1867  1865     2     0 &lt;&lt;
+   jtreg:langtools/test:tier1                     4711  4711     0     0
+   jtreg:nashorn/test:tier1                        133   133     0     0
+==============================
+TEST FAILURE</code></pre>
+<p>Tests where the number of TOTAL tests does not equal the number of PASSed tests will be considered a test failure. These are marked with the <code>&gt;&gt; ... &lt;&lt;</code> marker for easy identification.</p>
+<p>The classification of non-passed tests differs a bit between test suites. In the summary, ERROR is used as a catch-all for tests that neither passed nor are classified as failed by the framework. This might indicate test framework error, timeout or other problems.</p>
+<p>In case of test failures, <code>make test</code> will exit with a non-zero exit value.</p>
+<p>All tests have their result stored in <code>build/$BUILD/test-results/$TEST_ID</code>, where TEST_ID is a path-safe conversion from the fully qualified test descriptor, e.g. for <code>jtreg:jdk/test:tier1</code> the TEST_ID is <code>jtreg_jdk_test_tier1</code>. This path is also printed in the log at the end of the test run.</p>
+<p>Additional work data is stored in <code>build/$BUILD/test-support/$TEST_ID</code>. For some frameworks, this directory might contain information that is useful in determining the cause of a failed test.</p>
+<h2 id="test-suite-control">Test suite control</h2>
+<p>It is possible to control various aspects of the test suites using make control variables.</p>
+<p>These variables use a keyword=value approach to allow multiple values to be set. So, for instance, <code>JTREG=&quot;JOBS=1;TIMEOUT_FACTOR=8&quot;</code> will set the JTReg concurrency level to 1 and the timeout factor to 8. This is equivalent to setting <code>JTREG_JOBS=1 JTREG_TIMEOUT_FACTOR=8</code>, but using the keyword format means that the <code>JTREG</code> variable is parsed and verified for correctness, so <code>JTREG=&quot;TMIEOUT_FACTOR=8&quot;</code> would give an error, while <code>JTREG_TMIEOUT_FACTOR=8</code> would just pass unnoticed.</p>
+<p>To separate multiple keyword=value pairs, use <code>;</code> (semicolon). Since the shell normally eats <code>;</code>, the recommended usage is to write the assignment inside qoutes, e.g. <code>JTREG=&quot;...;...&quot;</code>. This will also make sure spaces are preserved, as in <code>JTREG=&quot;JAVA_OPTIONS=-XshowSettings -Xlog:gc+ref=debug&quot;</code>.</p>
+<p>(Other ways are possible, e.g. using backslash: <code>JTREG=JOBS=1\;TIMEOUT_FACTOR=8</code>. Also, as a special technique, the string <code>%20</code> will be replaced with space for certain options, e.g. <code>JTREG=JAVA_OPTIONS=-XshowSettings%20-Xlog:gc+ref=debug</code>. This can be useful if you have layers of scripts and have trouble getting proper quoting of command line arguments through.)</p>
+<p>As far as possible, the names of the keywords have been standardized between test suites.</p>
+<h3 id="general-keywords-test_opts">General keywords (TEST_OPTS)</h3>
+<p>Some keywords are valid across different test suites. If you want to run tests from multiple test suites, or just don't want to care which test suite specific control variable to use, then you can use the general TEST_OPTS control variable.</p>
+<p>There are also some keywords that applies globally to the test runner system, not to any specific test suites. These are also available as TEST_OPTS keywords.</p>
+<h4 id="jobs">JOBS</h4>
+<p>Currently only applies to JTReg.</p>
+<h4 id="timeout_factor">TIMEOUT_FACTOR</h4>
+<p>Currently only applies to JTReg.</p>
+<h4 id="java_options">JAVA_OPTIONS</h4>
+<p>Applies to JTReg, GTest and Micro.</p>
+<h4 id="vm_options">VM_OPTIONS</h4>
+<p>Applies to JTReg, GTest and Micro.</p>
+<h4 id="aot_modules">AOT_MODULES</h4>
+<p>Applies to JTReg and GTest.</p>
+<h4 id="jcov">JCOV</h4>
+<p>This keywords applies globally to the test runner system. If set to <code>true</code>, it enables JCov coverage reporting for all tests run. To be useful, the JDK under test must be run with a JDK built with JCov instrumentation (<code>configure --with-jcov=&lt;path to directory containing lib/jcov.jar&gt;</code>, <code>make jcov-image</code>).</p>
+<p>The simplest way to run tests with JCov coverage report is to use the special target <code>jcov-test</code> instead of <code>test</code>, e.g. <code>make jcov-test TEST=jdk_lang</code>. This will make sure the JCov image is built, and that JCov reporting is enabled.</p>
+<p>The JCov report is stored in <code>build/$BUILD/test-results/jcov-output/report</code>.</p>
+<p>Please note that running with JCov reporting can be very memory intensive.</p>
+<h4 id="jcov_diff_changeset">JCOV_DIFF_CHANGESET</h4>
+<p>While collecting code coverage with JCov, it is also possible to find coverage for only recently changed code. JCOV_DIFF_CHANGESET specifies a source revision. A textual report will be generated showing coverage of the diff between the specified revision and the repository tip.</p>
+<p>The report is stored in <code>build/$BUILD/test-results/jcov-output/diff_coverage_report</code> file.</p>
+<h3 id="jtreg-keywords">JTReg keywords</h3>
+<h4 id="jobs-1">JOBS</h4>
+<p>The test concurrency (<code>-concurrency</code>).</p>
+<p>Defaults to TEST_JOBS (if set by <code>--with-test-jobs=</code>), otherwise it defaults to JOBS, except for Hotspot, where the default is <em>number of CPU cores/2</em>, but never more than <em>memory size in GB/2</em>.</p>
+<h4 id="timeout_factor-1">TIMEOUT_FACTOR</h4>
+<p>The timeout factor (<code>-timeoutFactor</code>).</p>
+<p>Defaults to 4.</p>
+<h4 id="failure_handler_timeout">FAILURE_HANDLER_TIMEOUT</h4>
+<p>Sets the argument <code>-timeoutHandlerTimeout</code> for JTReg. The default value is 0. This is only valid if the failure handler is built.</p>
+<h4 id="test_mode">TEST_MODE</h4>
+<p>The test mode (<code>agentvm</code> or <code>othervm</code>).</p>
+<p>Defaults to <code>agentvm</code>.</p>
+<h4 id="assert">ASSERT</h4>
+<p>Enable asserts (<code>-ea -esa</code>, or none).</p>
+<p>Set to <code>true</code> or <code>false</code>. If true, adds <code>-ea -esa</code>. Defaults to true, except for hotspot.</p>
+<h4 id="verbose">VERBOSE</h4>
+<p>The verbosity level (<code>-verbose</code>).</p>
+<p>Defaults to <code>fail,error,summary</code>.</p>
+<h4 id="retain">RETAIN</h4>
+<p>What test data to retain (<code>-retain</code>).</p>
+<p>Defaults to <code>fail,error</code>.</p>
+<h4 id="max_mem">MAX_MEM</h4>
+<p>Limit memory consumption (<code>-Xmx</code> and <code>-vmoption:-Xmx</code>, or none).</p>
+<p>Limit memory consumption for JTReg test framework and VM under test. Set to 0 to disable the limits.</p>
+<p>Defaults to 512m, except for hotspot, where it defaults to 0 (no limit).</p>
+<h4 id="max_output">MAX_OUTPUT</h4>
+<p>Set the property <code>javatest.maxOutputSize</code> for the launcher, to change the default JTReg log limit.</p>
+<h4 id="keywords">KEYWORDS</h4>
+<p>JTReg keywords sent to JTReg using <code>-k</code>. Please be careful in making sure that spaces and special characters (like <code>!</code>) are properly quoted. To avoid some issues, the special value <code>%20</code> can be used instead of space.</p>
+<h4 id="extra_problem_lists">EXTRA_PROBLEM_LISTS</h4>
+<p>Use additional problem lists file or files, in addition to the default ProblemList.txt located at the JTReg test roots.</p>
+<p>If multiple file names are specified, they should be separated by space (or, to help avoid quoting issues, the special value <code>%20</code>).</p>
+<p>The file names should be either absolute, or relative to the JTReg test root of the tests to be run.</p>
+<h4 id="run_problem_lists">RUN_PROBLEM_LISTS</h4>
+<p>Use the problem lists to select tests instead of excluding them.</p>
+<p>Set to <code>true</code> or <code>false</code>. If <code>true</code>, JTReg will use <code>-match:</code> option, otherwise <code>-exclude:</code> will be used. Default is <code>false</code>.</p>
+<h4 id="options">OPTIONS</h4>
+<p>Additional options to the JTReg test framework.</p>
+<p>Use <code>JTREG=&quot;OPTIONS=--help all&quot;</code> to see all available JTReg options.</p>
+<h4 id="java_options-1">JAVA_OPTIONS</h4>
+<p>Additional Java options for running test classes (sent to JTReg as <code>-javaoption</code>).</p>
+<h4 id="vm_options-1">VM_OPTIONS</h4>
+<p>Additional Java options to be used when compiling and running classes (sent to JTReg as <code>-vmoption</code>).</p>
+<p>This option is only needed in special circumstances. To pass Java options to your test classes, use <code>JAVA_OPTIONS</code>.</p>
+<h4 id="launcher_options">LAUNCHER_OPTIONS</h4>
+<p>Additional Java options that are sent to the java launcher that starts the JTReg harness.</p>
+<h4 id="aot_modules-1">AOT_MODULES</h4>
+<p>Generate AOT modules before testing for the specified module, or set of modules. If multiple modules are specified, they should be separated by space (or, to help avoid quoting issues, the special value <code>%20</code>).</p>
+<h4 id="retry_count">RETRY_COUNT</h4>
+<p>Retry failed tests up to a set number of times. Defaults to 0.</p>
+<h3 id="gtest-keywords">Gtest keywords</h3>
+<h4 id="repeat">REPEAT</h4>
+<p>The number of times to repeat the tests (<code>--gtest_repeat</code>).</p>
+<p>Default is 1. Set to -1 to repeat indefinitely. This can be especially useful combined with <code>OPTIONS=--gtest_break_on_failure</code> to reproduce an intermittent problem.</p>
+<h4 id="options-1">OPTIONS</h4>
+<p>Additional options to the Gtest test framework.</p>
+<p>Use <code>GTEST=&quot;OPTIONS=--help&quot;</code> to see all available Gtest options.</p>
+<h4 id="aot_modules-2">AOT_MODULES</h4>
+<p>Generate AOT modules before testing for the specified module, or set of modules. If multiple modules are specified, they should be separated by space (or, to help avoid quoting issues, the special value <code>%20</code>).</p>
+<h3 id="microbenchmark-keywords">Microbenchmark keywords</h3>
+<h4 id="fork">FORK</h4>
+<p>Override the number of benchmark forks to spawn. Same as specifying <code>-f &lt;num&gt;</code>.</p>
+<h4 id="iter">ITER</h4>
+<p>Number of measurement iterations per fork. Same as specifying <code>-i &lt;num&gt;</code>.</p>
+<h4 id="time">TIME</h4>
+<p>Amount of time to spend in each measurement iteration, in seconds. Same as specifying <code>-r &lt;num&gt;</code></p>
+<h4 id="warmup_iter">WARMUP_ITER</h4>
+<p>Number of warmup iterations to run before the measurement phase in each fork. Same as specifying <code>-wi &lt;num&gt;</code>.</p>
+<h4 id="warmup_time">WARMUP_TIME</h4>
+<p>Amount of time to spend in each warmup iteration. Same as specifying <code>-w &lt;num&gt;</code>.</p>
+<h4 id="results_format">RESULTS_FORMAT</h4>
+<p>Specify to have the test run save a log of the values. Accepts the same values as <code>-rff</code>, i.e., <code>text</code>, <code>csv</code>, <code>scsv</code>, <code>json</code>, or <code>latex</code>.</p>
+<h4 id="vm_options-2">VM_OPTIONS</h4>
+<p>Additional VM arguments to provide to forked off VMs. Same as <code>-jvmArgs &lt;args&gt;</code></p>
+<h4 id="options-2">OPTIONS</h4>
+<p>Additional arguments to send to JMH.</p>
+<h2 id="notes-for-specific-tests">Notes for Specific Tests</h2>
+<h3 id="docker-tests">Docker Tests</h3>
+<p>Docker tests with default parameters may fail on systems with glibc versions not compatible with the one used in the default docker image (e.g., Oracle Linux 7.6 for x86). For example, they pass on Ubuntu 16.04 but fail on Ubuntu 18.04 if run like this on x86:</p>
+<pre><code>$ make test TEST=&quot;jtreg:test/hotspot/jtreg/containers/docker&quot;</code></pre>
+<p>To run these tests correctly, additional parameters for the correct docker image are required on Ubuntu 18.04 by using <code>JAVA_OPTIONS</code>.</p>
+<pre><code>$ make test TEST=&quot;jtreg:test/hotspot/jtreg/containers/docker&quot; \
+    JTREG=&quot;JAVA_OPTIONS=-Djdk.test.docker.image.name=ubuntu
+    -Djdk.test.docker.image.version=latest&quot;</code></pre>
+<h3 id="non-us-locale">Non-US locale</h3>
+<p>If your locale is non-US, some tests are likely to fail. To work around this you can set the locale to US. On Unix platforms simply setting <code>LANG=&quot;en_US&quot;</code> in the environment before running tests should work. On Windows, setting <code>JTREG=&quot;VM_OPTIONS=-Duser.language=en -Duser.country=US&quot;</code> helps for most, but not all test cases.</p>
+<p>For example:</p>
+<pre><code>$ export LANG=&quot;en_US&quot; &amp;&amp; make test TEST=...
+$ make test JTREG=&quot;VM_OPTIONS=-Duser.language=en -Duser.country=US&quot; TEST=...</code></pre>
+<h3 id="pkcs11-tests">PKCS11 Tests</h3>
+<p>It is highly recommended to use the latest NSS version when running PKCS11 tests. Improper NSS version may lead to unexpected failures which are hard to diagnose. For example, sun/security/pkcs11/Secmod/AddTrustedCert.java may fail on Ubuntu 18.04 with the default NSS version in the system. To run these tests correctly, the system property <code>test.nss.lib.paths</code> is required on Ubuntu 18.04 to specify the alternative NSS lib directories.</p>
+<p>For example:</p>
+<pre><code>$ make test TEST=&quot;jtreg:sun/security/pkcs11/Secmod/AddTrustedCert.java&quot; \
+    JTREG=&quot;JAVA_OPTIONS=-Dtest.nss.lib.paths=/path/to/your/latest/NSS-libs&quot;</code></pre>
+<p>For more notes about the PKCS11 tests, please refer to test/jdk/sun/security/pkcs11/README.</p>
+<h3 id="client-ui-tests">Client UI Tests</h3>
+<p>Some Client UI tests use key sequences which may be reserved by the operating system. Usually that causes the test failure. So it is highly recommended to disable system key shortcuts prior testing. The steps to access and disable system key shortcuts for various platforms are provided below.</p>
+<h4 id="macos">MacOS</h4>
+<p>Choose Apple menu; System Preferences, click Keyboard, then click Shortcuts; select or deselect desired shortcut.</p>
+<p>For example, test/jdk/javax/swing/TooltipManager/JMenuItemToolTipKeyBindingsTest/JMenuItemToolTipKeyBindingsTest.java fails on MacOS because it uses <code>CTRL + F1</code> key sequence to show or hide tooltip message but the key combination is reserved by the operating system. To run the test correctly the default global key shortcut should be disabled using the steps described above, and then deselect &quot;Turn keyboard access on or off&quot; option which is responsible for <code>CTRL + F1</code> combination.</p>
+<h4 id="linux">Linux</h4>
+<p>Open the Activities overview and start typing Settings; Choose Settings, click Devices, then click Keyboard; set or override desired shortcut.</p>
+<h4 id="windows">Windows</h4>
+<p>Type <code>gpedit</code> in the Search and then click Edit group policy; navigate to User Configuration -&gt; Administrative Templates -&gt; Windows Components -&gt; File Explorer; in the right-side pane look for &quot;Turn off Windows key hotkeys&quot; and double click on it; enable or disable hotkeys.</p>
+<p>Note: restart is required to make the settings take effect.</p>
+</body>
+</html>

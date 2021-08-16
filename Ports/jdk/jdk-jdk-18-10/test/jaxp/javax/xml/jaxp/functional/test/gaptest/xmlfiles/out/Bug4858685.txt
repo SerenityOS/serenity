@@ -1,0 +1,30 @@
+[document]
+   [element] env:Envelope {http://www.w3.org/2000/xmlns/}xmlns:xmlns:enc="http://schemas.xmlsoap.org/soap/encoding/" {http://www.w3.org/2000/xmlns/}xmlns:xmlns:env="http://schemas.xmlsoap.org/soap/envelope/" {http://www.w3.org/2000/xmlns/}xmlns:xmlns:ns0="http://headertest.org/" {http://www.w3.org/2000/xmlns/}xmlns:xmlns:xsd="http://www.w3.org/2001/XMLSchema" {http://www.w3.org/2000/xmlns/}xmlns:xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     [text] 
+   
+     [element] env:Body
+       [text] 
+	
+       [element] ds:X509Certificate xmlns="" {http://www.w3.org/2000/xmlns/}xmlns:xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+         [text] 
+MIIDVjCCAxICBD6kKrMwCwYHKoZIzjgEAwUAMIGPMQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0Ex
+FDASBgNVBAcTC1NhbnRhIENsYXJhMR8wHQYDVQQKExZTdW4gTWljcm9zeXN0ZW1zLCBJbmMuMR4w
+HAYDVQQLExVKYXZhIGFuZCBYTUwgU29mdHdhcmUxHDAaBgNVBAMTE0pXUy1TZWN1cml0eSBDbGll
+bnQwHhcNMDMwNDIxMTczMDI3WhcNMDMwNzIwMTczMDI3WjCBjzELMAkGA1UEBhMCVVMxCzAJBgNV
+BAgTAkNBMRQwEgYDVQQHEwtTYW50YSBDbGFyYTEfMB0GA1UEChMWU3VuIE1pY3Jvc3lzdGVtcywg
+SW5jLjEeMBwGA1UECxMVSmF2YSBhbmQgWE1MIFNvZnR3YXJlMRwwGgYDVQQDExNKV1MtU2VjdXJp
+dHkgQ2xpZW50MIIBtzCCASwGByqGSM44BAEwggEfAoGBAP1/U4EddRIpUt9KnC7s5Of2EbdSPO9E
+AMMeP4C2USZpRV1AIlH7WT2NWPq/xfW6MPbLm1Vs14E7gB00b/JmYLdrmVClpJ+f6AR7ECLCT7up
+1/63xhv4O1fnxqimFQ8E+4P208UewwI1VBNaFpEy9nXzrith1yrv8iIDGZ3RSAHHAhUAl2BQjxUj
+C8yykrmCouuEC/BYHPUCgYEA9+GghdabPd7LvKtcNrhXuXmUr7v6OuqC+VdMCz0HgmdRWVeOutRZ
+T+ZxBxCBgLRJFnEj6EwoFhO3zwkyjMim4TwWeotUfI0o4KOuHiuzpnWRbqN/C/ohNWLx+2J6ASQ7
+zKTxvqhRkImog9/hWuWfBpKLZl6Ae1UlZAFMO/7PSSoDgYQAAoGAV3R+bUfh+u0yaPBV75umKvFB
+ucv37ETDak889b7k72kZdGoHz3oDmp69tiNDg5r7IvKtjHGbZ6C3Nv0ycNR7Sed1QPOF4nn/tgUl
+j+BvtVW3iiIRgBJ82KP+28QtwPkkxSp7n5HG0v7bE29E/juLduuhKBQTaaCvajuCFxiBrmAwCwYH
+KoZIzjgEAwUAAzEAMC4CFQCCuDNmMKjgY6MV1SmAcCdnhuT6VwIVAJBOiPDnDWp2WlKAERF6nOAf
+vKz9
+   
+       [text] 
+   
+     [text] 
+

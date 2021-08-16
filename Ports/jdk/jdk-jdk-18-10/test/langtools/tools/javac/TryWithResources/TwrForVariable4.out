@@ -1,0 +1,5 @@
+TwrForVariable4.java:11:14: compiler.err.var.might.not.have.been.initialized: uninitialized
+TwrForVariable4.java:20:14: compiler.err.try.with.resources.expr.effectively.final.var: notEffectivellyFinal1
+TwrForVariable4.java:26:14: compiler.err.try.with.resources.expr.effectively.final.var: notEffectivellyFinal2
+TwrForVariable4.java:31:14: compiler.err.try.with.resources.expr.effectively.final.var: notFinal
+4 errors

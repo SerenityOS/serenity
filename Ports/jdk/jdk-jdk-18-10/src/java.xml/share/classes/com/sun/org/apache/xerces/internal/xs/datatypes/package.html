@@ -1,0 +1,309 @@
+<!--
+ * reserved comment block
+ * DO NOT REMOVE OR ALTER!
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head >
+<!--
+
+  Copyright 2005 The Apache Software Foundation.
+  
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+ 
+       http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+-->
+</head>
+<body bgcolor="white">This package provides interfaces for accessing actual value information through PSVI for XML Schema 1.0 data types.
+<BR>
+<BR>
+The table below gives the data type to applicable interface mapping:
+<BR>
+<BR>
+<TABLE border="1">
+	<TBODY>
+		<TR>
+			<TD width="332" align="center">XML Schema Data Type</TD>
+			<TD align="center" width="202">Interface/Class</TD>
+		</TR>
+		<TR>
+			<TD width="332"></TD>
+			<TD width="202"></TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">string</TD>
+			<TD width="202" align="center">java.lang.String</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">boolean</TD>
+			<TD width="202" align="center">java.lang.Boolean</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">decimal</TD>
+			<TD width="202" align="center">XSDecimal</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">float</TD>
+			<TD width="202" align="center">XSFloat</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">double</TD>
+			<TD width="202" align="center">XSDouble</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">duration</TD>
+			<TD width="202" align="center">XSDateTime</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">dateTime</TD>
+			<TD width="202" align="center">XSDateTime</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">date</TD>
+			<TD width="202" align="center">XSDateTime</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">time</TD>
+			<TD width="202" align="center">XSDateTime</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">gYear</TD>
+			<TD width="202" align="center">XSDateTime</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">gMonth</TD>
+			<TD width="202" align="center">XSDateTime</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">gDay</TD>
+			<TD width="202" align="center">XSDateTime</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">gYearMonth</TD>
+			<TD width="202" align="center">XSDateTime</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">gMonthDay</TD>
+			<TD width="202" align="center">XSDateTime</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">hexBinary</TD>
+			<TD width="202" align="center">ByteList</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">base64Binary</TD>
+			<TD width="202" align="center">ByteList</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">anyURI</TD>
+			<TD width="202" align="center">java.lang.String</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">QName</TD>
+			<TD width="202" align="center">XSQName</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">NOTATION</TD>
+			<TD width="202" align="center">XSQName</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">normalizedString</TD>
+			<TD width="202" align="center">java.lang.String</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">token</TD>
+			<TD width="202" align="center">java.lang.String</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">language</TD>
+			<TD width="202" align="center">java.lang.String</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">NMTOKEN</TD>
+			<TD width="202" align="center">java.lang.String</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">NMTOKENS</TD>
+			<TD width="202" align="center">ObjectList</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">Name</TD>
+			<TD width="202" align="center">java.lang.String</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">NCName</TD>
+			<TD width="202" align="center">java.lang.String</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">ID</TD>
+			<TD width="202" align="center">java.lang.String</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">IDREF</TD>
+			<TD width="202" align="center">java.lang.String</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">IDREFS</TD>
+			<TD width="202" align="center">ObjectList</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">ENTITY</TD>
+			<TD width="202" align="center">java.lang.String</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">ENTITIES</TD>
+			<TD width="202" align="center">ObjectList</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">list</TD>
+			<TD width="202" align="center">ObjectList</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">integer</TD>
+			<TD width="202" align="center">XSDecimal</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">positiveInteger</TD>
+			<TD width="202" align="center">XSDecimal</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">negativeInteger</TD>
+			<TD width="202" align="center">XSDecimal</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">nonPositiveInteger</TD>
+			<TD width="202" align="center">XSDecimal</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">nonNegativeInteger</TD>
+			<TD width="202" align="center">XSDecimal</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">unsignedShort</TD>
+			<TD width="202" align="center">XSDecimal</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">unsignedLong</TD>
+			<TD width="202" align="center">XSDecimal</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">unsignedByte</TD>
+			<TD width="202" align="center">XSDecimal</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">unsignedInt</TD>
+			<TD width="202" align="center">XSDecimal</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">long</TD>
+			<TD width="202" align="center">XSDecimal</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">int</TD>
+			<TD width="202" align="center">XSDecimal</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">short</TD>
+			<TD width="202" align="center">XSDecimal</TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">byte</TD>
+			<TD width="202" align="center">XSDecimal</TD>
+		</TR>
+	</TBODY>
+</TABLE>
+<P><BR>As shown above, the XSDateTime interface provides mapping to a number of decimal/integer data types. The application needs to ensure that appropriate methods for each of these types is invoked. The mapping of  these types to defined methods is shown in the table below. Accessing methods that are undefined for a type will give unexpected results.
+</P>
+
+
+<P><BR>
+</P>
+<TABLE border="1">
+	<TBODY>
+		<TR>
+			<TD width="308" align="center">XML Schema Data Type</TD>
+			<TD width="228" align="center">Applicable method in XSDateTime*</TD>
+		</TR>
+		<TR>
+			<TD width="308"></TD>
+			<TD width="228"></TD>
+		</TR>
+		<TR>
+			<TD width="332" align="center">integer</TD><TD width="202" align="center">getBigInteger()</TD>
+			
+		</TR>
+		<TR>
+			<TD width="332" align="center">positiveInteger</TD><TD width="202" align="center">getBigInteger()</TD>
+			
+		</TR>
+		<TR>
+			<TD width="332" align="center">negativeInteger</TD><TD width="202" align="center">getBigInteger()</TD>
+			
+		</TR>
+		<TR>
+			<TD width="332" align="center">nonPositiveInteger</TD><TD width="202" align="center">getBigInteger()</TD>
+			
+		</TR>
+		<TR>
+			<TD width="332" align="center">nonNegativeInteger</TD><TD width="202" align="center">getBigInteger()</TD>
+			
+		</TR>
+		<TR>
+			<TD width="332" align="center">unsignedShort</TD><TD width="202" align="center">getInt()</TD>
+			
+		</TR>
+		<TR>
+			<TD width="332" align="center">unsignedLong</TD><TD width="202" align="center">getBigInteger()</TD>
+			
+		</TR>
+		<TR>
+			<TD width="332" align="center">unsignedByte</TD><TD width="202" align="center">getShort()</TD>
+			
+		</TR>
+		<TR>
+			<TD width="332" align="center">unsignedInt</TD><TD width="202" align="center">getLong()</TD>
+			
+		</TR>
+		<TR>
+			<TD width="332" align="center">long</TD><TD width="202" align="center">getLong()</TD>
+			
+		</TR>
+		<TR>
+			<TD width="332" align="center">int</TD><TD width="202" align="center">getInt()</TD>
+			
+		</TR>
+		<TR>
+			<TD width="332" align="center">short</TD><TD width="202" align="center">getShort()</TD>
+			
+		</TR>
+		<TR>
+			<TD width="332" align="center">byte</TD><TD width="202" align="center">getByte()</TD>
+			
+		</TR>
+		<TR>
+			<TD width="308"></TD>
+			<TD width="228"></TD>
+		</TR>
+	</TBODY>
+</TABLE>
+<P><BR>* <SPAN
+	style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"Times New Roman";mso-ansi-language:EN-US;mso-fareast-language:
+EN-GB;mso-bidi-language:AR-SA'>This
+shows the base method that can be called. That is, users can call this
+method and all methods returning bigger types than the base method
+according to the order: byte &lt; short &lt; int &lt; long &lt;
+BigInteger &lt; BigDecimal. For example, in the case of unsignedShort,
+users can call getInt(), getLong(), getBigInteger() and getBigDecimal()
+but NOT getShort() or getByte().</SPAN>
+</P></body>
+</html>

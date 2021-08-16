@@ -1,0 +1,141 @@
+/*
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+// The below .jasm code implements the same java code as test
+// compiler/escapeAnalysis/TestEscapeThrowInvoke.java with the addition
+// of an ldc bytecode of a dynamic constant whose return type is an array of boolean.
+// The method bsmArray is the bootstrap method for the dynamic constant.
+// The ldc has been added to the method create.
+
+package runtime/condy;
+
+super public class TestEscapeThroughInvokeWithCondy
+        version 55:0
+{
+
+private Field a:"Lruntime/condy/TestEscapeThroughInvokeWithCondy$A;";
+
+public Method "<init>":"()V"
+	stack 1 locals 1
+{
+		aload_0;
+		invokespecial	Method java/lang/Object."<init>":"()V";
+		return;
+}
+
+public static Method main:"([Ljava/lang/String;)V"
+	stack 4 locals 3
+{
+		new	class TestEscapeThroughInvokeWithCondy;
+		dup;
+		invokespecial	Method "<init>":"()V";
+		astore_1;
+		aload_1;
+		new	class TestEscapeThroughInvokeWithCondy$A;
+		dup;
+		bipush	42;
+		invokestatic	Method java/lang/Integer.valueOf:"(I)Ljava/lang/Integer;";
+		invokespecial	Method TestEscapeThroughInvokeWithCondy$A."<init>":"(Ljava/lang/Integer;)V";
+		putfield	Field a:"Lruntime/condy/TestEscapeThroughInvokeWithCondy$A;";
+		iconst_0;
+		istore_2;
+	L26:	stack_frame_type append;
+		locals_map class TestEscapeThroughInvokeWithCondy, int;
+		iload_2;
+		ldc	int 100000;
+		if_icmpge	L42;
+		aload_1;
+		invokevirtual	Method run:"()V";
+		iinc	2, 1;
+		goto	L26;
+	L42:	stack_frame_type chop1;
+                getstatic       Field java/lang/System.out:"Ljava/io/PrintStream;";
+                ldc     String "Test has successfully analyzed ldc bytecode within method create";
+                invokevirtual   Method java/io/PrintStream.println:"(Ljava/lang/String;)V";
+		return;
+}
+public static Method bsmArray:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;)[Z"
+        stack 5 locals 6
+{
+        iconst_2;
+        newarray boolean;
+        astore_3;
+        aload_3;
+        iconst_0;
+        iconst_1;
+        bastore;
+        aload_3;
+        iconst_1;
+        iconst_1;
+        bastore;
+        aload_3;
+        areturn;
+}
+
+private Method run:"()V"
+	stack 2 locals 2
+{
+		new	class java/lang/Object;
+		dup;
+		invokespecial	Method java/lang/Object."<init>":"()V";
+		pop;
+		aload_0;
+		bipush	42;
+		invokestatic	Method java/lang/Integer.valueOf:"(I)Ljava/lang/Integer;";
+		invokevirtual	Method create:"(Ljava/lang/Integer;)Lruntime/condy/TestEscapeThroughInvokeWithCondy$A;";
+		astore_1;
+		aload_0;
+		getfield	Field a:"Lruntime/condy/TestEscapeThroughInvokeWithCondy$A;";
+		aload_1;
+		invokevirtual	Method TestEscapeThroughInvokeWithCondy$A.check:"(Lruntime/condy/TestEscapeThroughInvokeWithCondy$A;)V";
+		return;
+}
+
+private Method create:"(Ljava/lang/Integer;)Lruntime/condy/TestEscapeThroughInvokeWithCondy$A;"
+	stack 5 locals 4
+{
+                ldc     Dynamic REF_invokeStatic:TestEscapeThroughInvokeWithCondy.bsmArray:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;)[Z":name:"[Z";
+                astore_2;
+                aload_2;
+                iconst_1;
+                iconst_1;
+                bastore;
+		new	class TestEscapeThroughInvokeWithCondy$A;
+		dup;
+		aload_1;
+		invokespecial	Method TestEscapeThroughInvokeWithCondy$A."<init>":"(Ljava/lang/Integer;)V";
+		astore_3;
+		aload_3;
+		aload_0;
+		getfield	Field a:"Lruntime/condy/TestEscapeThroughInvokeWithCondy$A;";
+		aload_1;
+		invokevirtual	Method TestEscapeThroughInvokeWithCondy$A.saveInto:"(Lruntime/condy/TestEscapeThroughInvokeWithCondy$A;Ljava/lang/Integer;)V";
+		aload_3;
+		areturn;
+}
+
+NestMembers TestEscapeThroughInvokeWithCondy$A;
+static InnerClass A=class TestEscapeThroughInvokeWithCondy$A of class TestEscapeThroughInvokeWithCondy;
+
+} // end Class TestEscapeThroughInvokeWithCondy

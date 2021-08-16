@@ -1,0 +1,9 @@
+TargetType17.java:14:21: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: byte)
+TargetType17.java:15:23: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: short)
+TargetType17.java:16:19: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: int)
+TargetType17.java:17:21: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: long)
+TargetType17.java:18:23: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: float)
+TargetType17.java:19:25: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: double)
+TargetType17.java:20:21: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: char)
+TargetType17.java:21:27: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: boolean)
+8 errors

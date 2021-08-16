@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <configuration version="2.0" label="Test condition">
+
+    <event name="com.example.Tiger">
+      <setting name="period" control="tiger">0 s</setting>
+    </event>
+    
+    <event name="com.example.Lion">
+      <setting name="period" control="lion">0 s</setting>
+    </event>
+    
+    <event name="com.example.Zebra">
+      <setting name="period" control="zebra">0 s</setting>
+    </event>
+    
+    <control>
+      <text name="variable" label="Variable">disabled</text>
+      
+      <condition name="tiger" true="1 s">
+        <test name="variable" operator="equal" value="activate"/>
+      </condition>
+
+      <condition name="lion" true="3 s" false="5 s">
+        <test name="variable" operator="equal" value="activate"/>
+      </condition>
+
+      <condition name="zebra" false="7 s">
+        <test name="variable" operator="equal" value="activate"/>
+      </condition>
+            
+    </control>
+
+</configuration>

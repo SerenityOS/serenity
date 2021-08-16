@@ -1,0 +1,4 @@
+Neg03.java:26:12: compiler.err.does.not.override.abstract: Neg03.Y, m(), Neg03.D
+Neg03.java:32:12: compiler.err.does.not.override.abstract: Neg03.W, m(), Neg03.D
+Neg03.java:34:12: compiler.err.does.not.override.abstract: Neg03.Z, m(), Neg03.D
+3 errors

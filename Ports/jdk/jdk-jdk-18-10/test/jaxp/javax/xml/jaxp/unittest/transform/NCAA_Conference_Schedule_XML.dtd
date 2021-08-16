@@ -1,0 +1,20 @@
+<!ELEMENT message  (XML_File_ID , heading , category , sport , Title , Conference_Schedule , time_stamp )>
+
+<!ELEMENT XML_File_ID  (#PCDATA )>
+
+<!ELEMENT heading  (#PCDATA )>
+
+<!ELEMENT category  (#PCDATA )>
+
+<!ELEMENT sport  (#PCDATA )>
+
+<!ELEMENT Title  (#PCDATA )>
+
+<!ELEMENT Conference_Schedule  (Team+ )>
+
+<!ELEMENT Team  (Listing+ )>
+<!ATTLIST Team  fullname CDATA  #REQUIRED >
+<!ELEMENT Listing  (#PCDATA )>
+
+<!ELEMENT time_stamp  (#PCDATA )>
+

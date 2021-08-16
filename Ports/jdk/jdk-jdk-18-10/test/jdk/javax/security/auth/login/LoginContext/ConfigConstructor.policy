@@ -1,0 +1,7 @@
+grant {
+    permission java.util.PropertyPermission "user.home", "read";
+    permission javax.security.auth.AuthPermission "createLoginContext.module3";
+    permission javax.security.auth.AuthPermission "createLoginContext.module4";
+    permission javax.security.auth.AuthPermission "createLoginContext.goToOther";
+    permission javax.security.auth.AuthPermission "createLoginContext.other";
+};

@@ -1,0 +1,9 @@
+name = nss
+
+slot = 2
+
+library = ${pkcs11test.nss.lib}
+
+nssArgs = "configdir='${pkcs11test.nss.db}' certPrefix='' keyPrefix='' secmod='secmod.db'"
+
+attributes = compatibility

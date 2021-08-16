@@ -1,0 +1,2 @@
+			"ms-vscode.cpptools",
+			"ccls-project.ccls"

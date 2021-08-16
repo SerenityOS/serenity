@@ -1,0 +1,236 @@
+/*
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+/*
+ * This class file has an incorrect constant pool entry #49 which results
+ * in an incorrect BSM.
+ * The correct entry should have a return type as follows instead of V:
+ *     Ljava/lang/invoke/CallSite;"; // #49
+ */
+
+class WrongBSM {
+  0xCAFEBABE;
+  0; // minor version
+  59; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1
+    class #4; // #2
+    NameAndType #5 #6; // #3
+    Utf8 "java/lang/Object"; // #4
+    Utf8 "<init>"; // #5
+    Utf8 "()V"; // #6
+    InvokeDynamic 0s #8; // #7
+    NameAndType #9 #10; // #8
+    Utf8 "run"; // #9
+    Utf8 "()Ljava/lang/Runnable;"; // #10
+    Method #12 #13; // #11
+    class #14; // #12
+    NameAndType #15 #16; // #13
+    Utf8 "WrongBSM"; // #14
+    Utf8 "doit"; // #15
+    Utf8 "(Ljava/lang/Runnable;)V"; // #16
+    InterfaceMethod #18 #19; // #17
+    class #20; // #18
+    NameAndType #9 #6; // #19
+    Utf8 "java/lang/Runnable"; // #20
+    Field #22 #23; // #21
+    class #24; // #22
+    NameAndType #25 #26; // #23
+    Utf8 "java/lang/System"; // #24
+    Utf8 "out"; // #25
+    Utf8 "Ljava/io/PrintStream;"; // #26
+    String #28; // #27
+    Utf8 "Hello from Lambda"; // #28
+    Method #30 #31; // #29
+    class #32; // #30
+    NameAndType #33 #34; // #31
+    Utf8 "java/io/PrintStream"; // #32
+    Utf8 "println"; // #33
+    Utf8 "(Ljava/lang/String;)V"; // #34
+    Utf8 "Code"; // #35
+    Utf8 "LineNumberTable"; // #36
+    Utf8 "main"; // #37
+    Utf8 "([Ljava/lang/String;)V"; // #38
+    Utf8 "lambda$main$0"; // #39
+    Utf8 "SourceFile"; // #40
+    Utf8 "WrongBSM.java"; // #41
+    Utf8 "BootstrapMethods"; // #42
+    MethodHandle 6b #44; // #43
+    Method #45 #46; // #44
+    class #47; // #45
+    NameAndType #48 #49; // #46
+    Utf8 "java/lang/invoke/LambdaMetafactory"; // #47
+    Utf8 "metafactory"; // #48
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)V"; // #49
+    MethodType #6; // #50
+    MethodHandle 6b #52; // #51
+    Method #12 #53; // #52
+    NameAndType #39 #6; // #53
+    Utf8 "InnerClasses"; // #54
+    class #56; // #55
+    Utf8 "java/lang/invoke/MethodHandles$Lookup"; // #56
+    class #58; // #57
+    Utf8 "java/lang/invoke/MethodHandles"; // #58
+    Utf8 "Lookup"; // #59
+  } // Constant Pool
+
+  0x0021; // access
+  #12;// this_cpx
+  #2;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // Fields
+  } // Fields
+
+  [] { // Methods
+    {  // method
+      0x0001; // access
+      #5; // name_index
+      #6; // descriptor_index
+      [] { // Attributes
+        Attr(#35) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#36) { // LineNumberTable
+              [] { // line_number_table
+                0  1;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    }
+    ;
+    {  // method
+      0x0009; // access
+      #37; // name_index
+      #38; // descriptor_index
+      [] { // Attributes
+        Attr(#35) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xBA00070000B8000B;
+            0xB1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#36) { // LineNumberTable
+              [] { // line_number_table
+                0  3;
+                8  6;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    }
+    ;
+    {  // method
+      0x0008; // access
+      #15; // name_index
+      #16; // descriptor_index
+      [] { // Attributes
+        Attr(#35) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB900110100B1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#36) { // LineNumberTable
+              [] { // line_number_table
+                0  8;
+                6  9;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    }
+    ;
+    {  // method
+      0x100A; // access
+      #39; // name_index
+      #6; // descriptor_index
+      [] { // Attributes
+        Attr(#35) { // Code
+          2; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xB20015121BB6001D;
+            0xB1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#36) { // LineNumberTable
+              [] { // line_number_table
+                0  4;
+                8  5;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    }
+  } // Methods
+
+  [] { // Attributes
+    Attr(#40) { // SourceFile
+      #41;
+    } // end SourceFile
+    ;
+    Attr(#42) { // BootstrapMethods
+      [] { // bootstrap_methods
+        {  //  bootstrap_method
+          #43; // bootstrap_method_ref
+          [] { // bootstrap_arguments
+            #50;
+            #51;
+            #50;
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+      }
+    } // end BootstrapMethods
+    ;
+    Attr(#54) { // InnerClasses
+      [] { // classes
+        #55 #57 #59 25;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class WrongBSM

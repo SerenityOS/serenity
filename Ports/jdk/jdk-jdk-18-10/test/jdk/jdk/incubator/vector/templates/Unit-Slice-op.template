@@ -1,0 +1,16 @@
+    static $type$[] [[TEST]]($type$[] a, int origin, int idx) {
+        $type$[] res = new $type$[SPECIES.length()];
+        for (int i = 0; i < SPECIES.length(); i++){
+            if(i+origin < SPECIES.length())
+                res[i] = a[idx+i+origin];
+            else
+                res[i] = ($type$)0;
+        }
+        return res;
+    }
+
+    @Test(dataProvider = "$type$UnaryOpProvider")
+    static void [[TEST]]$vectorteststype$(IntFunction<$type$[]> fa) {
+[[KERNEL]]
+        assertArraysEquals(r, a, origin, $vectorteststype$::[[TEST]]);
+    }

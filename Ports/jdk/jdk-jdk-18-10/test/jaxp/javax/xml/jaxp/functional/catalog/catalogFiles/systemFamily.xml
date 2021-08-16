@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" xml:base="http://local/base/dtd/">
+    <delegateSystem systemIdStartString="http://remote/dtd/alice/" catalog="delegateSystem-alice.xml" />
+    <systemSuffix systemIdSuffix="docAlice.dtd" uri="docAliceSS.dtd" />
+    <rewriteSystem systemIdStartString="http://remote/dtd/alice/" rewritePrefix="http://local/base/rs/" />
+    <system systemId="http://remote/dtd/alice/docAlice.dtd" uri="docAliceSys.dtd" />
+
+    <delegateSystem systemIdStartString="http://remote/dtd/bob/" catalog="delegateSystem-bob.xml" />
+    <systemSuffix systemIdSuffix="docBob.dtd" uri="docBobSS.dtd" />
+    <rewriteSystem systemIdStartString="http://remote/dtd/bob/" rewritePrefix="http://local/base/dtd/rs/" />
+
+    <delegateSystem systemIdStartString="http://remote/dtd/carl/" catalog="delegateSystem-carl.xml" />
+    <systemSuffix systemIdSuffix="docCarl.dtd" uri="docCarlSS.dtd" />
+</catalog>

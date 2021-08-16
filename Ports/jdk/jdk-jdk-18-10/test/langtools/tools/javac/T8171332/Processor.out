@@ -1,0 +1,4 @@
+Buggy.java:3:35: compiler.err.intf.expected.here
+Buggy.java:3:13: compiler.err.cyclic.inheritance: Buggy
+Buggy.java:3:1: compiler.err.annotation.type.not.applicable
+3 errors

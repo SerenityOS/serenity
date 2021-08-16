@@ -1,0 +1,16 @@
+<!ELEMENT document ANY>
+<!ELEMENT title (#PCDATA)>
+<!ELEMENT publisher_list (publisher*)>
+<!ELEMENT publisher (name, email?, homepage?, address?, voice?, fax?, dtdname?)>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT email (#PCDATA)>
+<!ELEMENT homepage (#PCDATA)>
+<!ELEMENT address (street+, city, state, zip, country?)>
+<!ELEMENT street (#PCDATA)>
+<!ELEMENT city (#PCDATA)>
+<!ELEMENT state (#PCDATA)>
+<!ELEMENT zip (#PCDATA)>
+<!ELEMENT country (#PCDATA)>
+<!ELEMENT voice (#PCDATA)>
+<!ELEMENT fax (#PCDATA)>
+<!ENTITY  familytree SYSTEM "familytree.dtd">

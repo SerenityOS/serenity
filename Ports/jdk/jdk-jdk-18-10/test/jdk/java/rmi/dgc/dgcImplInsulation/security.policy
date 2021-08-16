@@ -1,0 +1,7 @@
+/*
+ * security policy used by the test process
+ */
+grant {
+  // so that synchronous DGC dirty call will succeed
+  permission java.net.SocketPermission "*:1024-", "accept,connect,listen";
+};

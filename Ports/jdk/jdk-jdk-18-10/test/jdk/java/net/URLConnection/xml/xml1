@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<doc/>
+
+<!--
+    Most legal XML documents encoded with supersets of US-ASCII
+    will start like this document.  Includes ISO-8859-1, EUC-JP,
+    Shift_JIS, UTF-8, ISO-2022-JP, and other encodings.
+    
+    That is:  they're flagged up front with an XML declaration.
+-->

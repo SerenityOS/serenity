@@ -1,0 +1,4 @@
+grant {
+    permission java.lang.RuntimePermission "setSecurityManager";
+    permission java.util.PropertyPermission "seed", "read";
+};

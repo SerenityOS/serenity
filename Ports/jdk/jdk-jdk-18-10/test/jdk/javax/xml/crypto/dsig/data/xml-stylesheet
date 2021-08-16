@@ -1,0 +1,341 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>Associating Style Sheets with XML documents</title>
+<link rel="stylesheet" type="text/css" href="http://www.w3.org/StyleSheets/TR/W3C-REC">
+<style type="text/css">code { font-family: monospace }</style>
+</head>
+<body>
+<div class="head">
+<a href="http://www.w3.org/"><img src="http://www.w3.org/Icons/WWW/w3c_home" alt="W3C" height="48" width="72"></a>
+<h1>Associating Style Sheets with XML documents<br>Version 1.0</h1>
+<h2>W3C Recommendation 29 June 1999</h2>
+<dl>
+<dt>This version:</dt>
+<dd>
+<a href="http://www.w3.org/1999/06/REC-xml-stylesheet-19990629">http://www.w3.org/1999/06/REC-xml-stylesheet-19990629</a>
+<br>
+</dd>
+<dt>Latest version:</dt>
+<dd>
+<a href="http://www.w3.org/TR/xml-stylesheet">http://www.w3.org/TR/xml-stylesheet</a>
+<br>
+</dd>
+<dt>Previous version:</dt>
+<dd>
+<a href="http://www.w3.org/TR/1999/xml-stylesheet-19990428">http://www.w3.org/TR/1999/xml-stylesheet-19990428</a>
+<br>
+</dd>
+<dt>Editor:</dt>
+<dd>
+
+James Clark
+<a href="mailto:jjc@jclark.com">&lt;jjc@jclark.com&gt;</a>
+<br>
+</dd>
+</dl>
+<p class="copyright">
+<a href="http://www.w3.org/Consortium/Legal/ipr-notice.html#Copyright">
+		Copyright</a> &nbsp;&copy;&nbsp; 1999 <a href="http://www.w3.org">W3C</a>
+		(<a href="http://www.lcs.mit.edu">MIT</a>,
+		<a href="http://www.inria.fr/">INRIA</a>,
+		<a href="http://www.keio.ac.jp/">Keio</a> ), All Rights Reserved. W3C
+		<a href="http://www.w3.org/Consortium/Legal/ipr-notice.html#Legal Disclaimer">liability,</a><a href="http://www.w3.org/Consortium/Legal/ipr-notice.html#W3C Trademarks">trademark</a>,
+		<a href="http://www.w3.org/Consortium/Legal/copyright-documents.html">document use </a>and
+		<a href="http://www.w3.org/Consortium/Legal/copyright-software.html">software licensing </a>rules apply.
+	</p>
+<hr title="Separator for header">
+</div>
+<h2>
+<a name="abstract">Abstract</a>
+</h2>
+
+<p>This document allows a style sheet to be associated with an XML
+document by including one or more processing instructions with a
+target of <code>xml-stylesheet</code> in the document's prolog.</p>
+
+<h2>
+<a name="status">Status of this document</a>
+</h2>
+
+<p>This document has been reviewed by W3C Members and other interested
+parties and has been endorsed by the Director as a W3C <a href="http://www.w3.org/Consortium/Process/#RecsW3C">Recommendation</a>. It
+is a stable document and may be used as reference material or cited as
+a normative reference from other documents. W3C's role in making the
+Recommendation is to draw attention to the specification and to
+promote its widespread deployment. This enhances the functionality and
+interoperability of the Web.</p>
+
+<p>The list of known errors in this specifications is available at
+<a href="http://www.w3.org/1999/06/REC-xml-stylesheet-19990629/errata">http://www.w3.org/TR/1999/xml-stylesheet-19990629/errata</a>.</p>
+
+<p>Comments on this specification may be sent to &lt;<a href="mailto:www-xml-stylesheet-comments@w3.org">www-xml-stylesheet-comments@w3.org</a>&gt;. The archive of public
+comments is available at <a href="http://www.w3.org/Archives/Public/www-xml-stylesheet-comments">http://w3.org/Archives/Public/www-xml-stylesheet-comments</a>.</p>
+
+<p>A list of current W3C Recommendations and other technical documents
+can be found at <a href="http://www.w3.org/TR">http://www.w3.org/TR</a>.</p>
+
+<p>The Working Group expects additional mechanisms for linking style
+sheets to XML document to be defined in a future specification.</p>
+
+<p>The use of XML processing instructions in this specification should
+not be taken as a precedent.  The W3C does not anticipate recommending
+the use of processing instructions in any future specification.  The
+<a href="#rationale">Rationale</a> explains why they were used in
+this specification.</p>
+
+<p>This document was produced as part of the <a href="http://www.w3.org/XML/Activity">W3C XML Activity</a>.</p>
+
+
+<h2>
+<a name="contents">Table of contents</a>
+</h2>1 <a href="#The xml-stylesheet processing instruction">The xml-stylesheet processing instruction</a>
+<br>
+<h3>Appendices</h3>A <a href="#References">References</a>
+<br>B <a href="#rationale">Rationale</a>
+<br>
+<hr>
+
+<h2>
+<a name="The xml-stylesheet processing instruction"></a>1 The <code>xml-stylesheet</code> processing instruction</h2>
+
+<p>Style Sheets can be associated with an XML<a href="#XML">[XML10]</a>
+document by using a processing instruction whose target is
+<code>xml-stylesheet</code>.  This processing instruction follows the
+behaviour of the HTML 4.0 <code>&lt;LINK
+REL="stylesheet"&gt;</code><a href="#HTML">[HTML40]</a>.</p>
+
+<p>The <code>xml-stylesheet</code> processing instruction is parsed in
+the same way as a start-tag, with the exception that entities other
+than predefined entities must not be referenced.</p>
+
+<p>The following grammar is given using the same notation as the
+grammar in the XML Recommendation<a href="#XML">[XML10]</a>.  Symbols in the
+grammar that are not defined here are defined in the XML
+Recommendation.</p>
+
+<h5>xml-stylesheet processing instruction</h5>
+<table class="scrap">
+<tbody>
+<tr valign="baseline">
+<td>
+<a name="NT-StyleSheetPI"></a>[1]&nbsp;&nbsp;&nbsp;</td>
+<td>StyleSheetPI</td>
+<td>&nbsp;&nbsp;&nbsp;::=&nbsp;&nbsp;&nbsp;</td>
+<td>'&lt;?xml-stylesheet' (<a href="http://www.w3.org/TR/REC-xml#NT-S">S</a> <a href="#NT-PseudoAtt">PseudoAtt</a>)* <a href="http://www.w3.org/TR/REC-xml#NT-S">S</a>? '?&gt;'</td>
+<td>
+</td>
+</tr>
+<tr valign="baseline">
+<td>
+<a name="NT-PseudoAtt"></a>[2]&nbsp;&nbsp;&nbsp;</td>
+<td>PseudoAtt</td>
+<td>&nbsp;&nbsp;&nbsp;::=&nbsp;&nbsp;&nbsp;</td>
+<td>
+<a href="http://www.w3.org/TR/REC-xml#NT-Name">Name</a> <a href="http://www.w3.org/TR/REC-xml#NT-S">S</a>? '=' <a href="http://www.w3.org/TR/REC-xml#NT-S">S</a>? <a href="#NT-PseudoAttValue">PseudoAttValue</a>
+</td>
+<td>
+</td>
+</tr>
+<tr valign="baseline">
+<td>
+<a name="NT-PseudoAttValue"></a>[3]&nbsp;&nbsp;&nbsp;</td>
+<td>PseudoAttValue</td>
+<td>&nbsp;&nbsp;&nbsp;::=&nbsp;&nbsp;&nbsp;</td>
+<td>('"' ([^"&lt;&amp;] | <a href="http://www.w3.org/TR/REC-xml#NT-CharRef">CharRef</a> | <a href="#NT-PredefEntityRef">PredefEntityRef</a>)* '"'</td>
+<td>
+</td>
+</tr>
+<tr valign="baseline">
+<td>
+</td>
+<td>
+</td>
+<td>
+</td>
+<td>| "'" ([^'&lt;&amp;] | <a href="http://www.w3.org/TR/REC-xml#NT-CharRef">CharRef</a> | <a href="#NT-PredefEntityRef">PredefEntityRef</a>)* "'")</td>
+<td>
+</td>
+</tr>
+<tr valign="baseline">
+<td>
+</td>
+<td>
+</td>
+<td>
+</td>
+<td>- (<a href="http://www.w3.org/TR/REC-xml#NT-Char">Char</a>* '?&gt;' <a href="http://www.w3.org/TR/REC-xml#NT-Char">Char</a>*)</td>
+<td>
+</td>
+</tr>
+<tr valign="baseline">
+<td>
+<a name="NT-PredefEntityRef"></a>[4]&nbsp;&nbsp;&nbsp;</td>
+<td>PredefEntityRef</td>
+<td>&nbsp;&nbsp;&nbsp;::=&nbsp;&nbsp;&nbsp;</td>
+<td>'&amp;amp;' | '&amp;lt;' | '&amp;gt;' | '&amp;quot;' | '&amp;apos;'</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+
+<p>In <a href="#NT-PseudoAttValue">PseudoAttValue</a>, a <a href="http://www.w3.org/TR/REC-xml#NT-CharRef">CharRef</a> or a <a href="#NT-PredefEntityRef">PredefEntityRef</a> is interpreted in the
+same manner as in a normal XML attribute value.  The actual value of
+the pseudo-attribute is the value after each reference is replaced by
+the character it references.  This replacement is not performed
+automatically by an XML processor.</p>
+
+<p>The <code>xml-stylesheet</code> processing instruction is allowed
+only in the prolog of an XML document. The syntax of XML constrains
+where processing instructions are allowed in the prolog; the
+<code>xml-stylesheet</code> processing instruction is allowed anywhere
+in the prolog that meets these constraints.</p>
+
+<blockquote>
+<b>NOTE: </b>If the <code>xml-stylesheet</code> processing instruction
+occurs in the external DTD subset or in a parameter entity, it is
+possible that it may not be processed by a non-validating XML
+processor (see <a href="#XML">[XML10]</a>).</blockquote>
+
+<p>The following pseudo attributes are defined</p>
+
+<pre>href CDATA #REQUIRED
+type CDATA #REQUIRED
+title CDATA #IMPLIED
+media CDATA #IMPLIED
+charset CDATA #IMPLIED
+alternate (yes|no) "no"</pre>
+
+<p>The semantics of the pseudo-attributes are exactly as with
+<code>&lt;LINK REL="stylesheet"&gt;</code> in HTML 4.0, with the
+exception of the <code>alternate</code> pseudo-attribute.  If
+<code>alternate="yes"</code> is specified, then the processing
+instruction has the semantics of <code>&lt;LINK REL="alternate
+stylesheet"&gt;</code> instead of <code>&lt;LINK
+REL="stylesheet"&gt;</code>.</p>
+
+<blockquote>
+<b>NOTE: </b>Since the value of the <code>href</code> attribute is a URI
+reference, it may be a relative URI and it may contain a fragment
+identifier. In particular the URI reference may contain only a
+fragment identifier.  Such a URI reference is a reference to a part of
+the document containing the <code>xml-stylesheet</code> processing
+instruction (see <a href="#RFC2396">[RFC2396]</a>). The consequence is that the
+<code>xml-stylesheet</code> processing instruction allows style sheets
+to be embedded in the same document as the <code>xml-stylesheet</code>
+processing instruction.</blockquote>
+
+<p>In some cases, style sheets may be linked with an XML document by
+means external to the document. For example, earlier versions of HTTP
+<a href="#RFC2068">[RFC2068]</a> (section 19.6.2.4) allowed style sheets to be
+associated with XML documents by means of the <code>Link</code>
+header.  Any links to style sheets that are specified externally to the
+document are considered to occur before the links specified by the
+<code>xml-stylesheet</code> processing instructions.  This is the same
+as in HTML 4.0 (see <a href="http://www.w3.org/TR/REC-html40/present/styles.html#h-14.6">section
+14.6</a>).</p>
+
+<p>Here are some examples from HTML 4.0 with the corresponding
+processing instruction:</p>
+
+<pre>&lt;LINK href="mystyle.css" rel="style sheet" type="text/css"&gt;
+&lt;?xml-stylesheet href="mystyle.css" type="text/css"?&gt;
+
+&lt;LINK href="mystyle.css" title="Compact" rel="stylesheet"
+type="text/css"&gt;
+&lt;?xml-stylesheet href="mystyle.css" title="Compact" type="text/css"?&gt;
+
+&lt;LINK href="mystyle.css" title="Medium" rel="alternate stylesheet"
+type="text/css"&gt;
+&lt;?xml-stylesheet alternate="yes" href="mystyle.css" title="Medium"
+type="text/css"?&gt;</pre>
+
+<p>Multiple <code>xml-stylesheet</code> processing instructions are
+also allowed with exactly the same semantics as with <code>LINK
+REL="stylesheet"</code>. For example,</p>
+
+<pre>&lt;LINK rel="alternate stylesheet" title="compact" href="small-base.css"
+type="text/css"&gt;
+&lt;LINK rel="alternate stylesheet" title="compact" href="small-extras.css"
+type="text/css"&gt;
+&lt;LINK rel="alternate stylesheet" title="big print" href="bigprint.css"
+type="text/css"&gt;
+&lt;LINK rel="stylesheet" href="common.css" type="text/css"&gt;</pre>
+
+<p>would be equivalent to:</p>
+
+<pre>&lt;?xml-stylesheet alternate="yes" title="compact" href="small-base.css"
+type="text/css"?&gt;
+&lt;?xml-stylesheet alternate="yes" title="compact" href="small-extras.css"
+type="text/css"?&gt;
+&lt;?xml-stylesheet alternate="yes" title="big print" href="bigprint.css"
+type="text/css"?&gt;
+&lt;?xml-stylesheet href="common.css" type="text/css"?&gt;</pre>
+
+
+
+<hr title="Separator from footer">
+
+<h2>
+<a name="References"></a>A References</h2>
+
+<dl>
+
+<dt>
+<a name="HTML">HTML40</a>
+</dt>
+<dd>World Wide Web
+Consortium. <i>HTML 4.0 Specification.</i> W3C Recommendation. See
+<a href="http://www.w3.org/TR/REC-html40">http://www.w3.org/TR/REC-html40</a>
+</dd>
+
+<dt>
+<a name="RFC2068">RFC2068</a>
+</dt>
+<dd>R. Fielding, J. Gettys, J. Mogul,
+H. Frystyk Nielsen, and T. Berners-Lee.  <i>Hypertext Transfer
+Protocol -- HTTP/1.1.</i>. IETF RFC 2068. See <a href="http://www.ietf.org/rfc/rfc2068.txt">http://www.ietf.org/rfc/rfc2068.txt</a>.</dd>
+
+<dt>
+<a name="RFC2396">RFC2396</a>
+</dt>
+<dd>T. Berners-Lee, R. Fielding, and
+L. Masinter.  <i>Uniform Resource Identifiers (URI): Generic
+Syntax</i>. IETF RFC 2396. See <a href="http://www.ietf.org/rfc/rfc2396.txt">http://www.ietf.org/rfc/rfc2396.txt</a>.</dd>
+
+<dt>
+<a name="XML">XML10</a>
+</dt>
+<dd>World Wide Web Consortium. <i>Extensible
+Markup Language (XML) 1.0.</i> W3C Recommendation. See <a href="http://www.w3.org/TR/1998/REC-xml-19980210">http://www.w3.org/TR/1998/REC-xml-19980210</a>
+</dd>
+
+</dl>
+
+
+
+
+<h2>
+<a name="rationale"></a>B Rationale</h2>
+
+<p>There was an urgent requirement for a specification for style sheet
+linking that could be completed in time for the next release from
+major browser vendors.  Only by choosing a simple mechanism closely
+based on a proven existing mechanism could the specification be
+completed in time to meet this requirement.</p>
+
+<p>Use of a processing instruction avoids polluting the main document
+structure with application specific processing information.</p>
+
+<p>The mechanism chosen for this version of the specification is not a
+constraint on the additional mechanisms planned for future versions.
+There is no expectation that these will use processing instructions;
+indeed they may not include the linking information in the source
+document.</p>
+
+
+
+
+</body>
+</html>

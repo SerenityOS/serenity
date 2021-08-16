@@ -1,0 +1,2 @@
+CaptureInSubtype.java:38:17: compiler.err.override.incompatible.ret: (compiler.misc.cant.override: m(), CaptureInSubtype.ShowFlaw, m(), CaptureInSubtype.SuperOfShowFlaw), CaptureInSubtype.Flaw<?>, CaptureInSubtype.SuperOfFlaw<java.util.List<?>>
+1 error

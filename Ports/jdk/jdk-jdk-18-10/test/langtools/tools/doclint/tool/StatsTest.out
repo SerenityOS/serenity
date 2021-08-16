@@ -1,0 +1,43 @@
+StatsTest.java:12: warning: no comment
+public class StatsTest {
+       ^
+StatsTest.java:14: error: invalid entity &#0;
+     * &#0; &#0; &#0; &#0;
+       ^
+StatsTest.java:14: error: invalid entity &#0;
+     * &#0; &#0; &#0; &#0;
+            ^
+StatsTest.java:14: error: invalid entity &#0;
+     * &#0; &#0; &#0; &#0;
+                 ^
+StatsTest.java:14: error: invalid entity &#0;
+     * &#0; &#0; &#0; &#0;
+                      ^
+StatsTest.java:19: warning: no @param for a1
+    public int warnings(int a1, int a2) throws Exception { return 0; }
+               ^
+StatsTest.java:19: warning: no @param for a2
+    public int warnings(int a1, int a2) throws Exception { return 0; }
+               ^
+StatsTest.java:19: warning: no @return
+    public int warnings(int a1, int a2) throws Exception { return 0; }
+               ^
+StatsTest.java:19: warning: no @throws for java.lang.Exception
+    public int warnings(int a1, int a2) throws Exception { return 0; }
+               ^
+By group...
+     5: missing
+     4: html
+
+By diagnostic kind...
+     5: warning
+     4: error
+
+By message kind...
+     4: invalid entity &{0};
+     2: no @param for {0}
+     1: no @return
+     1: no @throws for {0}
+     1: no comment
+4 errors
+5 warnings

@@ -1,0 +1,5 @@
+ImplicitFinal.java:14:13: compiler.err.try.resource.may.not.be.assigned: r
+ImplicitFinal.java:20:13: compiler.err.try.resource.may.not.be.assigned: r1
+ImplicitFinal.java:26:13: compiler.err.try.resource.may.not.be.assigned: r2
+ImplicitFinal.java:32:13: compiler.err.try.resource.may.not.be.assigned: r3
+4 errors

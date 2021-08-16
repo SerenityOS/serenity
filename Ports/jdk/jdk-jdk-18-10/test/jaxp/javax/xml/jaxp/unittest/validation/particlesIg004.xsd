@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://xsdtesting" xmlns:x="http://xsdtesting" elementFormDefault="qualified">
+	<xsd:complexType name="base">
+		<xsd:choice>
+			<xsd:element name="e1" block="#all"/>
+			<xsd:element name="e3" block="substitution extension restriction"/>
+			<xsd:element name="e4" block="#all"/>
+		</xsd:choice>
+	</xsd:complexType>
+	<xsd:complexType name="testing">
+		<xsd:complexContent>
+			<xsd:restriction base="x:base">
+				<xsd:choice>
+					<xsd:element name="e1" block="substitution extension restriction"/>
+					<xsd:element name="e3" block="substitution extension restriction"/>
+					<xsd:element name="e4" block="#all"/>
+				</xsd:choice>
+			</xsd:restriction>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:element name="doc" type="x:testing"/>
+</xsd:schema>

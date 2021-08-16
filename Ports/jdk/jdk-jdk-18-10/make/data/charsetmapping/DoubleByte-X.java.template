@@ -1,0 +1,88 @@
+/*
+ * Copyright (c) 2009, 2021, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+// -- This file was mechanically generated: Do not edit! -- //
+
+package $PACKAGE$;
+
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CharsetEncoder;
+import java.util.Arrays;
+import sun.nio.cs.HistoricallyNamedCharset;
+import sun.nio.cs.DoubleByte;
+import sun.nio.cs.*;
+
+public class $NAME_CLZ$ extends Charset
+                        $IMPLEMENTS$
+{
+    public $NAME_CLZ$() {
+        super("$NAME_CS$", $NAME_ALIASES$);
+    }
+
+    $HISTORICALNAME$
+
+    public boolean contains(Charset cs) {
+        $CONTAINS$
+    }
+
+    public CharsetDecoder newDecoder() {
+        return new DoubleByte.Decoder$DECTYPE$(this, DecodeHolder.b2c, DecodeHolder.b2cSB, $B2MIN$, $B2MAX$, $ASCIICOMPATIBLE$);
+    }
+
+    public CharsetEncoder newEncoder() {
+        return new DoubleByte.Encoder$ENCTYPE$(this, $ENC_REPLACEMENT$ EncodeHolder.c2b, EncodeHolder.c2bIndex, $ASCIICOMPATIBLE$);
+    }
+
+    static class DecodeHolder {
+        $B2C$
+        static final char[][] b2c = new char[b2cStr.length][];
+        static final char[] b2cSB;
+
+        static {
+            for (int i = 0; i < b2cStr.length; i++) {
+                if (b2cStr[i] == null)
+                    b2c[i] = DoubleByte.B2C_UNMAPPABLE;
+                else
+                    b2c[i] = b2cStr[i].toCharArray();
+            }
+            b2cSB = b2cSBStr.toCharArray();
+        }
+    }
+
+    static class EncodeHolder {
+        static final char[] c2b = new char[$C2BLENGTH$];
+        static final char[] c2bIndex = new char[0x100];
+
+        static {
+            $NONROUNDTRIP_B2C$
+            $NONROUNDTRIP_C2B$
+            DoubleByte.Encoder.initC2B(DecodeHolder.b2cStr, DecodeHolder.b2cSBStr,
+                                       b2cNR, c2bNR,
+                                       $B2MIN$, $B2MAX$,
+                                       c2b, c2bIndex);
+        }
+    }
+}

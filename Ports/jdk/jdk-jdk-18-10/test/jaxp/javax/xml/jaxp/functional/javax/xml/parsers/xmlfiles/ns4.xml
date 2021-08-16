@@ -1,0 +1,8 @@
+<section><title>Book-Signing Event</title>
+  <signing>
+    <author title="Mr" name="Vikram Seth" />
+    <book title="A Suitable Boy" price="$22.95" /></signing>
+  <signing>
+    <author title="Dr" name="Oliver Sacks" />
+    <book title="The Island of the Color-Blind" price="$12.95" /></signing>
+  </section>

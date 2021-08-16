@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration version="2.0" label="Test superfluous elements and attributes">
+
+    <event legs="4" name="com.example.Tiger">
+      <setting name="enabled" control="animal">false</setting>
+    </event>
+
+    <control>
+      <flag name="animal" label="Animal">true</flag>
+    
+      <radio name="color" label="Color" default="green">
+        <option name="red" label="Red">red</option>
+        <option name="green" label="Green">green</option>
+        <option name="blue" label="Blue">blue</option>
+      </radio>
+    </control>
+
+</configuration>

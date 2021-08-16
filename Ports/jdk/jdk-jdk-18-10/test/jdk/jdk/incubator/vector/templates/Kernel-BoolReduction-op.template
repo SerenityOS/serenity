@@ -1,0 +1,10 @@
+        boolean[] mask = fm.apply(SPECIES.length());
+        boolean[] r = fmr.apply(SPECIES.length());
+
+        for (int ic = 0; ic < INVOC_COUNT; ic++) {
+            for (int i = 0; i < mask.length; i += SPECIES.length()) {
+                VectorMask<$Wideboxtype$> vmask = VectorMask.fromArray(SPECIES, mask, i);
+                r[i] = vmask.[[TEST]]();
+            }
+        }
+

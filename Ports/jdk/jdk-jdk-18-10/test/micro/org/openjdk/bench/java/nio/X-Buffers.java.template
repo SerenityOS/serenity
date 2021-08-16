@@ -1,0 +1,149 @@
+/*
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+package org.openjdk.bench.java.nio;
+
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Param;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Warmup;
+import java.nio.*;
+import java.util.concurrent.TimeUnit;
+import static java.nio.ByteOrder.*;
+
+/**
+ * Benchmark for memory access operations on java.nio.Buffer ( and its views )
+ *
+ * A large number of variants are covered. The individual benchmarks conform to
+ * the following convention:
+#if[byte]
+ *   test(Direct|Heap)(Bulk|Loop)(Get|Put)(Byte|Char|Short|Int|Long|Float|Double)(Swap)?(RO)?
+#else[byte]
+ *   test(Direct|Heap)(Bulk|Loop)(Get|Put)$Type$(View)?(Swap)?(RO)?
+#end[byte]
+ *
+ * This allows to easily run a subset of particular interest. For example:
+ *   Direct only :- "org.openjdk.bench.java.nio.$Type$Buffers.testDirect.*"
+ *   Bulk only   :- "org.openjdk.bench.java.nio.$Type$Buffers.test.*Bulk.*"
+ *   Loop Put Swapped Views: -
+ *      test(Direct|Heap)(Loop)(Put)$Type$(View)+(Swap)+"
+ */
+@BenchmarkMode(Mode.AverageTime)
+@Warmup(iterations = 5, time = 500, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 10, time = 500, timeUnit = TimeUnit.MILLISECONDS)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@State(Scope.Thread)
+@Fork(3)
+public class $Type$Buffers {
+
+    static final int CARRIER_BYTE_WIDTH = $CarrierBW$;
+
+    @Param({"16", "1024", "131072"})
+    private int size;
+
+    public $type$ $type$Value;
+#if[byte]
+    public char charValue;
+    public short shortValue;
+    public int intValue;
+    public long longValue;
+    public float floatValue;
+    public double doubleValue;
+#end[byte]
+    public $type$[] $type$Array;
+
+    public $Type$Buffer heap$Type$Buffer;
+    public $Type$Buffer heap$Type$BufferRO;
+#if[byte]
+    public ByteBuffer directByteBuffer;
+    public ByteBuffer directByteBufferRO;
+    public ByteBuffer heapByteBufferSwap;
+    public ByteBuffer heapByteBufferSwapRO;
+    public ByteBuffer directByteBufferSwap;
+    public ByteBuffer directByteBufferSwapRO;
+#else[byte]
+    public $Type$Buffer heapByteBufferAs$Type$BufferView;
+    public $Type$Buffer heapByteBufferAs$Type$BufferViewRO;
+    public $Type$Buffer heapByteBufferAs$Type$BufferViewSwap;
+    public $Type$Buffer heapByteBufferAs$Type$BufferViewSwapRO;
+    public $Type$Buffer directByteBufferAs$Type$BufferView;
+    public $Type$Buffer directByteBufferAs$Type$BufferViewRO;
+    public $Type$Buffer directByteBufferAs$Type$BufferViewSwap;
+    public $Type$Buffer directByteBufferAs$Type$BufferViewSwapRO;
+#end[byte]
+
+    @Setup
+    public void setup() {
+        $type$Array = new $type$[size / CARRIER_BYTE_WIDTH];
+
+        // explicitly allocated heap carrier buffer
+        heap$Type$Buffer = $Type$Buffer.allocate(size / CARRIER_BYTE_WIDTH);
+        heap$Type$BufferRO = $Type$Buffer.allocate(size / CARRIER_BYTE_WIDTH).asReadOnlyBuffer();
+#if[byte]
+
+        heapByteBufferSwap     = ByteBuffer.allocate(size / CARRIER_BYTE_WIDTH).order(LITTLE_ENDIAN);
+        heapByteBufferSwapRO   = ByteBuffer.allocate(size / CARRIER_BYTE_WIDTH).order(LITTLE_ENDIAN).asReadOnlyBuffer();
+        directByteBuffer       = ByteBuffer.allocateDirect(size / CARRIER_BYTE_WIDTH);
+        directByteBufferRO     = ByteBuffer.allocateDirect(size / CARRIER_BYTE_WIDTH).asReadOnlyBuffer();
+        directByteBufferSwap   = ByteBuffer.allocateDirect(size / CARRIER_BYTE_WIDTH).order(LITTLE_ENDIAN);
+        directByteBufferSwapRO = ByteBuffer.allocateDirect(size / CARRIER_BYTE_WIDTH).order(LITTLE_ENDIAN).asReadOnlyBuffer();
+#else[byte]
+
+        // ByteBuffer views
+        heapByteBufferAs$Type$BufferView     = ByteBuffer.allocate(size).order(nativeOrder()).as$Type$Buffer();
+        heapByteBufferAs$Type$BufferViewRO   = ByteBuffer.allocate(size).order(nativeOrder()).as$Type$Buffer().asReadOnlyBuffer();
+        directByteBufferAs$Type$BufferView   = ByteBuffer.allocateDirect(size).order(nativeOrder()).as$Type$Buffer();
+        directByteBufferAs$Type$BufferViewRO = ByteBuffer.allocateDirect(size).order(nativeOrder()).as$Type$Buffer().asReadOnlyBuffer();
+
+        // endianness swapped
+        ByteOrder nonNativeOrder = nativeOrder() == BIG_ENDIAN ? LITTLE_ENDIAN : BIG_ENDIAN;
+        heapByteBufferAs$Type$BufferViewSwap     = ByteBuffer.allocate(size).order(nonNativeOrder).as$Type$Buffer();
+        heapByteBufferAs$Type$BufferViewSwapRO   = ByteBuffer.allocate(size).order(nonNativeOrder).as$Type$Buffer().asReadOnlyBuffer();
+        directByteBufferAs$Type$BufferViewSwap   = ByteBuffer.allocateDirect(size).order(nonNativeOrder).as$Type$Buffer();
+        directByteBufferAs$Type$BufferViewSwapRO = ByteBuffer.allocateDirect(size).order(nonNativeOrder).as$Type$Buffer().asReadOnlyBuffer();
+#end[byte]
+    }
+
+#if[!byte]
+    // ---------------- HELPER METHODS
+
+    private int innerLoopGet$Type$($Type$Buffer buf) {
+        int r = 0;
+        for (int i = 0; i < buf.capacity(); i++) {
+            r += buf.get(i);
+        }
+        return r;
+    }
+
+    private void innerLoopPut$Type$($Type$Buffer buf) {
+        for (int i = 0; i < buf.capacity(); i++) {
+            buf.put(i, $type$Value);
+        }
+    }
+#end[byte]

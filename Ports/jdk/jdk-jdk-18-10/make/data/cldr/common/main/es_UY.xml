@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="es"/>
+		<territory type="UY"/>
+	</identity>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1" draft="contributed">ene.</month>
+							<month type="2" draft="contributed">feb.</month>
+							<month type="3" draft="contributed">mar.</month>
+							<month type="4" draft="contributed">abr.</month>
+							<month type="5" draft="contributed">may.</month>
+							<month type="6" draft="contributed">jun.</month>
+							<month type="7" draft="contributed">jul.</month>
+							<month type="8" draft="contributed">ago.</month>
+							<month type="9" draft="contributed">set.</month>
+							<month type="10" draft="contributed">oct.</month>
+							<month type="11" draft="contributed">nov.</month>
+							<month type="12" draft="contributed">dic.</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1" draft="contributed">enero</month>
+							<month type="2" draft="contributed">febrero</month>
+							<month type="3" draft="contributed">marzo</month>
+							<month type="4" draft="contributed">abril</month>
+							<month type="5" draft="contributed">mayo</month>
+							<month type="6" draft="contributed">junio</month>
+							<month type="7" draft="contributed">julio</month>
+							<month type="8" draft="contributed">agosto</month>
+							<month type="9" draft="contributed">setiembre</month>
+							<month type="10" draft="contributed">octubre</month>
+							<month type="11" draft="contributed">noviembre</month>
+							<month type="12" draft="contributed">diciembre</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1" draft="contributed">Ene.</month>
+							<month type="2" draft="contributed">Feb.</month>
+							<month type="3" draft="contributed">Mar.</month>
+							<month type="4" draft="contributed">Abr.</month>
+							<month type="5" draft="contributed">May.</month>
+							<month type="6" draft="contributed">Jun.</month>
+							<month type="7" draft="contributed">Jul.</month>
+							<month type="8" draft="contributed">Ago.</month>
+							<month type="9" draft="contributed">Set.</month>
+							<month type="10" draft="contributed">Oct.</month>
+							<month type="11" draft="contributed">Nov.</month>
+							<month type="12" draft="contributed">Dic.</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1" draft="contributed">Enero</month>
+							<month type="2" draft="contributed">Febrero</month>
+							<month type="3" draft="contributed">Marzo</month>
+							<month type="4" draft="contributed">Abril</month>
+							<month type="5" draft="contributed">Mayo</month>
+							<month type="6" draft="contributed">Junio</month>
+							<month type="7" draft="contributed">Julio</month>
+							<month type="8" draft="contributed">Agosto</month>
+							<month type="9" draft="contributed">Setiembre</month>
+							<month type="10" draft="contributed">Octubre</month>
+							<month type="11" draft="contributed">Noviembre</month>
+							<month type="12" draft="contributed">Diciembre</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+			</calendar>
+		</calendars>
+		<timeZoneNames>
+			<metazone type="Uruguay">
+				<short>
+					<generic>UYT</generic>
+					<standard>UYT</standard>
+					<daylight>UYST</daylight>
+				</short>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group>.</group>
+		</symbols>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤ #,##0.00</pattern>
+				</currencyFormat>
+				<currencyFormat type="accounting">
+					<pattern>¤ #,##0.00;(¤ #,##0.00)</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="USD">
+				<symbol>US$</symbol>
+			</currency>
+			<currency type="UYU">
+				<symbol>$</symbol>
+			</currency>
+			<currency type="UYW">
+				<symbol>UP</symbol>
+			</currency>
+		</currencies>
+	</numbers>
+</ldml>

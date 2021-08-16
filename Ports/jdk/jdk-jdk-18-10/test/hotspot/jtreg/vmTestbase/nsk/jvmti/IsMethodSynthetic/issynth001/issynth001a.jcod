@@ -1,0 +1,541 @@
+/*
+ * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ *
+ * The following is a java-source of this file:
+ *
+ *package nsk.jvmti.IsMethodSynthetic;
+ *
+ *public class issynth001a {
+ *
+ *    native void nmeth();
+ *    native static int check(Class cls1, Class cls2);
+ *
+ *    public static int check() {
+ *        return check(issynth001.class, Inn.class);
+ *    }
+ *
+ *    protected static final float[] meth_stat(int i, String s) {
+ *        float[] f = new float[i];
+ *        return f;
+ *    }
+ *
+ *    // must be private non-constant to generate synthetic accessor
+ *    private int i = 1 + 2;
+ *
+ *    private char meth_1(char c1, char c2, char c3) {
+ *        char loc1 = c1;
+ *        return loc1;
+ *    }
+ *
+ *    class Inn {
+ *
+ *        String fld;
+ *
+ *        public synchronized final void meth_inn(String s, long l) {
+ *            fld = s;
+ *        }
+ *
+ *        public String toString() {
+ *            return "" + i;
+ *        }
+ *    }
+ *}
+ */
+
+class nsk/jvmti/IsMethodSynthetic/issynth001a {
+  0xCAFEBABE;
+  0; // minor version
+  48; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Field #14 #43; // #1
+    Method #44 #45; // #2
+    class #46; // #3
+    class #47; // #4
+    Method #4 #48; // #5
+    Method #4 #49; // #6
+    Method #15 #48; // #7
+    Field #14 #50; // #8
+    String #51; // #9
+    Method #14 #52; // #10
+    Field #14 #53; // #11
+    String #54; // #12
+    Method #14 #55; // #13
+    class #56; // #14
+    class #57; // #15
+    class #58; // #16
+    Utf8 "Inn"; // #17
+    Utf8 "InnerClasses"; // #18
+    Utf8 "i"; // #19
+    Utf8 "I"; // #20
+    Utf8 "class$nsk$jvmti$IsMethodSynthetic$issynth001"; // #21
+    Utf8 "Ljava/lang/Class;"; // #22
+    Utf8 "Synthetic"; // #23
+    Utf8 "class$nsk$jvmti$IsMethodSynthetic$issynth001a$Inn"; // #24
+    Utf8 "<init>"; // #25
+    Utf8 "()V"; // #26
+    Utf8 "Code"; // #27
+    Utf8 "LineNumberTable"; // #28
+    Utf8 "nmeth"; // #29
+    Utf8 "check"; // #30
+    Utf8 "(Ljava/lang/Class;Ljava/lang/Class;)I"; // #31
+    Utf8 "()I"; // #32
+    Utf8 "meth_stat"; // #33
+    Utf8 "(ILjava/lang/String;)[F"; // #34
+    Utf8 "meth_1"; // #35
+    Utf8 "(CCC)C"; // #36
+    Utf8 "class$"; // #37
+    Utf8 "(Ljava/lang/String;)Ljava/lang/Class;"; // #38
+    Utf8 "access$000"; // #39
+    Utf8 "(Lnsk/jvmti/IsMethodSynthetic/issynth001a;)I"; // #40
+    Utf8 "SourceFile"; // #41
+    Utf8 "issynth001a.java"; // #42
+    NameAndType #19 #20; // #43
+    class #59; // #44
+    NameAndType #60 #38; // #45
+    Utf8 "java/lang/ClassNotFoundException"; // #46
+    Utf8 "java/lang/NoClassDefFoundError"; // #47
+    NameAndType #25 #26; // #48
+    NameAndType #61 #62; // #49
+    NameAndType #21 #22; // #50
+    Utf8 "nsk.jvmti.IsMethodSynthetic.issynth001"; // #51
+    NameAndType #37 #38; // #52
+    NameAndType #24 #22; // #53
+    Utf8 "nsk.jvmti.IsMethodSynthetic.issynth001a$Inn"; // #54
+    NameAndType #30 #31; // #55
+    Utf8 "nsk/jvmti/IsMethodSynthetic/issynth001a"; // #56
+    Utf8 "java/lang/Object"; // #57
+    Utf8 "nsk/jvmti/IsMethodSynthetic/issynth001a$Inn"; // #58
+    Utf8 "java/lang/Class"; // #59
+    Utf8 "forName"; // #60
+    Utf8 "initCause"; // #61
+    Utf8 "(Ljava/lang/Throwable;)Ljava/lang/Throwable;"; // #62
+  } // Constant Pool
+
+  0x0021; // access
+  #14;// this_cpx
+  #15;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+    { // Member
+      0x0002; // access
+      #19; // name_cpx
+      #20; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0008; // access
+      #21; // name_cpx
+      #22; // sig_cpx
+      [] { // Attributes
+        Attr(#23) { // Synthetic
+        } // end Synthetic
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0008; // access
+      #24; // name_cpx
+      #22; // sig_cpx
+      [] { // Attributes
+        Attr(#23) { // Synthetic
+        } // end Synthetic
+      } // Attributes
+    } // Member
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #25; // name_cpx
+      #26; // sig_cpx
+      [] { // Attributes
+        Attr(#27) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB700072A06B500;
+            0x01B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#28) { // LineNumberTable
+              [] { // LineNumberTable
+                0  7;
+                4  22;
+                9  29;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0100; // access
+      #29; // name_cpx
+      #26; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0108; // access
+      #30; // name_cpx
+      #31; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #30; // name_cpx
+      #32; // sig_cpx
+      [] { // Attributes
+        Attr(#27) { // Code
+          3; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xB20008C7000F1209;
+            0xB8000A59B30008A7;
+            0x0006B20008B2000B;
+            0xC7000F120CB8000A;
+            0x59B3000BA70006B2;
+            0x000BB8000DAC;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#28) { // LineNumberTable
+              [] { // LineNumberTable
+                0  13;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x001C; // access
+      #33; // name_cpx
+      #34; // sig_cpx
+      [] { // Attributes
+        Attr(#27) { // Code
+          1; // max_stack
+          3; // max_locals
+          Bytes[]{
+            0x1ABC064D2CB0;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#28) { // LineNumberTable
+              [] { // LineNumberTable
+                0  17;
+                4  18;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0002; // access
+      #35; // name_cpx
+      #36; // sig_cpx
+      [] { // Attributes
+        Attr(#27) { // Code
+          1; // max_stack
+          5; // max_locals
+          Bytes[]{
+            0x1B36041504AC;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#28) { // LineNumberTable
+              [] { // LineNumberTable
+                0  25;
+                3  26;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0008; // access
+      #37; // name_cpx
+      #38; // sig_cpx
+      [] { // Attributes
+        Attr(#27) { // Code
+          2; // max_stack
+          2; // max_locals
+          Bytes[]{
+            0x2AB80002B04CBB00;
+            0x0459B700052BB600;
+            0x06BF;
+          };
+          [] { // Traps
+            0 4 5 3;
+          } // end Traps
+          [] { // Attributes
+            Attr(#28) { // LineNumberTable
+              [] { // LineNumberTable
+                0  13;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+        ;
+        Attr(#23) { // Synthetic
+        } // end Synthetic
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0008; // access
+      #39; // name_cpx
+      #40; // sig_cpx
+      [] { // Attributes
+        Attr(#27) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB40001AC;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#28) { // LineNumberTable
+              [] { // LineNumberTable
+                0  7;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+        ;
+        Attr(#23) { // Synthetic
+        } // end Synthetic
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#41) { // SourceFile
+      #42;
+    } // end SourceFile
+    ;
+    Attr(#18) { // InnerClasses
+      [] { // InnerClasses
+        #16 #14 #17 0;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class nsk/jvmti/IsMethodSynthetic/issynth001a
+
+class nsk/jvmti/IsMethodSynthetic/issynth001a$Inn {
+  0xCAFEBABE;
+  0; // minor version
+  48; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Field #11 #28; // #1
+    Method #12 #29; // #2
+    Field #11 #30; // #3
+    class #31; // #4
+    Method #4 #29; // #5
+    String #32; // #6
+    Method #4 #33; // #7
+    Method #34 #35; // #8
+    Method #4 #36; // #9
+    Method #4 #37; // #10
+    class #38; // #11
+    class #41; // #12
+    Utf8 "fld"; // #13
+    Utf8 "Ljava/lang/String;"; // #14
+    Utf8 "this$0"; // #15
+    Utf8 "Lnsk/jvmti/IsMethodSynthetic/issynth001a;"; // #16
+    Utf8 "Synthetic"; // #17
+    Utf8 "<init>"; // #18
+    Utf8 "(Lnsk/jvmti/IsMethodSynthetic/issynth001a;)V"; // #19
+    Utf8 "Code"; // #20
+    Utf8 "LineNumberTable"; // #21
+    Utf8 "meth_inn"; // #22
+    Utf8 "(Ljava/lang/String;J)V"; // #23
+    Utf8 "toString"; // #24
+    Utf8 "()Ljava/lang/String;"; // #25
+    Utf8 "SourceFile"; // #26
+    Utf8 "issynth001a.java"; // #27
+    NameAndType #15 #16; // #28
+    NameAndType #18 #42; // #29
+    NameAndType #13 #14; // #30
+    Utf8 "java/lang/StringBuffer"; // #31
+    Utf8 ""; // #32
+    NameAndType #43 #44; // #33
+    class #45; // #34
+    NameAndType #46 #47; // #35
+    NameAndType #43 #48; // #36
+    NameAndType #24 #25; // #37
+    Utf8 "nsk/jvmti/IsMethodSynthetic/issynth001a$Inn"; // #38
+    Utf8 "Inn"; // #39
+    Utf8 "InnerClasses"; // #40
+    Utf8 "java/lang/Object"; // #41
+    Utf8 "()V"; // #42
+    Utf8 "append"; // #43
+    Utf8 "(Ljava/lang/String;)Ljava/lang/StringBuffer;"; // #44
+    Utf8 "nsk/jvmti/IsMethodSynthetic/issynth001a"; // #45
+    Utf8 "access$000"; // #46
+    Utf8 "(Lnsk/jvmti/IsMethodSynthetic/issynth001a;)I"; // #47
+    Utf8 "(I)Ljava/lang/StringBuffer;"; // #48
+  } // Constant Pool
+
+  0x0020; // access
+  #11;// this_cpx
+  #12;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+    { // Member
+      0x0000; // access
+      #13; // name_cpx
+      #14; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0012; // access
+      #15; // name_cpx
+      #16; // sig_cpx
+      [] { // Attributes
+        Attr(#17) { // Synthetic
+        } // end Synthetic
+      } // Attributes
+    } // Member
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #18; // name_cpx
+      #19; // sig_cpx
+      [] { // Attributes
+        Attr(#20) { // Code
+          2; // max_stack
+          2; // max_locals
+          Bytes[]{
+            0x2A2BB500012AB700;
+            0x02B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#21) { // LineNumberTable
+              [] { // LineNumberTable
+                0  29;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0031; // access
+      #22; // name_cpx
+      #23; // sig_cpx
+      [] { // Attributes
+        Attr(#20) { // Code
+          2; // max_stack
+          4; // max_locals
+          Bytes[]{
+            0x2A2BB50003B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#21) { // LineNumberTable
+              [] { // LineNumberTable
+                0  34;
+                5  35;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0001; // access
+      #24; // name_cpx
+      #25; // sig_cpx
+      [] { // Attributes
+        Attr(#20) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xBB000459B7000512;
+            0x06B600072AB40001;
+            0xB80008B60009B600;
+            0x0AB0;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#21) { // LineNumberTable
+              [] { // LineNumberTable
+                0  38;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#26) { // SourceFile
+      #27;
+    } // end SourceFile
+    ;
+    Attr(#40) { // InnerClasses
+      [] { // InnerClasses
+        #11 #34 #39 0;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class nsk/jvmti/IsMethodSynthetic/issynth001a$Inn

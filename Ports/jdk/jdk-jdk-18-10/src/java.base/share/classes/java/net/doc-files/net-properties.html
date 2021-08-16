@@ -1,0 +1,297 @@
+<!DOCTYPE HTML>
+<!--
+ Copyright (c) 1998, 2020, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+<HTML lang="EN">
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE>Networking Properties</TITLE>
+</HEAD>
+<BODY LANG="en-US" DIR="LTR">
+<H1 style="text-align:center">Networking Properties</H1>
+<p>
+There are a few standard system properties used to
+alter the mechanisms and behavior of the various classes of the
+java.net package. Some are checked only once at startup of the VM,
+and therefore are best set using the -D option of the java command,
+while others have a more dynamic nature and can also be changed using
+the <a href="../../lang/System.html#setProperty(java.lang.String,java.lang.String)">System.setProperty()</a> API.
+The purpose of this document is to list
+and detail all of these properties.</P>
+<p>
+If there is no special note, a property value is checked every time it is used.</P>
+<a id="Ipv4IPv6"></a>
+<H2>IPv4 / IPv6</H2>
+<UL>
+	<LI><P><B>{@systemProperty java.net.preferIPv4Stack}</B> (default: false)<BR>
+	If IPv6 is available on the operating system the
+	underlying native socket will be, by default, an IPv6 socket which
+	lets applications connect to, and accept connections from, both
+	IPv4 and IPv6 hosts. However, in the case an application would
+	rather use IPv4 only sockets, then this property can be set to <B>true</B>.
+	The implication is that it will not be possible for the application
+	to communicate with IPv6 only hosts.</P>
+	<LI><P><B>{@systemProperty java.net.preferIPv6Addresses}</B> (default: false)<BR>
+	When dealing with a host which has both IPv4
+	and IPv6 addresses, and if IPv6 is available on the operating
+	system, the default behavior is to prefer using IPv4 addresses over
+	IPv6 ones. This is to ensure backward compatibility: for example,
+	for applications that depend on the representation of an IPv4 address
+	(e.g. 192.168.1.1). This property can be set to <B>true</B> to
+	change that preference and use IPv6 addresses over IPv4 ones where
+	possible, or <B>system</B> to preserve the order of the addresses as
+    returned by the operating system.</P>
+</UL>
+<P>Both of these properties are checked only once, at startup.</P>
+<a id="Proxies"></a>
+<H2>Proxies</H2>
+<P>A proxy server allows indirect connection to network services and
+is used mainly for security (to get through firewalls) and
+performance reasons (proxies often do provide caching mechanisms).
+The following properties allow for configuration of the various type
+of proxies.</P>
+<UL>
+	<LI><P>HTTP</P>
+	<P>The following proxy settings are used by the HTTP protocol handler.</P>
+	<UL>
+		<LI><P><B>{@systemProperty http.proxyHost}</B> (default: &lt;none&gt;)<BR>
+	        The hostname, or address, of the proxy server.
+		</P>
+		<LI><P><B>{@systemProperty http.proxyPort}</B> (default: {@code 80})<BR>
+	        The port number of the proxy server.</P>
+		<LI><P><B>{@systemProperty http.nonProxyHosts}</B> (default: {@code localhost|127.*|[::1]})<BR>
+	        Indicates the hosts that should be accessed without going
+	        through the proxy. Typically this defines internal hosts.
+	        The value of this property is a list of hosts,
+		separated by the '|' character. In addition, the wildcard
+	        character '*' can be used for pattern matching. For example,
+		{@code -Dhttp.nonProxyHosts="*.foo.com|localhost"}
+		will indicate that every host in the foo.com domain and the
+		localhost should be accessed directly even if a proxy server is
+		specified.</P>
+                <P>The default value excludes all common variations of the loopback address.</P>
+        </UL>
+	<LI><P>HTTPS<BR>This is HTTP over SSL, a secure version of HTTP
+	mainly used when confidentiality (like on payment sites) is needed.</P>
+	<P>The following proxy settings are used by the HTTPS protocol handler.</P>
+	<UL>
+		<LI><P><B>{@systemProperty https.proxyHost}</B> (default: &lt;none&gt;)<BR>
+	        The hostname, or address, of the proxy server.
+		</P>
+		<LI><P><B>{@systemProperty https.proxyPort}</B> (default: {@code 443})<BR>
+	        The port number of the proxy server.</P>
+		<P>The HTTPS protocol handler will use the same nonProxyHosts
+		property as the HTTP protocol.</P>
+	</UL>
+	<LI><P>FTP</P>
+	<P>The following proxy settings are used by the FTP protocol handler.</P>
+	<UL>
+		<LI><P><B>{@systemProperty ftp.proxyHost}</B> (default: &lt;none&gt;)<BR>
+	        The hostname, or address, of the proxy server.
+		</P>
+		<LI><P><B>{@systemProperty ftp.proxyPort}</B> (default: {@code 80})<BR>
+	        The port number of the proxy server.</P>
+		<LI><P><B>{@systemProperty ftp.nonProxyHosts}</B> (default: {@code localhost|127.*|[::1]})<BR>
+	        Indicates the hosts that should be accessed without going
+	        through the proxy. Typically this defines internal hosts.
+	        The value of this property is a list of hosts, separated by
+	        the '|' character. In addition, the wildcard character
+		'*' can be used for pattern matching. For example,
+		{@code -Dhttp.nonProxyHosts="*.foo.com|localhost"}
+		will indicate that every host in the foo.com domain and the
+		localhost should be accessed directly even if a proxy server is
+		specified.</P>
+                <P>The default value excludes all common variations of the loopback address.</P>
+	</UL>
+	<LI><P>SOCKS<BR>This is another type of proxy. It allows for lower-level
+	type of tunneling since it works at the TCP level. In effect,
+	in the Java(tm) platform setting a SOCKS proxy server will result in
+	all TCP connections to go through that proxy, unless other proxies
+	are specified. If SOCKS is supported by a Java SE implementation, the
+	following properties will be used:</P>
+	<UL>
+		<LI><P><B>{@systemProperty socksProxyHost}</B> (default: &lt;none&gt;)<BR>
+	        The hostname, or address, of the proxy server.</P>
+		<LI><P><B>{@systemProperty socksProxyPort}</B> (default: {@code 1080})<BR>
+	        The port number of the proxy server.</P>
+                <LI><P><B>{@systemProperty socksProxyVersion}</B> (default: {@code 5})<BR>
+                The version of the SOCKS protocol supported by the server. The
+                default is {@code 5} indicating SOCKS V5. Alternatively,
+                {@code 4} can be specified for SOCKS V4. Setting the property
+                to values other than these leads to unspecified behavior.</P>
+		<LI><P><B>{@systemProperty java.net.socks.username}</B> (default: &lt;none&gt;)<BR>
+	        Username to use if the SOCKSv5 server asks for authentication
+	        and no {@link java.net.Authenticator java.net.Authenticator} instance was found.</P>
+		<LI><P><B>{@systemProperty java.net.socks.password}</B> (default: &lt;none&gt;)<BR>
+	        Password to use if the SOCKSv5 server asks for authentication
+	        and no {@code java.net.Authenticator} instance was found.</P>
+		<P>Note that if no authentication is provided with either the above
+		properties or an Authenticator, and the proxy requires one, then
+		the <B>user.name</B> property will be used with no password.</P>
+	</UL>
+	<LI><P><B>{@systemProperty java.net.useSystemProxies}</B> (default: {@code false})<BR>
+	On Windows systems, macOS systems, and Gnome systems it is possible to
+	tell the java.net stack, setting this property to <B>true</B>, to use
+	the system proxy settings (all these systems let you set proxies
+	globally through their user interface). Note that this property is
+	checked only once at startup.</P>
+</UL>
+<a id="MiscHTTP"></a>
+<H2>Misc HTTP URL stream protocol handler properties</H2>
+<UL>
+	<LI><P><B>{@systemProperty http.agent}</B> (default: &ldquo;Java/&lt;version&gt;&rdquo;)<BR>
+	Defines the string sent in the User-Agent request header in http
+	requests. Note that the string &ldquo;Java/&lt;version&gt;&rdquo; will
+	be appended to the one provided in the property (e.g. if
+	{@code -Dhttp.agent="foobar"} is used, the User-Agent header will
+	contain &ldquo;foobar Java/1.5.0&rdquo; if the version of the VM is
+	1.5.0). This property is checked only once at startup.</P>
+	<LI><P><B>{@systemProperty http.keepAlive}</B> (default: {@code true})<BR>
+	Indicates if persistent connections should be supported. They improve
+	performance by allowing the underlying socket connection to be reused
+	for multiple HTTP requests. If this is set to true then persistent
+	connections will be requested with HTTP 1.1 servers.</P>
+	<LI><P><B>{@systemProperty http.maxConnections}</B> (default: {@code 5})<BR>
+	If HTTP keepalive is enabled (see above) this value determines the
+	maximum number of idle connections that will be simultaneously kept
+	alive, per destination.</P>
+	<LI><P><B>{@systemProperty http.maxRedirects}</B> (default: {@code 20})<BR>
+	This integer value determines the maximum number, for a given request,
+	of HTTP redirects that will be automatically followed by the
+	protocol handler.</P>
+	<LI><P><B>{@systemProperty http.auth.digest.validateServer}</B> (default: {@code false})</P>
+	<LI><P><B>{@systemProperty http.auth.digest.validateProxy}</B> (default: {@code false})</P>
+	<LI><P><B>{@systemProperty http.auth.digest.cnonceRepeat}</B> (default: {@code 5})</P>
+	<P>These 3 properties modify the behavior of the HTTP digest
+	authentication mechanism. Digest authentication provides a limited
+	ability for the server  to authenticate itself to the client (i.e.
+	By proving it knows the user's password). However, not all HTTP
+	servers support this capability and by default it is turned off. The
+	first two properties can be set to true to enforce this check for
+	authentication with either an origin or proxy server, respectively.</P>
+	<P>It is usually not necessary to change the third property. It
+	determines how many times a cnonce value is re-used. This can be
+	useful when the MD5-sess algorithm is being used. Increasing this
+	value reduces the computational overhead on both client and server
+	by reducing the amount of material that has to be hashed for each
+	HTTP request.</P>
+	<LI><P><B>{@systemProperty http.auth.ntlm.domain}</B> (default: &lt;none&gt;)<BR>
+	NTLM is another authentication scheme. It uses the
+	{@code java.net.Authenticator} class to acquire usernames and passwords when
+	they are needed. However, NTLM also needs the NT domain name. There are
+	3 options for specifying that domain:</P>
+	<OL>
+	  <LI><P>Do not specify it. In some environments the domain is
+	      actually not required and the application does not have to specify
+	      it.</P>
+	  <LI><P>The domain name can be encoded within the username by
+	      prefixing the domain name, followed by a backslash '\' before the
+	      username. With this method existing applications that use the
+	      authenticator class do not need to be modified, as long as users
+	      are made aware that this notation must be used.</P>
+	  <LI><P>If a domain name is not specified as in method 2) and this
+	      property is defined, then its value will be used as the domain
+	      name.</P>
+	</OL>
+</UL>
+<P>All these properties are checked only once at startup.</P>
+<a id="AddressCache"></a>
+<H2>Address Cache</H2>
+<P>The java.net package, when doing name resolution, uses an address
+cache for both security and performance reasons. Any address
+resolution attempt, be it forward (name to IP address) or reverse (IP
+address to name), will have its result cached, whether it was
+successful or not, so that subsequent identical requests will not
+have to access the naming service. These properties allow for some
+tuning on how the cache is operating.</P>
+<UL>
+	<LI><P><B>{@systemProperty networkaddress.cache.ttl}</B> (default: see below)<BR>
+	Value is an integer corresponding to the number of seconds successful
+	name lookups will be kept in the cache. A value of -1, or any other
+	negative value for that matter,	indicates a &ldquo;cache forever&rdquo;
+	policy, while a value of 0 (zero) means no caching. The default value
+	is -1 (forever) if a security manager is installed, and implementation-specific
+	when no security manager is installed.</P>
+	<LI><P><B>{@systemProperty networkaddress.cache.negative.ttl}</B> (default: {@code 10})<BR>
+	Value is an integer corresponding to the number of seconds an
+	unsuccessful name lookup will be kept in the cache. A value of -1,
+	or any negative value, means &ldquo;cache forever&rdquo;, while a
+	value of 0 (zero) means no caching.</P>
+</UL>
+<P>Since these 2 properties are part of the security policy, they are
+not set by either the -D option or the {@code System.setProperty()} API,
+instead they are set as security properties.</P>
+<a id="Unixdomain"></a>
+<H2>Unix domain sockets</H2>
+<p>
+Calling {@link java.nio.channels.ServerSocketChannel#bind(SocketAddress,int) ServerSocketChannel.bind}
+with a {@code null} address parameter will bind to an <i>automatically assigned</i> socket address.
+For Unix domain sockets, this means a unique path in some predefined system temporary directory.
+There are a number of system (and networking) properties that affect this behavior.
+<p>
+Unix domain socket addresses are limited in length to approximately 100 
+bytes (depending on the platform), it is important to ensure that the temporary directory's name
+together with the filename used for the socket (currently a name similar to
+{@code socket_1679697142}) does not exceed this limit. The following properties
+can be used to control the selection of this directory:
+<ul>
+	<li><p><b>{@systemProperty jdk.net.unixdomain.tmpdir}</b> This can be set as 
+	a networking property in {@code conf/net.properties} If set, this specifies the 
+	directory to use for automatically bound server socket addresses. On some platforms,
+	(eg some Unix systems) this will have a predefined default value. On others,
+	(eg Windows) there is no default value. Either way, it is always possible
+	to override the networking property with a system property of the same name
+	set on the command line. If neither of the networking nor system property
+	are set, then some systems (eg Windows)  may check a commonly used environment 
+	variable as temporary directory.
+	<li><p><b>{@systemProperty java.io.tmpdir}</b> If the previous step fails to locate
+	a directory to use, then the directory identified by the system property
+	{@code java.io.tmpdir} is used.
+</ul>
+More information about the platform specific behavior can be seen in the 
+{@code conf/net.properties} configuration file.
+<p>
+<i>Implicit</i> binding of a {@link java.nio.channels.SocketChannel SocketChannel}
+<p>
+If a client socket is connected to a remote destination without calling {@code bind} first,
+then the socket is <i>implicitly</i> bound. In this case, <i>Unix domain</i> sockets 
+are <i>unnamed</i> (ie. their path is empty). This behavior is not affected by any
+system or networking properties.
+<p>
+<a id="EnhancedExceptions"></a>
+<H2>Enhanced exception messages</H2>
+By default, for security reasons, exception messages do not include potentially sensitive
+security information such as hostnames or Unix domain socket address paths.
+The following property can be used to relax this restriction, for debugging and other
+purposes.
+<ul>
+	<li><p><b>{@systemProperty jdk.includeInExceptions}</b> This is typically set to
+	a comma separated list of keywords that refer to exception types whose messages
+	may be enhanced with more detailed information. If the value includes the string
+	{@code hostInfo} then socket addresses will be included in exception message
+	texts (eg hostnames, Unix domain socket address paths).
+</ul>
+
+</BODY>
+</HTML>

@@ -1,0 +1,2 @@
+MethodReference68.java:21:10: compiler.err.cant.apply.symbol: kindname.method, g, MethodReference68.F<Z>,Z[], @12,int, kindname.class, MethodReference68, (compiler.misc.incompatible.bounds: Z, (compiler.misc.upper.bounds: MethodReference68.Foo,java.lang.Object), (compiler.misc.lower.bounds: java.lang.Integer))
+1 error

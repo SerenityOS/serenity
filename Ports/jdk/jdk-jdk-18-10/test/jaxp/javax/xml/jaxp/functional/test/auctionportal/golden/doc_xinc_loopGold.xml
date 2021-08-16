@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root xmlns:xi="http://www.w3.org/2001/XInclude">
+	<p>The following is the outer XML file</p>
+	<example>
+            
+                
+                        &lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;root xmlns:xi="http://www.w3.org/2001/XInclude"&gt;
+	&lt;p&gt;The following is the outer XML file&lt;/p&gt;
+	&lt;example&gt;
+            
+                &lt;xi:include href="task.xml" parse="xml"&gt;
+                    &lt;xi:fallback&gt;
+                        &lt;xi:include href="doc_xinc_loops.xml" parse="text" /&gt;
+                    &lt;/xi:fallback&gt;
+                &lt;/xi:include&gt;
+        &lt;/example&gt;
+&lt;/root&gt;
+
+
+                    
+        </example>
+</root>
+

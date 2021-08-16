@@ -1,0 +1,3 @@
+AnnoWithClinitFail.java:14:5: compiler.err.annotation.missing.default.value: AnnoWithClinitFail, foo
+AnnoWithClinitFail.java:21:1: compiler.err.annotation.missing.default.value: AnnoWithClinitFail, foo
+2 errors

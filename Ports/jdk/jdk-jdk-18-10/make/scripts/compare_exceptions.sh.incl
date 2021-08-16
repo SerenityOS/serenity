@@ -1,0 +1,65 @@
+#!/bin/bash
+#
+# Copyright (c) 2012, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# This script is not to be run as stand-alone, it should be included from
+# compare.sh.
+
+##########################################################################################
+# Check that we are run via inclusion from compare.sh and not as stand-alone.
+if [ -z "$COMPARE_EXCEPTIONS_INCLUDE" ]; then
+    echo "Error: This script should not be run as stand-alone. It is included by compare.sh"
+    exit 1
+fi
+
+##########################################################################################
+# Diff exceptions
+
+if [ "$OPENJDK_TARGET_OS" = "linux" ]; then
+  if [ "$HOTSPOT_BUILD_TIME" = "" -o "$USE_PRECOMPILED_HEADER" = "true" ]; then
+    ACCEPTED_BIN_DIFF="
+        ./lib/server/libjvm.so
+        ./hotspot/gtest/server/libjvm.so
+        "
+    STRIP_BEFORE_COMPARE="
+        ./hotspot/gtest/server/libjvm.so
+        "
+   fi
+elif [ "$OPENJDK_TARGET_OS" = "windows" ]; then
+  SKIP_BIN_DIFF="true"
+  SKIP_FULLDUMP_DIFF="true"
+  ACCEPTED_JARZIP_CONTENTS="
+      /modules_libs/java.security.jgss/w2k_lsa_auth.pdb
+      /modules_libs/java.security.jgss/w2k_lsa_auth.map
+      /modules_libs/java.security.jgss/w2k_lsa_auth.dll
+      "
+elif [ "$OPENJDK_TARGET_OS" = "macosx" ]; then
+  ACCEPTED_BIN_DIFF="
+      ./lib/libawt_lwawt.dylib
+      ./lib/libosxapp.dylib
+      ./lib/libosxui.dylib
+      ./lib/server/libjvm.dylib
+      ./hotspot/gtest/server/libjvm.dylib
+      "
+  STRIP_TESTS_BEFORE_COMPARE="true"
+fi

@@ -1,0 +1,2 @@
+T8074381b.java:14:16: compiler.err.cant.apply.symbol: kindname.constructor, Invocation, T8074381b.ThrowingConsumer, @31, kindname.class, T8074381b.Invocation<T>, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.no.suitable.functional.intf.inst: T8074381b.ThrowingConsumer))
+1 error

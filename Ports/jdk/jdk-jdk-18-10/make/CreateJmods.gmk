@@ -1,0 +1,245 @@
+#
+# Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include Execute.gmk
+include Modules.gmk
+
+ifeq ($(MODULE), )
+  $(error MODULE must be set when calling CreateJmods.gmk)
+endif
+
+$(eval $(call IncludeCustomExtension, CreateJmods.gmk))
+
+################################################################################
+
+JMODS_DIR := $(IMAGES_OUTPUTDIR)/jmods
+JMODS_SUPPORT_DIR := $(SUPPORT_OUTPUTDIR)/images/jmods
+JMOD_FILE := $(MODULE).jmod
+
+LIBS_DIR ?= $(firstword $(wildcard $(addsuffix /$(MODULE), \
+    $(SUPPORT_OUTPUTDIR)/modules_libs $(IMPORT_MODULES_LIBS))))
+CMDS_DIR ?= $(firstword $(wildcard $(addsuffix /$(MODULE), \
+    $(SUPPORT_OUTPUTDIR)/modules_cmds $(IMPORT_MODULES_CMDS))))
+CONF_DIR ?= $(firstword $(wildcard $(addsuffix /$(MODULE), \
+    $(SUPPORT_OUTPUTDIR)/modules_conf $(IMPORT_MODULES_CONF))))
+CLASSES_DIR ?= $(wildcard $(JDK_OUTPUTDIR)/modules/$(MODULE))
+INCLUDE_HEADERS_DIR ?= $(firstword $(wildcard $(addsuffix /$(MODULE), \
+    $(SUPPORT_OUTPUTDIR)/modules_include $(IMPORT_MODULES_INCLUDE_HEADERS))))
+MAN_DIR ?= $(firstword $(wildcard $(addsuffix /$(MODULE), \
+    $(SUPPORT_OUTPUTDIR)/modules_man $(IMPORT_MODULES_MAN))))
+
+$(call FillFindCache, \
+    $(LIBS_DIR) $(CMDS_DIR) $(CONF_DIR) $(CLASSES_DIR) \
+)
+
+ifneq ($(LIBS_DIR), )
+  DEPS += $(call FindFiles, $(LIBS_DIR))
+  ifeq ($(call isTargetOs, windows)+$(SHIP_DEBUG_SYMBOLS), true+public)
+    # For public debug symbols on Windows, we have to use stripped pdbs and rename them
+    rename_stripped = $(patsubst %.stripped.pdb,%.pdb,$1)
+    LIBS_DIR_FILTERED := $(subst modules_libs,modules_libs_filtered, $(LIBS_DIR))
+    FILES_LIBS := $(filter-out %.pdb, $(call FindFiles, $(LIBS_DIR))) \
+        $(filter %.stripped.pdb, $(call FindFiles, $(LIBS_DIR)))
+    $(eval $(call SetupCopyFiles, COPY_FILTERED_LIBS, \
+        SRC := $(LIBS_DIR), \
+        DEST := $(LIBS_DIR_FILTERED), \
+        FILES := $(FILES_LIBS), \
+        NAME_MACRO := rename_stripped, \
+    ))
+    DEPS += $(COPY_FILTERED_LIBS)
+    JMOD_FLAGS += --libs $(LIBS_DIR_FILTERED)
+  else
+    JMOD_FLAGS += --libs $(LIBS_DIR)
+  endif
+endif
+ifneq ($(CMDS_DIR), )
+  DEPS += $(call FindFiles, $(CMDS_DIR))
+  ifeq ($(call isTargetOs, windows)+$(SHIP_DEBUG_SYMBOLS), true+public)
+    # For public debug symbols on Windows, we have to use stripped pdbs, rename them
+    # and filter out a few launcher pdbs where there's a lib that goes by the same name
+    rename_stripped = $(patsubst %.stripped.pdb,%.pdb,$1)
+    CMDS_DIR_FILTERED := $(subst modules_cmds,modules_cmds_filtered, $(CMDS_DIR))
+    FILES_CMDS := $(filter-out %.pdb, $(call FindFiles, $(CMDS_DIR))) \
+        $(filter-out %jimage.stripped.pdb %jpackage.stripped.pdb %java.stripped.pdb, \
+            $(filter %.stripped.pdb, $(call FindFiles, $(CMDS_DIR))))
+    $(eval $(call SetupCopyFiles, COPY_FILTERED_CMDS, \
+        SRC := $(CMDS_DIR), \
+        DEST := $(CMDS_DIR_FILTERED), \
+        FILES := $(FILES_CMDS), \
+        NAME_MACRO := rename_stripped, \
+    ))
+    DEPS += $(COPY_FILTERED_CMDS)
+    JMOD_FLAGS += --cmds $(CMDS_DIR_FILTERED)
+  else ifeq ($(call isTargetOs, windows)+$(SHIP_DEBUG_SYMBOLS), true+full)
+    # For full debug symbols on Windows, we have to filter out a few launcher pdbs
+    # where there's a lib that goes by the same name
+    CMDS_DIR_FILTERED := $(subst modules_cmds,modules_cmds_filtered, $(CMDS_DIR))
+    $(eval $(call SetupCopyFiles, COPY_FILTERED_CMDS, \
+        SRC := $(CMDS_DIR), \
+        DEST := $(CMDS_DIR_FILTERED), \
+        FILES := $(filter-out %jimage.pdb %jpackage.pdb %java.pdb, \
+            $(call FindFiles, $(CMDS_DIR))), \
+    ))
+    DEPS += $(COPY_FILTERED_CMDS)
+    JMOD_FLAGS += --cmds $(CMDS_DIR_FILTERED)
+  else
+    JMOD_FLAGS += --cmds $(CMDS_DIR)
+  endif
+endif
+ifneq ($(CONF_DIR), )
+  JMOD_FLAGS += --config $(CONF_DIR)
+  DEPS += $(call FindFiles, $(CONF_DIR))
+endif
+ifneq ($(CLASSES_DIR), )
+  JMOD_FLAGS += --class-path $(CLASSES_DIR)
+  DEPS += $(call FindFiles, $(CLASSES_DIR))
+endif
+ifneq ($(INCLUDE_HEADERS_DIR), )
+  JMOD_FLAGS += --header-files $(INCLUDE_HEADERS_DIR)
+  DEPS += $(call FindFiles, $(INCLUDE_HEADERS_DIR))
+endif
+ifneq ($(MAN_DIR), )
+  JMOD_FLAGS += --man-pages $(MAN_DIR)
+  DEPS += $(call FindFiles, $(MAN_DIR))
+endif
+
+# If a specific modules_legal dir exists for this module, only pick up files
+# from there. These files were explicitly filtered or modified in <module>-copy
+# targets. For the rest, just pick up everything from the source legal dirs.
+LEGAL_NOTICES := \
+    $(wildcard $(SUPPORT_OUTPUTDIR)/modules_legal/common) \
+    $(if $(wildcard $(SUPPORT_OUTPUTDIR)/modules_legal/$(MODULE)), \
+      $(wildcard $(SUPPORT_OUTPUTDIR)/modules_legal/$(MODULE)), \
+      $(call FindModuleLegalSrcDirs, $(MODULE)) \
+    )
+
+ifneq ($(strip $(LEGAL_NOTICES)), )
+  LEGAL_NOTICES_PATH := $(call PathList, $(LEGAL_NOTICES))
+  DEPS += $(call FindFiles, $(LEGAL_NOTICES))
+
+  JMOD_FLAGS += --legal-notices $(LEGAL_NOTICES_PATH)
+endif
+
+ifeq ($(filter-out jdk.incubator.%, $(MODULE)), )
+  JMOD_FLAGS += --do-not-resolve-by-default
+  JMOD_FLAGS += --warn-if-resolved=incubating
+endif
+
+# Add dependencies on other jmod files. Only java.base needs access to other
+# jmods.
+ifeq ($(MODULE), java.base)
+  # When creating a BUILDJDK, we don't need to add hashes to java.base
+  ifneq ($(CREATING_BUILDJDK), true)
+    # When creating interim versions of jmods, skip hashes
+    ifneq ($(INTERIM_JMOD), true)
+      ALL_UPGRADEABLE_MODULES := $(call FindAllUpgradeableModules)
+      DEPS += $(patsubst %, $(JMODS_DIR)/%.jmod, \
+          $(filter-out java.base $(ALL_UPGRADEABLE_MODULES), $(call FindAllModules)))
+
+      EXCLUDE_PATTERN := $(strip $(subst $(SPACE),$$|,$(strip $(ALL_UPGRADEABLE_MODULES))))
+
+      JMOD_FLAGS += --module-path $(JMODS_DIR) \
+          --hash-modules '^(?!$(EXCLUDE_PATTERN)$$)'
+    endif
+  endif
+else # not java.base
+  ifeq ($(call isTargetOs, windows), true)
+    # Only java.base needs to include the MSVC*_DLLs. Make sure no other module
+    # tries to include them (typically imported ones).
+    ifneq ($(MSVCR_DLL), )
+      ifneq ($(wildcard $(LIBS_DIR)/$(notdir $(MSVCR_DLL))), )
+        JMOD_FLAGS += --exclude '$(notdir $(MSVCR_DLL))'
+      endif
+    endif
+    ifneq ($(VCRUNTIME_1_DLL), )
+      ifneq ($(wildcard $(LIBS_DIR)/$(notdir $(VCRUNTIME_1_DLL))), )
+        JMOD_FLAGS += --exclude '$(notdir $(VCRUNTIME_1_DLL))'
+      endif
+    endif
+    ifneq ($(MSVCP_DLL), )
+      ifneq ($(wildcard $(LIBS_DIR)/$(notdir $(MSVCP_DLL))), )
+        JMOD_FLAGS += --exclude '$(notdir $(MSVCP_DLL))'
+      endif
+    endif
+    ifneq ($(UCRT_DLL_DIR), )
+      UCRT_DLL_FILES := $(notdir $(wildcard $(UCRT_DLL_DIR)/*.dll))
+      ifneq ($(wildcard $(LIBS_DIR)/$(firstword $(UCRT_DLL_FILES))), )
+        JMOD_FLAGS += $(patsubst %, --exclude '%', $(UCRT_DLL_FILES))
+      endif
+    endif
+  endif
+endif
+
+# Changes to the jmod tool itself should also trigger a rebuild of all jmods.
+# The variable JMOD_CMD could contain an environment variable assignment before
+# the actual command. Filter that out using wildcard before adding to DEPS.
+DEPS += $(wildcard $(JMOD_CMD))
+ifeq ($(EXTERNAL_BUILDJDK), false)
+  DEPS += $(call FindFiles, $(JDK_OUTPUTDIR)/modules/jdk.jlink/jdk/tools/jmod)
+endif
+
+# If creating interim versions of jmods, certain files need to be filtered out
+# to avoid false incremental rebuilds.
+ifeq ($(INTERIM_JMOD), true)
+  DEPS := $(filter-out $(SUPPORT_OUTPUTDIR)/modules_libs/java.base/classlist, $(DEPS))
+  INTERIM_MSG := interim$(SPACE)
+endif
+
+ifeq ($(call isTargetOs, windows), true)
+  ifeq ($(SHIP_DEBUG_SYMBOLS), )
+    JMOD_FLAGS += --exclude '**{_the.*,_*.marker*,*.diz,*.pdb,*.map}'
+  else
+    JMOD_FLAGS += --exclude '**{_the.*,_*.marker*,*.diz,*.map}'
+  endif
+else
+  JMOD_FLAGS += --exclude '**{_the.*,_*.marker*,*.diz,*.debuginfo,*.dSYM/**,*.dSYM}'
+endif
+
+# Create jmods in the support dir and then move them into place to keep the
+# module path in $(IMAGES_OUTPUTDIR)/jmods valid at all times.
+$(eval $(call SetupExecute, create_$(JMOD_FILE), \
+    WARN := Creating $(INTERIM_MSG)$(JMOD_FILE), \
+    DEPS := $(DEPS), \
+    OUTPUT_FILE := $(JMODS_DIR)/$(JMOD_FILE), \
+    SUPPORT_DIR := $(JMODS_SUPPORT_DIR), \
+    PRE_COMMAND := $(RM) $(JMODS_DIR)/$(JMOD_FILE) $(JMODS_SUPPORT_DIR)/$(JMOD_FILE), \
+    COMMAND := $(JMOD) create --module-version $(VERSION_SHORT) \
+        --target-platform '$(OPENJDK_MODULE_TARGET_PLATFORM)' \
+        --module-path $(JMODS_DIR) $(JMOD_FLAGS) \
+        $(JMODS_SUPPORT_DIR)/$(JMOD_FILE), \
+    POST_COMMAND := $(MV) $(JMODS_SUPPORT_DIR)/$(JMOD_FILE) $(JMODS_DIR)/$(JMOD_FILE), \
+))
+
+TARGETS += $(create_$(JMOD_FILE))
+
+################################################################################
+
+all: $(TARGETS)
+
+################################################################################

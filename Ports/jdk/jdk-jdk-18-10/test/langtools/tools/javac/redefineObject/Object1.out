@@ -1,0 +1,2 @@
+Object1.java:7:22: compiler.err.cyclic.inheritance: java.lang.Throwable
+1 error

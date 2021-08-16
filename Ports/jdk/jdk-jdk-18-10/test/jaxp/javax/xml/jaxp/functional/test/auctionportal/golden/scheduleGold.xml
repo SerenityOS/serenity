@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?><schedule xmlns:xi="http://www.w3.org/2001/XInclude">
+    <task>
+        <activities xml:base="inclusion.xml">
+    <activity id="1" xml:base="activity.xml">
+ <name>Code</name>
+ <description>Some description</description>
+</activity>
+</activities>
+    </task>
+    <task>
+        <activities xml:base="inclusion.xml">
+    <activity id="1" xml:base="activity.xml">
+ <name>Code</name>
+ <description>Some description</description>
+</activity>
+</activities>
+    </task>
+</schedule>
+

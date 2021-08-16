@@ -1,0 +1,40 @@
+
+@Foo(1)
+@Foo(2)
+@Bars({@Bar(3), @Bar(4)})
+public class XprintRepeatingAnnotations {
+
+  public XprintRepeatingAnnotations();
+}
+
+@java.lang.annotation.Retention(RUNTIME)
+@java.lang.annotation.Documented
+@java.lang.annotation.Repeatable(Foos.class)
+@interface Foo {
+
+  int value();
+}
+
+@java.lang.annotation.Retention(RUNTIME)
+@java.lang.annotation.Documented
+@interface Foos {
+
+  Foo[] value();
+}
+
+@java.lang.annotation.Retention(RUNTIME)
+@java.lang.annotation.Documented
+@java.lang.annotation.Repeatable(Bars.class)
+@interface Bar {
+
+  int value();
+}
+
+@java.lang.annotation.Retention(RUNTIME)
+@java.lang.annotation.Documented
+@interface Bars {
+
+  Bar[] value();
+
+  int quux() default 1;
+}

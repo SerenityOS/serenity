@@ -1,0 +1,6 @@
+EmptySwitch.java:10:10: compiler.err.switch.expression.empty
+EmptySwitch.java:12:10: compiler.err.switch.expression.no.result.expressions
+EmptySwitch.java:15:10: compiler.err.switch.expression.no.result.expressions
+EmptySwitch.java:21:9: compiler.err.switch.expression.completes.normally
+EmptySwitch.java:24:26: compiler.err.rule.completes.normally
+5 errors

@@ -1,0 +1,185 @@
+/*
+ * Copyright (c) 2017, 2019, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+body {
+  margin: 2em 2em;
+  font-family: DejaVu Sans, Bitstream Vera Sans, Luxi Sans, Verdana, Arial, Helvetica, sans-serif;
+  font-size: 10pt;
+  line-height: 1.4;
+}
+
+pre, code, tt {
+  font-family: DejaVu Sans Mono, Bitstream Vera Sans Mono, Luxi Mono,
+    Courier New, monospace;
+}
+
+blockquote {
+  margin: 1.5ex 0em 1.5ex 2em;
+}
+
+p {
+  padding: 0pt;
+  margin: 1ex 0em;
+}
+
+p:first-child, pre:first-child { margin-top: 0pt; }
+
+h1 {
+  font-weight: bold;
+  padding: 0pt;
+  margin: 2ex .5ex 1ex 0pt;
+}
+
+h1:first-child, h2:first-child {
+  margin-top: 0ex;
+}
+
+h2 {
+  font-weight: bold;
+  padding: 0pt;
+  margin: 2ex 0pt 1ex 0pt;
+}
+
+h3 {
+  font-weight: bold;
+  padding: 0pt;
+  margin: 1.5ex 0pt 1ex 0pt;
+}
+
+h4, h5 {
+  font-size: 100%;
+  font-weight: bold;
+  padding: 0pt;
+  margin: 1.5ex 0pt 1ex 0pt;
+}
+
+.subtitle {
+    font-style: italic;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
+
+h1.title + .subtitle {
+    margin-top: -1em;
+}
+
+a { text-decoration: none }
+
+a:link {
+  color: #4A6782;
+}
+
+a:visited {
+  color: #666666;
+}
+
+a[href]:hover {
+  color: #e76f00;
+}
+
+a img {
+  border-width: 0px;
+}
+
+img {
+  background: white;
+}
+
+table {
+  border-collapse: collapse;
+  margin-left: 15px;
+  margin-right: 15px;
+}
+
+th, td {
+  padding: 3px;
+  vertical-align: top;
+}
+
+table, th, td {
+  border: 1px solid black;
+}
+
+caption  {
+  text-align: left;
+  font-style: italic;
+  text-indent: 15px;
+  margin-bottom:10px;
+}
+
+tr:nth-child(even), tr:nth-child(even) th[scope=row] {
+  background: #E3E3E3;
+}
+
+tr:nth-child(odd), tr:nth-child(odd) th[scope=row] {
+  background: #FFF;
+}
+
+th {
+  background: #DDF;
+}
+
+table.centered {
+  margin-left: auto;
+  margin-right: auto;
+}
+table.centered td {
+  text-align: left;
+}
+.centered {
+  text-align: center;
+}
+
+.draft-header {
+  text-align: center;
+  font-size: 80%;
+  padding: 6px;
+  margin: -2.5em -2.5em 2.5em -2.5em;
+  background-color: #CBDAE4;
+}
+
+.legal-footer {
+    font-style: italic;
+    font-size: 80%;
+}
+
+nav#TOC {
+  border: 1px solid gray;
+  border-radius: 10px;
+  padding: 5px 10px;
+  margin-bottom: 15px;
+}
+
+nav#TOC ul ul {
+    font-size:smaller;
+}
+
+nav#TOC ul ul li {
+    display: inline-block
+}
+
+nav#TOC ul ul li::before {
+    content: " \2022  "
+}

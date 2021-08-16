@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<personnel>
+
+<person id="Big.Boss"  A100 = "" 
+A101 = "" A102 = "" A103 = ""
+>
+    <name><family>Boss</family> <given>Big</given></name>
+    <email>chief@foo.com</email>
+    <link subordinates="one.worker two.worker three.worker four.worker five.worker"/>
+  </person>
+
+  <person id="one.worker">
+    <name><family>Worker</family> <given>One</given></name>
+    <email>one@foo.com</email>
+    <link manager="Big.Boss"/>
+  </person>
+
+  <person id="two.worker">
+    <name><family>Worker</family> <given>Two</given></name>
+    <email>two@foo.com</email>
+    <link manager="Big.Boss"/>
+  </person>
+
+  <person id="three.worker">
+    <name><family>Worker</family> <given>Three</given></name>
+    <email>three@foo.com</email>
+    <link manager="Big.Boss"/>
+  </person>
+
+  <person id="four.worker">
+    <name><family>Worker</family> <given>Four</given></name>
+    <email>four@foo.com</email>
+    <link manager="Big.Boss"/>
+  </person>
+
+  <person id="five.worker">
+    <name><family>Worker</family> <given>Five</given></name>
+    <email>five@foo.com</email>
+    <link manager="Big.Boss"/>
+  </person>
+
+</personnel>

@@ -1,0 +1,2 @@
+NonStatic2StaticImportClash.java:11:1: compiler.err.already.defined.static.single.import: p1.A1.f
+1 error

@@ -1,0 +1,6 @@
+T8200199.java:21:13: compiler.warn.local.redundant.type
+T8200199.java:22:18: compiler.warn.local.redundant.type
+T8200199.java:23:23: compiler.warn.local.redundant.type
+- compiler.err.warnings.and.werror
+1 error
+3 warnings

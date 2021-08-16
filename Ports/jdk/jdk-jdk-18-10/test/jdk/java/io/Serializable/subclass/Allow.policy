@@ -1,0 +1,9 @@
+grant { 
+	// "standard" properies that can be read by anyone
+	permission java.io.FilePermission "-","read,write,execute";
+	permission java.io.SerializablePermission "enableSubstitution";
+
+	// Needed to get access to private writeObjectMethod and
+        // to be able to call it.
+	permission java.lang.reflect.ReflectPermission "access";
+};

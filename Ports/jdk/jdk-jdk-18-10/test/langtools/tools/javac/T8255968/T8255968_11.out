@@ -1,0 +1,2 @@
+T8255968_11.java:9:41: compiler.err.prob.found.req: (compiler.misc.invalid.mref: kindname.constructor, (compiler.misc.cant.apply.symbol: kindname.constructor, T8255968_11_Test, java.lang.String, int, kindname.class, T8255968_11_Test, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: int, java.lang.String))))
+1 error

@@ -1,0 +1,154 @@
+#
+# Copyright (c) 2013, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+$(eval $(call IncludeCustomExtension, hotspot/lib/JvmOverrideFiles.gmk))
+
+################################################################################
+# This file contains explicit overrides of CFLAGS and/or precompiled header
+# status for individual files on specific platforms.
+
+ifeq ($(TOOLCHAIN_TYPE), gcc)
+  BUILD_LIBJVM_vmStructs.cpp_CXXFLAGS := -fno-var-tracking-assignments
+  BUILD_LIBJVM_jvmciCompilerToVM.cpp_CXXFLAGS := -fno-var-tracking-assignments
+  BUILD_LIBJVM_jvmciCompilerToVMInit.cpp_CXXFLAGS := -fno-var-tracking-assignments
+  BUILD_LIBJVM_assembler_x86.cpp_CXXFLAGS := -Wno-maybe-uninitialized
+  BUILD_LIBJVM_cardTableBarrierSetAssembler_x86.cpp_CXXFLAGS := -Wno-maybe-uninitialized
+  BUILD_LIBJVM_interp_masm_x86.cpp_CXXFLAGS := -Wno-uninitialized
+  BUILD_LIBJVM_ad_$(HOTSPOT_TARGET_CPU_ARCH).cpp_CXXFLAGS := -Wno-nonnull
+  ifeq ($(DEBUG_LEVEL), release)
+    # Need extra inlining to collapse shared marking code into the hot marking loop
+    BUILD_LIBJVM_shenandoahMark.cpp_CXXFLAGS := --param inline-unit-growth=1000
+  endif
+endif
+
+LIBJVM_FDLIBM_COPY_OPT_FLAG := $(CXX_O_FLAG_NONE)
+# If the FDLIBM_CFLAGS variable is non-empty we know
+# that the fdlibm-fork in hotspot can get optimized
+# by using -ffp-contract=off on GCC/Clang platforms.
+ifneq ($(FDLIBM_CFLAGS), )
+  LIBJVM_FDLIBM_COPY_OPT_FLAG := $(CXX_O_FLAG_NORM)
+endif
+
+ifeq ($(call isTargetOs, linux), true)
+  BUILD_LIBJVM_ostream.cpp_CXXFLAGS := -D_FILE_OFFSET_BITS=64
+  BUILD_LIBJVM_logFileOutput.cpp_CXXFLAGS := -D_FILE_OFFSET_BITS=64
+
+  BUILD_LIBJVM_sharedRuntimeTrig.cpp_CXXFLAGS := -DNO_PCH $(FDLIBM_CFLAGS) $(LIBJVM_FDLIBM_COPY_OPT_FLAG)
+  BUILD_LIBJVM_sharedRuntimeTrans.cpp_CXXFLAGS := -DNO_PCH $(FDLIBM_CFLAGS) $(LIBJVM_FDLIBM_COPY_OPT_FLAG)
+
+  ifeq ($(TOOLCHAIN_TYPE), clang)
+    JVM_PRECOMPILED_HEADER_EXCLUDE := \
+	sharedRuntimeTrig.cpp \
+	sharedRuntimeTrans.cpp \
+        $(OPT_SPEED_SRC) \
+	#
+  endif
+
+  ifeq ($(call isTargetCpu, x86), true)
+    # Performance measurements show that by compiling GC related code, we could
+    # significantly reduce the GC pause time on 32 bit Linux/Unix platforms by
+    # compiling without the PIC flag (-fPIC on linux).
+    # See 6454213 for more details.
+    ALL_SRC := $(call FindFiles, $(TOPDIR)/src/hotspot/share, *.cpp)
+    NONPIC_FILTER := $(addsuffix %, $(addprefix $(TOPDIR)/src/hotspot/share/, \
+        memory oops gc))
+    # Due to what looks like a bug in the old build implementation of this, add a
+    # couple of more files that were accidentally matched as substrings of GC related
+    # files.
+    NONPIC_SRC := $(filter $(NONPIC_FILTER), $(ALL_SRC)) globals.cpp location.cpp
+    # Declare variables for each source file that needs the pic flag like this:
+    # BUILD_JVM_<srcfile>_CXXFLAGS := -fno-PIC
+    # This will get implicitly picked up by SetupNativeCompilation below.
+    $(foreach s, $(NONPIC_SRC), $(eval BUILD_LIBJVM_$(notdir $s)_CXXFLAGS := -fno-PIC))
+  endif
+
+else ifeq ($(call isTargetOs, macosx), true)
+  # The copied fdlibm routines in these files must not be optimized
+  BUILD_LIBJVM_sharedRuntimeTrig.cpp_CXXFLAGS := $(FDLIBM_CFLAGS) $(LIBJVM_FDLIBM_COPY_OPT_FLAG)
+  BUILD_LIBJVM_sharedRuntimeTrans.cpp_CXXFLAGS := $(FDLIBM_CFLAGS) $(LIBJVM_FDLIBM_COPY_OPT_FLAG)
+  ifeq ($(TOOLCHAIN_TYPE), clang)
+    # NOTE: The old build tested clang version to make sure this workaround
+    # for the clang bug was still needed.
+    BUILD_LIBJVM_loopTransform.cpp_CXXFLAGS := $(CXX_O_FLAG_NONE)
+
+    # The following files are compiled at various optimization
+    # levels due to optimization issues encountered at the
+    # default level. The Clang compiler issues a compile
+    # time error if there is an optimization level specification
+    # skew between the PCH file and the C++ file.  Especially if the
+    # PCH file is compiled at a higher optimization level than
+    # the C++ file.  One solution might be to prepare extra optimization
+    # level specific PCH files for the opt build and use them here, but
+    # it's probably not worth the effort as long as only a few files
+    # need this special handling.
+    JVM_PRECOMPILED_HEADER_EXCLUDE := \
+        sharedRuntimeTrig.cpp \
+        sharedRuntimeTrans.cpp \
+        loopTransform.cpp \
+        jvmciCompilerToVM.cpp \
+        $(OPT_SPEED_SRC) \
+        #
+  endif
+
+else ifeq ($(call isTargetOs, aix), true)
+  BUILD_LIBJVM_synchronizer.cpp_CXXFLAGS := -qnoinline
+  BUILD_LIBJVM_sharedRuntimeTrans.cpp_CXXFLAGS := $(CXX_O_FLAG_NONE)
+  # Disable aggressive optimizations for functions in sharedRuntimeTrig.cpp
+  # and sharedRuntimeTrans.cpp on ppc64.
+  # -qstrict turns off the following optimizations:
+  #   * Performing code motion and scheduling on computations such as loads
+  #     and floating-point computations that may trigger an exception.
+  #   * Relaxing conformance to IEEE rules.
+  #   * Reassociating floating-point expressions.
+  # When using '-qstrict' there still remains one problem
+  # in javasoft.sqe.tests.api.java.lang.Math.sin5Tests when run in compile-all
+  # mode, so don't optimize sharedRuntimeTrig.cpp at all.
+  BUILD_LIBJVM_sharedRuntimeTrig.cpp_CXXFLAGS := $(CXX_O_FLAG_NONE)
+
+  ifneq ($(DEBUG_LEVEL),slowdebug)
+    # Compiling jvmtiEnterTrace.cpp with full optimization needs more than 30min
+    # (mostly because of '-qhot=level=1' and the more than 1300 'log_trace' calls
+    # which cause a lot of template expansion).
+    BUILD_LIBJVM_jvmtiEnterTrace.cpp_OPTIMIZATION := LOW
+  endif
+
+  # Disable ELF decoder on AIX (AIX uses XCOFF).
+  JVM_EXCLUDE_PATTERNS += elf
+
+else ifeq ($(call isTargetOs, windows), true)
+  JVM_PRECOMPILED_HEADER_EXCLUDE := \
+      bytecodeInterpreter.cpp \
+      bytecodeInterpreterWithChecks.cpp \
+      opcodes.cpp \
+      os_windows.cpp \
+      os_windows_x86.cpp \
+      osThread_windows.cpp \
+      jvmciCompilerToVMInit.cpp \
+      #
+
+  # Workaround for jvmciCompilerToVM.cpp long compilation time
+  BUILD_LIBJVM_jvmciCompilerToVMInit.cpp_OPTIMIZATION := NONE
+
+endif

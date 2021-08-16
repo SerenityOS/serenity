@@ -1,0 +1,89 @@
+#  Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
+#  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+#  This code is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License version 2 only, as
+#  published by the Free Software Foundation.
+#
+#  This code is distributed in the hope that it will be useful, but WITHOUT
+#  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#  version 2 for more details (a copy is included in the LICENSE file that
+#  accompanied this code).
+#
+#  You should have received a copy of the GNU General Public License version
+#  2 along with this work; if not, write to the Free Software Foundation,
+#  Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#  Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+#  or visit www.oracle.com if you need additional information or have any
+#  questions.
+#
+
+# Langtools-specific test groups
+
+langtools_javac = \
+    tools/all \
+    tools/javac
+
+langtools_javap = \
+    tools/all \
+    tools/javap
+
+langtools_javadoc = \
+    tools/all \
+    tools/doclint \
+    tools/javac/doctree \
+    jdk/javadoc
+
+langtools_jshell = \
+    tools/all \
+    jdk/jshell
+
+langtools_jshell_unstable = \
+    jdk/jshell/ExternalEditorTest.java \
+    jdk/jshell/FailOverDirectExecutionControlTest.java \
+    jdk/jshell/FailOverExecutionControlDyingLaunchTest.java \
+    jdk/jshell/FailOverExecutionControlHangingListenTest.java \
+    jdk/jshell/JdiHangingListenExecutionControlTest.java \
+    jdk/jshell/JdiLaunchingExecutionControlTest.java \
+    jdk/jshell/JdiListeningExecutionControlTest.java \
+    jdk/jshell/JdiListeningLocalhostExecutionControlTest.java \
+    jdk/jshell/ToolBasicTest.java \
+    jdk/jshell/ToolLocaleMessageTest.java \
+    jdk/jshell/ToolReloadTest.java \
+    jdk/jshell/UserInputTest.java \
+    jdk/jshell/UserJdiUserRemoteTest.java
+
+langtools_jdeprscan = \
+    tools/all \
+    tools/jdeprscan
+
+langtools_jdeps = \
+    tools/all \
+    tools/jdeps
+
+langtools_sjavac = \
+    tools/all \
+    tools/sjavac
+
+langtools_all = \
+    jdk \
+    lib \
+    tools
+
+# Tiered testing definitions
+
+# (Nearly) all langtools tests are tier 1.
+tier1 = \
+    :langtools_all \
+    lib \
+    tools \
+    -:langtools_jshell_unstable
+
+# (Almost) no langtools tests are tier 2.
+tier2 = \
+    :langtools_jshell_unstable
+
+# No langtools tests are tier 3 either.
+tier3 =

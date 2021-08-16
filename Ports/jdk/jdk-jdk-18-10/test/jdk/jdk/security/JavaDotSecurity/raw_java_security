@@ -1,0 +1,63 @@
+#
+# This is my own security properties file.
+#
+
+#ifdef solaris
+foo.tbd=1
+#else
+foo.tbd=1a
+#endif
+#ifndef solaris
+foo.tbd=2
+#endif
+#ifdef mac
+foo.tbd=3
+#endif
+#ifndef mac
+foo.tbd=4
+#endif
+#ifdef solaris-sparc
+foo.tbd=5
+#endif
+#ifndef solaris-sparc
+foo.tbd=6
+#else
+foo.tbd=6a
+#endif
+#ifdef solaris-x64
+foo.tbd=7
+#endif
+#ifndef solaris-x64
+foo.tbd=8
+#endif
+#ifdef macosx-sparc
+foo.tbd=9
+#else
+foo.tbd=9a
+#endif
+#ifndef macosx-sparc
+foo.tbd=10
+#endif
+#ifdef macosx-x64
+foo.tbd=11
+#endif
+#ifndef macosx-x64
+foo.tbd=12
+#endif
+crypto.policy=crypto.policydir-tbd
+
+package.access=sun.,\
+#ifdef solaris
+               solaris.,\
+#endif
+#ifdef macosx
+               apple.,\
+#endif
+
+package.definition=sun.,\
+#ifdef solaris
+                   solaris.,\
+#endif
+#ifdef macosx
+                   apple.,\
+#endif

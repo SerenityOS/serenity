@@ -1,0 +1,4 @@
+
+* The "clangd" indexer must be present in PATH, or configured with "clangd.path" in user preferences.
+* If building with clang (default on OSX), precompiled headers must be disabled.
+

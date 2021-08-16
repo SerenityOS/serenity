@@ -1,0 +1,1509 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="en"/>
+		<territory type="CA"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ar_001">Modern Standard Arabic</language>
+			<language type="bn">Bengali</language>
+			<language type="de_AT">Austrian German</language>
+			<language type="de_CH">Swiss High German</language>
+			<language type="en_AU">Australian English</language>
+			<language type="en_CA">Canadian English</language>
+			<language type="en_GB">British English</language>
+			<language type="en_GB" alt="short">UK English</language>
+			<language type="en_US">American English</language>
+			<language type="en_US" alt="short">US English</language>
+			<language type="es_419">Latin American Spanish</language>
+			<language type="es_ES">European Spanish</language>
+			<language type="es_MX">Mexican Spanish</language>
+			<language type="fa_AF">Dari</language>
+			<language type="fr_CA">Canadian French</language>
+			<language type="fr_CH">Swiss French</language>
+			<language type="mfe">Mauritian</language>
+			<language type="nl_BE">Flemish</language>
+			<language type="pt_BR">Brazilian Portuguese</language>
+			<language type="pt_PT">European Portuguese</language>
+			<language type="ro_MD">Moldovan</language>
+			<language type="sr_ME">Montenegrin</language>
+			<language type="sw_CD">Congo Swahili</language>
+			<language type="tvl">Tuvaluan</language>
+			<language type="zh_Hans">Simplified Chinese</language>
+			<language type="zh_Hans" alt="long">Simplified Mandarin Chinese</language>
+			<language type="zh_Hant">Traditional Chinese</language>
+			<language type="zh_Hant" alt="long">Traditional Mandarin Chinese</language>
+		</languages>
+		<keys>
+			<key type="colNormalization">Normalized Sorting</key>
+		</keys>
+		<types>
+			<type key="calendar" type="dangi">Korean Calendar</type>
+			<type key="calendar" type="ethiopic">Ethiopian Calendar</type>
+			<type key="d0" type="fwidth">To Full Width</type>
+			<type key="d0" type="hwidth">To Half Width</type>
+			<type key="d0" type="lower">To Lower Case</type>
+			<type key="d0" type="title">To Title Case</type>
+			<type key="d0" type="upper">To Upper Case</type>
+		</types>
+	</localeDisplayNames>
+	<dates>
+		<calendars>
+			<calendar type="chinese">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, MMMM d, r(U)</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>MMMM d, r(U)</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>MMM d, r</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>r-MM-dd</pattern>
+							<pattern alt="variant">d/M/r</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Ed">d E</dateFormatItem>
+						<dateFormatItem id="GyMMMd">MMM d, r</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E, MMM d, r(U)</dateFormatItem>
+						<dateFormatItem id="Md">MM-dd</dateFormatItem>
+						<dateFormatItem id="Md" alt="variant">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">E, MM-dd</dateFormatItem>
+						<dateFormatItem id="MEd" alt="variant">E, d/M</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="UMd">U-MM-dd</dateFormatItem>
+						<dateFormatItem id="UMd" alt="variant">d/M/U</dateFormatItem>
+						<dateFormatItem id="UMMMd">MMM d, U</dateFormatItem>
+						<dateFormatItem id="yMd">r-MM-dd</dateFormatItem>
+						<dateFormatItem id="yMd" alt="variant">d/M/r</dateFormatItem>
+						<dateFormatItem id="yyyyM">r-MM</dateFormatItem>
+						<dateFormatItem id="yyyyM" alt="variant">M/r</dateFormatItem>
+						<dateFormatItem id="yyyyMd">r-MM-dd</dateFormatItem>
+						<dateFormatItem id="yyyyMd" alt="variant">d/M/r</dateFormatItem>
+						<dateFormatItem id="yyyyMEd">E, r-MM-dd</dateFormatItem>
+						<dateFormatItem id="yyyyMEd" alt="variant">E, d/M/r</dateFormatItem>
+						<dateFormatItem id="yyyyMMMd">MMM d, r</dateFormatItem>
+						<dateFormatItem id="yyyyMMMEd">E, MMM d, r(U)</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">MM-dd – MM-dd</greatestDifference>
+							<greatestDifference id="d" alt="variant">d/M – d/M</greatestDifference>
+							<greatestDifference id="M">MM-dd – MM-dd</greatestDifference>
+							<greatestDifference id="M" alt="variant">d/M – d/M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">E, MM-dd – E, MM-dd</greatestDifference>
+							<greatestDifference id="d" alt="variant">E, d/M – E, d/M</greatestDifference>
+							<greatestDifference id="M">E, MM-dd – E, MM-dd</greatestDifference>
+							<greatestDifference id="M" alt="variant">E, d/M – E, d/M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">MMM d – d</greatestDifference>
+							<greatestDifference id="M">MMM d – MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">E, MMM d – E, MMM d</greatestDifference>
+							<greatestDifference id="M">E, MMM d – E, MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">y-MM – y-MM</greatestDifference>
+							<greatestDifference id="M" alt="variant">M/y – M/y</greatestDifference>
+							<greatestDifference id="y">y-MM – y-MM</greatestDifference>
+							<greatestDifference id="y" alt="variant">M/y – M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="d" alt="variant">d/M/y – d/M/y</greatestDifference>
+							<greatestDifference id="M">y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="M" alt="variant">d/M/y – d/M/y</greatestDifference>
+							<greatestDifference id="y">y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="y" alt="variant">d/M/y – d/M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="d" alt="variant">E, d/M/y – E, d/M/y</greatestDifference>
+							<greatestDifference id="M">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="M" alt="variant">E, d/M/y – E, d/M/y</greatestDifference>
+							<greatestDifference id="y">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="y" alt="variant">E, d/M/y – E, d/M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">MMM d – d, U</greatestDifference>
+							<greatestDifference id="M">MMM d – MMM d, U</greatestDifference>
+							<greatestDifference id="y">MMM d, U – MMM d, U</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">E, MMM d – E, MMM d, U</greatestDifference>
+							<greatestDifference id="M">E, MMM d – E, MMM d, U</greatestDifference>
+							<greatestDifference id="y">E, MMM d, U – E, MMM d, U</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, MMMM d, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>MMMM d, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>MMM d, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>GGGGG y-MM-dd</pattern>
+							<pattern alt="variant">d/M/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} 'at' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} 'at' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="Ed">d E</dateFormatItem>
+						<dateFormatItem id="GyMMMd">MMM d, y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E, MMM d, y G</dateFormatItem>
+						<dateFormatItem id="Md">MM-dd</dateFormatItem>
+						<dateFormatItem id="Md" alt="variant">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">E, MM-dd</dateFormatItem>
+						<dateFormatItem id="MEd" alt="variant">E, d/M</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
+						<dateFormatItem id="yyyyM">GGGGG y-MM</dateFormatItem>
+						<dateFormatItem id="yyyyM" alt="variant">M/y GGGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMd">GGGGG y-MM-dd</dateFormatItem>
+						<dateFormatItem id="yyyyMd" alt="variant">d/M/y GGGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMEd">E, y-MM-dd GGGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMEd" alt="variant">E, d/M/y GGGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMMMd">MMM d, y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMEd">E, MMM d, y G</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">MM-dd – MM-dd</greatestDifference>
+							<greatestDifference id="d" alt="variant">d/M – d/M</greatestDifference>
+							<greatestDifference id="M">MM-dd – MM-dd</greatestDifference>
+							<greatestDifference id="M" alt="variant">d/M – d/M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">E, MM-dd – E, MM-dd</greatestDifference>
+							<greatestDifference id="d" alt="variant">E, d/M – E, d/M</greatestDifference>
+							<greatestDifference id="M">E, MM-dd – E, MM-dd</greatestDifference>
+							<greatestDifference id="M" alt="variant">E, d/M – E, d/M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">MMM d – d</greatestDifference>
+							<greatestDifference id="M">MMM d – MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">E, MMM d – E, MMM d</greatestDifference>
+							<greatestDifference id="M">E, MMM d – E, MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">GGGGG y-MM – y-MM</greatestDifference>
+							<greatestDifference id="M" alt="variant">M/y – M/y GGGGG</greatestDifference>
+							<greatestDifference id="y">GGGGG y-MM – y-MM</greatestDifference>
+							<greatestDifference id="y" alt="variant">M/y – M/y GGGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">GGGGG y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="d" alt="variant">d/M/y – d/M/y GGGGG</greatestDifference>
+							<greatestDifference id="M">GGGGG y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="M" alt="variant">d/M/y – d/M/y GGGGG</greatestDifference>
+							<greatestDifference id="y">GGGGG y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="y" alt="variant">d/M/y – d/M/y GGGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="d" alt="variant">E, d/M/y – E, d/M/y GGGGG</greatestDifference>
+							<greatestDifference id="M">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="M" alt="variant">E, d/M/y – E, d/M/y GGGGG</greatestDifference>
+							<greatestDifference id="y">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="y" alt="variant">E, d/M/y – E, d/M/y GGGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">MMM d – d, y G</greatestDifference>
+							<greatestDifference id="M">MMM d – MMM d, y G</greatestDifference>
+							<greatestDifference id="y">MMM d, y – MMM d, y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">E, MMM d – E, MMM d, y G</greatestDifference>
+							<greatestDifference id="M">E, MMM d – E, MMM d, y G</greatestDifference>
+							<greatestDifference id="y">E, MMM d, y – E, MMM d, y G</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">Jan.</month>
+							<month type="2">Feb.</month>
+							<month type="3">Mar.</month>
+							<month type="4">Apr.</month>
+							<month type="5">May</month>
+							<month type="6">Jun.</month>
+							<month type="7">Jul.</month>
+							<month type="8">Aug.</month>
+							<month type="9">Sep.</month>
+							<month type="10">Oct.</month>
+							<month type="11">Nov.</month>
+							<month type="12">Dec.</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Sun.</day>
+							<day type="mon">Mon.</day>
+							<day type="tue">Tue.</day>
+							<day type="wed">Wed.</day>
+							<day type="thu">Thu.</day>
+							<day type="fri">Fri.</day>
+							<day type="sat">Sat.</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">a.m.</dayPeriod>
+							<dayPeriod type="pm">p.m.</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="midnight">mid</dayPeriod>
+							<dayPeriod type="am">am</dayPeriod>
+							<dayPeriod type="noon">n</dayPeriod>
+							<dayPeriod type="pm">pm</dayPeriod>
+							<dayPeriod type="morning1">mor</dayPeriod>
+							<dayPeriod type="afternoon1">aft</dayPeriod>
+							<dayPeriod type="evening1">eve</dayPeriod>
+							<dayPeriod type="night1">night</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">a.m.</dayPeriod>
+							<dayPeriod type="pm">p.m.</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">a.m.</dayPeriod>
+							<dayPeriod type="pm">p.m.</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="midnight">mid</dayPeriod>
+							<dayPeriod type="am">a.m.</dayPeriod>
+							<dayPeriod type="pm">pm</dayPeriod>
+							<dayPeriod type="morning1">mor</dayPeriod>
+							<dayPeriod type="afternoon1">aft</dayPeriod>
+							<dayPeriod type="evening1">eve</dayPeriod>
+							<dayPeriod type="night1">night</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">a.m.</dayPeriod>
+							<dayPeriod type="pm">p.m.</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, MMMM d, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>MMMM d, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>MMM d, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>y-MM-dd</pattern>
+							<pattern alt="variant">d/M/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>h:mm:ss a zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>h:mm:ss a z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>h:mm:ss a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>h:mm a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} 'at' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} 'at' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="GyMMMd">MMM d, y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E, MMM d, y G</dateFormatItem>
+						<dateFormatItem id="Md">MM-dd</dateFormatItem>
+						<dateFormatItem id="Md" alt="variant">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">E, MM-dd</dateFormatItem>
+						<dateFormatItem id="MEd" alt="variant">E, d/M</dateFormatItem>
+						<dateFormatItem id="MMdd">MM-dd</dateFormatItem>
+						<dateFormatItem id="MMdd" alt="variant">dd/MM</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="yM">y-MM</dateFormatItem>
+						<dateFormatItem id="yM" alt="variant">M/y</dateFormatItem>
+						<dateFormatItem id="yMd">y-MM-dd</dateFormatItem>
+						<dateFormatItem id="yMd" alt="variant">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, y-MM-dd</dateFormatItem>
+						<dateFormatItem id="yMEd" alt="variant">E, d/M/y</dateFormatItem>
+						<dateFormatItem id="yMMMd">MMM d, y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, MMM d, y</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">MM-dd – MM-dd</greatestDifference>
+							<greatestDifference id="d" alt="variant">d/M – d/M</greatestDifference>
+							<greatestDifference id="M">MM-dd – MM-dd</greatestDifference>
+							<greatestDifference id="M" alt="variant">d/M – d/M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">E, MM-dd – E, MM-dd</greatestDifference>
+							<greatestDifference id="d" alt="variant">E, d/M – E, d/M</greatestDifference>
+							<greatestDifference id="M">E, MM-dd – E, MM-dd</greatestDifference>
+							<greatestDifference id="M" alt="variant">E, d/M – E, d/M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">MMM d – d</greatestDifference>
+							<greatestDifference id="M">MMM d – MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">E, MMM d – E, MMM d</greatestDifference>
+							<greatestDifference id="M">E, MMM d – E, MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">y-MM – y-MM</greatestDifference>
+							<greatestDifference id="M" alt="variant">M/y – M/y</greatestDifference>
+							<greatestDifference id="y">y-MM – y-MM</greatestDifference>
+							<greatestDifference id="y" alt="variant">M/y – M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="d" alt="variant">d/M/y – d/M/y</greatestDifference>
+							<greatestDifference id="M">y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="M" alt="variant">d/M/y – d/M/y</greatestDifference>
+							<greatestDifference id="y">y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="y" alt="variant">d/M/y – d/M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="d" alt="variant">E, d/M/y – E, d/M/y</greatestDifference>
+							<greatestDifference id="M">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="M" alt="variant">E, d/M/y – E, d/M/y</greatestDifference>
+							<greatestDifference id="y">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="y" alt="variant">E, d/M/y – E, d/M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">MMM d – d, y</greatestDifference>
+							<greatestDifference id="M">MMM d – MMM d, y</greatestDifference>
+							<greatestDifference id="y">MMM d, y – MMM d, y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">E, MMM d – E, MMM d, y</greatestDifference>
+							<greatestDifference id="M">E, MMM d – E, MMM d, y</greatestDifference>
+							<greatestDifference id="y">E, MMM d, y – E, MMM d, y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="islamic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, MMMM d, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>MMMM d, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>MMM d, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>GGGGG y-MM-dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="GyMMMd">MMM d, y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E, MMM d, y G</dateFormatItem>
+						<dateFormatItem id="MEd">E, MM-dd</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="yyyyM">y-MM GGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMd">y-MM-dd GGGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMMMd">MMM d, y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMEd">E, MMM d, y G</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="year-short">
+				<displayName>yr.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} yr.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} yrs.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} yr. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} yrs. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-narrow">
+				<displayName>yr.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} yr.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} yrs.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} yr. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} yrs. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter-short">
+				<displayName>qtr.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} qtr.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} qtrs.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} qtr. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} qtrs. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter-narrow">
+				<displayName>qtr.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} qtr.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} qtrs.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} qtr. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} qtrs. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month-short">
+				<displayName>mo.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} mo.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} mos.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} mo. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} mos. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month-narrow">
+				<displayName>mo.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} mo.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} mos.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} mo. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} mos. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week-short">
+				<displayName>wk.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} wk.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} wks.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} wk. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} wks. ago</relativeTimePattern>
+				</relativeTime>
+				<relativePeriod>the wk. of {0}</relativePeriod>
+			</field>
+			<field type="week-narrow">
+				<displayName>wk.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} wk.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} wks.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} wk. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} wks. ago</relativeTimePattern>
+				</relativeTime>
+				<relativePeriod>the wk. of {0}</relativePeriod>
+			</field>
+			<field type="sun-short">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} Sun.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} Sun’s.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} Sun. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} Sun’s. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sun-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} Su</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} Su’s</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} Su ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} Su’s ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon-short">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} Mon.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} Mon’s.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} Mon. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} Mon’s. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} M</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} Mo’s</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} M ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} Mo’s ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue-short">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} Tue.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} Tue’s.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} Tue. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} Tue’s. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} Tu</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} Tu’s</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} Tu ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} Tu’s ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed-short">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} Wed.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} Wed’s.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} Wed. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} Wed’s. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed-narrow">
+				<relative type="-1">last We</relative>
+				<relative type="0">this We</relative>
+				<relative type="1">next We</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} We</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} We’s</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} We ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} We’s ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu-short">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} Thu.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} Thu’s.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} Thu. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} Thu’s ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} Th</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} Th’s</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} Th ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} Th’s ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri-short">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} Fri.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} Fri’s.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} Fri. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} Fri’s. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri-narrow">
+				<relative type="-1">last Fr</relative>
+				<relative type="0">this Fr</relative>
+				<relative type="1">next Fr</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} Fr</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} Fr’s</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} Fr ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} Fr’s ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat-short">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} Sat.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} Sat’s.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} Sat. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} Sat’s. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} Sa</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} Sa’s</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} Sa ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} Sa’s ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="dayperiod-short">
+				<displayName>a.m./p.m.</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>a.m./p.m.</displayName>
+			</field>
+			<field type="dayperiod-narrow">
+				<displayName>a.m./p.m.</displayName>
+			</field>
+			<field type="hour-short">
+				<displayName>hr.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} hr.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} hrs.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} hr. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} hrs. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="hour-narrow">
+				<displayName>hr.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} hr.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} hrs.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} hr. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} hrs. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute-short">
+				<displayName>min.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} min.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} mins.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} min. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} mins. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute-narrow">
+				<displayName>min.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} min.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} mins.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} min. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} mins. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second-short">
+				<displayName>sec.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} sec.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} secs.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} sec. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} secs. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second-narrow">
+				<displayName>sec.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">in {0} sec.</relativeTimePattern>
+					<relativeTimePattern count="other">in {0} secs.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} sec. ago</relativeTimePattern>
+					<relativeTimePattern count="other">{0} secs. ago</relativeTimePattern>
+				</relativeTime>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<gmtZeroFormat>GMT</gmtZeroFormat>
+			<regionFormat type="daylight">{0} Daylight Saving Time</regionFormat>
+			<zone type="Asia/Rangoon">
+				<exemplarCity>Rangoon</exemplarCity>
+			</zone>
+			<zone type="Pacific/Honolulu">
+				<short>
+					<generic>HST</generic>
+					<standard>HST</standard>
+					<daylight>HDT</daylight>
+				</short>
+			</zone>
+			<metazone type="Alaska">
+				<short>
+					<generic>AKT</generic>
+					<standard>AKST</standard>
+					<daylight>AKDT</daylight>
+				</short>
+			</metazone>
+			<metazone type="America_Central">
+				<short>
+					<generic>CT</generic>
+					<standard>CST</standard>
+					<daylight>CDT</daylight>
+				</short>
+			</metazone>
+			<metazone type="America_Eastern">
+				<short>
+					<generic>ET</generic>
+					<standard>EST</standard>
+					<daylight>EDT</daylight>
+				</short>
+			</metazone>
+			<metazone type="America_Mountain">
+				<short>
+					<generic>MT</generic>
+					<standard>MST</standard>
+					<daylight>MDT</daylight>
+				</short>
+			</metazone>
+			<metazone type="America_Pacific">
+				<short>
+					<generic>PT</generic>
+					<standard>PST</standard>
+					<daylight>PDT</daylight>
+				</short>
+			</metazone>
+			<metazone type="Atlantic">
+				<short>
+					<generic>AT</generic>
+					<standard>AST</standard>
+					<daylight>ADT</daylight>
+				</short>
+			</metazone>
+			<metazone type="Hawaii_Aleutian">
+				<short>
+					<generic>HAT</generic>
+					<standard>HAST</standard>
+					<daylight>HADT</daylight>
+				</short>
+			</metazone>
+			<metazone type="Newfoundland">
+				<short>
+					<generic>NT</generic>
+					<standard>NST</standard>
+					<daylight>NDT</daylight>
+				</short>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<exponential>e</exponential>
+		</symbols>
+		<currencies>
+			<currency type="CAD">
+				<symbol>$</symbol>
+			</currency>
+			<currency type="VES">
+				<symbol draft="contributed">VES</symbol>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="concentr-karat">
+				<displayName>karats</displayName>
+				<unitPattern count="one">{0} karat</unitPattern>
+				<unitPattern count="other">{0} karats</unitPattern>
+			</unit>
+			<unit type="graphics-dot">
+				<unitPattern count="one">{0} dot</unitPattern>
+				<unitPattern count="other">{0} dots</unitPattern>
+			</unit>
+			<unit type="light-candela">
+				<displayName>candelas</displayName>
+			</unit>
+			<unit type="light-lumen">
+				<displayName>lumens</displayName>
+			</unit>
+			<unit type="mass-grain">
+				<displayName>grains</displayName>
+			</unit>
+			<unit type="torque-newton-meter">
+				<displayName>newton-metres</displayName>
+				<unitPattern count="one">{0} newton-metre</unitPattern>
+				<unitPattern count="other">{0} newton-metres</unitPattern>
+			</unit>
+			<unit type="volume-fluid-ounce">
+				<displayName>fluid ounces</displayName>
+				<unitPattern count="one">{0} fluid ounce</unitPattern>
+				<unitPattern count="other">{0} fluid ounces</unitPattern>
+			</unit>
+			<unit type="volume-fluid-ounce-imperial">
+				<displayName>imp. fluid ounces</displayName>
+				<unitPattern count="one">{0} imp. fluid ounce</unitPattern>
+				<unitPattern count="other">{0} imp. fluid ounces</unitPattern>
+			</unit>
+			<unit type="volume-drop">
+				<displayName>drops</displayName>
+			</unit>
+			<unit type="volume-dram">
+				<displayName>fluid drams</displayName>
+				<unitPattern count="one">{0} fluid dram</unitPattern>
+				<unitPattern count="other">{0} fluid drams</unitPattern>
+			</unit>
+			<unit type="volume-jigger">
+				<displayName>jiggers</displayName>
+			</unit>
+			<unit type="volume-pinch">
+				<displayName>pinches</displayName>
+			</unit>
+			<unit type="volume-quart-imperial">
+				<displayName>imp. quart</displayName>
+				<unitPattern count="one">{0} imp. quart</unitPattern>
+				<unitPattern count="other">{0} imp. quarts</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="acceleration-meter-per-square-second">
+				<displayName>metres/sec.²</displayName>
+			</unit>
+			<unit type="angle-radian">
+				<displayName>rad</displayName>
+			</unit>
+			<unit type="angle-degree">
+				<displayName>deg.</displayName>
+				<unitPattern count="one">{0} deg.</unitPattern>
+				<unitPattern count="other">{0} deg.</unitPattern>
+			</unit>
+			<unit type="angle-arc-minute">
+				<displayName>arcmins.</displayName>
+				<unitPattern count="one">{0} arcmin.</unitPattern>
+				<unitPattern count="other">{0} arcmins.</unitPattern>
+			</unit>
+			<unit type="angle-arc-second">
+				<displayName>arcsecs.</displayName>
+				<unitPattern count="one">{0} arcsec.</unitPattern>
+				<unitPattern count="other">{0} arcsecs.</unitPattern>
+			</unit>
+			<unit type="area-square-mile">
+				<displayName>sq. miles</displayName>
+				<unitPattern count="one">{0} sq. mi.</unitPattern>
+				<unitPattern count="other">{0} sq. mi.</unitPattern>
+				<perUnitPattern>{0}/sq. mi.</perUnitPattern>
+			</unit>
+			<unit type="area-acre">
+				<unitPattern count="one">{0} ac.</unitPattern>
+				<unitPattern count="other">{0} ac.</unitPattern>
+			</unit>
+			<unit type="area-square-yard">
+				<displayName>sq. yards</displayName>
+				<unitPattern count="one">{0} sq. yd.</unitPattern>
+				<unitPattern count="other">{0} sq. yd.</unitPattern>
+			</unit>
+			<unit type="area-square-foot">
+				<displayName>sq. feet</displayName>
+				<unitPattern count="one">{0} sq. ft.</unitPattern>
+				<unitPattern count="other">{0} sq. ft.</unitPattern>
+			</unit>
+			<unit type="area-square-inch">
+				<displayName>sq. inches</displayName>
+				<unitPattern count="one">{0} sq. in.</unitPattern>
+				<unitPattern count="other">{0} sq. in.</unitPattern>
+				<perUnitPattern>{0}/sq. in.</perUnitPattern>
+			</unit>
+			<unit type="concentr-karat">
+				<displayName>karats</displayName>
+				<unitPattern count="one">{0} kt</unitPattern>
+				<unitPattern count="other">{0} kt</unitPattern>
+			</unit>
+			<unit type="concentr-milligram-ofglucose-per-deciliter">
+				<displayName>mg/dL</displayName>
+				<unitPattern count="one">{0} mg/dL</unitPattern>
+				<unitPattern count="other">{0} mg/dL</unitPattern>
+			</unit>
+			<unit type="concentr-millimole-per-liter">
+				<unitPattern count="one">{0} mmol/L</unitPattern>
+				<unitPattern count="other">{0} mmol/L</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-kilometer">
+				<unitPattern count="one">{0} L/km</unitPattern>
+				<unitPattern count="other">{0} L/km</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-100-kilometer">
+				<displayName>L/100 km</displayName>
+				<unitPattern count="one">{0} L/100 km</unitPattern>
+				<unitPattern count="other">{0} L/100 km</unitPattern>
+			</unit>
+			<unit type="consumption-mile-per-gallon">
+				<displayName>mi./US gal.</displayName>
+			</unit>
+			<unit type="consumption-mile-per-gallon-imperial">
+				<displayName>mi./gal.</displayName>
+			</unit>
+			<unit type="duration-century">
+				<displayName>c.</displayName>
+				<unitPattern count="one">{0} c.</unitPattern>
+				<unitPattern count="other">{0} c.</unitPattern>
+			</unit>
+			<unit type="duration-decade">
+				<displayName>dec.</displayName>
+				<unitPattern count="one">{0} dec.</unitPattern>
+				<unitPattern count="other">{0} dec.</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<displayName>yrs.</displayName>
+				<unitPattern count="one">{0} yr.</unitPattern>
+				<unitPattern count="other">{0} yrs.</unitPattern>
+				<perUnitPattern>{0}/yr.</perUnitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>mos.</displayName>
+				<unitPattern count="one">{0} mo.</unitPattern>
+				<unitPattern count="other">{0} mos.</unitPattern>
+				<perUnitPattern>{0}/mo.</perUnitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName>wks.</displayName>
+				<unitPattern count="one">{0} wk.</unitPattern>
+				<unitPattern count="other">{0} wks.</unitPattern>
+				<perUnitPattern>{0}/wk.</perUnitPattern>
+			</unit>
+			<unit type="duration-day">
+				<perUnitPattern>{0}/day</perUnitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName>hrs.</displayName>
+				<unitPattern count="one">{0} hr.</unitPattern>
+				<unitPattern count="other">{0} hrs.</unitPattern>
+				<perUnitPattern>{0}/hr.</perUnitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>mins.</displayName>
+				<unitPattern count="one">{0} min.</unitPattern>
+				<unitPattern count="other">{0} min.</unitPattern>
+				<perUnitPattern>{0}/min.</perUnitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName>sec.</displayName>
+				<unitPattern count="one">{0} sec.</unitPattern>
+				<unitPattern count="other">{0} sec.</unitPattern>
+				<perUnitPattern>{0}/sec.</perUnitPattern>
+			</unit>
+			<unit type="duration-millisecond">
+				<displayName>millisecs.</displayName>
+				<unitPattern count="one">{0} millisec.</unitPattern>
+				<unitPattern count="other">{0} millisecs.</unitPattern>
+			</unit>
+			<unit type="duration-microsecond">
+				<displayName>μsec.</displayName>
+			</unit>
+			<unit type="duration-nanosecond">
+				<displayName>nanosec.</displayName>
+				<unitPattern count="one">{0} nanosec.</unitPattern>
+				<unitPattern count="other">{0} nanosec.</unitPattern>
+			</unit>
+			<unit type="electric-ohm">
+				<displayName>Ω</displayName>
+			</unit>
+			<unit type="electric-volt">
+				<displayName>V</displayName>
+			</unit>
+			<unit type="energy-kilojoule">
+				<displayName>kJ</displayName>
+			</unit>
+			<unit type="energy-joule">
+				<displayName>J</displayName>
+			</unit>
+			<unit type="energy-kilowatt-hour">
+				<displayName>kWh</displayName>
+			</unit>
+			<unit type="length-mile">
+				<unitPattern count="one">{0} mi.</unitPattern>
+				<unitPattern count="other">{0} mi.</unitPattern>
+			</unit>
+			<unit type="length-yard">
+				<unitPattern count="one">{0} yd.</unitPattern>
+				<unitPattern count="other">{0} yd.</unitPattern>
+			</unit>
+			<unit type="length-foot">
+				<unitPattern count="one">{0} ft.</unitPattern>
+				<unitPattern count="other">{0} ft.</unitPattern>
+				<perUnitPattern>{0}/ft.</perUnitPattern>
+			</unit>
+			<unit type="length-inch">
+				<unitPattern count="one">{0} in.</unitPattern>
+				<unitPattern count="other">{0} in.</unitPattern>
+				<perUnitPattern>{0}/in.</perUnitPattern>
+			</unit>
+			<unit type="length-astronomical-unit">
+				<displayName>AU</displayName>
+				<unitPattern count="one">{0} AU</unitPattern>
+				<unitPattern count="other">{0} AU</unitPattern>
+			</unit>
+			<unit type="length-furlong">
+				<unitPattern count="one">{0} fur.</unitPattern>
+				<unitPattern count="other">{0} fur.</unitPattern>
+			</unit>
+			<unit type="length-fathom">
+				<unitPattern count="one">{0} fm.</unitPattern>
+				<unitPattern count="other">{0} fm.</unitPattern>
+			</unit>
+			<unit type="length-nautical-mile">
+				<displayName>NM</displayName>
+				<unitPattern count="one">{0} NM</unitPattern>
+				<unitPattern count="other">{0} NM</unitPattern>
+			</unit>
+			<unit type="length-point">
+				<unitPattern count="one">{0} pt.</unitPattern>
+				<unitPattern count="other">{0} pts.</unitPattern>
+			</unit>
+			<unit type="mass-ton">
+				<unitPattern count="one">{0} tn.</unitPattern>
+				<unitPattern count="other">{0} tn.</unitPattern>
+			</unit>
+			<unit type="mass-stone">
+				<unitPattern count="one">{0} st.</unitPattern>
+				<unitPattern count="other">{0} st.</unitPattern>
+			</unit>
+			<unit type="mass-pound">
+				<displayName>lb.</displayName>
+				<unitPattern count="one">{0} lb.</unitPattern>
+				<unitPattern count="other">{0} lb.</unitPattern>
+				<perUnitPattern>{0}/lb.</perUnitPattern>
+			</unit>
+			<unit type="mass-ounce">
+				<displayName>oz.</displayName>
+				<unitPattern count="one">{0} oz.</unitPattern>
+				<unitPattern count="other">{0} oz.</unitPattern>
+				<perUnitPattern>{0}/oz.</perUnitPattern>
+			</unit>
+			<unit type="mass-ounce-troy">
+				<displayName>oz. troy</displayName>
+				<unitPattern count="one">{0} oz t.</unitPattern>
+				<unitPattern count="other">{0} oz t.</unitPattern>
+			</unit>
+			<unit type="mass-carat">
+				<displayName>ct</displayName>
+			</unit>
+			<unit type="mass-grain">
+				<displayName>grains</displayName>
+			</unit>
+			<unit type="power-watt">
+				<displayName>W</displayName>
+			</unit>
+			<unit type="pressure-millimeter-ofhg">
+				<displayName>mm Hg</displayName>
+				<unitPattern count="one">{0} mm Hg</unitPattern>
+				<unitPattern count="other">{0} mm Hg</unitPattern>
+			</unit>
+			<unit type="speed-meter-per-second">
+				<displayName>metres/sec.</displayName>
+			</unit>
+			<unit type="speed-knot">
+				<displayName>kn.</displayName>
+				<unitPattern count="one">{0} kn.</unitPattern>
+				<unitPattern count="other">{0} kn.</unitPattern>
+			</unit>
+			<unit type="temperature-celsius">
+				<unitPattern count="one">{0} °C</unitPattern>
+				<unitPattern count="other">{0} °C</unitPattern>
+			</unit>
+			<unit type="temperature-fahrenheit">
+				<unitPattern count="one">{0} °F</unitPattern>
+				<unitPattern count="other">{0} °F</unitPattern>
+			</unit>
+			<unit type="volume-cubic-mile">
+				<displayName>cu. mi.</displayName>
+				<unitPattern count="one">{0} cu. mi.</unitPattern>
+				<unitPattern count="other">{0} cu. mi.</unitPattern>
+			</unit>
+			<unit type="volume-cubic-yard">
+				<displayName>cu. yards</displayName>
+				<unitPattern count="one">{0} cu. yd.</unitPattern>
+				<unitPattern count="other">{0} cu. yd.</unitPattern>
+			</unit>
+			<unit type="volume-cubic-foot">
+				<displayName>cu. feet</displayName>
+				<unitPattern count="one">{0} cu. ft.</unitPattern>
+				<unitPattern count="other">{0} cu. ft.</unitPattern>
+			</unit>
+			<unit type="volume-cubic-inch">
+				<displayName>cu. inches</displayName>
+				<unitPattern count="one">{0} cu. in.</unitPattern>
+				<unitPattern count="other">{0} cu. in.</unitPattern>
+			</unit>
+			<unit type="volume-megaliter">
+				<displayName>ML</displayName>
+				<unitPattern count="one">{0} ML</unitPattern>
+				<unitPattern count="other">{0} ML</unitPattern>
+			</unit>
+			<unit type="volume-hectoliter">
+				<displayName>hL</displayName>
+				<unitPattern count="one">{0} hL</unitPattern>
+				<unitPattern count="other">{0} hL</unitPattern>
+			</unit>
+			<unit type="volume-liter">
+				<unitPattern count="one">{0} L</unitPattern>
+				<unitPattern count="other">{0} L</unitPattern>
+				<perUnitPattern>{0}/L</perUnitPattern>
+			</unit>
+			<unit type="volume-deciliter">
+				<displayName>dL</displayName>
+				<unitPattern count="one">{0} dL</unitPattern>
+				<unitPattern count="other">{0} dL</unitPattern>
+			</unit>
+			<unit type="volume-centiliter">
+				<displayName>cL</displayName>
+				<unitPattern count="one">{0} cL</unitPattern>
+				<unitPattern count="other">{0} cL</unitPattern>
+			</unit>
+			<unit type="volume-milliliter">
+				<displayName>mL</displayName>
+				<unitPattern count="one">{0} mL</unitPattern>
+				<unitPattern count="other">{0} mL</unitPattern>
+			</unit>
+			<unit type="volume-acre-foot">
+				<displayName>ac. ft.</displayName>
+				<unitPattern count="one">{0} ac. ft.</unitPattern>
+				<unitPattern count="other">{0} ac. ft.</unitPattern>
+			</unit>
+			<unit type="volume-gallon">
+				<displayName>US gal.</displayName>
+				<unitPattern count="one">{0} US gal.</unitPattern>
+				<unitPattern count="other">{0} US gal.</unitPattern>
+				<perUnitPattern>{0}/US gal.</perUnitPattern>
+			</unit>
+			<unit type="volume-gallon-imperial">
+				<displayName>gal.</displayName>
+				<unitPattern count="one">{0} gal.</unitPattern>
+				<unitPattern count="other">{0} gal.</unitPattern>
+				<perUnitPattern>{0}/gal.</perUnitPattern>
+			</unit>
+			<unit type="volume-quart">
+				<displayName>qt.</displayName>
+				<unitPattern count="one">{0} qt.</unitPattern>
+				<unitPattern count="other">{0} qt.</unitPattern>
+			</unit>
+			<unit type="volume-pint">
+				<unitPattern count="one">{0} pt.</unitPattern>
+				<unitPattern count="other">{0} pt.</unitPattern>
+			</unit>
+			<unit type="volume-cup">
+				<unitPattern count="one">{0} c.</unitPattern>
+				<unitPattern count="other">{0} c.</unitPattern>
+			</unit>
+			<unit type="volume-fluid-ounce">
+				<displayName>fl. oz.</displayName>
+				<unitPattern count="one">{0} fl. oz.</unitPattern>
+				<unitPattern count="other">{0} fl. oz.</unitPattern>
+			</unit>
+			<unit type="volume-fluid-ounce-imperial">
+				<displayName>imp. fl. oz.</displayName>
+				<unitPattern count="one">{0} imp. fl. oz.</unitPattern>
+				<unitPattern count="other">{0} imp. fl. oz.</unitPattern>
+			</unit>
+			<unit type="volume-tablespoon">
+				<displayName>tbsp.</displayName>
+				<unitPattern count="one">{0} tbsp.</unitPattern>
+				<unitPattern count="other">{0} tbsp.</unitPattern>
+			</unit>
+			<unit type="volume-teaspoon">
+				<displayName>tsp.</displayName>
+				<unitPattern count="one">{0} tsp.</unitPattern>
+				<unitPattern count="other">{0} tsp.</unitPattern>
+			</unit>
+			<unit type="volume-barrel">
+				<unitPattern count="one">{0} bbl.</unitPattern>
+				<unitPattern count="other">{0} bbl.</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon">
+				<displayName>dssp</displayName>
+				<unitPattern count="one">{0} dssp</unitPattern>
+				<unitPattern count="other">{0} dssp</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon-imperial">
+				<displayName>imp. dssp</displayName>
+				<unitPattern count="one">{0} imp. dssp</unitPattern>
+				<unitPattern count="other">{0} imp. dssp</unitPattern>
+			</unit>
+			<unit type="volume-drop">
+				<displayName>drops</displayName>
+			</unit>
+			<unit type="volume-dram">
+				<displayName>fl. dr.</displayName>
+				<unitPattern count="one">{0} fl. dr.</unitPattern>
+				<unitPattern count="other">{0} fl. dr.</unitPattern>
+			</unit>
+			<unit type="volume-jigger">
+				<displayName>jiggers</displayName>
+			</unit>
+			<unit type="volume-pinch">
+				<displayName>pinches</displayName>
+			</unit>
+			<unit type="volume-quart-imperial">
+				<displayName>imp. qt.</displayName>
+				<unitPattern count="one">{0} imp. qt.</unitPattern>
+				<unitPattern count="other">{0} imp. qt.</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="narrow">
+			<unit type="concentr-milligram-ofglucose-per-deciliter">
+				<displayName>mg/dL</displayName>
+				<unitPattern count="one">{0}mg/dL</unitPattern>
+				<unitPattern count="other">{0}mg/dL</unitPattern>
+			</unit>
+			<unit type="concentr-millimole-per-liter">
+				<displayName>mmol/L</displayName>
+				<unitPattern count="one">{0}mmol/L</unitPattern>
+				<unitPattern count="other">{0}mmol/L</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-kilometer">
+				<displayName>L/km</displayName>
+				<unitPattern count="one">{0}L/km</unitPattern>
+				<unitPattern count="other">{0}L/km</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-100-kilometer">
+				<displayName>L/100km</displayName>
+				<unitPattern count="one">{0}L/100km</unitPattern>
+				<unitPattern count="other">{0}L/100km</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<displayName>y</displayName>
+				<unitPattern count="one">{0} y</unitPattern>
+				<unitPattern count="other">{0} y</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>m</displayName>
+				<unitPattern count="one">{0} m</unitPattern>
+				<unitPattern count="other">{0} m</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName>w</displayName>
+				<unitPattern count="one">{0} w</unitPattern>
+				<unitPattern count="other">{0} w</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName>d</displayName>
+				<unitPattern count="one">{0} d</unitPattern>
+				<unitPattern count="other">{0} d</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName>h</displayName>
+				<unitPattern count="one">{0} h</unitPattern>
+				<unitPattern count="other">{0} h</unitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>min.</displayName>
+				<unitPattern count="one">{0} min.</unitPattern>
+				<unitPattern count="other">{0} min.</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName>sec.</displayName>
+				<unitPattern count="one">{0} sec.</unitPattern>
+				<unitPattern count="other">{0} sec.</unitPattern>
+			</unit>
+			<unit type="duration-millisecond">
+				<displayName>msec.</displayName>
+				<unitPattern count="one">{0} msec.</unitPattern>
+				<unitPattern count="other">{0} msec.</unitPattern>
+			</unit>
+			<unit type="length-mile">
+				<displayName>mi.</displayName>
+			</unit>
+			<unit type="length-yard">
+				<displayName>yd.</displayName>
+			</unit>
+			<unit type="length-foot">
+				<displayName>ft.</displayName>
+			</unit>
+			<unit type="length-inch">
+				<displayName>in.</displayName>
+			</unit>
+			<unit type="mass-stone">
+				<displayName>st.</displayName>
+			</unit>
+			<unit type="speed-mile-per-hour">
+				<displayName>mi./hr.</displayName>
+			</unit>
+			<unit type="volume-megaliter">
+				<displayName>ML</displayName>
+				<unitPattern count="one">{0}ML</unitPattern>
+				<unitPattern count="other">{0}ML</unitPattern>
+			</unit>
+			<unit type="volume-hectoliter">
+				<displayName>hL</displayName>
+				<unitPattern count="one">{0}hL</unitPattern>
+				<unitPattern count="other">{0}hL</unitPattern>
+			</unit>
+			<unit type="volume-liter">
+				<unitPattern count="one">{0}L</unitPattern>
+				<unitPattern count="other">{0}L</unitPattern>
+				<perUnitPattern>{0}/L</perUnitPattern>
+			</unit>
+			<unit type="volume-deciliter">
+				<displayName>dL</displayName>
+				<unitPattern count="one">{0}dL</unitPattern>
+				<unitPattern count="other">{0}dL</unitPattern>
+			</unit>
+			<unit type="volume-centiliter">
+				<displayName>cL</displayName>
+				<unitPattern count="one">{0}cL</unitPattern>
+				<unitPattern count="other">{0}cL</unitPattern>
+			</unit>
+			<unit type="volume-milliliter">
+				<displayName>mL</displayName>
+				<unitPattern count="one">{0}mL</unitPattern>
+				<unitPattern count="other">{0}mL</unitPattern>
+			</unit>
+		</unitLength>
+	</units>
+	<characterLabels>
+		<characterLabel type="downwards_arrows">downward arrow</characterLabel>
+		<characterLabel type="downwards_upwards_arrows">downward upward arrow</characterLabel>
+		<characterLabel type="leftwards_arrows">leftward arrow</characterLabel>
+		<characterLabel type="leftwards_rightwards_arrows">leftward rightward arrow</characterLabel>
+		<characterLabel type="letterlike_symbols">letter-like symbol</characterLabel>
+		<characterLabel type="limited_use">limited use</characterLabel>
+		<characterLabel type="math_symbols">math symbol</characterLabel>
+		<characterLabel type="nonspacing">non-spacing</characterLabel>
+		<characterLabel type="rightwards_arrows">rightward arrow</characterLabel>
+		<characterLabel type="upwards_arrows">upward arrows</characterLabel>
+	</characterLabels>
+	<typographicNames>
+		<styleName type="slnt" subtype="24">extraslanted</styleName>
+		<styleName type="wdth" subtype="62.5">extracondensed</styleName>
+		<styleName type="wdth" subtype="62.5" alt="compressed">extracompressed</styleName>
+		<styleName type="wdth" subtype="62.5" alt="narrow">extranarrow</styleName>
+		<styleName type="wdth" subtype="150">extraexpanded</styleName>
+		<styleName type="wdth" subtype="150" alt="extended">extraextended</styleName>
+		<styleName type="wdth" subtype="150" alt="wide">extrawide</styleName>
+		<styleName type="wght" subtype="200">extralight</styleName>
+		<styleName type="wght" subtype="800">extrabold</styleName>
+		<styleName type="wght" subtype="950">extrablack</styleName>
+	</typographicNames>
+</ldml>

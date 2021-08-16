@@ -1,0 +1,170 @@
+#
+# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+#############################################################################
+#
+# List of quarantined tests -- tests that should not be run by default, because
+# they may fail due to known reason. The reason (CR#) must be mandatory specified.
+#
+# List items are testnames followed by labels, all MUST BE commented
+#   as to why they are here and use a label:
+#     generic-all   Problems on all platforms
+#     generic-ARCH  Where ARCH is one of: x64, i586, ppc64, ppc64le, s390x etc.
+#     OSNAME-all    Where OSNAME is one of: linux, windows, macosx, aix
+#     OSNAME-ARCH   Specific on to one OSNAME and ARCH, e.g. macosx-x64
+#     OSNAME-REV    Specific on to one OSNAME and REV, e.g. macosx-10.7.4
+#
+# More than one label is allowed but must be on the same line.
+#
+#############################################################################
+
+# :hotspot_compiler
+
+compiler/ciReplay/TestSAServer.java 8029528 generic-all
+compiler/compilercontrol/jcmd/ClearDirectivesFileStackTest.java 8225370 generic-all
+compiler/jvmci/compilerToVM/GetFlagValueTest.java 8204459 generic-all
+compiler/jvmci/jdk.vm.ci.code.test/src/jdk/vm/ci/code/test/NativeCallTest.java 8262901 macosx-aarch64
+compiler/tiered/LevelTransitionTest.java 8067651 generic-all
+
+compiler/cpuflags/TestAESIntrinsicsOnSupportedConfig.java 8190680 generic-all
+
+compiler/runtime/Test8168712.java 8211769,8211771 generic-ppc64,generic-ppc64le,linux-s390x
+
+compiler/rtm/locking/TestRTMAbortRatio.java 8183263 generic-x64
+compiler/rtm/locking/TestRTMAbortThreshold.java 8183263 generic-x64
+compiler/rtm/locking/TestRTMAfterNonRTMDeopt.java 8183263 generic-x64
+compiler/rtm/locking/TestRTMDeoptOnHighAbortRatio.java 8183263 generic-x64
+compiler/rtm/locking/TestRTMDeoptOnLowAbortRatio.java 8183263 generic-x64
+compiler/rtm/locking/TestRTMLockingCalculationDelay.java 8183263 generic-x64
+compiler/rtm/locking/TestRTMLockingThreshold.java 8183263 generic-x64
+compiler/rtm/locking/TestRTMSpinLoopCount.java 8183263 generic-x64
+compiler/rtm/locking/TestUseRTMDeopt.java 8183263 generic-x64
+compiler/rtm/locking/TestUseRTMXendForLockBusy.java 8183263 generic-x64
+compiler/rtm/print/TestPrintPreciseRTMLockingStatistics.java 8183263 generic-x64
+
+compiler/c2/Test8004741.java 8235801 generic-all
+
+compiler/whitebox/ClearMethodStateTest.java 8265360 macosx-aarch64
+compiler/whitebox/EnqueueMethodForCompilationTest.java 8265360 macosx-aarch64
+compiler/whitebox/MakeMethodNotCompilableTest.java 8265360 macosx-aarch64
+
+compiler/codecache/jmx/PoolsIndependenceTest.java 8264632 macosx-x64
+
+
+#############################################################################
+
+# :hotspot_gc
+
+gc/epsilon/TestMemoryMXBeans.java 8206434 generic-all
+gc/g1/humongousObjects/objectGraphTest/TestObjectGraphAfterGC.java 8156755 generic-all
+gc/g1/logging/TestG1LoggingFailure.java 8169634 generic-all
+gc/g1/humongousObjects/TestHeapCounters.java 8178918 generic-all
+gc/stress/gclocker/TestExcessGCLockerCollections.java 8229120 generic-all
+gc/stress/gclocker/TestGCLockerWithParallel.java 8180622 generic-all
+gc/stress/gclocker/TestGCLockerWithG1.java 8180622 generic-all
+gc/stress/TestJNIBlockFullGC/TestJNIBlockFullGC.java 8192647 generic-all
+gc/metaspace/CompressedClassSpaceSizeInJmapHeap.java 8241293 macosx-x64
+
+#############################################################################
+
+# :hotspot_runtime
+
+runtime/cds/appcds/jigsaw/modulepath/ModulePathAndCP_JFR.java 8253437 windows-x64
+runtime/cds/DeterministicDump.java 8253495 generic-all
+runtime/InvocationTests/invokevirtualTests.java 8271125 generic-all
+runtime/jni/terminatedThread/TestTerminatedThread.java 8219652 aix-ppc64
+runtime/os/TestTracePageSizes.java#no-options 8267460 linux-aarch64
+runtime/os/TestTracePageSizes.java#explicit-large-page-size 8267460 linux-aarch64
+runtime/os/TestTracePageSizes.java#compiler-options 8267460 linux-aarch64
+runtime/os/TestTracePageSizes.java#with-G1 8267460 linux-aarch64
+runtime/os/TestTracePageSizes.java#with-Parallel 8267460 linux-aarch64
+runtime/os/TestTracePageSizes.java#with-Serial 8267460 linux-aarch64
+
+applications/jcstress/copy.java 8229852 linux-x64
+
+#############################################################################
+
+# :hotspot_serviceability
+
+serviceability/sa/sadebugd/DebugdConnectTest.java 8239062,8270326 macosx-x64,macosx-aarch64
+serviceability/sa/TestRevPtrsForInvokeDynamic.java 8241235 generic-all
+resourcehogs/serviceability/sa/TestHeapDumpForLargeArray.java 8262386 generic-all
+
+serviceability/jvmti/ModuleAwareAgents/ThreadStart/MAAThreadStart.java 8225354 windows-all
+serviceability/dcmd/gc/RunFinalizationTest.java 8227120 linux-all,windows-x64
+
+serviceability/sa/ClhsdbCDSCore.java 8269982 macosx-aarch64
+serviceability/sa/ClhsdbFindPC.java#id1 8269982 macosx-aarch64
+serviceability/sa/ClhsdbFindPC.java#id3 8269982 macosx-aarch64
+serviceability/sa/ClhsdbPstack.java#id1 8269982 macosx-aarch64
+
+#############################################################################
+
+# :hotspot_misc
+
+#############################################################################
+
+
+#############################################################################
+
+# :vmTestbase_*
+
+#############################################################################
+
+vmTestbase/nsk/monitoring/MemoryPoolMBean/isCollectionUsageThresholdExceeded/isexceeded003/TestDescription.java 8153598 generic-all
+vmTestbase/nsk/monitoring/MemoryPoolMBean/isUsageThresholdExceeded/isexceeded001/TestDescription.java 8198668 generic-all
+vmTestbase/nsk/monitoring/MemoryPoolMBean/isUsageThresholdExceeded/isexceeded002/TestDescription.java 8153598 generic-all
+vmTestbase/nsk/monitoring/MemoryPoolMBean/isUsageThresholdExceeded/isexceeded003/TestDescription.java 8198668 generic-all
+vmTestbase/nsk/monitoring/MemoryPoolMBean/isUsageThresholdExceeded/isexceeded004/TestDescription.java 8153598 generic-all
+vmTestbase/nsk/monitoring/MemoryPoolMBean/isUsageThresholdExceeded/isexceeded005/TestDescription.java 8153598 generic-all
+vmTestbase/nsk/monitoring/ThreadMXBean/ThreadInfo/Deadlock/JavaDeadlock001/TestDescription.java 8060733 generic-all
+
+vmTestbase/nsk/jdi/HiddenClass/events/events001.java                 8257705 generic-all
+vmTestbase/nsk/jdi/ThreadReference/stop/stop001/TestDescription.java 7034630 generic-all
+
+vmTestbase/metaspace/gc/firstGC_10m/TestDescription.java 8208250 generic-all
+vmTestbase/metaspace/gc/firstGC_50m/TestDescription.java 8208250 generic-all
+vmTestbase/metaspace/gc/firstGC_99m/TestDescription.java 8208250 generic-all
+vmTestbase/metaspace/gc/firstGC_default/TestDescription.java 8208250 generic-all
+
+vmTestbase/nsk/jvmti/AttachOnDemand/attach045/TestDescription.java 8202971 generic-all
+vmTestbase/nsk/jvmti/scenarios/jni_interception/JI05/ji05t001/TestDescription.java 8219652 aix-ppc64
+vmTestbase/nsk/jvmti/scenarios/jni_interception/JI06/ji06t001/TestDescription.java 8219652 aix-ppc64
+vmTestbase/nsk/jvmti/SetJNIFunctionTable/setjniftab001/TestDescription.java 8219652 aix-ppc64
+vmTestbase/nsk/jvmti/SuspendThread/suspendthrd003/TestDescription.java 8264605 generic-all
+vmTestbase/nsk/jvmti/PopFrame/popframe011/TestDescription.java 8266593 generic-all
+
+vmTestbase/gc/lock/jni/jnilock002/TestDescription.java 8192647 generic-all
+
+vmTestbase/jit/escape/LockCoarsening/LockCoarsening001.java 8148743 generic-all
+vmTestbase/jit/escape/LockCoarsening/LockCoarsening002.java 8208259 generic-all
+
+vmTestbase/vm/mlvm/indy/func/jvmti/redefineClassInBootstrap/TestDescription.java 8013267 generic-all
+vmTestbase/vm/mlvm/meth/stress/jdi/breakpointInCompiledCode/Test.java 8257761 generic-all
+vmTestbase/vm/mlvm/indy/func/jvmti/mergeCP_indy2none_a/TestDescription.java 8013267 generic-all
+vmTestbase/vm/mlvm/indy/func/jvmti/mergeCP_indy2manyDiff_b/TestDescription.java 8013267 generic-all
+vmTestbase/vm/mlvm/indy/func/jvmti/mergeCP_indy2manySame_b/TestDescription.java 8013267 generic-all
+
+vmTestbase/nsk/jdwp/ThreadReference/ForceEarlyReturn/forceEarlyReturn001/forceEarlyReturn001.java 7199837 generic-all
+
+#############################################################################

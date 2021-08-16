@@ -1,0 +1,57 @@
+#
+# Copyright (c) 2018, 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+
+include $(SPEC)
+include MakeBase.gmk
+
+################################################################################
+
+JCOV_INPUT_IMAGE_DIR :=
+
+ifneq ($(JCOV_INPUT_JDK), )
+  JCOV_INPUT_IMAGE_DIR := $(JCOV_INPUT_JDK)
+else
+  JCOV_INPUT_IMAGE_DIR := $(JDK_IMAGE_DIR)
+endif
+
+#moving instrumented jdk image in and out of jcov_temp because of CODETOOLS-7902299
+JCOV_TEMP := $(SUPPORT_OUTPUTDIR)/jcov_temp
+
+$(JCOV_IMAGE_DIR)/release: $(JCOV_INPUT_IMAGE_DIR)/release
+	$(call LogWarn, Creating instrumented jdk image with JCov)
+	$(call MakeDir, $(JCOV_TEMP) $(IMAGES_OUTPUTDIR))
+	$(RM) -r $(JCOV_IMAGE_DIR) $(JCOV_TEMP)/*
+	$(CP) -r $(JCOV_INPUT_IMAGE_DIR) $(JCOV_TEMP)/$(JCOV_IMAGE_SUBDIR)
+	$(JAVA) -Xmx3g -jar $(JCOV_HOME)/lib/jcov.jar JREInstr \
+	    -t $(JCOV_TEMP)/$(JCOV_IMAGE_SUBDIR)/template.xml \
+	    -rt $(JCOV_HOME)/lib/jcov_network_saver.jar \
+	    -exclude 'java.lang.Object' \
+	    -exclude 'jdk.internal.org.objectweb.**' \
+	    -exclude jdk.test.Main -exclude '**\$Proxy*' \
+	    $(JCOV_FILTERS) \
+	    $(JCOV_TEMP)/$(JCOV_IMAGE_SUBDIR)
+	$(MV) $(JCOV_TEMP)/$(JCOV_IMAGE_SUBDIR) $(JCOV_IMAGE_DIR)
+	$(RMDIR) $(JCOV_TEMP)
+
+jcov-image: $(JCOV_IMAGE_DIR)/release

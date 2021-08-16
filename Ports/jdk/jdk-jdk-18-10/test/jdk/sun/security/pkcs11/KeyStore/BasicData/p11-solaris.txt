@@ -1,0 +1,26 @@
+#
+# Configuration file to allow the SunPKCS11 provider to utilize
+# the Solaris Cryptographic Framework, if it is available
+#
+
+name = Solaris
+
+description = SunPKCS11 accessing Solaris Cryptographic Framework
+
+library = /usr/lib/$ISA/libpkcs11.so
+
+handleStartupErrors = ignoreAll
+
+attributes = compatibility
+
+disabledMechanisms = {
+  CKM_MD2
+  CKM_MD5
+  CKM_SHA_1
+  CKM_SHA256
+  CKM_SHA384
+  CKM_SHA512
+  CKM_DSA_KEY_PAIR_GEN
+#  KeyStore
+}
+

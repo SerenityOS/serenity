@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://server.type_substitution.fromjava/" xmlns:tns="http://server.type_substitution.fromjava/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="getSedans" type="tns:getSedans"/>
+
+  <xs:element name="getSedansResponse" type="tns:getSedansResponse"/>
+
+  <xs:complexType name="toyota">
+    <xs:complexContent>
+      <xs:extension base="tns:car">
+        <xs:sequence>
+          <xs:element name="color" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="car" abstract="true">
+    <xs:sequence>
+      <xs:element name="make" type="xs:string" minOccurs="0"/>
+      <xs:element name="model" type="xs:string" minOccurs="0"/>
+      <xs:element name="year" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="getSedans"/>
+
+  <xs:complexType name="getSedansResponse">
+    <xs:sequence>
+      <xs:element name="return" type="tns:car" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>
+

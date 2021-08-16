@@ -1,0 +1,42 @@
+
+CLASSFILE  MemberModifiers.c
+--- SUPER
+FIELD  this$0
+--- FINAL
+METHOD  <init>
+---
+
+CLASSFILE  MemberModifiers.i
+--- INTERFACE ABSTRACT
+
+CLASSFILE  MemberModifiers
+--- PUBLIC FINAL SUPER
+FIELD  f
+---
+METHOD  <init>
+--- PUBLIC
+METHOD  m
+---
+
+CLASSFILE  MemberModifiersAux.Foo.c
+--- SUPER
+FIELD  this$1
+--- FINAL
+METHOD  <init>
+---
+
+CLASSFILE  MemberModifiersAux.Foo
+--- FINAL SUPER
+FIELD  f
+---
+FIELD  this$0
+--- FINAL
+METHOD  <init>
+---
+METHOD  m
+---
+
+CLASSFILE  MemberModifiersAux
+--- SUPER
+METHOD  <init>
+---

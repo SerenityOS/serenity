@@ -1,0 +1,6 @@
+grant {
+    permission java.lang.RuntimePermission
+		"accessClassInPackage.sun.security.provider";
+    permission java.lang.RuntimePermission
+		"accessClassInPackage.sun.security.x509";
+}; 

@@ -1,0 +1,43 @@
+EXPECT_START
+DocComment[DOC_COMMENT, pos:10
+  preamble: 9
+    DocType[DOC_TYPE, pos:10, HTML_PUBLIC_"-//...W3C//DTD_HTML_4.01//EN"|________"http://www.w3.org/TR/html4/strict.dtd"]
+    Comment[COMMENT, pos:99, <!--_/nodynamiccopyright/_-->]
+    StartElement[START_ELEMENT, pos:129
+      name:HTML
+      attributes: empty
+    ]
+    StartElement[START_ELEMENT, pos:136
+      name:HEAD
+      attributes: empty
+    ]
+    StartElement[START_ELEMENT, pos:147
+      name:TITLE
+      attributes: empty
+    ]
+    Text[TEXT, pos:154, The_Crafty_Fox]
+    EndElement[END_ELEMENT, pos:168, TITLE]
+    EndElement[END_ELEMENT, pos:177, HEAD]
+    StartElement[START_ELEMENT, pos:185
+      name:BODY
+      attributes: empty
+    ]
+  firstSentence: 1
+    Text[TEXT, pos:192, A_simple_well_fo...rmed_html_document]
+  body: 4
+    StartElement[START_ELEMENT, pos:227
+      name:pre
+      attributes: empty
+    ]
+    Text[TEXT, pos:232, package.html]
+    StartElement[START_ELEMENT, pos:244
+      name:pre
+      attributes: empty
+    ]
+    Text[TEXT, pos:249, .]
+  block tags: empty
+  postamble: 2
+    EndElement[END_ELEMENT, pos:251, BODY]
+    EndElement[END_ELEMENT, pos:259, HTML]
+]
+EXPECT_END

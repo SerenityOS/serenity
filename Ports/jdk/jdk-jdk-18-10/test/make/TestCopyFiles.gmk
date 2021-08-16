@@ -1,0 +1,98 @@
+#
+# Copyright (c) 2017, 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include UtilsForTests.gmk
+
+THIS_FILE := $(TOPDIR)/test/make/TestCopyFiles.gmk
+DEPS := $(THIS_FILE) \
+    $(TOPDIR)/make/common/MakeBase.gmk \
+    #
+
+OUTPUT_DIR := $(TESTMAKE_OUTPUTDIR)/copy-files
+$(call MakeDir, $(OUTPUT_DIR))
+
+################################################################################
+# Test SetupCopyFiles with CacheFind and files with spaces in their names.
+
+SRC_DIR := $(OUTPUT_DIR)/src
+DEST_DIR := $(OUTPUT_DIR)/dest
+
+$(OUTPUT_DIR)/_src_created: $(DEPS)
+	$(RM) -r $(DEST_DIR)
+	$(RM) -r $(SRC_DIR)
+	$(MKDIR) -p $(SRC_DIR)
+	$(MKDIR) -p $(SRC_DIR)/foo
+	$(TOUCH) $(SRC_DIR)/file
+	$(TOUCH) $(SRC_DIR)/foo/foofile
+	$(TOUCH) "$(SRC_DIR)/foo/foo file"
+        # Spaces in directories only works with gnu make 4.0 or later
+        ifeq (4.0, $(firstword $(sort 4.0 $(MAKE_VERSION))))
+	  $(MKDIR) -p "$(SRC_DIR)/foo bar"
+	  $(TOUCH) "$(SRC_DIR)/foo bar/foobarfile"
+	  $(TOUCH) "$(SRC_DIR)/foo bar/foo bar file"
+        endif
+	$(LN) -s file "$(SRC_DIR)/link to file"
+	$(TOUCH) $@
+
+$(eval $(call SetupCopyFiles, COPY_1, \
+    SRC := $(SRC_DIR), \
+    DEST := $(DEST_DIR), \
+    FILES := $(call ShellFindFiles, $(SRC_DIR)), \
+))
+
+# Optionally define a rule that deletes all the target files after the makefile
+# has been parsed. GNU make has specific problems with this in combination with
+# spaces in directory names.
+ifeq ($(DELETE_FIRST), true)
+  delete-targets:
+	$(RM) -r $(DEST_DIR)
+	$(ECHO) '$(DEST_DIR)/foo' '$(wildcard $(DEST_DIR)/foo)'
+
+  $(COPY_1): delete-targets
+endif
+
+do-copy1: $(COPY_1)
+
+run-test1: $(OUTPUT_DIR)/_src_created
+	$(ECHO) "Copy 1 first time"
+	+$(MAKE) -f $(THIS_FILE) do-copy1
+	$(DIFF) -r $(SRC_DIR) $(DEST_DIR)
+        # Rerun the copy a second time, with the targets present at make parse
+        # time, but then deleted by a prerequisite rule.
+	$(ECHO) "Copy 1 second time"
+	+$(MAKE) -f $(THIS_FILE) do-copy1 DELETE_FIRST=true
+	$(DIFF) -r $(SRC_DIR) $(DEST_DIR)
+
+TEST_TARGETS += run-test1
+
+.PHONY: do-copy1 run-test1 delete-targets
+
+################################################################################
+
+all: $(TEST_TARGETS)

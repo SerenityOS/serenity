@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="fr"/>
+		<territory type="HT"/>
+	</identity>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="midnight" draft="contributed">minuit</dayPeriod>
+							<dayPeriod type="noon" draft="contributed">midi</dayPeriod>
+							<dayPeriod type="morning1" draft="contributed">du matin</dayPeriod>
+							<dayPeriod type="afternoon1" draft="contributed">de l’après-midi</dayPeriod>
+							<dayPeriod type="evening1" draft="contributed">du soir</dayPeriod>
+							<dayPeriod type="night1" draft="contributed">de la nuit</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="day-short">
+				<displayName draft="contributed">jr.</displayName>
+			</field>
+			<field type="day-narrow">
+				<displayName draft="contributed">jr.</displayName>
+			</field>
+			<field type="sun-narrow">
+				<relative type="-1" draft="contributed">dim dernier</relative>
+				<relative type="0" draft="contributed">ce dim</relative>
+				<relative type="1" draft="contributed">dim prochain</relative>
+			</field>
+			<field type="mon-narrow">
+				<relative type="-1" draft="contributed">lun dernier</relative>
+				<relative type="0" draft="contributed">ce lun</relative>
+				<relative type="1" draft="contributed">lun prochain</relative>
+			</field>
+			<field type="tue-narrow">
+				<relative type="-1" draft="contributed">mar dernier</relative>
+				<relative type="0" draft="contributed">ce mar</relative>
+				<relative type="1" draft="contributed">mar prochain</relative>
+			</field>
+			<field type="wed-narrow">
+				<relative type="-1" draft="contributed">mer dernier</relative>
+				<relative type="0" draft="contributed">ce mer</relative>
+				<relative type="1" draft="contributed">mer prochain</relative>
+			</field>
+			<field type="thu-narrow">
+				<relative type="-1" draft="contributed">jeu dernier</relative>
+				<relative type="0" draft="contributed">ce jeu</relative>
+				<relative type="1" draft="contributed">jeu prochain</relative>
+			</field>
+			<field type="fri-narrow">
+				<relative type="-1" draft="contributed">ven dernier</relative>
+				<relative type="0" draft="contributed">ce ven</relative>
+				<relative type="1" draft="contributed">ven prochain</relative>
+			</field>
+			<field type="sat-narrow">
+				<relative type="-1" draft="contributed">sam dernier</relative>
+				<relative type="0" draft="contributed">ce sam</relative>
+				<relative type="1" draft="contributed">sam prochain</relative>
+			</field>
+			<field type="hour-short">
+				<displayName draft="contributed">hr</displayName>
+			</field>
+			<field type="hour-narrow">
+				<displayName draft="contributed">hr</displayName>
+			</field>
+			<field type="minute-short">
+				<displayName draft="contributed">min.</displayName>
+			</field>
+			<field type="minute-narrow">
+				<displayName draft="contributed">min.</displayName>
+			</field>
+			<field type="second-narrow">
+				<displayName draft="contributed">sec.</displayName>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<currencies>
+			<currency type="HTG">
+				<symbol>G</symbol>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="area-hectare">
+				<displayName draft="contributed">carreau</displayName>
+				<unitPattern count="one" draft="contributed">{0}carreau</unitPattern>
+				<unitPattern count="other" draft="contributed">{0}carreaux</unitPattern>
+			</unit>
+			<unit type="volume-cubic-meter">
+				<perUnitPattern draft="contributed">{0} pour chaque metre cube</perUnitPattern>
+			</unit>
+			<unit type="volume-cubic-centimeter">
+				<perUnitPattern draft="contributed">{0} pour chaque centimetre cube</perUnitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="duration-century">
+				<displayName draft="contributed">sec</displayName>
+			</unit>
+			<unit type="mass-gram">
+				<unitPattern count="one" draft="contributed">{0}gr</unitPattern>
+				<unitPattern count="other" draft="contributed">{0}gr</unitPattern>
+			</unit>
+			<unit type="mass-carat">
+				<displayName draft="contributed">kr</displayName>
+				<unitPattern count="one" draft="contributed">{0}kr</unitPattern>
+				<unitPattern count="other" draft="contributed">{0}kr</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="narrow">
+			<unit type="mass-gram">
+				<displayName draft="contributed">gr.</displayName>
+			</unit>
+		</unitLength>
+	</units>
+</ldml>

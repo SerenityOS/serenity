@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!DOCTYPE note [                           
+<!ELEMENT note    (to,from,heading,body)>
+<!ELEMENT to      (#PCDATA)>
+<!NOTATION gs SYSTEM "GhostScript">
+
+
+ <!NOTATION name PUBLIC "pubId">
+
+
+ <!NOTATION name PUBLIC "pubId" "sysId">
+
+
+ <!NOTATION name SYSTEM "sysId">
+]>                         
+<note>
+<to>lll</to>
+
+</note> 

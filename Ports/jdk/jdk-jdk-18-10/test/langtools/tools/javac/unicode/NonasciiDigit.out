@@ -1,0 +1,10 @@
+NonasciiDigit.java:12:18: compiler.err.illegal.nonascii.digit
+NonasciiDigit.java:13:19: compiler.err.illegal.nonascii.digit
+NonasciiDigit.java:14:18: compiler.err.illegal.nonascii.digit
+NonasciiDigit.java:16:21: compiler.err.illegal.nonascii.digit
+NonasciiDigit.java:17:23: compiler.err.illegal.nonascii.digit
+NonasciiDigit.java:18:25: compiler.err.illegal.nonascii.digit
+NonasciiDigit.java:19:23: compiler.err.illegal.nonascii.digit
+NonasciiDigit.java:20:22: compiler.err.illegal.nonascii.digit
+NonasciiDigit.java:21:21: compiler.err.illegal.nonascii.digit
+9 errors

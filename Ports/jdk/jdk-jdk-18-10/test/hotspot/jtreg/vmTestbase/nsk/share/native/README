@@ -1,0 +1,183 @@
+Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+---------------------------------------------------------------------------------
+
+This directory contains source files of testbase_nsk native
+framework, which provides support for native tests.
+
+    Source files:
+        nsk_tools.h
+        nsk_tools.c
+
+    Naming conventions:
+        macroses:  NSK_*
+        functions: nsk_*
+
+Also this directory provides support for running native threads
+in a platform independent manner.
+
+    Source files:
+        native_thread.h
+        native_thread.c
+
+    Naming conventions:
+        functions: THREAD_*
+
+The following source files declares a set of functions which
+provides support for lists of various objects
+
+    Source files:
+        nsk_list.h
+        nsk_list.c
+
+    Naming conventions:
+        functions: nsk_list_*
+
+---------------------------------------------------------------------------------
+
+nsk_tools.h
+
+Provides functions and macroses for the most usefull actions:
+
+    - print error message with arguments
+
+        NSK_COMPLAINn(format, arg1, ..., argn)
+
+    - print verbose message with arguments
+
+        NSK_DISPLAYn(format, arg1, ..., argn)
+
+    - trace action execution
+
+        NSK_TRACE(action)
+
+    - trace action, check result for true/false and print error if required
+
+        NSK_VERIFY(action)
+        NSK_VERIFY_NEGATIVE(action)
+
+    - set verbose and trace mode of test output
+
+        void nsk_setVerboseMode(int verbose);
+        int  nsk_getVerboseMode();
+
+        void nsk_setTraceMode(int mode);
+        int  nsk_getTraceMode();
+
+    - miscelaneous functions for printing messages
+      (hidden by above mentioned macroses)
+
+Typical example of using the NSK_VERIFY macro
+for accesing JVM native environment:
+
+    // jvm->GetEnv(jvm, &env, version)
+    if (!NSK_VERIFY(
+            jvm->GetEnv(&env, JNI_VERSION_1_2) == JNI_OK)) {
+        return JNI_ERR;
+    }
+
+For more specific checks in invocations of JNI and JVMTI functions
+use special macroses defined in share/jni and share/jvmti frameworks.
+
+---------------------------------------------------------------------------------
+
+native_thread.h
+
+Provides platform-independent support for running native threads:
+
+    - manage native threads
+
+    void* THREAD_new(PROCEDURE procedure, void* context);
+    void* THREAD_start(void* thread);
+    void  THREAD_waitFor(void* thread);
+    void  THREAD_sleep(int seconds);
+
+    - get status of native threads
+
+    int THREAD_isStarted(void* thread);
+    int THREAD_hasFinished(void* thread);
+    int THREAD_status(void* thread);
+
+---------------------------------------------------------------------------------
+
+nsk_list.h
+
+Provides support for lists of various objects:
+
+    - managing list
+    const void* nsk_list_Create();
+    int         nsk_list_Destroy(const void *plist);
+
+    - managing elements
+    const void* nsk_list_Add(const void *plist, const void *p);
+    int         nsk_list_Delete(const void *plist, int ind);
+
+    - getting element info
+    int         nsk_list_getCount(const void *plist);
+    const void* nsk_list_Get(const void *plist, int ind);
+
+Typical example:
+
+int TOTAL_COUNT = 10;
+typedef struct recordStruct {
+    int field1;
+    int field2;
+} record;
+
+main() {
+    int i;
+    record *rec;
+    const void *plist;
+
+    /* creating list */
+    plist = nsk_list_create();
+
+    /* adding new elements */
+    for (i = 0; i < TOTAL_COUNT; i ++) {
+        rec = (record *)malloc(sizeof(record));
+        rec->field1 = i;
+        rec->field2 = i * 10;
+        if (!nsk_list_add(plist, rec)) {
+            free((void *)rec);
+        }
+    }
+
+    /* getting elements */
+    for (i = 0; i < TOTAL_COUNT; i ++) {
+        rec = (record *)nsk_list_get(plist, i);
+        printf("%3d %3d\n", rec->field1, rec->field2);
+    }
+
+    /* deleteing elements */
+    for (i = 0; i < TOTAL_COUNT; i ++) {
+        rec = (record *)nsk_list_get(plist, i);
+        free(rec);
+        nsk_list_remove(plist, 0);
+    }
+
+    /* destroying list */
+    nsk_list_destroy(plist);
+
+}
+
+---------------------------------------------------------------------------------
+

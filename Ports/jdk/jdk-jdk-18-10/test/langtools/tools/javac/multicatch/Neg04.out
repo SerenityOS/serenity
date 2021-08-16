@@ -1,0 +1,2 @@
+Neg04.java:27:13: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.Exception
+1 error

@@ -1,0 +1,4 @@
+BadRecovery.java:17:9: compiler.err.cant.apply.symbol: kindname.method, m, BadRecovery.SAM1, @11, kindname.class, BadRecovery, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.arg.types.in.lambda))
+BadRecovery.java:17:38: compiler.err.cant.resolve.location.args: kindname.method, someMemberOfReceiver, , @60, (compiler.misc.location.1: kindname.variable, receiver, java.lang.Object)
+BadRecovery.java:17:77: compiler.err.cant.resolve.location: kindname.variable, f, , , (compiler.misc.location: kindname.class, BadRecovery, null)
+3 errors

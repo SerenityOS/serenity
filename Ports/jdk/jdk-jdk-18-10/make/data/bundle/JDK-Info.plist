@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>CFBundleDevelopmentRegion</key>
+        <string>English</string>
+        <key>CFBundleExecutable</key>
+        <string>libjli.dylib</string>
+        <key>CFBundleGetInfoString</key>
+        <string>@@INFO@@</string>
+        <key>CFBundleIdentifier</key>
+        <string>@@ID@@</string>
+        <key>CFBundleInfoDictionaryVersion</key>
+        <string>7.0</string>
+        <key>CFBundleName</key>
+        <string>@@NAME@@</string>
+        <key>CFBundlePackageType</key>
+        <string>BNDL</string>
+        <key>CFBundleShortVersionString</key>
+        <string>@@VERSION@@</string>
+        <key>CFBundleSignature</key>
+        <string>????</string>
+        <key>CFBundleVersion</key>
+        <string>@@BUILD_VERSION@@</string>
+        <key>NSMicrophoneUsageDescription</key>
+        <string>The application is requesting access to the microphone.</string>
+        <key>JavaVM</key>
+        <dict>
+                <key>JVMCapabilities</key>
+                <array>
+                        <string>CommandLine</string>
+                </array>
+                <key>JVMMinimumFrameworkVersion</key>
+                <string>13.2.9</string>
+                <key>JVMMinimumSystemVersion</key>
+                <string>@@MACOSX_VERSION_MIN@@</string>
+                <key>JVMPlatformVersion</key>
+                <string>@@VERSION@@</string>
+                <key>JVMVendor</key>
+                <string>@@VENDOR@@</string>
+                <key>JVMVersion</key>
+                <string>@@VERSION@@</string>
+        </dict>
+</dict>
+</plist>

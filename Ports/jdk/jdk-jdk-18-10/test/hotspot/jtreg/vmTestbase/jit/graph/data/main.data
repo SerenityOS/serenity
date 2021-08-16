@@ -1,0 +1,13 @@
+12
+jit.graph.test1	callMe		1
+jit.graph.test2	callMe		2
+jit.graph.test2	CallCallMe	3
+jit.graph.test3	callMe		5
+jit.graph.test3	selfRecursion	7
+jit.graph.test4	CallCallMe	11
+jit.graph.test4	callMe		13
+jit.graph.test5	factTest	17
+jit.graph.test5	fiboTest	19
+jit.graph.test5	combTest	23
+jit.graph.test5	pascalTest	29
+jit.graph.test6	rbTest		31

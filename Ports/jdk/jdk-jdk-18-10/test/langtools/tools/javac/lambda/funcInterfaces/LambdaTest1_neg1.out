@@ -1,0 +1,3 @@
+LambdaTest1_neg1.java:13:60: compiler.err.not.stmt
+LambdaTest1_neg1.java:13:65: compiler.err.expected: ';'
+2 errors

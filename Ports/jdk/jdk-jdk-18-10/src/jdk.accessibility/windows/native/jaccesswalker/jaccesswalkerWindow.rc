@@ -1,0 +1,140 @@
+//
+// Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.  Oracle designates this
+// particular file as subject to the "Classpath" exception as provided
+// by Oracle in the LICENSE file that accompanied this code.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+
+#include "version.rc"
+#include "jaccesswalkerResource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_READONLY_SYMBOLS
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+JACCESSWALKERWINDOW DIALOG DISCARDABLE  160, 78, 294, 214
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+    WS_THICKFRAME
+CAPTION "jaccesswalker"
+MENU 10000
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Tree1",cTreeControl,"SysTreeView32",TVS_HASBUTTONS |
+                    TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP |
+                    WS_BORDER | WS_TABSTOP,4,0,283,214
+END
+
+EXPLORERWINDOW DIALOG DISCARDABLE  160, 78, 294, 214
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+    WS_THICKFRAME
+CAPTION "Java Accessibility Information"
+MENU 10000
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        cAccessInfoText,4,0,283,214,ES_MULTILINE | ES_AUTOVSCROLL |
+                    ES_READONLY | WS_VSCROLL
+END
+
+#ifdef APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "jaccesswalkerResource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    "JACCESSWALKERWINDOW", DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 287
+    END
+
+    "ACCESSINFOWINDOW", DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 287
+    END
+END
+
+#endif    // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+JACCESSWALKERMENU MENU DISCARDABLE
+BEGIN
+    POPUP "File"
+    BEGIN
+        MENUITEM "Refresh Tree",                cRefreshTreeItem
+        MENUITEM SEPARATOR
+        MENUITEM "Exit",                        cExitMenuItem
+    END
+    POPUP "Panels"
+    BEGIN
+        MENUITEM "Display Accessibility Information",     cAPIMenuItem
+    END
+END
+
+PopupMenu MENU
+    {
+    POPUP ""
+        {
+        MENUITEM "Display Accessibility Information",     cAPIPopupItem
+        }
+    }

@@ -1,0 +1,2 @@
+T7062745neg.java:16:36: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Object, java.lang.Number)
+1 error

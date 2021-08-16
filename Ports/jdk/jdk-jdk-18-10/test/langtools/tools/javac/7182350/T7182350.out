@@ -1,0 +1,4 @@
+T7182350.java:12:25: compiler.warn.unchecked.meth.invocation.applied: kindname.method, sort, java.util.List<T>,java.util.Comparator<? super T>, java.util.Vector,java.util.Comparator, kindname.class, java.util.Collections
+T7182350.java:12:26: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.util.Vector, java.util.List<T>
+T7182350.java:12:33: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.util.Comparator, java.util.Comparator<? super T>
+3 warnings

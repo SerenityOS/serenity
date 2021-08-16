@@ -1,0 +1,135 @@
+#
+# Copyright (c) 2016, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+################################################################################
+# Generate classlist
+################################################################################
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include JavaCompilation.gmk
+
+################################################################################
+# Create a jar with our generator class. Using a jar is intentional since it
+# will load more classes
+
+$(eval $(call SetupJavaCompilation, CLASSLIST_JAR, \
+    SMALL_JAVA := false, \
+    SRC := $(TOPDIR)/make/jdk/src/classes, \
+    INCLUDES := build/tools/classlist, \
+    BIN := $(BUILDTOOLS_OUTPUTDIR)/classlist_classes, \
+    JAR := $(SUPPORT_OUTPUTDIR)/classlist.jar, \
+))
+
+TARGETS += $(CLASSLIST_JAR)
+
+################################################################################
+
+LINK_OPT_DIR := $(SUPPORT_OUTPUTDIR)/link_opt
+CLASSLIST_FILE := $(LINK_OPT_DIR)/classlist
+JLI_TRACE_FILE := $(LINK_OPT_DIR)/default_jli_trace.txt
+
+# If an external buildjdk has been supplied, we don't build a separate interim
+# image, so just use the external build jdk instead.
+ifeq ($(EXTERNAL_BUILDJDK), true)
+  INTERIM_IMAGE_DIR := $(BUILD_JDK)
+endif
+
+# Save the stderr output of the command and print it along with stdout in case
+# something goes wrong.
+$(CLASSLIST_FILE): $(INTERIM_IMAGE_DIR)/bin/java$(EXECUTABLE_SUFFIX) $(CLASSLIST_JAR)
+	$(call MakeDir, $(LINK_OPT_DIR))
+	$(call LogInfo, Generating $(patsubst $(OUTPUTDIR)/%, %, $@))
+	$(call LogInfo, Generating $(patsubst $(OUTPUTDIR)/%, %, $(JLI_TRACE_FILE)))
+	$(FIXPATH) $(INTERIM_IMAGE_DIR)/bin/java -XX:DumpLoadedClassList=$@.raw \
+	    -Duser.language=en -Duser.country=US \
+	    -cp $(SUPPORT_OUTPUTDIR)/classlist.jar \
+	    build.tools.classlist.HelloClasslist $(LOG_DEBUG)
+	$(GREP) -v HelloClasslist $@.raw > $@.interim
+	$(FIXPATH) $(INTERIM_IMAGE_DIR)/bin/java -Xshare:dump \
+	    -XX:SharedClassListFile=$@.interim -XX:SharedArchiveFile=$@.jsa \
+	    -Xmx128M -Xms128M $(LOG_INFO)
+	$(FIXPATH) $(INTERIM_IMAGE_DIR)/bin/java -XX:DumpLoadedClassList=$@.raw.2 \
+	    -XX:SharedClassListFile=$@.interim -XX:SharedArchiveFile=$@.jsa \
+	    -Djava.lang.invoke.MethodHandle.TRACE_RESOLVE=true \
+	    -Duser.language=en -Duser.country=US \
+	    --module-path $(SUPPORT_OUTPUTDIR)/classlist.jar \
+	    -cp $(SUPPORT_OUTPUTDIR)/classlist.jar \
+	    build.tools.classlist.HelloClasslist \
+	    2> $(LINK_OPT_DIR)/stderr > $(JLI_TRACE_FILE) \
+	    || ( \
+	        exitcode=$$? ; \
+	        $(ECHO) "ERROR: Failed to generate link optimization data." \
+	            "This is likely a problem with the newly built JVM/JDK." ; \
+	        $(CAT) $(LINK_OPT_DIR)/stderr $(JLI_TRACE_FILE) ; \
+	        exit $$exitcode \
+	    )
+	$(GREP) -v HelloClasslist $@.raw.2 > $@
+
+# The jli trace is created by the same recipe as classlist. By declaring these
+# dependencies, make will correctly rebuild both jli trace and classlist
+# incrementally using the single recipe above.
+$(CLASSLIST_FILE): $(JLI_TRACE_FILE)
+$(JLI_TRACE_FILE): $(INTERIM_IMAGE_DIR)/bin/java$(EXECUTABLE_SUFFIX) $(CLASSLIST_JAR)
+
+TARGETS += $(CLASSLIST_FILE) $(JLI_TRACE_FILE)
+
+# Copy the classlist file into java.base libs
+$(eval $(call SetupCopyFiles, COPY_CLASSLIST, \
+    FILES := $(CLASSLIST_FILE), \
+    DEST := $(SUPPORT_OUTPUTDIR)/modules_libs/java.base, \
+))
+
+TARGETS += $(COPY_CLASSLIST)
+
+# In case of shipping public debug symbols on windows, there is another temporary
+# location from where jmods are compiled - need to deploy classlist there, too.
+ifeq ($(call isTargetOs, windows)+$(SHIP_DEBUG_SYMBOLS), true+public)
+  $(eval $(call SetupCopyFiles, COPY_CLASSLIST_TO_FILTERED, \
+      FILES := $(CLASSLIST_FILE), \
+      DEST := $(SUPPORT_OUTPUTDIR)/modules_libs_filtered/java.base, \
+  ))
+
+  TARGETS += $(COPY_CLASSLIST_TO_FILTERED)
+endif
+
+# Copy the default_jli_trace.txt file into jdk.jlink
+$(eval $(call SetupCopyFiles, COPY_JLI_TRACE, \
+    FILES := $(JLI_TRACE_FILE), \
+    DEST := $(JDK_OUTPUTDIR)/modules/jdk.jlink/jdk/tools/jlink/internal/plugins, \
+))
+
+# Because of the single recipe for jli trace and classlist above, the
+# COPY_JLI_TRACE rule needs to explicitly add the classlist file as a
+# prerequisite.
+$(COPY_JLI_TRACE): $(CLASSLIST_FILE)
+
+TARGETS += $(COPY_JLI_TRACE)
+
+################################################################################
+
+all: $(TARGETS)

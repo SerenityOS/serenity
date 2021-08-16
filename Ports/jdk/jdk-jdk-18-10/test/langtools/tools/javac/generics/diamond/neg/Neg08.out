@@ -1,0 +1,2 @@
+Neg08.java:13:27: compiler.err.cant.apply.diamond.1: java.lang.String, (compiler.misc.diamond.non.generic: java.lang.String)
+1 error

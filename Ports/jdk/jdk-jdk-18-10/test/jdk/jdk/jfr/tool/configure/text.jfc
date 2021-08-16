@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration version="2.0" label="Test text">
+
+    <event name="com.example.Tiger">
+      <setting name="enabled">false</setting>
+      <setting name="threshold" control="animal-threshold">0 s</setting>
+    </event>
+
+    <event name="com.example.Lion">
+      <setting name="enabled">true</setting>
+      <setting name="threshold" control="animal-threshold">0 s</setting>
+    </event>
+
+    <event name="com.example.Cactus">
+      <setting name="legs">0 s</setting>
+    </event>
+
+    <control>
+      <text name="animal-threshold" contentType="timespan" label="Threshold">0 s</text>
+    </control>
+
+</configuration>

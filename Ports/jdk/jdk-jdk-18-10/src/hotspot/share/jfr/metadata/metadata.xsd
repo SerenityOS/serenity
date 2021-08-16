@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+ Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+
+-->
+
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:simpleType name="periodType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="beginChunk" />
+      <xs:enumeration value="endChunk" />
+      <xs:enumeration value="everyChunk" />
+    </xs:restriction>
+  </xs:simpleType>
+    <xs:simpleType name="transitionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="from" />
+      <xs:enumeration value="to" />
+    </xs:restriction>
+  </xs:simpleType> 
+  <xs:element name="Metadata">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element maxOccurs="unbounded" name="Event">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element minOccurs="0" maxOccurs="unbounded" name="Field">
+                  <xs:complexType>
+                    <xs:attribute name="type" type="xs:NMTOKEN" use="required" />
+                    <xs:attribute name="struct" type="xs:boolean" use="optional" />
+                    <xs:attribute name="array" type="xs:boolean" use="optional" />
+                    <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+                    <xs:attribute name="label" type="xs:string" use="required" />
+                    <xs:attribute name="description" type="xs:string" use="optional" />
+                    <xs:attribute name="contentType" type="xs:string" use="optional" />
+                    <xs:attribute name="relation" type="xs:string" use="optional" />
+                    <xs:attribute name="experimental" type="xs:boolean" use="optional" />
+                    <xs:attribute name="transition" type="transitionType" use="optional" />
+                  </xs:complexType>
+                </xs:element>
+              </xs:sequence>
+              <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+              <xs:attribute name="category" type="xs:string" use="required" />
+              <xs:attribute name="label" type="xs:string" use="required" />
+              <xs:attribute name="description" type="xs:string" use="optional" />
+              <xs:attribute name="experimental" type="xs:boolean" use="optional" />
+              <xs:attribute name="thread" type="xs:boolean" use="optional" />
+              <xs:attribute name="startTime" type="xs:boolean" use="optional" />
+              <xs:attribute name="stackTrace" type="xs:boolean" use="optional" />
+              <xs:attribute name="period" type="periodType" use="optional" />
+              <xs:attribute name="cutoff" type="xs:boolean" use="optional" />
+              <xs:attribute name="throttle" type="xs:boolean" use="optional" />
+              <xs:attribute name="commitState" type="xs:string" use="optional" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element maxOccurs="unbounded" name="Type">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="Field">
+                  <xs:complexType>
+                    <xs:attribute name="type" type="xs:NMTOKEN" use="required" />
+                    <xs:attribute name="struct" type="xs:boolean" use="optional" />
+                    <xs:attribute name="array" type="xs:boolean" use="optional" />
+                    <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+                    <xs:attribute name="contentType" type="xs:string" use="optional" />
+                    <xs:attribute name="label" type="xs:string" use="required" />
+                    <xs:attribute name="description" type="xs:string" use="optional" />
+                    <xs:attribute name="experimental" type="xs:boolean" use="optional" />
+                    <xs:attribute name="relation" type="xs:string" use="optional" />
+                  </xs:complexType>
+                </xs:element>
+              </xs:sequence>
+              <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+              <xs:attribute name="label" type="xs:string" use="optional" />
+              <xs:attribute name="experimental" type="xs:boolean" use="optional" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="XmlType">
+            <xs:complexType>
+              <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+              <xs:attribute name="contentType" type="xs:NMTOKEN" use="optional" />
+              <xs:attribute name="javaType" type="xs:NMTOKEN" use="optional" />
+              <xs:attribute name="unsigned" type="xs:boolean" use="optional" />
+              <xs:attribute name="parameterType" type="xs:string" use="required" />
+              <xs:attribute name="fieldType" type="xs:string" use="required" />
+             </xs:complexType>
+          </xs:element>
+          <xs:element name="XmlContentType">
+            <xs:complexType>
+              <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+              <xs:attribute name="annotation" type="xs:string" use="required" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="Relation">
+            <xs:complexType>
+              <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+            </xs:complexType>
+          </xs:element>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

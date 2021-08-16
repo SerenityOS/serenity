@@ -1,0 +1,6 @@
+grant {
+    permission java.security.SecurityPermission "getPolicy";
+    permission java.lang.RuntimePermission "createSecurityManager";
+    permission java.lang.RuntimePermission "setSecurityManager";
+    permission java.util.PropertyPermission "merged.foo", "read";
+};

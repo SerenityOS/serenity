@@ -1,0 +1,18 @@
+<simple>
+<test xmlns:xinclude="http://www.w3.org/2001/XInclude">
+  <latin1>
+    <firstElement/>
+    <xinclude:include href="XI_utf8.xml" parse="text"/>
+    <insideChildren/>
+    <another>
+      <deeper>text</deeper>
+    </another>
+  </latin1>
+  <test2>
+    <xinclude:include href="XI_test2.xml"/>
+  </test2>
+  <test3>
+   <!-- <xinclude:include href="XI_roottest.xml"/> -->
+  </test3>
+</test>
+</simple>

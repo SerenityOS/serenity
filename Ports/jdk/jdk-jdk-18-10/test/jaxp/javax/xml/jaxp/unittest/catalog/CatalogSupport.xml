@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+    <!-- DTDs and external entities -->
+    <system systemId="http://openjdk_java_net/xml/catalog/dtd/system.dtd" uri="system.dtd"/>
+    
+    <!-- XMLSchema refers to XMLSchema.dtd -->
+    <public publicId="-//W3C//DTD XMLSCHEMA 200102//EN" uri="XMLSchema.dtd"/>
+    <!-- XMLSchema.dtd refers to datatypes.dtd -->
+    <systemSuffix systemIdSuffix="datatypes.dtd" uri="datatypes.dtd"/>
+    <!-- XMLSchema.dtd refers to datatypes.dtd, can use public entry as well -->
+    <!-- public publicId="datatypes" uri="datatypes.dtd"/-->
+
+    <!-- XInclude -->
+    <system systemId="XI_simple.xml" uri="XI_simple4Catalog.xml"/>
+    <system systemId="XI_utf8.xml" uri="XI_utf8.xml"/>
+    <system systemId="XI_utf8Catalog.xml" uri="XI_utf8Catalog.xml"/>
+    <system systemId="XI_test2.xml" uri="XI_test2.xml"/>
+    <system systemId="XI_test2Catalog.xml" uri="XI_test2Catalog.xml"/>
+    <system systemId="XI_red.dtd" uri="XI_red.dtd"/>
+
+    <!-- xsd import can be mapped using the namespace or systemId -->
+    <!--public publicId="http://www.w3.org/XML/1998/namespace" uri="xml.xsd"/-->
+    <!--uri name="http://www.w3.org/XML/1998/namespace" uri="xml.xsd"/-->
+    <system systemId="http://www.w3.org/2001/pathto/xml.xsd" uri="xml.xsd"/>
+    
+    <!-- schema include -->
+    <system systemId="pathto/XSDInclude_person.xsd" uri="XSDInclude_person.xsd"/>
+    <system systemId="pathto/XSDInclude_product.xsd" uri="XSDInclude_product.xsd"/>
+    
+    <!-- for relative path, use Suffix -->    
+    <systemSuffix systemIdSuffix="pathto/val_test.xsd" uri="val_test.xsd"/>
+    
+    <!-- XSL import and include -->
+    <system systemId="pathto/XSLImport_html.xsl" uri="XSLImport_html.xsl"/>
+    <system systemId="pathto/XSLInclude_header.xsl" uri="XSLInclude_header.xsl"/>
+    <system systemId="pathto/XSLInclude_footer.xsl" uri="XSLInclude_footer.xsl"/>
+    <!-- and DTDs -->
+    <system systemId="http://openjdk_java_net/xml/catalog/dtd/XSLDTD.dtd" uri="XSLDTD.dtd"/>
+    <system systemId="http://openjdk_java_net/xml/catalog/dtd/include.dtd" uri="include.dtd"/>
+    
+    <!-- XSLT document function -->
+    <system systemId="pathto/DocFunc2.xml" uri="DocFuncCatalog.xml"/>
+</catalog>

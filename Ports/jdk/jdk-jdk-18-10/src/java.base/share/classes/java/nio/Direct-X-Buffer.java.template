@@ -1,0 +1,477 @@
+/*
+ * Copyright (c) 2000, 2021, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+#warn This file is preprocessed before being compiled
+
+package java.nio;
+
+import java.io.FileDescriptor;
+import java.lang.ref.Reference;
+import java.util.Objects;
+import jdk.internal.access.foreign.MemorySegmentProxy;
+import jdk.internal.misc.ScopedMemoryAccess.Scope;
+import jdk.internal.misc.VM;
+import jdk.internal.ref.Cleaner;
+import sun.nio.ch.DirectBuffer;
+
+
+class Direct$Type$Buffer$RW$$BO$
+#if[rw]
+    extends {#if[byte]?Mapped$Type$Buffer:$Type$Buffer}
+#else[rw]
+    extends Direct$Type$Buffer$BO$
+#end[rw]
+    implements DirectBuffer
+{
+
+#if[rw]
+
+    // Cached array base offset
+    private static final long ARRAY_BASE_OFFSET = UNSAFE.arrayBaseOffset($type$[].class);
+
+    // Cached unaligned-access capability
+    protected static final boolean UNALIGNED = Bits.unaligned();
+
+    // Base address, used in all indexing calculations
+    // NOTE: moved up to Buffer.java for speed in JNI GetDirectBufferAddress
+    //    protected long address;
+
+    // An object attached to this buffer. If this buffer is a view of another
+    // buffer then we use this field to keep a reference to that buffer to
+    // ensure that its memory isn't freed before we are done with it.
+    private final Object att;
+
+    public Object attachment() {
+        return att;
+    }
+
+#if[byte]
+
+    private static class Deallocator
+        implements Runnable
+    {
+
+        private long address;
+        private long size;
+        private int capacity;
+
+        private Deallocator(long address, long size, int capacity) {
+            assert (address != 0);
+            this.address = address;
+            this.size = size;
+            this.capacity = capacity;
+        }
+
+        public void run() {
+            if (address == 0) {
+                // Paranoia
+                return;
+            }
+            UNSAFE.freeMemory(address);
+            address = 0;
+            Bits.unreserveMemory(size, capacity);
+        }
+
+    }
+
+    private final Cleaner cleaner;
+
+    public Cleaner cleaner() { return cleaner; }
+
+#else[byte]
+
+    public Cleaner cleaner() { return null; }
+
+#end[byte]
+
+#end[rw]
+
+#if[byte]
+
+    // Primary constructor
+    //
+    Direct$Type$Buffer$RW$(int cap) {                   // package-private
+#if[rw]
+        super(-1, 0, cap, cap, null);
+        boolean pa = VM.isDirectMemoryPageAligned();
+        int ps = Bits.pageSize();
+        long size = Math.max(1L, (long)cap + (pa ? ps : 0));
+        Bits.reserveMemory(size, cap);
+
+        long base = 0;
+        try {
+            base = UNSAFE.allocateMemory(size);
+        } catch (OutOfMemoryError x) {
+            Bits.unreserveMemory(size, cap);
+            throw x;
+        }
+        UNSAFE.setMemory(base, size, (byte) 0);
+        if (pa && (base % ps != 0)) {
+            // Round up to page boundary
+            address = base + ps - (base & (ps - 1));
+        } else {
+            address = base;
+        }
+        cleaner = Cleaner.create(this, new Deallocator(base, size, cap));
+        att = null;
+#else[rw]
+        super(cap);
+        this.isReadOnly = true;
+#end[rw]
+    }
+
+#if[rw]
+
+    // Invoked to construct a direct ByteBuffer referring to the block of
+    // memory. A given arbitrary object may also be attached to the buffer.
+    //
+    Direct$Type$Buffer(long addr, int cap, Object ob, MemorySegmentProxy segment) {
+        super(-1, 0, cap, cap, segment);
+        address = addr;
+        cleaner = null;
+        att = ob;
+    }
+
+    // Invoked to construct a direct ByteBuffer referring to the block of
+    // memory. A given arbitrary object may also be attached to the buffer.
+    //
+    Direct$Type$Buffer(long addr, int cap, Object ob, FileDescriptor fd, boolean isSync, MemorySegmentProxy segment) {
+        super(-1, 0, cap, cap, fd, isSync, segment);
+        address = addr;
+        cleaner = null;
+        att = ob;
+    }
+
+    // Invoked only by JNI: NewDirectByteBuffer(void*, long)
+    //
+    private Direct$Type$Buffer(long addr, int cap) {
+        super(-1, 0, cap, cap, null);
+        address = addr;
+        cleaner = null;
+        att = null;
+    }
+
+#end[rw]
+
+    // For memory-mapped buffers -- invoked by FileChannelImpl via reflection
+    //
+    protected Direct$Type$Buffer$RW$(int cap, long addr,
+                                     FileDescriptor fd,
+                                     Runnable unmapper,
+                                     boolean isSync, MemorySegmentProxy segment)
+    {
+#if[rw]
+        super(-1, 0, cap, cap, fd, isSync, segment);
+        address = addr;
+        cleaner = Cleaner.create(this, unmapper);
+        att = null;
+#else[rw]
+        super(cap, addr, fd, unmapper, isSync, segment);
+        this.isReadOnly = true;
+#end[rw]
+    }
+
+#end[byte]
+
+    // For duplicates and slices
+    //
+    Direct$Type$Buffer$RW$$BO$(DirectBuffer db,         // package-private
+                               int mark, int pos, int lim, int cap, int off,
+#if[byte]
+                               FileDescriptor fd, boolean isSync,
+#end[byte]
+                               MemorySegmentProxy segment)
+    {
+#if[rw]
+        super(mark, pos, lim, cap,
+#if[byte]
+              fd, isSync,
+#end[byte]
+              segment);
+        address = ((Buffer)db).address + off;
+#if[byte]
+        cleaner = null;
+#end[byte]
+        Object attachment = db.attachment();
+        att = (attachment == null ? db : attachment);
+#else[rw]
+        super(db, mark, pos, lim, cap, off,
+#if[byte]
+              fd, isSync,
+#end[byte]
+              segment);
+        this.isReadOnly = true;
+#end[rw]
+    }
+
+    @Override
+    Object base() {
+        return null;
+    }
+
+    public {#if[byte]?Mapped$Type$Buffer:$Type$Buffer} slice() {
+        int pos = this.position();
+        int lim = this.limit();
+        int rem = (pos <= lim ? lim - pos : 0);
+        int off = (pos << $LG_BYTES_PER_VALUE$);
+        assert (off >= 0);
+        return new Direct$Type$Buffer$RW$$BO$(this,
+                                              -1,
+                                              0,
+                                              rem, 
+                                              rem,
+                                              off,
+#if[byte]
+                                              fileDescriptor(),
+                                              isSync(),
+#end[byte]
+                                              segment);
+    }
+
+    @Override
+    public {#if[byte]?Mapped$Type$Buffer:$Type$Buffer} slice(int index, int length) {
+        Objects.checkFromIndexSize(index, length, limit());
+        return new Direct$Type$Buffer$RW$$BO$(this,
+                                              -1,
+                                              0,
+                                              length,
+                                              length,
+                                              index << $LG_BYTES_PER_VALUE$,
+#if[byte]
+                                              fileDescriptor(),
+                                              isSync(),
+#end[byte]
+                                              segment);
+    }
+
+    public {#if[byte]?Mapped$Type$Buffer:$Type$Buffer} duplicate() {
+        return new Direct$Type$Buffer$RW$$BO$(this,
+                                              this.markValue(),
+                                              this.position(),
+                                              this.limit(),
+                                              this.capacity(),
+                                              0,
+#if[byte]
+                                              fileDescriptor(),
+                                              isSync(),
+#end[byte]
+                                              segment);
+    }
+
+    public $Type$Buffer asReadOnlyBuffer() {
+#if[rw]
+        return new Direct$Type$BufferR$BO$(this,
+                                           this.markValue(),
+                                           this.position(),
+                                           this.limit(),
+                                           this.capacity(),
+                                           0,
+#if[byte]
+                                           fileDescriptor(),
+                                           isSync(),
+#end[byte]
+                                           segment);
+#else[rw]
+        return duplicate();
+#end[rw]
+    }
+
+#if[rw]
+
+    public long address() {
+        Scope scope = scope();
+        if (scope != null) {
+            if (scope.ownerThread() == null) {
+                throw new UnsupportedOperationException("ByteBuffer derived from shared segments not supported");
+            }
+            try {
+                scope.checkValidState();
+            } catch (Scope.ScopedAccessError e) {
+                throw new IllegalStateException("This segment is already closed");
+            }
+        }
+        return address;
+    }
+
+    private long ix(int i) {
+        return address + ((long)i << $LG_BYTES_PER_VALUE$);
+    }
+
+    public $type$ get() {
+        try {
+            return $fromBits$($swap$(SCOPED_MEMORY_ACCESS.get$Swaptype$(scope(), null, ix(nextGetIndex()))));
+        } finally {
+            Reference.reachabilityFence(this);
+        }
+    }
+
+    public $type$ get(int i) {
+        try {
+            return $fromBits$($swap$(SCOPED_MEMORY_ACCESS.get$Swaptype$(scope(), null, ix(checkIndex(i)))));
+        } finally {
+            Reference.reachabilityFence(this);
+        }
+    }
+
+#if[streamableType]
+    $type$ getUnchecked(int i) {
+        try {
+            return $fromBits$($swap$(SCOPED_MEMORY_ACCESS.get$Swaptype$(null, null, ix(i))));
+        } finally {
+            Reference.reachabilityFence(this);
+        }
+    }
+#end[streamableType]
+#end[rw]
+
+    public $Type$Buffer put($type$ x) {
+#if[rw]
+        try {
+            SCOPED_MEMORY_ACCESS.put$Swaptype$(scope(), null, ix(nextPutIndex()), $swap$($toBits$(x)));
+        } finally {
+            Reference.reachabilityFence(this);
+        }
+        return this;
+#else[rw]
+        throw new ReadOnlyBufferException();
+#end[rw]
+    }
+
+    public $Type$Buffer put(int i, $type$ x) {
+#if[rw]
+        try {
+            SCOPED_MEMORY_ACCESS.put$Swaptype$(scope(), null, ix(checkIndex(i)), $swap$($toBits$(x)));
+        } finally {
+            Reference.reachabilityFence(this);
+        }
+        return this;
+#else[rw]
+        throw new ReadOnlyBufferException();
+#end[rw]
+    }
+
+    public {#if[byte]?Mapped$Type$Buffer:$Type$Buffer} compact() {
+#if[rw]
+        int pos = position();
+        int lim = limit();
+        assert (pos <= lim);
+        int rem = (pos <= lim ? lim - pos : 0);
+        try {
+            // null is passed as destination Scope to avoid checking scope() twice
+            SCOPED_MEMORY_ACCESS.copyMemory(scope(), null, null,
+                    ix(pos), null, ix(0), (long)rem << $LG_BYTES_PER_VALUE$);
+        } finally {
+            Reference.reachabilityFence(this);
+        }
+        position(rem);
+        limit(capacity());
+        discardMark();
+        return this;
+#else[rw]
+        throw new ReadOnlyBufferException();
+#end[rw]
+    }
+
+    public boolean isDirect() {
+        return true;
+    }
+
+    public boolean isReadOnly() {
+        return {#if[rw]?false:true};
+    }
+
+
+#if[char]
+
+    public String toString(int start, int end) {
+        Objects.checkFromToIndex(start, end, limit());
+        try {
+            int len = end - start;
+            char[] ca = new char[len];
+            CharBuffer cb = CharBuffer.wrap(ca);
+            CharBuffer db = this.duplicate();
+            db.position(start);
+            db.limit(end);
+            cb.put(db);
+            return new String(ca);
+        } catch (StringIndexOutOfBoundsException x) {
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+
+    // --- Methods to support CharSequence ---
+
+    public CharBuffer subSequence(int start, int end) {
+        int pos = position();
+        int lim = limit();
+        assert (pos <= lim);
+        pos = (pos <= lim ? pos : lim);
+        int len = lim - pos;
+
+        Objects.checkFromToIndex(start, end, len);
+        return new DirectCharBuffer$RW$$BO$(this,
+                                            -1,
+                                            pos + start,
+                                            pos + end,
+                                            capacity(),
+                                            offset, segment);
+    }
+
+#end[char]
+
+
+
+#if[!byte]
+
+    public ByteOrder order() {
+#if[boS]
+        return ((ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN)
+                ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
+#end[boS]
+#if[boU]
+        return ((ByteOrder.nativeOrder() != ByteOrder.BIG_ENDIAN)
+                ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
+#end[boU]
+    }
+
+#end[!byte]
+
+#if[char]
+    ByteOrder charRegionOrder() {
+        return order();
+    }
+#end[char]
+
+
+#if[byte]
+    // #BIN
+    //
+    // Binary-data access methods  for short, char, int, long, float,
+    // and double will be inserted here
+
+#end[byte]
+
+}

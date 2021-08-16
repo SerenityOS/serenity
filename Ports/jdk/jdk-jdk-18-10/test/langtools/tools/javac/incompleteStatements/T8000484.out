@@ -1,0 +1,10 @@
+T8000484.java:10:9: compiler.err.catch.without.try
+T8000484.java:11:9: compiler.err.else.without.if
+T8000484.java:12:9: compiler.err.finally.without.try
+T8000484.java:13:30: compiler.err.catch.without.try
+T8000484.java:13:9: compiler.err.catch.without.try
+T8000484.java:14:14: compiler.err.else.without.if
+T8000484.java:14:9: compiler.err.else.without.if
+T8000484.java:15:17: compiler.err.finally.without.try
+T8000484.java:15:9: compiler.err.finally.without.try
+9 errors

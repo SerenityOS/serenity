@@ -1,0 +1,4194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ks"/>
+	</identity>
+	<localeDisplayNames>
+		<localeDisplayPattern>
+			<localePattern>{0} ({1})</localePattern>
+			<localeSeparator>{0}, {1}</localeSeparator>
+		</localeDisplayPattern>
+		<languages>
+			<language type="aa">اَفار</language>
+			<language type="ab">اَبخازِیان</language>
+			<language type="ace">اَچَےنیٖز</language>
+			<language type="ach">اَکولی</language>
+			<language type="ada">اَدَنگمیے</language>
+			<language type="ady">اَدَیٖگیے</language>
+			<language type="ae">اَویستَن</language>
+			<language type="af">اَفریٖکانز</language>
+			<language type="afh">اَفرِہِلی</language>
+			<language type="ain">اینوٗ</language>
+			<language type="ak">اَکان</language>
+			<language type="akk">اَکادِیَن</language>
+			<language type="ale">اَلویتی</language>
+			<language type="alt">جنوٗبی اَلتایی</language>
+			<language type="am">اَمہاری</language>
+			<language type="an">اَراگونی</language>
+			<language type="ang">پرون اَنگریٖزی</language>
+			<language type="anp">اَنگِکا</language>
+			<language type="ar">عربی</language>
+			<language type="arc">اَرَمیک</language>
+			<language type="arn">ایرو کونِیَن</language>
+			<language type="arp">اَراپاہو</language>
+			<language type="arw">اَراوَک</language>
+			<language type="as">اسٲمۍ</language>
+			<language type="ast">ایسٹوٗریَن</language>
+			<language type="av">اَوارِک</language>
+			<language type="awa">اَوَدی</language>
+			<language type="ay">ایمارا</language>
+			<language type="az">اَزَربیجانی</language>
+			<language type="ba">بَشکیٖر</language>
+			<language type="bal">بَلوٗچی</language>
+			<language type="ban">بالِنیٖز</language>
+			<language type="bas">باسا</language>
+			<language type="be">بیلَروٗشیَن</language>
+			<language type="bej">بیجا</language>
+			<language type="bem">بیمبا</language>
+			<language type="bg">بینا</language>
+			<language type="bho">بوجپوٗری</language>
+			<language type="bi">بِسلاما</language>
+			<language type="bik">بِکول</language>
+			<language type="bin">بِنی</language>
+			<language type="bla">سِکسِکا</language>
+			<language type="bm">بَمبارا</language>
+			<language type="bn">بَنگٲلۍ</language>
+			<language type="bo">تِبتی</language>
+			<language type="br">بریٹَن</language>
+			<language type="bra">برج</language>
+			<language type="bs">بوسنِیَن</language>
+			<language type="bua">بُرِیَت</language>
+			<language type="bug">بَگنیٖز</language>
+			<language type="byn">بٕلِن</language>
+			<language type="ca">کَتلان</language>
+			<language type="cad">کاڈو</language>
+			<language type="car">کارِب</language>
+			<language type="cch">اتسَم</language>
+			<language type="ce">چیچَن</language>
+			<language type="ceb">سیباونو</language>
+			<language type="ch">کَمورو</language>
+			<language type="chb">چیٖبچا</language>
+			<language type="chg">چھَگتاے</language>
+			<language type="chk">چُکیٖز</language>
+			<language type="chm">ماری</language>
+			<language type="chn">چِنوٗک جارگَن</language>
+			<language type="cho">چوکتَو</language>
+			<language type="chp">شیپویان</language>
+			<language type="chr">چیروکی</language>
+			<language type="chy">شییون</language>
+			<language type="co">کارسِکَن</language>
+			<language type="cop">کاپٹِک</language>
+			<language type="cr">کری</language>
+			<language type="crh">کرٕمیٖن تُرکی</language>
+			<language type="cs">چیک</language>
+			<language type="csb">کَشوٗبِیَن</language>
+			<language type="cu">چٔرچ سلاوِک</language>
+			<language type="cv">چُواش</language>
+			<language type="cy">ویلش</language>
+			<language type="da">ڈینِش</language>
+			<language type="dak">ڈکوٹا</language>
+			<language type="dar">دَرگوا</language>
+			<language type="de">جٔرمَن</language>
+			<language type="de_AT">آسٹرِیَن جٔرمَن</language>
+			<language type="de_CH">سٕوِس ہاےجٔرمَن</language>
+			<language type="del">ڈیلوییَر</language>
+			<language type="den">سلیو</language>
+			<language type="dgr">ڈاگرِب</language>
+			<language type="din">ڈِنکا</language>
+			<language type="doi">ڈوگری</language>
+			<language type="dsb">بۆنِم ساربِیَن</language>
+			<language type="dua">دُوالا</language>
+			<language type="dum">وَستی پُرتُگالی</language>
+			<language type="dv">دِویہی</language>
+			<language type="dyu">ڈِیوٗلا</language>
+			<language type="dz">زونگکھا</language>
+			<language type="ee">ایٖو</language>
+			<language type="efi">ایفِک</language>
+			<language type="egy">قدیٖمی مِصری</language>
+			<language type="eka">ایکاجُک</language>
+			<language type="el">یوٗنٲنی</language>
+			<language type="elx">ایلامایِٹ</language>
+			<language type="en">اَنگیٖزۍ</language>
+			<language type="en_AU">آسٹریلیَن اَنگریٖزۍ</language>
+			<language type="en_CA">کینَڈِیٲیی اَنگریٖزۍ</language>
+			<language type="en_GB">بَرطانوی اَنگریٖزۍ</language>
+			<language type="en_US">یوٗ ایس اَنگریٖزۍ</language>
+			<language type="enm">وَسطی اَنگریٖزۍ</language>
+			<language type="eo">ایسپَرینٹو</language>
+			<language type="es">سپینِش</language>
+			<language type="es_419">لیٹٕن امریٖکی سپینِش</language>
+			<language type="es_ES">لِبیریَن سپینِش</language>
+			<language type="et">ایسٹونیَن</language>
+			<language type="eu">باسک</language>
+			<language type="ewo">ایوونڈو</language>
+			<language type="fa">فارسی</language>
+			<language type="fan">فینگ</language>
+			<language type="fat">فانٹی</language>
+			<language type="ff">فُلاہ</language>
+			<language type="fi">فِنِش</language>
+			<language type="fil">فِلِپیٖنو</language>
+			<language type="fj">فِجیَن</language>
+			<language type="fo">فَروس</language>
+			<language type="fon">فون</language>
+			<language type="fr">فرینچ</language>
+			<language type="fr_CA">کَنیڈیَن فرینچ</language>
+			<language type="fr_CH">سٕوٕس فرینچ</language>
+			<language type="frm">وسطی فرینچ</language>
+			<language type="fro">پرون فرینچ</language>
+			<language type="frr">شُمٲلی فرِشیَن</language>
+			<language type="frs">مشرِقی فرِشیَن</language>
+			<language type="fur">فروٗلِیَن</language>
+			<language type="fy">مغربی فرِشیَن</language>
+			<language type="ga">اَیرِش</language>
+			<language type="gaa">گا</language>
+			<language type="gay">گیےیو</language>
+			<language type="gba">گبایا</language>
+			<language type="gd">سکوٹِش گیےلِک</language>
+			<language type="gez">گیٖز</language>
+			<language type="gil">گِلبٔرٹیٖز</language>
+			<language type="gl">گیلِشِیَن</language>
+			<language type="gmh">وَسطی ہاے جٔرمَن</language>
+			<language type="gn">گُوارَنی</language>
+			<language type="goh">پرون ہاے جٔرمَن</language>
+			<language type="gon">گوندی</language>
+			<language type="gor">گورینٹیلو</language>
+			<language type="got">گوتھِک</language>
+			<language type="grb">گرِبو</language>
+			<language type="grc">قدیٖم یوٗنٲنی</language>
+			<language type="gsw">سٕوِس جٔرمَن</language>
+			<language type="gu">گُجرٲتی</language>
+			<language type="gv">مینکس</language>
+			<language type="gwi">گُوِچ اِن</language>
+			<language type="ha">ہاوسا</language>
+			<language type="hai">ہَیدا</language>
+			<language type="haw">ہوایِیَن</language>
+			<language type="he">عبرٲنۍ</language>
+			<language type="hi">ہِندی</language>
+			<language type="hil">ہِلیٖگینَن</language>
+			<language type="hit">ہِتایِت</language>
+			<language type="hmn">ہمونگ</language>
+			<language type="ho">ہِری موتوٗ</language>
+			<language type="hr">کروشِیَن</language>
+			<language type="hsb">ہیرِم ساربِیَن</language>
+			<language type="ht">ہیتِیاں</language>
+			<language type="hu">ہَنگیریَن</language>
+			<language type="hup">ہُپا</language>
+			<language type="hy">اَرمینیَن</language>
+			<language type="hz">ہیریٖرو</language>
+			<language type="ia">اِنٹَرلِنگوا</language>
+			<language type="iba">اِبان</language>
+			<language type="id">اِنڈونیشیا</language>
+			<language type="ie">اِنٹَر لِننگویے</language>
+			<language type="ig">اِگبو</language>
+			<language type="ii">سِچوان یٖی</language>
+			<language type="ik">اِنُپِیاک</language>
+			<language type="ilo">اِلوکو</language>
+			<language type="inh">اِنگُش</language>
+			<language type="io">اِڈو</language>
+			<language type="is">آیِسلینڈِک</language>
+			<language type="it">اِٹیلیَن</language>
+			<language type="iu">اِنُکتِتوٗ</language>
+			<language type="ja">جاپٲنۍ</language>
+			<language type="jbo">لوجبان</language>
+			<language type="jpr">جوڈیو فارسی</language>
+			<language type="jrb">جوڈیو عربی</language>
+			<language type="jv">جَوَنیٖز</language>
+			<language type="ka">جارجِیَن</language>
+			<language type="kaa">کارا کَلپَک</language>
+			<language type="kab">کَبایِل</language>
+			<language type="kac">کاچِن</language>
+			<language type="kaj">جُوٗ</language>
+			<language type="kam">کامبا</language>
+			<language type="kaw">کَوی</language>
+			<language type="kbd">کَبارڈِیَن</language>
+			<language type="kcg">تَیَپ</language>
+			<language type="kfo">کورو</language>
+			<language type="kg">کونگو</language>
+			<language type="kha">کھاسی</language>
+			<language type="kho">کھوتَنیٖز</language>
+			<language type="ki">کِکُیوٗ</language>
+			<language type="kj">کُوانیاما</language>
+			<language type="kk">کازَخ</language>
+			<language type="kl">کَلالِسُت</language>
+			<language type="km">خَمیر</language>
+			<language type="kmb">کِمبُندوٗ</language>
+			<language type="kn">کَنَڑ</language>
+			<language type="ko">کوریَن</language>
+			<language type="kok">کونکَنی</language>
+			<language type="kos">کوسرییَن</language>
+			<language type="kpe">کَپیلی</language>
+			<language type="kr">کَنوٗری</language>
+			<language type="krc">کراچیے بَلکار</language>
+			<language type="krl">کَریلِیَن</language>
+			<language type="kru">کُرُکھ</language>
+			<language type="ks">کٲشُر</language>
+			<language type="ku">کُردِش</language>
+			<language type="kum">کُمِک</language>
+			<language type="kut">کُتینَے</language>
+			<language type="kv">کومی</language>
+			<language type="kw">کورنِش</language>
+			<language type="ky">کِرگِز</language>
+			<language type="la">لاتیٖنی</language>
+			<language type="lad">لیڈِنو</language>
+			<language type="lah">لَہَندا</language>
+			<language type="lam">لَمبا</language>
+			<language type="lb">لُکھزیمبورگِش</language>
+			<language type="lez">لیزگِیَن</language>
+			<language type="lg">گاندا</language>
+			<language type="li">لِمبٔرگِش</language>
+			<language type="ln">لِنگالا</language>
+			<language type="lo">لاو</language>
+			<language type="lol">مونگو</language>
+			<language type="loz">لوزی</language>
+			<language type="lt">لِتھوانِیَن</language>
+			<language type="lu">لوُبا کَتَنگا</language>
+			<language type="lua">لوٗبا لوٗلُوا</language>
+			<language type="lui">لویِسینو</language>
+			<language type="lun">لُندا</language>
+			<language type="luo">لُوو</language>
+			<language type="lus">لُسہاے</language>
+			<language type="lv">لَتوِیَن</language>
+			<language type="mad">مَدُریٖز</language>
+			<language type="mag">مَگاے</language>
+			<language type="mai">میتَھلی</language>
+			<language type="mak">مَکَسار</language>
+			<language type="man">مَندِنگو</language>
+			<language type="mas">مَساے</language>
+			<language type="mdf">موکشا</language>
+			<language type="mdr">مَندَر</language>
+			<language type="men">میندیے</language>
+			<language type="mg">مَلاگَسی</language>
+			<language type="mga">وَستی ایرِش</language>
+			<language type="mh">مارشَلیٖز</language>
+			<language type="mi">ماوری</language>
+			<language type="mic">مِکمیک</language>
+			<language type="min">مِنَنگکَباو</language>
+			<language type="mk">میکَڈونیَن</language>
+			<language type="ml">مٔلیالَم</language>
+			<language type="mn">مَنگولی</language>
+			<language type="mnc">مانچوٗ</language>
+			<language type="mni">مَنیپوٗری</language>
+			<language type="moh">موہاک</language>
+			<language type="mos">موسی</language>
+			<language type="mr">مَرٲٹھۍ</language>
+			<language type="ms">مَلَے</language>
+			<language type="mt">مَلتیٖس</language>
+			<language type="mul">واریاہ زبان</language>
+			<language type="mus">کریٖک</language>
+			<language type="mwl">مِراندیٖز</language>
+			<language type="mwr">مارواڑی</language>
+			<language type="my">بٔمیٖز</language>
+			<language type="myv">ایرزِیا</language>
+			<language type="na">ناورُ</language>
+			<language type="nap">نیٖپالیٹَن</language>
+			<language type="nb">ناروییَن بوکمال</language>
+			<language type="nd">شُمال ڈَبیل</language>
+			<language type="nds">بۆنِم جٔرمَن</language>
+			<language type="ne">نیپٲلۍ</language>
+			<language type="new">نیواری</language>
+			<language type="ng">ڈونگا</language>
+			<language type="nia">نِیاس</language>
+			<language type="niu">نِیویَن</language>
+			<language type="nl">ڈَچ</language>
+			<language type="nl_BE">فلیمِش</language>
+			<language type="nn">ناروییَن نَے نورسک</language>
+			<language type="no">ناروییَن</language>
+			<language type="nog">نوگاے</language>
+			<language type="non">پرون نارسی</language>
+			<language type="nqo">این کو</language>
+			<language type="nr">جنوب ڈیبیل</language>
+			<language type="nso">شمالی ستھو</language>
+			<language type="nv">نَواجو</language>
+			<language type="nwc">کلاسِکَل نیواری</language>
+			<language type="ny">نِیَنجا</language>
+			<language type="nym">نِیَمویزی</language>
+			<language type="nyn">نِیَنکول</language>
+			<language type="nyo">نِیورو</language>
+			<language type="nzi">نَظیٖما</language>
+			<language type="oc">اوکسیٖٹَن</language>
+			<language type="oj">اوجِبوا</language>
+			<language type="om">اۆرومو</language>
+			<language type="or">اۆرِیا</language>
+			<language type="os">اۆسیٹِک</language>
+			<language type="osa">اۆسیج</language>
+			<language type="ota">اوٹومَن تُرکِش</language>
+			<language type="pa">پَنجٲبۍ</language>
+			<language type="pag">پَنگاسِنَن</language>
+			<language type="pal">پَہلَوی</language>
+			<language type="pam">پَمپَنگا</language>
+			<language type="pap">پَپِیامینٹو</language>
+			<language type="pau">پَلااُواں</language>
+			<language type="peo">پرون فارسی</language>
+			<language type="phn">فونیٖشیَن</language>
+			<language type="pi">پالی</language>
+			<language type="pl">پالِش</language>
+			<language type="pon">پانپییَن</language>
+			<language type="pro">پرون پرووینچَل</language>
+			<language type="ps">پَشتوٗ</language>
+			<language type="pt">پُرتَگیٖز</language>
+			<language type="pt_BR">برازیٖلی پُتَگیٖز</language>
+			<language type="pt_PT">لِبیریَن پُرتَگیٖز</language>
+			<language type="qu">کُویشُوا</language>
+			<language type="raj">راجِستھٲنۍ</language>
+			<language type="rap">رَپانوی</language>
+			<language type="rar">رَروٹونگَن</language>
+			<language type="rm">رومانش</language>
+			<language type="rn">رُندی</language>
+			<language type="ro">رومٲنی</language>
+			<language type="ro_MD">مولداوِیَن</language>
+			<language type="rom">رومَنی</language>
+			<language type="ru">روٗسی</language>
+			<language type="rup">اَرومانی</language>
+			<language type="rw">کِنیاوِندا</language>
+			<language type="sa">سَنسکرٕت</language>
+			<language type="sad">سَندَویے</language>
+			<language type="sah">یاکُت</language>
+			<language type="sam">سَمارِتَن اَرامیک</language>
+			<language type="sas">سَسَک</language>
+			<language type="sat">سَنتالی</language>
+			<language type="sc">سراڈیٖنی</language>
+			<language type="scn">سِچِلِیَن</language>
+			<language type="sco">سکاٹس</language>
+			<language type="sd">سِندی</language>
+			<language type="se">شُمٲلی سَمی</language>
+			<language type="sel">سیلکُپ</language>
+			<language type="sg">سَنگو</language>
+			<language type="sga">پرون ایرِش</language>
+			<language type="sh">سیربو کروشِیَن</language>
+			<language type="shn">شان</language>
+			<language type="si">سِنہالا</language>
+			<language type="sid">سِدامو</language>
+			<language type="sk">سلووَک</language>
+			<language type="sl">سلووینیَن</language>
+			<language type="sm">سَمواَن</language>
+			<language type="sma">جنوٗبی سَمی</language>
+			<language type="smj">لولیے سَمی</language>
+			<language type="smn">اِناری سَمی</language>
+			<language type="sms">سکولٹ سَمی</language>
+			<language type="sn">شونا</language>
+			<language type="snk">سونِنکیے</language>
+			<language type="so">سومٲلی</language>
+			<language type="sog">سوگڈِیَن</language>
+			<language type="sq">البانِیَن</language>
+			<language type="sr">سٔربِیَن</language>
+			<language type="srn">سرانَن ٹونگو</language>
+			<language type="srr">سیریر</language>
+			<language type="ss">سواتی</language>
+			<language type="st">جنوبی ستھو</language>
+			<language type="su">سَنڈَنیٖز</language>
+			<language type="suk">سُکُما</language>
+			<language type="sus">سُسوٗ</language>
+			<language type="sux">سُمیریَن</language>
+			<language type="sv">سویٖڈِش</language>
+			<language type="sw">سواہِلی</language>
+			<language type="syr">سیٖریٲیی</language>
+			<language type="ta">تَمِل</language>
+			<language type="te">تیلگوٗ</language>
+			<language type="tem">ٹِمنیے</language>
+			<language type="ter">ٹیرینو</language>
+			<language type="tet">ٹیٹَم</language>
+			<language type="tg">تاجِک</language>
+			<language type="th">تھاے</language>
+			<language type="ti">ٹِگرِنیا</language>
+			<language type="tig">ٹاےگریے</language>
+			<language type="tiv">تیٖو</language>
+			<language type="tk">تُرکمین</language>
+			<language type="tkl">ٹوکیٖلاو</language>
+			<language type="tl">تَماشیک</language>
+			<language type="tlh">کِلِنگون</language>
+			<language type="tli">ٹِلِنگِت</language>
+			<language type="tmh">تاماشیک</language>
+			<language type="tn">سوانا</language>
+			<language type="to">ٹونگا</language>
+			<language type="tog">نیاسا ٹونگا</language>
+			<language type="tpi">ٹاک پِسِن</language>
+			<language type="tr">تُرکِش</language>
+			<language type="ts">ژونگا</language>
+			<language type="tsi">ژھِمشِیان</language>
+			<language type="tt">تَتار</language>
+			<language type="tum">تُمبُکا</language>
+			<language type="tvl">تُوالوٗ</language>
+			<language type="tw">توی</language>
+			<language type="ty">تاہیشِیَن</language>
+			<language type="tyv">تُویٖنیَن</language>
+			<language type="udm">اُدمُرت</language>
+			<language type="uga">اُگارتِک</language>
+			<language type="uk">یوٗکرینیٲیی</language>
+			<language type="umb">یُمبُندوٗ</language>
+			<language type="und">اَنزٲنۍ یا نَہ لَگہٕہار زبان</language>
+			<language type="ur">اُردوٗ</language>
+			<language type="uz">اُزبیک</language>
+			<language type="vai">واے</language>
+			<language type="ve">ویندا</language>
+			<language type="vi">وِیَتنَمیٖز</language>
+			<language type="vo">وولَپُک</language>
+			<language type="vot">ووتِک</language>
+			<language type="wa">وَلوٗن</language>
+			<language type="wal">والامو</language>
+			<language type="war">وَریے</language>
+			<language type="was">واشو</language>
+			<language type="wo">وولوف</language>
+			<language type="xal">کالمِک</language>
+			<language type="xh">کھوسا</language>
+			<language type="yao">یاو</language>
+			<language type="yap">یَپیٖز</language>
+			<language type="yi">یِدِش</language>
+			<language type="yo">یورُبا</language>
+			<language type="za">زُہانگ</language>
+			<language type="zap">زَپوتیک</language>
+			<language type="zen">زیناگا</language>
+			<language type="zh">چیٖنی</language>
+			<language type="zh_Hans">سیود چیٖنی</language>
+			<language type="zh_Hant">رِوٲجی چیٖنی</language>
+			<language type="zu">زُلوٗ</language>
+			<language type="zun">زوٗنی</language>
+			<language type="zxx">کانہہ تہِ لِسانیاتی مواد نہٕ</language>
+			<language type="zza">زازا</language>
+		</languages>
+		<scripts>
+			<script type="Arab">اَربی</script>
+			<script type="Aran" draft="contributed">نستعلیق</script>
+			<script type="Armn">اَرمانیَن</script>
+			<script type="Avst">اَویستَن</script>
+			<script type="Bali">بالَنیٖز</script>
+			<script type="Batk">باتَک</script>
+			<script type="Beng">بینگٲلۍ</script>
+			<script type="Blis">بِلِس سِمبلز</script>
+			<script type="Bopo">بوپوموفو</script>
+			<script type="Brah">براہمی</script>
+			<script type="Brai">بریل</script>
+			<script type="Bugi">بُگِنیٖز</script>
+			<script type="Buhd">بُہِد</script>
+			<script type="Cans">یُنِفایِڑ کنیڑِیَن ایب آرجِنَل سِلیبِک</script>
+			<script type="Cari">کاریَن</script>
+			<script type="Cham">چَم</script>
+			<script type="Cher">چیروکی</script>
+			<script type="Cirt">کِرتھ</script>
+			<script type="Copt">کاپٹِک</script>
+			<script type="Cprt">کِپرایِٹ</script>
+			<script type="Cyrl">سَیرِلِک</script>
+			<script type="Cyrs">پرون چٔرچسلیوونِک سَیرِلِک</script>
+			<script type="Deva">دیوناگری</script>
+			<script type="Dsrt">ڈیسٔریٹ</script>
+			<script type="Egyd">اِجپشِیَن ڈِماٹِک</script>
+			<script type="Egyh">اِجِپشَن ہَیریٹِک</script>
+			<script type="Egyp">اِجِپشَن ہَیروگلِپھس</script>
+			<script type="Ethi">اِتھیوپِک</script>
+			<script type="Geok">جارجِیَن کھتسوری</script>
+			<script type="Geor">جارجِیَن</script>
+			<script type="Glag">گلیگولِٹِک</script>
+			<script type="Goth">گوتھِک</script>
+			<script type="Grek">گرَنتھا</script>
+			<script type="Gujr">گریٖک</script>
+			<script type="Guru">گُجرٲتۍ</script>
+			<script type="Hang">ہانگُل</script>
+			<script type="Hani">ہان</script>
+			<script type="Hano">ہانُنوٗ</script>
+			<script type="Hans">سِمپلِفایِڑ ہان</script>
+			<script type="Hant">ٹریڑِشَنَل</script>
+			<script type="Hebr">ہِبرِو</script>
+			<script type="Hira">ہیٖراگانا</script>
+			<script type="Hmng">پَہاو مانگ</script>
+			<script type="Hrkt">کَٹاکانا یا ہِراگانا</script>
+			<script type="Hung">پرون ہَنگیریَن</script>
+			<script type="Inds">اِنڈَس</script>
+			<script type="Ital">اولڈ اِٹیلِک</script>
+			<script type="Java">جاوَنیٖز</script>
+			<script type="Jpan">جیپَنیٖز</script>
+			<script type="Kali">کایا لی</script>
+			<script type="Kana">کَتاکانا</script>
+			<script type="Khar">خَروشتھی</script>
+			<script type="Khmr">کھٕمیر</script>
+			<script type="Knda">کَنَڑا</script>
+			<script type="Kore">کوریَن</script>
+			<script type="Lana">لانا</script>
+			<script type="Laoo">لاو</script>
+			<script type="Latf">فرکتُر لیٹِن</script>
+			<script type="Latg">گیلِک لیٹَن</script>
+			<script type="Latn">لیٹِن</script>
+			<script type="Lepc">لیپکا</script>
+			<script type="Limb">لِمبوٗ</script>
+			<script type="Lina">لیٖنیَر اے</script>
+			<script type="Linb">لیٖنیَر بی</script>
+			<script type="Lyci">لیسِیَن</script>
+			<script type="Lydi">لیدِیَن</script>
+			<script type="Mand">مَندییَن</script>
+			<script type="Mani">مانیشییَن</script>
+			<script type="Maya">مایَن ہیٖروگلِپھ</script>
+			<script type="Mero">مِرایٹِک</script>
+			<script type="Mlym">مَلیالَم</script>
+			<script type="Mong">مَنگولیَن</script>
+			<script type="Moon">موٗن</script>
+			<script type="Mtei">میتی مایَک</script>
+			<script type="Mymr">مَیَنمار</script>
+			<script type="Nkoo">این کو</script>
+			<script type="Ogam">اوگہام</script>
+			<script type="Olck">اول چِکی</script>
+			<script type="Orkh">اورکھون</script>
+			<script type="Orya">اورِیا</script>
+			<script type="Osma">اوسمانیا</script>
+			<script type="Perm">اولڈ پٔرمِک</script>
+			<script type="Phag">پھاگس پا</script>
+			<script type="Phlv">بوٗک پَہَلوی</script>
+			<script type="Phnx">پھونِشِیَن</script>
+			<script type="Plrd">پولاڑ پھونِٹِک</script>
+			<script type="Rjng">ریجَنگ</script>
+			<script type="Roro">رونگو رونگو</script>
+			<script type="Runr">رَنِک</script>
+			<script type="Samr">سَمارِٹَن</script>
+			<script type="Sara">سَراتی</script>
+			<script type="Saur">سوراشٹرا</script>
+			<script type="Sgnw">اِشارٲتی لِکھٲے</script>
+			<script type="Shaw">شاویَن</script>
+			<script type="Sinh">سِنہالا</script>
+			<script type="Sund">سَنڈَنیٖز</script>
+			<script type="Sylo">سیلوتی ناگری</script>
+			<script type="Syrc">سیٖرِیَک</script>
+			<script type="Syre">ایسٹرینجِلو سیٖرِیَک</script>
+			<script type="Syrj">مغرِبی سیٖریَک</script>
+			<script type="Syrn">مشرَقی سیٖریَک</script>
+			<script type="Tagb">تَگبَنوا</script>
+			<script type="Tale">تَیلیے</script>
+			<script type="Talu">نۆو تیلو</script>
+			<script type="Taml">تَمِل</script>
+			<script type="Telu">تیلگوٗ</script>
+			<script type="Teng">تینگوار</script>
+			<script type="Tfng">تِفِناگ</script>
+			<script type="Tglg">تَگَلوگ</script>
+			<script type="Thaa">تھانا</script>
+			<script type="Thai">تھاے</script>
+			<script type="Tibt">تِبتی</script>
+			<script type="Ugar">اُگارِٹِک</script>
+			<script type="Vaii">واے</script>
+			<script type="Visp">وِزِبٕل سپیٖچ</script>
+			<script type="Xpeo">پرون فارسی</script>
+			<script type="Xsux">سُمیرو اکادیَن کوٗنِفام</script>
+			<script type="Yiii">یٖی</script>
+			<script type="Zxxx">لیکھنَے</script>
+			<script type="Zyyy">عام</script>
+			<script type="Zzzz">اَن زٲنۍ یا نا لَگہٕ ہار رَسمُل خظ</script>
+		</scripts>
+		<territories>
+			<territory type="001">دُنیا</territory>
+			<territory type="002">اَفریٖکا</territory>
+			<territory type="003">شُمٲلی اَمریٖکا</territory>
+			<territory type="005">جَنوٗنی اَمرٖیٖکا</territory>
+			<territory type="009">اوشَنیا</territory>
+			<territory type="011">مَغریٖبی اَفریٖکا</territory>
+			<territory type="013">مرکٔزی اَمریٖکا</territory>
+			<territory type="014">مَشرِقی اَفریٖکا</territory>
+			<territory type="015">شُمٲلی اَفریٖکا</territory>
+			<territory type="017">وسطی اَفریٖکا</territory>
+			<territory type="018">جنوٗبی اَفریٖکا</territory>
+			<territory type="019">اَمریٖکَس</territory>
+			<territory type="021">شُمٲلی اَمریٖکا خٕطہٕ</territory>
+			<territory type="029">کَرِببیٖن</territory>
+			<territory type="030">مَشرِقی ایشیا</territory>
+			<territory type="034">جنوٗبی ایشیا</territory>
+			<territory type="035">جنوٗبہِ مَشرِقی ایشیا</territory>
+			<territory type="039">جنوٗبی یوٗرَپ</territory>
+			<territory type="053">آسٹریلیا تہٕ نِوزِلینڑ</territory>
+			<territory type="054">مؠلَنیٖشِیا</territory>
+			<territory type="057">مَیکرونَیشِیَن خٕطہٕ</territory>
+			<territory type="061">پالنیشِیا</territory>
+			<territory type="142">ایشیا</territory>
+			<territory type="143">مرکٔزی ایشیا</territory>
+			<territory type="145">مَغرِبی ایشیا</territory>
+			<territory type="150">یوٗرَپ</territory>
+			<territory type="151">مشرِقی یوٗرَپ</territory>
+			<territory type="154">شُمٲلی یوٗرَپ</territory>
+			<territory type="155">مغرِبی یوٗرَپ</territory>
+			<territory type="419">لاطیٖنی اَمریٖکا تہٕ کیرَبیٖن</territory>
+			<territory type="AD">اؠنڑورا</territory>
+			<territory type="AE">مُتحدہ عرَب امارات</territory>
+			<territory type="AF">اَفغانَستان</territory>
+			<territory type="AG">اؠنٹِگُوا تہٕ باربوڑا</territory>
+			<territory type="AI">انگوئیلا</territory>
+			<territory type="AL">اؠلبانِیا</territory>
+			<territory type="AM">اَرمانِیا</territory>
+			<territory type="AO">انگولا</territory>
+			<territory type="AQ">اینٹارٹِکا</territory>
+			<territory type="AR">أرجَنٹینا</territory>
+			<territory type="AS">اَمریٖکَن سَموا</territory>
+			<territory type="AT">آسٹِیا</territory>
+			<territory type="AU">آسٹریلِیا</territory>
+			<territory type="AW">اَروٗبا</territory>
+			<territory type="AX">ایلینڑ جٔزیٖرٕ</territory>
+			<territory type="AZ">آزَرباجان</territory>
+			<territory type="BA">بوسنِیا تہٕ ہَرزِگووِنا</territory>
+			<territory type="BB">باربیڈاس</territory>
+			<territory type="BD">بَنگلادیش</territory>
+			<territory type="BE">بیلجِیَم</territory>
+			<territory type="BF">بُرکِنا فیسو</territory>
+			<territory type="BG">بَلجیرِیا</territory>
+			<territory type="BH">بحریٖن</territory>
+			<territory type="BI">بورَنڈِ</territory>
+			<territory type="BJ">بِنِن</territory>
+			<territory type="BL">سینٹ بارتَھیلمی</territory>
+			<territory type="BM">بٔرمیوڈا</territory>
+			<territory type="BN">بُرنٔے</territory>
+			<territory type="BO">بولِوِیا</territory>
+			<territory type="BQ">برطانوی قُطبہِ جَنوٗبی علاقہٕ</territory>
+			<territory type="BR">برازِل</territory>
+			<territory type="BS">بَہامَس</territory>
+			<territory type="BT">بوٗٹان</territory>
+			<territory type="BV">بووَٹ جٔزیٖرٕ</territory>
+			<territory type="BW">بوتَسوانا</territory>
+			<territory type="BY">بیلاروٗس</territory>
+			<territory type="BZ">بیلِج</territory>
+			<territory type="CA">کینَڑا</territory>
+			<territory type="CC">کوکَس کیٖلِنگ جٔزیٖرٕ</territory>
+			<territory type="CD">کونگو کِنشاسا</territory>
+			<territory type="CF">مرکٔزی اَفریٖکی جموٗریَت</territory>
+			<territory type="CG">کونگو بٔرزاوِلی</territory>
+			<territory type="CH">سُوِزَرلینڑ</territory>
+			<territory type="CI">اَیوٕری کوسٹ</territory>
+			<territory type="CK">کُک جٔزیٖرٕ</territory>
+			<territory type="CL">چِلی</territory>
+			<territory type="CM">کیمِروٗن</territory>
+			<territory type="CN">چیٖن</territory>
+			<territory type="CO">کولَمبِیا</territory>
+			<territory type="CR">کوسٹا رِکا</territory>
+			<territory type="CU">کیوٗبا</territory>
+			<territory type="CV">کیپ ؤرڑی</territory>
+			<territory type="CX">کرِسمَس جٔزیٖرٕ</territory>
+			<territory type="CY">سایفرس</territory>
+			<territory type="CZ">چیک جَموٗرِیَت</territory>
+			<territory type="DE">جرمٔنی</territory>
+			<territory type="DJ">جِبوٗتی</territory>
+			<territory type="DK">ڈینمارٕک</territory>
+			<territory type="DM">ڈومِنِکا</territory>
+			<territory type="DO">ڈومِنِکَن جموٗرِیَت</territory>
+			<territory type="DZ">اؠلجیرِیا</territory>
+			<territory type="EC">اِکواڑور</territory>
+			<territory type="EE">ایسٹونِیا</territory>
+			<territory type="EG">مِسٔر</territory>
+			<territory type="EH">مشرِقی سَہارا</territory>
+			<territory type="ER">اِرٕٹِیا</territory>
+			<territory type="ES">سٕپین</territory>
+			<territory type="ET">اِتھوپِیا</territory>
+			<territory type="FI">فِنلینڑ</territory>
+			<territory type="FJ">فِجی</territory>
+			<territory type="FK">فٕلاکلینڑ جٔزیٖرٕ</territory>
+			<territory type="FR">فرانس</territory>
+			<territory type="GA">گیبان</territory>
+			<territory type="GB">یُنایٹِڑ کِنگڈَم</territory>
+			<territory type="GD">گرنیڑا</territory>
+			<territory type="GE">جارجِیا</territory>
+			<territory type="GF">فرانسِسی گِانا</territory>
+			<territory type="GG">گیوَنَرسے</territory>
+			<territory type="GH">گانا</territory>
+			<territory type="GI">جِبرالٹَر</territory>
+			<territory type="GL">گریٖنلینڑ</territory>
+			<territory type="GM">گَمبِیا</territory>
+			<territory type="GN">گِنی</territory>
+			<territory type="GP">گَواڑیلوپ</territory>
+			<territory type="GQ">اِکوِٹورِیَل گِنی</territory>
+			<territory type="GR">گریٖس</territory>
+			<territory type="GS">جنوٗبی جارجِیا تہٕ جنوٗبی سینڑوٕچ جٔزیٖرٕ</territory>
+			<territory type="GT">گوتیدالا</territory>
+			<territory type="GU">گُوام</territory>
+			<territory type="GW">گیٖنی بِساو</territory>
+			<territory type="GY">گُیانا</territory>
+			<territory type="HK">ہانگ کانگ ایس اے آر چیٖن</territory>
+			<territory type="HM">ہَرٕڑ جٔزیٖرٕ تہٕ مؠکڈونالڑٕ جٔزیٖرٕ</territory>
+			<territory type="HN">ہانڈوٗرِس</territory>
+			<territory type="HR">کروشِیا</territory>
+			<territory type="HT">ہایتی</territory>
+			<territory type="HU">ہَنگری</territory>
+			<territory type="ID">اِنڑونیشِیا</territory>
+			<territory type="IE">اَیَرلینڑ</territory>
+			<territory type="IL">اِسرایٖل</territory>
+			<territory type="IM">آیِل آف مین</territory>
+			<territory type="IN">ہِندوستان</territory>
+			<territory type="IO">برطانوی بحرِ ہِندۍ علاقہٕ</territory>
+			<territory type="IQ">ایٖراق</territory>
+			<territory type="IR">ایٖران</territory>
+			<territory type="IS">اَیِسلینڑ</territory>
+			<territory type="IT">اِٹلی</territory>
+			<territory type="JE">جٔرسی</territory>
+			<territory type="JM">جَمایکا</territory>
+			<territory type="JP">جاپان</territory>
+			<territory type="KE">کِنیا</territory>
+			<territory type="KG">کِرگِستان</territory>
+			<territory type="KH">کَمبوڑِیا</territory>
+			<territory type="KI">کِرٕباتی</territory>
+			<territory type="KM">کَمورَس</territory>
+			<territory type="KN">سینٹ کِٹَس تہٕ نیوِس</territory>
+			<territory type="KP">شُمٲلی کورِیا</territory>
+			<territory type="KR">جنوٗبی کورِیا</territory>
+			<territory type="KW">کُویت</territory>
+			<territory type="KY">کیمَن جٔزیٖرٕ</territory>
+			<territory type="KZ">کَزاکِستان</territory>
+			<territory type="LA">لاس</territory>
+			<territory type="LB">لؠبنان</territory>
+			<territory type="LC">سینٹ لوٗسِیا</territory>
+			<territory type="LI">لِکٹیسٹیٖن</territory>
+			<territory type="LK">سِریٖلَنکا</territory>
+			<territory type="LR">لایبیرِیا</territory>
+			<territory type="LS">لیسوتھو</territory>
+			<territory type="LT">لِتھُوانِیا</territory>
+			<territory type="LU">لَکسَمبٔرٕگ</territory>
+			<territory type="LV">لیٹوِیا</territory>
+			<territory type="LY">لِبیا</territory>
+			<territory type="MA">موروکو</territory>
+			<territory type="MC">مونیکو</territory>
+			<territory type="MD">مولڑاوِیا</territory>
+			<territory type="ME">موٹونیگِریو</territory>
+			<territory type="MF">سینٹ مارٹِن</territory>
+			<territory type="MG">میڑاگاسکار</territory>
+			<territory type="MH">مارشَل جٔزیٖرٕ</territory>
+			<territory type="ML">مالی</territory>
+			<territory type="MM">مَیَنما بٔرما</territory>
+			<territory type="MN">مَنگولِیا</territory>
+			<territory type="MO">مَکاوو ایس اے آر چیٖن</territory>
+			<territory type="MP">شُمٲلی مارِیانا جٔزیٖرٕ</territory>
+			<territory type="MQ">مارٹِنِک</territory>
+			<territory type="MR">مارٕٹانِیا</territory>
+			<territory type="MS">مانٹسیراٹ</territory>
+			<territory type="MT">مالٹا</territory>
+			<territory type="MU">مورِشَس</territory>
+			<territory type="MV">مالدیٖو</territory>
+			<territory type="MW">ملاوی</territory>
+			<territory type="MX">مؠکسِکو</territory>
+			<territory type="MY">مَلیشِیا</territory>
+			<territory type="MZ">موزَمبِک</territory>
+			<territory type="NA">نامِبِیا</territory>
+			<territory type="NC">نِو کیلِڑونِیا</territory>
+			<territory type="NE">نایجَر</territory>
+			<territory type="NF">نارفاک جٔزیٖرٕ</territory>
+			<territory type="NG">نایجیرِیا</territory>
+			<territory type="NI">ناکاراگُوا</territory>
+			<territory type="NL">نیٖدَرلینڑ</territory>
+			<territory type="NO">ناروے</territory>
+			<territory type="NP">نیپال</territory>
+			<territory type="NR">نارووٗ</territory>
+			<territory type="NU">نیوٗ</territory>
+			<territory type="NZ">نیوٗزِلینڑ</territory>
+			<territory type="OM">اومان</territory>
+			<territory type="PA">پَناما</territory>
+			<territory type="PE">پیٖروٗ</territory>
+			<territory type="PF">فرانسی پولِنیشِیا</territory>
+			<territory type="PG">پاپُوا نیوٗ گیٖنی</territory>
+			<territory type="PH">فِلِپِینس</territory>
+			<territory type="PK">پاکِستان</territory>
+			<territory type="PL">پولینڑ</territory>
+			<territory type="PM">سینٹ پیٖری تہٕ موکیلِیَن</territory>
+			<territory type="PN">پِٹکیرٕنۍ جٔزیٖرٕ</territory>
+			<territory type="PR">پٔرٹو رِکو</territory>
+			<territory type="PS">فَلَستیٖن</territory>
+			<territory type="PT">پُرتِگال</territory>
+			<territory type="PW">پَلاو</territory>
+			<territory type="PY">پَراگُے</territory>
+			<territory type="QA">قَطِر</territory>
+			<territory type="QO">آوُٹلاینِگ اوشینِیا</territory>
+			<territory type="RE">رِیوٗنِیَن</territory>
+			<territory type="RO">رومانِیا</territory>
+			<territory type="RS">سَربِیا</territory>
+			<territory type="RU">روٗس</territory>
+			<territory type="RW">روٗوانڈا</territory>
+			<territory type="SA">سوٗدی عربِیہ</territory>
+			<territory type="SB">سولامان جٔزیٖرٕ</territory>
+			<territory type="SC">سیشَلِس</territory>
+			<territory type="SD">سوٗڈان</territory>
+			<territory type="SE">سُوِڈَن</territory>
+			<territory type="SG">سِنگاپوٗر</territory>
+			<territory type="SH">سینٹ ہؠلِنا</territory>
+			<territory type="SI">سَلووینِیا</territory>
+			<territory type="SJ">سَوالبریڑ تہٕ جان ماییڑ</territory>
+			<territory type="SK">سَلوواکِیا</territory>
+			<territory type="SL">سیٖرالیوون</territory>
+			<territory type="SM">سین میرِنو</territory>
+			<territory type="SN">سینیگَل</territory>
+			<territory type="SO">سومالِیا</territory>
+			<territory type="SR">سُرِنام</territory>
+			<territory type="ST">ساو توم تہٕ پرنسِپی</territory>
+			<territory type="SV">اؠل سَلواڑور</territory>
+			<territory type="SY">شام</territory>
+			<territory type="SZ">سُوزِلینڑ</territory>
+			<territory type="TC">تُرُک تہٕ کیکوس جٔزیٖرٕ</territory>
+			<territory type="TD">چاڑ</territory>
+			<territory type="TF">فرانسِسی جَنوٗبی عَلاقہٕ</territory>
+			<territory type="TG">ٹوگو</territory>
+			<territory type="TH">تھایلینڑ</territory>
+			<territory type="TJ">تاجکِستان</territory>
+			<territory type="TK">توکیلاو</territory>
+			<territory type="TL">مَشرِقی تایمور</territory>
+			<territory type="TM">تُرمِنِستان</territory>
+			<territory type="TN">ٹونیشِیا</territory>
+			<territory type="TO">ٹونگا</territory>
+			<territory type="TR">تُرکی</territory>
+			<territory type="TT">ٹرنِنداد تہٕ ٹوبیگو</territory>
+			<territory type="TV">توٗوالوٗ</territory>
+			<territory type="TW">تایوان</territory>
+			<territory type="TZ">تَنجانِیا</territory>
+			<territory type="UA">یوٗرِکین</territory>
+			<territory type="UG">یوٗگانڑا</territory>
+			<territory type="UM">یوٗنایٹِڑ سِٹیٹِس ماینَر آوُٹلییِنگ جٔزیٖرٕ</territory>
+			<territory type="US">یوٗنایٹِڑ سِٹیٹِس</territory>
+			<territory type="UY">یوٗروگے</territory>
+			<territory type="UZ">اُزبِکِستان</territory>
+			<territory type="VA">ویٹِکَن سِٹی</territory>
+			<territory type="VC">سینٹ وینسؠٹ تہٕ گریناڑاینٕز</territory>
+			<territory type="VE">وینازوٗلا</territory>
+			<territory type="VG">بَرطانوی ؤرجِن جٔزیٖرٕ</territory>
+			<territory type="VI">یوٗ ایس ؤرجِن جٔزیٖرٕ</territory>
+			<territory type="VN">ویٹِنام</territory>
+			<territory type="VU">وانوٗتوٗ</territory>
+			<territory type="WF">والِس تہٕ فیوٗچوٗنا</territory>
+			<territory type="WS">سیمووا</territory>
+			<territory type="YE">یَمَن</territory>
+			<territory type="YT">مَییٹ</territory>
+			<territory type="ZA">جَنوٗبی اَفریٖکا</territory>
+			<territory type="ZM">جامبِیا</territory>
+			<territory type="ZW">زِمبابے</territory>
+			<territory type="ZZ">نامعلوٗم تہٕ نالَگہار عَلاقہٕ</territory>
+		</territories>
+		<variants>
+			<variant type="1901">رؠوٲتی جٔرمَن عِلمہِ ہِجا</variant>
+			<variant type="1994">مَیعٲری روٗسی عِلمہِ ہِجا</variant>
+			<variant type="1996">جٔرمَن عِلمہِ ہِجا ۱۹۹۶سُک</variant>
+			<variant type="1606NICT">بعد وَقت وَسطی فرانس پؠٹھ ۱۶٠۶ تام</variant>
+			<variant type="AREVELA">مَشرِقی اَمریٖکا</variant>
+			<variant type="BAKU1926">جٔمع کٔرِتھ تُرکی لاطیٖنی اَچھر</variant>
+			<variant type="BISKE">سین جارجِیو/بِلا بوٗلۍ</variant>
+			<variant type="FONIPA">آوازیات</variant>
+			<variant type="FONUPA">یوٗ پی اے آوازِیات</variant>
+			<variant type="LIPAW">روٗسی زَبانہِ ہِنز لِپوواز بوٗلۍ</variant>
+			<variant type="MONOTON">اَکٔے لہجہٕ واجؠن زَبان</variant>
+			<variant type="NEDIS">نؠٹِسون بوٗلۍ</variant>
+			<variant type="NJIVA">نیجِوا بوٗلۍ</variant>
+			<variant type="OSOJS">اُشیکو/اوسوجین بوٗلۍ</variant>
+			<variant type="POLYTON">واریاہ لہجہٕ واجؠن زَبان</variant>
+			<variant type="POSIX">کَمپیوٗٹَر</variant>
+			<variant type="REVISED">دُبارٕ دۄہراونہٕ آمُت عِلمہِ ہِجا</variant>
+			<variant type="ROZAJ">روٗسی</variant>
+			<variant type="SAAHO">سوہو</variant>
+			<variant type="SCOTLAND">سُکاٹِش مَیعٲری اَنگریٖزۍ</variant>
+			<variant type="SCOUSE">سِکوس</variant>
+			<variant type="SOLBA">ثٹولوِزا/سولبِکا بوٗلۍ</variant>
+			<variant type="TARASK">تاراسکیٖوِکا علمہ ہِجاِ</variant>
+		</variants>
+		<keys>
+			<key type="calendar">کیلنڑر</key>
+			<key type="currency">ضَرب</key>
+		</keys>
+		<types>
+			<type key="calendar" type="buddhist">بُدَن ہُند کیلنڑَر</type>
+			<type key="calendar" type="chinese">چیٖنی کیلَنڑَر</type>
+			<type key="calendar" type="gregorian">گرگوریَن کیلنڑَر</type>
+			<type key="calendar" type="hebrew">ہِبرِو کیلنڑَر</type>
+			<type key="calendar" type="islamic">اِسلٲمی کیلنڑَر</type>
+			<type key="calendar" type="islamic-civil">اِسلٲمی اِجتمٲیی کیلنڑَر</type>
+			<type key="calendar" type="japanese">جاپٲنۍ کیلنڑَر</type>
+			<type key="calendar" type="roc">جموٗریٲتی چیٖنی کیلَنڑَر</type>
+			<type key="collation" type="big5han">رؠوٲتی چیٖنی تِرتیٖب</type>
+			<type key="collation" type="phonebook">فون بُک تَرتیٖب</type>
+			<type key="collation" type="pinyin">آسان بَناونہٕ آمُت چیٖنی پیٖنیَن تَرتیٖب</type>
+			<type key="collation" type="stroke">رؠوٲتی چیٖنی سٹروک تَرتیٖب</type>
+			<type key="collation" type="traditional">رؠوٲتی تَرتیٖب</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">میٖٹرِک</measurementSystemName>
+			<measurementSystemName type="US">یوٗ ایس</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language">زَبان: {0}</codePattern>
+			<codePattern type="script">رَسم الخط: {0}</codePattern>
+			<codePattern type="territory">علاقہٕ: {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<layout>
+		<orientation>
+			<characterOrder>right-to-left</characterOrder>
+		</orientation>
+	</layout>
+	<characters>
+		<exemplarCharacters>[ء آ أ ٲ ؤ ا ب پ ت ث ٹ ج چ ح خ د ذ ڈ ر ز ڑ ژ س ش ص ض ط ظ ع غ ف ق ک گ ل م ن ں ھ ہ و ۄ ۆ ی ۍ ؠ ے]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[\u200E\u200F \u064E \u064F \u0650 \u0654 \u0655 \u065F \u0656 \u0657]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\u200E \- ‑ , . % ‰ + 0۰ 1۱ 2۲ 3۳ 4۴ 5۵ 6۶ 7۷ 8۸ 9۹]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, MMMM d, Gy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>MMMM d, Gy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>MMM d, Gy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>M/d/Gy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="Gy">Gy</dateFormatItem>
+						<dateFormatItem id="GyMMM">MMM Gy</dateFormatItem>
+						<dateFormatItem id="GyMMMd">MMM d, Gy</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">EEE, MMM d, Gy</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">M/d</dateFormatItem>
+						<dateFormatItem id="MEd">E, M/d</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">d-MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="MMMMEd">E, MMMM d</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">Gy</dateFormatItem>
+						<dateFormatItem id="yyyy">Gy</dateFormatItem>
+						<dateFormatItem id="yyyyM">M/Gy</dateFormatItem>
+						<dateFormatItem id="yyyyMEd">EEE, M/d/Gy</dateFormatItem>
+						<dateFormatItem id="yyyyMMM">MMM Gy</dateFormatItem>
+						<dateFormatItem id="yyyyMMMd">MMM d, Gy</dateFormatItem>
+						<dateFormatItem id="yyyyMMMEd">EEE, MMM d, Gy</dateFormatItem>
+						<dateFormatItem id="yyyyMMMM">MMMM Gy</dateFormatItem>
+						<dateFormatItem id="yyyyQQQ">QQQ Gy</dateFormatItem>
+						<dateFormatItem id="yyyyQQQQ">QQQQ Gy</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="wide">
+							<month type="1">جنؤری</month>
+							<month type="2">فرؤری</month>
+							<month type="3">مارٕچ</month>
+							<month type="4">اپریل</month>
+							<month type="5">میٔ</month>
+							<month type="6">جوٗن</month>
+							<month type="7">جوٗلایی</month>
+							<month type="8">اگست</month>
+							<month type="9">ستمبر</month>
+							<month type="10">اکتوٗبر</month>
+							<month type="11">نومبر</month>
+							<month type="12">دسمبر</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="narrow">
+							<month type="1">ج</month>
+							<month type="2">ف</month>
+							<month type="3">م</month>
+							<month type="4">ا</month>
+							<month type="5">م</month>
+							<month type="6">ج</month>
+							<month type="7">ج</month>
+							<month type="8">ا</month>
+							<month type="9">س</month>
+							<month type="10">س</month>
+							<month type="11">ا</month>
+							<month type="12">ن</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">آتھوار</day>
+							<day type="mon">ژٔندٕروار</day>
+							<day type="tue">بۆموار</day>
+							<day type="wed">بودوار</day>
+							<day type="thu">برؠسوار</day>
+							<day type="fri">جُمہ</day>
+							<day type="sat">بٹوار</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">اَتھوار</day>
+							<day type="mon">ژٔندرٕروار</day>
+							<day type="tue">بۆموار</day>
+							<day type="wed">بودوار</day>
+							<day type="thu">برؠسوار</day>
+							<day type="fri">جُمہ</day>
+							<day type="sat">بٹوار</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="narrow">
+							<day type="sun">ا</day>
+							<day type="mon">ژ</day>
+							<day type="tue">ب</day>
+							<day type="wed">ب</day>
+							<day type="thu">ب</day>
+							<day type="fri">ج</day>
+							<day type="sat">ب</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">ژۄباگ</quarter>
+							<quarter type="2">دۆیِم ژۄباگ</quarter>
+							<quarter type="3">تریِم ژۄباگ</quarter>
+							<quarter type="4">ژوٗرِم ژۄباگ</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">گۄڑنیُک ژۄباگ</quarter>
+							<quarter type="2">دۆیِم ژۄباگ</quarter>
+							<quarter type="3">تریِم ژۄباگ</quarter>
+							<quarter type="4">ژوٗرِم ژۄباگ</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<eras>
+					<eraNames>
+						<era type="0">قبٕل مسیٖح</era>
+						<era type="1">عیٖسوی سنہٕ</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">بی سی</era>
+						<era type="1">اے ڈی</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, MMMM d, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>MMMM d, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>MMM d, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>M/d/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>h:mm:ss a zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>h:mm:ss a z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>h:mm:ss a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>h:mm a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="Gy">Gy</dateFormatItem>
+						<dateFormatItem id="GyMMM">MMM Gy</dateFormatItem>
+						<dateFormatItem id="GyMMMd">MMM d, Gy</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">EEE, MMM d, Gy</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">M/d</dateFormatItem>
+						<dateFormatItem id="MEd">E, M/d</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">d-MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="MMMMEd">E, MMMM d</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">EEE, M/d/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">EEE, MMM d, y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="indian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="wide">
+							<month type="1">محرم</month>
+							<month type="2">صفر</month>
+							<month type="3">ربیٖع الاول</month>
+							<month type="4">ربیٖع الثانی</month>
+							<month type="5">جمادی الاول</month>
+							<month type="6">جمادی الثانی</month>
+							<month type="7">رجب</month>
+							<month type="8">شعبان</month>
+							<month type="9">رمضان</month>
+							<month type="10">شوال</month>
+							<month type="11">ذِی القد</month>
+							<month type="12">ذِی الحج</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>دور</displayName>
+			</field>
+			<field type="year">
+				<displayName>ؤری</displayName>
+			</field>
+			<field type="month">
+				<displayName>رؠتھ</displayName>
+			</field>
+			<field type="week">
+				<displayName>ہفتہٕ</displayName>
+			</field>
+			<field type="day">
+				<displayName>دۄہ</displayName>
+				<relative type="-1">راتھ</relative>
+				<relative type="0">اَز</relative>
+				<relative type="1">پگاہ</relative>
+			</field>
+			<field type="weekday">
+				<displayName>ہفتُک دۄہ</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>صبح/رات</displayName>
+			</field>
+			<field type="hour">
+				<displayName>گٲنٹہٕ</displayName>
+			</field>
+			<field type="minute">
+				<displayName>مِنَٹ</displayName>
+			</field>
+			<field type="second">
+				<displayName>سؠکَنڑ</displayName>
+			</field>
+			<field type="zone">
+				<displayName>زون</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<hourFormat>+HH:mm;-HH:mm</hourFormat>
+			<gmtFormat>GMT{0}</gmtFormat>
+			<zone type="Etc/Unknown">
+				<exemplarCity>غٲر زان</exemplarCity>
+			</zone>
+			<zone type="Europe/Andorra">
+				<exemplarCity>اَنڑورا</exemplarCity>
+			</zone>
+			<zone type="Asia/Dubai">
+				<exemplarCity>دُبَے</exemplarCity>
+			</zone>
+			<zone type="Asia/Kabul">
+				<exemplarCity>قابُل</exemplarCity>
+			</zone>
+			<zone type="America/Antigua">
+				<exemplarCity>اؠنٹِگُوا</exemplarCity>
+			</zone>
+			<zone type="America/Anguilla">
+				<exemplarCity>اؠنگِولا</exemplarCity>
+			</zone>
+			<zone type="Europe/Tirane">
+				<exemplarCity>ٹِرین</exemplarCity>
+			</zone>
+			<zone type="Asia/Yerevan">
+				<exemplarCity>یےریوَن</exemplarCity>
+			</zone>
+			<zone type="Africa/Luanda">
+				<exemplarCity>لُعؠنڑا</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Rothera">
+				<exemplarCity>روتھیرا</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Palmer">
+				<exemplarCity>پامَر</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Syowa">
+				<exemplarCity>سیووا</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Mawson">
+				<exemplarCity>ماسَن</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Davis">
+				<exemplarCity>ڈیوِس</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Vostok">
+				<exemplarCity>ووستوک</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Casey">
+				<exemplarCity>کیسی</exemplarCity>
+			</zone>
+			<zone type="Antarctica/DumontDUrville">
+				<exemplarCity>ڈُمونٹ ڈ اَروِل</exemplarCity>
+			</zone>
+			<zone type="Antarctica/McMurdo">
+				<exemplarCity>مؠک مٲڑو</exemplarCity>
+			</zone>
+			<zone type="America/Argentina/Rio_Gallegos">
+				<exemplarCity>رِیو گالیگوس</exemplarCity>
+			</zone>
+			<zone type="America/Mendoza">
+				<exemplarCity>مؠنڑوزا</exemplarCity>
+			</zone>
+			<zone type="America/Argentina/San_Juan">
+				<exemplarCity>سین جُواں</exemplarCity>
+			</zone>
+			<zone type="America/Argentina/Ushuaia">
+				<exemplarCity>اُشُوٗاییا</exemplarCity>
+			</zone>
+			<zone type="America/Argentina/La_Rioja">
+				<exemplarCity>لا رِیوجا</exemplarCity>
+			</zone>
+			<zone type="America/Argentina/San_Luis">
+				<exemplarCity>سین لوٗیِس</exemplarCity>
+			</zone>
+			<zone type="America/Catamarca">
+				<exemplarCity>کیٹامارکا</exemplarCity>
+			</zone>
+			<zone type="America/Jujuy">
+				<exemplarCity>جُجویے</exemplarCity>
+			</zone>
+			<zone type="America/Argentina/Tucuman">
+				<exemplarCity>ٹوکوٗمَن</exemplarCity>
+			</zone>
+			<zone type="America/Cordoba">
+				<exemplarCity>کورڑوبا</exemplarCity>
+			</zone>
+			<zone type="America/Buenos_Aires">
+				<exemplarCity>بیوٗنَس آیرَس</exemplarCity>
+			</zone>
+			<zone type="Pacific/Pago_Pago">
+				<exemplarCity>پیگو پیگو</exemplarCity>
+			</zone>
+			<zone type="Europe/Vienna">
+				<exemplarCity>وِیَننا</exemplarCity>
+			</zone>
+			<zone type="Australia/Perth">
+				<exemplarCity>پٔرتھ</exemplarCity>
+			</zone>
+			<zone type="Australia/Eucla">
+				<exemplarCity>یوٗکلا</exemplarCity>
+			</zone>
+			<zone type="Australia/Darwin">
+				<exemplarCity>ڈاروِن</exemplarCity>
+			</zone>
+			<zone type="Australia/Adelaide">
+				<exemplarCity>اؠڑِلیڑ</exemplarCity>
+			</zone>
+			<zone type="Australia/Broken_Hill">
+				<exemplarCity>بروکٕن ہِل</exemplarCity>
+			</zone>
+			<zone type="Australia/Melbourne">
+				<exemplarCity>مؠلبعارن</exemplarCity>
+			</zone>
+			<zone type="Australia/Currie">
+				<exemplarCity>کیوٗری</exemplarCity>
+			</zone>
+			<zone type="Australia/Hobart">
+				<exemplarCity>حۄبٲٹ</exemplarCity>
+			</zone>
+			<zone type="Australia/Lindeman">
+				<exemplarCity>لِنڑیمان</exemplarCity>
+			</zone>
+			<zone type="Australia/Sydney">
+				<exemplarCity>سِڑنی</exemplarCity>
+			</zone>
+			<zone type="Australia/Brisbane">
+				<exemplarCity>برسبین</exemplarCity>
+			</zone>
+			<zone type="Australia/Lord_Howe">
+				<exemplarCity>لعاڑ ہووے</exemplarCity>
+			</zone>
+			<zone type="America/Aruba">
+				<exemplarCity>اَروٗبا</exemplarCity>
+			</zone>
+			<zone type="Asia/Baku">
+				<exemplarCity>باقوٗ</exemplarCity>
+			</zone>
+			<zone type="America/Barbados">
+				<exemplarCity>بَرباڑوس</exemplarCity>
+			</zone>
+			<zone type="Asia/Dhaka">
+				<exemplarCity>ڈھاکا</exemplarCity>
+			</zone>
+			<zone type="Europe/Brussels">
+				<exemplarCity>برسٕلس</exemplarCity>
+			</zone>
+			<zone type="Africa/Ouagadougou">
+				<exemplarCity>اوآگدوگو</exemplarCity>
+			</zone>
+			<zone type="Europe/Sofia">
+				<exemplarCity>سوفِیا</exemplarCity>
+			</zone>
+			<zone type="Asia/Bahrain">
+				<exemplarCity>بؠہریٖن</exemplarCity>
+			</zone>
+			<zone type="Africa/Bujumbura">
+				<exemplarCity>بُجُمبُرا</exemplarCity>
+			</zone>
+			<zone type="Africa/Porto-Novo">
+				<exemplarCity>پوٹو نووو</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Bermuda">
+				<exemplarCity>برموٗڑا</exemplarCity>
+			</zone>
+			<zone type="Asia/Brunei">
+				<exemplarCity>بروٗنَے</exemplarCity>
+			</zone>
+			<zone type="America/La_Paz">
+				<exemplarCity>لا پاز</exemplarCity>
+			</zone>
+			<zone type="America/Eirunepe">
+				<exemplarCity>ایٖروٗنیپ</exemplarCity>
+			</zone>
+			<zone type="America/Rio_Branco">
+				<exemplarCity>رِیو برانکو</exemplarCity>
+			</zone>
+			<zone type="America/Porto_Velho">
+				<exemplarCity>پوٹو وؠلہو</exemplarCity>
+			</zone>
+			<zone type="America/Boa_Vista">
+				<exemplarCity>بوآ وِسٹا</exemplarCity>
+			</zone>
+			<zone type="America/Manaus">
+				<exemplarCity>مَنوس</exemplarCity>
+			</zone>
+			<zone type="America/Cuiaba">
+				<exemplarCity>کوٗیابا</exemplarCity>
+			</zone>
+			<zone type="America/Campo_Grande">
+				<exemplarCity>کؠمپو گرینڑ</exemplarCity>
+			</zone>
+			<zone type="America/Belem">
+				<exemplarCity>بؠلؠم</exemplarCity>
+			</zone>
+			<zone type="America/Araguaina">
+				<exemplarCity>اؠریگُوینا</exemplarCity>
+			</zone>
+			<zone type="America/Sao_Paulo">
+				<exemplarCity>ساو پعالو</exemplarCity>
+			</zone>
+			<zone type="America/Bahia">
+				<exemplarCity>بَہِیا</exemplarCity>
+			</zone>
+			<zone type="America/Fortaleza">
+				<exemplarCity>فورٹیلیزا</exemplarCity>
+			</zone>
+			<zone type="America/Maceio">
+				<exemplarCity>میسِیوو</exemplarCity>
+			</zone>
+			<zone type="America/Recife">
+				<exemplarCity>رؠچیٖف</exemplarCity>
+			</zone>
+			<zone type="America/Noronha">
+				<exemplarCity>نورونہا</exemplarCity>
+			</zone>
+			<zone type="America/Nassau">
+				<exemplarCity>نساؤں</exemplarCity>
+			</zone>
+			<zone type="Asia/Thimphu">
+				<exemplarCity>تھِمپوٗ</exemplarCity>
+			</zone>
+			<zone type="Africa/Gaborone">
+				<exemplarCity>گؠبورون</exemplarCity>
+			</zone>
+			<zone type="Europe/Minsk">
+				<exemplarCity>مِنسک</exemplarCity>
+			</zone>
+			<zone type="America/Belize">
+				<exemplarCity>بؠلیٖز</exemplarCity>
+			</zone>
+			<zone type="America/Dawson">
+				<exemplarCity>ڑاسَن</exemplarCity>
+			</zone>
+			<zone type="America/Whitehorse">
+				<exemplarCity>وایِٹ ہارٕس</exemplarCity>
+			</zone>
+			<zone type="America/Inuvik">
+				<exemplarCity>اِنوٗوِک</exemplarCity>
+			</zone>
+			<zone type="America/Vancouver">
+				<exemplarCity>وؠنکووَر</exemplarCity>
+			</zone>
+			<zone type="America/Dawson_Creek">
+				<exemplarCity>ڑاسَن کریٖک</exemplarCity>
+			</zone>
+			<zone type="America/Yellowknife">
+				<exemplarCity>یؠلو نایِف</exemplarCity>
+			</zone>
+			<zone type="America/Edmonton">
+				<exemplarCity>اؠڑمَنٹَن</exemplarCity>
+			</zone>
+			<zone type="America/Swift_Current">
+				<exemplarCity>سٕوِفٹ کَرَنٹ</exemplarCity>
+			</zone>
+			<zone type="America/Cambridge_Bay">
+				<exemplarCity>کیمبرِج خلیٖج</exemplarCity>
+			</zone>
+			<zone type="America/Regina">
+				<exemplarCity>رؠجیٖنا</exemplarCity>
+			</zone>
+			<zone type="America/Winnipeg">
+				<exemplarCity>وِنِپؠگ</exemplarCity>
+			</zone>
+			<zone type="America/Resolute">
+				<exemplarCity>رِسولیوٗٹ</exemplarCity>
+			</zone>
+			<zone type="America/Rainy_River">
+				<exemplarCity>رینی رِوَر</exemplarCity>
+			</zone>
+			<zone type="America/Rankin_Inlet">
+				<exemplarCity>رینکِن اِنلؠٹ</exemplarCity>
+			</zone>
+			<zone type="America/Coral_Harbour">
+				<exemplarCity>کورَل بٔندٕرگاہ</exemplarCity>
+			</zone>
+			<zone type="America/Thunder_Bay">
+				<exemplarCity>تھَنڑَر خلیٖج</exemplarCity>
+			</zone>
+			<zone type="America/Nipigon">
+				<exemplarCity>نِپِگَن</exemplarCity>
+			</zone>
+			<zone type="America/Toronto">
+				<exemplarCity>ٹورونٹو</exemplarCity>
+			</zone>
+			<zone type="America/Iqaluit">
+				<exemplarCity>اِقالیوٗیِت</exemplarCity>
+			</zone>
+			<zone type="America/Pangnirtung">
+				<exemplarCity>پَنگنِرٹَنگ</exemplarCity>
+			</zone>
+			<zone type="America/Moncton">
+				<exemplarCity>مونکٹٕن</exemplarCity>
+			</zone>
+			<zone type="America/Halifax">
+				<exemplarCity>حیلِفؠکس</exemplarCity>
+			</zone>
+			<zone type="America/Goose_Bay">
+				<exemplarCity>گوٗس خلیٖج</exemplarCity>
+			</zone>
+			<zone type="America/Glace_Bay">
+				<exemplarCity>گلیس خلیٖج</exemplarCity>
+			</zone>
+			<zone type="America/Blanc-Sablon">
+				<exemplarCity>بلانک سؠبلَن</exemplarCity>
+			</zone>
+			<zone type="America/St_Johns">
+				<exemplarCity>سؠنٹ جونس</exemplarCity>
+			</zone>
+			<zone type="Indian/Cocos">
+				<exemplarCity>کوکوس</exemplarCity>
+			</zone>
+			<zone type="Africa/Kinshasa">
+				<exemplarCity>کِنشاسا</exemplarCity>
+			</zone>
+			<zone type="Africa/Lubumbashi">
+				<exemplarCity>لُبُمباشی</exemplarCity>
+			</zone>
+			<zone type="Africa/Bangui">
+				<exemplarCity>بؠنگوٗیی</exemplarCity>
+			</zone>
+			<zone type="Africa/Brazzaville">
+				<exemplarCity>برازاوِل</exemplarCity>
+			</zone>
+			<zone type="Europe/Zurich">
+				<exemplarCity>زیوٗرِک</exemplarCity>
+			</zone>
+			<zone type="Africa/Abidjan">
+				<exemplarCity>عابِدجان</exemplarCity>
+			</zone>
+			<zone type="Pacific/Rarotonga">
+				<exemplarCity>راروٹونگا</exemplarCity>
+			</zone>
+			<zone type="Pacific/Easter">
+				<exemplarCity>ایٖسٹَر</exemplarCity>
+			</zone>
+			<zone type="America/Santiago">
+				<exemplarCity>سینٹِعؠگو</exemplarCity>
+			</zone>
+			<zone type="Africa/Douala">
+				<exemplarCity>دوعالا</exemplarCity>
+			</zone>
+			<zone type="Asia/Urumqi">
+				<exemplarCity>اُرَمچی</exemplarCity>
+			</zone>
+			<zone type="America/Bogota">
+				<exemplarCity>بوگوٹا</exemplarCity>
+			</zone>
+			<zone type="America/Costa_Rica">
+				<exemplarCity>کوسٹا ریٖکا</exemplarCity>
+			</zone>
+			<zone type="America/Havana">
+				<exemplarCity>حوانا</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Cape_Verde">
+				<exemplarCity>کیپ ؤرڑے</exemplarCity>
+			</zone>
+			<zone type="America/Curacao">
+				<exemplarCity>کیوٗراکااو</exemplarCity>
+			</zone>
+			<zone type="Indian/Christmas">
+				<exemplarCity>کرِسمَس</exemplarCity>
+			</zone>
+			<zone type="Asia/Nicosia">
+				<exemplarCity>نِکوسِیا</exemplarCity>
+			</zone>
+			<zone type="Europe/Berlin">
+				<exemplarCity>بٔرلِن</exemplarCity>
+			</zone>
+			<zone type="Africa/Djibouti">
+				<exemplarCity>ڑِزِبوٹی</exemplarCity>
+			</zone>
+			<zone type="Europe/Copenhagen">
+				<exemplarCity>کوپَنہیگَن</exemplarCity>
+			</zone>
+			<zone type="America/Dominica">
+				<exemplarCity>ڈومِنِکا</exemplarCity>
+			</zone>
+			<zone type="America/Santo_Domingo">
+				<exemplarCity>سؠنٹو ڑومِنگو</exemplarCity>
+			</zone>
+			<zone type="Africa/Algiers">
+				<exemplarCity>اَلجیٖرِیا</exemplarCity>
+			</zone>
+			<zone type="Pacific/Galapagos">
+				<exemplarCity>گؠلَپگوس</exemplarCity>
+			</zone>
+			<zone type="America/Guayaquil">
+				<exemplarCity>گوایاکِوَل</exemplarCity>
+			</zone>
+			<zone type="Europe/Tallinn">
+				<exemplarCity>ٹؠلِن</exemplarCity>
+			</zone>
+			<zone type="Africa/Cairo">
+				<exemplarCity>کَیرو</exemplarCity>
+			</zone>
+			<zone type="Africa/Asmera">
+				<exemplarCity>اَسمیرا</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Canary">
+				<exemplarCity>کؠنَری</exemplarCity>
+			</zone>
+			<zone type="Africa/Ceuta">
+				<exemplarCity>کیوٗٹا</exemplarCity>
+			</zone>
+			<zone type="Europe/Madrid">
+				<exemplarCity>میڑرِڑ</exemplarCity>
+			</zone>
+			<zone type="Europe/Helsinki">
+				<exemplarCity>حؠلسِنکی</exemplarCity>
+			</zone>
+			<zone type="Pacific/Fiji">
+				<exemplarCity>فِجی</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Stanley">
+				<exemplarCity>سٹینلی</exemplarCity>
+			</zone>
+			<zone type="Pacific/Truk">
+				<exemplarCity>ٹرک</exemplarCity>
+			</zone>
+			<zone type="Pacific/Ponape">
+				<exemplarCity>پوناپے</exemplarCity>
+			</zone>
+			<zone type="Pacific/Kosrae">
+				<exemplarCity>کوسراے</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Faeroe">
+				<exemplarCity>فؠرو</exemplarCity>
+			</zone>
+			<zone type="Europe/Paris">
+				<exemplarCity>پیرِس</exemplarCity>
+			</zone>
+			<zone type="Africa/Libreville">
+				<exemplarCity>لِبَروِل</exemplarCity>
+			</zone>
+			<zone type="Europe/London">
+				<long>
+					<daylight>برطٲنوی سَمَر ٹایِم</daylight>
+				</long>
+				<exemplarCity>لَندَن</exemplarCity>
+			</zone>
+			<zone type="America/Grenada">
+				<exemplarCity>گریناڑا</exemplarCity>
+			</zone>
+			<zone type="Asia/Tbilisi">
+				<exemplarCity>بِلِسی</exemplarCity>
+			</zone>
+			<zone type="America/Cayenne">
+				<exemplarCity>کَیین</exemplarCity>
+			</zone>
+			<zone type="Africa/Accra">
+				<exemplarCity>اؠکرا</exemplarCity>
+			</zone>
+			<zone type="Europe/Gibraltar">
+				<exemplarCity>گِبرالٹَر</exemplarCity>
+			</zone>
+			<zone type="America/Thule">
+				<exemplarCity>تھیوٗلے</exemplarCity>
+			</zone>
+			<zone type="America/Godthab">
+				<exemplarCity>گعاڑتھیب</exemplarCity>
+			</zone>
+			<zone type="America/Scoresbysund">
+				<exemplarCity>سکورٕسباےسَنڑ</exemplarCity>
+			</zone>
+			<zone type="America/Danmarkshavn">
+				<exemplarCity>ڑؠنمارکشَون</exemplarCity>
+			</zone>
+			<zone type="Africa/Banjul">
+				<exemplarCity>بَنجوٗل</exemplarCity>
+			</zone>
+			<zone type="Africa/Conakry">
+				<exemplarCity>کوناکری</exemplarCity>
+			</zone>
+			<zone type="America/Guadeloupe">
+				<exemplarCity>گوڑلوپ</exemplarCity>
+			</zone>
+			<zone type="Africa/Malabo">
+				<exemplarCity>مالابو</exemplarCity>
+			</zone>
+			<zone type="Europe/Athens">
+				<exemplarCity>اؠتھٕنس</exemplarCity>
+			</zone>
+			<zone type="Atlantic/South_Georgia">
+				<exemplarCity>ساوتھ جورجِیا</exemplarCity>
+			</zone>
+			<zone type="America/Guatemala">
+				<exemplarCity>گواٹیمالا</exemplarCity>
+			</zone>
+			<zone type="Pacific/Guam">
+				<exemplarCity>گوام</exemplarCity>
+			</zone>
+			<zone type="Africa/Bissau">
+				<exemplarCity>بِساؤں</exemplarCity>
+			</zone>
+			<zone type="America/Guyana">
+				<exemplarCity>گُیانا</exemplarCity>
+			</zone>
+			<zone type="Asia/Hong_Kong">
+				<exemplarCity>حانگ کانگ</exemplarCity>
+			</zone>
+			<zone type="America/Port-au-Prince">
+				<exemplarCity>پوٹ آؤں پرِنس</exemplarCity>
+			</zone>
+			<zone type="Europe/Budapest">
+				<exemplarCity>بُڑاپیسٹ</exemplarCity>
+			</zone>
+			<zone type="Asia/Jakarta">
+				<exemplarCity>جکارتا</exemplarCity>
+			</zone>
+			<zone type="Asia/Pontianak">
+				<exemplarCity>پونتِعانک</exemplarCity>
+			</zone>
+			<zone type="Asia/Makassar">
+				<exemplarCity>مَکَسَر</exemplarCity>
+			</zone>
+			<zone type="Asia/Jayapura">
+				<exemplarCity>جَیاپوٗرا</exemplarCity>
+			</zone>
+			<zone type="Europe/Dublin">
+				<long>
+					<daylight>اَیرِش سَمَر ٹایِم</daylight>
+				</long>
+				<exemplarCity>ڈَبلِن</exemplarCity>
+			</zone>
+			<zone type="Asia/Jerusalem">
+				<exemplarCity>یؠروٗسَلَم</exemplarCity>
+			</zone>
+			<zone type="Indian/Chagos">
+				<exemplarCity>چاگوس</exemplarCity>
+			</zone>
+			<zone type="Asia/Baghdad">
+				<exemplarCity>بغداد</exemplarCity>
+			</zone>
+			<zone type="Asia/Tehran">
+				<exemplarCity>تؠہران</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Reykjavik">
+				<exemplarCity>رؠکیاوِک</exemplarCity>
+			</zone>
+			<zone type="Europe/Rome">
+				<exemplarCity>روم</exemplarCity>
+			</zone>
+			<zone type="America/Jamaica">
+				<exemplarCity>جَمَیکا</exemplarCity>
+			</zone>
+			<zone type="Asia/Amman">
+				<exemplarCity>اَمان</exemplarCity>
+			</zone>
+			<zone type="Asia/Tokyo">
+				<exemplarCity>ٹوکیو</exemplarCity>
+			</zone>
+			<zone type="Africa/Nairobi">
+				<exemplarCity>نیروبی</exemplarCity>
+			</zone>
+			<zone type="Asia/Bishkek">
+				<exemplarCity>بِشکیک</exemplarCity>
+			</zone>
+			<zone type="Asia/Phnom_Penh">
+				<exemplarCity>نوم پؠنہہ</exemplarCity>
+			</zone>
+			<zone type="Pacific/Enderbury">
+				<exemplarCity>اؠنڑربیری</exemplarCity>
+			</zone>
+			<zone type="Pacific/Kiritimati">
+				<exemplarCity>کِرِتِماتی</exemplarCity>
+			</zone>
+			<zone type="Pacific/Tarawa">
+				<exemplarCity>ٹَراوا</exemplarCity>
+			</zone>
+			<zone type="Indian/Comoro">
+				<exemplarCity>کومورو</exemplarCity>
+			</zone>
+			<zone type="America/St_Kitts">
+				<exemplarCity>سینٹ کِٹس</exemplarCity>
+			</zone>
+			<zone type="Asia/Pyongyang">
+				<exemplarCity>پیونگیانگ</exemplarCity>
+			</zone>
+			<zone type="Asia/Seoul">
+				<exemplarCity>سول</exemplarCity>
+			</zone>
+			<zone type="Asia/Kuwait">
+				<exemplarCity>کُویت</exemplarCity>
+			</zone>
+			<zone type="America/Cayman">
+				<exemplarCity>کیمَن</exemplarCity>
+			</zone>
+			<zone type="Asia/Aqtau">
+				<exemplarCity>اَکتاؤں</exemplarCity>
+			</zone>
+			<zone type="Asia/Oral">
+				<exemplarCity>اورَل</exemplarCity>
+			</zone>
+			<zone type="Asia/Aqtobe">
+				<exemplarCity>اَقٹوب</exemplarCity>
+			</zone>
+			<zone type="Asia/Qyzylorda">
+				<exemplarCity>قؠزؠلوڑا</exemplarCity>
+			</zone>
+			<zone type="Asia/Almaty">
+				<exemplarCity>اَلماٹی</exemplarCity>
+			</zone>
+			<zone type="Asia/Vientiane">
+				<exemplarCity>وِیَنتِیین</exemplarCity>
+			</zone>
+			<zone type="Asia/Beirut">
+				<exemplarCity>بیرُت</exemplarCity>
+			</zone>
+			<zone type="America/St_Lucia">
+				<exemplarCity>سؠنٹ لوٗسِیا</exemplarCity>
+			</zone>
+			<zone type="Europe/Vaduz">
+				<exemplarCity>وادُز</exemplarCity>
+			</zone>
+			<zone type="Asia/Colombo">
+				<exemplarCity>کولَمبو</exemplarCity>
+			</zone>
+			<zone type="Africa/Monrovia">
+				<exemplarCity>مونرووِیا</exemplarCity>
+			</zone>
+			<zone type="Africa/Maseru">
+				<exemplarCity>مَسیروٗ</exemplarCity>
+			</zone>
+			<zone type="Europe/Vilnius">
+				<exemplarCity>وِلِنِیَس</exemplarCity>
+			</zone>
+			<zone type="Europe/Luxembourg">
+				<exemplarCity>لَکزٕمبٔرگ</exemplarCity>
+			</zone>
+			<zone type="Europe/Riga">
+				<exemplarCity>رِگا</exemplarCity>
+			</zone>
+			<zone type="Africa/Tripoli">
+				<exemplarCity>ترپولی</exemplarCity>
+			</zone>
+			<zone type="Africa/Casablanca">
+				<exemplarCity>کؠسابلؠنکا</exemplarCity>
+			</zone>
+			<zone type="Europe/Monaco">
+				<exemplarCity>موناکو</exemplarCity>
+			</zone>
+			<zone type="Europe/Chisinau">
+				<exemplarCity>چِسیٖنو</exemplarCity>
+			</zone>
+			<zone type="Indian/Antananarivo">
+				<exemplarCity>اؠنٹنانرِوو</exemplarCity>
+			</zone>
+			<zone type="Pacific/Kwajalein">
+				<exemplarCity>کُوجلین</exemplarCity>
+			</zone>
+			<zone type="Pacific/Majuro">
+				<exemplarCity>مَجوٗرو</exemplarCity>
+			</zone>
+			<zone type="Africa/Bamako">
+				<exemplarCity>بماکو</exemplarCity>
+			</zone>
+			<zone type="Asia/Rangoon">
+				<exemplarCity>رنگوٗن</exemplarCity>
+			</zone>
+			<zone type="Asia/Hovd">
+				<exemplarCity>حووڑ</exemplarCity>
+			</zone>
+			<zone type="Asia/Ulaanbaatar">
+				<exemplarCity>اُلانباٹَر</exemplarCity>
+			</zone>
+			<zone type="Asia/Choibalsan">
+				<exemplarCity>چویبالسَن</exemplarCity>
+			</zone>
+			<zone type="Asia/Macau">
+				<exemplarCity>مقاؤں</exemplarCity>
+			</zone>
+			<zone type="Pacific/Saipan">
+				<exemplarCity>سَیپان</exemplarCity>
+			</zone>
+			<zone type="America/Martinique">
+				<exemplarCity>مارٹِنِک</exemplarCity>
+			</zone>
+			<zone type="Africa/Nouakchott">
+				<exemplarCity>نوواکچھوت</exemplarCity>
+			</zone>
+			<zone type="America/Montserrat">
+				<exemplarCity>مونژیرات</exemplarCity>
+			</zone>
+			<zone type="Europe/Malta">
+				<exemplarCity>مالٹا</exemplarCity>
+			</zone>
+			<zone type="Indian/Mauritius">
+				<exemplarCity>مورِشیس</exemplarCity>
+			</zone>
+			<zone type="Indian/Maldives">
+				<exemplarCity>مالدیٖوز</exemplarCity>
+			</zone>
+			<zone type="Africa/Blantyre">
+				<exemplarCity>بلانتَیر</exemplarCity>
+			</zone>
+			<zone type="America/Tijuana">
+				<exemplarCity>تِجُوانا</exemplarCity>
+			</zone>
+			<zone type="America/Hermosillo">
+				<exemplarCity>ۂرموسِلو</exemplarCity>
+			</zone>
+			<zone type="America/Mazatlan">
+				<exemplarCity>مَزَٹلان</exemplarCity>
+			</zone>
+			<zone type="America/Chihuahua">
+				<exemplarCity>چِہُوا ہُوا</exemplarCity>
+			</zone>
+			<zone type="America/Monterrey">
+				<exemplarCity>موٹیری</exemplarCity>
+			</zone>
+			<zone type="America/Mexico_City">
+				<exemplarCity>میکسِکو سِٹی</exemplarCity>
+			</zone>
+			<zone type="America/Merida">
+				<exemplarCity>میرِڈا</exemplarCity>
+			</zone>
+			<zone type="America/Cancun">
+				<exemplarCity>کینکَن</exemplarCity>
+			</zone>
+			<zone type="Asia/Kuala_Lumpur">
+				<exemplarCity>کولالَمپوٗر</exemplarCity>
+			</zone>
+			<zone type="Asia/Kuching">
+				<exemplarCity>کُچِنگ</exemplarCity>
+			</zone>
+			<zone type="Africa/Maputo">
+				<exemplarCity>مَپوٗٹو</exemplarCity>
+			</zone>
+			<zone type="Africa/Windhoek">
+				<exemplarCity>وِنڈہوک</exemplarCity>
+			</zone>
+			<zone type="Pacific/Noumea">
+				<exemplarCity>نومیی</exemplarCity>
+			</zone>
+			<zone type="Africa/Niamey">
+				<exemplarCity>نَیمیے</exemplarCity>
+			</zone>
+			<zone type="Pacific/Norfolk">
+				<exemplarCity>نورفوک</exemplarCity>
+			</zone>
+			<zone type="Africa/Lagos">
+				<exemplarCity>لیگوس</exemplarCity>
+			</zone>
+			<zone type="America/Managua">
+				<exemplarCity>مَناگوا</exemplarCity>
+			</zone>
+			<zone type="Europe/Amsterdam">
+				<exemplarCity>ایمسٹَرڈیم</exemplarCity>
+			</zone>
+			<zone type="Europe/Oslo">
+				<exemplarCity>اوسلو</exemplarCity>
+			</zone>
+			<zone type="Asia/Katmandu">
+				<exemplarCity>کاٹھمَنڈوٗ</exemplarCity>
+			</zone>
+			<zone type="Pacific/Nauru">
+				<exemplarCity>ناوروٗ</exemplarCity>
+			</zone>
+			<zone type="Pacific/Niue">
+				<exemplarCity>نِو</exemplarCity>
+			</zone>
+			<zone type="Pacific/Chatham">
+				<exemplarCity>چَتھَم</exemplarCity>
+			</zone>
+			<zone type="Pacific/Auckland">
+				<exemplarCity>آکلینڈ</exemplarCity>
+			</zone>
+			<zone type="Asia/Muscat">
+				<exemplarCity>مَسکَت</exemplarCity>
+			</zone>
+			<zone type="America/Panama">
+				<exemplarCity>پَناما</exemplarCity>
+			</zone>
+			<zone type="America/Lima">
+				<exemplarCity>لِما</exemplarCity>
+			</zone>
+			<zone type="Pacific/Tahiti">
+				<exemplarCity>تَہِتی</exemplarCity>
+			</zone>
+			<zone type="Pacific/Marquesas">
+				<exemplarCity>مارکیسَس</exemplarCity>
+			</zone>
+			<zone type="Pacific/Gambier">
+				<exemplarCity>گیمبِیَر</exemplarCity>
+			</zone>
+			<zone type="Pacific/Port_Moresby">
+				<exemplarCity>پوٹ مورسبی</exemplarCity>
+			</zone>
+			<zone type="Asia/Manila">
+				<exemplarCity>مَنیٖلا</exemplarCity>
+			</zone>
+			<zone type="Asia/Karachi">
+				<exemplarCity>کَراچی</exemplarCity>
+			</zone>
+			<zone type="Europe/Warsaw">
+				<exemplarCity>وارسا</exemplarCity>
+			</zone>
+			<zone type="America/Miquelon">
+				<exemplarCity>مِکیٖلَن</exemplarCity>
+			</zone>
+			<zone type="Pacific/Pitcairn">
+				<exemplarCity>پِٹکیرَن</exemplarCity>
+			</zone>
+			<zone type="America/Puerto_Rico">
+				<exemplarCity>پیٖٹو رِکو</exemplarCity>
+			</zone>
+			<zone type="Asia/Gaza">
+				<exemplarCity>غازا</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Azores">
+				<exemplarCity>اَزورَس</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Madeira">
+				<exemplarCity>مَڈیٖرا</exemplarCity>
+			</zone>
+			<zone type="Europe/Lisbon">
+				<exemplarCity>لِسبَن</exemplarCity>
+			</zone>
+			<zone type="Pacific/Palau">
+				<exemplarCity>پَلاو</exemplarCity>
+			</zone>
+			<zone type="America/Asuncion">
+				<exemplarCity>اَسُنچِیَن</exemplarCity>
+			</zone>
+			<zone type="Asia/Qatar">
+				<exemplarCity>قَتَر</exemplarCity>
+			</zone>
+			<zone type="Indian/Reunion">
+				<exemplarCity>رِیوٗنیَن</exemplarCity>
+			</zone>
+			<zone type="Europe/Bucharest">
+				<exemplarCity>بَچاریسٹ</exemplarCity>
+			</zone>
+			<zone type="Europe/Kaliningrad">
+				<exemplarCity>کَلِناِنگرَد</exemplarCity>
+			</zone>
+			<zone type="Europe/Moscow">
+				<exemplarCity>ماسکو</exemplarCity>
+			</zone>
+			<zone type="Europe/Volgograd">
+				<exemplarCity>وولگوگرَد</exemplarCity>
+			</zone>
+			<zone type="Europe/Samara">
+				<exemplarCity>سَمارا</exemplarCity>
+			</zone>
+			<zone type="Asia/Yekaterinburg">
+				<exemplarCity>یَکاتِرِنبٔرگ</exemplarCity>
+			</zone>
+			<zone type="Asia/Omsk">
+				<exemplarCity>اومسک</exemplarCity>
+			</zone>
+			<zone type="Asia/Novosibirsk">
+				<exemplarCity>نوووسِبِرسک</exemplarCity>
+			</zone>
+			<zone type="Asia/Krasnoyarsk">
+				<exemplarCity>کرنسنویارسک</exemplarCity>
+			</zone>
+			<zone type="Asia/Irkutsk">
+				<exemplarCity>اِرکُسک</exemplarCity>
+			</zone>
+			<zone type="Asia/Yakutsk">
+				<exemplarCity>یکوسک</exemplarCity>
+			</zone>
+			<zone type="Asia/Vladivostok">
+				<exemplarCity>لادِووستوک</exemplarCity>
+			</zone>
+			<zone type="Asia/Sakhalin">
+				<exemplarCity>سَکھالِن</exemplarCity>
+			</zone>
+			<zone type="Asia/Magadan">
+				<exemplarCity>مَگادَن</exemplarCity>
+			</zone>
+			<zone type="Asia/Kamchatka">
+				<exemplarCity>کَمچھٹکا</exemplarCity>
+			</zone>
+			<zone type="Asia/Anadyr">
+				<exemplarCity>اَنَدیر</exemplarCity>
+			</zone>
+			<zone type="Africa/Kigali">
+				<exemplarCity>کِگالی</exemplarCity>
+			</zone>
+			<zone type="Asia/Riyadh">
+				<exemplarCity>رِیاد</exemplarCity>
+			</zone>
+			<zone type="Pacific/Guadalcanal">
+				<exemplarCity>گُوادَلچَنَل</exemplarCity>
+			</zone>
+			<zone type="Indian/Mahe">
+				<exemplarCity>ماہیے</exemplarCity>
+			</zone>
+			<zone type="Africa/Khartoum">
+				<exemplarCity>کھارتوم</exemplarCity>
+			</zone>
+			<zone type="Europe/Stockholm">
+				<exemplarCity>سٹاک ہولم</exemplarCity>
+			</zone>
+			<zone type="Asia/Singapore">
+				<exemplarCity>سِنگاپور</exemplarCity>
+			</zone>
+			<zone type="Atlantic/St_Helena">
+				<exemplarCity>سینٹ ہیلِنا</exemplarCity>
+			</zone>
+			<zone type="Africa/Freetown">
+				<exemplarCity>فری ٹاوُن</exemplarCity>
+			</zone>
+			<zone type="Africa/Dakar">
+				<exemplarCity>دَکار</exemplarCity>
+			</zone>
+			<zone type="Africa/Mogadishu">
+				<exemplarCity>موگادِشوٗ</exemplarCity>
+			</zone>
+			<zone type="America/Paramaribo">
+				<exemplarCity>پَرامارِبو</exemplarCity>
+			</zone>
+			<zone type="Africa/Sao_Tome">
+				<exemplarCity>ساو ٹوم</exemplarCity>
+			</zone>
+			<zone type="America/El_Salvador">
+				<exemplarCity>ایل سَلویدَر</exemplarCity>
+			</zone>
+			<zone type="Asia/Damascus">
+				<exemplarCity>دَمَسکَس</exemplarCity>
+			</zone>
+			<zone type="Africa/Mbabane">
+				<exemplarCity>مابین</exemplarCity>
+			</zone>
+			<zone type="America/Grand_Turk">
+				<exemplarCity>گرینڈ تٔرک</exemplarCity>
+			</zone>
+			<zone type="Africa/Ndjamena">
+				<exemplarCity>جَمیٖنا</exemplarCity>
+			</zone>
+			<zone type="Indian/Kerguelen">
+				<exemplarCity>کیرگولِن</exemplarCity>
+			</zone>
+			<zone type="Africa/Lome">
+				<exemplarCity>لوم</exemplarCity>
+			</zone>
+			<zone type="Asia/Bangkok">
+				<exemplarCity>بینگ کاک</exemplarCity>
+			</zone>
+			<zone type="Asia/Dushanbe">
+				<exemplarCity>دُشانبیے</exemplarCity>
+			</zone>
+			<zone type="Pacific/Fakaofo">
+				<exemplarCity>فَکَوفو</exemplarCity>
+			</zone>
+			<zone type="Asia/Dili">
+				<exemplarCity>دِلی</exemplarCity>
+			</zone>
+			<zone type="Asia/Ashgabat">
+				<exemplarCity>اَشگَبَت</exemplarCity>
+			</zone>
+			<zone type="Africa/Tunis">
+				<exemplarCity>ٹوٗنِس</exemplarCity>
+			</zone>
+			<zone type="Pacific/Tongatapu">
+				<exemplarCity>تونگاتَپوٗ</exemplarCity>
+			</zone>
+			<zone type="Europe/Istanbul">
+				<exemplarCity>اِستانبُل</exemplarCity>
+			</zone>
+			<zone type="America/Port_of_Spain">
+				<exemplarCity>پوٹ آف سپین</exemplarCity>
+			</zone>
+			<zone type="Pacific/Funafuti">
+				<exemplarCity>فُنافوٗتی</exemplarCity>
+			</zone>
+			<zone type="Asia/Taipei">
+				<exemplarCity>تَیپیے</exemplarCity>
+			</zone>
+			<zone type="Africa/Dar_es_Salaam">
+				<exemplarCity>دارُالسلام</exemplarCity>
+			</zone>
+			<zone type="Europe/Uzhgorod">
+				<exemplarCity>اُزگورود</exemplarCity>
+			</zone>
+			<zone type="Europe/Kiev">
+				<exemplarCity>کیٖو</exemplarCity>
+			</zone>
+			<zone type="Europe/Simferopol">
+				<exemplarCity>سِمفیروپول</exemplarCity>
+			</zone>
+			<zone type="Europe/Zaporozhye">
+				<exemplarCity>زَپوروزَے</exemplarCity>
+			</zone>
+			<zone type="Africa/Kampala">
+				<exemplarCity>کَمپالا</exemplarCity>
+			</zone>
+			<zone type="Pacific/Midway">
+				<exemplarCity>مِڈویے</exemplarCity>
+			</zone>
+			<zone type="Pacific/Wake">
+				<exemplarCity>ویک</exemplarCity>
+			</zone>
+			<zone type="America/Adak">
+				<exemplarCity>اِدَک</exemplarCity>
+			</zone>
+			<zone type="America/Nome">
+				<exemplarCity>نوم</exemplarCity>
+			</zone>
+			<zone type="Pacific/Honolulu">
+				<exemplarCity>ہونولو لو</exemplarCity>
+			</zone>
+			<zone type="Pacific/Johnston">
+				<exemplarCity>جانسٹَن</exemplarCity>
+			</zone>
+			<zone type="America/Anchorage">
+				<exemplarCity>اَنکوراج</exemplarCity>
+			</zone>
+			<zone type="America/Yakutat">
+				<exemplarCity>یکوٗتات</exemplarCity>
+			</zone>
+			<zone type="America/Juneau">
+				<exemplarCity>جوٗنی</exemplarCity>
+			</zone>
+			<zone type="America/Los_Angeles">
+				<exemplarCity>لاس اینجٕلز</exemplarCity>
+			</zone>
+			<zone type="America/Boise">
+				<exemplarCity>بویِس</exemplarCity>
+			</zone>
+			<zone type="America/Phoenix">
+				<exemplarCity>پھِنِکس</exemplarCity>
+			</zone>
+			<zone type="America/Denver">
+				<exemplarCity>ڈینوَر</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/New_Salem">
+				<exemplarCity>نوو سیلٕم</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/Center">
+				<exemplarCity>مَرکزی جنوٗبی ڈکوٹا</exemplarCity>
+			</zone>
+			<zone type="America/Chicago">
+				<exemplarCity>شِکاگو</exemplarCity>
+			</zone>
+			<zone type="America/Menominee">
+				<exemplarCity>مینومِنی</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Vincennes">
+				<exemplarCity>وِنسینیس</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Petersburg">
+				<exemplarCity>پِٹس بٔرگ</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Tell_City">
+				<exemplarCity>ٹیل سِٹی</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Knox">
+				<exemplarCity>نوکس</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Winamac">
+				<exemplarCity>وِنیمیک</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Marengo">
+				<exemplarCity>میرینگو</exemplarCity>
+			</zone>
+			<zone type="America/Indianapolis">
+				<exemplarCity>اِنڈیَن پولِس</exemplarCity>
+			</zone>
+			<zone type="America/Louisville">
+				<exemplarCity>لوٗیِس وِل</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Vevay">
+				<exemplarCity>ویویے</exemplarCity>
+			</zone>
+			<zone type="America/Kentucky/Monticello">
+				<exemplarCity>مونٹِسیلو</exemplarCity>
+			</zone>
+			<zone type="America/Detroit">
+				<exemplarCity>ڈیٹرایِٹ</exemplarCity>
+			</zone>
+			<zone type="America/New_York">
+				<exemplarCity>نِو یارک</exemplarCity>
+			</zone>
+			<zone type="America/Montevideo">
+				<exemplarCity>مونٹیوِڈیو</exemplarCity>
+			</zone>
+			<zone type="Asia/Samarkand">
+				<exemplarCity>سَمَرکَند</exemplarCity>
+			</zone>
+			<zone type="Asia/Tashkent">
+				<exemplarCity>تاشکینٹ</exemplarCity>
+			</zone>
+			<zone type="America/St_Vincent">
+				<exemplarCity>وِنسینٹ</exemplarCity>
+			</zone>
+			<zone type="America/Caracas">
+				<exemplarCity>کیرَکَس</exemplarCity>
+			</zone>
+			<zone type="America/Tortola">
+				<exemplarCity>ٹارٹولا</exemplarCity>
+			</zone>
+			<zone type="America/St_Thomas">
+				<exemplarCity>سینٹ تھامَس</exemplarCity>
+			</zone>
+			<zone type="Asia/Saigon">
+				<exemplarCity>سیگَن</exemplarCity>
+			</zone>
+			<zone type="Pacific/Efate">
+				<exemplarCity>ایفاتیے</exemplarCity>
+			</zone>
+			<zone type="Pacific/Wallis">
+				<exemplarCity>ویلِس</exemplarCity>
+			</zone>
+			<zone type="Pacific/Apia">
+				<exemplarCity>آپِیا</exemplarCity>
+			</zone>
+			<zone type="Asia/Aden">
+				<exemplarCity>ایڈٕن</exemplarCity>
+			</zone>
+			<zone type="Indian/Mayotte">
+				<exemplarCity>میوٹ</exemplarCity>
+			</zone>
+			<zone type="Africa/Johannesburg">
+				<exemplarCity>جانسبٔرگ</exemplarCity>
+			</zone>
+			<zone type="Africa/Lusaka">
+				<exemplarCity>لُساکا</exemplarCity>
+			</zone>
+			<zone type="Africa/Harare">
+				<exemplarCity>ہَراریے</exemplarCity>
+			</zone>
+			<metazone type="Acre">
+				<long>
+					<generic>اؠکرے ٹایِم</generic>
+					<standard>اؠکرے سٹینڑاڑ ٹایِم</standard>
+					<daylight>اؠکرے سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Afghanistan">
+				<long>
+					<standard>افغانِستان ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Central">
+				<long>
+					<standard>مرکزی افریٖقا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Eastern">
+				<long>
+					<standard>مشرقی افریٖقا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Southern">
+				<long>
+					<standard>جنوٗبی افریقا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Western">
+				<long>
+					<generic>مغربی افریٖقا ٹایِم</generic>
+					<standard>مغربی افریٖقا سٹینڑاڑ ٹایِم</standard>
+					<daylight>مغربی افریٖقا سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Alaska">
+				<long>
+					<generic>اؠلاسکا ٹایِم</generic>
+					<standard>اؠلاسکا سٹینڑاڑ ٹایِم</standard>
+					<daylight>اؠلاسکا ڈےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Almaty">
+				<long>
+					<generic>اؠلمؠٹی ٹایِم</generic>
+					<standard>اؠلمؠٹی سٹینڑاڑ ٹایِم</standard>
+					<daylight>اؠلمؠٹی سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Amazon">
+				<long>
+					<generic>اؠمَزَن ٹایِم</generic>
+					<standard>اؠمَزَن سٹینڑاڑ ٹایِم</standard>
+					<daylight>اؠمَزَن سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Central">
+				<long>
+					<generic>مرکزی ٹایِم</generic>
+					<standard>مرکزی سٹینڑاڑ ٹایِم</standard>
+					<daylight>مرکزی ڈےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic>مشرقی ٹایِم</generic>
+					<standard>مشرقی سٹینڑاڑ ٹایِم</standard>
+					<daylight>مشرقی ڈےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic>ماونٹین ٹایِم</generic>
+					<standard>ماونٹین سٹینڑاڑ ٹایِم</standard>
+					<daylight>ماونٹین ڈےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic>پیسِفِک ٹایِم</generic>
+					<standard>پیسِفِک سٹینڑاڑ ٹایِم</standard>
+					<daylight>پیسِفِک ڈےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Anadyr">
+				<long>
+					<generic>اؠنَڑیٖر ٹایِم</generic>
+					<standard>اؠنَڑیٖر سٹینڑاڑ ٹایِم</standard>
+					<daylight>اؠنڑیٖر سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Aqtau">
+				<long>
+					<generic>اؠکٹاؤ ٹایِم</generic>
+					<standard>اؠکٹاؤ سٹینڑاڑ ٹایِم</standard>
+					<daylight>اؠکٹاؤ سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Aqtobe">
+				<long>
+					<generic>اؠکٹوب ٹایِم</generic>
+					<standard>اؠکٹوب سٹینڑاڑ ٹایِم</standard>
+					<daylight>اؠکٹوب سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Arabian">
+				<long>
+					<generic>ارؠبِیَن ٹایِم</generic>
+					<standard>ارؠبِیَن سٹینڑاڑ ٹایِم</standard>
+					<daylight>ارؠبِیَن ڈےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina">
+				<long>
+					<generic>ارجؠنٹیٖنا ٹایِم</generic>
+					<standard>ارجؠنٹیٖنا سٹینڑاڑ ٹایِم</standard>
+					<daylight>ارجؠنٹیٖنا سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina_Western">
+				<long>
+					<generic>مغربی ارجؠنٹیٖنا ٹایِم</generic>
+					<standard>مغربی ارجؠنٹیٖنا سٹینڑاڑ ٹایِم</standard>
+					<daylight>مغربی ارجؠنٹیٖنا سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Armenia">
+				<long>
+					<generic>ارمیٖنِیا ٹایِم</generic>
+					<standard>ارمیٖنِیا سٹینڑاڑ ٹایِم</standard>
+					<daylight>ارمیٖنِیا سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<generic>اؠٹلانٹِک ٹایِم</generic>
+					<standard>اؠٹلانٹِک سٹینڑاڑ ٹایِم</standard>
+					<daylight>اؠٹلانٹِک ڈےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Central">
+				<long>
+					<generic>مرکزی آسٹریلِیَن ٹایِم</generic>
+					<standard>آسٹریلِیَن مرکزی سٹینڑاڑ ٹایِم</standard>
+					<daylight>آسٹریلِیَن مرکزی ڈےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_CentralWestern">
+				<long>
+					<generic>آسٹریلِیَن مرکزی مغربی ٹایِم</generic>
+					<standard>آسٹریلِیَن مرکزی مغربی سٹینڑاڑ ٹایِم</standard>
+					<daylight>آسٹریلِیَن مرکزی مغربی ڈےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Eastern">
+				<long>
+					<generic>مشرِقی آسٹریلِیا ٹایِم</generic>
+					<standard>آسٹریلِیَن مشرقی سٹینڑاڑ ٹایِم</standard>
+					<daylight>آسٹریلِیَن مشرقی ڈےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Western">
+				<long>
+					<generic>مغرِبی آسٹریلِیا ٹایِم</generic>
+					<standard>آسٹریلِیَن مغرِبی سٹینڑاڑ ٹایِم</standard>
+					<daylight>آسٹریلِیَن مغرِبیٖ ڈےلایٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azerbaijan">
+				<long>
+					<generic>اَزَربیجان ٹایِم</generic>
+					<standard>اَزَربیجان سٹینڑاڑ ٹایِم</standard>
+					<daylight>اَزَربیجان سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azores">
+				<long>
+					<generic>اؠزورٕس ٹایِم</generic>
+					<standard>اؠزورٕس سٹینڑاڑ ٹایِم</standard>
+					<daylight>اؠزورٕس سَمَر ٹ</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bangladesh">
+				<long>
+					<generic>بَنگلادیش ٹایِم</generic>
+					<standard>بَنگلادیش سٹینڑاڑ ٹایِم</standard>
+					<daylight>بَنگلادیش سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bhutan">
+				<long>
+					<standard>بوٗٹان ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Bolivia">
+				<long>
+					<standard>بولِوِیا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Brasilia">
+				<long>
+					<generic>برؠسِلِیا ٹایِم</generic>
+					<standard>برؠسِلِیا سٹینڑاڑ ٹایِم</standard>
+					<daylight>برؠسِلِیا سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Brunei">
+				<long>
+					<standard>بروٗنَے دَروٗسَلَم ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Cape_Verde">
+				<long>
+					<generic>کیپ ؤرڑو ٹایِم</generic>
+					<standard>کیپ ؤرڑو سٹینڑاڑ ٹایِم</standard>
+					<daylight>کیپ سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chamorro">
+				<long>
+					<standard>کؠمورو سٹینڑاڑ ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Chatham">
+				<long>
+					<generic>کؠتھَم ٹایِم</generic>
+					<standard>کؠتھَم سٹینڑاڑ ٹایِم</standard>
+					<daylight>چؠتھَم سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chile">
+				<long>
+					<generic>چِلی ٹایِم</generic>
+					<standard>چِلی سٹینڑاڑ ٹایِم</standard>
+					<daylight>چِلی سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="China">
+				<long>
+					<generic>چَینا ٹایِم</generic>
+					<standard>چَینا سٹینڑاڑ ٹایِم</standard>
+					<daylight>چَینا ڈےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Choibalsan">
+				<long>
+					<generic>کوےبؠلسَن ٹایِم</generic>
+					<standard>کوےبؠلسَن سٹینڑاڑ ٹایِم</standard>
+					<daylight>کوےبؠلسَن سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Christmas">
+				<long>
+					<standard>کرسمَس ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Cocos">
+				<long>
+					<standard>کوکوز اَیلینڑز ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Colombia">
+				<long>
+					<generic>کولومبِیا ٹایِم</generic>
+					<standard>کولومبِیا سٹینڑاڑ ٹایِم</standard>
+					<daylight>کولومبِیا سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cook">
+				<long>
+					<generic>کُک اَیلینڑز ٹایِم</generic>
+					<standard>کُک اَیلینڑز سٹینڑاڑ ٹایِم</standard>
+					<daylight>کُک اَیلینڑز حاف سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cuba">
+				<long>
+					<generic>کیوٗبا ٹایِم</generic>
+					<standard>کیوٗبا سٹینڑاڑ ٹایِم</standard>
+					<daylight>کیوٗبا ڈےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Davis">
+				<long>
+					<standard>ڑیوِس ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="DumontDUrville">
+				<long>
+					<standard>ڑمانٹ ڈی اُرویٖل ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="East_Timor">
+				<long>
+					<standard>ایٖسٹ ٹیٖمَر ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Easter">
+				<long>
+					<generic>ایٖسٹَر ٹایِم</generic>
+					<standard>ایٖسٹَر سٹینڑاڑ ٹایِم</standard>
+					<daylight>ایٖسٹَر سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Ecuador">
+				<long>
+					<standard>اِکویڑَر ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>مرکزی یوٗرپی ٹایِم</generic>
+					<standard>مرکزی یوٗرپی سٹینڑاڑ ٹایِم</standard>
+					<daylight>مرکزی یوٗرپی سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic>مشرقی یوٗرپی ٹایِم</generic>
+					<standard>مشرقی یوٗرپی سٹینڑاڑ ٹایِم</standard>
+					<daylight>مشرقی یوٗرپی سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>مغرِبی یوٗرپی ٹایِم</generic>
+					<standard>مغرِبی یوٗرپی سٹینڑاڑ ٹایِم</standard>
+					<daylight>مغرِبی یوٗرِپی سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Falkland">
+				<long>
+					<generic>فاکلینڑ ٹایِم</generic>
+					<standard>فاکلینڑ سٹینڑاڑ ٹایِم</standard>
+					<daylight>فاکلینڑ سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Fiji">
+				<long>
+					<generic>فیٖجی ٹایِم</generic>
+					<standard>فیٖجی سٹینڑاڑ ٹایِم</standard>
+					<daylight>فیٖجی سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="French_Guiana">
+				<long>
+					<standard>فرؠنچ گیوٗؠنا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="French_Southern">
+				<long>
+					<standard>جنوٗبی فرؠنچ ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Galapagos">
+				<long>
+					<standard>گؠلؠپیگوز ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Gambier">
+				<long>
+					<standard>گؠمبِیَر ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Georgia">
+				<long>
+					<generic>جورجِیاہُک ٹایِم</generic>
+					<standard>جورجِیاہُک سٹینڑاڑ ٹایِم</standard>
+					<daylight>جورجِیاہُک سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gilbert_Islands">
+				<long>
+					<standard>گِلبٲٹ ججیٖرُک ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="GMT">
+				<long>
+					<standard>گریٖن وِچ میٖن ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Eastern">
+				<long>
+					<generic>مشرِقی گریٖن لینڑُک ٹایِم</generic>
+					<standard>مشرِقی گریٖن لینڑُک سٹینڑاڑ ٹایِم</standard>
+					<daylight>مشرِقی گریٖن لینڑُک سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Western">
+				<long>
+					<generic>مغرِبی گریٖن لینڑُک ٹایِم</generic>
+					<standard>مغرِبی گریٖن لینڑُک سٹینڑاڑ ٹایِم</standard>
+					<daylight>مغرِبی گریٖن لینڑُک سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Guam">
+				<long>
+					<standard>گُوؠم ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Gulf">
+				<long>
+					<standard>گَلف سٹینڑاڑ ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Guyana">
+				<long>
+					<standard>گُیَنا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Hawaii_Aleutian">
+				<long>
+					<generic>حَواے اؠلیوٗٹِیَن ٹایِم</generic>
+					<standard>حَواے اؠلیوٗٹِیَن سٹینڑاڑ ٹایِم</standard>
+					<daylight>حَواے اؠلیوٗٹِیَن سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hong_Kong">
+				<long>
+					<generic>حانگ کانگ ٹایِم</generic>
+					<standard>حانگ کانگ سٹینڑاڑ ٹایِم</standard>
+					<daylight>حانگ کانگ سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hovd">
+				<long>
+					<generic>حووڑ ٹایِم</generic>
+					<standard>حووڑ سٹینڑاڑ ٹایِم</standard>
+					<daylight>حووڑ سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="India">
+				<long>
+					<standard>ہِندوستان</standard>
+				</long>
+			</metazone>
+			<metazone type="Indian_Ocean">
+				<long>
+					<standard>ہِندوستٲنۍ اوشَن ٹایِن</standard>
+				</long>
+			</metazone>
+			<metazone type="Indochina">
+				<long>
+					<standard>اِنڑوچَینا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Central">
+				<long>
+					<standard>مرکزی اِنڑونیشِیا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Eastern">
+				<long>
+					<standard>مشرِقی اِنڑونیشِیا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Western">
+				<long>
+					<standard>مغرِبی اِنڑونیشِیا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Iran">
+				<long>
+					<generic>اِیٖرٲنۍ ٹایِم</generic>
+					<standard>اِیٖرٲنۍ سٹینڑاڑ ٹایِم</standard>
+					<daylight>اِیٖرٲنی سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Irkutsk">
+				<long>
+					<generic>اِرکُٹسک ٹایِم</generic>
+					<standard>اِرکُٹسک سٹینڑاڑ ٹایِم</standard>
+					<daylight>اِرکُٹسک سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Israel">
+				<long>
+					<generic>اِسرٲیِلی ٹایِم</generic>
+					<standard>اِسرٲیِلی سٹینڑاڑ ٹایِم</standard>
+					<daylight>اِسرٲیِلی ڑےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Japan">
+				<long>
+					<generic>جاپٲنۍ ٹایِم</generic>
+					<standard>جاپٲنۍ سٹینڑاڑ ٹایِم</standard>
+					<daylight>جاپٲنۍ ڑےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kamchatka">
+				<long>
+					<generic>کَمچَٹکا ٹایِم</generic>
+					<standard>کَمچَٹکا سٹینڑاڑ ٹایِم</standard>
+					<daylight>کَمچَٹکا سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Eastern">
+				<long>
+					<standard>مشرِقی کَزاکھِستان ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Western">
+				<long>
+					<standard>مغرِبی کَزاکھِستان ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Korea">
+				<long>
+					<generic>کورِیا ٹایِم</generic>
+					<standard>کورِیا سٹینڑاڑ ٹایِم</standard>
+					<daylight>کورِیا ڑےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kosrae">
+				<long>
+					<standard>کورسَے ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Krasnoyarsk">
+				<long>
+					<generic>کرؠسنوےیارسک ٹایِم</generic>
+					<standard>کرؠسنوےیارسک سٹینڑاڑ ٹایِم</standard>
+					<daylight>کرؠسنوےیارسک سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kyrgystan">
+				<long>
+					<standard>کِرگِستان ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Lanka">
+				<long>
+					<standard>لَنکا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Line_Islands">
+				<long>
+					<standard>لایِٔن ججیٖرُک ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Lord_Howe">
+				<long>
+					<generic>لعاڑ حووے ٹایِم</generic>
+					<standard>لعاڑ حووے سٹینڑاڑ ٹایِم</standard>
+					<daylight>لعاڑ ڑےلایٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Macau">
+				<long>
+					<generic>مَکَعوٗ ٹایِم</generic>
+					<standard>مَکَعوٗ سٹینڑاڑ ٹایِم</standard>
+					<daylight>مَکَعوٗ سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Magadan">
+				<long>
+					<generic>مَگَدَن ٹایِم</generic>
+					<standard>مَگَدَن سٹینڑاڑ ٹایِم</standard>
+					<daylight>مَگَدَن سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Malaysia">
+				<long>
+					<standard>مَلیشِیا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Maldives">
+				<long>
+					<standard>مالدیٖوٕز ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Marquesas">
+				<long>
+					<standard>مارقیوٗسَس ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Marshall_Islands">
+				<long>
+					<standard>مارشَل ججیٖرُک ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Mauritius">
+				<long>
+					<generic>مورِشَس ٹایِم</generic>
+					<standard>مورِشَس سٹینڑاڑ ٹایِم</standard>
+					<daylight>مورِشَس سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mawson">
+				<long>
+					<standard>ماسَن ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Mongolia">
+				<long>
+					<generic>مونگولِیا ٹایِم</generic>
+					<standard>مونگولِیا سٹینڑاڑ ٹایِم</standard>
+					<daylight>مونگولِیا سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Moscow">
+				<long>
+					<generic>ماسکَو ٹایِم</generic>
+					<standard>ماسکو سٹینڑاڑ ٹایِم</standard>
+					<daylight>ماسکو سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Myanmar">
+				<long>
+					<standard>مِیانمَر ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Nauru">
+				<long>
+					<standard>نَعوٗروٗ ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Nepal">
+				<long>
+					<standard>نؠپٲلۍ ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="New_Caledonia">
+				<long>
+					<generic>نِو کیلؠڑونِیا ٹایِم</generic>
+					<standard>نِو کیلؠڑونِیا سٹینڑاڑ ٹایِم</standard>
+					<daylight>نِو کیلؠڑونِیس سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="New_Zealand">
+				<long>
+					<generic>نِوزِلینڑ ٹایِم</generic>
+					<standard>نِوزِلینڑ سٹینڑاڑ ٹایِم</standard>
+					<daylight>نِوزِلینڑ ڑےلایٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Newfoundland">
+				<long>
+					<generic>نیوٗ فاونڑلینڑ ٹایِم</generic>
+					<standard>نیوٗ فاونڑلینڑ سٹینڑاڑ ٹایِم</standard>
+					<daylight>نیوٗ فاونڑ لینڑ ڑےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Niue">
+				<long>
+					<standard>نِیوٗ ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Norfolk">
+				<long>
+					<generic draft="contributed">نورفعاک ٹایِم</generic>
+					<standard draft="contributed">نورفعاک سٹینڑاڑ ٹایِم</standard>
+					<daylight draft="contributed">نورفعاک سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Noronha">
+				<long>
+					<generic>نورونہا ٹایِم</generic>
+					<standard>نورونہا سٹینڑاڑ ٹایِم</standard>
+					<daylight>نورونہا سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="North_Mariana">
+				<long>
+					<standard>شُمٲلی مَرِیانا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Novosibirsk">
+				<long>
+					<generic>نۄوۄسِبٔرسک ٹایِم</generic>
+					<standard>نۄوۄسِبٔرسک سٹینڑاڑ ٹایِم</standard>
+					<daylight>نۄوۄسِبٔرسک سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Omsk">
+				<long>
+					<generic>اۄمسک ٹایِم</generic>
+					<standard>اۄمسک سٹینڑاڑ ٹایِم</standard>
+					<daylight>اۄمسک سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pakistan">
+				<long>
+					<generic>پاکِستان ٹایِم</generic>
+					<standard>پاکِستان سٹینڑاڑ ٹایِم</standard>
+					<daylight>پاکِستان سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Palau">
+				<long>
+					<standard>پَلاو ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Papua_New_Guinea">
+				<long>
+					<standard>پاپُعا نیوٗ گؠنی ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Paraguay">
+				<long>
+					<generic>پیرؠگوے ٹایِم</generic>
+					<standard>پیرؠگوے سٹینڑاڑ ٹایِم</standard>
+					<daylight>پیرؠگوے سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Peru">
+				<long>
+					<generic>پٔروٗ ٹایِم</generic>
+					<standard>پٔروٗ سٹینڑاڑ ٹایِم</standard>
+					<daylight>پٔروٗ سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Philippines">
+				<long>
+					<generic>پھِلِپایِن ٹایِم</generic>
+					<standard>پھِلِپایِن سٹینڑاڑ ٹایِم</standard>
+					<daylight>پھِلِپایِن سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Phoenix_Islands">
+				<long>
+					<standard>پھونِکس ججیٖرُک ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Pierre_Miquelon">
+				<long>
+					<generic>سینٹ پَیری مِقیوٗلَن ٹایِم</generic>
+					<standard>سینٹ پَیری مِقیوٗلَن سٹینڑاڑ ٹایِم</standard>
+					<daylight>سینٹ پَیری مِقیوٗلَن ڑےلایِٔٹ ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pitcairn">
+				<long>
+					<standard>پِٹکیرٕن ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Ponape">
+				<long>
+					<standard>پونیپ ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Qyzylorda">
+				<long>
+					<generic>قِزلوڑا ٹایِم</generic>
+					<standard>قِزلوڑا سٹینڑاڑ ٹایِم</standard>
+					<daylight>قِزلوڑا سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Reunion">
+				<long>
+					<standard>رِیوٗنِیَن ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Rothera">
+				<long>
+					<standard>روتھؠرا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Sakhalin">
+				<long>
+					<generic>سَکھؠلِن ٹایِم</generic>
+					<standard>سَکھؠلِن سٹینڑاڑ ٹایِم</standard>
+					<daylight>سَکھؠلِن سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Samara">
+				<long>
+					<generic>سمؠرا ٹایِم</generic>
+					<standard>سمؠرا سٹینڑاڑ ٹایِم</standard>
+					<daylight>سمؠرا سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Samoa">
+				<long>
+					<generic>سؠموآ ٹایِم</generic>
+					<standard>سؠموآ سٹینڑاڑ ٹایِم</standard>
+					<daylight>سؠموآ سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Seychelles">
+				<long>
+					<standard>سیشؠلٕز ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Singapore">
+				<long>
+					<standard>سِنگاپوٗر ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Solomon">
+				<long>
+					<standard>سولومَن ججیٖرَن ہُند ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="South_Georgia">
+				<long>
+					<standard>شُمٲلی جورجِیا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Suriname">
+				<long>
+					<standard>سُرِنام ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Syowa">
+				<long>
+					<standard>سیووا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Tahiti">
+				<long>
+					<standard>ٹاہِٹی ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Tajikistan">
+				<long>
+					<standard>تازِکِستان ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Tokelau">
+				<long>
+					<standard>ٹوکؠلو ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Tonga">
+				<long>
+					<generic>ٹعانگا ٹایِم</generic>
+					<standard>ٹعانگا سٹینڑاڑ ٹایِم</standard>
+					<daylight>ٹعانگا سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Truk">
+				<long>
+					<standard>ٹٔرک ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Turkmenistan">
+				<long>
+					<generic>تُرکمؠنِستان ٹایِم</generic>
+					<standard>تُرکمؠنِستان سٹینڑاڑ ٹایِم</standard>
+					<daylight>تُرکمؠنِستان سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Tuvalu">
+				<long>
+					<standard>ٹوٗوَلوٗ ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Uruguay">
+				<long>
+					<generic>یوٗرؠگوَے ٹایِم</generic>
+					<standard>یوٗرؠگوَے سٹینڑاڑ ٹایِم</standard>
+					<daylight>یوٗرؠگوَے سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Uzbekistan">
+				<long>
+					<generic>اُزبیکِستان ٹایِم</generic>
+					<standard>اُزبیکِستان سٹینڑاڑ ٹایِم</standard>
+					<daylight>اُزبیکِستانُک سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Vanuatu">
+				<long>
+					<generic>وَنوٗاَٹوٗ ٹایِم</generic>
+					<standard>وَنوٗاَٹوٗ سٹینڑاڑ ٹایِم</standard>
+					<daylight>وَنوٗاَٹوٗ سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Venezuela">
+				<long>
+					<standard>وؠنؠزیوٗلا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Vladivostok">
+				<long>
+					<generic>ولاڑِووسٹوک ٹایِم</generic>
+					<standard>ولاڑِووسٹوک سٹینڑاڑ ٹایِم</standard>
+					<daylight>ولاڑِووسٹوک سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Volgograd">
+				<long>
+					<generic>وولگوگریڑ ٹایِم</generic>
+					<standard>وولگوگریڑ سٹینڑاڑ ٹایِم</standard>
+					<daylight>وولگوگریڑ سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Vostok">
+				<long>
+					<standard>ووسٹوک ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Wake">
+				<long>
+					<standard>ویک ججیٖرُک ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Wallis">
+				<long>
+					<standard>والِس تہٕ فیوٗٹیوٗنا ٹایِم</standard>
+				</long>
+			</metazone>
+			<metazone type="Yakutsk">
+				<long>
+					<generic>یَکُٹسک ٹایِم</generic>
+					<standard>یَکُٹسک سٹینڑاڑ ٹایِم</standard>
+					<daylight>یَکُٹُسک سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Yekaterinburg">
+				<long>
+					<generic>یؠکَٹٔرِنبٔرگ ٹایِم</generic>
+					<standard>یؠکَٹٔرِنبٔرگ سٹینڑاڑ ٹایِم</standard>
+					<daylight>یؠکَٹرِنبٔرگ سَمَر ٹایِم</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>arabext</defaultNumberingSystem>
+		<otherNumberingSystems>
+			<native>arabext</native>
+		</otherNumberingSystems>
+		<symbols numberSystem="arabext">
+			<timeSeparator>:</timeSeparator>
+		</symbols>
+		<symbols numberSystem="latn">
+			<decimal>.</decimal>
+			<group>,</group>
+			<list>;</list>
+			<percentSign>%</percentSign>
+			<plusSign>‎+</plusSign>
+			<minusSign>‎-</minusSign>
+			<exponential>E</exponential>
+			<perMille>‰</perMille>
+			<infinity>∞</infinity>
+			<nan>NaN</nan>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<scientificFormats numberSystem="latn">
+			<scientificFormatLength>
+				<scientificFormat>
+					<pattern>#E0</pattern>
+				</scientificFormat>
+			</scientificFormatLength>
+		</scientificFormats>
+		<percentFormats numberSystem="latn">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern>#,##,##0%</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤ #,##,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="one" draft="provisional">¤ 0K</pattern>
+					<pattern type="1000" count="other" draft="provisional">¤ 0K</pattern>
+					<pattern type="10000" count="one" draft="provisional">¤ 00K</pattern>
+					<pattern type="10000" count="other" draft="provisional">¤ 00K</pattern>
+					<pattern type="100000" count="one" draft="provisional">¤ 000K</pattern>
+					<pattern type="100000" count="other" draft="provisional">¤ 000K</pattern>
+					<pattern type="1000000" count="one" draft="provisional">¤ 0M</pattern>
+					<pattern type="1000000" count="other" draft="provisional">¤ 0M</pattern>
+					<pattern type="10000000" count="one" draft="provisional">¤ 00M</pattern>
+					<pattern type="10000000" count="other" draft="provisional">¤ 00M</pattern>
+					<pattern type="100000000" count="one" draft="provisional">¤ 000M</pattern>
+					<pattern type="100000000" count="other" draft="provisional">¤ 000M</pattern>
+					<pattern type="1000000000" count="one" draft="provisional">¤ 0G</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">¤ 0G</pattern>
+					<pattern type="10000000000" count="one" draft="provisional">¤ 00G</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">¤ 00G</pattern>
+					<pattern type="100000000000" count="one" draft="provisional">¤ 000G</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">¤ 000G</pattern>
+					<pattern type="1000000000000" count="one" draft="provisional">¤ 0T</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">¤ 0T</pattern>
+					<pattern type="10000000000000" count="one" draft="provisional">¤ 00T</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">¤ 00T</pattern>
+					<pattern type="100000000000000" count="one" draft="provisional">¤ 000T</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">¤ 000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="ADP">
+				<displayName>اؠڑورَن پیسِٹا</displayName>
+			</currency>
+			<currency type="AED">
+				<displayName>مُتحدہ عرب اِمارات دِرہم</displayName>
+			</currency>
+			<currency type="AFN">
+				<displayName>افغان افغٲنی</displayName>
+			</currency>
+			<currency type="ALL">
+				<displayName>اؠلبینِیَن لِک</displayName>
+			</currency>
+			<currency type="AMD">
+				<displayName>اَرمانؠن ڈرؠم</displayName>
+			</currency>
+			<currency type="ANG">
+				<displayName>نایدَرلینڑ اؠنٹٕلیٖیَن گِلڑَر</displayName>
+			</currency>
+			<currency type="AOA">
+				<displayName>اؠنگولَن کوانزا</displayName>
+			</currency>
+			<currency type="AOR">
+				<displayName>اؠنگولَن کوانزا رؠجِسٹاڑو</displayName>
+			</currency>
+			<currency type="ARA">
+				<displayName>أرجَنٹیٖن اَسٹرل</displayName>
+			</currency>
+			<currency type="ARS">
+				<displayName>أرجَنٹیٖن پِسو</displayName>
+			</currency>
+			<currency type="ATS">
+				<displayName>آسٹریَن شِلِنگ</displayName>
+			</currency>
+			<currency type="AUD">
+				<displayName>آسٹریلِیَن ڈالَر</displayName>
+			</currency>
+			<currency type="AWG">
+				<displayName>اَروبَن فِلورِن</displayName>
+			</currency>
+			<currency type="AZN">
+				<displayName>آزَرباجانی مَنَٹ</displayName>
+			</currency>
+			<currency type="BAD">
+				<displayName>بوزنِیاہَرزِگووِنا دیٖنار</displayName>
+			</currency>
+			<currency type="BAM">
+				<displayName>بوزنِیاہَرزِگووِنا کَنوٲٹیبٕل مارٕک</displayName>
+			</currency>
+			<currency type="BBD">
+				<displayName>بابیڑِیَن ڈالَر</displayName>
+			</currency>
+			<currency type="BDT">
+				<displayName>بَنگلادیٖشی ٹَکا</displayName>
+			</currency>
+			<currency type="BEF">
+				<displayName>بَلجِیَن فرینک</displayName>
+			</currency>
+			<currency type="BGN">
+				<displayName>بیلگیرِیَن ہاڑ لِو</displayName>
+			</currency>
+			<currency type="BHD">
+				<displayName>بحریٖنی دیٖنار</displayName>
+			</currency>
+			<currency type="BIF">
+				<displayName>بُرُنڑِین فرینک</displayName>
+			</currency>
+			<currency type="BMD">
+				<displayName>بٔرمیوٗڑَن ڈالَر</displayName>
+			</currency>
+			<currency type="BND">
+				<displayName>برونی ڈالَر</displayName>
+			</currency>
+			<currency type="BOB">
+				<displayName>بولِوِیَن بولوینو</displayName>
+			</currency>
+			<currency type="BOP">
+				<displayName>بولویَن پِسو</displayName>
+			</currency>
+			<currency type="BOV">
+				<displayName>بولوِیَن مَوڈال</displayName>
+			</currency>
+			<currency type="BRB">
+				<displayName>برازیٖلین کروزِرو نووو</displayName>
+			</currency>
+			<currency type="BRC">
+				<displayName>برازیٖلین کروزیڑو</displayName>
+			</currency>
+			<currency type="BRE">
+				<displayName>برازیٖلین کروزِرو</displayName>
+			</currency>
+			<currency type="BRL">
+				<displayName>برازیٖلین رِیَل</displayName>
+			</currency>
+			<currency type="BRN">
+				<displayName>برازیٖلین کروزیڑو نووو</displayName>
+			</currency>
+			<currency type="BRR">
+				<displayName>برازیٖلین کروزیرو</displayName>
+			</currency>
+			<currency type="BSD">
+				<displayName>بہامِیَن ڈالر</displayName>
+			</currency>
+			<currency type="BTN">
+				<displayName>بوٗٹینیٖز نگُلٹرم</displayName>
+			</currency>
+			<currency type="BUK">
+				<displayName>بٔرمیٖز کیٹ</displayName>
+			</currency>
+			<currency type="BWP">
+				<displayName>بوٹٕسوانَن پُلا</displayName>
+			</currency>
+			<currency type="BYB">
+				<displayName>بِلیروشِیَن نِو رِبٕل</displayName>
+			</currency>
+			<currency type="BYN">
+				<displayName>بِلیروشِیَن رِبٕل</displayName>
+			</currency>
+			<currency type="BYR">
+				<displayName>بِلیروشِیَن رِبٕل (۲۰۰۰–۲۰۱۶)</displayName>
+			</currency>
+			<currency type="BZD">
+				<displayName>بِلِزی ڈالر</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName>کینَڑِیَن ڈالر</displayName>
+			</currency>
+			<currency type="CDF">
+				<displayName>کونگولیٖز فریک</displayName>
+			</currency>
+			<currency type="CHE">
+				<displayName>وِر یوٗرو</displayName>
+			</currency>
+			<currency type="CHF">
+				<displayName>سُوِز فریک</displayName>
+			</currency>
+			<currency type="CHW">
+				<displayName>وِر فریک</displayName>
+			</currency>
+			<currency type="CLF">
+				<displayName>چِلِن یوٗنِڑیدیٖز ڑِ فومیٹو</displayName>
+			</currency>
+			<currency type="CLP">
+				<displayName>چِلِن پِسو</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>چینیٖز یَن رِنمِنبی</displayName>
+			</currency>
+			<currency type="COP">
+				<displayName>کولَمبِین پِسو</displayName>
+			</currency>
+			<currency type="COU">
+				<displayName>ِٖیوٗنِڑیڑ ڑِ ویلور رِیل</displayName>
+			</currency>
+			<currency type="CRC">
+				<displayName>کوسٹا رِکَن کولَن</displayName>
+			</currency>
+			<currency type="CSD">
+				<displayName>پرون سٔربِین ڈالر</displayName>
+			</currency>
+			<currency type="CSK">
+				<displayName>چِکوسولوواک ہاڑ کوروٗنا</displayName>
+			</currency>
+			<currency type="CUP">
+				<displayName>کیوٗبَن پِسو</displayName>
+			</currency>
+			<currency type="CYP">
+				<displayName>کیپروٹ پَوُڑ</displayName>
+			</currency>
+			<currency type="CZK">
+				<displayName>چیک کوریٖنا</displayName>
+			</currency>
+			<currency type="DDM">
+				<displayName>مٔشرِقی جٔرمَن مارٕک</displayName>
+			</currency>
+			<currency type="DEM">
+				<displayName>جٔرمَن مارٕک</displayName>
+			</currency>
+			<currency type="DKK">
+				<displayName>ڈٔنِش کرون</displayName>
+			</currency>
+			<currency type="DOP">
+				<displayName>ڈومِنِکَن پِسو</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName>اؠلجیرِیَن ڈیٖنار</displayName>
+			</currency>
+			<currency type="EEK">
+				<displayName>اؠسٹونِیَن کرون</displayName>
+			</currency>
+			<currency type="EGP">
+				<displayName>اِجِپٹِیَن پَوُنڑ</displayName>
+			</currency>
+			<currency type="ERN">
+				<displayName>رِٹریٖن نَفکا</displayName>
+			</currency>
+			<currency type="ESP">
+				<displayName>سِپینِش پیسِٹا</displayName>
+			</currency>
+			<currency type="ETB">
+				<displayName>اِتھوپِیَن بِر</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>یوٗرو</displayName>
+			</currency>
+			<currency type="FIM">
+				<displayName>فِنِش مارکا</displayName>
+			</currency>
+			<currency type="FJD">
+				<displayName>فِجین ڈالر</displayName>
+			</currency>
+			<currency type="FKP">
+				<displayName>فیکلینڑِس آیلینڑ پونڑ</displayName>
+			</currency>
+			<currency type="FRF">
+				<displayName>فرانسِسی فریک</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>برطٲنوی پاونڑ سٹٔرلِنگ</displayName>
+			</currency>
+			<currency type="GEK">
+				<displayName>جارجِیَن کیوٗپَن لَرِٹ</displayName>
+			</currency>
+			<currency type="GEL">
+				<displayName>جارجِیَن لاری</displayName>
+			</currency>
+			<currency type="GHC">
+				<displayName>گَنییَن سؠڑی(۱۹۷۹–۲٠٠۷)</displayName>
+			</currency>
+			<currency type="GHS">
+				<displayName>گَنییَن سؠڑی</displayName>
+			</currency>
+			<currency type="GIP">
+				<displayName>گِبریلٹَر پَاونڑ</displayName>
+			</currency>
+			<currency type="GMD">
+				<displayName>گیمبِیاہُک دلاسی</displayName>
+			</currency>
+			<currency type="GNF">
+				<displayName>گِنِیَن فرینک</displayName>
+			</currency>
+			<currency type="GNS">
+				<displayName>گِنِیَن سِلی</displayName>
+			</currency>
+			<currency type="GQE">
+				<displayName>اِکویٹورِیَل گِنِیَن اؠکویٖل</displayName>
+			</currency>
+			<currency type="GRD">
+				<displayName>گریٖسُک ڑرؠکما</displayName>
+			</currency>
+			<currency type="GTQ">
+				<displayName>گواٹَمالَن قیوٗٹزَل</displayName>
+			</currency>
+			<currency type="GWE">
+				<displayName>پورتگیٖزُک گِنی اؠسکیوٗڑو</displayName>
+			</currency>
+			<currency type="GWP">
+				<displayName>گِنی بِساوُک پؠسو</displayName>
+			</currency>
+			<currency type="GYD">
+				<displayName>گَیَنیٖزُک ڑالَر</displayName>
+			</currency>
+			<currency type="HKD">
+				<displayName>حانگ کانگُک ڑالَر</displayName>
+			</currency>
+			<currency type="HNL">
+				<displayName>حونڑورنُک لؠمپیٖرا</displayName>
+			</currency>
+			<currency type="HRD">
+				<displayName>کروایشنُک دیٖنار</displayName>
+			</currency>
+			<currency type="HRK">
+				<displayName>کروایشنُک کوٗنا</displayName>
+			</currency>
+			<currency type="HTG">
+				<displayName>حیشَنُک گوڑ</displayName>
+			</currency>
+			<currency type="HUF">
+				<displayName>حَنگیرِیَن فورِنٹ</displayName>
+			</currency>
+			<currency type="IDR">
+				<displayName>اِنڑونیشیاہُک رُپِیاہ</displayName>
+			</currency>
+			<currency type="IEP">
+				<displayName>اَیرلینڑُک پاونڑ</displayName>
+			</currency>
+			<currency type="ILP">
+				<displayName>اِزرٲیِلی پاونڑ</displayName>
+			</currency>
+			<currency type="ILS">
+				<displayName>اِزرٲیِلی نٔوۍ شؠقٕل</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName>ہِندُستٲنۍ رۄپَے</displayName>
+			</currency>
+			<currency type="IQD">
+				<displayName>ایٖراقُک دیٖنار</displayName>
+			</currency>
+			<currency type="IRR">
+				<displayName>ایٖرانُک رِیال</displayName>
+			</currency>
+			<currency type="ISK">
+				<displayName>اَیسلینڑُک کرونا</displayName>
+			</currency>
+			<currency type="ITL">
+				<displayName>اِٹلیٖ یُک لیٖرا</displayName>
+			</currency>
+			<currency type="JMD">
+				<displayName>جَمَیکاہُک ڑالَر</displayName>
+			</currency>
+			<currency type="JOD">
+				<displayName>جَرڑینیاہُک دیٖنار</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>جاپانُک یَن</displayName>
+			</currency>
+			<currency type="KES">
+				<displayName>کؠنیَن شِلِنگ</displayName>
+			</currency>
+			<currency type="KGS">
+				<displayName>کِرگِستانُک سوم</displayName>
+			</currency>
+			<currency type="KHR">
+				<displayName>کَمبوڑِیاہُک رِیال</displayName>
+			</currency>
+			<currency type="KMF">
+				<displayName>کومورِیَن فرینک</displayName>
+			</currency>
+			<currency type="KPW">
+				<displayName>جنوٗبی کورِیَن وَن</displayName>
+			</currency>
+			<currency type="KRW">
+				<displayName>ساوتھ کورِیَن وَن</displayName>
+			</currency>
+			<currency type="KWD">
+				<displayName>قُویتُک دیٖنار</displayName>
+			</currency>
+			<currency type="KYD">
+				<displayName>کیمین ججیٖرُک ڑالَر</displayName>
+			</currency>
+			<currency type="KZT">
+				<displayName>کزاکِستان ٹینج</displayName>
+			</currency>
+			<currency type="LAK">
+				<displayName>لَوٹِیَن کِپ</displayName>
+			</currency>
+			<currency type="LBP">
+				<displayName>لیبنیٖزُک پاونڑ</displayName>
+			</currency>
+			<currency type="LKR">
+				<displayName>سری لَنکاہٕچ رۄپَے</displayName>
+			</currency>
+			<currency type="LRD">
+				<displayName>لَیبیرِیَن ڑالَر</displayName>
+			</currency>
+			<currency type="LSL">
+				<displayName>لِسوتھو لوٹی</displayName>
+			</currency>
+			<currency type="LTL">
+				<displayName>لِتھوینِیَن لِٹاس</displayName>
+			</currency>
+			<currency type="LTT">
+				<displayName>لِتھوینِیَن ٹؠلوناس</displayName>
+			</currency>
+			<currency type="LUC">
+				<displayName>لَکزٕمبورگِیَن کَنؤرٹِبٕل فرینک</displayName>
+			</currency>
+			<currency type="LUF">
+				<displayName>لَکزٕمبورگِیَن فرینک</displayName>
+			</currency>
+			<currency type="LUL">
+				<displayName>لَکزٕمبوگ فَینانشَل فرینک</displayName>
+			</currency>
+			<currency type="LVL">
+				<displayName>لَتوِیَن لیٹس</displayName>
+			</currency>
+			<currency type="LVR">
+				<displayName>لَتوِیَن رَبٕل</displayName>
+			</currency>
+			<currency type="LYD">
+				<displayName>لِبیَن دیٖنار</displayName>
+			</currency>
+			<currency type="MAD">
+				<displayName>موروکَن دِرہَم</displayName>
+			</currency>
+			<currency type="MAF">
+				<displayName>موروکَن فرینک</displayName>
+			</currency>
+			<currency type="MDL">
+				<displayName>مولڑووین لیوٗ</displayName>
+			</currency>
+			<currency type="MGA">
+				<displayName>مؠلؠگیسی اؠریَری</displayName>
+			</currency>
+			<currency type="MGF">
+				<displayName>مؠلؠگیسی فرینک</displayName>
+			</currency>
+			<currency type="MKD">
+				<displayName>مؠکَڑونِیَن دیٖنار</displayName>
+			</currency>
+			<currency type="MLF">
+				<displayName>میلِیَن فرینک</displayName>
+			</currency>
+			<currency type="MMK">
+				<displayName>مِیانما کیاٹ</displayName>
+			</currency>
+			<currency type="MNT">
+				<displayName>مۄنگولِیَن ٹُگرِک</displayName>
+			</currency>
+			<currency type="MOP">
+				<displayName>مؠکانیٖز پَٹاکا</displayName>
+			</currency>
+			<currency type="MRO">
+				<displayName>مورِٹینِیَن عوگیوٗیا (1973–2017)</displayName>
+			</currency>
+			<currency type="MRU">
+				<displayName>مورِٹینِیَن عوگیوٗیا</displayName>
+			</currency>
+			<currency type="MTL">
+				<displayName>مالٹیٖزُک لیٖرا</displayName>
+			</currency>
+			<currency type="MTP">
+				<displayName>مالٹیٖزُک پاونڑ</displayName>
+			</currency>
+			<currency type="MUR">
+				<displayName>مورؠشِیاہٕچ رۄپَے</displayName>
+			</currency>
+			<currency type="MVR">
+				<displayName>مالدِیٖوِیَن رُفِیا</displayName>
+			</currency>
+			<currency type="MWK">
+				<displayName>مؠلیوِیَن کواچا</displayName>
+			</currency>
+			<currency type="MXN">
+				<displayName>مؠکسِکَن پؠسو</displayName>
+			</currency>
+			<currency type="MXP">
+				<displayName>مؠکسِکَن سِلوَر پؠسو (۱۸۶۱–۱۹۹۲)</displayName>
+			</currency>
+			<currency type="MYR">
+				<displayName>مَلیشِیَن رِنگِٹ</displayName>
+			</currency>
+			<currency type="MZE">
+				<displayName>موزیمبِکَن سکیوٗڑو</displayName>
+			</currency>
+			<currency type="MZM">
+				<displayName>پرون موزیمبِکَن مؠٹِکَل</displayName>
+			</currency>
+			<currency type="MZN">
+				<displayName>موزیمبِکَن مؠٹِکَل</displayName>
+			</currency>
+			<currency type="NAD">
+				<displayName>نامِبِیَن ڑالَر</displayName>
+			</currency>
+			<currency type="NGN">
+				<displayName>نَیجیرِیَن ڑالَر</displayName>
+			</currency>
+			<currency type="NIC">
+				<displayName>نِکؠراگُوؠن کورڑوبا</displayName>
+			</currency>
+			<currency type="NIO">
+				<displayName>نِکؠراگُوؠن کورڑوبا اورو</displayName>
+			</currency>
+			<currency type="NLG">
+				<displayName>ڈَچ گِلڑَر</displayName>
+			</currency>
+			<currency type="NOK">
+				<displayName>نوروییِنُک کرون</displayName>
+			</currency>
+			<currency type="NPR">
+				<displayName>نیپالٕچ رۄپَے</displayName>
+			</currency>
+			<currency type="NZD">
+				<displayName>نِوزیٖلینڑُک ڑالَر</displayName>
+			</currency>
+			<currency type="OMR">
+				<displayName>اومِنی رِیال</displayName>
+			</currency>
+			<currency type="PAB">
+				<displayName>پانامانِیَن بالبوز</displayName>
+			</currency>
+			<currency type="PEI">
+				<displayName>پٔریوٗوِیَن اِنٹی</displayName>
+			</currency>
+			<currency type="PEN">
+				<displayName>پٔریوٗوِیَن سولٕز</displayName>
+			</currency>
+			<currency type="PES">
+				<displayName>پٔریوٗوِیَن سول (۱۸۶۳–۱۹۶۵)</displayName>
+			</currency>
+			<currency type="PGK">
+				<displayName>نیوٗ پیپُعا گِنِیَن کیٖنا</displayName>
+			</currency>
+			<currency type="PHP">
+				<displayName>پھِلِپایِٔن پؠسو</displayName>
+			</currency>
+			<currency type="PKR">
+				<displayName>پاکِستٲنۍ رۄپَے</displayName>
+			</currency>
+			<currency type="PLN">
+				<displayName>پولِش زلوٹی</displayName>
+			</currency>
+			<currency type="PLZ">
+				<displayName>پولِش زلوٹی(۱۹۵٠–۱۹۹۵)</displayName>
+			</currency>
+			<currency type="PTE">
+				<displayName>پورتُگیٖز اؠسکیوٗڑو</displayName>
+			</currency>
+			<currency type="PYG">
+				<displayName>پؠرؠگیوٗوَیَن گُعارانی</displayName>
+			</currency>
+			<currency type="QAR">
+				<displayName>قطاری رِیال</displayName>
+			</currency>
+			<currency type="RHD">
+				<displayName>رھوڑیشِیَن ڑالَر</displayName>
+			</currency>
+			<currency type="ROL">
+				<displayName>اولڑ رومانِیَن لؠیوٗ</displayName>
+			</currency>
+			<currency type="RON">
+				<displayName>رومانِیَن لؠیوٗ</displayName>
+			</currency>
+			<currency type="RSD">
+				<displayName>سٔربِیَن دیٖنار</displayName>
+			</currency>
+			<currency type="RUB">
+				<displayName>رٔشیَن رَبٕل</displayName>
+			</currency>
+			<currency type="RUR">
+				<displayName>رٔشیَن رَبٕل(۱۹۹۱–۱۹۹۸)</displayName>
+			</currency>
+			<currency type="RWF">
+				<displayName>روانڑَن فرانک</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName>سودیٖیُک رِیال</displayName>
+			</currency>
+			<currency type="SBD">
+				<displayName>سولَمَن جٔزیٖرُک ڈالَر</displayName>
+			</currency>
+			<currency type="SDD">
+				<displayName>پرون سوٗڈانُک دیٖنار</displayName>
+			</currency>
+			<currency type="SDG">
+				<displayName>سوٗڈانُک پونڈ</displayName>
+			</currency>
+			<currency type="SDP">
+				<displayName>پرون سوٗڈانُک پونڈ</displayName>
+			</currency>
+			<currency type="SEK">
+				<displayName>سویٖڈِش کَرونا</displayName>
+			</currency>
+			<currency type="SGD">
+				<displayName>سِنگاپورُک ڈالَر</displayName>
+			</currency>
+			<currency type="SHP">
+				<displayName>سینٹ ہیلِنا پونڈ</displayName>
+			</currency>
+			<currency type="SIT">
+				<displayName>سلووینُک ٹولَر</displayName>
+			</currency>
+			<currency type="SKK">
+				<displayName>سلووَک کَرونا</displayName>
+			</currency>
+			<currency type="SOS">
+				<displayName>سومالی شِلِنگ</displayName>
+			</currency>
+			<currency type="SRD">
+				<displayName>سُریٖنامُک ڈالَر</displayName>
+			</currency>
+			<currency type="SRG">
+				<displayName>سُریٖنام گِلدَر</displayName>
+			</currency>
+			<currency type="SUR">
+				<displayName>سوویت روبٕل</displayName>
+			</currency>
+			<currency type="SVC">
+				<displayName>سَلویدَرُک کولَن</displayName>
+			</currency>
+			<currency type="SYP">
+				<displayName>سیٖریاہُک پونڈ</displayName>
+			</currency>
+			<currency type="SZL">
+				<displayName>سوازی لِلَنگینی</displayName>
+			</currency>
+			<currency type="THB">
+				<displayName>تھایھک بات</displayName>
+			</currency>
+			<currency type="TJR">
+				<displayName>تاجکِستانُک رَبٕل</displayName>
+			</currency>
+			<currency type="TJS">
+				<displayName>تاجِکتانُک سَمونی</displayName>
+			</currency>
+			<currency type="TMM">
+				<displayName>تُکَمَنِستانُک مَنَت</displayName>
+			</currency>
+			<currency type="TND">
+				<displayName>ٹُنیشیاہُک دیٖنار</displayName>
+			</currency>
+			<currency type="TOP">
+				<displayName>ٹونگَن پانگا</displayName>
+			</currency>
+			<currency type="TPE">
+				<displayName>ٹیموریسو ایکیٖڈو</displayName>
+			</currency>
+			<currency type="TRL">
+				<displayName>پرون تُرکِش لیرا</displayName>
+			</currency>
+			<currency type="TRY">
+				<displayName>تُرکیہُک لیرا</displayName>
+			</currency>
+			<currency type="TTD">
+				<displayName>ٹرِنہِ ڈیڈ تہٕ ٹوبیگو ڈالَر</displayName>
+			</currency>
+			<currency type="TWD">
+				<displayName>نۆو تیوانُک ڈالَر</displayName>
+			</currency>
+			<currency type="TZS">
+				<displayName>تَنزانیاہُک شِلِنگ</displayName>
+			</currency>
+			<currency type="UAH">
+				<displayName>یوٗکرینیاہُک ہرِوِنیا</displayName>
+			</currency>
+			<currency type="UAK">
+				<displayName>یوٗکرینیاہُک کاربووَنیٹس</displayName>
+			</currency>
+			<currency type="UGS">
+				<displayName>اُگاداہُک شِلِنگ(۱۹۶۶–۱۹۸۷)</displayName>
+			</currency>
+			<currency type="UGX">
+				<displayName>اُگاداہُک شِلِنگ</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>یوٗ ایس ڈالَر</displayName>
+			</currency>
+			<currency type="USN">
+				<displayName>یوٗ ایس ڈالَر(پَگاہ)</displayName>
+			</currency>
+			<currency type="USS">
+				<displayName>یوٗ ایس ڈالَر(تَمی دًۄہ)</displayName>
+			</currency>
+			<currency type="UYI">
+				<displayName>اُرگایَن پیسو یوٗنِڈیڈَس اِنڈیکسَس</displayName>
+			</currency>
+			<currency type="UYP">
+				<displayName>اُرگایَن پیسو(۱۹۷۵–۱۹۹۳)</displayName>
+			</currency>
+			<currency type="UYU">
+				<displayName>اُروٗگایَن پیسو</displayName>
+			</currency>
+			<currency type="UZS">
+				<displayName>اُبیکِستان سوم</displayName>
+			</currency>
+			<currency type="VEB">
+				<displayName>وینٕزوٗلیُک بولِوَر (۱۸۷۱–۲۰۰۸)</displayName>
+			</currency>
+			<currency type="VEF">
+				<displayName>وینٕزوٗلیُک بولِوَر (2008–2018)</displayName>
+			</currency>
+			<currency type="VES">
+				<displayName>وینٕزوٗلیُک بولِوَر</displayName>
+			</currency>
+			<currency type="VND">
+				<displayName>وِیَنَمُک ڈانگ</displayName>
+			</currency>
+			<currency type="VUV">
+				<displayName>وَنوٗاَتوٗ وَتوٗ</displayName>
+			</currency>
+			<currency type="WST">
+				<displayName>سَمون تَلا</displayName>
+			</currency>
+			<currency type="XAF">
+				<displayName>سی ایف اے فرینک بی ایٖ اے سی</displayName>
+			</currency>
+			<currency type="XAG">
+				<displayName>رۄپھ</displayName>
+			</currency>
+			<currency type="XAU">
+				<displayName>سۄن</displayName>
+			</currency>
+			<currency type="XBA">
+				<displayName>یوٗرپی کَمپوسِٹ یوٗنِٹ</displayName>
+			</currency>
+			<currency type="XBB">
+				<displayName>یوٗرپی مونِٹَری یوٗنِٹ</displayName>
+			</currency>
+			<currency type="XBC">
+				<displayName>یوٗرپی یوٗنِٹ آف ایکاوُنٹ (ایکس بی سی)</displayName>
+			</currency>
+			<currency type="XBD">
+				<displayName>یوٗرپی یوٗنِٹ آف ایکاوُنٹ (ایکس بی ڈی)</displayName>
+			</currency>
+			<currency type="XCD">
+				<displayName>مَشرِقی کیرِبِیَن ڈالَر</displayName>
+			</currency>
+			<currency type="XDR">
+				<displayName>خاص ڈرایِنگ رایٹس</displayName>
+			</currency>
+			<currency type="XEU">
+				<displayName>یوٗرپی کَرَنسی یوٗنِٹ</displayName>
+			</currency>
+			<currency type="XFO">
+				<displayName>فرینچ گولڈ فرینک</displayName>
+			</currency>
+			<currency type="XFU">
+				<displayName>فرینچ یوٗ اے سی فرینک</displayName>
+			</currency>
+			<currency type="XOF">
+				<displayName>سی ایف اے فرینک بی سی ایٖ اے او</displayName>
+			</currency>
+			<currency type="XPD">
+				<displayName>پُلیڈیَم</displayName>
+			</currency>
+			<currency type="XPF">
+				<displayName>سی ایف پی فرینک</displayName>
+			</currency>
+			<currency type="XPT">
+				<displayName>پلیٹِنَم</displayName>
+			</currency>
+			<currency type="XRE">
+				<displayName>آر آے این ایٖ ٹی فَنڈ</displayName>
+			</currency>
+			<currency type="XTS">
+				<displayName>ٹیسٹِنگ کَرَنسی کوڈ</displayName>
+			</currency>
+			<currency type="XXX">
+				<displayName>اَنزٲنۍ یا نالَگہٕ ہار سِکہٕ</displayName>
+			</currency>
+			<currency type="YDD">
+				<displayName>یَمنُک دیٖنار</displayName>
+			</currency>
+			<currency type="YER">
+				<displayName>یَمنُک رِیال</displayName>
+			</currency>
+			<currency type="YUD">
+				<displayName>یوگوسلاوِیَن ہاڑ دیٖنار</displayName>
+			</currency>
+			<currency type="YUM">
+				<displayName>یوگوسلاوِیَن نووِے دیٖنار</displayName>
+			</currency>
+			<currency type="YUN">
+				<displayName>یوگوسلاوِیَن کَنؤٹِبٕل دیٖنار</displayName>
+			</currency>
+			<currency type="ZAR">
+				<displayName>ساوُتھ افریٖکاہُک رینڈ</displayName>
+			</currency>
+			<currency type="ZMK">
+				<displayName>زِمبابیُک کواچا (1968–2012)</displayName>
+			</currency>
+			<currency type="ZMW">
+				<displayName>زِمبابیُک کواچا</displayName>
+			</currency>
+			<currency type="ZRN">
+				<displayName>زایرِیَن نِو زایِر</displayName>
+			</currency>
+			<currency type="ZRZ">
+				<displayName>زَیرُک ڈالَر</displayName>
+			</currency>
+			<currency type="ZWD">
+				<displayName>زِمبابِیُک ڈالَر</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="duration-year">
+				<displayName draft="provisional">ؤری</displayName>
+				<unitPattern count="one">{0} ؤری</unitPattern>
+				<unitPattern count="other">{0} ؤری</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="provisional">ریتھ</displayName>
+				<unitPattern count="one">{0} ریتھ</unitPattern>
+				<unitPattern count="other">{0} ریتھ</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName draft="provisional">ہَفتہٕ</displayName>
+				<unitPattern count="one">{0} ہَفتہٕ</unitPattern>
+				<unitPattern count="other">{0} ہَفتہٕ</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="provisional">دۄہ</displayName>
+				<unitPattern count="one">{0} دۄہ</unitPattern>
+				<unitPattern count="other">{0} دۄہ</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName draft="provisional">گٲنٹہٕ</displayName>
+				<unitPattern count="one">{0} گَنٹہٕ</unitPattern>
+				<unitPattern count="other">{0} گٲنٹہٕ</unitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName draft="provisional">مِنَٹ</displayName>
+				<unitPattern count="one">{0} مِنَٹ</unitPattern>
+				<unitPattern count="other">{0} مِنَٹ</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName draft="provisional">سیکَنڈ</displayName>
+				<unitPattern count="one">{0} سیکَنڈ</unitPattern>
+				<unitPattern count="other">{0} سیکَنڈ</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="duration-year">
+				<displayName draft="provisional">ؤری</displayName>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="provisional">ریتھ</displayName>
+			</unit>
+			<unit type="duration-week">
+				<displayName draft="provisional">ہَفتہٕ</displayName>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="provisional">دۄہ</displayName>
+			</unit>
+			<unit type="duration-hour">
+				<displayName draft="provisional">گٲنٹہٕ</displayName>
+			</unit>
+			<unit type="duration-minute">
+				<displayName draft="provisional">مِنَٹ</displayName>
+			</unit>
+			<unit type="duration-second">
+				<displayName draft="provisional">سیکَنڈ</displayName>
+			</unit>
+		</unitLength>
+	</units>
+	<posix>
+		<messages>
+			<yesstr>اٟں</yesstr>
+			<nostr>نَہ</nostr>
+		</messages>
+	</posix>
+</ldml>

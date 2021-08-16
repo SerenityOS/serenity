@@ -1,0 +1,2 @@
+Neg09c.java:15:39: compiler.err.cant.apply.diamond.1: Neg09c.Member<X>, (compiler.misc.feature.not.supported.in.source: (compiler.misc.feature.diamond.and.anon.class), 8, 9)
+1 error

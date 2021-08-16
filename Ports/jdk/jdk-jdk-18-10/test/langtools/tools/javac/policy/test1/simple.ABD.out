@@ -1,0 +1,11 @@
+[attribute A]
+[attribute A1]
+[attribute A2]
+[attribute B]
+[attribute B1]
+B.java:12:9: compiler.err.cant.resolve.location: kindname.variable, x, , , (compiler.misc.location: kindname.class, B1, null)
+[attribute B2]
+[attribute D]
+[attribute D1]
+[attribute D2]
+1 error

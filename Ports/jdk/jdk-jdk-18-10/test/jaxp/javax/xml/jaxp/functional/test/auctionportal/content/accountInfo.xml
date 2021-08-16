@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<acc:Account xmlns="http://www.auctionportal.org/Accounts"
+         xmlns:acc="http://www.auctionportal.org/Accounts"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.auctionportal.org/Accounts accountInfo.xsd" acc:accountID="1">
+
+   <FirstName>Rachel</FirstName>
+   <LastName>Green</LastName>
+   <UserID>744</UserID>
+   <Role><Sell/></Role>
+</acc:Account>

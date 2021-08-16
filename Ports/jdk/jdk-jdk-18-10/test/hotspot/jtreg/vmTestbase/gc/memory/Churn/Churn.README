@@ -1,0 +1,117 @@
+Copyright (c) 2002, 2020, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+The Churn tests are a series of small programs designed to
+simply churn memory over, mixing in calls to GC and Finalization.
+They are all basically the same program with permutations.
+Each program contains:
+
+LocalRandom class -- used to isloate calls to random generator
+        for reproducibility
+
+MemoryObject class -- simply allocated and reclaimed. contains
+        a byte array
+
+Churn class -- entry point. Allocates threads and counts objects.
+        When loop is done, sets Semaphore to signal threads to cease
+
+ThreadObject class -- allocates and deallocates (by assignment)
+        MemoryObjects
+
+SemaphoreObject class -- static class for signalling threads when
+        to stop running. Perhap poorly named.
+
+CommandLine class -- parses command line args. Static class.
+--------------------------
+Usage:
+
+java Churn [-l numberOfLoops] [-t numberOfThreads] [-a sizeOfArray] [-m multiplier] [-f <run forever>]
+
+NOTE: the options can be passed in any order
+
+
+numberOfLoops is the number of iterations a test will go through.
+This defaults to 2000
+
+numberOfThreads is the number of threads activating and deactivating
+MemoryObjects. This deaults to 2.
+
+sizeOfArray is the number of MemoryObjects each thread manipulates.
+This defaults to 1024.
+
+multiplier is a value used to determine how much memory each MemoryObject
+holds. It defaults to 10.
+
+The tests can be configured to run forever by passing -f on the
+command line. This is useful for continued stress testing outside
+of a test harness.
+-----------------------------
+The total amount of needed memory is approximately
+numberOfThreads * (sizeOfArray * sizeOfArray) * (multiplier / 2) bytes
+
+The default is about 10 Megs needed, not couting garbage collection
+overhead.  Garbage collection doubles the memory requirements for
+programs that run out of heap space, so the the true default size
+is 20 Megs.
+
+
+Testname        What it does
+-------------   ---------------------------------------------------------
+Churn1          Simply creates new MemObjects. No finalizers. No user
+                calls to System.gc(). Count of objects simply grows
+                since no method ever decreases the count -- object count
+                equals total objects ever allocated. Memory used is
+                approx = (object count) * (array size) * (multiplier) / 2
+
+Churn2          Same as Churn1, but adds a call to System.gc() every loop.
+                Object Count should simply increase. About half the time,
+                this test will hang before the 100th loop. About 10% of
+                the time this test will SEG FAULT with either a BUS ERROR
+                or ACCESS VIOLATION
+
+Churn3          Same as Churn1, but the MemoryObject class has a
+                finalize() method on it. The method is empty. The objecty
+                count should continue to rise. However, this program
+                runs out of memory after around 35 loops. The threads
+                dies from OutOfMemoryErrors. It looks as if the
+                finalizers are not called fast enough during GC, so
+                enough memory cannot be freed.
+                Additionally, about 10% of the time, this program SEGFAULTS
+
+Churn3a         Same as Churn3, but with an explicit call to
+                System.runFinalization() in each loop.
+                Occasionally, this test will run out of memory
+                early on for one or more of the threads.
+                Also, this test sometimes hangs, even if one or
+                all of the ThreadObjects have died.
+                Even if no threads die, and it doesn't hang, this
+                program will still die with:
+                        java.lang.NullPointerException
+                                at java.lang.String.indexOf(String.java)
+                                at Churn3a.main(Churn3a.java:71)
+                which contains only a call to join()
+
+
+
+Churn4          Same as Churn3, but with code in the finalize method
+                which would decrement a *static* field in the class.
+                This test runs out of memory much more quickly, something
+                like after 3 or 4 loops.

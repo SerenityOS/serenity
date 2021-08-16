@@ -1,0 +1,7 @@
+grant {
+    permission java.lang.RuntimePermission "setSecurityManager";
+    permission java.security.SecurityPermission "insertProvider.*";
+    permission java.security.SecurityPermission "removeProvider.*";
+    permission java.util.PropertyPermission "java.home", "read";
+    permission java.io.FilePermission "${java.home}/lib/security/cacerts", "read";
+};

@@ -1,0 +1,6 @@
+usage: jps [--help]
+       jps [-q] [-mlvV] [<hostid>]
+
+Definitions:
+    <hostid>:      <hostname>[:<port>]
+    -? -h --help -help: Print this help message and exit.

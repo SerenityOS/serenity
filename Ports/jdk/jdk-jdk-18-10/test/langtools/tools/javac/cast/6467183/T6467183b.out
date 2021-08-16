@@ -1,0 +1,2 @@
+T6467183b.java:15:42: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), T6665356b<T>.A<compiler.misc.type.captureof: 1, ? extends java.lang.Number>, T6665356b<T>.B<? extends java.lang.Integer>
+1 warning

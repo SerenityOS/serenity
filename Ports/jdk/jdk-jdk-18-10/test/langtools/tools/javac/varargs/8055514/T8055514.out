@@ -1,0 +1,5 @@
+T8055514.java:21:9: compiler.err.non-static.cant.be.ref: kindname.method, m(int...)
+T8055514.java:22:9: compiler.err.non-static.cant.be.ref: kindname.method, m2(int...)
+T8055514.java:23:9: compiler.err.non-static.cant.be.ref: kindname.method, m3(int...)
+T8055514.java:24:9: compiler.err.non-static.cant.be.ref: kindname.method, m4(int,int,int)
+4 errors

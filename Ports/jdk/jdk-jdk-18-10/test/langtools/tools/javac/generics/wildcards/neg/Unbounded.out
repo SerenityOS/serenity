@@ -1,0 +1,2 @@
+Unbounded.java:14:29: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: compiler.misc.type.captureof: 1, ?, java.lang.String)
+1 error

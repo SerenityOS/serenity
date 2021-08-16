@@ -1,0 +1,2 @@
+Bad.java:12:1: compiler.err.pkg.clashes.with.class.of.same.name: java.lang.String
+1 error

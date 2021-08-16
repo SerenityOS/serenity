@@ -1,0 +1,2 @@
+T4720359a.java:16:23: compiler.err.override.incompatible.ret: (compiler.misc.cant.hide: m(), p1.T4720359c, m(), p1.T4720359a), int, void
+1 error

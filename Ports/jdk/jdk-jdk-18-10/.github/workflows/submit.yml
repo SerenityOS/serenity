@@ -1,0 +1,1717 @@
+name: Pre-submit tests
+
+on:
+  push:
+    branches-ignore:
+      - master
+      - pr/*
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: "Platform(s) to execute on"
+        required: true
+        default: "Linux additional (hotspot only), Linux x64, Linux x86, Windows aarch64, Windows x64, macOS x64"
+
+jobs:
+  prerequisites:
+    name: Prerequisites
+    runs-on: "ubuntu-20.04"
+    outputs:
+      should_run: ${{ steps.check_submit.outputs.should_run }}
+      bundle_id: ${{ steps.check_bundle_id.outputs.bundle_id }}
+      platform_linux_additional: ${{ steps.check_platforms.outputs.platform_linux_additional }}
+      platform_linux_x64: ${{ steps.check_platforms.outputs.platform_linux_x64 }}
+      platform_linux_x86: ${{ steps.check_platforms.outputs.platform_linux_x86 }}
+      platform_windows_aarch64: ${{ steps.check_platforms.outputs.platform_windows_aarch64 }}
+      platform_windows_x64: ${{ steps.check_platforms.outputs.platform_windows_x64 }}
+      platform_macos_x64: ${{ steps.check_platforms.outputs.platform_macos_x64 }}
+      platform_macos_aarch64: ${{ steps.check_platforms.outputs.platform_macos_aarch64 }}
+      dependencies: ${{ steps.check_deps.outputs.dependencies }}
+
+    steps:
+      - name: Check if submit tests should actually run depending on secrets and manual triggering
+        id: check_submit
+        run: echo "::set-output name=should_run::${{ github.event.inputs.platforms != '' || (!secrets.JDK_SUBMIT_FILTER || startsWith(github.ref, 'refs/heads/submit/')) }}"
+
+      - name: Check which platforms should be included
+        id: check_platforms
+        run: |
+          echo "::set-output name=platform_linux_additional::${{ contains(github.event.inputs.platforms, 'linux additional (hotspot only)') || (github.event.inputs.platforms == '' && (secrets.JDK_SUBMIT_PLATFORMS == '' || contains(secrets.JDK_SUBMIT_PLATFORMS, 'linux additional (hotspot only)'))) }}"
+          echo "::set-output name=platform_linux_x64::${{ contains(github.event.inputs.platforms, 'linux x64') || (github.event.inputs.platforms == '' && (secrets.JDK_SUBMIT_PLATFORMS == '' || contains(secrets.JDK_SUBMIT_PLATFORMS, 'linux x64'))) }}"
+          echo "::set-output name=platform_linux_x86::${{ contains(github.event.inputs.platforms, 'linux x86') || (github.event.inputs.platforms == '' && (secrets.JDK_SUBMIT_PLATFORMS == '' || contains(secrets.JDK_SUBMIT_PLATFORMS, 'linux x86'))) }}"
+          echo "::set-output name=platform_windows_aarch64::${{ contains(github.event.inputs.platforms, 'windows aarch64') || (github.event.inputs.platforms == '' && (secrets.JDK_SUBMIT_PLATFORMS == '' || contains(secrets.JDK_SUBMIT_PLATFORMS, 'windows aarch64'))) }}"
+          echo "::set-output name=platform_windows_x64::${{ contains(github.event.inputs.platforms, 'windows x64') || (github.event.inputs.platforms == '' && (secrets.JDK_SUBMIT_PLATFORMS == '' || contains(secrets.JDK_SUBMIT_PLATFORMS, 'windows x64'))) }}"
+          echo "::set-output name=platform_macos_x64::${{ contains(github.event.inputs.platforms, 'macos x64') || (github.event.inputs.platforms == '' && (secrets.JDK_SUBMIT_PLATFORMS == '' || contains(secrets.JDK_SUBMIT_PLATFORMS, 'macos x64'))) }}"
+          echo "::set-output name=platform_macos_aarch64::${{ contains(github.event.inputs.platforms, 'macos aarch64') || (github.event.inputs.platforms == '' && (secrets.JDK_SUBMIT_PLATFORMS == '' || contains(secrets.JDK_SUBMIT_PLATFORMS, 'macos aarch64'))) }}"
+        if: steps.check_submit.outputs.should_run != 'false'
+
+      - name: Determine unique bundle identifier
+        id: check_bundle_id
+        run: echo "::set-output name=bundle_id::${GITHUB_ACTOR}_${GITHUB_SHA:0:8}"
+        if: steps.check_submit.outputs.should_run != 'false'
+
+      - name: Checkout the source
+        uses: actions/checkout@v2
+        with:
+          path: jdk
+        if: steps.check_submit.outputs.should_run != 'false'
+
+      - name: Determine versions and locations to be used for dependencies
+        id: check_deps
+        run: "echo ::set-output name=dependencies::`cat make/conf/version-numbers.conf make/conf/test-dependencies | sed -e '1i {' -e 's/#.*//g' -e 's/\"//g' -e 's/\\(.*\\)=\\(.*\\)/\"\\1\": \"\\2\",/g' -e '$s/,\\s\\{0,\\}$/\\}/'`"
+        working-directory: jdk
+        if: steps.check_submit.outputs.should_run != 'false'
+
+      - name: Print extracted dependencies to the log
+        run: "echo '${{ steps.check_deps.outputs.dependencies }}'"
+        if: steps.check_submit.outputs.should_run != 'false'
+
+      - name: Determine the jtreg ref to checkout
+        run: "echo JTREG_REF=jtreg-${{ fromJson(steps.check_deps.outputs.dependencies).JTREG_VERSION }}+${{ fromJson(steps.check_deps.outputs.dependencies).JTREG_BUILD }} >> $GITHUB_ENV"
+        if: steps.check_submit.outputs.should_run != 'false'
+
+      - name: Check if a jtreg image is present in the cache
+        id: jtreg
+        uses: actions/cache@v2
+        with:
+          path: ~/jtreg/
+          key: jtreg-${{ env.JTREG_REF }}-v1
+        if: steps.check_submit.outputs.should_run != 'false'
+
+      - name: Checkout the jtreg source
+        uses: actions/checkout@v2
+        with:
+          repository: "openjdk/jtreg"
+          ref: ${{ env.JTREG_REF }}
+          path: jtreg
+        if: steps.check_submit.outputs.should_run != 'false' && steps.jtreg.outputs.cache-hit != 'true'
+
+      - name: Build jtreg
+        run: bash make/build.sh --jdk ${JAVA_HOME_8_X64}
+        working-directory: jtreg
+        if: steps.check_submit.outputs.should_run != 'false' && steps.jtreg.outputs.cache-hit != 'true'
+
+      - name: Move jtreg image to destination folder
+        run: mv build/images/jtreg ~/
+        working-directory: jtreg
+        if: steps.check_submit.outputs.should_run != 'false' && steps.jtreg.outputs.cache-hit != 'true'
+
+      - name: Store jtreg for use by later steps
+        uses: actions/upload-artifact@v2
+        with:
+          name: transient_jtreg_${{ steps.check_bundle_id.outputs.bundle_id }}
+          path: ~/jtreg/
+        if: steps.check_submit.outputs.should_run != 'false'
+
+  linux_x64_build:
+    name: Linux x64
+    runs-on: "ubuntu-20.04"
+    needs: prerequisites
+    if: needs.prerequisites.outputs.should_run != 'false' && (needs.prerequisites.outputs.platform_linux_x64 != 'false' || needs.prerequisites.outputs.platform_linux_additional == 'true')
+
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor:
+          - build release
+          - build debug
+        include:
+          - flavor: build debug
+            flags: --enable-debug
+            artifact: -debug
+
+    env:
+      JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).DEFAULT_VERSION_FEATURE }}"
+      BOOT_JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).BOOT_JDK_VERSION }}"
+      BOOT_JDK_FILENAME: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_FILENAME }}"
+      BOOT_JDK_URL: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_URL }}"
+      BOOT_JDK_SHA256: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_SHA256 }}"
+
+    steps:
+      - name: Checkout the source
+        uses: actions/checkout@v2
+        with:
+          path: jdk
+
+      - name: Restore boot JDK from cache
+        id: bootjdk
+        uses: actions/cache@v2
+        with:
+          path: ~/bootjdk/${{ env.BOOT_JDK_VERSION }}
+          key: bootjdk-${{ runner.os }}-${{ env.BOOT_JDK_VERSION }}-${{ env.BOOT_JDK_SHA256 }}-v1
+
+      - name: Download boot JDK
+        run: |
+          mkdir -p "${HOME}/bootjdk/${BOOT_JDK_VERSION}"
+          wget -O "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" "${BOOT_JDK_URL}"
+          echo "${BOOT_JDK_SHA256} ${HOME}/bootjdk/${BOOT_JDK_FILENAME}" | sha256sum -c >/dev/null -
+          tar -xf "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" -C "${HOME}/bootjdk/${BOOT_JDK_VERSION}"
+          mv "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"*/* "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"
+        if: steps.bootjdk.outputs.cache-hit != 'true'
+
+      - name: Restore jtreg artifact
+        id: jtreg_restore
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        continue-on-error: true
+
+      - name: Restore jtreg artifact (retry)
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        if: steps.jtreg_restore.outcome == 'failure'
+
+      - name: Checkout gtest sources
+        uses: actions/checkout@v2
+        with:
+          repository: "google/googletest"
+          ref: "release-${{ fromJson(needs.prerequisites.outputs.dependencies).GTEST_VERSION }}"
+          path: gtest
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install gcc-10=10.3.0-1ubuntu1~20.04 g++-10=10.3.0-1ubuntu1~20.04 libxrandr-dev libxtst-dev libcups2-dev libasound2-dev
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+
+      - name: Configure
+        run: >
+          bash configure
+          --with-conf-name=linux-x64
+          ${{ matrix.flags }}
+          --with-version-opt=${GITHUB_ACTOR}-${GITHUB_SHA}
+          --with-version-build=0
+          --with-boot-jdk=${HOME}/bootjdk/${BOOT_JDK_VERSION}
+          --with-jtreg=${HOME}/jtreg
+          --with-gtest=${GITHUB_WORKSPACE}/gtest
+          --with-default-make-target="product-bundles test-bundles"
+          --with-zlib=system
+          --enable-jtreg-failure-handler
+        working-directory: jdk
+
+      - name: Build
+        run: make CONF_NAME=linux-x64
+        working-directory: jdk
+
+      - name: Persist test bundles
+        uses: actions/upload-artifact@v2
+        with:
+          name: transient_jdk-linux-x64${{ matrix.artifact }}_${{ needs.prerequisites.outputs.bundle_id }}
+          path: |
+            jdk/build/linux-x64/bundles/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x64_bin${{ matrix.artifact }}.tar.gz
+            jdk/build/linux-x64/bundles/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x64_bin-tests${{ matrix.artifact }}.tar.gz
+
+  linux_x64_test:
+    name: Linux x64
+    runs-on: "ubuntu-20.04"
+    needs:
+      - prerequisites
+      - linux_x64_build
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - jdk/tier1 part 1
+          - jdk/tier1 part 2
+          - jdk/tier1 part 3
+          - langtools/tier1
+          - hs/tier1 common
+          - hs/tier1 compiler
+          - hs/tier1 gc
+          - hs/tier1 runtime
+          - hs/tier1 serviceability
+        include:
+          - test: jdk/tier1 part 1
+            suites: test/jdk/:tier1_part1
+          - test: jdk/tier1 part 2
+            suites: test/jdk/:tier1_part2
+          - test: jdk/tier1 part 3
+            suites: test/jdk/:tier1_part3
+          - test: langtools/tier1
+            suites: test/langtools/:tier1
+          - test: hs/tier1 common
+            suites: test/hotspot/jtreg/:tier1_common
+            artifact: -debug
+          - test: hs/tier1 compiler
+            suites: test/hotspot/jtreg/:tier1_compiler
+            artifact: -debug
+          - test: hs/tier1 gc
+            suites: test/hotspot/jtreg/:tier1_gc
+            artifact: -debug
+          - test: hs/tier1 runtime
+            suites: test/hotspot/jtreg/:tier1_runtime
+            artifact: -debug
+          - test: hs/tier1 serviceability
+            suites: test/hotspot/jtreg/:tier1_serviceability
+            artifact: -debug
+
+    env:
+      JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).DEFAULT_VERSION_FEATURE }}"
+      BOOT_JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).BOOT_JDK_VERSION }}"
+      BOOT_JDK_FILENAME: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_FILENAME }}"
+      BOOT_JDK_URL: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_URL }}"
+      BOOT_JDK_SHA256: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_SHA256 }}"
+
+    steps:
+      - name: Checkout the source
+        uses: actions/checkout@v2
+
+      - name: Restore boot JDK from cache
+        id: bootjdk
+        uses: actions/cache@v2
+        with:
+          path: ~/bootjdk/${{ env.BOOT_JDK_VERSION }}
+          key: bootjdk-${{ runner.os }}-${{ env.BOOT_JDK_VERSION }}-${{ env.BOOT_JDK_SHA256 }}-v1
+
+      - name: Download boot JDK
+        run: |
+          mkdir -p "${HOME}/bootjdk/${BOOT_JDK_VERSION}"
+          wget -O "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" "${BOOT_JDK_URL}"
+          echo "${BOOT_JDK_SHA256} ${HOME}/bootjdk/${BOOT_JDK_FILENAME}" | sha256sum -c >/dev/null -
+          tar -xf "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" -C "${HOME}/bootjdk/${BOOT_JDK_VERSION}"
+          mv "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"*/* "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"
+        if: steps.bootjdk.outputs.cache-hit != 'true'
+
+      - name: Restore jtreg artifact
+        id: jtreg_restore
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        continue-on-error: true
+
+      - name: Restore jtreg artifact (retry)
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        if: steps.jtreg_restore.outcome == 'failure'
+
+      - name: Restore build artifacts
+        id: build_restore
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jdk-linux-x64${{ matrix.artifact }}_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jdk-linux-x64${{ matrix.artifact }}
+        continue-on-error: true
+
+      - name: Restore build artifacts (retry)
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jdk-linux-x64${{ matrix.artifact }}_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jdk-linux-x64${{ matrix.artifact }}
+        if: steps.build_restore.outcome == 'failure'
+
+      - name: Unpack jdk
+        run: |
+          mkdir -p "${HOME}/jdk-linux-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x64_bin${{ matrix.artifact }}"
+          tar -xf "${HOME}/jdk-linux-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x64_bin${{ matrix.artifact }}.tar.gz" -C "${HOME}/jdk-linux-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x64_bin${{ matrix.artifact }}"
+
+      - name: Unpack tests
+        run: |
+          mkdir -p "${HOME}/jdk-linux-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x64_bin-tests${{ matrix.artifact }}"
+          tar -xf "${HOME}/jdk-linux-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x64_bin-tests${{ matrix.artifact }}.tar.gz" -C "${HOME}/jdk-linux-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x64_bin-tests${{ matrix.artifact }}"
+
+      - name: Find root of jdk image dir
+        run: |
+          imageroot=`find ${HOME}/jdk-linux-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x64_bin${{ matrix.artifact }} -name release -type f`
+          echo "imageroot=`dirname ${imageroot}`" >> $GITHUB_ENV
+
+      - name: Run tests
+        run: >
+          JDK_IMAGE_DIR=${{ env.imageroot }}
+          TEST_IMAGE_DIR=${HOME}/jdk-linux-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x64_bin-tests${{ matrix.artifact }}
+          BOOT_JDK=${HOME}/bootjdk/${BOOT_JDK_VERSION}
+          JT_HOME=${HOME}/jtreg
+          make test-prebuilt
+          CONF_NAME=run-test-prebuilt
+          LOG_CMDLINES=true
+          JTREG_VERBOSE=fail,error,time
+          TEST="${{ matrix.suites }}"
+          TEST_OPTS_JAVA_OPTIONS=
+          JTREG_KEYWORDS="!headful"
+          JTREG="JAVA_OPTIONS=-XX:-CreateCoredumpOnCrash"
+
+      - name: Check that all tests executed successfully
+        if: always()
+        run: >
+          if ! grep --include=test-summary.txt -lqr build/*/test-results -e "TEST SUCCESS" ; then
+            cat build/*/test-results/*/text/newfailures.txt ;
+            exit 1 ;
+          fi
+
+      - name: Create suitable test log artifact name
+        if: always()
+        run: echo "logsuffix=`echo ${{ matrix.test }} | sed -e 's!/!_!'g -e 's! !_!'g`" >> $GITHUB_ENV
+
+      - name: Package test results
+        if: always()
+        working-directory: build/run-test-prebuilt/test-results/
+        run: >
+          zip -r9
+          "$HOME/linux-x64${{ matrix.artifact }}_testresults_${{ env.logsuffix }}.zip"
+          .
+        continue-on-error: true
+
+      - name: Package test support
+        if: always()
+        working-directory: build/run-test-prebuilt/test-support/
+        run: >
+          zip -r9
+          "$HOME/linux-x64${{ matrix.artifact }}_testsupport_${{ env.logsuffix }}.zip"
+          .
+          -i *.jtr
+          -i */hs_err*.log
+          -i */replay*.log
+        continue-on-error: true
+
+      - name: Persist test results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          path: ~/linux-x64${{ matrix.artifact }}_testresults_${{ env.logsuffix }}.zip
+        continue-on-error: true
+
+      - name: Persist test outputs
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          path: ~/linux-x64${{ matrix.artifact }}_testsupport_${{ env.logsuffix }}.zip
+        continue-on-error: true
+
+  linux_additional_build:
+    name: Linux additional
+    runs-on: "ubuntu-20.04"
+    needs:
+      - prerequisites
+      - linux_x64_build
+    if: needs.prerequisites.outputs.should_run != 'false' && needs.prerequisites.outputs.platform_linux_additional != 'false'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor:
+          - hs x64 build only
+          - hs x64 zero build only
+          - hs x64 minimal build only
+          - hs x64 optimized build only
+          - hs aarch64 build only
+          - hs arm build only
+          - hs s390x build only
+          - hs ppc64le build only
+        include:
+          - flavor: hs x64 build only
+            flags: --enable-debug --disable-precompiled-headers
+          - flavor: hs x64 zero build only
+            flags: --enable-debug --disable-precompiled-headers --with-jvm-variants=zero
+          - flavor: hs x64 minimal build only
+            flags: --enable-debug --disable-precompiled-headers --with-jvm-variants=minimal
+          - flavor: hs x64 optimized build only
+            flags: --with-debug-level=optimized --disable-precompiled-headers
+          - flavor: hs aarch64 build only
+            flags: --enable-debug --disable-precompiled-headers
+            debian-arch: arm64
+            gnu-arch: aarch64
+          - flavor: hs arm build only
+            flags: --enable-debug --disable-precompiled-headers
+            debian-arch: armhf
+            gnu-arch: arm
+            gnu-flavor: eabihf
+          - flavor: hs s390x build only
+            flags: --enable-debug --disable-precompiled-headers
+            debian-arch: s390x
+            gnu-arch: s390x
+          - flavor: hs ppc64le build only
+            flags: --enable-debug --disable-precompiled-headers
+            debian-arch: ppc64el
+            gnu-arch: powerpc64le
+
+    env:
+      JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).DEFAULT_VERSION_FEATURE }}"
+      BOOT_JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).BOOT_JDK_VERSION }}"
+      BOOT_JDK_FILENAME: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_FILENAME }}"
+      BOOT_JDK_URL: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_URL }}"
+      BOOT_JDK_SHA256: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_SHA256 }}"
+
+    steps:
+      - name: Checkout the source
+        uses: actions/checkout@v2
+        with:
+          path: jdk
+
+      - name: Restore boot JDK from cache
+        id: bootjdk
+        uses: actions/cache@v2
+        with:
+          path: ~/bootjdk/${{ env.BOOT_JDK_VERSION }}
+          key: bootjdk-${{ runner.os }}-${{ env.BOOT_JDK_VERSION }}-${{ env.BOOT_JDK_SHA256 }}-v1
+
+      - name: Download boot JDK
+        run: |
+          mkdir -p "${HOME}/bootjdk/${BOOT_JDK_VERSION}"
+          wget -O "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" "${BOOT_JDK_URL}"
+          echo "${BOOT_JDK_SHA256} ${HOME}/bootjdk/${BOOT_JDK_FILENAME}" | sha256sum -c >/dev/null -
+          tar -xf "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" -C "${HOME}/bootjdk/${BOOT_JDK_VERSION}"
+          mv "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"*/* "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"
+        if: steps.bootjdk.outputs.cache-hit != 'true'
+
+      - name: Restore build JDK
+        id: build_restore
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jdk-linux-x64_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jdk-linux-x64
+        continue-on-error: true
+
+      - name: Restore build JDK (retry)
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jdk-linux-x64_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jdk-linux-x64
+        if: steps.build_restore.outcome == 'failure'
+
+      - name: Unpack build JDK
+        run: |
+          mkdir -p "${HOME}/jdk-linux-x64/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x64_bin"
+          tar -xf "${HOME}/jdk-linux-x64/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x64_bin.tar.gz" -C "${HOME}/jdk-linux-x64/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x64_bin"
+
+      - name: Find root of build JDK image dir
+        run: |
+          build_jdk_root=`find ${HOME}/jdk-linux-x64/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x64_bin -name release -type f`
+          echo "build_jdk_root=`dirname ${build_jdk_root}`" >> $GITHUB_ENV
+
+      - name: Update apt
+        run: sudo apt-get update
+
+      - name: Install native host dependencies
+        run: |
+          sudo apt-get install gcc-10=10.3.0-1ubuntu1~20.04 g++-10=10.3.0-1ubuntu1~20.04 libxrandr-dev libxtst-dev libcups2-dev libasound2-dev
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+        if: matrix.debian-arch == ''
+
+      - name: Install cross-compilation host dependencies
+        run: sudo apt-get install gcc-10-${{ matrix.gnu-arch }}-linux-gnu${{ matrix.gnu-flavor}}=10.3.0-1ubuntu1~20.04cross1 g++-10-${{ matrix.gnu-arch }}-linux-gnu${{ matrix.gnu-flavor}}=10.3.0-1ubuntu1~20.04cross1
+        if: matrix.debian-arch != ''
+
+      - name: Cache sysroot
+        id: cache-sysroot
+        uses: actions/cache@v2
+        with:
+          path: ~/sysroot-${{ matrix.debian-arch }}/
+          key: sysroot-${{ matrix.debian-arch }}-${{ hashFiles('jdk/.github/workflows/submit.yml') }}
+        if: matrix.debian-arch != ''
+
+      - name: Install sysroot host dependencies
+        run: sudo apt-get install debootstrap qemu-user-static
+        if: matrix.debian-arch != '' && steps.cache-sysroot.outputs.cache-hit != 'true'
+
+      - name: Create sysroot
+        run: >
+          sudo qemu-debootstrap
+          --arch=${{ matrix.debian-arch }}
+          --verbose
+          --include=fakeroot,symlinks,build-essential,libx11-dev,libxext-dev,libxrender-dev,libxrandr-dev,libxtst-dev,libxt-dev,libcups2-dev,libfontconfig1-dev,libasound2-dev,libfreetype6-dev,libpng-dev
+          --resolve-deps
+          buster
+          ~/sysroot-${{ matrix.debian-arch }}
+          http://httpredir.debian.org/debian/
+        if: matrix.debian-arch != '' && steps.cache-sysroot.outputs.cache-hit != 'true'
+
+      - name: Prepare sysroot for caching
+        run: |
+          sudo chroot ~/sysroot-${{ matrix.debian-arch }} symlinks -cr .
+          sudo chown ${USER} -R ~/sysroot-${{ matrix.debian-arch }}
+          rm -rf ~/sysroot-${{ matrix.debian-arch }}/{dev,proc,run,sys}
+        if: matrix.debian-arch != '' && steps.cache-sysroot.outputs.cache-hit != 'true'
+
+      - name: Configure cross compiler
+        run: |
+          echo "CC=${{ matrix.gnu-arch }}-linux-gnu${{ matrix.gnu-flavor}}-gcc-10" >> $GITHUB_ENV
+          echo "CXX=${{ matrix.gnu-arch }}-linux-gnu${{ matrix.gnu-flavor}}-g++-10" >> $GITHUB_ENV
+        if: matrix.debian-arch != ''
+
+      - name: Configure cross specific flags
+        run: >
+          echo "cross_flags=
+          --openjdk-target=${{ matrix.gnu-arch }}-linux-gnu${{ matrix.gnu-flavor}}
+          --with-sysroot=${HOME}/sysroot-${{ matrix.debian-arch }}/
+          " >> $GITHUB_ENV
+        if: matrix.debian-arch != ''
+
+      - name: Configure
+        run: >
+          bash configure
+          --with-conf-name=linux-${{ matrix.gnu-arch }}-hotspot
+          ${{ matrix.flags }}
+          ${{ env.cross_flags }}
+          --with-version-opt=${GITHUB_ACTOR}-${GITHUB_SHA}
+          --with-version-build=0
+          --with-boot-jdk=${HOME}/bootjdk/${BOOT_JDK_VERSION}
+          --with-build-jdk=${{ env.build_jdk_root }}
+          --with-default-make-target="hotspot"
+          --with-zlib=system
+        working-directory: jdk
+
+      - name: Build
+        run: make CONF_NAME=linux-${{ matrix.gnu-arch }}-hotspot
+        working-directory: jdk
+
+  linux_x86_build:
+    name: Linux x86
+    runs-on: "ubuntu-20.04"
+    needs: prerequisites
+    if: needs.prerequisites.outputs.should_run != 'false' && needs.prerequisites.outputs.platform_linux_x86 != 'false'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor:
+          - build release
+          - build debug
+        include:
+          - flavor: build debug
+            flags: --enable-debug
+            artifact: -debug
+
+    # Reduced 32-bit build uses the same boot JDK as 64-bit build
+    env:
+      JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).DEFAULT_VERSION_FEATURE }}"
+      BOOT_JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).BOOT_JDK_VERSION }}"
+      BOOT_JDK_FILENAME: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_FILENAME }}"
+      BOOT_JDK_URL: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_URL }}"
+      BOOT_JDK_SHA256: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_SHA256 }}"
+
+    steps:
+      - name: Checkout the source
+        uses: actions/checkout@v2
+        with:
+          path: jdk
+
+      - name: Restore boot JDK from cache
+        id: bootjdk
+        uses: actions/cache@v2
+        with:
+          path: ~/bootjdk/${{ env.BOOT_JDK_VERSION }}
+          key: bootjdk-${{ runner.os }}-${{ env.BOOT_JDK_VERSION }}-${{ env.BOOT_JDK_SHA256 }}-v1
+
+      - name: Download boot JDK
+        run: |
+          mkdir -p "${HOME}/bootjdk/${BOOT_JDK_VERSION}"
+          wget -O "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" "${BOOT_JDK_URL}"
+          echo "${BOOT_JDK_SHA256} ${HOME}/bootjdk/${BOOT_JDK_FILENAME}" | sha256sum -c >/dev/null -
+          tar -xf "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" -C "${HOME}/bootjdk/${BOOT_JDK_VERSION}"
+          mv "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"*/* "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"
+        if: steps.bootjdk.outputs.cache-hit != 'true'
+
+      - name: Restore jtreg artifact
+        id: jtreg_restore
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        continue-on-error: true
+
+      - name: Restore jtreg artifact (retry)
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        if: steps.jtreg_restore.outcome == 'failure'
+
+      - name: Checkout gtest sources
+        uses: actions/checkout@v2
+        with:
+          repository: "google/googletest"
+          ref: "release-${{ fromJson(needs.prerequisites.outputs.dependencies).GTEST_VERSION }}"
+          path: gtest
+
+      # Roll in the multilib environment and its dependencies.
+      # Some multilib libraries do not have proper inter-dependencies, so we have to
+      # install their dependencies manually. Additionally, upgrading apt solves
+      # the libc6 installation bugs until base image catches up, see JDK-8260460.
+      - name: Install dependencies
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install --only-upgrade apt
+          sudo apt-get install gcc-10-multilib g++-10-multilib libfreetype6-dev:i386 libxrandr-dev:i386 libxtst-dev:i386 libtiff-dev:i386 libcupsimage2-dev:i386 libcups2-dev:i386 libasound2-dev:i386
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+
+      - name: Configure
+        run: >
+          bash configure
+          --with-conf-name=linux-x86
+          --with-target-bits=32
+          ${{ matrix.flags }}
+          --with-version-opt=${GITHUB_ACTOR}-${GITHUB_SHA}
+          --with-version-build=0
+          --with-boot-jdk=${HOME}/bootjdk/${BOOT_JDK_VERSION}
+          --with-jtreg=${HOME}/jtreg
+          --with-gtest=${GITHUB_WORKSPACE}/gtest
+          --with-default-make-target="product-bundles test-bundles"
+          --with-zlib=system
+          --enable-jtreg-failure-handler
+        working-directory: jdk
+
+      - name: Build
+        run: make CONF_NAME=linux-x86
+        working-directory: jdk
+
+      - name: Persist test bundles
+        uses: actions/upload-artifact@v2
+        with:
+          name: transient_jdk-linux-x86${{ matrix.artifact }}_${{ needs.prerequisites.outputs.bundle_id }}
+          path: |
+            jdk/build/linux-x86/bundles/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x86_bin${{ matrix.artifact }}.tar.gz
+            jdk/build/linux-x86/bundles/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x86_bin-tests${{ matrix.artifact }}.tar.gz
+
+  linux_x86_test:
+    name: Linux x86
+    runs-on: "ubuntu-20.04"
+    needs:
+      - prerequisites
+      - linux_x86_build
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - jdk/tier1 part 1
+          - jdk/tier1 part 2
+          - jdk/tier1 part 3
+          - langtools/tier1
+          - hs/tier1 common
+          - hs/tier1 compiler
+          - hs/tier1 gc
+          - hs/tier1 runtime
+          - hs/tier1 serviceability
+        include:
+          - test: jdk/tier1 part 1
+            suites: test/jdk/:tier1_part1
+          - test: jdk/tier1 part 2
+            suites: test/jdk/:tier1_part2
+          - test: jdk/tier1 part 3
+            suites: test/jdk/:tier1_part3
+          - test: langtools/tier1
+            suites: test/langtools/:tier1
+          - test: hs/tier1 common
+            suites: test/hotspot/jtreg/:tier1_common
+            artifact: -debug
+          - test: hs/tier1 compiler
+            suites: test/hotspot/jtreg/:tier1_compiler
+            artifact: -debug
+          - test: hs/tier1 gc
+            suites: test/hotspot/jtreg/:tier1_gc
+            artifact: -debug
+          - test: hs/tier1 runtime
+            suites: test/hotspot/jtreg/:tier1_runtime
+            artifact: -debug
+          - test: hs/tier1 serviceability
+            suites: test/hotspot/jtreg/:tier1_serviceability
+            artifact: -debug
+
+    # Reduced 32-bit build uses the same boot JDK as 64-bit build
+    env:
+      JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).DEFAULT_VERSION_FEATURE }}"
+      BOOT_JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).BOOT_JDK_VERSION }}"
+      BOOT_JDK_FILENAME: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_FILENAME }}"
+      BOOT_JDK_URL: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_URL }}"
+      BOOT_JDK_SHA256: "${{ fromJson(needs.prerequisites.outputs.dependencies).LINUX_X64_BOOT_JDK_SHA256 }}"
+
+    steps:
+      - name: Checkout the source
+        uses: actions/checkout@v2
+
+      - name: Restore boot JDK from cache
+        id: bootjdk
+        uses: actions/cache@v2
+        with:
+          path: ~/bootjdk/${{ env.BOOT_JDK_VERSION }}
+          key: bootjdk-${{ runner.os }}-${{ env.BOOT_JDK_VERSION }}-${{ env.BOOT_JDK_SHA256 }}-v1
+
+      - name: Download boot JDK
+        run: |
+          mkdir -p "${HOME}/bootjdk/${BOOT_JDK_VERSION}"
+          wget -O "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" "${BOOT_JDK_URL}"
+          echo "${BOOT_JDK_SHA256} ${HOME}/bootjdk/${BOOT_JDK_FILENAME}" | sha256sum -c >/dev/null -
+          tar -xf "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" -C "${HOME}/bootjdk/${BOOT_JDK_VERSION}"
+          mv "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"*/* "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"
+        if: steps.bootjdk.outputs.cache-hit != 'true'
+
+      - name: Restore jtreg artifact
+        id: jtreg_restore
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        continue-on-error: true
+
+      - name: Restore jtreg artifact (retry)
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        if: steps.jtreg_restore.outcome == 'failure'
+
+      - name: Restore build artifacts
+        id: build_restore
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jdk-linux-x86${{ matrix.artifact }}_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jdk-linux-x86${{ matrix.artifact }}
+        continue-on-error: true
+
+      - name: Restore build artifacts (retry)
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jdk-linux-x86${{ matrix.artifact }}_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jdk-linux-x86${{ matrix.artifact }}
+        if: steps.build_restore.outcome == 'failure'
+
+      - name: Unpack jdk
+        run: |
+          mkdir -p "${HOME}/jdk-linux-x86${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x86_bin${{ matrix.artifact }}"
+          tar -xf "${HOME}/jdk-linux-x86${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x86_bin${{ matrix.artifact }}.tar.gz" -C "${HOME}/jdk-linux-x86${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x86_bin${{ matrix.artifact }}"
+
+      - name: Unpack tests
+        run: |
+          mkdir -p "${HOME}/jdk-linux-x86${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x86_bin-tests${{ matrix.artifact }}"
+          tar -xf "${HOME}/jdk-linux-x86${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x86_bin-tests${{ matrix.artifact }}.tar.gz" -C "${HOME}/jdk-linux-x86${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x86_bin-tests${{ matrix.artifact }}"
+
+      - name: Find root of jdk image dir
+        run: |
+          imageroot=`find ${HOME}/jdk-linux-x86${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x86_bin${{ matrix.artifact }} -name release -type f`
+          echo "imageroot=`dirname ${imageroot}`" >> $GITHUB_ENV
+
+      - name: Run tests
+        run: >
+          JDK_IMAGE_DIR=${{ env.imageroot }}
+          TEST_IMAGE_DIR=${HOME}/jdk-linux-x86${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_linux-x86_bin-tests${{ matrix.artifact }}
+          BOOT_JDK=${HOME}/bootjdk/${BOOT_JDK_VERSION}
+          JT_HOME=${HOME}/jtreg
+          make test-prebuilt
+          CONF_NAME=run-test-prebuilt
+          LOG_CMDLINES=true
+          JTREG_VERBOSE=fail,error,time
+          TEST="${{ matrix.suites }}"
+          TEST_OPTS_JAVA_OPTIONS=
+          JTREG_KEYWORDS="!headful"
+          JTREG="JAVA_OPTIONS=-XX:-CreateCoredumpOnCrash"
+
+      - name: Check that all tests executed successfully
+        if: always()
+        run: >
+          if ! grep --include=test-summary.txt -lqr build/*/test-results -e "TEST SUCCESS" ; then
+            cat build/*/test-results/*/text/newfailures.txt ;
+            exit 1 ;
+          fi
+
+      - name: Create suitable test log artifact name
+        if: always()
+        run: echo "logsuffix=`echo ${{ matrix.test }} | sed -e 's!/!_!'g -e 's! !_!'g`" >> $GITHUB_ENV
+
+      - name: Package test results
+        if: always()
+        working-directory: build/run-test-prebuilt/test-results/
+        run: >
+          zip -r9
+          "$HOME/linux-x86${{ matrix.artifact }}_testresults_${{ env.logsuffix }}.zip"
+          .
+        continue-on-error: true
+
+      - name: Package test support
+        if: always()
+        working-directory: build/run-test-prebuilt/test-support/
+        run: >
+          zip -r9
+          "$HOME/linux-x86${{ matrix.artifact }}_testsupport_${{ env.logsuffix }}.zip"
+          .
+          -i *.jtr
+          -i */hs_err*.log
+          -i */replay*.log
+        continue-on-error: true
+
+      - name: Persist test results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          path: ~/linux-x86${{ matrix.artifact }}_testresults_${{ env.logsuffix }}.zip
+        continue-on-error: true
+
+      - name: Persist test outputs
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          path: ~/linux-x86${{ matrix.artifact }}_testsupport_${{ env.logsuffix }}.zip
+        continue-on-error: true
+
+  windows_aarch64_build:
+    name: Windows aarch64
+    runs-on: "windows-2019"
+    needs: prerequisites
+    if: needs.prerequisites.outputs.should_run != 'false' && needs.prerequisites.outputs.platform_windows_aarch64 != 'false'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor:
+          - build debug
+        include:
+          - flavor: build debug
+            flags: --enable-debug
+            artifact: -debug
+
+    env:
+      JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).DEFAULT_VERSION_FEATURE }}"
+      BOOT_JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).BOOT_JDK_VERSION }}"
+      BOOT_JDK_FILENAME: "${{ fromJson(needs.prerequisites.outputs.dependencies).WINDOWS_X64_BOOT_JDK_FILENAME }}"
+      BOOT_JDK_URL: "${{ fromJson(needs.prerequisites.outputs.dependencies).WINDOWS_X64_BOOT_JDK_URL }}"
+      BOOT_JDK_SHA256: "${{ fromJson(needs.prerequisites.outputs.dependencies).WINDOWS_X64_BOOT_JDK_SHA256 }}"
+
+    steps:
+      - name: Restore cygwin packages from cache
+        id: cygwin
+        uses: actions/cache@v2
+        with:
+          path: ~/cygwin/packages
+          key: cygwin-packages-${{ runner.os }}-v1
+
+      - name: Install cygwin
+        run: |
+          New-Item -Force -ItemType directory -Path "$HOME\cygwin"
+          & curl -L "https://www.cygwin.com/setup-x86_64.exe" -o "$HOME/cygwin/setup-x86_64.exe"
+          Start-Process -FilePath "$HOME\cygwin\setup-x86_64.exe" -ArgumentList "--quiet-mode --packages autoconf,make,zip,unzip --root $HOME\cygwin\cygwin64 --local-package-dir $HOME\cygwin\packages --site http://mirrors.kernel.org/sourceware/cygwin --no-desktop --no-shortcuts --no-startmenu --no-admin" -Wait -NoNewWindow
+
+      - name: Checkout the source
+        uses: actions/checkout@v2
+        with:
+          path: jdk
+
+      - name: Restore boot JDK from cache
+        id: bootjdk
+        uses: actions/cache@v2
+        with:
+          path: ~/bootjdk/${{ env.BOOT_JDK_VERSION }}
+          key: bootjdk-${{ runner.os }}-${{ env.BOOT_JDK_VERSION }}-${{ env.BOOT_JDK_SHA256 }}-v1
+
+      - name: Download boot JDK
+        run: |
+          mkdir -p "$HOME\bootjdk\$env:BOOT_JDK_VERSION"
+          & curl -L "$env:BOOT_JDK_URL" -o "$HOME/bootjdk/$env:BOOT_JDK_FILENAME"
+          $FileHash = Get-FileHash -Algorithm SHA256 "$HOME/bootjdk/$env:BOOT_JDK_FILENAME"
+          $FileHash.Hash -eq $env:BOOT_JDK_SHA256
+          & tar -xf "$HOME/bootjdk/$env:BOOT_JDK_FILENAME" -C "$HOME/bootjdk/$env:BOOT_JDK_VERSION"
+          Get-ChildItem "$HOME\bootjdk\$env:BOOT_JDK_VERSION\*\*" | Move-Item -Destination "$HOME\bootjdk\$env:BOOT_JDK_VERSION"
+        if: steps.bootjdk.outputs.cache-hit != 'true'
+
+      - name: Ensure a specific version of MSVC is installed
+        run: >
+          Start-Process -FilePath 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe' -Wait -NoNewWindow -ArgumentList
+          'modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise" --quiet
+          --add Microsoft.VisualStudio.Component.VC.14.29.arm64'
+
+      - name: Configure
+        run: >
+          $env:Path = "$HOME\cygwin\cygwin64\bin;$HOME\cygwin\cygwin64\bin;$env:Path" ;
+          $env:Path = $env:Path -split ";" -match "C:\\Windows|PowerShell|cygwin" -join ";" ;
+          $env:BOOT_JDK = cygpath "$HOME/bootjdk/$env:BOOT_JDK_VERSION" ;
+          & bash configure
+          --with-conf-name=windows-aarch64
+          --with-msvc-toolset-version=14.29
+          --openjdk-target=aarch64-unknown-cygwin
+          ${{ matrix.flags }}
+          --with-version-opt="$env:GITHUB_ACTOR-$env:GITHUB_SHA"
+          --with-version-build=0
+          --with-boot-jdk="$env:BOOT_JDK"
+          --with-default-make-target="hotspot"
+        working-directory: jdk
+
+      - name: Build
+        run: |
+          $env:Path = "$HOME\cygwin\cygwin64\bin;$HOME\cygwin\cygwin64\bin;$env:Path" ;
+          $env:Path = $env:Path -split ";" -match "C:\\Windows|PowerShell|cygwin" -join ";" ;
+          & make CONF_NAME=windows-aarch64
+        working-directory: jdk
+
+  windows_x64_build:
+    name: Windows x64
+    runs-on: "windows-2019"
+    needs: prerequisites
+    if: needs.prerequisites.outputs.should_run != 'false' && needs.prerequisites.outputs.platform_windows_x64 != 'false'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor:
+          - build release
+          - build debug
+        include:
+          - flavor: build debug
+            flags: --enable-debug
+            artifact: -debug
+
+    env:
+      JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).DEFAULT_VERSION_FEATURE }}"
+      BOOT_JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).BOOT_JDK_VERSION }}"
+      BOOT_JDK_FILENAME: "${{ fromJson(needs.prerequisites.outputs.dependencies).WINDOWS_X64_BOOT_JDK_FILENAME }}"
+      BOOT_JDK_URL: "${{ fromJson(needs.prerequisites.outputs.dependencies).WINDOWS_X64_BOOT_JDK_URL }}"
+      BOOT_JDK_SHA256: "${{ fromJson(needs.prerequisites.outputs.dependencies).WINDOWS_X64_BOOT_JDK_SHA256 }}"
+
+    steps:
+      - name: Restore cygwin packages from cache
+        id: cygwin
+        uses: actions/cache@v2
+        with:
+          path: ~/cygwin/packages
+          key: cygwin-packages-${{ runner.os }}-v1
+
+      - name: Install cygwin
+        run: |
+          New-Item -Force -ItemType directory -Path "$HOME\cygwin"
+          & curl -L "https://www.cygwin.com/setup-x86_64.exe" -o "$HOME/cygwin/setup-x86_64.exe"
+          Start-Process -FilePath "$HOME\cygwin\setup-x86_64.exe" -ArgumentList "--quiet-mode --packages autoconf,make,zip,unzip --root $HOME\cygwin\cygwin64 --local-package-dir $HOME\cygwin\packages --site http://mirrors.kernel.org/sourceware/cygwin --no-desktop --no-shortcuts --no-startmenu --no-admin" -Wait -NoNewWindow
+
+      - name: Checkout the source
+        uses: actions/checkout@v2
+        with:
+          path: jdk
+
+      - name: Restore boot JDK from cache
+        id: bootjdk
+        uses: actions/cache@v2
+        with:
+          path: ~/bootjdk/${{ env.BOOT_JDK_VERSION }}
+          key: bootjdk-${{ runner.os }}-${{ env.BOOT_JDK_VERSION }}-${{ env.BOOT_JDK_SHA256 }}-v1
+
+      - name: Download boot JDK
+        run: |
+          mkdir -p "$HOME\bootjdk\$env:BOOT_JDK_VERSION"
+          & curl -L "$env:BOOT_JDK_URL" -o "$HOME/bootjdk/$env:BOOT_JDK_FILENAME"
+          $FileHash = Get-FileHash -Algorithm SHA256 "$HOME/bootjdk/$env:BOOT_JDK_FILENAME"
+          $FileHash.Hash -eq $env:BOOT_JDK_SHA256
+          & tar -xf "$HOME/bootjdk/$env:BOOT_JDK_FILENAME" -C "$HOME/bootjdk/$env:BOOT_JDK_VERSION"
+          Get-ChildItem "$HOME\bootjdk\$env:BOOT_JDK_VERSION\*\*" | Move-Item -Destination "$HOME\bootjdk\$env:BOOT_JDK_VERSION"
+        if: steps.bootjdk.outputs.cache-hit != 'true'
+
+      - name: Checkout gtest sources
+        uses: actions/checkout@v2
+        with:
+          repository: "google/googletest"
+          ref: "release-${{ fromJson(needs.prerequisites.outputs.dependencies).GTEST_VERSION }}"
+          path: gtest
+
+      - name: Restore jtreg artifact
+        id: jtreg_restore
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        continue-on-error: true
+
+      - name: Restore jtreg artifact (retry)
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        if: steps.jtreg_restore.outcome == 'failure'
+
+      - name: Ensure a specific version of MSVC is installed
+        run: >
+          Start-Process -FilePath 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe' -Wait -NoNewWindow -ArgumentList
+          'modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise" --quiet
+          --add Microsoft.VisualStudio.Component.VC.14.28.x86.x64'
+
+      - name: Configure
+        run: >
+          $env:Path = "$HOME\cygwin\cygwin64\bin;$HOME\cygwin\cygwin64\bin;$env:Path" ;
+          $env:Path = $env:Path -split ";" -match "C:\\Windows|PowerShell|cygwin" -join ";" ;
+          $env:BOOT_JDK = cygpath "$HOME/bootjdk/$env:BOOT_JDK_VERSION" ;
+          $env:JT_HOME = cygpath "$HOME/jtreg" ;
+          $env:GTEST = cygpath "$env:GITHUB_WORKSPACE/gtest" ;
+          & bash configure
+          --with-conf-name=windows-x64
+          --with-msvc-toolset-version=14.28
+          ${{ matrix.flags }}
+          --with-version-opt="$env:GITHUB_ACTOR-$env:GITHUB_SHA"
+          --with-version-build=0
+          --with-boot-jdk="$env:BOOT_JDK"
+          --with-jtreg="$env:JT_HOME"
+          --with-gtest="$env:GTEST"
+          --with-default-make-target="product-bundles test-bundles"
+          --enable-jtreg-failure-handler
+        working-directory: jdk
+
+      - name: Build
+        run: |
+          $env:Path = "$HOME\cygwin\cygwin64\bin;$HOME\cygwin\cygwin64\bin;$env:Path" ;
+          $env:Path = $env:Path -split ";" -match "C:\\Windows|PowerShell|cygwin" -join ";" ;
+          & make CONF_NAME=windows-x64
+        working-directory: jdk
+
+      - name: Persist test bundles
+        uses: actions/upload-artifact@v2
+        with:
+          name: transient_jdk-windows-x64${{ matrix.artifact }}_${{ needs.prerequisites.outputs.bundle_id }}
+          path: |
+            jdk/build/windows-x64/bundles/jdk-${{ env.JDK_VERSION }}-internal+0_windows-x64_bin${{ matrix.artifact }}.zip
+            jdk/build/windows-x64/bundles/jdk-${{ env.JDK_VERSION }}-internal+0_windows-x64_bin-tests${{ matrix.artifact }}.tar.gz
+            jdk/build/windows-x64/bundles/jdk-${{ env.JDK_VERSION }}-internal+0_windows-x64_bin${{ matrix.artifact }}-symbols.tar.gz
+
+  windows_x64_test:
+    name: Windows x64
+    runs-on: "windows-2019"
+    needs:
+      - prerequisites
+      - windows_x64_build
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - jdk/tier1 part 1
+          - jdk/tier1 part 2
+          - jdk/tier1 part 3
+          - langtools/tier1
+          - hs/tier1 common
+          - hs/tier1 compiler
+          - hs/tier1 gc
+          - hs/tier1 runtime
+          - hs/tier1 serviceability
+        include:
+          - test: jdk/tier1 part 1
+            suites: test/jdk/:tier1_part1
+          - test: jdk/tier1 part 2
+            suites: test/jdk/:tier1_part2
+          - test: jdk/tier1 part 3
+            suites: test/jdk/:tier1_part3
+          - test: langtools/tier1
+            suites: test/langtools/:tier1
+          - test: hs/tier1 common
+            suites: test/hotspot/jtreg/:tier1_common
+            artifact: -debug
+          - test: hs/tier1 compiler
+            suites: test/hotspot/jtreg/:tier1_compiler
+            artifact: -debug
+          - test: hs/tier1 gc
+            suites: test/hotspot/jtreg/:tier1_gc
+            artifact: -debug
+          - test: hs/tier1 runtime
+            suites: test/hotspot/jtreg/:tier1_runtime
+            artifact: -debug
+          - test: hs/tier1 serviceability
+            suites: test/hotspot/jtreg/:tier1_serviceability
+            artifact: -debug
+
+    env:
+      JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).DEFAULT_VERSION_FEATURE }}"
+      BOOT_JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).BOOT_JDK_VERSION }}"
+      BOOT_JDK_FILENAME: "${{ fromJson(needs.prerequisites.outputs.dependencies).WINDOWS_X64_BOOT_JDK_FILENAME }}"
+      BOOT_JDK_URL: "${{ fromJson(needs.prerequisites.outputs.dependencies).WINDOWS_X64_BOOT_JDK_URL }}"
+      BOOT_JDK_SHA256: "${{ fromJson(needs.prerequisites.outputs.dependencies).WINDOWS_X64_BOOT_JDK_SHA256 }}"
+
+    steps:
+      - name: Checkout the source
+        uses: actions/checkout@v2
+
+      - name: Restore boot JDK from cache
+        id: bootjdk
+        uses: actions/cache@v2
+        with:
+          path: ~/bootjdk/${{ env.BOOT_JDK_VERSION }}
+          key: bootjdk-${{ runner.os }}-${{ env.BOOT_JDK_VERSION }}-${{ env.BOOT_JDK_SHA256 }}-v1
+
+      - name: Download boot JDK
+        run: |
+          mkdir -p "$HOME\bootjdk\$env:BOOT_JDK_VERSION"
+          & curl -L "$env:BOOT_JDK_URL" -o "$HOME/bootjdk/$env:BOOT_JDK_FILENAME"
+          $FileHash = Get-FileHash -Algorithm SHA256 "$HOME/bootjdk/$env:BOOT_JDK_FILENAME"
+          $FileHash.Hash -eq $env:BOOT_JDK_SHA256
+          & tar -xf "$HOME/bootjdk/$env:BOOT_JDK_FILENAME" -C "$HOME/bootjdk/$env:BOOT_JDK_VERSION"
+          Get-ChildItem "$HOME\bootjdk\$env:BOOT_JDK_VERSION\*\*" | Move-Item -Destination "$HOME\bootjdk\$env:BOOT_JDK_VERSION"
+        if: steps.bootjdk.outputs.cache-hit != 'true'
+
+      - name: Restore cygwin packages from cache
+        id: cygwin
+        uses: actions/cache@v2
+        with:
+          path: ~/cygwin/packages
+          key: cygwin-packages-${{ runner.os }}-v1
+
+      - name: Install cygwin
+        run: |
+          New-Item -Force -ItemType directory -Path "$HOME\cygwin"
+          & curl -L "https://www.cygwin.com/setup-x86_64.exe" -o "$HOME/cygwin/setup-x86_64.exe"
+          Start-Process -FilePath "$HOME\cygwin\setup-x86_64.exe" -ArgumentList "--quiet-mode --packages autoconf,make,zip,unzip --root $HOME\cygwin\cygwin64 --local-package-dir $HOME\cygwin\packages --site http://mirrors.kernel.org/sourceware/cygwin --no-desktop --no-shortcuts --no-startmenu --no-admin" -Wait -NoNewWindow
+
+      - name: Restore jtreg artifact
+        id: jtreg_restore
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        continue-on-error: true
+
+      - name: Restore jtreg artifact (retry)
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        if: steps.jtreg_restore.outcome == 'failure'
+
+      - name: Restore build artifacts
+        id: build_restore
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jdk-windows-x64${{ matrix.artifact }}_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jdk-windows-x64${{ matrix.artifact }}
+        continue-on-error: true
+
+      - name: Restore build artifacts (retry)
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jdk-windows-x64${{ matrix.artifact }}_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jdk-windows-x64${{ matrix.artifact }}
+        if: steps.build_restore.outcome == 'failure'
+
+      - name: Unpack jdk
+        run: |
+          mkdir -p "${HOME}/jdk-windows-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_windows-x64_bin${{ matrix.artifact }}"
+          tar -xf "${HOME}/jdk-windows-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_windows-x64_bin${{ matrix.artifact }}.zip" -C "${HOME}/jdk-windows-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_windows-x64_bin${{ matrix.artifact }}"
+
+      - name: Unpack symbols
+        run: |
+          mkdir -p "${HOME}/jdk-windows-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_windows-x64_bin${{ matrix.artifact }}-symbols"
+          tar -xf "${HOME}/jdk-windows-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_windows-x64_bin${{ matrix.artifact }}-symbols.tar.gz" -C "${HOME}/jdk-windows-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_windows-x64_bin${{ matrix.artifact }}-symbols"
+
+      - name: Unpack tests
+        run: |
+          mkdir -p "${HOME}/jdk-windows-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_windows-x64_bin-tests${{ matrix.artifact }}"
+          tar -xf "${HOME}/jdk-windows-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_windows-x64_bin-tests${{ matrix.artifact }}.tar.gz" -C "${HOME}/jdk-windows-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_windows-x64_bin-tests${{ matrix.artifact }}"
+
+      - name: Find root of jdk image dir
+        run: echo ("imageroot=" + (Get-ChildItem -Path $HOME/jdk-windows-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_windows-x64_bin${{ matrix.artifact }} -Filter release -Recurse -ErrorAction SilentlyContinue -Force).DirectoryName) | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+
+      - name: Run tests
+        run: >
+          $env:Path = "$HOME\cygwin\cygwin64\bin;$HOME\cygwin\cygwin64\bin;$env:Path" ;
+          $env:Path = $env:Path -split ";" -match "C:\\Windows|PowerShell|cygwin" -join ";" ;
+          $env:JDK_IMAGE_DIR = cygpath "${{ env.imageroot }}" ;
+          $env:SYMBOLS_IMAGE_DIR = cygpath "${{ env.imageroot }}" ;
+          $env:TEST_IMAGE_DIR = cygpath "$HOME/jdk-windows-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_windows-x64_bin-tests${{ matrix.artifact }}" ;
+          $env:BOOT_JDK = cygpath "$HOME/bootjdk/$env:BOOT_JDK_VERSION" ;
+          $env:JT_HOME = cygpath "$HOME/jtreg" ;
+          & make test-prebuilt
+          CONF_NAME=run-test-prebuilt
+          LOG_CMDLINES=true
+          JTREG_VERBOSE=fail,error,time
+          TEST=${{ matrix.suites }}
+          TEST_OPTS_JAVA_OPTIONS=
+          JTREG_KEYWORDS="!headful"
+          JTREG="JAVA_OPTIONS=-XX:-CreateCoredumpOnCrash"
+
+      - name: Check that all tests executed successfully
+        if: always()
+        run: >
+          if ((Get-ChildItem -Path build\*\test-results\test-summary.txt -Recurse | Select-String -Pattern "TEST SUCCESS" ).Count -eq 0) {
+            Get-Content -Path build\*\test-results\*\*\newfailures.txt ;
+            exit 1
+          }
+
+      - name: Create suitable test log artifact name
+        if: always()
+        run: echo ("logsuffix=" + ("${{ matrix.test }}" -replace "/", "_" -replace " ", "_")) | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+
+      - name: Package test results
+        if: always()
+        working-directory: build/run-test-prebuilt/test-results/
+        run: >
+          $env:Path = "$HOME\cygwin\cygwin64\bin;$env:Path" ;
+          zip -r9
+          "$HOME/windows-x64${{ matrix.artifact }}_testresults_${{ env.logsuffix }}.zip"
+          .
+        continue-on-error: true
+
+      - name: Package test support
+        if: always()
+        working-directory: build/run-test-prebuilt/test-support/
+        run: >
+          $env:Path = "$HOME\cygwin\cygwin64\bin;$env:Path" ;
+          zip -r9
+          "$HOME/windows-x64${{ matrix.artifact }}_testsupport_${{ env.logsuffix }}.zip"
+          .
+          -i *.jtr
+          -i */hs_err*.log
+          -i */replay*.log
+        continue-on-error: true
+
+      - name: Persist test results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          path: ~/windows-x64${{ matrix.artifact }}_testresults_${{ env.logsuffix }}.zip
+        continue-on-error: true
+
+      - name: Persist test outputs
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          path: ~/windows-x64${{ matrix.artifact }}_testsupport_${{ env.logsuffix }}.zip
+        continue-on-error: true
+
+  macos_x64_build:
+    name: macOS x64
+    runs-on: "macos-10.15"
+    needs: prerequisites
+    if: needs.prerequisites.outputs.should_run != 'false' && needs.prerequisites.outputs.platform_macos_x64 != 'false'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor:
+          - build release
+          - build debug
+        include:
+          - flavor: build release
+          - flavor: build debug
+            flags: --enable-debug
+            artifact: -debug
+
+    env:
+      JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).DEFAULT_VERSION_FEATURE }}"
+      BOOT_JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).BOOT_JDK_VERSION }}"
+      BOOT_JDK_FILENAME: "${{ fromJson(needs.prerequisites.outputs.dependencies).MACOS_X64_BOOT_JDK_FILENAME }}"
+      BOOT_JDK_URL: "${{ fromJson(needs.prerequisites.outputs.dependencies).MACOS_X64_BOOT_JDK_URL }}"
+      BOOT_JDK_SHA256: "${{ fromJson(needs.prerequisites.outputs.dependencies).MACOS_X64_BOOT_JDK_SHA256 }}"
+
+    steps:
+      - name: Checkout the source
+        uses: actions/checkout@v2
+        with:
+          path: jdk
+
+      - name: Restore boot JDK from cache
+        id: bootjdk
+        uses: actions/cache@v2
+        with:
+          path: ~/bootjdk/${{ env.BOOT_JDK_VERSION }}
+          key: bootjdk-${{ runner.os }}-${{ env.BOOT_JDK_VERSION }}-${{ env.BOOT_JDK_SHA256 }}-v1
+
+      - name: Download boot JDK
+        run: |
+          mkdir -p ${HOME}/bootjdk/${BOOT_JDK_VERSION} || true
+          wget -O "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" "${BOOT_JDK_URL}"
+          echo "${BOOT_JDK_SHA256}  ${HOME}/bootjdk/${BOOT_JDK_FILENAME}" | shasum -a 256 -c >/dev/null -
+          tar -xf "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" -C "${HOME}/bootjdk/${BOOT_JDK_VERSION}"
+          mv "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"*/* "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"
+        if: steps.bootjdk.outputs.cache-hit != 'true'
+
+      - name: Restore jtreg artifact
+        id: jtreg_restore
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        continue-on-error: true
+
+      - name: Restore jtreg artifact (retry)
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        if: steps.jtreg_restore.outcome == 'failure'
+
+      - name: Checkout gtest sources
+        uses: actions/checkout@v2
+        with:
+          repository: "google/googletest"
+          ref: "release-${{ fromJson(needs.prerequisites.outputs.dependencies).GTEST_VERSION }}"
+          path: gtest
+
+      - name: Install dependencies
+        run: brew install make
+
+      - name: Select Xcode version
+        run: sudo xcode-select --switch /Applications/Xcode_11.3.1.app/Contents/Developer
+
+      - name: Configure
+        run: >
+          bash configure
+          --with-conf-name=macos-x64
+          ${{ matrix.flags }}
+          --with-version-opt=${GITHUB_ACTOR}-${GITHUB_SHA}
+          --with-version-build=0
+          --with-boot-jdk=${HOME}/bootjdk/${BOOT_JDK_VERSION}/Contents/Home
+          --with-jtreg=${HOME}/jtreg
+          --with-gtest=${GITHUB_WORKSPACE}/gtest
+          --with-default-make-target="product-bundles test-bundles"
+          --with-zlib=system
+          --enable-jtreg-failure-handler
+        working-directory: jdk
+
+      - name: Build
+        run: make CONF_NAME=macos-x64
+        working-directory: jdk
+
+      - name: Persist test bundles
+        uses: actions/upload-artifact@v2
+        with:
+          name: transient_jdk-macos-x64${{ matrix.artifact }}_${{ needs.prerequisites.outputs.bundle_id }}
+          path: |
+            jdk/build/macos-x64/bundles/jdk-${{ env.JDK_VERSION }}-internal+0_macos-x64_bin${{ matrix.artifact }}.tar.gz
+            jdk/build/macos-x64/bundles/jdk-${{ env.JDK_VERSION }}-internal+0_macos-x64_bin-tests${{ matrix.artifact }}.tar.gz
+
+  macos_aarch64_build:
+    name: macOS aarch64
+    runs-on: "macos-10.15"
+    needs: prerequisites
+    if: needs.prerequisites.outputs.should_run != 'false' && needs.prerequisites.outputs.platform_macos_aarch64 != 'false'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor:
+          - build release
+          - build debug
+        include:
+          - flavor: build release
+          - flavor: build debug
+            flags: --enable-debug
+            artifact: -debug
+
+    env:
+      JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).DEFAULT_VERSION_FEATURE }}"
+      BOOT_JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).BOOT_JDK_VERSION }}"
+      BOOT_JDK_FILENAME: "${{ fromJson(needs.prerequisites.outputs.dependencies).MACOS_X64_BOOT_JDK_FILENAME }}"
+      BOOT_JDK_URL: "${{ fromJson(needs.prerequisites.outputs.dependencies).MACOS_X64_BOOT_JDK_URL }}"
+      BOOT_JDK_SHA256: "${{ fromJson(needs.prerequisites.outputs.dependencies).MACOS_X64_BOOT_JDK_SHA256 }}"
+
+    steps:
+      - name: Checkout the source
+        uses: actions/checkout@v2
+        with:
+          path: jdk
+
+      - name: Restore boot JDK from cache
+        id: bootjdk
+        uses: actions/cache@v2
+        with:
+          path: ~/bootjdk/${{ env.BOOT_JDK_VERSION }}
+          key: bootjdk-${{ runner.os }}-${{ env.BOOT_JDK_VERSION }}-${{ env.BOOT_JDK_SHA256 }}-v1
+
+      - name: Download boot JDK
+        run: |
+          mkdir -p ${HOME}/bootjdk/${BOOT_JDK_VERSION} || true
+          wget -O "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" "${BOOT_JDK_URL}"
+          echo "${BOOT_JDK_SHA256}  ${HOME}/bootjdk/${BOOT_JDK_FILENAME}" | shasum -a 256 -c >/dev/null -
+          tar -xf "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" -C "${HOME}/bootjdk/${BOOT_JDK_VERSION}"
+          mv "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"*/* "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"
+        if: steps.bootjdk.outputs.cache-hit != 'true'
+
+      - name: Restore jtreg artifact
+        id: jtreg_restore
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        continue-on-error: true
+
+      - name: Restore jtreg artifact (retry)
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        if: steps.jtreg_restore.outcome == 'failure'
+
+      - name: Checkout gtest sources
+        uses: actions/checkout@v2
+        with:
+          repository: "google/googletest"
+          ref: "release-${{ fromJson(needs.prerequisites.outputs.dependencies).GTEST_VERSION }}"
+          path: gtest
+
+      - name: Install dependencies
+        run: brew install make
+
+      - name: Select Xcode version
+        run: sudo xcode-select --switch /Applications/Xcode_12.4.app/Contents/Developer
+
+      - name: Configure
+        run: >
+          bash configure
+          --with-conf-name=macos-aarch64
+          --openjdk-target=aarch64-apple-darwin
+          ${{ matrix.flags }}
+          --with-version-opt=${GITHUB_ACTOR}-${GITHUB_SHA}
+          --with-version-build=0
+          --with-boot-jdk=${HOME}/bootjdk/${BOOT_JDK_VERSION}/Contents/Home
+          --with-jtreg=${HOME}/jtreg
+          --with-gtest=${GITHUB_WORKSPACE}/gtest
+          --with-default-make-target="product-bundles test-bundles"
+          --with-zlib=system
+          --enable-jtreg-failure-handler
+        working-directory: jdk
+
+      - name: Build
+        run: make CONF_NAME=macos-aarch64
+        working-directory: jdk
+
+      - name: Persist test bundles
+        uses: actions/upload-artifact@v2
+        with:
+          name: transient_jdk-macos-aarch64${{ matrix.artifact }}_${{ needs.prerequisites.outputs.bundle_id }}
+          path: |
+            jdk/build/macos-aarch64/bundles/jdk-${{ env.JDK_VERSION }}-internal+0_macos-aarch64_bin${{ matrix.artifact }}.tar.gz
+            jdk/build/macos-aarch64/bundles/jdk-${{ env.JDK_VERSION }}-internal+0_macos-aarch64_bin-tests${{ matrix.artifact }}.tar.gz
+
+
+  macos_x64_test:
+    name: macOS x64
+    runs-on: "macos-10.15"
+    needs:
+      - prerequisites
+      - macos_x64_build
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - jdk/tier1 part 1
+          - jdk/tier1 part 2
+          - jdk/tier1 part 3
+          - langtools/tier1
+          - hs/tier1 common
+          - hs/tier1 compiler
+          - hs/tier1 gc
+          - hs/tier1 runtime
+          - hs/tier1 serviceability
+        include:
+          - test: jdk/tier1 part 1
+            suites: test/jdk/:tier1_part1
+          - test: jdk/tier1 part 2
+            suites: test/jdk/:tier1_part2
+          - test: jdk/tier1 part 3
+            suites: test/jdk/:tier1_part3
+          - test: langtools/tier1
+            suites: test/langtools/:tier1
+          - test: hs/tier1 common
+            suites: test/hotspot/jtreg/:tier1_common
+            artifact: -debug
+          - test: hs/tier1 compiler
+            suites: test/hotspot/jtreg/:tier1_compiler
+            artifact: -debug
+          - test: hs/tier1 gc
+            suites: test/hotspot/jtreg/:tier1_gc
+            artifact: -debug
+          - test: hs/tier1 runtime
+            suites: test/hotspot/jtreg/:tier1_runtime
+            artifact: -debug
+          - test: hs/tier1 serviceability
+            suites: test/hotspot/jtreg/:tier1_serviceability
+            artifact: -debug
+
+    env:
+      JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).DEFAULT_VERSION_FEATURE }}"
+      BOOT_JDK_VERSION: "${{ fromJson(needs.prerequisites.outputs.dependencies).BOOT_JDK_VERSION }}"
+      BOOT_JDK_FILENAME: "${{ fromJson(needs.prerequisites.outputs.dependencies).MACOS_X64_BOOT_JDK_FILENAME }}"
+      BOOT_JDK_URL: "${{ fromJson(needs.prerequisites.outputs.dependencies).MACOS_X64_BOOT_JDK_URL }}"
+      BOOT_JDK_SHA256: "${{ fromJson(needs.prerequisites.outputs.dependencies).MACOS_X64_BOOT_JDK_SHA256 }}"
+
+    steps:
+      - name: Checkout the source
+        uses: actions/checkout@v2
+
+      - name: Restore boot JDK from cache
+        id: bootjdk
+        uses: actions/cache@v2
+        with:
+          path: ~/bootjdk/${{ env.BOOT_JDK_VERSION }}
+          key: bootjdk-${{ runner.os }}-${{ env.BOOT_JDK_VERSION }}-${{ env.BOOT_JDK_SHA256 }}-v1
+
+      - name: Download boot JDK
+        run: |
+          mkdir -p ${HOME}/bootjdk/${BOOT_JDK_VERSION} || true
+          wget -O "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" "${BOOT_JDK_URL}"
+          echo "${BOOT_JDK_SHA256}  ${HOME}/bootjdk/${BOOT_JDK_FILENAME}" | shasum -a 256 -c >/dev/null -
+          tar -xf "${HOME}/bootjdk/${BOOT_JDK_FILENAME}" -C "${HOME}/bootjdk/${BOOT_JDK_VERSION}"
+          mv "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"*/* "${HOME}/bootjdk/${BOOT_JDK_VERSION}/"
+        if: steps.bootjdk.outputs.cache-hit != 'true'
+
+      - name: Restore jtreg artifact
+        id: jtreg_restore
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        continue-on-error: true
+
+      - name: Restore jtreg artifact (retry)
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jtreg_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jtreg/
+        if: steps.jtreg_restore.outcome == 'failure'
+
+      - name: Restore build artifacts
+        id: build_restore
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jdk-macos-x64${{ matrix.artifact }}_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jdk-macos-x64${{ matrix.artifact }}
+        continue-on-error: true
+
+      - name: Restore build artifacts (retry)
+        uses: actions/download-artifact@v2
+        with:
+          name: transient_jdk-macos-x64${{ matrix.artifact }}_${{ needs.prerequisites.outputs.bundle_id }}
+          path: ~/jdk-macos-x64${{ matrix.artifact }}
+        if: steps.build_restore.outcome == 'failure'
+
+      - name: Unpack jdk
+        run: |
+          mkdir -p "${HOME}/jdk-macos-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_macos-x64_bin${{ matrix.artifact }}"
+          tar -xf "${HOME}/jdk-macos-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_macos-x64_bin${{ matrix.artifact }}.tar.gz" -C "${HOME}/jdk-macos-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_macos-x64_bin${{ matrix.artifact }}"
+
+      - name: Unpack tests
+        run: |
+          mkdir -p "${HOME}/jdk-macos-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_macos-x64_bin-tests${{ matrix.artifact }}"
+          tar -xf "${HOME}/jdk-macos-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_macos-x64_bin-tests${{ matrix.artifact }}.tar.gz" -C "${HOME}/jdk-macos-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_macos-x64_bin-tests${{ matrix.artifact }}"
+
+      - name: Install dependencies
+        run: brew install make
+
+      - name: Select Xcode version
+        run: sudo xcode-select --switch /Applications/Xcode_11.3.1.app/Contents/Developer
+
+      - name: Find root of jdk image dir
+        run: |
+          imageroot=`find ${HOME}/jdk-macos-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_macos-x64_bin${{ matrix.artifact }} -name release -type f`
+          echo "imageroot=`dirname ${imageroot}`" >> $GITHUB_ENV
+
+      - name: Run tests
+        run: >
+          JDK_IMAGE_DIR=${{ env.imageroot }}
+          TEST_IMAGE_DIR=${HOME}/jdk-macos-x64${{ matrix.artifact }}/jdk-${{ env.JDK_VERSION }}-internal+0_macos-x64_bin-tests${{ matrix.artifact }}
+          BOOT_JDK=${HOME}/bootjdk/${BOOT_JDK_VERSION}/Contents/Home
+          JT_HOME=${HOME}/jtreg
+          gmake test-prebuilt
+          CONF_NAME=run-test-prebuilt
+          LOG_CMDLINES=true
+          JTREG_VERBOSE=fail,error,time
+          TEST=${{ matrix.suites }}
+          TEST_OPTS_JAVA_OPTIONS=
+          JTREG_KEYWORDS="!headful"
+          JTREG="JAVA_OPTIONS=-XX:-CreateCoredumpOnCrash"
+
+      - name: Check that all tests executed successfully
+        if: always()
+        run: >
+          if ! grep --include=test-summary.txt -lqr build/*/test-results -e "TEST SUCCESS" ; then
+            cat build/*/test-results/*/text/newfailures.txt ;
+            exit 1 ;
+          fi
+
+      - name: Create suitable test log artifact name
+        if: always()
+        run: echo "logsuffix=`echo ${{ matrix.test }} | sed -e 's!/!_!'g -e 's! !_!'g`" >> $GITHUB_ENV
+
+      - name: Package test results
+        if: always()
+        working-directory: build/run-test-prebuilt/test-results/
+        run: >
+          zip -r9
+          "$HOME/macos-x64${{ matrix.artifact }}_testresults_${{ env.logsuffix }}.zip"
+          .
+        continue-on-error: true
+
+      - name: Package test support
+        if: always()
+        working-directory: build/run-test-prebuilt/test-support/
+        run: >
+          zip -r9
+          "$HOME/macos-x64${{ matrix.artifact }}_testsupport_${{ env.logsuffix }}.zip"
+          .
+          -i *.jtr
+          -i */hs_err*.log
+          -i */replay*.log
+        continue-on-error: true
+
+      - name: Persist test results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          path: ~/macos-x64${{ matrix.artifact }}_testresults_${{ env.logsuffix }}.zip
+        continue-on-error: true
+
+      - name: Persist test outputs
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          path: ~/macos-x64${{ matrix.artifact }}_testsupport_${{ env.logsuffix }}.zip
+        continue-on-error: true
+
+  artifacts:
+    name: Post-process artifacts
+    runs-on: "ubuntu-20.04"
+    if: always()
+    continue-on-error: true
+    needs:
+      - prerequisites
+      - linux_additional_build
+      - windows_aarch64_build
+      - linux_x64_test
+      - linux_x86_test
+      - windows_x64_test
+      - macos_x64_test
+      - macos_aarch64_build
+
+    steps:
+      - name: Determine current artifacts endpoint
+        id: actions_runtime
+        uses: actions/github-script@v3
+        with:
+          script: "return { url: process.env['ACTIONS_RUNTIME_URL'], token: process.env['ACTIONS_RUNTIME_TOKEN'] }"
+
+      - name: Display current artifacts
+        run: >
+          curl -s -H 'Accept: application/json;api-version=6.0-preview'
+          -H 'Authorization: Bearer ${{ fromJson(steps.actions_runtime.outputs.result).token }}'
+          '${{ fromJson(steps.actions_runtime.outputs.result).url }}_apis/pipelines/workflows/${{ github.run_id }}/artifacts?api-version=6.0-preview'
+
+      - name: Delete transient artifacts
+        run: >
+          for url in `
+          curl -s -H 'Accept: application/json;api-version=6.0-preview'
+          -H 'Authorization: Bearer ${{ fromJson(steps.actions_runtime.outputs.result).token }}'
+          '${{ fromJson(steps.actions_runtime.outputs.result).url }}_apis/pipelines/workflows/${{ github.run_id }}/artifacts?api-version=6.0-preview' |
+          jq -r -c '.value | map(select(.name|startswith("transient_"))) | .[].url'`; do
+          curl -s -H 'Accept: application/json;api-version=6.0-preview'
+          -H 'Authorization: Bearer ${{ fromJson(steps.actions_runtime.outputs.result).token }}'
+          -X DELETE "${url}";
+          done
+
+      - name: Fetch remaining artifacts (test results)
+        uses: actions/download-artifact@v2
+        with:
+          path: test-results
+
+      - name: Delete remaining artifacts
+        run: >
+          for url in `
+          curl -s -H 'Accept: application/json;api-version=6.0-preview'
+          -H 'Authorization: Bearer ${{ fromJson(steps.actions_runtime.outputs.result).token }}'
+          '${{ fromJson(steps.actions_runtime.outputs.result).url }}_apis/pipelines/workflows/${{ github.run_id }}/artifacts?api-version=6.0-preview' |
+          jq -r -c '.value | .[].url'`; do
+          curl -s -H 'Accept: application/json;api-version=6.0-preview'
+          -H 'Authorization: Bearer ${{ fromJson(steps.actions_runtime.outputs.result).token }}'
+          -X DELETE "${url}";
+          done
+
+      - name: Upload a combined test results artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-results_${{ needs.prerequisites.outputs.bundle_id }}
+          path: test-results

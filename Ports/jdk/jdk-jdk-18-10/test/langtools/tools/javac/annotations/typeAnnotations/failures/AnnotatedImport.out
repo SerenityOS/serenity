@@ -1,0 +1,7 @@
+AnnotatedImport.java:10:13: compiler.err.expected: token.identifier
+AnnotatedImport.java:10:16: compiler.err.expected4: class, interface, enum, record
+AnnotatedImport.java:11:7: compiler.err.expected: token.identifier
+AnnotatedImport.java:11:11: compiler.err.expected4: class, interface, enum, record
+AnnotatedImport.java:12:18: compiler.err.expected: token.identifier
+AnnotatedImport.java:12:21: compiler.err.expected4: class, interface, enum, record
+6 errors

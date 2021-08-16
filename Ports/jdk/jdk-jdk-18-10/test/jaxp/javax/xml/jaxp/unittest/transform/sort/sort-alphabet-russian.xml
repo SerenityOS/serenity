@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <!--
+   * Licensed to the Apache Software Foundation (ASF) under one
+   * or more contributor license agreements. See the NOTICE file
+   * distributed with this work for additional information
+   * regarding copyright ownership. The ASF licenses this file
+   * to you under the Apache License, Version 2.0 (the  "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *     http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+  -->
+<alphabet language="ru">
+  <character>А</character>
+  <character>Б</character>
+  <character>В</character>
+  <character>Г</character>
+  <character>Д</character>
+  <character>Е</character>
+  <character>Ё</character>
+  <character>Ж</character>
+  <character>З</character>
+  <character>Й</character>
+  <character>П</character>
+  <character>Я</character>
+  <character>К</character>
+  <character>Л</character>
+  <character>С</character>
+  <character>М</character>
+  <character>Н</character>
+  <character>О</character>
+  <character>Р</character>
+  <character>И</character>
+  <character>Т</character>
+  <character>Ф</character>
+  <character>Х</character>
+  <character>Ц</character>
+  <character>У</character>
+  <character>Ш</character>
+  <character>Щ</character>
+  <character>Ъ</character>
+  <character>Ы</character>
+  <character>Ч</character>
+  <character>Ь</character>
+  <character>Э</character>
+  <character>Ю</character>
+</alphabet>

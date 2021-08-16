@@ -1,0 +1,1 @@
+-Dshared.property=othervalue -XX:MinHeapFreeRatio=13 -Doptfile_1=option_file_1 -Xint -XX:SurvivorRatio=16 -Xminf0.22 -Dshared.property=vmoptfile -XX:+PrintVMOptions

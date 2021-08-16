@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="../.." name="0">
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>../../Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject|build)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>../..</Elem>
+  </sourceRootList>
+  <projectmakefile>../../Makefile</projectmakefile>
+  <confs>
+    <conf name="Mac_64" type="0">
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>../..</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Makefile images</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+        </makeTool>
+        <preBuild>
+          <preBuildCommandWorkingDir>../..</preBuildCommandWorkingDir>
+          <preBuildCommand>sh configure --with-debug-level=slowdebug</preBuildCommand>
+        </preBuild>
+      </makefileType>
+    </conf>
+    <conf name="Linux_64" type="0">
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>../..</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Makefile images</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+        </makeTool>
+        <preBuild>
+          <preBuildCommandWorkingDir>../..</preBuildCommandWorkingDir>
+          <preBuildCommand>sh configure --with-debug-level=slowdebug</preBuildCommand>
+        </preBuild>
+      </makefileType>
+    </conf>
+    <conf name="Windws64" type="0">
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>../../../output</buildCommandWorkingDir>
+          <buildCommand>make images</buildCommand>
+          <cleanCommand>make clean</cleanCommand>
+          <executablePath></executablePath>
+        </makeTool>
+        <preBuild>
+          <preBuildCommandWorkingDir>../../../output</preBuildCommandWorkingDir>
+          <preBuildCommand></preBuildCommand>
+          <preBuildFirst>true</preBuildFirst>
+        </preBuild>
+      </makefileType>
+    </conf>
+  </confs>
+</configurationDescriptor>

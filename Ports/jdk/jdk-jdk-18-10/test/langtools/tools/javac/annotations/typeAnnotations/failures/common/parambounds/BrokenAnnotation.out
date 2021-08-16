@@ -1,0 +1,5 @@
+BrokenAnnotation.java:16:6: compiler.err.cant.resolve.location: kindname.class, Target, , , (compiler.misc.location: kindname.class, BrokenAnnotation<T>, null)
+BrokenAnnotation.java:16:14: compiler.err.cant.resolve.location: kindname.variable, ElementType, , , (compiler.misc.location: kindname.class, BrokenAnnotation<T>, null)
+BrokenAnnotation.java:16:36: compiler.err.cant.resolve.location: kindname.variable, ElementType, , , (compiler.misc.location: kindname.class, BrokenAnnotation<T>, null)
+BrokenAnnotation.java:15:34: compiler.err.annotation.type.not.applicable.to.type: BrokenAnnotation.A
+4 errors

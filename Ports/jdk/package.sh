@@ -1,6 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=jdk
 useconfigure=true
+depends="freetype"
 
 ##### Java 18 #####
 version="jdk-18-10"
@@ -16,14 +17,17 @@ files="https://github.com/openjdk/jdk/archive/refs/tags/jdk-${download_version}.
 auth_type="sha256"
 
 configure() {
-    host_env
-    CC=../../../Toolchain/Local/i686/bin/i686-pc-serenity-gcc
-    run sh configure --openjdk-target=${SERENITY_ARCH}-pc-serenity --enable-headless-only=yes --enable-ccache $configopts
+    target_env
+    run sh configure \
+        CC=/home/adam/Documents/serenity/Toolchain/Local/i686/bin/i686-pc-serenity-gcc \
+        CXX=/home/adam/Documents/serenity/Toolchain/Local/i686/bin/i686-pc-serenity-g++ \
+        --openjdk-target=${SERENITY_ARCH}-pc-serenity \
+        --enable-headless-only=yes
 }
 
 build() {
     host_env
-    run make $makeopts images
+    run make JOBS=1 images
 }
 
 #install() {

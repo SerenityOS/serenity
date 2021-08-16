@@ -1,0 +1,13 @@
+VERSION: 1.0
+@SECTION: Symbol
+11 -1: linkMethod
+18 -1: isAlphaNumericString
+33 -1: java/util/Locale$LocaleNameGetter
+23 -1: sun/invoke/util/Wrapper
+12 -1: reduceToLong
+11 -1: setReadOnly
+8 -1: endsWith
+55 -1: <T:Ljava/lang/Object;>(Ljava/lang/ClassValue<TT;>;TT;)V
+20 -1: createAnnotationData
+6 -1: OfLong
+17 -1: getClassSignature

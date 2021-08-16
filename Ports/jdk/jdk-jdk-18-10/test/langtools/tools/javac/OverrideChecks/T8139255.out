@@ -1,0 +1,2 @@
+T8139255.java:13:15: compiler.err.override.incompatible.ret: (compiler.misc.cant.hide: func(), T8139255_1, func(), T8139255), int, void
+1 error

@@ -1,0 +1,3 @@
+OverridePosition.java:17:10: compiler.err.override.weaker.access: (compiler.misc.cant.implement: method(), T4524388.Testa, method(), T4524388.Interface), public
+OverridePosition.java:24:1: compiler.err.override.weaker.access: (compiler.misc.cant.implement: method(), T4524388.A, method(), T4524388.Interface), public
+2 errors

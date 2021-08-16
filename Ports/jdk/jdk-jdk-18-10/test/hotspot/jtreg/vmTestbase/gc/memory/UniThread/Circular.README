@@ -1,0 +1,43 @@
+Copyright (c) 2002, 2018, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+The Unithread Circular tests are pretty basic.
+The main program allocates an array of objects and
+the generates a circular linked list from them.
+     A->B->C->A
+The circularity is then removed from the array
+as more objects are allocated. The circularities
+should be garbage collected to make room for the new
+obects.
+
+Circular1 uses 5000 objects of 100 bytes (or so) apiece
+in chains of 5 objects apiece in a singly-linked list.
+
+Circular2 uses 10000 objects of 1000 bytes (or so) apiece
+in chains of 100 objects apiece.
+
+Circular3 is the same as Circular1, but uses a local
+Random Number Generator to access the arrays in a non-linear
+way.
+
+Circular4 is the same as Circular2, but uses a local
+Random Number Generator to access the arrays in a non-linear
+way.

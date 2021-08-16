@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root xmlns="foo">
+    <a>
+       <b id="id1">
+         <c id="id2"/>
+       </b>
+    </a>
+
+    <ref>id2</ref>
+</root>

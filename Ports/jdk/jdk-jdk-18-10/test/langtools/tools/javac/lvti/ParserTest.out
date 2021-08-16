@@ -1,0 +1,24 @@
+ParserTest.java:14:18: compiler.err.restricted.type.not.allowed: var, 10
+ParserTest.java:16:22: compiler.err.restricted.type.not.allowed: var, 10
+ParserTest.java:20:19: compiler.err.restricted.type.not.allowed: var, 10
+ParserTest.java:24:14: compiler.err.restricted.type.not.allowed: var, 10
+ParserTest.java:28:20: compiler.err.restricted.type.not.allowed: var, 10
+ParserTest.java:36:27: compiler.err.restricted.type.not.allowed: var, 10
+ParserTest.java:38:5: compiler.err.restricted.type.not.allowed.here: var
+ParserTest.java:41:9: compiler.err.restricted.type.not.allowed.array: var
+ParserTest.java:42:9: compiler.err.restricted.type.not.allowed.array: var
+ParserTest.java:43:9: compiler.err.restricted.type.not.allowed.array: var
+ParserTest.java:44:9: compiler.err.restricted.type.not.allowed.array: var
+ParserTest.java:45:9: compiler.err.restricted.type.not.allowed.array: var
+ParserTest.java:46:9: compiler.err.restricted.type.not.allowed.array: var
+ParserTest.java:49:9: compiler.err.restricted.type.not.allowed.compound: var
+ParserTest.java:54:5: compiler.err.restricted.type.not.allowed.here: var
+ParserTest.java:58:16: compiler.err.restricted.type.not.allowed.here: var
+ParserTest.java:59:14: compiler.err.restricted.type.not.allowed.here: var
+ParserTest.java:60:24: compiler.err.restricted.type.not.allowed.here: var
+ParserTest.java:61:22: compiler.err.restricted.type.not.allowed.here: var
+ParserTest.java:63:22: compiler.err.restricted.type.not.allowed.here: var
+ParserTest.java:64:18: compiler.err.restricted.type.not.allowed.here: var
+ParserTest.java:68:35: compiler.err.restricted.type.not.allowed.here: var
+ParserTest.java:69:22: compiler.err.restricted.type.not.allowed.here: var
+23 errors

@@ -1,0 +1,18 @@
+<xsd:schema
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:unit="xslt.unittests"
+  targetNamespace="xslt.unittests">
+  
+  <xsd:import schemaLocation="base.xsd"/>
+  
+  <xsd:element name="A" type="unit:W"/>
+  
+  <xsd:complexType name="W">
+    <xsd:sequence>
+      <xsd:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute ref="attr"/>
+    <xsd:attribute ref="unparsedEntityAttr"/>
+  </xsd:complexType>
+
+</xsd:schema>

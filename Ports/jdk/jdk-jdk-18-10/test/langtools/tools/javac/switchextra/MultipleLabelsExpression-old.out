@@ -1,0 +1,4 @@
+MultipleLabelsExpression.java:31:16: compiler.err.feature.not.supported.in.source.plural: (compiler.misc.feature.switch.expressions), 9, 14
+MultipleLabelsExpression.java:32:20: compiler.err.feature.not.supported.in.source.plural: (compiler.misc.feature.switch.rules), 9, 14
+MultipleLabelsExpression.java:33:19: compiler.err.feature.not.supported.in.source.plural: (compiler.misc.feature.multiple.case.labels), 9, 14
+3 errors

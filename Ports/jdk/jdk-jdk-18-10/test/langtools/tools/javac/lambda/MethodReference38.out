@@ -1,0 +1,5 @@
+MethodReference38.java:24:18: compiler.err.abstract.cant.be.instantiated: MethodReference38.A
+MethodReference38.java:25:18: compiler.err.abstract.cant.be.instantiated: MethodReference38.I
+MethodReference38.java:26:18: compiler.err.abstract.cant.be.instantiated: MethodReference38.AC
+MethodReference38.java:27:18: compiler.err.enum.cant.be.instantiated
+4 errors

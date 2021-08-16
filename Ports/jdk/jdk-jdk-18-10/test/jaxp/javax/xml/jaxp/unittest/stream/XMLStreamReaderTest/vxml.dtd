@@ -1,0 +1,474 @@
+<!-- 
+VoiceXML 2.1 DTD (20060322)
+
+Copyright 1998-2006 W3C (MIT, ERCIM, Keio), All Rights Reserved. 
+
+Permission to use, copy, modify and distribute the VoiceXML DTD and 
+its accompanying documentation for any purpose and without fee is 
+hereby granted in perpetuity, provided that the above copyright 
+notice and this paragraph appear in all copies.  
+
+The copyright holders make no representation about the suitability 
+of the DTD for any purpose. It is provided "as is" without expressed 
+or implied warranty.
+-->
+
+<!ENTITY % audio "#PCDATA | audio | enumerate | value">
+<!ENTITY % bargeintype "( speech | hotword )">
+<!ENTITY % boolean "(true|false)">
+<!ENTITY % content.type "CDATA">
+<!ENTITY % duration "CDATA">
+<!ENTITY % event.handler "catch | help | noinput | nomatch | error">
+<!ENTITY % event.name "NMTOKEN">
+<!ENTITY % event.names "NMTOKENS">
+<!ENTITY % executable.content "%audio; | assign | clear | data | disconnect | 
+    exit | foreach |goto | if | log | prompt | 
+    reprompt | return | script | submit | throw | var ">
+<!ENTITY % expression "CDATA">
+<!ENTITY % restrictedvariable.name "CDATA">
+<!ENTITY % variable.name "CDATA">
+<!ENTITY % restrictedvariable.names "CDATA">
+<!ENTITY % variable.names "CDATA">
+<!ENTITY % integer "CDATA">
+<!ENTITY % item.attrs "name     %restrictedvariable.name; #IMPLIED 
+    cond        %expression;    #IMPLIED
+    expr        %expression;    #IMPLIED ">
+<!ENTITY % uri "CDATA">
+<!ENTITY % cache.attrs "fetchhint   (prefetch|safe) #IMPLIED
+    fetchtimeout    %duration;  #IMPLIED
+    maxage      %integer;   #IMPLIED
+    maxstale    %integer;   #IMPLIED">
+<!ENTITY % next.attrs "next     %uri;       #IMPLIED
+    expr        %expression;    #IMPLIED ">
+<!ENTITY % submit.attrs "method     (get|post)  'get'
+    enctype     %content.type;  'application/x-www-form-urlencoded'
+    namelist    %variable.names;    #IMPLIED">
+<!ENTITY % throw.attrs "event       %event.name;    #IMPLIED
+    eventexpr   %expression;    #IMPLIED
+    message     CDATA       #IMPLIED
+    messageexpr %expression;    #IMPLIED">
+<!ENTITY % variable "block | data | field | var">
+<!--================================= Root ================================-->
+<!ELEMENT vxml (%event.handler; | data | form | link | menu | meta | metadata | 
+                property | script | var)+>
+<!ATTLIST vxml
+    application %uri; #IMPLIED
+    xml:base %uri; #IMPLIED
+    xml:lang NMTOKEN #IMPLIED
+    xmlns CDATA #FIXED 'http://www.w3.org/2001/vxml'
+    xmlns:xsi CDATA #IMPLIED
+    xsi:schemaLocation CDATA #IMPLIED
+    version CDATA #REQUIRED
+>
+<!ELEMENT meta EMPTY>
+<!ATTLIST meta
+    name NMTOKEN #IMPLIED
+    content CDATA #REQUIRED
+    http-equiv NMTOKEN #IMPLIED
+>
+
+<!ELEMENT metadata ANY>
+
+<!--================================ Prompts ==============================-->
+<!-- definitions adapted from SSML 1.0 DTD -->
+<!ENTITY % structure "p | s">
+<!ENTITY % sentence-elements "break | emphasis | mark | phoneme | prosody | 
+                              say-as | voice | sub">
+<!-- addition of enumerate and value elements as 'allowed-within-sentence' 
+     audio elements -->
+<!ENTITY % allowed-within-sentence " %audio; | %sentence-elements; ">
+
+<!-- Prompt is modelled on SSML 1.0 DTD speak element:
+- addition of 'bargein', 'bargeintype', 'cond', 'count' and 'timeout' attributes
+- removal of xmlns, xmlns:xsi, and xsi:schemaLocation attributes
+- version attribute fixed as "1.0"
+-->
+<!ELEMENT prompt (%allowed-within-sentence; | foreach | %structure; | lexicon 
+                  | metadata | meta )*>
+<!ATTLIST prompt
+    bargein %boolean; #IMPLIED
+    bargeintype %bargeintype; #IMPLIED
+    cond %expression; #IMPLIED
+    count %integer; #IMPLIED
+    xml:lang NMTOKEN #IMPLIED
+    timeout %duration; #IMPLIED
+    xml:base %uri; #IMPLIED
+    version CDATA #FIXED "1.0"
+>
+<!ELEMENT enumerate (%allowed-within-sentence; | %structure;)*>
+<!ELEMENT reprompt EMPTY>
+
+<!--================================= Dialogs =============================-->
+<!ENTITY % input "grammar">
+<!ENTITY % scope "(document | dialog)">
+<!ELEMENT form (%input; | %event.handler; | filled | initial | object | link |
+              property | record | script | subdialog | transfer | %variable;)*>
+<!ATTLIST form
+    id ID #IMPLIED
+    scope %scope; "dialog"
+>
+<!ENTITY % accept.attrs "accept     (exact | approximate)   'exact'">
+<!ELEMENT menu (%audio; | choice | %event.handler; | prompt | property)*>
+<!ATTLIST menu
+    id ID #IMPLIED
+    scope %scope; "dialog"
+    %accept.attrs; 
+    dtmf %boolean; "false"
+>
+<!ELEMENT choice ( #PCDATA | %input; )*>
+<!ATTLIST choice
+    %cache.attrs; 
+    accept  (exact | approximate) #IMPLIED
+    dtmf CDATA #IMPLIED
+    %throw.attrs; 
+    fetchaudio %uri; #IMPLIED
+    %next.attrs; 
+>
+<!--================================ Audio Output ==============================-->
+<!-- definitions adapted from SSML 1.0 DTD -->
+<!ELEMENT p (%allowed-within-sentence; | s)*>
+<!ATTLIST p
+    xml:lang NMTOKEN #IMPLIED
+>
+<!ELEMENT s (%allowed-within-sentence;)*>
+<!ATTLIST s
+    xml:lang NMTOKEN #IMPLIED
+>
+<!ELEMENT voice (%allowed-within-sentence; | %structure;)*>
+<!ATTLIST voice
+    xml:lang NMTOKEN #IMPLIED
+    gender (male | female | neutral) #IMPLIED
+    age %integer; #IMPLIED
+    variant %integer; #IMPLIED
+    name CDATA #IMPLIED
+>
+<!ELEMENT prosody (%allowed-within-sentence; | %structure;)*>
+<!ATTLIST prosody
+    pitch CDATA #IMPLIED
+    contour CDATA #IMPLIED
+    range CDATA #IMPLIED
+    rate CDATA #IMPLIED
+    duration %duration; #IMPLIED
+    volume CDATA #IMPLIED
+>
+<!-- Changes to SSML 1.0 DTD audio element:
+- src not obligatory, addition of 'expr' and caching attributes
+-->
+<!ELEMENT audio (%allowed-within-sentence; | %structure; | desc)*>
+<!ATTLIST audio
+    src %uri; #IMPLIED
+    expr %expression; #IMPLIED
+    %cache.attrs; 
+>
+<!ELEMENT desc (#PCDATA)>
+<!ATTLIST desc
+    xml:lang NMTOKEN #IMPLIED
+>
+<!ELEMENT emphasis (%allowed-within-sentence;)*>
+<!ATTLIST emphasis
+    level (strong | moderate | none | reduced) "moderate"
+>
+<!-- Changes to SSML 1.0 DTD say-as element:
+- allows value element as child
+-->
+<!ELEMENT say-as (#PCDATA | value )*>
+<!ATTLIST say-as
+    interpret-as NMTOKEN #REQUIRED
+    format NMTOKEN #IMPLIED
+    detail NMTOKEN #IMPLIED
+>
+<!ELEMENT sub (#PCDATA)>
+<!ATTLIST sub
+    alias CDATA #REQUIRED
+>
+<!ELEMENT phoneme (#PCDATA)>
+<!ATTLIST phoneme
+    ph CDATA #REQUIRED
+    alphabet CDATA #IMPLIED
+>
+<!ELEMENT break EMPTY>
+<!ATTLIST break
+    time CDATA #IMPLIED
+    strength  (none | x-weak | weak  | medium | strong | x-strong) "medium"
+>
+<!ELEMENT mark EMPTY>
+<!ATTLIST mark
+    name ID #IMPLIED
+    nameexpr %expression; #IMPLIED
+>
+<!--================================ Fields ===============================-->
+<!ELEMENT field (%audio; | %event.handler; | filled | %input; | link | option |
+                 prompt | property)*>
+<!ATTLIST field
+    %item.attrs; 
+    type CDATA #IMPLIED
+    slot NMTOKEN #IMPLIED
+    modal %boolean; "false"
+>
+<!ELEMENT option (#PCDATA)>
+<!ATTLIST option
+    %accept.attrs; 
+    dtmf CDATA #IMPLIED
+    value CDATA #IMPLIED
+>
+<!ELEMENT var EMPTY>
+<!ATTLIST var
+    name %restrictedvariable.name; #REQUIRED
+    expr %expression; #IMPLIED
+>
+<!ELEMENT initial (%audio; | %event.handler; | link | prompt | property)*>
+<!ATTLIST initial
+    %item.attrs; 
+>
+<!ELEMENT block (%executable.content;)*>
+<!ATTLIST block
+    %item.attrs; 
+>
+<!ELEMENT assign EMPTY>
+<!ATTLIST assign
+    name %variable.name; #REQUIRED
+    expr %expression; #REQUIRED
+>
+<!ELEMENT clear EMPTY>
+<!ATTLIST clear
+    namelist %variable.names; #IMPLIED
+>
+<!ELEMENT value EMPTY>
+<!ATTLIST value
+    expr %expression; #REQUIRED
+>
+<!--================================== Events =============================-->
+<!ENTITY % event.handler.attrs "count       %integer;   #IMPLIED
+    cond        %expression;    #IMPLIED">
+<!ELEMENT catch (%executable.content;)*>
+<!ATTLIST catch
+    event %event.names; #IMPLIED
+    %event.handler.attrs; 
+>
+<!ELEMENT error (%executable.content;)*>
+<!ATTLIST error
+    %event.handler.attrs; 
+>
+<!ELEMENT help (%executable.content;)*>
+<!ATTLIST help
+    %event.handler.attrs; 
+>
+<!ELEMENT link (%input;)*>
+<!ATTLIST link
+    %cache.attrs; 
+    %next.attrs; 
+    fetchaudio %uri; #IMPLIED
+    dtmf CDATA #IMPLIED
+    %throw.attrs; 
+>
+<!ELEMENT noinput (%executable.content;)*>
+<!ATTLIST noinput
+    %event.handler.attrs; 
+>
+<!ELEMENT nomatch (%executable.content;)*>
+<!ATTLIST nomatch
+    %event.handler.attrs; 
+>
+<!ELEMENT throw EMPTY>
+<!ATTLIST throw
+    %throw.attrs; 
+>
+<!--============================= Grammar Input =============================-->
+<!-- definitions adapted from SRGS 1.0 DTD -->
+<!ENTITY % rule-expansion "#PCDATA | token | ruleref
+                              | item | one-of | tag ">
+<!ELEMENT ruleref EMPTY>
+<!ATTLIST ruleref
+    uri %uri; #IMPLIED
+    type CDATA #IMPLIED
+    special (NULL | VOID | GARBAGE) #IMPLIED
+>
+<!ELEMENT token (#PCDATA)>
+<!ATTLIST token
+    xml:lang NMTOKEN #IMPLIED
+>
+<!ELEMENT tag (#PCDATA)>
+<!ELEMENT one-of (item)+>
+<!ATTLIST one-of
+    xml:lang NMTOKEN #IMPLIED
+>
+<!ELEMENT item (%rule-expansion;)*>
+<!ATTLIST item
+    repeat NMTOKEN #IMPLIED
+    repeat-prob NMTOKEN #IMPLIED
+    weight NMTOKEN #IMPLIED
+    xml:lang NMTOKEN #IMPLIED
+>
+<!ELEMENT rule (%rule-expansion; | example)*>
+<!ATTLIST rule
+    id ID #REQUIRED
+    scope (private | public) "private"
+>
+<!ELEMENT example (#PCDATA)>
+<!ELEMENT lexicon EMPTY>
+<!ATTLIST lexicon
+    uri %uri; #REQUIRED
+    type CDATA #IMPLIED
+>
+<!-- Changes to SRGS 1.0 DTD grammar element:
+- mixed, unordered content model 
+- addition of 'scope', 'src', 'type', 'weight' and caching attributes
+- 'version' attribute is optional
+- removal of xmlns, xmlns:xsi, and xsi:schemaLocation attributes
+-->
+<!ELEMENT grammar (#PCDATA | meta | metadata | lexicon | rule | tag)*>
+<!ATTLIST grammar
+    scope %scope; #IMPLIED
+    src %uri; #IMPLIED
+    srcexpr %expression; #IMPLIED
+    type CDATA #IMPLIED
+    weight CDATA #IMPLIED
+    %cache.attrs; 
+    tag-format %uri; #IMPLIED
+    xml:base %uri; #IMPLIED
+    version NMTOKEN #IMPLIED
+    xml:lang NMTOKEN #IMPLIED
+    root IDREF #IMPLIED
+    mode (voice | dtmf) "voice"
+>
+<!--============================= Audio Input =============================-->
+<!ELEMENT record (%audio; | %event.handler; | filled | %input; | prompt | 
+                  property)*>
+<!ATTLIST record
+    %item.attrs; 
+    type CDATA #IMPLIED
+    beep %boolean; "false"
+    maxtime %duration; #IMPLIED
+    modal %boolean; "true"
+    finalsilence %duration; #IMPLIED
+    dtmfterm %boolean; "true"
+>
+<!--============================ Call Control ============================-->
+<!ELEMENT disconnect EMPTY>
+<!ATTLIST disconnect
+    namelist %variable.names; #IMPLIED
+>
+
+<!ELEMENT transfer (%audio; | %event.handler; | filled | %input; | prompt | 
+                    property)*>
+<!ATTLIST transfer
+    %item.attrs; 
+    dest %uri; #IMPLIED
+    destexpr %expression; #IMPLIED
+    bridge %boolean; #IMPLIED
+    type NMTOKEN #IMPLIED
+    connecttimeout %duration; #IMPLIED
+    maxtime %duration; #IMPLIED
+    transferaudio %uri; #IMPLIED
+    aai CDATA #IMPLIED
+    aaiexpr %expression; #IMPLIED
+>
+<!--============================ Control Flow ============================-->
+<!ENTITY % if.attrs "cond       %expression;    #REQUIRED">
+<!ELEMENT if (%executable.content; | elseif | else)*>
+<!ATTLIST if
+    %if.attrs; 
+>
+<!ELEMENT elseif EMPTY>
+<!ATTLIST elseif
+    %if.attrs; 
+>
+<!ELEMENT else EMPTY>
+<!ELEMENT exit EMPTY>
+<!ATTLIST exit
+    expr %expression; #IMPLIED
+    namelist %variable.names; #IMPLIED
+>
+<!ELEMENT filled (%executable.content;)*>
+<!ATTLIST filled
+    mode (any | all) #IMPLIED
+    namelist %restrictedvariable.names; #IMPLIED
+>
+
+<!-- executable content + contents of prompt  -->
+<!ELEMENT foreach (%executable.content; | %sentence-elements; | 
+    %structure; )*
+>
+<!ATTLIST foreach
+    item %restrictedvariable.name; #REQUIRED
+    array CDATA #REQUIRED
+>
+
+<!ELEMENT goto EMPTY>
+<!ATTLIST goto
+    %cache.attrs; 
+    %next.attrs; 
+    fetchaudio %uri; #IMPLIED
+    expritem %expression; #IMPLIED
+    nextitem %restrictedvariable.name; #IMPLIED
+>
+<!ELEMENT param EMPTY>
+<!ATTLIST param
+    name NMTOKEN #REQUIRED
+    expr %expression; #IMPLIED
+    value CDATA #IMPLIED
+    valuetype (data | ref) "data"
+    type CDATA #IMPLIED
+>
+<!ELEMENT return EMPTY>
+<!ATTLIST return
+    namelist %variable.names; #IMPLIED
+    %throw.attrs; 
+>
+<!ELEMENT subdialog (%audio; | %event.handler; | filled | param | prompt | 
+                     property)*>
+<!ATTLIST subdialog
+    %item.attrs; 
+    src %uri; #IMPLIED
+    srcexpr %expression; #IMPLIED
+    %cache.attrs; 
+    fetchaudio %uri; #IMPLIED
+    %submit.attrs; 
+>
+<!ELEMENT submit EMPTY>
+<!ATTLIST submit
+    %cache.attrs; 
+    %next.attrs; 
+    fetchaudio %uri; #IMPLIED
+    %submit.attrs; 
+>
+<!--========================== Miscellaneous ==============================-->
+<!ELEMENT data EMPTY>
+<!ATTLIST data
+    name %restrictedvariable.name; #IMPLIED
+    src %uri; #IMPLIED
+    srcexpr %expression; #IMPLIED 
+    fetchaudio  %uri;       #IMPLIED
+    %submit.attrs;
+    %cache.attrs;
+>
+
+<!ELEMENT log (#PCDATA | value)*>
+<!ATTLIST log
+    label CDATA #IMPLIED
+    expr %expression; #IMPLIED
+>
+<!ELEMENT object (%audio; | %event.handler; | filled | param | prompt | 
+                  property)*>
+<!ATTLIST object
+    %item.attrs; 
+    %cache.attrs; 
+    classid %uri; #IMPLIED
+    codebase %uri; #IMPLIED
+    data %uri; #IMPLIED
+    type CDATA #IMPLIED
+    codetype CDATA #IMPLIED
+    archive %uri; #IMPLIED
+>
+<!ELEMENT property EMPTY>
+<!ATTLIST property
+    name NMTOKEN #REQUIRED
+    value CDATA #REQUIRED
+>
+<!ELEMENT script (#PCDATA)>
+<!ATTLIST script
+    src %uri; #IMPLIED
+    srcexpr %expression; #IMPLIED
+    charset CDATA #IMPLIED
+    %cache.attrs; 
+>

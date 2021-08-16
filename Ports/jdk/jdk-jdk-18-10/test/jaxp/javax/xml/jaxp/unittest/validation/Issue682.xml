@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<root xmlns="http://unique/test"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://unique/test unique.xsd">
+
+    <node>
+        <module name="test2"/>
+    </node>
+
+    <node name="router">
+        <module name="test1"/>
+    </node>
+
+</root>

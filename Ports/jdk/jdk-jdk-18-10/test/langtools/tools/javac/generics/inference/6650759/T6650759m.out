@@ -1,0 +1,2 @@
+T6650759m.java:20:36: compiler.err.prob.found.req: (compiler.misc.incompatible.bounds: Z, (compiler.misc.upper.bounds: java.lang.Integer,java.lang.Object), (compiler.misc.lower.bounds: java.lang.String))
+1 error

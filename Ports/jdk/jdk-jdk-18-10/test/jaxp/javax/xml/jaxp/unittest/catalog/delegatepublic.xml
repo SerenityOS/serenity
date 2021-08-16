@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE  catalogtest  PUBLIC  "-//JAVASE//XML CATALOG DTD//DELEGATEPULIC"  
+     "http://java.com/xml/catalog/dtd/delegatepublic.dtd">
+
+<catalogtest>Test &delegatepublic; entry</catalogtest>

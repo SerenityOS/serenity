@@ -1,0 +1,194 @@
+#
+# Copyright (c) 2000, 2009, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# Generated exception classes for java.nio.channels
+
+SINCE=1.4
+PACKAGE=java.nio.channels
+# This year should only change if the generated source is modified.
+COPYRIGHT_YEARS="2000, 2007,"
+
+
+SUPER=java.io.IOException
+
+gen ClosedChannelException "
+ * Checked exception thrown when an attempt is made to invoke or complete an
+ * I/O operation upon channel that is closed, or at least closed to that
+ * operation.  That this exception is thrown does not necessarily imply that
+ * the channel is completely closed.  A socket channel whose write half has
+ * been shut down, for example, may still be open for reading." \
+ 882777185433553857L
+
+gen FileLockInterruptionException "
+ * Checked exception received by a thread when another thread interrupts it
+ * while it is waiting to acquire a file lock.  Before this exception is thrown
+ * the interrupt status of the previously-blocked thread will have been set." \
+ 7104080643653532383L
+
+
+SUPER=ClosedChannelException
+
+gen AsynchronousCloseException "
+ * Checked exception received by a thread when another thread closes the
+ * channel or the part of the channel upon which it is blocked in an I/O
+ * operation." \
+ 6891178312432313966L
+
+
+SUPER=AsynchronousCloseException
+
+gen ClosedByInterruptException "
+ * Checked exception received by a thread when another thread interrupts it
+ * while it is blocked in an I/O operation upon a channel.  Before this
+ * exception is thrown the channel will have been closed and the interrupt
+ * status of the previously-blocked thread will have been set." \
+ -4488191543534286750L
+
+
+SUPER=IllegalArgumentException
+
+gen IllegalSelectorException "
+ * Unchecked exception thrown when an attempt is made to register a channel
+ * with a selector that was not created by the provider that created the
+ * channel." \
+ -8406323347253320987L
+
+gen UnresolvedAddressException "
+ * Unchecked exception thrown when an attempt is made to invoke a network
+ * operation upon an unresolved socket address." \
+ 6136959093620794148L
+
+gen UnsupportedAddressTypeException "
+ * Unchecked exception thrown when an attempt is made to bind or connect
+ * to a socket address of a type that is not supported." \
+ -2964323842829700493L
+
+
+SUPER=IllegalStateException
+
+gen AlreadyConnectedException "
+ * Unchecked exception thrown when an attempt is made to connect a {@link
+ * SocketChannel} that is already connected." \
+ -7331895245053773357L
+
+gen ConnectionPendingException "
+ * Unchecked exception thrown when an attempt is made to connect a {@link
+ * SocketChannel} for which a non-blocking connection operation is already in
+ * progress." \
+ 2008393366501760879L
+
+gen ClosedSelectorException "
+ * Unchecked exception thrown when an attempt is made to invoke an I/O
+ * operation upon a closed selector." \
+ 6466297122317847835L
+
+gen CancelledKeyException "
+ * Unchecked exception thrown when an attempt is made to use
+ * a selection key that is no longer valid." \
+ -8438032138028814268L
+
+gen IllegalBlockingModeException "
+ * Unchecked exception thrown when a blocking-mode-specific operation
+ * is invoked upon a channel in the incorrect blocking mode." \
+ -3335774961855590474L
+
+gen NoConnectionPendingException "
+ * Unchecked exception thrown when the {@link SocketChannel#finishConnect
+ * finishConnect} method of a {@link SocketChannel} is invoked without first
+ * successfully invoking its {@link SocketChannel#connect connect} method." \
+ -8296561183633134743L
+
+gen NonReadableChannelException "
+ * Unchecked exception thrown when an attempt is made to read
+ * from a channel that was not originally opened for reading." \
+ -3200915679294993514L
+
+gen NonWritableChannelException "
+ * Unchecked exception thrown when an attempt is made to write
+ * to a channel that was not originally opened for writing." \
+ -7071230488279011621L
+
+gen NotYetBoundException "
+ * Unchecked exception thrown when an attempt is made to invoke an I/O
+ * operation upon a server socket channel that is not yet bound." \
+ 4640999303950202242L
+
+gen NotYetConnectedException "
+ * Unchecked exception thrown when an attempt is made to invoke an I/O
+ * operation upon a socket channel that is not yet connected." \
+ 4697316551909513464L
+
+gen OverlappingFileLockException "
+ * Unchecked exception thrown when an attempt is made to acquire a lock on a
+ * region of a file that overlaps a region already locked by the same Java
+ * virtual machine, or when another thread is already waiting to lock an
+ * overlapping region of the same file." \
+ 2047812138163068433L
+
+
+SINCE=1.7
+
+SUPER=java.io.IOException
+
+gen InterruptedByTimeoutException "
+ * Checked exception received by a thread when a timeout elapses before an
+ * asynchronous operation completes." \
+ -4268008601014042947L
+
+SUPER=IllegalArgumentException
+
+gen IllegalChannelGroupException "
+ * Unchecked exception thrown when an attempt is made to open a channel
+ * in a group that was not created by the same provider. " \
+ -2495041211157744253L
+
+
+SUPER=IllegalStateException
+
+gen AlreadyBoundException "
+ * Unchecked exception thrown when an attempt is made to bind the socket a
+ * network oriented channel that is already bound." \
+ 6796072983322737592L
+
+gen AcceptPendingException "
+ * Unchecked exception thrown when an attempt is made to initiate an accept
+ * operation on a channel and a previous accept operation has not completed." \
+ 2721339977965416421L
+
+gen ReadPendingException "
+ * Unchecked exception thrown when an attempt is made to read from an
+ * asynchronous socket channel and a previous read has not completed." \
+ 1986315242191227217L
+
+gen WritePendingException "
+ * Unchecked exception thrown when an attempt is made to write to an
+ * asynchronous socket channel and a previous write has not completed." \
+ 7031871839266032276L
+
+gen ShutdownChannelGroupException "
+ * Unchecked exception thrown when an attempt is made to construct a channel in 
+ * a group that is shutdown or the completion handler for an I/O operation 
+ * cannot be invoked because the channel group has terminated." \
+ -3903801676350154157L

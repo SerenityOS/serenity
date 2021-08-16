@@ -1,0 +1,9 @@
+grant {
+        permission java.net.SocketPermission   "*:0-", "listen,connect,resolve";
+        permission java.lang.RuntimePermission "modifyThreadGroup";
+        permission java.lang.RuntimePermission "modifyThread";
+        permission java.lang.RuntimePermission "shutdownHooks";
+        permission java.util.PropertyPermission "vmsqe.aod.AppId", "read";
+        permission java.io.FilePermission "${vmsqe.aod.AppId}", "read";
+        permission java.io.FilePermission "${vmsqe.aod.AppId}", "delete";
+};

@@ -1,0 +1,28 @@
+ProvidesTest.java:13: error: invalid use of @provides
+ * @provides NotFound
+   ^
+ProvidesTest.java:13: error: service-type not found
+ * @provides NotFound
+   ^
+ProvidesTest.java:13: error: reference not found
+ * @provides NotFound
+             ^
+ProvidesTest.java:19: error: invalid use of @provides
+     * @provides NotFound Test description.
+       ^
+ProvidesTest.java:19: error: service-type not found
+     * @provides NotFound Test description.
+       ^
+ProvidesTest.java:19: error: reference not found
+     * @provides NotFound Test description.
+                 ^
+ProvidesTest.java:26: error: invalid use of @provides
+     * @provides NotFound Test description.
+       ^
+ProvidesTest.java:26: error: service-type not found
+     * @provides NotFound Test description.
+       ^
+ProvidesTest.java:26: error: reference not found
+     * @provides NotFound Test description.
+                 ^
+9 errors

@@ -1,0 +1,5 @@
+grant {
+    permission java.io.FilePermission "serial.tmp", "read,write";
+    permission java.io.FilePermission "serial2.tmp", "read,write";
+    permission javax.security.auth.AuthPermission "modifyPrivateCredentials";
+};

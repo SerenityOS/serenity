@@ -1,0 +1,9 @@
+# RMI Registry Input Serial Filter
+#
+# The filter pattern uses the same format as java.io.ObjectInputStream.serialFilter.
+# This filter can override the builtin filter if additional types need to be
+# allowed or rejected from the RMI Registry.
+#
+#sun.rmi.registry.registryFilter=pattern,pattern
+sun.rmi.registry.registryFilter=!java.lang.Long;!RegistryFilterTest$RejectableClass
+

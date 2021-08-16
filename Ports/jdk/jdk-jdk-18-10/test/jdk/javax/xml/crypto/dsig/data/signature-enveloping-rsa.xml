@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+  <SignedInfo>
+    <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+    <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" />
+    <Reference URI="#object">
+      <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+      <DigestValue>7/XTsHaBSOnJ/jXD5v0zL6VKYsk=</DigestValue>
+    </Reference>
+  </SignedInfo>
+  <SignatureValue>
+    ov3HOoPN0w71N3DdGNhN+dSzQm6NJFUB5qGKRp9Q986nVzMb8wCIVxCQu+x3vMtq
+    p4/R3KEcPtEJSaoR+thGq++GPIh2mZXyWJs3xHy9P4xmoTVwli7/l7s8ebDSmnbZ
+    7xZU4Iy1BSMZSxGKnRG+Z/0GJIfTz8jhH6wCe3l03L4=
+  </SignatureValue>
+  <KeyInfo>
+    <KeyValue>
+      <RSAKeyValue>
+        <Modulus>
+          q07hpxA5DGFfvJFZueFl/LI85XxQxrvqgVugL25V090A9MrlLBg5PmAsxFTe+G6a
+          xvWJQwYOVHj/nuiCnNLa9a7uAtPFiTtW+v5H3wlLaY3ws4atRBNOQlYkIBp38sTf
+          QBkk4i8PEU1GQ2M0CLIJq4/2Akfv1wxzSQ9+8oWkArc=
+        </Modulus>
+        <Exponent>
+          AQAB
+        </Exponent>
+      </RSAKeyValue>
+    </KeyValue>
+  </KeyInfo>
+  <Object Id="object">some text</Object>
+</Signature>

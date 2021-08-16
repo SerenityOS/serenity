@@ -1,0 +1,3 @@
+VERSION: 1.0
+@SECTION: String
+25: GCStressApp_shared_string

@@ -1,0 +1,367 @@
+#!/bin/bash
+#
+# Copyright (c) 2012, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+if test "x$1" != xCHECKME; then
+  echo "ERROR: Calling this wrapper script directly is not supported."
+  echo "Use the 'configure' script in the top-level directory instead."
+  exit 1
+fi
+
+# The next argument is the absolute top-level directory path.
+# The TOPDIR variable is passed on to configure.ac.
+TOPDIR="$2"
+# Remove these two arguments to get to the user supplied arguments
+shift
+shift
+
+if test "x$BASH" = x; then
+  echo "Error: This script must be run using bash." 1>&2
+  exit 1
+fi
+# Force autoconf to use bash. This also means we must disable autoconf re-exec.
+export CONFIG_SHELL=$BASH
+export _as_can_reexec=no
+
+# Make sure all shell commands are executed with the C locale
+export LC_ALL=C
+
+if test "x$CUSTOM_CONFIG_DIR" != x; then
+  custom_hook=$CUSTOM_CONFIG_DIR/custom-hook.m4
+  if test ! -e $custom_hook; then
+    echo "CUSTOM_CONFIG_DIR ($CUSTOM_CONFIG_DIR) not pointing to a proper custom config dir."
+    echo "Error: Cannot continue" 1>&2
+    exit 1
+  fi
+fi
+
+CURRENT_DIR=`pwd`
+if test "x$CURRENT_DIR" = "x$TOPDIR"; then
+  # We are running configure from the src root.
+  # Create '.configure-support' under $TOPDIR/build
+  build_support_dir="$TOPDIR/build/.configure-support"
+elif test "x$CURRENT_DIR" = "x$CUSTOM_ROOT"; then
+  # We are running configure from the custom root.
+  # Create '.configure-support' under $CUSTOM_ROOT/build
+  build_support_dir="$CUSTOM_ROOT/build/.configure-support"
+else
+  # We are running configure from outside of the src dir.
+  # Create 'build_support_dir' in the current directory.
+  build_support_dir="$CURRENT_DIR/configure-support"
+fi
+
+conf_script_dir="$TOPDIR/make/autoconf"
+generated_script="$build_support_dir/generated-configure.sh"
+
+###
+### Use autoconf to create a runnable configure script, if needed
+###
+
+autoconf_missing_help() {
+  APT_GET="`type -p apt-get 2> /dev/null`"
+  YUM="`type -p yum 2> /dev/null`"
+  BREW="`type -p brew 2> /dev/null`"
+  ZYPPER="`type -p zypper 2> /dev/null`"
+  CYGWIN="`type -p cygpath 2> /dev/null`"
+  UNAMEOUT="`uname 2> /dev/null`"
+
+  if test "x$ZYPPER" != x; then
+    PKGHANDLER_COMMAND="sudo zypper install autoconf"
+  elif test "x$APT_GET" != x; then
+    PKGHANDLER_COMMAND="sudo apt-get install autoconf"
+  elif test "x$YUM" != x; then
+    PKGHANDLER_COMMAND="sudo yum install autoconf"
+  elif test "x$BREW" != x; then
+    PKGHANDLER_COMMAND="brew install autoconf"
+  elif test "x$UNAMEOUT" == xAIX; then
+    echo "You might be able to fix this by installing autoconf from the 'AIX Toolbox for Linux Applications' (or compile it from the sources)."
+  elif test "x$CYGWIN" != x; then
+    PKGHANDLER_COMMAND="( cd <location of cygwin setup.exe> && cmd /c setup -q -P autoconf )"
+  fi
+
+  if test "x$PKGHANDLER_COMMAND" != x; then
+    echo "You might be able to fix this by running '$PKGHANDLER_COMMAND'."
+  fi
+}
+
+generate_configure_script() {
+  if test "x$AUTOCONF" != x; then
+    if test ! -x "$AUTOCONF"; then
+      echo
+      echo "The specified AUTOCONF variable does not point to a valid autoconf executable:"
+      echo "AUTOCONF=$AUTOCONF"
+      echo "Error: Cannot continue" 1>&2
+      exit 1
+    fi
+  else
+    AUTOCONF="`type -p autoconf 2> /dev/null`"
+    if test "x$AUTOCONF" = x; then
+      echo
+      echo "Autoconf is not found on the PATH ($PATH), and AUTOCONF is not set."
+      echo "You need autoconf to be able to generate a runnable configure script."
+      autoconf_missing_help
+      echo "Error: Cannot find autoconf" 1>&2
+      exit 1
+    fi
+  fi
+
+  autoconf_version=`$AUTOCONF --version | head -1`
+  echo "Using autoconf at ${AUTOCONF} [$autoconf_version]"
+
+  if test "x$CUSTOM_CONFIG_DIR" != x; then
+    # Generate configure script with custom hooks compiled in.
+    custom_patcher='sed -e "s|#CUSTOM_AUTOCONF_INCLUDE|m4_include([$custom_hook])|"'
+    custom_script_dir_include="-I$CUSTOM_CONFIG_DIR"
+  else
+    custom_patcher='cat'
+    custom_script_dir_include=""
+  fi
+
+  mkdir -p $build_support_dir
+  # Call autoconf but replace the "magic" variable in configure.ac if requested.
+
+  cat $conf_script_dir/configure.ac | eval $custom_patcher | \
+      ${AUTOCONF} -W all $custom_script_dir_include -I$conf_script_dir - \
+      > $generated_script
+  rm -rf autom4te.cache
+
+  # Sanity check
+  if test ! -s $generated_script; then
+    echo "Error: Failed to generate runnable configure script" 1>&2
+    rm -f $generated_script
+    exit 1
+  fi
+}
+
+test_generated_up_to_date() {
+  conf_source_files="$conf_script_dir/configure.ac $conf_script_dir/*.m4"
+  if test "x$CUSTOM_CONFIG_DIR" != x; then
+    conf_custom_source_files="$CUSTOM_CONFIG_DIR/*.m4"
+  else
+    conf_custom_source_files=""
+  fi
+
+  for file in $conf_source_files $conf_custom_source_files ; do
+    if test $file -nt $generated_script; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+run_autoconf=false
+if test "x$1" = xautogen; then
+  # User called us as "configure autogen", so force regeneration
+  run_autoconf=true
+  shift
+fi
+
+if test ! -s $generated_script; then
+  # Generated script is missing, so we need to create it
+  echo "Runnable configure script is not present"
+  run_autoconf=true
+else
+  # File is present, but is it up to date?
+  if test_generated_up_to_date; then
+    echo "Runnable configure script is not up to date"
+    run_autoconf=true
+  fi
+fi
+
+if test "x$run_autoconf" = xtrue; then
+  echo "Generating runnable configure script at $generated_script"
+  generate_configure_script
+fi
+
+# Autoconf calls the configure script recursively sometimes.
+# Don't start logging twice in that case
+if test "x$conf_debug_configure" = xtrue; then
+  conf_debug_configure=recursive
+fi
+
+###
+### Process command-line arguments
+###
+
+# Returns a shell-escaped version of the argument given.
+function shell_quote() {
+  if [[ -n "$1" ]]; then
+    # Uses only shell-safe characters?  No quoting needed.
+    # '=' is a zsh meta-character, but only in word-initial position.
+    if echo "$1" | grep '^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\.:,%/+=_-]\{1,\}$' > /dev/null \
+        && ! echo "$1" | grep '^=' > /dev/null; then
+      quoted="$1"
+    else
+      if echo "$1" | grep "[\'!]" > /dev/null; then
+        # csh does history expansion within single quotes, but not
+        # when backslash-escaped!
+        local quoted_quote="'\\''" quoted_exclam="'\\!'"
+        word="${1//\'/${quoted_quote}}"
+        word="${1//\!/${quoted_exclam}}"
+      fi
+      quoted="'$1'"
+    fi
+    echo "$quoted"
+  fi
+}
+
+conf_processed_arguments=()
+conf_quoted_arguments=()
+conf_openjdk_target=
+
+for conf_option
+do
+
+  # Process (and remove) our own extensions that will not be passed to autoconf
+  case $conf_option in
+    --openjdk-target=*)
+      conf_openjdk_target=`expr "X$conf_option" : '[^=]*=\(.*\)'`
+      ;;
+    --debug-configure)
+      if test "x$conf_debug_configure" != xrecursive; then
+        conf_debug_configure=true
+        export conf_debug_configure
+      fi
+      ;;
+    *)
+      conf_processed_arguments=("${conf_processed_arguments[@]}" "$conf_option")
+      ;;
+  esac
+
+  # Store all variables overridden on the command line
+  case $conf_option in
+    [^-]*=*)
+      # Add name of variable to CONFIGURE_OVERRIDDEN_VARIABLES list inside !...!.
+      conf_env_var=`expr "x$conf_option" : 'x\([^=]*\)='`
+      CONFIGURE_OVERRIDDEN_VARIABLES="$CONFIGURE_OVERRIDDEN_VARIABLES!$conf_env_var!"
+      ;;
+  esac
+
+  # Save the arguments, intelligently quoted for CONFIGURE_COMMAND_LINE.
+  case $conf_option in
+    *=*)
+      conf_option_name=`expr "x$conf_option" : 'x\([^=]*\)='`
+      conf_option_name=$(shell_quote "$conf_option_name")
+      conf_option_value=`expr "x$conf_option" : 'x[^=]*=\(.*\)'`
+      conf_option_value=$(shell_quote "$conf_option_value")
+      conf_quoted_arguments=("${conf_quoted_arguments[@]}" "$conf_option_name=$conf_option_value")
+      ;;
+    *)
+      conf_quoted_arguments=("${conf_quoted_arguments[@]}" "$(shell_quote "$conf_option")")
+      ;;
+  esac
+
+  # Check for certain autoconf options that require extra action
+  case $conf_option in
+    -build | --build | --buil | --bui | --bu |-build=* | --build=* | --buil=* | --bui=* | --bu=*)
+      conf_legacy_crosscompile="$conf_legacy_crosscompile $conf_option" ;;
+    -target | --target | --targe | --targ | --tar | --ta | --t | -target=* | --target=* | --targe=* | --targ=* | --tar=* | --ta=* | --t=*)
+      conf_legacy_crosscompile="$conf_legacy_crosscompile $conf_option" ;;
+    -host | --host | --hos | --ho | -host=* | --host=* | --hos=* | --ho=*)
+      conf_legacy_crosscompile="$conf_legacy_crosscompile $conf_option" ;;
+    -help | --help | --hel | --he | -h)
+      conf_print_help=true ;;
+  esac
+done
+
+# Save the quoted command line
+CONFIGURE_COMMAND_LINE="${conf_quoted_arguments[@]}"
+
+if test "x$conf_legacy_crosscompile" != "x"; then
+  if test "x$conf_openjdk_target" != "x"; then
+    echo "Error: Specifying --openjdk-target together with autoconf"
+    echo "legacy cross-compilation flags is not supported."
+    echo "You specified: --openjdk-target=$conf_openjdk_target and $conf_legacy_crosscompile."
+    echo "The recommended use is just --openjdk-target."
+    exit 1
+  else
+    echo "Warning: You are using legacy autoconf cross-compilation flags."
+    echo "It is recommended that you use --openjdk-target instead."
+    echo ""
+  fi
+fi
+
+if test "x$conf_openjdk_target" != "x"; then
+  conf_build_platform=`sh $conf_script_dir/build-aux/config.guess`
+  conf_processed_arguments=("--build=$conf_build_platform" "--host=$conf_openjdk_target" "--target=$conf_openjdk_target" "${conf_processed_arguments[@]}")
+fi
+
+# Make configure exit with error on invalid options as default.
+# Can be overridden by --disable-option-checking, since we prepend our argument
+# and later options override earlier.
+conf_processed_arguments=("--enable-option-checking=fatal" "${conf_processed_arguments[@]}")
+
+###
+### Call the configure script
+###
+if test "x$conf_debug_configure" != x; then
+  # Turn on shell debug output if requested (initial or recursive)
+  set -x
+fi
+
+# Now transfer control to the script generated by autoconf. This is where the
+# main work is done.
+RCDIR=`mktemp -dt jdk-build-configure.tmp.XXXXXX` || exit $?
+trap "rm -rf \"$RCDIR\"" EXIT
+conf_logfile=./configure.log
+(exec 3>&1 ; ((. $generated_script "${conf_processed_arguments[@]}" 2>&1 1>&3 ) \
+    ; echo $? > "$RCDIR/rc" ) \
+    | tee -a $conf_logfile 1>&2 ; exec 3>&-) | tee -a $conf_logfile
+
+conf_result_code=`cat "$RCDIR/rc"`
+###
+### Post-processing
+###
+
+if test $conf_result_code -eq 0; then
+  if test "x$conf_print_help" = xtrue; then
+    cat <<EOT
+
+Additional (non-autoconf) OpenJDK Options:
+  --openjdk-target=TARGET cross-compile with TARGET as target platform
+                          (i.e. the one you will run the resulting binary on).
+                          Equivalent to --host=TARGET --target=TARGET
+                          --build=<current platform>
+  --debug-configure       Run the configure script with additional debug
+                          logging enabled.
+
+EOT
+
+    # Print additional help, e.g. a list of toolchains and JVM features.
+    # This must be done by the autoconf script.
+    ( CONFIGURE_PRINT_ADDITIONAL_HELP=true . $generated_script PRINTF=printf )
+
+    cat <<EOT
+
+Please be aware that, when cross-compiling, the OpenJDK configure script will
+generally use 'target' where autoconf traditionally uses 'host'.
+
+Also note that variables must be passed on the command line. Variables in the
+environment will generally be ignored, unlike traditional autoconf scripts.
+EOT
+  fi
+else
+  echo configure exiting with result code $conf_result_code
+fi
+
+exit $conf_result_code

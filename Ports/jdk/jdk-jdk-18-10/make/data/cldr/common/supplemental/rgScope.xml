@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE supplementalData SYSTEM '../../common/dtd/ldmlSupplemental.dtd'>
+<!--
+Copyright © 1991-2016 Unicode, Inc.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+For terms of use, see http://www.unicode.org/copyright.html
+-->
+<supplementalData>
+    <version number='$Revision$'/>
+	<rgScope>
+		<rgPath path="//supplementalData/currencyData/fractions/info[@iso4217='#'][@digits='*'][@rounding='*'][@cashDigits='*'][@cashRounding='*']" draft="provisional" />
+		<rgPath path="//supplementalData/currencyData/fractions/info[@iso4217='#'][@digits='*'][@rounding='*'][@cashRounding='*']" draft="provisional" />
+		<rgPath path="//supplementalData/currencyData/fractions/info[@iso4217='#'][@digits='*'][@rounding='*']" draft="provisional" />
+		<rgPath path="//supplementalData/calendarPreferenceData/calendarPreference[@territories='#'][@ordering='*']" draft="provisional" />
+		<rgPath path="//supplementalData/weekData/firstDay[@day='*'][@territories='#']" draft="provisional" />
+		<rgPath path="//supplementalData/weekData/minDays[@count='*'][@territories='#']" draft="provisional" />
+		<rgPath path="//supplementalData/weekData/weekendStart[@day='*'][@territories='#']" draft="provisional" />
+		<rgPath path="//supplementalData/weekData/weekendEnd[@day='*'][@territories='#']" draft="provisional" />
+		<rgPath path="//supplementalData/timeData/hours[@allowed='*'][@preferred='*'][@regions='#']" draft="provisional" />
+		<rgPath path="//supplementalData/measurementData/measurementSystem[@type='*'][@category='*'][@territories='#']" draft="provisional" />
+		<rgPath path="//supplementalData/measurementData/measurementSystem[@type='*'][@territories='#']" draft="provisional" />
+		<rgPath path="//supplementalData/measurementData/paperSize[@type='*'][@territories='#']" draft="provisional" />
+		<rgPath path="//supplementalData/unitPreferenceData/unitPreferences[@category='*'][@usage='*'][@scope='*']/unitPreference[@regions='#'][@alt='*']" draft="provisional" />
+		<rgPath path="//supplementalData/unitPreferenceData/unitPreferences[@category='*'][@usage='*'][@scope='*']/unitPreference[@regions='#']" draft="provisional" />
+		<rgPath path="//supplementalData/unitPreferenceData/unitPreferences[@category='*'][@usage='*']/unitPreference[@regions='#'][@alt='*']" draft="provisional" />
+		<rgPath path="//supplementalData/unitPreferenceData/unitPreferences[@category='*'][@usage='*']/unitPreference[@regions='#']" draft="provisional" />
+	</rgScope>
+</supplementalData>

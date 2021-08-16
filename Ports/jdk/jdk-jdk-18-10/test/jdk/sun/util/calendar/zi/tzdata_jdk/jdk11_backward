@@ -1,0 +1,78 @@
+#
+# Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+# JDK 1.1.x compatible time zone IDs
+#
+
+Link Australia/Darwin ACT
+Link Australia/Sydney AET
+Link America/Argentina/Buenos_Aires AGT
+Link Africa/Cairo ART
+Link America/Anchorage AST
+Link America/Sao_Paulo BET
+Link Asia/Dhaka BST
+Link Africa/Harare CAT
+Link America/St_Johns CNT
+Link America/Chicago CST
+Link Asia/Shanghai CTT
+Link Africa/Addis_Ababa EAT
+Link Europe/Paris ECT
+Link America/New_York EST
+Link Pacific/Honolulu HST
+Link America/Indianapolis IET
+Link Asia/Calcutta IST
+Link Asia/Tokyo JST
+Link Pacific/Apia MIT
+Link America/Denver MST
+Link Asia/Yerevan NET
+Link Pacific/Auckland NST
+Link Asia/Karachi PLT
+Link America/Phoenix PNT
+Link America/Puerto_Rico PRT
+Link America/Los_Angeles PST
+Link Pacific/Guadalcanal SST
+Link Asia/Saigon VST
+
+# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+Rule	SystemV	min	1973	-	Apr	lastSun	2:00	1:00	D
+Rule	SystemV	min	1973	-	Oct	lastSun	2:00	0	S
+Rule	SystemV	1974	only	-	Jan	6	2:00	1:00	D
+Rule	SystemV	1974	only	-	Nov	lastSun	2:00	0	S
+Rule	SystemV	1975	only	-	Feb	23	2:00	1:00	D
+Rule	SystemV	1975	only	-	Oct	lastSun	2:00	0	S
+Rule	SystemV	1976	max	-	Apr	lastSun	2:00	1:00	D
+Rule	SystemV	1976	max	-	Oct	lastSun	2:00	0	S
+
+# Zone	NAME		GMTOFF	RULES/SAVE	FORMAT	[UNTIL]
+Zone	SystemV/AST4ADT	-4:00	SystemV		A%sT
+Zone	SystemV/EST5EDT	-5:00	SystemV		E%sT
+Zone	SystemV/CST6CDT	-6:00	SystemV		C%sT
+Zone	SystemV/MST7MDT	-7:00	SystemV		M%sT
+Zone	SystemV/PST8PDT	-8:00	SystemV		P%sT
+Zone	SystemV/YST9YDT	-9:00	SystemV		Y%sT
+Zone	SystemV/AST4	-4:00	-		AST
+Zone	SystemV/EST5	-5:00	-		EST
+Zone	SystemV/CST6	-6:00	-		CST
+Zone	SystemV/MST7	-7:00	-		MST
+Zone	SystemV/PST8	-8:00	-		PST
+Zone	SystemV/YST9	-9:00	-		YST
+Zone	SystemV/HST10	-10:00	-		HST

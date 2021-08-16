@@ -1,0 +1,14 @@
+    @Test(dataProvider = "$type$TernaryOpProvider")
+    static void [[TEST]]$vectorteststype$(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb, IntFunction<$type$[]> fc) {
+#if[double]
+        int count = INVOC_COUNT;
+        switch ("[[TEST]]") {
+        case "fma": case "lanewise_FMA":
+           // Math.fma uses BigDecimal
+           count = Math.max(5, count/20); break;
+        }
+        final int INVOC_COUNT = count;
+#end[double]
+[[KERNEL]]
+        assertArraysEquals(r, a, b, c, $vectorteststype$::[[TEST]]);
+    }

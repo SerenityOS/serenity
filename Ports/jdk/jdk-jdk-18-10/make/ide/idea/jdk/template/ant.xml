@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AntConfiguration">
+    <buildFile url="file://###ROOT_DIR###/make/ide/idea/jdk/build.xml">
+      <properties>
+        <property name="intellij.ismake" value="$IsMake$" />
+        <property name="build.target.dir" value="###BUILD_DIR###" />
+        <property name="module.name" value="###MODULE_NAMES###" />
+        <property name="idea.dir" value="###IDEA_DIR###" />
+      </properties>
+      <executeOn event="afterCompilation" target="post-make" />
+    </buildFile>
+  </component>
+</project>

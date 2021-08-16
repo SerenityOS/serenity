@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Test>
+  <mytest  a= '[]'
+           b= '[]'
+           c= '[]'
+           d= '[]'
+           e= '[]'
+           f= '[]'
+           Y= '[]'
+           Z= 'ZZ[]'
+  />
+</Test>

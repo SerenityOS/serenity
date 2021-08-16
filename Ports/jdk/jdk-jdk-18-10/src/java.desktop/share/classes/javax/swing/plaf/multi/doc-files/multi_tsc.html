@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Using the Multiplexing Look and Feel</title>
+</head>
+<!--
+ Copyright (c) 1998, 2021, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+
+<body>
+<main role="main">
+<h1>Using the Multiplexing Look and Feel</h1>
+
+<blockquote>
+<hr>
+<p>
+<i>
+This document is based on an article
+originally published in
+<a href="http://www.oracle.com/technetwork/java/javase/tech/articles-jsp-139072.html"
+   target="_top"><em>The Swing Connection</em></a>.
+</i>
+</p>
+<hr>
+</blockquote>
+
+<p>
+The Multiplexing look and feel lets
+you supplement an ordinary look and feel
+(called the <em>default</em> look and feel)
+with one or more <em>auxiliary</em> look and feels.
+For example, you could
+simultaneously provide text-to-speech and Braille outputs,
+in addition to the ordinary visual output that a Swing-based
+application generates,
+by adding
+two auxiliary look and feels (one for text-to-speech,
+the other for Braille)
+to the default look and feel.
+The default look and feel can be any ordinary look and feel --
+the Java or Windows look and feel, for example --
+and requires no modifications to work with auxiliary look and feels.
+</p>
+
+
+<p>
+This document has the following sections:
+<ul>
+<li> <a href="#overview">Overview</a>
+<li> <a href="#howtouse">How to Use Auxiliary Look and Feels</a>
+<li> <a href="#howtowrite">Tips for Writing an Auxiliary Look and Feel</a>
+     <ul>
+     <li> <a href="#dosanddonts">Dos and Don'ts</a>
+     <li> <a href="#uidefaults">Extending UIDefaults</a>
+     <li> <a href="#defaultui">Examining Other UI Objects</a>
+     </ul>
+<li> <a href="#implementation">How the Multiplexing Look and Feel is
+     Implemented</a>
+<li> <a href="#custom">How to Provide a Custom Multiplexing
+     Look and Feel</a>
+</ul>
+
+<p>
+Before reading further, you should be familiar
+with the concept of pluggable look and feels.
+For basic information, see
+<a href="https://docs.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html">
+  How to Set the Look and Feel</a>, a section in <em>The Java Tutorial</em>.
+For architectural details, you can read
+<a
+href="http://www.oracle.com/technetwork/java/architecture-142923.html#pluggable">
+  Pluggable look-and-feel architecture</a>, a section within
+a <em>Swing Connection</em> article.
+</p>
+
+<p>
+<a id="overview"></a>
+<hr>
+  <h2>Overview</h2>
+
+<p>
+
+The classes in the
+<code>javax.swing.plaf.multi</code> package
+implement a
+<i>multiplexing look and feel</i>.
+A multiplexing look and feel transparently creates -- and
+simultaneously supports -- UI objects from several different look and feels
+in response to a component requesting its UI object
+(with the <code>getUI</code> method).
+
+<p>
+Without a multiplexing look and feel, a
+developer who wanted to enhance a particular look and feel would
+need to extend the classes supporting that look and feel. For example, to
+add text-to-speech support to the Java look and feel without using a multiplexing
+look and feel, the developer would need to create a group of
+classes that extend those of
+the Java look and feel, and add text-to-speech support to the new classes.
+If the developer also wanted to add text-to-speech support to other look
+and feels,
+such as Motif or Windows, the developers would need to create subclasses
+of those classes as well.
+</p>
+
+<p>
+This approach has at least two shortcomings:
+<ul>
+  <li>First, each subclass must use what is
+      essentially a copy of the same code, potentially creating a difficult
+      support situation for the developer.<br></li>
+  <li>Second, and more significantly for the
+      end user, some application developers might force a
+      particular look and feel to be used. When this approach is used,
+      the end user can't even use the enhanced look and feel.</li>
+</ul>
+
+<p>
+A multiplexing look and feel
+both these problems simultaneously because it allows multiple look
+and feels to be combined.
+The first problem (having to use what amounts to a second copy of the same
+code) is solved because the developer can create a specialized look
+and feel that can then be combined with other look and feels.
+</p>
+
+<p>
+The second problem (having to force the use of
+a particular look and feel) is solved because a specialized look and feel
+can be used with whatever default look and feel the
+application may have locked in place.
+</p>
+
+<p>
+The default multiplexing look and feel implementation,
+represented by the <code>MultiLookAndFeel</code> class
+in the <code>javax.swing.plaf.multi</code> package,
+is called (unsurprisingly)
+the Multiplexing look and feel.
+
+<p>
+<a id="howtouse"></a>
+<hr>
+  <h2>How to Use Auxiliary Look and Feels</h2>
+
+<p>
+It's easy to use auxiliary look and feels with Swing. To instruct
+Swing to use the Multiplexing look and feel, all an application
+has to do is modify the <code>$JDKHOME/conf/swing.properties</code>
+file to include a definition of the <code>swing.auxiliarylaf</code>
+property. Swing treats the <code>swing.auxiliarylaf</code>
+property as a comma-separated list of <code>LookAndFeel</code>
+subclasses that specify what auxiliary look and feels should be
+used in addition to the default look and feel. If at least one valid
+<code>LookAndFeel</code>
+subclass is specified in the <code>swing.auxiliarylaf</code>
+property, Swing automatically uses the Multiplexing look and feel
+to load and support the default and auxiliary look and feels.
+</p>
+
+<p>
+For example, let's assume that an application
+makes use of a look and feel that supports text-to-speech feedback, and also
+uses an look and feel that adds support for a device
+that emits perfume.
+Let's assume that the text-to-speech
+look and feel is named <code>com.myco.TextTalkerLookAndFeel</code>,
+and the look and feel that adds support for perfume
+is named <code>com.smellco.OlfactoryLookAndFeel</code>.
+</p>
+
+<p>
+To tell Swing to use both these look and feels
+-- and to use a default look and feel at the same time -- your application
+could simply add the following line to the <code>$JDKHOME/conf/swing.properties</code> file:
+</p>
+
+<p>
+<code>&nbsp;&nbsp;&nbsp;
+              swing.auxiliarylaf=com.myco.TextTalkerLookAndFeel,<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; com.smellco.OlfactoryLookAndFeel</code>
+</p>
+
+<p>
+This statement tells Swing to obtain a component's UI from the Multiplexing
+look and feel automatically, instead of obtaining it directly from
+the default look and feel. The resulting multiplexing UI is a small
+delegate that obtains and maintains UIs from the default and auxiliary
+look and feels. As a result, when a method is invoked in a multiplexing
+UI object, the multiplexing UI invokes the same method on each
+of the UIs obtained from the default and auxiliary look and feels.
+</p>
+
+<p>
+<a id="howtowrite"></a>
+<hr>
+  <h2>Tips for Writing an Auxiliary Look and Feel</h2>
+
+<p>
+An auxiliary look and feel is like any other look and feel,
+except that it doesn't have to provide the complete support
+that a default look and feel must. For
+example, an auxiliary look and feel that supports just text-to-speech feedback
+doesn't need to provide any code for painting.
+Also, it might not need to support all components --
+<code>JSeparator</code>s, for example, might be ignored.
+
+<p>
+Auxiliary look and feels tend to be simple,
+so developing one can be easier than developing a visual
+look and feel.
+The developer can concentrate solely
+on providing the specialized functionality.
+
+<p>
+Because the primary purpose of an auxiliary look and feel is to enhance the
+default look and feel, auxiliary look and feels tend
+be nonvisual. Since an auxiliary look and feel is a genuine
+look and feel, however, there is nothing to prevent it
+from rendering information on the display.
+</p>
+
+<p>
+Just like for any other look and feel, you
+implement an auxiliary look and feel
+by writing a subclass of <code>javax.swing.LookAndFeel</code>
+and creating subclasses of the
+<code><em>Foo</em>UI</code> classes defined in
+the <code>javax.swing.plaf</code> package.
+</p>
+
+<a id="dosanddonts"></a>
+  <h3>Dos and Don'ts</h3>
+
+<p>
+The following paragraphs provide some general recommendations for developing
+auxiliary look and feels.
+</p>
+
+<h4>Use the <code>installUI</code> method
+to perform all initialization,
+and the <code>uninstallUI</code> method
+to perform all cleanup.</h4>
+
+<blockquote>
+The <code>installUI</code> and <code>uninstallUI</code>
+methods are invoked when a component's look and feel is set.
+The <code>installUI</code> method gives the new UI object
+a chance to add listeners on the component and its data model.
+Similarly, the <code>uninstallUI</code> method
+lets the previous UI object remove its listeners.
+</blockquote>
+            <h4><b>Don't extend visual look and feels.</b></h4>
+<blockquote>
+               We recommended that you <i>don't</i> implement
+                UI classes of an auxiliary look and feel as subclasses of the
+                UI classes of a visual look and feel. Why not? Because they might
+                accidentally inherit code that installs listeners on a component
+                object or renders the component on the display. As a result,
+                your auxiliary look and feel would compete with the default look
+                and feel rather than cooperating with it.<br>
+                <br>
+                Instead, we recommend that the UI classes of an auxiliary look
+                and feel directly extend the abstract UI classes in the <code>javax.swing.plaf</code>
+                package. By using this strategy, the developer of an auxiliary
+                look and feel can avoid competing with the default look and feel.
+</blockquote>
+            <h4><b>Override all UI-specific methods your UI classes inherit.</b></h4>
+
+<blockquote>
+               We recommend that each UI class of
+                an auxiliary look and feel override the methods
+		defined in the <code>javax.swing.plaf</code>
+                UI classes it descends from
+		The reasons for this recommendation are similar
+                to those for not extending a visual look and feel.
+                For example, the <code>ComponentUI</code>
+                class, from which all UI classes descend,
+		provides a default implementation for the <code>update</code>
+                method. This default implementation paints on the display
+		if the
+                component is opaque. If a UI class from a non-visual auxiliary
+                look and feel does not override this method, all
+                opaque components appear as blank areas on the screen!
+</blockquote>
+
+<a id="uidefaults"></a>
+  <h3>Extending UIDefaults</h3>
+
+            <p>In many cases, you
+              might want an auxiliary look and feel to be &quot;incomplete.&quot; That
+              is, you might not need to support the complete set
+              of components.
+            For example, an auxiliary look and feel might choose
+	    to provide a <code>ButtonUI</code> subclass but no
+              <code>LabelUI</code> subclass.
+	     This
+              option is allowed, and the multiplexing look and feel gracefully
+              handles such situations.</p>
+            <p>By default, however, Swing issues an error message when it asks
+              a look and feel for a UI object and the look and feel does not
+              support that UI. This message can be annoying, especially to auxiliary
+              look-and-feel developers who don't want to support a particular
+              component.</p>
+            <p>Fortunately, you can prevent this error
+              message by creating a subclass of the <code>UIDefaults</code>
+              class and returning an instance of it from the
+	      <code>getDefaults</code> method
+	      of your <code>LookAndFeel</code> class.
+	      For example:
+	      </p>
+            <p><code>public class MyAuxLookAndFeel
+              extends LookAndFeel {<br>
+                  ...<br>
+                  public UIDefaults getDefaults() {<br>
+                      <b>UIDefaults table = <br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              new MyAuxUIDefaults();<br>
+              </b>        Object[] uiDefaults = {<br>
+                        &quot;ButtonUI&quot;, &quot;MyAuxButtonUI&quot;,<br>
+                        ...<br>
+                      }<br>
+                      table.putDefaults(uiDefaults);<br>
+                      return table;<br>
+                  }<br>
+              }<br>
+              <br>
+              <b>class MyAuxUIDefaults extends UIDefaults {<br>
+                  protected void getUIError(String msg) {<br>
+                      //System.err.println<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp; (&quot;An
+              annoying message!&quot;);<br>
+                  }<br>
+              }</b></code></p>
+
+<p>
+In the preceding example, an auxiliary look and feel named <code>MyAux</code>
+              creates a <code>UIDefaults</code> subclass
+              that overrides the <code>getUIError</code>
+              method. The <code>getUIError</code>
+              method is the method that is invoked when Swing cannot find a UI
+              object in a look and feel. By merely doing nothing in this method,
+              you can avoid the error message.</p>
+            <p>
+
+<a id="defaultui"></a>
+<h3>Examining Other UI Objects</h3>
+
+            <p>In
+              rare instances, a UI object from an auxiliary look and feel
+              may be interested in the default UI object used by the component. In
+              these cases, the UI object from auxiliary look and feel can obtain
+              the UI from a component by calling its <code>getUI</code>
+              method. The returned UI is an instance of one of the multiplexing
+              look and feel UI classes (for example, <code>MultiButtonUI</code>).
+              The UI object from the auxiliary look and feel can call the <code>getUIs</code>
+              method of the returned object to obtain an array containing a complete list
+              of all UI objects handled by the multiplexing UI. The first element
+              is guaranteed to be the UI created from the default look and feel.
+	      </p>
+
+<p>
+<a id="implementation"></a>
+<hr>
+<h2>How the Multiplexing Look and Feel Is Implemented</h2>
+
+<p>
+The Multiplexing look and feel
+(represented by
+<code>javax.swing.plaf.multi.MultiLookAndFeel</code>)
+is meant to be transparent to
+all developers and users. It should &quot;just work&quot; -- and
+              it is used only when the user tells Swing to use an auxiliary look
+              and feel.</p>
+
+            <p>
+              When the Multiplexing look and
+              feel is in use, the type of the UI object
+	      associated with each component
+	      depends on whether
+	      any of the auxiliary look and feels currently in use
+	      support the component.
+	      If so, the component's UI object is
+	      an instance of a multiplexing UI.
+	      If only the default look and feel supports the component,
+	      then the component gets
+              a UI object from the default look and feel,
+	      just as if no auxiliary look and feels were installed.
+
+	      <p>
+	      A multiplexing UI object
+              obtains and maintains UI objects
+	      from the default and auxiliary look
+	      and feels,
+              referring to these UIs in the following manner:
+
+<ul>
+              <li> The UI object from the default look
+                and feel is always the first to be created. After that, a UI object
+                is created from each auxiliary look and feel in the order
+                they are specified in the <code>swing.auxiliarylaf</code>
+                property.<br><br></li>
+
+              <li> When a method that requests information
+                from a UI object is invoked, the multiplexing UI object
+		invokes the method on all the UI objects, but returns
+                only the results from the UI for the default look and feel.
+                For example, when the <code>getPreferredSize</code>
+                method is invoked on a multiplexing UI, the UI returns only the
+                results of invoking <code>getPreferredSize</code>
+                on the UI obtained from the default look and feel.
+		The <code>getPreferredSize</code> method
+		is also invoked on the UI object for each auxiliary look and feel,
+		but the return values are ignored.
+                <br><br></li>
+
+              <li> When a method that does not request information
+                from the UI object is invoked, the multiplexing UI object
+                invokes that method on all UIs --
+		on the UI object obtained from the default look
+		and feel
+                and on all the UIs obtained from the auxiliary look and feels,
+		as well.
+                For example, invoking the <code>installUI</code>
+                method on a multiplexing UI causes the multiplexing UI to invoke
+                <code>installUI</code>
+                on the UI obtained from the default look and feel and the UIs obtained from
+                the auxiliary factories.</li>
+            </ul>
+            <p> In all cases, the UI object obtained from
+              the default look and feel is acted upon first, and then the auxiliary
+              look and feels are acted upon in the order they are specified in
+              the <code>swing.auxiliarylaf</code>
+              property.
+</p>
+
+<p>
+
+<a id="custom"></a>
+<hr>
+<h2>How to Provide a Custom Multiplexing Look and Feel</h2>
+
+            <p>While
+              we hope the behavior of the Multiplexing look and feel is
+              flexible enough not to require an alternative multiplexing look
+              and feel, Swing allows the user to specify another multiplexing look
+              and feel to use.
+</p>
+
+            <p> To do that, all the user has to do is modify
+              the <code>$JDKHOME/conf/swing.properties</code>
+              file to include a definition of the <code>swing.plaf.multiplexinglaf</code>
+              property. Swing then treats the <code>swing.plaf.multiplexinglaf</code>
+              property as a <code>LookAndFeel</code>
+              subclass that supports multiplexing.
+</p>
+            <p> For example, if a user has a multiplexing
+              look and feel represented by <code>com.myco.SuperMultiLookAndFeel</code>
+              that is a better match for their needs than the Multiplexing
+              look and feel
+	      (<code>javax.swing.plaf.multi.MultiLookAndFeel</code>),
+              the user could include the following line in <code>$JDKHOME/conf/swing.properties</code>:
+</p>
+
+<p>
+<code>swing.plaf.multiplexinglaf = com.myco.SuperMultiLookAndFeel</code>
+</p>
+
+<p>
+This statement instructs Swing to use <code>com.myco.SuperMultiLookAndFeel</code>
+instead of <code>javax.swing.plaf.multi.MultiLookAndFeel</code>. But
+if you use this kind of statement, be careful, because the suppliers
+of auxiliary look and feels will most likely have developed and
+tested against our Multiplexing look and feel.
+</p>
+</main>
+</body>
+</html>

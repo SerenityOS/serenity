@@ -1,0 +1,1522 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="yo"/>
+		<territory type="BJ"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="agq">Èdè Ágɛ̀ɛ̀mù</language>
+			<language type="bez">Èdè Bɛ́nà</language>
+			<language type="chr">Èdè Shɛ́rókiì</language>
+			<language type="cu">Èdè Síláfííkì Ilé Ìjɔ́sìn</language>
+			<language type="da">Èdè Ilɛ̀ Denmark</language>
+			<language type="de_AT">Èdè Jámánì (Ɔ́síríà )</language>
+			<language type="de_CH">Èdè Ilɛ̀ Jámánì (Orílɛ́ède swítsàlandì)</language>
+			<language type="dje">Shárúmà</language>
+			<language type="dsb">Shóbíánù Apá Ìshàlɛ̀</language>
+			<language type="ebu">Èdè Ɛmbù</language>
+			<language type="en">Èdè Gɛ̀ɛ́sì</language>
+			<language type="en_AU">Èdè Gɛ̀ɛ́sì (órílɛ̀-èdè Ɔsirélíà)</language>
+			<language type="en_CA">Èdè Gɛ̀ɛ́sì (Orílɛ̀-èdè Kánádà)</language>
+			<language type="en_GB">Èdè òyìnbó Gɛ̀ɛ́sì</language>
+			<language type="en_GB" alt="short">Èdè Gɛ̀ɛ́sì (GB)</language>
+			<language type="en_US" alt="short">Èdè Gɛ̀ɛ́sì (US)</language>
+			<language type="es">Èdè Sípáníìshì</language>
+			<language type="es_419">Èdè Sípáníìshì (orílɛ̀-èdè Látìn-Amɛ́ríkà)</language>
+			<language type="es_ES">Èdè Sípáníìshì (orílɛ̀-èdè Yúróòpù)</language>
+			<language type="es_MX">Èdè Sípáníìshì (orílɛ̀-èdè Mɛ́síkò)</language>
+			<language type="fr_CA">Èdè Faransé (orílɛ̀-èdè Kánádà)</language>
+			<language type="fr_CH">Èdè Faranshé (Súwísàlaǹdì)</language>
+			<language type="id">Èdè Indonéshíà</language>
+			<language type="ii">Shíkuán Yì</language>
+			<language type="jmc">Máshámè</language>
+			<language type="khq">Koira Shíínì</language>
+			<language type="kk">Kashakì</language>
+			<language type="kln">Kálɛnjín</language>
+			<language type="ks">Kashímirì</language>
+			<language type="ksb">Sháńbálà</language>
+			<language type="ku">Kɔdishì</language>
+			<language type="kw">Èdè Kɔ́nììshì</language>
+			<language type="lb">Lùshɛ́mbɔ́ɔ̀gì</language>
+			<language type="mul">Ɔlɔ́pɔ̀ èdè</language>
+			<language type="nb">Nɔ́ɔ́wè Bokímàl</language>
+			<language type="nds">Jámánì ìpìlɛ̀</language>
+			<language type="nl">Èdè Dɔ́ɔ̀shì</language>
+			<language type="nmg">Kíwáshíò</language>
+			<language type="nn">Nɔ́ɔ́wè Nínɔ̀sìkì</language>
+			<language type="nus">Núɛ̀</language>
+			<language type="nyn">Ńyákɔ́lè</language>
+			<language type="om">Òròmɔ́</language>
+			<language type="os">Ɔshɛ́tíìkì</language>
+			<language type="prg">Púrúshíànù</language>
+			<language type="pt">Èdè Pɔtogí</language>
+			<language type="pt_BR">Èdè Pɔtogí (Orilɛ̀-èdè Bràsíl)</language>
+			<language type="pt_PT">Èdè Pɔtogí (orílɛ̀-èdè Yúróòpù)</language>
+			<language type="qu">Kúɛ́ńjùà</language>
+			<language type="rm">Rómáǹshì</language>
+			<language type="ru">Èdè Rɔ́shíà</language>
+			<language type="seh">Shɛnà</language>
+			<language type="shi">Tashelíìtì</language>
+			<language type="sn">Shɔnà</language>
+			<language type="teo">Tɛ́sò</language>
+			<language type="tr">Èdè Tɔɔkisi</language>
+			<language type="ug">Yúgɔ̀</language>
+			<language type="und">Èdè àìmɔ̀</language>
+			<language type="vo">Fɔ́lápùùkù</language>
+			<language type="wae">Wɔsà</language>
+			<language type="wo">Wɔ́lɔ́ɔ̀fù</language>
+			<language type="xog">Shógà</language>
+			<language type="yav">Yangbɛn</language>
+			<language type="zgh">Àfɛnùkò Támásáìtì ti Mòrókò</language>
+			<language type="zh">Edè Sháínà</language>
+			<language type="zh" alt="menu">Edè Sháínà, Mandárínì</language>
+			<language type="zh_Hans">Ɛdè Sháínà Onírɔ̀rùn</language>
+			<language type="zh_Hans" alt="long">Èdè Mandárínì Sháínà Onírɔ̀rùn</language>
+			<language type="zh_Hant">Èdè Sháínà Ìbílɛ̀</language>
+			<language type="zh_Hant" alt="long">Èdè Mandárínì Sháínà Ìbílɛ̀</language>
+			<language type="zu">Èdè Shulu</language>
+		</languages>
+		<scripts>
+			<script type="Armn">Àmɛ́níà</script>
+			<script type="Cyrl">èdè ilɛ̀ Rɔ́shíà</script>
+			<script type="Deva">Dɛfanagárì</script>
+			<script type="Ethi">Ɛtiópíìkì</script>
+			<script type="Geor">Jɔ́jíànù</script>
+			<script type="Grek">Jɔ́jíà</script>
+			<script type="Hanb">Han pɛ̀lú Bopomófò</script>
+			<script type="Hans">tí wɔ́n mú rɔrùn.</script>
+			<script type="Hans" alt="stand-alone">Hans tí wɔ́n mú rɔrùn.</script>
+			<script type="Hant">Hans àtɔwɔ́dɔ́wɔ́</script>
+			<script type="Hant" alt="stand-alone">Hans àtɔwɔ́dɔ́wɔ́</script>
+			<script type="Hrkt">ìlànà àfɔwɔ́kɔ ará Jàpánù</script>
+			<script type="Khmr">Kɛmɛ̀</script>
+			<script type="Zmth">Àmì Ìshèsìrò</script>
+			<script type="Zsym">Àwɔn àmì</script>
+			<script type="Zxxx">Aikɔsilɛ</script>
+			<script type="Zyyy">Wɔ́pɔ̀</script>
+			<script type="Zzzz">Ìshɔwɔ́kɔ̀wé àìmɔ̀</script>
+		</scripts>
+		<territories>
+			<territory type="003">Àríwá Amɛ́ríkà</territory>
+			<territory type="005">Gúúshù Amɛ́ríkà</territory>
+			<territory type="009">Òsɔ́ɔ́níà</territory>
+			<territory type="011">Ìwɔ̀ oorùn Afíríkà</territory>
+			<territory type="013">Ààrin Gbùgbùn Àmɛ́ríkà</territory>
+			<territory type="019">Amɛ́ríkà</territory>
+			<territory type="021">Apáàríwá Amɛ́ríkà</territory>
+			<territory type="030">Ìlà Òòrùn Eshíà</territory>
+			<territory type="034">Gúúshù Eshíà</territory>
+			<territory type="035">Gúúshù ìlà òòrùn Éshíà</territory>
+			<territory type="039">Gúúshù Yúróòpù</territory>
+			<territory type="053">Ɔshirélashíà</territory>
+			<territory type="054">Mɛlanéshíà</territory>
+			<territory type="057">Agbègbè Maikironéshíà</territory>
+			<territory type="061">Polineshíà</territory>
+			<territory type="142">Áshíà</territory>
+			<territory type="143">Ààrin Gbùngbùn Éshíà</territory>
+			<territory type="145">Ìwɔ̀ Òòrùn Eshíà</territory>
+			<territory type="155">Ìwɔ̀ Òòrùn Yúrópù</territory>
+			<territory type="419">Látín Amɛ́ríkà</territory>
+			<territory type="AE">Ɛmirate ti Awɔn Arabu</territory>
+			<territory type="AS">Sámóánì ti Orílɛ́ède Àméríkà</territory>
+			<territory type="AX">Àwɔn Erékùsù ti Åland</territory>
+			<territory type="AZ">Asɛ́bájánì</territory>
+			<territory type="BA">Bɔ̀síníà àti Ɛtisɛgófínà</territory>
+			<territory type="BE">Bégíɔ́mù</territory>
+			<territory type="BJ">Bɛ̀nɛ̀</territory>
+			<territory type="BN">Búrúnɛ́lì</territory>
+			<territory type="BO">Bɔ̀lífíyà</territory>
+			<territory type="BW">Bɔ̀tìsúwánà</territory>
+			<territory type="BZ">Bèlísɛ̀</territory>
+			<territory type="CH">switishilandi</territory>
+			<territory type="CL">Shílè</territory>
+			<territory type="CN">Sháínà</territory>
+			<territory type="CZ">Shɛ́ɛ́kì</territory>
+			<territory type="CZ" alt="variant">Shɛ́ɛ́kì</territory>
+			<territory type="DG">Diego Gashia</territory>
+			<territory type="DJ">Díbɔ́ótì</territory>
+			<territory type="DK">Dɛ́mákì</territory>
+			<territory type="EH">Ìwɔ̀òòrùn Sàhárà</territory>
+			<territory type="EU">Àpapɔ̀ Yúróòpù</territory>
+			<territory type="FO">Àwɔn Erékùsù ti Faroe</territory>
+			<territory type="GB">Gɛ̀ɛ́sì</territory>
+			<territory type="GE">Gɔgia</territory>
+			<territory type="GF">Firenshi Guana</territory>
+			<territory type="GS">Gúúsù Georgia àti Gúúsù Àwɔn Erékùsù Sandwich</territory>
+			<territory type="HK">Agbègbè Ìshàkóso Ìshúná Hong Kong Tí Shánà Ń Darí</territory>
+			<territory type="IC">Ɛrékùsù Kánárì</territory>
+			<territory type="IL">Iserɛli</territory>
+			<territory type="IS">Ashilandi</territory>
+			<territory type="JO">Jɔdani</territory>
+			<territory type="KG">Kurishisitani</territory>
+			<territory type="KP">Guusu Kɔria</territory>
+			<territory type="KR">Ariwa Kɔria</territory>
+			<territory type="KZ">Kashashatani</territory>
+			<territory type="LC">Lushia</territory>
+			<territory type="LI">Lɛshitɛnisiteni</territory>
+			<territory type="MH">Etikun Máshali</territory>
+			<territory type="MO">Agbègbè Ìshàkóso Pàtàkì Macao</territory>
+			<territory type="MZ">Moshamibiku</territory>
+			<territory type="NF">Etikun Nɔ́úfókì</territory>
+			<territory type="NO">Nɔɔwii</territory>
+			<territory type="NZ">Shilandi Titun</territory>
+			<territory type="OM">Ɔɔma</territory>
+			<territory type="PF">Firenshi Polinesia</territory>
+			<territory type="PM">Pɛɛri ati mikuloni</territory>
+			<territory type="PR">Pɔto Riko</territory>
+			<territory type="PS">Agbègbè ara Palɛsítínì</territory>
+			<territory type="PS" alt="short">Palɛsítínì</territory>
+			<territory type="PT">Pɔ́túgà</territory>
+			<territory type="QO">Agbègbè Òshɔ́ɔ́níà</territory>
+			<territory type="RU">Rɔshia</territory>
+			<territory type="SC">Sheshɛlɛsi</territory>
+			<territory type="SH">Hɛlena</territory>
+			<territory type="SN">Sɛnɛga</territory>
+			<territory type="ST">Sao tomi ati piriishipi</territory>
+			<territory type="SV">Ɛɛsáfádò</territory>
+			<territory type="SZ">Sashiland</territory>
+			<territory type="TC">Tɔɔki ati Etikun Kakɔsi</territory>
+			<territory type="TD">Shààdì</territory>
+			<territory type="TF">Agbègbè Gúúsù Faranshé</territory>
+			<territory type="TL">ÌlàOòrùn Tímɔ̀</territory>
+			<territory type="TL" alt="variant">Ìlà Òòrùn Tímɔ̀</territory>
+			<territory type="TM">Tɔɔkimenisita</territory>
+			<territory type="TN">Tunishia</territory>
+			<territory type="TR">Tɔɔki</territory>
+			<territory type="UM">Àwɔn Erékùsù Kékèké Agbègbè US</territory>
+			<territory type="UN">Ìshɔ̀kan àgbáyé</territory>
+			<territory type="US">Amɛrikà</territory>
+			<territory type="UZ">Nshibɛkisitani</territory>
+			<territory type="VC">Fisɛnnti ati Genadina</territory>
+			<territory type="VE">Fɛnɛshuɛla</territory>
+			<territory type="VI">Etikun Fagini ti Amɛrika</territory>
+			<territory type="VN">Fɛtinami</territory>
+			<territory type="WS">Samɔ</territory>
+			<territory type="XA">ìsɔ̀rɔ̀sí irɔ́</territory>
+			<territory type="XB">ibi irɔ́</territory>
+			<territory type="ZA">Gúúshù Áfíríkà</territory>
+			<territory type="ZM">Shamibia</territory>
+			<territory type="ZW">Shimibabe</territory>
+			<territory type="ZZ">Àgbègbè àìmɔ̀</territory>
+		</territories>
+		<keys>
+			<key type="calendar">Kàlɛ́ńdà</key>
+			<key type="cf">Ìgúnrégé Kɔ́rɛ́ńsì</key>
+			<key type="collation">Ètò Ɛlɛ́sɛɛsɛ</key>
+			<key type="currency">Kɔ́rɛ́ńsì</key>
+			<key type="ms">Èto Ìdiwɔ̀n</key>
+			<key type="numbers">Àwɔn nɔ́ńbà</key>
+		</keys>
+		<types>
+			<type key="calendar" type="buddhist">Kàlɛ́ńdà Buddhist</type>
+			<type key="calendar" type="chinese">Kàlɛ́ńdà ti Sháìnà</type>
+			<type key="calendar" type="dangi">Kàlɛ́ńdà dangi</type>
+			<type key="calendar" type="ethiopic">Kàlɛ́ńdà Ɛtíópíìkì</type>
+			<type key="calendar" type="gregorian">Kàlɛ́ńdà Gregory</type>
+			<type key="calendar" type="hebrew">Kàlɛ́ńdà Hébérù</type>
+			<type key="calendar" type="islamic">Kàlɛ́ńdà Lárúbáwá</type>
+			<type key="calendar" type="iso8601">Kàlɛ́ńdà ISO-8601</type>
+			<type key="calendar" type="japanese">Kàlɛ́ńdà ti Jàpánù</type>
+			<type key="calendar" type="persian">Kàlɛ́ńdà Pásíànù</type>
+			<type key="calendar" type="roc">Kàlɛ́ńdà Minguo</type>
+			<type key="cf" type="account">Ìgúnrégé Ìshirò Owó Kɔ́rɛ́ńsì</type>
+			<type key="cf" type="standard">Ìgúnrégé Gbèdéke Kɔ́rɛ́ńsì</type>
+			<type key="collation" type="ducet">Ètò Ɛlɛ́sɛɛsɛ Àkùàyàn Unicode</type>
+			<type key="collation" type="search">Ìshàwárí Ète-Gbogbogbò</type>
+			<type key="ms" type="metric">Èto Mɛ́tíríìkì</type>
+			<type key="ms" type="uksystem">Èto Ìdiwɔ̀n Ɔba</type>
+			<type key="ms" type="ussystem">Èto Ìdiwɔ̀n US</type>
+			<type key="numbers" type="arab">àwɔn díjítì Làrubáwá-Índíà</type>
+			<type key="numbers" type="arabext">Àwɔn Díjíìtì Lárúbáwá-Índíà fífɛ̀</type>
+			<type key="numbers" type="armn">Àwɔn nɔ́ńbà Àmɛ́níà</type>
+			<type key="numbers" type="armnlow">Àwɔn Nɔ́ńbà Kékèké ti Amɛ́ríkà</type>
+			<type key="numbers" type="beng">Àwɔn díjíìtì Báńgílà</type>
+			<type key="numbers" type="deva">Àwɔn díjììtì Defanagárì</type>
+			<type key="numbers" type="ethi">Àwɔn nɔ́ńbà Ɛtiópíìkì</type>
+			<type key="numbers" type="fullwide">Àwɔn Díjíìtì Fífɛ̀-Ɛ̀kún</type>
+			<type key="numbers" type="geor">Àwɔn nɔ́ńbà Jɔ́jíà</type>
+			<type key="numbers" type="grek">Àwɔn nɔ́ńbà Gíríìkì</type>
+			<type key="numbers" type="greklow">Àwɔn Nɔ́ńbà Gíríìkì Kékèké</type>
+			<type key="numbers" type="gujr">Àwɔn díjíìtì Gùjárátì</type>
+			<type key="numbers" type="guru">Àwɔn Díjíìtì Gurumukì</type>
+			<type key="numbers" type="hanidec">Àwɔn nɔ́ńbà Dɛ́símà Sháìnà</type>
+			<type key="numbers" type="hans">Àwɔn nɔ́ńbà Ìrɔ̀rùn ti Sháìnà</type>
+			<type key="numbers" type="hansfin">Àwɔn nɔ́ńbà Ìshúná Ìrɔ̀rùn Sháìnà</type>
+			<type key="numbers" type="hant">Àwɔn nɔ́ńbà Ìbílɛ̀ Sháìnà</type>
+			<type key="numbers" type="hantfin">Àwɔn nɔ́ńbà Ìshúná Ìbílɛ̀ Sháìnà</type>
+			<type key="numbers" type="hebr">Àwɔn nɔ́ńbà Hébérù</type>
+			<type key="numbers" type="jpan">Àwɔn nɔ́ńbà Jápànù</type>
+			<type key="numbers" type="jpanfin">Àwɔn nɔ́ńbà Ìshúná Jàpáànù</type>
+			<type key="numbers" type="khmr">Àwɔn díjíìtì Kɛ́mɛ̀</type>
+			<type key="numbers" type="knda">Àwɔn díjíìtì kanada</type>
+			<type key="numbers" type="laoo">Àwɔn díjíìtì Láó</type>
+			<type key="numbers" type="latn">Díjíítì Ìwɔ̀ Oòrùn</type>
+			<type key="numbers" type="mlym">Àwɔn díjíìtì Málàyálámù</type>
+			<type key="numbers" type="mymr">Àwɔn díjíìtì Myánmarí</type>
+			<type key="numbers" type="orya">Àwɔn díjíìtì Òdíà</type>
+			<type key="numbers" type="roman">Àwɔn díjíìtì Rómánù</type>
+			<type key="numbers" type="romanlow">Àwɔn díjíìtì Rómánù Kékeré</type>
+			<type key="numbers" type="taml">Àwɔn díjíìtì Ìbílɛ̀ Támílù</type>
+			<type key="numbers" type="tamldec">Àwɔn díjíìtì Tàmílù</type>
+			<type key="numbers" type="telu">Àwɔn díjíìtì Télúgù</type>
+			<type key="numbers" type="thai">Àwɔn díjíìtì Thai</type>
+			<type key="numbers" type="tibt">Àwɔn díjíìtì Tibetán</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">Mɛ́tíríìkì</measurementSystemName>
+			<measurementSystemName type="UK">Ilɛ̀ Gɛ̀ɛ́sì</measurementSystemName>
+			<measurementSystemName type="US">Orílɛ̀-Èdè Amɛ́ríkà</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="script">Ìshɔwɔ́kɔ̀wé: {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a á à b d e é è ɛ {ɛ\u0301} {ɛ\u0300} f g {gb} h i í ì j k l m n o ó ò ɔ {ɔ\u0301} {ɔ\u0300} p r s {sh} t u ú ù w y]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">Shɛ́r</month>
+							<month type="2">Èrèl</month>
+							<month type="3">Ɛrɛ̀n</month>
+							<month type="4">Ìgb</month>
+							<month type="5">Ɛ̀bi</month>
+							<month type="6">Òkú</month>
+							<month type="7">Agɛ</month>
+							<month type="8">Ògú</month>
+							<month type="9">Owe</month>
+							<month type="10">Ɔ̀wà</month>
+							<month type="11">Bél</month>
+							<month type="12">Ɔ̀pɛ</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">S</month>
+							<month type="2">È</month>
+							<month type="3">Ɛ</month>
+							<month type="4">Ì</month>
+							<month type="5">Ɛ̀</month>
+							<month type="6">Ò</month>
+							<month type="7">A</month>
+							<month type="8">Ò</month>
+							<month type="9">O</month>
+							<month type="10">Ɔ̀</month>
+							<month type="11">B</month>
+							<month type="12">Ɔ̀</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Oshù Shɛ́rɛ́</month>
+							<month type="2">Oshù Èrèlè</month>
+							<month type="3">Oshù Ɛrɛ̀nà</month>
+							<month type="4">Oshù Ìgbé</month>
+							<month type="5">Oshù Ɛ̀bibi</month>
+							<month type="6">Oshù Òkúdu</month>
+							<month type="7">Oshù Agɛmɔ</month>
+							<month type="8">Oshù Ògún</month>
+							<month type="9">Oshù Owewe</month>
+							<month type="10">Oshù Ɔ̀wàrà</month>
+							<month type="11">Oshù Bélú</month>
+							<month type="12">Oshù Ɔ̀pɛ̀</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">Shɛ́</month>
+							<month type="2">Èr</month>
+							<month type="3">Ɛr</month>
+							<month type="4">Ìg</month>
+							<month type="5">Ɛ̀b</month>
+							<month type="6">Òk</month>
+							<month type="7">Ag</month>
+							<month type="8">Òg</month>
+							<month type="9">Ow</month>
+							<month type="10">Ɔ̀w</month>
+							<month type="11">Bé</month>
+							<month type="12">Ɔ̀p</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">S</month>
+							<month type="2">È</month>
+							<month type="3">Ɛ</month>
+							<month type="4">Ì</month>
+							<month type="5">Ɛ̀</month>
+							<month type="6">Ò</month>
+							<month type="7">A</month>
+							<month type="8">Ò</month>
+							<month type="9">O</month>
+							<month type="10">Ɔ̀</month>
+							<month type="11">B</month>
+							<month type="12">Ɔ̀</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Shɛ́rɛ́</month>
+							<month type="2">Èrèlè</month>
+							<month type="3">Ɛrɛ̀nà</month>
+							<month type="4">Ìgbé</month>
+							<month type="5">Ɛ̀bibi</month>
+							<month type="6">Òkúdu</month>
+							<month type="7">Agɛmɔ</month>
+							<month type="8">Ògún</month>
+							<month type="9">Owewe</month>
+							<month type="10">Ɔ̀wàrà</month>
+							<month type="11">Bélú</month>
+							<month type="12">Ɔ̀pɛ̀</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Àìk</day>
+							<day type="mon">Aj</day>
+							<day type="tue">Ìsɛ́g</day>
+							<day type="wed">Ɔjɔ́r</day>
+							<day type="thu">Ɔjɔ́b</day>
+							<day type="fri">Ɛt</day>
+							<day type="sat">Àbám</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">À</day>
+							<day type="mon">A</day>
+							<day type="tue">Ì</day>
+							<day type="wed">Ɔ</day>
+							<day type="thu">Ɔ</day>
+							<day type="fri">Ɛ</day>
+							<day type="sat">À</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Ɔjɔ́ Àìkú</day>
+							<day type="mon">Ɔjɔ́ Ajé</day>
+							<day type="tue">Ɔjɔ́ Ìsɛ́gun</day>
+							<day type="wed">Ɔjɔ́rú</day>
+							<day type="thu">Ɔjɔ́bɔ</day>
+							<day type="fri">Ɔjɔ́ Ɛtì</day>
+							<day type="sat">Ɔjɔ́ Àbámɛ́ta</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="narrow">
+							<day type="sun">À</day>
+							<day type="mon">A</day>
+							<day type="tue">Ì</day>
+							<day type="wed">Ɔ</day>
+							<day type="thu">Ɔ</day>
+							<day type="fri">Ɛ</day>
+							<day type="sat">À</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Àìkú</day>
+							<day type="mon">Ajé</day>
+							<day type="tue">Ìsɛ́gun</day>
+							<day type="wed">Ɔjɔ́rú</day>
+							<day type="thu">Ɔjɔ́bɔ</day>
+							<day type="fri">Ɛtì</day>
+							<day type="sat">Àbámɛ́ta</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="narrow">
+							<quarter type="1">kíní</quarter>
+							<quarter type="2">Kejì</quarter>
+							<quarter type="3">Kɛta</quarter>
+							<quarter type="4">Kɛin</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">Ìdámɛ́rin kíní</quarter>
+							<quarter type="2">Ìdámɛ́rin Kejì</quarter>
+							<quarter type="3">Ìdámɛ́rin Kɛta</quarter>
+							<quarter type="4">Ìdámɛ́rin Kɛrin</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="narrow">
+							<quarter type="1">kí</quarter>
+							<quarter type="2">Ke</quarter>
+							<quarter type="3">Kɛt</quarter>
+							<quarter type="4">Kɛr</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="3">Ìdámɛ́rin Kɛta</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">Àárɔ̀</dayPeriod>
+							<dayPeriod type="pm">Ɔ̀sán</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">Àárɔ̀</dayPeriod>
+							<dayPeriod type="pm">Ɔ̀sán</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">Àárɔ̀</dayPeriod>
+							<dayPeriod type="pm">Ɔ̀sán</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">Àárɔ̀</dayPeriod>
+							<dayPeriod type="pm">Ɔ̀sán</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">Àárɔ̀</dayPeriod>
+							<dayPeriod type="pm">Ɔ̀sán</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">Àárɔ̀</dayPeriod>
+							<dayPeriod type="pm">Ɔ̀sán</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0" alt="variant">Sáájú ìgbà mímɔ̀</era>
+					</eraNames>
+				</eras>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="year">
+				<displayName>Ɔdún</displayName>
+				<relative type="-1">Èshín</relative>
+				<relative type="0">Ɔdúnǹí</relative>
+				<relative type="1">Àmɔ́dún</relative>
+			</field>
+			<field type="year-short">
+				<relative type="-1">Ɔdún tó kɔjá</relative>
+				<relative type="0">Ɔdún yìí</relative>
+				<relative type="1">Ɔdún tó ńbɔ̀</relative>
+			</field>
+			<field type="quarter">
+				<displayName>Ìdá mɛ́rin</displayName>
+			</field>
+			<field type="quarter-narrow">
+				<displayName>Ìdá mɛ́rin</displayName>
+			</field>
+			<field type="month">
+				<relative type="-1">óshù tó kɔjá</relative>
+				<relative type="0">oshù yìí</relative>
+				<relative type="1">óshù tó ń bɔ̀,</relative>
+			</field>
+			<field type="month-narrow">
+				<displayName>Oshù</displayName>
+			</field>
+			<field type="week">
+				<displayName>Ɔ̀sɛ̀</displayName>
+				<relative type="-1">ɔ̀sɛ̀ tó kɔjá</relative>
+				<relative type="0">ɔ̀sɛ̀ yìí</relative>
+				<relative type="1">ɔ́sɛ̀ tó ń bɔ̀</relative>
+				<relativePeriod>ɔ̀sɛ̀ ti {0}</relativePeriod>
+			</field>
+			<field type="week-short">
+				<relativePeriod>ɔ̀sɛ̀ ti {0}</relativePeriod>
+			</field>
+			<field type="weekOfMonth">
+				<displayName>Ɔshɛ̀ inú Oshù</displayName>
+			</field>
+			<field type="day">
+				<displayName>Ɔjɔ́</displayName>
+				<relative type="-2">íjɛta</relative>
+				<relative type="-1">Àná</relative>
+				<relative type="0">Òní</relative>
+				<relative type="1">Ɔ̀la</relative>
+			</field>
+			<field type="dayOfYear">
+				<displayName>Ɔjɔ́ inú ɔdún</displayName>
+			</field>
+			<field type="dayOfYear-short">
+				<displayName>Ɔjɔ́ inú ɔd.</displayName>
+			</field>
+			<field type="dayOfYear-narrow">
+				<displayName>Ɔjɔ́ inú ɔd.</displayName>
+			</field>
+			<field type="weekday">
+				<displayName>Ɔjɔ́ tó wà láàárín ɔ̀sɛ̀</displayName>
+			</field>
+			<field type="weekday-short">
+				<displayName>ɔjɔ́ inú ɔshɛ̀.</displayName>
+			</field>
+			<field type="weekday-narrow">
+				<displayName>ɔjɔ́ inú ɔshɛ̀.</displayName>
+			</field>
+			<field type="weekdayOfMonth">
+				<displayName>ɔjɔ́ ɔshɛ̀ inú oshù</displayName>
+			</field>
+			<field type="weekdayOfMonth-short">
+				<displayName>ɔjɔ́ ɔshɛ̀ inú oshù</displayName>
+			</field>
+			<field type="weekdayOfMonth-narrow">
+				<displayName>ɔjɔ́ ɔshɛ̀ inú oshù</displayName>
+			</field>
+			<field type="sun">
+				<relative type="-1">Ɔjɔ́ Àìkú tó kɔjá</relative>
+				<relative type="0">Ɔjɔ́ Àìkú yìí</relative>
+				<relative type="1">Ɔjɔ́ Àìkú tó ń bɔ̀</relative>
+			</field>
+			<field type="sun-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="other">Ɔjɔ́ Àíkú +{0}</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="dayperiod">
+				<displayName>Àárɔ̀/ɔ̀sán</displayName>
+			</field>
+			<field type="minute">
+				<displayName>Ìsɛ́jú</displayName>
+			</field>
+			<field type="second">
+				<displayName>Ìsɛ́jú Ààyá</displayName>
+			</field>
+			<field type="second-short">
+				<displayName>Ìsɛ́jú Ààyá</displayName>
+			</field>
+			<field type="second-narrow">
+				<displayName>Ìsɛ́jú Ààyá</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<regionFormat type="daylight">{0} Àkókò ojúmɔmɔ</regionFormat>
+			<zone type="Etc/UTC">
+				<long>
+					<standard>Àpapɔ̀ Àkókò Àgbáyé</standard>
+				</long>
+			</zone>
+			<zone type="Etc/Unknown">
+				<exemplarCity>Ìlú Àìmɔ̀</exemplarCity>
+			</zone>
+			<zone type="America/Barbados">
+				<exemplarCity>ìlú Bábádɔ́ɔ̀sì</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Bermuda">
+				<exemplarCity>ìlú Bɛ̀múdà</exemplarCity>
+			</zone>
+			<zone type="America/Kralendijk">
+				<exemplarCity>ìlú Kíralɛ́ndáikì</exemplarCity>
+			</zone>
+			<zone type="America/Belize">
+				<exemplarCity>ìlú Bɛ̀líìsì</exemplarCity>
+			</zone>
+			<zone type="America/Creston">
+				<exemplarCity>ìlú Kírɛstɔ́ɔ̀nù</exemplarCity>
+			</zone>
+			<zone type="America/Swift_Current">
+				<exemplarCity>ìlú Súfítù Kɔ̀rentì</exemplarCity>
+			</zone>
+			<zone type="America/Coral_Harbour">
+				<exemplarCity>ìlú àtikɔkàn</exemplarCity>
+			</zone>
+			<zone type="America/Blanc-Sablon">
+				<exemplarCity>ìlú Blank Sabulɔ́ɔ̀nì</exemplarCity>
+			</zone>
+			<zone type="America/St_Johns">
+				<exemplarCity>ìlú St Jɔ́ɔ̀nù</exemplarCity>
+			</zone>
+			<zone type="America/Curacao">
+				<exemplarCity>ìlú Kurashao</exemplarCity>
+			</zone>
+			<zone type="America/Marigot">
+				<exemplarCity>ìlú Marigɔ́ɔ̀tì</exemplarCity>
+			</zone>
+			<zone type="America/Chihuahua">
+				<exemplarCity>ìlú Shihuahua</exemplarCity>
+			</zone>
+			<zone type="America/Bahia_Banderas">
+				<exemplarCity>ìlú Báhì Bándɛ́rásì</exemplarCity>
+			</zone>
+			<zone type="America/Mexico_City">
+				<exemplarCity>ìlú Mɛ́síkò</exemplarCity>
+			</zone>
+			<zone type="America/Miquelon">
+				<exemplarCity>ìlú Mikulɔ́nì</exemplarCity>
+			</zone>
+			<zone type="America/Anchorage">
+				<exemplarCity>ìlú Ankɔ́réèjì</exemplarCity>
+			</zone>
+			<zone type="America/Boise">
+				<exemplarCity>ìlú Bɔ́isè</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Knox">
+				<exemplarCity>ìlú nɔ́sì</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Marengo">
+				<exemplarCity>ìlú Marɛ́ngo</exemplarCity>
+			</zone>
+			<zone type="America/Kentucky/Monticello">
+				<exemplarCity>ìlú Montisɛ́lò</exemplarCity>
+			</zone>
+			<zone type="America/St_Thomas">
+				<exemplarCity>ìlú St Tɔ́màsì</exemplarCity>
+			</zone>
+			<metazone type="America_Central">
+				<long>
+					<generic>àkókò àárín gbùngbùn</generic>
+					<standard>àkókò asiko àárín gbùngbùn</standard>
+					<daylight>Akókò àárín gbùngbùn ojúmɔmɔ</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic>Àkókò ìhà ìlà oòrùn</generic>
+					<standard>Akókò Àsikò Ìha Ìla Oòrùn</standard>
+					<daylight>Àkókò ojúmɔmɔ Ìhà Ìlà Oòrun</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic>Àkókò òkè</generic>
+					<standard>Àkókò asiko òkè</standard>
+					<daylight>Àkókò ojúmɔmɔ Ori-òkè</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic>Àkókò Pàsífíìkì</generic>
+					<standard>Àkókò àsikò Pàsífíìkì</standard>
+					<daylight>Àkókò Ìyálɛta Pàsífíìkì</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina">
+				<long>
+					<generic>Aago Ajɛntìnà</generic>
+					<standard>Aago àsìkò Argentina</standard>
+					<daylight>Aago Soma Argentina</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<generic>Àkókò Àtìláńtíìkì</generic>
+					<standard>Àkókò àsikò Àtìláńtíìkì</standard>
+					<daylight>Àkókò Ìyálɛta Àtìláńtíìkì</daylight>
+				</long>
+			</metazone>
+			<metazone type="China">
+				<long>
+					<generic>Àkókò Sháínà</generic>
+					<standard>Àkókò Ìfɛnukòsí Sháínà</standard>
+					<daylight>Àkókò Ojúmɔmɔ Sháínà</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cuba">
+				<long>
+					<generic>Àkókò Kúbà</generic>
+					<standard>Àkókò Àfɛnukò Kúbà</standard>
+					<daylight>Àkókò Ojúmɔmɔ Kúbà</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>Àkókò Àárin Europe</generic>
+					<standard>Àkókò Àárin àsikò Europe</standard>
+					<daylight>Àkókò Àárin Sɔmà Europe</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic>Àkókò Ìhà Ìlà Oòrùn Europe</generic>
+					<standard>Àkókò àsikò Ìhà Ìlà Oòrùn Europe</standard>
+					<daylight>Àkókò Sɔmà Ìha Ìlà Oòrùn Europe</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>Àkókò Ìwɔ Oòrùn Europe</generic>
+					<standard>Àkókò àsikò Ìwɔ Oòrùn Europe</standard>
+					<daylight>Àkókò Sɔmà Ìhà Ìwɔ Oòrùn Europe</daylight>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Eastern">
+				<long>
+					<generic>Àkókò Ìlà oorùn Greenland</generic>
+					<standard>Àkókò Ìwɔ̀ Ìfɛnukò oorùn Greenland</standard>
+					<daylight>Àkókò ìgbà Ooru Greenland</daylight>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Western">
+				<long>
+					<generic>Àkókò Ìwɔ̀ oorùn Greenland</generic>
+					<standard>Àkókò Àfɛnukò Ìwɔ̀ Oòrùn Greenland</standard>
+					<daylight>Àkókò Àfɛnukò Ìgba Oòru Greenland</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hawaii_Aleutian">
+				<long>
+					<generic>Àkókò Hawaii-Aleutian</generic>
+					<standard>Àkókò Àfɛnukò Hawaii-Aleutian</standard>
+					<daylight>Àkókò Ojúmɔmɔ Hawaii-Aleutian</daylight>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Western">
+				<long>
+					<standard>Àkókò Ìwɔ̀ oorùn Indonesia</standard>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Northwest">
+				<long>
+					<generic>Àkókò Apá Ìwɔ̀ Oorùn Mɛ́shíkò</generic>
+					<standard>Àkókò Àfɛnukò Apá Ìwɔ̀ Oorùn Mɛ́shíkò</standard>
+					<daylight>Àkókò Ojúmɔmɔ Apá Ìwɔ̀ Oorùn Mɛ́shíkò</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Pacific">
+				<long>
+					<generic>Àkókò Pásífíìkì Mɛ́shíkò</generic>
+					<standard>Àkókò Àfɛnukò Pásífíìkì Mɛ́síkò</standard>
+					<daylight>Àkókò Ojúmɔmɔ Pásífíìkì Mɛ́síkò</daylight>
+				</long>
+			</metazone>
+			<metazone type="Newfoundland">
+				<long>
+					<generic>Àkókò Newfoundland</generic>
+					<standard>Àkókò Àfɛnukò Newfoundland</standard>
+					<daylight>Àkókò Ojúmɔmɔ Newfoundland</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pierre_Miquelon">
+				<long>
+					<generic>Àkókò Pierre &amp; Miquelon</generic>
+					<standard>Àkókò Àfɛnukò Pierre &amp; Miquelon</standard>
+					<daylight>Àkókò Ojúmɔmɔ Pierre &amp; Miquelon</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<approximatelySign>dáàshì</approximatelySign>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength type="long">
+				<decimalFormat>
+					<pattern type="1000" count="other">0 ɛgbɛ̀rún</pattern>
+					<pattern type="10000" count="other">00 ɛgbɛ̀rún</pattern>
+					<pattern type="100000" count="other">000 ɛgbɛ̀rún</pattern>
+					<pattern type="1000000" count="other">0 mílíɔ̀nù</pattern>
+					<pattern type="10000000" count="other">00 mílíɔ̀nù</pattern>
+					<pattern type="100000000" count="other">000 mílíɔ̀nù</pattern>
+					<pattern type="1000000000" count="other">0 bilíɔ̀nù</pattern>
+					<pattern type="10000000000" count="other">00 bilíɔ̀nù</pattern>
+					<pattern type="100000000000" count="other">000 bilíɔ̀nù</pattern>
+					<pattern type="1000000000000" count="other">0 tiriliɔ̀nù</pattern>
+					<pattern type="10000000000000" count="other">00 tiriliɔ̀nù</pattern>
+					<pattern type="100000000000000" count="other">000 tiriliɔ̀nù</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<currencies>
+			<currency type="AED">
+				<displayName>Diami ti Awon Orílɛ́ède Arabu</displayName>
+			</currency>
+			<currency type="ALL">
+				<displayName>Lɛ́kɛ̀ Àlìbéníà</displayName>
+				<displayName count="other">lɛ́kè Àlìbéníà</displayName>
+			</currency>
+			<currency type="AMD">
+				<displayName>Dírààmù Àmɛ́níà</displayName>
+			</currency>
+			<currency type="ANG">
+				<displayName count="other">àwɔn gílídà Netherlands Antillean</displayName>
+			</currency>
+			<currency type="AOA">
+				<displayName count="other">àwɔn kíwánsà Angola</displayName>
+			</currency>
+			<currency type="ARS">
+				<displayName>Pɛ́sò Agɛntínà</displayName>
+				<displayName count="other">àwɔn pɛ́sò Agɛntínà</displayName>
+			</currency>
+			<currency type="AUD">
+				<displayName>Dɔla ti Orílɛ́ède Ástràlìá</displayName>
+			</currency>
+			<currency type="AWG">
+				<displayName count="other">àwɔn fuloríìnì Àrúbà</displayName>
+			</currency>
+			<currency type="BAM">
+				<displayName count="other">àwɔn àmi Yíyípadà Bosnia-Herzegovina</displayName>
+			</currency>
+			<currency type="BBD">
+				<displayName>Dɔ́là Bábádɔ̀ɔ̀sì</displayName>
+				<displayName count="other">àwɔn dɔ́là Bábádɔ̀ɔ̀sì</displayName>
+			</currency>
+			<currency type="BDT">
+				<displayName>Tákà Báńgíládɛ̀ɛ̀shì</displayName>
+			</currency>
+			<currency type="BGN">
+				<displayName>Owó Lɛ́fì Bɔ̀lìgéríà</displayName>
+				<displayName count="other">Lɛ́fà Bɔ̀lìgéríà</displayName>
+			</currency>
+			<currency type="BHD">
+				<displayName>Dina ti Orílɛ́ède Báránì</displayName>
+			</currency>
+			<currency type="BIF">
+				<displayName count="other">àwɔn faransi Bùùrúndì</displayName>
+			</currency>
+			<currency type="BMD">
+				<displayName>Dɔ́là Bɛ̀múdà</displayName>
+				<displayName count="other">àwɔ́n dɔ́là Bɛ̀múdà</displayName>
+			</currency>
+			<currency type="BND">
+				<displayName>Dɔ́là Bùrùnéì</displayName>
+			</currency>
+			<currency type="BOB">
+				<displayName>Bɔlifiánò Bɔ̀lífíà</displayName>
+				<displayName count="other">àwɔn bɔlifiánò Bɔ̀lífíà</displayName>
+			</currency>
+			<currency type="BRL">
+				<displayName>Owó ti Orílɛ̀-èdè Brazil</displayName>
+				<displayName count="other">Awon owó ti Orílɛ̀-èdè Brazil</displayName>
+			</currency>
+			<currency type="BSD">
+				<displayName>Dɔ́là Bàhámà</displayName>
+				<displayName count="other">àwɔn dɔ́là Bàhámà</displayName>
+			</currency>
+			<currency type="BTN">
+				<displayName>Ìngɔ́tírɔ̀mù Bútàànì</displayName>
+			</currency>
+			<currency type="BWP">
+				<displayName>Pula Bɔ̀tìsúwánà</displayName>
+				<displayName count="other">àwɔn pula Bɔ̀tìsúwánà</displayName>
+			</currency>
+			<currency type="BYN">
+				<displayName>Rɔ́bù Bɛ̀lárùùsì</displayName>
+				<displayName count="other">àwɔn rɔ́bù Bɛ̀lárùùsì</displayName>
+			</currency>
+			<currency type="BZD">
+				<displayName>Dɔ́là Bɛ̀lísè</displayName>
+				<displayName count="other">àwɔn Dɔ́là Bɛ́lìsè</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName>Dɔ́là Kánádà</displayName>
+				<displayName count="other">àwɔn dɔ́là Kánádà</displayName>
+			</currency>
+			<currency type="CDF">
+				<displayName count="other">àwɔn firanki Kongo</displayName>
+			</currency>
+			<currency type="CHF">
+				<displayName>Faransi ti Orílɛ́ède Siwisi</displayName>
+			</currency>
+			<currency type="CLP">
+				<displayName>Pɛ́sò Shílè</displayName>
+				<displayName count="other">àwɔn pɛ́sò Shílè</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>Reminibi ti Orílɛ́ède sháínà</displayName>
+			</currency>
+			<currency type="COP">
+				<displayName>Pɛ́sò Kòlóḿbíà</displayName>
+				<displayName count="other">àwɔn pɛ́sò Kòlóḿbíà</displayName>
+			</currency>
+			<currency type="CRC">
+				<displayName>Kólɔ́ɔ̀nì Kosita Ríkà</displayName>
+				<displayName count="other">àwɔ́n kólɔ́ɔ̀nì Kosita Ríkà</displayName>
+			</currency>
+			<currency type="CUC">
+				<displayName>Pɛ́sò Yíyípadà Kúbà</displayName>
+				<displayName count="other">àwɔn pɛ́sò yíyípadà Kúbà</displayName>
+			</currency>
+			<currency type="CUP">
+				<displayName>Pɛ́sò Kúbà</displayName>
+			</currency>
+			<currency type="CVE">
+				<displayName count="other">àwɔn èsìkúdò Kapú Faadì</displayName>
+			</currency>
+			<currency type="CZK">
+				<displayName>Koruna Shɛ́ɛ̀kì</displayName>
+				<displayName count="other">àwɔn koruna Shɛ́ɛ̀kì</displayName>
+			</currency>
+			<currency type="DJF">
+				<displayName count="other">àwɔn faransi Dibouti</displayName>
+			</currency>
+			<currency type="DKK">
+				<displayName>Kírónì Dáníshì</displayName>
+				<displayName count="other">Kírònà Dáníìshì</displayName>
+			</currency>
+			<currency type="DOP">
+				<displayName>Pɛ́sò Dòníníkà</displayName>
+				<displayName count="other">àwɔn pɛ́sò Dòníníkà</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName>Dina ti Orílɛ́ède Àlùgèríánì</displayName>
+				<displayName count="other">àwɔn dínà Àlùgèríánì</displayName>
+			</currency>
+			<currency type="EGP">
+				<displayName>pɔɔn ti Orílɛ́ède Egipiti</displayName>
+				<displayName count="other">àwɔn pɔ́n-ún Ejipítì</displayName>
+			</currency>
+			<currency type="ERN">
+				<displayName count="other">àwɔn nakifasì Eritira</displayName>
+			</currency>
+			<currency type="ETB">
+				<displayName count="other">àwɔn báà Etópíà</displayName>
+			</currency>
+			<currency type="FJD">
+				<displayName>Dɔ́là Fíjì</displayName>
+			</currency>
+			<currency type="FKP">
+				<displayName>Pɔ́n-ùn Erékùsù Falkland</displayName>
+				<displayName count="other">àwɔn Pɔ́n-ùn Erékùsù Falkland [ Pɔ́n-ùn Erékùsù Falkland ] 1.23 Pɔ́n-ùn Erékùsù Falkland 0.00 pɔ́n-ùn Erékùsù Falkland</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>Pɔ́n-ùn ti Orilɛ̀-èdè Gɛ̀ɛ́sì</displayName>
+			</currency>
+			<currency type="GEL">
+				<displayName>Lárì Jɔ́jíà</displayName>
+			</currency>
+			<currency type="GHC">
+				<displayName>shidi ti Orílɛ́ède Gana</displayName>
+			</currency>
+			<currency type="GHS">
+				<displayName count="other">àwɔn sídì Gana</displayName>
+			</currency>
+			<currency type="GIP">
+				<displayName>Pɔ́n-ùn Gibraltar</displayName>
+				<displayName count="other">àwɔn pɔ́n-ùn Gibraltar</displayName>
+			</currency>
+			<currency type="GMD">
+				<displayName count="other">àwɔn dalasi Gamibia</displayName>
+			</currency>
+			<currency type="GNF">
+				<displayName count="other">àwɔn fírànkì Gínì</displayName>
+			</currency>
+			<currency type="GNS">
+				<displayName>Faransi ti Orílɛ́ède Gini</displayName>
+			</currency>
+			<currency type="GTQ">
+				<displayName>Kúɛ́tísààlì Guatimílà</displayName>
+				<displayName count="other">àwɔn kúɛ́tísààlì Guatimílà</displayName>
+			</currency>
+			<currency type="GYD">
+				<displayName>Dɔ́là Gùyánà</displayName>
+				<displayName count="other">àwɔn dɔ́là Gùyánà</displayName>
+			</currency>
+			<currency type="HKD">
+				<displayName>Dɔ́là Hong Kong</displayName>
+			</currency>
+			<currency type="HNL">
+				<displayName>Lɛmipírà Ɔ́ńdúrà</displayName>
+				<displayName count="other">àwɔn Lɛmipírà Ɔ́ńdúrà</displayName>
+			</currency>
+			<currency type="HRK">
+				<displayName count="other">àwɔn kúnà Croatian</displayName>
+			</currency>
+			<currency type="HTG">
+				<displayName>Gɔ́dì Àítì</displayName>
+				<displayName count="other">àwɔn gɔ́dì Àítì</displayName>
+			</currency>
+			<currency type="HUF">
+				<displayName>Fɔ́ríǹtì Hɔ̀ngérí</displayName>
+				<displayName count="other">àwɔn fɔ́ríǹtì Hɔ̀ngérí</displayName>
+			</currency>
+			<currency type="ILS">
+				<displayName>Shékélì Tuntun Ísírɛ̀ɛ̀lì</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName>Rupi ti Orílɛ́ède Indina</displayName>
+			</currency>
+			<currency type="JMD">
+				<displayName>Dɔ́là Jàmáíkà</displayName>
+				<displayName count="other">àwɔn dɔ́là Jàmáíkà</displayName>
+			</currency>
+			<currency type="JOD">
+				<displayName>Dínárì Jɔ́dàànì</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>Yeni ti Orílɛ́ède Japani</displayName>
+			</currency>
+			<currency type="KES">
+				<displayName>Shiili Kenya</displayName>
+				<displayName count="other">àwɔ́n shiili Kenya</displayName>
+			</currency>
+			<currency type="KHR">
+				<displayName>Ráyò Kàm̀bɔ́díà</displayName>
+			</currency>
+			<currency type="KMF">
+				<displayName count="other">àwɔn faransi Komori</displayName>
+			</currency>
+			<currency type="KPW">
+				<displayName>Wɔ́ɔ̀nù Àríwá Kòríà</displayName>
+			</currency>
+			<currency type="KRW">
+				<displayName>Wɔ́ɔ̀nù Gúúsù Kòríà</displayName>
+			</currency>
+			<currency type="KYD">
+				<displayName>Dɔ́là Erékùsù Cayman</displayName>
+				<displayName count="other">àwɔn dɔ́là Erékùsù Cayman</displayName>
+			</currency>
+			<currency type="KZT">
+				<displayName>Tɛngé Kasakísítàànì</displayName>
+			</currency>
+			<currency type="LBP">
+				<displayName>Pɔ́n-ùn Lebanese</displayName>
+			</currency>
+			<currency type="LRD">
+				<displayName>Dɔla Liberia</displayName>
+				<displayName count="other">àwɔn dɔla Liberia</displayName>
+			</currency>
+			<currency type="LSL">
+				<displayName>Loti ti Orílɛ́ède Lesoto</displayName>
+			</currency>
+			<currency type="LYD">
+				<displayName count="other">àwɔn dínà Líbíyà</displayName>
+			</currency>
+			<currency type="MAD">
+				<displayName count="other">àwɔn dírámì Morokò</displayName>
+			</currency>
+			<currency type="MGA">
+				<displayName count="other">àwɔn faransi Malagasi</displayName>
+			</currency>
+			<currency type="MKD">
+				<displayName>Dɛ́nà Masidóníà</displayName>
+				<displayName count="other">dɛ́nàrì Masidóníà</displayName>
+			</currency>
+			<currency type="MRO">
+				<displayName>Ouguiya ti Orílɛ́ède Maritania (1973–2017)</displayName>
+			</currency>
+			<currency type="MRU">
+				<displayName>Ouguiya ti Orílɛ́ède Maritania</displayName>
+			</currency>
+			<currency type="MUR">
+				<displayName count="other">àwɔn rupi Maritusi</displayName>
+			</currency>
+			<currency type="MVR">
+				<displayName>Rúfìyá Mɔ̀lìdífà</displayName>
+			</currency>
+			<currency type="MWK">
+				<displayName count="other">àwɔn kásà Màláwì</displayName>
+			</currency>
+			<currency type="MXN">
+				<displayName>Pɛ́sò Mɛ́síkò</displayName>
+				<displayName count="other">àwɔn pɛ́sò Mɛ́síkò</displayName>
+			</currency>
+			<currency type="MYR">
+				<displayName>Ríngìtì Màléshíà</displayName>
+			</currency>
+			<currency type="MZM">
+				<displayName>Metika ti Orílɛ́ède Mosamibiki</displayName>
+			</currency>
+			<currency type="MZN">
+				<displayName>Mɛ́tíkààlì Mòsáḿbíìkì</displayName>
+				<displayName count="other">àwɔn mɛ́tíkààlì Mòsáḿbíìkì</displayName>
+			</currency>
+			<currency type="NAD">
+				<displayName>Dɔla Namibíà</displayName>
+				<displayName count="other">àwɔn dɔla Namibíà</displayName>
+			</currency>
+			<currency type="NIO">
+				<displayName>Kɔ̀dóbà Naikarágúà</displayName>
+				<displayName count="other">àwɔn kɔ̀dóbà Naikarágúà</displayName>
+			</currency>
+			<currency type="NOK">
+				<displayName>Kírónì Nɔ́ɔ́wè</displayName>
+				<displayName count="other">kìrónà Nɔ́ɔ́wè</displayName>
+			</currency>
+			<currency type="NPR">
+				<displayName>Rúpìì Nɛ̵́pààlì</displayName>
+			</currency>
+			<currency type="NZD">
+				<displayName>Dɔ́là New Zealand</displayName>
+			</currency>
+			<currency type="PAB">
+				<displayName count="other">àwɔn bálíbóà Pànámà</displayName>
+			</currency>
+			<currency type="PEN">
+				<displayName count="other">àwɔn sólì Pèrúù</displayName>
+			</currency>
+			<currency type="PLN">
+				<displayName>Sílɔ̀tì Pɔ́líshì</displayName>
+				<displayName count="other">àwɔn sílɔ̀tì Pɔ́líshì</displayName>
+			</currency>
+			<currency type="PYG">
+				<displayName count="other">àwɔn gúáránì Párágúwè</displayName>
+			</currency>
+			<currency type="RSD">
+				<displayName count="other">àwɔn dínárì Sàbíà</displayName>
+			</currency>
+			<currency type="RUB">
+				<displayName>Owó ruble ti ilɛ̀ Rɔ́shíà</displayName>
+				<displayName count="other">Owó ruble ti ilɛ̀ Rɔ́shíà</displayName>
+			</currency>
+			<currency type="RWF">
+				<displayName count="other">àwɔn faransi Ruwanda</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName>Riya ti Orílɛ́ède Saudi</displayName>
+			</currency>
+			<currency type="SBD">
+				<displayName>Dɔ́là Erékùsù Sɔ́lómɔ́nì</displayName>
+			</currency>
+			<currency type="SCR">
+				<displayName count="other">àwɔ́n rúpì Sayiselesi</displayName>
+			</currency>
+			<currency type="SDG">
+				<displayName>Pɔ́n-ùn Sùdáànì</displayName>
+				<displayName count="other">àwɔn pɔ́n-ùn Sùdáànì</displayName>
+			</currency>
+			<currency type="SDP">
+				<displayName>Pɔɔun ti Orílɛ́ède Sudani</displayName>
+			</currency>
+			<currency type="SEK">
+				<displayName count="other">Kòrónɔ̀ Súwídìn</displayName>
+			</currency>
+			<currency type="SGD">
+				<displayName>Dɔ́là Síngápɔ̀</displayName>
+			</currency>
+			<currency type="SHP">
+				<displayName>Pɔ́n-un Elena</displayName>
+				<displayName count="other">àwɔn pɔ́n-un Elena</displayName>
+			</currency>
+			<currency type="SLL">
+				<displayName count="other">àwɔn líónì Sira Líonì</displayName>
+			</currency>
+			<currency type="SOS">
+				<displayName>Shílè Somali</displayName>
+				<displayName count="other">àwɔ́n shílè Somali</displayName>
+			</currency>
+			<currency type="SRD">
+				<displayName>Dɔ́là Súrínámì</displayName>
+				<displayName count="other">àwɔn Dɔ́là Súrínámì</displayName>
+			</currency>
+			<currency type="SSP">
+				<displayName>Pɔ́n-un Gúúsù Sùdáànì</displayName>
+				<displayName count="other">àwɔn pɔ́n-un Gúúsù Sùdáànì</displayName>
+			</currency>
+			<currency type="STD">
+				<displayName>Dobira ti Orílɛ́ède Sao tome Ati Pirisipe (1977–2017)</displayName>
+			</currency>
+			<currency type="STN">
+				<displayName>Dɔbíra Sao tome àti Pirisipi</displayName>
+			</currency>
+			<currency type="SYP">
+				<displayName>Pɔ́n-ùn Sírìà</displayName>
+			</currency>
+			<currency type="TMT">
+				<displayName>Mánààtì Tɔkimɛnístàànì</displayName>
+			</currency>
+			<currency type="TND">
+				<displayName>Dínà Tunishíà</displayName>
+				<displayName count="other">àwɔn dínà Tunishíà</displayName>
+			</currency>
+			<currency type="TRY">
+				<displayName>Lírà Tɔ́kì</displayName>
+			</currency>
+			<currency type="TTD">
+				<displayName>Dɔ́là Trinidad &amp; Tobago</displayName>
+				<displayName count="other">àwɔn dɔ́là Trinidad àti Tobago</displayName>
+			</currency>
+			<currency type="TWD">
+				<displayName>Dɔ́là Tàìwánì Tuntun</displayName>
+			</currency>
+			<currency type="TZS">
+				<displayName count="other">àwɔn shile Tansania</displayName>
+			</currency>
+			<currency type="UAH">
+				<displayName>Ɔrifiníyà Yukiréníà</displayName>
+			</currency>
+			<currency type="UGX">
+				<displayName>Shile Uganda</displayName>
+				<displayName count="other">àwɔn shile Uganda</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>Dɔ́là</displayName>
+				<displayName count="other">Dɔ́là ti Orílɛ̀-Èdè Amɛ́ríkà</displayName>
+			</currency>
+			<currency type="UYU">
+				<displayName>Pɛ́sò Úrúgúwè</displayName>
+				<displayName count="other">àwɔn pɛ́sò Úrúgúwè</displayName>
+			</currency>
+			<currency type="UZS">
+				<displayName>Sómú Usibɛkísítàànì</displayName>
+			</currency>
+			<currency type="VES">
+				<displayName>Bɔ̀lífà Fɛnɛsuɛ́là</displayName>
+				<displayName count="other">àwɔn bɔ̀lífà Fɛnɛsuɛ́là</displayName>
+			</currency>
+			<currency type="XAF">
+				<displayName count="other">àwɔn firanki àárín Afíríkà</displayName>
+			</currency>
+			<currency type="XCD">
+				<displayName>Dɔ́là Ilà Oòrùn Karíbíà</displayName>
+				<displayName count="other">àwɔn dɔ́là Ilà Oòrùn Karíbíà</displayName>
+			</currency>
+			<currency type="XOF">
+				<displayName>Faransì ìwɔ̀-oorùn Afíríkà</displayName>
+				<displayName count="other">àwɔn faransì ìwɔ̀-oorùn Afíríkà</displayName>
+			</currency>
+			<currency type="XXX">
+				<displayName>owóníná àìmɔ̀</displayName>
+				<displayName count="other">owóníná àìmɔ̀</displayName>
+			</currency>
+			<currency type="YER">
+				<displayName>Ráyò Yɛ́mɛ̀nì</displayName>
+			</currency>
+			<currency type="ZMK">
+				<displayName>Kawasha ti Orílɛ́ède Saabia (1968–2012)</displayName>
+			</currency>
+			<currency type="ZMW">
+				<displayName count="other">àwɔn kàwasà Sámbíà</displayName>
+			</currency>
+			<currency type="ZWD">
+				<displayName>Dɔla ti Orílɛ́ède Siibabuwe</displayName>
+			</currency>
+		</currencies>
+		<minimalPairs>
+			<pluralMinimalPairs count="other" draft="contributed">Àwɔn ɔjɔ́ {0}</pluralMinimalPairs>
+			<ordinalMinimalPairs ordinal="other" draft="contributed">Mú {0} apá ɔ̀tún</ordinalMinimalPairs>
+		</minimalPairs>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<compoundUnit type="1024p2">
+				<unitPrefixPattern>mɛ́bì {0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p4">
+				<unitPrefixPattern>tɛbi {0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p5">
+				<unitPrefixPattern>pɛbi {0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p6">
+				<unitPrefixPattern>ɛ́síbì {0}</unitPrefixPattern>
+			</compoundUnit>
+			<compoundUnit type="1024p7">
+				<unitPrefixPattern>sɛ́bì {0}</unitPrefixPattern>
+			</compoundUnit>
+			<unit type="concentr-permille">
+				<unitPattern count="other">{0} ìdákan nínú ɛgbɛ̀rún</unitPattern>
+			</unit>
+			<unit type="digital-petabyte">
+				<displayName>àwɔn pɛ́tábáìtì</displayName>
+				<unitPattern count="other">{0} àwɔn pɛ́tábáìtì</unitPattern>
+			</unit>
+			<unit type="digital-terabyte">
+				<displayName>àwɔn tɛ́rábáìtì</displayName>
+				<unitPattern count="other">{0} àwɔn tɛ́rábáìtì</unitPattern>
+			</unit>
+			<unit type="digital-terabit">
+				<displayName>àwɔn tɛ́rábíìtì</displayName>
+				<unitPattern count="other">{0} àwɔn tɛ́rábíìtì</unitPattern>
+			</unit>
+			<unit type="digital-gigabyte">
+				<displayName>àwɔn gígábáìtì</displayName>
+				<unitPattern count="other">{0} àwɔn gígábáìtì</unitPattern>
+			</unit>
+			<unit type="digital-gigabit">
+				<displayName>àwɔn gígábíìtì</displayName>
+				<unitPattern count="other">{0} àwɔn gígábíìtì</unitPattern>
+			</unit>
+			<unit type="digital-megabyte">
+				<displayName>àwɔn mégábáìtì</displayName>
+				<unitPattern count="other">{0} àwɔn mégábáìtì</unitPattern>
+			</unit>
+			<unit type="digital-megabit">
+				<displayName>àwɔn mégábíìtì</displayName>
+				<unitPattern count="other">{0} àwɔn mégábíìtì</unitPattern>
+			</unit>
+			<unit type="digital-kilobyte">
+				<displayName>àwɔn kílóbáìtì</displayName>
+				<unitPattern count="other">{0} àwɔn kílóbáìtì</unitPattern>
+			</unit>
+			<unit type="digital-kilobit">
+				<displayName>àwɔn kílóbíìtì</displayName>
+				<unitPattern count="other">{0} àwɔ́n kílóbíìtì</unitPattern>
+			</unit>
+			<unit type="digital-byte">
+				<displayName>àwɔ́n báìtì</displayName>
+				<unitPattern count="other">{0} àwɔ́n báìtì</unitPattern>
+			</unit>
+			<unit type="digital-bit">
+				<displayName>àwɔ́n bíìtì</displayName>
+				<unitPattern count="other">{0} àwɔ́n bíìtì</unitPattern>
+			</unit>
+			<unit type="duration-century">
+				<displayName>ɔ̀rúndún</displayName>
+				<unitPattern count="other">ɔ̀rúndún {0}</unitPattern>
+			</unit>
+			<unit type="duration-decade">
+				<displayName>ɛ̀wádùn</displayName>
+				<unitPattern count="other">ɛ̀wádùn {0}</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<displayName>ɔ̀dún</displayName>
+				<unitPattern count="other">{0} ɔd</unitPattern>
+				<perUnitPattern>{0} ɔd</perUnitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>oshù</displayName>
+				<unitPattern count="other">{0} oshù</unitPattern>
+				<perUnitPattern>{0}/oshù</perUnitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName>ɔsh</displayName>
+				<unitPattern count="other">{0} ɔsh</unitPattern>
+				<perUnitPattern>{0}/ɔsh</perUnitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName>ɔjɔ́</displayName>
+				<unitPattern count="other">ɔj {0}</unitPattern>
+				<perUnitPattern>{0}/ɔj</perUnitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>ìsh</displayName>
+				<unitPattern count="other">{0} ìsh</unitPattern>
+				<perUnitPattern>{0}/ìsh</perUnitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName>ìsh àáy</displayName>
+				<unitPattern count="other">{0}ìsh àáy</unitPattern>
+				<perUnitPattern>{0}/ìsh àáy</perUnitPattern>
+			</unit>
+			<unit type="graphics-dot">
+				<displayName>dɔ́ɔ̀tì</displayName>
+				<unitPattern count="other">{0} dɔ́ɔ̀tì</unitPattern>
+			</unit>
+			<unit type="length-earth-radius">
+				<displayName>ìdinwɔ̀n ayé</displayName>
+				<unitPattern count="other">{0} ìdinwɔ̀n ayé</unitPattern>
+			</unit>
+			<unit type="light-candela">
+				<displayName>kandɛ́là</displayName>
+				<unitPattern count="other">{0} kandɛ́là</unitPattern>
+			</unit>
+			<unit type="light-lumen">
+				<displayName>lumɛ́ɛ̀nì</displayName>
+				<unitPattern count="other">{0} lumɛ́ɛ̀nì</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon">
+				<displayName>àmì shíbí oúnjɛ́ kékeré</displayName>
+				<unitPattern count="other">{0} àmì shíbí oúnjɛ́ kékeré</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon-imperial">
+				<displayName>shíbí oúnjɛ kékeré</displayName>
+				<unitPattern count="other">{0} àmì oúnjɛ kékeré</unitPattern>
+			</unit>
+			<unit type="volume-drop">
+				<displayName>dírɔ́pù</displayName>
+				<unitPattern count="other">{0} dírɔ́pù</unitPattern>
+			</unit>
+			<unit type="volume-pinch">
+				<displayName>píńshì</displayName>
+				<unitPattern count="other">{0} píńshì</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="concentr-permille">
+				<displayName>ìdákan nínú ɛgbɛ̀rún</displayName>
+			</unit>
+			<unit type="digital-megabyte">
+				<displayName>ɛ́mbáìtì</displayName>
+			</unit>
+			<unit type="digital-megabit">
+				<displayName>ɛ́mbíìtì</displayName>
+				<unitPattern count="other">{0} ɛ́mbiì</unitPattern>
+			</unit>
+			<unit type="duration-decade">
+				<displayName>ɛ̀wádùn</displayName>
+				<unitPattern count="other">ɛ̀wádún {0}</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<displayName>ɔd</displayName>
+				<unitPattern count="other">{0} ɔd</unitPattern>
+				<perUnitPattern>{0}/ɔd</perUnitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>oshù</displayName>
+				<unitPattern count="other">{0} oshù</unitPattern>
+				<perUnitPattern>{0}/oshù</perUnitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName>ɔsh</displayName>
+				<unitPattern count="other">{0} ɔsh</unitPattern>
+				<perUnitPattern>{0}/ɔshɛ̀</perUnitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName>ɔjɔ́</displayName>
+				<unitPattern count="other">{0} ɔj</unitPattern>
+				<perUnitPattern>{0}/ɔj</perUnitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>ìsh</displayName>
+				<unitPattern count="other">{0} ìsh</unitPattern>
+				<perUnitPattern>{0}/ìsh</perUnitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName>ìsh àáy</displayName>
+				<unitPattern count="other">{0} ìsh àáy</unitPattern>
+				<perUnitPattern>{0} ìsh àáy</perUnitPattern>
+			</unit>
+			<unit type="graphics-dot">
+				<displayName>dɔ́ɔ̀tì</displayName>
+				<unitPattern count="other">{0} dɔ́ɔ̀tì</unitPattern>
+			</unit>
+			<unit type="length-earth-radius">
+				<displayName>àmì ìdínwɔ̀n ayé</displayName>
+				<unitPattern count="other">{0} àmì ìdínwɔ̀n ayé</unitPattern>
+			</unit>
+			<unit type="light-lumen">
+				<displayName>àmì lumɛ́ɛ̀nì</displayName>
+				<unitPattern count="other">{0} àmi lumɛ́ɛ̀nì</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon">
+				<displayName>shíbí oúnjɛ́ kékeré</displayName>
+				<unitPattern count="other">{0} shíbí oúnjɛ́ kékeré</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon-imperial">
+				<displayName>àmì oúnjɛ kékeré</displayName>
+				<unitPattern count="other">{0} àmì oúnjɛ kékeré</unitPattern>
+			</unit>
+			<unit type="volume-drop">
+				<displayName>dírɔ́pù</displayName>
+				<unitPattern count="other">{0} dírɔ́pù</unitPattern>
+			</unit>
+			<unit type="volume-pinch">
+				<displayName>píńshì</displayName>
+				<unitPattern count="other">{0} píńshì</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="narrow">
+			<unit type="duration-year">
+				<displayName>ɔd</displayName>
+				<unitPattern count="other">{0} ɔd</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>oshù</displayName>
+				<unitPattern count="other">{0} oshù</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName>ɔshɛ́</displayName>
+				<unitPattern count="other">{0} ɔsh</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName>ɔjɔ́</displayName>
+				<unitPattern count="other">ɔj {0}</unitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>ìsh</displayName>
+				<unitPattern count="other">{0}/ìsh</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName>ìsh àáy</displayName>
+				<unitPattern count="other">{0} ìsh àáy</unitPattern>
+			</unit>
+		</unitLength>
+	</units>
+	<posix>
+		<messages>
+			<yesstr>Bɛ́ɛ̀ni :N</yesstr>
+			<nostr>Bɛ́ɛ̀kɔ́:K</nostr>
+		</messages>
+	</posix>
+</ldml>

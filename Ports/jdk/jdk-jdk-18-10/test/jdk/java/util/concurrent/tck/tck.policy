@@ -1,0 +1,17 @@
+grant {
+    // Permissions j.u.c. needs directly
+    permission java.lang.RuntimePermission "modifyThread";
+    permission java.lang.RuntimePermission "getClassLoader";
+    permission java.lang.RuntimePermission "setContextClassLoader";
+    permission java.util.PropertyPermission "*", "read";
+    // Permissions needed to change permissions!
+    permission java.security.SecurityPermission "getPolicy";
+    permission java.security.SecurityPermission "setPolicy";
+    permission java.security.SecurityPermission "setSecurityManager";
+    // Permissions needed by the junit test harness
+    permission java.lang.RuntimePermission "accessDeclaredMembers";
+    permission java.io.FilePermission "<<ALL FILES>>", "read";
+    permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+    // Allows test methods to inspect test thread state
+    permission java.lang.management.ManagementPermission "monitor";
+};

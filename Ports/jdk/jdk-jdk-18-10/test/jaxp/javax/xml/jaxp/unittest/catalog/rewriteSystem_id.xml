@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" xml:base="http://local/base/dtd/">
+    <rewriteSystem systemIdStartString="http://remote/dtd/alice/" rewritePrefix="http://local/dtd/alice/rs/" />
+
+    <rewriteSystem systemIdStartString="http://remote/dtd/bob/" rewritePrefix="bob/rs/" />
+
+    <rewriteSystem systemIdStartString="http://remote/dtd/carl/" rewritePrefix="carl/rs/"
+        xml:base="http://local/carlBase/dtd/" />
+
+    <rewriteSystem systemIdStartString="http://remote/dtd/david/" rewritePrefix="david1/rs/" />
+    <rewriteSystem systemIdStartString="http://remote/dtd/david/" rewritePrefix="david2/rs/" />
+
+    <rewriteSystem systemIdStartString="http://remote/dtd/" rewritePrefix="ella/" />
+    <rewriteSystem systemIdStartString="http://remote/dtd/ella/" rewritePrefix="ella/rs/" />
+
+    <rewriteSystem systemIdStartString="http://remote.com/"
+                   rewritePrefix="file:///share/doctypes/dtd/fail/"/>
+    <rewriteSystem systemIdStartString="http://remote.com/dtd"
+                   rewritePrefix="file:///share/docbook/docbook/pass"/>
+
+    <group xml:base="http://www.groupxmlbase.com/">
+        <rewriteSystem systemIdStartString="http://www.sys00test.com" rewritePrefix="dtds"/>
+    </group>
+</catalog>

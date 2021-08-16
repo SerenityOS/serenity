@@ -1,0 +1,2 @@
+Neg14.java:10:14: compiler.err.types.incompatible: Neg14.IB, Neg14.IA, (compiler.misc.incompatible.abstract.default: kindname.class, Neg14.AB, m, , Neg14.IB, Neg14.IA)
+1 error

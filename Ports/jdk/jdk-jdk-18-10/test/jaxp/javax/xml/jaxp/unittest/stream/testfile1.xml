@@ -1,0 +1,8 @@
+<?xml version="1.0" standalone="no" ?>
+<ns1:foo  attr1="defaultAttr1" ns1:attr1="ns1Attr1" ns2:attr1="ns2Attr1" attr2="defaultAttr2" attr3="defaultAttr3" xmlns:ns1="http://ns1.java.com"  xmlns:ns2="http://ns2.java.com">
+<!--description-->
+    content text
+    <![CDATA[<greeting>Hello</greeting>]]>
+    other content
+</ns1:foo>
+

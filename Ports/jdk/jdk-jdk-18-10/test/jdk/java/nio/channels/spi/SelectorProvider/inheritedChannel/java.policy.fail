@@ -1,0 +1,11 @@
+//
+// Used by unit tests for System.inheritedChannel() method. This policy
+// file allows doesn't grant the service the runtime permission needed
+// to obtain the inherited channel but does grant the socket permission
+// needed to report a test result over a socket connection.
+//
+grant {
+    permission java.net.SocketPermission "*:1024-", "resolve,connect";
+    permission java.io.FilePermission "${test.classes}${/}statetest.txt", "read,write";
+    permission java.util.PropertyPermission "test.classes", "read";
+};

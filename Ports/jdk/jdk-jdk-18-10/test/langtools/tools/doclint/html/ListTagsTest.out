@@ -1,0 +1,7 @@
+ListTagsTest.java:17: error: attribute lacks value
+     *  <ol> <li value> bad </ol>
+                 ^
+ListTagsTest.java:18: error: attribute value is not a number
+     *  <ol> <li value="a"> bad </ol>
+                 ^
+2 errors

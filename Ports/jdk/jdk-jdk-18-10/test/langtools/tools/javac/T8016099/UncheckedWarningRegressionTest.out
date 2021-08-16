@@ -1,0 +1,5 @@
+UncheckedWarningRegressionTest.java:18:24: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), java.lang.Object[], T[]
+UncheckedWarningRegressionTest.java:29:24: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), java.lang.Object[], T[]
+- compiler.err.warnings.and.werror
+1 error
+2 warnings

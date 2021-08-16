@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <xsd:element name="doc" type="foo"/>
+        <xsd:complexType name="foo">
+                <xsd:all>
+                        <xsd:element name="e1" type="xsd:string"/>
+                        <xsd:element name="e1" type="bar"/>
+                </xsd:all>
+        </xsd:complexType>
+        <xsd:complexType name="bar">
+                <xsd:sequence>
+                        <xsd:choice>
+                                <xsd:choice>
+                                        <xsd:element name="e1" type="xsd:string"/>
+                                </xsd:choice>
+                        </xsd:choice>
+                </xsd:sequence>
+        </xsd:complexType>
+</xsd:schema>

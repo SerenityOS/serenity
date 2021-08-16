@@ -1,0 +1,55 @@
+module mod {
+  0xCAFEBABE;
+  0; // minor version
+  53; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Utf8 "mod/module-info"; // #1
+    class #1; // #2
+    Utf8 "java/lang/Object"; // #3
+    class #3; // #4
+    Utf8 "java.base"; // #5
+    Utf8 "pkg"; // #6
+    Utf8 "Module"; // #7
+    Utf8 "Version"; // #8
+    Utf8 "6.0"; // #9
+  } // Constant Pool
+
+  0x8000; // access
+  #2;// this_cpx
+  #4;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+  } // methods
+
+  [] { // Attributes
+    Attr(#7) { // Module
+      [] { // requires
+        #5 0x8020;
+      } // requires
+
+      [] { // exports
+        #6
+        [] { // to
+        }; // end to
+      } // exports
+
+      [] { // uses
+      } // uses
+
+      [] { // provides
+      } // provides
+
+    } // end Module
+    ;
+    Attr(#8) { // Version
+      0x0009;
+    } // end Version
+  } // Attributes
+} // end module mod

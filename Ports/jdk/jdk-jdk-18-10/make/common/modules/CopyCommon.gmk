@@ -1,0 +1,88 @@
+#
+# Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+LIB_DST_DIR := $(SUPPORT_OUTPUTDIR)/modules_libs/$(MODULE)
+CONF_DST_DIR := $(SUPPORT_OUTPUTDIR)/modules_conf/$(MODULE)
+LEGAL_DST_DIR := $(SUPPORT_OUTPUTDIR)/modules_legal/$(MODULE)
+COMMON_LEGAL_DST_DIR := $(SUPPORT_OUTPUTDIR)/modules_legal/common
+
+################################################################################
+#
+# Copy exported include headers files to output directory, if present.
+#
+
+INCLUDE_TARGET_DIR := $(SUPPORT_OUTPUTDIR)/modules_include/$(MODULE)
+INCLUDE_SOURCE_DIR := $(TOPDIR)/src/$(MODULE)/share/native/include
+
+ifneq ($(wildcard $(INCLUDE_SOURCE_DIR)/*), )
+  $(eval $(call SetupCopyFiles, COPY_EXPORTED_INCLUDE, \
+      SRC := $(INCLUDE_SOURCE_DIR), \
+      DEST := $(INCLUDE_TARGET_DIR), \
+      FILES := $(filter %.h, $(call FindFiles, $(INCLUDE_SOURCE_DIR))), \
+  ))
+
+  TARGETS += $(COPY_EXPORTED_INCLUDE)
+endif
+
+# Use the most specific of OS and OS_TYPE.
+INCLUDE_SOURCE_OS_DIR := $(TOPDIR)/src/$(MODULE)/$(OPENJDK_TARGET_OS)/native/include
+ifeq ($(wildcard $(INCLUDE_SOURCE_OS_DIR)/*), )
+  INCLUDE_SOURCE_OS_DIR := $(TOPDIR)/src/$(MODULE)/$(OPENJDK_TARGET_OS_TYPE)/native/include
+endif
+
+ifneq ($(wildcard $(INCLUDE_SOURCE_OS_DIR)/*), )
+  $(eval $(call SetupCopyFiles, COPY_EXPORTED_INCLUDE_OS, \
+      SRC := $(INCLUDE_SOURCE_OS_DIR), \
+      DEST := $(INCLUDE_TARGET_DIR)/$(OPENJDK_TARGET_OS_INCLUDE_SUBDIR), \
+      FILES := $(filter %.h, $(call FindFiles, $(INCLUDE_SOURCE_OS_DIR))), \
+  ))
+
+  TARGETS += $(COPY_EXPORTED_INCLUDE_OS)
+endif
+
+################################################################################
+# Setup make rules for copying legal files. This is only needed if the files
+# need to be filtered due to optional components being enabled/disabled.
+# Otherwise CreateJmods.gmk will find the legal files in the original src dirs.
+# If multiple license files with the same name are found, only the first one
+# found will get copied.
+#
+# Parameter 1 is the name of the rule.
+#
+# Remaining parameters are named arguments. These include:
+#   EXCLUDES : List of filenames to exclude from copy
+SetupCopyLegalFiles = $(NamedParamsMacroTemplate)
+define SetupCopyLegalFilesBody
+  $$(foreach f, $$(filter-out $$(addprefix %/, $$($1_EXCLUDES)), \
+      $$(wildcard $$(addsuffix /*, $$(call FindModuleLegalSrcDirs, $$(MODULE))))), \
+    $$(if $$(filter $$($1_$$(notdir $$f)), $$($1)), , \
+      $$(eval $$(call SetupCopyFiles, $1_$$(notdir $$f), \
+          DEST := $$(LEGAL_DST_DIR), \
+          FILES := $$f, \
+      )) \
+      $$(eval $1 += $$($1_$$(notdir $$f))) \
+    ) \
+  )
+endef

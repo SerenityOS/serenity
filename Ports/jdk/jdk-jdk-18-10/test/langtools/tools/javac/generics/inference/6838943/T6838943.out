@@ -1,0 +1,2 @@
+T6838943.java:13:14: compiler.err.cant.apply.symbol: kindname.method, m, T6838943.A<Z>,Z, T6838943.A<T6838943.B>,T6838943.B, kindname.class, T6838943.C<X>, (compiler.misc.infer.no.conforming.assignment.exists: Z, (compiler.misc.inconvertible.types: T6838943.A<T6838943.B>, T6838943.A<Z>))
+1 error

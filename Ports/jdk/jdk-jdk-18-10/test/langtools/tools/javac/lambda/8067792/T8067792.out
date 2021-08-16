@@ -1,0 +1,4 @@
+T8067792.java:13:37: compiler.warn.potential.lambda.found
+- compiler.err.warnings.and.werror
+1 error
+1 warning

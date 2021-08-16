@@ -1,0 +1,3 @@
+InterfaceObjectIncompatibility.java:12:12: compiler.err.override.meth.doesnt.throw: (compiler.misc.cant.override: toString(), InterfaceObjectIncompatibility, toString(), java.lang.Object), java.io.IOException
+InterfaceObjectIncompatibility.java:13:9: compiler.err.override.meth.doesnt.throw: (compiler.misc.cant.override: hashCode(), InterfaceObjectIncompatibility, hashCode(), java.lang.Object), java.lang.Exception
+2 errors

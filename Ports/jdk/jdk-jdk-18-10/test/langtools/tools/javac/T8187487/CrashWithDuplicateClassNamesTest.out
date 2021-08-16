@@ -1,0 +1,3 @@
+CrashWithDuplicateClassNamesTest.java:12:16: compiler.err.same.binary.name: C1$C2, C2
+CrashWithDuplicateClassNamesTest.java:19:12: compiler.err.same.binary.name: C4, C3$C4
+2 errors

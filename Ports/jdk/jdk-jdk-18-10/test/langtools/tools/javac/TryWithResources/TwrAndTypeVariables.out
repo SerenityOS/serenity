@@ -1,0 +1,2 @@
+TwrAndTypeVariables.java:20:14: compiler.err.prob.found.req: (compiler.misc.try.not.applicable.to.type: (compiler.misc.inconvertible.types: S, java.lang.AutoCloseable))
+1 error

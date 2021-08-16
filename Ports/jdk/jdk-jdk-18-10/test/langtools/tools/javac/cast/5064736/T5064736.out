@@ -1,0 +1,2 @@
+T5064736.java:14:34: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T5064736.Foo<compiler.misc.type.captureof: 1, ? super T5064736.A>, T5064736.Foo<U>)
+1 error

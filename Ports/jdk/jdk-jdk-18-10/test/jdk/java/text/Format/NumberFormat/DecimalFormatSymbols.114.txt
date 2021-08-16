@@ -1,0 +1,39 @@
+#
+# Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# Hex dump of a serialized DecimalFormatSymbols for SerializationLoadTest.
+
+aced000573720019436865636b446563696d616c466f726d617453796d626f6c
+737763237e1aa359bb0200014c00115f646563466f726d617453796d626f6c73
+7400204c6a6176612f746578742f446563696d616c466f726d617453796d626f
+6c733b78707372001e6a6176612e746578742e446563696d616c466f726d6174
+53796d626f6c73501d17990868939c02000c430010646563696d616c53657061
+7261746f72430005646967697443001167726f7570696e67536570617261746f
+724300096d696e75735369676e4300107061747465726e536570617261746f72
+4300077065724d696c6c43000770657263656e744300097a65726f4469676974
+4c00034e614e7400124c6a6176612f6c616e672f537472696e673b4c000e6375
+7272656e637953796d626f6c7400124c6a6176612f6c616e672f537472696e67
+3b4c0008696e66696e6974797400124c6a6176612f6c616e672f537472696e67
+3b4c0012696e746c43757272656e637953796d626f6c7400124c6a6176612f6c
+616e672f537472696e673b7870002e0023002c002d003b203000250030740003
+efbfbd74000124740003e2889e740003555344

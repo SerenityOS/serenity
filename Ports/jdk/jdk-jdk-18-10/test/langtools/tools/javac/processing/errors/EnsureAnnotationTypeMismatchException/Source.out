@@ -1,0 +1,7 @@
+Generated.java:2:29: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Class<java.lang.String>, java.lang.Class<? extends java.lang.Number>)
+Generated.java:3:26: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: boolean, int)
+Generated.java:4:22: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.String, E)
+Generated.java:5:37: compiler.err.annotation.not.valid.for.type: int
+Generated.java:6:32: compiler.err.annotation.value.not.allowable.type
+Generated.java:7:35: compiler.err.expression.not.allowable.as.annotation.value
+6 errors

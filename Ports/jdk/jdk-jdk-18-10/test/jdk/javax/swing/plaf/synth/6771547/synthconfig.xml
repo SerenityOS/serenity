@@ -1,0 +1,10 @@
+<synth>
+    <style id="button">
+        <font name="Verdana" size="16"/>
+        <state>
+            <color value="RED"
+                   type="javax.swing.plaf.synth.ColorType.FOREGROUND"/>
+        </state>
+    </style>
+    <bind style="button" type="region" key="button"/>
+</synth>

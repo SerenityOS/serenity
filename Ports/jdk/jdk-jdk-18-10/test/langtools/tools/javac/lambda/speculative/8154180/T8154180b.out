@@ -1,0 +1,6 @@
+T8154180b.java:21:9: compiler.err.ref.ambiguous: m, kindname.method, m(T8154180b.Foo1), T8154180b, kindname.method, m(T8154180b.Foo2), T8154180b
+T8154180b.java:22:9: compiler.err.ref.ambiguous: m, kindname.method, m(T8154180b.Foo1), T8154180b, kindname.method, m(T8154180b.Foo2), T8154180b
+T8154180b.java:23:9: compiler.err.ref.ambiguous: m, kindname.method, m(T8154180b.Foo1), T8154180b, kindname.method, m(T8154180b.Foo2), T8154180b
+T8154180b.java:24:9: compiler.err.ref.ambiguous: m, kindname.method, m(T8154180b.Foo1), T8154180b, kindname.method, m(T8154180b.Foo2), T8154180b
+T8154180b.java:25:9: compiler.err.ref.ambiguous: m, kindname.method, m(T8154180b.Foo1), T8154180b, kindname.method, m(T8154180b.Foo2), T8154180b
+5 errors

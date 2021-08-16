@@ -1,0 +1,2 @@
+MethodReference62.java:19:21: compiler.err.abstract.cant.be.accessed.directly: kindname.method, foo(), MethodReference62.Sup
+1 error

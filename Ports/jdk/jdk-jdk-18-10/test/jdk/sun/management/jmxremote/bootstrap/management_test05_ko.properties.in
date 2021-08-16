@@ -1,0 +1,3 @@
+com.sun.management.jmxremote.ssl=false
+com.sun.management.jmxremote.password.file=@TEST-SRC@/jmxremote_test05_ko.password
+com.sun.management.jmxremote.access.file=@TEST-SRC@/jmxremote_test05_ko.access

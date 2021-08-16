@@ -1,0 +1,17 @@
+1. Setup two hosts
+2. Make sure tcp connection between them works
+3. run tcpdump -i <interface> host <host2_name> and 'tcp[13] & 2!=0'
+   on host 1
+4. run 
+
+   ${TESTJAVA}/bin/java -server TestApp \
+   -Dcom.sun.management.jmxremote.port=50234 \
+   -Dcom.sun.management.jmxremote.rmi.port=50235 \
+   -Dcom.sun.management.jmxremote.authenticate=false \
+   -Dcom.sun.management.jmxremote.ssl=false
+
+    on host2
+5. run jconsole on host1
+6. connect jconsole to host2:50234
+   Make sure jconsole works
+   Make sure only host2.50234 and host2.50235 appears in tcpdump output.

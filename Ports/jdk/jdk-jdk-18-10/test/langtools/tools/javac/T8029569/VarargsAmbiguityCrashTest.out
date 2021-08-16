@@ -1,0 +1,2 @@
+VarargsAmbiguityCrashTest.java:11:9: compiler.err.ref.ambiguous: m2, kindname.method, m2(java.lang.Exception...), VarargsAmbiguityCrashTest, kindname.method, m2(java.lang.Long,java.lang.Exception...), VarargsAmbiguityCrashTest
+1 error

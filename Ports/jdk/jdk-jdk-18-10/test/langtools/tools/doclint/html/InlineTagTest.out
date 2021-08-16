@@ -1,0 +1,10 @@
+InlineTagsTest.java:39: error: tag not supported in HTML5: big
+     *  <big> abc </big>
+        ^
+InlineTagsTest.java:45: error: tag not supported in HTML5: font
+     *  <font> abc </font>
+        ^
+InlineTagsTest.java:53: error: tag not supported in HTML5: tt
+     *  <tt> abc </tt>
+        ^
+3 errors

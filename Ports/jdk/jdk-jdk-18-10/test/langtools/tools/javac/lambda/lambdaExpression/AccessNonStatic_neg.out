@@ -1,0 +1,5 @@
+AccessNonStatic_neg.java:15:32: compiler.err.non-static.cant.be.ref: kindname.variable, this
+AccessNonStatic_neg.java:16:32: compiler.err.non-static.cant.be.ref: kindname.variable, n
+AccessNonStatic_neg.java:22:24: compiler.err.non-static.cant.be.ref: kindname.variable, this
+AccessNonStatic_neg.java:23:13: compiler.err.non-static.cant.be.ref: kindname.variable, n
+4 errors

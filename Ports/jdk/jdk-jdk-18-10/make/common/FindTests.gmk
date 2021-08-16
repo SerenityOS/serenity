@@ -1,0 +1,106 @@
+#
+# Copyright (c) 2017, 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+ifndef _FIND_TESTS_GMK
+_FIND_TESTS_GMK := 1
+
+# This makefile can be called directly to just trigger generation of the cache
+# makefile. If so, SPEC and MakeBase.gmk need to be included.
+ifeq ($(FINDTESTS_STAND_ALONE), true)
+  include $(SPEC)
+  include MakeBase.gmk
+endif
+
+# Make sure this variable is not lazy evaled.
+ALL_NAMED_TESTS :=
+
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, common/FindTests.gmk))
+
+# TEST_BASEDIRS might have been set by a custom extension
+TEST_BASEDIRS += $(TOPDIR)/test $(TOPDIR)
+
+# JTREG_TESTROOTS might have been set by a custom extension
+JTREG_TESTROOTS += $(addprefix $(TOPDIR)/test/, hotspot/jtreg jdk langtools jaxp lib-test)
+
+# Extract the names of the Jtreg group files from the TEST.ROOT files. The
+# TEST.ROOT files being properties files can be interpreted as makefiles so
+# use include to get at the contents instead of expensive shell calls. We are
+# looking for the "groups" property in each file.
+JTREG_ROOT_FILES := $(addsuffix /TEST.ROOT, $(JTREG_TESTROOTS))
+JTREG_GROUP_FILES :=
+$(foreach root, $(JTREG_TESTROOTS), \
+  $(if $(wildcard $(root)/TEST.ROOT), \
+    $(eval include $(root)/TEST.ROOT) \
+    $(eval $(root)_JTREG_GROUP_FILES := $$(addprefix $(root)/, $$(groups))) \
+    $(eval JTREG_GROUP_FILES += $$($(root)_JTREG_GROUP_FILES)) \
+   ) \
+)
+
+# Cache the expensive to calculate test names in a generated makefile.
+FIND_TESTS_CACHE_FILE := $(MAKESUPPORT_OUTPUTDIR)/find-tests.gmk
+
+# If this file is deemed outdated, it will automatically get regenerated
+# by this rule before being included below.
+$(FIND_TESTS_CACHE_FILE): $(JTREG_ROOT_FILES) $(JTREG_GROUP_FILES) \
+    $(TOPDIR)/test/make/TestMake.gmk
+	$(call MakeTargetDir)
+	( $(foreach root, $(JTREG_TESTROOTS), \
+	    $(PRINTF) "\n$(root)_JTREG_TEST_GROUPS := " ; \
+	    $(SED) -n -e 's/^\#.*//g' -e 's/\([^ ]*\)\w*=.*/\1/gp' \
+	      $($(root)_JTREG_GROUP_FILES) \
+	      | $(SORT) -u | $(TR) '\n' ' ' ; \
+	  ) \
+	) > $@
+	$(PRINTF) "\nMAKE_TEST_TARGETS := " >> $@
+	$(MAKE) -s --no-print-directory $(MAKE_ARGS) \
+	    SPEC=$(SPEC) -f $(TOPDIR)/test/make/TestMake.gmk print-targets \
+	    TARGETS_FILE=$@
+
+-include $(FIND_TESTS_CACHE_FILE)
+
+# Create a list of all available Jtreg test groups in all components
+JTREG_TEST_GROUPS += $(sort $(foreach root, $(JTREG_TESTROOTS), \
+    $($(root)_JTREG_TEST_GROUPS)))
+
+# Add Jtreg test groups to list of named tests (test groups, test list, etc)
+# ALL_NAMED_TESTS might have been set by a custom extension
+ALL_NAMED_TESTS += $(JTREG_TEST_GROUPS)
+
+# Add the make test targets
+ALL_NAMED_TESTS += $(addprefix make-, $(MAKE_TEST_TARGETS))
+
+# Add Gtest
+ALL_NAMED_TESTS += gtest
+
+# Add microbenchmarks
+ALL_NAMED_TESTS += micro
+
+# Add special tests
+ALL_NAMED_TESTS += failure-handler make
+
+################################################################################
+
+endif # _FIND_TESTS_GMK

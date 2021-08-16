@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<!DOCTYPE organization2 [
+    <!ELEMENT organization2 (company*,ids)>
+    <!ELEMENT company (#PCDATA | department)*>
+    <!ELEMENT ids (id*)>
+    <!ELEMENT id EMPTY>
+    <!ELEMENT department EMPTY>
+    
+    <!ATTLIST organization  id              ID  #IMPLIED
+    >
+    <!ATTLIST company   id                  ID  #REQUIRED
+                        count               CDATA  #REQUIRED
+    >
+    <!ATTLIST department    id              ID  #REQUIRED
+    >
+    <!ATTLIST id
+        value       IDREF   #REQUIRED
+    >
+]>
+<organization2>
+    <company id="xca" count="2">
+        <department id="xda"/>
+    </company>
+    <company id="xcb" count="0"/>
+    <company id="xcc" count="5"/>
+    <ids>
+        <id value="xca"/>
+        <id value="xcb"/>
+    </ids>
+</organization2>

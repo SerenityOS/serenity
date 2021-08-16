@@ -1,0 +1,4 @@
+TargetType46.java:22:17: compiler.err.report.access: TargetType46Outer.PI, private, TargetType46Outer
+TargetType46.java:23:17: compiler.err.report.access: TargetType46Outer.PI, private, TargetType46Outer
+TargetType46.java:25:16: compiler.err.report.access: TargetType46Outer.PI, private, TargetType46Outer
+3 errors

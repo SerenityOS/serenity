@@ -1,0 +1,2 @@
+BrokenConstantValue.java:7:21: compiler.err.cant.access: HasBrokenConstantValue, (compiler.misc.bad.class.file.header: HasBrokenConstantValue.class, (compiler.misc.bad.constant.value.type: java.lang.Object))
+1 error

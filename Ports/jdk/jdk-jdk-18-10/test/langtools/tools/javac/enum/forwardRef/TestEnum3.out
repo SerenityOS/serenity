@@ -1,0 +1,2 @@
+TestEnum3.java:13:34: compiler.err.illegal.enum.static.ref
+1 error

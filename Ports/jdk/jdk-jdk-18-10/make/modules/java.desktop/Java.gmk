@@ -1,0 +1,152 @@
+#
+# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+DOCLINT += -Xdoclint:all/protected,-reference \
+    '-Xdoclint/package:java.*,javax.*'
+COPY += .gif .png .wav .txt .xml .css .pf
+CLEAN += iio-plugin.properties cursors.properties
+
+EXCLUDES += \
+    java/awt/doc-files \
+    javax/swing/doc-files \
+    javax/swing/text/doc-files \
+    javax/swing/plaf/synth/doc-files \
+    javax/swing/undo/doc-files \
+    sun/awt/X11/doc-files \
+    #
+
+EXCLUDE_FILES += \
+    javax/swing/plaf/nimbus/InternalFrameTitlePanePainter.java \
+    javax/swing/plaf/nimbus/OptionPaneMessageAreaPainter.java \
+    javax/swing/plaf/nimbus/ScrollBarPainter.java \
+    javax/swing/plaf/nimbus/SliderPainter.java \
+    javax/swing/plaf/nimbus/SpinnerPainter.java \
+    javax/swing/plaf/nimbus/SplitPanePainter.java \
+    javax/swing/plaf/nimbus/TabbedPanePainter.java \
+    sun/awt/resources/security-icon-bw16.png \
+    sun/awt/resources/security-icon-bw24.png \
+    sun/awt/resources/security-icon-bw32.png \
+    sun/awt/resources/security-icon-bw48.png \
+    sun/awt/resources/security-icon-interim16.png \
+    sun/awt/resources/security-icon-interim24.png \
+    sun/awt/resources/security-icon-interim32.png \
+    sun/awt/resources/security-icon-interim48.png \
+    sun/awt/resources/security-icon-yellow16.png \
+    sun/awt/resources/security-icon-yellow24.png \
+    sun/awt/resources/security-icon-yellow32.png \
+    sun/awt/resources/security-icon-yellow48.png \
+    sun/awt/X11/java-icon16.png \
+    sun/awt/X11/java-icon24.png \
+    sun/awt/X11/java-icon32.png \
+    sun/awt/X11/java-icon48.png \
+    .template \
+    #
+
+ifeq ($(call isTargetOs, macosx), true)
+  # exclude all X11 on Mac.
+  EXCLUDES += \
+      sun/awt/X11 \
+      sun/java2d/x11 \
+      sun/java2d/jules \
+      sun/java2d/xr \
+      com/sun/java/swing/plaf/gtk \
+      #
+  EXCLUDE_FILES += \
+      $(wildcard $(TOPDIR)/src/java.desktop/unix/classes/sun/java2d/*.java) \
+      $(wildcard $(TOPDIR)/src/java.desktop/unix/classes/sun/java2d/opengl/*.java) \
+      $(wildcard $(TOPDIR)/src/java.desktop/unix/classes/sun/awt/*.java) \
+      $(wildcard $(TOPDIR)/src/java.desktop/unix/classes/sun/font/*.java) \
+      #
+else
+  # TBD: figure out how to eliminate this long list
+  EXCLUDE_FILES += \
+      sun/awt/X11/ScreenFormat.java \
+      sun/awt/X11/XArc.java \
+      sun/awt/X11/XChar2b.java \
+      sun/awt/X11/XCharStruct.java \
+      sun/awt/X11/XClassHint.java \
+      sun/awt/X11/XComposeStatus.java \
+      sun/awt/X11/XExtCodes.java \
+      sun/awt/X11/XFontProp.java \
+      sun/awt/X11/XFontSetExtents.java \
+      sun/awt/X11/XFontStruct.java \
+      sun/awt/X11/XGCValues.java \
+      sun/awt/X11/XHostAddress.java \
+      sun/awt/X11/XIMCallback.java \
+      sun/awt/X11/XIMHotKeyTrigger.java \
+      sun/awt/X11/XIMHotKeyTriggers.java \
+      sun/awt/X11/XIMPreeditCaretCallbackStruct.java \
+      sun/awt/X11/XIMPreeditDrawCallbackStruct.java \
+      sun/awt/X11/XIMPreeditStateNotifyCallbackStruct.java \
+      sun/awt/X11/XIMStatusDrawCallbackStruct.java \
+      sun/awt/X11/XIMStringConversionCallbackStruct.java \
+      sun/awt/X11/XIMStringConversionText.java \
+      sun/awt/X11/XIMStyles.java \
+      sun/awt/X11/XIMText.java \
+      sun/awt/X11/XIMValuesList.java \
+      sun/awt/X11/XImage.java \
+      sun/awt/X11/XKeyboardControl.java \
+      sun/awt/X11/XKeyboardState.java \
+      sun/awt/X11/XOMCharSetList.java \
+      sun/awt/X11/XOMFontInfo.java \
+      sun/awt/X11/XOMOrientation.java \
+      sun/awt/X11/XPoint.java \
+      sun/awt/X11/XRectangle.java \
+      sun/awt/X11/XSegment.java \
+      sun/awt/X11/XStandardColormap.java \
+      sun/awt/X11/XTextItem.java \
+      sun/awt/X11/XTextItem16.java \
+      sun/awt/X11/XTextProperty.java \
+      sun/awt/X11/XTimeCoord.java \
+      sun/awt/X11/XWindowChanges.java \
+      sun/awt/X11/XdbeSwapInfo.java \
+      sun/awt/X11/XmbTextItem.java \
+      sun/awt/X11/XwcTextItem.java
+endif
+
+ifeq ($(call isTargetOs, windows), true)
+  EXCLUDES += com/sun/java/swing/plaf/gtk
+endif
+
+ifeq ($(call isTargetOs, windows macosx), false)
+  EXCLUDE_FILES += sun/awt/AWTCharset.java
+endif
+
+# These files do not appear in the build result of the old build. This
+# is because they are generated sources, but the AUTO_JAVA_FILES won't
+# pick them up since they aren't generated when the source dirs are
+# searched and they aren't referenced by any other classes so they won't
+# be picked up by implicit compilation. On a rebuild, they are picked up
+# and compiled. Exclude them here to produce the same rt.jar as the old
+# build does when building just once.
+EXCLUDE_FILES += \
+    javax/swing/plaf/nimbus/InternalFrameTitlePanePainter.java \
+    javax/swing/plaf/nimbus/OptionPaneMessageAreaPainter.java \
+    javax/swing/plaf/nimbus/ScrollBarPainter.java \
+    javax/swing/plaf/nimbus/SliderPainter.java \
+    javax/swing/plaf/nimbus/SpinnerPainter.java \
+    javax/swing/plaf/nimbus/SplitPanePainter.java \
+    javax/swing/plaf/nimbus/TabbedPanePainter.java \
+    #

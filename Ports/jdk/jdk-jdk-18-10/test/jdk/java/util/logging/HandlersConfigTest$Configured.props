@@ -1,0 +1,29 @@
+# mandatory Default properties...
+
+.level= INFO
+handlers=HandlersConfigTest$ConfiguredHandler
+
+java.util.logging.MemoryHandler.target=HandlersConfigTest$ConfiguredHandler
+
+# in addition to Default, Configured adds the following...
+
+java.util.logging.MemoryHandler.level=FINE
+java.util.logging.MemoryHandler.filter=HandlersConfigTest$ConfiguredFilter
+java.util.logging.MemoryHandler.formatter=HandlersConfigTest$ConfiguredFormatter
+java.util.logging.MemoryHandler.size=123
+java.util.logging.MemoryHandler.push=FINE
+
+java.util.logging.ConsoleHandler.level=FINE
+java.util.logging.ConsoleHandler.encoding=ASCII
+java.util.logging.ConsoleHandler.filter=HandlersConfigTest$ConfiguredFilter
+java.util.logging.ConsoleHandler.formatter=HandlersConfigTest$ConfiguredFormatter
+
+java.util.logging.StreamHandler.level=FINE
+java.util.logging.StreamHandler.encoding=ASCII
+java.util.logging.StreamHandler.filter=HandlersConfigTest$ConfiguredFilter
+java.util.logging.StreamHandler.formatter=HandlersConfigTest$ConfiguredFormatter
+
+java.util.logging.SocketHandler.level=FINE
+java.util.logging.SocketHandler.encoding=ASCII
+java.util.logging.SocketHandler.filter=HandlersConfigTest$ConfiguredFilter
+java.util.logging.SocketHandler.formatter=HandlersConfigTest$ConfiguredFormatter

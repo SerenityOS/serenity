@@ -1,0 +1,7 @@
+DuplicateReturnTest.java:20: warning: @return has already been specified
+     * @return two
+       ^
+DuplicateReturnTest.java:21: warning: @return has already been specified
+     * @return three
+       ^
+2 warnings

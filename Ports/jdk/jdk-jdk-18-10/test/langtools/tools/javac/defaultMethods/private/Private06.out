@@ -1,0 +1,4 @@
+Private06.java:9:5: compiler.err.bad.functional.intf.anno.1: (compiler.misc.not.a.functional.intf.1: Private06.NAFI, (compiler.misc.no.abstracts: kindname.interface, Private06.NAFI))
+Private06.java:21:31: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: Private06.NAFI, (compiler.misc.no.abstracts: kindname.interface, Private06.NAFI))
+Private06.java:28:27: compiler.err.prob.found.req: (compiler.misc.invalid.mref: kindname.method, (compiler.misc.report.access: foo(), private, Private06.NAFI))
+3 errors

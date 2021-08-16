@@ -1,0 +1,4 @@
+T6359951.java:14:27: compiler.err.type.var.cant.be.deref
+T6359951.java:15:44: compiler.err.type.var.cant.be.deref
+T6359951.java:16:44: compiler.err.type.var.cant.be.deref
+3 errors

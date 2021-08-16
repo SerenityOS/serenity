@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.hibid.com/useraccount"
+           xmlns="http://www.hibid.com/useraccount"
+           xmlns:user="http://www.hibid.com/useraccount" elementFormDefault="qualified">
+
+
+
+        <xs:complexType name="AddressType">
+           <xs:sequence>
+              <xs:element name="StreetInfo" type="xs:string" />
+           </xs:sequence>
+        </xs:complexType>
+
+
+</xs:schema>

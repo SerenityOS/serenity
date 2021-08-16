@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha1"/><Reference URI="#object"><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><DigestValue>7/XTsHaBSOnJ/jXD5v0zL6VKYsk=</DigestValue></Reference></SignedInfo><SignatureValue>AaVkRumHXD0vVtkn2ogcAoByVge1KWGVWE6vph+xr/hcZTqNNaiIyXb7Itu0FBHD9M47T/CuM7y4
+m60zEssaaHl0AUNm7xGpZy7Heqaoibb/gMU1ErrfSNs7yuPG/TCqs8YAd3RGnc6ZbloitWpycGCU
+LS4xxKms0KeRnbVpjk5OeVfK</SignatureValue><KeyInfo><KeyValue><ECKeyValue xmlns="http://www.w3.org/2009/xmldsig11#"><NamedCurve URI="urn:oid:1.3.132.0.35"/><PublicKey>BAE2HJjBQRbl0sdGa1+1cJwxtPJXcnrRdmRXs6TEQmU97US+CK0vsoDQtlnXxDx37mawN7Sh4Atp
+CUeYBbzvBmwPfQEyAO600W9xn4s5wSQvXod8v8brh5ISXhxYPFy3SCcGUxbQYqrVUnBrIXH8WEQX
+K0/T+FdF4CzlQswJY0UZGeQYcA==</PublicKey></ECKeyValue></KeyValue></KeyInfo><Object Id="object">some text</Object></Signature>

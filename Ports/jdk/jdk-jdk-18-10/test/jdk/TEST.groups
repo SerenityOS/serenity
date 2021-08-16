@@ -1,0 +1,558 @@
+#  Copyright (c) 2013, 2021, Oracle and/or its affiliates. All rights reserved.
+#  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+#  This code is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License version 2 only, as
+#  published by the Free Software Foundation.
+#
+#  This code is distributed in the hope that it will be useful, but WITHOUT
+#  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#  version 2 for more details (a copy is included in the LICENSE file that
+#  accompanied this code).
+#
+#  You should have received a copy of the GNU General Public License version
+#  2 along with this work; if not, write to the Free Software Foundation,
+#  Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#  Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+#  or visit www.oracle.com if you need additional information or have any
+#  questions.
+#
+
+###############################################################################
+#
+# Tiered testing definitions
+#
+
+# When adding tests to tier1, make sure they end up in one of the tier1_partX groups
+tier1 = \
+    :tier1_part1 \
+    :tier1_part2 \
+    :tier1_part3
+
+tier1_part1 = \
+    :jdk_lang
+
+tier1_part2 = \
+    :jdk_util
+
+tier1_part3 = \
+    :jdk_math \
+    :jdk_svc_sanity \
+    :jdk_foreign \
+    java/nio/Buffer \
+    com/sun/crypto/provider/Cipher \
+    sun/nio/cs/ISO8859x.java
+
+# When adding tests to tier2, make sure they end up in one of the tier2_partX groups
+tier2 = \
+    :tier2_part1 \
+    :tier2_part2 \
+    :tier2_part3
+
+# com/sun/crypto/provider/Cipher is in tier1 because of JDK-8132855
+tier2_part1 = \
+    :jdk_security \
+    -com/sun/crypto/provider/Cipher
+
+# sun/nio/cs/ISO8859x.java and java/nio/Buffer are in tier1 because of JDK-8132854
+tier2_part2 = \
+    :core_tools \
+    :jdk_io \
+    :jdk_nio \
+    -java/nio/Buffer \
+    -sun/nio/cs/ISO8859x.java \
+    :jdk_other \
+    :jdk_text \
+    :jdk_time
+
+tier2_part3 = \
+    :jdk_net
+
+tier3 = \
+    :build \
+    :jdk_vector \
+    :jdk_rmi \
+    :jdk_jfr_tier3
+
+###############################################################################
+#
+# Other test definitions; generally smaller granularity than tiers
+#
+
+# Build source checking
+build = \
+    build
+
+# java.lang package and VM runtime support
+jdk_lang = \
+    java/lang \
+    -java/lang/management \
+    -java/lang/instrument \
+    sun/invoke \
+    sun/misc \
+    sun/reflect \
+    jdk/internal/reflect \
+    jdk/lambda \
+    jdk/internal/loader \
+    jdk/internal/misc \
+    jdk/internal/ref \
+    jdk/internal/jimage \
+    jdk/internal/math \
+    jdk/modules
+
+# All of the java.util package
+jdk_util = \
+    :jdk_util_other \
+    :jdk_collections \
+    :jdk_concurrent \
+    :jdk_stream
+
+# All util components not part of some other util category
+jdk_util_other = \
+    java/util \
+    sun/util \
+    -:jdk_collections \
+    -:jdk_concurrent \
+    -:jdk_stream
+
+# All collections, core and concurrent
+jdk_collections = \
+    :jdk_collections_core \
+    :jdk_concurrent
+
+# java.util.concurrent
+# Includes concurrent collections plus other stuff
+# Maintained by JSR-166 EG (Doug Lea et al)
+jdk_concurrent = \
+    java/util/concurrent
+
+# Java Collections Framework core classes
+jdk_collections_core = \
+    java/util/AbstractCollection \
+    java/util/AbstractList \
+    java/util/AbstractMap \
+    java/util/AbstractSequentialList \
+    java/util/ArrayDeque \
+    java/util/ArrayList \
+    java/util/Arrays \
+    java/util/BitSet \
+    java/util/Collection \
+    java/util/Collections \
+    java/util/Comparator \
+    java/util/Deque \
+    java/util/EnumMap \
+    java/util/EnumSet \
+    java/util/HashMap \
+    java/util/HashSet \
+    java/util/Hashtable \
+    java/util/IdentityHashMap \
+    java/util/Iterator \
+    java/util/LinkedHashMap \
+    java/util/LinkedHashSet \
+    java/util/LinkedList \
+    java/util/List \
+    java/util/Map \
+    java/util/NavigableMap \
+    java/util/PriorityQueue \
+    java/util/TimSort \
+    java/util/TreeMap \
+    java/util/Vector \
+    java/util/WeakHashMap
+
+# java.util.stream (JSR-335)
+jdk_stream = \
+    java/util/Optional \
+    java/util/function \
+    java/util/stream
+
+jdk_math = \
+    java/math
+
+jdk_io = \
+    java/io
+
+jdk_nio = \
+    java/nio \
+    sun/nio \
+    jdk/nio
+
+jdk_net = \
+    java/net \
+    com/sun/net/httpserver \
+    sun/net \
+    jdk/net
+
+jdk_time = \
+    java/time
+
+jdk_rmi = \
+    java/rmi \
+    sun/rmi
+
+jdk_security1 = \
+    java/security
+
+jdk_security2 = \
+    javax/crypto \
+    javax/xml/crypto \
+    com/sun/crypto
+
+jdk_security3 = \
+    javax/security  \
+    -javax/security/auth/kerberos \
+    com/sun/jarsigner \
+    com/sun/security \
+    -com/sun/security/jgss \
+    com/sun/org/apache/xml/internal/security \
+    jdk/security \
+    sun/security \
+    -sun/security/krb5 \
+    -sun/security/jgss \
+    javax/net
+
+jdk_security4 = \
+    com/sun/security/jgss \
+    javax/security/auth/kerberos \
+    sun/security/krb5 \
+    sun/security/jgss
+
+jdk_security = \
+    :jdk_security1 \
+    :jdk_security2 \
+    :jdk_security3 \
+    :jdk_security4
+
+jdk_security_infra = \
+    security/infra/java/security/cert/CertPathValidator/certification
+
+jdk_text = \
+    java/text \
+    sun/text
+
+jdk_management = \
+    java/lang/management \
+    com/sun/management \
+    sun/management \
+    jdk/internal/agent
+
+jdk_instrument = \
+    java/lang/instrument
+
+jdk_jmx = \
+    javax/management \
+    com/sun/jmx
+
+jdk_jdi = \
+    com/sun/jdi
+
+jdk_native_sanity = \
+    native_sanity
+
+# java launcher specific tests.
+jdk_launcher = \
+    tools/launcher \
+    sun/tools
+
+#
+# Tool (and tool API) tests are split into core and svc groups
+#
+core_tools = \
+    tools \
+    jdk/internal/jrtfs \
+    sun/tools/jrunscript
+
+svc_tools = \
+    com/sun/tools/attach \
+    sun/tools \
+    -sun/tools/jrunscript \
+    sun/jvmstat
+
+jdk_tools = \
+    :core_tools \
+    :svc_tools
+
+jdk_jfr = \
+    jdk/jfr
+
+jdk_jfr_tier3 = \
+    jdk/jfr/event/metadata/TestLookForUntestedEvents.java
+
+#
+# Catch-all for other areas with a small number of tests
+#
+jdk_other = \
+    java/sql \
+    javax/sql \
+    javax/transaction \
+    javax/rmi \
+    javax/naming \
+    javax/script \
+    javax/smartcardio \
+    javax/xml \
+    -javax/xml/crypto \
+    jdk/dynalink \
+    jdk/internal/jline \
+    com/sun/jndi \
+    lib/testlibrary
+
+#
+# SCTP is its own group as it is highly sensitive to kernel/network config
+#
+jdk_sctp = \
+    com/sun/nio/sctp
+
+
+#
+# core group to run all core area tests
+#
+jdk_core = \
+    :jdk_lang \
+    :jdk_util \
+    :jdk_math \
+    :jdk_io \
+    :jdk_nio \
+    :jdk_net \
+    :jdk_rmi \
+    :jdk_time \
+    :jdk_security \
+    :jdk_text \
+    :core_tools \
+    :jdk_other
+
+#
+# svc group to run all serviceability area tests
+#
+jdk_svc = \
+    :jdk_management \
+    :jdk_instrument \
+    :jdk_jmx \
+    :jdk_jdi \
+    :jdk_jfr \
+    :svc_tools
+
+jdk_foreign = \
+    java/foreign \
+    -java/foreign/TestMatrix.java
+
+jdk_vector = \
+    jdk/incubator/vector
+
+#############################
+
+#
+# Client area groups
+#
+
+jdk_awt = \
+    java/awt \
+    com/apple/eawt \
+    com/apple/laf \
+    sun/awt
+
+jdk_2d = \
+    javax/print \
+    sun/java2d
+
+jdk_beans = \
+    java/beans
+
+jdk_swing = \
+    javax/swing \
+    com/sun/java/swing
+
+jdk_sound = \
+    javax/sound
+
+jdk_imageio = \
+    javax/imageio
+
+jdk_accessibility = \
+    javax/accessibility \
+    com/sun/java/accessibility
+
+jfc_demo = \
+     demo/jfc
+
+jdk_desktop = \
+    :jdk_awt \
+    :jdk_2d \
+    :jdk_beans \
+    :jdk_swing \
+    :jdk_sound \
+    :jdk_imageio \
+    :jdk_accessibility \
+    :jfc_demo \
+    :jdk_client_sanity
+
+# SwingSet3 tests.
+jdk_client_sanity = \
+    sanity/client/SwingSet
+
+# This test group represents a subset of tests which are expected to
+# exercise most of the most commonly used code in Swing applications.
+# New failures in this area may be a problem.
+jdk_swing_core = \
+     :jdk_client_sanity \
+     javax/swing
+
+# The most commonly used printing APIs are included here along with swing core.
+jdk_desktop_core = \
+    :jdk_swing_core \
+    java/awt/print
+
+###############################################################################
+#
+# Serviceability sanity groups
+#
+# These groups specify a subset of Serviceability tests that are supposed to
+# guard against breakage of Serviceability features by other component teams.
+
+jdk_svc_sanity = \
+    :jdk_management_sanity \
+    :jdk_instrument_sanity \
+    :jdk_jmx_sanity \
+    :jdk_jdi_sanity \
+    :jdk_jfr_sanity \
+    :svc_tools_sanity
+
+jdk_management_sanity =
+
+jdk_instrument_sanity =
+
+jdk_jmx_sanity =
+
+jdk_jdi_sanity = \
+    com/sun/jdi/AcceptTimeout.java \
+    com/sun/jdi/AccessSpecifierTest.java \
+    com/sun/jdi/AfterThreadDeathTest.java \
+    com/sun/jdi/ArrayRangeTest.java \
+    com/sun/jdi/ConstantPoolInfo.java \
+    com/sun/jdi/CountFilterTest.java \
+    com/sun/jdi/EarlyReturnNegativeTest.java \
+    com/sun/jdi/EarlyReturnTest.java \
+    com/sun/jdi/FieldWatchpoints.java \
+    com/sun/jdi/FramesTest.java \
+    com/sun/jdi/InstanceFilter.java \
+    com/sun/jdi/InterfaceMethodsTest.java \
+    com/sun/jdi/InvokeTest.java \
+    com/sun/jdi/LocalVariableEqual.java \
+    com/sun/jdi/LocationTest.java \
+    com/sun/jdi/ModificationWatchpoints.java \
+    com/sun/jdi/MonitorEventTest.java \
+    com/sun/jdi/MonitorFrameInfo.java \
+    com/sun/jdi/NullThreadGroupNameTest.java \
+    com/sun/jdi/PopAndStepTest.java \
+    com/sun/jdi/PopAsynchronousTest.java \
+    com/sun/jdi/ProcessAttachTest.java \
+    com/sun/jdi/ReferrersTest.java \
+    com/sun/jdi/RequestReflectionTest.java \
+    com/sun/jdi/ResumeOneThreadTest.java \
+    com/sun/jdi/RunToExit.java \
+    com/sun/jdi/SourceNameFilterTest.java \
+    com/sun/jdi/VarargsTest.java \
+    com/sun/jdi/Vars.java \
+    com/sun/jdi/redefineMethod/RedefineTest.java \
+    com/sun/jdi/sde/MangleTest.java \
+    com/sun/jdi/sde/TemperatureTableTest.java
+
+jdk_jfr_sanity = \
+    jdk/jfr/api/recording/event/TestLoadEventAfterStart.java \
+    jdk/jfr/api/recording/state/TestState.java \
+    jdk/jfr/event/os/TestCPULoad.java \
+    jdk/jfr/event/allocation/TestObjectAllocationSampleEvent.java \
+    jdk/jfr/jcmd/TestJcmdStartStopDefault.java \
+    jdk/jfr/event/io/TestFileStreamEvents.java \
+    jdk/jfr/event/compiler/TestCompilerCompile.java \
+    jdk/jfr/event/gc/collection/TestGCGarbageCollectionEvent.java \
+    jdk/jfr/event/runtime/TestClassLoadEvent.java \
+    jdk/jfr/event/runtime/TestJavaBlockedEvent.java \
+    jdk/jfr/event/gc/collection/TestGCWithFasttime.java \
+    jdk/jfr/event/gc/configuration/TestGCConfigurationEvent.java \
+    jdk/jfr/event/metadata/TestDefaultConfigurations.java \
+    jdk/jfr/startupargs/TestDumpOnExit.java \
+    jdk/jfr/api/consumer/recordingstream/TestBasics.java
+
+svc_tools_sanity =
+
+#############################
+#
+# Stable test groups
+#
+
+jdk_stable = \
+    :jdk_core \
+    :jdk_svc \
+    :jdk_beans \
+    :jdk_imageio \
+    :jdk_sound \
+    :jdk_sctp \
+    javax/accessibility \
+    com/sun/java/swing
+
+needs_g1gc = \
+  jdk/jfr/event/gc/refstat/TestRefStatEventWithG1ConcurrentMark.java \
+  jdk/jfr/event/gc/refstat/TestRefStatEventWithG1FullCollection.java \
+  jdk/jfr/event/gc/refstat/TestRefStatEventWithG1New.java \
+  jdk/jfr/event/gc/detailed/TestEvacuationFailedEvent.java \
+  jdk/jfr/event/gc/detailed/TestEvacuationInfoEvent.java \
+  jdk/jfr/event/gc/detailed/TestG1ConcurrentModeFailureEvent.java \
+  jdk/jfr/event/gc/collection/TestGCCauseWithG1ConcurrentMark.java \
+  jdk/jfr/event/gc/collection/TestGCCauseWithG1FullCollection.java \
+  jdk/jfr/event/gc/collection/TestYoungGarbageCollectionEventWithG1New.java \
+  jdk/jfr/event/gc/collection/TestGCEventMixedWithG1FullCollection.java \
+  jdk/jfr/event/gc/collection/TestGCEventMixedWithG1ConcurrentMark.java \
+  jdk/jfr/event/gc/collection/TestG1ParallelPhases.java \
+  jdk/jfr/event/gc/objectcount/TestObjectCountAfterGCEventWithG1FullCollection.java \
+  jdk/jfr/event/gc/objectcount/TestObjectCountAfterGCEventWithG1ConcurrentMark.java \
+  jdk/jfr/event/gc/heapsummary/TestHeapSummaryEventG1.java
+  
+jdk_core_manual = \
+    :jdk_core_manual_no_input \
+    :jdk_core_manual_no_input_security \
+    :jdk_core_manual_requires_human_input
+
+jdk_core_manual_no_input = \
+    java/net/HugeDataTransferTest.java \
+    java/net/httpclient/BodyProcessorInputStreamTest.java \
+    java/net/httpclient/HttpInputStreamTest.java \
+    java/nio/MappedByteBuffer/PmemTest.java \
+    java/rmi/registry/nonLocalRegistry/NonLocalRegistryTest.java \
+    java/util/zip/ZipFile/TestZipFile.java \
+    javax/net/ssl/compatibility/AlpnTest.java \
+    javax/net/ssl/compatibility/BasicConnectTest.java \
+    javax/net/ssl/compatibility/HrrTest.java \
+    javax/net/ssl/compatibility/SniTest.java \
+    jdk/nio/zipfs/TestLocOffsetFromZip64EF.java
+
+jdk_core_manual_no_input_security = \
+    com/sun/crypto/provider/Cipher/DES/PerformanceTest.java \
+    com/sun/security/auth/callback/TextCallbackHandler/Default.java \
+    com/sun/security/auth/callback/TextCallbackHandler/Password.java \
+    com/sun/security/sasl/gsskerb/AuthOnly.java \
+    com/sun/security/sasl/gsskerb/ConfSecurityLayer.java \
+    com/sun/security/sasl/gsskerb/NoSecurityLayer.java \
+    sun/security/provider/PolicyFile/GrantAllPermToExtWhenNoPolicy.java \
+    sun/security/provider/PolicyParser/ExtDirs.java \
+    sun/security/provider/PolicyParser/ExtDirsChange.java \
+    sun/security/provider/PolicyParser/ExtDirsDefaultPolicy.java \
+    sun/security/provider/PolicyParser/PrincipalExpansionError.java \
+    sun/security/smartcardio/TestChannel.java \
+    sun/security/smartcardio/TestConnect.java \
+    sun/security/smartcardio/TestConnectAgain.java \
+    sun/security/smartcardio/TestControl.java \
+    sun/security/smartcardio/TestDefault.java \
+    sun/security/smartcardio/TestDirect.java \
+    sun/security/smartcardio/TestExclusive.java \
+    sun/security/smartcardio/TestMultiplePresent.java \
+    sun/security/smartcardio/TestPresent.java \
+    sun/security/smartcardio/TestTransmit.java \
+    sun/security/tools/jarsigner/compatibility/Compatibility.java \
+    sun/security/tools/keytool/i18n.java
+
+jdk_core_manual_requires_human_input = \
+    com/sun/jndi/dns/Test6991580.java \
+    java/util/TimeZone/DefaultTimeZoneTest.java
+
+

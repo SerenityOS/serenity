@@ -1,0 +1,4 @@
+T6400189b.java:24:24: compiler.warn.unchecked.call.mbr.of.raw.type: <T>m(T6400189b<T>), T6400189b.B
+T6400189b.java:24:24: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Object, java.lang.Integer)
+1 error
+1 warning

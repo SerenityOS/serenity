@@ -1,0 +1,1092 @@
+<!--
+ Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+
+<!--
+        W3C Document Type Definition for the HyperText Markup Language
+        This version is code named Wilbur, and also as "HTML 3.2".
+
+        Draft: Tuesday August 21st 1996
+
+        Author: Dave Raggett <dsr@w3.org>
+
+        This is subject to change, pending final approval by the W3C
+        member companies.
+
+        HTML 3.2 aims to capture recommended practice as of early '96
+        and as such to be used as a replacement for HTML 2.0 (RFC 1866).
+        Widely deployed rendering attributes are included where they
+        have been shown to be interoperable. SCRIPT and STYLE are
+        included to smooth the introduction of client-side scripts
+        and style sheets. Browsers must avoid showing the contents
+        of these element Otherwise support for them is not required.
+        ID, CLASS and STYLE attributes are not included in this version
+        of HTML.
+
+        The next version of HTML after Wilbur is code named Cougar and
+        will add support for <OBJECT>, client-side scripting, style
+        sheets, and extensions to fill-out forms.
+-->
+
+<!-- HotJava modifications by Steve Byrne, 9/13/1996 -->
+
+<!ENTITY % HTML.Version
+        "-//HotJava//DTD HotJava 1.0 HTML 3.2 Draft 19960821//EN"
+
+        -- Typical usage:
+
+            <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Draft 19960821//EN">
+            <html>
+            ...
+            </html>
+        --
+        >
+
+<!--================== Deprecated Features Switch =========================-->
+
+<!ENTITY % HTML.Deprecated "INCLUDE">
+
+<!--================== Feature Test Entities ==============================-->
+
+<!ENTITY % HTML.Recommended "IGNORE"
+	-- Certain features of the language are necessary for compatibility
+	   with widespread usage, but they may compromise the structural
+	   integrity of a document. This feature test entity enables
+	   a more prescriptive document type definition that eliminates
+	   the above features.
+	-->
+
+<!ENTITY % HTML.HotJava "INCLUDE"
+	-- HotJava specific extensions to the default HTML 3.2 DTD -->
+
+<!-- Currently we are using the the HTML.3.2.Conflict entity to work around
+     a bug in the DTD parser where the first declaration of an ENTITY/ELEMENT
+     or ATTLIST is not taking precedence over subsequent declarations of the same
+     item.  Therefore we need to explicitly "IGNORE" subsequent declarations 
+     in order for HotJava specific extensions to take effect. 
+  -->
+<!ENTITY % HTML.3.2.Conflict "IGNORE"
+	-- 3.2 features to be ignored -->
+
+
+<!--================== Imported Names =====================================-->
+
+<!ENTITY % Content-Type "CDATA"
+        -- meaning a MIME content type, as per RFC1521
+        -->
+
+<!ENTITY % HTTP-Method "GET | POST"
+        -- as per HTTP specification
+        -->
+
+<!ENTITY % URL "CDATA"
+        -- The term URL means a CDATA attribute
+           whose value is a Uniform Resource Locator,
+           See RFC1808 (June 95) and RFC1738 (Dec 94).
+        -->
+
+<!-- Parameter Entities -->
+
+<!ENTITY % head.misc "NOSCRIPT|SCRIPT|STYLE|META|LINK" -- repeatable head elements -->
+
+<!ENTITY % heading "H1|H2|H3|H4|H5|H6">
+
+<!ENTITY % list "UL | OL |  DIR | MENU">
+
+<![ %HTML.Deprecated [
+    <!ENTITY % preformatted "PRE | XMP | LISTING | PLAINTEXT">
+]]>
+
+<!ENTITY % preformatted "PRE">
+
+<!--================ Character mnemonic entities ==========================-->
+
+<!ENTITY % HTMLlat1 PUBLIC
+       "-//W3C//ENTITIES Latin 1//EN//HTML">
+%HTMLlat1;
+
+<!ENTITY % HTMLsymbol PUBLIC
+       "-//W3C//ENTITIES Symbols//EN//HTML">
+%HTMLsymbol;
+
+<!ENTITY % HTMLspecial PUBLIC
+       "-//W3C//ENTITIES Special//EN//HTML">
+%HTMLspecial;
+
+
+<!--=================== Text Markup =======================================-->
+
+<!ENTITY % font "TT | I | B  | U | STRIKE | S | BIG | SMALL | SUB | SUP">
+
+<!ENTITY % phrase "EM | STRONG | DFN | CODE | SAMP | KBD | VAR | CITE">
+
+<![ %HTML.HotJava [
+    <!ENTITY % special "A | IMG | APPLET | OBJECT | FONT | BASEFONT | BR | SCRIPT | MAP
+                        | NOBR | WBR | BLINK | SPAN">
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ENTITY % special "A | IMG | APPLET | FONT | BASEFONT | BR | SCRIPT | MAP">
+]]>
+
+<!ENTITY % form "INPUT | SELECT | TEXTAREA">
+
+<!ENTITY % text "#PCDATA | %font | %phrase | %special | %form">
+
+<![ %HTML.HotJava [
+    <!ELEMENT (%font|%phrase) - - (%text | CENTER | P | DL | UL | OL)*>
+]]>
+<![ %HTML.3.2.Conflict [
+    <!ELEMENT (%font|%phrase) - - (%text)*>
+]]>
+
+
+<!-- there are also 16 widely known color names although
+  the resulting colors are implementation dependent:
+
+   aqua, black, blue, fuchsia, gray, green, lime, maroon,
+   navy, olive, purple, red, silver, teal, white, and yellow
+
+ These colors were originally picked as being the standard
+ 16 colors supported with the Windows VGA palette.
+ -->
+
+<![ %HTML.HotJava [
+    <!ELEMENT FONT - - (%text | CENTER | P | DL | UL | OL)*     -- local change to font -->
+]]>
+<![ %HTML.3.2.Conflict [
+    <!ELEMENT FONT - - (%text)*     -- local change to font -->
+]]>
+<!ATTLIST FONT
+    size    CDATA   #IMPLIED    -- [+]nn e.g. size="+1", size=4 --
+    color   CDATA   #IMPLIED    -- #RRGGBB in hex, e.g. red: color="#FF0000" --
+    >
+
+<!ELEMENT BASEFONT - O EMPTY    -- base font size (1 to 7)-->
+<!ATTLIST BASEFONT
+    size    CDATA   #IMPLIED    -- e.g. size=3 --
+    >
+
+<!ELEMENT BR    - O EMPTY    -- forced line break -->
+<!ATTLIST BR
+        clear (left|all|right|none) none -- control of text flow --
+        >
+
+
+<!--================== HTML content models ================================-->
+<!--
+    HTML has three basic content models:
+
+        %text       character level elements and text strings
+        %flow       block-like elements e.g. paragraphs and lists
+        %bodytext   as (b) plus headers and ADDRESS
+-->
+
+<!ENTITY % block
+     "P | %list | %preformatted | DL | DIV | CENTER | NOSCRIPT |
+      BLOCKQUOTE | FORM | ISINDEX | HR | TABLE | OBJECT">
+
+<!-- %flow is used for DD and LI -->
+
+<!ENTITY % flow "(%block | %text)*">
+
+<!--=================== Document Body =====================================-->
+
+
+<![ %HTML.HotJava [
+    <!ENTITY % body.content "(%heading | %block | %text | ADDRESS | FRAMESET |
+                             NOFRAMES | NOHOTJAVA | ANIMATE)*">
+
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ENTITY % body.content "(%heading | %text | %block | ADDRESS)*">
+]]>
+
+<!ENTITY % color "CDATA" -- a color specification: #HHHHHH @@ details? -->
+
+<!ENTITY % body-color-attrs "
+        bgcolor %color #IMPLIED
+        text %color #IMPLIED
+        link %color #IMPLIED
+        vlink %color #IMPLIED
+        alink %color #IMPLIED
+        ">
+
+<!ELEMENT BODY O O  %body.content>
+<![ %HTML.HotJava [
+    <!ATTLIST BODY
+	    background %URL #IMPLIED  -- texture tile for document background --
+	    %body-color-attrs;  -- bgcolor, text, link, vlink, alink --
+	    width NUTOKEN #IMPLIED
+	    height NUTOKEN #IMPLIED
+	    >
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ATTLIST BODY
+            background %URL #IMPLIED  -- texture tile for document background --
+            %body-color-attrs;  -- bgcolor, text, link, vlink, alink --
+	    >
+]]>
+
+
+<!ENTITY % address.content "((%text;) | P)*">
+
+<!ELEMENT ADDRESS - - %address.content>
+
+<!ELEMENT DIV - - %body.content>
+<![ %HTML.HotJava [
+    <!ATTLIST DIV
+            align   (left|center|right) left -- alignment of following text --
+            >
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ATTLIST DIV
+            align   (left|center|right) #IMPLIED -- alignment of following text --
+	    >
+]]>
+
+<!-- CENTER is a shorthand for DIV with ALIGN=CENTER -->
+<!ELEMENT center - - %body.content>
+
+<!--================== The Anchor Element =================================-->
+
+<!ENTITY % SHAPE "(rect|circle|poly|default)">
+<!ENTITY % COORDS "CDATA" -- comma separated list of numbers -->
+
+<![ %HTML.HotJava [
+    <!ELEMENT A - - (%text|%heading|PRE)* -(A)>
+    <!ATTLIST A
+	    name    CDATA   #IMPLIED    -- named link end --
+	    href    %URL    #IMPLIED    -- URL for linked resource --
+	    rel     CDATA   #IMPLIED    -- forward link types --
+	    rev     CDATA   #IMPLIED    -- reverse link types --
+	    title   CDATA   #IMPLIED    -- advisory title string --
+	    target  CDATA   #IMPLIED
+       	    shape   %SHAPE  #IMPLIED    -- (OBJECT tag specific) -- 
+	    coords  %COORDS #IMPLIED    -- always needed except for shape=default (OBJECT tag specific)--
+            ismap   (ismap) #IMPLIED    -- (OBJECT tag specific) --
+	    >
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ELEMENT A - - (%text)* -(A)>
+    <!ATTLIST A
+	    name    CDATA   #IMPLIED    -- named link end --
+	    href    %URL    #IMPLIED    -- URL for linked resource --
+	    rel     CDATA   #IMPLIED    -- forward link types --
+	    rev     CDATA   #IMPLIED    -- reverse link types --
+	    title   CDATA   #IMPLIED    -- advisory title string --
+	    >
+]]>
+
+<!--================== Client-side image maps ============================-->
+
+<!-- These can be placed in the same document or grouped in a
+     separate document although this isn't yet widely supported -->
+
+
+<![ %HTML.HotJava [
+<!ELEMENT MAP - - (BASE|AREA)*>
+]]>
+
+<![ %HTML.3.2.Conflict [
+<!ELEMENT MAP - - (AREA)*>
+]]>
+
+<!ATTLIST MAP
+    name    CDATA   #IMPLIED
+    >
+
+<!ELEMENT AREA - O EMPTY>
+
+<![ %HTML.HotJava [
+    <!ATTLIST AREA
+	shape   %SHAPE  rect
+	coords  %COORDS #IMPLIED  -- always needed except for shape=default --
+	href    %URL    #IMPLIED  -- this region acts as hypertext link --
+	nohref (nohref) #IMPLIED  -- this region has no action --
+	alt     CDATA   #IMPLIED  -- make HotJava more forgiving --
+	target  CDATA   #IMPLIED
+	>
+]]>
+
+
+<![ %HTML.3.2.Conflict [
+    <!ATTLIST AREA
+        shape   %SHAPE  rect
+        coords  %COORDS #IMPLIED  -- always needed except for shape=default --
+        href    %URL    #IMPLIED  -- this region acts as hypertext link --
+        nohref (nohref) #IMPLIED  -- this region has no action --
+        alt     CDATA   #REQUIRED
+        >
+]]>
+
+<!--================== The LINK Element ==================================-->
+
+<!ENTITY % Types "CDATA"
+        -- See Internet Draft: draft-ietf-html-relrev-00.txt
+           LINK has been part of HTML since the early days
+           although few browsers as yet take advantage of it.
+
+           Relationship values can be used in principle:
+
+                a) for document specific toolbars/menus when used
+                   with the LINK element in document head:
+                b) to link to a separate style sheet (rel=stylesheet)
+                c) to make a link to a script (rel=script)
+                d) by stylesheets to control how collections of
+                   html nodes are rendered into printed documents
+                e) to make a link to a printable version of this document
+                   e.g. a postscript or pdf version (rel=print)
+-->
+
+<!ELEMENT LINK - O EMPTY>
+<!ATTLIST LINK
+        id      ID      #IMPLIED    -- SGML ID attribute --
+        href    %URL    #IMPLIED    -- URL for linked resource --
+        rel     %Types  #IMPLIED    -- forward link types --
+        rev     %Types  #IMPLIED    -- reverse link types --
+        title   CDATA   #IMPLIED    -- advisory title string --
+        >
+
+<!--=================== Images ============================================-->
+
+<!ENTITY % Length "CDATA" -- nn for pixels or nn% for percentage length -->
+<!ENTITY % Pixels "CDATA" -- integer representing length in pixels -->
+
+<!-- Suggested widths are used for negotiating image size
+     with the module responsible for painting the image.
+     align=left or right cause image to float to margin
+     and for subsequent text to wrap around image -->
+
+<![ %HTML.HotJava [
+    <!ENTITY % IAlign "top|middle|bottom|left|right
+			|texttop|absmiddle|baseline|absbottom">
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ENTITY % IAlign "top|middle|bottom|left|right">
+]]>
+
+<!ENTITY % ImgAlign "( %IAlign | center)">
+
+<!ELEMENT IMG    - O EMPTY --  Embedded image -->
+<![ %HTML.HotJava [
+    <!ATTLIST IMG
+	    src     %URL         #REQUIRED  -- URL of image to embed --
+	    alt     CDATA        #IMPLIED   -- for display in place of image --
+	    align   %ImgAlign  	 baseline   -- vertical or horizontal alignment --
+	    height  %Pixels      #IMPLIED   -- suggested height in pixels --
+	    width   %Pixels      #IMPLIED   -- suggested width in pixels --
+	    border  %Pixels      #IMPLIED   -- suggested link border width --
+	    hspace  %Pixels      #IMPLIED   -- suggested horizontal gutter --
+	    vspace  %Pixels      #IMPLIED   -- suggested vertical gutter --
+	    usemap  %URL         #IMPLIED   -- use client-side image map --
+	    ismap   (ismap)      #IMPLIED   -- use server image map --
+	    lowsrc  %URL         #IMPLIED
+	    >
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ATTLIST IMG
+	    src     %URL      #REQUIRED  -- URL of image to embed --
+	    alt     CDATA     #IMPLIED   -- for display in place of image --
+	    align   (%IAlign) #IMPLIED   -- vertical or horizontal alignment --
+	    height  %Pixels   #IMPLIED   -- suggested height in pixels --
+	    width   %Pixels   #IMPLIED   -- suggested width in pixels --
+	    border  %Pixels   #IMPLIED   -- suggested link border width --
+	    hspace  %Pixels   #IMPLIED   -- suggested horizontal gutter --
+	    vspace  %Pixels   #IMPLIED   -- suggested vertical gutter --
+	    usemap  %URL      #IMPLIED   -- use client-side image map --
+	    ismap   (ismap)   #IMPLIED   -- use server image map --
+	    >
+]]>
+
+<!-- USEMAP points to a MAP element which may be in this document
+  or an external document, although the latter is not widely supported -->
+
+<!--=================== Java APPLET tag ===================================-->
+<!--
+  This tag is supported by all java enabled browsers. Applet resources
+  (including their classes) are normally loaded relative to the document
+  URL (or <BASE> element if it is defined). The CODEBASE attribute is used
+  to change this default behavior. If the CODEBASE attribute is defined then
+  it specifies a different location to find applet resources. The value
+  can be an absolute URL or a relative URL. The absolute URL is used as is
+  without modification and is not effected by the documents <BASE> element.
+  When the codebase attribute is relative, then it is relative to the
+  document URL (or <BASE> tag if defined).
+-->
+<![ %HTML.HotJava [
+    <!ELEMENT APPLET - - (%flow|%heading|%form|TR|TD)* +(PARAM)>
+    <!ATTLIST APPLET
+	    codebase %URL      #IMPLIED   -- code base --
+	    code     CDATA     #IMPLIED  -- class file --
+	    alt      CDATA     #IMPLIED   -- for display in place of applet --
+	    name     CDATA     #IMPLIED   -- applet name --
+	    archive  CDATA     #IMPLIED   -- archive attribute for jar files --
+	    width    %Pixels   #REQUIRED  -- suggested width in pixels --
+	    height   %Pixels   #REQUIRED  -- suggested height in pixels --
+	    align    (%IAlign) baseline   -- vertical or horizontal alignment --
+	    hspace   %Pixels   #IMPLIED   -- suggested horizontal gutter --
+	    vspace   %Pixels   #IMPLIED   -- suggested vertical gutter --
+	    >
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ELEMENT APPLET - - (%text)* +(PARAM)>
+    <!ATTLIST APPLET
+	    codebase %URL      #IMPLIED   -- code base --
+	    code     CDATA     #REQUIRED  -- class file --
+	    alt      CDATA     #IMPLIED   -- for display in place of applet --
+	    name     CDATA     #IMPLIED   -- applet name --
+	    width    %Pixels   #REQUIRED  -- suggested width in pixels --
+	    height   %Pixels   #REQUIRED  -- suggested height in pixels --
+	    align    (%IAlign) #IMPLIED   -- vertical or horizontal alignment --
+	    hspace   %Pixels   #IMPLIED   -- suggested horizontal gutter --
+	    vspace   %Pixels   #IMPLIED   -- suggested vertical gutter --
+	    >
+]]>
+
+
+<!-- This tag is used by both the APPLET tag and the OBJECT tag. -->
+<!ELEMENT PARAM - O EMPTY>
+<!ATTLIST PARAM
+        name        NAME               #REQUIRED  -- The name of the parameter --
+        value       CDATA              #IMPLIED   -- The value of the parameter --
+        valuetype   (DATA|REF|OBJECT)  DATA       -- How to interpret value (OBJECT tag specific) --
+        type        CDATA              #IMPLIED   -- Internet media type (OBJECT tag specific) --
+        >
+
+<!--
+Here is an example:
+
+    <applet codebase="applets/NervousText"
+        code=NervousText.class
+        width=300
+        height=50>
+    <param name=text value="Java is Cool!">
+    <img src=sorry.gif alt="This looks better with Java support">
+    </applet>
+-->
+<!--=================== Object Tag ===================================-->
+
+<!--
+  The OBJECT element is used to insert an object into an HTML document.
+  It requires both start and end tags. The OBJECT element has the same
+  content model as the HTML BODY element, except that one or more optional
+  PARAM elements can be placed immediately after the OBJECT start tag and
+  used to initialize the inserted object. The content of the OBJECT
+  element is rendered if the object specified by the CLASSID, CODEBASE and
+  DATA attributes can't be rendered (user agents may choose to display the
+  content of the OBJECT element if displaying the actual element will take
+  a long time to render). This provides for backwards compatibility with
+  existing browsers, and allows authors to specify alternative media via
+  nested OBJECT elements. 
+-->
+
+<!-- This is identical to the HMTL3.2 body.content entity.
+     It differs from the HotJava body.content in that it doesnt
+     have FRAMESET and NOFRAMES elements.
+-->
+<!ENTITY % bodytext "(%heading | %flow | ADDRESS)*">
+
+<!-- OBJECT is a character-like element for inserting objects -->
+
+<![ %HTML.3.2.Conflict [
+<!ELEMENT OBJECT - - (param | %bodytext)*>
+]]>
+
+<![ %HTML.HotJava [
+<!ELEMENT OBJECT - - (param | %bodytext | %form)*>
+]]>
+
+
+<!ATTLIST OBJECT
+        id       ID        #IMPLIED   -- document wide unique id --
+        class    CDATA     #IMPLIED   -- comma list of class values --
+        style    CDATA     #IMPLIED   -- associated style info --
+        lang     NAME      #IMPLIED   -- RFC 1766 language value --
+        dir      (ltr|rtl) #IMPLIED   -- default directionality --
+        declare  (declare) #IMPLIED   -- declare but don't instantiate flag --
+        classid  %URL      #IMPLIED   -- identifies an implementation --
+        codebase %URL      #IMPLIED   -- some systems need an additional URL --
+        data     %URL      #IMPLIED   -- reference to object's data --
+        type     CDATA     #IMPLIED   -- Internet media type for data --
+        codetype CDATA     #IMPLIED   -- Internet media type for code --
+        standby  CDATA     #IMPLIED   -- message to show while loading --
+        align    (%IAlign) #IMPLIED   -- positioning inside document --
+        height   %Length   #IMPLIED   -- suggested height --
+        width    %Length   #IMPLIED   -- suggested width --
+        border   %Length   #IMPLIED   -- suggested link border width --
+        hspace   %Length   #IMPLIED   -- suggested horizontal gutter --
+        vspace   %Length   #IMPLIED   -- suggested vertical gutter --
+        usemap   %URL      #IMPLIED   -- reference to image map --
+        shapes   (shapes)  #IMPLIED   -- object has shaped hypertext links --
+        name     %URL      #IMPLIED   -- submit as part of form --
+        >
+
+                         
+<!--=================== Horizontal Rule ===================================-->
+
+<!ELEMENT HR    - O EMPTY>
+<!ATTLIST HR
+        align (left|right|center) #IMPLIED
+        noshade (noshade) #IMPLIED
+        size  %Pixels #IMPLIED
+        width %Length #IMPLIED
+        >
+<!--=================== Paragraphs=========================================-->
+
+<!ELEMENT P     - O (%text)*>
+<!ATTLIST P
+        align  (left|center|right) #IMPLIED
+        >
+
+<!--=================== Headings ==========================================-->
+
+<!--
+  There are six levels of headers from H1 (the most important)
+  to H6 (the least important).
+-->
+
+<![ %HTML.HotJava [
+    <!ELEMENT ( %heading )  - -  (IMG|br|hr|center|%text;)*>
+]]>
+
+
+<![ %HTML.3.2.Conflict [
+    <!ELEMENT ( %heading )  - -  (%text;)*>
+]]>
+
+<!ATTLIST ( %heading )
+        align  (left|center|right) #IMPLIED
+        >
+
+<!--=================== Preformatted Text =================================-->
+
+<!-- excludes images and changes in font size -->
+
+<![ %HTML.HotJava [
+    <!ENTITY % pre.exclusions "BIG|SMALL|SUB|SUP">
+]]>
+
+<![ %HTML.3.2.Conflict [
+     <!ENTITY % pre.exclusions "IMG|BIG|SMALL|SUB|SUP|FONT">
+]]>
+
+<![ %HTML.HotJava [
+    <!ELEMENT PRE - - (%text)* +(HR|P)>
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ELEMENT PRE - - (%text)* -(%pre.exclusion)>
+]]>
+
+<!ATTLIST PRE
+        width NUMBER #implied -- is this widely supported? --
+        >
+
+<![ %HTML.Deprecated [
+
+<!ENTITY % literal "CDATA"
+        -- historical, non-conforming parsing mode where
+           the only markup signal is the end tag
+           in full
+        -->
+
+<!ELEMENT (XMP|LISTING) - -  %literal>
+<!ELEMENT PLAINTEXT - O %literal>
+
+]]>
+
+<!--=================== Block-like Quotes =================================-->
+
+<!ELEMENT BLOCKQUOTE - - %body.content>
+
+<!--=================== Lists =============================================-->
+
+<!--
+    HTML 3.2 allows you to control the sequence number for ordered lists.
+    You can set the sequence number with the START and VALUE attributes.
+    The TYPE attribute may be used to specify the rendering of ordered
+    and unordered lists.
+-->
+
+<!-- definition lists - DT for term, DD for its definition -->
+
+
+<!-- 
+      Changed to enable hotjava to read netscape bookmarks.
+-->
+<![ %HTML.HotJava [
+    <!ELEMENT DL    - -  (P|DL|DT|DD)*>
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ELEMENT DL    - -  (DT|DD)*>
+]]>
+
+<!ATTLIST DL
+        compact (compact) #IMPLIED -- more compact style --
+        >
+<!-- 
+      Changed to enable hotjava to read netscape bookmarks.
+      Also hotjava's hotlist uses the same format to save its
+      bookmarks.
+-->
+<![ %HTML.HotJava [
+    <!ELEMENT DT - O  (%heading|%text)*>
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ELEMENT DT - O  (%text)*>
+]]>
+
+<!ELEMENT DD - O  %flow;>
+
+<!-- Ordered lists OL, and unordered lists UL -->
+<![ %HTML.3.2.Conflict [
+    <!ELEMENT (OL|UL) - -  (LI)*>
+]]>
+
+<!-- Ordered lists OL, and unordered lists UL -->
+<![ %HTML.HotJava [
+    <!ELEMENT (OL|UL) - -  (P|BR|%text|OL|UL|LI)*>
+]]>
+
+<!--
+       Numbering style
+    1   arablic numbers     1, 2, 3, ...
+    a   lower alpha         a, b, c, ...
+    A   upper alpha         A, B, C, ...
+    i   lower roman         i, ii, iii, ...
+    I   upper roman         I, II, III, ...
+
+    The style is applied to the sequence number which by default
+    is reset to 1 for the first list item in an ordered list.
+
+    This can't be expressed directly in SGML due to case folding.
+-->
+
+<!ENTITY % OLStyle "CDATA" -- constrained to: [1|a|A|i|I] -->
+
+<![ %HTML.HotJava [
+    <!ATTLIST OL -- ordered lists --
+	    type      %OLStyle   "1"   -- numbering style --
+	    start     NUMBER     #IMPLIED   -- starting sequence number --
+	    compact  (compact)   #IMPLIED   -- reduced interitem spacing --
+	    >
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ATTLIST OL -- ordered lists --
+	    type      %OLStyle   #IMPLIED   -- numbering style --
+	    start     NUMBER     #IMPLIED   -- starting sequence number --
+	    compact  (compact)   #IMPLIED   -- reduced interitem spacing --
+	    >
+]]>
+
+<!-- bullet styles -->
+
+<!ENTITY % ULStyle "disc|square|circle">
+
+<!ATTLIST UL -- unordered lists --
+        type    (%ULStyle)   #IMPLIED   -- bullet style --
+        compact (compact)    #IMPLIED   -- reduced interitem spacing --
+        >
+
+<![ %HTML.HotJava [
+     <!ELEMENT (DIR|MENU) - -  (%list|%text|LI)* -(%preformatted | DL | DIV | CENTER |
+           BLOCKQUOTE | FORM | ISINDEX | HR | TABLE | OBJECT) +(P)>
+]]>
+
+<![ %HTML.3.2.Conflict [
+     <!ELEMENT (DIR|MENU) - -  (LI)* -(%block)>
+]]>
+
+<!ATTLIST DIR
+        compact (compact) #IMPLIED
+        >
+<!ATTLIST MENU
+        compact (compact) #IMPLIED
+        >
+
+<!-- <DIR>              Directory list                  -->
+<!-- <DIR COMPACT>      Compact list style              -->
+<!-- <MENU>             Menu list                       -->
+<!-- <MENU COMPACT>     Compact list style              -->
+
+<!-- The type attribute can be used to change the bullet style
+     in unordered lists and the numbering style in ordered lists -->
+
+<!ENTITY % LIStyle "CDATA" -- constrained to: "(%ULStyle|%OLStyle)" -->
+
+<![ %HTML.HotJava [
+    <!ELEMENT LI - O (%flow|%heading)* -- list item -->
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ELEMENT LI - O %flow -- list item -->
+]]>
+
+<!ATTLIST LI
+        type    %LIStyle     #IMPLIED   -- list item style --
+        value    NUMBER      #IMPLIED   -- reset sequence number --
+        >
+
+<!--================ Forms ===============================================-->
+
+<!ELEMENT FORM - - %body.content -(FORM)>
+<!ATTLIST FORM
+        action %URL #IMPLIED  -- server-side form handler --
+        method (%HTTP-Method) GET -- see HTTP specification --
+        enctype %Content-Type; "application/x-www-form-urlencoded"
+        >
+
+<!ENTITY % InputType
+        "(TEXT | PASSWORD | CHECKBOX | RADIO | SUBMIT
+            | RESET | FILE | HIDDEN | IMAGE)">
+
+<!ELEMENT INPUT - O EMPTY>
+
+<![ %HTML.HotJava [
+     <!ATTLIST INPUT
+        type %InputType TEXT     -- what kind of widget is needed --
+        name  CDATA #IMPLIED     -- required for all but submit and reset --
+        value  CDATA #IMPLIED     -- required for radio and checkboxes --
+	border   %Pixels      #IMPLIED   -- suggested image border width --
+        checked	  (checked) #IMPLIED -- for radio buttons and check boxes --
+        size CDATA  #IMPLIED     -- specific to each type of field --
+        maxlength NUMBER #IMPLIED
+        src   %URL  #IMPLIED     -- for fields with background images --
+        align  (top|middle|bottom|left|right) top -- image alignment --
+        >
+]]>
+
+
+<![ %HTML.3.2.Conflict [
+     <!ATTLIST INPUT
+        type %InputType TEXT     -- what kind of widget is needed --
+        name  CDATA #IMPLIED     -- required for all but submit and reset --
+        value  CDATA #IMPLIED     -- required for radio and checkboxes --
+        checked	  (checked) #IMPLIED -- for radio buttons and check boxes --
+        size CDATA  #IMPLIED     -- specific to each type of field --
+        maxlength NUMBER #IMPLIED
+        src   %URL  #IMPLIED     -- for fields with background images --
+        align  (top|middle|bottom|left|right) top -- image alignment --
+        >
+]]>
+
+
+<!ELEMENT SELECT - - (OPTION+)>
+<!ATTLIST SELECT
+        name CDATA #REQUIRED
+        size NUMBER #IMPLIED
+        multiple (multiple) #IMPLIED
+        >
+
+<!ELEMENT OPTION - O (#PCDATA)*>
+<!ATTLIST OPTION
+        selected (selected) #IMPLIED
+        value  CDATA  #IMPLIED -- defaults to element content --
+        >
+
+<!-- Multi-line text input field. -->
+
+<!ELEMENT TEXTAREA - - (#PCDATA)*>
+<!ATTLIST TEXTAREA
+        name CDATA #REQUIRED
+        rows NUMBER #REQUIRED
+        cols NUMBER #REQUIRED
+        >
+
+<!--======================= Tables ========================================-->
+
+<!-- Widely deployed subset of the full table standard, see RFC 1942
+     e.g. at http://www.ics.uci.edu/pub/ietf/html/rfc1942.txt -->
+
+<!-- horizontal placement of table relative to window -->
+<!ENTITY % Where "(left|center|right)">
+
+<!-- horizontal alignment attributes for cell contents -->
+<!ENTITY % cell.halign
+        "align  (left|center|right) #IMPLIED"
+        >
+
+<!-- vertical alignment attributes for cell contents -->
+<!ENTITY % cell.valign
+        "valign  (top|middle|bottom|baseline)  #IMPLIED"
+        >
+
+<![ %HTML.HotJava [
+    <!ELEMENT table - - (tr|caption)*     -- a little more forgiving -->
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ELEMENT table - - (caption?, tr+)>
+]]>
+
+<!-- added to enable some pages like the nbc and apple pages to display correctly -->
+<![ %HTML.HotJava [
+    <!ELEMENT tr - O (td|th|SCRIPT|MAP)*>
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ELEMENT tr - O (td|th)*>
+]]>
+
+<!ELEMENT (th|td) - O %body.content>
+
+
+<![ %HTML.HotJava [
+
+    <!ATTLIST table                       -- table element --
+	    align     %Where;   #IMPLIED  -- table position relative to window --
+	    width     %Length   #IMPLIED  -- table width relative to window --
+	    border    %Pixels   #IMPLIED  -- controls frame width around table --
+	    cellspacing %Pixels #IMPLIED  -- spacing between cells --
+	    cellpadding %Pixels #IMPLIED  -- spacing within cells --
+	    bgcolor   %color	#IMPLIED  -- def background color of all cells --
+	    >
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ATTLIST table                       -- table element --
+	    align     %Where;   #IMPLIED  -- table position relative to window --
+	    width     %Length   #IMPLIED  -- table width relative to window --
+	    border    %Pixels   #IMPLIED  -- controls frame width around table --
+	    cellspacing %Pixels #IMPLIED  -- spacing between cells --
+	    cellpadding %Pixels #IMPLIED  -- spacing within cells --
+	    >
+]]>
+
+<![ %HTML.HotJava [
+    <!ELEMENT CAPTION - - %body.content -- table or figure caption -->
+]]>
+
+
+<![ %HTML.3.2.Conflict [
+    <!ELEMENT CAPTION - - (%text;)* -- table or figure caption -->
+]]>
+
+<![ %HTML.HotJava [
+    <!ATTLIST CAPTION
+	    align (top|bottom) top
+	    >
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ATTLIST CAPTION
+	    align (top|bottom) #IMPLIED
+	    >
+]]>
+
+<![ %HTML.HotJava [
+    <!ATTLIST tr                       -- table row --
+	    %cell.halign;              -- horizontal alignment in cells --
+	    %cell.valign;              -- vertical alignment in cells --
+	    bgcolor %color  #IMPLIED   -- def bkg color for cells in row --
+	    >
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ATTLIST tr                       -- table row --
+	    %cell.halign;              -- horizontal alignment in cells --
+	    %cell.valign;              -- vertical alignment in cells --
+	    >
+]]>
+
+<![ %HTML.HotJava [
+
+    <!ATTLIST (th|td)                  -- header or data cell --
+	    nowrap (nowrap)  #IMPLIED  -- suppress word wrap --
+	    bgcolor %color   #IMPLIED  -- cell background color --
+	    rowspan NUMBER   1         -- number of rows spanned by cell --
+	    colspan NUMBER   1         -- number of cols spanned by cell --
+	    %cell.halign;              -- horizontal alignment in cell --
+	    %cell.valign;              -- vertical alignment in cell --
+	    width   %Length  #IMPLIED  -- suggested width for cell --
+	    height  %Length  #IMPLIED  -- suggested height for cell --
+	    >
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ATTLIST (th|td)                  -- header or data cell --
+            nowrap (nowrap)  #IMPLIED  -- suppress word wrap --
+            rowspan NUMBER   1         -- number of rows spanned by cell --
+            colspan NUMBER   1         -- number of cols spanned by cell --
+            %cell.halign;              -- horizontal alignment in cell --
+            %cell.valign;              -- vertical alignment in cell --
+            width   %Pixels  #IMPLIED  -- suggested width for cell --
+            height  %Pixels  #IMPLIED  -- suggested height for cell --
+            >
+]]>
+
+
+
+<!--================ Document Head ========================================-->
+
+<!-- %head.misc defined earlier on as "SCRIPT|STYLE|META|LINK" -->
+
+<![ %HTML.HotJava [
+    <!ENTITY % head.content "TITLE? & ISINDEX? & BASE? & NEXTID?">
+]]>
+
+<![ %HTML.3.2.Conflict [
+    <!ENTITY % head.content "TITLE & ISINDEX? & BASE?">
+]]>
+
+<!ELEMENT HEAD O O  (%head.content) +(%head.misc)>
+
+<!ELEMENT TITLE - -  (#PCDATA)* -(%head.misc)
+          -- The TITLE element is not considered part of the flow of text.
+             It should be displayed, for example as the page header or
+             window title.
+          -->
+
+<!ELEMENT ISINDEX - O EMPTY>
+<!ATTLIST ISINDEX
+        prompt CDATA #IMPLIED -- prompt message -->
+
+
+
+<!--
+    The BASE element gives an absolute URL for dereferencing relative
+    URLs, e.g.
+
+         <BASE href="http://foo.com/index.html">
+         ...
+         <IMG SRC="images/bar.gif">
+
+    The image is deferenced to
+
+         http://foo.com/images/bar.gif
+
+   In the absence of a BASE element the document URL should be used.
+   Note that this is not necessarily the same as the URL used to
+   request the document, as the base URL may be overridden by an HTTP
+   header accompanying the document.
+-->
+
+<!ELEMENT BASE - O EMPTY>
+
+<![ %HTML.3.2.Conflict [
+    <!ATTLIST BASE href %URL  #REQUIRED>
+]]>
+
+<![ %HTML.HotJava [
+    <!ATTLIST BASE
+         href   %URL  #IMPLIED
+         target CDATA #IMPLIED
+    >
+]]>
+
+<!ELEMENT META - O EMPTY -- Generic Metainformation -->
+<!ATTLIST META
+        http-equiv  NAME    #IMPLIED  -- HTTP response header name  --
+        name        NAME    #IMPLIED  -- metainformation name       --
+        content     CDATA   #REQUIRED -- associated information     --
+        >
+
+<!-- SCRIPT/STYLE are place holders for transition to next version of HTML -->
+
+<!ELEMENT STYLE  - - (#PCDATA)*  -(%head.misc) -- style info -->
+
+<![ %HTML.3.2.Conflict [
+    <!ELEMENT SCRIPT - - (#PCDATA)*  -(%head.misc) -- script statements -->
+]]>
+
+<!-- this definition of script for hotjava is done so that all html tags
+     that occur within the script tags can be ignored - given that
+     currently hotjava does not support javascript.  -->
+     
+<![ %HTML.HotJava [
+    <!ELEMENT SCRIPT - - %body.content  -(%head.misc) -- script statements -->
+]]>
+
+<![ %HTML.HotJava [
+    <!ATTLIST SCRIPT
+	    language    CDATA   #IMPLIED
+	    >
+]]>
+
+<!--================ Document Structure ===================================-->
+
+<!ENTITY % version.attr "VERSION CDATA #FIXED '%HTML.Version;'">
+
+<![ %HTML.Deprecated [
+    <!ENTITY % html.content "HEAD, BODY, PLAINTEXT?">
+]]>
+<!ENTITY % html.content "HEAD, BODY">
+
+<!ELEMENT HTML O O  (%html.content)>
+<!ATTLIST HTML
+        %version.attr;
+        >
+
+<!--================ HotJava Specials =====================================-->
+
+<!ELEMENT THEAD    - O (TR)+>
+<!ELEMENT TFOOT    - O (TR)+>
+<!ELEMENT TBODY    O O (TR)+>
+
+<!ELEMENT SPAN - - (%text)*>
+
+<!ELEMENT BLINK - - ANY>
+
+<!ELEMENT NOBR - - (%text)+>
+<!ELEMENT WBR  - O EMPTY>
+
+<!ELEMENT NEXTID - O EMPTY>
+<!ATTLIST NEXTID
+        n CDATA #REQUIRED>
+
+<!ELEMENT FRAMESET - O (FRAMESET|FRAME|NOFRAMES)*>
+<!ATTLIST FRAMESET
+	rows CDATA #IMPLIED
+	cols CDATA #IMPLIED
+>
+
+<!ELEMENT FRAME - O EMPTY>
+<!ATTLIST FRAME
+	src	    CDATA	#IMPLIED
+	name	    CDATA	#IMPLIED
+	frameborder NUMBER	1  -- the DTD says (1|0) --
+	marginwidth NUMBER	#IMPLIED
+	marginheight NUMBER	#IMPLIED
+	scrolling (yes|no|auto) AUTO
+	noresize    (noresize)  #IMPLIED
+>
+
+<!ELEMENT NOFRAMES - - CDATA>
+
+<!ELEMENT NOHOTJAVA - - CDATA>
+
+<!ELEMENT ANIMATE - - CDATA>
+
+<!ELEMENT NOSCRIPT - - (%block)+>

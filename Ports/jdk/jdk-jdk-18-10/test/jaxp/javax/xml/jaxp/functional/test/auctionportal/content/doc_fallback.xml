@@ -1,0 +1,11 @@
+<?xml version='1.0'?>
+<document xmlns:xi="http://www.w3.org/2001/XInclude">
+	<p>The following is the source of the "task.xml" resource:</p>
+	<example>
+            <xi:include href="task.xml" parse="xml">
+                <xi:fallback >
+                    <xi:include href="fallback.xml" parse="xml" />
+                </xi:fallback>
+            </xi:include>
+        </example>
+</document>

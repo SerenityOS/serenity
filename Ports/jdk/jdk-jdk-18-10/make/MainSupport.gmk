@@ -1,0 +1,207 @@
+#
+# Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+################################################################################
+# This file contains helper functions for Main.gmk.
+################################################################################
+
+ifndef _MAINSUPPORT_GMK
+_MAINSUPPORT_GMK := 1
+
+# Setup make rules for creating a top-level target.
+# Parameter 1 is the name of the rule. This name is used as variable prefix.
+#
+# Remaining parameters are named arguments. These include:
+#   MAKEFILE the makefile to delegate to
+#   TARGET the makefile target
+#   ARGS arguments to the makefile
+#   DEPS the target(s) this new rule depends on
+#
+SetupTarget = $(NamedParamsMacroTemplate)
+define SetupTargetBody
+  $1:
+	+($(CD) $(TOPDIR)/make && $(MAKE) $(MAKE_ARGS) -f $$($1_MAKEFILE).gmk $$($1_TARGET) $$($1_ARGS))
+
+  ALL_TARGETS += $1
+
+  ifneq ($(DEPS), none)
+    $1: $$($1_DEPS)
+  endif
+endef
+
+define CleanDocs
+	@$(PRINTF) "Cleaning docs ..."
+	@$(PRINTF) "\n" $(LOG_DEBUG)
+	$(RM) -r $(SUPPORT_OUTPUTDIR)/docs
+	$(RM) -r $(SUPPORT_OUTPUTDIR)/javadoc
+	$(RM) -r $(IMAGES_OUTPUTDIR)/docs
+	@$(PRINTF) " done\n"
+endef
+
+# Cleans the dir given as $1
+define CleanDir
+	@$(PRINTF) "Cleaning $(strip $1) build artifacts ..."
+	@$(PRINTF) "\n" $(LOG_DEBUG)
+	($(CD) $(OUTPUTDIR) && $(RM) -r $1)
+	@$(PRINTF) " done\n"
+endef
+
+define CleanSupportDir
+	@$(PRINTF) "Cleaning $(strip $1) build artifacts ..."
+	@$(PRINTF) "\n" $(LOG_DEBUG)
+	$(RM) -r $(SUPPORT_OUTPUTDIR)/$(strip $1)
+	@$(PRINTF) " done\n"
+endef
+
+define CleanMakeSupportDir
+	@$(PRINTF) "Cleaning $(strip $1) make support artifacts ..."
+	@$(PRINTF) "\n" $(LOG_DEBUG)
+	$(RM) -r $(MAKESUPPORT_OUTPUTDIR)/$(strip $1)
+	@$(PRINTF) " done\n"
+endef
+
+define CleanTest
+	@$(PRINTF) "Cleaning test $(strip $1) ..."
+	@$(PRINTF) "\n" $(LOG_DEBUG)
+	$(RM) -r $(SUPPORT_OUTPUTDIR)/test/$(strip $(subst -,/,$1))
+        # Remove as much of the test directory structure as is empty
+	$(RMDIR) -p $(dir $(SUPPORT_OUTPUTDIR)/test/$(strip $(subst -,/,$1))) 2> /dev/null || true
+	@$(PRINTF) " done\n"
+endef
+
+define Clean-gensrc
+	@$(PRINTF) "Cleaning gensrc $(if $1,for $(strip $1) )..."
+	@$(PRINTF) "\n" $(LOG_DEBUG)
+	$(RM) -r $(SUPPORT_OUTPUTDIR)/gensrc/$(strip $1)
+	@$(PRINTF) " done\n"
+endef
+
+define Clean-java
+	@$(PRINTF) "Cleaning java $(if $1,for $(strip $1) )..."
+	@$(PRINTF) "\n" $(LOG_DEBUG)
+	$(RM) -r $(JDK_OUTPUTDIR)/modules/$(strip $1)
+	$(RM) -r $(SUPPORT_OUTPUTDIR)/special_classes/$(strip $1)
+	$(PRINTF) " done\n"
+	$(PRINTF) "Cleaning headers $(if $1,for $(strip $1)) ..."
+	$(RM) -r $(SUPPORT_OUTPUTDIR)/headers/$(strip $1)
+	@$(PRINTF) " done\n"
+endef
+
+define Clean-native
+	@$(PRINTF) "Cleaning native $(if $1,for $(strip $1) )..."
+	@$(PRINTF) "\n" $(LOG_DEBUG)
+	$(RM) -r $(SUPPORT_OUTPUTDIR)/native/$(strip $1)
+	$(RM) -r $(SUPPORT_OUTPUTDIR)/modules_libs/$(strip $1)
+	$(RM) -r $(SUPPORT_OUTPUTDIR)/modules_cmds/$(strip $1)
+	@$(PRINTF) " done\n"
+endef
+
+define Clean-include
+	@$(PRINTF) "Cleaning include $(if $1,for $(strip $1) )..."
+	@$(PRINTF) "\n" $(LOG_DEBUG)
+	$(RM) -r $(SUPPORT_OUTPUTDIR)/modules_include/$(strip $1)
+	@$(PRINTF) " done\n"
+endef
+
+define CleanModule
+  $(call Clean-gensrc, $1)
+  $(call Clean-java, $1)
+  $(call Clean-native, $1)
+  $(call Clean-include, $1)
+endef
+
+
+################################################################################
+
+PHASE_MAKEDIRS := $(TOPDIR)/make
+
+# Helper macro for DeclareRecipesForPhase
+# Declare a recipe for calling the module and phase specific makefile.
+# If there are multiple makefiles to call, create a rule for each topdir
+# that contains a makefile with the target $module-$suffix-$repodir,
+# (i.e: java.base-gensrc-src)
+# Normally there is only one makefile, and the target will just be
+# $module-$suffix
+# Param 1: Name of list to add targets to
+# Param 2: Module name
+define DeclareRecipeForModuleMakefile
+  $2-$$($1_TARGET_SUFFIX):
+	+($(CD) $(TOPDIR)/make && $(MAKE) $(MAKE_ARGS) \
+	    -f ModuleWrapper.gmk -I $$(TOPDIR)/make/common/modules  \
+	    $$(patsubst %,-I%/modules/$2,$$(PHASE_MAKEDIRS)) \
+	    MODULE=$2 MAKEFILE_PREFIX=$$($1_FILE_PREFIX) $$($1_EXTRA_ARGS))
+
+endef
+
+# Helper macro for DeclareRecipesForPhase
+# Param 1: Name of list to add targets to
+# Param 2: Module name
+define DeclareRecipesForPhaseAndModule
+  $1_$2_MAKEFILES := $$(strip $$(wildcard \
+      $$(addsuffix /modules/$2/$$($1_FILE_PREFIX).gmk, $$(PHASE_MAKEDIRS))))
+
+  # Only declare recipes if there are makefiles to call
+  ifneq ($$($1_$2_MAKEFILES), )
+    # Add the top dir specific target to target list regardless of if recipe
+    # generation is disabled.
+    ifeq ($$($1_MULTIPLE_MAKEFILES), true)
+      $$(foreach d, $$($1_$2_TOPDIRS), \
+        $$(eval $1 += $2-$$($1_TARGET_SUFFIX)-$$(notdir $$d)))
+    endif
+    ifeq ($(NO_RECIPES),)
+      $$(eval $$(call DeclareRecipeForModuleMakefile,$1,$2))
+    endif
+    $1 += $2-$$($1_TARGET_SUFFIX)
+    $1_MODULES += $2
+  endif
+endef
+
+# Declare recipes for a specific module and build phase if there are makefiles
+# present for the specific combination.
+# Param 1: Name of list to add targets to
+# Named params:
+# TARGET_SUFFIX : Suffix of target to create for recipe
+# FILE_PREFIX : File prefix for this build phase
+# CHECK_MODULES : List of modules to try
+# MULTIPLE_MAKEFILES : Set to true to handle makefiles for the same module and
+#                      phase in multiple repos
+# EXTRA_ARGS : Add extra make args to each makefile call
+# Exported variables:
+# $1_MODULES : All modules that had rules generated
+# $1_TARGETS : All targets generated
+define DeclareRecipesForPhase
+  $(foreach i,2 3 4 5 6 7 8, $(if $(strip $($i)),$(strip $1)_$(strip $($i)))$(NEWLINE))
+  $(if $(9),$(error Internal makefile error: Too many arguments to \
+      DeclareRecipesForPhase, please update MakeHelper.gmk))
+
+  $$(foreach m, $$($(strip $1)_CHECK_MODULES), \
+      $$(eval $$(call DeclareRecipesForPhaseAndModule,$(strip $1),$$m)))
+
+  $(strip $1)_TARGETS := $$($(strip $1))
+endef
+
+################################################################################
+
+endif # _MAINSUPPORT_GMK

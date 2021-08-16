@@ -1,0 +1,3 @@
+IllegalParenthesis.java:12:16: compiler.err.illegal.parenthesized.expression
+IllegalParenthesis.java:14:26: compiler.err.illegal.parenthesized.expression
+2 errors

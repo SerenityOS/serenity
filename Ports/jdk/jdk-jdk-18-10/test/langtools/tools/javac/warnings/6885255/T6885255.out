@@ -1,0 +1,16 @@
+T6885255.java:13:16: compiler.warn.raw.class.use: T6885255.Test, T6885255.Test<X,Y>
+T6885255.java:13:22: compiler.warn.raw.class.use: T6885255.Test, T6885255.Test<X,Y>
+T6885255.java:15:17: compiler.warn.raw.class.use: T6885255.Test, T6885255.Test<X,Y>
+T6885255.java:16:22: compiler.warn.raw.class.use: T6885255.Test, T6885255.Test<X,Y>
+T6885255.java:16:28: compiler.warn.raw.class.use: T6885255.Test, T6885255.Test<X,Y>
+T6885255.java:19:23: compiler.warn.raw.class.use: T6885255.Test, T6885255.Test<X,Y>
+T6885255.java:19:29: compiler.warn.raw.class.use: T6885255.Test, T6885255.Test<X,Y>
+T6885255.java:24:29: compiler.warn.raw.class.use: T6885255.Test, T6885255.Test<X,Y>
+T6885255.java:24:35: compiler.warn.raw.class.use: T6885255.Test, T6885255.Test<X,Y>
+T6885255.java:25:35: compiler.warn.raw.class.use: T6885255.Test, T6885255.Test<X,Y>
+T6885255.java:25:41: compiler.warn.raw.class.use: T6885255.Test, T6885255.Test<X,Y>
+T6885255.java:27:23: compiler.warn.raw.class.use: java.lang.Class, java.lang.Class<T>
+T6885255.java:27:30: compiler.warn.raw.class.use: java.lang.Class, java.lang.Class<T>
+T6885255.java:28:29: compiler.warn.raw.class.use: T6885255.Test, T6885255.Test<X,Y>
+T6885255.java:28:42: compiler.warn.raw.class.use: T6885255.Test, T6885255.Test<X,Y>
+15 warnings

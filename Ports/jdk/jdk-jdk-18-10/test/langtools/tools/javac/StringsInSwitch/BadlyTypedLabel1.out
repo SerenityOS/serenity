@@ -1,0 +1,2 @@
+BadlyTypedLabel1.java:12:14: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: int, java.lang.String)
+1 error

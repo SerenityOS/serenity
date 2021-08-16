@@ -1,0 +1,201 @@
+/*
+ * Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+// -- This file was mechanically generated: Do not edit! -- //
+
+package sun.nio.cs;
+
+import java.nio.charset.Charset;
+import java.nio.charset.spi.CharsetProvider;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import jdk.internal.vm.annotation.Stable;
+
+public class StandardCharsets extends CharsetProvider {
+
+    _INCLUDE_ALIASES_TABLES_
+    _INCLUDE_ALIASES_MAP_
+    _INCLUDE_CLASSES_MAP_
+    _INCLUDE_CACHE_MAP_
+
+    // Maps canonical names to class names
+    private @Stable Map<String,String> classMap;
+
+    // Maps alias names to canonical names
+    private @Stable Map<String,String> aliasMap;
+
+    // Maps canonical names to cached instances
+    private @Stable Map<String,Charset> cache;
+
+    private static final String packagePrefix = "sun.nio.cs.";
+
+    public StandardCharsets() {
+    }
+
+    private String canonicalize(String csn) {
+        String acn = aliasMap().get(csn);
+        return (acn != null) ? acn : csn;
+    }
+
+    private Map<String,String> aliasMap() {
+        Map<String,String> map = aliasMap;
+        if (map == null) {
+            aliasMap = map = new Aliases();
+        }
+        return map;
+    }
+
+    private Map<String,String> classMap() {
+        Map<String,String> map = classMap;
+        if (map == null) {
+            classMap = map = new Classes();
+        }
+        return map;
+    }
+
+    private Map<String,Charset> cache() {
+        Map<String,Charset> map = cache;
+        if (map == null) {
+            map = new Cache();
+            map.put("utf-8", UTF_8.INSTANCE);
+            map.put("iso-8859-1", ISO_8859_1.INSTANCE);
+            map.put("us-ascii", US_ASCII.INSTANCE);
+            map.put("utf-16", java.nio.charset.StandardCharsets.UTF_16);
+            map.put("utf-16be", java.nio.charset.StandardCharsets.UTF_16BE);
+            map.put("utf-16le", java.nio.charset.StandardCharsets.UTF_16LE);
+            cache = map;
+        }
+        return map;
+    }
+
+    // Private ASCII-only version, optimized for interpretation during startup
+    //
+    private static String toLower(String s) {
+        int n = s.length();
+        boolean allLower = true;
+        for (int i = 0; i < n; i++) {
+            int c = s.charAt(i);
+            if (((c - 'A') | ('Z' - c)) >= 0) {
+                allLower = false;
+                break;
+            }
+        }
+        if (allLower)
+            return s;
+        StringBuilder sb = new StringBuilder(n);
+        for (int i = 0; i < n; i++) {
+            int c = s.charAt(i);
+            if (((c - 'A') | ('Z' - c)) >= 0)
+                sb.append((char)(c + 0x20));
+            else
+                sb.append((char)c);
+        }
+        return sb.toString();
+    }
+
+    private Charset lookup(String charsetName) {
+        // By checking these built-ins we can avoid initializing Aliases,
+        // Classes and Cache eagerly during bootstrap.
+        //
+        // Initialization of java.nio.charset.StandardCharsets should be
+        // avoided here to minimize time spent in System.initPhase1, as it
+        // may delay initialization of performance critical VM subsystems.
+        String csn;
+        if (charsetName.equals("UTF-8")) {
+            return UTF_8.INSTANCE;
+        } else if (charsetName.equals("US-ASCII")) {
+            return US_ASCII.INSTANCE;
+        } else if (charsetName.equals("ISO-8859-1")) {
+            return ISO_8859_1.INSTANCE;
+        } else {
+            csn = canonicalize(toLower(charsetName));
+        }
+
+        // Check cache first
+        Charset cs = cache().get(csn);
+        if (cs != null)
+            return cs;
+
+        // Do we even support this charset?
+        String cln = classMap().get(csn);
+        if (cln == null)
+            return null;
+
+        // Instantiate the charset and cache it
+        try {
+            @SuppressWarnings("deprecation")
+            Object o = Class.forName(packagePrefix + cln,
+                                     true,
+                                     this.getClass().getClassLoader()).newInstance();
+            return cache(csn, (Charset)o);
+        } catch (ClassNotFoundException |
+                 IllegalAccessException |
+                 InstantiationException x) {
+            return null;
+        }
+    }
+
+    private Charset cache(String csn, Charset cs) {
+        cache().put(csn, cs);
+        return cs;
+    }
+
+    public final Charset charsetForName(String charsetName) {
+        synchronized (this) {
+            return lookup(charsetName);
+        }
+    }
+
+    public final Iterator<Charset> charsets() {
+        Set<String> charsetNames;
+        synchronized (this) {
+            // Ensure initialized in synchronized block
+            charsetNames = classMap().keySet();
+            aliasMap();
+            cache();
+        }
+        return new Iterator<Charset>() {
+
+                Iterator<String> i = charsetNames.iterator();
+
+                public boolean hasNext() {
+                    return i.hasNext();
+                }
+
+                public Charset next() {
+                    String csn = i.next();
+                    return lookup(csn);
+                }
+
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+
+            };
+    }
+}

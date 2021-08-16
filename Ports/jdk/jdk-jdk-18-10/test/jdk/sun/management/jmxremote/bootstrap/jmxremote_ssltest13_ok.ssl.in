@@ -1,0 +1,4 @@
+javax.net.ssl.keyStore=@TEST-SRC@/ssl/keystore
+javax.net.ssl.keyStorePassword=password
+javax.net.ssl.trustStore=@TEST-SRC@/ssl/truststore
+javax.net.ssl.trustStorePassword=trustword

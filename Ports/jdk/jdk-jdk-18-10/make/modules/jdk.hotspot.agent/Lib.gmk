@@ -1,0 +1,79 @@
+#
+# Copyright (c) 2015, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include LibCommon.gmk
+
+################################################################################
+
+ifeq ($(call isTargetOs, linux), true)
+  SA_CFLAGS := -D_FILE_OFFSET_BITS=64
+
+else ifeq ($(call isTargetOs, macosx), true)
+  SA_CFLAGS := -D_GNU_SOURCE -mno-omit-leaf-frame-pointer \
+      -mstack-alignment=16 -fPIC
+  LIBSA_EXTRA_SRC := $(SUPPORT_OUTPUTDIR)/gensrc/jdk.hotspot.agent
+else ifeq ($(call isTargetOs, windows), true)
+  SA_CFLAGS := -D_WINDOWS -D_DEBUG -D_CONSOLE -EHsc
+  ifeq ($(call isTargetCpu, x86_64), true)
+    SA_CXXFLAGS := -DWIN64
+  else
+    # Only add /RTC1 flag for debug builds as it's
+    # incompatible with release type builds. See
+    # https://msdn.microsoft.com/en-us/library/8wtf2dfz.aspx
+    ifeq ($(DEBUG_LEVEL),slowdebug)
+      SA_CXXFLAGS := -RTC1
+    endif
+  endif
+endif
+
+SA_TOOLCHAIN := $(TOOLCHAIN_DEFAULT)
+ifeq ($(call isTargetOs, linux), true)
+  SA_TOOLCHAIN := TOOLCHAIN_LINK_CXX
+endif
+
+################################################################################
+
+$(eval $(call SetupJdkLibrary, BUILD_LIBSA, \
+    NAME := saproc, \
+    TOOLCHAIN := $(SA_TOOLCHAIN), \
+    OPTIMIZATION := HIGH, \
+    DISABLED_WARNINGS_microsoft := 4267, \
+    DISABLED_WARNINGS_gcc := sign-compare pointer-arith, \
+    DISABLED_WARNINGS_clang := sign-compare pointer-arith format-nonliteral, \
+    CFLAGS := $(CFLAGS_JDKLIB) $(SA_CFLAGS), \
+    CXXFLAGS := $(CXXFLAGS_JDKLIB) $(SA_CFLAGS) $(SA_CXXFLAGS), \
+    EXTRA_SRC := $(LIBSA_EXTRA_SRC), \
+    LDFLAGS := $(LDFLAGS_JDKLIB) $(call SET_SHARED_LIBRARY_ORIGIN), \
+    LIBS := $(LIBCXX), \
+    LIBS_unix := -ljava, \
+    LIBS_linux := $(LIBDL), \
+    LIBS_macosx := -framework Foundation \
+        -framework JavaRuntimeSupport -framework Security -framework CoreFoundation, \
+    LIBS_windows := dbgeng.lib $(WIN_JAVA_LIB), \
+))
+
+TARGETS += $(BUILD_LIBSA)
+
+################################################################################

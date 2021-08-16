@@ -1,0 +1,1164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>JPEG Metadata Format Specification and Usage Notes</title>
+</head>
+<!--
+Copyright (c) 2000, 2021, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.  Oracle designates this
+particular file as subject to the "Classpath" exception as provided
+by Oracle in the LICENSE file that accompanied this code.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+-->
+
+<body>
+<main role="main">
+<h1>JPEG Metadata Format Specification and Usage Notes</h1>
+
+<p>
+<a href=#metadata>JPEG Metadata</a><br>
+<a href=#abbrev>Abbreviated Streams</a><br>
+<a href=#tables>Sources of Tables</a><br>
+<a href=#color>Colorspace Transformations and Conventional Markers</a><br>
+<a href=#thumbs>Thumbnail Images</a><br>
+<a href=#prog>Progressive Encoding</a><br>
+<a href=#tree>Native Metadata Format Tree Structure and Editing</a><br>
+<a href=#image>Image Metadata DTD</a><br>
+<a href=#stream>Stream Metadata DTD</a>
+<p>
+<b>NOTE</b>: It is important to call <code>dispose()</code>
+on the JPEG reader and writer objects when they are no longer needed, as
+they consume significant native resources which are not adequately recovered
+by garbage collection.  Both reader and writer call <code>dispose()</code>
+in their finalizers, but those finalizers may not be called before the native
+code has exhausted native memory.
+
+<p>
+
+The JPEG writer does not support replacing pixels.
+
+<h2>
+<a id=metadata>JPEG Metadata</a>
+</h2>
+JPEG metadata consists of the data contained in marker segments in a JPEG
+stream.  The image metadata object returned from a read describes the
+contents of the marker segments between the <code>SOI</code> marker and
+the <code>EOI</code> marker for that image.  The image metadata object
+passed into a write determines the contents of the stream between the
+<code>SOI</code> marker and the <code>EOI</code> marker for that image,
+subject to the controls in any <code>ImageWriteParam</code>.
+
+<p>
+Stream metadata is used only for tables-only images found (or to be
+placed) at the beginning of a stream containing abbreviated images.
+Tables-only images are not treated as images and do not consume an
+image index.  The stream metadata object returned from a read describes the
+contents of the marker segments between the <code>SOI</code> marker and
+the <code>EOI</code> marker for the single tables-only image at the
+beginning of the stream, if one is present.  If no tables-only image is
+present at the front of the stream, the <code>getStreamMetadata</code>
+method of <code>ImageReader</code> returns <code>null</code>.  If
+stream metadata is provided to the writer, a single tables-only image
+containing the tables from the stream metadata object will be written at
+the beginning of the stream.  If the stream metadata object contains no
+tables, default tables will be written.  As the sole purpose of stream
+metadata is for specifying tables-only images at the front of abbreviated
+streams, the stream metadata argument is useful only on the
+<code>ImageWriter.prepareWriteSequence</code> method.  It is ignored on all
+other methods.
+
+<p>
+The <code>ImageWriter.getDefaultStreamMetadata</code> method returns an
+object containing the tables from the <code>ImageWriteParam</code> argument,
+if it is a <code>JPEGImageWriteParam</code> and contains tables.  Otherwise,
+the returned object will contain default tables.
+
+<p>The <code>ImageWriter.getDefaultImageMetadata</code> method returns a
+metadata object containing <b>no</b> tables if the
+<code>ImageWriteParam</code> argument contains tables.  Otherwise the
+returned metadata object will contain default visually lossless tables.
+Of course, only a <code>JPEGImageWriteParam</code> may contain tables.
+
+<p>
+If <code>ignoreMetadata</code> is set to <code>true</code> when the input
+is set on the reader, stream metadata will not be available, but image
+metadata will.
+
+<h2>
+<a id=abbrev>Abbreviated Streams</a>
+</h2>
+Both the reader and the writer retain their tables from one operation to the
+next, thus permitting the use of abbreviated streams quite naturally, with a
+few minor restrictions:
+<ol>
+  <li> Abbreviated streams may contain only one tables-only image, which must
+       come first in the stream.  Subsequent tables-only images will cause
+       undefined behavior.</li>
+  <li> Abbreviated streams must be read fully and in order.  No random access
+       is allowed, in either direction.  The same image may be read multiple
+       times.  If a call is made with an image index that is not the same as
+       or one greater than the most recent call (or 0 if no calls have been
+       made), then an <code>IllegalArgumentException</code> is thrown.</li>
+</ol>
+These restrictions mean that streams may contain abbreviated images
+interspersed with images containing tables.  As required by JPEG, any tables
+appearing in the stream override previous tables, regardless of the source
+of the previous tables.
+
+<p>
+Note that once a tables-only image has been read, it's contents is available
+as stream metadata from the reader until either another tables-only image
+is read from another stream or the reader is reset.  Changing the input does
+not reset the stream metadata.  This is useful for reading the tables from
+one file, then changing the input to read an abbreviated stream containing
+a sequence of images.  The tables will be used automatically, and will remain
+available as "stream" metadata.
+
+<p>
+Abbreviated streams are written using the sequence methods of
+<code>ImageWriter</code>.  Stream metadata is used to write a tables-only
+image at the beginning of the stream, and the tables are set up for use, using
+<code>ImageWriter.prepareWriteSequence</code>.  If no stream metadata is
+supplied to <code>ImageWriter.prepareWriteSequence</code>, then no
+tables-only image is written.  If stream metadata containing no tables is
+supplied to <code>ImageWriter.prepareWriteSequence</code>, then a tables-only
+image containing default visually lossless tables is written.
+
+<h2>
+<a id=tables>Sources of Tables</a>
+</h2>
+<p>
+Images are written with tables if tables are present in their metadata objects
+or without them if no tables are present in their metadata objects.  If no
+metadata object is present then the tables are written.  The tables used for
+compression are taken from one of the following sources, which are consulted
+in order:
+<ol>
+  <li> If there is an <code>ImageWriteParam</code> and the compression mode is
+       set to <code>EXPLICIT</code>, default tables constructed using the
+       quality setting are used.  They are written only if the metadata
+       contains tables or if there is no metadata, but they replace the
+       tables in the metadata.</li>
+  <li> If there is an <code>ImageWriteParam</code> and the compression mode is
+       set to <code>DEFAULT</code>, default visually lossles tables are used.
+       They are written only if the metadata contains tables or if
+       there is no metadata, but they replace the tables in the
+       metadata.</li>
+  <li> Otherwise the compression mode on the <code>ImageWriteParam</code> must
+       be MODE_COPY_FROM_<code>METADATA</code>, in which case the following
+       are used:
+    <ol>
+      <li> the tables in the image metadata, if present</li>
+      <li> the tables in the stream metadata, if present</li>
+      <li> the tables in the <code>JPEGImageWriteParam</code>, if present</li>
+      <li> default visually lossless tables</li>
+    </ol> Tables are written only if they are taken from image metadata.
+  </li>
+</ol>
+
+This ordering implements the design intention that tables should be included
+in <code>JPEGImageWriteParam</code>s only as a means of specifying tables
+when no other source is available, and this can occur only when writing to an
+abbreviated stream without tables using known non-standard tables for
+compression.
+
+<p>
+When reading, tables in a <code>JPEGImageReadParam</code> are consulted only
+if tables have not been set by any previous read.  Tables set from a
+<code>JPEGImageReadParam</code> are overridden by any tables present in the
+stream being read.
+
+<p>
+Note that if no image metadata object is specified for a particular image, a
+default object is used, which includes default tables.
+
+<h2>
+<a id=color>Colorspace Transformations and Conventional Markers</a>
+</h2>
+Colorspace transformations are controlled by the destination type for
+both reading and writing of images.  When <code>Raster</code>s are
+read, no colorspace transformation is performed, and any destination type
+is ignored.  A warning is sent to any listeners if a destination type is
+specified in this case.  When <code>Raster</code>s are written, any
+destination type is used to interpret the bands.  This might result in a
+JFIF or Adobe header being written, or different component ids being written
+to the frame and scan headers.  If values present in a metadata object do not
+match the destination type, the destination type is used and a warning is sent
+to any listeners.
+
+<p>
+
+<a id=optcolor><b>Optional ColorSpace support:</b></a>
+Handling of PhotoYCC (YCC), PhotoYCCA (YCCA), RGBA and YCbCrA color spaces
+by the standard plugin, as described below, is dependent on capabilities
+of the libraries used to interpret the JPEG data. Thus all consequential
+behaviors are optional. If the support is not available when decoding,
+the color space will be treated as unrecognized and the appropriate
+default color space for the specified number of component channels
+may be used.
+When writing, an Exception may be thrown if no suitable conversion
+can be applied before encoding.
+But where the support for these color spaces is available, the behavior
+must be as documented.
+<p>
+
+When reading, the contents of the stream are interpreted by the usual
+JPEG conventions, as follows:
+
+<ul>
+  <li> If a JFIF <code>APP0</code> marker segment is present, the colorspace
+       is known to be either grayscale or YCbCr.  If an <code>APP2</code>
+       marker segment containing an embedded ICC profile is also present, then
+       the YCbCr is converted to RGB according to the formulas given in the
+       JFIF spec, and the ICC profile is assumed to refer to the resulting RGB
+       space.
+  <li> If an Adobe <code>APP14</code> marker segment is present, the
+       colorspace is determined by consulting the <code>transform</code> flag.
+       The <code>transform</code> flag takes one of three values:
+    <ul>
+      <li> 2 - The image is encoded as YCCK (implicitly converted from
+           CMYK on encoding).
+
+      <li> 1 - The image is encoded as YCbCr (implicitly converted from RGB
+           on encoding).
+
+      <li> 0 - Unknown.  3-channel images are assumed to be RGB, 4-channel
+           images are assumed to be CMYK.
+    </ul>
+  <li> If neither marker segment is present, the following procedure is
+       followed: Single-channel images are assumed to be grayscale, and
+       2-channel images are assumed to be grayscale with an alpha channel.
+       For 3- and 4-channel images, the component ids are consulted.  If these
+       values are 1-3 for a 3-channel image, then the image is assumed to be
+       YCbCr. Subject to the availability of the
+       <a href=#optcolor>optional color space support</a>
+       described above, if these values are 1-4 for a 4-channel image,
+       then the image is assumed to be YCbCrA.
+       If these values are > 4, they are checked
+       against the ASCII codes for 'R', 'G', 'B', 'A', 'C', 'c'.  These can
+       encode the following colorspaces:
+       <p>
+       <br>RGB
+       <br>RGBA
+       <br>YCC (as 'Y','C','c'), assumed to be PhotoYCC
+       <br>YCCA (as 'Y','C','c','A'), assumed to be PhotoYCCA
+       <p>
+       Otherwise, 3-channel subsampled images are assumed to be YCbCr,
+       3-channel non-subsampled images are assumed to be RGB, 4-channel
+       subsampled images are assumed to be YCCK, and 4-channel, non-subsampled
+       images are assumed to be CMYK.
+
+  <li> All other images are declared uninterpretable and an exception is
+       thrown if an attempt is made to read one as a
+       <code>BufferedImage</code>.  Such an image may be read only as a
+       <code>Raster</code>.  If an image is interpretable but there is no Java
+       <code>ColorSpace</code> available corresponding to the encoded
+       colorspace (<i>e.g.</i> YCbCr), then
+       <code>ImageReader.getRawImageType</code> will return <code>null</code>.
+</ul>
+
+Once an encoded colorspace is determined, then the target colorspace is
+determined as follows:
+
+<ul>
+  <li> If a destination type is not set, then the following default
+       transformations take place after upsampling: YCbCr (and YCbCrA) images
+       are converted to RGB (and RGBA) using the conversion provided by the
+       underlying IJG library and either the built-in sRGB
+       <code>ColorSpace</code> or a custom RGB <code>ColorSpace</code> object
+       based on an embedded ICC profile is used to create the output
+       <code>ColorModel</code>.  PhotoYCC and PhotoYCCA images are not
+       converted.  CMYK and YCCK images are currently not supported.</li>
+
+  <li> If a destination image or type is set, it is used as follows:
+       If the IJG library provides an appropriate conversion, it is used.
+       Otherwise the default library conversion is followed by a colorspace
+       conversion in Java.</li>
+
+  <li> Bands are selected AFTER any library colorspace conversion.  If a
+       subset of either source or destination bands is used, then the default
+       library conversions are used with no further conversion in Java,
+       regardless of any destination type.</li>
+
+  <li> An exception is thrown if an attempt is made to read an image in an
+       unsupported jpeg colorspace as a <code>BufferedImage</code>
+       (<i>e.g.</i> CMYK).  Such images may be read as
+       <code>Raster</code>s.  If an image colorspace is unsupported or
+       uninterpretable, then <code>ImageReader.getImageTypes</code> will
+       return an empty <code>Iterator</code>.   If a subset of the raw bands
+       are required, a <code>Raster</code> must be obtained first and the
+       bands obtained from that. </li>
+</ul>
+
+<p>
+For writing, the color transformation to apply is determined as
+follows:
+
+<p>
+If a subset of the source bands is to be written, no color conversion is
+performed.  Any destination, if set, must match the number of bands that will
+be written, and serves as an interpretation of the selected bands, rather than
+a conversion request.  This behavior is identical to that for
+<code>Raster</code>s.  If all the bands are to be written and an image
+(as opposed to a <code>Raster</code>) is being written, any destination type
+is ignored and a warning is sent to any listeners.
+
+<p>
+If a destination type is used and any aspect of the metadata object, if there
+is one, is not compatible with that type, the destination type is used, the
+metadata written is modified from that provided, and a warning is sent to
+listeners.  This includes the <code>app0JFIF</code> and
+<code>app14Adobe</code> nodes.  The component ids in the <code>sof</code> and
+<code>sos</code> nodes are not modified, however, as unless a
+<code>app0JFIF</code> node is present, any values may be used.
+<p>
+
+When a full image is written, a destination colorspace will be
+chosen based on the image contents and the metadata settings, according to
+the following algorithm:
+
+<p>
+
+If no metadata object is specified, then the following defaults apply:
+
+<ul>
+  <li> Grayscale images are written with a JFIF <code>APP0</code> marker
+       segment.  Grayscale images with alpha are written with no special
+       marker.  As required by JFIF, the component ids in the frame and
+       scan header is set to 1.
+
+  <li> RGB images are converted to YCbCr, subsampled in the chrominance
+       channels by half both vertically and horizontally, and written with a
+       JFIF <code>APP0</code> marker segment.  If the <code>ColorSpace</code>
+       of the image is based on an <code>ICCProfile</code> (it is an instance
+       of <code>ICC_ColorSpace</code>, but is not one of the standard built-in
+       <code>ColorSpaces</code>), then that profile is embedded in an
+       <code>APP2</code> marker segment.  As required by JFIF, the
+       component ids in the frame and scan headers are set to 1, 2, and 3.
+
+
+  <li> Subject to the <a href=#optcolor>optional library support</a>
+        described above,
+       RGBA images are converted to YCbCrA, subsampled in the
+       chrominance channels by half both vertically and horizontally, and
+       written without any special marker segments.  The component ids
+       in the frame and scan headers are set to 1, 2, 3, and 4.
+
+  <li> Subject to the <a href=#optcolor>optional library support</a>
+       described above,
+       PhotoYCC and YCCAimages are subsampled by half in the chrominance
+       channels both vertically and horizontally and written with an
+       Adobe <code>APP14</code> marker segment and 'Y','C', and 'c' (and
+       'A' if an alpha channel is present) as component ids in the frame
+        and scan headers.
+</ul>
+
+Default metadata objects for these image types will reflect these settings.
+
+<p>
+
+If a metadata object is specified, then the number of channels in the
+frame and scan headers must always match the number of bands to be
+written, or an exception is thrown.  <code>app0JFIF</code> and
+<code>app14Adobe</code> nodes may appear in the same metadata object only
+if the <code>app14Adobe</code> node indicates YCbCr, and the component ids
+are JFIF compatible (0-2).  The various image types are processed in the
+following ways:
+
+<br>
+
+(All multi-channel images are subsampled according to the sampling factors
+in the frame header node of the metadata object, regardless of color space.)
+
+<ul>
+  <li> Grayscale Images:
+    <ul>
+      <li> If an <code>app0JFIF</code> node is present in the metadata object,
+           a JFIF <code>APP0</code> marker segment is written.
+      <li> If an <code>app14Adobe</code> node is present in the metadata
+           object, it is checked for validity (<code>transform</code> must be
+           <code>UNKNOWN</code>) and written.
+      <li> If neither node is present in the metadata object, no special
+           marker segment is written.
+    </ul>
+
+  <li> Grayscale Images with an Alpha Channel:
+    <ul>
+      <li> If an <code>app0JFIF</code> node is present in the metadata object,
+           it is ignored and a warning is sent to listeners, as JFIF does not
+           support 2-channel images.
+      <li> If an <code>app14Adobe</code> node is present in the metadata
+           object, it is checked for validity (<code>transform</code> must be
+           <code>UNKNOWN</code>) and written.  If <code>transform</code> is
+           not <code>UNKNOWN</code>, a warning is sent to listeners and the
+           correct transform is written.
+      <li> If neither node is present in the metadata object, no special
+           marker segment is written.
+    </ul>
+
+  <li> RGB Images:
+    <ul>
+      <li> If an <code>app0JFIF</code> node is present in the metadata object,
+           the image is converted to YCbCr and written with a JFIF
+           <code>APP0</code> marker segment.  If the <code>ColorSpace</code>
+           of the image is based on a non-standard ICC Profile, then that
+           profile is embedded in an <code>APP2</code> marker segment.  If the
+           <code>ColorSpace</code> is not based on a non-standard ICC Profile,
+           but an <code>app2ICC</code> node appears in the metadata, then an
+           <code>APP2</code> marker segment is written with the appropriate
+           standard profile.  Note that the profile must specify an RGB color
+           space, as the file must be JFIF compliant.
+
+      <li> If an <code>app14Adobe</code> node is present in the metadata
+           object, the image is converted according to the color transform
+           setting and written with an Adobe <code>APP14</code> marker
+           segment.  Component ids are written just as they appear in the
+           frame and scan headers.  The color transform must be either YCbCr
+           or <code>UNKNOWN</code>.  If it is <code>UNKNOWN</code>, the image
+           is not color converted.
+
+      <li> If neither node is present, the component ids in the frame
+           header are consulted.  If these indicate a colorspace as described
+           above, then the image is converted to that colorspace if possible.
+           If the component ids do not indicate a colorspace, then the
+           sampling factors are consulted.  If the image is to be subsampled,
+           it is converted to YCbCr first.  If the image is not to be
+           subsampled, then no conversion is applied.  No special marker
+           segmentss are written.
+    </ul>
+
+  <li> RGBA images:
+       Subject to the <a href=#optcolor>optional library support</a>
+       described above,
+    <ul>
+      <li> If an <code>app0JFIF</code> node is present in the metadata object,
+           it is ignored and a warning is sent to listeners, as JFIF does not
+           support 4-channel images.
+
+      <li> If an <code>app14Adobe</code> node is present in the metadata
+           object, the image is written with an Adobe <code>APP14</code> marker
+           segment.  No colorspace conversion is performed.  Component ids
+           are written just as they appear in the frame and scan  headers.
+           The color transform must be <code>UNKNOWN</code>.  If it is
+           not, a warning is sent to listeners.
+
+      <li> If no <code>app14Adobe</code> node is present, the component ids in
+           the frame header are consulted.  If these indicate a colorspace as
+           described above, then the image is converted to that colorspace if
+           possible.  If the component ids do not indicate a colorspace, then
+           the sampling factors are consulted.  If the image is to be
+           subsampled, it is converted to YCbCrA.  If the image is not to be
+           subsampled, then no conversion is applied.  No special marker
+           segments are written.
+    </ul>
+
+  <li> PhotoYCC Images:
+       Subject to the <a href=#optcolor>optional library support</a>
+       described above,
+    <ul>
+      <li> If an <code>app0JFIF</code> node is present in the metadata object,
+           the image is converted to sRGB, and then to YCbCr during encoding,
+           and a JFIF <code>APP0</code> marker segment is written.
+
+      <li> If an <code>app14Adobe</code> node is present in the metadata
+           object, no conversion is applied, and an Adobe <code>APP14</code>
+           marker segment is written.  The color transform must be YCC.  If it
+           is not, a warning is sent to listeners.
+
+      <li> If neither node is present in the metadata object, no conversion
+           is applied, and no special marker segment is written.
+    </ul>
+
+  <li> PhotoYCCA Images:
+       Subject to the <a href=#optcolor>optional library support</a>
+       described above,
+    <ul>
+      <li> If an <code>app0JFIF</code> node is present in the metadata object,
+           it is ignored and a warning is sent to listeners, as JFIF does not
+           support 4-channel images.
+
+      <li> If an <code>app14Adobe</code> node is present in the metadata
+           object, no conversion is applied, and an Adobe <code>APP14</code>
+           marker segment is written.  The color transform must be
+           <code>UNKNOWN</code>.  If it is not, a warning is sent to
+           listeners.
+
+      <li> If neither node is present in the metadata object, no conversion
+           is applied, and no special marker segment is written.
+    </ul>
+</ul>
+
+<h2>
+<a id=thumbs>Thumbnail Images</a>
+</h2>
+Thumbnails are supported by the use of JFIF and JFIF extension marker segments.
+Thumbnails provided on the write methods determine the thumbnails that will be
+included.  <code>app0JFIF</code> and <code>app0JFXX</code> nodes present in
+the metadata do not contain any thumbnail pixel data.  However, the kinds of
+thumbnails written depend on the contents of the metadata object, as follows.
+Any thumbnail which is to be written as an indexed or RGB image and which is
+larger than 255 by 255 will be clipped, not scaled, to 255 by 255.  Thumbnails
+written as JPEG images may be any size.  A warning is sent to any listeners
+whenever a thumbnail is clipped.
+<ul>
+  <li> If there is a single thumbnail, it is processed as follows:
+    <ul>
+      <li> If the thumbnail image is an RGB palette image, it is processed as
+           follows:
+        <ul>
+          <li> If no <code>app0JFXX</code> node is present in the metadata, or
+               the first <code>app0JFXX</code> node present in the metadata
+               contains a <code>JFIFthumbPalette</code> element, a
+               palette thumbnail is written in a JFXX <code>APP0</code> marker
+               segment.
+          <li> If the first <code>app0JFXX</code> node present in the metadata
+               contains another thumbnail form (RGB or JPEG), the palette
+               image is expanded to RGB and the indicated thumbnail form is
+               written.
+        </ul>
+
+      <li> If the thumbnail image is an RGB image, it is processed as follows:
+        <ul>
+          <li> If no <code>app0JFXX</code> node is present in the metadata,
+               the thumbnail is written as part of the JFIF <code>APP0</code>
+               marker segment.
+          <li> If the first <code>app0JFXX</code> node present in the metadata
+               contains a <code>JFIFthumbRGB</code> element, an
+               RGB thumbnail is written in a JFXX <code>APP0</code> marker
+               segment.
+          <li> If the first <code>app0JFXX</code> node present in the metadata
+               contains a <code>JFIFthumbJPEG</code> element, a
+               JPEG thumbnail is written in a JFXX <code>APP0</code> marker
+               segment.
+          <li> If the first <code>app0JFXX</code> node present in the metadata
+               contains a <code>JFIFthumbPalette</code> element, an
+               RGB thumbnail is written in a JFXX <code>APP0</code> marker
+               segment and a warning is sent to any listeners.
+        </ul>
+
+      <li> If the thumbnail image is a grayscale image, it is processed as
+           follows:
+        <ul>
+          <li> If no <code>app0JFXX</code> node is present in the metadata,
+               the thumbnail is expanded to RGB and written as part of the
+               JFIF <code>APP0</code> marker segment.
+          <li> If the first <code>app0JFXX</code> node present in the metadata
+               contains a <code>JFIFthumbRGB</code> element, the thumbnail is
+               expanded to RGB and written in a separate <code>JFXX</code> RGB
+               marker segment.
+          <li> If the first <code>app0JFXX</code> node present in the metadata
+               contains a <code>JFIFthumbJPEG</code> element, a
+               JPEG thumbnail is written in a JFXX <code>APP0</code> marker
+               segment.
+          <li> If the first <code>app0JFXX</code> node present in the metadata
+               contains a <code>JFIFthumbPalette</code> element, a
+               JPEG thumbnail is written in a JFXX <code>APP0</code> marker
+               segment and a warning is sent to any listeners.
+        </ul>
+
+      <li> Any other thumbnail image types are ignored and a warning is sent
+           to any listeners.
+    </ul>
+
+  <li> If there are multiple thumbnails, each one is processed as above, except
+       that no thumbnail is placed in the JFIF <code>APP0</code> segment, and
+       the <code>app0JFXX</code> node consulted for each thumbnail is the
+       <code>app0JFXX</code> node from the metadata that occurs in the same
+       sequence as the thumbnail.  <i>I.e.</i> the first
+       <code>app0JFXX</code> node applies to the first thumbnail, the second
+       node to the second thumbnail, and so on.  If there are fewer
+       <code>app0JFXX</code> nodes in the metadata than thumbnails, then
+       those thumbnails are considered to have no matching
+       <code>app0JFXX</code> node.  An RGB thumbnail with no matching
+       <code>app0JFXX</code> node is written in a JFXX <code>APP0</code> marker
+       segment.  A grayscale thumbnail with no matching
+       <code>app0JFXX</code> node is written as a JPEG image to a JFXX
+       <code>APP0</code> marker segment.
+</ul>
+<p>
+
+Note that as the only mechanism for storing thumbnails is via the
+JFIF or JFIF extension marker segments, only grayscale or RGB images
+may have thumbnails.  If thumbnails are present when writing any other type
+of image, the thumbnails are ignored and a warning is sent to any warning
+listeners.
+
+<h2>
+<a id=prog>Progressive Encoding</a>
+</h2>
+
+Progressive encoding must be enabled on the <code>ImageWriteParam</code>
+passed in to a write operation, or the image will be written sequentially,
+regardless of the scan headers included in the metadata object.  If
+progressive encoding is enabled and set to copy from metadata, then
+the sequence of scan headers from the metadata is used to write the
+image.  If progressive encoding is enabled and set to use a default,
+then the scans in the metadata are ignored and a default set of scans
+is used.  Progressive encoding always forces optimized Huffman tables to
+be used.  Any Huffman tables present in the metadata will be ignored,
+and a warning will be sent to any warning listeners.
+
+If Huffman-table optimization is requested on the <code>ImageWriteParam</code>,
+all Huffman tables in the metadata or in the <code>ImageWriteParam</code>
+itself are ignored, and a warning will be sent to any warning listeners if
+any such tables are present.
+
+<h2>
+<a id=tree>Native Metadata Format Tree Structure and Editing</a>
+</h2>
+
+The DTDs below describe just the trees of metadata objects actually returned
+by the <code>IIOMetadata</code> object.  They do not include nodes
+corresponding to <code>SOI</code>, <code>EOI</code>, or <code>RST</code>
+markers, as these parsing delimiters do not carry any meaningful metadata.
+<p>
+
+The first node is always a <code>JPEGvariety</code> node.  In the
+<code>javax_imageio_jpeg_image_1.0</code> version of the JPEG metadata
+format, this node may have one child, an <code>app0JFIF</code> node,
+indicating that the JPEG stream contains a JFIF marker segment and related
+data, or no children, indicating that the stream contains no JFIF marker.
+In future versions of the JPEG metadata format, other varieties of JPEG
+metadata may be supported (e.g. Exif) by defining other types of nodes
+which may appear as a child of the <code>JPEGvariety</code> node.
+<p>
+
+(Note that an application wishing to interpret Exif metadata given
+a metadata tree structure in the <code>javax_imageio_jpeg_image_1.0</code>
+format must check for an <code>unknown</code> marker segment with a tag
+indicating an <code>APP1</code> marker and containing data identifying it
+as an Exif marker segment.  Then it may use application-specific code to
+interpret the data in the marker segment.  If such an application were
+to encounter a metadata tree formatted according to a future version of
+the JPEG metadata format, the Exif marker segment might not be
+<code>unknown</code> in that format - it might be structured as a
+child node of the <code>JPEGvariety</code> node.  Thus, it is important
+for an application to specify which version to use by passing the string
+identifying the version to the method/constructor used to obtain an
+<code>IIOMetadata</code> object.)
+
+<p>
+
+On reading, <code>JFXX</code> and <code>app2ICC</code> nodes occur as
+children of an <code>app0JFIF</code> node.
+This is true regardless of where the JFXX <code>APP0</code> and
+<code>APP2</code> marker segments actually occur in the stream.  The ordering
+of nodes within the <code>markerSequence</code> node corresponds to the
+ordering of marker segments found in the JPEG stream.
+<p>
+On writing, any <code>JFXX</code> and <code>app2ICC</code> nodes must
+occur as children of an <code>app0JFIF</code> node, itself a child of a
+<code>JPEGvariety</code> node, which must always be the first node.
+(If the stream is not to be JFIF compliant, no <code>app0JFIF</code> node
+should be provided, and the <code>JPEGvariety</code> node should have no
+children.)  Any
+JFIF <code>APP0</code>, JFXX <code>APP0</code>, and <code>APP2</code> marker
+segments are written first, followed by all Adobe <code>APP14</code>,
+<code>APPn</code>, <code>COM</code> and unknown segments in the
+order in which their corresponding nodes appear in the
+<code>markerSequence</code> node, followed by <code>DQT</code> (and
+<code>DHT</code> for non-progressive writes) marker segments, followed by the
+<code>SOF</code> and <code>SOS</code> marker segments.  For progressive writes
+using metadata to control progression, the <code>SOS</code> segments are used
+in the order in which their corresponding nodes occur in the
+<code>markerSequence</code> node.
+<p>
+
+The <code>reset</code>, <code>mergeTree</code> and <code>setFromTree</code>
+operations have the following semantics for the JPEG plug-in metadata object:
+
+<p> <code>reset</code> - A call to <code>reset</code> will restore the
+metadata object to the same state it had immediately after creation, whether
+this came about from reading a stream or by obtaining a default object from
+the <code>ImageWriter</code>.  This is true regardless of how many times the
+metadata object has been modified since creation.
+
+<p> <code>mergeTree</code> - Native Format
+<br> The <code>mergeTree</code> operation accepts valid trees conforming to
+the DTD below, and merges the nodes using the following ordering rules.  In
+all cases, only data present in the new node is changed in a corresponding
+existing node, if any.  This means that nodes cannot be removed using
+<code>mergeTree</code>.  To remove nodes, use <code>setFromTree</code>.  The
+tree must consist of <code>IIOMetadataNode</code>s.
+<ul>
+  <li> <code>app0JFIF</code>
+        <ul>
+          <li> If an <code>app0JFIF</code> node already exists, the contents
+               of the new one modify the existing one.
+          <li> If there is no such node, a new one is created and inserted in
+               the appropriate position.
+        </ul>
+  <li> <code>dqt</code>
+        <ul>
+          <li> If there already exist <code>dqt</code> nodes in the sequence,
+               then each table in the node replaces the first table, in any
+               <code>dqt</code> node, with the same table id.
+          <li> If none of the existing <code>dqt</code> nodes contain a table
+               with the same id, then the table is added to the last existing
+               <code>dqt</code> node.
+          <li> If there are no <code>dqt</code> nodes, then a new one is
+               created and added as follows:
+            <ul>
+              <li> If there are <code>dht</code> nodes, the new
+                   <code>dqt</code> node is inserted before the first one.
+              <li> If there are no <code>dht</code> nodes, the new
+                   <code>dqt</code> node is inserted  before an
+                   <code>sof</code> node, if there is one.
+              <li> If there is no <code>sof</code> node, the new
+                   <code>dqt</code> node is inserted before the first
+                   <code>sos</code> node, if there is one.
+              <li> If there is no <code>sos</code> node, the new
+                   <code>dqt</code> node is added to the end of the sequence.
+            </ul>
+        </ul>
+  <li> <code>dht</code>
+        <ul>
+          <li> If there already exist <code>dht</code> nodes in the sequence,
+               then each table in the node replaces the first table, in any
+               <code>dht</code> node, with the same table class and table id.
+          <li> If none of the existing <code>dht</code> nodes contain a table
+               with the same class and id, then the table is added to the last
+               existing <code>dht</code> node.
+          <li> If there are no <code>dht</code> nodes, then a new one is
+               created and added as follows:
+            <ul>
+              <li> If there are <code>dqt</code> nodes, the new
+                   <code>dht</code> node is inserted immediately following the
+                   last <code>dqt</code> node.
+              <li> If there are no <code>dqt</code> nodes, the new
+                   <code>dht</code> node is inserted before an
+                   <code>sof</code> node, if there is one.
+              <li> If there is no <code>sof</code> node, the new
+                   <code>dht</code> node is inserted before the first
+                   <code>sos</code> node, if there is one.
+              <li> If there is no <code>sos</code> node, the new
+                   <code>dht</code> node is added to the end of the sequence.
+            </ul>
+        </ul>
+  <li> <code>dri</code>
+        <ul>
+          <li> If there already exists a <code>dri</code> node, the restart
+               interval value is updated.
+          <li> If there is no <code>dri</code> node, then a new one is created
+               and added as follows:
+            <ul>
+              <li> If there is an <code>sof</code> node, the new
+                   <code>dri</code> node is inserted before it.
+              <li> If there is no <code>sof</code> node, the new
+                   <code>dri</code> node is inserted before the first
+                   <code>sos</code> node, if there is one.
+              <li> If there is no <code>sos</code> node, the new
+                   <code>dri</code> node is added to the end of the sequence.
+            </ul>
+        </ul>
+  <li> <code>com</code>
+        <br> A new <code>com</code> node is created and inserted as follows:
+        <ul>
+          <li> If there already exist <code>com</code> nodes, the new one is
+               inserted after the last one.
+          <li> If there are no <code>com</code> nodes, the new
+               <code>com</code> node is inserted after the
+               <code>app14Adobe</code> node, if there is one.
+          <li> If there is no <code>app14Adobe</code> node, the new
+               <code>com</code> node is inserted at the beginning of the
+               sequence.
+        </ul>
+  <li> <code>app14Adobe</code>
+        <ul>
+          <li> If there already exists an <code>app14Adobe</code> node, then
+               its attributes are updated from the node.
+          <li> If there is no <code>app14Adobe</code> node, then a new one is
+               created and  added as follows:
+            <ul>
+              <li> The new <code>app14Adobe</code> node is inserted after the
+                   last <code>unknown</code> node, if there are any.
+              <li> If there are no <code>unknown</code> nodes, the new
+                   <code>app14Adobe</code> node is inserted at the beginning
+                   of the sequence.
+            </ul>
+        </ul>
+  <li> <code>unknown</code>
+       <br> A new <code>unknown</code> node is created and added to the
+            sequence as follows:
+        <ul>
+          <li> If there already exist <code>unknown</code> marker nodes, the
+               new one is inserted after the last one.
+          <li> If there are no <code>unknown</code> nodes, the new
+               <code>unknown</code> node is inserted before the
+               <code>app14Adobe</code> node, if there is one.
+          <li> If there is no <code>app14Adobe</code> node, the new
+               <code>unknown</code> node is inserted at the beginning of the
+               sequence.
+        </ul>
+  <li> <code>sof</code>
+        <ul>
+          <li> If there already exists an <code>sof</code> node in the
+               sequence, then its values are updated from the node.
+          <li> If there is no <code>sof</code> node, then a new one is created
+               and added as follows:
+            <ul>
+              <li> If there are any <code>sos</code> nodes, the new
+                   <code>sof</code> node is inserted before the first one.
+              <li> If there is no <code>sos</code> node, the new
+                   <code>sof</code> node is added to the end of the sequence.
+            </ul>
+        </ul>
+  <li> <code>sos</code>
+        <ul>
+          <li> If there already exists a single <code>sos</code> node, then
+               the values are updated from the node.
+          <li> If there are more than one existing <code>sos</code> nodes,
+               then an <code>IIOInvalidTreeException</code> is thrown, as
+               <code>sos</code> nodes cannot be merged into a set of
+               progressive scans.
+          <li> If there are no <code>sos</code> nodes, a new one is created
+               and added to the end of the sequence.
+        </ul>
+</ul>
+
+<p> <code>mergeTree</code> - Standard Format
+<br>
+The <code>mergeTree</code> operation, when given a tree in the standard
+format, will modify the native tree in the following ways:
+<ul>
+   <li> <code>Chroma</code> - The <code>ColorSpaceType</code> subnode of a
+        <code>Chroma</code> node may change the target colorspace of the
+        compressed image.  The selection of a new colorspace can cause a number
+        of changes, in keeping with the algorithms described above:
+        <code>app0JFIF</code> and <code>app14Adobe</code> nodes may be added
+        or removed, subsampling may be added or removed, component ids may
+        be changed, and <code>sof</code> and <code>sos</code> nodes will be
+        updated accordingly.  If necessary, additional quantization and
+        huffman tables are added.  In the case of quantization tables, the
+        default will be scaled to match the quality level of any existing
+        tables.  No tables are added to metadata that does not already contain
+        tables.  If the existing metadata specifies progressive encoding, then
+        the number of channels must not change.  Any <code>Transparency</code>
+        node is also taken into account, as an explicit value of
+        <code>none</code> for the <code>Alpha</code> subnode can cause the
+        removal of an alpha channel, and anything other than <code>none</code>
+        can cause the addition of an alpha channel.
+   <li> <code>Dimension</code> - A <code>PixelAspectRatio</code> specification
+        can cause the contents of an <code>app0JFIF</code> node to change, if
+        there is one present, or the addition of an <code>app0JFIF</code> node
+        containing appropriate values, if there can be one.  An appropriate
+        pair of integers is computed from the floating-point ratio for
+        inclusion in the node.
+   <li> <code>Text</code> - Each uncompressed text item is converted to a
+        <code>com</code> node and inserted according to the rules above for
+        merging <code>com</code> nodes.
+</ul>
+
+<p> <code>setFromTree</code> - Native Format
+<br>
+The <code>setFromTree</code> operation, when given a tree in the native
+format described below, will simply replace the existing tree in its entirety
+with the new one.  The tree must consist of <code>IIOMetadataNode</code>s.
+
+<p> <code>setFromTree</code> - Standard Format
+<br>
+The <code>setFromTree</code> operation, when given a tree in the standard
+format, performs a <code>reset</code> followed by a merge of the new tree.
+
+<h2>
+<a id=image>Image Metadata DTD</a>
+</h2>
+
+<pre>
+&lt;!DOCTYPE "javax_imageio_jpeg_image_1.0" [
+
+  &lt;!ELEMENT "javax_imageio_jpeg_image_1.0" (JPEGvariety, markerSequence)&gt;
+
+    &lt;!ELEMENT "JPEGvariety" (app0JFIF)&gt;
+      &lt;!-- A node grouping all marker segments specific to the variety of
+              stream being read/written (e.g. JFIF) - may be empty --&gt;
+
+      &lt;!ELEMENT "app0JFIF" (JFXX?, app2ICC?)&gt;
+        &lt;!ATTLIST "app0JFIF" "majorVersion" #CDATA "1"&gt;
+          &lt;!-- The major JFIF version number --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 0 (inclusive) --&gt;
+          &lt;!-- Max value: 255 (inclusive) --&gt;
+        &lt;!ATTLIST "app0JFIF" "minorVersion" #CDATA "2"&gt;
+          &lt;!-- The minor JFIF version number --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 0 (inclusive) --&gt;
+          &lt;!-- Max value: 255 (inclusive) --&gt;
+        &lt;!ATTLIST "app0JFIF" "resUnits" ("0" | "1" | "2") "0"&gt;
+          &lt;!-- The resolution units for Xdensisty and Ydensity (0 = no
+               units, just aspect ratio; 1 = dots/inch; 2 = dots/cm) --&gt;
+        &lt;!ATTLIST "app0JFIF" "Xdensity" #CDATA "1"&gt;
+          &lt;!-- The horizontal density or aspect ratio numerator --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 1 (inclusive) --&gt;
+          &lt;!-- Max value: 65535 (inclusive) --&gt;
+        &lt;!ATTLIST "app0JFIF" "Ydensity" #CDATA "1"&gt;
+          &lt;!-- The vertical density or aspect ratio denominator --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 1 (inclusive) --&gt;
+          &lt;!-- Max value: 65535 (inclusive) --&gt;
+        &lt;!ATTLIST "app0JFIF" "thumbWidth" #CDATA "0"&gt;
+          &lt;!-- The width of the thumbnail, or 0 if there isn't one --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 0 (inclusive) --&gt;
+          &lt;!-- Max value: 255 (inclusive) --&gt;
+        &lt;!ATTLIST "app0JFIF" "thumbHeight" #CDATA "0"&gt;
+          &lt;!-- The height of the thumbnail, or 0 if there isn't one --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 0 (inclusive) --&gt;
+          &lt;!-- Max value: 255 (inclusive) --&gt;
+
+        &lt;!ELEMENT "JFXX" (app0JFXX)*&gt;
+          &lt;!-- Min children: 1 --&gt;
+
+        &lt;!ELEMENT "app0JFXX" (JFIFthumbJPEG | JFIFthumbPalette |
+          JFIFthumbRGB)&gt;
+          &lt;!-- A JFIF extension marker segment --&gt;
+          &lt;!ATTLIST "app0JFXX" "extensionCode" ("16" | "17" | "19")
+             #IMPLIED&gt;
+            &lt;!-- The JFXX extension code identifying thumbnail type: (16 =
+                 JPEG, 17 = indexed, 19 = RGB --&gt;
+
+          &lt;!ELEMENT "JFIFthumbJPEG" (markerSequence?)&gt;
+            &lt;!-- A JFIF thumbnail in JPEG format (no JFIF segments
+                 permitted) --&gt;
+
+          &lt;!ELEMENT "JFIFthumbPalette" EMPTY&gt;
+            &lt;!-- A JFIF thumbnail as an RGB indexed image --&gt;
+            &lt;!ATTLIST "JFIFthumbPalette" "thumbWidth" #CDATA #IMPLIED&gt;
+              &lt;!-- The width of the thumbnail --&gt;
+              &lt;!-- Data type: Integer --&gt;
+              &lt;!-- Min value: 0 (inclusive) --&gt;
+              &lt;!-- Max value: 255 (inclusive) --&gt;
+            &lt;!ATTLIST "JFIFthumbPalette" "thumbHeight" #CDATA #IMPLIED&gt;
+              &lt;!-- The height of the thumbnail --&gt;
+              &lt;!-- Data type: Integer --&gt;
+              &lt;!-- Min value: 0 (inclusive) --&gt;
+              &lt;!-- Max value: 255 (inclusive) --&gt;
+
+          &lt;!ELEMENT "JFIFthumbRGB" EMPTY&gt;
+            &lt;!-- A JFIF thumbnail as an RGB image --&gt;
+            &lt;!ATTLIST "JFIFthumbRGB" "thumbWidth" #CDATA #IMPLIED&gt;
+              &lt;!-- The width of the thumbnail --&gt;
+              &lt;!-- Data type: Integer --&gt;
+              &lt;!-- Min value: 0 (inclusive) --&gt;
+              &lt;!-- Max value: 255 (inclusive) --&gt;
+            &lt;!ATTLIST "JFIFthumbRGB" "thumbHeight" #CDATA #IMPLIED&gt;
+              &lt;!-- The height of the thumbnail --&gt;
+              &lt;!-- Data type: Integer --&gt;
+              &lt;!-- Min value: 0 (inclusive) --&gt;
+              &lt;!-- Max value: 255 (inclusive) --&gt;
+
+        &lt;!ELEMENT "app2ICC" EMPTY&gt;
+          &lt;!-- An ICC profile APP2 marker segment --&gt;
+          &lt;!-- Optional User object: java.awt.color.ICC_Profile --&gt;
+
+    &lt;!ELEMENT "markerSequence" (dqt | dht | dri | com | unknown |
+      app14Adobe | sof | sos)*&gt;
+      &lt;!-- A node grouping all non-jfif marker segments --&gt;
+
+      &lt;!ELEMENT "dqt" (dqtable)*&gt;
+        &lt;!-- A Define Quantization Table(s) marker segment --&gt;
+        &lt;!-- Min children: 1 --&gt;
+        &lt;!-- Max children: 4 --&gt;
+
+        &lt;!ELEMENT "dqtable" EMPTY&gt;
+          &lt;!-- A single quantization table --&gt;
+          &lt;!-- User object: javax.imageio.plugins.jpeg.JPEGQTable --&gt;
+          &lt;!ATTLIST "dqtable" "elementPrecision" #CDATA "0"&gt;
+            &lt;!-- The number of bits in each table element (0 = 8, 1 = 16)
+                 --&gt;
+            &lt;!-- Data type: Integer --&gt;
+          &lt;!ATTLIST "dqtable" "qtableId" ("0" | "1" | "2" | "3") #REQUIRED&gt;
+
+      &lt;!ELEMENT "dht" (dhtable)*&gt;
+        &lt;!-- A Define Huffman Table(s) marker segment --&gt;
+        &lt;!-- Min children: 1 --&gt;
+        &lt;!-- Max children: 4 --&gt;
+
+        &lt;!ELEMENT "dhtable" EMPTY&gt;
+          &lt;!-- A single Huffman table --&gt;
+          &lt;!-- User object: javax.imageio.plugins.jpeg.JPEGHuffmanTable --&gt;
+          &lt;!ATTLIST "dhtable" "class" ("0" | "1") #REQUIRED&gt;
+            &lt;!-- Indicates whether this is a DC (0) or an AC (1) table --&gt;
+          &lt;!ATTLIST "dhtable" "htableId" ("0" | "1" | "2" | "3") #REQUIRED&gt;
+            &lt;!-- The table id --&gt;
+
+      &lt;!ELEMENT "dri" EMPTY&gt;
+        &lt;!-- A Define Restart Interval marker segment --&gt;
+        &lt;!ATTLIST "dri" "interval" #CDATA #REQUIRED&gt;
+          &lt;!-- The restart interval in MCUs --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 0 (inclusive) --&gt;
+          &lt;!-- Max value: 65535 (inclusive) --&gt;
+
+      &lt;!ELEMENT "com" EMPTY&gt;
+        &lt;!-- A Comment marker segment. The user object contains the actual
+             bytes. --&gt;
+        &lt;!-- User object: array of [B --&gt;
+        &lt;!-- Min length: 1 --&gt;
+        &lt;!-- Max length: 65533 --&gt;
+        &lt;!ATTLIST "com" "comment" #CDATA #IMPLIED&gt;
+          &lt;!-- The comment as a string (used only if user object is null)
+               --&gt;
+          &lt;!-- Data type: String --&gt;
+
+      &lt;!ELEMENT "unknown" EMPTY&gt;
+        &lt;!-- An unrecognized marker segment. The user object contains the
+             data not including length. --&gt;
+        &lt;!-- User object: array of [B --&gt;
+        &lt;!-- Min length: 1 --&gt;
+        &lt;!-- Max length: 65533 --&gt;
+        &lt;!ATTLIST "unknown" "MarkerTag" #CDATA #REQUIRED&gt;
+          &lt;!-- The tag identifying this marker segment --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 0 (inclusive) --&gt;
+          &lt;!-- Max value: 255 (inclusive) --&gt;
+
+      &lt;!ELEMENT "app14Adobe" EMPTY&gt;
+        &lt;!-- An Adobe APP14 marker segment --&gt;
+        &lt;!ATTLIST "app14Adobe" "version" #CDATA "100"&gt;
+          &lt;!-- The version of Adobe APP14 marker segment --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 100 (inclusive) --&gt;
+          &lt;!-- Max value: 255 (inclusive) --&gt;
+        &lt;!ATTLIST "app14Adobe" "flags0" #CDATA "0"&gt;
+          &lt;!-- The flags0 variable of an APP14 marker segment --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 0 (inclusive) --&gt;
+          &lt;!-- Max value: 65535 (inclusive) --&gt;
+        &lt;!ATTLIST "app14Adobe" "flags1" #CDATA "0"&gt;
+          &lt;!-- The flags1 variable of an APP14 marker segment --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 0 (inclusive) --&gt;
+          &lt;!-- Max value: 65535 (inclusive) --&gt;
+        &lt;!ATTLIST "app14Adobe" "transform" ("0" | "1" | "2") #REQUIRED&gt;
+          &lt;!-- The color transform applied to the image (0 = Unknown, 1 =
+               YCbCr, 2 = YCCK) --&gt;
+
+      &lt;!ELEMENT "sof" (componentSpec)*&gt;
+        &lt;!-- A Start Of Frame marker segment --&gt;
+        &lt;!-- Min children: 1 --&gt;
+        &lt;!-- Max children: 4 --&gt;
+        &lt;!ATTLIST "sof" "process" ("0" | "1" | "2") #IMPLIED&gt;
+          &lt;!-- The JPEG process (0 = Baseline sequential, 1 = Extended
+               sequential, 2 = Progressive) --&gt;
+        &lt;!ATTLIST "sof" "samplePrecision" #CDATA "8"&gt;
+          &lt;!-- The number of bits per sample --&gt;
+          &lt;!-- Data type: Integer --&gt;
+        &lt;!ATTLIST "sof" "numLines" #CDATA #IMPLIED&gt;
+          &lt;!-- The number of lines in the image --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 0 (inclusive) --&gt;
+          &lt;!-- Max value: 65535 (inclusive) --&gt;
+        &lt;!ATTLIST "sof" "samplesPerLine" #CDATA #IMPLIED&gt;
+          &lt;!-- The number of samples per line --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 0 (inclusive) --&gt;
+          &lt;!-- Max value: 65535 (inclusive) --&gt;
+        &lt;!ATTLIST "sof" "numFrameComponents" ("1" | "2" | "3" | "4")
+           #IMPLIED&gt;
+          &lt;!-- The number of components in the image --&gt;
+
+        &lt;!ELEMENT "componentSpec" EMPTY&gt;
+          &lt;!-- A component specification for a frame --&gt;
+          &lt;!ATTLIST "componentSpec" "componentId" #CDATA #REQUIRED&gt;
+            &lt;!-- The id for this component --&gt;
+            &lt;!-- Data type: Integer --&gt;
+            &lt;!-- Min value: 0 (inclusive) --&gt;
+            &lt;!-- Max value: 255 (inclusive) --&gt;
+          &lt;!ATTLIST "componentSpec" "HsamplingFactor" #CDATA #REQUIRED&gt;
+            &lt;!-- The horizontal sampling factor for this component --&gt;
+            &lt;!-- Data type: Integer --&gt;
+            &lt;!-- Min value: 1 (inclusive) --&gt;
+            &lt;!-- Max value: 255 (inclusive) --&gt;
+          &lt;!ATTLIST "componentSpec" "VsamplingFactor" #CDATA #REQUIRED&gt;
+            &lt;!-- The vertical sampling factor for this component --&gt;
+            &lt;!-- Data type: Integer --&gt;
+            &lt;!-- Min value: 1 (inclusive) --&gt;
+            &lt;!-- Max value: 255 (inclusive) --&gt;
+          &lt;!ATTLIST "componentSpec" "QtableSelector" ("0" | "1" | "2" |
+            "3") #REQUIRED&gt;
+            &lt;!-- The quantization table to use for this component --&gt;
+
+      &lt;!ELEMENT "sos" (scanComponentSpec)*&gt;
+        &lt;!-- A Start Of Scan marker segment --&gt;
+        &lt;!-- Min children: 1 --&gt;
+        &lt;!-- Max children: 4 --&gt;
+        &lt;!ATTLIST "sos" "numScanComponents" ("1" | "2" | "3" | "4")
+           #REQUIRED&gt;
+          &lt;!-- The number of components in the scan --&gt;
+        &lt;!ATTLIST "sos" "startSpectralSelection" #CDATA "0"&gt;
+          &lt;!-- The first spectral band included in this scan --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 0 (inclusive) --&gt;
+          &lt;!-- Max value: 63 (inclusive) --&gt;
+        &lt;!ATTLIST "sos" "endSpectralSelection" #CDATA "63"&gt;
+          &lt;!-- The last spectral band included in this scan --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 0 (inclusive) --&gt;
+          &lt;!-- Max value: 63 (inclusive) --&gt;
+        &lt;!ATTLIST "sos" "approxHigh" #CDATA "0"&gt;
+          &lt;!-- The highest bit position included in this scan --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 0 (inclusive) --&gt;
+          &lt;!-- Max value: 15 (inclusive) --&gt;
+        &lt;!ATTLIST "sos" "approxLow" #CDATA "0"&gt;
+          &lt;!-- The lowest bit position included in this scan --&gt;
+          &lt;!-- Data type: Integer --&gt;
+          &lt;!-- Min value: 0 (inclusive) --&gt;
+          &lt;!-- Max value: 15 (inclusive) --&gt;
+
+        &lt;!ELEMENT "scanComponentSpec" EMPTY&gt;
+          &lt;!-- A component specification for a scan --&gt;
+          &lt;!ATTLIST "scanComponentSpec" "componentSelector" #CDATA
+             #REQUIRED&gt;
+            &lt;!-- The id of this component --&gt;
+            &lt;!-- Data type: Integer --&gt;
+            &lt;!-- Min value: 0 (inclusive) --&gt;
+            &lt;!-- Max value: 255 (inclusive) --&gt;
+          &lt;!ATTLIST "scanComponentSpec" "dcHuffTable" ("0" | "1" | "2" |
+            "3") #REQUIRED&gt;
+            &lt;!-- The huffman table to use for encoding DC coefficients --&gt;
+          &lt;!ATTLIST "scanComponentSpec" "acHuffTable" ("0" | "1" | "2" |
+            "3") #REQUIRED&gt;
+            &lt;!-- The huffman table to use for encoding AC coefficients --&gt;
+]&gt;
+</pre>
+
+<h2>
+<a id=stream>Stream Metadata DTD</a>
+</h2>
+
+<pre>
+&lt;!DOCTYPE "javax_imageio_jpeg_stream_1.0" [
+  &lt;!ELEMENT "javax_imageio_jpeg_stream_1.0" (dqt |
+                      dht |
+                      dri |
+                      com |
+                      unknown)*&gt;
+
+  &lt;!-- All elements are as defined above for image metadata --&gt;
+]&gt;
+</pre>
+</main>
+</body>
+</html>

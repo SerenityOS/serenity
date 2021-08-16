@@ -1,0 +1,2 @@
+Readonly.java:15:10: compiler.err.cant.apply.symbol: kindname.method, put, Err<compiler.misc.type.captureof: 1, ? extends java.lang.String>, Err<compiler.misc.type.captureof: 2, ? extends java.lang.String>, kindname.class, Err<T>, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: Err<compiler.misc.type.captureof: 3, ? extends java.lang.String>, Err<compiler.misc.type.captureof: 1, ? extends java.lang.String>))
+1 error

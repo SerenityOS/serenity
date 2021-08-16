@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>AWT Threading Issues</title>
+</head>
+<!--
+ Copyright (c) 2002, 2021, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+
+<body>
+<main role="main">
+<h1>AWT Threading Issues</h1>
+
+<a id="ListenersThreads"></a>
+<h2>Listeners and threads</h2>
+
+Unless otherwise noted all AWT listeners are notified on the event
+dispatch thread. It is safe to remove/add listeners from any thread
+during dispatching, but the changes only effect subsequent notification.
+<br>For example, if a key listeners is added from another key listener, the
+newly added listener is only notified on subsequent key events.
+
+<a id="Autoshutdown"></a>
+<h2>Auto-shutdown</h2>
+
+According to
+<cite>The Java Virtual Machine Specification</cite>,
+sections 2.17.9 and 2.19,
+the Java virtual machine (JVM) initially starts up with a single non-daemon
+thread, which typically calls the <code>main</code> method of some class.
+The virtual machine terminates all its activity and exits when
+one of two things happens:
+<ul>
+  <li> All the threads that are not daemon threads terminate.
+  <li> Some thread invokes the <code>exit</code> method of class
+  <code>Runtime</code> or class <code>System</code>, and the exit
+  operation is permitted by the security manager.
+</ul>
+<p>
+This implies that if an application doesn't start any threads itself,
+the JVM will exit as soon as <code>main</code> terminates.
+This is not the case, however, for a simple application
+that creates and displays a <code>java.awt.Frame</code>:
+<pre>
+        public static void main(String[] args) {
+            Frame frame = new Frame();
+            frame.setVisible(true);
+         }
+</pre>
+The reason is that AWT encapsulates asynchronous event dispatch
+machinery to process events AWT or Swing components can fire. The
+exact behavior of this machinery is implementation-dependent. In
+particular, it can start non-daemon helper threads for its internal
+purposes. In fact, these are the threads that prevent the example
+above from exiting. The only restrictions imposed on the behavior of
+this machinery are as follows:
+<ul>
+  <li> <a href="../EventQueue.html#isDispatchThread()"><code>EventQueue.isDispatchThread</code></a>
+       returns <code>true</code> if and only if the calling thread is the
+       event dispatch thread started by the machinery;
+  <li> <code>AWTEvents</code> which were actually enqueued to a
+       particular <code>EventQueue</code> (note that events being
+       posted to the <code>EventQueue</code> can be coalesced) are
+       dispatched:
+       <ul>
+           <li>
+           <dl><dt>Sequentially.
+             <dd> That is, it is not permitted that several events from
+	        this queue are dispatched simultaneously. </dd></dl>
+           <li>
+           <dl><dt>In the same order as they are enqueued.
+             <dd> That is, if <code>AWTEvent</code>&nbsp;A is enqueued
+	        to the <code>EventQueue</code> before
+		<code>AWTEvent</code>&nbsp;B then event B will not be
+                dispatched before event A.</dd></dl>
+       </ul>
+  <li> There is at least one alive non-daemon thread while there is at
+       least one displayable AWT or Swing component within the
+       application (see
+       <a href="../Component.html#isDisplayable()"><code>Component.isDisplayable</code></a>).
+</ul>
+The implications of the third restriction are as follows:
+<ul>
+  <li> The JVM will exit if some thread invokes the <code>exit</code>
+  method of class <code>Runtime</code> or class <code>System</code>
+  regardless of the presence of displayable components;
+  <li> Even if the application terminates all non-daemon threads it
+  started, the JVM will not exit while there is at least one
+  displayable component.
+</ul>
+It depends on the implementation if and when the non-daemon helper
+threads are terminated once all components are made undisplayable.
+The implementation-specific details are given below.
+
+<h3>
+Implementation-dependent behavior.
+</h3>
+
+Prior to 1.4, the helper threads were never terminated.
+<p>
+Starting with 1.4, the behavior has changed as a result of the fix for
+<a href="https://bugs.java.com/view_bug.do?bug_id=4030718">
+4030718</a>. With the current implementation, AWT terminates all its
+helper threads allowing the application to exit cleanly when the
+following three conditions are true:
+<ul>
+  <li> There are no displayable AWT or Swing components.
+  <li> There are no native events in the native event queue.
+  <li> There are no AWT events in java EventQueues.
+</ul>
+Therefore, a stand-alone AWT application that wishes to exit
+cleanly without calling <code>System.exit</code> must:
+<ul>
+  <li> Make sure that all AWT or Swing components are made
+       undisplayable when the application finishes. This can be done
+       by calling
+<a href="../Window.html#dispose()"><code>Window.dispose</code></a>
+       on all top-level <code>Windows</code>. See
+<a href="../Frame.html#getFrames()"><code>Frame.getFrames</code></a>.
+  <li> Make sure that no method of AWT event listeners registered by
+       the application with any AWT or Swing component can run into an
+       infinite loop or hang indefinitely. For example, an AWT listener
+       method triggered by some AWT event can post a new AWT event of
+       the same type to the <code>EventQueue</code>.
+       The argument is that methods
+       of AWT event listeners are typically executed on helper
+       threads.
+</ul>
+Note, that while an application following these recommendations will
+exit cleanly under normal conditions, it is not guaranteed that it
+will exit cleanly in all cases. Two examples:
+<ul>
+  <li> Other packages can create displayable components for internal
+       needs and never make them undisplayable. See
+<a href="https://bugs.java.com/view_bug.do?bug_id=4515058">
+4515058</a>,
+<a href="https://bugs.java.com/view_bug.do?bug_id=4671025">
+4671025</a>, and
+<a href="https://bugs.java.com/view_bug.do?bug_id=4465537">
+4465537</a>.
+  <li> Both Microsoft Windows and X11 allow an application to send native
+       events to windows that belong to another application. With this
+       feature it is possible to write a malicious program that will
+       continuously send events to all available windows preventing
+       any AWT application from exiting cleanly.
+</ul>
+On the other hand, if you require the JVM to continue running even after
+the application has made all components undisplayable you should start a
+non-daemon thread that blocks forever.
+
+<pre>
+        &lt;...&gt;
+        Runnable r = new Runnable() {
+            public void run() {
+                Object o = new Object();
+                try {
+                    synchronized (o) {
+                        o.wait();
+                    }
+                } catch (InterruptedException ie) {
+                }
+            }
+        };
+        Thread t = new Thread(r);
+        t.setDaemon(false);
+        t.start();
+        &lt;...&gt;
+</pre>
+
+<cite>The Java Virtual Machine Specification</cite>
+ guarantees
+that the JVM doesn't exit until this thread terminates.
+</main>
+</body>
+</html>

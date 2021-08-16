@@ -1,0 +1,2 @@
+Superarg2.java:25:14: compiler.err.cant.apply.symbols: kindname.constructor, U, java.lang.String,{(compiler.misc.inapplicable.method: kindname.constructor, T.U, <B>T.U(B), (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Integer))),(compiler.misc.inapplicable.method: kindname.constructor, T.U, T.U(int), (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.String, int)))}
+1 error

@@ -1,0 +1,2 @@
+Cycle3.java:17:9: compiler.err.cyclic.annotation.element: cycle3.A
+1 error

@@ -1,0 +1,2 @@
+Test.java:15:9: compiler.err.ref.ambiguous: f, kindname.variable, f, p1.A1, kindname.variable, f, p2.A2
+1 error

@@ -1,0 +1,4 @@
+T6946618c.java:13:24: compiler.err.type.found.req: ? extends java.lang.String, (compiler.misc.type.req.exact)
+T6946618c.java:14:24: compiler.err.type.found.req: ? super java.lang.String, (compiler.misc.type.req.exact)
+T6946618c.java:15:24: compiler.err.type.found.req: ?, (compiler.misc.type.req.exact)
+3 errors

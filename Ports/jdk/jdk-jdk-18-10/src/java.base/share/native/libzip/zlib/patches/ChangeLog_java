@@ -1,0 +1,98 @@
+(1) renamed adler32.c -> zadler32.c, zcrc32c -> zcrc32.c
+
+(2) zconf.h:
+    - added _LP64 to make uLong a 32-bit int on 64-bit platform
+    uLong -> 32-bit int
+
+--------------------------
+35,37d10
+< /* for _LP64 */
+< #include <sys/types.h>
+<
+421,424d393
+<
+< #ifdef _LP64
+< typedef unsigned int  uLong;  /* 32 bits or more */
+< #else
+426d394
+< #endif
+--------------------------
+
+(3) updated crc32.c/crc32(), crc32_z()
+   unsigned long      -> uLong
+
+--------------------------
+
+226,227c202,203
+< uLong ZEXPORT crc32_z(crc, buf, len)
+<     uLong crc;
+---
+> unsigned long ZEXPORT crc32_z(crc, buf, len)
+>     unsigned long crc;
+244c220
+<             return (uLong)crc32_little(crc, buf, len);
+---
+>             return crc32_little(crc, buf, len);
+246c222
+<             return (uLong)crc32_big(crc, buf, len);
+---
+>             return crc32_big(crc, buf, len);
+261,262c237,238
+< uLong ZEXPORT crc32(crc, buf, len)
+<     uLong crc;
+---
+> unsigned long ZEXPORT crc32(crc, buf, len)
+>     unsigned long crc;
+
+--------------------------
+
+(4) gzread.c
+
+--------------------------
+343c319
+<             n = (unsigned)len;
+---
+>             n = len;
+424c400
+<     len = (unsigned)gz_read(state, buf, len);
+---
+>     len = gz_read(state, buf, len);
+496c472
+<     ret = (int)gz_read(state, buf, 1);
+---
+>     ret = gz_read(state, buf, 1);
+--------------------------
+
+(5) gzwrite.c
+
+--------------------------
+236c212
+<                 copy = (unsigned)len;
+---
+>                 copy = len;
+256c232
+<                 n = (unsigned)len;
+---
+>                 n = len;
+--------------------------
+
+(6) deflate.c  #8184306
+
+*** 503,512 ****
+--- 503,514 ----
+  
+      s = (deflate_state *)strm->state;
+      s->pending = 0;
+      s->pending_out = s->pending_buf;
+  
++     s->high_water = 0;      /* reset to its inital value 0 */
++ 
+      if (s->wrap < 0) {
+          s->wrap = -s->wrap; /* was made negative by deflate(..., Z_FINISH); */
+      }
+      s->status =
+  #ifdef GZIP
+
+(7) deflate.c undo (6), replaced withe the official zlib repo fix see#305/#f969409
+
+  

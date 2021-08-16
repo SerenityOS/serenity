@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="gv"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="gv">Gaelg</language>
+		</languages>
+		<territories>
+			<territory type="GB">Rywvaneth Unys</territory>
+			<territory type="IM">Ellan Vannin</territory>
+		</territories>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a b c ç d e f g h i j k l m n o p q r s t u v w x y z]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]</exemplarCharacters>
+		<exemplarCharacters type="punctuation">[\- ‐ ‑ – — , ; \: ! ? . … ' ‘ ’ &quot; “ ” ( ) \[ \] § @ * / \&amp; # † ‡ ′ ″]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern draft="unconfirmed">EEEE dd MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern draft="unconfirmed">dd MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern draft="unconfirmed">MMM dd, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="unconfirmed">dd/MM/yy GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">J-guer</month>
+							<month type="2">T-arree</month>
+							<month type="3">Mayrnt</month>
+							<month type="4">Avrril</month>
+							<month type="5">Boaldyn</month>
+							<month type="6">M-souree</month>
+							<month type="7">J-souree</month>
+							<month type="8">Luanistyn</month>
+							<month type="9">M-fouyir</month>
+							<month type="10">J-fouyir</month>
+							<month type="11">M-Houney</month>
+							<month type="12">M-Nollick</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Jerrey-geuree</month>
+							<month type="2">Toshiaght-arree</month>
+							<month type="3">Mayrnt</month>
+							<month type="4">Averil</month>
+							<month type="5">Boaldyn</month>
+							<month type="6">Mean-souree</month>
+							<month type="7">Jerrey-souree</month>
+							<month type="8">Luanistyn</month>
+							<month type="9">Mean-fouyir</month>
+							<month type="10">Jerrey-fouyir</month>
+							<month type="11">Mee Houney</month>
+							<month type="12">Mee ny Nollick</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Jed</day>
+							<day type="mon">Jel</day>
+							<day type="tue">Jem</day>
+							<day type="wed">Jerc</day>
+							<day type="thu">Jerd</day>
+							<day type="fri">Jeh</day>
+							<day type="sat">Jes</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Jedoonee</day>
+							<day type="mon">Jelhein</day>
+							<day type="tue">Jemayrt</day>
+							<day type="wed">Jercean</day>
+							<day type="thu">Jerdein</day>
+							<day type="fri">Jeheiney</day>
+							<day type="sat">Jesarn</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">a.m.</dayPeriod>
+							<dayPeriod type="pm">p.m.</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">a.m.</dayPeriod>
+							<dayPeriod type="pm">p.m.</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraAbbr>
+						<era type="0">RC</era>
+						<era type="1">AD</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern draft="unconfirmed">EEEE dd MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern draft="unconfirmed">dd MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern draft="unconfirmed">MMM dd, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="unconfirmed">dd/MM/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern draft="unconfirmed">HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern draft="unconfirmed">HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern draft="unconfirmed">HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern draft="unconfirmed">HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+			</calendar>
+		</calendars>
+		<timeZoneNames>
+			<metazone type="Europe_Central">
+				<short>
+					<generic draft="unconfirmed">CET</generic>
+					<standard draft="unconfirmed">CET</standard>
+					<daylight draft="unconfirmed">CEST</daylight>
+				</short>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<short>
+					<generic draft="unconfirmed">EET</generic>
+					<standard draft="unconfirmed">EET</standard>
+					<daylight draft="unconfirmed">EEST</daylight>
+				</short>
+			</metazone>
+			<metazone type="Europe_Western">
+				<short>
+					<generic draft="unconfirmed">WET</generic>
+					<standard draft="unconfirmed">WET</standard>
+					<daylight draft="unconfirmed">WEST</daylight>
+				</short>
+			</metazone>
+			<metazone type="GMT">
+				<short>
+					<standard draft="unconfirmed">GMT</standard>
+				</short>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤#,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="one" draft="provisional">¤0K</pattern>
+					<pattern type="1000" count="two" draft="provisional">¤0K</pattern>
+					<pattern type="1000" count="few" draft="provisional">¤0K</pattern>
+					<pattern type="1000" count="many" draft="provisional">¤0K</pattern>
+					<pattern type="1000" count="other" draft="provisional">¤0K</pattern>
+					<pattern type="10000" count="one" draft="provisional">¤00K</pattern>
+					<pattern type="10000" count="two" draft="provisional">¤00K</pattern>
+					<pattern type="10000" count="few" draft="provisional">¤00K</pattern>
+					<pattern type="10000" count="many" draft="provisional">¤00K</pattern>
+					<pattern type="10000" count="other" draft="provisional">¤00K</pattern>
+					<pattern type="100000" count="one" draft="provisional">¤000K</pattern>
+					<pattern type="100000" count="two" draft="provisional">¤000K</pattern>
+					<pattern type="100000" count="few" draft="provisional">¤000K</pattern>
+					<pattern type="100000" count="many" draft="provisional">¤000K</pattern>
+					<pattern type="100000" count="other" draft="provisional">¤000K</pattern>
+					<pattern type="1000000" count="one" draft="provisional">¤0M</pattern>
+					<pattern type="1000000" count="two" draft="provisional">¤0M</pattern>
+					<pattern type="1000000" count="few" draft="provisional">¤0M</pattern>
+					<pattern type="1000000" count="many" draft="provisional">¤0M</pattern>
+					<pattern type="1000000" count="other" draft="provisional">¤0M</pattern>
+					<pattern type="10000000" count="one" draft="provisional">¤00M</pattern>
+					<pattern type="10000000" count="two" draft="provisional">¤00M</pattern>
+					<pattern type="10000000" count="few" draft="provisional">¤00M</pattern>
+					<pattern type="10000000" count="many" draft="provisional">¤00M</pattern>
+					<pattern type="10000000" count="other" draft="provisional">¤00M</pattern>
+					<pattern type="100000000" count="one" draft="provisional">¤000M</pattern>
+					<pattern type="100000000" count="two" draft="provisional">¤000M</pattern>
+					<pattern type="100000000" count="few" draft="provisional">¤000M</pattern>
+					<pattern type="100000000" count="many" draft="provisional">¤000M</pattern>
+					<pattern type="100000000" count="other" draft="provisional">¤000M</pattern>
+					<pattern type="1000000000" count="one" draft="provisional">¤0G</pattern>
+					<pattern type="1000000000" count="two" draft="provisional">¤0G</pattern>
+					<pattern type="1000000000" count="few" draft="provisional">¤0G</pattern>
+					<pattern type="1000000000" count="many" draft="provisional">¤0G</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">¤0G</pattern>
+					<pattern type="10000000000" count="one" draft="provisional">¤00G</pattern>
+					<pattern type="10000000000" count="two" draft="provisional">¤00G</pattern>
+					<pattern type="10000000000" count="few" draft="provisional">¤00G</pattern>
+					<pattern type="10000000000" count="many" draft="provisional">¤00G</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">¤00G</pattern>
+					<pattern type="100000000000" count="one" draft="provisional">¤000G</pattern>
+					<pattern type="100000000000" count="two" draft="provisional">¤000G</pattern>
+					<pattern type="100000000000" count="few" draft="provisional">¤000G</pattern>
+					<pattern type="100000000000" count="many" draft="provisional">¤000G</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">¤000G</pattern>
+					<pattern type="1000000000000" count="one" draft="provisional">¤0T</pattern>
+					<pattern type="1000000000000" count="two" draft="provisional">¤0T</pattern>
+					<pattern type="1000000000000" count="few" draft="provisional">¤0T</pattern>
+					<pattern type="1000000000000" count="many" draft="provisional">¤0T</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">¤0T</pattern>
+					<pattern type="10000000000000" count="one" draft="provisional">¤00T</pattern>
+					<pattern type="10000000000000" count="two" draft="provisional">¤00T</pattern>
+					<pattern type="10000000000000" count="few" draft="provisional">¤00T</pattern>
+					<pattern type="10000000000000" count="many" draft="provisional">¤00T</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">¤00T</pattern>
+					<pattern type="100000000000000" count="one" draft="provisional">¤000T</pattern>
+					<pattern type="100000000000000" count="two" draft="provisional">¤000T</pattern>
+					<pattern type="100000000000000" count="few" draft="provisional">¤000T</pattern>
+					<pattern type="100000000000000" count="many" draft="provisional">¤000T</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">¤000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<minimalPairs>
+			<pluralMinimalPairs count="one">{0} thunnag/vuc/ooyl</pluralMinimalPairs>
+			<pluralMinimalPairs count="two">{0} hunnag/vuc/ooyl</pluralMinimalPairs>
+			<pluralMinimalPairs count="few">{0} thunnag/muc/ooyl</pluralMinimalPairs>
+			<pluralMinimalPairs count="many">{0} dy hunnagyn/dy vucyn/dy ooylyn</pluralMinimalPairs>
+			<pluralMinimalPairs count="other">{0} thunnagyn/mucyn/ooylyn</pluralMinimalPairs>
+		</minimalPairs>
+	</numbers>
+</ldml>

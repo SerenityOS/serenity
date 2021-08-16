@@ -1,0 +1,103 @@
+/*
+ * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/* Generated from: ExternalSub.java
+
+   Super constructor call is changed from the public NestedA(int)
+   constructor to the private NestedA() constructor.
+*/
+
+class ExternalSub {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #10; // #1    
+    class #11; // #2    
+    class #13; // #3    
+    Utf8 "<init>"; // #4    
+    Utf8 "()V"; // #5    
+    Utf8 "Code"; // #6    
+    Utf8 "LineNumberTable"; // #7    
+    Utf8 "SourceFile"; // #8    
+    Utf8 "TestConstructorHierarchy.java"; // #9    
+    NameAndType #4 #5; // #10    - modified #16 to #5
+    Utf8 "ExternalSub"; // #11    
+    class #17; // #12    
+    Utf8 "TestConstructorHierarchy$NestedA"; // #13    
+    Utf8 "NestedA"; // #14    
+    Utf8 "InnerClasses"; // #15    
+    Utf8 "(I)V"; // #16    
+    Utf8 "TestConstructorHierarchy"; // #17    
+  } // Constant Pool
+
+  0x0020; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001 // access 
+      #4; // name_cpx
+      #5; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack - modified from 2
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#7) { // LineNumberTable
+              [] { // LineNumberTable
+                0  84;
+//                5  85;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#8) { // SourceFile
+      #9;
+    } // end SourceFile
+    ;
+    Attr(#15) { // InnerClasses
+      [] { // InnerClasses
+        #3 #12 #14 8;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class ExternalSub

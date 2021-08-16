@@ -1,0 +1,2 @@
+T6230128.java:11:10: compiler.err.override.weaker.access: (compiler.misc.cant.override: foo(java.lang.Object...), A1a, foo(java.lang.Object[]), A1), public
+1 error

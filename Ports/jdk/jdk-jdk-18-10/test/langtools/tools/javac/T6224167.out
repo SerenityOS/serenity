@@ -1,0 +1,2 @@
+T6224167.java:11:10: compiler.err.array.and.varargs: printf(java.lang.String,java.lang.Object...), printf(java.lang.String,java.lang.Object[]), T6224167
+1 error

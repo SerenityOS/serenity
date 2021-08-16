@@ -1,0 +1,459 @@
+/*
+ * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ *
+ * This test checks that the JVMTI function
+ * <code>GetSourceDebugExtension()</code> properly returns
+ * the SourceDebugExtension attribute. String obtained from
+ * <code>GetSourceDebugExtension()</code> is compared with
+ * the expected attribute string.<br>
+ *
+ * The following java-source is a prototype of this jcod-file:
+ *
+ * package nsk.jvmti.GetSourceDebugExtension;
+ *
+ * import java.io.*;
+ *
+ * public class srcdebugex003 {
+ *     static final int PASSED = 0;
+ *     static final int FAILED = 2;
+ *     static final int JCK_STATUS_BASE = 95;
+ *
+ *     static boolean DEBUG_MODE = false;
+ *     private PrintStream out;
+ *
+ *     static {
+ *         try {
+ *             System.loadLibrary("srcdebugex003");
+ *         } catch (UnsatisfiedLinkError e) {
+ *             System.err.println("Could not load srcdebugex003 library");
+ *             System.err.println("java.library.path:" +
+ *                 System.getProperty("java.library.path"));
+ *             throw e;
+ *         }
+ *     }
+ *
+ *     native static int getSrcDebugX(boolean vrb);
+ *
+ *     public static void main(String[] argv) {
+ *         System.exit(run(argv, System.out) + JCK_STATUS_BASE);
+ *     }
+ *
+ *     public static int run(String argv[], PrintStream out) {
+ *         return new srcdebugex003().runIt(argv, out);
+ *     }
+ *
+ *     private int runIt(String argv[], PrintStream out) {
+ *         this.out = out;
+ *         for (int i=0; i < argv.length; i++) {
+ *             if (argv[i].equals("-v")) // verbose mode
+ *                 DEBUG_MODE = true;
+ *         }
+ *
+ *         return getSrcDebugX(DEBUG_MODE);
+ *     }
+ * }
+ *
+ */
+
+class nsk/jvmti/GetSourceDebugExtension/srcdebugex003 {
+  0xCAFEBABE;
+  3; // minor version
+  45; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #29 #64; // #1
+    Field #65 #66; // #2
+    Method #5 #67; // #3
+    Method #65 #68; // #4
+    class #110; // #5
+    Method #5 #64; // #6
+    Method #5 #70; // #7
+    Field #5 #66; // #8
+    String #71; // #9
+    Method #72 #73; // #10
+    Field #5 #74; // #11
+    Method #5 #75; // #12
+    Field #5 #76; // #13
+    Field #5 #77; // #14
+    Field #5 #78; // #15
+    String #69; // #16
+    Method #65 #79; // #17
+    class #80; // #18
+    Field #65 #81; // #19
+    String #82; // #20
+    Method #83 #84; // #21
+    class #85; // #22
+    Method #22 #64; // #23
+    String #86; // #24
+    Method #22 #87; // #25
+    String #88; // #26
+    Method #65 #89; // #27
+    Method #22 #90; // #28
+    class #91; // #29
+    Utf8 "PASSED"; // #30
+    Utf8 "I"; // #31
+    Utf8 "ConstantValue"; // #32
+    int 0x00000000; // #33
+    Utf8 "FAILED"; // #34
+    int 0x00000002; // #35
+    Utf8 "JCK_STATUS_BASE"; // #36
+    int 0x0000005F; // #37
+    Utf8 "DEBUG_MODE"; // #38
+    Utf8 "Z"; // #39
+    Utf8 "out"; // #40
+    Utf8 "Ljava/io/PrintStream;"; // #41
+    Utf8 "<init>"; // #42
+    Utf8 "()V"; // #43
+    Utf8 "Code"; // #44
+    Utf8 "LineNumberTable"; // #45
+    Utf8 "LocalVariableTable"; // #46
+    Utf8 "this"; // #47
+    Utf8 "Lnsk/jvmti/GetSourceDebugExtension/srcdebugex003;"; // #48
+    Utf8 "getSrcDebugX"; // #49
+    Utf8 "(Z)I"; // #50
+    Utf8 "main"; // #51
+    Utf8 "([Ljava/lang/String;)V"; // #52
+    Utf8 "argv"; // #53
+    Utf8 "[Ljava/lang/String;"; // #54
+    Utf8 "run"; // #55
+    Utf8 "([Ljava/lang/String;Ljava/io/PrintStream;)I"; // #56
+    Utf8 "runIt"; // #57
+    Utf8 "i"; // #58
+    Utf8 "<clinit>"; // #59
+    Utf8 "e"; // #60
+    Utf8 "Ljava/lang/UnsatisfiedLinkError;"; // #61
+    Utf8 "SourceFile"; // #62
+    Utf8 "srcdebugex003.java"; // #63
+    NameAndType #42 #43; // #64
+    class #92; // #65
+    NameAndType #40 #41; // #66
+    NameAndType #55 #56; // #67
+    NameAndType #93 #94; // #68
+    Utf8 "srcdebugex003"; // #69
+    NameAndType #57 #56; // #70
+    Utf8 "-v"; // #71
+    class #95; // #72
+    NameAndType #96 #97; // #73
+    NameAndType #38 #39; // #74
+    NameAndType #49 #50; // #75
+    NameAndType #30 #31; // #76
+    NameAndType #34 #31; // #77
+    NameAndType #36 #31; // #78
+    NameAndType #98 #99; // #79
+    Utf8 "java/lang/UnsatisfiedLinkError"; // #80
+    NameAndType #100 #41; // #81
+    Utf8 "Could not load srcdebugex003 library"; // #82
+    class #101; // #83
+    NameAndType #102 #99; // #84
+    Utf8 "java/lang/StringBuffer"; // #85
+    Utf8 "java.library.path:"; // #86
+    NameAndType #103 #104; // #87
+    Utf8 "java.library.path"; // #88
+    NameAndType #105 #106; // #89
+    NameAndType #107 #108; // #90
+    Utf8 "java/lang/Object"; // #91
+    Utf8 "java/lang/System"; // #92
+    Utf8 "exit"; // #93
+    Utf8 "(I)V"; // #94
+    Utf8 "java/lang/String"; // #95
+    Utf8 "equals"; // #96
+    Utf8 "(Ljava/lang/Object;)Z"; // #97
+    Utf8 "loadLibrary"; // #98
+    Utf8 "(Ljava/lang/String;)V"; // #99
+    Utf8 "err"; // #100
+    Utf8 "java/io/PrintStream"; // #101
+    Utf8 "println"; // #102
+    Utf8 "append"; // #103
+    Utf8 "(Ljava/lang/String;)Ljava/lang/StringBuffer;"; // #104
+    Utf8 "getProperty"; // #105
+    Utf8 "(Ljava/lang/String;)Ljava/lang/String;"; // #106
+    Utf8 "toString"; // #107
+    Utf8 "()Ljava/lang/String;"; // #108
+    Utf8 "SourceDebugExtension"; // #109
+    Utf8 "nsk/jvmti/GetSourceDebugExtension/srcdebugex003"; // #110
+  } // Constant Pool
+
+  0x0021; // access
+  #5;// this_cpx
+  #29;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+    { // Member
+      0x0018; // access
+      #30; // name_cpx
+      #31; // sig_cpx
+      [] { // Attributes
+        Attr(#32) { // ConstantValue
+          #33;
+        } // end ConstantValue
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0018; // access
+      #34; // name_cpx
+      #31; // sig_cpx
+      [] { // Attributes
+        Attr(#32) { // ConstantValue
+          #35;
+        } // end ConstantValue
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0018; // access
+      #36; // name_cpx
+      #31; // sig_cpx
+      [] { // Attributes
+        Attr(#32) { // ConstantValue
+          #37;
+        } // end ConstantValue
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0008; // access
+      #38; // name_cpx
+      #39; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0002; // access
+      #40; // name_cpx
+      #41; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #42; // name_cpx
+      #43; // sig_cpx
+      [] { // Attributes
+        Attr(#44) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[] {
+            0x2AB70001B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#45) { // LineNumberTable
+              [] { // LineNumberTable
+                0  19;
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#46) { // LocalVariableTable
+              [] { // LocalVariableTable
+                0 5 47 48 0;
+              }
+            } // end LocalVariableTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0108; // access
+      #49; // name_cpx
+      #50; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #51; // name_cpx
+      #52; // sig_cpx
+      [] { // Attributes
+        Attr(#44) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[] {
+            0x2AB20002B8000310;
+            0x5F60B80004B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#45) { // LineNumberTable
+              [] { // LineNumberTable
+                0  41;
+                13  42;
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#46) { // LocalVariableTable
+              [] { // LocalVariableTable
+                0 14 53 54 0;
+              }
+            } // end LocalVariableTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #55; // name_cpx
+      #56; // sig_cpx
+      [] { // Attributes
+        Attr(#44) { // Code
+          3; // max_stack
+          2; // max_locals
+          Bytes[] {
+            0xBB000559B700062A;
+            0x2BB70007AC;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#45) { // LineNumberTable
+              [] { // LineNumberTable
+                0  45;
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#46) { // LocalVariableTable
+              [] { // LocalVariableTable
+                0 13 53 54 0;
+                0 13 40 41 1;
+              }
+            } // end LocalVariableTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0002; // access
+      #57; // name_cpx
+      #56; // sig_cpx
+      [] { // Attributes
+        Attr(#44) { // Code
+          2; // max_stack
+          4; // max_locals
+          Bytes[] {
+            0x2A2CB50008033EA7;
+            0x00152B1D321209B6;
+            0x000A99000704B300;
+            0x0B8403011D2BBEA1;
+            0xFFEBB2000BB8000C;
+            0xAC;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#45) { // LineNumberTable
+              [] { // LineNumberTable
+                0  49;
+                5  50;
+                10  51;
+                21  52;
+                25  50;
+                34  55;
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#46) { // LocalVariableTable
+              [] { // LocalVariableTable
+                0 41 47 48 0;
+                0 41 53 54 1;
+                0 41 40 41 2;
+                7 34 58 31 3;
+              }
+            } // end LocalVariableTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0008; // access
+      #59; // name_cpx
+      #43; // sig_cpx
+      [] { // Attributes
+        Attr(#44) { // Code
+          3; // max_stack
+          1; // max_locals
+          Bytes[] {
+            0x03B3000D05B3000E;
+            0x105FB3000F03B300;
+            0x0B1210B80011A700;
+            0x2B4BB200131214B6;
+            0x0015B20013BB0016;
+            0x59B700171218B600;
+            0x19121AB8001BB600;
+            0x19B6001CB600152A;
+            0xBFB1;
+          };
+          [] { // Traps
+            17 22 25 18;
+          } // end Traps
+          [] { // Attributes
+            Attr(#45) { // LineNumberTable
+              [] { // LineNumberTable
+                0  20;
+                4  21;
+                8  22;
+                13  24;
+                17  29;
+                25  31;
+                34  32;
+                63  34;
+                65  20;
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#46) { // LocalVariableTable
+              [] { // LocalVariableTable
+                25 40 60 61 0;
+              }
+            } // end LocalVariableTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#62) { // SourceFile
+      #63;
+    } // end SourceFile
+    ;
+    Attr(#109) { // SourceDebugExtension
+      'An expected attribute string'; // an UTF string without prepended length
+    } // end SourceDebugExtension
+  } // Attributes
+} // end class nsk/jvmti/GetSourceDebugExtension/srcdebugex003

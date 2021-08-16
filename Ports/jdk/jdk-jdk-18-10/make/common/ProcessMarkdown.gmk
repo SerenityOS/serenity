@@ -1,0 +1,177 @@
+# Copyright (c) 2017, 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+ifeq (,$(_MAKEBASE_GMK))
+  $(error You must include MakeBase.gmk prior to including ProcessMarkdown.gmk)
+endif
+
+include TextFileProcessing.gmk
+
+# Helper function for SetupProcessMarkdown
+# $1: The $1 from SetupProcessMarkdown
+# $2: The name of the current source file, relative to the dir given in $3
+# $3: The directory of the current source file
+define ProcessMarkdown
+  $1_$2_OUTPUT_FILE := $$($1_DEST)/$$(basename $2)$$($1_FILE_EXT)
+  $1_$2_TARGET_DIR := $$(dir $$($1_$2_OUTPUT_FILE))
+  $1_$2_INPUT_FILE := $3/$2
+  $1_$2_MARKER := $$(subst /,_,$1_$2)
+
+  ifneq ($$($1_REPLACEMENTS), )
+    $1_$2_PANDOC_INPUT := $$(SUPPORT_OUTPUTDIR)/markdown/$$($1_$2_MARKER)_pre.tmp
+
+    $$(eval $$(call SetupTextFileProcessing, $1_$2_PREPROCESSED, \
+        SOURCE_FILES := $$($1_$2_INPUT_FILE), \
+        OUTPUT_FILE := $$($1_$2_PANDOC_INPUT), \
+        REPLACEMENTS := $$($1_REPLACEMENTS), \
+    ))
+  else
+    $1_$2_PANDOC_INPUT := $$($1_$2_INPUT_FILE)
+  endif
+
+  ifneq ($$($1_POST_PROCESS), )
+    $1_$2_PANDOC_OUTPUT := $$(SUPPORT_OUTPUTDIR)/markdown/$$($1_$2_MARKER)_post.tmp
+  else
+    $1_$2_PANDOC_OUTPUT := $$($1_$2_OUTPUT_FILE)
+  endif
+
+  ifneq ($$($1_CSS), )
+    ifneq ($$(findstring http:/, $$($1_CSS)), )
+      $1_$2_CSS_OPTION := --css '$$($1_CSS)'
+    else
+      $1_$2_CSS := $$(strip $$(call RelativePath, $$($1_CSS), $$($1_$2_TARGET_DIR)))
+      $1_$2_CSS_OPTION := --css '$$($1_$2_CSS)'
+    endif
+  endif
+
+  # This does not need to be included in VARDEPS since it's from the actual
+  # source file. Only run the shell if the recipe gets executed below.
+  $1_$2_OPTIONS_FROM_SRC = \
+      $$(shell $$(GREP) _pandoc-options_: $3/$2 | $$(CUT) -d : -f 2-)
+
+  ifneq ($$($1_FILTER), )
+    $1_$2_OPTIONS := --filter $$($1_FILTER)
+  endif
+
+  $1_$2_VARDEPS := $$($1_OPTIONS) $$($1_$2_OPTIONS) $$($1_CSS) \
+      $$($1_REPLACEMENTS) $$($1_POST_PROCESS)
+  $1_$2_VARDEPS_FILE := $$(call DependOnVariable, $1_$2_VARDEPS, \
+      $$(SUPPORT_OUTPUTDIR)/markdown/$$($1_$2_MARKER).vardeps)
+
+  $$($1_$2_PANDOC_OUTPUT): $$($1_$2_PANDOC_INPUT) $$($1_$2_VARDEPS_FILE) $$($1_EXTRA_DEPS)
+	$$(call LogInfo, Converting $2 to $$($1_FORMAT))
+	$$(call MakeDir, $$(SUPPORT_OUTPUTDIR)/markdown $$(dir $$($1_$2_PANDOC_OUTPUT)))
+	$$(call ExecuteWithLog, $$(SUPPORT_OUTPUTDIR)/markdown/$$($1_$2_MARKER), \
+	    $$(PANDOC) $$($1_OPTIONS) -f $$(PANDOC_MARKDOWN_FLAG) \
+	    -t $$($1_FORMAT) --standalone \
+	    $$($1_$2_CSS_OPTION) $$($1_$2_OPTIONS_FROM_SRC) $$($1_$2_OPTIONS) \
+	    '$$($1_$2_PANDOC_INPUT)' -o '$$($1_$2_PANDOC_OUTPUT)')
+        ifneq ($$(findstring $$(LOG_LEVEL), debug trace),)
+	  TOO_LONG_LINES=`$$(GREP) -E -e '^.{80}.+$$$$' $$<` || true ; \
+	  if [ "x$$$$TOO_LONG_LINES" != x ]; then \
+	    $$(ECHO) "Warning: Unsuitable markdown in $$<:" ; \
+	    $$(ECHO) "The following lines are longer than 80 characters:" ; \
+	    $$(GREP) -E -n -e '^.{80}.+$$$$' $$< || true ; \
+	  fi
+        endif
+
+  # If we have no post processing, PANDOC_OUTPUT is set to OUTPUT_FILE. Otherwise
+  # PANDOC_OUTPUT is a temporary file, and we must now create the real OUTPUT_FILE.
+  ifneq ($$($1_POST_PROCESS), )
+    $$($1_$2_OUTPUT_FILE): $$($1_$2_PANDOC_OUTPUT)
+	$$(call LogInfo, Post-processing markdown file $2)
+	$$(call MakeDir, $$(SUPPORT_OUTPUTDIR)/markdown $$($1_$2_TARGET_DIR))
+	$$(call ExecuteWithLog, $$(SUPPORT_OUTPUTDIR)/markdown/$$($1_$2_MARKER)_post, \
+	    ( $$($1_POST_PROCESS) < $$($1_$2_PANDOC_OUTPUT) > $$($1_$2_OUTPUT_FILE) ) )
+  endif
+
+  $1 += $$($1_$2_OUTPUT_FILE)
+endef
+
+################################################################################
+# Setup make rules for converting a markdown file to html.
+#
+# Parameter 1 is the name of the rule. This name is used as variable prefix,
+# and the targets generated are listed in a variable by that name.
+#
+# Remaining parameters are named arguments. These include:
+#   DEST     : Destination root dir
+#   FILES    : List of files to copy with absolute paths, or path relative to SRC.
+#   SRC      : Source root dir; if given keep input files hierarchy relative to
+#              SRC in DEST, otherwise flatten structure into DEST.
+#   FORMAT   : The target format (defaults to html5)
+#   FILE_EXT : The file extension to replace .md with (defaults to .html)
+#   OPTIONS  : Additional options to pandoc
+#   EXTRA_DEPS : Additional dependencies to add to each pandoc call
+#   FILTER   : Optional pandoc filter command
+#   POST_PROCESS : Optional command-line to post-process generated markdown
+#   REPLACEMENTS : Text replacements to perform on input file before processing
+#
+SetupProcessMarkdown = $(NamedParamsMacroTemplate)
+define SetupProcessMarkdownBody
+  ifeq ($$($1_FILES), )
+    $$(error FILES is missing in SetupProcessMarkdown $1)
+  endif
+
+  ifeq ($$($1_DEST), )
+    $$(error DEST is missing in SetupProcessMarkdown $1)
+  endif
+
+  # If no target format is specified, default to html5.
+  ifeq ($$($1_FORMAT), )
+    $1_FORMAT := html5
+  endif
+
+  ifeq ($$($1_FORMAT), man)
+    # If no file extension is specified, default to '.1'.
+    ifeq ($$($1_FILE_EXT), )
+      $1_FILE_EXT := .1
+    endif
+  else ifeq ($$($1_FORMAT), html5)
+    ifeq ($$($1_FILE_EXT), )
+      $1_FILE_EXT := .html
+    endif
+  else ifeq ($$($1_FORMAT), html)
+    ifeq ($$($1_FILE_EXT), )
+      $1_FILE_EXT := .html
+    endif
+  endif
+
+  # Remove any trailing slash
+  $1_DEST := $$(patsubst %/,%,$$($1_DEST))
+
+  ifeq ($$($1_SRC), )
+    # No SRC given, assume we're flattening all files into output dir.
+    $$(foreach f, $$($1_FILES), \
+      $$(eval $$(call ProcessMarkdown,$1,$$(notdir $$f),$$(patsubst %/,%,$$(dir $$f)))) \
+    )
+  else
+    # Remove any trailing slash
+    $1_SRC := $$(patsubst %/,%,$$($1_SRC))
+
+    $$(foreach f, $$(patsubst $$($1_SRC)/%,%,$$($1_FILES)), \
+      $$(eval $$(call ProcessMarkdown,$1,$$f,$$($1_SRC))) \
+    )
+  endif
+endef

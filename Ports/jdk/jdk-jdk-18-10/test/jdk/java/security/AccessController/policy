@@ -1,0 +1,4 @@
+grant{
+	permission java.util.PropertyPermission "user.name", "read";
+ 	permission java.io.FilePermission "*", "read";
+};

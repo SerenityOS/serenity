@@ -1,0 +1,951 @@
+//
+// Copyright (c) 1999, 2009, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+//
+// This file contains test cases with BMP characters for regular expressions.
+// A test case consists of three lines:
+// The first line is a pattern used in the test
+// The second line is the input to search for the pattern in
+// The third line is a concatentation of the match, the number of groups,
+//     and the contents of the first four subexpressions.
+// Empty lines and lines beginning with comment slashes are ignored.
+
+// Test unsetting of backed off groups
+^(\u3042)?\u3042
+\u3042
+true \u3042 1
+
+^(\u3042\u3042(\u3043\u3043)?)+$
+\u3042\u3042\u3043\u3043\u3042\u3042
+true \u3042\u3042\u3043\u3043\u3042\u3042 2 \u3042\u3042 \u3043\u3043
+
+((\u3042|\u3043)?\u3043)+
+\u3043
+true \u3043 2 \u3043
+
+(\u3042\u3042\u3042)?\u3042\u3042\u3042
+\u3042\u3042\u3042
+true \u3042\u3042\u3042 1
+
+^(\u3042(\u3043)?)+$
+\u3042\u3043\u3042
+true \u3042\u3043\u3042 2 \u3042 \u3043
+
+^(\u3042(\u3043(\u3044)?)?)?\u3042\u3043\u3044
+\u3042\u3043\u3044
+true \u3042\u3043\u3044 3
+
+^(\u3042(\u3043(\u3044))).*
+\u3042\u3043\u3044
+true \u3042\u3043\u3044 3 \u3042\u3043\u3044 \u3043\u3044 \u3044
+
+// use of x modifier
+\u3042\u3043\u3044(?x)\u3043la\u3049
+\u3042\u3043\u3044\u3043la\u3049
+true \u3042\u3043\u3044\u3043la\u3049 0
+
+\u3042\u3043\u3044(?x)  bla\u3049
+\u3042\u3043\u3044bla\u3049
+true \u3042\u3043\u3044bla\u3049 0
+
+\u3042\u3043\u3044(?x)  bla\u3049  ble\u3044\u3049
+\u3042\u3043\u3044bla\u3049ble\u3044\u3049
+true \u3042\u3043\u3044bla\u3049ble\u3044\u3049 0
+
+\u3042\u3043\u3044(?x)  bla\u3049 # ignore comment
+\u3042\u3043\u3044bla\u3049
+true \u3042\u3043\u3044bla\u3049 0
+
+// Simple alternation
+\u3042|\u3043
+\u3042
+true \u3042 0
+
+\u3042|\u3043
+\u305B
+false 0
+
+\u3042|\u3043
+\u3043
+true \u3043 0
+
+\u3042|\u3043|\u3044\u3045
+\u3044\u3045
+true \u3044\u3045 0
+
+\u3042|\u3042\u3045
+\u3042\u3045
+true \u3042 0
+
+\u305B(\u3042|\u3042\u3044)\u3043
+\u305B\u3042\u3044\u3043
+true \u305B\u3042\u3044\u3043 1 \u3042\u3044
+
+// Simple char class
+[\u3042\u3043\u3044]+
+\u3042\u3043\u3042\u3043\u3042\u3043
+true \u3042\u3043\u3042\u3043\u3042\u3043 0
+
+[\u3042\u3043\u3044]+
+\u3045\u3046\u3047\u3048
+false 0
+
+[\u3042\u3043\u3044]+[\u3045\u3046\u3047]+[\u3048\u3049\u304A]+
+\u305B\u305B\u305B\u3042\u3042\u3045\u3045\u3048\u3048\u305B\u305B\u305B
+true \u3042\u3042\u3045\u3045\u3048\u3048 0
+
+// Range char class
+[\u3042-\u3048]+
+\u305B\u305B\u305B\u3048\u3048\u3048
+true \u3048\u3048\u3048 0
+
+[\u3042-\u3048]+
+mmm
+false 0
+
+[\u3042-]+
+\u305B\u3042-9\u305B
+true \u3042- 0
+
+[\u3042-\\u4444]+
+\u305B\u3042-9\u305B
+true \u305B\u3042 0
+
+// Negated char class
+[^\u3042\u3043\u3044]+
+\u3042\u3043\u3042\u3043\u3042\u3043
+false 0
+
+[^\u3042\u3043\u3044]+
+\u3042\u3042\u3042\u3043\u3043\u3043\u3044\u3044\u3044\u3045\u3046\u3047\u3048
+true \u3045\u3046\u3047\u3048 0
+
+// Making sure a ^ not in first position matches literal ^
+[\u3042\u3043\u3044^\u3043]
+\u3043
+true \u3043 0
+
+[\u3042\u3043\u3044^\u3043]
+^
+true ^ 0
+
+// Class union and intersection
+[\u3042\u3043\u3044[\u3045\u3046\u3047]]
+\u3043
+true \u3043 0
+
+[\u3042\u3043\u3044[\u3045\u3046\u3047]]
+\u3046
+true \u3046 0
+
+[\u3042-\u3045[0-9][\u304e-\u3051]]
+\u3042
+true \u3042 0
+
+[\u3042-\u3045[0-9][\u304e-\u3051]]
+\u3050
+true \u3050 0
+
+[\u3042-\u3045[0-9][\u304e-\u3051]]
+4
+true 4 0
+
+[\u3042-\u3045[0-9][\u304e-\u3051]]
+\u3046
+false 0
+
+[\u3042-\u3045[0-9][\u304e-\u3051]]
+\u3056
+false 0
+
+[[\u3042-\u3045][0-9][\u304e-\u3051]]
+\u3043
+true \u3043 0
+
+[[\u3042-\u3045][0-9][\u304e-\u3051]]
+\u305B
+false 0
+
+[\u3042-\u3044[\u3045-\u3047[\u3048-\u304A]]]
+\u3042
+true \u3042 0
+
+[\u3042-\u3044[\u3045-\u3047[\u3048-\u304A]]]
+\u3046
+true \u3046 0
+
+[\u3042-\u3044[\u3045-\u3047[\u3048-\u304A]]]
+\u3049
+true \u3049 0
+
+[\u3042-\u3044[\u3045-\u3047[\u3048-\u304A]]]
+m
+false 0
+
+[\u3042-\u3044[\u3045-\u3047[\u3048-\u304A]]m]
+m
+true m 0
+
+[\u3042\u3043\u3044[\u3045\u3046\u3047]\u3048\u3049\u304A]
+\u3042
+true \u3042 0
+
+[\u3042\u3043\u3044[\u3045\u3046\u3047]\u3048\u3049\u304A]
+\u3045
+true \u3045 0
+
+[\u3042\u3043\u3044[\u3045\u3046\u3047]\u3048\u3049\u304A]
+\u3049
+true \u3049 0
+
+[\u3042\u3043\u3044[\u3045\u3046\u3047]\u3048\u3049\u304A]
+w
+false 0
+
+[\u3042-\u3044&&[\u3045-\u3047]]
+\u3042
+false 0
+
+[\u3042-\u3044&&[\u3045-\u3047]]
+\u3046
+false 0
+
+[\u3042-\u3044&&[\u3045-\u3047]]
+\u305B
+false 0
+
+[[\u3042-\u3044]&&[\u3045-\u3047]]
+\u3042
+false 0
+
+[[\u3042-\u3044]&&[\u3045-\u3047]]
+\u3046
+false 0
+
+[[\u3042-\u3044]&&[\u3045-\u3047]]
+\u305B
+false 0
+
+[\u3042-\u3044&&\u3045-\u3047]
+\u3042
+false 0
+
+[\u3042-\u304e&&\u304e-\u305B]
+\u304e
+true \u304e 0
+
+[\u3042-\u304e&&\u304e-\u305B&&\u3042-\u3044]
+\u304e
+false 0
+
+[\u3042-\u304e&&\u304e-\u305B&&\u3042-\u305B]
+\u304e
+true \u304e 0
+
+[[\u3042-\u304e]&&[\u304e-\u305B]]
+\u3042
+false 0
+
+[[\u3042-\u304e]&&[\u304e-\u305B]]
+\u304e
+true \u304e 0
+
+[[\u3042-\u304e]&&[\u304e-\u305B]]
+\u305B
+false 0
+
+[[\u3042-\u304e]&&[^\u3042-\u3044]]
+\u3042
+false 0
+
+[[\u3042-\u304e]&&[^\u3042-\u3044]]
+\u3045
+true \u3045 0
+
+[\u3042-\u304e&&[^\u3042-\u3044]]
+\u3042
+false 0
+
+[\u3042-\u304e&&[^\u3042-\u3044]]
+\u3045
+true \u3045 0
+
+[\u3042-\u3044\u3045-\u3047&&[\u3045-\u3047]]
+\u3042
+false 0
+
+[\u3042-\u3044\u3045-\u3047&&[\u3045-\u3047]]
+\u3046
+true \u3046 0
+
+[[\u3042-\u3044]&&\u3045-\u3047\u3042-\u3044]
+\u3042
+true \u3042 0
+
+[[\u3042-\u3044]&&[\u3045-\u3047][\u3042-\u3044]]
+\u3042
+true \u3042 0
+
+[[\u3042-\u3044][\u3045-\u3047]&&\u3042\u3043\u3044]
+\u3042
+true \u3042 0
+
+[[\u3042-\u3044][\u3045-\u3047]&&\u3042\u3043\u3044[\u3045\u3046\u3047]]
+\u3046
+true \u3046 0
+
+[[\u3042-\u3044]&&[\u3043-\u3045]&&[\u3044-\u3046]]
+\u3042
+false 0
+
+[[\u3042-\u3044]&&[\u3043-\u3045]&&[\u3044-\u3046]]
+\u3044
+true \u3044 0
+
+[[\u3042-\u3044]&&[\u3043-\u3045][\u3044-\u3046]&&[\u3056-\u305B]]
+\u3044
+false 0
+
+[\u3042\u3043\u3044[^\u3043\u3044\u3045]]
+\u3042
+true \u3042 0
+
+[\u3042\u3043\u3044[^\u3043\u3044\u3045]]
+\u3045
+false 0
+
+[\u3042-\u3044&&\u3042-\u3045&&\u3042-\u3046\u3048\u3049\u304A]
+\u3043
+true \u3043 0
+
+[\u3042-\u3044&&\u3042-\u3045&&\u3042-\u3046\u3048\u3049\u304A]
+\u3048
+false 0
+
+[[\u3042[\u3043]]&&[\u3043[\u3042]]]
+\u3042
+true \u3042 0
+
+[[\u3042]&&[\u3043][\u3044][\u3042]&&[^\u3045]]
+\u3042
+true \u3042 0
+
+[[\u3042]&&[b][c][\u3042]&&[^d]]
+\u3042
+true \u3042 0
+
+[[\u3042]&&[\u3043][\u3044][\u3042]&&[^\u3045]]
+\u3045
+false 0
+
+[[[\u3042-\u3045]&&[\u3044-\u3047]]]
+\u3042
+false 0
+
+[[[\u3042-\u3045]&&[\u3044-\u3047]]]
+\u3044
+true \u3044 0
+
+[[[\u3042-\u3045]&&[\u3044-\u3047]]&&[\u3044]]
+\u3044
+true \u3044 0
+
+[[[\u3042-\u3045]&&[\u3044-\u3047]]&&[\u3044]&&\u3044]
+\u3044
+true \u3044 0
+
+[[[\u3042-\u3045]&&[\u3044-\u3047]]&&[\u3044]&&\u3044&&\u3044]
+\u3044
+true \u3044 0
+
+[[[\u3042-\u3045]&&[\u3044-\u3047]]&&[\u3044]&&\u3044&&[\u3044\u3045\u3046]]
+\u3044
+true \u3044 0
+
+[\u305B[\u3042\u3043\u3044&&\u3043\u3044\u3045]]
+\u3044
+true \u3044 0
+
+[\u305B[\u3042\u3043\u3044&&\u3043\u3044\u3045]&&[\u3056-\u305B]]
+\u305B
+true \u305B 0
+
+[\u3059[\u3042\u3043\u3044&&\u3043\u3044\u3045[\u305B]]&&[\u3056-\u305B]]
+\u305B
+false 0
+
+[\u3059[[w\u305B]\u3042\u3043\u3044&&\u3043\u3044\u3045[\u305B]]&&[\u3056-\u305B]]
+\u305B
+true \u305B 0
+
+[[\u3042\u3043\u3044]&&[\u3045\u3046\u3047]\u3042\u3043\u3044]
+\u3042
+true \u3042 0
+
+[[\u3042\u3043\u3044]&&[\u3045\u3046\u3047]\u3059\u305A\u305B[\u3042\u3043\u3044]]
+\u3042
+true \u3042 0
+
+\pL
+\u3042
+true \u3042 0
+
+\pL
+7
+false 0
+
+\p{L}
+\u3042
+true \u3042 0
+
+\p{IsL}
+\u3042
+true \u3042 0
+
+\p{InHiragana}
+\u3042
+true \u3042 0
+
+\p{InHiragana}
+\u0370
+false 0
+
+\pL\u3043\u3044
+\u3042\u3043\u3044
+true \u3042\u3043\u3044 0
+
+\u3042[r\p{InGreek}]\u3044
+\u3042\u0370\u3044
+true \u3042\u0370\u3044 0
+
+\u3042\p{InGreek}
+\u3042\u0370
+true \u3042\u0370 0
+
+\u3042\P{InGreek}
+\u3042\u0370
+false 0
+
+\u3042\P{InGreek}
+\u3042\u3043
+true \u3042\u3043 0
+
+\u3042{^InGreek}
+-
+error
+
+\u3042\p{^InGreek}
+-
+error
+
+\u3042\P{^InGreek}
+-
+error
+
+\u3042\p{InGreek}
+\u3042\u0370
+true \u3042\u0370 0
+
+\u3042[\p{InGreek}]\u3044
+\u3042\u0370\u3044
+true \u3042\u0370\u3044 0
+
+\u3042[\P{InGreek}]\u3044
+\u3042\u0370\u3044
+false 0
+
+\u3042[\P{InGreek}]\u3044
+\u3042\u3043\u3044
+true \u3042\u3043\u3044 0
+
+\u3042[{^InGreek}]\u3044
+\u3042n\u3044
+true \u3042n\u3044 0
+
+\u3042[{^InGreek}]\u3044
+\u3042\u305B\u3044
+false 0
+
+\u3042[\p{^InGreek}]\u3044
+-
+error
+
+\u3042[\P{^InGreek}]\u3044
+-
+error
+
+\u3042[\p{InGreek}]
+\u3042\u0370
+true \u3042\u0370 0
+
+\u3042[r\p{InGreek}]\u3044
+\u3042r\u3044
+true \u3042r\u3044 0
+
+\u3042[\p{InGreek}r]\u3044
+\u3042r\u3044
+true \u3042r\u3044 0
+
+\u3042[r\p{InGreek}]\u3044
+\u3042r\u3044
+true \u3042r\u3044 0
+
+\u3042[^\p{InGreek}]\u3044
+\u3042\u0370\u3044
+false 0
+
+\u3042[^\P{InGreek}]\u3044
+\u3042\u0370\u3044
+true \u3042\u0370\u3044 0
+
+\u3042[\p{InGreek}&&[^\u0370]]\u3044
+\u3042\u0370\u3044
+false 0
+
+// Test the dot metacharacter
+\u3042.\u3044.+
+\u3042#\u3044%&
+true \u3042#\u3044%& 0
+
+\u3042\u3043.
+\u3042\u3043\n
+false 0
+
+(?s)\u3042\u3043.
+\u3042\u3043\n
+true \u3042\u3043\n 0
+
+\u3042[\p{L}&&[\P{InGreek}]]\u3044
+\u3042\u6000\u3044
+true \u3042\u6000\u3044 0
+
+\u3042[\p{L}&&[\P{InGreek}]]\u3044
+\u3042r\u3044
+true \u3042r\u3044 0
+
+\u3042[\p{L}&&[\P{InGreek}]]\u3044
+\u3042\u0370\u3044
+false 0
+
+\u3042\p{InGreek}\u3044
+\u3042\u0370\u3044
+true \u3042\u0370\u3044 0
+
+\u3042\p{Sc}
+\u3042$
+true \u3042$ 0
+
+\W\w\W
+rrrr#\u3048\u3048\u3048
+false 0
+
+\u3042\u3043\u3044[\s\u3045\u3046\u3047]*
+\u3042\u3043\u3044  \u3045\u3046\u3047
+true \u3042\u3043\u3044  \u3045\u3046\u3047 0
+
+\u3042\u3043\u3044[\s\u305A-\u305B]*
+\u3042\u3043\u3044 \u305A \u305B
+true \u3042\u3043\u3044 \u305A \u305B 0
+
+\u3042\u3043\u3044[\u3042-\u3045\s\u304e-\u3051]*
+\u3042\u3043\u3044\u3042\u3042 \u304e\u304f  \u3051
+true \u3042\u3043\u3044\u3042\u3042 \u304e\u304f  \u3051 0
+
+// Test the whitespace escape sequence
+\u3042\u3043\s\u3044
+\u3042\u3043 \u3044
+true \u3042\u3043 \u3044 0
+
+\s\s\s
+\u3043l\u3042\u3049  \u3046rr
+false 0
+
+\S\S\s
+\u3043l\u3042\u3049  \u3046rr
+true \u3042\u3049  0
+
+// Test the digit escape sequence
+\u3042\u3043\d\u3044
+\u3042\u30439\u3044
+true \u3042\u30439\u3044 0
+
+\d\d\d
+\u3043l\u3042\u304945
+false 0
+
+// Test the caret metacharacter
+^\u3042\u3043\u3044
+\u3042\u3043\u3044\u3045\u3046\u3047
+true \u3042\u3043\u3044 0
+
+^\u3042\u3043\u3044
+\u3043\u3044\u3045\u3042\u3043\u3044
+false 0
+
+// Greedy ? metacharacter
+\u3042?\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3043 0
+
+\u3042?\u3043
+\u3043
+true \u3043 0
+
+\u3042?\u3043
+\u3042\u3042\u3042\u3044\u3044\u3044
+false 0
+
+.?\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3043 0
+
+// Reluctant ? metacharacter
+\u3042??\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3043 0
+
+\u3042??\u3043
+\u3043
+true \u3043 0
+
+\u3042??\u3043
+\u3042\u3042\u3042\u3044\u3044\u3044
+false 0
+
+.??\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3043 0
+
+// Possessive ? metacharacter
+\u3042?+\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3043 0
+
+\u3042?+\u3043
+\u3043
+true \u3043 0
+
+\u3042?+\u3043
+\u3042\u3042\u3042\u3044\u3044\u3044
+false 0
+
+.?+\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3043 0
+
+// Greedy + metacharacter
+\u3042+\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3042\u3042\u3042\u3043 0
+
+\u3042+\u3043
+\u3043
+false 0
+
+\u3042+\u3043
+\u3042\u3042\u3042\u3044\u3044\u3044
+false 0
+
+.+\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3042\u3042\u3042\u3043 0
+
+// Reluctant + metacharacter
+\u3042+?\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3042\u3042\u3042\u3043 0
+
+\u3042+?\u3043
+\u3043
+false 0
+
+\u3042+?\u3043
+\u3042\u3042\u3042\u3044\u3044\u3044
+false 0
+
+.+?\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3042\u3042\u3042\u3043 0
+
+// Possessive + metacharacter
+\u3042++\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3042\u3042\u3042\u3043 0
+
+\u3042++\u3043
+\u3043
+false 0
+
+\u3042++\u3043
+\u3042\u3042\u3042\u3044\u3044\u3044
+false 0
+
+.++\u3043
+\u3042\u3042\u3042\u3042\u3043
+false 0
+
+// Greedy Repetition
+\u3042{2,3}
+\u3042
+false 0
+
+\u3042{2,3}
+\u3042\u3042
+true \u3042\u3042 0
+
+\u3042{2,3}
+\u3042\u3042\u3042
+true \u3042\u3042\u3042 0
+
+\u3042{2,3}
+\u3042\u3042\u3042\u3042
+true \u3042\u3042\u3042 0
+
+\u3042{3,}
+\u305B\u305B\u305B\u3042\u3042\u3042\u3042\u305B\u305B\u305B
+true \u3042\u3042\u3042\u3042 0
+
+\u3042{3,}
+\u305B\u305B\u305B\u3042\u3042\u305B\u305B\u305B
+false 0
+
+// Reluctant Repetition
+\u3042{2,3}?
+\u3042
+false 0
+
+\u3042{2,3}?
+\u3042\u3042
+true \u3042\u3042 0
+
+\u3042{2,3}?
+\u3042\u3042\u3042
+true \u3042\u3042 0
+
+\u3042{2,3}?
+\u3042\u3042\u3042\u3042
+true \u3042\u3042 0
+
+// Zero width Positive lookahead
+\u3042\u3043\u3044(?=\u3045)
+\u305B\u305B\u305B\u3042\u3043\u3044\u3045
+true \u3042\u3043\u3044 0
+
+\u3042\u3043\u3044(?=\u3045)
+\u305B\u305B\u305B\u3042\u3043\u3044\u3046\u3045
+false 0
+
+// Zero width Negative lookahead
+\u3042\u3043\u3044(?!\u3045)
+\u305B\u305B\u3042\u3043\u3044\u3045
+false 0
+
+\u3042\u3043\u3044(?!\u3045)
+\u305B\u305B\u3042\u3043\u3044\u3046\u3045
+true \u3042\u3043\u3044 0
+
+// Zero width Positive lookbehind
+\u3042(?<=\u3042)
+###\u3042\u3043\u3044
+true \u3042 0
+
+\u3042(?<=\u3042)
+###\u3043\u3044###
+false 0
+
+// Zero width Negative lookbehind
+(?<!\u3042)\w
+###\u3042\u3043\u3044a###
+true a 0
+
+(?<!\u3042)\u3044
+\u3043\u3044
+true \u3044 0
+
+(?<!\u3042)\u3044
+\u3042\u3044
+false 0
+
+// Nondeterministic group
+(\u3042+\u3043)+
+\u3042\u3043\u3042\u3043\u3042\u3043
+true \u3042\u3043\u3042\u3043\u3042\u3043 1 \u3042\u3043
+
+(\u3042|\u3043)+
+\u3044\u3044\u3044\u3044\u3045
+false 1
+
+// Deterministic group
+(\u3042\u3043)+
+\u3042\u3043\u3042\u3043\u3042\u3043
+true \u3042\u3043\u3042\u3043\u3042\u3043 1 \u3042\u3043
+
+(\u3042\u3043)+
+\u3042\u3044\u3044\u3044\u3044\u3045
+false 1
+
+(\u3042\u3043)*
+\u3042\u3043\u3042\u3043\u3042\u3043
+true \u3042\u3043\u3042\u3043\u3042\u3043 1 \u3042\u3043
+
+(\u3042\u3043)(\u3044\u3045*)
+\u305B\u305B\u305B\u3042\u3043\u3044\u305B\u305B\u305B
+true \u3042\u3043\u3044 2 \u3042\u3043 \u3044
+
+\u3042\u3043\u3044(\u3045)*\u3042\u3043\u3044
+\u3042\u3043\u3044\u3045\u3045\u3045\u3045\u3045\u3042\u3043\u3044
+true \u3042\u3043\u3044\u3045\u3045\u3045\u3045\u3045\u3042\u3043\u3044 1 \u3045
+
+// Back references
+(\u3042*)\u3043\u3044\1
+\u305B\u305B\u305B\u3042\u3042\u3043\u3044\u3042\u3042\u305B\u305B\u305B
+true \u3042\u3042\u3043\u3044\u3042\u3042 1 \u3042\u3042
+
+(\u3042*)\u3043\u3044\1
+\u305B\u305B\u305B\u3042\u3042\u3043\u3044\u3042\u305B\u305B\u305B
+true \u3042\u3043\u3044\u3042 1 \u3042
+
+(\u3048t*)(\u3045\u3045\u3046)*(\u305A\u3056)\1\3(\u3057\u3057)
+\u305B\u305B\u305B\u3048tt\u3045\u3045\u3046\u3045\u3045\u3046\u305A\u3056\u3048tt\u305A\u3056\u3057\u3057\u305B\u305B\u305B
+true \u3048tt\u3045\u3045\u3046\u3045\u3045\u3046\u305A\u3056\u3048tt\u305A\u3056\u3057\u3057 4 \u3048tt \u3045\u3045\u3046 \u305A\u3056 \u3057\u3057
+
+// Greedy * metacharacter
+\u3042*\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3042\u3042\u3042\u3043 0
+
+\u3042*\u3043
+\u3043
+true \u3043 0
+
+\u3042*\u3043
+\u3042\u3042\u3042\u3044\u3044\u3044
+false 0
+
+.*\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3042\u3042\u3042\u3043 0
+
+// Reluctant * metacharacter
+\u3042*?\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3042\u3042\u3042\u3043 0
+
+\u3042*?\u3043
+\u3043
+true \u3043 0
+
+\u3042*?\u3043
+\u3042\u3042\u3042\u3044\u3044\u3044
+false 0
+
+.*?\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3042\u3042\u3042\u3043 0
+
+// Possessive * metacharacter
+\u3042*+\u3043
+\u3042\u3042\u3042\u3042\u3043
+true \u3042\u3042\u3042\u3042\u3043 0
+
+\u3042*+\u3043
+\u3043
+true \u3043 0
+
+\u3042*+\u3043
+\u3042\u3042\u3042\u3044\u3044\u3044
+false 0
+
+.*+\u3043
+\u3042\u3042\u3042\u3042\u3043
+false 0
+
+// Case insensitivity
+(?iu)\uFF46\uFF4F\uFF4F\uFF42\uFF41\uFF52
+\uFF46\uFF2F\uFF4F\uFF42\uFF21\uFF52
+true \uFF46\uFF2F\uFF4F\uFF42\uFF21\uFF52 0
+
+\uFF46(?iu)\uFF4F\uFF4F\uFF42\uFF41\uFF52
+\uFF46\uFF2F\uFF4F\uFF42\uFF21\uFF52
+true \uFF46\uFF2F\uFF4F\uFF42\uFF21\uFF52 0
+
+\uFF46\uFF4F\uFF4F(?iu)\uFF42\uFF41\uFF52
+\uFF46\uFF2F\uFF4F\uFF42\uFF21\uFF52
+false 0
+
+(?iu)\uFF46\uFF4F\uFF4F[\uFF42\uFF41\uFF52]+
+\uFF46\uFF4F\uFF2F\uFF42\uFF21\uFF52
+true \uFF46\uFF4F\uFF2F\uFF42\uFF21\uFF52 0
+
+(?iu)\uFF46\uFF4F\uFF4F[\uFF41-\uFF52]+
+\uFF46\uFF4F\uFF2F\uFF42\uFF21\uFF52
+true \uFF46\uFF4F\uFF2F\uFF42\uFF21\uFF52 0
+
+// Disable metacharacters- test both length <=3 and >3
+// So that the BM optimization is part of test
+\Q***\E\u3042\u3043\u3044
+***\u3042\u3043\u3044
+true ***\u3042\u3043\u3044 0
+
+\u3043l\Q***\E\u3042\u3043\u3044
+\u3043l***\u3042\u3043\u3044
+true \u3043l***\u3042\u3043\u3044 0
+
+\Q***\u3042\u3043\u3044
+***\u3042\u3043\u3044
+true ***\u3042\u3043\u3044 0
+
+\u3043l\u3042\u3049\Q***\E\u3042\u3043\u3044
+\u3043l\u3042\u3049***\u3042\u3043\u3044
+true \u3043l\u3042\u3049***\u3042\u3043\u3044 0
+
+\Q***\u3042\u3043\u3044
+***\u3042\u3043\u3044
+true ***\u3042\u3043\u3044 0
+
+\Q*\u3042\u3043
+*\u3042\u3043
+true *\u3042\u3043 0
+
+\u3043l\u3042\u3049\Q***\u3042\u3043\u3044
+\u3043l\u3042\u3049***\u3042\u3043\u3044
+true \u3043l\u3042\u3049***\u3042\u3043\u3044 0
+
+\u3043l\u3042\Q***\u3042\u3043\u3044
+\u3043l\u3042***\u3042\u3043\u3044
+true \u3043l\u3042***\u3042\u3043\u3044 0
+
+[\043]+
+\u3043l\u3042\u3049\u3043l\u3042\u3049#\u3043le\u3044\u3049
+true # 0
+
+[\042-\044]+
+\u3043l\u3042\u3049\u3043l\u3042\u3049#\u3043le\u3044\u3049
+true # 0
+
+[\u1234-\u1236]
+\u3043l\u3042\u3049\u3043l\u3042\u3049\u1235\u3043le\u3044\u3049
+true \u1235 0
+
+[^\043]*
+\u3043l\u3042\u3049\u3043l\u3042\u3049#\u3043le\u3044\u3049
+true \u3043l\u3042\u3049\u3043l\u3042\u3049 0

@@ -1,0 +1,42 @@
+This README is to keep a list facts and known workaround for the pkcs11 java tests
+perform as a result of bugs or features in NSS or other pkcs11 libraries.
+
+- How to get NSS libraries?
+The libraries come from the following sources.
+
+1. Specified by system property test.nss.lib.paths
+System property test.nss.lib.paths can specify a set of absolute paths to
+the local NSS library directories. The paths are separated by comma.
+
+2. Pre-built NSS libraries from artifactory server
+If the value of system property test.nss.lib.paths is not set, the tests will try
+to download pre-built NSS libraries from artifactory server. Currently, the
+tests only looks for libraries for Windows and MacOSX platforms on artifactory.
+Please note that JIB jar MUST be present in classpath when downloading the
+libraries.
+
+3. System NSS libraries
+If both of the above sources are not available, the tests will try to search
+for the libraries in some system paths. The paths are platform-specific. Note
+that, there is no such system path on Windows and MacOSX platforms. On these
+platforms, it has to use source 1 or 2.
+
+- NSS ECC None/Basic/Extended
+The tests detect the NSS library support for Elliptic Curves as to not
+report incorrect failures.  PKCS11 reports back CKR_DOMAIN_PARAMS_INVALID
+when the curve is not supported.
+
+- Default libsoftokn3.so
+By default PKCS11Test.java will look for libsoftokn3.so. There are a number of
+tests, particularly in Secmod, that need libnss3.so.  The method useNSS() in
+PKCS11test.java is to change the search and version checking to libnss3.
+
+ECC Basic supports is secp256r1, secp384r1, and secp521r1.
+
+- A bug in NSS 3.12 (Mozilla bug 471665) causes AES key lengths to be
+read incorrectly. KeyStore/SecretKeysBasic.java tiggers this bug and
+knows to avoid it.
+
+- A number of EC tests fail because of a DER bug in NSS 3.11. The best guess
+is Mozilla bug 480280.  Those tests that abort execution with a PASS result
+are:  TestECDH2, TestECDSA, TestECDSA2 and TestECGenSpec.

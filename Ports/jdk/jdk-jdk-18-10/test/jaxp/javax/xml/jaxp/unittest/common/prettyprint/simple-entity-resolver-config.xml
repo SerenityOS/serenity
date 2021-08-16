@@ -1,0 +1,20 @@
+<?xml version="1.0"?> 
+ <entity-resolver-config 
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+     xsi:noNamespaceSchemaLocation="http://www.example.test/schema.xsd" 
+     schema-major-version="1" 
+     schema-minor-version="1"> 
+
+     <entity> 
+         <description>Example 1 Schema Type library 10.0 </description> 
+         <public-id>>-//Oracle//Example 1 Schema Type library 10.0//EN</public-id> 
+         <system-id>http://www.example.test/oracle/schema/example1.xsd</system-id> 
+         <location>META-INF/example1.xsd</location> 
+     </entity> 
+     <entity> 
+         <description>Example 2 Schema Type library 10.0 </description> 
+         <public-id>>-//Oracle//Example 2 Schema Type library 10.0//EN</public-id> 
+         <system-id>http://www.example.test/oracle/schema/example2.xsd</system-id> 
+         <location>META-INF/example2.xsd</location> 
+     </entity> 
+ </entity-resolver-config>

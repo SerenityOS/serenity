@@ -1,0 +1,2 @@
+Exception thrown.
+java.lang.NullPointerException: Cannot enter synchronized block because "<local1>" is null

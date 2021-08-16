@@ -1,0 +1,6 @@
+T8012003a.java:19:12: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Integer)
+T8012003a.java:20:20: compiler.err.prob.found.req: (compiler.misc.incompatible.type.in.conditional: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Integer))
+T8012003a.java:21:12: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Integer)
+T8012003a.java:22:9: compiler.err.cant.apply.symbols: kindname.method, m3, char,{(compiler.misc.inapplicable.method: kindname.method, T8012003a, m3(java.lang.Integer), (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: char, java.lang.Integer))),(compiler.misc.inapplicable.method: kindname.method, T8012003a, m3(java.lang.String), (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: char, java.lang.String)))}
+- compiler.note.compressed.diags
+4 errors

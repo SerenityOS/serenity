@@ -1,0 +1,2 @@
+T6548436d.java:15:35: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6548436d.Base<compiler.misc.type.captureof: 1, ? extends java.lang.Double>, T6548436d.Base<java.lang.Integer>)
+1 error

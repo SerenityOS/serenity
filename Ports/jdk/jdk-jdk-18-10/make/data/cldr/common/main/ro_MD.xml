@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ro"/>
+		<territory type="MD"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="sw_CD" draft="contributed">swahili (R. D. Congo)</language>
+			<language type="wal" draft="contributed">wolaytta</language>
+		</languages>
+		<territories>
+			<territory type="MM" draft="contributed">Myanmar</territory>
+		</territories>
+	</localeDisplayNames>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun" draft="contributed">Dum</day>
+							<day type="mon" draft="contributed">Lun</day>
+							<day type="tue" draft="contributed">Mar</day>
+							<day type="wed" draft="contributed">Mie</day>
+							<day type="thu" draft="contributed">Joi</day>
+							<day type="fri" draft="contributed">Vin</day>
+							<day type="sat" draft="contributed">Sâm</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun" draft="contributed">D</day>
+							<day type="mon" draft="contributed">L</day>
+							<day type="tue" draft="contributed">Ma</day>
+							<day type="wed" draft="contributed">Mi</day>
+							<day type="thu" draft="contributed">J</day>
+							<day type="fri" draft="contributed">V</day>
+							<day type="sat" draft="contributed">S</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun" draft="contributed">Du</day>
+							<day type="mon" draft="contributed">Lu</day>
+							<day type="tue" draft="contributed">Ma</day>
+							<day type="wed" draft="contributed">Mi</day>
+							<day type="thu" draft="contributed">Jo</day>
+							<day type="fri" draft="contributed">Vi</day>
+							<day type="sat" draft="contributed">Sâ</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun" draft="contributed">Dum</day>
+							<day type="mon" draft="contributed">Lun</day>
+							<day type="tue" draft="contributed">Mar</day>
+							<day type="wed" draft="contributed">Mie</day>
+							<day type="thu" draft="contributed">Joi</day>
+							<day type="fri" draft="contributed">Vin</day>
+							<day type="sat" draft="contributed">Sâm</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun" draft="contributed">D</day>
+							<day type="mon" draft="contributed">L</day>
+							<day type="tue" draft="contributed">Ma</day>
+							<day type="wed" draft="contributed">Mi</day>
+							<day type="thu" draft="contributed">J</day>
+							<day type="fri" draft="contributed">V</day>
+							<day type="sat" draft="contributed">S</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun" draft="contributed">Du</day>
+							<day type="mon" draft="contributed">Lu</day>
+							<day type="tue" draft="contributed">Ma</day>
+							<day type="wed" draft="contributed">Mi</day>
+							<day type="thu" draft="contributed">Jo</day>
+							<day type="fri" draft="contributed">Vi</day>
+							<day type="sat" draft="contributed">Sâ</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1" draft="contributed">trim. 1</quarter>
+							<quarter type="2" draft="contributed">trim. 2</quarter>
+							<quarter type="3" draft="contributed">trim. 3</quarter>
+							<quarter type="4" draft="contributed">trim. 4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1" draft="contributed">trimestrul 1</quarter>
+							<quarter type="2" draft="contributed">trimestrul 2</quarter>
+							<quarter type="3" draft="contributed">trimestrul 3</quarter>
+							<quarter type="4" draft="contributed">trimestrul 4</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1" draft="contributed">Trim. 1</quarter>
+							<quarter type="2" draft="contributed">Trim. 2</quarter>
+							<quarter type="3" draft="contributed">Trim. 3</quarter>
+							<quarter type="4" draft="contributed">Trim. 4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1" draft="contributed">Trimestrul 1</quarter>
+							<quarter type="2" draft="contributed">Trimestrul 2</quarter>
+							<quarter type="3" draft="contributed">Trimestrul 3</quarter>
+							<quarter type="4" draft="contributed">Trimestrul 4</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="midnight" draft="contributed">miezul nopții</dayPeriod>
+							<dayPeriod type="noon" draft="contributed">amiază</dayPeriod>
+							<dayPeriod type="morning1" draft="contributed">dimineață</dayPeriod>
+							<dayPeriod type="afternoon1" draft="contributed">după-amiază</dayPeriod>
+							<dayPeriod type="evening1" draft="contributed">seară</dayPeriod>
+							<dayPeriod type="night1" draft="contributed">noapte</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="midnight" draft="contributed">miezul nopții</dayPeriod>
+							<dayPeriod type="noon" draft="contributed">amiază</dayPeriod>
+							<dayPeriod type="morning1" draft="contributed">dimineața</dayPeriod>
+							<dayPeriod type="afternoon1" draft="contributed">după-amiaza</dayPeriod>
+							<dayPeriod type="evening1" draft="contributed">seara</dayPeriod>
+							<dayPeriod type="night1" draft="contributed">noaptea</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="morning1" draft="contributed">dimineață</dayPeriod>
+							<dayPeriod type="afternoon1" draft="contributed">după-amiază</dayPeriod>
+							<dayPeriod type="evening1" draft="contributed">seară</dayPeriod>
+							<dayPeriod type="night1" draft="contributed">noapte</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="midnight" draft="contributed">miezul nopții</dayPeriod>
+							<dayPeriod type="noon" draft="contributed">amiază</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraAbbr>
+						<era type="0" alt="variant" draft="contributed">î.e.n.</era>
+					</eraAbbr>
+				</eras>
+			</calendar>
+		</calendars>
+	</dates>
+	<numbers>
+		<currencies>
+			<currency type="MDL">
+				<symbol>L</symbol>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="short">
+			<unit type="duration-millisecond">
+				<displayName draft="contributed">milisec.</displayName>
+			</unit>
+		</unitLength>
+		<unitLength type="narrow">
+			<unit type="duration-year">
+				<unitPattern count="one" draft="contributed">{0} an</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} ani</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ani</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="contributed">lună</displayName>
+				<unitPattern count="one" draft="contributed">{0} lună</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} luni</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} luni</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<unitPattern count="one" draft="contributed">{0} zi</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} zile</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} zile</unitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName draft="contributed">min</displayName>
+				<unitPattern count="one" draft="contributed">{0} min.</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} min.</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} min.</unitPattern>
+			</unit>
+			<unit type="duration-millisecond">
+				<displayName draft="contributed">msec</displayName>
+			</unit>
+		</unitLength>
+	</units>
+</ldml>

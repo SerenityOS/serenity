@@ -1,0 +1,2 @@
+Neg01.java:14:12: compiler.err.types.incompatible: Neg01.IA, Neg01.IB, (compiler.misc.incompatible.unrelated.defaults: kindname.class, Neg01.AB, m, , Neg01.IA, Neg01.IB)
+1 error

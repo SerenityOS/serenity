@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration version="2.0" label="Test flag">
+
+    <event name="com.example.Tiger">
+      <setting name="enabled" control="mammal">false</setting>
+      <setting name="stackTrace">false</setting>
+    </event>
+    
+     <event name="com.example.Lion">
+      <setting name="enabled" control="mammal">false</setting>
+    </event>
+
+    <event name="com.example.Albatross">
+      <setting name="enabled">false</setting>
+    </event>
+
+    <control>
+      <flag name="mammal" label="Mammal">false</flag>
+    </control>
+
+</configuration>

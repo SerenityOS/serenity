@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.1//EN" "http://www.netbeans.org/dtds/filesystem-1_1.dtd">
+<filesystem>
+    <folder name="OptionsDialog">
+        <file name="General.instance_hidden"/>
+        <file name="Keymaps.instance_hidden"/>
+        <file name="Appearance.instance_hidden"/>
+        <file name="Advanced.instance_hidden"/>
+        <file name="com-sun-hotspot-igv-settings-ViewOptionsCategory.instance">
+            <attr name="position" intvalue="100" />
+        </file>
+    </folder>
+</filesystem>

@@ -1,0 +1,5 @@
+StaticFields.java:14:11: compiler.err.expected: token.identifier
+StaticFields.java:17:17: compiler.err.illegal.start.of.expr
+StaticFields.java:19:33: compiler.err.illegal.start.of.expr
+StaticFields.java:22:19: compiler.err.illegal.start.of.expr
+4 errors

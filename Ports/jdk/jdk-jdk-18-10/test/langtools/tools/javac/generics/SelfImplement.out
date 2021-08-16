@@ -1,0 +1,2 @@
+SelfImplement.java:15:21: compiler.err.concrete.inheritance.conflict: f(T), SelfImplement.A<java.lang.Integer>, f(java.lang.Integer), SelfImplement.A<java.lang.Integer>, SelfImplement.A<java.lang.Integer>
+1 error

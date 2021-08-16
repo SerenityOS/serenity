@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="kkj"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="en">yaman</language>
+			<language type="fr">numbu buy</language>
+			<language type="kkj">kakɔ</language>
+		</languages>
+		<territories>
+			<territory type="CM">Kamɛrun</territory>
+		</territories>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a á à â {a\u0327} b ɓ c d ɗ {ɗy} e é è ê ɛ {ɛ\u0301} {ɛ\u0300} {ɛ\u0302} {ɛ\u0327} f g {gb} {gw} h i í ì î {i\u0327} j k {kp} {kw} l m {mb} n {nd} ǌ {ny} ŋ {ŋg} {ŋgb} {ŋgw} o ó ò ô ɔ {ɔ\u0301} {ɔ\u0300} {ɔ\u0302} {ɔ\u0327} p r s t u ú ù û {u\u0327} v w y]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[q x z]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B Ɓ C D Ɗ {Ɗy} E Ɛ F G {Gb} {Gw} H I {I\u0327} J K {Kp} {Kw} L M {Mb} N {Nd} ǋ {Ny} Ŋ {Ŋg} {Ŋgb} {Ŋgw} O Ɔ {Ɔ\u0327} P R S T U {U\u0327} V W Y]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+		<exemplarCharacters type="punctuation">[, \: ! ? . … ‘ ‹ › “ ” « » ( ) *]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart>«</quotationStart>
+		<quotationEnd>»</quotationEnd>
+		<alternateQuotationStart>‹</alternateQuotationStart>
+		<alternateQuotationEnd>›</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE dd MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd/MM y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="Ed">E d</dateFormatItem>
+						<dateFormatItem id="Gy">y G</dateFormatItem>
+						<dateFormatItem id="GyMMM">MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMd">d MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E d MMM y G</dateFormatItem>
+						<dateFormatItem id="Md">dd/MM</dateFormatItem>
+						<dateFormatItem id="MEd">E dd/MM</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E d MMM</dateFormatItem>
+						<dateFormatItem id="yyyyM">MM y GGGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMd">dd/MM y GGGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMEd">E dd/MM y GGGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMMM">MMM y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMd">d MMM y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMEd">E d MMM y G</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="wide">
+							<month type="1">pamba</month>
+							<month type="2">wanja</month>
+							<month type="3">mbiyɔ mɛndoŋgɔ</month>
+							<month type="4">Nyɔlɔmbɔŋgɔ</month>
+							<month type="5">Mɔnɔ ŋgbanja</month>
+							<month type="6">Nyaŋgwɛ ŋgbanja</month>
+							<month type="7">kuŋgwɛ</month>
+							<month type="8">fɛ</month>
+							<month type="9">njapi</month>
+							<month type="10">nyukul</month>
+							<month type="11">M11</month>
+							<month type="12">ɓulɓusɛ</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="wide">
+							<month type="1">pamba</month>
+							<month type="2">wanja</month>
+							<month type="3">mbiyɔ mɛndoŋgɔ</month>
+							<month type="4">Nyɔlɔmbɔŋgɔ</month>
+							<month type="5">Mɔnɔ ŋgbanja</month>
+							<month type="6">Nyaŋgwɛ ŋgbanja</month>
+							<month type="7">kuŋgwɛ</month>
+							<month type="8">fɛ</month>
+							<month type="9">njapi</month>
+							<month type="10">nyukul</month>
+							<month type="11">M11</month>
+							<month type="12">ɓulɓusɛ</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">sɔndi</day>
+							<day type="mon">lundi</day>
+							<day type="tue">mardi</day>
+							<day type="wed">mɛrkɛrɛdi</day>
+							<day type="thu">yedi</day>
+							<day type="fri">vaŋdɛrɛdi</day>
+							<day type="sat">mɔnɔ sɔndi</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">so</day>
+							<day type="mon">lu</day>
+							<day type="tue">ma</day>
+							<day type="wed">mɛ</day>
+							<day type="thu">ye</day>
+							<day type="fri">va</day>
+							<day type="sat">ms</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">sɔndi</day>
+							<day type="mon">lundi</day>
+							<day type="tue">mardi</day>
+							<day type="wed">mɛrkɛrɛdi</day>
+							<day type="thu">yedi</day>
+							<day type="fri">vaŋdɛrɛdi</day>
+							<day type="sat">mɔnɔ sɔndi</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">sɔndi</day>
+							<day type="mon">lundi</day>
+							<day type="tue">mardi</day>
+							<day type="wed">mɛrkɛrɛdi</day>
+							<day type="thu">yedi</day>
+							<day type="fri">vaŋdɛrɛdi</day>
+							<day type="sat">mɔnɔ sɔndi</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">sɔndi</day>
+							<day type="mon">lundi</day>
+							<day type="tue">mardi</day>
+							<day type="wed">mɛrkɛrɛdi</day>
+							<day type="thu">yedi</day>
+							<day type="fri">vaŋdɛrɛdi</day>
+							<day type="sat">mɔnɔ sɔndi</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">so</day>
+							<day type="mon">lu</day>
+							<day type="tue">ma</day>
+							<day type="wed">mɛ</day>
+							<day type="thu">ye</day>
+							<day type="fri">va</day>
+							<day type="sat">ms</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">so</day>
+							<day type="mon">lu</day>
+							<day type="tue">ma</day>
+							<day type="wed">mɛ</day>
+							<day type="thu">ye</day>
+							<day type="fri">va</day>
+							<day type="sat">ms</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">sɔndi</day>
+							<day type="mon">lundi</day>
+							<day type="tue">mardi</day>
+							<day type="wed">mɛrkɛrɛdi</day>
+							<day type="thu">yedi</day>
+							<day type="fri">vaŋdɛrɛdi</day>
+							<day type="sat">mɔnɔ sɔndi</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE dd MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd/MM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="Ed">E d</dateFormatItem>
+						<dateFormatItem id="Gy">y G</dateFormatItem>
+						<dateFormatItem id="GyMMM">MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMd">d MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E d MMM y G</dateFormatItem>
+						<dateFormatItem id="Md">dd/MM</dateFormatItem>
+						<dateFormatItem id="MEd">E dd/MM</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E d MMM</dateFormatItem>
+						<dateFormatItem id="yM">MM y</dateFormatItem>
+						<dateFormatItem id="yMd">dd/MM y</dateFormatItem>
+						<dateFormatItem id="yMEd">E dd/MM y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E d MMM y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="day">
+				<relative type="-1">kwey</relative>
+				<relative type="0">muka</relative>
+				<relative type="1">nɛmɛnɔ</relative>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>latn</defaultNumberingSystem>
+		<otherNumberingSystems>
+			<native>latn</native>
+		</otherNumberingSystems>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group>.</group>
+		</symbols>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="one" draft="provisional">¤ 0K</pattern>
+					<pattern type="1000" count="other" draft="provisional">¤ 0K</pattern>
+					<pattern type="10000" count="one" draft="provisional">¤ 00K</pattern>
+					<pattern type="10000" count="other" draft="provisional">¤ 00K</pattern>
+					<pattern type="100000" count="one" draft="provisional">¤ 000K</pattern>
+					<pattern type="100000" count="other" draft="provisional">¤ 000K</pattern>
+					<pattern type="1000000" count="one" draft="provisional">¤ 0M</pattern>
+					<pattern type="1000000" count="other" draft="provisional">¤ 0M</pattern>
+					<pattern type="10000000" count="one" draft="provisional">¤ 00M</pattern>
+					<pattern type="10000000" count="other" draft="provisional">¤ 00M</pattern>
+					<pattern type="100000000" count="one" draft="provisional">¤ 000M</pattern>
+					<pattern type="100000000" count="other" draft="provisional">¤ 000M</pattern>
+					<pattern type="1000000000" count="one" draft="provisional">¤ 0G</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">¤ 0G</pattern>
+					<pattern type="10000000000" count="one" draft="provisional">¤ 00G</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">¤ 00G</pattern>
+					<pattern type="100000000000" count="one" draft="provisional">¤ 000G</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">¤ 000G</pattern>
+					<pattern type="1000000000000" count="one" draft="provisional">¤ 0T</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">¤ 0T</pattern>
+					<pattern type="10000000000000" count="one" draft="provisional">¤ 00T</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">¤ 00T</pattern>
+					<pattern type="100000000000000" count="one" draft="provisional">¤ 000T</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">¤ 000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="XAF">
+				<displayName>Franc CFA</displayName>
+				<symbol>FCFA</symbol>
+			</currency>
+		</currencies>
+	</numbers>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0}, {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+</ldml>

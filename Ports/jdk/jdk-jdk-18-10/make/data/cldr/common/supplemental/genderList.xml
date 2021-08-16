@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE supplementalData SYSTEM "../../common/dtd/ldmlSupplemental.dtd">
+<!--
+Copyright © 1991-2013 Unicode, Inc.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+For terms of use, see http://www.unicode.org/copyright.html
+-->
+
+<supplementalData>
+    <version number="$Revision$"/>
+    <gender>
+        <!-- gender(list) = other -->
+        <personList type="neutral" locales="af bn bg da de en et eu fa fil fi gu hu id ja kn ko ml ms no sv sw ta te th tr vi zu" />
+        <!-- gender(all male) = male, gender(all female) = female, otherwise gender(list) = other -->
+        <personList type="mixedNeutral" locales="el is"/>
+        <!-- gender(all female) = female, otherwise gender(list) = male -->
+        <personList type="maleTaints" locales="ar ca cs hr es fr he hi it lij lt lv mr nl pl pt ro ru sk sl sr uk ur zh zh_Hant"/>
+    </gender>
+</supplementalData>
+

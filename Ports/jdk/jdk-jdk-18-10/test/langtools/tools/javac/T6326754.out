@@ -1,0 +1,7 @@
+T6326754.java:21:12: compiler.err.name.clash.same.erasure: TestConstructor(T), TestConstructor(K)
+T6326754.java:29:17: compiler.err.name.clash.same.erasure: setT(K), setT(T)
+T6326754.java:41:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T, T)
+T6326754.java:47:11: compiler.err.cant.apply.symbol: kindname.method, setT, java.lang.Object, compiler.misc.no.args, kindname.class, TestC<T>, (compiler.misc.arg.length.mismatch)
+- compiler.note.unchecked.filename: T6326754.java
+- compiler.note.unchecked.recompile
+4 errors

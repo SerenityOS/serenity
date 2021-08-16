@@ -1,0 +1,5 @@
+DeclarationAnnotation.java:13:21: compiler.err.annotation.type.not.applicable.to.type: DA
+DeclarationAnnotation.java:10:21: compiler.err.annotation.type.not.applicable.to.type: DA
+DeclarationAnnotation.java:11:21: compiler.err.annotation.type.not.applicable.to.type: DA
+DeclarationAnnotation.java:12:21: compiler.err.annotation.type.not.applicable.to.type: DA
+4 errors

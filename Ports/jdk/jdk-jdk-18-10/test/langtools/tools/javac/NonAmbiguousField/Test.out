@@ -1,0 +1,2 @@
+Child2.java:11:28: compiler.err.ref.ambiguous: i, kindname.variable, i, one.Parent2, kindname.variable, i, two.I
+1 error

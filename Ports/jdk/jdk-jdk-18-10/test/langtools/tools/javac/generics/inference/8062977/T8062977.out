@@ -1,0 +1,5 @@
+T8062977.java:15:31: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.assignment.exists: T,B, (compiler.misc.inconvertible.types: java.lang.Class<java.lang.Iterable<?>>, java.lang.Class<java.lang.Object>))
+T8062977.java:21:29: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.assignment.exists: T,B, (compiler.misc.inconvertible.types: java.lang.Class<java.lang.Iterable<?>[]>, java.lang.Class<java.lang.Object>))
+T8062977.java:26:31: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.assignment.exists: T,B, (compiler.misc.inconvertible.types: java.lang.Class<java.lang.Iterable<?>[][]>, java.lang.Class<java.lang.Object>))
+T8062977.java:27:29: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.assignment.exists: T,B, (compiler.misc.inconvertible.types: java.lang.Class<java.lang.Iterable<?>[][]>, java.lang.Class<java.lang.Object>))
+4 errors

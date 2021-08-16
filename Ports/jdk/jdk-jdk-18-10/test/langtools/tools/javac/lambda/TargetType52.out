@@ -1,0 +1,2 @@
+TargetType52.java:17:9: compiler.err.cant.apply.symbol: kindname.method, m, TargetType52.FI<? extends java.lang.CharSequence,? extends java.util.ArrayList<? extends java.lang.CharSequence>>, @11, kindname.class, TargetType52, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.no.suitable.functional.intf.inst: TargetType52.FI<java.lang.CharSequence,java.util.ArrayList<? extends java.lang.CharSequence>>))
+1 error

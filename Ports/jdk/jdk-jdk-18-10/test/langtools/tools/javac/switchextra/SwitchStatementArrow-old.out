@@ -1,0 +1,3 @@
+SwitchStatementArrow.java:41:20: compiler.err.feature.not.supported.in.source.plural: (compiler.misc.feature.switch.rules), 9, 14
+SwitchStatementArrow.java:42:21: compiler.err.feature.not.supported.in.source.plural: (compiler.misc.feature.multiple.case.labels), 9, 14
+2 errors

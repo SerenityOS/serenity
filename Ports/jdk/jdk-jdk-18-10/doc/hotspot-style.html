@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HotSpot Coding Style</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="../make/data/docs-resources/resources/jdk-default.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HotSpot Coding Style</h1>
+</header>
+<nav id="TOC">
+<ul>
+<li><a href="#introduction">Introduction</a><ul>
+<li><a href="#why-care-about-style">Why Care About Style?</a></li>
+<li><a href="#counterexamples-and-updates">Counterexamples and Updates</a></li>
+</ul></li>
+<li><a href="#structure-and-formatting">Structure and Formatting</a><ul>
+<li><a href="#factoring-and-class-design">Factoring and Class Design</a></li>
+<li><a href="#source-files">Source Files</a></li>
+<li><a href="#jtreg-tests">JTReg Tests</a></li>
+<li><a href="#naming">Naming</a></li>
+<li><a href="#commenting">Commenting</a></li>
+<li><a href="#macros">Macros</a></li>
+<li><a href="#whitespace">Whitespace</a></li>
+<li><a href="#miscellaneous">Miscellaneous</a></li>
+</ul></li>
+<li><a href="#use-of-c-features">Use of C++ Features</a><ul>
+<li><a href="#error-handling">Error Handling</a></li>
+<li><a href="#rtti-runtime-type-information">RTTI (Runtime Type Information)</a></li>
+<li><a href="#memory-allocation">Memory Allocation</a></li>
+<li><a href="#class-inheritance">Class Inheritance</a></li>
+<li><a href="#namespaces">Namespaces</a></li>
+<li><a href="#c-standard-library">C++ Standard Library</a></li>
+<li><a href="#type-deduction">Type Deduction</a></li>
+<li><a href="#expression-sfinae">Expression SFINAE</a></li>
+<li><a href="#enum">enum</a></li>
+<li><a href="#thread_local">thread_local</a></li>
+<li><a href="#nullptr">nullptr</a></li>
+<li><a href="#atomic">&lt;atomic&gt;</a></li>
+<li><a href="#uniform-initialization">Uniform Initialization</a></li>
+<li><a href="#additional-permitted-features">Additional Permitted Features</a></li>
+<li><a href="#excluded-features">Excluded Features</a></li>
+<li><a href="#undecided-features">Undecided Features</a></li>
+</ul></li>
+</ul>
+</nav>
+<h2 id="introduction">Introduction</h2>
+<p>This is a collection of rules, guidelines, and suggestions for writing HotSpot code. Following these will help new code fit in with existing HotSpot code, making it easier to read and maintain. Failure to follow these guidelines may lead to discussion during code reviews, if not outright rejection of a change.</p>
+<h3 id="why-care-about-style">Why Care About Style?</h3>
+<p>Some programmers seem to have lexers and even C preprocessors installed directly behind their eyeballs. The rest of us require code that is not only functionally correct but also easy to read. More than that, since there is no one style for easy-to-read code, and since a mashup of many styles is just as confusing as no style at all, it is important for coders to be conscious of the many implicit stylistic choices that historically have gone into the HotSpot code base.</p>
+<p>Some of these guidelines are driven by the cross-platform requirements for HotSpot. Shared code must work on a variety of platforms, and may encounter deficiencies in some. Using platform conditionalization in shared code is usually avoided, while shared code is strongly preferred to multiple platform-dependent implementations, so some language features may be recommended against.</p>
+<p>Some of the guidelines here are relatively arbitrary choices among equally plausible alternatives. The purpose of stating and enforcing these rules is largely to provide a consistent look to the code. That consistency makes the code more readable by avoiding non-functional distractions from the interesting functionality.</p>
+<p>When changing pre-existing code, it is reasonable to adjust it to match these conventions. Exception: If the pre-existing code clearly conforms locally to its own peculiar conventions, it is not worth reformatting the whole thing. Also consider separating changes that make extensive stylistic updates from those which make functional changes.</p>
+<h3 id="counterexamples-and-updates">Counterexamples and Updates</h3>
+<p>Many of the guidelines mentioned here have (sometimes widespread) counterexamples in the HotSpot code base. Finding a counterexample is not sufficient justification for new code to follow the counterexample as a precedent, since readers of your code will rightfully expect your code to follow the greater bulk of precedents documented here.</p>
+<p>Occasionally a guideline mentioned here may be just out of synch with the actual HotSpot code base. If you find that a guideline is consistently contradicted by a large number of counterexamples, please bring it up for discussion and possible change. The architectural rule, of course, is &quot;When in Rome do as the Romans&quot;. Sometimes in the suburbs of Rome the rules are a little different; these differences can be pointed out here.</p>
+<p>Proposed changes should be discussed on the <a href="mailto:hotspot-dev@openjdk.java.net">HotSpot Developers</a> mailing list, and approved by <a href="https://en.wikipedia.org/wiki/Rough_consensus">rough consensus</a> of the <a href="https://openjdk.java.net/census#hotspot">HotSpot Group</a> Members. The Group Lead determines whether consensus has been reached. Changes are likely to be cautious and incremental, since HotSpot coders have been using these guidelines for years.</p>
+<h2 id="structure-and-formatting">Structure and Formatting</h2>
+<h3 id="factoring-and-class-design">Factoring and Class Design</h3>
+<ul>
+<li><p>Group related code together, so readers can concentrate on one section of one file.</p></li>
+<li><p>Classes are the primary code structuring mechanism. Place related functionality in a class, or a set of related classes. Use of either namespaces or public non-member functions is rare in HotSpot code. Static non-member functions are not uncommon.</p></li>
+<li><p>If a class <code>FooBar</code> is going to be used in more than one place, put it a file named fooBar.hpp and fooBar.cpp. If the class is a sidekick to a more important class <code>BazBat</code>, it can go in bazBat.hpp.</p></li>
+<li><p>Put a member function <code>FooBar::bang</code> into the same file that defined <code>FooBar</code>, or its associated <em>.inline.hpp or </em>.cpp file.</p></li>
+<li><p>Use public accessor functions for member variables accessed outside the class.</p></li>
+<li><p>Assign names to constant literals and use the names instead.</p></li>
+<li><p>Keep functions small, a screenful at most. Split out chunks of logic into file-local classes or static functions if needed.</p></li>
+<li><p>Factor away nonessential complexity into local inline helper functions and helper classes.</p></li>
+<li><p>Think clearly about internal invariants that apply to each class, and document them in the form of asserts within member functions.</p></li>
+<li><p>Make simple, self-evident contracts for member functions. If you cannot communicate a simple contract, redesign the class.</p></li>
+<li><p>Implement classes as if expecting rough usage by clients. Check for incorrect usage of a class using <code>assert(...)</code>, <code>guarantee(...)</code>, <code>ShouldNotReachHere()</code> and comments wherever needed. Performance is almost never a reason to omit asserts.</p></li>
+<li><p>When possible, design as if for reusability. This forces a clear design of the class's externals, and clean hiding of its internals.</p></li>
+<li><p>Initialize all variables and data structures to a known state. If a class has a constructor, initialize it there.</p></li>
+<li><p>Do no optimization before its time. Prove the need to optimize.</p></li>
+<li><p>When you must defactor to optimize, preserve as much structure as possible. If you must hand-inline some name, label the local copy with the original name.</p></li>
+<li><p>If you need to use a hidden detail (e.g., a structure offset), name it (as a constant or function) in the class that owns it.</p></li>
+<li><p>Don't use the Copy and Paste keys to replicate more than a couple lines of code. Name what you must repeat.</p></li>
+<li><p>If a class needs a member function to change a user-visible attribute, the change should be done with a &quot;setter&quot; accessor matched to the simple &quot;getter&quot;.</p></li>
+</ul>
+<h3 id="source-files">Source Files</h3>
+<ul>
+<li><p>All source files must have a globally unique basename. The build system depends on this uniqueness.</p></li>
+<li><p>Do not put non-trivial function implementations in .hpp files. If the implementation depends on other .hpp files, put it in a .cpp or a .inline.hpp file.</p></li>
+<li><p>.inline.hpp files should only be included in .cpp or .inline.hpp files.</p></li>
+<li><p>All .inline.hpp files should include their corresponding .hpp file as the first include line. Declarations needed by other files should be put in the .hpp file, and not in the .inline.hpp file. This rule exists to resolve problems with circular dependencies between .inline.hpp files.</p></li>
+<li><p>All .cpp files include precompiled.hpp as the first include line.</p></li>
+<li><p>precompiled.hpp is just a build time optimization, so don't rely on it to resolve include problems.</p></li>
+<li><p>Keep the include lines alphabetically sorted.</p></li>
+<li><p>Put conditional inclusions (<code>#if ...</code>) at the end of the include list.</p></li>
+</ul>
+<h3 id="jtreg-tests">JTReg Tests</h3>
+<ul>
+<li><p>JTReg tests should have meaningful names.</p></li>
+<li><p>JTReg tests associated with specific bugs should be tagged with the <code>@bug</code> keyword in the test description.</p></li>
+<li><p>JTReg tests should be organized by component or feature under <code>test/</code>, in a directory hierarchy that generally follows that of the <code>src/</code> directory. There may be additional subdirectories to further categorize tests by feature. This structure makes it easy to run a collection of tests associated with a specific feature by specifying the associated directory as the source of the tests to run.</p>
+<ul>
+<li>Some (older) tests use the associated bug number in the directory name, the test name, or both. That naming style should no longer be used, with existing tests using that style being candidates for migration.</li>
+</ul></li>
+</ul>
+<h3 id="naming">Naming</h3>
+<ul>
+<li><p>The length of a name may be correlated to the size of its scope. In particular, short names (even single letter names) may be fine in a small scope, but are usually inappropriate for larger scopes.</p></li>
+<li><p>Prefer whole words rather than abbreviations, unless the abbreviation is more widely used than the long form in the code's domain.</p></li>
+<li><p>Choose names consistently. Do not introduce spurious variations. Abbreviate corresponding terms to a consistent length.</p></li>
+<li><p>Global names must be unique, to avoid <a href="https://en.cppreference.com/w/cpp/language/definition" title="One Definition Rule">One Definition Rule</a> (ODR) violations. A common prefixing scheme for related global names is often used. (This is instead of using namespaces, which are mostly avoided in HotSpot.)</p></li>
+<li><p>Don't give two names to the semantically same thing. But use different names for semantically different things, even if they are representationally the same. (So use meaningful <code>typedef</code> or template alias names where appropriate.)</p></li>
+<li><p>When choosing names, avoid categorical nouns like &quot;variable&quot;, &quot;field&quot;, &quot;parameter&quot;, &quot;value&quot;, and verbs like &quot;compute&quot;, &quot;get&quot;. (<code>storeValue(int param)</code> is bad.)</p></li>
+<li><p>Type names and global names should use mixed-case with the first letter of each word capitalized (<code>FooBar</code>).</p></li>
+<li><p>Embedded abbreviations in otherwise mixed-case names are usually capitalized entirely rather than being treated as a single word with only the initial letter capitalized, e.g. &quot;HTML&quot; rather than &quot;Html&quot;.</p></li>
+<li><p>Function and local variable names use lowercase with words separated by a single underscore (<code>foo_bar</code>).</p></li>
+<li><p>Class data member names have a leading underscore, and use lowercase with words separated by a single underscore (<code>_foo_bar</code>).</p></li>
+<li><p>Constant names may be upper-case or mixed-case, according to historical necessity. (Note: There are many examples of constants with lowercase names.)</p></li>
+<li><p>Constant names should follow an existing pattern, and must have a distinct appearance from other names in related APIs.</p></li>
+<li><p>Class and type names should be noun phrases. Consider an &quot;er&quot; suffix for a class that represents an action.</p></li>
+<li><p>Function names should be verb phrases that reflect changes of state known to a class's user, or else noun phrases if they cause no change of state visible to the class's user.</p></li>
+<li><p>Getter accessor names are noun phrases, with no &quot;<code>get_</code>&quot; noise word. Boolean getters can also begin with &quot;<code>is_</code>&quot; or &quot;<code>has_</code>&quot;. Member function for reading data members usually have the same name as the data member, exclusive of the leading underscore.</p></li>
+<li><p>Setter accessor names prepend &quot;<code>set_</code>&quot; to the getter name.</p></li>
+<li><p>Other member function names are verb phrases, as if commands to the receiver.</p></li>
+<li><p>Avoid leading underscores (as &quot;<code>_oop</code>&quot;) except in cases required above. (Names with leading underscores can cause portability problems.)</p></li>
+</ul>
+<h3 id="commenting">Commenting</h3>
+<ul>
+<li><p>Clearly comment subtle fixes.</p></li>
+<li><p>Clearly comment tricky classes and functions.</p></li>
+<li><p>If you have to choose between commenting code and writing wiki content, comment the code. Link from the wiki to the source file if it makes sense.</p></li>
+<li><p>As a general rule don't add bug numbers to comments (they would soon overwhelm the code). But if the bug report contains significant information that can't reasonably be added as a comment, then refer to the bug report.</p></li>
+<li><p>Personal names are discouraged in the source code, which is a team product.</p></li>
+</ul>
+<h3 id="macros">Macros</h3>
+<ul>
+<li><p>You can almost always use an inline function or class instead of a macro. Use a macro only when you really need it.</p></li>
+<li><p>Templates may be preferable to multi-line macros. (There may be subtle performance effects with templates on some platforms; revert to macros if absolutely necessary.)</p></li>
+<li><p><code>#ifdef</code>s should not be used to introduce platform-specific code into shared code (except for <code>_LP64</code>). They must be used to manage header files, in the pattern found at the top of every source file. They should be used mainly for major build features, including <code>PRODUCT</code>, <code>ASSERT</code>, <code>_LP64</code>, <code>INCLUDE_SERIALGC</code>, <code>COMPILER1</code>, etc.</p></li>
+<li><p>For build features such as <code>PRODUCT</code>, use <code>#ifdef PRODUCT</code> for multiple-line inclusions or exclusions.</p></li>
+<li><p>For short inclusions or exclusions based on build features, use macros like <code>PRODUCT_ONLY</code> and <code>NOT_PRODUCT</code>. But avoid using them with multiple-line arguments, since debuggers do not handle that well.</p></li>
+<li><p>Use <code>CATCH</code>, <code>THROW</code>, etc. for HotSpot-specific exception processing.</p></li>
+</ul>
+<h3 id="whitespace">Whitespace</h3>
+<ul>
+<li><p>In general, don't change whitespace unless it improves readability or consistency. Gratuitous whitespace changes will make integrations and backports more difficult.</p></li>
+<li><p>Use One-True-Brace-Style. The opening brace for a function or class is normally at the end of the line; it is sometimes moved to the beginning of the next line for emphasis. Substatements are enclosed in braces, even if there is only a single statement. Extremely simple one-line statements may drop braces around a substatement.</p></li>
+<li><p>Indentation levels are two columns.</p></li>
+<li><p>There is no hard line length limit. That said, bear in mind that excessively long lines can cause difficulties. Some people like to have multiple side-by-side windows in their editors, and long lines may force them to choose among unpleasant options. They can use wide windows, reducing the number that can fit across the screen, and wasting a lot of screen real estate because most lines are not that long. Alternatively, they can have more windows across the screen, with long lines wrapping (or worse, requiring scrolling to see in their entirety), which is harder to read. Similar issues exist for side-by-side code reviews.</p></li>
+<li><p>Tabs are not allowed in code. Set your editor accordingly.<br> (Emacs: <code>(setq-default indent-tabs-mode nil)</code>.)</p></li>
+<li><p>Use good taste to break lines and align corresponding tokens on adjacent lines.</p></li>
+<li><p>Use spaces around operators, especially comparisons and assignments. (Relaxable for boolean expressions and high-precedence operators in classic math-style formulas.)</p></li>
+<li><p>Put spaces on both sides of control flow keywords <code>if</code>, <code>else</code>, <code>for</code>, <code>switch</code>, etc. Don't add spaces around the associated <em>control</em> expressions. Examples:</p>
+<pre><code>while (test_foo(args...)) {   // Yes
+while(test_foo(args...)) {    // No, missing space after while
+while ( test_foo(args...) ) { // No, excess spaces around control</code></pre></li>
+<li><p>Use extra parentheses in expressions whenever operator precedence seems doubtful. Always use parentheses in shift/mask expressions (<code>&lt;&lt;</code>, <code>&amp;</code>, <code>|</code>). Don't add whitespace immediately inside parentheses.</p></li>
+<li><p>Use more spaces and blank lines between larger constructs, such as classes or function definitions.</p></li>
+<li><p>If the surrounding code has any sort of vertical organization, adjust new lines horizontally to be consistent with that organization. (E.g., trailing backslashes on long macro definitions often align.)</p></li>
+</ul>
+<h3 id="miscellaneous">Miscellaneous</h3>
+<ul>
+<li><p>Use the <a href="https://en.cppreference.com/w/cpp/language/raii" title="Resource Acquisition Is Initialization">Resource Acquisition Is Initialization</a> (RAII) design pattern to manage bracketed critical sections. See class <code>ResourceMark</code> for an example.</p></li>
+<li>Avoid implicit conversions to <code>bool</code>.
+<ul>
+<li>Use <code>bool</code> for boolean values.</li>
+<li>Do not use ints or pointers as (implicit) booleans with <code>&amp;&amp;</code>, <code>||</code>, <code>if</code>, <code>while</code>. Instead, compare explicitly, i.e. <code>if (x != 0)</code> or <code>if (ptr != nullptr)</code>, etc.</li>
+<li>Do not use declarations in <em>condition</em> forms, i.e. don't use <code>if (T v = value) { ... }</code>.</li>
+</ul></li>
+<li><p>Use functions from globalDefinitions.hpp and related files when performing bitwise operations on integers. Do not code directly as C operators, unless they are extremely simple. (Examples: <code>align_up</code>, <code>is_power_of_2</code>, <code>exact_log2</code>.)</p></li>
+<li><p>Use arrays with abstractions supporting range checks.</p></li>
+<li><p>Always enumerate all cases in a switch statement or provide a default case. It is ok to have an empty default with comment.</p></li>
+</ul>
+<h2 id="use-of-c-features">Use of C++ Features</h2>
+<p>HotSpot was originally written in a subset of the C++98/03 language. More recently, support for C++14 is provided, though again, HotSpot only uses a subset. (Backports to JDK versions lacking support for more recent Standards must of course stick with the original C++98/03 subset.)</p>
+<p>This section describes that subset. Features from the C++98/03 language may be used unless explicitly excluded here. Features from C++11 and C++14 may be explicitly permitted or explicitly excluded, and discussed accordingly here. There is a third category, undecided features, about which HotSpot developers have not yet reached a consensus, or perhaps have not discussed at all. Use of these features is also excluded.</p>
+<p>(The use of some features may not be immediately obvious and may slip in anyway, since the compiler will accept them. The code review process is the main defense against this.)</p>
+<p>Some features are discussed in their own subsection, typically to provide more extensive discussion or rationale for limitations. Features that don't have their own subsection are listed in omnibus feature sections for permitted, excluded, and undecided features.</p>
+<p>Lists of new features for C++11 and C++14, along with links to their descriptions, can be found in the online documentation for some of the compilers and libraries. The C++14 Standard is the definitive description.</p>
+<ul>
+<li><a href="https://gcc.gnu.org/projects/cxx-status.html">C++ Standards Support in GCC</a></li>
+<li><a href="https://clang.llvm.org/cxx_status.html">C++ Support in Clang</a></li>
+<li><a href="https://docs.microsoft.com/en-us/cpp/visual-cpp-language-conformance">Visual C++ Language Conformance</a></li>
+<li><a href="https://gcc.gnu.org/onlinedocs/libstdc++/manual/status.html">libstdc++ Status</a></li>
+<li><a href="https://libcxx.llvm.org/cxx1y_status.html">libc++ Status</a></li>
+</ul>
+<p>As a rule of thumb, permitting features which simplify writing code and, especially, reading code, is encouraged.</p>
+<p>Similar discussions for some other projects:</p>
+<ul>
+<li><p><a href="https://google.github.io/styleguide/cppguide.html">Google C++ Style Guide</a> — Currently (2020) targeting C++17.</p></li>
+<li><p><a href="https://chromium-cpp.appspot.com">C++11 and C++14 use in Chromium</a> — Categorizes features as allowed, banned, or to be discussed.</p></li>
+<li><p><a href="https://llvm.org/docs/CodingStandards.html">llvm Coding Standards</a> — Currently (2020) targeting C++14.</p></li>
+<li><p><a href="https://firefox-source-docs.mozilla.org/code-quality/coding-style/using_cxx_in_firefox_code.html">Using C++ in Mozilla code</a> — C++17 support is required for recent versions (2020).</p></li>
+</ul>
+<h3 id="error-handling">Error Handling</h3>
+<p>Do not use exceptions. Exceptions are disabled by the build configuration for some platforms.</p>
+<p>Rationale: There is significant concern over the performance cost of exceptions and their usage model and implications for maintainable code. That's not just a matter of history that has been fixed; there remain questions and problems even today (2019). See, for example, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0709r0.pdf">Zero cost deterministic exceptions</a>. Because of this, HotSpot has always used a build configuration that disables exceptions where that is available. As a result, HotSpot code uses error handling mechanisms such as two-phase construction, factory functions, returning error codes, and immediate termination. Even if the cost of exceptions were not a concern, the existing body of code was not written with exception safety in mind. Making HotSpot exception safe would be a very large undertaking.</p>
+<p>In addition to the usual alternatives to exceptions, HotSpot provides its own exception mechanism. This is based on a set of macros defined in utilities/exceptions.hpp.</p>
+<h3 id="rtti-runtime-type-information">RTTI (Runtime Type Information)</h3>
+<p>Do not use <a href="https://en.wikipedia.org/wiki/Run-time_type_information" title="Runtime Type Information">Runtime Type Information</a> (RTTI). <a href="https://en.wikipedia.org/wiki/Run-time_type_information" title="Runtime Type Information">RTTI</a> is disabled by the build configuration for some platforms. Among other things, this means <code>dynamic_cast</code> cannot be used.</p>
+<p>Rationale: Other than to implement exceptions (which HotSpot doesn't use), most potential uses of <a href="https://en.wikipedia.org/wiki/Run-time_type_information" title="Runtime Type Information">RTTI</a> are better done via virtual functions. Some of the remainder can be replaced by bespoke mechanisms. The cost of the additional runtime data structures needed to support <a href="https://en.wikipedia.org/wiki/Run-time_type_information" title="Runtime Type Information">RTTI</a> are deemed not worthwhile, given the alternatives.</p>
+<h3 id="memory-allocation">Memory Allocation</h3>
+<p>Do not use the standard global allocation and deallocation functions (operator new and related functions). Use of these functions by HotSpot code is disabled for some platforms.</p>
+<p>Rationale: HotSpot often uses &quot;resource&quot; or &quot;arena&quot; allocation. Even where heap allocation is used, the standard global functions are avoided in favor of wrappers around malloc and free that support the VM's Native Memory Tracking (NMT) feature.</p>
+<p>Native memory allocation failures are often treated as non-recoverable. The place where &quot;out of memory&quot; is (first) detected may be an innocent bystander, unrelated to the actual culprit.</p>
+<h3 id="class-inheritance">Class Inheritance</h3>
+<p>Use public single inheritance.</p>
+<p>Prefer composition rather than non-public inheritance.</p>
+<p>Restrict inheritance to the &quot;is-a&quot; case; use composition rather than non-is-a related inheritance.</p>
+<p>Avoid multiple inheritance. Never use virtual inheritance.</p>
+<h3 id="namespaces">Namespaces</h3>
+<p>Avoid using namespaces. HotSpot code normally uses &quot;all static&quot; classes rather than namespaces for grouping. An &quot;all static&quot; class is not instantiable, has only static members, and is normally derived (possibly indirectly) from the helper class <code>AllStatic</code>.</p>
+<p>Benefits of using such classes include:</p>
+<ul>
+<li><p>Provides access control for members, which is unavailable with namespaces.</p></li>
+<li><p>Avoids <a href="https://en.cppreference.com/w/cpp/language/adl" title="Argument Dependent Lookup">Argument Dependent Lookup</a> (ADL).</p></li>
+<li><p>Closed for additional members. Namespaces allow names to be added in multiple contexts, making it harder to see the complete API.</p></li>
+</ul>
+<p>Namespaces should be used only in cases where one of those &quot;benefits&quot; is actually a hindrance.</p>
+<p>In particular, don't use anonymous namespaces. They seem like they should be useful, and indeed have some real benefits for naming and generated code size on some platforms. Unfortunately, debuggers don't seem to like them at all.</p>
+<p><a href="https://groups.google.com/forum/#!topic/mozilla.dev.platform/KsaG3lEEaRM" class="uri">https://groups.google.com/forum/#!topic/mozilla.dev.platform/KsaG3lEEaRM</a><br> Suggests Visual Studio debugger might not be able to refer to anonymous namespace symbols, so can't set breakpoints in them. Though the discussion seems to go back and forth on that.</p>
+<p><a href="https://firefox-source-docs.mozilla.org/code-quality/coding-style/coding_style_cpp.html" class="uri">https://firefox-source-docs.mozilla.org/code-quality/coding-style/coding_style_cpp.html</a><br> Search for &quot;Anonymous namespaces&quot; Suggests preferring &quot;static&quot; to anonymous namespaces where applicable, because of poor debugger support for anonymous namespaces.</p>
+<p><a href="https://sourceware.org/bugzilla/show_bug.cgi?id=16874" class="uri">https://sourceware.org/bugzilla/show_bug.cgi?id=16874</a><br> Bug for similar gdb problems.</p>
+<h3 id="c-standard-library">C++ Standard Library</h3>
+<p>Avoid using the C++ Standard Library.</p>
+<p>Historically, HotSpot has mostly avoided use of the Standard Library.</p>
+<p>(It used to be impossible to use most of it in shared code, because the build configuration for Solaris with Solaris Studio made all but a couple of pieces inaccessible. Support for header-only parts was added in mid-2017. Support for Solaris was removed in 2020.)</p>
+<p>Some reasons for this include</p>
+<ul>
+<li><p>Exceptions. Perhaps the largest core issue with adopting the use of Standard Library facilities is exceptions. HotSpot does not use exceptions and, for platforms which allow doing so, builds with them turned off. Many Standard Library facilities implicitly or explicitly use exceptions.</p></li>
+<li><p><code>assert</code>. An issue that is quickly encountered is the <code>assert</code> macro name collision (<a href="https://bugs.openjdk.java.net/browse/JDK-8007770">JDK-8007770</a>). Some mechanism for addressing this would be needed before much of the Standard Library could be used. (Not all Standard Library implementations use assert in header files, but some do.)</p></li>
+<li><p>Memory allocation. HotSpot requires explicit control over where allocations occur. The C++98/03 <code>std::allocator</code> class is too limited to support our usage. (Changes in more recent Standards may remove this limitation.)</p></li>
+<li><p>Implementation vagaries. Bugs, or simply different implementation choices, can lead to different behaviors among the various Standard Libraries we need to deal with.</p></li>
+<li><p>Inconsistent naming conventions. HotSpot and the C++ Standard use different naming conventions. The coexistence of those different conventions might appear jarring and reduce readability.</p></li>
+</ul>
+<p>There are a few exceptions to this rule.</p>
+<ul>
+<li><code>#include &lt;new&gt;</code> to use placement <code>new</code>, <code>std::nothrow</code>, and <code>std::nothrow_t</code>.</li>
+<li><code>#include &lt;limits&gt;</code> to use <code>std::numeric_limits</code>.</li>
+<li><code>#include &lt;type_traits&gt;</code>.</li>
+<li><code>#include &lt;cstddef&gt;</code> to use <code>std::nullptr_t</code>.</li>
+</ul>
+<p>TODO: Rather than directly #including (permitted) Standard Library headers, use a convention of #including wrapper headers (in some location like hotspot/shared/stdcpp). This provides a single place for dealing with issues we might have for any given header, esp. platform-specific issues.</p>
+<h3 id="type-deduction">Type Deduction</h3>
+<p>Use type deduction only if it makes the code clearer or safer. Do not use it merely to avoid the inconvenience of writing an explicit type, unless that type is itself difficult to write. An example of the latter is a function template return type that depends on template parameters in a non-trivial way.</p>
+<p>There are several contexts where types are deduced.</p>
+<ul>
+<li><p>Function argument deduction. This is always permitted, and indeed encouraged. It is nearly always better to allow the type of a function template argument to be deduced rather than explicitly specified.</p></li>
+<li><p><code>auto</code> variable declarations (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1984.pdf">n1984</a>)<br> For local variables, this can be used to make the code clearer by eliminating type information that is obvious or irrelevant. Excessive use can make code much harder to understand.</p></li>
+<li><p>Function return type deduction (<a href="https://isocpp.org/files/papers/N3638.html">n3638</a>)<br> Only use if the function body has a very small number of <code>return</code> statements, and generally relatively little other code.</p></li>
+<li><p>Generic lambdas. Lambdas are not (yet) permitted.</p></li>
+<li><p>Lambda init captures. Lambdas are not (yet) permitted.</p></li>
+</ul>
+<h3 id="expression-sfinae">Expression SFINAE</h3>
+<p><a href="https://en.cppreference.com/w/cpp/language/sfinae" title="Substitution Failure Is Not An Error">Substitution Failure Is Not An Error</a> (SFINAE) is a template metaprogramming technique that makes use of template parameter substitution failures to make compile-time decisions.</p>
+<p>C++11 relaxed the rules for what constitutes a hard-error when attempting to substitute template parameters with template arguments, making most deduction errors be substitution errors; see (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2634.html">n2634</a>). This makes <a href="https://en.cppreference.com/w/cpp/language/sfinae" title="Substitution Failure Is Not An Error">SFINAE</a> more powerful and easier to use. However, the implementation complexity for this change is significant, and this seems to be a place where obscure corner-case bugs in various compilers can be found. So while this feature can (and indeed should) be used (and would be difficult to avoid), caution should be used when pushing to extremes.</p>
+<p>Here are a few closely related example bugs:<br> <a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95468" class="uri">https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95468</a><br> <a href="https://developercommunity.visualstudio.com/content/problem/396562/sizeof-deduced-type-is-sometimes-not-a-constant-ex.html" class="uri">https://developercommunity.visualstudio.com/content/problem/396562/sizeof-deduced-type-is-sometimes-not-a-constant-ex.html</a></p>
+<h3 id="enum">enum</h3>
+<p>Where appropriate, <em>scoped-enums</em> should be used. (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2347.pdf">n2347</a>)</p>
+<p>Use of <em>unscoped-enums</em> is permitted, though ordinary constants may be preferable when the automatic initializer feature isn't used.</p>
+<p>The underlying type (the <em>enum-base</em>) of an unscoped enum type should always be specified explicitly. When unspecified, the underlying type is dependent on the range of the enumerator values and the platform.</p>
+<p>The underlying type of a <em>scoped-enum</em> should also be specified explicitly if conversions may be applied to values of that type.</p>
+<p>Due to bugs in certain (very old) compilers, there is widespread use of enums and avoidance of in-class initialization of static integral constant members. Compilers having such bugs are no longer supported. Except where an enum is semantically appropriate, new code should use integral constants.</p>
+<h3 id="thread_local">thread_local</h3>
+<p>Do not use <code>thread_local</code> (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2659.htm">n2659</a>); instead, use the HotSpot macro <code>THREAD_LOCAL</code>. The initializer must be a constant expression.</p>
+<p>As was discussed in the review for <a href="https://mail.openjdk.java.net/pipermail/hotspot-dev/2019-September/039487.html">JDK-8230877</a>, <code>thread_local</code> allows dynamic initialization and destruction semantics. However, that support requires a run-time penalty for references to non-function-local <code>thread_local</code> variables defined in a different translation unit, even if they don't need dynamic initialization. Dynamic initialization and destruction of namespace-scoped thread local variables also has the same ordering problems as for ordinary namespace-scoped variables.</p>
+<h3 id="nullptr">nullptr</h3>
+<p>Prefer <code>nullptr</code> (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2431.pdf">n2431</a>) to <code>NULL</code>. Don't use (constexpr or literal) 0 for pointers.</p>
+<p>For historical reasons there are widespread uses of both <code>NULL</code> and of integer 0 as a pointer value.</p>
+<h3 id="atomic">&lt;atomic&gt;</h3>
+<p>Do not use facilities provided by the <code>&lt;atomic&gt;</code> header (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2427.html">n2427</a>), (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2752.htm">n2752</a>); instead, use the HotSpot <code>Atomic</code> class and related facilities.</p>
+<p>Atomic operations in HotSpot code must have semantics which are consistent with those provided by the JDK's compilers for Java. There are platform-specific implementation choices that a C++ compiler might make or change that are outside the scope of the C++ Standard, and might differ from what the Java compilers implement.</p>
+<p>In addition, HotSpot <code>Atomic</code> has a concept of &quot;conservative&quot; memory ordering, which may differ from (may be stronger than) sequentially consistent. There are algorithms in HotSpot that are believed to rely on that ordering.</p>
+<h3 id="uniform-initialization">Uniform Initialization</h3>
+<p>The use of <em>uniform initialization</em> (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2672.htm">n2672</a>), also known as <em>brace initialization</em>, is permitted.</p>
+<p>Some relevant sections from cppreference.com:</p>
+<ul>
+<li><a href="https://en.cppreference.com/w/cpp/language/initialization">initialization</a></li>
+<li><a href="https://en.cppreference.com/w/cpp/language/value_initialization">value initialization</a></li>
+<li><a href="https://en.cppreference.com/w/cpp/language/direct_initialization">direct initialization</a></li>
+<li><a href="https://en.cppreference.com/w/cpp/language/list_initialization">list initialization</a></li>
+<li><a href="https://en.cppreference.com/w/cpp/language/aggregate_initialization">aggregate initialization</a></li>
+</ul>
+<p>Although related, the use of <code>std::initializer_list</code> remains forbidden, as part of the avoidance of the C++ Standard Library in HotSpot code.</p>
+<h3 id="additional-permitted-features">Additional Permitted Features</h3>
+<ul>
+<li><p><code>constexpr</code> (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2235.pdf">n2235</a>) (<a href="https://isocpp.org/files/papers/N3652.html">n3652</a>)</p></li>
+<li><p>Sized deallocation (<a href="https://isocpp.org/files/papers/n3778.html">n3778</a>)</p></li>
+<li><p>Variadic templates (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2242.pdf">n2242</a>) (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2555.pdf">n2555</a>)</p></li>
+<li><p>Static assertions (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1720.html">n1720</a>)</p></li>
+<li><p><code>decltype</code> (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2343.pdf">n2343</a>) (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3276.pdf">n3276</a>)</p></li>
+<li><p>Right angle brackets (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1757.html">n1757</a>)</p></li>
+<li><p>Default template arguments for function templates (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#226">CWG D226</a>)</p></li>
+<li><p>Template aliases (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2258.pdf">n2258</a>)</p></li>
+<li><p>Delegating constructors (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1986.pdf">n1986</a>)</p></li>
+<li><p>Explicit conversion operators (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2437.pdf">n2437</a>)</p></li>
+<li><p>Standard Layout Types (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2342.htm">n2342</a>)</p></li>
+<li><p>Defaulted and deleted functions (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2346.htm">n2346</a>)</p></li>
+<li><p>Dynamic initialization and destruction with concurrency (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2660.htm">n2660</a>)</p></li>
+<li><p><code>final</code> virtual specifiers for classes and virtual functions (<a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2009/n2928.htm">n2928</a>), (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3206.htm">n3206</a>), (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3272.htm">n3272</a>)</p></li>
+<li><p><code>override</code> virtual specifiers for virtual functions (<a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2009/n2928.htm">n2928</a>), (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3206.htm">n3206</a>), (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3272.htm">n3272</a>)</p></li>
+<li><p>Local and unnamed types as template parameters (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2657.htm">n2657</a>)</p></li>
+<li><p>Range-based <code>for</code> loops (<a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2009/n2930.html">n2930</a>) (<a href="https://en.cppreference.com/w/cpp/language/range-for">range-for</a>)</p></li>
+</ul>
+<h3 id="excluded-features">Excluded Features</h3>
+<ul>
+<li>New string and character literals
+<ul>
+<li>New character types (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2249.html">n2249</a>)</li>
+<li>Unicode string literals (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2442.htm">n2442</a>)</li>
+<li>Raw string literals (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2442.htm">n2442</a>)</li>
+<li>Universal character name literals (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2170.html">n2170</a>)</li>
+</ul>
+<p>HotSpot doesn't need any of the new character and string literal types.</p></li>
+<li><p>User-defined literals (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2765.pdf">n2765</a>) — User-defined literals should not be added casually, but only through a proposal to add a specific UDL.</p></li>
+<li><p>Inline namespaces (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2535.htm">n2535</a>) — HotSpot makes very limited use of namespaces.</p></li>
+<li><p><code>using namespace</code> directives. In particular, don't use <code>using namespace std;</code> to avoid needing to qualify Standard Library names.</p></li>
+<li><p>Propagating exceptions (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2179.html">n2179</a>) — HotSpot does not permit the use of exceptions, so this feature isn't useful.</p></li>
+<li><p>Avoid namespace-scoped variables with non-constexpr initialization. In particular, avoid variables with types requiring non-trivial initialization or destruction. Initialization order problems can be difficult to deal with and lead to surprises, as can destruction ordering. HotSpot doesn't generally try to cleanup on exit, and running destructors at exit can also lead to problems.</p></li>
+<li><p><code>[[deprecated]]</code> attribute (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3760.html">n3760</a>) — Not relevant in HotSpot code.</p></li>
+<li><p>Avoid most operator overloading, preferring named functions. When operator overloading is used, ensure the semantics conform to the normal expected behavior of the operation.</p></li>
+<li><p>Avoid most implicit conversion constructors and (implicit or explicit) conversion operators. (Note that conversion to <code>bool</code> isn't needed in HotSpot code because of the &quot;no implicit boolean&quot; guideline.)</p></li>
+<li><p>Avoid covariant return types.</p></li>
+<li><p>Avoid <code>goto</code> statements.</p></li>
+</ul>
+<h3 id="undecided-features">Undecided Features</h3>
+<p>This list is incomplete; it serves to explicitly call out some features that have not yet been discussed.</p>
+<ul>
+<li><p>Trailing return type syntax for functions (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2541.htm">n2541</a>)</p></li>
+<li><p>Variable templates (<a href="https://isocpp.org/files/papers/N3651.pdf">n3651</a>)</p></li>
+<li><p>Member initializers and aggregates (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3653.html">n3653</a>)</p></li>
+<li><p><code>[[noreturn]]</code> attribute (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2761.pdf">n2761</a>)</p></li>
+<li><p>Rvalue references and move semantics</p></li>
+<li><p>Lambdas</p></li>
+</ul>
+</body>
+</html>

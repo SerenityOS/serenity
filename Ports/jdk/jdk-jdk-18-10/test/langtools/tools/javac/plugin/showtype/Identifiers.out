@@ -1,0 +1,21 @@
+Identifiers.java:3: Note: type is ()void
+public class Identifiers {
+       ^
+Identifiers.java:4: Note: type is double
+    public double E = Math.E;
+                          ^
+Identifiers.java:4: Note: type is java.lang.Math
+    public double E = Math.E;
+                      ^
+Identifiers.java:5: Note: type is double
+    public double PI = Math.PI;
+                           ^
+Identifiers.java:5: Note: type is java.lang.Math
+    public double PI = Math.PI;
+                       ^
+Identifiers.java:6: Note: type is double
+    public double PIE = PI + E;
+                        ^
+Identifiers.java:6: Note: type is double
+    public double PIE = PI + E;
+                             ^

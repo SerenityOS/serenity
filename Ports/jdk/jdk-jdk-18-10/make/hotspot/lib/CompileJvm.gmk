@@ -1,0 +1,267 @@
+#
+# Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# Include support files that will setup compiler flags due to the selected
+# jvm feature set, specific file overrides, and general flags.
+include lib/JvmFeatures.gmk
+include lib/JvmOverrideFiles.gmk
+include lib/JvmFlags.gmk
+
+################################################################################
+# Setup compilation of the main Hotspot native library (libjvm).
+
+JVM_OUTPUTDIR := $(JVM_VARIANT_OUTPUTDIR)/libjvm
+JVM_MAPFILE := $(JVM_OUTPUTDIR)/mapfile
+
+################################################################################
+# Platform independent setup
+
+JVM_LDFLAGS += \
+    $(SHARED_LIBRARY_FLAGS) \
+    $(JVM_LDFLAGS_FEATURES) \
+    $(EXTRA_LDFLAGS) \
+    #
+
+JVM_ASFLAGS += $(EXTRA_ASFLAGS)
+
+JVM_LIBS += \
+    $(JVM_LIBS_FEATURES) \
+    #
+
+# These files and directories are always excluded
+JVM_EXCLUDE_FILES += args.cc
+JVM_EXCLUDES += adlc
+
+# Needed by abstract_vm_version.cpp
+ifeq ($(call isTargetCpu, x86_64), true)
+  OPENJDK_TARGET_CPU_VM_VERSION := amd64
+else
+  OPENJDK_TARGET_CPU_VM_VERSION := $(OPENJDK_TARGET_CPU)
+endif
+
+CFLAGS_VM_VERSION := \
+    $(VERSION_CFLAGS) \
+    -DHOTSPOT_VERSION_STRING='"$(VERSION_STRING)"' \
+    -DDEBUG_LEVEL='"$(DEBUG_LEVEL)"' \
+    -DHOTSPOT_BUILD_USER='"$(USERNAME)"' \
+    -DHOTSPOT_VM_DISTRO='"$(HOTSPOT_VM_DISTRO)"' \
+    -DCPU='"$(OPENJDK_TARGET_CPU_VM_VERSION)"' \
+    #
+
+ifneq ($(HOTSPOT_BUILD_TIME), )
+  CFLAGS_VM_VERSION += -DHOTSPOT_BUILD_TIME='"$(HOTSPOT_BUILD_TIME)"'
+endif
+
+################################################################################
+# Disabled warnings
+
+DISABLED_WARNINGS_gcc := parentheses comment unknown-pragmas address \
+    delete-non-virtual-dtor char-subscripts array-bounds int-in-bool-context \
+    ignored-qualifiers  missing-field-initializers implicit-fallthrough \
+    empty-body strict-overflow sequence-point maybe-uninitialized \
+    misleading-indentation cast-function-type shift-negative-value
+
+ifeq ($(call check-jvm-feature, zero), true)
+  DISABLED_WARNINGS_gcc += return-type switch clobbered
+endif
+
+DISABLED_WARNINGS_clang := tautological-compare \
+    undefined-var-template sometimes-uninitialized unknown-pragmas \
+    delete-non-virtual-dtor missing-braces char-subscripts \
+    ignored-qualifiers missing-field-initializers mismatched-tags \
+    shift-negative-value misleading-indentation
+
+DISABLED_WARNINGS_xlc := tautological-compare shift-negative-value
+
+DISABLED_WARNINGS_microsoft := 4100 4127 4146 4201 4244 4291 4351 \
+    4511 4512 4514 4624 4996
+
+################################################################################
+# Platform specific setup
+
+# ARM source selection
+
+ifeq ($(call And, $(call isTargetOs, linux) $(call isTargetCpu, arm)), true)
+  JVM_EXCLUDE_PATTERNS += arm_64
+
+else ifeq ($(call And, $(call isTargetOs, linux) $(call isTargetCpu, aarch64)), true)
+  # For 64-bit arm builds, we use the 64 bit hotspot/src/cpu/arm
+  # hotspot sources if HOTSPOT_TARGET_CPU_ARCH is set to arm.
+  # Exclude the aarch64 and 32 bit arm files for this build.
+  ifeq ($(HOTSPOT_TARGET_CPU_ARCH), arm)
+    JVM_EXCLUDE_PATTERNS += arm_32 aarch64
+  endif
+endif
+
+ifeq ($(call isTargetOs, linux macosx windows), true)
+  JVM_PRECOMPILED_HEADER := $(TOPDIR)/src/hotspot/share/precompiled/precompiled.hpp
+endif
+
+ifeq ($(call isTargetCpu, x86), true)
+  JVM_EXCLUDE_PATTERNS += x86_64
+else ifeq ($(call isTargetCpu, x86_64), true)
+  JVM_EXCLUDE_PATTERNS += x86_32
+endif
+
+JVM_OPTIMIZATION ?= HIGHEST_JVM
+
+# Need to set JVM_STRIPFLAGS to the default value from SPEC since the STRIPFLAGS
+# parameter to SetupNativeCompilation allows an empty value to override the
+# default.
+JVM_STRIPFLAGS ?= $(STRIPFLAGS)
+
+# This source set is reused so save in cache.
+$(call FillFindCache, $(JVM_SRC_DIRS))
+
+################################################################################
+# Now set up the actual compilation of the main hotspot native library
+
+$(eval $(call SetupJdkLibrary, BUILD_LIBJVM, \
+    NAME := jvm, \
+    TOOLCHAIN := TOOLCHAIN_LINK_CXX, \
+    OUTPUT_DIR := $(JVM_LIB_OUTPUTDIR), \
+    SRC := $(JVM_SRC_DIRS), \
+    EXCLUDES := $(JVM_EXCLUDES), \
+    EXCLUDE_FILES := $(JVM_EXCLUDE_FILES), \
+    EXCLUDE_PATTERNS := $(JVM_EXCLUDE_PATTERNS), \
+    CFLAGS := $(JVM_CFLAGS), \
+    abstract_vm_version.cpp_CXXFLAGS := $(CFLAGS_VM_VERSION), \
+    arguments.cpp_CXXFLAGS := $(CFLAGS_VM_VERSION), \
+    DISABLED_WARNINGS_gcc := $(DISABLED_WARNINGS_gcc), \
+    DISABLED_WARNINGS_clang := $(DISABLED_WARNINGS_clang), \
+    DISABLED_WARNINGS_xlc := $(DISABLED_WARNINGS_xlc), \
+    DISABLED_WARNINGS_microsoft := $(DISABLED_WARNINGS_microsoft), \
+    ASFLAGS := $(JVM_ASFLAGS), \
+    LDFLAGS := $(JVM_LDFLAGS), \
+    LIBS := $(JVM_LIBS), \
+    OPTIMIZATION := $(JVM_OPTIMIZATION), \
+    OBJECT_DIR := $(JVM_OUTPUTDIR)/objs, \
+    MAPFILE := $(JVM_MAPFILE), \
+    USE_MAPFILE_FOR_SYMBOLS := true, \
+    STRIPFLAGS := $(JVM_STRIPFLAGS), \
+    EMBED_MANIFEST := true, \
+    RC_FILEDESC := $(HOTSPOT_VM_DISTRO) $(OPENJDK_TARGET_CPU_BITS)-Bit $(JVM_VARIANT) VM, \
+    PRECOMPILED_HEADER := $(JVM_PRECOMPILED_HEADER), \
+    PRECOMPILED_HEADER_EXCLUDE := $(JVM_PRECOMPILED_HEADER_EXCLUDE), \
+))
+
+# Always recompile abstract_vm_version.cpp if libjvm needs to be relinked. This ensures
+# that the internal vm version is updated as it relies on __DATE__ and __TIME__
+# macros.
+ABSTRACT_VM_VERSION_OBJ := $(JVM_OUTPUTDIR)/objs/abstract_vm_version$(OBJ_SUFFIX)
+$(ABSTRACT_VM_VERSION_OBJ): $(filter-out $(ABSTRACT_VM_VERSION_OBJ) $(JVM_MAPFILE), \
+    $(BUILD_LIBJVM_TARGET_DEPS))
+
+ifneq ($(GENERATE_COMPILE_COMMANDS_ONLY), true)
+  ifeq ($(call isTargetOs, windows), true)
+    # It doesn't matter which jvm.lib file gets exported, but we need
+    # to pick just one.
+    ifeq ($(JVM_VARIANT), $(JVM_VARIANT_MAIN))
+      $(eval $(call SetupCopyFiles, COPY_JVM_LIB, \
+          DEST := $(LIB_OUTPUTDIR), \
+          FILES :=$(BUILD_LIBJVM_IMPORT_LIBRARY), \
+      ))
+      TARGETS += $(COPY_JVM_LIB)
+    endif
+  endif
+endif
+
+# AIX warning explanation:
+# 1500-010  : (W) WARNING in ...: Infinite loop.  Program may not stop.
+#             There are several infinite loops in the vm, so better suppress.
+# 1540-0198 : (W) The omitted keyword "private" is assumed for base class "...".
+# 1540-0216 : (W) An expression of type .. cannot be converted to type ..
+#             In hotspot this fires for functionpointer to pointer conversions
+# 1540-1088 : (W) The exception specification is being ignored.
+#             In hotspot this is caused by throw() in declaration of new() in nmethod.hpp.
+# 1540-1090 : (I) The destructor of "..." might not be called.
+# 1540-1639 : (I) The behavior of long type bit fields has changed ...
+
+# Include mapfile generation. It relies on BUILD_LIBJVM_ALL_OBJS which is only
+# defined after the above call to BUILD_LIBJVM. Mapfile will be generated
+# after all object files are built, but before the jvm library is linked.
+include lib/JvmMapfile.gmk
+
+TARGETS += $(BUILD_LIBJVM)
+
+################################################################################
+# Hotspot disallows the use of global operators 'new' and 'delete'. This build
+# time check helps enforce this requirement. If you trigger this check and the
+# reference is not obvious from the source, GNU objdump can be used to help find
+# the reference if compiled with GCC:
+#
+# objdump -lrdSC <path/to/file.o>
+#
+# -C demangle
+# -d disassemble
+# -r print relocation entries, interspersed with the disassembly
+# -S print source code, intermixed with disassembly
+# -l include filenames and line numbers
+#
+# Search the output for the operator(s) of interest, to see where they are
+# referenced.
+#
+# When a reference to the global 'operator delete' is reported, it might be
+# due to a "deleting destructor".  In this case, objdump may show the
+# reference to be associated with but not actually in a destructor.  A
+# deleting destructor is automatically generated for a class whose destructor
+# is virtual.  A deleting destructor requires an accessible 'operator delete'
+# for the associated class.  If the class doesn't provide a more specific
+# declaration (either directly or by inheriting from a class that provides
+# one) then the global definition will be used, triggering this check.
+
+ifneq ($(GENERATE_COMPILE_COMMANDS_ONLY), true)
+  ifneq ($(filter $(TOOLCHAIN_TYPE), gcc clang), )
+
+    DEMANGLED_REGEXP := [^:]operator (new|delete)
+
+    # Running c++filt to find offending symbols in all files is too expensive,
+    # so use mangled names when looking for symbols.
+    # Save the demangling for when something is actually found.
+    MANGLED_SYMS := \
+        _ZdaPv \
+        _ZdlPv \
+        _Znam \
+        _Znwm \
+        #
+    UNDEF_PATTERN := ' U '
+
+    define SetupOperatorNewDeleteCheck
+        $1.op_check: $1
+	  $$(call ExecuteWithLog, $1.op_check, \
+	      $$(NM) $$<  2>&1 | $$(GREP) $$(addprefix -e , $$(MANGLED_SYMS)) | $$(GREP) $$(UNDEF_PATTERN) > $1.op_check || true)
+	  if [ -s $1.op_check ]; then \
+	    $$(ECHO) "$$(notdir $$<): Error: Use of global operators new and delete is not allowed in Hotspot:"; \
+	    $$(NM) $$< | $$(CXXFILT) | $$(EGREP) '$$(DEMANGLED_REGEXP)' | $$(GREP) $$(UNDEF_PATTERN); \
+	    $$(ECHO) "See: $$(TOPDIR)/make/hotspot/lib/CompileJvm.gmk"; \
+	    exit 1; \
+	  fi
+
+      TARGETS += $1.op_check
+    endef
+
+    $(foreach o, $(BUILD_LIBJVM_ALL_OBJS), $(eval $(call SetupOperatorNewDeleteCheck,$o)))
+  endif
+endif

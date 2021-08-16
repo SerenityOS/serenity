@@ -1,0 +1,4 @@
+T6467183a.java:16:26: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), T6467183a<T>.B, T6467183a<T>.A<T>
+- compiler.err.warnings.and.werror
+1 error
+1 warning

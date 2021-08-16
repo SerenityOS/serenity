@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="fr"/>
+		<territory type="MA"/>
+	</identity>
+	<characters>
+		<exemplarCharacters type="numbers">[\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1" draft="contributed">jan.</month>
+							<month type="2" draft="contributed">fév.</month>
+							<month type="3" draft="contributed">mar.</month>
+							<month type="4" draft="contributed">avr.</month>
+							<month type="5" draft="contributed">mai</month>
+							<month type="6" draft="contributed">jui.</month>
+							<month type="7" draft="contributed">juil.</month>
+							<month type="8" draft="contributed">août</month>
+							<month type="9" draft="contributed">sept.</month>
+							<month type="10" draft="contributed">oct.</month>
+							<month type="11" draft="contributed">nov.</month>
+							<month type="12" draft="contributed">déc.</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1" draft="contributed">jan.</month>
+							<month type="2" draft="contributed">fév.</month>
+							<month type="3" draft="contributed">mar.</month>
+							<month type="4" draft="contributed">avr.</month>
+							<month type="5" draft="contributed">mai</month>
+							<month type="6" draft="contributed">jui.</month>
+							<month type="7" draft="contributed">juil.</month>
+							<month type="8" draft="contributed">août</month>
+							<month type="9" draft="contributed">sept.</month>
+							<month type="10" draft="contributed">oct.</month>
+							<month type="11" draft="contributed">nov.</month>
+							<month type="12" draft="contributed">déc.</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am" draft="contributed">a.m.</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">p.m.</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+			</calendar>
+		</calendars>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<group draft="contributed">.</group>
+		</symbols>
+	</numbers>
+</ldml>

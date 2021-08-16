@@ -1,0 +1,2 @@
+Test.java:8:26: compiler.err.proc.messager: compiler.misc.crules.err.var.must.be.final: public static String mutable
+1 error

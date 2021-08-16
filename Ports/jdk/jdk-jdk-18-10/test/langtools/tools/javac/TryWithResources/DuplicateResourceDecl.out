@@ -1,0 +1,2 @@
+DuplicateResourceDecl.java:12:56: compiler.err.already.defined: kindname.variable, c, kindname.method, main(java.lang.String[])
+1 error

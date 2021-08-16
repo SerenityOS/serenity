@@ -1,0 +1,4 @@
+InvalidName.java:18: error: invalid name for anchor: "foo() "
+ * <a id="foo() ">invalid</a>
+      ^
+1 error

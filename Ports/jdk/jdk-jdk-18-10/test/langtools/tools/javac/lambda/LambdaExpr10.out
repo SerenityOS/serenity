@@ -1,0 +1,9 @@
+LambdaExpr10.java:18:28: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: java.lang.Object)
+LambdaExpr10.java:19:32: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: java.lang.Object)
+LambdaExpr10.java:23:40: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: java.lang.Object)
+LambdaExpr10.java:24:46: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: java.lang.Object)
+LambdaExpr10.java:28:29: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: java.lang.Object)
+LambdaExpr10.java:29:33: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: java.lang.Object)
+LambdaExpr10.java:33:35: compiler.err.prob.found.req: (compiler.misc.stat.expr.expected)
+LambdaExpr10.java:34:49: compiler.err.prob.found.req: (compiler.misc.stat.expr.expected)
+8 errors

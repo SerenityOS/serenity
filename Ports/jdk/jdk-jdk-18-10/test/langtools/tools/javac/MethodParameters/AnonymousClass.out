@@ -1,0 +1,80 @@
+static public class AnonymousClass$Sinner -- inner
+AnonymousClass$Sinner.<init>()
+AnonymousClass$Sinner.<init>(arg, barg)
+AnonymousClass$Sinner.m(s/*synthetic*/, ts/*synthetic*/)/*synthetic*/
+AnonymousClass$Sinner.m()/*synthetic*/
+AnonymousClass$Sinner.m(s, ts)
+AnonymousClass$Sinner.m()
+class AnonymousClass$9 -- anon
+AnonymousClass$9.<init>(final this$0/*implicit*/)
+AnonymousClass$9.m()/*synthetic*/
+AnonymousClass$9.m(i/*synthetic*/, ji/*synthetic*/)/*synthetic*/
+AnonymousClass$9.m(i, ji)
+AnonymousClass$9.m()
+class AnonymousClass$Inner -- inner
+AnonymousClass$Inner.<init>(final this$0/*synthetic*/)
+AnonymousClass$Inner.<init>(final this$0/*synthetic*/, arg, barg)
+AnonymousClass$Inner.m(s/*synthetic*/, ts/*synthetic*/)/*synthetic*/
+AnonymousClass$Inner.m()/*synthetic*/
+AnonymousClass$Inner.m(s, ts)
+AnonymousClass$Inner.m()
+class AnonymousClass$3 -- anon
+AnonymousClass$3.<init>(final this$0/*implicit*/, arg, barg)
+AnonymousClass$3.m()/*synthetic*/
+AnonymousClass$3.m(i/*synthetic*/, ji/*synthetic*/)/*synthetic*/
+AnonymousClass$3.m(i, ji)
+AnonymousClass$3.m()
+class AnonymousClass$2 -- anon
+AnonymousClass$2.<init>(final this$0/*implicit*/)
+AnonymousClass$2.m()/*synthetic*/
+AnonymousClass$2.m(i/*synthetic*/, ji/*synthetic*/)/*synthetic*/
+AnonymousClass$2.m(i, ji)
+AnonymousClass$2.m()
+class AnonymousClass -- 
+AnonymousClass.<init>(final a, ba)
+AnonymousClass.foo(final a, ba)
+class AnonymousClass$5 -- anon
+AnonymousClass$5.<init>(final this$0/*implicit*/, arg, barg)
+AnonymousClass$5.m()/*synthetic*/
+AnonymousClass$5.m(i/*synthetic*/, ji/*synthetic*/)/*synthetic*/
+AnonymousClass$5.m(i, ji)
+AnonymousClass$5.m()
+static interface AnonymousClass$I -- inner
+AnonymousClass$I.m()
+AnonymousClass$I.m(x, yx)
+class AnonymousClass$10 -- anon
+AnonymousClass$10.<init>(final this$0/*implicit*/, arg, barg)
+AnonymousClass$10.m()/*synthetic*/
+AnonymousClass$10.m(i/*synthetic*/, ji/*synthetic*/)/*synthetic*/
+AnonymousClass$10.m(i, ji)
+AnonymousClass$10.m()
+class AnonymousClass$8 -- anon
+AnonymousClass$8.<init>(final this$0/*implicit*/, arg, barg)
+AnonymousClass$8.m()/*synthetic*/
+AnonymousClass$8.m(i/*synthetic*/, ji/*synthetic*/)/*synthetic*/
+AnonymousClass$8.m(i, ji)
+AnonymousClass$8.m()
+class AnonymousClass$6 -- anon
+AnonymousClass$6.<init>(final this$0/*implicit*/)
+AnonymousClass$6.m()/*synthetic*/
+AnonymousClass$6.m(i/*synthetic*/, ji/*synthetic*/)/*synthetic*/
+AnonymousClass$6.m(i, ji)
+AnonymousClass$6.m()
+class AnonymousClass$7 -- anon
+AnonymousClass$7.<init>(final this$0/*implicit*/)
+AnonymousClass$7.m()/*synthetic*/
+AnonymousClass$7.m(i/*synthetic*/, ji/*synthetic*/)/*synthetic*/
+AnonymousClass$7.m(i, ji)
+AnonymousClass$7.m()
+class AnonymousClass$4 -- anon
+AnonymousClass$4.<init>(final this$0/*implicit*/)
+AnonymousClass$4.m()/*synthetic*/
+AnonymousClass$4.m(i/*synthetic*/, ji/*synthetic*/)/*synthetic*/
+AnonymousClass$4.m(i, ji)
+AnonymousClass$4.m()
+class AnonymousClass$1 -- anon
+AnonymousClass$1.<init>(final this$0/*implicit*/)
+AnonymousClass$1.m()/*synthetic*/
+AnonymousClass$1.m(i/*synthetic*/, ji/*synthetic*/)/*synthetic*/
+AnonymousClass$1.m(i, ji)
+AnonymousClass$1.m()

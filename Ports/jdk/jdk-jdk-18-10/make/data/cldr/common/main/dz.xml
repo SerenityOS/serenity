@@ -1,0 +1,2705 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="dz"/>
+	</identity>
+	<localeDisplayNames>
+		<localeDisplayPattern>
+			<localePattern>{0}། ({1}།)</localePattern>
+			<localeSeparator>{0}་, {1}</localeSeparator>
+			<localeKeyTypePattern>{0}།: {1}</localeKeyTypePattern>
+		</localeDisplayPattern>
+		<languages>
+			<language type="aa">ཨ་ཕར་ཁ</language>
+			<language type="ab">ཨཱབ་ཁ་ཟི་ཡ་ཁ</language>
+			<language type="af">ཨཕ་རི་ཀཱནས་ཁ</language>
+			<language type="am">ཨམ་ཧ་རིཀ་ཁ</language>
+			<language type="ar">ཨེ་ར་བིཀ་ཁ</language>
+			<language type="as">ཨ་ས་མིས་ཁ</language>
+			<language type="az">ཨ་ཛར་བྷའི་ཇཱན་ཁ</language>
+			<language type="be">བེལ་ཨ་རུས་ཁ</language>
+			<language type="bg">བཱལ་གེ་རི་ཡཱན་ཁ</language>
+			<language type="bn">བངྒ་ལ་ཁ</language>
+			<language type="bo">བོད་ཁ</language>
+			<language type="bs">བྷོས་ནི་ཡཱན་ཁ</language>
+			<language type="ca">ཀེ་ཊ་ལཱན་ཁ</language>
+			<language type="cs">ཅེཀ་ཁ</language>
+			<language type="cy">ཝེལཤ་ཁ</language>
+			<language type="da">ཌེ་ནིཤ་ཁ</language>
+			<language type="dak">ད་ཀོ་ཏ་ཁ</language>
+			<language type="de">ཇཱར་མཱན་ཁ</language>
+			<language type="de_AT">ཨཱོས་ཊྲི་ཡཱན་ཇཱར་མཱན་ཁ</language>
+			<language type="de_CH">སུ་ཡིས་གི་མཐོ་སའི་ཇཱར་མཱན་ཁ</language>
+			<language type="dv">དི་བེ་ཧི་ཁ</language>
+			<language type="dz">རྫོང་ཁ</language>
+			<language type="egy" draft="unconfirmed">ཨི་ཇིཔ་ཤཱན (སྔ་དུས་ཀྱི)</language>
+			<language type="el">གྲིཀ་ཁ</language>
+			<language type="en">ཨིང་ལིཤ་ཁ</language>
+			<language type="en_AU">ཨཱོས་ཊྲེ་ལི་ཡཱན་ཨིང་ལིཤ་ཁ</language>
+			<language type="en_CA">ཀེ་ན་ཌི་ཡཱན་ཨིང་ལིཤ་ཁ</language>
+			<language type="en_GB">བྲི་ཊིཤ་ཨིང་ལིཤ་ཁ</language>
+			<language type="en_US">ཡུ་ཨེས་ཨིང་ལིཤ་ཁ</language>
+			<language type="eo">ཨེས་པ་རཱན་ཏོ་ཁ</language>
+			<language type="es">ཨིས་པེ་ནིཤ་ཁ</language>
+			<language type="es_419">ལེ་ཊིན་ཨ་མེ་རི་ཀཱན་གི་ཨིས་པེ་ནིཤ་ཁ</language>
+			<language type="es_ES">ཡུ་རོབ་ཀྱི་ཨིས་པེ་ནིཤ་ཁ</language>
+			<language type="et">ཨེས་ཊོ་ནི་ཡཱན་ཁ</language>
+			<language type="eu">བཱསཀ་ཁ</language>
+			<language type="fa">པར་ཤི་ཡཱན་ཁ</language>
+			<language type="fi">ཕི་ནིཤ་ཁ</language>
+			<language type="fil">ཕི་ལི་པི་ནོ་ཁ</language>
+			<language type="fj">ཕི་ཇི་ཡཱན་ཁ</language>
+			<language type="fo">ཕཱ་རོ་ཨིས་ཁ</language>
+			<language type="fr">ཕྲནཅ་ཁ</language>
+			<language type="fr_CA">ཀེ་ན་ཌི་ཡཱན་ཕྲནཅ་ཁ</language>
+			<language type="fr_CH">སུ་ཡིས་ཕྲནཅ་ཁ</language>
+			<language type="fy">ནུབ་ཕྼི་སི་ཡན་ཁ</language>
+			<language type="ga">ཨཱའི་རིཤ་ཁ</language>
+			<language type="gl">གལ་ཨིས་ཨི་ཡན་ཁ</language>
+			<language type="gn">གུ་ཝ་ར་ནི་ཁ</language>
+			<language type="grc" draft="unconfirmed">གིརིཀ, སྔ་དུས་ཀྱི (༡༤༥༣)</language>
+			<language type="gsw">སུ་ཡིས་ཇཱར་མཱན་ཁ</language>
+			<language type="gu">གུ་ཇ་ར་ཏི་ཁ</language>
+			<language type="ha">ཧཝ་ས་ཁ</language>
+			<language type="haw">ཧ་ཝ་ཡིའི་ཁ</language>
+			<language type="he">ཧེ་བྲུ་ཁ</language>
+			<language type="hi">ཧིན་དི་ཁ</language>
+			<language type="hr">ཀྲོ་ཨེ་ཤི་ཡཱན་ཁ</language>
+			<language type="ht">ཧེ་ཏི་ཡཱན་ཁ</language>
+			<language type="hu">ཧཱང་གྷ་རི་ཡཱན་ཁ</language>
+			<language type="hy">ཨར་མི་ནི་ཡཱན་ཁ</language>
+			<language type="id">ཨིན་ཌོ་ནེ་ཤི་ཡཱན་ཁ</language>
+			<language type="ig">ཨིག་བོ་ཁ</language>
+			<language type="is">ཨ་ཡིས་ལེན་ཌིཀ་ཁ</language>
+			<language type="it">ཨི་ཊ་ལི་ཡཱན་ཁ</language>
+			<language type="ja">ཇཱ་པཱ་ནིས་ཁ</language>
+			<language type="jv">ཇཱ་བ་ནིས་ཁ</language>
+			<language type="ka">ཇཽ་ཇི་ཡཱན་ཁ</language>
+			<language type="kac">ཀ་ཆིན་ཁ</language>
+			<language type="kfo">ཀོ་རོ་ཁ</language>
+			<language type="kk">ཀ་ཛགས་ཁ</language>
+			<language type="km">ཁེ་མེར་ཁ</language>
+			<language type="kn">ཀ་ན་ཌ་ཁ</language>
+			<language type="ko">ཀོ་རི་ཡཱན་ཁ</language>
+			<language type="ks">ཀཱཤ་མི་རི་ཁ</language>
+			<language type="ku">ཀར་ཌིཤ་ཁ</language>
+			<language type="ky">ཀིར་གིས་ཁ</language>
+			<language type="la">ལེ་ཊིན་ཁ</language>
+			<language type="lb">ལག་ཛམ་བོརྒ་ཁ</language>
+			<language type="lo">ལཱ་ཝོས་ཁ</language>
+			<language type="lt">ལི་ཐུ་ཝེ་ནི་ཡཱན་ཁ</language>
+			<language type="lv">ལཊ་བི་ཡཱན་ཁ</language>
+			<language type="mg">མ་ལ་ག་སི་ཁ</language>
+			<language type="mi">མ་ཨོ་རི་ཁ</language>
+			<language type="mk">མ་སེ་ཌོ་ནི་ཡཱན་ཁ</language>
+			<language type="ml">མ་ལ་ཡ་ལམ་ཁ</language>
+			<language type="mn" draft="unconfirmed">སོག་པོའི་ཁ</language>
+			<language type="mnc">མན་ཇུ་ཁ</language>
+			<language type="mni" draft="unconfirmed">མ་ནི་པུ་རི</language>
+			<language type="mr">མ་ར་ཐི་ཁ</language>
+			<language type="ms">མ་ལེ་ཁ</language>
+			<language type="mt">མཱལ་ཊ་ཁ</language>
+			<language type="my">བར་མིས་ཁ</language>
+			<language type="nb">ནོར་ཝེ་ཇི་ཡཱན་བོཀ་མཱལ་ཁ</language>
+			<language type="ne">ནེ་པཱལི་ཁ</language>
+			<language type="new" draft="unconfirmed">ནི་ཝ་རི</language>
+			<language type="nl">ཌཆ་ཁ</language>
+			<language type="nl_BE">ཕྷེལེ་མིཤ་ཁ</language>
+			<language type="nn">ནོར་ཝེ་ཇི་ཡཱན་ནོརསཀ་ཁ</language>
+			<language type="no">ནོར་ཝི་ཇི་ཡན་ཁ</language>
+			<language type="or">ཨོ་རི་ཡ་ཁ</language>
+			<language type="pa">པཱན་ཇ་བི་ཁ</language>
+			<language type="pi" draft="unconfirmed">པ་ལི</language>
+			<language type="pl">པོ་ལིཤ་ཁ</language>
+			<language type="ps">པཱཤ་ཏོ་ཁ</language>
+			<language type="pt">པོར་ཅུ་གིས་ཁ</language>
+			<language type="pt_BR">བྲ་ཛི་ལི་ཡཱན་པོར་ཅུ་གིས་ཁ</language>
+			<language type="pt_PT">ཨི་བེ་རི་ཡཱན་པོར་ཅུ་གིས་ཁ</language>
+			<language type="qu">ཀྭེ་ཆུ་ཨ་ཁ</language>
+			<language type="rm">རོ་མེ་ནིཤ་ཁ</language>
+			<language type="ro">རོ་མེ་ནི་ཡཱན་ཁ</language>
+			<language type="ru">ཨུ་རུ་སུའི་ཁ</language>
+			<language type="sa">སཾསྐྲྀཏ་ཁ</language>
+			<language type="sd">སིན་དཱི་ཁ</language>
+			<language type="shn">ཤཱན་ཁ</language>
+			<language type="si">སིང་ཧ་ལ་ཁ</language>
+			<language type="sk">སུ་ལོ་བཱཀ་ཁ</language>
+			<language type="sl">སུ་ལོ་བི་ནི་ཡཱན་ཁ</language>
+			<language type="so">སོ་མ་ལི་ཁ</language>
+			<language type="sq">ཨཱལ་བེ་ནི་ཡཱན་ཁ</language>
+			<language type="sr">སཱར་བྷི་ཡཱན་ཁ</language>
+			<language type="su">སཱུན་ད་ནིས་ཁ</language>
+			<language type="sv">སུའི་ཌིཤ་ཁ</language>
+			<language type="sw">སྭཱ་ཧི་ལི་ཁ</language>
+			<language type="ta">ཏ་མིལ་ཁ</language>
+			<language type="te">ཏེ་ལུ་གུ་ཁ</language>
+			<language type="tg">ཏ་ཇིཀ་ཁ</language>
+			<language type="th">ཐཱའི་ཁ</language>
+			<language type="ti">ཏིག་རི་ཉ་ཁ</language>
+			<language type="tk">ཊཱརཀ་མེན་ཁ</language>
+			<language type="to">ཊོང་གྷན་ཁ</language>
+			<language type="tr">ཊཱར་ཀིཤ་ཁ</language>
+			<language type="tt">ཊ་ཊར་ཁ</language>
+			<language type="ug">ཝི་གུར་ཁ</language>
+			<language type="uk">ཡུ་ཀེ་རེ་ནི་ཡཱན་ཁ</language>
+			<language type="und">ཁ་ངོ་མ་ཤེསཔ</language>
+			<language type="ur">ཨུར་དུ་ཁ</language>
+			<language type="uz">ཨུས་བེཀ་ཁ</language>
+			<language type="vi">བེཊ་ནཱ་མིས་ཁ</language>
+			<language type="wo">ཝོ་ལོཕ་ཁ</language>
+			<language type="xh">ཞོ་ས་ཁ</language>
+			<language type="yo">ཡོ་རུ་བ་ཁ</language>
+			<language type="zh">རྒྱ་མི་ཁ</language>
+			<language type="zh_Hans">རྒྱ་མི་ཁ་འཇམ་སངམ</language>
+			<language type="zh_Hant">སྔ་དུས་ཀྱི་རྒྱ་མི་ཁ</language>
+			<language type="zu">ཟུ་ལུ་ཁ</language>
+			<language type="zxx">སྐད་རིག་ནང་དོན་མེདཔ</language>
+		</languages>
+		<scripts>
+			<script type="Arab">ཨེ་ར་བིཀ་ཡིག་གུ</script>
+			<script type="Armn">ཨར་མི་ནི་ཡཱན་ཡིག་གུ</script>
+			<script type="Beng">བངྒ་ལ་ཡིག་གུ</script>
+			<script type="Bopo">བོ་པོ་མོ་ཕཱོ་ཡིག་གུ</script>
+			<script type="Brai">འབུར་ཡིག</script>
+			<script type="Cyrl">སིརིལ་ལིཀ་ཡིག་གུ</script>
+			<script type="Deva">དེ་ཝ་ན་ག་རི་ཡིག་གུ</script>
+			<script type="Ethi">ཨི་ཐི་ཡོ་པིཀ྄་ཡིག་གུ</script>
+			<script type="Geor">ཇཽ་ཇི་ཡཱན་ཡིག་གུ</script>
+			<script type="Grek">གྲིཀ་ཡིག་གུ</script>
+			<script type="Gujr">གུ་ཇ་ར་ཏི་ཡིག་གུ</script>
+			<script type="Guru">གུ་རུ་མུ་ཁ་ཡིག་གུ</script>
+			<script type="Hang">ཧཱན་གུལ་ཡིག་གུ</script>
+			<script type="Hani">རྒྱ་ནག་ཡིག་གུ</script>
+			<script type="Hans">རྒྱ་ཡིག་ ལུགས་གསར་</script>
+			<script type="Hant">ལུགས་རྙིང་ རྒྱ་ཡིག</script>
+			<script type="Hebr">ཧེ་བྲུ་ཡིག་གུ</script>
+			<script type="Hira">ཇ་པཱན་གྱི་ཧི་ར་ག་ན་ཡིག་གུ</script>
+			<script type="Jpan">ཇ་པཱན་ཡིག་གུ</script>
+			<script type="Kana">ཇ་པཱན་གྱི་ཀ་ཏ་ཀ་ན་ཡིག་གུ</script>
+			<script type="Khmr">ཁེ་མེར་ཡིག་གུ</script>
+			<script type="Knda">ཀ་ན་ཌ་ཡིག་གུ</script>
+			<script type="Kore">ཀོ་རི་ཡཱན་ཡིག་གུ</script>
+			<script type="Laoo">ལའོ་ཡིག་གུ</script>
+			<script type="Latn">ལེ་ཊིན་ཡིག་གུ</script>
+			<script type="Limb" draft="unconfirmed">ལིམ་བུ</script>
+			<script type="Mlym">མ་ལ་ཡ་ལམ་ཡིག་གུ</script>
+			<script type="Mong">སོག་པོའི་ཡིག་གུ</script>
+			<script type="Mymr">བར་མིས་ཡིག་གུ</script>
+			<script type="Orya">ཨོ་རི་ཡ་ཡིག་གུ</script>
+			<script type="Sinh">སིན་ཧ་ལ་རིག་གུ</script>
+			<script type="Taml">ཏ་མིལ་ཡིག་གུ</script>
+			<script type="Telu">ཏེ་ལུ་གུ་ཡིག་གུ</script>
+			<script type="Thaa">ཐཱ་ན་ཡིག་གུ</script>
+			<script type="Thai">ཐཱའི་ཡིག་གུ</script>
+			<script type="Tibt">ང་བཅས་ཀྱི་ཡིག་གུ</script>
+			<script type="Zinh" draft="unconfirmed">སྔར་རྒྱུན</script>
+			<script type="Zsym">མཚན་རྟགས</script>
+			<script type="Zxxx">ཡིག་ཐོག་མ་བཀོདཔ</script>
+			<script type="Zyyy">སྤྱིཡིག</script>
+			<script type="Zzzz">ངོ་མ་ཤེས་པའི་ཡི་གུ</script>
+		</scripts>
+		<territories>
+			<territory type="001">འཛམ་གླིང༌</territory>
+			<territory type="002">ཨཕ་རི་ཀ</territory>
+			<territory type="003">བྱང་ཨ་མི་རི་ཀ</territory>
+			<territory type="005">ལྷོ་ཨ་མི་རི་ཀ</territory>
+			<territory type="009">ཨོཤི་ཡཱན་ན</territory>
+			<territory type="011">ནུབ་ཕྱོགས་ཀྱི་ཨཕ་རི་ཀ</territory>
+			<territory type="013">བར་ཕྱོགས་ཨ་མི་རི་ཀ</territory>
+			<territory type="014">ཤར་ཕྱོགས་ཀྱི་ཨཕ་རི་ཀ</territory>
+			<territory type="015">བྱང་ཕྱོགས་ཀྱི་ཨཕ་རི་ཀ</territory>
+			<territory type="017">སྦུག་ཕྱོགས་ཀྱི་ཨཕ་རི་ཀ</territory>
+			<territory type="018">ལྷོའི་ཨཕ་རི་ཀ</territory>
+			<territory type="019">ཨ་མི་རི་ཀ་ཚུ</territory>
+			<territory type="021">བྱང་ཕྱོགས་ཀྱི་ཨ་མི་རི་ཀ</territory>
+			<territory type="029">ཀེ་རི་བི་ཡེན</territory>
+			<territory type="030">ཤར་ཕྱོགས་ཀྱི་ཨེ་ཤི་ཡ</territory>
+			<territory type="034">ལྷོའི་ཨེ་ཤི་ཡ</territory>
+			<territory type="035">ལྷོ་ཤར་ཕྱོགས་ཀྱི་ཨེ་ཤི་ཡ</territory>
+			<territory type="039">ལྷོའི་ཡུ་རོབ</territory>
+			<territory type="053">ཨཱོས་ཊྲེལ་ཨེ་ཤི་ཡ</territory>
+			<territory type="054">མེ་ལ་ནི་ཤི་ཡ</territory>
+			<territory type="057">ལུང་ཕྱོགས་མའི་ཀྲོ་ནི་ཤི་ཡ</territory>
+			<territory type="061">པོ་ལི་ནི་ཤི་ཡ</territory>
+			<territory type="142">ཨེ་ཤི་ཡ</territory>
+			<territory type="143">སྦུག་ཕྱོགས་ཀྱི་ཨེ་ཤི་ཡ</territory>
+			<territory type="145">ནུབ་ཕྱོགས་ཀྱི་ཨེ་ཤི་ཡ</territory>
+			<territory type="150">ཡུ་རོབ</territory>
+			<territory type="151">ཤར་ཕྱོགས་ཀྱི་ཡུ་རོབ</territory>
+			<territory type="154">བྱང་ཕྱོགས་ཀྱི་ཡུ་རོབ</territory>
+			<territory type="155">ནུབ་ཕྱོགས་ཀྱི་ཡུ་རོབ</territory>
+			<territory type="419">ལེ་ཊིནཨ་མི་རི་ཀ</territory>
+			<territory type="AC">ཨེ་སེན་ཤུན་ཚོ་གླིང༌</territory>
+			<territory type="AD">ཨཱན་དོ་ར</territory>
+			<territory type="AE">ཡུ་ནཱའི་ཊེཌ་ ཨ་རབ་ ཨེ་མེ་རེཊས</territory>
+			<territory type="AF">ཨཕ་གྷ་ནི་སཏཱན</territory>
+			<territory type="AG">ཨན་ཊི་གུ་ཝ་ ཨེནཌ་ བྷར་བྷུ་ཌ</territory>
+			<territory type="AI">ཨང་གི་ལ</territory>
+			<territory type="AL">ཨཱལ་བེ་ནི་ཡ</territory>
+			<territory type="AM">ཨར་མི་ནི་ཡ</territory>
+			<territory type="AO">ཨང་གྷོ་ལ</territory>
+			<territory type="AQ">འཛམ་གླིང་ལྷོ་མཐའི་ཁྱགས་གླིང</territory>
+			<territory type="AR">ཨར་ཇེན་ཊི་ན</territory>
+			<territory type="AS">ས་མོ་ཨ་ཡུ་ཨེས་ཨེ་མངའ་ཁོངས</territory>
+			<territory type="AT">ཨཱོས་ཊྲི་ཡ</territory>
+			<territory type="AU">ཨཱོས་ཊྲེལ་ལི་ཡ</territory>
+			<territory type="AW">ཨ་རུ་བཱ</territory>
+			<territory type="AX">ཨ་ལནཌ་གླིང་ཚོམ</territory>
+			<territory type="AZ">ཨ་ཛར་བྷའི་ཇཱན</territory>
+			<territory type="BA">བྷོས་ནི་ཡ་ ཨེནཌ་ ཧར་ཛི་གྷོ་བི་ན</territory>
+			<territory type="BB">བྷར་བེ་ཌོས</territory>
+			<territory type="BD">བངྒ་ལ་དེཤ</territory>
+			<territory type="BE">བྷེལ་ཇམ</territory>
+			<territory type="BF">བྷར་ཀི་ན་ ཕེ་སོ</territory>
+			<territory type="BG">བུལ་ག་རི་ཡ</territory>
+			<territory type="BH">བྷ་རེན</territory>
+			<territory type="BI">བྷུ་རུན་ཌི</territory>
+			<territory type="BJ">བྷེ་ནིན</territory>
+			<territory type="BL">སེནཊ་ བར་ཐོ་ལོམ་མིའུ</territory>
+			<territory type="BM">བར་མུ་ཌ</territory>
+			<territory type="BN">བྷྲུ་ནའི</territory>
+			<territory type="BO">བྷེ་ལི་བི་ཡ</territory>
+			<territory type="BQ">ཀེ་རི་བི་ཡེན་ནེ་དར་ལནཌས྄</territory>
+			<territory type="BR">བྲ་ཛིལ</territory>
+			<territory type="BS">བྷ་ཧ་མས྄</territory>
+			<territory type="BT">འབྲུག</territory>
+			<territory type="BV">བོའུ་ཝེཊ་མཚོ་གླིང</territory>
+			<territory type="BW">བྷོཙ་ཝ་ན</territory>
+			<territory type="BY">བེལ་ཨ་རུ་སུ</territory>
+			<territory type="BZ">བྷེ་ལིཛ</territory>
+			<territory type="CA">ཀེ་ན་ཌ</territory>
+			<territory type="CC">ཀོ་ཀོས་གླིང་ཚོམ</territory>
+			<territory type="CD">ཀོང་གྷོ ཀིན་ཤ་ས</territory>
+			<territory type="CD" alt="variant">ཌེ་མོ་ཀེརེ་ཊིཀ་ རི་པབ་ལིཀ་ ཨོཕ་ ཀོང་གྷོ</territory>
+			<territory type="CF">སེན་ཊལ་ ཨཕ་རི་ཀཱན་ རི་པབ་ལིཀ</territory>
+			<territory type="CG">ཀོང་གྷོ བྷྲ་ཛ་བིལ</territory>
+			<territory type="CG" alt="variant">རི་པབ་ལིཀ་ ཨོཕ་ ཀོང་གྷོ</territory>
+			<territory type="CH">སུ་ཝིཊ་ཛར་ལེནཌ</territory>
+			<territory type="CI">ཀོ་ཊེ་ ཌི་ཨི་ཝོ་རེ</territory>
+			<territory type="CI" alt="variant">ཨི་ཝོ་རི་ཀོསཊ</territory>
+			<territory type="CK">ཀུག་གླིང་ཚོམ</territory>
+			<territory type="CL">ཅི་ལི</territory>
+			<territory type="CM">ཀེ་མ་རུན</territory>
+			<territory type="CN">རྒྱ་ནག</territory>
+			<territory type="CO">ཀོ་ལོམ་བྷི་ཡ</territory>
+			<territory type="CP">ཀི་ལི་པེར་ཊོན་མཚོ་གླིང་</territory>
+			<territory type="CR">ཀོས་ཊ་རི་ཀ</territory>
+			<territory type="CU">ཀིའུ་བྷ</territory>
+			<territory type="CV">ཀེཔ་བཱཌ</territory>
+			<territory type="CW">ཀྱཱུར་ར་ཀོ</territory>
+			<territory type="CX">ཁི་རིསྟ་མེས་མཚོ་གླིང</territory>
+			<territory type="CY">སཱའི་པྲས</territory>
+			<territory type="CZ">ཅེཀ་ རི་པབ་ལིཀ</territory>
+			<territory type="DE">ཇཱར་མ་ནི</territory>
+			<territory type="DG">ཌི་ཡེ་གོ་གར་སིའོ</territory>
+			<territory type="DJ">ཇི་བྷུ་ཊི</territory>
+			<territory type="DK">ཌེན་མཱཀ</territory>
+			<territory type="DM">ཌོ་མི་ནི་ཀ</territory>
+			<territory type="DO">ཌོ་མི་ནི་ཀཱན་ རི་པབ་ལིཀ</territory>
+			<territory type="DZ">ཨཱལ་ཇི་རི་ཡ</territory>
+			<territory type="EA">སེ་ཨུ་ཏ་ ཨེནཌ་ མེལ་ལི་ལ</territory>
+			<territory type="EC">ཨེ་ཁྭ་ཌོར</territory>
+			<territory type="EE">ཨེས་ཊོ་ནི་ཡ</territory>
+			<territory type="EG">ཨི་ཇིབཊ</territory>
+			<territory type="EH">ནུབ་ཕྱོགས་ ས་ཧཱ་ར</territory>
+			<territory type="ER">ཨེ་རི་ཊྲེ་ཡ</territory>
+			<territory type="ES">ཨིས་པེན</territory>
+			<territory type="ET">ཨི་ཐི་ཡོ་པི་ཡ</territory>
+			<territory type="EU">ཡུ་རོབ་གཅིག་བསྡོམས་ཚོགས་པ</territory>
+			<territory type="FI">ཕིན་ལེནཌ</territory>
+			<territory type="FJ">ཕི་ཇི</territory>
+			<territory type="FK">ཕལྐ་ལནྜ་གླིང་ཚོམ</territory>
+			<territory type="FK" alt="variant">ཕལྐ་ལནྜ་གླིང་ཚོམ (ཨིས་ལཱས་མལ་བི་ཎཱས)</territory>
+			<territory type="FM">མའི་ཀྲོ་ནི་ཤི་ཡ</territory>
+			<territory type="FO">ཕཱའེ་རོ་གླིང་ཚོམ</territory>
+			<territory type="FR">ཕྲཱནས</territory>
+			<territory type="GA">གྷ་བྷོན</territory>
+			<territory type="GB">ཡུ་ནཱའི་ཊེཌ་ ཀིང་ཌམ</territory>
+			<territory type="GD">གྲྀ་ན་ཌ</territory>
+			<territory type="GE">ཇཽར་ཇཱ</territory>
+			<territory type="GF">གུའི་ཡ་ན་ ཕྲནས྄་མངའ་ཁོངས</territory>
+			<territory type="GG">གུ་ཨེརྣ་སི</territory>
+			<territory type="GH">གྷ་ན</territory>
+			<territory type="GI">ཇིབ་རཱལ་ཊར</territory>
+			<territory type="GL">གིརཱིན་ལནཌ྄</territory>
+			<territory type="GM">གྷེམ་བི་ཡ</territory>
+			<territory type="GN">གྷི་ནི</territory>
+			<territory type="GP">གོ་ཌེ་ལུ་པེ</territory>
+			<territory type="GQ">ཨེ་ཀུ་ཊོ་རེལ་ གི་ནི</territory>
+			<territory type="GR">གིརིས྄</territory>
+			<territory type="GS">སཱའུཐ་ཇཽར་ཇཱ་ དང་ སཱའུཐ་སེནཌ྄་ཝིཅ་གླིང་ཚོམ</territory>
+			<territory type="GT">གྷོ་ཊ་མ་ལ</territory>
+			<territory type="GU">གུ་འམ་ མཚོ་གླིང</territory>
+			<territory type="GW">གྷི་ནི་ བྷི་སཱའུ</territory>
+			<territory type="GY">གྷ་ཡ་ན</territory>
+			<territory type="HK">ཧོང་ཀོང་ཅཱའི་ན</territory>
+			<territory type="HK" alt="short">ཧོང་ཀོང</territory>
+			<territory type="HM">ཧཱརཌ་མཚོ་གླིང་ དང་ མེཀ་ཌོ་ནལཌ྄་གླིང་ཚོམ</territory>
+			<territory type="HN">ཧཱན་ཌུ་རཱས྄</territory>
+			<territory type="HR">ཀྲོ་ཨེ་ཤ</territory>
+			<territory type="HT">ཧེ་ཊི</territory>
+			<territory type="HU">ཧཱང་གྷ་རི</territory>
+			<territory type="IC">ཀ་ནེ་རི་གླིང་ཚོམ</territory>
+			<territory type="ID">ཨིན་ཌོ་ནེ་ཤི་ཡ</territory>
+			<territory type="IE">ཨཱ་ཡ་ལེནཌ</territory>
+			<territory type="IL">ཨིས་ར་ཡེལ</territory>
+			<territory type="IM">ཨ་ཡུལ་ ཨོཕ་ མཱན</territory>
+			<territory type="IN">རྒྱ་གར</territory>
+			<territory type="IO">བྲི་ཊིཤ་རྒྱ་གར་གྱི་རྒྱ་མཚོ་ས་ཁོངས</territory>
+			<territory type="IQ">ཨི་རཱཀ</territory>
+			<territory type="IR">ཨི་རཱན</territory>
+			<territory type="IS">ཨཱའིས་ལེནཌ</territory>
+			<territory type="IT">ཨི་ཊ་ལི</territory>
+			<territory type="JE">ཇེར་སི</territory>
+			<territory type="JM">ཇཱ་མཻ་ཀ</territory>
+			<territory type="JO">ཇོར་ཌན</territory>
+			<territory type="JP">ཇ་པཱན</territory>
+			<territory type="KE">ཀེན་ཡ</territory>
+			<territory type="KG">ཀིར་གིས་སཏཱན</territory>
+			<territory type="KH">ཀམ་བྷོ་ཌི་ཡ</territory>
+			<territory type="KI">ཀི་རི་བ་ཏི་མཚོ་གླིང</territory>
+			<territory type="KM">ཀོ་མོ་རོས</territory>
+			<territory type="KN">སེནཊ་ ཀིཊས་ དང་ ནེ་བིས</territory>
+			<territory type="KP">བྱང་ ཀོ་རི་ཡ</territory>
+			<territory type="KR">ལྷོ་ ཀོ་རི་ཡ</territory>
+			<territory type="KW">ཀུ་ཝེཊ</territory>
+			<territory type="KY">ཁེ་མེན་གླིང་ཚོམ</territory>
+			<territory type="KZ">ཀ་ཛགས་སཏཱན</territory>
+			<territory type="LA">ལཱ་ཝོས</territory>
+			<territory type="LB">ལེ་བ་ནོན</territory>
+			<territory type="LC">སེནཊ་ ལུ་སི་ཡ</territory>
+			<territory type="LI">ལིཀ་ཏནས་ཏ་ཡིན</territory>
+			<territory type="LK">ཤྲཱི་ལང་ཀ</territory>
+			<territory type="LR">ལཱའི་བེ་རི་ཡ</territory>
+			<territory type="LS">ལཻ་སོ་ཐོ</territory>
+			<territory type="LT">ལི་ཐུ་ཝེ་ནི་ཡ</territory>
+			<territory type="LU">ལག་ཛམ་བོརྒ</territory>
+			<territory type="LV">ལཊ་བི་ཡ</territory>
+			<territory type="LY">ལི་བི་ཡ</territory>
+			<territory type="MA">མོ་རོ་ཀོ</territory>
+			<territory type="MC">མོ་ན་ཀོ</territory>
+			<territory type="MD">མོལ་དོ་བཱ</territory>
+			<territory type="ME">མོན་ཊི་ནེག་རོ</territory>
+			<territory type="MF">སེནཊ་ མཱར་ཊིན</territory>
+			<territory type="MG">མ་དཱ་གེས་ཀར</territory>
+			<territory type="MH">མར་ཤེལ་གླིང་ཚོམ</territory>
+			<territory type="ML">མཱ་ལི</territory>
+			<territory type="MM">མི་ཡཱན་མར་ (བྷར་མ)</territory>
+			<territory type="MN">སོག་པོ་ཡུལ</territory>
+			<territory type="MO">མཀ་ཨའུ་ཅཱའི་ན</territory>
+			<territory type="MO" alt="short">མཀ་ཨའུ</territory>
+			<territory type="MP">བྱང་ཕྱོགས་ཀྱི་མ་ར་ཡ་ན་གླིང་ཚོམ</territory>
+			<territory type="MQ">མཱར་ཊི་ནིཀ</territory>
+			<territory type="MR">མོ་རི་ཊེ་ནི་ཡ</territory>
+			<territory type="MS">མོན་ས་རཊ</territory>
+			<territory type="MT">མཱལ་ཊ</territory>
+			<territory type="MU">མོ་རི་ཤཱས</territory>
+			<territory type="MV">མཱལ་དིབས</territory>
+			<territory type="MW">མ་ལ་ཝི</territory>
+			<territory type="MX">མེཀ་སི་ཀོ</territory>
+			<territory type="MY">མ་ལེ་ཤི་ཡ</territory>
+			<territory type="MZ">མོ་ཛམ་བྷིཀ</territory>
+			<territory type="NA">ན་མི་བི་ཡ</territory>
+			<territory type="NC">ནིའུ་ཀ་ལི་དོ་ནི་ཡ</territory>
+			<territory type="NE">ནཱའི་ཇཱ</territory>
+			<territory type="NF">ནོར་ཕོལཀ་མཚོ་གླིང༌</territory>
+			<territory type="NG">ནཱའི་ཇི་རི་ཡ</territory>
+			<territory type="NI">ནི་ཀྲ་ཝ་ག</territory>
+			<territory type="NL">ནེ་དར་ལནཌས྄</territory>
+			<territory type="NO">ནོར་ཝེ</territory>
+			<territory type="NP">བལ་ཡུལ</territory>
+			<territory type="NR">ནའུ་རུ་</territory>
+			<territory type="NU">ནི་ཨུ་ཨཻ</territory>
+			<territory type="NZ">ནིའུ་ཛི་ལེནཌ</territory>
+			<territory type="OM">ཨོ་མཱན</territory>
+			<territory type="PA">པ་ན་མ</territory>
+			<territory type="PE">པེ་རུ</territory>
+			<territory type="PF">ཕྲཱནས྄་ཀྱི་པོ་ལི་ནི་ཤི་ཡ</territory>
+			<territory type="PG">པ་པུ་ ནིའུ་གི་ནི</territory>
+			<territory type="PH">ཕི་ལི་པིནས</territory>
+			<territory type="PK">པ་ཀི་སཏཱན</territory>
+			<territory type="PL">པོ་ལེནཌ</territory>
+			<territory type="PM">སིནཊ་པི་ཡེར་ ཨེནཌ་ མིཀོ་ལེན</territory>
+			<territory type="PN">པིཊ་ཀེ་ཡེརན་གླིང་ཚོམ</territory>
+			<territory type="PR">པུ་འེར་ཊོ་རི་ཁོ</territory>
+			<territory type="PS">པེ་ལིསི་ཊི་ནི་ཡན་ཊེ་རི་ཐོ་རི</territory>
+			<territory type="PT">པོར་ཅུ་གཱལ</territory>
+			<territory type="PW">པ་ལའུ</territory>
+			<territory type="PY">པ་ར་གུ་ཝའི</territory>
+			<territory type="QA">ཀ་ཊར</territory>
+			<territory type="QO">ཨོཤི་ཡཱན་ན་གྱི་མཐའ་མཚམས</territory>
+			<territory type="RE">རེ་ཡུ་ནི་ཡོན</territory>
+			<territory type="RO">རོ་མེ་ནི་ཡ</territory>
+			<territory type="RS">སཱར་བྷི་ཡ</territory>
+			<territory type="RU">ཨུ་རུ་སུ</territory>
+			<territory type="RW">རུ་ཝན་ཌ</territory>
+			<territory type="SA">སཱཝ་དི་ ཨ་རེ་བྷི་ཡ</territory>
+			<territory type="SB">སོ་ལོ་མོན་ གླིང་ཚོམ</territory>
+			<territory type="SC">སེ་ཤཱལས</territory>
+			<territory type="SD">སུ་ཌཱན</territory>
+			<territory type="SE">སུའི་ཌེན</territory>
+			<territory type="SG">སིང་ག་པོར</territory>
+			<territory type="SH">སེནཊ་ ཧེ་ལི་ན</territory>
+			<territory type="SI">སུ་ལོ་བི་ནི་ཡ</territory>
+			<territory type="SJ">སྭཱལ་བྷརྡ་ ཨེནཌ་ ཇཱན་མ་ཡེན</territory>
+			<territory type="SK">སུ་ལོ་བཱ་ཀི་ཡ</territory>
+			<territory type="SL">སི་ར་ ལི་འོན</territory>
+			<territory type="SM">སཱན་མ་རི་ནོ</territory>
+			<territory type="SN">སེ་ནི་གྷལ</territory>
+			<territory type="SO">སོ་མ་ལི་ཡ</territory>
+			<territory type="SR">སུ་རི་ནཱམ</territory>
+			<territory type="SS">སཱའུཐ་ སུ་ཌཱན</territory>
+			<territory type="ST">སཝ་ ཊོ་མེ་ ཨེནཌ་ པྲྀན་སི་པེ</territory>
+			<territory type="SV">ཨེལ་སལ་བ་ཌོར</territory>
+			<territory type="SX">སིནཊ་ མཱར་ཊེན</territory>
+			<territory type="SY">སི་རི་ཡ</territory>
+			<territory type="SZ">སུ་ཝ་ཛི་ལེནཌ</territory>
+			<territory type="TA">ཏྲིས་ཏན་ད་ཀུན་ཧ</territory>
+			<territory type="TC">ཏུརྐས྄་ ཨེནཌ་ ཀ་ཀོས་གླིང་ཚོམ</territory>
+			<territory type="TD">ཅཱཌ</territory>
+			<territory type="TF">ཕྲནཅ་གི་ལྷོ་ཕྱོགས་མངའ་ཁོངས</territory>
+			<territory type="TG">ཊོ་གྷོ</territory>
+			<territory type="TH">ཐཱའི་ལེནཌ</territory>
+			<territory type="TJ">ཏ་ཇིག་གི་སཏཱན</territory>
+			<territory type="TK">ཏོ་ཀེ་ལའུ་ མཚོ་གླིང</territory>
+			<territory type="TL">ཏི་་མོར་ལེ་ཨེསཊ</territory>
+			<territory type="TL" alt="variant">ཤར་ཕྱོགས་ཏི་་མོར</territory>
+			<territory type="TM">ཊཱརཀ་མེནའི་སཏཱན</territory>
+			<territory type="TN">ཊུ་ནི་ཤི་ཡ</territory>
+			<territory type="TO">ཊོང་གྷ</territory>
+			<territory type="TR">ཊཱར་ཀི</territory>
+			<territory type="TT">ཊི་ནི་ཌཱཌ་ ཨེནཌ་ ཊོ་བྷེ་གྷོ</territory>
+			<territory type="TV">ཏུ་ཝ་ལུ</territory>
+			<territory type="TW">ཊཱའི་ཝཱན</territory>
+			<territory type="TZ">ཊཱན་ཛཱ་ནི་ཡ</territory>
+			<territory type="UA">ཡུ་ཀརེན</territory>
+			<territory type="UG">ཡུ་གྷན་ཌ</territory>
+			<territory type="UM">ཡུ་ཨེས་གྱི་མཐའ་མཚམས་མཚོ་གླིང་</territory>
+			<territory type="US">ཡུ་ཨེས་ཨེ</territory>
+			<territory type="UY">ཡུ་རུ་གུ་ཝའི</territory>
+			<territory type="UZ">ཨུས་བེག་གི་སཏཱན</territory>
+			<territory type="VA">བ་ཊི་ཀཱན་ སི་ཊི</territory>
+			<territory type="VC">སེནཊ་ཝིན་སེནཌ྄ ཨེནཌ་ གི་རེ་ན་དིནས྄</territory>
+			<territory type="VE">བེ་ནི་ཛུ་ཝེ་ལ</territory>
+			<territory type="VG">ཝརཇིན་གླིང་ཚོམ་ བྲཱི་ཊིཤ་མངའ་ཁོངས</territory>
+			<territory type="VI">ཝརཇིན་གླིང་ཚོམ་ ཡུ་ཨེས་ཨེ་མངའ་ཁོངས</territory>
+			<territory type="VN">བེཊ་ནཱམ</territory>
+			<territory type="VU">ཝ་ནུ་ཨ་ཏུ</territory>
+			<territory type="WF">ཝལ་ལིས྄་ ཨེནཌ་ ཕུ་ཏུ་ན་</territory>
+			<territory type="WS">ས་མོ་ཨ</territory>
+			<territory type="YE">ཡེ་མེན</territory>
+			<territory type="YT">མེ་ཡོཊ</territory>
+			<territory type="ZA">སཱའུཐ་ ཨཕ་རི་ཀ</territory>
+			<territory type="ZM">ཛམ་བྷི་ཡ</territory>
+			<territory type="ZW">ཛིམ་བྷབ་ཝེ</territory>
+			<territory type="ZZ">ངོ་མ་ཤེས་པའི་ལུང་ཕྱོགས</territory>
+		</territories>
+		<keys>
+			<key type="calendar">ཟླ་ཐོ</key>
+			<key type="collation">གནས་སདུད་རིམ་ སགྲིག</key>
+			<key type="currency">ཤོག་དངུལ</key>
+			<key type="numbers">ཨང་ཡིག</key>
+		</keys>
+		<types>
+			<type key="calendar" type="gregorian">གྲེག་གོ་རི་ཡཱན་ཟླ་ཐོ</type>
+			<type key="collation" type="ducet">སྔ་སྒྲིག་ཡུ་ནི་ཀོཊ་གི་གོ་རིམ</type>
+			<type key="collation" type="search">སྤྱི་དོན་འཚོལ་བ</type>
+			<type key="collation" type="traditional" draft="unconfirmed">ལུགས་སྲོལ</type>
+			<type key="numbers" type="arab">ཨེ་ར་བིཀ་-ཨིན་ཌིཀ་ཨང</type>
+			<type key="numbers" type="arabext">ཨེ་ར་བིཀ་-ཨིན་ཌིཀ་རྒྱ་སྐྱེད་ཨང</type>
+			<type key="numbers" type="armn">ཨར་མི་ནི་ཡཱན་ཨང</type>
+			<type key="numbers" type="armnlow">ཨར་མི་ནི་ཡཱན་གྱི་མགྱོགས་ཡིག་ཨང་རྟགས</type>
+			<type key="numbers" type="beng">བངྒ་ལི་ཨང</type>
+			<type key="numbers" type="deva">དེ་ཝ་ན་ག་རི་ཨང</type>
+			<type key="numbers" type="ethi">ཨི་ཐི་ཡོ་པིཀ་ཨང་རྟགཨ</type>
+			<type key="numbers" type="fullwide">རྒྱ་ཚད་གང་བའི་ཨང</type>
+			<type key="numbers" type="geor">ཇཽར་ཇཱི་ཡཱན་ཨང་རྟགས</type>
+			<type key="numbers" type="grek">གྲིཀ་ཨང་རྟགས</type>
+			<type key="numbers" type="greklow">གྲིཀ་གི་མགྱོགས་ཡིག་ཨང་རྟགས</type>
+			<type key="numbers" type="gujr">གུ་ཇ་ར་ཏི་ཨང</type>
+			<type key="numbers" type="guru">གུ་རུ་མུ་ཁི་ཨང</type>
+			<type key="numbers" type="hanidec">རྒྱ་མིའི་ཚག་ཅན་མའི་ཨང་རྟགས</type>
+			<type key="numbers" type="hans">འཇམ་སངམ་རྒྱ་མིའི་ཨང་རྟགས</type>
+			<type key="numbers" type="hansfin">འཇམ་སངམ་རྒྱ་མི་གི་དངུལ་འབྲེལ་ཨང་རྟགས</type>
+			<type key="numbers" type="hant">སྔ་དུས་རྒྱ་མིའི་ཨང་རྟགས</type>
+			<type key="numbers" type="hantfin">སྔ་དུས་རྒྱ་མིའི་གི་དངུལ་འབྲེལ་ཨང་རྟགས</type>
+			<type key="numbers" type="hebr">ཧེ་བྲུ་ཨང་རྟགས</type>
+			<type key="numbers" type="jpan">ཇཱ་པཱན་ནིས་ཨང་རྟགས</type>
+			<type key="numbers" type="jpanfin">ཇཱ་པཱན་ནིས་དངུལ་འབྲེལ་ཨང་རྟགས</type>
+			<type key="numbers" type="khmr">ཁེ་མར་ཨང</type>
+			<type key="numbers" type="knda">ཀ་ན་ཌ་ཨང</type>
+			<type key="numbers" type="laoo">ལཱ་འོས་ཨང་</type>
+			<type key="numbers" type="latn">ཕྱི་གླིང་པའི་ཨང</type>
+			<type key="numbers" type="mlym">མ་ལ་ཡ་ལམ་ཨང་</type>
+			<type key="numbers" type="mymr">མི་ཡཱན་མར་ཨང་</type>
+			<type key="numbers" type="orya">ཨོ་རི་ཡ་ཨང་</type>
+			<type key="numbers" type="roman">རོ་མཱན་ཨང་རྟགས</type>
+			<type key="numbers" type="romanlow">རོ་མཱན་གྱི་མགྱོགས་ཡིག་ཨང་རྟགས</type>
+			<type key="numbers" type="taml">སྔ་དུས་ཊ་མིལ་ཨང་རྟགས</type>
+			<type key="numbers" type="tamldec">ཊ་མིལ་ཨང</type>
+			<type key="numbers" type="telu">ཏེ་ལུ་གུ་ཨང</type>
+			<type key="numbers" type="thai">ཐཱའི་ཨང</type>
+			<type key="numbers" type="tibt">ང་བཅས་ཀྱི་ཨང་ཡིག</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">མེ་ཊྲིཀ་བརྩི་ལུགས</measurementSystemName>
+			<measurementSystemName type="UK">བྲི་ཊིཤ་ བརྩི་ལུགས</measurementSystemName>
+			<measurementSystemName type="US">ཨ་མི་རི་ཀཱན་ བརྩི་ལུགས</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language">ཁ་སྐད་: {0}</codePattern>
+			<codePattern type="script">ཡིག་གཟུགས་: {0}</codePattern>
+			<codePattern type="territory">{0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[ཀ ཁ ག ང ཅ ཆ ཇ ཉ ཏ ཐ ད ན པ ཕ བ མ ཙ ཚ ཛ ཝ ཞ ཟ འ ཡ ར ལ ཤ ས ཧ ཨ \u0F72 \u0F74 \u0F7A \u0F7C \u0F90 \u0F91 \u0F92 \u0F94 \u0F97 \u0F99 \u0F9F \u0FA0 \u0FA1 \u0FA3 \u0FA4 \u0FA5 \u0FA6 \u0FA8 \u0FA9 \u0FAA \u0FAB \u0FAD \u0FB1 \u0FB2 \u0FB3 \u0FB5 \u0FB6 \u0FB7]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[\u0F84 ཊ ཋ ཌ ཎ \u0F7E ཥ \u0F80 \u0F7B \u0F7D \u0F9A \u0F9B \u0F9C \u0F9E \u0FBA \u0FBB \u0FBC]</exemplarCharacters>
+		<exemplarCharacters type="index" draft="contributed">[ཀ ཁ ག ང ཅ ཆ ཇ ཉ ཏ ཐ ད ན པ ཕ བ མ ཙ ཚ ཛ ཝ ཞ ཟ འ ཡ ར ལ ཤ ས ཧ ཨ]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\- ‑ , . % ‰ + 0༠ 1༡ 2༢ 3༣ 4༤ 5༥ 6༦ 7༧ 8༨ 9༩]</exemplarCharacters>
+		<exemplarCharacters type="punctuation">[\- ‐ ‑ – — , ; \: ! ? . … ' ‘ ’ &quot; “ ” ( ) \[ \] ༼ ༽ § @ * / \&amp; # † ‡ ༄ ༅ ༆ ༈ ༉ ༊ ࿐ ࿑ ༒ ࿒ ࿓ ࿔ ༶ ྾ ྿ ༌ ། ༎ ༏ ༐ ༑ ༔ ༴]</exemplarCharacters>
+		<ellipsis type="final">{0}་་་་</ellipsis>
+		<ellipsis type="initial">་་་་{0}</ellipsis>
+		<ellipsis type="medial">{0}་་་་་་ {1}</ellipsis>
+		<moreInformation>?</moreInformation>
+	</characters>
+	<delimiters>
+		<quotationStart>“</quotationStart>
+		<quotationEnd>”</quotationEnd>
+		<alternateQuotationStart>‘</alternateQuotationStart>
+		<alternateQuotationEnd>’</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, G སྤྱི་ལོ་y MMMM ཚེས་dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>G སྤྱི་ལོ་y MMMM ཚེས་ dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>G སྤྱི་ལོ་y ཟླ་MMM ཚེས་dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>GGGGG y-MM-dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="Ed">d E</dateFormatItem>
+						<dateFormatItem id="Gy">G y</dateFormatItem>
+						<dateFormatItem id="GyMMM">G y སྤྱི་ཟླ་MMM</dateFormatItem>
+						<dateFormatItem id="GyMMMd">G y MMM d</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">གཟའ་E, G ལོy ཟླ་MMM ཚེ་d</dateFormatItem>
+						<dateFormatItem id="h">ཆུ་ཚོད་h a</dateFormatItem>
+						<dateFormatItem id="H">ཆུ་ཚོད་HH</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">M-d</dateFormatItem>
+						<dateFormatItem id="MEd">E, M-d</dateFormatItem>
+						<dateFormatItem id="MMM">སྤྱི་LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">སྤྱི་LLL ཚེ་d</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, སྤྱི་LLL ཚེ་d</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">G y</dateFormatItem>
+						<dateFormatItem id="yyyy">G y</dateFormatItem>
+						<dateFormatItem id="yyyyM">G y-M</dateFormatItem>
+						<dateFormatItem id="yyyyMd">G y-M-d</dateFormatItem>
+						<dateFormatItem id="yyyyMEd">E, G y-M-d</dateFormatItem>
+						<dateFormatItem id="yyyyMMM">G y སྤྱི་ཟླ་MMM</dateFormatItem>
+						<dateFormatItem id="yyyyMMMd">G y MMM d</dateFormatItem>
+						<dateFormatItem id="yyyyMMMEd">གཟའ་E, G ལོy ཟླ་MMM ཚེ་d</dateFormatItem>
+						<dateFormatItem id="yyyyQQQ">G y QQQ</dateFormatItem>
+						<dateFormatItem id="yyyyQQQQ">G y QQQQ</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d">d–d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="h">
+							<greatestDifference id="a">h a – h a</greatestDifference>
+							<greatestDifference id="h">h–h a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="H">
+							<greatestDifference id="H">HH–HH</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="a">h:mm a – h:mm a</greatestDifference>
+							<greatestDifference id="h">h:mm–h:mm a</greatestDifference>
+							<greatestDifference id="m">h:mm–h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hm">
+							<greatestDifference id="H">HH:mm–HH:mm</greatestDifference>
+							<greatestDifference id="m">HH:mm–HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="a">h:mm a – h:mm a v</greatestDifference>
+							<greatestDifference id="h">h:mm–h:mm a v</greatestDifference>
+							<greatestDifference id="m">h:mm–h:mm a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H">HH:mm–HH:mm v</greatestDifference>
+							<greatestDifference id="m">HH:mm–HH:mm v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="a">h a – h a v</greatestDifference>
+							<greatestDifference id="h">h–h a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H">HH–HH v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M">སྤྱི་ཟླ་M–M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">སྤྱི་ཟླ་M ཚེས་dd/dd</greatestDifference>
+							<greatestDifference id="M">སྤྱི་ཟླ་MM ཚེས་dd–ཟླ་MM ཚེས་dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">E, སྤྱི་ཟླ་MM ཚེས་dd–ཟླ་MM ཚེས་dd</greatestDifference>
+							<greatestDifference id="M">E, སྤྱི་ཟླ་MM ཚེས་dd–ཟླ་MM ཚེས་dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M">སྤྱི་LLL–LLL</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">སྤྱི་ཟླ་MM ཚེས་d–d</greatestDifference>
+							<greatestDifference id="M">སྤྱི་ཟླ་MM ཚེས་d–ཟླ་MM ཚེས་d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">E, སྤྱི་ཟླ་MM ཚེས་d – E, ཟླ་MM ཚེས་d</greatestDifference>
+							<greatestDifference id="M">E, སྤྱི་ཟླ་MM ཚེས་d – E, ཟླ་MM ཚེས་d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y">G y–y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">G y-MM – MM</greatestDifference>
+							<greatestDifference id="y">G y-MM – y-MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">G y-MM-dd – dd</greatestDifference>
+							<greatestDifference id="M">G y-MM-dd – MM-dd</greatestDifference>
+							<greatestDifference id="y">G y-MM-dd – y-MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="M">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="y">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M">སྤྱི་ཟླ་MMM/MMM, y</greatestDifference>
+							<greatestDifference id="y">G y-MM – y-MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">G y-MM-d – d</greatestDifference>
+							<greatestDifference id="M">G y-MM-dd – MM-d</greatestDifference>
+							<greatestDifference id="y">G y-MM-dd – y-MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="M">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="y">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M">G y-སྤྱི་ཟླ་MM – MM</greatestDifference>
+							<greatestDifference id="y">G y-MM – y-MM</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">༡</month>
+							<month type="2">༢</month>
+							<month type="3">༣</month>
+							<month type="4">༤</month>
+							<month type="5">༥</month>
+							<month type="6">༦</month>
+							<month type="7">༧</month>
+							<month type="8">༨</month>
+							<month type="9">༩</month>
+							<month type="10">༡༠</month>
+							<month type="11">༡༡</month>
+							<month type="12">12</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">༡</month>
+							<month type="2">༢</month>
+							<month type="3">༣</month>
+							<month type="4">4</month>
+							<month type="5">༥</month>
+							<month type="6">༦</month>
+							<month type="7">༧</month>
+							<month type="8">༨</month>
+							<month type="9">9</month>
+							<month type="10">༡༠</month>
+							<month type="11">༡༡</month>
+							<month type="12">༡༢</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">ཟླ་དངཔ་</month>
+							<month type="2">ཟླ་གཉིས་པ་</month>
+							<month type="3">ཟླ་གསུམ་པ་</month>
+							<month type="4">ཟླ་བཞི་པ་</month>
+							<month type="5">ཟླ་ལྔ་པ་</month>
+							<month type="6">ཟླ་དྲུག་པ</month>
+							<month type="7">ཟླ་བདུན་པ་</month>
+							<month type="8">ཟླ་བརྒྱད་པ་</month>
+							<month type="9">ཟླ་དགུ་པ་</month>
+							<month type="10">ཟླ་བཅུ་པ་</month>
+							<month type="11">ཟླ་བཅུ་གཅིག་པ་</month>
+							<month type="12">ཟླ་བཅུ་གཉིས་པ་</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">ཟླ་༡</month>
+							<month type="2">ཟླ་༢</month>
+							<month type="3">ཟླ་༣</month>
+							<month type="4">ཟླ་༤</month>
+							<month type="5">ཟླ་༥</month>
+							<month type="6">ཟླ་༦</month>
+							<month type="7">ཟླ་༧</month>
+							<month type="8">ཟླ་༨</month>
+							<month type="9">ཟླ་༩</month>
+							<month type="10">ཟླ་༡༠</month>
+							<month type="11">ཟླ་༡༡</month>
+							<month type="12">ཟླ་༡༢</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">༡</month>
+							<month type="2">༢</month>
+							<month type="3">༣</month>
+							<month type="4">༤</month>
+							<month type="5">༥</month>
+							<month type="6">༦</month>
+							<month type="7">༧</month>
+							<month type="8">༨</month>
+							<month type="9">༩</month>
+							<month type="10">༡༠</month>
+							<month type="11">༡༡</month>
+							<month type="12">༡༢</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">སྤྱི་ཟླ་དངཔ་</month>
+							<month type="2">སྤྱི་ཟླ་གཉིས་པ་</month>
+							<month type="3">སྤྱི་ཟླ་གསུམ་པ་</month>
+							<month type="4">སྤྱི་ཟླ་བཞི་པ</month>
+							<month type="5">སྤྱི་ཟླ་ལྔ་པ་</month>
+							<month type="6">སྤྱི་ཟླ་དྲུག་པ</month>
+							<month type="7">སྤྱི་ཟླ་བདུན་པ་</month>
+							<month type="8">སྤྱི་ཟླ་བརྒྱད་པ་</month>
+							<month type="9">སྤྱི་ཟླ་དགུ་པ་</month>
+							<month type="10">སྤྱི་ཟླ་བཅུ་པ་</month>
+							<month type="11">སྤྱི་ཟླ་བཅུ་གཅིག་པ་</month>
+							<month type="12">སྤྱི་ཟླ་བཅུ་གཉིས་པ་</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">ཟླ་</day>
+							<day type="mon">མིར་</day>
+							<day type="tue">ལྷག་</day>
+							<day type="wed">ཕུར་</day>
+							<day type="thu">སངས་</day>
+							<day type="fri">སྤེན་</day>
+							<day type="sat">ཉི་</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">ཟླ</day>
+							<day type="mon">མིར</day>
+							<day type="tue">ལྷག</day>
+							<day type="wed">ཕུར</day>
+							<day type="thu">སངྶ</day>
+							<day type="fri">སྤེན</day>
+							<day type="sat">ཉི</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">ཟླ་</day>
+							<day type="mon">མིར་</day>
+							<day type="tue">ལྷག་</day>
+							<day type="wed">ཕུར་</day>
+							<day type="thu">སངས་</day>
+							<day type="fri">སྤེན་</day>
+							<day type="sat">ཉི་</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">གཟའ་ཟླ་བ་</day>
+							<day type="mon">གཟའ་མིག་དམར་</day>
+							<day type="tue">གཟའ་ལྷག་པ་</day>
+							<day type="wed">གཟའ་ཕུར་བུ་</day>
+							<day type="thu">གཟའ་པ་སངས་</day>
+							<day type="fri">གཟའ་སྤེན་པ་</day>
+							<day type="sat">གཟའ་ཉི་མ་</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">ཟླ་</day>
+							<day type="mon">མིར་</day>
+							<day type="tue">ལྷག་</day>
+							<day type="wed">ཕུར་</day>
+							<day type="thu">སངས་</day>
+							<day type="fri">སྤེན་</day>
+							<day type="sat">ཉི་</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">ཟླ</day>
+							<day type="mon">མིར</day>
+							<day type="tue">ལྷག</day>
+							<day type="wed">ཕུར</day>
+							<day type="thu">སངྶ</day>
+							<day type="fri">སྤེན</day>
+							<day type="sat">ཉི</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">ཟླ་</day>
+							<day type="mon">མིར་</day>
+							<day type="tue">ལྷག་</day>
+							<day type="wed">ཕུར་</day>
+							<day type="thu">སངས་</day>
+							<day type="fri">སྤེན་</day>
+							<day type="sat">ཉི་</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">གཟའ་ཟླ་བ་</day>
+							<day type="mon">གཟའ་མིག་དམར་</day>
+							<day type="tue">གཟའ་ལྷག་པ་</day>
+							<day type="wed">གཟའ་ཕུར་བུ་</day>
+							<day type="thu">གཟའ་པ་སངས་</day>
+							<day type="fri">གཟའ་སྤེན་པ་</day>
+							<day type="sat">གཟའ་ཉི་མ་</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">བཞི་དཔྱ་༡</quarter>
+							<quarter type="2">བཞི་དཔྱ་༢</quarter>
+							<quarter type="3">བཞི་དཔྱ་༣</quarter>
+							<quarter type="4">བཞི་དཔྱ་༤</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">༡</quarter>
+							<quarter type="2">༢</quarter>
+							<quarter type="3">༣</quarter>
+							<quarter type="4">༤</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">བཞི་དཔྱ་དང་པ་</quarter>
+							<quarter type="2">བཞི་དཔྱ་གཉིས་པ་</quarter>
+							<quarter type="3">བཞི་དཔྱ་གསུམ་པ་</quarter>
+							<quarter type="4">བཞི་དཔྱ་བཞི་པ་</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">བཞི་དཔྱ་༡</quarter>
+							<quarter type="2">བཞི་དཔྱ་༢</quarter>
+							<quarter type="3">བཞི་དཔྱ་༣</quarter>
+							<quarter type="4">བཞི་དཔྱ་༤</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">༡</quarter>
+							<quarter type="2">༢</quarter>
+							<quarter type="3">༣</quarter>
+							<quarter type="4">༤</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">བཞི་དཔྱ་དང་པ་</quarter>
+							<quarter type="2">བཞི་དཔྱ་གཉིས་པ་</quarter>
+							<quarter type="3">བཞི་དཔྱ་གསུམ་པ་</quarter>
+							<quarter type="4">བཞི་དཔྱ་བཞི་པ་</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">སྔ་ཆ་</dayPeriod>
+							<dayPeriod type="pm">ཕྱི་ཆ་</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">སྔ་ཆ་</dayPeriod>
+							<dayPeriod type="pm">ཕྱི་ཆ་</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">སྔ་ཆ་</dayPeriod>
+							<dayPeriod type="pm">ཕྱི་ཆ་</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraAbbr>
+						<era type="0">BCE</era>
+						<era type="1">CE</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, སྤྱི་ལོ་y MMMM ཚེས་dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>སྤྱི་ལོ་y MMMM ཚེས་ dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>སྤྱི་ལོ་y ཟླ་MMM ཚེས་dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>y-MM-dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>ཆུ་ཚོད་ h སྐར་མ་ mm:ss a zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>ཆུ་ཚོད་ h སྐར་མ་ mm:ss a z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>ཆུ་ཚོད་h:mm:ss a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>ཆུ་ཚོད་ h སྐར་མ་ mm a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="Ed">d E</dateFormatItem>
+						<dateFormatItem id="Gy">G y</dateFormatItem>
+						<dateFormatItem id="GyMMM">G y སྤྱི་ཟླ་MMM</dateFormatItem>
+						<dateFormatItem id="GyMMMd">G y MMM d</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">གཟའ་E, G ལོy ཟླ་MMM ཚེ་d</dateFormatItem>
+						<dateFormatItem id="h">ཆུ་ཚོད་h a</dateFormatItem>
+						<dateFormatItem id="H">ཆུ་ཚོད་HH</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">M-d</dateFormatItem>
+						<dateFormatItem id="MEd">E, M-d</dateFormatItem>
+						<dateFormatItem id="MMM">སྤྱི་LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">སྤྱི་LLL ཚེ་d</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, སྤྱི་LLL ཚེ་d</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">y-M</dateFormatItem>
+						<dateFormatItem id="yMd">y-M-d</dateFormatItem>
+						<dateFormatItem id="yMEd">E, y-M-d</dateFormatItem>
+						<dateFormatItem id="yMMM">y སྤྱི་ཟླ་MMM</dateFormatItem>
+						<dateFormatItem id="yMMMd">y MMM d</dateFormatItem>
+						<dateFormatItem id="yMMMEd">གཟའ་E, ལོy ཟླ་MMM ཚེ་d</dateFormatItem>
+						<dateFormatItem id="yQQQ">y QQQ</dateFormatItem>
+						<dateFormatItem id="yQQQQ">y QQQQ</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d">d–d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="h">
+							<greatestDifference id="a">h a – h a</greatestDifference>
+							<greatestDifference id="h">h–h a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="H">
+							<greatestDifference id="H">HH–HH</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="a">h:mm a – h:mm a</greatestDifference>
+							<greatestDifference id="h">h:mm–h:mm a</greatestDifference>
+							<greatestDifference id="m">h:mm–h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hm">
+							<greatestDifference id="H">HH:mm–HH:mm</greatestDifference>
+							<greatestDifference id="m">HH:mm–HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="a">h:mm a – h:mm a v</greatestDifference>
+							<greatestDifference id="h">h:mm–h:mm a v</greatestDifference>
+							<greatestDifference id="m">h:mm–h:mm a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H">HH:mm–HH:mm v</greatestDifference>
+							<greatestDifference id="m">HH:mm–HH:mm v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="a">h a – h a v</greatestDifference>
+							<greatestDifference id="h">h–h a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H">HH–HH v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M">སྤྱི་ཟླ་M–M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">སྤྱི་ཟླ་M ཚེས་dd/dd</greatestDifference>
+							<greatestDifference id="M">སྤྱི་ཟླ་MM ཚེས་dd–ཟླ་MM ཚེས་dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">E, སྤྱི་ཟླ་MM ཚེས་dd–ཟླ་MM ཚེས་dd</greatestDifference>
+							<greatestDifference id="M">E, སྤྱི་ཟླ་MM ཚེས་dd–ཟླ་MM ཚེས་dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M">སྤྱི་LLL–LLL</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">སྤྱི་ཟླ་MM ཚེས་d–d</greatestDifference>
+							<greatestDifference id="M">སྤྱི་ཟླ་MM ཚེས་d–ཟླ་MM ཚེས་d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">E, སྤྱི་ཟླ་MM ཚེས་d – E, ཟླ་MM ཚེས་d</greatestDifference>
+							<greatestDifference id="M">E, སྤྱི་ཟླ་MM ཚེས་d – E, ཟླ་MM ཚེས་d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y">y–y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">y-MM – MM</greatestDifference>
+							<greatestDifference id="y">y-MM – y-MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">y-MM-dd – dd</greatestDifference>
+							<greatestDifference id="M">y-MM-dd – MM-dd</greatestDifference>
+							<greatestDifference id="y">y-MM-dd – y-MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="M">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="y">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M">སྤྱི་ཟླ་MMM/MMM, y</greatestDifference>
+							<greatestDifference id="y">y-MM – y-MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">y-MM-d – d</greatestDifference>
+							<greatestDifference id="M">y-MM-dd – MM-d</greatestDifference>
+							<greatestDifference id="y">y-MM-dd – y-MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="M">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+							<greatestDifference id="y">E, y-MM-dd – E, y-MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M">y-སྤྱི་ཟླ་MM – MM</greatestDifference>
+							<greatestDifference id="y">y-MM – y-MM</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>དུས་བསྐལ</displayName>
+			</field>
+			<field type="year">
+				<displayName>ལོ</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">ལོ་འཁོར་ {0} ནང་</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">ལོ་འཁོར་ {0} ཧེ་མ་</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month">
+				<displayName>ཟླ་ཝ་</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">ཟླཝ་ {0} ནང་</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">ཟླཝ་ {0} ཧེ་མ་</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week">
+				<displayName>བདུན་ཕྲག</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">བངུན་ཕྲག་ {0} ནང་</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">བངུན་ཕྲག་ {0} ཧེ་མ་</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day">
+				<displayName>ཚེས་</displayName>
+				<relative type="-2">ཁ་ཉིམ</relative>
+				<relative type="-1">ཁ་ཙ་</relative>
+				<relative type="0">ད་རིས་</relative>
+				<relative type="1">ནངས་པ་</relative>
+				<relative type="2">གནངས་ཚེ</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">ཉིནམ་ {0} ནང་</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">ཉིནམ་ {0} ཧེ་མ་</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="weekday">
+				<displayName>བདུན་ཕྲག་གི་ཉིམ</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>སྔ་ཆ/ཕྱི་ཆ་</displayName>
+			</field>
+			<field type="hour">
+				<displayName>ཆུ་ཚོད</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">ཆུ་ཚོད་ {0} ནང་</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">ཆུ་ཚོད་ {0} ཧེ་མ་</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute">
+				<displayName>སྐར་མ</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">སྐར་མ་ {0} ནང་</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">སྐར་མ་ {0} ཧེ་མ་</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second">
+				<displayName>སྐར་ཆཱ་</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">སྐར་ཆ་ {0} ནང་</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">སྐར་ཆ་ {0} ཧེ་མ་</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="zone">
+				<displayName>དུས་ཀུལ</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<hourFormat>+HH:mm;-HH:mm</hourFormat>
+			<gmtFormat>ཇི་ཨེམ་ཏི་{0}</gmtFormat>
+			<gmtZeroFormat>ཇི་ཨེམ་ཊི་</gmtZeroFormat>
+			<regionFormat>{0}་ཆུ་ཚོད།</regionFormat>
+			<fallbackFormat>{1}། ({0}་)</fallbackFormat>
+			<zone type="Etc/Unknown">
+				<exemplarCity>མ་ཤེས་པའི་ཁྲོམ་སྡེ</exemplarCity>
+			</zone>
+			<zone type="Europe/Andorra">
+				<exemplarCity draft="unconfirmed">ཨཱན་དོ་ར</exemplarCity>
+			</zone>
+			<zone type="Asia/Kabul">
+				<exemplarCity draft="unconfirmed">ཀ་བྷུལ</exemplarCity>
+			</zone>
+			<zone type="America/Antigua">
+				<exemplarCity>ཨན་ཊི་གུ་ཝ་</exemplarCity>
+			</zone>
+			<zone type="Europe/Tirane">
+				<exemplarCity draft="unconfirmed">ཊ་ར་ནི</exemplarCity>
+			</zone>
+			<zone type="Africa/Luanda">
+				<exemplarCity draft="unconfirmed">ལུ་ཝེན་ཌ</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Rothera">
+				<exemplarCity draft="unconfirmed">རཱོ་ཐེ་ར</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Palmer">
+				<exemplarCity draft="unconfirmed">ཕཱལ་མར</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Mawson">
+				<exemplarCity>མའུ་སཱོན</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Davis">
+				<exemplarCity>ཌེ་ཝིས།</exemplarCity>
+			</zone>
+			<zone type="Antarctica/Vostok">
+				<exemplarCity draft="unconfirmed">ཝོསི་ཊོཀ</exemplarCity>
+			</zone>
+			<zone type="America/Buenos_Aires">
+				<exemplarCity draft="unconfirmed">བྷུའི་ནོས་ ཨའི་རིས</exemplarCity>
+			</zone>
+			<zone type="Pacific/Pago_Pago">
+				<exemplarCity draft="unconfirmed">པ་གོ་ པ་གོ</exemplarCity>
+			</zone>
+			<zone type="Europe/Vienna">
+				<exemplarCity draft="unconfirmed">ཝི་ཡེ་ན</exemplarCity>
+			</zone>
+			<zone type="Europe/Sarajevo">
+				<exemplarCity draft="unconfirmed">ས་ར་ཡེ་བོ</exemplarCity>
+			</zone>
+			<zone type="America/Barbados">
+				<exemplarCity>བྷར་བེ་ཌོས</exemplarCity>
+			</zone>
+			<zone type="Asia/Dhaka">
+				<exemplarCity draft="unconfirmed">ཌཱ་ཀ</exemplarCity>
+			</zone>
+			<zone type="Europe/Brussels">
+				<exemplarCity draft="unconfirmed">བྲ་སེལས</exemplarCity>
+			</zone>
+			<zone type="Africa/Ouagadougou">
+				<exemplarCity draft="unconfirmed">ཝ་གཱ་ཌུ་གུ</exemplarCity>
+			</zone>
+			<zone type="Europe/Sofia">
+				<exemplarCity draft="unconfirmed">སོ་ཕི་ཡ</exemplarCity>
+			</zone>
+			<zone type="Asia/Bahrain">
+				<exemplarCity>བྷ་རེན་</exemplarCity>
+			</zone>
+			<zone type="Africa/Bujumbura">
+				<exemplarCity draft="unconfirmed">བྷུ་ཇུམ་བྷུ་ར</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Bermuda">
+				<exemplarCity>བར་མུ་ད</exemplarCity>
+			</zone>
+			<zone type="Asia/Brunei">
+				<exemplarCity draft="unconfirmed">བྷྲུ་ནའི</exemplarCity>
+			</zone>
+			<zone type="America/La_Paz">
+				<exemplarCity>ལ་པཱཛ྄</exemplarCity>
+			</zone>
+			<zone type="America/Nassau">
+				<exemplarCity draft="unconfirmed">ན་སའོ</exemplarCity>
+			</zone>
+			<zone type="Asia/Thimphu">
+				<exemplarCity>ཐིམ་ཕུག</exemplarCity>
+			</zone>
+			<zone type="Africa/Gaborone">
+				<exemplarCity draft="unconfirmed">གྷ་བྷོ་རོ་ནེ</exemplarCity>
+			</zone>
+			<zone type="Europe/Minsk">
+				<exemplarCity draft="unconfirmed">མིནསཀ</exemplarCity>
+			</zone>
+			<zone type="America/Belize">
+				<exemplarCity>བྷེ་ལིཛ</exemplarCity>
+			</zone>
+			<zone type="America/Dawson">
+				<exemplarCity>དའུ་སཱོན</exemplarCity>
+			</zone>
+			<zone type="America/Inuvik">
+				<exemplarCity>ཨི་ནུ་ཝིཀ</exemplarCity>
+			</zone>
+			<zone type="America/Dawson_Creek">
+				<exemplarCity>དའུ་སཱོན་ ཀིརིཀ</exemplarCity>
+			</zone>
+			<zone type="America/Edmonton">
+				<exemplarCity>ཨེཌ་མཱོན་ཊོན</exemplarCity>
+			</zone>
+			<zone type="America/Swift_Current">
+				<exemplarCity>སུ་ཨིཕཊ་ཀ་རེནཊ</exemplarCity>
+			</zone>
+			<zone type="America/Cambridge_Bay">
+				<exemplarCity>ཀེམ་བིརིདཆ་ བའེ</exemplarCity>
+			</zone>
+			<zone type="America/Regina">
+				<exemplarCity>རི་ཇི་ན</exemplarCity>
+			</zone>
+			<zone type="America/Resolute">
+				<exemplarCity>རི་སོ་ལིའུཊ</exemplarCity>
+			</zone>
+			<zone type="America/Rainy_River">
+				<exemplarCity>རཱེ་ནི་རི་ཝར</exemplarCity>
+			</zone>
+			<zone type="America/Rankin_Inlet">
+				<exemplarCity>རེན་ཀིན་ ཨིན་ལེཊ</exemplarCity>
+			</zone>
+			<zone type="America/Coral_Harbour">
+				<exemplarCity>ཨ་ཏི་ཀོ་ཀཱན</exemplarCity>
+			</zone>
+			<zone type="America/Thunder_Bay">
+				<exemplarCity>ཐན་ཌར་ བའེ</exemplarCity>
+			</zone>
+			<zone type="America/Nipigon">
+				<exemplarCity>ནི་པི་གཱོན</exemplarCity>
+			</zone>
+			<zone type="America/Toronto">
+				<exemplarCity>ཊོ་རོན་ཊོ</exemplarCity>
+			</zone>
+			<zone type="America/Pangnirtung">
+				<exemplarCity>པེང་ནིར་ཏུང</exemplarCity>
+			</zone>
+			<zone type="America/Moncton">
+				<exemplarCity>མཱོངཀ་ཊོན</exemplarCity>
+			</zone>
+			<zone type="America/Halifax">
+				<exemplarCity>ཧ་ལི་ཕེགསི</exemplarCity>
+			</zone>
+			<zone type="America/Goose_Bay">
+				<exemplarCity>གཱུསི་ བའེ</exemplarCity>
+			</zone>
+			<zone type="America/St_Johns">
+				<exemplarCity>ཨིསི་ཊེཊ་ ཇཱོནསི་</exemplarCity>
+			</zone>
+			<zone type="Indian/Cocos">
+				<exemplarCity draft="unconfirmed">ཀོ་ཀོསི</exemplarCity>
+			</zone>
+			<zone type="Africa/Kinshasa">
+				<exemplarCity draft="unconfirmed">ཀིན་ཤ་ས</exemplarCity>
+			</zone>
+			<zone type="Africa/Bangui">
+				<exemplarCity draft="unconfirmed">བྷང་གི</exemplarCity>
+			</zone>
+			<zone type="Africa/Brazzaville">
+				<exemplarCity draft="unconfirmed">བྷྲ་ཛ་བིལ</exemplarCity>
+			</zone>
+			<zone type="Europe/Zurich">
+				<exemplarCity draft="unconfirmed">ཛུ་རིཆ</exemplarCity>
+			</zone>
+			<zone type="Pacific/Rarotonga">
+				<exemplarCity draft="unconfirmed">རཱ་རོ་་ཏོང་ག</exemplarCity>
+			</zone>
+			<zone type="America/Santiago">
+				<exemplarCity>སཱན་ཊི་ཡ་གྷོ</exemplarCity>
+			</zone>
+			<zone type="America/Bogota">
+				<exemplarCity>བྷོ་ག་ཊ</exemplarCity>
+			</zone>
+			<zone type="America/Costa_Rica">
+				<exemplarCity>ཀོས་ཊ་རི་ཀ</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Cape_Verde">
+				<exemplarCity draft="unconfirmed">ཀེཔ་བཱཌ</exemplarCity>
+			</zone>
+			<zone type="Indian/Christmas">
+				<exemplarCity draft="unconfirmed">ཀིརིསཊ་མསི</exemplarCity>
+			</zone>
+			<zone type="Europe/Prague">
+				<exemplarCity draft="unconfirmed">པྲག</exemplarCity>
+			</zone>
+			<zone type="Europe/Berlin">
+				<exemplarCity draft="unconfirmed">བྷར་ལིན</exemplarCity>
+			</zone>
+			<zone type="Africa/Djibouti">
+				<exemplarCity draft="unconfirmed">ཇི་བྷུ་ཊི</exemplarCity>
+			</zone>
+			<zone type="Europe/Copenhagen">
+				<exemplarCity>ཀོ་པེན་ཧེ་གེན</exemplarCity>
+			</zone>
+			<zone type="America/Dominica">
+				<exemplarCity>ཌོ་མི་ནི་ཀ</exemplarCity>
+			</zone>
+			<zone type="America/Santo_Domingo">
+				<exemplarCity>སཱན་ཊོ་ ཌོ་མིང་གྷོ</exemplarCity>
+			</zone>
+			<zone type="Africa/Algiers">
+				<exemplarCity draft="unconfirmed">ཨལ་ཇི་ཡས</exemplarCity>
+			</zone>
+			<zone type="Europe/Tallinn">
+				<exemplarCity>ཊཱ་ལཱིན</exemplarCity>
+			</zone>
+			<zone type="Africa/Cairo">
+				<exemplarCity>ཀཱའི་རོ</exemplarCity>
+			</zone>
+			<zone type="Africa/Asmera">
+				<exemplarCity draft="unconfirmed">ཨཱས་མ་ར</exemplarCity>
+			</zone>
+			<zone type="Europe/Madrid">
+				<exemplarCity draft="unconfirmed">མ་ཌེ་རེཌ</exemplarCity>
+			</zone>
+			<zone type="Africa/Addis_Ababa">
+				<exemplarCity draft="unconfirmed">ཨ་ཌིས་ ཨ་བྷ་བྷ</exemplarCity>
+			</zone>
+			<zone type="Europe/Helsinki">
+				<exemplarCity>ཧེལ་སིང་ཀི</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Faeroe">
+				<exemplarCity>ཕཱའེ་རོ་</exemplarCity>
+			</zone>
+			<zone type="Europe/Paris">
+				<exemplarCity draft="unconfirmed">པེ་རིས</exemplarCity>
+			</zone>
+			<zone type="Africa/Libreville">
+				<exemplarCity draft="unconfirmed">ལི་བྷྲ་བིལ</exemplarCity>
+			</zone>
+			<zone type="Europe/London">
+				<long>
+					<daylight>བྲཱི་ཊིཤ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+				<exemplarCity draft="unconfirmed">ལཱན་ཌཱན</exemplarCity>
+			</zone>
+			<zone type="Africa/Accra">
+				<exemplarCity draft="unconfirmed">ཨེཀ་ཀྲ</exemplarCity>
+			</zone>
+			<zone type="Africa/Banjul">
+				<exemplarCity draft="unconfirmed">བྷཱན་ཇུལ</exemplarCity>
+			</zone>
+			<zone type="Africa/Conakry">
+				<exemplarCity draft="unconfirmed">ཀོ་ནཀ་རི</exemplarCity>
+			</zone>
+			<zone type="Africa/Malabo">
+				<exemplarCity draft="unconfirmed">མ་ལ་བྷོ</exemplarCity>
+			</zone>
+			<zone type="Europe/Athens">
+				<exemplarCity>ཨེ་ཐེནས་</exemplarCity>
+			</zone>
+			<zone type="Atlantic/South_Georgia">
+				<exemplarCity draft="unconfirmed">སཱའུཐ་ཇོ་ཇཱ</exemplarCity>
+			</zone>
+			<zone type="America/Guatemala">
+				<exemplarCity>གྷོ་ཊ་མ་ལ</exemplarCity>
+			</zone>
+			<zone type="Africa/Bissau">
+				<exemplarCity draft="unconfirmed">བྷི་སཱའུ</exemplarCity>
+			</zone>
+			<zone type="America/Guyana">
+				<exemplarCity draft="unconfirmed">གྷ་ཡ་ན</exemplarCity>
+			</zone>
+			<zone type="America/Tegucigalpa">
+				<exemplarCity>ཊེ་གུ་སི་གཱལ་པ</exemplarCity>
+			</zone>
+			<zone type="Europe/Budapest">
+				<exemplarCity draft="unconfirmed">བྷུ་ཌ་པེསཊ</exemplarCity>
+			</zone>
+			<zone type="Asia/Jakarta">
+				<exemplarCity draft="unconfirmed">ཇཱ་ཀར་ཊ</exemplarCity>
+			</zone>
+			<zone type="Asia/Pontianak">
+				<exemplarCity draft="unconfirmed">པཱོན་ཊའེ་ནཀ</exemplarCity>
+			</zone>
+			<zone type="Asia/Jayapura">
+				<exemplarCity draft="unconfirmed">ཇ་ཡ་པུ་ར</exemplarCity>
+			</zone>
+			<zone type="Europe/Dublin">
+				<long>
+					<daylight>ཨཱ་ཡརིཤ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+				<exemplarCity draft="unconfirmed">ཌབ་ལིན</exemplarCity>
+			</zone>
+			<zone type="Asia/Calcutta">
+				<exemplarCity draft="unconfirmed">ཀཱོལ་ཀ་ཊ</exemplarCity>
+			</zone>
+			<zone type="Asia/Tehran">
+				<exemplarCity draft="unconfirmed">ཊེ་རཱན</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Reykjavik">
+				<exemplarCity draft="unconfirmed">རེ་ཁི་ཡ་བིཀ</exemplarCity>
+			</zone>
+			<zone type="America/Jamaica">
+				<exemplarCity draft="unconfirmed">ཇཱ་མའེ་ཀ</exemplarCity>
+			</zone>
+			<zone type="Africa/Nairobi">
+				<exemplarCity draft="unconfirmed">ནཱའི་རོ་བི</exemplarCity>
+			</zone>
+			<zone type="Indian/Comoro">
+				<exemplarCity draft="unconfirmed">ཀོ་མོ་རོ</exemplarCity>
+			</zone>
+			<zone type="Asia/Vientiane">
+				<exemplarCity draft="unconfirmed">བི་ཡཱན་ཊི་ཡཱན</exemplarCity>
+			</zone>
+			<zone type="Europe/Vaduz">
+				<exemplarCity draft="unconfirmed">བ་དུདས</exemplarCity>
+			</zone>
+			<zone type="Asia/Colombo">
+				<exemplarCity draft="unconfirmed">ཀོ་ལོམ་བྷོ</exemplarCity>
+			</zone>
+			<zone type="Africa/Monrovia">
+				<exemplarCity draft="unconfirmed">མཱན་རོ་བི་ཡ</exemplarCity>
+			</zone>
+			<zone type="Africa/Maseru">
+				<exemplarCity draft="unconfirmed">མ་ས་རུ</exemplarCity>
+			</zone>
+			<zone type="Europe/Vilnius">
+				<exemplarCity draft="unconfirmed">བིལ་ནི་ཡཱས</exemplarCity>
+			</zone>
+			<zone type="Europe/Luxembourg">
+				<exemplarCity draft="unconfirmed">ལག་སམ་བྷཀ</exemplarCity>
+			</zone>
+			<zone type="Europe/Riga">
+				<exemplarCity draft="unconfirmed">རི་གྷ</exemplarCity>
+			</zone>
+			<zone type="Africa/Tripoli">
+				<exemplarCity>ཏྲི་པོ་ལི</exemplarCity>
+			</zone>
+			<zone type="Europe/Monaco">
+				<exemplarCity draft="unconfirmed">མོ་ན་ཀོ</exemplarCity>
+			</zone>
+			<zone type="Europe/Chisinau">
+				<exemplarCity draft="unconfirmed">ཀི་ཤི་ནཱཝ</exemplarCity>
+			</zone>
+			<zone type="Indian/Antananarivo">
+				<exemplarCity draft="unconfirmed">ཨཱན་ཏ་ན་ན་དི་བོ</exemplarCity>
+			</zone>
+			<zone type="Pacific/Majuro">
+				<exemplarCity draft="unconfirmed">མེ་ཇུ་རོ</exemplarCity>
+			</zone>
+			<zone type="Africa/Bamako">
+				<exemplarCity draft="unconfirmed">བྷ་མ་ཀོ</exemplarCity>
+			</zone>
+			<zone type="Asia/Rangoon">
+				<exemplarCity draft="unconfirmed">རང་གྷུན</exemplarCity>
+			</zone>
+			<zone type="Pacific/Saipan">
+				<exemplarCity draft="unconfirmed">སཱའེ་ཕཱན</exemplarCity>
+			</zone>
+			<zone type="Africa/Nouakchott">
+				<exemplarCity draft="unconfirmed">ནུ་ཨཀ་ཤའོཊ</exemplarCity>
+			</zone>
+			<zone type="Indian/Mauritius">
+				<exemplarCity draft="unconfirmed">མོ་རི་ཤཱས</exemplarCity>
+			</zone>
+			<zone type="Indian/Maldives">
+				<exemplarCity draft="unconfirmed">མཱལ་དིབས</exemplarCity>
+			</zone>
+			<zone type="America/Tijuana">
+				<exemplarCity>ཏིའུ་ཝ་ན</exemplarCity>
+			</zone>
+			<zone type="America/Mexico_City">
+				<exemplarCity>མེཀ་སི་ཀོ་ སི་ཊི</exemplarCity>
+			</zone>
+			<zone type="Asia/Kuala_Lumpur">
+				<exemplarCity draft="unconfirmed">ཀོ་ལ་ ལམ་པུར</exemplarCity>
+			</zone>
+			<zone type="Africa/Maputo">
+				<exemplarCity draft="unconfirmed">མ་པུ་ཏོ</exemplarCity>
+			</zone>
+			<zone type="Africa/Windhoek">
+				<exemplarCity draft="unconfirmed">ཝིནཌ་ཧུཀ</exemplarCity>
+			</zone>
+			<zone type="Africa/Niamey">
+				<exemplarCity draft="unconfirmed">ནི་ཡ་མེ</exemplarCity>
+			</zone>
+			<zone type="Europe/Amsterdam">
+				<exemplarCity draft="unconfirmed">ཨམས་ཊར་ཌམ</exemplarCity>
+			</zone>
+			<zone type="Europe/Oslo">
+				<exemplarCity draft="unconfirmed">ཨོས་ལོ</exemplarCity>
+			</zone>
+			<zone type="Asia/Katmandu">
+				<exemplarCity draft="unconfirmed">ཀཱཊ་མཱན་ཌུ</exemplarCity>
+			</zone>
+			<zone type="Pacific/Nauru">
+				<exemplarCity draft="unconfirmed">ནཱཝ་རུ</exemplarCity>
+			</zone>
+			<zone type="America/Panama">
+				<exemplarCity>པ་ན་མ</exemplarCity>
+			</zone>
+			<zone type="America/Lima">
+				<exemplarCity draft="unconfirmed">ལི་མ</exemplarCity>
+			</zone>
+			<zone type="Pacific/Gambier">
+				<exemplarCity draft="unconfirmed">གེམ་བིཡར</exemplarCity>
+			</zone>
+			<zone type="Asia/Karachi">
+				<exemplarCity draft="unconfirmed">ཀ་ར་ཅི</exemplarCity>
+			</zone>
+			<zone type="Europe/Warsaw">
+				<exemplarCity draft="unconfirmed">ཝར་སོ</exemplarCity>
+			</zone>
+			<zone type="Pacific/Palau">
+				<exemplarCity draft="unconfirmed">པ་ལཱཝ</exemplarCity>
+			</zone>
+			<zone type="America/Asuncion">
+				<exemplarCity draft="unconfirmed">ཨ་སུན་སི་འོན</exemplarCity>
+			</zone>
+			<zone type="Europe/Bucharest">
+				<exemplarCity draft="unconfirmed">བྷུ་ཀ་རེསཊ</exemplarCity>
+			</zone>
+			<zone type="Europe/Moscow">
+				<exemplarCity draft="unconfirmed">མཱོས་ཀོ</exemplarCity>
+			</zone>
+			<zone type="Africa/Kigali">
+				<exemplarCity draft="unconfirmed">ཀི་གྷ་ལི</exemplarCity>
+			</zone>
+			<zone type="Africa/Khartoum">
+				<exemplarCity>ཁཱར་ཊུམ</exemplarCity>
+			</zone>
+			<zone type="Europe/Stockholm">
+				<exemplarCity draft="unconfirmed">ཨིས་ཊོཀ་ཧོལམ</exemplarCity>
+			</zone>
+			<zone type="Africa/Dakar">
+				<exemplarCity>ཌཱ་ཀར</exemplarCity>
+			</zone>
+			<zone type="Africa/Mogadishu">
+				<exemplarCity draft="unconfirmed">མོ་གཱ་ཌི་ཤུ</exemplarCity>
+			</zone>
+			<zone type="America/Paramaribo">
+				<exemplarCity draft="unconfirmed">པ་ར་མ་རི་བྷོ</exemplarCity>
+			</zone>
+			<zone type="Africa/Sao_Tome">
+				<exemplarCity draft="unconfirmed">སཝ་ ཊོ་མེ</exemplarCity>
+			</zone>
+			<zone type="America/El_Salvador">
+				<exemplarCity>ཨེལ་ སཱལ་བ་ཌོ</exemplarCity>
+			</zone>
+			<zone type="Africa/Mbabane">
+				<exemplarCity draft="unconfirmed">འུམ་བྷ་བྷ་ནི</exemplarCity>
+			</zone>
+			<zone type="Indian/Kerguelen">
+				<exemplarCity draft="unconfirmed">ཀིར་གུ་ལིན</exemplarCity>
+			</zone>
+			<zone type="Africa/Lome">
+				<exemplarCity>ལོ་མེ</exemplarCity>
+			</zone>
+			<zone type="Pacific/Fakaofo">
+				<exemplarCity draft="unconfirmed">ཕ་ཀའོ་ཕོ</exemplarCity>
+			</zone>
+			<zone type="Africa/Tunis">
+				<exemplarCity>ཊུ་ནིས྄</exemplarCity>
+			</zone>
+			<zone type="Pacific/Tongatapu">
+				<exemplarCity draft="unconfirmed">ཏོང་ག་ཏ་པུ</exemplarCity>
+			</zone>
+			<zone type="Pacific/Funafuti">
+				<exemplarCity draft="unconfirmed">ཕུ་ན་ཕུ་ཊི</exemplarCity>
+			</zone>
+			<zone type="Africa/Kampala">
+				<exemplarCity draft="unconfirmed">ཀེམ་པ་ལ</exemplarCity>
+			</zone>
+			<zone type="Pacific/Midway">
+				<exemplarCity draft="unconfirmed">མིཌ་ཝེ</exemplarCity>
+			</zone>
+			<zone type="Pacific/Wake">
+				<exemplarCity draft="unconfirmed">ཝེཀ</exemplarCity>
+			</zone>
+			<zone type="Pacific/Johnston">
+				<exemplarCity draft="unconfirmed">ཇཱོནསི་ཊོན</exemplarCity>
+			</zone>
+			<zone type="America/Yakutat">
+				<exemplarCity>ཡ་ཀུ་ཏཏ</exemplarCity>
+			</zone>
+			<zone type="America/Chicago">
+				<exemplarCity>ཅི་ཀཱ་གོ</exemplarCity>
+			</zone>
+			<zone type="America/Montevideo">
+				<exemplarCity draft="unconfirmed">མོན་ཊེ་བྷི་ཌིའོ</exemplarCity>
+			</zone>
+			<zone type="America/Caracas">
+				<exemplarCity draft="unconfirmed">ཀ་ར་ཀཱས</exemplarCity>
+			</zone>
+			<zone type="Pacific/Apia">
+				<exemplarCity>ཨ་པི་ཡ</exemplarCity>
+			</zone>
+			<zone type="Africa/Lusaka">
+				<exemplarCity draft="unconfirmed">ལུ་སཱ་ཀ</exemplarCity>
+			</zone>
+			<zone type="Africa/Harare">
+				<exemplarCity draft="unconfirmed">ཧ་རཱ་རེ</exemplarCity>
+			</zone>
+			<metazone type="Afghanistan">
+				<long>
+					<standard>ཨཕ་ག་ནི་ས྄ཏཱནཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Central">
+				<long>
+					<standard>དབུས་ཕྱོགས་ཨཕ་རི་ཀཱ་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Eastern">
+				<long>
+					<standard>ཤར་ཕྱོགས་ཨཕ་རི་ཀཱ་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Southern">
+				<long>
+					<standard>ལྷོ་ཕྱོགས་ཨཕ་རི་ཀཱ་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Western">
+				<long>
+					<generic>ནུབ་ཕྱོགས་ཨཕ་རི་ཀཱ་ཆུ་ཚོད</generic>
+					<standard>ནུབ་ཕྱོགས་ཨཕ་རི་ཀཱ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ནུབ་ཕྱོགས་ཨཕ་རི་ཀཱ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Alaska">
+				<long>
+					<generic>ཨ་ལསི་ཀ་ཆུ་ཚོད</generic>
+					<standard>ཨ་ལསི་ཀ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཨ་ལསི་ཀ་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Amazon">
+				<long>
+					<generic>ཨེ་མ་ཛཱོན་ཆུ་ཚོད</generic>
+					<standard>ཨེ་མ་ཛཱོན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཨེ་མ་ཛཱོན་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Central">
+				<long>
+					<generic>བྱང་ཨ་མི་རི་ཀ་དབུས་ཕྱོགས་ཆུ་ཚོད</generic>
+					<standard>བྱང་ཨ་མི་རི་ཀ་དབུས་ཕྱོགས་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>བྱང་ཨ་མི་རི་ཀ་དབུས་ཕྱོགས་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic>བྱང་ཨ་མི་རི་ཀ་ཤར་ཕྱོགས་ཆུ་ཚོད</generic>
+					<standard>བྱང་ཨ་མི་རི་ཀ་ཤར་ཕྱོགས་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>བྱང་ཨ་མི་རི་ཀ་ཤར་ཕྱོགས་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic>བྱང་ཨ་མི་རི་ཀ་མའུ་ཊེན་ཆུ་ཚོད</generic>
+					<standard>བྱང་ཨ་མི་རི་ཀ་མའུ་ཊེན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>བྱང་ཨ་མི་རི་ཀ་མའུ་ཊེན་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic>བྱང་ཨ་མི་རི་ཀ་པེ་སི་ཕིག་ཆུ་ཚོད</generic>
+					<standard>བྱང་ཨ་མི་རི་ཀ་པེ་སི་ཕིག་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>བྱང་ཨ་མི་རི་ཀ་པེ་སི་ཕིག་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Arabian">
+				<long>
+					<generic>ཨ་རེ་བྷི་ཡན་ཆུ་ཚོད</generic>
+					<standard>ཨ་རེ་བྷི་ཡན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཨ་རེ་བྷི་ཡན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina">
+				<long>
+					<generic>ཨར་ཇེན་ཊི་ན་ཆུ་ཚོད</generic>
+					<standard>ཨར་ཇེན་ཊི་ན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཨར་ཇེན་ཊི་ན་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina_Western">
+				<long>
+					<generic>ནུབ་ཕྱོགས་ཨར་ཇེན་ཊི་ན་ཆུ་ཚོད</generic>
+					<standard>ནུབ་ཕྱོགས་ཨར་ཇེན་ཊི་ན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ནུབ་ཕྱོགས་ཨར་ཇེན་ཊི་ན་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Armenia">
+				<long>
+					<generic>ཨར་མི་ནི་ཡ་ཆུ་ཚོད</generic>
+					<standard>ཨར་མི་ནི་ཡ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཨར་མི་ནི་ཡ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<generic>ཨེཊ་ལེན་ཊིཀ་ཆུ་ཚོད</generic>
+					<standard>ཨེཊ་ལེན་ཊིཀ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཨེཊ་ལེན་ཊིཀ་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Central">
+				<long>
+					<generic>དབུས་ཕྱོགས་ཨཱོས་ཊྲེལ་ལི་ཡ་ཆུ་ཚོད</generic>
+					<standard>དབུས་ཕྱོགས་ཨཱོས་ཊྲེལ་ལི་ཡ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>དབུས་ཕྱོགས་ཨཱོས་ཊྲེལ་ལི་ཡ་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_CentralWestern">
+				<long>
+					<generic>བུས་ནུབ་ཕྱོགས་ཨཱོས་ཊྲེལ་ལི་ཡ་ཆུ་ཚོད</generic>
+					<standard>དབུས་ནུབ་ཕྱོགས་ཨཱོས་ཊྲེལ་ལི་ཡ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>དབུས་ནུབ་ཕྱོགས་ཨཱོས་ཊྲེལ་ལི་ཡ་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Eastern">
+				<long>
+					<generic>ཤར་ཕྱོགས་ཕྱོགས་ཨཱོས་ཊྲེལ་ལི་ཡ་ཆུ་ཚོད</generic>
+					<standard>ཤར་ཕྱོགས་ཕྱོགས་ཨཱོས་ཊྲེལ་ལི་ཡ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཤར་ཕྱོགས་ཕྱོགས་ཨཱོས་ཊྲེལ་ལི་ཡ་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Western">
+				<long>
+					<generic>ནུབ་ཕྱོགས་ཨཱོས་ཊྲེལ་ལི་ཡ་ཆུ་ཚོད</generic>
+					<standard>ནུབ་ཕྱོགས་ཨཱོས་ཊྲེལ་ལི་ཡ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ནུབ་ཕྱོགས་ཨཱོས་ཊྲེལ་ལི་ཡ་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azerbaijan">
+				<long>
+					<generic>ཨ་ཛར་བྷའི་ཇཱན་ཆུ་ཚོད</generic>
+					<standard>ཨ་ཛར་བྷའི་ཇཱན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཨ་ཛར་བྷའི་ཇཱན་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azores">
+				<long>
+					<generic>ཨེ་ཛོརས་ཆུ་ཚོད</generic>
+					<standard>ཨེ་ཛོརས་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཨེ་ཛོརས་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bangladesh">
+				<long>
+					<generic>བངྒ་ལ་དེཤ་ཆུ་ཚོད</generic>
+					<standard>བངྒ་ལ་དེཤ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>བངྒ་ལ་དེཤ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bhutan">
+				<long>
+					<standard>འབྲུག་ཡུལ་ཆུ་ཚོད</standard>
+				</long>
+				<short>
+					<standard draft="unconfirmed">BT</standard>
+				</short>
+			</metazone>
+			<metazone type="Bolivia">
+				<long>
+					<standard>བྷོ་ལི་བི་ཡ་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Brasilia">
+				<long>
+					<generic>བྲ་ཛི་ལི་ཡ་ཆུ་ཚོད</generic>
+					<standard>བྲ་ཛི་ལི་ཡ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>བྲ་ཛི་ལི་ཡ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cape_Verde">
+				<long>
+					<generic>ཀེཔ་བཱཌ་ཆུ་ཚོད</generic>
+					<standard>ཀེཔ་བཱཌ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཀེཔ་བཱཌ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chile">
+				<long>
+					<generic>ཅི་ལི་ཆུ་ཚོད</generic>
+					<standard>ཅི་ལི་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཅི་ལི་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="China">
+				<long>
+					<generic>རྒྱ་ནག་ཆུ་ཚོད</generic>
+					<standard>རྒྱ་ནག་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>རྒྱ་ནག་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Christmas">
+				<long>
+					<standard>ཁི་རིསྟ་མེས་མཚོ་གླིང་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Colombia">
+				<long>
+					<generic>ཀོ་ལོམ་བྷི་ཡ་ཆུ་ཚོད</generic>
+					<standard>ཀོ་ལོམ་བྷི་ཡ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཀོ་ལོམ་བྷི་ཡ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cuba">
+				<long>
+					<generic>ཀིའུ་བྷ་ཆུ་ཚོད</generic>
+					<standard>ཀིའུ་བྷ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཀིའུ་བྷ་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Easter">
+				<long>
+					<generic>ཨིསི་ཊར་ཨཱའི་ལེནཌ་ཆུ་ཚོད</generic>
+					<standard>ཨིསི་ཊར་ཨཱའི་ལེནཌ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཨིསི་ཊར་ཨཱའི་ལེནཌ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Ecuador">
+				<long>
+					<standard>ཨེ་ཀུ་ཌཽ་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>དབུས་ཕྱོགས་ཡུ་རོ་པེན་ཆུ་ཚོད</generic>
+					<standard>དབུས་ཕྱོགས་ཡུ་རོ་པེན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>དབུས་ཕྱོགས་ཡུ་རོ་པེན་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic>ཤར་ཕྱོགས་ཡུ་རོ་པེན་ཆུ་ཚོད</generic>
+					<standard>ཤར་ཕྱོགས་ཡུ་རོ་པེན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཤར་ཕྱོགས་ཡུ་རོ་པེན་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>ནུབ་ཕྱོགས་ཡུ་རོ་པེན་ཆུ་ཚོད</generic>
+					<standard>ནུབ་ཕྱོགས་ཡུ་རོ་པེན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ནུབ་ཕྱོགས་ཡུ་རོ་པེན་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Falkland">
+				<long>
+					<generic>ཕལཀ་ལེནཌ་ཨཱའི་ལེནཌས་ཆུ་ཚོད</generic>
+					<standard>ཕལཀ་ལེནཌ་ཨཱའི་ལེནཌས་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཕལཀ་ལེནཌ་ཨཱའི་ལེནཌས་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="French_Guiana">
+				<long>
+					<standard>ཕིརེནཅ་གི་ཡ་ན་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Galapagos">
+				<long>
+					<standard>ག་ལ་པ་གོསི་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Georgia">
+				<long>
+					<generic>ཇཽ་ཇཱ་ཆུ་ཚོད</generic>
+					<standard>ཇཽ་ཇཱ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཇཽ་ཇཱ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="GMT">
+				<long>
+					<standard>གིརིན་ཝིཆ་ལུ་ཡོད་པའི་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Eastern">
+				<long>
+					<generic>ཤར་ཕྱོགས་གིརིན་ལེནཌ་ཆུ་ཚོད</generic>
+					<standard>ཤར་ཕྱོགས་གིརིན་ལེནཌ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཤར་ཕྱོགས་གིརིན་ལེནཌ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Western">
+				<long>
+					<generic>ནུབ་ཕྱོགས་གིརིན་ལེནཌ་ཆུ་ཚོད</generic>
+					<standard>ནུབ་ཕྱོགས་གིརིན་ལེནཌ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ནུབ་ཕྱོགས་གིརིན་ལེནཌ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gulf">
+				<long>
+					<standard>གཱལཕི་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Guyana">
+				<long>
+					<standard>གུ་ཡ་ན་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Hawaii_Aleutian">
+				<long>
+					<generic>ཧ་ཝའི་-ཨེ་ལིའུ་ཤེན་ཆུ་ཚོད</generic>
+					<standard>ཧ་ཝའི་-ཨེ་ལིའུ་ཤེན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཧ་ཝའི་-ཨེ་ལིའུ་ཤེན་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="India">
+				<long>
+					<standard>རྒྱ་གར་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Indian_Ocean">
+				<long>
+					<standard>རྒྱ་གར་གྱི་རྒྱ་མཚོ་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Indochina">
+				<long>
+					<standard>ཨིན་ཌོ་ཅཱའི་ན་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Central">
+				<long>
+					<standard>དབུས་ཕྱོགས་ཨིན་ཌོ་ནེ་ཤི་ཡ་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Eastern">
+				<long>
+					<standard>ཤར་ཕྱོགས་ཨིན་ཌོ་ནེ་ཤི་ཡ་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Western">
+				<long>
+					<standard>ནུབ་ཕྱོགས་ཨིན་ཌོ་ནེ་ཤི་ཡ་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Iran">
+				<long>
+					<generic>ཨི་རཱན་ཆུ་ཚོད</generic>
+					<standard>ཨི་རཱན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཨི་རཱན་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Irkutsk">
+				<long>
+					<generic>ཨར་ཀུཙི་ཆུ་ཚོད</generic>
+					<standard>ཨར་ཀུཙི་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཨར་ཀུཙི་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Israel">
+				<long>
+					<generic>ཨིས་རེལ་ཆུ་ཚོད</generic>
+					<standard>ཨིས་རེལ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཨིས་རེལ་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Japan">
+				<long>
+					<generic>ཇ་པཱན་ཆུ་ཚོད</generic>
+					<standard>ཇ་པཱན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཇ་པཱན་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Korea">
+				<long>
+					<generic>ཀོ་རི་ཡ་ཆུ་ཚོད</generic>
+					<standard>ཀོ་རི་ཡ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཀོ་རི་ཡ་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Krasnoyarsk">
+				<long>
+					<generic>ཀརསི་ནོ་ཡརསཀི་ཆུ་ཚོད</generic>
+					<standard>ཀརསི་ནོ་ཡརསཀི་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཀརསི་ནོ་ཡརསཀི་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Magadan">
+				<long>
+					<generic>མ་གྷ་དཱན་ཆུ་ཚོད</generic>
+					<standard>མ་གྷ་དཱན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>མ་གྷ་དཱན་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Maldives">
+				<long>
+					<standard>མཱལ་དིབས་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Mauritius">
+				<long>
+					<generic>མོ་རི་ཤཱས་ཆུ་ཚོད</generic>
+					<standard>མོ་རི་ཤཱས་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>མོ་རི་ཤཱས་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Moscow">
+				<long>
+					<generic>མཽས་ཀོ་ཆུ་ཚོད</generic>
+					<standard>མཽས་ཀོ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>མཽས་ཀོ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Nepal">
+				<long>
+					<standard>ནེ་པཱལ་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="New_Zealand">
+				<long>
+					<generic>ནིའུ་ཛི་ལེནཌ་ཆུ་ཚོད</generic>
+					<standard>ནིའུ་ཛི་ལེནཌ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ནིའུ་ཛི་ལེནཌ་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Newfoundland">
+				<long>
+					<generic>ནིའུ་ཕའུནཌ་ལེནཌ་ཆུ་ཚོད</generic>
+					<standard>ནིའུ་ཕའུནཌ་ལེནཌ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ནིའུ་ཕའུནཌ་ལེནཌ་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Noronha">
+				<long>
+					<generic>ཕར་ནེན་ཌོ་ ཌི་ ནོ་རཱོན་ཧ་ཆུ་ཚོད</generic>
+					<standard>ཕར་ནེན་ཌོ་ ཌི་ ནོ་རཱོན་ཧ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཕར་ནེན་ཌོ་ ཌི་ ནོ་རཱོན་ཧ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Novosibirsk">
+				<long>
+					<generic>ནོ་བོ་སི་བིརསཀི་ཆུ་ཚོད</generic>
+					<standard>ནོ་བོ་སི་བིརསཀི་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ནོ་བོ་སི་བིརསཀི་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Omsk">
+				<long>
+					<generic>ཨོམསཀི་ཆུ་ཚོད</generic>
+					<standard>ཨོམསཀི་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཨོམསཀི་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pakistan">
+				<long>
+					<generic>པ་ཀི་ས྄ཏཱན་ཆུ་ཚོད</generic>
+					<standard>པ་ཀི་ས྄ཏཱན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>པ་ཀི་ས྄ཏཱན་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Paraguay">
+				<long>
+					<generic>པ་ར་གུ་ཝའི་ཆུ་ཚོད</generic>
+					<standard>པ་ར་གུ་ཝའི་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>པ་ར་གུ་ཝའི་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Peru">
+				<long>
+					<generic>པ་རུ་ཆུ་ཚོད</generic>
+					<standard>པ་རུ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>པ་རུ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pierre_Miquelon">
+				<long>
+					<generic>པའི་རི་དང་མི་ཀི་ལཱོན་ཆུ་ཚོད</generic>
+					<standard>པའི་རི་དང་མི་ཀི་ལཱོན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>པའི་རི་དང་མི་ཀི་ལཱོན་ཉིན་སྲུང་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Reunion">
+				<long>
+					<standard>རི་ཡུ་ནི་ཡཱན་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Sakhalin">
+				<long>
+					<generic>ས་ཁ་ལིན་ཆུ་ཚོད</generic>
+					<standard>ས་ཁ་ལིན་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ས་ཁ་ལིན་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Seychelles">
+				<long>
+					<standard>སེ་ཤཱལས་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Suriname">
+				<long>
+					<standard>སུ་རི་ནཱམ་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Uruguay">
+				<long>
+					<generic>ཡུ་རུ་གུ་ཝཱའི་ཆུ་ཚོད</generic>
+					<standard>ཡུ་རུ་གུ་ཝཱའི་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཡུ་རུ་གུ་ཝཱའི་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Venezuela">
+				<long>
+					<standard>བེ་ནི་ཛུ་ཝེ་ལ་ཆུ་ཚོད</standard>
+				</long>
+			</metazone>
+			<metazone type="Vladivostok">
+				<long>
+					<generic>བ་ལ་ཌི་བོསི་ཏོཀ་ཆུ་ཚོད</generic>
+					<standard>བ་ལ་ཌི་བོསི་ཏོཀ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>བ་ལ་ཌི་བོསི་ཏོཀ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Volgograd">
+				<long>
+					<generic>བཱོལ་གོ་གིརེཌ་ཆུ་ཚོད</generic>
+					<standard>བཱོལ་གོ་གིརེཌ་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>བཱོལ་གོ་གིརེཌ་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Yakutsk">
+				<long>
+					<generic>ཡ་ཀུཙིཀི་ཆུ་ཚོད</generic>
+					<standard>ཡ་ཀུཙིཀི་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཡ་ཀུཙིཀི་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+			<metazone type="Yekaterinburg">
+				<long>
+					<generic>ཡེ་ཀ་ཏེ་རིན་བརག་ཆུ་ཚོད</generic>
+					<standard>ཡེ་ཀ་ཏེ་རིན་བརག་ཚད་ལྡན་ཆུ་ཚོད</standard>
+					<daylight>ཡེ་ཀ་ཏེ་རིན་བརག་བྱཱར་དུས་ཆུ་ཚོད</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>tibt</defaultNumberingSystem>
+		<otherNumberingSystems>
+			<native>tibt</native>
+		</otherNumberingSystems>
+		<symbols numberSystem="latn">
+			<decimal>.</decimal>
+			<group>,</group>
+			<list>;</list>
+			<percentSign>%</percentSign>
+			<plusSign>+</plusSign>
+			<minusSign>-</minusSign>
+			<exponential>E</exponential>
+			<perMille>‰</perMille>
+			<infinity>∞</infinity>
+			<nan>NaN</nan>
+		</symbols>
+		<symbols numberSystem="tibt">
+			<decimal>.</decimal>
+			<group>,</group>
+			<list>;</list>
+			<percentSign>%</percentSign>
+			<plusSign>+</plusSign>
+			<minusSign>-</minusSign>
+			<exponential>E</exponential>
+			<perMille>‰</perMille>
+			<infinity>གྲངས་མེད</infinity>
+			<nan>ཨང་མད</nan>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+			<decimalFormatLength type="long">
+				<decimalFormat>
+					<pattern type="1000" count="other">སྟོང་ཕྲག 0</pattern>
+					<pattern type="10000" count="other">ཁྲི་ཕྲག 0</pattern>
+					<pattern type="100000" count="other">འབུམ་ཕྲག 0</pattern>
+					<pattern type="1000000" count="other">ས་ཡ་ 0</pattern>
+					<pattern type="10000000" count="other">བྱེ་བ་ 0</pattern>
+					<pattern type="100000000" count="other">དུང་ཕྱུར་ 0</pattern>
+					<pattern type="1000000000" count="other">དུང་ཕྱུར་ 00</pattern>
+					<pattern type="10000000000" count="other">དུང་ཕྱུར་བརྒྱ་ 0</pattern>
+					<pattern type="100000000000" count="other">དུང་ཕྱུར་སྟོང 0</pattern>
+					<pattern type="1000000000000" count="other">དུང་ཕྱུར་ཁྲི་ 0</pattern>
+					<pattern type="10000000000000" count="other">དུང་ཕྱུར་འབུམ་ 0</pattern>
+					<pattern type="100000000000000" count="other">དུང་ཕྱུར་ས་ཡ་ 0</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<scientificFormats numberSystem="latn">
+			<scientificFormatLength>
+				<scientificFormat>
+					<pattern>#E0</pattern>
+				</scientificFormat>
+			</scientificFormatLength>
+		</scientificFormats>
+		<percentFormats numberSystem="latn">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern>#,##,##0 %</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤#,##,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="other" draft="provisional">¤0K</pattern>
+					<pattern type="10000" count="other" draft="provisional">¤00K</pattern>
+					<pattern type="100000" count="other" draft="provisional">¤000K</pattern>
+					<pattern type="1000000" count="other" draft="provisional">¤0M</pattern>
+					<pattern type="10000000" count="other" draft="provisional">¤00M</pattern>
+					<pattern type="100000000" count="other" draft="provisional">¤000M</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">¤0G</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">¤00G</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">¤000G</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">¤0T</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">¤00T</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">¤000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<unitPattern count="other">{0} {1}</unitPattern>
+		</currencyFormats>
+		<currencies>
+			<currency type="AED">
+				<displayName>ཡུ་ནཱའི་ཊེཌ་ ཨ་རབ་ ཨེ་མེ་རེཊས་ཀྱི་དངུལ་ ཌིར་ཧཱམ</displayName>
+			</currency>
+			<currency type="AFN">
+				<displayName>ཨཕ་གཱན་གྱི་དངུལ་ ཨཕ་ག་ནི</displayName>
+			</currency>
+			<currency type="AUD">
+				<displayName>ཨཱོས་ཊྲེ་ལི་ཡ་གི་དངུལ་ ཌོ་ལར</displayName>
+				<symbol>AU$</symbol>
+			</currency>
+			<currency type="BDT">
+				<displayName>བྷང་ལ་དེཤ་གི་དངུལ་ ཏ་ཀ</displayName>
+			</currency>
+			<currency type="BMD">
+				<displayName>བར་མུ་ཌ་གི་དངུལ་ ཌོ་ལར</displayName>
+			</currency>
+			<currency type="BRL">
+				<displayName>བྲ་ཛིལ་གྱི་དངུལ་ རེ་ཡལ</displayName>
+				<symbol>R$</symbol>
+			</currency>
+			<currency type="BTN">
+				<displayName>དངུལ་ཀྲམ</displayName>
+				<symbol>Nu.</symbol>
+			</currency>
+			<currency type="CAD">
+				<displayName>ཀེ་ན་ཌ་གི་དངུལ་ ཌོ་ལར</displayName>
+				<symbol>CA$</symbol>
+			</currency>
+			<currency type="CHF">
+				<displayName>སུ་ཡིས་ཀྱི་དངུལ་ ཕྲངཀ</displayName>
+			</currency>
+			<currency type="CLP">
+				<displayName>ཅི་ལི་གི་དངུལ་ པེ་སོ</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>རྒྱ་ནག་གི་དངུལ་ ཡུ་ཝཱན</displayName>
+				<symbol>CN¥</symbol>
+			</currency>
+			<currency type="COP">
+				<displayName>ཀོ་ལོམ་བྷི་ཡ་གི་དངུལ་ པེ་སོ</displayName>
+			</currency>
+			<currency type="CUP">
+				<displayName>ཀིའུ་བྷ་གི་དངུལ་ པེ་སོ</displayName>
+			</currency>
+			<currency type="DKK">
+				<displayName>ཌེན་མཱཀ་གི་དངུལ་ ཀྲོན</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName>ཨཱལ་ཇི་རི་ཡ་གི་དངུལ་ ཌའི་ནར</displayName>
+			</currency>
+			<currency type="EGP">
+				<displayName>ཨི་ཇིབཊ་གི་དངུལ་ པ་འུནཌ</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>ཡུ་རོ༌དངུལ་</displayName>
+				<symbol>€</symbol>
+			</currency>
+			<currency type="GBP">
+				<displayName>བྲི་ཊིཤ་ པ་འུནཌ་ ཨིས་ཊར་ལིང</displayName>
+				<symbol>£</symbol>
+			</currency>
+			<currency type="HKD">
+				<displayName>ཧོང་ཀོང་གི་དངུལ་ ཌོ་ལར</displayName>
+				<symbol>HK$</symbol>
+			</currency>
+			<currency type="IDR">
+				<displayName>ཨིན་ཌོ་ནེ་ཤི་ཡ་གི་དངུལ་ རུ་པི་ཡ</displayName>
+			</currency>
+			<currency type="ILS">
+				<displayName>ཨིས་རེལ་གྱི་དངུལ་གསརཔ་ ཤེ་ཀེལ</displayName>
+				<symbol>ILS</symbol>
+			</currency>
+			<currency type="INR">
+				<displayName>རྒྱ་གར་གྱི་དངུལ་ རུ་པི</displayName>
+				<symbol>₹</symbol>
+			</currency>
+			<currency type="IQD">
+				<displayName>ཨི་རཱཀ་གི་དངུལ་ ཌི་ན</displayName>
+			</currency>
+			<currency type="IRR">
+				<displayName>ཨི་རཱན་གྱི་དངུལ་ རི་ཨཱལ</displayName>
+			</currency>
+			<currency type="ISK">
+				<displayName>ཨཱཡིས་ལེནཌ་གི་དངུལ་ ཀྲོ་ན</displayName>
+			</currency>
+			<currency type="JMD">
+				<displayName>ཇཱ་མཻ་ཀ་གི་དངུལ་ ཌོ་ལར</displayName>
+			</currency>
+			<currency type="JOD">
+				<displayName>ཇོར་ཌན་གྱི་དངུལ་ ཌི་ན</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>ཇཱ་པཱན་གྱི་དངུལ་ ཡེན</displayName>
+				<symbol>JP¥</symbol>
+			</currency>
+			<currency type="KES">
+				<displayName>ཀེན་ཡ་གི་དངུལ་ ཤི་ལིང</displayName>
+			</currency>
+			<currency type="KHR">
+				<displayName>ཀེམ་བྷོ་ཌི་ཡ་གི་དངུལ་ རི་ཨཱལ</displayName>
+			</currency>
+			<currency type="KPW">
+				<displayName>ནོརཐ་ ཀོ་རི་ཡ་གི་དངུལ་ ཝོན</displayName>
+			</currency>
+			<currency type="KRW">
+				<displayName>སཱའུཐ་ ཀོ་རི་ཡ་གི་དངུལ་ ཝོན</displayName>
+				<symbol>KR₩</symbol>
+			</currency>
+			<currency type="KWD">
+				<displayName>ཀུ་ཝེཊ་གི་དངུལ་ ཌི་ན</displayName>
+			</currency>
+			<currency type="KZT">
+				<displayName>ཀ་ཛགས་ཏཱན་གྱི་དངུལ་ ཏེང་གེ</displayName>
+			</currency>
+			<currency type="LAK">
+				<displayName>ལཱ་ཝོས་ཀྱི་དངུལ་ ཀིཔ</displayName>
+			</currency>
+			<currency type="LBP">
+				<displayName>ལེ་བ་ནོན་གྱི་དངུལ་ པ་འུནཌ</displayName>
+			</currency>
+			<currency type="LKR">
+				<displayName>ཤྲི་ ལང་ཀ་གི་དངུལ་ རུ་པི</displayName>
+			</currency>
+			<currency type="LRD">
+				<displayName>ལཱའི་བེ་རི་ཡ་གི་དངུལ་ ཌོ་ལར</displayName>
+			</currency>
+			<currency type="LYD">
+				<displayName>ལི་བི་ཡ་གི་དངུལ་ ཌི་ན</displayName>
+			</currency>
+			<currency type="MAD">
+				<displayName>མོ་རོ་ཀོ་གི་དངུལ་ ཌིར་ཧཱམ</displayName>
+			</currency>
+			<currency type="MMK">
+				<displayName>མི་ཡཱན་མར་གྱི་དངུལ་ ཅཱཏ</displayName>
+			</currency>
+			<currency type="MNT">
+				<displayName>སོག་པོའི་དངུལ་ ཏུ་གྲིཀ</displayName>
+			</currency>
+			<currency type="MVR">
+				<displayName>མཱལ་དིབས་ཀྱི་དངུལ་ རུ་ཕི་ཡ</displayName>
+			</currency>
+			<currency type="MXN">
+				<displayName>མེཀ་སི་ཀོ་གི་དངུལ་ པེ་སོ</displayName>
+				<symbol>MX$</symbol>
+			</currency>
+			<currency type="MYR">
+				<displayName>མ་ལེ་ཤི་ཡ་གི་དངུལ་ རིང་གིཊ</displayName>
+			</currency>
+			<currency type="NOK">
+				<displayName>ནོར་ཝེ་གི་དངུལ་ ཀྲོ་ན</displayName>
+			</currency>
+			<currency type="NPR">
+				<displayName>བལ་པོའི་དངུལ་ རུ་པི</displayName>
+			</currency>
+			<currency type="NZD">
+				<displayName>ནིའུ་ཛི་ལེནཌ་གི་དངུལ་ ཌོ་ལར</displayName>
+				<symbol>NZ$</symbol>
+			</currency>
+			<currency type="OMR">
+				<displayName>ཨོ་མཱན་གྱི་དངུལ་ རི་ཨཱལ</displayName>
+			</currency>
+			<currency type="PAB">
+				<displayName>པ་ན་མ་གི་དངུལ་ བཱལ་བོ་ཝ</displayName>
+			</currency>
+			<currency type="PEN">
+				<displayName>པ་རུ་གི་དངུལ་ ནུ་བོ་ སཱོལ</displayName>
+			</currency>
+			<currency type="PHP">
+				<displayName>ཕི་ལི་པིནས་གྱི་དངུལ་ པེ་སོ</displayName>
+			</currency>
+			<currency type="PKR">
+				<displayName>པ་ཀིས་ཏཱན་གྱི་དངུལ་ རུ་པི</displayName>
+			</currency>
+			<currency type="PLN">
+				<displayName>པོ་ལེནཌ་ཀྱི་དངུལ ཛ྄ལོ་ཊི</displayName>
+			</currency>
+			<currency type="QAR">
+				<displayName>ཀ་ཊར་གྱི་དངུལ་ རི་ཨཱལ</displayName>
+			</currency>
+			<currency type="RUB">
+				<displayName>ཨུ་རུ་སུ་གི་དངུལ་ རུ་བཱལ</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName>སཱཝ་དིའི་དངུལ་ རི་ཡཱལ</displayName>
+			</currency>
+			<currency type="SCR">
+				<displayName>སེ་ཤཱལས་ཀྱི་དངུལ་ རུ་པི</displayName>
+			</currency>
+			<currency type="SEK">
+				<displayName>སུའི་ཌེན་གྱི་དངུལ་ ཀྲོ་ན</displayName>
+			</currency>
+			<currency type="SGD">
+				<displayName>སིང་ག་པོར་གྱི་དངུལ་ ཌོ་ལར</displayName>
+			</currency>
+			<currency type="SYP">
+				<displayName>སི་རི་ཡ་གི་དངུལ་ པ་འུནཌ</displayName>
+			</currency>
+			<currency type="THB">
+				<displayName>ཐཱའི་ལེནཌ་གི་དངུལ་ བཱཏ</displayName>
+				<symbol>TH฿</symbol>
+			</currency>
+			<currency type="TJS">
+				<displayName>ཏ་ཇི་ཀིས་ཏཱན་གྱི་དངུལ་ སོ་མོ་ནི</displayName>
+			</currency>
+			<currency type="TRY">
+				<displayName>ཊཱར་ཀི་གི་དངུལ་ ལི་ར</displayName>
+			</currency>
+			<currency type="TWD">
+				<displayName>ཊཱའི་ཝཱན་གི་དངུལ ཌོ་ལར</displayName>
+				<symbol>NT$</symbol>
+			</currency>
+			<currency type="TZS">
+				<displayName>ཊཱན་ཛཱ་ནི་ཡ་གི་དངུལ་ ཤི་ལིང</displayName>
+			</currency>
+			<currency type="UGX">
+				<displayName>ཡུ་གྷེན་ཌ་གི་དངུལ་ ཤི་ལིང</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>ཡུ་ཨེས་ ཌོ་ལར</displayName>
+				<symbol>US$</symbol>
+			</currency>
+			<currency type="UYU">
+				<displayName>ཡུ་རུ་གུ་ཝའི་གི་དངུལ་ པེ་སོ</displayName>
+			</currency>
+			<currency type="UZS">
+				<displayName>ཨུས་བེ་ཀིས་ཏཱན་གྱི་དངུལ་ སོམ</displayName>
+			</currency>
+			<currency type="VEF">
+				<displayName>བེ་ནི་ཛུ་ཝེ་ལ་གི་དངུལ་ བོ་ལི་བར (2008–2018)</displayName>
+			</currency>
+			<currency type="VES">
+				<displayName>བེ་ནི་ཛུ་ཝེ་ལ་གི་དངུལ་ བོ་ལི་བར</displayName>
+			</currency>
+			<currency type="VND">
+				<displayName>བེཊ་ནཱམ་གྱི་དངུལ་ ཌོང</displayName>
+			</currency>
+			<currency type="XAF">
+				<symbol>XAF</symbol>
+			</currency>
+			<currency type="XXX">
+				<displayName>མ་ཤེས་པའི་དངུལ</displayName>
+			</currency>
+			<currency type="ZAR">
+				<displayName>སཱའུཐ་ ཨཕ་རི་ཀ་གི་དངུལ་ རཱནད</displayName>
+			</currency>
+		</currencies>
+		<minimalPairs>
+			<pluralMinimalPairs count="other">ཉིནམ་ {0}</pluralMinimalPairs>
+		</minimalPairs>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="duration-year">
+				<displayName draft="provisional">ལོ་འཁོར་</displayName>
+				<unitPattern count="other">ལོ་འཁོར་ {0}</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="provisional">ཟླཝ་</displayName>
+				<unitPattern count="other">ཟླཝ་ {0}</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName draft="provisional">བངུན་ཕྲག་</displayName>
+				<unitPattern count="other">བངུན་ཕྲག་ {0}</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="provisional">ཉིན་ཞག་</displayName>
+				<unitPattern count="other">ཉིན་ཞག་ {0}</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName draft="provisional">ཆུ་ཚོད་</displayName>
+				<unitPattern count="other">ཆུ་ཚོད་ {0}</unitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName draft="provisional">སྐར་མ་</displayName>
+				<unitPattern count="other">སྐར་མ་ {0}</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName draft="provisional">སྐར་ཆ་</displayName>
+				<unitPattern count="other">སྐར་ཆ་ {0}</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="duration-year">
+				<displayName draft="provisional">ལོ་འཁོར་</displayName>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="provisional">ཟླཝ་</displayName>
+			</unit>
+			<unit type="duration-week">
+				<displayName draft="provisional">བངུན་ཕྲག་</displayName>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="provisional">ཉིན་ཞག་</displayName>
+			</unit>
+			<unit type="duration-hour">
+				<displayName draft="provisional">ཆུ་ཚོད་</displayName>
+			</unit>
+			<unit type="duration-minute">
+				<displayName draft="provisional">སྐར་མ་</displayName>
+			</unit>
+			<unit type="duration-second">
+				<displayName draft="provisional">སྐར་ཆ་</displayName>
+			</unit>
+		</unitLength>
+	</units>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="start">{0} དང་ {1}</listPatternPart>
+			<listPatternPart type="middle">{0} དང་ {1}</listPatternPart>
+			<listPatternPart type="end">{0} དང་ {1}</listPatternPart>
+			<listPatternPart type="2">{0} དང་ {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<yesstr>ཨིན་:ཨ</yesstr>
+			<nostr>མེན་:མ</nostr>
+		</messages>
+	</posix>
+</ldml>

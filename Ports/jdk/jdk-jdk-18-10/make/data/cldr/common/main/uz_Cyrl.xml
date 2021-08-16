@@ -1,0 +1,3658 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="uz"/>
+		<script type="Cyrl"/>
+	</identity>
+	<localeDisplayNames>
+		<localeDisplayPattern>
+			<localePattern>{0} ({1})</localePattern>
+			<localeSeparator>{0}, {1}</localeSeparator>
+			<localeKeyTypePattern>{0}: {1}</localeKeyTypePattern>
+		</localeDisplayPattern>
+		<languages>
+			<language type="aa">афарча</language>
+			<language type="ab">абхазча</language>
+			<language type="ace">ачин</language>
+			<language type="ada">адангмэ</language>
+			<language type="ady">адигей</language>
+			<language type="af">африкаанс</language>
+			<language type="agq">агемча</language>
+			<language type="ain">айну</language>
+			<language type="ak">аканча</language>
+			<language type="ale">алеут</language>
+			<language type="am">амхарча</language>
+			<language type="an">арагон</language>
+			<language type="anp">ангика</language>
+			<language type="ar">арабча</language>
+			<language type="ar_001">стандарт арабча</language>
+			<language type="arn">мапудунгун</language>
+			<language type="arp">арапахо</language>
+			<language type="as">ассомча</language>
+			<language type="asa">асуча</language>
+			<language type="ast">астурийча</language>
+			<language type="av">аварча</language>
+			<language type="awa">авадхи</language>
+			<language type="ay">аймара</language>
+			<language type="az">озарбайжонча</language>
+			<language type="az" alt="short">озар</language>
+			<language type="ba">бошқирдча</language>
+			<language type="ban">балича</language>
+			<language type="bas">басаа</language>
+			<language type="be">беларусча</language>
+			<language type="bem">бемба</language>
+			<language type="bez">бенача</language>
+			<language type="bg">болгарча</language>
+			<language type="bho">бхожпури</language>
+			<language type="bi">бислама</language>
+			<language type="bin">бини</language>
+			<language type="bm">бамбарча</language>
+			<language type="bn">бенгалча</language>
+			<language type="bo">тибетча</language>
+			<language type="br">бретонча</language>
+			<language type="brx">бодоча</language>
+			<language type="bs">боснийча</language>
+			<language type="bug">бугийча</language>
+			<language type="byn">блинча</language>
+			<language type="ca">каталонча</language>
+			<language type="ce">чечен тили</language>
+			<language type="ceb">себуанча</language>
+			<language type="cgg">чигача</language>
+			<language type="ch">чаморро</language>
+			<language type="chk">чуукча</language>
+			<language type="chm">мари</language>
+			<language type="cho">чоктавча</language>
+			<language type="chr">чероки</language>
+			<language type="chy">шайенн</language>
+			<language type="ckb">сорани-курдча</language>
+			<language type="co">корсиканча</language>
+			<language type="cs">чехча</language>
+			<language type="cu">славянча (черков)</language>
+			<language type="cv">чуваш тили</language>
+			<language type="cy">уэлсча</language>
+			<language type="da">датча</language>
+			<language type="dak">дакотча</language>
+			<language type="dar">даргинча</language>
+			<language type="dav">таитача</language>
+			<language type="de">немисча</language>
+			<language type="dgr">догриб</language>
+			<language type="dje">зарма</language>
+			<language type="dsb">қуйи-сорбча</language>
+			<language type="dua">дуалача</language>
+			<language type="dv">дивехи</language>
+			<language type="dyo">диола-фогни</language>
+			<language type="dz">дзонгка</language>
+			<language type="dzg">дазага</language>
+			<language type="ebu">эмбуча</language>
+			<language type="ee">эвеча</language>
+			<language type="efi">эфик</language>
+			<language type="eka">экажук</language>
+			<language type="el">грекча</language>
+			<language type="en">инглизча</language>
+			<language type="en_GB">инглизча (Британия)</language>
+			<language type="en_US">инглизча (Америка)</language>
+			<language type="eo">эсперанто</language>
+			<language type="es">испанча</language>
+			<language type="et">эстонча</language>
+			<language type="eu">баскча</language>
+			<language type="ewo">эвондонча</language>
+			<language type="fa">форсий</language>
+			<language type="ff">фулаҳ</language>
+			<language type="fi">финча</language>
+			<language type="fil">филипинча</language>
+			<language type="fj">фижича</language>
+			<language type="fo">фарерча</language>
+			<language type="fon">фон</language>
+			<language type="fr">французча</language>
+			<language type="fur">фриулча</language>
+			<language type="fy">ғарбий фризча</language>
+			<language type="ga">ирландча</language>
+			<language type="gaa">га</language>
+			<language type="gd">шотландча гаелик</language>
+			<language type="gez">геэз</language>
+			<language type="gil">гилбертча</language>
+			<language type="gl">галицийча</language>
+			<language type="gn">гуарани</language>
+			<language type="gor">горонтало</language>
+			<language type="gsw">немисча (Швейцария)</language>
+			<language type="gu">гужаротча</language>
+			<language type="guz">гусии</language>
+			<language type="gv">мэнча</language>
+			<language type="gwi">гвичин</language>
+			<language type="ha">хауса</language>
+			<language type="haw">гавайча</language>
+			<language type="he">иброний</language>
+			<language type="hi">ҳинди</language>
+			<language type="hil">хилигайнон</language>
+			<language type="hmn">хмонгча</language>
+			<language type="hr">хорватча</language>
+			<language type="hsb">юқори сорбча</language>
+			<language type="ht">гаитянча</language>
+			<language type="hu">венгерча</language>
+			<language type="hup">хупа тили</language>
+			<language type="hy">арманча</language>
+			<language type="hz">гереро</language>
+			<language type="ia">интерлингва</language>
+			<language type="iba">ибан тили</language>
+			<language type="ibb">ибибо</language>
+			<language type="id">индонезча</language>
+			<language type="ig">игбо</language>
+			<language type="ilo">илоко</language>
+			<language type="inh">ингушча</language>
+			<language type="io">идо</language>
+			<language type="is">исландча</language>
+			<language type="it">италянча</language>
+			<language type="iu">инуктитут</language>
+			<language type="ja">японча</language>
+			<language type="jgo">нгомба</language>
+			<language type="jmc">мачаме тили</language>
+			<language type="jv">яванча</language>
+			<language type="ka">грузинча</language>
+			<language type="kab">кабилча</language>
+			<language type="kaj">кажи</language>
+			<language type="kam">камбача</language>
+			<language type="kde">макондеча</language>
+			<language type="kea">кабувердиану</language>
+			<language type="khq">койра-чиини</language>
+			<language type="ki">кикую</language>
+			<language type="kk">қозоқча</language>
+			<language type="kkj">како</language>
+			<language type="kl">гренландча</language>
+			<language type="kln">каленжинча</language>
+			<language type="km">хмерча</language>
+			<language type="kn">каннада</language>
+			<language type="ko">корейсча</language>
+			<language type="kok">конканча</language>
+			<language type="kr">канури</language>
+			<language type="ks">кашмирча</language>
+			<language type="ksb">шамбала</language>
+			<language type="ksf">бафияча</language>
+			<language type="ksh">кёлнча</language>
+			<language type="ku">курдча</language>
+			<language type="kw">корнча</language>
+			<language type="ky">қирғизча</language>
+			<language type="la">лотинча</language>
+			<language type="lag">лангича</language>
+			<language type="lb">люксембургча</language>
+			<language type="lg">гандача</language>
+			<language type="lkt">лакотачалакотача</language>
+			<language type="ln">лингалча</language>
+			<language type="lo">лаосча</language>
+			<language type="lrc">шимолий лури</language>
+			<language type="lt">литвача</language>
+			<language type="lu">луба-катанга</language>
+			<language type="lus">лушай</language>
+			<language type="luy">луҳя</language>
+			<language type="lv">латишча</language>
+			<language type="mas">масайча</language>
+			<language type="mdf">мокша тили</language>
+			<language type="men">менде</language>
+			<language type="mer">меруча</language>
+			<language type="mfe">морисьен</language>
+			<language type="mg">малагасийча</language>
+			<language type="mgh">махува-митто</language>
+			<language type="mgo">мета</language>
+			<language type="mh">маршалл тили</language>
+			<language type="mi">маори</language>
+			<language type="mic">микмак</language>
+			<language type="min">минангкабау</language>
+			<language type="mk">македонча</language>
+			<language type="ml">малаялам</language>
+			<language type="mn">мўғулча</language>
+			<language type="mni">манипурча</language>
+			<language type="moh">могавк</language>
+			<language type="mos">мосси</language>
+			<language type="mr">маратхи</language>
+			<language type="ms">малай тил</language>
+			<language type="mt">малтача</language>
+			<language type="mua">мунданг</language>
+			<language type="mul">бир нечта тил</language>
+			<language type="mus">крикча</language>
+			<language type="mwl">мирандес</language>
+			<language type="my">бирманча</language>
+			<language type="myv">эрзянча</language>
+			<language type="mzn">мазандеран</language>
+			<language type="naq">нама</language>
+			<language type="nb">норвегча бокмал</language>
+			<language type="nd">шимолий ндебеле</language>
+			<language type="ne">непалча</language>
+			<language type="niu">ниуэча</language>
+			<language type="nl">голландча</language>
+			<language type="nl_BE">фламандча</language>
+			<language type="nmg">квасио</language>
+			<language type="nn">норвегча нюнорск</language>
+			<language type="nnh">нгиембун</language>
+			<language type="nqo">нко</language>
+			<language type="nr">жанубий ндебелча</language>
+			<language type="nus">нуэрча</language>
+			<language type="ny">чева</language>
+			<language type="nyn">нянколе</language>
+			<language type="oc">окситанча</language>
+			<language type="om">оромо</language>
+			<language type="or">одия</language>
+			<language type="pa">панжобча</language>
+			<language type="pap">папияменто</language>
+			<language type="pl">полякча</language>
+			<language type="ps">пушту</language>
+			<language type="pt">португалча</language>
+			<language type="qu">кечуа</language>
+			<language type="quc">кичэ</language>
+			<language type="rm">романшча</language>
+			<language type="rn">рунди</language>
+			<language type="ro">руминча</language>
+			<language type="rof">ромбоча</language>
+			<language type="ru">русча</language>
+			<language type="rup">арумин</language>
+			<language type="rw">киняруанда</language>
+			<language type="rwk">руанда тили</language>
+			<language type="sa">санскрит</language>
+			<language type="sah">саха</language>
+			<language type="saq">самбуруча</language>
+			<language type="sat">сантали</language>
+			<language type="sbp">сангуча</language>
+			<language type="sd">синдҳи</language>
+			<language type="se">шимолий саамча</language>
+			<language type="seh">сена</language>
+			<language type="ses">койраборо-сенни</language>
+			<language type="sg">санго</language>
+			<language type="shi">ташелхит</language>
+			<language type="si">сингалча</language>
+			<language type="sk">словакча</language>
+			<language type="sl">словенча</language>
+			<language type="sma">жанубий саамча</language>
+			<language type="smj">луле-саамча</language>
+			<language type="smn">инари-саамча</language>
+			<language type="sms">сколт-саамча</language>
+			<language type="sn">шона</language>
+			<language type="so">сомалича</language>
+			<language type="sq">албанча</language>
+			<language type="sr">сербча</language>
+			<language type="ss">свати</language>
+			<language type="ssy">саҳоча</language>
+			<language type="su">сунданча</language>
+			<language type="sv">шведча</language>
+			<language type="sw">суахили</language>
+			<language type="sw_CD">конго-суахили</language>
+			<language type="swb">коморча</language>
+			<language type="syr">сурияча</language>
+			<language type="ta">тамилча</language>
+			<language type="te">телугу</language>
+			<language type="teo">тесо</language>
+			<language type="tg">тожикча</language>
+			<language type="th">тайча</language>
+			<language type="ti">тигриняча</language>
+			<language type="tig">тигре</language>
+			<language type="tk">туркманча</language>
+			<language type="to">тонганча</language>
+			<language type="tr">туркча</language>
+			<language type="tt">татарча</language>
+			<language type="twq">тасавак</language>
+			<language type="tzm">марказий атлас тамазигхт</language>
+			<language type="ug">уйғурча</language>
+			<language type="uk">украинча</language>
+			<language type="und">номаълум тил</language>
+			<language type="ur">урду</language>
+			<language type="uz">ўзбекча</language>
+			<language type="vai">ваи</language>
+			<language type="ve">венда</language>
+			<language type="vi">ветнамча</language>
+			<language type="vo">волапюк</language>
+			<language type="vun">вунжо</language>
+			<language type="wae">валсерча</language>
+			<language type="wal">волятта</language>
+			<language type="wo">волофча</language>
+			<language type="xh">хоса</language>
+			<language type="xog">сога</language>
+			<language type="yav">янгбен</language>
+			<language type="yi">иддиш</language>
+			<language type="yo">йоруба</language>
+			<language type="yue">кантонча</language>
+			<language type="zgh">тамазигхт</language>
+			<language type="zh">хитойча</language>
+			<language type="zh_Hans">соддалаштирилган хитойча</language>
+			<language type="zh_Hant">анъанавий хитойча</language>
+			<language type="zu">зулу</language>
+			<language type="zxx">Тил таркиби йўқ</language>
+		</languages>
+		<scripts>
+			<script type="Arab">Араб</script>
+			<script type="Armn">Арман</script>
+			<script type="Beng">Бенгали</script>
+			<script type="Bopo">Бопомофо</script>
+			<script type="Brai">Браилле</script>
+			<script type="Cyrl">Кирил</script>
+			<script type="Deva">Девангари</script>
+			<script type="Ethi">Ҳабаш</script>
+			<script type="Geor">Грузин</script>
+			<script type="Grek">Юнон</script>
+			<script type="Gujr">Гужарати</script>
+			<script type="Guru">Гурмухи</script>
+			<script type="Hang">Хангул</script>
+			<script type="Hani">Хан</script>
+			<script type="Hans">Соддалаштирилган</script>
+			<script type="Hant">Анъанавий</script>
+			<script type="Hebr">Иброний</script>
+			<script type="Hira">Хирагана</script>
+			<script type="Jpan">Япон</script>
+			<script type="Kana">Катакана</script>
+			<script type="Khmr">Хмер</script>
+			<script type="Knda">Каннада</script>
+			<script type="Kore">Корейс</script>
+			<script type="Laoo">Лао</script>
+			<script type="Latn">Лотин</script>
+			<script type="Mlym">Малайалам</script>
+			<script type="Mong">Мўғулча</script>
+			<script type="Mymr">Мьянма</script>
+			<script type="Orya">Ория</script>
+			<script type="Sinh">Синхала</script>
+			<script type="Taml">Тамил</script>
+			<script type="Telu">Телугу</script>
+			<script type="Thaa">Таана</script>
+			<script type="Thai">Тай</script>
+			<script type="Tibt">Тибет</script>
+			<script type="Zsym">Рамзлар</script>
+			<script type="Zxxx">Ёзилмаган</script>
+			<script type="Zyyy">Умумий</script>
+			<script type="Zzzz">Номаълум шрифт</script>
+		</scripts>
+		<territories>
+			<territory type="001">Дунё</territory>
+			<territory type="002">Африка</territory>
+			<territory type="003">Шимолий Америка</territory>
+			<territory type="005">Жанубий Америка</territory>
+			<territory type="009">Океания</territory>
+			<territory type="011">Ғарбий Африка</territory>
+			<territory type="013">Марказий Америка</territory>
+			<territory type="014">Шарқий Африка</territory>
+			<territory type="015">Шимолий Африка</territory>
+			<territory type="017">Марказий Африка</territory>
+			<territory type="018">Жануби-Африка</territory>
+			<territory type="019">Америка</territory>
+			<territory type="021">Шимоли-Америка</territory>
+			<territory type="029">Кариб ҳавзаси</territory>
+			<territory type="030">Шарқий Осиё</territory>
+			<territory type="034">Жанубий Осиё</territory>
+			<territory type="035">Жанубий-Шарқий Осиё</territory>
+			<territory type="039">Жанубий Европа</territory>
+			<territory type="053">Австралазия</territory>
+			<territory type="054">Меланезия</territory>
+			<territory type="057">Микронезия минтақаси</territory>
+			<territory type="061">Полинезия</territory>
+			<territory type="142">Осиё</territory>
+			<territory type="143">Марказий Осиё</territory>
+			<territory type="145">Ғарбий Осиё</territory>
+			<territory type="150">Европа</territory>
+			<territory type="151">Шарқий Европа</territory>
+			<territory type="154">Шимолий Европа</territory>
+			<territory type="155">Ғарбий Европа</territory>
+			<territory type="419">Лотин Америкаси</territory>
+			<territory type="AC">Меърож ороли</territory>
+			<territory type="AD">Андорра</territory>
+			<territory type="AE">Бирлашган Араб Амирликлари</territory>
+			<territory type="AF">Афғонистон</territory>
+			<territory type="AG">Антигуа ва Барбуда</territory>
+			<territory type="AI">Ангилья</territory>
+			<territory type="AL">Албания</territory>
+			<territory type="AM">Арманистон</territory>
+			<territory type="AO">Ангола</territory>
+			<territory type="AQ">Антарктида</territory>
+			<territory type="AR">Аргентина</territory>
+			<territory type="AS">Америка Самоаси</territory>
+			<territory type="AT">Австрия</territory>
+			<territory type="AU">Австралия</territory>
+			<territory type="AW">Аруба</territory>
+			<territory type="AX">Аланд ороллари</territory>
+			<territory type="AZ">Озарбайжон</territory>
+			<territory type="BA">Босния ва Герцеговина</territory>
+			<territory type="BB">Барбадос</territory>
+			<territory type="BD">Бангладеш</territory>
+			<territory type="BE">Бельгия</territory>
+			<territory type="BF">Буркина-Фасо</territory>
+			<territory type="BG">Болгария</territory>
+			<territory type="BH">Баҳрайн</territory>
+			<territory type="BI">Бурунди</territory>
+			<territory type="BJ">Бенин</territory>
+			<territory type="BL">Сен-Бартелеми</territory>
+			<territory type="BM">Бермуда</territory>
+			<territory type="BN">Бруней</territory>
+			<territory type="BO">Боливия</territory>
+			<territory type="BQ">Бонейр, Синт-Эстатиус ва Саба</territory>
+			<territory type="BR">Бразилия</territory>
+			<territory type="BS">Багама ороллари</territory>
+			<territory type="BT">Бутан</territory>
+			<territory type="BV">Буве ороли</territory>
+			<territory type="BW">Ботсванна</territory>
+			<territory type="BY">Беларус</territory>
+			<territory type="BZ">Белиз</territory>
+			<territory type="CA">Канада</territory>
+			<territory type="CC">Кокос (Килинг) ороллари</territory>
+			<territory type="CD">Конго-Киншаса</territory>
+			<territory type="CD" alt="variant">Конго (КДР)</territory>
+			<territory type="CF">Марказий Африка Республикаси</territory>
+			<territory type="CG">Конго Браззавиль</territory>
+			<territory type="CG" alt="variant">Конго (Республика)</territory>
+			<territory type="CH">Швейцария</territory>
+			<territory type="CI">Кот-д’Ивуар</territory>
+			<territory type="CI" alt="variant">Фил Суяги Қирғоғи</territory>
+			<territory type="CK">Кук ороллари</territory>
+			<territory type="CL">Чили</territory>
+			<territory type="CM">Камерун</territory>
+			<territory type="CN">Хитой</territory>
+			<territory type="CO">Колумбия</territory>
+			<territory type="CP">Клиппертон ороли</territory>
+			<territory type="CR">Коста-Рика</territory>
+			<territory type="CU">Куба</territory>
+			<territory type="CV">Кабо-Верде</territory>
+			<territory type="CW">Кюрасао</territory>
+			<territory type="CX">Рождество ороли</territory>
+			<territory type="CY">Кипр</territory>
+			<territory type="CZ">Чехия</territory>
+			<territory type="CZ" alt="variant">Чехия Республикаси</territory>
+			<territory type="DE">Германия</territory>
+			<territory type="DG">Диего-Гарсия</territory>
+			<territory type="DJ">Жибути</territory>
+			<territory type="DK">Дания</territory>
+			<territory type="DM">Доминика</territory>
+			<territory type="DO">Доминикан Республикаси</territory>
+			<territory type="DZ">Жазоир</territory>
+			<territory type="EA">Сэута ва Мелилла</territory>
+			<territory type="EC">Эквадор</territory>
+			<territory type="EE">Эстония</territory>
+			<territory type="EG">Миср</territory>
+			<territory type="EH">Ғарбий Саҳрои Кабир</territory>
+			<territory type="ER">Эритрея</territory>
+			<territory type="ES">Испания</territory>
+			<territory type="ET">Эфиопия</territory>
+			<territory type="EU">Европа Иттифоқи</territory>
+			<territory type="FI">Финляндия</territory>
+			<territory type="FJ">Фижи</territory>
+			<territory type="FK">Фолкленд ороллари</territory>
+			<territory type="FK" alt="variant">Фолкленд (Малвин) ороллари</territory>
+			<territory type="FM">Микронезия</territory>
+			<territory type="FO">Фарер ороллари</territory>
+			<territory type="FR">Франция</territory>
+			<territory type="GA">Габон</territory>
+			<territory type="GB">Буюк Британия</territory>
+			<territory type="GD">Гренада</territory>
+			<territory type="GE">Грузия</territory>
+			<territory type="GF">Француз Гвианаси</territory>
+			<territory type="GG">Гернси</territory>
+			<territory type="GH">Гана</territory>
+			<territory type="GI">Гибралтар</territory>
+			<territory type="GL">Гренландия</territory>
+			<territory type="GM">Гамбия</territory>
+			<territory type="GN">Гвинея</territory>
+			<territory type="GP">Гваделупе</territory>
+			<territory type="GQ">Экваториал Гвинея</territory>
+			<territory type="GR">Греция</territory>
+			<territory type="GS">Жанубий Георгия ва Жанубий Сендвич ороллари</territory>
+			<territory type="GT">Гватемала</territory>
+			<territory type="GU">Гуам</territory>
+			<territory type="GW">Гвинея-Бисау</territory>
+			<territory type="GY">Гаяна</territory>
+			<territory type="HK">Гонконг (Хитой ММҲ)</territory>
+			<territory type="HK" alt="short">Гонконг</territory>
+			<territory type="HM">Херд ва Макдоналд ороллари</territory>
+			<territory type="HN">Гондурас</territory>
+			<territory type="HR">Хорватия</territory>
+			<territory type="HT">Гаити</territory>
+			<territory type="HU">Венгрия</territory>
+			<territory type="IC">Канар ороллари</territory>
+			<territory type="ID">Индонезия</territory>
+			<territory type="IE">Ирландия</territory>
+			<territory type="IL">Исроил</territory>
+			<territory type="IM">Мэн ороли</territory>
+			<territory type="IN">Ҳиндистон</territory>
+			<territory type="IO">Британиянинг Ҳинд океанидаги ҳудуди</territory>
+			<territory type="IQ">Ироқ</territory>
+			<territory type="IR">Эрон</territory>
+			<territory type="IS">Исландия</territory>
+			<territory type="IT">Италия</territory>
+			<territory type="JE">Жерси</territory>
+			<territory type="JM">Ямайка</territory>
+			<territory type="JO">Иордания</territory>
+			<territory type="JP">Япония</territory>
+			<territory type="KE">Кения</territory>
+			<territory type="KG">Қирғизистон</territory>
+			<territory type="KH">Камбоджа</territory>
+			<territory type="KI">Кирибати</territory>
+			<territory type="KM">Комор ороллари</territory>
+			<territory type="KN">Сент-Китс ва Невис</territory>
+			<territory type="KP">Шимолий Корея</territory>
+			<territory type="KR">Жанубий Корея</territory>
+			<territory type="KW">Қувайт</territory>
+			<territory type="KY">Кайман ороллари</territory>
+			<territory type="KZ">Қозоғистон</territory>
+			<territory type="LA">Лаос</territory>
+			<territory type="LB">Ливан</territory>
+			<territory type="LC">Сент-Люсия</territory>
+			<territory type="LI">Лихтенштейн</territory>
+			<territory type="LK">Шри-Ланка</territory>
+			<territory type="LR">Либерия</territory>
+			<territory type="LS">Лесото</territory>
+			<territory type="LT">Литва</territory>
+			<territory type="LU">Люксембург</territory>
+			<territory type="LV">Латвия</territory>
+			<territory type="LY">Ливия</territory>
+			<territory type="MA">Марокаш</territory>
+			<territory type="MC">Монако</territory>
+			<territory type="MD">Молдова</territory>
+			<territory type="ME">Черногория</territory>
+			<territory type="MF">Сент-Мартин</territory>
+			<territory type="MG">Мадагаскар</territory>
+			<territory type="MH">Маршал ороллари</territory>
+			<territory type="MK">Шимолий Македония</territory>
+			<territory type="ML">Мали</territory>
+			<territory type="MM">Мьянма (Бирма)</territory>
+			<territory type="MN">Монголия</territory>
+			<territory type="MO">Макао (Хитой ММҲ)</territory>
+			<territory type="MO" alt="short">Макао</territory>
+			<territory type="MP">Шимолий Марианна ороллари</territory>
+			<territory type="MQ">Мартиника</territory>
+			<territory type="MR">Мавритания</territory>
+			<territory type="MS">Монтсеррат</territory>
+			<territory type="MT">Мальта</territory>
+			<territory type="MU">Маврикий</territory>
+			<territory type="MV">Мальдив ороллари</territory>
+			<territory type="MW">Малави</territory>
+			<territory type="MX">Мексика</territory>
+			<territory type="MY">Малайзия</territory>
+			<territory type="MZ">Мозамбик</territory>
+			<territory type="NA">Намибия</territory>
+			<territory type="NC">Янги Каледония</territory>
+			<territory type="NE">Нигер</territory>
+			<territory type="NF">Норфолк ороллари</territory>
+			<territory type="NG">Нигерия</territory>
+			<territory type="NI">Никарагуа</territory>
+			<territory type="NL">Нидерландия</territory>
+			<territory type="NO">Норвегия</territory>
+			<territory type="NP">Непал</territory>
+			<territory type="NR">Науру</territory>
+			<territory type="NU">Ниуэ</territory>
+			<territory type="NZ">Янги Зеландия</territory>
+			<territory type="OM">Уммон</territory>
+			<territory type="PA">Панама</territory>
+			<territory type="PE">Перу</territory>
+			<territory type="PF">Француз Полинезияси</territory>
+			<territory type="PG">Папуа - Янги Гвинея</territory>
+			<territory type="PH">Филиппин</territory>
+			<territory type="PK">Покистон</territory>
+			<territory type="PL">Польша</territory>
+			<territory type="PM">Сент-Пьер ва Микелон</territory>
+			<territory type="PN">Питкэрн ороллари</territory>
+			<territory type="PR">Пуэрто-Рико</territory>
+			<territory type="PS">Фаластин ҳудуди</territory>
+			<territory type="PS" alt="short">Фаластин</territory>
+			<territory type="PT">Португалия</territory>
+			<territory type="PW">Палау</territory>
+			<territory type="PY">Парагвай</territory>
+			<territory type="QA">Қатар</territory>
+			<territory type="QO">Ёндош Океания</territory>
+			<territory type="RE">Реюнион</territory>
+			<territory type="RO">Руминия</territory>
+			<territory type="RS">Сербия</territory>
+			<territory type="RU">Россия</territory>
+			<territory type="RW">Руанда</territory>
+			<territory type="SA">Саудия Арабистони</territory>
+			<territory type="SB">Соломон ороллари</territory>
+			<territory type="SC">Сейшел ороллари</territory>
+			<territory type="SD">Судан</territory>
+			<territory type="SE">Швеция</territory>
+			<territory type="SG">Сингапур</territory>
+			<territory type="SH">Муқаддас Елена ороли</territory>
+			<territory type="SI">Словения</territory>
+			<territory type="SJ">Свалбард ва Ян-Майен</territory>
+			<territory type="SK">Словакия</territory>
+			<territory type="SL">Сьерра-Леоне</territory>
+			<territory type="SM">Сан-Марино</territory>
+			<territory type="SN">Сенегал</territory>
+			<territory type="SO">Сомали</territory>
+			<territory type="SR">Суринам</territory>
+			<territory type="SS">Жанубий Судан</territory>
+			<territory type="ST">Сан-Томе ва Принсипи</territory>
+			<territory type="SV">Салвадор</territory>
+			<territory type="SX">Синт-Мартен</territory>
+			<territory type="SY">Сурия</territory>
+			<territory type="SZ">Свазиленд</territory>
+			<territory type="TA">Тристан-да-Куня</territory>
+			<territory type="TC">Туркс ва Кайкос ороллари</territory>
+			<territory type="TD">Чад</territory>
+			<territory type="TF">Француз жанубий ҳудудлари</territory>
+			<territory type="TG">Того</territory>
+			<territory type="TH">Таиланд</territory>
+			<territory type="TJ">Тожикистон</territory>
+			<territory type="TK">Токелау</territory>
+			<territory type="TL">Тимор-Лесте</territory>
+			<territory type="TL" alt="variant">Шарқий Тимор</territory>
+			<territory type="TM">Туркманистон</territory>
+			<territory type="TN">Тунис</territory>
+			<territory type="TO">Тонга</territory>
+			<territory type="TR">Туркия</territory>
+			<territory type="TT">Тринидад ва Тобаго</territory>
+			<territory type="TV">Тувалу</territory>
+			<territory type="TW">Тайван</territory>
+			<territory type="TZ">Танзания</territory>
+			<territory type="UA">Украина</territory>
+			<territory type="UG">Уганда</territory>
+			<territory type="UM">АҚШ ёндош ороллари</territory>
+			<territory type="US">Америка Қўшма Штатлари</territory>
+			<territory type="US" alt="short">АҚШ</territory>
+			<territory type="UY">Уругвай</territory>
+			<territory type="UZ">Ўзбекистон</territory>
+			<territory type="VA">Ватикан</territory>
+			<territory type="VC">Сент-Винсент ва Гренадин</territory>
+			<territory type="VE">Венесуэла</territory>
+			<territory type="VG">Британия Виргин ороллари</territory>
+			<territory type="VI">АҚШ Виргин ороллари</territory>
+			<territory type="VN">Вьетнам</territory>
+			<territory type="VU">Вануату</territory>
+			<territory type="WF">Уоллис ва Футуна</territory>
+			<territory type="WS">Самоа</territory>
+			<territory type="XK">Косово</territory>
+			<territory type="YE">Яман</territory>
+			<territory type="YT">Майотта</territory>
+			<territory type="ZA">Жанубий Африка Республикаси</territory>
+			<territory type="ZM">Замбия</territory>
+			<territory type="ZW">Зимбабве</territory>
+			<territory type="ZZ">Номаълум минтақа</territory>
+		</territories>
+		<keys>
+			<key type="calendar">Календарь</key>
+			<key type="collation">Саралаш тартиби</key>
+			<key type="currency">Валюта</key>
+			<key type="numbers">Рақамлар</key>
+		</keys>
+		<types>
+			<type key="calendar" type="gregorian">Григориан календари</type>
+			<type key="collation" type="ducet">Сукут бўйича саралаш тартиби</type>
+			<type key="collation" type="search">Умумий қидириш</type>
+			<type key="collation" type="standard">Стандарт саралаш тартиби</type>
+			<type key="numbers" type="arab">Араб-ҳинд рақамлари</type>
+			<type key="numbers" type="arabext">Кенгайтирилган араб-ҳинд рақамлари</type>
+			<type key="numbers" type="armn">Арман сонлари</type>
+			<type key="numbers" type="armnlow">Арман кичик сонлари</type>
+			<type key="numbers" type="beng">Бенгали рақамлари</type>
+			<type key="numbers" type="deva">Деванагари рақамлари</type>
+			<type key="numbers" type="ethi">Ҳабаш сонлари</type>
+			<type key="numbers" type="fullwide">Тўлиқ кенгликдаги рақамлар</type>
+			<type key="numbers" type="geor">Грузин сонлари</type>
+			<type key="numbers" type="grek">Грек сонлари</type>
+			<type key="numbers" type="greklow">Грек кичик сонлари</type>
+			<type key="numbers" type="gujr">Гужарати рақамлари</type>
+			<type key="numbers" type="guru">Гурмухи рақамлари</type>
+			<type key="numbers" type="hanidec">Хитой ўнлик сонлари</type>
+			<type key="numbers" type="hans">Соддалаштирилган Хитой сонлари</type>
+			<type key="numbers" type="hansfin">Соддалаштирилган Хитой молия сонлари</type>
+			<type key="numbers" type="hant">Анъанавий Хитой сонлари</type>
+			<type key="numbers" type="hantfin">Анъанавий Хитой молия сонлари</type>
+			<type key="numbers" type="hebr">Иброний сонлари</type>
+			<type key="numbers" type="jpan">Япония сонлари</type>
+			<type key="numbers" type="jpanfin">Япония молия сонлари</type>
+			<type key="numbers" type="khmr">Хмер рақамлари</type>
+			<type key="numbers" type="knda">Каннада рақамлари</type>
+			<type key="numbers" type="laoo">Лао рақамлари</type>
+			<type key="numbers" type="latn">Ғарб рақамлари</type>
+			<type key="numbers" type="mlym">Малайалам рақамлари</type>
+			<type key="numbers" type="mymr">Мьянма рақамлари</type>
+			<type key="numbers" type="orya">Ория рақамлари</type>
+			<type key="numbers" type="roman">Рим сонлари</type>
+			<type key="numbers" type="romanlow">Рим кичик сонлари</type>
+			<type key="numbers" type="taml">Анъанавий Тамил сонлари</type>
+			<type key="numbers" type="tamldec">Тамил рақамлари</type>
+			<type key="numbers" type="telu">Телугу рақамлари</type>
+			<type key="numbers" type="thai">Тай рақамлари</type>
+			<type key="numbers" type="tibt">Тибет рақамлари</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">Metric</measurementSystemName>
+			<measurementSystemName type="UK">UK</measurementSystemName>
+			<measurementSystemName type="US">US</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language">Тил: {0}</codePattern>
+			<codePattern type="script">{0}</codePattern>
+			<codePattern type="territory">{0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[а б в г ғ д е ё ж з и й к қ л м н о п р с т у ў ф х ҳ ч ш ъ э ю я]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[ц щ ы ь]</exemplarCharacters>
+		<exemplarCharacters type="index" draft="unconfirmed">[А Б В Г Ғ Д Е Ж З И Й К Қ Л М Н О П Р С Т У Ў Ф Х Ҳ Ч Ш Ъ Э Ю Я]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[  \- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+		<ellipsis type="final">{0}…</ellipsis>
+		<ellipsis type="initial">…{0}</ellipsis>
+		<ellipsis type="medial">{0}…{1}</ellipsis>
+		<ellipsis type="word-final">{0} …</ellipsis>
+		<ellipsis type="word-initial">… {0}</ellipsis>
+		<ellipsis type="word-medial">{0} … {1}</ellipsis>
+		<moreInformation>?</moreInformation>
+	</characters>
+	<delimiters>
+		<quotationStart>“</quotationStart>
+		<quotationEnd>”</quotationEnd>
+		<alternateQuotationStart>‘</alternateQuotationStart>
+		<alternateQuotationEnd>’</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, G y MMMM dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>G y MMMM d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>G y MMM d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>GGGGG y/MM/dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="Ed">d, E</dateFormatItem>
+						<dateFormatItem id="Gy">G y</dateFormatItem>
+						<dateFormatItem id="GyMMM">G y MMM</dateFormatItem>
+						<dateFormatItem id="GyMMMd">G y MMM d</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">G y MMM d, E</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">MM-dd</dateFormatItem>
+						<dateFormatItem id="MEd">MM-dd, E</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMMEd">MMM d, E</dateFormatItem>
+						<dateFormatItem id="y">G y</dateFormatItem>
+						<dateFormatItem id="yyyy">G y</dateFormatItem>
+						<dateFormatItem id="yyyyM">GGGGG y-MM</dateFormatItem>
+						<dateFormatItem id="yyyyMd">GGGGG y-MM-dd</dateFormatItem>
+						<dateFormatItem id="yyyyMEd">GGGGG y-MM-dd, E</dateFormatItem>
+						<dateFormatItem id="yyyyMMM">G y MMM</dateFormatItem>
+						<dateFormatItem id="yyyyMMMd">G y MMM d</dateFormatItem>
+						<dateFormatItem id="yyyyMMMEd">G y MMM d, E</dateFormatItem>
+						<dateFormatItem id="yyyyQQQ">G y QQQ</dateFormatItem>
+						<dateFormatItem id="yyyyQQQQ">G y QQQQ</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d">d–d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M">MM–MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">MM-dd – MM-dd</greatestDifference>
+							<greatestDifference id="M">MM-dd – MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">MM-dd, E – MM-dd, E</greatestDifference>
+							<greatestDifference id="M">MM-dd, E – MM-dd, E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M">LLL–LLL</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">MMM d–d</greatestDifference>
+							<greatestDifference id="M">MMM d – MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">MMM d, E – MMM d, E</greatestDifference>
+							<greatestDifference id="M">MMM d, E – MMM d, E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y">G y–y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">GGGGG y-MM – y-MM</greatestDifference>
+							<greatestDifference id="y">GGGGG y-MM – y-MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">GGGGG y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="M">GGGGG y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="y">GGGGG y-MM-dd – y-MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">GGGGG y-MM-dd, E – y-MM-dd, E</greatestDifference>
+							<greatestDifference id="M">GGGGG y-MM-dd, E – y-MM-dd, E</greatestDifference>
+							<greatestDifference id="y">GGGGG y-MM-dd, E – y-MM-dd, E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M">G y MMM–MMM</greatestDifference>
+							<greatestDifference id="y">G y MMM – y MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">G y MMM d–d</greatestDifference>
+							<greatestDifference id="M">G y MMM d – MMM d</greatestDifference>
+							<greatestDifference id="y">G y MMM d – y MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">G y MMM d, E – MMM d, E</greatestDifference>
+							<greatestDifference id="M">G y MMM d, E – MMM d, E</greatestDifference>
+							<greatestDifference id="y">G y MMM d, E – y MMM d, E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M">G y MMMM–MMMM</greatestDifference>
+							<greatestDifference id="y">G y MMMM – y MMMM</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1" draft="contributed">янв</month>
+							<month type="2" draft="contributed">фев</month>
+							<month type="3" draft="contributed">мар</month>
+							<month type="4" draft="contributed">апр</month>
+							<month type="5" draft="contributed">май</month>
+							<month type="6" draft="contributed">июн</month>
+							<month type="7" draft="contributed">июл</month>
+							<month type="8" draft="contributed">авг</month>
+							<month type="9" draft="contributed">сен</month>
+							<month type="10" draft="contributed">окт</month>
+							<month type="11" draft="contributed">ноя</month>
+							<month type="12" draft="contributed">дек</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">Я</month>
+							<month type="2">Ф</month>
+							<month type="3">М</month>
+							<month type="4">А</month>
+							<month type="5">М</month>
+							<month type="6">И</month>
+							<month type="7">И</month>
+							<month type="8">А</month>
+							<month type="9">С</month>
+							<month type="10">О</month>
+							<month type="11">Н</month>
+							<month type="12">Д</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">январ</month>
+							<month type="2">феврал</month>
+							<month type="3">март</month>
+							<month type="4">апрел</month>
+							<month type="5">май</month>
+							<month type="6">июн</month>
+							<month type="7">июл</month>
+							<month type="8">август</month>
+							<month type="9">сентябр</month>
+							<month type="10">октябр</month>
+							<month type="11">ноябр</month>
+							<month type="12">декабр</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">янв</month>
+							<month type="2">фев</month>
+							<month type="3">мар</month>
+							<month type="4">апр</month>
+							<month type="5">май</month>
+							<month type="6">июн</month>
+							<month type="7">июл</month>
+							<month type="8">авг</month>
+							<month type="9">сен</month>
+							<month type="10">окт</month>
+							<month type="11">ноя</month>
+							<month type="12">дек</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">Я</month>
+							<month type="2">Ф</month>
+							<month type="3">М</month>
+							<month type="4">А</month>
+							<month type="5">М</month>
+							<month type="6">И</month>
+							<month type="7">И</month>
+							<month type="8">А</month>
+							<month type="9">С</month>
+							<month type="10">О</month>
+							<month type="11">Н</month>
+							<month type="12">Д</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">январ</month>
+							<month type="2">феврал</month>
+							<month type="3">март</month>
+							<month type="4">апрел</month>
+							<month type="5">май</month>
+							<month type="6">июн</month>
+							<month type="7">июл</month>
+							<month type="8">август</month>
+							<month type="9">сентябр</month>
+							<month type="10">октябр</month>
+							<month type="11">ноябр</month>
+							<month type="12">декабр</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">якш</day>
+							<day type="mon">душ</day>
+							<day type="tue">сеш</day>
+							<day type="wed">чор</day>
+							<day type="thu">пай</day>
+							<day type="fri">жум</day>
+							<day type="sat">шан</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">Я</day>
+							<day type="mon">Д</day>
+							<day type="tue">С</day>
+							<day type="wed">Ч</day>
+							<day type="thu">П</day>
+							<day type="fri">Ж</day>
+							<day type="sat">Ш</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">як</day>
+							<day type="mon">ду</day>
+							<day type="tue">се</day>
+							<day type="wed">чо</day>
+							<day type="thu">па</day>
+							<day type="fri">жу</day>
+							<day type="sat">ша</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">якшанба</day>
+							<day type="mon">душанба</day>
+							<day type="tue">сешанба</day>
+							<day type="wed">чоршанба</day>
+							<day type="thu">пайшанба</day>
+							<day type="fri">жума</day>
+							<day type="sat">шанба</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">якш</day>
+							<day type="mon">душ</day>
+							<day type="tue">сеш</day>
+							<day type="wed">чор</day>
+							<day type="thu">пай</day>
+							<day type="fri">жум</day>
+							<day type="sat">шан</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">Я</day>
+							<day type="mon">Д</day>
+							<day type="tue">С</day>
+							<day type="wed">Ч</day>
+							<day type="thu">П</day>
+							<day type="fri">Ж</day>
+							<day type="sat">Ш</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">як</day>
+							<day type="mon">ду</day>
+							<day type="tue">се</day>
+							<day type="wed">чо</day>
+							<day type="thu">па</day>
+							<day type="fri">жу</day>
+							<day type="sat">ша</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">якшанба</day>
+							<day type="mon">душанба</day>
+							<day type="tue">сешанба</day>
+							<day type="wed">чоршанба</day>
+							<day type="thu">пайшанба</day>
+							<day type="fri">жума</day>
+							<day type="sat">шанба</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">1-ч</quarter>
+							<quarter type="2">2-ч</quarter>
+							<quarter type="3">3-ч</quarter>
+							<quarter type="4">4-ч</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">1</quarter>
+							<quarter type="2">2</quarter>
+							<quarter type="3">3</quarter>
+							<quarter type="4">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">1-чорак</quarter>
+							<quarter type="2">2-чорак</quarter>
+							<quarter type="3">3-чорак</quarter>
+							<quarter type="4">4-чорак</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">1-ч</quarter>
+							<quarter type="2">2-ч</quarter>
+							<quarter type="3">3-ч</quarter>
+							<quarter type="4">4-ч</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">1</quarter>
+							<quarter type="2">2</quarter>
+							<quarter type="3">3</quarter>
+							<quarter type="4">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">1-чорак</quarter>
+							<quarter type="2">2-чорак</quarter>
+							<quarter type="3">3-чорак</quarter>
+							<quarter type="4">4-чорак</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="midnight">ярим тун</dayPeriod>
+							<dayPeriod type="am">ТО</dayPeriod>
+							<dayPeriod type="noon">туш пайти</dayPeriod>
+							<dayPeriod type="pm">ТК</dayPeriod>
+							<dayPeriod type="morning1">эрталаб</dayPeriod>
+							<dayPeriod type="afternoon1">кундузи</dayPeriod>
+							<dayPeriod type="evening1">кечқурун</dayPeriod>
+							<dayPeriod type="night1">кечаси</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="midnight">ярим тун</dayPeriod>
+							<dayPeriod type="am">ТО</dayPeriod>
+							<dayPeriod type="noon">туш пайти</dayPeriod>
+							<dayPeriod type="pm">ТК</dayPeriod>
+							<dayPeriod type="morning1">эрталаб</dayPeriod>
+							<dayPeriod type="afternoon1">кундузи</dayPeriod>
+							<dayPeriod type="evening1">кечқурун</dayPeriod>
+							<dayPeriod type="night1">кечаси</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="midnight">ярим тун</dayPeriod>
+							<dayPeriod type="am">ТО</dayPeriod>
+							<dayPeriod type="noon">туш пайти</dayPeriod>
+							<dayPeriod type="pm">ТК</dayPeriod>
+							<dayPeriod type="morning1">эрталаб</dayPeriod>
+							<dayPeriod type="afternoon1">кундузи</dayPeriod>
+							<dayPeriod type="evening1">кечқурун</dayPeriod>
+							<dayPeriod type="night1">кечаси</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="midnight">ярим тун</dayPeriod>
+							<dayPeriod type="am">ТО</dayPeriod>
+							<dayPeriod type="noon">туш пайти</dayPeriod>
+							<dayPeriod type="pm">ТК</dayPeriod>
+							<dayPeriod type="morning1">эрталаб</dayPeriod>
+							<dayPeriod type="afternoon1">кундузи</dayPeriod>
+							<dayPeriod type="evening1">кечқурун</dayPeriod>
+							<dayPeriod type="night1">кечаси</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="midnight">ярим тун</dayPeriod>
+							<dayPeriod type="am">ТО</dayPeriod>
+							<dayPeriod type="noon">туш пайти</dayPeriod>
+							<dayPeriod type="pm">ТК</dayPeriod>
+							<dayPeriod type="morning1">эрталаб</dayPeriod>
+							<dayPeriod type="afternoon1">кундузи</dayPeriod>
+							<dayPeriod type="evening1">кечқурун</dayPeriod>
+							<dayPeriod type="night1">кечаси</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="midnight">ярим тун</dayPeriod>
+							<dayPeriod type="am">ТО</dayPeriod>
+							<dayPeriod type="noon">туш пайти</dayPeriod>
+							<dayPeriod type="pm">ТК</dayPeriod>
+							<dayPeriod type="morning1">эрталаб</dayPeriod>
+							<dayPeriod type="afternoon1">кундузи</dayPeriod>
+							<dayPeriod type="evening1">кечқурун</dayPeriod>
+							<dayPeriod type="night1">кечаси</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">милоддан аввалги</era>
+						<era type="0" alt="variant">эрамиздан аввалги</era>
+						<era type="1">милодий</era>
+						<era type="1" alt="variant">эрамиз</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">м.а.</era>
+						<era type="0" alt="variant">э.а.</era>
+						<era type="1">милодий</era>
+						<era type="1" alt="variant">эрамиз</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, dd MMMM, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd/MM/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>HH:mm:ss (zzzz)</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>HH:mm:ss (z)</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="Bh">B h</dateFormatItem>
+						<dateFormatItem id="Bhm">B h:mm</dateFormatItem>
+						<dateFormatItem id="Bhms">B h:mm:ss</dateFormatItem>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="EBhm">E, B h:mm</dateFormatItem>
+						<dateFormatItem id="EBhms">E, B h:mm:ss</dateFormatItem>
+						<dateFormatItem id="Ed">d, E</dateFormatItem>
+						<dateFormatItem id="Ehm">E, h:mm a</dateFormatItem>
+						<dateFormatItem id="EHm">E, HH:mm</dateFormatItem>
+						<dateFormatItem id="Ehms">E, h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="EHms">E, HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="Gy">G y</dateFormatItem>
+						<dateFormatItem id="GyMMM">MMM, G y</dateFormatItem>
+						<dateFormatItem id="GyMMMd">d MMM, G y</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E, d-MMM, G y</dateFormatItem>
+						<dateFormatItem id="h">h a</dateFormatItem>
+						<dateFormatItem id="H">HH</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="hmsv">h:mm:ss a (v)</dateFormatItem>
+						<dateFormatItem id="Hmsv">HH:mm:ss (v)</dateFormatItem>
+						<dateFormatItem id="hmv">h:mm a (v)</dateFormatItem>
+						<dateFormatItem id="Hmv">HH:mm (v)</dateFormatItem>
+						<dateFormatItem id="M">LL</dateFormatItem>
+						<dateFormatItem id="Md">dd/MM</dateFormatItem>
+						<dateFormatItem id="MEd">E, dd/MM</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, d MMM</dateFormatItem>
+						<dateFormatItem id="MMMMd">d MMMM</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="one">MMMM, W-'ҳафта'</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="other">MMMM, W-'ҳафта'</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">MM/y</dateFormatItem>
+						<dateFormatItem id="yMd">dd/MM/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, dd/MM/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM, y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d MMM, y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, d-MMM, y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM, y</dateFormatItem>
+						<dateFormatItem id="yQQQ">y, QQQ</dateFormatItem>
+						<dateFormatItem id="yQQQQ">y, QQQQ</dateFormatItem>
+						<dateFormatItem id="yw" count="one">Y, w-'ҳафта'</dateFormatItem>
+						<dateFormatItem id="yw" count="other">Y, w-'ҳафта'</dateFormatItem>
+					</availableFormats>
+					<appendItems>
+						<appendItem request="Timezone">{0} {1}</appendItem>
+					</appendItems>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d">d–d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="h">
+							<greatestDifference id="a">h a – h a</greatestDifference>
+							<greatestDifference id="h">h–h a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="H">
+							<greatestDifference id="H">HH–HH</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="a">h:mm a – h:mm a</greatestDifference>
+							<greatestDifference id="h">h:mm–h:mm a</greatestDifference>
+							<greatestDifference id="m">h:mm–h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hm">
+							<greatestDifference id="H">HH:mm–HH:mm</greatestDifference>
+							<greatestDifference id="m">HH:mm–HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="a">h:mm a – h:mm a (v)</greatestDifference>
+							<greatestDifference id="h">h:mm–h:mm a (v)</greatestDifference>
+							<greatestDifference id="m">h:mm–h:mm a (v)</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H">HH:mm–HH:mm (v)</greatestDifference>
+							<greatestDifference id="m">HH:mm–HH:mm (v)</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="a">h a – h a (v)</greatestDifference>
+							<greatestDifference id="h">h–h a (v)</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H">HH–HH (v)</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M">MM–MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">dd/MM – dd/MM</greatestDifference>
+							<greatestDifference id="M">dd/MM – dd/MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">E, dd/MM – E, dd/MM</greatestDifference>
+							<greatestDifference id="M">E, dd/MM – E, dd/MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M">MMM–MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">d – d MMM</greatestDifference>
+							<greatestDifference id="M">d MMM – d MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">E, d MMM – E, d MMM</greatestDifference>
+							<greatestDifference id="M">E, d MMM – E, d MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y">y–y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">MM/y – MM/y</greatestDifference>
+							<greatestDifference id="y">MM/y – MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">dd/MM/y – dd/MM/y</greatestDifference>
+							<greatestDifference id="M">dd/MM/y – dd/MM/y</greatestDifference>
+							<greatestDifference id="y">dd/MM/y – dd/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">E, dd/MM/y – E, dd/MM/y</greatestDifference>
+							<greatestDifference id="M">E, dd/MM/y – E, dd/MM/y</greatestDifference>
+							<greatestDifference id="y">E, dd/MM/y – E, dd/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M">MMM – MMM, y</greatestDifference>
+							<greatestDifference id="y">MMM, y – MMM, y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">d – d MMM, y</greatestDifference>
+							<greatestDifference id="M">d MMM – d MMM, y</greatestDifference>
+							<greatestDifference id="y">d MMM, y – d MMM, y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">E, d MMM – E, d MMM, y</greatestDifference>
+							<greatestDifference id="M">E, d MMM – E, d MMM, y</greatestDifference>
+							<greatestDifference id="y">E, d MMM, y – E, d MMM, y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M">MMMM – MMMM, y</greatestDifference>
+							<greatestDifference id="y">MMMM, y – MMMM, y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="islamic">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="wide">
+							<month type="1" draft="unconfirmed">Муҳаррам</month>
+							<month type="2" draft="unconfirmed">Сафар</month>
+							<month type="3" draft="unconfirmed">Рабиул-аввал</month>
+							<month type="4" draft="unconfirmed">Рабиул-охир</month>
+							<month type="5" draft="unconfirmed">Жумодиул-уло</month>
+							<month type="6" draft="unconfirmed">Жумодиул-ухро</month>
+							<month type="7" draft="unconfirmed">Ражаб</month>
+							<month type="8" draft="unconfirmed">Шаъбон</month>
+							<month type="9" draft="unconfirmed">Рамазон</month>
+							<month type="10" draft="unconfirmed">Шаввол</month>
+							<month type="11" draft="unconfirmed">Зил-қаъда</month>
+							<month type="12" draft="unconfirmed">Зил-ҳижжа</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>Эра</displayName>
+			</field>
+			<field type="year">
+				<displayName>Йил</displayName>
+				<relative type="-1">ўтган йил</relative>
+				<relative type="0">бу йил</relative>
+				<relative type="1">кейинги йил</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} йилдан сўнг</relativeTimePattern>
+					<relativeTimePattern count="other">{0} йилдан сўнг</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} йил аввал</relativeTimePattern>
+					<relativeTimePattern count="other">{0} йил аввал</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month">
+				<displayName>Ой</displayName>
+				<relative type="-1">ўтган ой</relative>
+				<relative type="0">бу ой</relative>
+				<relative type="1">кейинги ой</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} ойдан сўнг</relativeTimePattern>
+					<relativeTimePattern count="other">{0} ойдан сўнг</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} ой аввал</relativeTimePattern>
+					<relativeTimePattern count="other">{0} ой аввал</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week">
+				<displayName>Ҳафта</displayName>
+				<relative type="-1">ўтган ҳафта</relative>
+				<relative type="0">бу ҳафта</relative>
+				<relative type="1">кейинги ҳафта</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} ҳафтадан сўнг</relativeTimePattern>
+					<relativeTimePattern count="other">{0} ҳафтадан сўнг</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} ҳафта олдин</relativeTimePattern>
+					<relativeTimePattern count="other">{0} ҳафта олдин</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day">
+				<displayName>Кун</displayName>
+				<relative type="-1">кеча</relative>
+				<relative type="0">бугун</relative>
+				<relative type="1">эртага</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} кундан сўнг</relativeTimePattern>
+					<relativeTimePattern count="other">{0} кундан сўнг</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} кун олдин</relativeTimePattern>
+					<relativeTimePattern count="other">{0} кун олдин</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="weekday">
+				<displayName>Ҳафта куни</displayName>
+			</field>
+			<field type="sun">
+				<relative type="-1">ўтган якшанба</relative>
+				<relative type="0">бу якшанба</relative>
+				<relative type="1">кейинги якшанба</relative>
+			</field>
+			<field type="mon">
+				<relative type="-1">ўтган душанба</relative>
+				<relative type="0">бу душанба</relative>
+				<relative type="1">кейинги душанба</relative>
+			</field>
+			<field type="tue">
+				<relative type="-1">ўтган сешанба</relative>
+				<relative type="0">бу сешанба</relative>
+				<relative type="1">кейинги сешанба</relative>
+			</field>
+			<field type="wed">
+				<relative type="-1">ўтган чоршанба</relative>
+				<relative type="0">this Wednesday</relative>
+				<relative type="1">кейинги чоршанба</relative>
+			</field>
+			<field type="thu">
+				<relative type="-1">ўтган пайшанба</relative>
+				<relative type="0">бу пайшанба</relative>
+				<relative type="1">кейинги пайшанба</relative>
+			</field>
+			<field type="fri">
+				<relative type="-1">ўтган жума</relative>
+				<relative type="0">бу жума</relative>
+				<relative type="1">кейинги жума</relative>
+			</field>
+			<field type="sat">
+				<relative type="-1">ўтган шанба</relative>
+				<relative type="0">бу шанба</relative>
+				<relative type="1">кейинги шанба</relative>
+			</field>
+			<field type="dayperiod">
+				<displayName>Кун вақти</displayName>
+			</field>
+			<field type="hour">
+				<displayName>Соат</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} соатдан сўнг</relativeTimePattern>
+					<relativeTimePattern count="other">{0} соатдан сўнг</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} соат олдин</relativeTimePattern>
+					<relativeTimePattern count="other">{0} соат олдин</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute">
+				<displayName>Дақиқа</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} дақиқадан сўнг</relativeTimePattern>
+					<relativeTimePattern count="other">{0} дақиқадан сўнг</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} дақиқа олдин</relativeTimePattern>
+					<relativeTimePattern count="other">{0} дақиқа олдин</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second">
+				<displayName>Сония</displayName>
+				<relative type="0">ҳозир</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} сониядан сўнг</relativeTimePattern>
+					<relativeTimePattern count="other">{0} сониядан сўнг</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} сония олдин</relativeTimePattern>
+					<relativeTimePattern count="other">{0} сония олдин</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="zone">
+				<displayName>Минтақа</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<hourFormat>+HH:mm;-HH:mm</hourFormat>
+			<gmtFormat>GMT{0}</gmtFormat>
+			<gmtZeroFormat>GMT</gmtZeroFormat>
+			<regionFormat>{0} вақти</regionFormat>
+			<regionFormat type="daylight">{0} кундузги вақти</regionFormat>
+			<regionFormat type="standard">{0} стандарт вақти</regionFormat>
+			<fallbackFormat>{1} ({0})</fallbackFormat>
+			<zone type="Etc/Unknown">
+				<exemplarCity>Номаълум</exemplarCity>
+			</zone>
+			<zone type="Antarctica/DumontDUrville">
+				<exemplarCity>Dumont d’Urville</exemplarCity>
+			</zone>
+			<zone type="America/St_Barthelemy">
+				<exemplarCity>St. Barthelemy</exemplarCity>
+			</zone>
+			<zone type="America/Coral_Harbour">
+				<exemplarCity>Atikokan</exemplarCity>
+			</zone>
+			<zone type="America/St_Johns">
+				<exemplarCity>St. John’s</exemplarCity>
+			</zone>
+			<zone type="Africa/Asmera">
+				<exemplarCity>Asmara</exemplarCity>
+			</zone>
+			<zone type="Pacific/Truk">
+				<exemplarCity>Chuuk</exemplarCity>
+			</zone>
+			<zone type="Pacific/Ponape">
+				<exemplarCity>Pohnpei</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Faeroe">
+				<exemplarCity>Faroe</exemplarCity>
+			</zone>
+			<zone type="Europe/London">
+				<long>
+					<daylight>Британия ёзги вақти</daylight>
+				</long>
+			</zone>
+			<zone type="America/Godthab">
+				<exemplarCity>Nuuk</exemplarCity>
+			</zone>
+			<zone type="America/Scoresbysund">
+				<exemplarCity>Ittoqqortoormiit</exemplarCity>
+			</zone>
+			<zone type="Europe/Dublin">
+				<long>
+					<daylight>Ирландия ёзги вақти</daylight>
+				</long>
+			</zone>
+			<zone type="Asia/Calcutta">
+				<exemplarCity>Kolkata</exemplarCity>
+			</zone>
+			<zone type="America/St_Kitts">
+				<exemplarCity>St. Kitts</exemplarCity>
+			</zone>
+			<zone type="America/St_Lucia">
+				<exemplarCity>St. Lucia</exemplarCity>
+			</zone>
+			<zone type="Asia/Katmandu">
+				<exemplarCity>Kathmandu</exemplarCity>
+			</zone>
+			<zone type="Atlantic/St_Helena">
+				<exemplarCity>St. Helena</exemplarCity>
+			</zone>
+			<zone type="America/Lower_Princes">
+				<exemplarCity>Lower Princeʼs Quarter</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/Beulah">
+				<exemplarCity>Beulah, North Dakota</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/New_Salem">
+				<exemplarCity>New Salem, North Dakota</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/Center">
+				<exemplarCity>Center, North Dakota</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Vincennes">
+				<exemplarCity>Vincennes, Indiana</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Petersburg">
+				<exemplarCity>Petersburg, Indiana</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Tell_City">
+				<exemplarCity>Tell City, Indiana</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Knox">
+				<exemplarCity>Knox, Indiana</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Winamac">
+				<exemplarCity>Winamac, Indiana</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Marengo">
+				<exemplarCity>Marengo, Indiana</exemplarCity>
+			</zone>
+			<zone type="America/Indiana/Vevay">
+				<exemplarCity>Vevay, Indiana</exemplarCity>
+			</zone>
+			<zone type="America/Kentucky/Monticello">
+				<exemplarCity>Monticello, Kentucky</exemplarCity>
+			</zone>
+			<zone type="America/St_Vincent">
+				<exemplarCity>St. Vincent</exemplarCity>
+			</zone>
+			<zone type="America/St_Thomas">
+				<exemplarCity>St. Thomas</exemplarCity>
+			</zone>
+			<zone type="Asia/Saigon">
+				<exemplarCity>Ho Chi Minh</exemplarCity>
+			</zone>
+			<metazone type="Afghanistan">
+				<long>
+					<standard>Афғонистон вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Central">
+				<long>
+					<standard>Марказий Африка вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Eastern">
+				<long>
+					<standard>Шарқий Африка вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Southern">
+				<long>
+					<standard>Жанубий Африка вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Western">
+				<long>
+					<generic>Ғарбий Африка вақти</generic>
+					<standard>Ғарбий Африка стандарт вақти</standard>
+					<daylight>Ғарбий Африка ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Alaska">
+				<long>
+					<generic>Аляска вақти</generic>
+					<standard>Аляска стандарт вақти</standard>
+					<daylight>Аляска кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Amazon">
+				<long>
+					<generic>Амазонка вақти</generic>
+					<standard>Амазонка стандарт вақти</standard>
+					<daylight>Амазонка ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Central">
+				<long>
+					<generic>Шимолий Америка</generic>
+					<standard>Шимолий Америка марказий стандарт вақти</standard>
+					<daylight>Шимолий Америка марказий кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic>Шимолий Америка шарқий вақти</generic>
+					<standard>Шимолий Америка шарқий стандарт вақти</standard>
+					<daylight>Шимолий Америка шарқий кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic>Шимолий Америка тоғ вақти</generic>
+					<standard>Шимолий Америка тоғ стандарт вақти</standard>
+					<daylight>Шимолий Америка тоғ кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic>Шимолий Америка тинч океани вақти</generic>
+					<standard>Шимолий Америка тинч океани стандарт вақти</standard>
+					<daylight>Шимолий Америка тинч океани кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Arabian">
+				<long>
+					<generic>Арабистон вақти</generic>
+					<standard>Арабистон стандарт вақти</standard>
+					<daylight>Арабистон кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina">
+				<long>
+					<generic>Аргентина вақти</generic>
+					<standard>Аргентина стандарт вақти</standard>
+					<daylight>Аргентина ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina_Western">
+				<long>
+					<generic>Ғарбий Аргентина вақти</generic>
+					<standard>Ғарбий Аргентина стандарт вақти</standard>
+					<daylight>Ғарбий Аргентина ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Armenia">
+				<long>
+					<generic>Арамнистон вақти</generic>
+					<standard>Арманистон стандарт вақти</standard>
+					<daylight>Арманистон ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<generic>Атлантика вақти</generic>
+					<standard>Атлантика стандарт вақти</standard>
+					<daylight>Атлантика кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Central">
+				<long>
+					<generic>Марказий Австралия вақти</generic>
+					<standard>Марказий Австралия стандарт вақти</standard>
+					<daylight>Марказий Австралия кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_CentralWestern">
+				<long>
+					<generic>Марказий Австралия Ғарбий вақти</generic>
+					<standard>Марказий Австралия Ғарбий стандарт вақти</standard>
+					<daylight>Марказий Австралия Ғарбий кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Eastern">
+				<long>
+					<generic>Шарқий Австралия вақти</generic>
+					<standard>Шарқий Австралия стандарт вақти</standard>
+					<daylight>Шарқий Австралия кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Western">
+				<long>
+					<generic>Ғарбий Австралия вақти</generic>
+					<standard>Ғарбий Австралия стандарт вақти</standard>
+					<daylight>Ғарбий Австралия кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azerbaijan">
+				<long>
+					<generic>Озарбайжон вақти</generic>
+					<standard>Озарбайжон стандарт вақти</standard>
+					<daylight>Озарбайжон ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azores">
+				<long>
+					<generic>Азор вақти</generic>
+					<standard>Азор стандарт вақти</standard>
+					<daylight>Азор ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bangladesh">
+				<long>
+					<generic>Бангладеш вақти</generic>
+					<standard>Бангладеш стандарт вақти</standard>
+					<daylight>Бангладеш ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bhutan">
+				<long>
+					<standard>Бутан вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Bolivia">
+				<long>
+					<standard>Боливия вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Brasilia">
+				<long>
+					<generic>Бразилия вақти</generic>
+					<standard>Бразилия стандарт вақти</standard>
+					<daylight>Бразилия ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Brunei">
+				<long>
+					<standard>Бруней Даруссалом вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Cape_Verde">
+				<long>
+					<generic>Кабо-Верде вақти</generic>
+					<standard>Кабо-Верде стандарт вақти</standard>
+					<daylight>Кабо-Верде ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chamorro">
+				<long>
+					<standard>Каморро вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Chatham">
+				<long>
+					<generic>Чатхам вақти</generic>
+					<standard>Чатхам стандарт вақти</standard>
+					<daylight>Чатхам кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chile">
+				<long>
+					<generic>Чили вақти</generic>
+					<standard>Чили стандарт вақти</standard>
+					<daylight>Чили ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="China">
+				<long>
+					<generic>Хитой вақти</generic>
+					<standard>Хитой стандарт вақти</standard>
+					<daylight>Хитой кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Choibalsan">
+				<long>
+					<generic>Чойбалсан вақти</generic>
+					<standard>Чойбалсан стандарт вақти</standard>
+					<daylight>Чойбалсан ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Christmas">
+				<long>
+					<standard>Рождество ороли вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Cocos">
+				<long>
+					<standard>Кокос ороллари вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Colombia">
+				<long>
+					<generic>Колумбия вақти</generic>
+					<standard>Колумбия стандарт вақти</standard>
+					<daylight>Колумбия ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cook">
+				<long>
+					<generic>Кук ороллари вақти</generic>
+					<standard>Кук ороллари стандарт вақти</standard>
+					<daylight>Кук ороллари ярим ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cuba">
+				<long>
+					<generic>Куба вақти</generic>
+					<standard>Куба стандарт вақти</standard>
+					<daylight>Куба кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Davis">
+				<long>
+					<standard>Дэвис вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="DumontDUrville">
+				<long>
+					<standard>Думонт-д-Урвил вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="East_Timor">
+				<long>
+					<standard>Шарқий Тимор вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Easter">
+				<long>
+					<generic>Пасхи Ороли вақти</generic>
+					<standard>Пасхи ороли стандарт вақти</standard>
+					<daylight>Пасхи ороли ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Ecuador">
+				<long>
+					<standard>Эквадор вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>Марказий Европа вақти</generic>
+					<standard>Марказий Европа стандарт вақти</standard>
+					<daylight>Марказий Европа ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic>Шарқий Европа вақти</generic>
+					<standard>Шарқий Европа стандарт вақти</standard>
+					<daylight>Шарқий Европа ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>Ғарбий Европа вақти</generic>
+					<standard>Ғарбий Европа стандарт вақти</standard>
+					<daylight>Ғарбий Европа ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Falkland">
+				<long>
+					<generic>Фолькленд ороллари вақти</generic>
+					<standard>Фолькленд ороллари стандарт вақти</standard>
+					<daylight>Фолькленд ороллари ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Fiji">
+				<long>
+					<generic>Фижи вақти</generic>
+					<standard>Фижи стандарт вақти</standard>
+					<daylight>Фижи ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="French_Guiana">
+				<long>
+					<standard>Француз Гвианаси вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="French_Southern">
+				<long>
+					<standard>Француз жанубий ва Антарктика вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Galapagos">
+				<long>
+					<standard>Галапагос вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Gambier">
+				<long>
+					<standard>Гамбиер вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Georgia">
+				<long>
+					<generic>Грузия вақти</generic>
+					<standard>Грузия стандарт вақти</standard>
+					<daylight>Грузия ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gilbert_Islands">
+				<long>
+					<standard>Гилберт ороллари вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="GMT">
+				<long>
+					<standard>Гринвич вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Eastern">
+				<long>
+					<generic>Шарқий Гренландия вақти</generic>
+					<standard>Шарқий Гренландия стандарт вақти</standard>
+					<daylight>Шарқий Гренландия ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Western">
+				<long>
+					<generic>Ғарбий Гренландия вақти</generic>
+					<standard>Ғарбий Гренландия стандарт вақти</standard>
+					<daylight>Ғарбий Гренландия ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gulf">
+				<long>
+					<standard>Кўрфаз вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Guyana">
+				<long>
+					<standard>Гайана вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Hawaii_Aleutian">
+				<long>
+					<generic>Гавайи-алеут вақти</generic>
+					<standard>Гавайи-алеут стандарт вақти</standard>
+					<daylight>Гавайи-алеут кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hong_Kong">
+				<long>
+					<generic>Гонконг вақти</generic>
+					<standard>Гонконг стандарт вақти</standard>
+					<daylight>Гонконг ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hovd">
+				<long>
+					<generic>Ховд вақти</generic>
+					<standard>Ховд стандарт вақти</standard>
+					<daylight>Ховд ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="India">
+				<long>
+					<standard>Ҳиндистон вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Indian_Ocean">
+				<long>
+					<standard>Ҳинд океани вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Indochina">
+				<long>
+					<standard>Ҳинд-Хитой вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Central">
+				<long>
+					<standard>Марказий Индонезия вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Eastern">
+				<long>
+					<standard>Шарқий Индонезия вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Western">
+				<long>
+					<standard>Ғарбий Индонезия вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Iran">
+				<long>
+					<generic>Эрон вақти</generic>
+					<standard>Эрон стандарт вақти</standard>
+					<daylight>Эрон кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Irkutsk">
+				<long>
+					<generic>Иркутск вақти</generic>
+					<standard>Иркутск стандарт вақти</standard>
+					<daylight>Иркутск ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Israel">
+				<long>
+					<generic>Исроил вақти</generic>
+					<standard>Исроил стандарт вақти</standard>
+					<daylight>Исроил кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Japan">
+				<long>
+					<generic>Япония вақти</generic>
+					<standard>Япония стандарт вақти</standard>
+					<daylight>Япония кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Eastern">
+				<long>
+					<standard>Шарқий Қозоғистон вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Western">
+				<long>
+					<standard>Ғарбий Қозоғистон вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Korea">
+				<long>
+					<generic>Корея вақти</generic>
+					<standard>Корея стандарт вақти</standard>
+					<daylight>Корея кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kosrae">
+				<long>
+					<standard>Косрае вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Krasnoyarsk">
+				<long>
+					<generic>Красноярск вақти</generic>
+					<standard>Красноярск стандарт вақти</standard>
+					<daylight>Красноярск ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kyrgystan">
+				<long>
+					<standard>Қирғизистон вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Line_Islands">
+				<long>
+					<standard>Лайн ороллари вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Lord_Howe">
+				<long>
+					<generic>Лорд Хове вақти</generic>
+					<standard>Лорд Хове стандарт вақти</standard>
+					<daylight>Лорд Хове кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Macquarie">
+				<long>
+					<standard>Маквари ороли вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Magadan">
+				<long>
+					<generic>Магадан вақти</generic>
+					<standard>Магадан стандарт вақти</standard>
+					<daylight>Магадан ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Malaysia">
+				<long>
+					<standard>Малайзия вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Maldives">
+				<long>
+					<standard>Мальдив ороллар</standard>
+				</long>
+			</metazone>
+			<metazone type="Marquesas">
+				<long>
+					<standard>Маркезас вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Marshall_Islands">
+				<long>
+					<standard>Маршалл ороллари вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Mauritius">
+				<long>
+					<generic>Маврикий вақти</generic>
+					<standard>Маврикий стандарт вақти</standard>
+					<daylight>Маврикий ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mawson">
+				<long>
+					<standard>Моувсон вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Mongolia">
+				<long>
+					<generic>Улан-Батор вақти</generic>
+					<standard>Улан-Батор стандарт вақти</standard>
+					<daylight>Улан-Батор ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Moscow">
+				<long>
+					<generic>Москва вақти</generic>
+					<standard>Москва стандарт вақти</standard>
+					<daylight>Москва ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Myanmar">
+				<long>
+					<standard>Мьянма вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Nauru">
+				<long>
+					<standard>Науру вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Nepal">
+				<long>
+					<standard>Непал вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="New_Caledonia">
+				<long>
+					<generic>Янги Каледония вақти</generic>
+					<standard>Янги Каледония стандарт вақти</standard>
+					<daylight>Янги Каледония ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="New_Zealand">
+				<long>
+					<generic>Янги Зеландия вақти</generic>
+					<standard>Янги Зеландия стандарт вақти</standard>
+					<daylight>Янги Зеландия кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Newfoundland">
+				<long>
+					<generic>Ньюфаундленд вақти</generic>
+					<standard>Ньюфаундленд стандарт вақти</standard>
+					<daylight>Ньюфаундленд кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Niue">
+				<long>
+					<standard>Ниуе вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Norfolk">
+				<long>
+					<generic draft="contributed">Норфолк ороли вақти</generic>
+					<standard draft="contributed">Норфолк ороли стандарт вақти</standard>
+					<daylight draft="contributed">Норфолк ороли ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Noronha">
+				<long>
+					<generic>Фернандо де Норонья вақти</generic>
+					<standard>Фернандо де Норонья стандарт вақти</standard>
+					<daylight>Фернандо де Норонья ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Novosibirsk">
+				<long>
+					<generic>Новосибирск вақти</generic>
+					<standard>Новосибирск стандарт вақти</standard>
+					<daylight>Новосибирск ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Omsk">
+				<long>
+					<generic>Омск вақти</generic>
+					<standard>Омск стандарт вақти</standard>
+					<daylight>Омск ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pakistan">
+				<long>
+					<generic>Покистон вақти</generic>
+					<standard>Покистон стандарт вақти</standard>
+					<daylight>Покистон ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Palau">
+				<long>
+					<standard>Палау вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Papua_New_Guinea">
+				<long>
+					<standard>Папуа-Янги Гвинея вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Paraguay">
+				<long>
+					<generic>Парагвай вақти</generic>
+					<standard>Парагвай стандарт вақти</standard>
+					<daylight>Парагвай ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Peru">
+				<long>
+					<generic>Перу вақти</generic>
+					<standard>Перу стандарт вақти</standard>
+					<daylight>Перу ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Philippines">
+				<long>
+					<generic>Филиппин вақти</generic>
+					<standard>Филиппин стандарт вақти</standard>
+					<daylight>Филиппин ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Phoenix_Islands">
+				<long>
+					<standard>Феникс ороллари вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Pierre_Miquelon">
+				<long>
+					<generic>Сент-Пьер ва Микелон вақти</generic>
+					<standard>Сент-Пьер ва Микелон стандарт вақти</standard>
+					<daylight>Сент-Пьер ва Микелон кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pitcairn">
+				<long>
+					<standard>Питкерн вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Ponape">
+				<long>
+					<standard>Понапе вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Reunion">
+				<long>
+					<standard>Реюньон вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Rothera">
+				<long>
+					<standard>Ротера вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Sakhalin">
+				<long>
+					<generic>Сахалин вақти</generic>
+					<standard>Сахалин стандарт вақти</standard>
+					<daylight>Сахалин ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Samoa">
+				<long>
+					<generic>Самоа вақти</generic>
+					<standard>Самоа стандарт вақти</standard>
+					<daylight>Самоа кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Seychelles">
+				<long>
+					<standard>Сейшел ороллари вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Singapore">
+				<long>
+					<standard>Сингапур вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Solomon">
+				<long>
+					<standard>Соломон ороллари вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="South_Georgia">
+				<long>
+					<standard>Жанубий Джорджия вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Suriname">
+				<long>
+					<standard>Суринам вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Syowa">
+				<long>
+					<standard>Сьова вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Tahiti">
+				<long>
+					<standard>Таити вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Taipei">
+				<long>
+					<generic>Тайпей вақти</generic>
+					<standard>Тайпей стандарт вақти</standard>
+					<daylight>Тайпей кундузги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Tajikistan">
+				<long>
+					<standard>Тожикистон вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Tokelau">
+				<long>
+					<standard>Токелау вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Tonga">
+				<long>
+					<generic>Тонга вақти</generic>
+					<standard>Тонга стандарт вақти</standard>
+					<daylight>Тонга ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Truk">
+				<long>
+					<standard>Чуук вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Turkmenistan">
+				<long>
+					<generic>Туркманистон вақти</generic>
+					<standard>Туркманистон стандарт вақти</standard>
+					<daylight>Туркманистон ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Tuvalu">
+				<long>
+					<standard>Тувалу вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Uruguay">
+				<long>
+					<generic>Уругвай вақти</generic>
+					<standard>Уругвай стандарт вақти</standard>
+					<daylight>Уругвай ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Uzbekistan">
+				<long>
+					<generic>Ўзбекистон вақти</generic>
+					<standard>Ўзбекистон стандарт вақти</standard>
+					<daylight>Ўзбекистон ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Vanuatu">
+				<long>
+					<generic>Вануату вақти</generic>
+					<standard>Вануату стандарт вақти</standard>
+					<daylight>Вануату ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Venezuela">
+				<long>
+					<standard>Венесуэла вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Vladivostok">
+				<long>
+					<generic>Владивосток вақти</generic>
+					<standard>Владивосток стандарт вақти</standard>
+					<daylight>Владивосток ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Volgograd">
+				<long>
+					<generic>Волгоград вақти</generic>
+					<standard>Волгоград стандарт вақти</standard>
+					<daylight>Волгоград ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Vostok">
+				<long>
+					<standard>Восток вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Wake">
+				<long>
+					<standard>Уэйк ороли вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Wallis">
+				<long>
+					<standard>Уэллис ва Футуна вақти</standard>
+				</long>
+			</metazone>
+			<metazone type="Yakutsk">
+				<long>
+					<generic>Якутск вақти</generic>
+					<standard>Якутск стандарт вақти</standard>
+					<daylight>Якутск ёзги вақти</daylight>
+				</long>
+			</metazone>
+			<metazone type="Yekaterinburg">
+				<long>
+					<generic>Екатеринбург вақти</generic>
+					<standard>Екатеринбург стандарт вақти</standard>
+					<daylight>Екатеринбург ёзги вақти</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<symbols numberSystem="arabext">
+			<decimal>٫</decimal>
+			<group>٬</group>
+			<percentSign>٪</percentSign>
+			<plusSign>+</plusSign>
+			<minusSign>-</minusSign>
+			<exponential>×۱۰^</exponential>
+			<superscriptingExponent>×</superscriptingExponent>
+			<perMille>؉</perMille>
+			<infinity>∞</infinity>
+			<nan>ҳақиқий сон эмас</nan>
+		</symbols>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group> </group>
+			<percentSign>%</percentSign>
+			<plusSign>+</plusSign>
+			<minusSign>-</minusSign>
+			<exponential>E</exponential>
+			<superscriptingExponent>×</superscriptingExponent>
+			<perMille>‰</perMille>
+			<infinity>∞</infinity>
+			<nan>ҳақиқий сон эмас</nan>
+		</symbols>
+		<decimalFormats numberSystem="arabext">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+			<decimalFormatLength type="long">
+				<decimalFormat>
+					<pattern type="1000" count="one">0 минг</pattern>
+					<pattern type="1000" count="other">0 минг</pattern>
+					<pattern type="10000" count="one">00 минг</pattern>
+					<pattern type="10000" count="other">00 минг</pattern>
+					<pattern type="100000" count="one">000 минг</pattern>
+					<pattern type="100000" count="other">000 минг</pattern>
+					<pattern type="1000000" count="one">0 миллион</pattern>
+					<pattern type="1000000" count="other">0 миллион</pattern>
+					<pattern type="10000000" count="one">00 миллион</pattern>
+					<pattern type="10000000" count="other">00 миллион</pattern>
+					<pattern type="100000000" count="one">000 миллион</pattern>
+					<pattern type="100000000" count="other">000 миллион</pattern>
+					<pattern type="1000000000" count="one">0 миллиард</pattern>
+					<pattern type="1000000000" count="other">0 миллиард</pattern>
+					<pattern type="10000000000" count="one">00 миллиард</pattern>
+					<pattern type="10000000000" count="other">00 миллиард</pattern>
+					<pattern type="100000000000" count="one">000 миллиард</pattern>
+					<pattern type="100000000000" count="other">000 миллиард</pattern>
+					<pattern type="1000000000000" count="one">0 трилион</pattern>
+					<pattern type="1000000000000" count="other">0 трилион</pattern>
+					<pattern type="10000000000000" count="one">00 трилион</pattern>
+					<pattern type="10000000000000" count="other">00 трилион</pattern>
+					<pattern type="100000000000000" count="one">000 трилион</pattern>
+					<pattern type="100000000000000" count="other">000 трилион</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+			<decimalFormatLength type="short">
+				<decimalFormat>
+					<pattern type="1000" count="one">0минг</pattern>
+					<pattern type="1000" count="other">0минг</pattern>
+					<pattern type="10000" count="one">00минг</pattern>
+					<pattern type="10000" count="other">00минг</pattern>
+					<pattern type="100000" count="one">000минг</pattern>
+					<pattern type="100000" count="other">000минг</pattern>
+					<pattern type="1000000" count="one">0млн</pattern>
+					<pattern type="1000000" count="other">0млн</pattern>
+					<pattern type="10000000" count="one">00млн</pattern>
+					<pattern type="10000000" count="other">00млн</pattern>
+					<pattern type="100000000" count="one">000млн</pattern>
+					<pattern type="100000000" count="other">000млн</pattern>
+					<pattern type="1000000000" count="one">0млрд</pattern>
+					<pattern type="1000000000" count="other">0млрд</pattern>
+					<pattern type="10000000000" count="one">00млрд</pattern>
+					<pattern type="10000000000" count="other">00млрд</pattern>
+					<pattern type="100000000000" count="one">000млрд</pattern>
+					<pattern type="100000000000" count="other">000млрд</pattern>
+					<pattern type="1000000000000" count="one">0трлн</pattern>
+					<pattern type="1000000000000" count="other">0трлн</pattern>
+					<pattern type="10000000000000" count="one">00трлн</pattern>
+					<pattern type="10000000000000" count="other">00трлн</pattern>
+					<pattern type="100000000000000" count="one">000трлн</pattern>
+					<pattern type="100000000000000" count="other">000трлн</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<scientificFormats numberSystem="arabext">
+			<scientificFormatLength>
+				<scientificFormat>
+					<pattern>#E0</pattern>
+				</scientificFormat>
+			</scientificFormatLength>
+		</scientificFormats>
+		<scientificFormats numberSystem="latn">
+			<scientificFormatLength>
+				<scientificFormat>
+					<pattern>#E0</pattern>
+				</scientificFormat>
+			</scientificFormatLength>
+		</scientificFormats>
+		<percentFormats numberSystem="arabext">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern>#,##0%</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<percentFormats numberSystem="latn">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern>#,##0%</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<currencyFormats numberSystem="arabext">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>#,##0.00 ¤</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>#,##0.00 ¤</pattern>
+				</currencyFormat>
+				<currencyFormat type="accounting">
+					<pattern>#,##0.00 ¤</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="one" draft="provisional">¤ 0минг</pattern>
+					<pattern type="1000" count="other" draft="provisional">¤ 0минг</pattern>
+					<pattern type="10000" count="one" draft="provisional">¤ 00минг</pattern>
+					<pattern type="10000" count="other" draft="provisional">¤ 00минг</pattern>
+					<pattern type="100000" count="one" draft="provisional">¤ 000минг</pattern>
+					<pattern type="100000" count="other" draft="provisional">¤ 000минг</pattern>
+					<pattern type="1000000" count="one" draft="provisional">¤ 0млн</pattern>
+					<pattern type="1000000" count="other" draft="provisional">¤ 0млн</pattern>
+					<pattern type="10000000" count="one" draft="provisional">¤ 00млн</pattern>
+					<pattern type="10000000" count="other" draft="provisional">¤ 00млн</pattern>
+					<pattern type="100000000" count="one" draft="provisional">¤ 000млн</pattern>
+					<pattern type="100000000" count="other" draft="provisional">¤ 000млн</pattern>
+					<pattern type="1000000000" count="one" draft="provisional">¤ 0млрд</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">¤ 0млрд</pattern>
+					<pattern type="10000000000" count="one" draft="provisional">¤ 00млрд</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">¤ 00млрд</pattern>
+					<pattern type="100000000000" count="one" draft="provisional">¤ 000млрд</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">¤ 000млрд</pattern>
+					<pattern type="1000000000000" count="one" draft="provisional">¤ 0трлн</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">¤ 0трлн</pattern>
+					<pattern type="10000000000000" count="one" draft="provisional">¤ 00трлн</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">¤ 00трлн</pattern>
+					<pattern type="100000000000000" count="one" draft="provisional">¤ 000трлн</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">¤ 000трлн</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<unitPattern count="one">{0} {1}</unitPattern>
+			<unitPattern count="other">{0} {1}</unitPattern>
+		</currencyFormats>
+		<currencies>
+			<currency type="ANG">
+				<displayName>Голланд Антил гульдени</displayName>
+				<displayName count="one">Голланд Антил гульдени</displayName>
+				<displayName count="other">Голланд Антил гульдени</displayName>
+			</currency>
+			<currency type="ARS">
+				<displayName>Аргентина песоси</displayName>
+				<displayName count="one">Аргентина песоси</displayName>
+				<displayName count="other">Аргентина песоси</displayName>
+			</currency>
+			<currency type="AUD">
+				<symbol>A$</symbol>
+			</currency>
+			<currency type="AWG">
+				<displayName>Аруба флорини</displayName>
+				<displayName count="one">Аруба флорини</displayName>
+				<displayName count="other">Аруба флорини</displayName>
+			</currency>
+			<currency type="BBD">
+				<displayName>Барбадос доллари</displayName>
+				<displayName count="one">Барбадос доллари</displayName>
+				<displayName count="other">Барбадос доллари</displayName>
+			</currency>
+			<currency type="BMD">
+				<displayName>Бермуда доллари</displayName>
+				<displayName count="one">Бермуда доллари</displayName>
+				<displayName count="other">Бермуда доллари</displayName>
+			</currency>
+			<currency type="BOB">
+				<displayName>Боливия болвиани</displayName>
+				<displayName count="one">Боливия болвиани</displayName>
+				<displayName count="other">Боливия болвиани</displayName>
+			</currency>
+			<currency type="BRL">
+				<displayName>Бразил реали</displayName>
+				<displayName count="one">Бразил реали</displayName>
+				<displayName count="other">Бразил реали</displayName>
+				<symbol>R$</symbol>
+			</currency>
+			<currency type="BSD">
+				<displayName>Багама доллари</displayName>
+				<displayName count="one">Багама доллари</displayName>
+				<displayName count="other">Багама доллари</displayName>
+			</currency>
+			<currency type="BZD">
+				<displayName>Белиз доллари</displayName>
+				<displayName count="one">Белиз доллари</displayName>
+				<displayName count="other">Белиз доллари</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName>Канада доллари</displayName>
+				<displayName count="one">Канада доллари</displayName>
+				<displayName count="other">Канада доллари</displayName>
+				<symbol>CA$</symbol>
+			</currency>
+			<currency type="CLP">
+				<displayName>Чили песоси</displayName>
+				<displayName count="one">Чили песоси</displayName>
+				<displayName count="other">Чили песоси</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>Хитой юани</displayName>
+				<displayName count="one">Хитой юани</displayName>
+				<displayName count="other">Хитой юани</displayName>
+				<symbol>CN¥</symbol>
+			</currency>
+			<currency type="COP">
+				<displayName>Колумбия песоси</displayName>
+				<displayName count="one">Колумбия песоси</displayName>
+				<displayName count="other">Колумбия песоси</displayName>
+			</currency>
+			<currency type="CRC">
+				<displayName>Коста-Рика колони</displayName>
+				<displayName count="one">Коста-Рика колони</displayName>
+				<displayName count="other">Коста-Рика колони</displayName>
+			</currency>
+			<currency type="CUC">
+				<displayName>Куба Айирбошлаш песоси</displayName>
+				<displayName count="one">Куба айирбошлаш песоси</displayName>
+				<displayName count="other">Куба айирбошлаш песоси</displayName>
+			</currency>
+			<currency type="CUP">
+				<displayName>Куба песоси</displayName>
+				<displayName count="one">Куба песоси</displayName>
+				<displayName count="other">Куба песоси</displayName>
+			</currency>
+			<currency type="DOP">
+				<displayName>Доминикан песоси</displayName>
+				<displayName count="one">Доминикан песоси</displayName>
+				<displayName count="other">Доминикан песоси</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName>Жазоир динори</displayName>
+				<displayName count="one">Жазоир динори</displayName>
+				<displayName count="other">Жазоир динори</displayName>
+			</currency>
+			<currency type="EGP">
+				<displayName>Миср фунти</displayName>
+				<displayName count="one">Миср фунти</displayName>
+				<displayName count="other">Миср фунти</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>Евро</displayName>
+				<displayName count="one">Евро</displayName>
+				<displayName count="other">Евро</displayName>
+				<symbol>€</symbol>
+			</currency>
+			<currency type="FKP">
+				<displayName>Фолькленд ороли фунти</displayName>
+				<displayName count="one">Фолькленд ороли фунти</displayName>
+				<displayName count="other">Фолькленд ороли фунти</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>Инглиз фунт</displayName>
+				<displayName count="one">Инглиз фунт</displayName>
+				<displayName count="other">Инглиз фунт</displayName>
+				<symbol>£</symbol>
+			</currency>
+			<currency type="GTQ">
+				<displayName>Гватемала кветзали</displayName>
+				<displayName count="one">Гватемала кветзали</displayName>
+				<displayName count="other">Гватемала кветзали</displayName>
+			</currency>
+			<currency type="GYD">
+				<displayName>Гаяна доллари</displayName>
+				<displayName count="one">Гаяна доллари</displayName>
+				<displayName count="other">Гаяна доллари</displayName>
+			</currency>
+			<currency type="HKD">
+				<symbol>HK$</symbol>
+			</currency>
+			<currency type="HNL">
+				<displayName>Гондурас лемпираси</displayName>
+				<displayName count="one">Гондурас лемпираси</displayName>
+				<displayName count="other">Гондурас лемпираси</displayName>
+			</currency>
+			<currency type="HTG">
+				<displayName>Гаити гурдаси</displayName>
+				<displayName count="one">Гаити гурдаси</displayName>
+				<displayName count="other">Гаити гурдаси</displayName>
+			</currency>
+			<currency type="ILS">
+				<symbol>₪</symbol>
+			</currency>
+			<currency type="INR">
+				<displayName>Ҳинд рупияси</displayName>
+				<symbol>₹</symbol>
+			</currency>
+			<currency type="JMD">
+				<displayName>Ямайка доллари</displayName>
+				<displayName count="one">Ямайка доллари</displayName>
+				<displayName count="other">Ямайка доллари</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>Япон йенаси</displayName>
+				<displayName count="one">Япон йенаси</displayName>
+				<displayName count="other">Япон йенаси</displayName>
+				<symbol>JP¥</symbol>
+			</currency>
+			<currency type="KRW">
+				<symbol>₩</symbol>
+			</currency>
+			<currency type="KYD">
+				<displayName>Кайман ороли Доллари</displayName>
+				<displayName count="one">Кайман ороли доллари</displayName>
+				<displayName count="other">Кайман ороли доллари</displayName>
+			</currency>
+			<currency type="LYD">
+				<displayName>Ливия динори</displayName>
+				<displayName count="one">Ливия динори</displayName>
+				<displayName count="other">Ливия динори</displayName>
+			</currency>
+			<currency type="MAD">
+				<displayName>Марокаш дирҳами</displayName>
+				<displayName count="one">Марокаш дирҳами</displayName>
+				<displayName count="other">Марокаш дирҳами</displayName>
+			</currency>
+			<currency type="MXN">
+				<displayName>Мексика песоси</displayName>
+				<displayName count="one">Мексика песоси</displayName>
+				<displayName count="other">Мексика песоси</displayName>
+				<symbol>MX$</symbol>
+			</currency>
+			<currency type="NIO">
+				<displayName>Никарагуа кордобаси</displayName>
+				<displayName count="one">Никарагуа кордобаси</displayName>
+				<displayName count="other">Никарагуа кордобаси</displayName>
+			</currency>
+			<currency type="NZD">
+				<symbol>NZ$</symbol>
+			</currency>
+			<currency type="PAB">
+				<displayName>Панама бальбоаси</displayName>
+				<displayName count="one">Панама бальбоаси</displayName>
+				<displayName count="other">Панама бальбоаси</displayName>
+			</currency>
+			<currency type="PEN">
+				<displayName>Перу сол</displayName>
+				<displayName count="one">Перу сол</displayName>
+				<displayName count="other">Перу сол</displayName>
+			</currency>
+			<currency type="PYG">
+				<displayName>Парагвай гуарани</displayName>
+				<displayName count="one">Парагвай гуарани</displayName>
+				<displayName count="other">Парагвай гуарани</displayName>
+			</currency>
+			<currency type="RON">
+				<symbol draft="contributed">RON</symbol>
+			</currency>
+			<currency type="RUB">
+				<displayName>Рус рубли</displayName>
+				<displayName count="one">Рус рубли</displayName>
+				<displayName count="other">Рус рубли</displayName>
+			</currency>
+			<currency type="SRD">
+				<displayName>Суринам доллари</displayName>
+				<displayName count="one">Суринам доллари</displayName>
+				<displayName count="other">Суринам доллари</displayName>
+			</currency>
+			<currency type="THB">
+				<symbol>฿</symbol>
+			</currency>
+			<currency type="TTD">
+				<displayName>Тринидад ва Тобаго доллари</displayName>
+				<displayName count="one">Тринидад ва Тобаго доллари</displayName>
+				<displayName count="other">Тринидад ва Тобаго доллари</displayName>
+			</currency>
+			<currency type="TWD">
+				<symbol>NT$</symbol>
+			</currency>
+			<currency type="USD">
+				<displayName>АҚШ доллари</displayName>
+				<displayName count="one">АҚШ доллари</displayName>
+				<displayName count="other">АҚШ доллари</displayName>
+				<symbol>US$</symbol>
+			</currency>
+			<currency type="UYU">
+				<displayName>Уругвай песоси</displayName>
+				<displayName count="one">Уругвай песоси</displayName>
+				<displayName count="other">Уругвай песоси</displayName>
+			</currency>
+			<currency type="UZS">
+				<displayName>Ўзбекистон сўм</displayName>
+				<displayName count="one">Ўзбекистон сўм</displayName>
+				<displayName count="other">Ўзбекистон сўм</displayName>
+				<symbol>сўм</symbol>
+			</currency>
+			<currency type="VEF">
+				<displayName>Венесуэла боливари (2008–2018)</displayName>
+				<displayName count="one">Венесуэла боливари (2008–2018)</displayName>
+				<displayName count="other">Венесуэла боливари (2008–2018)</displayName>
+			</currency>
+			<currency type="VES">
+				<displayName>Венесуэла боливари</displayName>
+				<displayName count="one">Венесуэла боливари</displayName>
+				<displayName count="other">Венесуэла боливари</displayName>
+			</currency>
+			<currency type="VND">
+				<symbol>₫</symbol>
+			</currency>
+			<currency type="XAF">
+				<symbol>FCFA</symbol>
+			</currency>
+			<currency type="XCD">
+				<displayName>Шарқий Кариб доллари</displayName>
+				<displayName count="one">Шарқ Кариб доллари</displayName>
+				<displayName count="other">Шарқ Кариб доллари</displayName>
+				<symbol>EC$</symbol>
+			</currency>
+			<currency type="XOF">
+				<symbol>F CFA</symbol>
+			</currency>
+			<currency type="XPF">
+				<symbol>CFPF</symbol>
+			</currency>
+		</currencies>
+		<miscPatterns numberSystem="latn">
+			<pattern type="atLeast">{0}+</pattern>
+			<pattern type="range">{0}–{1}</pattern>
+		</miscPatterns>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<compoundUnit type="per">
+				<compoundUnitPattern>{0}/{1}</compoundUnitPattern>
+			</compoundUnit>
+			<unit type="acceleration-g-force">
+				<displayName draft="provisional">G</displayName>
+				<unitPattern count="one">{0} G</unitPattern>
+				<unitPattern count="other">{0} G</unitPattern>
+			</unit>
+			<unit type="angle-degree">
+				<displayName draft="provisional">°</displayName>
+				<unitPattern count="one">{0}°</unitPattern>
+				<unitPattern count="other">{0}°</unitPattern>
+			</unit>
+			<unit type="angle-arc-minute">
+				<displayName draft="provisional">′</displayName>
+				<unitPattern count="one">{0}′</unitPattern>
+				<unitPattern count="other">{0}′</unitPattern>
+			</unit>
+			<unit type="angle-arc-second">
+				<displayName draft="provisional">″</displayName>
+				<unitPattern count="one">{0}″</unitPattern>
+				<unitPattern count="other">{0}″</unitPattern>
+			</unit>
+			<unit type="area-square-kilometer">
+				<displayName draft="provisional">km²</displayName>
+				<unitPattern count="one">{0} km²</unitPattern>
+				<unitPattern count="other">{0} km²</unitPattern>
+			</unit>
+			<unit type="area-hectare">
+				<displayName draft="provisional">ha</displayName>
+				<unitPattern count="one">{0} ha</unitPattern>
+				<unitPattern count="other">{0} ha</unitPattern>
+			</unit>
+			<unit type="area-square-meter">
+				<displayName draft="provisional">m²</displayName>
+				<unitPattern count="one">{0} m²</unitPattern>
+				<unitPattern count="other">{0} m²</unitPattern>
+			</unit>
+			<unit type="area-square-mile">
+				<displayName draft="provisional">mi²</displayName>
+				<unitPattern count="one">{0} mi²</unitPattern>
+				<unitPattern count="other">{0} mi²</unitPattern>
+			</unit>
+			<unit type="area-acre">
+				<displayName draft="provisional">ac</displayName>
+				<unitPattern count="one">{0} ac</unitPattern>
+				<unitPattern count="other">{0} ac</unitPattern>
+			</unit>
+			<unit type="area-square-foot">
+				<displayName draft="provisional">ft²</displayName>
+				<unitPattern count="one">{0} ft²</unitPattern>
+				<unitPattern count="other">{0} ft²</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<displayName draft="provisional">йил</displayName>
+				<unitPattern count="one">{0} йил</unitPattern>
+				<unitPattern count="other">{0} йил</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="provisional">ой</displayName>
+				<unitPattern count="one">{0} ой</unitPattern>
+				<unitPattern count="other">{0} ой</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName draft="provisional">ҳафта</displayName>
+				<unitPattern count="one">{0} ҳафта</unitPattern>
+				<unitPattern count="other">{0} ҳафта</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="provisional">кун</displayName>
+				<unitPattern count="one">{0} кун</unitPattern>
+				<unitPattern count="other">{0} кун</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName draft="provisional">соат</displayName>
+				<unitPattern count="one">{0} соат</unitPattern>
+				<unitPattern count="other">{0} соат</unitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName draft="provisional">дақиқа</displayName>
+				<unitPattern count="one">{0} дақиқа</unitPattern>
+				<unitPattern count="other">{0} дақиқа</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName draft="provisional">сония</displayName>
+				<unitPattern count="one">{0} сония</unitPattern>
+				<unitPattern count="other">{0} сония</unitPattern>
+			</unit>
+			<unit type="duration-millisecond">
+				<displayName draft="provisional">миллисония</displayName>
+				<unitPattern count="one">{0} миллисония</unitPattern>
+				<unitPattern count="other">{0} миллисония</unitPattern>
+			</unit>
+			<unit type="length-kilometer">
+				<displayName draft="provisional">км</displayName>
+				<unitPattern count="one">{0} км</unitPattern>
+				<unitPattern count="other">{0} км</unitPattern>
+			</unit>
+			<unit type="length-meter">
+				<displayName draft="provisional">м</displayName>
+				<unitPattern count="one">{0} м</unitPattern>
+				<unitPattern count="other">{0} м</unitPattern>
+			</unit>
+			<unit type="length-centimeter">
+				<displayName draft="provisional">см</displayName>
+				<unitPattern count="one">{0} см</unitPattern>
+				<unitPattern count="other">{0} см</unitPattern>
+			</unit>
+			<unit type="length-millimeter">
+				<displayName draft="provisional">мм</displayName>
+				<unitPattern count="one">{0} мм</unitPattern>
+				<unitPattern count="other">{0} мм</unitPattern>
+			</unit>
+			<unit type="length-picometer">
+				<displayName draft="provisional">пм</displayName>
+				<unitPattern count="one">{0} пм</unitPattern>
+				<unitPattern count="other">{0} пм</unitPattern>
+			</unit>
+			<unit type="length-mile">
+				<displayName draft="provisional">миля</displayName>
+				<unitPattern count="one">{0} миля</unitPattern>
+				<unitPattern count="other">{0} миля</unitPattern>
+			</unit>
+			<unit type="length-yard">
+				<displayName draft="provisional">ярд</displayName>
+				<unitPattern count="one">{0} ярд</unitPattern>
+				<unitPattern count="other">{0} ярд</unitPattern>
+			</unit>
+			<unit type="length-foot">
+				<displayName draft="provisional">фут</displayName>
+				<unitPattern count="one">{0} фут</unitPattern>
+				<unitPattern count="other">{0} фут</unitPattern>
+			</unit>
+			<unit type="length-inch">
+				<displayName draft="provisional">дюйм</displayName>
+				<unitPattern count="one">{0} дюйм</unitPattern>
+				<unitPattern count="other">{0} дюйм</unitPattern>
+			</unit>
+			<unit type="length-light-year">
+				<displayName draft="provisional">ё.й.</displayName>
+				<unitPattern count="one">{0} ё.й.</unitPattern>
+				<unitPattern count="other">{0} ё.й.</unitPattern>
+			</unit>
+			<unit type="mass-kilogram">
+				<displayName draft="provisional">кг</displayName>
+				<unitPattern count="one">{0} кг</unitPattern>
+				<unitPattern count="other">{0} кг</unitPattern>
+			</unit>
+			<unit type="mass-gram">
+				<displayName draft="provisional">г</displayName>
+				<unitPattern count="one">{0} г</unitPattern>
+				<unitPattern count="other">{0} г</unitPattern>
+			</unit>
+			<unit type="mass-pound">
+				<displayName draft="provisional">фунт</displayName>
+				<unitPattern count="one">{0} фунт</unitPattern>
+				<unitPattern count="other">{0} фунт</unitPattern>
+			</unit>
+			<unit type="mass-ounce">
+				<displayName draft="provisional">унция</displayName>
+				<unitPattern count="one">{0} унция</unitPattern>
+				<unitPattern count="other">{0} унция</unitPattern>
+			</unit>
+			<unit type="power-kilowatt">
+				<displayName draft="provisional">kW</displayName>
+				<unitPattern count="one">{0} kW</unitPattern>
+				<unitPattern count="other">{0} kW</unitPattern>
+			</unit>
+			<unit type="power-watt">
+				<displayName draft="provisional">W</displayName>
+				<unitPattern count="one">{0} W</unitPattern>
+				<unitPattern count="other">{0} W</unitPattern>
+			</unit>
+			<unit type="power-horsepower">
+				<displayName draft="provisional">hp</displayName>
+				<unitPattern count="one">{0} hp</unitPattern>
+				<unitPattern count="other">{0} hp</unitPattern>
+			</unit>
+			<unit type="pressure-inch-ofhg">
+				<displayName draft="provisional">inHg</displayName>
+				<unitPattern count="one">{0} inHg</unitPattern>
+				<unitPattern count="other">{0} inHg</unitPattern>
+			</unit>
+			<unit type="pressure-millibar">
+				<displayName draft="provisional">mbar</displayName>
+				<unitPattern count="one">{0} mbar</unitPattern>
+				<unitPattern count="other">{0} mbar</unitPattern>
+			</unit>
+			<unit type="pressure-hectopascal">
+				<displayName draft="provisional">hPa</displayName>
+				<unitPattern count="one">{0} hPa</unitPattern>
+				<unitPattern count="other">{0} hPa</unitPattern>
+			</unit>
+			<unit type="speed-kilometer-per-hour">
+				<displayName draft="provisional">km/h</displayName>
+				<unitPattern count="one">{0} km/h</unitPattern>
+				<unitPattern count="other">{0} km/h</unitPattern>
+			</unit>
+			<unit type="speed-meter-per-second">
+				<displayName draft="provisional">m/s</displayName>
+				<unitPattern count="one">{0} m/s</unitPattern>
+				<unitPattern count="other">{0} m/s</unitPattern>
+			</unit>
+			<unit type="speed-mile-per-hour">
+				<displayName draft="provisional">mi/h</displayName>
+				<unitPattern count="one">{0} mi/h</unitPattern>
+				<unitPattern count="other">{0} mi/h</unitPattern>
+			</unit>
+			<unit type="temperature-celsius">
+				<displayName draft="provisional">°C</displayName>
+				<unitPattern count="one">{0}°C</unitPattern>
+				<unitPattern count="other">{0}°C</unitPattern>
+			</unit>
+			<unit type="temperature-fahrenheit">
+				<displayName draft="provisional">°F</displayName>
+				<unitPattern count="one">{0}°F</unitPattern>
+				<unitPattern count="other">{0}°F</unitPattern>
+			</unit>
+			<unit type="volume-cubic-kilometer">
+				<displayName draft="provisional">km³</displayName>
+				<unitPattern count="one">{0} km³</unitPattern>
+				<unitPattern count="other">{0} km³</unitPattern>
+			</unit>
+			<unit type="volume-cubic-mile">
+				<displayName draft="provisional">mi³</displayName>
+				<unitPattern count="one">{0} mi³</unitPattern>
+				<unitPattern count="other">{0} mi³</unitPattern>
+			</unit>
+			<unit type="volume-liter">
+				<displayName draft="provisional">l</displayName>
+				<unitPattern count="one">{0} l</unitPattern>
+				<unitPattern count="other">{0} l</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<compoundUnit type="per">
+				<compoundUnitPattern>{0}/{1}</compoundUnitPattern>
+			</compoundUnit>
+			<unit type="acceleration-g-force">
+				<displayName draft="provisional">G</displayName>
+				<unitPattern count="one">{0} G</unitPattern>
+				<unitPattern count="other">{0} G</unitPattern>
+			</unit>
+			<unit type="angle-degree">
+				<displayName draft="provisional">°</displayName>
+				<unitPattern count="one">{0}°</unitPattern>
+				<unitPattern count="other">{0}°</unitPattern>
+			</unit>
+			<unit type="angle-arc-minute">
+				<displayName draft="provisional">′</displayName>
+				<unitPattern count="one">{0}′</unitPattern>
+				<unitPattern count="other">{0}′</unitPattern>
+			</unit>
+			<unit type="angle-arc-second">
+				<displayName draft="provisional">″</displayName>
+				<unitPattern count="one">{0}″</unitPattern>
+				<unitPattern count="other">{0}″</unitPattern>
+			</unit>
+			<unit type="area-square-kilometer">
+				<displayName draft="provisional">km²</displayName>
+				<unitPattern count="one">{0} km²</unitPattern>
+				<unitPattern count="other">{0} km²</unitPattern>
+			</unit>
+			<unit type="area-hectare">
+				<displayName draft="provisional">ha</displayName>
+				<unitPattern count="one">{0} ha</unitPattern>
+				<unitPattern count="other">{0} ha</unitPattern>
+			</unit>
+			<unit type="area-square-meter">
+				<displayName draft="provisional">m²</displayName>
+				<unitPattern count="one">{0} m²</unitPattern>
+				<unitPattern count="other">{0} m²</unitPattern>
+			</unit>
+			<unit type="area-square-mile">
+				<displayName draft="provisional">mi²</displayName>
+				<unitPattern count="one">{0} mi²</unitPattern>
+				<unitPattern count="other">{0} mi²</unitPattern>
+			</unit>
+			<unit type="area-acre">
+				<displayName draft="provisional">ac</displayName>
+				<unitPattern count="one">{0} ac</unitPattern>
+				<unitPattern count="other">{0} ac</unitPattern>
+			</unit>
+			<unit type="area-square-foot">
+				<displayName draft="provisional">ft²</displayName>
+				<unitPattern count="one">{0} ft²</unitPattern>
+				<unitPattern count="other">{0} ft²</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<displayName draft="provisional">йил</displayName>
+				<unitPattern count="one">{0} й</unitPattern>
+				<unitPattern count="other">{0} й</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="provisional">ой</displayName>
+				<unitPattern count="one">{0} ой</unitPattern>
+				<unitPattern count="other">{0} ой</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName draft="provisional">ҳафта</displayName>
+				<unitPattern count="one">{0} ҳафт</unitPattern>
+				<unitPattern count="other">{0} ҳафт</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="provisional">кун</displayName>
+				<unitPattern count="one">{0} кун</unitPattern>
+				<unitPattern count="other">{0} кун</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName draft="provisional">соат</displayName>
+				<unitPattern count="one">{0} соат</unitPattern>
+				<unitPattern count="other">{0} соат</unitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName draft="provisional">дақиқа</displayName>
+				<unitPattern count="one">{0} дақ</unitPattern>
+				<unitPattern count="other">{0} дақ</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName draft="provisional">сония</displayName>
+				<unitPattern count="one">{0} сония</unitPattern>
+				<unitPattern count="other">{0} сония</unitPattern>
+			</unit>
+			<unit type="duration-millisecond">
+				<displayName draft="provisional">миллисония</displayName>
+				<unitPattern count="one">{0} мс</unitPattern>
+				<unitPattern count="other">{0} мс</unitPattern>
+			</unit>
+			<unit type="length-kilometer">
+				<displayName draft="provisional">км</displayName>
+				<unitPattern count="one">{0} км</unitPattern>
+				<unitPattern count="other">{0} км</unitPattern>
+			</unit>
+			<unit type="length-meter">
+				<displayName draft="provisional">м</displayName>
+				<unitPattern count="one">{0} м</unitPattern>
+				<unitPattern count="other">{0} м</unitPattern>
+			</unit>
+			<unit type="length-centimeter">
+				<displayName draft="provisional">см</displayName>
+				<unitPattern count="one">{0} см</unitPattern>
+				<unitPattern count="other">{0} см</unitPattern>
+			</unit>
+			<unit type="length-millimeter">
+				<displayName draft="provisional">мм</displayName>
+				<unitPattern count="one">{0} мм</unitPattern>
+				<unitPattern count="other">{0} мм</unitPattern>
+			</unit>
+			<unit type="length-picometer">
+				<displayName draft="provisional">пм</displayName>
+				<unitPattern count="one">{0} пм</unitPattern>
+				<unitPattern count="other">{0} пм</unitPattern>
+			</unit>
+			<unit type="length-mile">
+				<displayName draft="provisional">миля</displayName>
+				<unitPattern count="one">{0} миля</unitPattern>
+				<unitPattern count="other">{0} миля</unitPattern>
+			</unit>
+			<unit type="length-yard">
+				<displayName draft="provisional">ярд</displayName>
+				<unitPattern count="one">{0} ярд</unitPattern>
+				<unitPattern count="other">{0} ярд</unitPattern>
+			</unit>
+			<unit type="length-foot">
+				<displayName draft="provisional">фут</displayName>
+				<unitPattern count="one">{0} фут</unitPattern>
+				<unitPattern count="other">{0} фут</unitPattern>
+			</unit>
+			<unit type="length-inch">
+				<displayName draft="provisional">дюйм</displayName>
+				<unitPattern count="one">{0} дюйм</unitPattern>
+				<unitPattern count="other">{0} дюйм</unitPattern>
+			</unit>
+			<unit type="length-light-year">
+				<displayName draft="provisional">ё.й.</displayName>
+				<unitPattern count="one">{0} ё.й.</unitPattern>
+				<unitPattern count="other">{0} ё.й.</unitPattern>
+			</unit>
+			<unit type="mass-kilogram">
+				<displayName draft="provisional">кг</displayName>
+				<unitPattern count="one">{0} кг</unitPattern>
+				<unitPattern count="other">{0} кг</unitPattern>
+			</unit>
+			<unit type="mass-gram">
+				<displayName draft="provisional">г</displayName>
+				<unitPattern count="one">{0} г</unitPattern>
+				<unitPattern count="other">{0} г</unitPattern>
+			</unit>
+			<unit type="mass-pound">
+				<displayName draft="provisional">фунт</displayName>
+				<unitPattern count="one">{0} фунт</unitPattern>
+				<unitPattern count="other">{0} фунт</unitPattern>
+			</unit>
+			<unit type="mass-ounce">
+				<displayName draft="provisional">унция</displayName>
+				<unitPattern count="one">{0} унция</unitPattern>
+				<unitPattern count="other">{0} унция</unitPattern>
+			</unit>
+			<unit type="power-kilowatt">
+				<displayName draft="provisional">kW</displayName>
+				<unitPattern count="one">{0} kW</unitPattern>
+				<unitPattern count="other">{0} kW</unitPattern>
+			</unit>
+			<unit type="power-watt">
+				<displayName draft="provisional">W</displayName>
+				<unitPattern count="one">{0} W</unitPattern>
+				<unitPattern count="other">{0} W</unitPattern>
+			</unit>
+			<unit type="power-horsepower">
+				<displayName draft="provisional">hp</displayName>
+				<unitPattern count="one">{0} hp</unitPattern>
+				<unitPattern count="other">{0} hp</unitPattern>
+			</unit>
+			<unit type="pressure-inch-ofhg">
+				<displayName draft="provisional">inHg</displayName>
+				<unitPattern count="one">{0} inHg</unitPattern>
+				<unitPattern count="other">{0} inHg</unitPattern>
+			</unit>
+			<unit type="pressure-millibar">
+				<displayName draft="provisional">mbar</displayName>
+				<unitPattern count="one">{0} mbar</unitPattern>
+				<unitPattern count="other">{0} mbar</unitPattern>
+			</unit>
+			<unit type="pressure-hectopascal">
+				<displayName draft="provisional">hPa</displayName>
+				<unitPattern count="one">{0} hPa</unitPattern>
+				<unitPattern count="other">{0} hPa</unitPattern>
+			</unit>
+			<unit type="speed-kilometer-per-hour">
+				<displayName draft="provisional">km/h</displayName>
+				<unitPattern count="one">{0} km/h</unitPattern>
+				<unitPattern count="other">{0} km/h</unitPattern>
+			</unit>
+			<unit type="speed-meter-per-second">
+				<displayName draft="provisional">m/s</displayName>
+				<unitPattern count="one">{0} m/s</unitPattern>
+				<unitPattern count="other">{0} m/s</unitPattern>
+			</unit>
+			<unit type="speed-mile-per-hour">
+				<displayName draft="provisional">mi/h</displayName>
+				<unitPattern count="one">{0} mi/h</unitPattern>
+				<unitPattern count="other">{0} mi/h</unitPattern>
+			</unit>
+			<unit type="temperature-celsius">
+				<displayName draft="provisional">°C</displayName>
+				<unitPattern count="one">{0}°C</unitPattern>
+				<unitPattern count="other">{0}°C</unitPattern>
+			</unit>
+			<unit type="temperature-fahrenheit">
+				<displayName draft="provisional">°F</displayName>
+				<unitPattern count="one">{0}°F</unitPattern>
+				<unitPattern count="other">{0}°F</unitPattern>
+			</unit>
+			<unit type="volume-cubic-kilometer">
+				<displayName draft="provisional">km³</displayName>
+				<unitPattern count="one">{0} km³</unitPattern>
+				<unitPattern count="other">{0} km³</unitPattern>
+			</unit>
+			<unit type="volume-cubic-mile">
+				<displayName draft="provisional">mi³</displayName>
+				<unitPattern count="one">{0} mi³</unitPattern>
+				<unitPattern count="other">{0} mi³</unitPattern>
+			</unit>
+			<unit type="volume-liter">
+				<displayName draft="provisional">l</displayName>
+				<unitPattern count="one">{0} l</unitPattern>
+				<unitPattern count="other">{0} l</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="narrow">
+			<compoundUnit type="per">
+				<compoundUnitPattern>{0}/{1}</compoundUnitPattern>
+			</compoundUnit>
+			<unit type="acceleration-g-force">
+				<unitPattern count="one">{0} G</unitPattern>
+				<unitPattern count="other">{0} G</unitPattern>
+			</unit>
+			<unit type="angle-degree">
+				<unitPattern count="one">{0}°</unitPattern>
+				<unitPattern count="other">{0}°</unitPattern>
+			</unit>
+			<unit type="angle-arc-minute">
+				<unitPattern count="one">{0}′</unitPattern>
+				<unitPattern count="other">{0}′</unitPattern>
+			</unit>
+			<unit type="angle-arc-second">
+				<unitPattern count="one">{0}″</unitPattern>
+				<unitPattern count="other">{0}″</unitPattern>
+			</unit>
+			<unit type="area-square-kilometer">
+				<unitPattern count="one">{0} km²</unitPattern>
+				<unitPattern count="other">{0} km²</unitPattern>
+			</unit>
+			<unit type="area-hectare">
+				<unitPattern count="one">{0} ha</unitPattern>
+				<unitPattern count="other">{0} ha</unitPattern>
+			</unit>
+			<unit type="area-square-meter">
+				<unitPattern count="one">{0} m²</unitPattern>
+				<unitPattern count="other">{0} m²</unitPattern>
+			</unit>
+			<unit type="area-square-mile">
+				<unitPattern count="one">{0} mi²</unitPattern>
+				<unitPattern count="other">{0} mi²</unitPattern>
+			</unit>
+			<unit type="area-acre">
+				<unitPattern count="one">{0} ac</unitPattern>
+				<unitPattern count="other">{0} ac</unitPattern>
+			</unit>
+			<unit type="area-square-foot">
+				<unitPattern count="one">{0} ft²</unitPattern>
+				<unitPattern count="other">{0} ft²</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<unitPattern count="one">{0} й</unitPattern>
+				<unitPattern count="other">{0} й</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<unitPattern count="one">{0} ой</unitPattern>
+				<unitPattern count="other">{0} ой</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<unitPattern count="one">{0} ҳафт</unitPattern>
+				<unitPattern count="other">{0} ҳафт</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<unitPattern count="one">{0} к</unitPattern>
+				<unitPattern count="other">{0} к</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<unitPattern count="one">{0} с</unitPattern>
+				<unitPattern count="other">{0} с</unitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<unitPattern count="one">{0} дақ</unitPattern>
+				<unitPattern count="other">{0} дақ</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<unitPattern count="one">{0} сон</unitPattern>
+				<unitPattern count="other">{0} сон</unitPattern>
+			</unit>
+			<unit type="duration-millisecond">
+				<unitPattern count="one">{0} мс</unitPattern>
+				<unitPattern count="other">{0} мс</unitPattern>
+			</unit>
+			<unit type="length-kilometer">
+				<unitPattern count="one">{0} км</unitPattern>
+				<unitPattern count="other">{0} км</unitPattern>
+			</unit>
+			<unit type="length-meter">
+				<unitPattern count="one">{0} м</unitPattern>
+				<unitPattern count="other">{0} м</unitPattern>
+			</unit>
+			<unit type="length-centimeter">
+				<unitPattern count="one">{0} см</unitPattern>
+				<unitPattern count="other">{0} см</unitPattern>
+			</unit>
+			<unit type="length-millimeter">
+				<unitPattern count="one">{0} мм</unitPattern>
+				<unitPattern count="other">{0} мм</unitPattern>
+			</unit>
+			<unit type="length-picometer">
+				<unitPattern count="one">{0} пм</unitPattern>
+				<unitPattern count="other">{0} пм</unitPattern>
+			</unit>
+			<unit type="length-mile">
+				<unitPattern count="one">{0} миля</unitPattern>
+				<unitPattern count="other">{0} миля</unitPattern>
+			</unit>
+			<unit type="length-yard">
+				<unitPattern count="one">{0} ярд</unitPattern>
+				<unitPattern count="other">{0} ярд</unitPattern>
+			</unit>
+			<unit type="length-foot">
+				<unitPattern count="one">{0} фут</unitPattern>
+				<unitPattern count="other">{0} фут</unitPattern>
+			</unit>
+			<unit type="length-inch">
+				<unitPattern count="one">{0} дюйм</unitPattern>
+				<unitPattern count="other">{0} дюйм</unitPattern>
+			</unit>
+			<unit type="length-light-year">
+				<unitPattern count="one">{0} ё.й.</unitPattern>
+				<unitPattern count="other">{0} ё.й.</unitPattern>
+			</unit>
+			<unit type="mass-kilogram">
+				<unitPattern count="one">{0} кг</unitPattern>
+				<unitPattern count="other">{0} кг</unitPattern>
+			</unit>
+			<unit type="mass-gram">
+				<unitPattern count="one">{0} г</unitPattern>
+				<unitPattern count="other">{0} г</unitPattern>
+			</unit>
+			<unit type="mass-pound">
+				<unitPattern count="one">{0} фунт</unitPattern>
+				<unitPattern count="other">{0} фунт</unitPattern>
+			</unit>
+			<unit type="mass-ounce">
+				<unitPattern count="one">{0} унция</unitPattern>
+				<unitPattern count="other">{0} унция</unitPattern>
+			</unit>
+			<unit type="power-kilowatt">
+				<unitPattern count="one">{0} kW</unitPattern>
+				<unitPattern count="other">{0} kW</unitPattern>
+			</unit>
+			<unit type="power-watt">
+				<unitPattern count="one">{0} W</unitPattern>
+				<unitPattern count="other">{0} W</unitPattern>
+			</unit>
+			<unit type="power-horsepower">
+				<unitPattern count="one">{0} hp</unitPattern>
+				<unitPattern count="other">{0} hp</unitPattern>
+			</unit>
+			<unit type="pressure-inch-ofhg">
+				<unitPattern count="one">{0} inHg</unitPattern>
+				<unitPattern count="other">{0} inHg</unitPattern>
+			</unit>
+			<unit type="pressure-millibar">
+				<unitPattern count="one">{0} mbar</unitPattern>
+				<unitPattern count="other">{0} mbar</unitPattern>
+			</unit>
+			<unit type="pressure-hectopascal">
+				<unitPattern count="one">{0} hPa</unitPattern>
+				<unitPattern count="other">{0} hPa</unitPattern>
+			</unit>
+			<unit type="speed-kilometer-per-hour">
+				<unitPattern count="one">{0} km/h</unitPattern>
+				<unitPattern count="other">{0} km/h</unitPattern>
+			</unit>
+			<unit type="speed-meter-per-second">
+				<unitPattern count="one">{0} m/s</unitPattern>
+				<unitPattern count="other">{0} m/s</unitPattern>
+			</unit>
+			<unit type="speed-mile-per-hour">
+				<unitPattern count="one">{0} mi/h</unitPattern>
+				<unitPattern count="other">{0} mi/h</unitPattern>
+			</unit>
+			<unit type="temperature-celsius">
+				<unitPattern count="one">{0}°</unitPattern>
+				<unitPattern count="other">{0}°</unitPattern>
+			</unit>
+			<unit type="temperature-fahrenheit">
+				<unitPattern count="one">{0}°F</unitPattern>
+				<unitPattern count="other">{0}°F</unitPattern>
+			</unit>
+			<unit type="volume-cubic-kilometer">
+				<unitPattern count="one">{0} km³</unitPattern>
+				<unitPattern count="other">{0} km³</unitPattern>
+			</unit>
+			<unit type="volume-cubic-mile">
+				<unitPattern count="one">{0} mi³</unitPattern>
+				<unitPattern count="other">{0} mi³</unitPattern>
+			</unit>
+			<unit type="volume-liter">
+				<unitPattern count="one">{0} l</unitPattern>
+				<unitPattern count="other">{0} l</unitPattern>
+			</unit>
+		</unitLength>
+		<durationUnit type="hm">
+			<durationUnitPattern>h:mm</durationUnitPattern>
+		</durationUnit>
+		<durationUnit type="hms">
+			<durationUnitPattern>h:mm:ss</durationUnitPattern>
+		</durationUnit>
+		<durationUnit type="ms">
+			<durationUnitPattern>m:ss</durationUnitPattern>
+		</durationUnit>
+	</units>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0}, {1}</listPatternPart>
+			<listPatternPart type="2">{0}, {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="unit">
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0}, {1}</listPatternPart>
+			<listPatternPart type="2">{0}, {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="unit-narrow">
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="unit-short">
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0}, {1}</listPatternPart>
+			<listPatternPart type="2">{0}, {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<yesstr>ҳа:ҳ</yesstr>
+			<nostr>йўқ:й</nostr>
+		</messages>
+	</posix>
+</ldml>

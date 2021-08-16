@@ -1,0 +1,4 @@
+package-info.java:13:1: compiler.warn.proc.messager: no comment
+- compiler.err.warnings.and.werror
+1 error
+1 warning

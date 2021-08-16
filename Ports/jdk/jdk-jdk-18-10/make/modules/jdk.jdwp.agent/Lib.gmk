@@ -1,0 +1,93 @@
+#
+# Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include LibCommon.gmk
+
+################################################################################
+
+$(eval $(call SetupJdkLibrary, BUILD_LIBDT_SOCKET, \
+    NAME := dt_socket, \
+    OPTIMIZATION := LOW, \
+    CFLAGS := $(CFLAGS_JDKLIB) $(LIBDT_SOCKET_CPPFLAGS), \
+    EXTRA_HEADER_DIRS := \
+        include \
+        libjdwp/export, \
+    LDFLAGS := $(LDFLAGS_JDKLIB) \
+        $(call SET_SHARED_LIBRARY_ORIGIN), \
+    LIBS_linux := -lpthread, \
+    LIBS_windows := $(JDKLIB_LIBS) ws2_32.lib iphlpapi.lib, \
+))
+
+$(BUILD_LIBDT_SOCKET): $(call FindLib, java.base, java)
+
+# Include socket transport with JDWP agent to allow for remote debugging
+TARGETS += $(BUILD_LIBDT_SOCKET)
+
+################################################################################
+
+# JDWP_LOGGING causes log messages to be compiled into the library.
+$(eval $(call SetupJdkLibrary, BUILD_LIBJDWP, \
+    NAME := jdwp, \
+    OPTIMIZATION := LOW, \
+    CFLAGS := $(CFLAGS_JDKLIB) -DJDWP_LOGGING, \
+    DISABLED_WARNINGS_gcc := unused-function, \
+    DISABLED_WARNINGS_clang := sometimes-uninitialized format-nonliteral \
+        self-assign, \
+    EXTRA_HEADER_DIRS := \
+      include \
+      libjdwp/export, \
+    LDFLAGS := $(LDFLAGS_JDKLIB) \
+        $(call SET_SHARED_LIBRARY_ORIGIN), \
+    LIBS := $(JDKLIB_LIBS), \
+    LIBS_linux := $(LIBDL), \
+    LIBS_macosx := -liconv, \
+    LIBS_aix := -liconv, \
+))
+
+$(BUILD_LIBJDWP): $(call FindLib, java.base, java)
+
+TARGETS += $(BUILD_LIBJDWP)
+
+################################################################################
+
+ifeq ($(STATIC_BUILD), true)
+  JDK_JDWP_AGENT_EXPORT_SYMBOLS_SRC := \
+      $(SUPPORT_OUTPUTDIR)/modules_libs/jdk.jdwp.agent/$(LIBRARY_PREFIX)dt_socket.symbols \
+      $(SUPPORT_OUTPUTDIR)/modules_libs/jdk.jdwp.agent/$(LIBRARY_PREFIX)jdwp.symbols
+
+  JDK_JDWP_AGENT_EXPORT_SYMBOL_FILE := $(SUPPORT_OUTPUTDIR)/modules_libs/jdk.jdwp.agent/jdk.jdwp.agent.symbols
+
+  $(JDK_JDWP_AGENT_EXPORT_SYMBOL_FILE): $(JDK_JDWP_AGENT_EXPORT_SYMBOLS_SRC)
+	$(call LogInfo, Generating jdk.jdwp.agent symbols file)
+	$(CAT) $^ > $@
+
+  # The individual symbol files is generated when the respective lib is built
+  $(JDK_JDWP_AGENT_EXPORT_SYMBOLS_SRC): $(BUILD_LIBDT_SOCKET) $(BUILD_LIBJDWP)
+
+  TARGETS += $(JDK_JDWP_AGENT_EXPORT_SYMBOL_FILE)
+
+endif
+
+################################################################################

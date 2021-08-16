@@ -1,0 +1,346 @@
+/*
+ * Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+// The constant pool in this class contains an unused NameAndType entry (#20)
+// that points to method <init> and signature ()D.  This is a valid NameAndType
+// because <init> is a valid method name and ()D is a valid method signature.
+class nonVoidInitSig {
+  0xCAFEBABE;
+  0; // minor version
+  62; // version
+  [21] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1     at 0x0A
+    class #4; // #2     at 0x0F
+    NameAndType #5 #6; // #3     at 0x12
+    Utf8 "java/lang/Object"; // #4     at 0x17
+    Utf8 "<init>"; // #5     at 0x2A
+    Utf8 "()V"; // #6     at 0x33
+    class #8; // #7     at 0x39
+    Utf8 "nonVoidInitSig"; // #8     at 0x3C
+    Method #7 #3; // #9     at 0x47
+    Utf8 "Code"; // #10     at 0x4C
+    Utf8 "LineNumberTable"; // #11     at 0x53
+    Utf8 "func"; // #12     at 0x65
+    Utf8 "([Ljava/lang/String;)V"; // #13     at 0x6C
+    Utf8 "Exceptions"; // #14     at 0x85
+    class #16; // #15     at 0x92
+    Utf8 "java/lang/Throwable"; // #16     at 0x95
+    Utf8 "SourceFile"; // #17     at 0xAB
+    Utf8 "nonVoidInitSig.java"; // #18     at 0xB8
+    Utf8 "()D"; // #19
+    NameAndType #5 #19; // #20 // Unused, points to <init>()D.
+  } // Constant Pool
+
+  0x0021; // access [ ACC_PUBLIC ACC_SUPER ]
+  #7;// this_cpx
+  #2;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // Fields
+  } // Fields
+
+  [2] { // Methods
+    {  // method at 0xD4
+      0x0001; // access
+      #5; // name_index       : <init>
+      #6; // descriptor_index : ()V
+      [1] { // Attributes
+        Attr(#10, 29) { // Code at 0xDC
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#11, 6) { // LineNumberTable at 0xF3
+              [1] { // line_number_table
+                0  1; //  at 0xFF
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    }
+    ;
+    {  // method at 0xFF
+      0x0009; // access
+      #12; // name_index       : func
+      #13; // descriptor_index : ([Ljava/lang/String;)V
+      [2] { // Attributes
+        Attr(#10, 37) { // Code at 0x0107
+          2; // max_stack
+          2; // max_locals
+          Bytes[9]{
+            0xBB000759B700094C;
+            0xB1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#11, 10) { // LineNumberTable at 0x0122
+              [2] { // line_number_table
+                0  4; //  at 0x012E
+                8  5; //  at 0x0132
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+        ;
+        Attr(#14, 4) { // Exceptions at 0x0132
+          [1] { // Exceptions
+            #15; //  at 0x013C
+          }
+        } // end Exceptions
+      } // Attributes
+    }
+  } // Methods
+
+  [1] { // Attributes
+    Attr(#17, 2) { // SourceFile at 0x013E
+      #18;
+    } // end SourceFile
+  } // Attributes
+} // end class nonVoidInitSig
+
+
+
+// The constant pool in this class contains a cp NameAndType entry (#3) that
+// points to method <init> and signature ()D.  This is a valid NameAndType
+// because <init> is a valid method name and ()D is a valid method signature.
+// But, a cp Methodref (#1) that points to NameAndType with a method named
+// <init> and a non-void return type, is invalid.
+class nonVoidInitSigCFE {
+  0xCAFEBABE;
+  0; // minor version
+  62; // version
+  [20] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1     at 0x0A
+    class #4; // #2     at 0x0F
+    NameAndType #5 #19; // #3     at 0x12
+    Utf8 "java/lang/Object"; // #4     at 0x17
+    Utf8 "<init>"; // #5     at 0x2A
+    Utf8 "()V"; // #6     at 0x33
+    class #8; // #7     at 0x39
+    Utf8 "nonVoidInitSigCFE"; // #8     at 0x3C
+    Method #7 #3; // #9     at 0x47
+    Utf8 "Code"; // #10     at 0x4C
+    Utf8 "LineNumberTable"; // #11     at 0x53
+    Utf8 "func"; // #12     at 0x65
+    Utf8 "([Ljava/lang/String;)V"; // #13     at 0x6C
+    Utf8 "Exceptions"; // #14     at 0x85
+    class #16; // #15     at 0x92
+    Utf8 "java/lang/Throwable"; // #16     at 0x95
+    Utf8 "SourceFile"; // #17     at 0xAB
+    Utf8 "nonVoidInitSigCFE.java"; // #18     at 0xB8
+    Utf8 "()D"; // #19
+  } // Constant Pool
+
+  0x0021; // access [ ACC_PUBLIC ACC_SUPER ]
+  #7;// this_cpx
+  #2;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // Fields
+  } // Fields
+
+  [2] { // Methods
+    {  // method at 0xD4
+      0x0001; // access
+      #5; // name_index       : <init>
+      #6; // descriptor_index : ()V
+      [1] { // Attributes
+        Attr(#10, 29) { // Code at 0xDC
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#11, 6) { // LineNumberTable at 0xF3
+              [1] { // line_number_table
+                0  1; //  at 0xFF
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    }
+    ;
+    {  // method at 0xFF
+      0x0009; // access
+      #12; // name_index       : func
+      #13; // descriptor_index : ([Ljava/lang/String;)V
+      [2] { // Attributes
+        Attr(#10, 37) { // Code at 0x0107
+          2; // max_stack
+          2; // max_locals
+          Bytes[9]{
+            0xBB000759B700094C;
+            0xB1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#11, 10) { // LineNumberTable at 0x0122
+              [2] { // line_number_table
+                0  4; //  at 0x012E
+                8  5; //  at 0x0132
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+        ;
+        Attr(#14, 4) { // Exceptions at 0x0132
+          [1] { // Exceptions
+            #15; //  at 0x013C
+          }
+        } // end Exceptions
+      } // Attributes
+    }
+  } // Methods
+
+  [1] { // Attributes
+    Attr(#17, 2) { // SourceFile at 0x013E
+      #18;
+    } // end SourceFile
+  } // Attributes
+} // end class nonVoidInitSigCFE
+
+
+// The constant pool in this class contains a cp NameAndType entry (#20) that
+// points to method <init> and signature ()))V.  This is an invalid NameAndType
+// entry and should throw a ClassFormatError exception, with a message containing
+// the name <init> and the bad signature, even thought the NameAndType is not
+// referenced by a cp Methodref.
+class voidInitBadSig {
+  0xCAFEBABE;
+  0; // minor version
+  62; // version
+  [21] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1     at 0x0A
+    class #4; // #2     at 0x0F
+    NameAndType #5 #6; // #3     at 0x12
+    Utf8 "java/lang/Object"; // #4     at 0x17
+    Utf8 "<init>"; // #5     at 0x2A
+    Utf8 "()V"; // #6     at 0x33
+    class #8; // #7     at 0x39
+    Utf8 "voidInitBadSig"; // #8     at 0x3C
+    Method #7 #3; // #9     at 0x47
+    Utf8 "Code"; // #10     at 0x4C
+    Utf8 "LineNumberTable"; // #11     at 0x53
+    Utf8 "func"; // #12     at 0x65
+    Utf8 "([Ljava/lang/String;)V"; // #13     at 0x6C
+    Utf8 "Exceptions"; // #14     at 0x85
+    class #16; // #15     at 0x92
+    Utf8 "java/lang/Throwable"; // #16     at 0x95
+    Utf8 "SourceFile"; // #17     at 0xAB
+    Utf8 "voidInitBadSig.java"; // #18     at 0xB8
+    Utf8 "()))V"; // #19
+    NameAndType #5 #19; // #20 // Unused, points to <init>()))V.
+  } // Constant Pool
+
+  0x0021; // access [ ACC_PUBLIC ACC_SUPER ]
+  #7;// this_cpx
+  #2;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // Fields
+  } // Fields
+
+  [2] { // Methods
+    {  // method at 0xD4
+      0x0001; // access
+      #5; // name_index       : <init>
+      #6; // descriptor_index : ()V
+      [1] { // Attributes
+        Attr(#10, 29) { // Code at 0xDC
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#11, 6) { // LineNumberTable at 0xF3
+              [1] { // line_number_table
+                0  1; //  at 0xFF
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    }
+    ;
+    {  // method at 0xFF
+      0x0009; // access
+      #12; // name_index       : func
+      #13; // descriptor_index : ([Ljava/lang/String;)V
+      [2] { // Attributes
+        Attr(#10, 37) { // Code at 0x0107
+          2; // max_stack
+          2; // max_locals
+          Bytes[9]{
+            0xBB000759B700094C;
+            0xB1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#11, 10) { // LineNumberTable at 0x0122
+              [2] { // line_number_table
+                0  4; //  at 0x012E
+                8  5; //  at 0x0132
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+        ;
+        Attr(#14, 4) { // Exceptions at 0x0132
+          [1] { // Exceptions
+            #15; //  at 0x013C
+          }
+        } // end Exceptions
+      } // Attributes
+    }
+  } // Methods
+
+  [1] { // Attributes
+    Attr(#17, 2) { // SourceFile at 0x013E
+      #18;
+    } // end SourceFile
+  } // Attributes
+} // end class voidInitBadSig

@@ -1,0 +1,14 @@
+keystore "NONE", "Test8131486", "Test8131486";
+
+grant {
+    permission java.lang.RuntimePermission "getProtectionDomain";
+};
+grant codebase "http://localhost/" {
+    permission java.util.PropertyPermission "user.home", "read";
+};
+grant codebase "http://127.0.0.1/" {
+    permission java.util.PropertyPermission "user.name", "read";
+};
+grant codebase "http://localhost/", signedby "baz" {
+    permission java.util.PropertyPermission "user.dir", "read";
+};

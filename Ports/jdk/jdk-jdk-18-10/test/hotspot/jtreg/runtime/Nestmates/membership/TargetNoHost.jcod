@@ -1,0 +1,148 @@
+/*
+ * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+// NestHost attribute deleted
+
+class TestNestmateMembership$TargetNoHost {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #6 #18; // #1
+    Field #19 #20; // #2
+    String #21; // #3
+    Method #22 #23; // #4
+    class #24; // #5
+    class #27; // #6
+    Utf8 "f"; // #7
+    Utf8 "I"; // #8
+    Utf8 "<init>"; // #9
+    Utf8 "()V"; // #10
+    Utf8 "Code"; // #11
+    Utf8 "LineNumberTable"; // #12
+    Utf8 "m"; // #13
+    Utf8 "SourceFile"; // #14
+    Utf8 "TestNestmateMembership.java"; // #15
+    Utf8 "NestHost"; // #16
+    class #28; // #17
+    NameAndType #9 #10; // #18
+    class #29; // #19
+    NameAndType #30 #31; // #20
+    Utf8 "TargetNoHost.m() - java version"; // #21
+    class #32; // #22
+    NameAndType #33 #34; // #23
+    Utf8 "TestNestmateMembership$TargetNoHost"; // #24
+    Utf8 "TargetNoHost"; // #25
+    Utf8 "InnerClasses"; // #26
+    Utf8 "java/lang/Object"; // #27
+    Utf8 "TestNestmateMembership"; // #28
+    Utf8 "java/lang/System"; // #29
+    Utf8 "out"; // #30
+    Utf8 "Ljava/io/PrintStream;"; // #31
+    Utf8 "java/io/PrintStream"; // #32
+    Utf8 "println"; // #33
+    Utf8 "(Ljava/lang/String;)V"; // #34
+  } // Constant Pool
+
+  0x0020; // access
+  #5;// this_cpx
+  #6;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+    { // Member
+      0x000A; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0002; // access
+      #9; // name_cpx
+      #10; // sig_cpx
+      [] { // Attributes
+        Attr(#11) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#12) { // LineNumberTable
+              [] { // LineNumberTable
+                0  345;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x000A; // access
+      #13; // name_cpx
+      #10; // sig_cpx
+      [] { // Attributes
+        Attr(#11) { // Code
+          2; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xB200021203B60004;
+            0xB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#12) { // LineNumberTable
+              [] { // LineNumberTable
+                0  348;
+                8  349;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#14) { // SourceFile
+      #15;
+    } // end SourceFile
+    ;
+    Attr(#26) { // InnerClasses
+      [] { // InnerClasses
+        #5 #17 #25 8;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class TestNestmateMembership$TargetNoHost

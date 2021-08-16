@@ -1,0 +1,6 @@
+SwitchStatementBroken2.java:17:23: compiler.err.switch.case.unexpected.statement
+SwitchStatementBroken2.java:18:23: compiler.err.switch.case.unexpected.statement
+SwitchStatementBroken2.java:19:23: compiler.err.switch.case.unexpected.statement
+SwitchStatementBroken2.java:22:27: compiler.err.variable.not.allowed
+SwitchStatementBroken2.java:23:24: compiler.err.switch.case.unexpected.statement
+5 errors

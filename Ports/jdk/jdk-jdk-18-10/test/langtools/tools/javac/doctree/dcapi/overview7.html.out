@@ -1,0 +1,29 @@
+EXPECT_START
+DocComment[DOC_COMMENT, pos:0
+  preamble: 5
+    Comment[COMMENT, pos:0, <!--_/nodynamiccopyright/_-->]
+    StartElement[START_ELEMENT, pos:30
+      name:HTML
+      attributes: empty
+    ]
+    StartElement[START_ELEMENT, pos:37
+      name:HEAD
+      attributes: empty
+    ]
+    EndElement[END_ELEMENT, pos:44, HEAD]
+    StartElement[START_ELEMENT, pos:52
+      name:BODY
+      attributes: empty
+    ]
+  firstSentence: empty
+  body: empty
+  block tags: 1
+    Since[SINCE, pos:58
+      body: 1
+        Text[TEXT, pos:65, 1.0]
+    ]
+  postamble: 2
+    EndElement[END_ELEMENT, pos:68, BODY]
+    EndElement[END_ELEMENT, pos:76, HTML]
+]
+EXPECT_END

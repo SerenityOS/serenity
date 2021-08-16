@@ -1,0 +1,3 @@
+T6569633.java:10:27: compiler.err.varargs.and.old.array.syntax
+T6569633.java:12:29: compiler.err.varargs.and.old.array.syntax
+2 errors

@@ -1,0 +1,4 @@
+T6313164.java:14:10: compiler.err.cant.apply.symbol: kindname.method, foo1, p1.A[], p1.B,p1.B, kindname.class, p1.B, (compiler.misc.inaccessible.varargs.type: p1.A, kindname.class, T6313164)
+T6313164.java:19:15: compiler.err.prob.found.req: (compiler.misc.inaccessible.varargs.type: p1.A, kindname.class, T6313164)
+T6313164.java:20:15: compiler.err.prob.found.req: (compiler.misc.inaccessible.varargs.type: p1.A, kindname.class, T6313164)
+3 errors

@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!--
+ Copyright (c) 2005, 2016, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+<!---->
+<html>
+  <head>
+    <title>Disable Auto-adjust Daylight Saving Time Test</title>
+  </head>
+
+  <body>
+This applet tests the platform time zone detection on all platforms (Part I)
+and on/off of DST adjustment on Windows (Part II).
+
+Part I:
+
+Observe the displayed Time zone ID and the local time. If you can change
+the platform time zone setting, try several time zones. If both the ID and
+the local time, including the time zone name and its time zone offset, are
+always correct, Part I passes. Note that some time zone IDs have their
+aliases that may be displayed.  For example, "US/Pacific" is an alias of
+"America/Los_Angeles".
+
+If you are running this applet in non-English locale, the time zone names
+can be displayed in the local language and English by pushing the
+English/Local button.
+
+If platform time zones are NOT detected correctly, press the Fail button
+to finish this applet.
+
+If this platform is Windows, proceed to Part II. Otherwise, press the Pass
+button to finish this applet.
+
+Part II:
+
+Note that Part II may require the Administrator privilege to change
+Windows setting.
+
+  1. Open the Date and Time control panel.
+  2. Select any time zone where daylight saving time is *currently* in effect,
+     such as "(GMT-08:00) Pacific Time (US & Canada); Tijuana",
+     "(GMT+10:00) Canberra, Melbourne, Sydney", and Apply.
+  3. Observe the local time on the control panel (Date&Time pane) and
+     the applet local time should be the same (daylight time).
+  4. Clear "Automatically adjust clock for daylight saving changes" and Apply.
+  5. Observe the two local times should be the same (standard time).
+  6. Select "Automatically adjust clock for daylight saving changes" and Apply.
+
+If the local time in the control panel and applet are always the same,
+then this test passes. Press the Pass or Fail button based on the Part II
+result and finish this applet.
+
+<applet code="DefaultTimeZoneTest.class" width=500 height=90></applet>
+  </body>
+</html>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<!DOCTYPE organization [
+    <!ELEMENT organization (company*,ids)>
+    <!ELEMENT company (#PCDATA | department | equipment:instance)*>
+    <!ELEMENT ids (id*)>
+    <!ELEMENT id EMPTY>
+    <!ELEMENT department EMPTY>
+    <!ELEMENT equipment:instance EMPTY>
+
+    <!ATTLIST organization  id              ID  #IMPLIED
+                            xmlns:equipment CDATA  #FIXED "http://namespaces.tksoft.com/equipment/"
+    >
+    <!ATTLIST company   id                  ID  #REQUIRED
+                        count               CDATA  #REQUIRED
+    >
+    <!ATTLIST department    id              ID  #REQUIRED
+    >
+    <!ATTLIST equipment:instance    id          ID  #REQUIRED
+    >
+    <!ATTLIST id
+        value       IDREF   #REQUIRED
+    >
+]>
+<organization>
+    <company id="ca" count="2">
+        <department id="da"/>
+        <equipment:instance id="ea"/>
+        <equipment:instance id="eb"/>
+    </company>
+    <company id="cb" count="0"/>
+    <company id="cc" count="5"/>
+    <ids>
+        <id value="ca"/>
+        <id value="cb"/>
+    </ids>
+</organization>

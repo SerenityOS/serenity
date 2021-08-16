@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Envelope [
+  <!ENTITY dsig 'http://www.w3.org/2000/09/xmldsig#'>
+  <!ENTITY c14n 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315'>
+  <!ENTITY xpath 'http://www.w3.org/TR/1999/REC-xpath-19991116'>
+  <!ENTITY xslt 'http://www.w3.org/TR/1999/REC-xslt-19991116'>
+  <!ATTLIST Notaries Id ID #IMPLIED>
+]>
+<!-- Preamble -->
+<Envelope xmlns:foo="http://example.org/foo" xmlns="http://example.org/usps">
+  <DearSir>foo</DearSir>
+  <Body>bar</Body>
+  <YoursSincerely>
+  </YoursSincerely>
+  <PostScript>bar</PostScript>
+  <Notaries xmlns="" Id="notaries">
+    <Notary name="Great, A. T." />
+    <Notary name="Hun, A. T." />
+  </Notaries>
+  <!-- Commentary -->
+</Envelope>
+<!-- Postamble -->

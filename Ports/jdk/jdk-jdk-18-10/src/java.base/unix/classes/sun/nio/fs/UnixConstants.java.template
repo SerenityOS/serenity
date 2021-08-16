@@ -1,0 +1,143 @@
+/*
+ * Copyright (c) 2008, 2020, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+@@END_COPYRIGHT@@
+
+#include <stdio.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+
+/* To be able to name the Java constants the same as the C constants without
+   having the preprocessor rewrite those identifiers, add PREFIX_ to all
+   identifiers matching a C constant. The PREFIX_ is filtered out in the
+   makefile. */
+
+@@START_HERE@@
+
+package sun.nio.fs;
+class UnixConstants {
+    private UnixConstants() { }
+    static final int PREFIX_O_RDONLY = O_RDONLY;
+    static final int PREFIX_O_WRONLY = O_WRONLY;
+    static final int PREFIX_O_RDWR = O_RDWR;
+    static final int PREFIX_O_APPEND = O_APPEND;
+    static final int PREFIX_O_CREAT = O_CREAT;
+    static final int PREFIX_O_EXCL = O_EXCL;
+    static final int PREFIX_O_TRUNC = O_TRUNC;
+    static final int PREFIX_O_SYNC = O_SYNC;
+
+#ifndef O_DSYNC
+    // At least FreeBSD doesn't define O_DSYNC
+    static final int PREFIX_O_DSYNC = O_SYNC;
+#else
+    static final int PREFIX_O_DSYNC = O_DSYNC;
+#endif
+
+#ifdef O_NOFOLLOW
+    static final int PREFIX_O_NOFOLLOW = O_NOFOLLOW;
+#else
+    // not supported (dummy values will not be used at runtime).
+    static final int PREFIX_O_NOFOLLOW = 00;
+#endif
+
+#ifdef O_DIRECT
+    static final int PREFIX_O_DIRECT = O_DIRECT;
+#else
+    // not supported (dummy values will not be used at runtime).
+    static final int PREFIX_O_DIRECT = 00;
+#endif
+
+    static final int PREFIX_S_IAMB =
+        (S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP|S_IROTH|S_IWOTH|S_IXOTH);
+    static final int PREFIX_S_IRUSR = S_IRUSR;
+    static final int PREFIX_S_IWUSR = S_IWUSR;
+    static final int PREFIX_S_IXUSR = S_IXUSR;
+    static final int PREFIX_S_IRGRP = S_IRGRP;
+    static final int PREFIX_S_IWGRP = S_IWGRP;
+    static final int PREFIX_S_IXGRP = S_IXGRP;
+    static final int PREFIX_S_IROTH = S_IROTH;
+    static final int PREFIX_S_IWOTH = S_IWOTH;
+    static final int PREFIX_S_IXOTH = S_IXOTH;
+
+    static final int PREFIX_S_IFMT = S_IFMT;
+    static final int PREFIX_S_IFREG = S_IFREG;
+    static final int PREFIX_S_IFDIR = S_IFDIR;
+    static final int PREFIX_S_IFLNK = S_IFLNK;
+    static final int PREFIX_S_IFCHR = S_IFCHR;
+    static final int PREFIX_S_IFBLK = S_IFBLK;
+    static final int PREFIX_S_IFIFO = S_IFIFO;
+    static final int PREFIX_R_OK = R_OK;
+    static final int PREFIX_W_OK = W_OK;
+    static final int PREFIX_X_OK = X_OK;
+    static final int PREFIX_F_OK = F_OK;
+    static final int PREFIX_ENOENT = ENOENT;
+    static final int PREFIX_ENXIO = ENXIO;
+    static final int PREFIX_EACCES = EACCES;
+    static final int PREFIX_EEXIST = EEXIST;
+    static final int PREFIX_ENOTDIR = ENOTDIR;
+    static final int PREFIX_EINVAL = EINVAL;
+    static final int PREFIX_EXDEV = EXDEV;
+    static final int PREFIX_EISDIR = EISDIR;
+    static final int PREFIX_ENOTEMPTY = ENOTEMPTY;
+    static final int PREFIX_ENOSPC = ENOSPC;
+    static final int PREFIX_EAGAIN = EAGAIN;
+    static final int PREFIX_EWOULDBLOCK = EWOULDBLOCK;
+    static final int PREFIX_ENOSYS = ENOSYS;
+    static final int PREFIX_ELOOP = ELOOP;
+    static final int PREFIX_EROFS = EROFS;
+
+#ifndef ENODATA
+    // Only used in Linux java source, provide any value so it compiles
+    static final int PREFIX_ENODATA = ELAST;
+#else
+    static final int PREFIX_ENODATA = ENODATA;
+#endif
+
+// fgetxattr error codes for absent attributes depend on the OS:
+#ifdef _ALLBSD_SOURCE
+    static final int PREFIX_XATTR_NOT_FOUND = ENOATTR;
+#elif __linux__
+    static final int PREFIX_XATTR_NOT_FOUND = ENODATA;
+#else
+    // not supported (dummy values will not be used at runtime).
+    static final int PREFIX_XATTR_NOT_FOUND = 00;
+#endif
+
+    static final int PREFIX_ERANGE = ERANGE;
+    static final int PREFIX_EMFILE = EMFILE;
+
+    // flags used with openat/unlinkat/etc.
+#if defined(AT_SYMLINK_NOFOLLOW) && defined(AT_REMOVEDIR)
+    static final int PREFIX_AT_SYMLINK_NOFOLLOW = AT_SYMLINK_NOFOLLOW;
+    static final int PREFIX_AT_REMOVEDIR = AT_REMOVEDIR;
+#else
+    // not supported (dummy values will not be used at runtime).
+    static final int PREFIX_AT_SYMLINK_NOFOLLOW = 00;
+    static final int PREFIX_AT_REMOVEDIR = 00;
+#endif
+
+}

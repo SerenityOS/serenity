@@ -1,0 +1,32 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    	<xsd:element name="root">
+		<xsd:complexType>
+			<xsd:choice maxOccurs="unbounded">
+				<xsd:element ref="foo"/>
+				<xsd:element ref="bar"/>
+			</xsd:choice>
+		</xsd:complexType>
+	</xsd:element>
+
+    	<xsd:element type="xsd:anyURI" name="foo"></xsd:element>
+    	<xsd:element type="st" name="bar"></xsd:element>
+
+	<xsd:simpleType name="st">
+		<xsd:restriction base="xsd:anyURI">
+			<xsd:enumeration value="/"/>
+			<xsd:enumeration value="//"/>
+			<xsd:enumeration value="///"/>
+			<xsd:enumeration value="//a\\b"/>
+			<xsd:enumeration value="\"/>
+			<xsd:enumeration value="\\"/>
+			<xsd:enumeration value="\\\"/>
+			<xsd:enumeration value="\\/"/>
+			<xsd:enumeration value="\\a\b"/>
+			<xsd:enumeration value="\a\b"/>
+			<xsd:enumeration value="/a\b"/>
+			<xsd:enumeration value="..\..\..\..\..\..\..\..\..\..\..\..\..\..\..\..\..\..\..\..\..\..\a"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+
+</xsd:schema>

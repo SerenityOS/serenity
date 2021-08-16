@@ -1,0 +1,41 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <xsd:element name="itemList" type="itemListType">
+    <xsd:unique name="itemAttr">
+      <xsd:selector xpath="item"/>
+      <xsd:field    xpath="@uniqueAttr"/>
+    </xsd:unique>
+
+    <xsd:key name="itemValueKey">
+      <xsd:selector xpath="item"/>
+      <xsd:field    xpath="."/>
+    </xsd:key>
+
+    <xsd:keyref name="itemKeyRef" refer="itemValueKey">
+      <xsd:selector xpath="itemRef"/>
+      <xsd:field    xpath="."/>
+    </xsd:keyref>
+  </xsd:element>
+  
+  <xsd:element name="item" type="itemType"/>
+
+  <xsd:attribute name="uniqueAttr" type="xsd:string"/>
+
+  <xsd:attribute name="unparsedEntityAttr" type="xsd:ENTITIES"/>
+
+  <xsd:complexType name="itemListType">
+    <xsd:sequence>
+      <xsd:element ref="item" maxOccurs="unbounded"/>
+      <xsd:element name="itemRef" type="xsd:string" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="itemType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute ref="uniqueAttr" use="required"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+</xsd:schema>

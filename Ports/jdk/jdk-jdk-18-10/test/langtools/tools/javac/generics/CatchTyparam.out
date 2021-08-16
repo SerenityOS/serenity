@@ -1,0 +1,3 @@
+CatchTyparam.java:14:18: compiler.err.type.found.req: (compiler.misc.type.parameter: T), (compiler.misc.type.req.class)
+CatchTyparam.java:15:18: compiler.err.type.found.req: (compiler.misc.type.parameter: U), (compiler.misc.type.req.class)
+2 errors

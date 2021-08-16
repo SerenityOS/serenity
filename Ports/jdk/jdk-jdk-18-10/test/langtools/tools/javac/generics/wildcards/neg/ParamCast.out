@@ -1,0 +1,2 @@
+ParamCast.java:15:36: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: A<java.lang.String>, B<?,java.lang.Integer>)
+1 error

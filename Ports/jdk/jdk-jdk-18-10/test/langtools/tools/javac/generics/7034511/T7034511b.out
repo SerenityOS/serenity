@@ -1,0 +1,2 @@
+T7034511b.java:14:11: compiler.err.cant.apply.symbol: kindname.method, toArray, compiler.misc.type.captureof: 1, ?[], java.lang.Object[], kindname.class, T7034511b.MyList<E>, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.Object[], compiler.misc.type.captureof: 1, ?[]))
+1 error

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE note [                           
+<!ELEMENT note    (to,from,heading,body)>
+<!ELEMENT to      (#PCDATA)>
+<!ENTITY writer "Albert Einstein">
+<!ENTITY author "Albert Einstein">
+<!ENTITY test SYSTEM "test.txt">
+<!ENTITY % test2 "test2">
+<!ENTITY author "author">
+]>                         
+<note>
+<to>&writer;</to>
+
+</note> 

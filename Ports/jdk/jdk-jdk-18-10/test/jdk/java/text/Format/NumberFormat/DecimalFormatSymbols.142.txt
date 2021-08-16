@@ -1,0 +1,42 @@
+#
+# Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# Hex dump of a serialized DecimalFormatSymbols for SerializationLoadTest.
+
+aced00057372001e6a6176612e746578742e446563696d616c466f726d617453
+796d626f6c73501d17990868939c020010430010646563696d616c5365706172
+61746f72430005646967697443000b6578706f6e656e7469616c43001167726f
+7570696e67536570617261746f724300096d696e75735369676e4300116d6f6e
+6574617279536570617261746f724300107061747465726e536570617261746f
+724300077065724d696c6c43000770657263656e7449001573657269616c5665
+7273696f6e4f6e53747265616d4300097a65726f44696769744c00034e614e74
+00124c6a6176612f6c616e672f537472696e673b4c000e63757272656e637953
+796d626f6c71007e00014c0008696e66696e69747971007e00014c0012696e74
+6c43757272656e637953796d626f6c71007e00014c00066c6f63616c65740012
+4c6a6176612f7574696c2f4c6f63616c653b7870002e00230045002c002d002e
+003b20300025000000020030740003efbfbd7400172a5370656369616c437572
+72656e637953796d626f6c2a740003e2889e740003434e59737200106a617661
+2e7574696c2e4c6f63616c657ef811609c30f9ec03000449000868617368636f
+64654c0007636f756e74727971007e00014c00086c616e677561676571007e00
+014c000776617269616e7471007e00017870ffffffff740002434e7400027a68
+74000078

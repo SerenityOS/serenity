@@ -1,0 +1,3 @@
+TargetType01.java:22:9: compiler.err.ref.ambiguous: M, kindname.method, M(TargetType01.F_I_I), TargetType01, kindname.method, M(TargetType01.F_S_S), TargetType01
+TargetType01.java:23:20: compiler.err.ref.ambiguous: M, kindname.method, M(TargetType01.F_I_I), TargetType01, kindname.method, M(TargetType01.F_S_S), TargetType01
+2 errors

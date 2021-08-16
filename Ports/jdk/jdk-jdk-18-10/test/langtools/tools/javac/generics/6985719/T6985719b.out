@@ -1,0 +1,2 @@
+T6985719b.java:14:14: compiler.err.name.clash.same.erasure.no.override: f, java.util.List<java.lang.Integer>, T6985719b.B, f, java.util.List<java.lang.String>, T6985719b.A
+1 error

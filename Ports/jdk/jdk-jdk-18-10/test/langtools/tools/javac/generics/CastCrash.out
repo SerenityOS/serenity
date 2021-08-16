@@ -1,0 +1,2 @@
+CastCrash.java:19:22: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: cast.crash.LI, cast.crash.SN)
+1 error

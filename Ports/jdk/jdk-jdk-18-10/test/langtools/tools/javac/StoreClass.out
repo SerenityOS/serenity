@@ -1,0 +1,3 @@
+StoreClass.java:12:19: compiler.err.cant.assign.val.to.final.var: class
+StoreClass.java:13:12: compiler.err.cant.assign.val.to.final.var: class
+2 errors

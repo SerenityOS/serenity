@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+OpenIDE-Module: com.sun.hotspot.igv.bytecodes
+OpenIDE-Module-Layer: com/sun/hotspot/igv/bytecodes/layer.xml
+OpenIDE-Module-Localizing-Bundle: com/sun/hotspot/igv/bytecodes/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

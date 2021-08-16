@@ -1,0 +1,6 @@
+FoldingTest.java:20:18: compiler.err.string.const.req
+FoldingTest.java:21:18: compiler.err.string.const.req
+FoldingTest.java:26:16: compiler.err.attribute.value.must.be.constant
+FoldingTest.java:28:16: compiler.err.annotation.value.must.be.class.literal
+FoldingTest.java:30:16: compiler.err.enum.annotation.must.be.enum.constant
+5 errors

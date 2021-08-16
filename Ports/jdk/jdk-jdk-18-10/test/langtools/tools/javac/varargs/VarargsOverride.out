@@ -1,0 +1,2 @@
+VarargsOverride.java:18:10: compiler.warn.override.varargs.missing: (compiler.misc.varargs.override: f(java.lang.Object...), varargs.override.B, f(java.lang.Object[]), varargs.override.A)
+1 warning

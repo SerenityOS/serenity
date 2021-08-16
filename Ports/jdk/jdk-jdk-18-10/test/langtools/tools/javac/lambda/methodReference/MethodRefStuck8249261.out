@@ -1,0 +1,13 @@
+MethodRefStuck8249261.java:17:9: compiler.err.cant.apply.symbol: kindname.method, p, int, @11, kindname.class, MethodRefStuck8249261, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.not.a.functional.intf: int))
+MethodRefStuck8249261.java:18:9: compiler.err.cant.apply.symbol: kindname.method, p, int, @11, kindname.class, MethodRefStuck8249261, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.not.a.functional.intf: int))
+MethodRefStuck8249261.java:19:11: compiler.err.unexpected.mref
+MethodRefStuck8249261.java:20:11: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: boolean)
+MethodRefStuck8249261.java:21:9: compiler.err.cant.apply.symbol: kindname.method, p, int, @16, kindname.class, MethodRefStuck8249261, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.type.in.conditional: (compiler.misc.not.a.functional.intf: int)))
+MethodRefStuck8249261.java:22:19: compiler.err.unexpected.mref
+MethodRefStuck8249261.java:23:9: compiler.err.cant.apply.symbol: kindname.method, p, int, @11, kindname.class, MethodRefStuck8249261, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.not.a.functional.intf: int))
+MethodRefStuck8249261.java:24:9: compiler.err.cant.apply.symbol: kindname.method, p, int, @11, kindname.class, MethodRefStuck8249261, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.not.a.functional.intf: int))
+MethodRefStuck8249261.java:25:12: compiler.err.unexpected.lambda
+MethodRefStuck8249261.java:26:12: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: boolean)
+MethodRefStuck8249261.java:27:9: compiler.err.cant.apply.symbol: kindname.method, p, int, @16, kindname.class, MethodRefStuck8249261, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.type.in.conditional: (compiler.misc.not.a.functional.intf: int)))
+MethodRefStuck8249261.java:28:20: compiler.err.unexpected.lambda
+12 errors

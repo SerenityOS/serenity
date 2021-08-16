@@ -1,0 +1,7 @@
+
+    @Test(dataProvider = "$type$BinaryOpMaskProvider")
+    static void [[TEST]]$vectorteststype$BroadcastMaskedSmokeTest(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb,
+                                          IntFunction<boolean[]> fm) {
+[[KERNEL]]
+        assertBroadcastArraysEquals(r, a, b, mask, $vectorteststype$::[[TEST]]);
+    }

@@ -1,0 +1,57 @@
+#
+# Copyright (c) 2015, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include Modules.gmk
+
+$(eval $(call ReadImportMetaData))
+
+# Replacing double-comma with a single comma is to workaround the issue
+# with some version of make on windows that doesn't substitute spaces
+# with one comma properly as with make 4.0
+define SubstComma
+$(strip \
+  $(subst $(COMMA)$(COMMA),$(COMMA),$(subst $(SPACE),$(COMMA),$(strip $1))) \
+)
+endef
+BOOT_MODULES_LIST := $(call SubstComma, $(BOOT_MODULES))
+PLATFORM_MODULES_LIST := $(call SubstComma, $(PLATFORM_MODULES))
+
+VARDEPS_VALUE := $(BOOT_MODULES_LIST) $(PLATFORM_MODULES_LIST)
+VARDEPS_FILE := $(call DependOnVariable, VARDEPS_VALUE)
+
+############################################################################
+
+$(SUPPORT_OUTPUTDIR)/gensrc/java.base/jdk/internal/module/ModuleLoaderMap.java: \
+    $(TOPDIR)/src/java.base/share/classes/jdk/internal/module/ModuleLoaderMap.java \
+    $(VARDEPS_FILE) $(BUILD_TOOLS_JDK)
+	$(call MakeTargetDir)
+	$(RM) $@ $@.tmp
+	$(TOOL_GENCLASSLOADERMAP) -boot $(BOOT_MODULES_LIST) \
+	     -platform $(PLATFORM_MODULES_LIST) -o $@.tmp $<
+	$(MV) $@.tmp $@
+
+TARGETS += $(SUPPORT_OUTPUTDIR)/gensrc/java.base/jdk/internal/module/ModuleLoaderMap.java
+
+################################################################################

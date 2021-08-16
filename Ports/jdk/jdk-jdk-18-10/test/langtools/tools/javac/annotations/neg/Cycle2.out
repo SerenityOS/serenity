@@ -1,0 +1,2 @@
+Cycle2.java:13:9: compiler.err.cyclic.annotation.element: cycle2.Bar
+1 error

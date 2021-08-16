@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Root xmlns="http://www.example.org/root">
+
+    <Object name="object1">
+        <Members>
+            <String name="string1" />
+        </Members>
+    </Object>
+
+    <Object name="object2">
+        <Members>
+            <Collection name="Collection1">
+                <CollectionMembers>
+                    <CollectionMember name="Collectionmember1" type="object1" />
+                    <CollectionMember name="Collectionmember2" >
+                        <Members>
+                            <String name="string1" />
+                        </Members>
+                    </CollectionMember>
+                </CollectionMembers>
+            </Collection>
+        </Members>
+    </Object>
+</Root>

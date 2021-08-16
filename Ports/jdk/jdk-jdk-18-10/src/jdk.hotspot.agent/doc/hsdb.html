@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>
+SA HSDB GUI
+</title>
+</head>
+<body>
+<p>
+Once the HSDB debugger has been launched, the threads list is displayed
+if launched with debuggee options (pid or core) in command line. If
+HSDB was launched without debuggee, empty screen is shown.
+</p>
+<p>File menu sub-menu options to attach, detach debuggee and exit tool.</p>
+<p>Tools menu sub-menus include:</p>
+  <ul>
+  <li>browsing of the annotated stack memory ("Stack Memory" button). It
+   is currently annotated with the following information:
+   <ul>
+   <li> method names of the Java frames and their extents (supporting
+     inlined compiled methods)
+   <li> locations and types of oops, found using the oop map information
+     from compiled methods (interpreter oop maps coming soon)
+   <li> if a Java frame was interrupted by a signal (e.g., because of a
+     crash), annotates the frame with the signal name and number
+   <li> interpreter codelet descriptions for interpreted frames
+   </ul>
+ <li> finding which thread or threads caused a crash (currently
+   identified by the presence of a signal handler frame - solaris-only)
+ <li> browsing of oops using the Oop Inspector.
+ <li> browsing of the java.lang.Thread object's oop.
+ <li> Object Histogram and inspection of objects and liveness analysis therein.
+ <li> Class Browser - view Java classes, bytecode disassembly,
+   or create .class files for selected classes
+ <li> native disassembly (x86 only) and nmethod disassembly with annotations for safepoint details.
+ <li> view -XX flags, System properties, VM version of debuggee
+ </ul>
+<p>Windows sub-menu options include:</p>
+ <ul>
+ <li> Windows sub-menu: Console window to run "CLHSDB" commands in GUI
+ <li> Windows sub-menu: Debugger console of underlying native debugger (MS Windbg or dbx (if used))
+</ul>
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+# 
+# Diff of 
+# b2c: cdctables.zip/Package2.zip/IBM-1364A.zip/055444B0.TPMAP110
+# c2b: cdctables.zip/Package2.zip/IBM-1364A.zip/055444B0.UPMAP110
+# shows there are 6 additional c->b entries in UPMAP110, they are
+# listed below (in b->c form)
+#
+# UPMAP110 also defines
+#      <subchar>    \xFE\xFE
+# and commend out
+#      #<subchar1>  \x3F
+# with
+#
+# <UFFFD>         \xFE\xFD            #  (SUB)
+# <UFFFD>         \xFE\xFE            #  (SUB)
+#
+OE41480F    00AD
+OE41430F    00B7
+OE41490F    2015
+OE42A10F    223C
+OE496F0F    2299
+OE49540F    FF5E

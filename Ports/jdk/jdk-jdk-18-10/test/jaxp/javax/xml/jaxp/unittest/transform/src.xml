@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:x-data xmlns:x="http://msqr.us/xsd/jaxb-web" xmlns:m="http://msqr.us/xsd/matte">
+	<x:x-context>
+		<x:server-name>localhost</x:server-name>
+		<x:server-port>8484</x:server-port>
+		<x:user-agent>Mozilla/5.0 (Macintosh; U; PPC Mac OS X; en) AppleWebKit/419 (KHTML, like Gecko) Safari/419.3</x:user-agent>
+		<x:user-locale>en</x:user-locale>
+		<x:web-context>/matte</x:web-context>
+		<x:path>/logon.do</x:path>
+	</x:x-context>
+	<x:x-auxillary>
+		<x:x-param key="magoffin.matt.xweb.REQ">org.springframework.web.servlet.support.RequestContext@4bf0ff</x:x-param>
+	</x:x-auxillary>
+	<x:x-messages>
+		<x:msg key="">You must be logged in and have sufficient access privileges to view the requested page.</x:msg>
+	</x:x-messages>
+	<x:x-session>
+		<x:x-param key="magoffin.matt.xweb.URL">http://localhost:8484/matte/home.do</x:x-param>
+	</x:x-session>
+	<x:x-request/>
+	<x:x-request-headers>
+		<x:param key="accept">*/*</x:param>
+		<x:param key="accept-language">en</x:param>
+		<x:param key="accept-encoding">gzip, deflate</x:param>
+		<x:param key="cookie">JSESSIONID=42E37E740D15356C0E861590CEA4A421; JSESSIONID=5647B2F0C0A7E5E673970E4A21D2F3FD</x:param>
+		<x:param key="user-agent">Mozilla/5.0 (Macintosh; U; PPC Mac OS X; en) AppleWebKit/419 (KHTML, like Gecko) Safari/419.3</x:param>
+		<x:param key="connection">keep-alive</x:param>
+		<x:param key="host">localhost:8484</x:param>
+	</x:x-request-headers>
+	<x:x-model>
+		<x:x-param key="no.model">no model</x:x-param>
+	</x:x-model>
+</x:x-data>

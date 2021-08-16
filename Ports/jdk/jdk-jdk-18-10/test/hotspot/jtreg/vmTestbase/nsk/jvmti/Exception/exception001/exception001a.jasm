@@ -1,0 +1,156 @@
+/*
+ * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+package nsk/jvmti/Exception;
+
+/* Reassembled from the following Java pattern:
+ *
+ * public class exception001a {
+ *     public static void run() {
+ *         exception001b t = new exception001b();
+ *         try {
+ *             t.meth1();
+ *         } catch (Throwable e) {}
+ *         try {
+ *             t.meth2(0);
+ *         } catch (Throwable e) {}
+ *         try {
+ *             t.meth3(2);
+ *         } catch (Throwable e) {}
+ *     }
+ * }
+ *
+ * class exception001b {
+ *     public static void meth1() throws Throwable {
+ *         throw new exception001c();
+ *     }
+ *
+ *     public int meth2(int i) throws ArithmeticException {
+ *         return (10 / i);
+ *     }
+ *
+ *     public int meth3(int i) throws IndexOutOfBoundsException {
+ *         int arr[] = {1};
+ *         return arr[i];
+ *     }
+ * }
+ *
+ * class exception001c extends Throwable {
+ * }
+ *
+ */
+
+super public class exception001a {
+
+    public Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial        Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    public static Method run:"()V" stack 2 locals 2 {
+        new     class exception001b;
+        dup;
+        invokespecial Method exception001b."<init>":"()V";
+        astore_0;
+    try t0;
+        invokestatic Method exception001b.meth1:"()V";
+    endtry t0;
+        goto    L15;
+    catch t0 java/lang/Throwable; // bci=14
+        astore_1;
+    try t1;
+L15:    aload_0;
+        iconst_0;
+        invokevirtual Method exception001b.meth2:"(I)I";
+        pop;
+    endtry t1;
+        goto    L25;
+    catch t1 java/lang/Throwable; // bci=24
+        astore_1;
+    try t2;
+L25:    aload_0;
+        iconst_2;
+        invokevirtual Method exception001b.meth3:"(I)I";
+        pop;
+    endtry t2;
+        goto    L35;
+    catch t2 java/lang/Throwable; // bci=34
+        astore_1;
+L35:    return;
+    }
+
+}
+
+super class exception001b {
+
+    Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial        Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    public static Method meth1:"()V"
+    throws java/lang/Throwable
+    stack 2 locals 0 {
+        new     class exception001c;
+        dup;
+        invokespecial Method exception001c."<init>":"()V";
+        athrow; // bci=7
+    }
+
+    public Method meth2:"(I)I"
+    throws java/lang/ArithmeticException
+    stack 2 locals 2 {
+        bipush  10;
+        iload_1;
+        idiv;   // bci=3
+        ireturn;
+    }
+
+    public Method meth3:"(I)I"
+    throws java/lang/IndexOutOfBoundsException
+    stack 4 locals 3 {
+        iconst_1;
+        newarray int;
+        dup;
+        iconst_0;
+        iconst_1;
+        iastore;
+        astore_2;
+        aload_2;
+        iload_1;
+        iaload;  // bci=10
+        ireturn;
+    }
+}
+
+super class exception001c extends java/lang/Throwable {
+
+    Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial Method java/lang/Throwable."<init>":"()V";
+        return;
+    }
+
+}

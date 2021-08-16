@@ -1,0 +1,174 @@
+/*
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+super public class compiler/parsing/TestExceptionBlockWithPredecessors
+	version 59:0
+{
+
+Field loopCounter:I;
+Field switchOn:I;
+Field iFld:I;
+
+public Method "<init>":"()V"
+	stack 1 locals 1
+{
+		aload_0;
+		invokespecial	Method java/lang/Object."<init>":"()V";
+		return;
+}
+
+Method test:"()V"
+	stack 4 locals 2
+{
+		try t0, t1;
+		aload_0;
+		invokevirtual	Method dontInlineThrow:"()V";
+		aload_0;
+		getfield	Field switchOn:"I";
+		tableswitch{ //1 to 3
+		1: L32;
+		2: L53;
+		3: L57;
+		default: L67 };
+	L32:	stack_frame_type same;
+		aload_0;
+		getfield	Field loopCounter:"I";
+		bipush	10;
+		if_icmpge	L67;
+		aload_0;
+		invokevirtual	Method dontInlineThrow:"()V";
+	L53:	stack_frame_type same;
+		aload_0;
+		invokevirtual	Method dontInlineThrow:"()V";
+	L57:	stack_frame_type same;
+		aload_0;
+		dup;
+		getfield	Field loopCounter:"I";
+		iconst_1;
+		iadd;
+		putfield	Field loopCounter:"I";
+		goto	L32;
+		endtry t0, t1;
+	L67:	stack_frame_type same;
+		goto	L74;
+		catch t0 java/lang/RuntimeException;
+		stack_frame_type stack1;
+		stack_map class java/lang/RuntimeException;
+		astore_1;
+		aload_1;
+		aload_0;
+		getfield	Field loopCounter:"I";
+		bipush	10;
+		if_icmpge	L70;
+        aload_0;
+        dup;
+		getfield	Field loopCounter:"I";
+		iconst_1;
+		iadd;
+		putfield	Field loopCounter:"I";
+		goto L70;
+		catch t1 java/lang/Throwable;
+	L70:    stack_frame_type stack1;
+		stack_map class java/lang/Throwable;
+		astore_1;
+	L74:	stack_frame_type same;
+		return;
+}
+
+Method testWorksWithoutPreds:"()V"
+	stack 4 locals 2
+{
+		try t0, t1;
+		aload_0;
+		invokevirtual	Method dontInlineThrow:"()V";
+		aload_0;
+		getfield	Field switchOn:"I";
+		tableswitch{ //1 to 3
+		1: L32; // No profile information about it. Never taken. Skip on it in first iteration in do_all_blocks()
+		2: L53;
+		3: L57;
+		default: L67 };
+	L32:	stack_frame_type same; // Only parsed in second iteration of do_all_blocks(), when both exception handler blocks are already parsed
+		aload_0;
+		getfield	Field loopCounter:"I";
+		bipush	10;
+		if_icmpge	L67;
+		aload_0;
+		invokevirtual	Method dontInlineThrow:"()V";
+        aload_0;
+	    getfield	Field iFld:"I";
+		bipush	10;
+		if_icmpeq	L53;
+		aload_0;
+		invokevirtual	Method dontInlineThrow:"()V";
+	L52:	stack_frame_type same;
+        aload_0;
+		invokevirtual	Method dontInlineThrow:"()V";
+	L53:	stack_frame_type same;
+		aload_0;
+		invokevirtual	Method dontInlineThrow:"()V";
+	L57:	stack_frame_type same;
+		aload_0;
+		dup;
+		getfield	Field loopCounter:"I";
+		iconst_1;
+		iadd;
+		putfield	Field loopCounter:"I";
+		goto	L32; // Only merge block starting at that bytecode which has a smaller rpo than this block -> process in next iteration in do_all_blocks()
+		endtry t0, t1;
+	L67:	stack_frame_type same;
+		goto	L74;
+		catch t0 java/lang/RuntimeException;
+		stack_frame_type stack1;
+		stack_map class java/lang/RuntimeException;
+		astore_1;
+		aload_0;
+		getfield	Field loopCounter:"I";
+		bipush	10;
+		if_icmpge	L74;
+        aload_0;
+        dup;
+		getfield	Field loopCounter:"I";
+		iconst_1;
+		iadd;
+		putfield	Field loopCounter:"I";
+		goto L74;
+		catch t1 java/lang/Throwable;
+	L70:    stack_frame_type stack1;
+		stack_map class java/lang/Throwable;
+		astore_1;
+	L74:	stack_frame_type same;
+		return;
+}
+
+
+public Method dontInlineThrow:"()V"
+	throws java/lang/RuntimeException
+	stack 0 locals 1
+{
+		return;
+}
+
+} // end Class TestExceptionBlockWithPredecessors
+

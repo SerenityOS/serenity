@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<doc  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+    xsi:noNamespaceSchemaLocation='Bug6971190_v.xsd' >
+
+<!--
+negative tests
+-->
+
+<!--reV10--> <elem>&#x2B0;</elem>
+<!--reV11--> <elem>&#x2B0;</elem>
+<!--reV12--> <elem>&#xFF9F;</elem>
+<!--reV15--> <elem>&#x2FA1D;</elem>
+<!--reV16--> <!--elem>&#x64B;</elem  064b is ARABIC FATHATAN, not a letter according to Character.isLetter, the current range \u0641\u064a (Arabic letters) is correct-->
+<!--reV17--> <!-- elem>&#x1D1AD;</elem MUSICAL SYMBOL COMBINING SNAP PIZZICATO, is not a letter-->
+<!--reV18--> <!-- elem>&#x903;</elem  'DEVANAGARI SIGN VISARGA' , not a letter -->
+<!--reV19--> <!-- elem>&#x1D172;</elem 'MUSICAL SYMBOL COMBINING FLAG-5', not a letter -->
+<!--reV20--> <!-- elem>&#x903;</elem -->
+<!--reV21--> <!-- elem>&#x1D172;</elem -->
+<!--reV22 elem text--> <!-- elem>&#x20DD;</elem 'COMBINING ENCLOSING CIRCLE' , not a letter -->
+<!--reV23 attribute--> <!--elem>&#x20DD;</elem-->
+<!--reV24--> <!-- elem>&#x20E2;</elem 'COMBINING ENCLOSING SCREEN' , not a letter -->
+<!--reV26--> <elem>&#x1D7FF;</elem> <!-- 1D7FF 'MATHEMATICAL MONOSPACE DIGIT NINE', added to digit range -->
+<!--reV27--> <!-- elem>&#x1034A;</elem 'GOTHIC LETTER NINE HUNDRED', not a letter -->
+<!--reV28--> <!--elem>&#x1034A;</elem-->
+<!--reV30--> <!-- elem>&#xB2;</elem 'SUPERSCRIPT TWO', not a letter -->
+<!--reV31--> <!-- elem>&#xB2;</elem-->
+<!--reV32--> <!-- elem>&#x10323;</elem OLD ITALIC NUMERAL FIFTY, not a letter. In fact, none of the OLD ITALIC NUMERALs are considered letter -->
+<!--reV33--> <!-- elem>&#x2044;</elem 'FRACTION SLASH' , not a letter -->
+<!--reV34--> <!-- elem>&#xFFE2;</elem 'FULLWIDTH NOT SIGN', not a letter -->
+<!--reV35--> <!-- elem>&#x20A0;</elem 'EURO-CURRENCY SIGN', not a letter -->
+<!--reV36--> <!-- elem>&#x20A0;</elem -->
+<!--reV37--> <!-- elem>&#xFFE6;</elem 'FULLWIDTH WON SIGN' , not a letter -->
+<!--reV38--> <!-- elem>&#x309B;</elem 'KATAKANA-HIRAGANA VOICED SOUND MARK', not a letter -->
+<!--reV39--> <!-- elem>&#x309B;</elem -->
+<!--reV40--> <!-- elem>&#xFFE3;</elem 'FULLWIDTH MACRON', not a letter -->
+<!--reV41--> <!-- elem>&#x3190;</elem 'IDEOGRAPHIC ANNOTATION LINKING MARK', not a letter -->
+<!--reV42--> <!-- elem>&#x3190;</elem-->
+<!--reV43--> <!-- elem>&#x1D1DD;</elem 'MUSICAL SYMBOL PES SUBPUNCTIS', not a letter -->
+<!--reV3--> <elem>&#x1D7A8;</elem>
+<!--reV6--> <elem>&#x1D7C9;</elem>
+<!--reV7--> <elem>&#x1C5;</elem>
+<!--reV8--> <elem>&#x1C5;</elem>
+
+ </doc>

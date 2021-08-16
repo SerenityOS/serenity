@@ -1,0 +1,860 @@
+/*
+ * Copyright (c) 2005, 2006, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+package ${PACKAGE};
+
+import javax.swing.Painter;
+import java.awt.Graphics;
+import sun.font.FontUtilities;
+import sun.swing.plaf.synth.DefaultSynthStyle;
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
+import javax.swing.JInternalFrame;
+import javax.swing.UIDefaults;
+import javax.swing.UIManager;
+import javax.swing.plaf.BorderUIResource;
+import javax.swing.plaf.ColorUIResource;
+import javax.swing.plaf.DimensionUIResource;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.plaf.InsetsUIResource;
+import javax.swing.plaf.synth.Region;
+import javax.swing.plaf.synth.SynthStyle;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.image.BufferedImage;
+import static java.awt.image.BufferedImage.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
+import javax.swing.border.Border;
+import javax.swing.plaf.UIResource;
+
+/**
+ * This class contains all the implementation details related to
+ * ${LAF_NAME}. It contains all the code for initializing the UIDefaults table,
+ * as well as for selecting
+ * a SynthStyle based on a JComponent/Region pair.
+ *
+ * @author Richard Bair
+ */
+final class ${LAF_NAME}Defaults {
+    /**
+     * The map of SynthStyles. This map is keyed by Region. Each Region maps
+     * to a List of LazyStyles. Each LazyStyle has a reference to the prefix
+     * that was registered with it. This reference can then be inspected to see
+     * if it is the proper lazy style.
+     * <p/>
+     * There can be more than one LazyStyle for a single Region if there is more
+     * than one prefix defined for a given region. For example, both Button and
+     * "MyButton" might be prefixes assigned to the Region.Button region.
+     */
+    private Map<Region, List<LazyStyle>> m;
+    /**
+     * A map of regions which have been registered.
+     * This mapping is maintained so that the Region can be found based on
+     * prefix in a very fast manner. This is used in the "matches" method of
+     * LazyStyle.
+     */
+    private Map<String, Region> registeredRegions =
+            new HashMap<String, Region>();
+
+    private Map<JComponent, Map<Region, SynthStyle>> overridesCache =
+            new WeakHashMap<JComponent, Map<Region, SynthStyle>>();
+    
+    /**
+     * Our fallback style to avoid NPEs if the proper style cannot be found in
+     * this class. Not sure if relying on DefaultSynthStyle is the best choice.
+     */
+    private DefaultSynthStyle defaultStyle;
+    /**
+     * The default font that will be used. I store this value so that it can be
+     * set in the UIDefaults when requested.
+     */
+    private FontUIResource defaultFont;
+
+    private ColorTree colorTree = new ColorTree();
+
+    /** Listener for changes to user defaults table */
+    private DefaultsListener defaultsListener = new DefaultsListener();
+
+    /** Called by UIManager when this look and feel is installed. */
+    void initialize() {
+        // add listener for derived colors
+        UIManager.addPropertyChangeListener(defaultsListener);
+        UIManager.getDefaults().addPropertyChangeListener(colorTree);
+    }
+
+    /** Called by UIManager when this look and feel is uninstalled. */
+    void uninitialize() {
+        // remove listener for derived colors
+        UIManager.removePropertyChangeListener(defaultsListener);
+        UIManager.getDefaults().removePropertyChangeListener(colorTree);
+    }
+
+    /**
+     * Create a new ${LAF_NAME}Defaults. This constructor is only called from
+     * within ${LAF_NAME}LookAndFeel.
+     */
+    ${LAF_NAME}Defaults() {
+        m = new HashMap<Region, List<LazyStyle>>();
+
+        //Create the default font and default style. Also register all of the
+        //regions and their states that this class will use for later lookup.
+        //Additional regions can be registered later by 3rd party components.
+        //These are simply the default registrations.
+        defaultFont = FontUtilities.getFontConfigFUIR("sans", Font.PLAIN, 12);
+        defaultStyle = new DefaultSynthStyle();
+        defaultStyle.setFont(defaultFont);
+
+        //initialize the map of styles
+${STYLE_INIT}
+    }
+
+    //--------------- Methods called by ${LAF_NAME}LookAndFeel
+
+    /**
+     * Called from ${LAF_NAME}LookAndFeel to initialize the UIDefaults.
+     *
+     * @param d UIDefaults table to initialize. This will never be null.
+     *          If listeners are attached to <code>d</code>, then you will
+     *          only receive notification of LookAndFeel level defaults, not
+     *          all defaults on the UIManager.
+     */
+    void initializeDefaults(UIDefaults d) {
+${UI_DEFAULT_INIT}
+    }
+
+    /**
+     * <p>Registers the given region and prefix. The prefix, if it contains
+     * quoted sections, refers to certain named components. If there are not
+     * quoted sections, then the prefix refers to a generic component type.</p>
+     *
+     * <p>If the given region/prefix combo has already been registered, then
+     * it will not be registered twice. The second registration attempt will
+     * fail silently.</p>
+     *
+     * @param region The Synth Region that is being registered. Such as Button,
+     *        or ScrollBarThumb.
+     * @param prefix The UIDefault prefix. For example, could be ComboBox, or if
+     *        a named components, "MyComboBox", or even something like
+     *        ToolBar:"MyComboBox":"ComboBox.arrowButton"
+     */
+    void register(Region region, String prefix) {
+        //validate the method arguments
+        if (region == null || prefix == null) {
+            throw new IllegalArgumentException(
+                    "Neither Region nor Prefix may be null");
+        }
+
+        //Add a LazyStyle for this region/prefix to m.
+        List<LazyStyle> styles = m.get(region);
+        if (styles == null) {
+            styles = new LinkedList<LazyStyle>();
+            styles.add(new LazyStyle(prefix));
+            m.put(region, styles);
+        } else {
+            //iterate over all the current styles and see if this prefix has
+            //already been registered. If not, then register it.
+            for (LazyStyle s : styles) {
+                if (prefix.equals(s.prefix)) {
+                    return;
+                }
+            }
+            styles.add(new LazyStyle(prefix));
+        }
+
+        //add this region to the map of registered regions
+        registeredRegions.put(region.getName(), region);
+    }
+
+    /**
+     * <p>Locate the style associated with the given region, and component.
+     * This is called from ${LAF_NAME}LookAndFeel in the SynthStyleFactory
+     * implementation.</p>
+     *
+     * <p>Lookup occurs as follows:<br/>
+     * Check the map of styles <code>m</code>. If the map contains no styles at
+     * all, then simply return the defaultStyle. If the map contains styles,
+     * then iterate over all of the styles for the Region <code>r</code> looking
+     * for the best match, based on prefix. If a match was made, then return
+     * that SynthStyle. Otherwise, return the defaultStyle.</p>
+     *
+     * @param comp The component associated with this region. For example, if
+     *        the Region is Region.Button then the component will be a JButton.
+     *        If the Region is a subregion, such as ScrollBarThumb, then the
+     *        associated component will be the component that subregion belongs
+     *        to, such as JScrollBar. The JComponent may be named. It may not be
+     *        null.
+     * @param r The region we are looking for a style for. May not be null.
+     */
+    SynthStyle getStyle(JComponent comp, Region r) {
+        //validate method arguments
+        if (comp == null || r == null) {
+            throw new IllegalArgumentException(
+                    "Neither comp nor r may be null");
+        }
+
+        //if there are no lazy styles registered for the region r, then return
+        //the default style
+        List<LazyStyle> styles = m.get(r);
+        if (styles == null || styles.size() == 0) {
+            return defaultStyle;
+        }
+
+        //Look for the best SynthStyle for this component/region pair.
+        LazyStyle foundStyle = null;
+        for (LazyStyle s : styles) {
+            if (s.matches(comp)) {
+                //replace the foundStyle if foundStyle is null, or
+                //if the new style "s" is more specific (ie, its path was
+                //longer), or if the foundStyle was "simple" and the new style
+                //was not (ie: the foundStyle was for something like Button and
+                //the new style was for something like "MyButton", hence, being
+                //more specific.) In all cases, favor the most specific style
+                //found.
+                if (foundStyle == null ||
+                   (foundStyle.parts.length < s.parts.length) ||
+                   (foundStyle.parts.length == s.parts.length 
+                    && foundStyle.simple && !s.simple)) {
+                    foundStyle = s;
+                }
+            }
+        }
+
+        //return the style, if found, or the default style if not found
+        return foundStyle == null ? defaultStyle : foundStyle.getStyle(comp, r);
+    }
+
+    public void clearOverridesCache(JComponent c) {
+        overridesCache.remove(c);
+    }
+
+    /*
+        Various public helper classes.
+        These may be used to register 3rd party values into UIDefaults
+    */
+
+    /**
+     * <p>Derives its font value based on a parent font and a set of offsets and
+     * attributes. This class is an ActiveValue, meaning that it will recompute
+     * its value each time it is requested from UIDefaults. It is therefore
+     * recommended to read this value once and cache it in the UI delegate class
+     * until asked to reinitialize.</p>
+     *
+     * <p>To use this class, create an instance with the key of the font in the
+     * UI defaults table from which to derive this font, along with a size
+     * offset (if any), and whether it is to be bold, italic, or left in its
+     * default form.</p>
+     */
+    static final class DerivedFont implements UIDefaults.ActiveValue {
+        private float sizeOffset;
+        private Boolean bold;
+        private Boolean italic;
+        private String parentKey;
+
+        /**
+         * Create a new DerivedFont.
+         *
+         * @param key The UIDefault key associated with this derived font's
+         *            parent or source. If this key leads to a null value, or a
+         *            value that is not a font, then null will be returned as
+         *            the derived font. The key must not be null.
+         * @param sizeOffset The size offset, as a percentage, to use. For
+         *                   example, if the source font was a 12pt font and the
+         *                   sizeOffset were specified as .9, then the new font
+         *                   will be 90% of what the source font was, or, 10.8
+         *                   pts which is rounded to 11pts. This fractional
+         *                   based offset allows for proper font scaling in high
+         *                   DPI or large system font scenarios.
+         * @param bold Whether the new font should be bold. If null, then this
+         *             new font will inherit the bold setting of the source
+         *             font.
+         * @param italic Whether the new font should be italicized. If null,
+         *               then this new font will inherit the italic setting of
+         *               the source font.
+         */
+        public DerivedFont(String key, float sizeOffset, Boolean bold,
+                           Boolean italic) {
+            //validate the constructor arguments
+            if (key == null) {
+                throw new IllegalArgumentException("You must specify a key");
+            }
+
+            //set the values
+            this.parentKey = key;
+            this.sizeOffset = sizeOffset;
+            this.bold = bold;
+            this.italic = italic;
+        }
+
+        /**
+         * @inheritDoc
+         */
+        @Override
+        public Object createValue(UIDefaults defaults) {
+            Font f = defaults.getFont(parentKey);
+            if (f != null) {
+                // always round size for now so we have exact int font size
+                // (or we may have lame looking fonts)
+                float size = Math.round(f.getSize2D() * sizeOffset);
+                int style = f.getStyle();
+                if (bold != null) {
+                    if (bold.booleanValue()) {
+                        style = style | Font.BOLD;
+                    } else {
+                        style = style & ~Font.BOLD;
+                    }
+                }
+                if (italic != null) {
+                    if (italic.booleanValue()) {
+                        style = style | Font.ITALIC;
+                    } else {
+                        style = style & ~Font.ITALIC;
+                    }
+                }
+                return f.deriveFont(style, size);
+            } else {
+                return null;
+            }
+        }
+    }
+
+
+    /**
+     * This class is private because it relies on the constructor of the
+     * auto-generated AbstractRegionPainter subclasses. Hence, it is not
+     * generally useful, and is private.
+     * <p/>
+     * LazyPainter is a LazyValue class. It will create the
+     * AbstractRegionPainter lazily, when asked. It uses reflection to load the
+     * proper class and invoke its constructor.
+     */
+    private static final class LazyPainter implements UIDefaults.LazyValue {
+        private int which;
+        private AbstractRegionPainter.PaintContext ctx;
+        private String className;
+
+        LazyPainter(String className, int which, Insets insets,
+                    Dimension canvasSize, boolean inverted) {
+            if (className == null) {
+                throw new IllegalArgumentException(
+                        "The className must be specified");
+            }
+
+            this.className = className;
+            this.which = which;
+            this.ctx = new AbstractRegionPainter.PaintContext(
+                insets, canvasSize, inverted);
+        }
+
+        LazyPainter(String className, int which, Insets insets,
+                    Dimension canvasSize, boolean inverted,
+                    AbstractRegionPainter.PaintContext.CacheMode cacheMode,
+                    double maxH, double maxV) {
+            if (className == null) {
+                throw new IllegalArgumentException(
+                        "The className must be specified");
+            }
+
+            this.className = className;
+            this.which = which;
+            this.ctx = new AbstractRegionPainter.PaintContext(
+                    insets, canvasSize, inverted, cacheMode, maxH, maxV);
+        }
+
+        @Override
+        public Object createValue(UIDefaults table) {
+            try {
+                Class<?> c;
+                Object cl;
+                // See if we should use a separate ClassLoader
+                if (table == null || !((cl = table.get("ClassLoader"))
+                                       instanceof ClassLoader)) {
+                    cl = Thread.currentThread().
+                                getContextClassLoader();
+                    if (cl == null) {
+                        // Fallback to the system class loader.
+                        cl = ClassLoader.getSystemClassLoader();
+                    }
+                }
+
+                c = Class.forName(className, true, (ClassLoader)cl);
+                Constructor<?> constructor = c.getConstructor(
+                        AbstractRegionPainter.PaintContext.class, int.class);
+                if (constructor == null) {
+                    throw new NullPointerException(
+                            "Failed to find the constructor for the class: " +
+                            className);
+                }
+                return constructor.newInstance(ctx, which);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+    }
+
+    /**
+     * A class which creates the NimbusStyle associated with it lazily, but also
+     * manages a lot more information about the style. It is less of a LazyValue
+     * type of class, and more of an Entry or Item type of class, as it
+     * represents an entry in the list of LazyStyles in the map m.
+     *
+     * The primary responsibilities of this class include:
+     * <ul>
+     *   <li>Determining whether a given component/region pair matches this
+     *       style</li>
+     *   <li>Splitting the prefix specified in the constructor into its
+     *       constituent parts to facilitate quicker matching</li>
+     *   <li>Creating and vending a NimbusStyle lazily.</li>
+     * </ul>
+     */
+    private final class LazyStyle {
+        /**
+         * The prefix this LazyStyle was registered with. Something like
+         * Button or ComboBox:"ComboBox.arrowButton"
+         */
+        private String prefix;
+        /**
+         * Whether or not this LazyStyle represents an unnamed component
+         */
+        private boolean simple = true;
+        /**
+         * The various parts, or sections, of the prefix. For example,
+         * the prefix:
+         *     ComboBox:"ComboBox.arrowButton"
+         *
+         * will be broken into two parts,
+         *     ComboBox and "ComboBox.arrowButton"
+         */
+        private Part[] parts;
+        /**
+         * Cached shared style.
+         */
+        private NimbusStyle style;
+
+        /**
+         * Create a new LazyStyle.
+         *
+         * @param prefix The prefix associated with this style. Cannot be null.
+         */
+        private LazyStyle(String prefix) {
+            if (prefix == null) {
+                throw new IllegalArgumentException(
+                        "The prefix must not be null");
+            }
+
+            this.prefix = prefix;
+
+            //there is one odd case that needs to be supported here: cell
+            //renderers. A cell renderer is defined as a named internal
+            //component, so for example:
+            // List."List.cellRenderer"
+            //The problem is that the component named List.cellRenderer is not a
+            //child of a JList. Rather, it is treated more as a direct component
+            //Thus, if the prefix ends with "cellRenderer", then remove all the
+            //previous dotted parts of the prefix name so that it becomes, for
+            //example: "List.cellRenderer"
+            //Likewise, we have a hacked work around for cellRenderer, renderer,
+            //and listRenderer.
+            String temp = prefix;
+            if (temp.endsWith("cellRenderer\"")
+                    || temp.endsWith("renderer\"")
+                    || temp.endsWith("listRenderer\"")) {
+                temp = temp.substring(temp.lastIndexOf(":\"") + 1);
+            }
+
+            //otherwise, normal code path
+            List<String> sparts = split(temp);
+            parts = new Part[sparts.size()];
+            for (int i = 0; i < parts.length; i++) {
+                parts[i] = new Part(sparts.get(i));
+                if (parts[i].named) {
+                    simple = false;
+                }
+            }
+        }
+
+        /**
+         * Gets the style. Creates it if necessary.
+         * @return the style
+         */
+        SynthStyle getStyle(JComponent c, Region r) {
+            // if the component has overrides, it gets its own unique style
+            // instead of the shared style.
+            if (c.getClientProperty("Nimbus.Overrides") != null) {
+                Map<Region, SynthStyle> map = overridesCache.get(c);
+                SynthStyle s = null;
+                if (map == null) {
+                    map = new HashMap<Region, SynthStyle>();
+                    overridesCache.put(c, map);
+                } else {
+                    s = map.get(r);
+                }
+                if (s == null) {
+                    s = new NimbusStyle(prefix, c);
+                    map.put(r, s);
+                }
+                return s;
+            }
+            
+            // lazily create the style if necessary
+            if (style == null)
+                style = new NimbusStyle(prefix, null);
+            
+            // return the style
+            return style;
+        }
+
+        /**
+         * This LazyStyle is a match for the given component if, and only if,
+         * for each part of the prefix the component hierarchy matches exactly.
+         * That is, if given "a":something:"b", then:
+         * c.getName() must equals "b"
+         * c.getParent() can be anything
+         * c.getParent().getParent().getName() must equal "a".
+         */
+        boolean matches(JComponent c) {
+            return matches(c, parts.length - 1);
+        }
+
+        private boolean matches(Component c, int partIndex) {
+            if (partIndex < 0) return true;
+            if (c == null) return false;
+            //only get here if partIndex > 0 and c == null
+
+            String name = c.getName();
+            if (parts[partIndex].named && parts[partIndex].s.equals(name)) {
+                //so far so good, recurse
+                return matches(c.getParent(), partIndex - 1);
+            } else if (!parts[partIndex].named) {
+                //if c is not named, and parts[partIndex] has an expected class
+                //type registered, then check to make sure c is of the
+                //right type;
+                Class<?> clazz = parts[partIndex].c;
+                if (clazz != null && clazz.isAssignableFrom(c.getClass())) {
+                    //so far so good, recurse
+                    return matches(c.getParent(), partIndex - 1);
+                } else if (clazz == null &&
+                           registeredRegions.containsKey(parts[partIndex].s)) {
+                    Region r = registeredRegions.get(parts[partIndex].s);
+                    Component parent = r.isSubregion() ? c : c.getParent();
+                    //special case the JInternalFrameTitlePane, because it
+                    //doesn't fit the mold. very, very funky.
+                    if (r == Region.INTERNAL_FRAME_TITLE_PANE && parent != null
+                        && parent instanceof JInternalFrame.JDesktopIcon) {
+                        JInternalFrame.JDesktopIcon icon =
+                                (JInternalFrame.JDesktopIcon) parent;
+                        parent = icon.getInternalFrame();
+                    }
+                    //it was the name of a region. So far, so good. Recurse.
+                    return matches(parent, partIndex - 1);
+                }
+            }
+
+            return false;
+        }
+
+        /**
+         * Given some dot separated prefix, split on the colons that are
+         * not within quotes, and not within brackets.
+         *
+         * @param prefix
+         * @return
+         */
+        private List<String> split(String prefix) {
+            List<String> parts = new ArrayList<String>();
+            int bracketCount = 0;
+            boolean inquotes = false;
+            int lastIndex = 0;
+            for (int i = 0; i < prefix.length(); i++) {
+                char c = prefix.charAt(i);
+
+                if (c == '[') {
+                    bracketCount++;
+                    continue;
+                } else if (c == '"') {
+                    inquotes = !inquotes;
+                    continue;
+                } else if (c == ']') {
+                    bracketCount--;
+                    if (bracketCount < 0) {
+                        throw new RuntimeException(
+                                "Malformed prefix: " + prefix);
+                    }
+                    continue;
+                }
+
+                if (c == ':' && !inquotes && bracketCount == 0) {
+                    //found a character to split on.
+                    parts.add(prefix.substring(lastIndex, i));
+                    lastIndex = i + 1;
+                }
+            }
+            if (lastIndex < prefix.length() - 1 && !inquotes
+                    && bracketCount == 0) {
+                parts.add(prefix.substring(lastIndex));
+            }
+            return parts;
+
+        }
+
+        private final class Part {
+            private String s;
+            //true if this part represents a component name
+            private boolean named;
+            private Class<?> c;
+
+            Part(String s) {
+                named = s.charAt(0) == '"' && s.charAt(s.length() - 1) == '"';
+                if (named) {
+                    this.s = s.substring(1, s.length() - 1);
+                } else {
+                    this.s = s;
+                    //TODO use a map of known regions for Synth and Swing, and
+                    //then use [classname] instead of org_class_name style
+                    try {
+                        c = Class.forName("javax.swing.J" + s);
+                    } catch (Exception e) {
+                    }
+                    try {
+                        c = Class.forName(s.replace("_", "."));
+                    } catch (Exception e) {
+                    }
+                }
+            }
+        }
+    }
+
+    private void addColor(UIDefaults d, String uin, int r, int g, int b, int a) {
+        Color color = new ColorUIResource(new Color(r, g, b, a));
+        colorTree.addColor(uin, color);
+        d.put(uin, color);
+    }
+
+    private void addColor(UIDefaults d, String uin, String parentUin,
+            float hOffset, float sOffset, float bOffset, int aOffset) {
+        addColor(d, uin, parentUin, hOffset, sOffset, bOffset, aOffset, true);
+    }
+
+    private void addColor(UIDefaults d, String uin, String parentUin,
+            float hOffset, float sOffset, float bOffset,
+            int aOffset, boolean uiResource) {
+        Color color = getDerivedColor(uin, parentUin,
+                hOffset, sOffset, bOffset, aOffset, uiResource);
+        d.put(uin, color);
+    }
+
+    /**
+     * Get a derived color, derived colors are shared instances and will be
+     * updated when its parent UIDefault color changes.
+     *
+     * @param uiDefaultParentName The parent UIDefault key
+     * @param hOffset The hue offset
+     * @param sOffset The saturation offset
+     * @param bOffset The brightness offset
+     * @param aOffset The alpha offset
+     * @param uiResource True if the derived color should be a UIResource,
+     *        false if it should not be a UIResource
+     * @return The stored derived color
+     */
+    public DerivedColor getDerivedColor(String parentUin,
+                                        float hOffset, float sOffset,
+                                        float bOffset, int aOffset,
+                                        boolean uiResource){
+        return getDerivedColor(null, parentUin,
+                hOffset, sOffset, bOffset, aOffset, uiResource);
+    }
+
+    private DerivedColor getDerivedColor(String uin, String parentUin,
+                                        float hOffset, float sOffset,
+                                        float bOffset, int aOffset,
+                                        boolean uiResource) {
+        DerivedColor color;
+        if (uiResource) {
+            color = new DerivedColor.UIResource(parentUin,
+                    hOffset, sOffset, bOffset, aOffset);
+        } else {
+            color = new DerivedColor(parentUin, hOffset, sOffset,
+                bOffset, aOffset);
+        }
+
+        if (derivedColors.containsKey(color)) {
+            return derivedColors.get(color);
+        } else {
+            derivedColors.put(color, color);
+            color.rederiveColor(); /// move to ARP.decodeColor() ?
+            colorTree.addColor(uin, color);
+            return color;
+        }
+    }
+
+    private Map<DerivedColor, DerivedColor> derivedColors =
+            new HashMap<DerivedColor, DerivedColor>();
+
+    private class ColorTree implements PropertyChangeListener {
+        private Node root = new Node(null, null);
+        private Map<String, Node> nodes = new HashMap<String, Node>();
+
+        public Color getColor(String uin) {
+            return nodes.get(uin).color;
+        }
+
+        public void addColor(String uin, Color color) {
+            Node parent = getParentNode(color);
+            Node node = new Node(color, parent);
+            parent.children.add(node);
+            if (uin != null) {
+                nodes.put(uin, node);
+            }
+        }
+
+        private Node getParentNode(Color color) {
+            Node parent = root;
+            if (color instanceof DerivedColor) {
+                String parentUin = ((DerivedColor)color).getUiDefaultParentName();
+                Node p = nodes.get(parentUin);
+                if (p != null) {
+                    parent = p;
+                }
+            }
+            return parent;
+        }
+
+        public void update() {
+            root.update();
+        }
+
+        @Override
+        public void propertyChange(PropertyChangeEvent ev) {
+            String name = ev.getPropertyName();
+            Node node = nodes.get(name);
+            if (node != null) {
+                // this is a registered color
+                node.parent.children.remove(node);
+                Color color = (Color) ev.getNewValue();
+                Node parent = getParentNode(color);
+                node.set(color, parent);
+                parent.children.add(node);
+                node.update();
+            }
+        }
+
+        class Node {
+            Color color;
+            Node parent;
+            List<Node> children = new LinkedList<Node>();
+
+            Node(Color color, Node parent) {
+                set(color, parent);
+            }
+
+            public void set(Color color, Node parent) {
+                this.color = color;
+                this.parent = parent;
+            }
+
+            public void update() {
+                if (color instanceof DerivedColor) {
+                    ((DerivedColor)color).rederiveColor();
+                }
+                for (Node child: children) {
+                    child.update();
+                }
+            }
+        }
+    }
+
+    /**
+     * Listener to update derived colors on UIManager Defaults changes
+     */
+    private class DefaultsListener implements PropertyChangeListener {
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            if ("lookAndFeel".equals(evt.getPropertyName())) {
+                // LAF has been installed, this is the first point at which we
+                // can access our defaults table via UIManager so before now
+                // all derived colors will be incorrect.
+                // First we need to update
+                colorTree.update();
+            }
+        }
+    }
+
+    private static final class PainterBorder implements Border, UIResource {
+        private Insets insets;
+        private Painter<Component> painter;
+        private String painterKey;
+        
+        PainterBorder(String painterKey, Insets insets) {
+            this.insets = insets;
+            this.painterKey = painterKey;
+        }
+        
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int w, int h) {
+            if (painter == null) {
+                @SuppressWarnings("unchecked")
+                Painter<Component> temp = (Painter<Component>)UIManager.get(painterKey);
+                painter = temp;
+                if (painter == null) return;
+            }
+            
+            g.translate(x, y);
+            if (g instanceof Graphics2D)
+                painter.paint((Graphics2D)g, c, w, h);
+            else {
+                BufferedImage img = new BufferedImage(w, h, TYPE_INT_ARGB);
+                Graphics2D gfx = img.createGraphics();
+                painter.paint(gfx, c, w, h);
+                gfx.dispose();
+                g.drawImage(img, x, y, null);
+                img = null;
+            }
+            g.translate(-x, -y);
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return (Insets)insets.clone();
+        }
+
+        @Override
+        public boolean isBorderOpaque() {
+            return false;
+        }
+    }
+}

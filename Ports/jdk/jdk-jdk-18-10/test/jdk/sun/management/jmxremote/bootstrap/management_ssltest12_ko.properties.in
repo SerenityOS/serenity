@@ -1,0 +1,5 @@
+com.sun.management.jmxremote.ssl.enabled.cipher.suites=SSL_RSA_WITH_RC4_128_SHA,INVALID_CIPHER_SUITE
+com.sun.management.jmxremote.ssl.enabled.protocols=SSLv2Hello,SSLv3,TLSv1
+com.sun.management.jmxremote.ssl.need.client.auth=true
+com.sun.management.jmxremote.ssl.config.file=@TEST-SRC@/jmxremote_ssltest12_ok.ssl
+com.sun.management.jmxremote.authenticate=false

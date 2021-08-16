@@ -1,0 +1,7 @@
+PatternCaseErrorRecovery.java:13:22: compiler.err.expected2: :, ->
+PatternCaseErrorRecovery.java:13:23: compiler.err.not.stmt
+PatternCaseErrorRecovery.java:14:23: compiler.err.expected2: :, ->
+PatternCaseErrorRecovery.java:14:24: compiler.err.not.stmt
+PatternCaseErrorRecovery.java:15:31: compiler.err.expected2: :, ->
+PatternCaseErrorRecovery.java:15:32: compiler.err.not.stmt
+6 errors

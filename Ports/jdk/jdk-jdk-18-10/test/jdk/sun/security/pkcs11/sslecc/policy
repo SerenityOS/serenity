@@ -1,0 +1,9 @@
+grant {
+    permission java.lang.RuntimePermission "setSecurityManager";
+    permission java.security.SecurityPermission "insertProvider.*";
+    permission java.security.SecurityPermission "removeProvider.*";
+    permission java.util.PropertyPermission "test.src", "read";
+    permission java.util.PropertyPermission "numThreads", "read";
+    permission java.io.FilePermission "${test.src}/*", "read";
+    permission java.net.SocketPermission "127.0.0.1:*", "listen,resolve,accept,connect";
+};

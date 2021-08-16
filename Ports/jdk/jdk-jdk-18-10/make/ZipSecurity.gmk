@@ -1,0 +1,103 @@
+#
+# Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include JavaCompilation.gmk
+
+##########################################################################################
+#
+# sec-bin.zip is used by builds where the corresponding sources are not available
+#
+$(eval $(call SetupZipArchive,BUILD_SEC_BIN_ZIP, \
+    SRC := $(JDK_OUTPUTDIR), \
+    INCLUDES := \
+        modules/java.base/javax/crypto \
+        modules/java.base/javax/crypto/spec \
+        modules/java.base/sun/security/internal/interfaces \
+        modules/java.base/sun/security/internal/spec \
+        modules/java.base/com/sun/crypto/provider \
+        modules/jdk.crypto.ec/sun/security/ec \
+        modules/jdk.crypto.mscapi/sun/security/mscapi \
+        modules/jdk.crypto.cryptoki/sun/security/pkcs11 \
+        modules/jdk.crypto.cryptoki/sun/security/pkcs11/wrapper \
+        modules/java.base/javax/net \
+        modules/java.base/javax/security/cert \
+        modules/java.base/com/sun/net/ssl \
+        modules/java.base/com/sun/security/cert \
+        modules/java.base/sun/net/www/protocol/https \
+        modules/java.base/sun/security/pkcs12 \
+        modules/java.base/sun/security/ssl \
+        modules/java.security.jgss/sun/security/krb5 \
+        modules/java.security.jgss/sun/security/krb5/internal \
+        modules/java.security.jgss/sun/security/krb5/internal/ccache \
+        modules/java.security.jgss/sun/security/krb5/internal/crypto \
+        modules/java.security.jgss/sun/security/krb5/internal/ktab \
+        modules/java.security.jgss/sun/security/krb5/internal/rcache \
+        modules/java.security.jgss/sun/security/krb5/internal/util, \
+    INCLUDE_FILES := modules/java.security.jgss/sun/security/jgss/spi/GSSContextSpi.class, \
+    EXCLUDES := modules/java.security.jgss/sun/security/krb5/internal/tools, \
+    ZIP := $(IMAGES_OUTPUTDIR)/sec-bin.zip))
+
+TARGETS += $(IMAGES_OUTPUTDIR)/sec-bin.zip
+
+##########################################################################################
+#
+# Windows specific binary security packages.
+#
+ifeq ($(call isTargetOs, windows), true)
+  # sec-windows-bin.zip is used by builds where the corresponding sources are not available
+  $(eval $(call SetupZipArchive,BUILD_SEC_WINDOWS_BIN_ZIP, \
+      SRC := $(JDK_OUTPUTDIR), \
+      INCLUDES := modules/java.security.jgss/sun/security/krb5/internal/tools, \
+      ZIP := $(IMAGES_OUTPUTDIR)/sec-windows-bin.zip))
+
+  TARGETS += $(IMAGES_OUTPUTDIR)/sec-windows-bin.zip
+
+  # JGSS files contain the native Kerberos library
+  ifeq ($(call isTargetCpu, x86_64), true)
+    JGSS_ZIP_NAME = jgss-windows-x64-bin.zip
+  else
+    JGSS_ZIP_NAME = jgss-windows-i586-bin.zip
+  endif
+
+  $(eval $(call SetupZipArchive,BUILD_JGSS_BIN_ZIP, \
+      SRC := $(SUPPORT_OUTPUTDIR), \
+      INCLUDE_FILES := modules_libs/java.security.jgss/w2k_lsa_auth.dll \
+          modules_libs/java.security.jgss/w2k_lsa_auth.diz \
+          modules_libs/java.security.jgss/w2k_lsa_auth.map \
+          modules_libs/java.security.jgss/w2k_lsa_auth.pdb, \
+      ZIP := $(IMAGES_OUTPUTDIR)/$(JGSS_ZIP_NAME)))
+
+  TARGETS += $(IMAGES_OUTPUTDIR)/$(JGSS_ZIP_NAME)
+endif
+
+##########################################################################################
+
+all: $(TARGETS)
+
+.PHONY: default all

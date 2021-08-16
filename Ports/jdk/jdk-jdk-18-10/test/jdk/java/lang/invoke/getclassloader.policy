@@ -1,0 +1,10 @@
+/*
+ * Security policy used by the FindClassSecurityManager and 
+ * MethodTypeSecurityManager test.
+ * Must allow file reads so that jtreg itself can run, and getting class loaders.
+ */
+
+grant {
+  permission java.io.FilePermission "*", "read";
+  permission java.lang.RuntimePermission "getClassLoader";
+};

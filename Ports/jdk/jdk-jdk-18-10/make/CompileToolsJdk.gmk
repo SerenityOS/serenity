@@ -1,0 +1,142 @@
+#
+# Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include JavaCompilation.gmk
+include TextFileProcessing.gmk
+
+################################################################################
+
+$(eval $(call IncludeCustomExtension, CompileTools.gmk))
+
+################################################################################
+
+# Use += to be able to add to this from a custom extension
+BUILD_TOOLS_SRC_DIRS += \
+    $(TOPDIR)/make/jdk/src/classes \
+    $(BUILDTOOLS_OUTPUTDIR)/interim_tzdb_classes \
+    #
+
+$(eval $(call SetupJavaCompilation, BUILD_TOOLS_JDK, \
+    TARGET_RELEASE := $(TARGET_RELEASE_BOOTJDK), \
+    SRC := $(BUILD_TOOLS_SRC_DIRS), \
+    EXCLUDES := \
+        build/tools/classlist \
+        build/tools/deps \
+        build/tools/docs \
+        build/tools/jigsaw \
+        build/tools/depend \
+        , \
+    BIN := $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes, \
+    DISABLED_WARNINGS := options, \
+    JAVAC_FLAGS := \
+        --add-exports java.desktop/sun.awt=ALL-UNNAMED \
+        --add-exports java.base/sun.text=ALL-UNNAMED \
+        --add-exports java.base/sun.security.util=ALL-UNNAMED, \
+))
+
+TARGETS += $(BUILD_TOOLS_JDK)
+
+$(eval $(call SetupCopyFiles,COPY_NIMBUS_TEMPLATES, \
+    SRC := $(TOPDIR)/src/java.desktop/share/classes/javax/swing/plaf/nimbus, \
+    DEST := $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes/build/tools/generatenimbus/resources, \
+    FILES := $(wildcard $(TOPDIR)/src/java.desktop/share/classes/javax/swing/plaf/nimbus/*.template)))
+
+TARGETS += $(COPY_NIMBUS_TEMPLATES)
+
+################################################################################
+
+$(eval $(call SetupJavaCompilation, COMPILE_DEPEND, \
+    TARGET_RELEASE := $(TARGET_RELEASE_BOOTJDK), \
+    SRC := $(TOPDIR)/make/jdk/src/classes, \
+    INCLUDES := build/tools/depend, \
+    BIN := $(BUILDTOOLS_OUTPUTDIR)/depend, \
+    DISABLED_WARNINGS := options, \
+))
+
+DEPEND_SERVICE_PROVIDER := $(BUILDTOOLS_OUTPUTDIR)/depend/META-INF/services/com.sun.source.util.Plugin
+
+$(DEPEND_SERVICE_PROVIDER):
+	$(call MakeDir, $(BUILDTOOLS_OUTPUTDIR)/depend/META-INF/services)
+	$(ECHO) build.tools.depend.Depend > $@
+
+TARGETS += $(COMPILE_DEPEND) $(DEPEND_SERVICE_PROVIDER)
+
+################################################################################
+
+# To be able to call the javascript filter when generating man pages using
+# pandoc, we need to create this executable wrapper script.
+ifeq ($(ENABLE_PANDOC), true)
+  # PANDOC_TROFF_MANPAGE_FILTER is duplicated for export in ToolsJdk.gmk.
+  PANDOC_TROFF_MANPAGE_FILTER := \
+      $(BUILDTOOLS_OUTPUTDIR)/manpages/pandoc-troff-manpage-filter
+  PANDOC_TROFF_MANPAGE_FILTER_SETUP := \
+      $(BUILDTOOLS_OUTPUTDIR)/manpages/_pandoc_troff_manpage_filter_setup.marker
+
+  # Create a usable instance of the wrapper script that calls the pandoc filter
+  # (which is written in javascript).
+  $(eval $(call SetupTextFileProcessing, CREATE_PANDOC_TROFF_MANPAGE_FILTER, \
+      SOURCE_FILES := $(TOPDIR)/make/scripts/pandoc-troff-manpage-filter.sh.template, \
+      OUTPUT_FILE := $(PANDOC_TROFF_MANPAGE_FILTER), \
+      REPLACEMENTS := \
+          @@JAVA_SMALL@@ => $(JAVA_SMALL) ; \
+          @@BUILDTOOLS_OUTPUTDIR@@ => $(BUILDTOOLS_OUTPUTDIR) ; \
+  ))
+
+  # Created script must be made executable
+  $(PANDOC_TROFF_MANPAGE_FILTER_SETUP): $(CREATE_PANDOC_TROFF_MANPAGE_FILTER)
+	$(CHMOD) a+rx $(PANDOC_TROFF_MANPAGE_FILTER)
+	$(TOUCH) $@
+
+  TARGETS += $(PANDOC_TROFF_MANPAGE_FILTER_SETUP)
+
+  # PANDOC_HTML_MANPAGE_FILTER is duplicated for export in ToolsJdk.gmk.
+  PANDOC_HTML_MANPAGE_FILTER := \
+      $(BUILDTOOLS_OUTPUTDIR)/manpages/pandoc-html-manpage-filter
+  PANDOC_HTML_MANPAGE_FILTER_SETUP := \
+      $(BUILDTOOLS_OUTPUTDIR)/manpages/_pandoc_html_manpage_filter_setup.marker
+
+  # Create a usable instance of the wrapper script that calls the pandoc filter
+  # (which is written in javascript).
+  $(eval $(call SetupTextFileProcessing, CREATE_PANDOC_HTML_MANPAGE_FILTER, \
+      SOURCE_FILES := $(TOPDIR)/make/scripts/pandoc-html-manpage-filter.sh.template, \
+      OUTPUT_FILE := $(PANDOC_HTML_MANPAGE_FILTER), \
+      REPLACEMENTS := \
+          @@JAVA_SMALL@@ => $(JAVA_SMALL) ; \
+          @@BUILDTOOLS_OUTPUTDIR@@ => $(BUILDTOOLS_OUTPUTDIR) ; \
+  ))
+
+  # Created script must be made executable
+  $(PANDOC_HTML_MANPAGE_FILTER_SETUP): $(CREATE_PANDOC_HTML_MANPAGE_FILTER)
+	$(CHMOD) a+rx $(PANDOC_HTML_MANPAGE_FILTER)
+	$(TOUCH) $@
+
+  TARGETS += $(PANDOC_HTML_MANPAGE_FILTER_SETUP)
+endif
+
+all: $(TARGETS)

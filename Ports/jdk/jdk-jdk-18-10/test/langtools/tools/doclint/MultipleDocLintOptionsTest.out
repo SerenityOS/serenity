@@ -1,0 +1,5 @@
+MultipleDocLintOptionsTest.java:8:5: compiler.err.proc.messager: element not allowed in documentation comments: <html>
+MultipleDocLintOptionsTest.java:8:5: compiler.err.proc.messager: element not closed: html
+MultipleDocLintOptionsTest.java:10:9: compiler.warn.proc.messager: no description for @return
+2 errors
+1 warning

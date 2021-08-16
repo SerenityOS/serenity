@@ -1,0 +1,1569 @@
+/*
+ * Copyright (c) 2018, 2021, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ * @test
+ * @modules jdk.incubator.vector
+ * @run testng/othervm -ea -esa -Xbatch -XX:-TieredCompilation $vectorteststype$
+ */
+
+#warn This file is preprocessed before being compiled
+
+import jdk.incubator.vector.VectorShape;
+import jdk.incubator.vector.VectorSpecies;
+import jdk.incubator.vector.VectorShuffle;
+import jdk.incubator.vector.VectorMask;
+import jdk.incubator.vector.VectorOperators;
+import jdk.incubator.vector.Vector;
+
+#if[Byte]
+import jdk.incubator.vector.ByteVector;
+#end[Byte]
+#if[Float]
+import jdk.incubator.vector.FloatVector;
+#end[Float]
+#if[Int]
+import jdk.incubator.vector.IntVector;
+#end[Int]
+#if[Double]
+import jdk.incubator.vector.DoubleVector;
+#end[Double]
+#if[Short]
+import jdk.incubator.vector.ShortVector;
+#end[Short]
+#if[Long]
+import jdk.incubator.vector.LongVector;
+#end[Long]
+
+import org.testng.Assert;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+import java.lang.Integer;
+import java.util.List;
+import java.util.Arrays;
+import java.util.function.BiFunction;
+import java.util.function.IntFunction;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+@Test
+public class $vectorteststype$ extends AbstractVectorTest {
+
+#if[MaxBit]
+    static final VectorSpecies<$Wideboxtype$> SPECIES =
+                $Type$Vector.SPECIES_MAX;
+#else[MaxBit]
+    static final VectorSpecies<$Wideboxtype$> SPECIES =
+                $Type$Vector.SPECIES_$bits$;
+#end[MaxBit]
+
+    static final int INVOC_COUNT = Integer.getInteger("jdk.incubator.vector.test.loop-iterations", 100);
+
+#if[MaxBit]
+    static VectorShape getMaxBit() {
+        return VectorShape.S_Max_BIT;
+    }
+
+    private static final int Max = 256;  // juts so we can do N/$bits$
+#end[MaxBit]
+
+    static final int BUFFER_REPS = Integer.getInteger("jdk.incubator.vector.test.buffer-vectors", 25000 / $bits$);
+
+    interface FUnOp {
+        $type$ apply($type$ a);
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, FUnOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i]));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], f.apply(a[i]), "at index #" + i + ", input = " + a[i]);
+        }
+    }
+
+    interface FUnArrayOp {
+        $type$[] apply($type$ a);
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, FUnArrayOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(Arrays.copyOfRange(r, i, i+SPECIES.length()),
+                  f.apply(a[i]));
+            }
+        } catch (AssertionError e) {
+            $type$[] ref = f.apply(a[i]);
+            $type$[] res = Arrays.copyOfRange(r, i, i+SPECIES.length());
+            Assert.assertEquals(res, ref, "(ref: " + Arrays.toString(ref)
+              + ", res: " + Arrays.toString(res)
+              + "), at index #" + i);
+        }
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, boolean[] mask, FUnOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], mask[i % SPECIES.length()] ? f.apply(a[i]) : a[i]);
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], mask[i % SPECIES.length()] ? f.apply(a[i]) : a[i], "at index #" + i + ", input = " + a[i] + ", mask = " + mask[i % SPECIES.length()]);
+        }
+    }
+
+    interface FReductionOp {
+        $type$ apply($type$[] a, int idx);
+    }
+
+    interface FReductionAllOp {
+        $type$ apply($type$[] a);
+    }
+
+    static void assertReductionArraysEquals($type$[] r, $type$ rc, $type$[] a,
+                                            FReductionOp f, FReductionAllOp fa) {
+        int i = 0;
+        try {
+            Assert.assertEquals(rc, fa.apply(a));
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(r[i], f.apply(a, i));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(rc, fa.apply(a), "Final result is incorrect!");
+            Assert.assertEquals(r[i], f.apply(a, i), "at index #" + i);
+        }
+    }
+
+    interface FReductionMaskedOp {
+        $type$ apply($type$[] a, int idx, boolean[] mask);
+    }
+
+    interface FReductionAllMaskedOp {
+        $type$ apply($type$[] a, boolean[] mask);
+    }
+
+    static void assertReductionArraysEqualsMasked($type$[] r, $type$ rc, $type$[] a, boolean[] mask,
+                                            FReductionMaskedOp f, FReductionAllMaskedOp fa) {
+        int i = 0;
+        try {
+            Assert.assertEquals(rc, fa.apply(a, mask));
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(r[i], f.apply(a, i, mask));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(rc, fa.apply(a, mask), "Final result is incorrect!");
+            Assert.assertEquals(r[i], f.apply(a, i, mask), "at index #" + i);
+        }
+    }
+
+#if[!Long]
+    interface FReductionOpLong {
+        long apply($type$[] a, int idx);
+    }
+
+    interface FReductionAllOpLong {
+        long apply($type$[] a);
+    }
+
+    static void assertReductionLongArraysEquals(long[] r, long rc, $type$[] a,
+                                            FReductionOpLong f, FReductionAllOpLong fa) {
+        int i = 0;
+        try {
+            Assert.assertEquals(rc, fa.apply(a));
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(r[i], f.apply(a, i));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(rc, fa.apply(a), "Final result is incorrect!");
+            Assert.assertEquals(r[i], f.apply(a, i), "at index #" + i);
+        }
+    }
+
+    interface FReductionMaskedOpLong {
+        long apply($type$[] a, int idx, boolean[] mask);
+    }
+
+    interface FReductionAllMaskedOpLong {
+        long apply($type$[] a, boolean[] mask);
+    }
+
+    static void assertReductionLongArraysEqualsMasked(long[] r, long rc, $type$[] a, boolean[] mask,
+                                            FReductionMaskedOpLong f, FReductionAllMaskedOpLong fa) {
+        int i = 0;
+        try {
+            Assert.assertEquals(rc, fa.apply(a, mask));
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(r[i], f.apply(a, i, mask));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(rc, fa.apply(a, mask), "Final result is incorrect!");
+            Assert.assertEquals(r[i], f.apply(a, i, mask), "at index #" + i);
+        }
+    }
+#end[!Long]
+
+    interface FBoolReductionOp {
+        boolean apply(boolean[] a, int idx);
+    }
+
+    static void assertReductionBoolArraysEquals(boolean[] r, boolean[] a, FBoolReductionOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(r[i], f.apply(a, i));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], f.apply(a, i), "at index #" + i);
+        }
+    }
+
+    interface FMaskReductionOp {
+        int apply(boolean[] a, int idx);
+    }
+
+    static void assertMaskReductionArraysEquals(int[] r, boolean[] a, FMaskReductionOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(r[i], f.apply(a, i));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], f.apply(a, i), "at index #" + i);
+        }
+    }
+
+    static void assertInsertArraysEquals($type$[] r, $type$[] a, $type$ element, int index) {
+        int i = 0;
+        try {
+            for (; i < a.length; i += 1) {
+                if(i%SPECIES.length() == index) {
+                    Assert.assertEquals(r[i], element);
+                } else {
+                    Assert.assertEquals(r[i], a[i]);
+                }
+            }
+        } catch (AssertionError e) {
+            if (i%SPECIES.length() == index) {
+                Assert.assertEquals(r[i], element, "at index #" + i);
+            } else {
+                Assert.assertEquals(r[i], a[i], "at index #" + i);
+            }
+        }
+    }
+
+    static void assertRearrangeArraysEquals($type$[] r, $type$[] a, int[] order, int vector_len) {
+        int i = 0, j = 0;
+        try {
+            for (; i < a.length; i += vector_len) {
+                for (j = 0; j < vector_len; j++) {
+                    Assert.assertEquals(r[i+j], a[i+order[i+j]]);
+                }
+            }
+        } catch (AssertionError e) {
+            int idx = i + j;
+            Assert.assertEquals(r[i+j], a[i+order[i+j]], "at index #" + idx + ", input = " + a[i+order[i+j]]);
+        }
+    }
+
+    static void assertSelectFromArraysEquals($type$[] r, $type$[] a, $type$[] order, int vector_len) {
+        int i = 0, j = 0;
+        try {
+            for (; i < a.length; i += vector_len) {
+                for (j = 0; j < vector_len; j++) {
+                    Assert.assertEquals(r[i+j], a[i+(int)order[i+j]]);
+                }
+            }
+        } catch (AssertionError e) {
+            int idx = i + j;
+            Assert.assertEquals(r[i+j], a[i+(int)order[i+j]], "at index #" + idx + ", input = " + a[i+(int)order[i+j]]);
+        }
+    }
+
+    static void assertRearrangeArraysEquals($type$[] r, $type$[] a, int[] order, boolean[] mask, int vector_len) {
+        int i = 0, j = 0;
+        try {
+            for (; i < a.length; i += vector_len) {
+                for (j = 0; j < vector_len; j++) {
+                    if (mask[j % SPECIES.length()])
+                         Assert.assertEquals(r[i+j], a[i+order[i+j]]);
+                    else
+                         Assert.assertEquals(r[i+j], ($type$)0);
+                }
+            }
+        } catch (AssertionError e) {
+            int idx = i + j;
+            if (mask[j % SPECIES.length()])
+                Assert.assertEquals(r[i+j], a[i+order[i+j]], "at index #" + idx + ", input = " + a[i+order[i+j]] + ", mask = " + mask[j % SPECIES.length()]);
+            else
+                Assert.assertEquals(r[i+j], ($type$)0, "at index #" + idx + ", input = " + a[i+order[i+j]] + ", mask = " + mask[j % SPECIES.length()]);
+        }
+    }
+
+    static void assertSelectFromArraysEquals($type$[] r, $type$[] a, $type$[] order, boolean[] mask, int vector_len) {
+        int i = 0, j = 0;
+        try {
+            for (; i < a.length; i += vector_len) {
+                for (j = 0; j < vector_len; j++) {
+                    if (mask[j % SPECIES.length()])
+                         Assert.assertEquals(r[i+j], a[i+(int)order[i+j]]);
+                    else
+                         Assert.assertEquals(r[i+j], ($type$)0);
+                }
+            }
+        } catch (AssertionError e) {
+            int idx = i + j;
+            if (mask[j % SPECIES.length()])
+                Assert.assertEquals(r[i+j], a[i+(int)order[i+j]], "at index #" + idx + ", input = " + a[i+(int)order[i+j]] + ", mask = " + mask[j % SPECIES.length()]);
+            else
+                Assert.assertEquals(r[i+j], ($type$)0, "at index #" + idx + ", input = " + a[i+(int)order[i+j]] + ", mask = " + mask[j % SPECIES.length()]);
+        }
+    }
+
+    static void assertBroadcastArraysEquals($type$[] r, $type$[] a) {
+        int i = 0;
+        for (; i < a.length; i += SPECIES.length()) {
+            int idx = i;
+            for (int j = idx; j < (idx + SPECIES.length()); j++)
+                a[j]=a[idx];
+        }
+
+        try {
+            for (i = 0; i < a.length; i++) {
+                Assert.assertEquals(r[i], a[i]);
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], a[i], "at index #" + i + ", input = " + a[i]);
+        }
+    }
+
+    interface FBinOp {
+        $type$ apply($type$ a, $type$ b);
+    }
+
+    interface FBinMaskOp {
+        $type$ apply($type$ a, $type$ b, boolean m);
+
+        static FBinMaskOp lift(FBinOp f) {
+            return (a, b, m) -> m ? f.apply(a, b) : a;
+        }
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, $type$[] b, FBinOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i], b[i]));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], f.apply(a[i], b[i]), "(" + a[i] + ", " + b[i] + ") at index #" + i);
+        }
+    }
+
+    static void assertBroadcastArraysEquals($type$[] r, $type$[] a, $type$[] b, FBinOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()]));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], f.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()]),
+                                "(" + a[i] + ", " + b[(i / SPECIES.length()) * SPECIES.length()] + ") at index #" + i);
+        }
+    }
+
+    static void assertBroadcastLongArraysEquals($type$[] r, $type$[] a, $type$[] b, FBinOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i], ($type$)((long)b[(i / SPECIES.length()) * SPECIES.length()])));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], f.apply(a[i], ($type$)((long)b[(i / SPECIES.length()) * SPECIES.length()])),
+                                "(" + a[i] + ", " + b[(i / SPECIES.length()) * SPECIES.length()] + ") at index #" + i);
+        }
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, $type$[] b, boolean[] mask, FBinOp f) {
+        assertArraysEquals(r, a, b, mask, FBinMaskOp.lift(f));
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, $type$[] b, boolean[] mask, FBinMaskOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i], b[i], mask[i % SPECIES.length()]));
+            }
+        } catch (AssertionError err) {
+            Assert.assertEquals(r[i], f.apply(a[i], b[i], mask[i % SPECIES.length()]), "at index #" + i + ", input1 = " + a[i] + ", input2 = " + b[i] + ", mask = " + mask[i % SPECIES.length()]);
+        }
+    }
+
+    static void assertBroadcastArraysEquals($type$[] r, $type$[] a, $type$[] b, boolean[] mask, FBinOp f) {
+        assertBroadcastArraysEquals(r, a, b, mask, FBinMaskOp.lift(f));
+    }
+
+    static void assertBroadcastArraysEquals($type$[] r, $type$[] a, $type$[] b, boolean[] mask, FBinMaskOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()], mask[i % SPECIES.length()]));
+            }
+        } catch (AssertionError err) {
+            Assert.assertEquals(r[i], f.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()],
+                                mask[i % SPECIES.length()]), "at index #" + i + ", input1 = " + a[i] +
+                                ", input2 = " + b[(i / SPECIES.length()) * SPECIES.length()] + ", mask = " +
+                                mask[i % SPECIES.length()]);
+        }
+    }
+
+    static void assertBroadcastLongArraysEquals($type$[] r, $type$[] a, $type$[] b, boolean[] mask, FBinOp f) {
+        assertBroadcastLongArraysEquals(r, a, b, mask, FBinMaskOp.lift(f));
+    }
+
+    static void assertBroadcastLongArraysEquals($type$[] r, $type$[] a, $type$[] b, boolean[] mask, FBinMaskOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i], ($type$)((long)b[(i / SPECIES.length()) * SPECIES.length()]), mask[i % SPECIES.length()]));
+            }
+        } catch (AssertionError err) {
+            Assert.assertEquals(r[i], f.apply(a[i], ($type$)((long)b[(i / SPECIES.length()) * SPECIES.length()]),
+                                mask[i % SPECIES.length()]), "at index #" + i + ", input1 = " + a[i] +
+                                ", input2 = " + b[(i / SPECIES.length()) * SPECIES.length()] + ", mask = " +
+                                mask[i % SPECIES.length()]);
+        }
+    }
+
+    static void assertShiftArraysEquals($type$[] r, $type$[] a, $type$[] b, FBinOp f) {
+        int i = 0;
+        int j = 0;
+        try {
+            for (; j < a.length; j += SPECIES.length()) {
+                for (i = 0; i < SPECIES.length(); i++) {
+                    Assert.assertEquals(r[i+j], f.apply(a[i+j], b[j]));
+                }
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i+j], f.apply(a[i+j], b[j]), "at index #" + i + ", " + j);
+        }
+    }
+
+    static void assertShiftArraysEquals($type$[] r, $type$[] a, $type$[] b, boolean[] mask, FBinOp f) {
+        assertShiftArraysEquals(r, a, b, mask, FBinMaskOp.lift(f));
+    }
+
+    static void assertShiftArraysEquals($type$[] r, $type$[] a, $type$[] b, boolean[] mask, FBinMaskOp f) {
+        int i = 0;
+        int j = 0;
+        try {
+            for (; j < a.length; j += SPECIES.length()) {
+                for (i = 0; i < SPECIES.length(); i++) {
+                    Assert.assertEquals(r[i+j], f.apply(a[i+j], b[j], mask[i]));
+                }
+            }
+        } catch (AssertionError err) {
+            Assert.assertEquals(r[i+j], f.apply(a[i+j], b[j], mask[i]), "at index #" + i + ", input1 = " + a[i+j] + ", input2 = " + b[j] + ", mask = " + mask[i]);
+        }
+    }
+
+    interface FTernOp {
+        $type$ apply($type$ a, $type$ b, $type$ c);
+    }
+
+    interface FTernMaskOp {
+        $type$ apply($type$ a, $type$ b, $type$ c, boolean m);
+
+        static FTernMaskOp lift(FTernOp f) {
+            return (a, b, c, m) -> m ? f.apply(a, b, c) : a;
+        }
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, $type$[] b, $type$[] c, FTernOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i], b[i], c[i]));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], f.apply(a[i], b[i], c[i]), "at index #" + i + ", input1 = " + a[i] + ", input2 = " + b[i] + ", input3 = " + c[i]);
+        }
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, $type$[] b, $type$[] c, boolean[] mask, FTernOp f) {
+        assertArraysEquals(r, a, b, c, mask, FTernMaskOp.lift(f));
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, $type$[] b, $type$[] c, boolean[] mask, FTernMaskOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i], b[i], c[i], mask[i % SPECIES.length()]));
+            }
+        } catch (AssertionError err) {
+            Assert.assertEquals(r[i], f.apply(a[i], b[i], c[i], mask[i % SPECIES.length()]), "at index #" + i + ", input1 = " + a[i] + ", input2 = "
+              + b[i] + ", input3 = " + c[i] + ", mask = " + mask[i % SPECIES.length()]);
+        }
+    }
+
+    static void assertBroadcastArraysEquals($type$[] r, $type$[] a, $type$[] b, $type$[] c, FTernOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i], b[i], c[(i / SPECIES.length()) * SPECIES.length()]));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], f.apply(a[i], b[i], c[(i / SPECIES.length()) * SPECIES.length()]), "at index #" +
+                                i + ", input1 = " + a[i] + ", input2 = " + b[i] + ", input3 = " +
+                                c[(i / SPECIES.length()) * SPECIES.length()]);
+        }
+    }
+
+    static void assertAltBroadcastArraysEquals($type$[] r, $type$[] a, $type$[] b, $type$[] c, FTernOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()], c[i]));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], f.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()], c[i]), "at index #" +
+                                i + ", input1 = " + a[i] + ", input2 = " +
+                                b[(i / SPECIES.length()) * SPECIES.length()] + ",  input3 = " + c[i]);
+        }
+    }
+
+    static void assertBroadcastArraysEquals($type$[] r, $type$[] a, $type$[] b, $type$[] c, boolean[] mask,
+                                            FTernOp f) {
+        assertBroadcastArraysEquals(r, a, b, c, mask, FTernMaskOp.lift(f));
+    }
+
+    static void assertBroadcastArraysEquals($type$[] r, $type$[] a, $type$[] b, $type$[] c, boolean[] mask,
+                                            FTernMaskOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i], b[i], c[(i / SPECIES.length()) * SPECIES.length()],
+                                    mask[i % SPECIES.length()]));
+            }
+        } catch (AssertionError err) {
+            Assert.assertEquals(r[i], f.apply(a[i], b[i], c[(i / SPECIES.length()) * SPECIES.length()],
+                                mask[i % SPECIES.length()]), "at index #" + i + ", input1 = " + a[i] + ", input2 = " +
+                                b[i] + ", input3 = " + c[(i / SPECIES.length()) * SPECIES.length()] + ", mask = " +
+                                mask[i % SPECIES.length()]);
+        }
+    }
+
+    static void assertAltBroadcastArraysEquals($type$[] r, $type$[] a, $type$[] b, $type$[] c, boolean[] mask,
+                                            FTernOp f) {
+        assertAltBroadcastArraysEquals(r, a, b, c, mask, FTernMaskOp.lift(f));
+    }
+
+    static void assertAltBroadcastArraysEquals($type$[] r, $type$[] a, $type$[] b, $type$[] c, boolean[] mask,
+                                            FTernMaskOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()], c[i],
+                                    mask[i % SPECIES.length()]));
+            }
+        } catch (AssertionError err) {
+            Assert.assertEquals(r[i], f.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()], c[i],
+                                mask[i % SPECIES.length()]), "at index #" + i + ", input1 = " + a[i] +
+                                ", input2 = " + b[(i / SPECIES.length()) * SPECIES.length()] +
+                                ", input3 = " + c[i] + ", mask = " + mask[i % SPECIES.length()]);
+        }
+    }
+
+    static void assertDoubleBroadcastArraysEquals($type$[] r, $type$[] a, $type$[] b, $type$[] c, FTernOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()],
+                                    c[(i / SPECIES.length()) * SPECIES.length()]));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], f.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()],
+                                c[(i / SPECIES.length()) * SPECIES.length()]), "at index #" + i + ", input1 = " + a[i]
+                                + ", input2 = " + b[(i / SPECIES.length()) * SPECIES.length()] + ", input3 = " +
+                                c[(i / SPECIES.length()) * SPECIES.length()]);
+        }
+    }
+
+    static void assertDoubleBroadcastArraysEquals($type$[] r, $type$[] a, $type$[] b, $type$[] c, boolean[] mask,
+                                                  FTernOp f) {
+        assertDoubleBroadcastArraysEquals(r, a, b, c, mask, FTernMaskOp.lift(f));
+    }
+
+    static void assertDoubleBroadcastArraysEquals($type$[] r, $type$[] a, $type$[] b, $type$[] c, boolean[] mask,
+                                                  FTernMaskOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()],
+                                    c[(i / SPECIES.length()) * SPECIES.length()], mask[i % SPECIES.length()]));
+            }
+        } catch (AssertionError err) {
+            Assert.assertEquals(r[i], f.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()],
+                                c[(i / SPECIES.length()) * SPECIES.length()], mask[i % SPECIES.length()]), "at index #"
+                                + i + ", input1 = " + a[i] + ", input2 = " + b[(i / SPECIES.length()) * SPECIES.length()] +
+                                ", input3 = " + c[(i / SPECIES.length()) * SPECIES.length()] + ", mask = " +
+                                mask[i % SPECIES.length()]);
+        }
+    }
+
+
+#if[FP]
+    static boolean isWithin1Ulp($type$ actual, $type$ expected) {
+        if ($Type$.isNaN(expected) && !$Type$.isNaN(actual)) {
+            return false;
+        } else if (!$Type$.isNaN(expected) && $Type$.isNaN(actual)) {
+            return false;
+        }
+
+        $type$ low = Math.nextDown(expected);
+        $type$ high = Math.nextUp(expected);
+
+        if ($Type$.compare(low, expected) > 0) {
+            return false;
+        }
+
+        if ($Type$.compare(high, expected) < 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    static void assertArraysEqualsWithinOneUlp($type$[] r, $type$[] a, FUnOp mathf, FUnOp strictmathf) {
+        int i = 0;
+        try {
+            // Check that result is within 1 ulp of strict math or equivalent to math implementation.
+            for (; i < a.length; i++) {
+                Assert.assertTrue($Type$.compare(r[i], mathf.apply(a[i])) == 0 ||
+                                    isWithin1Ulp(r[i], strictmathf.apply(a[i])));
+            }
+        } catch (AssertionError e) {
+            Assert.assertTrue($Type$.compare(r[i], mathf.apply(a[i])) == 0, "at index #" + i + ", input = " + a[i] + ", actual = " + r[i] + ", expected = " + mathf.apply(a[i]));
+            Assert.assertTrue(isWithin1Ulp(r[i], strictmathf.apply(a[i])), "at index #" + i + ", input = " + a[i] + ", actual = " + r[i] + ", expected (within 1 ulp) = " + strictmathf.apply(a[i]));
+        }
+    }
+
+    static void assertArraysEqualsWithinOneUlp($type$[] r, $type$[] a, $type$[] b, FBinOp mathf, FBinOp strictmathf) {
+        int i = 0;
+        try {
+            // Check that result is within 1 ulp of strict math or equivalent to math implementation.
+            for (; i < a.length; i++) {
+                Assert.assertTrue($Type$.compare(r[i], mathf.apply(a[i], b[i])) == 0 ||
+                                    isWithin1Ulp(r[i], strictmathf.apply(a[i], b[i])));
+            }
+        } catch (AssertionError e) {
+            Assert.assertTrue($Type$.compare(r[i], mathf.apply(a[i], b[i])) == 0, "at index #" + i + ", input1 = " + a[i] + ", input2 = " + b[i] + ", actual = " + r[i] + ", expected = " + mathf.apply(a[i], b[i]));
+            Assert.assertTrue(isWithin1Ulp(r[i], strictmathf.apply(a[i], b[i])), "at index #" + i + ", input1 = " + a[i] + ", input2 = " + b[i] + ", actual = " + r[i] + ", expected (within 1 ulp) = " + strictmathf.apply(a[i], b[i]));
+        }
+    }
+
+    static void assertBroadcastArraysEqualsWithinOneUlp($type$[] r, $type$[] a, $type$[] b,
+                                                        FBinOp mathf, FBinOp strictmathf) {
+        int i = 0;
+        try {
+            // Check that result is within 1 ulp of strict math or equivalent to math implementation.
+            for (; i < a.length; i++) {
+                Assert.assertTrue($Type$.compare(r[i],
+                                  mathf.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()])) == 0 ||
+                                  isWithin1Ulp(r[i],
+                                  strictmathf.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()])));
+            }
+        } catch (AssertionError e) {
+            Assert.assertTrue($Type$.compare(r[i],
+                              mathf.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()])) == 0,
+                              "at index #" + i + ", input1 = " + a[i] + ", input2 = " +
+                              b[(i / SPECIES.length()) * SPECIES.length()] + ", actual = " + r[i] +
+                              ", expected = " + mathf.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()]));
+            Assert.assertTrue(isWithin1Ulp(r[i],
+                              strictmathf.apply(a[i], b[(i / SPECIES.length()) * SPECIES.length()])),
+                             "at index #" + i + ", input1 = " + a[i] + ", input2 = " +
+                             b[(i / SPECIES.length()) * SPECIES.length()] + ", actual = " + r[i] +
+                             ", expected (within 1 ulp) = " + strictmathf.apply(a[i],
+                             b[(i / SPECIES.length()) * SPECIES.length()]));
+        }
+    }
+#end[FP]
+
+    interface FBinArrayOp {
+        $type$ apply($type$[] a, int b);
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, FBinArrayOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i++) {
+                Assert.assertEquals(r[i], f.apply(a, i));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], f.apply(a,i), "at index #" + i);
+        }
+    }
+
+    interface FGatherScatterOp {
+        $type$[] apply($type$[] a, int ix, int[] b, int iy);
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, int[] b, FGatherScatterOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(Arrays.copyOfRange(r, i, i+SPECIES.length()),
+                  f.apply(a, i, b, i));
+            }
+        } catch (AssertionError e) {
+            $type$[] ref = f.apply(a, i, b, i);
+            $type$[] res = Arrays.copyOfRange(r, i, i+SPECIES.length());
+            Assert.assertEquals(res, ref,
+              "(ref: " + Arrays.toString(ref) + ", res: " + Arrays.toString(res) + ", a: "
+              + Arrays.toString(Arrays.copyOfRange(a, i, i+SPECIES.length()))
+              + ", b: "
+              + Arrays.toString(Arrays.copyOfRange(b, i, i+SPECIES.length()))
+              + " at index #" + i);
+        }
+    }
+
+    interface FGatherMaskedOp {
+        $type$[] apply($type$[] a, int ix, boolean[] mask, int[] b, int iy);
+    }
+
+    interface FScatterMaskedOp {
+        $type$[] apply($type$[] r, $type$[] a, int ix, boolean[] mask, int[] b, int iy);
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, int[] b, boolean[] mask, FGatherMaskedOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(Arrays.copyOfRange(r, i, i+SPECIES.length()),
+                  f.apply(a, i, mask, b, i));
+            }
+        } catch (AssertionError e) {
+            $type$[] ref = f.apply(a, i, mask, b, i);
+            $type$[] res = Arrays.copyOfRange(r, i, i+SPECIES.length());
+            Assert.assertEquals(res, ref,
+              "(ref: " + Arrays.toString(ref) + ", res: " + Arrays.toString(res) + ", a: "
+              + Arrays.toString(Arrays.copyOfRange(a, i, i+SPECIES.length()))
+              + ", b: "
+              + Arrays.toString(Arrays.copyOfRange(b, i, i+SPECIES.length()))
+              + ", mask: "
+              + Arrays.toString(mask)
+              + " at index #" + i);
+        }
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, int[] b, boolean[] mask, FScatterMaskedOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(Arrays.copyOfRange(r, i, i+SPECIES.length()),
+                  f.apply(r, a, i, mask, b, i));
+            }
+        } catch (AssertionError e) {
+            $type$[] ref = f.apply(r, a, i, mask, b, i);
+            $type$[] res = Arrays.copyOfRange(r, i, i+SPECIES.length());
+            Assert.assertEquals(res, ref,
+              "(ref: " + Arrays.toString(ref) + ", res: " + Arrays.toString(res) + ", a: "
+              + Arrays.toString(Arrays.copyOfRange(a, i, i+SPECIES.length()))
+              + ", b: "
+              + Arrays.toString(Arrays.copyOfRange(b, i, i+SPECIES.length()))
+              + ", r: "
+              + Arrays.toString(Arrays.copyOfRange(r, i, i+SPECIES.length()))
+              + ", mask: "
+              + Arrays.toString(mask)
+              + " at index #" + i);
+        }
+    }
+
+    interface FLaneOp {
+        $type$[] apply($type$[] a, int origin, int idx);
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, int origin, FLaneOp f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(Arrays.copyOfRange(r, i, i+SPECIES.length()),
+                  f.apply(a, origin, i));
+            }
+        } catch (AssertionError e) {
+            $type$[] ref = f.apply(a, origin, i);
+            $type$[] res = Arrays.copyOfRange(r, i, i+SPECIES.length());
+            Assert.assertEquals(res, ref, "(ref: " + Arrays.toString(ref)
+              + ", res: " + Arrays.toString(res)
+              + "), at index #" + i);
+        }
+    }
+
+    interface FLaneBop {
+        $type$[] apply($type$[] a, $type$[] b, int origin, int idx);
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, $type$[] b, int origin, FLaneBop f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(Arrays.copyOfRange(r, i, i+SPECIES.length()),
+                  f.apply(a, b, origin, i));
+            }
+        } catch (AssertionError e) {
+            $type$[] ref = f.apply(a, b, origin, i);
+            $type$[] res = Arrays.copyOfRange(r, i, i+SPECIES.length());
+            Assert.assertEquals(res, ref, "(ref: " + Arrays.toString(ref)
+              + ", res: " + Arrays.toString(res)
+              + "), at index #" + i
+              + ", at origin #" + origin);
+        }
+    }
+
+    interface FLaneMaskedBop {
+        $type$[] apply($type$[] a, $type$[] b, int origin, boolean[] mask, int idx);
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, $type$[] b, int origin, boolean[] mask, FLaneMaskedBop f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(Arrays.copyOfRange(r, i, i+SPECIES.length()),
+                  f.apply(a, b, origin, mask, i));
+            }
+        } catch (AssertionError e) {
+            $type$[] ref = f.apply(a, b, origin, mask, i);
+            $type$[] res = Arrays.copyOfRange(r, i, i+SPECIES.length());
+            Assert.assertEquals(res, ref, "(ref: " + Arrays.toString(ref)
+              + ", res: " + Arrays.toString(res)
+              + "), at index #" + i
+              + ", at origin #" + origin);
+        }
+    }
+
+    interface FLanePartBop {
+        $type$[] apply($type$[] a, $type$[] b, int origin, int part, int idx);
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, $type$[] b, int origin, int part, FLanePartBop f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(Arrays.copyOfRange(r, i, i+SPECIES.length()),
+                  f.apply(a, b, origin, part, i));
+            }
+        } catch (AssertionError e) {
+            $type$[] ref = f.apply(a, b, origin, part, i);
+            $type$[] res = Arrays.copyOfRange(r, i, i+SPECIES.length());
+            Assert.assertEquals(res, ref, "(ref: " + Arrays.toString(ref)
+              + ", res: " + Arrays.toString(res)
+              + "), at index #" + i
+              + ", at origin #" + origin
+              + ", with part #" + part);
+        }
+    }
+
+    interface FLanePartMaskedBop {
+        $type$[] apply($type$[] a, $type$[] b, int origin, int part, boolean[] mask, int idx);
+    }
+
+    static void assertArraysEquals($type$[] r, $type$[] a, $type$[] b, int origin, int part, boolean[] mask, FLanePartMaskedBop f) {
+        int i = 0;
+        try {
+            for (; i < a.length; i += SPECIES.length()) {
+                Assert.assertEquals(Arrays.copyOfRange(r, i, i+SPECIES.length()),
+                  f.apply(a, b, origin, part, mask, i));
+            }
+        } catch (AssertionError e) {
+            $type$[] ref = f.apply(a, b, origin, part, mask, i);
+            $type$[] res = Arrays.copyOfRange(r, i, i+SPECIES.length());
+            Assert.assertEquals(res, ref, "(ref: " + Arrays.toString(ref)
+              + ", res: " + Arrays.toString(res)
+              + "), at index #" + i
+              + ", at origin #" + origin
+              + ", with part #" + part);
+        }
+    }
+
+#if[!Int]
+#if[!byteOrShort]
+    static int intCornerCaseValue(int i) {
+        switch(i % 5) {
+            case 0:
+                return Integer.MAX_VALUE;
+            case 1:
+                return Integer.MIN_VALUE;
+            case 2:
+                return Integer.MIN_VALUE;
+            case 3:
+                return Integer.MAX_VALUE;
+            default:
+                return (int)0;
+        }
+    }
+
+    static final List<IntFunction<$type$[]>> INT_$TYPE$_GENERATORS = List.of(
+            withToString("$type$[-i * 5]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ($type$)(-i * 5));
+            }),
+            withToString("$type$[i * 5]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ($type$)(i * 5));
+            }),
+            withToString("$type$[i + 1]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ((($type$)(i + 1) == 0) ? 1 : ($type$)(i + 1)));
+            }),
+            withToString("$type$[intCornerCaseValue(i)]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ($type$)intCornerCaseValue(i));
+            })
+    );
+#end[!byteOrShort]
+#end[!Int]
+
+    static void assertArraysEquals(int[] r, $type$[] a, int offs) {
+        int i = 0;
+        try {
+            for (; i < r.length; i++) {
+                Assert.assertEquals(r[i], (int)(a[i+offs]));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], (int)(a[i+offs]), "at index #" + i + ", input = " + a[i+offs]);
+        }
+    }
+
+#if[!Long]
+#if[FP]
+    static long longCornerCaseValue(int i) {
+        switch(i % 5) {
+            case 0:
+                return Long.MAX_VALUE;
+            case 1:
+                return Long.MIN_VALUE;
+            case 2:
+                return Long.MIN_VALUE;
+            case 3:
+                return Long.MAX_VALUE;
+            default:
+                return (long)0;
+        }
+    }
+
+    static final List<IntFunction<$type$[]>> LONG_$TYPE$_GENERATORS = List.of(
+            withToString("$type$[-i * 5]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ($type$)(-i * 5));
+            }),
+            withToString("$type$[i * 5]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ($type$)(i * 5));
+            }),
+            withToString("$type$[i + 1]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ((($type$)(i + 1) == 0) ? 1 : ($type$)(i + 1)));
+            }),
+            withToString("$type$[cornerCaseValue(i)]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ($type$)longCornerCaseValue(i));
+            })
+    );
+#end[FP]
+#end[!Long]
+
+#if[byte]
+    static void assertArraysEquals($type$[] r, $type$[] a, int offs) {
+        int i = 0;
+        try {
+            for (; i < r.length; i++) {
+                Assert.assertEquals(r[i], (long)(a[i+offs]));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], (long)(a[i+offs]), "at index #" + i + ", input = " + a[i+offs]);
+        }
+    }
+#end[byte]
+
+    static void assertArraysEquals(long[] r, $type$[] a, int offs) {
+        int i = 0;
+        try {
+            for (; i < r.length; i++) {
+                Assert.assertEquals(r[i], (long)(a[i+offs]));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], (long)(a[i+offs]), "at index #" + i + ", input = " + a[i+offs]);
+        }
+    }
+
+#if[!Double]
+    static void assertArraysEquals(double[] r, $type$[] a, int offs) {
+        int i = 0;
+        try {
+            for (; i < r.length; i++) {
+                Assert.assertEquals(r[i], (double)(a[i+offs]));
+            }
+        } catch (AssertionError e) {
+            Assert.assertEquals(r[i], (double)(a[i+offs]), "at index #" + i + ", input = " + a[i+offs]);
+        }
+    }
+#end[!Double]
+
+
+    static $bitstype$ bits($type$ e) {
+        return {#if[FP]? $Type$.$type$To$Bitstype$Bits(e): e};
+    }
+
+    static final List<IntFunction<$type$[]>> $TYPE$_GENERATORS = List.of(
+            withToString("$type$[-i * 5]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ($type$)(-i * 5));
+            }),
+            withToString("$type$[i * 5]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ($type$)(i * 5));
+            }),
+            withToString("$type$[i + 1]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ((($type$)(i + 1) == 0) ? 1 : ($type$)(i + 1)));
+            }),
+            withToString("$type$[cornerCaseValue(i)]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> cornerCaseValue(i));
+            })
+    );
+
+    // Create combinations of pairs
+    // @@@ Might be sensitive to order e.g. div by 0
+    static final List<List<IntFunction<$type$[]>>> $TYPE$_GENERATOR_PAIRS =
+        Stream.of($TYPE$_GENERATORS.get(0)).
+                flatMap(fa -> $TYPE$_GENERATORS.stream().skip(1).map(fb -> List.of(fa, fb))).
+                collect(Collectors.toList());
+
+    @DataProvider
+    public Object[][] boolUnaryOpProvider() {
+        return BOOL_ARRAY_GENERATORS.stream().
+                map(f -> new Object[]{f}).
+                toArray(Object[][]::new);
+    }
+
+    static final List<List<IntFunction<$type$[]>>> $TYPE$_GENERATOR_TRIPLES =
+        $TYPE$_GENERATOR_PAIRS.stream().
+                flatMap(pair -> $TYPE$_GENERATORS.stream().map(f -> List.of(pair.get(0), pair.get(1), f))).
+                collect(Collectors.toList());
+
+    @DataProvider
+    public Object[][] $type$BinaryOpProvider() {
+        return $TYPE$_GENERATOR_PAIRS.stream().map(List::toArray).
+                toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] $type$IndexedOpProvider() {
+        return $TYPE$_GENERATOR_PAIRS.stream().map(List::toArray).
+                toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] $type$BinaryOpMaskProvider() {
+        return BOOLEAN_MASK_GENERATORS.stream().
+                flatMap(fm -> $TYPE$_GENERATOR_PAIRS.stream().map(lfa -> {
+                    return Stream.concat(lfa.stream(), Stream.of(fm)).toArray();
+                })).
+                toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] $type$TernaryOpProvider() {
+        return $TYPE$_GENERATOR_TRIPLES.stream().map(List::toArray).
+                toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] $type$TernaryOpMaskProvider() {
+        return BOOLEAN_MASK_GENERATORS.stream().
+                flatMap(fm -> $TYPE$_GENERATOR_TRIPLES.stream().map(lfa -> {
+                    return Stream.concat(lfa.stream(), Stream.of(fm)).toArray();
+                })).
+                toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] $type$UnaryOpProvider() {
+        return $TYPE$_GENERATORS.stream().
+                map(f -> new Object[]{f}).
+                toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] $type$UnaryOpMaskProvider() {
+        return BOOLEAN_MASK_GENERATORS.stream().
+                flatMap(fm -> $TYPE$_GENERATORS.stream().map(fa -> {
+                    return new Object[] {fa, fm};
+                })).
+                toArray(Object[][]::new);
+    }
+
+#if[!Int]
+#if[!byteOrShort]
+    @DataProvider
+    public Object[][] $type$toIntUnaryOpProvider() {
+        return INT_$TYPE$_GENERATORS.stream().
+                map(f -> new Object[]{f}).
+                toArray(Object[][]::new);
+    }
+#end[!byteOrShort]
+#end[!Int]
+
+#if[FP]
+    @DataProvider
+    public Object[][] $type$toLongUnaryOpProvider() {
+        return LONG_$TYPE$_GENERATORS.stream().
+                map(f -> new Object[]{f}).
+                toArray(Object[][]::new);
+    }
+#end[FP]
+
+    @DataProvider
+    public Object[][] maskProvider() {
+        return BOOLEAN_MASK_GENERATORS.stream().
+                map(f -> new Object[]{f}).
+                toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] maskCompareOpProvider() {
+        return BOOLEAN_MASK_COMPARE_GENERATOR_PAIRS.stream().map(List::toArray).
+                toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] shuffleProvider() {
+        return INT_SHUFFLE_GENERATORS.stream().
+                map(f -> new Object[]{f}).
+                toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] shuffleCompareOpProvider() {
+        return INT_SHUFFLE_COMPARE_GENERATOR_PAIRS.stream().map(List::toArray).
+                toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] $type$UnaryOpShuffleProvider() {
+        return INT_SHUFFLE_GENERATORS.stream().
+                flatMap(fs -> $TYPE$_GENERATORS.stream().map(fa -> {
+                    return new Object[] {fa, fs};
+                })).
+                toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] $type$UnaryOpShuffleMaskProvider() {
+        return BOOLEAN_MASK_GENERATORS.stream().
+                flatMap(fm -> INT_SHUFFLE_GENERATORS.stream().
+                    flatMap(fs -> $TYPE$_GENERATORS.stream().map(fa -> {
+                        return new Object[] {fa, fs, fm};
+                }))).
+                toArray(Object[][]::new);
+    }
+
+#if[!Int]
+    static final List<BiFunction<Integer,Integer,$type$[]>> $TYPE$_SHUFFLE_GENERATORS = List.of(
+            withToStringBi("shuffle[random]", (Integer l, Integer m) -> {
+                $type$[] a = new $type$[l];
+#if[ByteMax]
+                int upper = Math.min(Byte.MAX_VALUE + 1, m);
+#else[ByteMax]
+                int upper = m;
+#end[ByteMax]
+                for (int i = 0; i < 1; i++) {
+                    a[i] = ($type$)RAND.nextInt(upper);
+                }
+                return a;
+            })
+    );
+
+    @DataProvider
+    public Object[][] $type$UnaryOpSelectFromProvider() {
+        return $TYPE$_SHUFFLE_GENERATORS.stream().
+                flatMap(fs -> $TYPE$_GENERATORS.stream().map(fa -> {
+                    return new Object[] {fa, fs};
+                })).
+                toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] $type$UnaryOpSelectFromMaskProvider() {
+        return BOOLEAN_MASK_GENERATORS.stream().
+                flatMap(fm -> $TYPE$_SHUFFLE_GENERATORS.stream().
+                    flatMap(fs -> $TYPE$_GENERATORS.stream().map(fa -> {
+                        return new Object[] {fa, fs, fm};
+                }))).
+                toArray(Object[][]::new);
+    }
+
+#end[!Int]
+
+    static final List<IntFunction<$type$[]>> $TYPE$_COMPARE_GENERATORS = List.of(
+            withToString("$type$[i]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ($type$)i);
+            }),
+            withToString("$type$[i - length / 2]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ($type$)(i - (s * BUFFER_REPS / 2)));
+            }),
+            withToString("$type$[i + 1]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ($type$)(i + 1));
+            }),
+            withToString("$type$[i - 2]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> ($type$)(i - 2));
+            }),
+            withToString("$type$[zigZag(i)]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> i%3 == 0 ? ($type$)i : (i%3 == 1 ? ($type$)(i + 1) : ($type$)(i - 2)));
+            }),
+            withToString("$type$[cornerCaseValue(i)]", (int s) -> {
+                return fill(s * BUFFER_REPS,
+                            i -> cornerCaseValue(i));
+            })
+    );
+
+    static final List<List<IntFunction<$type$[]>>> $TYPE$_TEST_GENERATOR_ARGS =
+        $TYPE$_COMPARE_GENERATORS.stream().
+                map(fa -> List.of(fa)).
+                collect(Collectors.toList());
+
+    @DataProvider
+    public Object[][] $type$TestOpProvider() {
+        return $TYPE$_TEST_GENERATOR_ARGS.stream().map(List::toArray).
+                toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] $type$TestOpMaskProvider() {
+        return BOOLEAN_MASK_GENERATORS.stream().
+                flatMap(fm -> $TYPE$_TEST_GENERATOR_ARGS.stream().map(lfa -> {
+                    return Stream.concat(lfa.stream(), Stream.of(fm)).toArray();
+                })).
+                toArray(Object[][]::new);
+    }
+
+    static final List<List<IntFunction<$type$[]>>> $TYPE$_COMPARE_GENERATOR_PAIRS =
+        $TYPE$_COMPARE_GENERATORS.stream().
+                flatMap(fa -> $TYPE$_COMPARE_GENERATORS.stream().map(fb -> List.of(fa, fb))).
+                collect(Collectors.toList());
+
+    @DataProvider
+    public Object[][] $type$CompareOpProvider() {
+        return $TYPE$_COMPARE_GENERATOR_PAIRS.stream().map(List::toArray).
+                toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] $type$CompareOpMaskProvider() {
+        return BOOLEAN_MASK_GENERATORS.stream().
+                flatMap(fm -> $TYPE$_COMPARE_GENERATOR_PAIRS.stream().map(lfa -> {
+                    return Stream.concat(lfa.stream(), Stream.of(fm)).toArray();
+                })).
+                toArray(Object[][]::new);
+    }
+
+    interface To$Type$F {
+        $type$ apply(int i);
+    }
+
+    static $type$[] fill(int s , To$Type$F f) {
+        return fill(new $type$[s], f);
+    }
+
+    static $type$[] fill($type$[] a, To$Type$F f) {
+        for (int i = 0; i < a.length; i++) {
+            a[i] = f.apply(i);
+        }
+        return a;
+    }
+
+    static $type$ cornerCaseValue(int i) {
+#if[FP]
+        switch(i % 7) {
+            case 0:
+                return $Wideboxtype$.MAX_VALUE;
+            case 1:
+                return $Wideboxtype$.MIN_VALUE;
+            case 2:
+                return $Wideboxtype$.NEGATIVE_INFINITY;
+            case 3:
+                return $Wideboxtype$.POSITIVE_INFINITY;
+            case 4:
+                return $Wideboxtype$.NaN;
+            case 5:
+                return ($type$)0.0;
+            default:
+                return ($type$)-0.0;
+        }
+#else[FP]
+        switch(i % 5) {
+            case 0:
+                return $Wideboxtype$.MAX_VALUE;
+            case 1:
+                return $Wideboxtype$.MIN_VALUE;
+            case 2:
+                return $Wideboxtype$.MIN_VALUE;
+            case 3:
+                return $Wideboxtype$.MAX_VALUE;
+            default:
+                return ($type$)0;
+        }
+#end[FP]
+    }
+
+    static $type$ get($type$[] a, int i) {
+        return ($type$) a[i];
+    }
+
+    static final IntFunction<$type$[]> fr = (vl) -> {
+        int length = BUFFER_REPS * vl;
+        return new $type$[length];
+    };
+
+    static final IntFunction<boolean[]> fmr = (vl) -> {
+        int length = BUFFER_REPS * vl;
+        return new boolean[length];
+    };
+
+#if[!Long]
+    static final IntFunction<long[]> lfr = (vl) -> {
+        int length = BUFFER_REPS * vl;
+        return new long[length];
+    };
+#end[!Long]
+
+#if[BITWISE]
+    static void replaceZero($type$[] a, $type$ v) {
+        for (int i = 0; i < a.length; i++) {
+            if (a[i] == 0) {
+                a[i] = v;
+            }
+        }
+    }
+
+    static void replaceZero($type$[] a, boolean[] mask, $type$ v) {
+        for (int i = 0; i < a.length; i++) {
+            if (mask[i % mask.length] && a[i] == 0) {
+                a[i] = v;
+            }
+        }
+    }
+#end[BITWISE]
+
+    static boolean eq($type$ a, $type$ b) {
+        return a == b;
+    }
+
+    static boolean neq($type$ a, $type$ b) {
+        return a != b;
+    }
+
+    static boolean lt($type$ a, $type$ b) {
+        return a < b;
+    }
+
+    static boolean le($type$ a, $type$ b) {
+        return a <= b;
+    }
+
+    static boolean gt($type$ a, $type$ b) {
+        return a > b;
+    }
+
+    static boolean ge($type$ a, $type$ b) {
+        return a >= b;
+    }
+
+#if[!FP]
+    static boolean ult($type$ a, $type$ b) {
+        return $Boxtype$.compareUnsigned(a, b) < 0;
+    }
+
+    static boolean ule($type$ a, $type$ b) {
+        return $Boxtype$.compareUnsigned(a, b) <= 0;
+    }
+
+    static boolean ugt($type$ a, $type$ b) {
+        return $Boxtype$.compareUnsigned(a, b) > 0;
+    }
+
+    static boolean uge($type$ a, $type$ b) {
+        return $Boxtype$.compareUnsigned(a, b) >= 0;
+    }
+#end[!FP]
+
+    @Test
+    static void smokeTest1() {
+        $abstractvectortype$ three = $abstractvectortype$.broadcast(SPECIES, (byte)-3);
+        $abstractvectortype$ three2 = ($abstractvectortype$) SPECIES.broadcast(-3);
+        assert(three.eq(three2).allTrue());
+        $abstractvectortype$ three3 = three2.broadcast(1).broadcast(-3);
+        assert(three.eq(three3).allTrue());
+        int scale = 2;
+        Class<?> ETYPE = $type$.class;
+        if (ETYPE == double.class || ETYPE == long.class)
+            scale = 1000000;
+        else if (ETYPE == byte.class && SPECIES.length() >= 64)
+            scale = 1;
+        $abstractvectortype$ higher = three.addIndex(scale);
+        VectorMask<$Boxtype$> m = three.compare(VectorOperators.LE, higher);
+        assert(m.allTrue());
+        m = higher.min(($type$)-1).test(VectorOperators.IS_NEGATIVE);
+        assert(m.allTrue());
+#if[FP]
+        m = higher.test(VectorOperators.IS_FINITE);
+        assert(m.allTrue());
+#end[FP]
+        $type$ max = higher.reduceLanes(VectorOperators.MAX);
+        assert(max == -3 + scale * (SPECIES.length()-1));
+    }
+
+    private static $type$[]
+    bothToArray($abstractvectortype$ a, $abstractvectortype$ b) {
+        $type$[] r = new $type$[a.length() + b.length()];
+        a.intoArray(r, 0);
+        b.intoArray(r, a.length());
+        return r;
+    }
+
+    @Test
+    static void smokeTest2() {
+        // Do some zipping and shuffling.
+        $abstractvectortype$ io = ($abstractvectortype$) SPECIES.broadcast(0).addIndex(1);
+        $abstractvectortype$ io2 = ($abstractvectortype$) VectorShuffle.iota(SPECIES,0,1,false).toVector();
+        Assert.assertEquals(io, io2);
+        $abstractvectortype$ a = io.add(($type$)1); //[1,2]
+        $abstractvectortype$ b = a.neg();  //[-1,-2]
+        $type$[] abValues = bothToArray(a,b); //[1,2,-1,-2]
+        VectorShuffle<$Boxtype$> zip0 = VectorShuffle.makeZip(SPECIES, 0);
+        VectorShuffle<$Boxtype$> zip1 = VectorShuffle.makeZip(SPECIES, 1);
+        $abstractvectortype$ zab0 = a.rearrange(zip0,b); //[1,-1]
+        $abstractvectortype$ zab1 = a.rearrange(zip1,b); //[2,-2]
+        $type$[] zabValues = bothToArray(zab0, zab1); //[1,-1,2,-2]
+        // manually zip
+        $type$[] manual = new $type$[zabValues.length];
+        for (int i = 0; i < manual.length; i += 2) {
+            manual[i+0] = abValues[i/2];
+            manual[i+1] = abValues[a.length() + i/2];
+        }
+        Assert.assertEquals(Arrays.toString(zabValues), Arrays.toString(manual));
+        VectorShuffle<$Boxtype$> unz0 = VectorShuffle.makeUnzip(SPECIES, 0);
+        VectorShuffle<$Boxtype$> unz1 = VectorShuffle.makeUnzip(SPECIES, 1);
+        $abstractvectortype$ uab0 = zab0.rearrange(unz0,zab1);
+        $abstractvectortype$ uab1 = zab0.rearrange(unz1,zab1);
+        $type$[] abValues1 = bothToArray(uab0, uab1);
+        Assert.assertEquals(Arrays.toString(abValues), Arrays.toString(abValues1));
+    }
+
+    static void iotaShuffle() {
+        $abstractvectortype$ io = ($abstractvectortype$) SPECIES.broadcast(0).addIndex(1);
+        $abstractvectortype$ io2 = ($abstractvectortype$) VectorShuffle.iota(SPECIES, 0 , 1, false).toVector();
+        Assert.assertEquals(io, io2);
+    }
+
+    @Test
+    // Test all shuffle related operations.
+    static void shuffleTest() {
+        // To test backend instructions, make sure that C2 is used.
+        for (int loop = 0; loop < INVOC_COUNT * INVOC_COUNT; loop++) {
+            iotaShuffle();
+        }
+    }
+
+    @Test
+    void viewAsIntegeralLanesTest() {
+#if[FP]
+        Vector<?> asIntegral = SPECIES.zero().viewAsIntegralLanes();
+        VectorSpecies<?> asIntegralSpecies = asIntegral.species();
+        Assert.assertNotEquals(asIntegralSpecies.elementType(), SPECIES.elementType());
+        Assert.assertEquals(asIntegralSpecies.vectorShape(), SPECIES.vectorShape());
+        Assert.assertEquals(asIntegralSpecies.length(), SPECIES.length());
+        Assert.assertEquals(asIntegral.viewAsFloatingLanes().species(), SPECIES);
+#else[FP]
+        Vector<?> asIntegral = SPECIES.zero().viewAsIntegralLanes();
+        Assert.assertEquals(asIntegral.species(), SPECIES);
+#end[FP]
+    }
+
+#if[FP]
+    @Test
+    void viewAsFloatingLanesTest() {
+        Vector<?> asFloating = SPECIES.zero().viewAsFloatingLanes();
+        Assert.assertEquals(asFloating.species(), SPECIES);
+    }
+#else[FP]
+#if[byteOrShort]
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    void viewAsFloatingLanesTest() {
+        SPECIES.zero().viewAsFloatingLanes();
+    }
+#else[byteOrShort]
+    @Test
+    void viewAsFloatingLanesTest() {
+        Vector<?> asFloating = SPECIES.zero().viewAsFloatingLanes();
+        VectorSpecies<?> asFloatingSpecies = asFloating.species();
+        Assert.assertNotEquals(asFloatingSpecies.elementType(), SPECIES.elementType());
+        Assert.assertEquals(asFloatingSpecies.vectorShape(), SPECIES.vectorShape());
+        Assert.assertEquals(asFloatingSpecies.length(), SPECIES.length());
+        Assert.assertEquals(asFloating.viewAsIntegralLanes().species(), SPECIES);
+    }
+#end[byteOrShort]
+#end[FP]
+
+#if[BITWISE]
+    @Test
+    // Test div by 0.
+    static void bitwiseDivByZeroSmokeTest() {
+        try {
+            $abstractvectortype$ a = ($abstractvectortype$) SPECIES.broadcast(0).addIndex(1);
+            $abstractvectortype$ b = ($abstractvectortype$) SPECIES.broadcast(0);
+            a.div(b);
+            Assert.fail();
+        } catch (ArithmeticException e) {
+        }
+
+        try {
+            $abstractvectortype$ a = ($abstractvectortype$) SPECIES.broadcast(0).addIndex(1);
+            $abstractvectortype$ b = ($abstractvectortype$) SPECIES.broadcast(0);
+            VectorMask<$Boxtype$> m = a.lt(($type$) 1);
+            a.div(b, m);
+            Assert.fail();
+        } catch (ArithmeticException e) {
+        }
+    }
+#end[BITWISE]

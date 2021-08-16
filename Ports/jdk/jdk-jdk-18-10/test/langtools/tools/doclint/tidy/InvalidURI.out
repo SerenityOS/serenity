@@ -1,0 +1,13 @@
+InvalidURI.java:17: error: invalid uri: "abc def"
+ * <a href="abc def">invalid</a>
+      ^
+InvalidURI.java:18: error: attribute lacks value
+ * <a href>no value</a>
+      ^
+InvalidURI.java:19: error: attribute lacks value
+ * <a href= >no value</a>
+      ^
+InvalidURI.java:20: error: attribute lacks value
+ * <a href="" >no value</a>
+      ^
+4 errors

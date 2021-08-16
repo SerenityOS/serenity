@@ -1,0 +1,688 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="yav"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ak">akánɛ</language>
+			<language type="am">amalíke</language>
+			<language type="ar">́pakas</language>
+			<language type="be">pielúse</language>
+			<language type="bg">bulgálɛ</language>
+			<language type="bn">pengálɛ́ɛ</language>
+			<language type="cs">cɛ́kɛ́ɛ</language>
+			<language type="de">ŋndiáman</language>
+			<language type="el">yavánɛ</language>
+			<language type="en">íŋgilísé</language>
+			<language type="es">nuɛspanyɔ́lɛ</language>
+			<language type="fa">nupɛ́lisɛ</language>
+			<language type="fr">feleŋsí</language>
+			<language type="ha">pakas</language>
+			<language type="hi">índí</language>
+			<language type="hu">ɔ́ŋgɛ</language>
+			<language type="id">índonísiɛ</language>
+			<language type="ig">íbo</language>
+			<language type="it">itáliɛ</language>
+			<language type="ja">ndiáman</language>
+			<language type="jv">yávanɛ</language>
+			<language type="km">kímɛɛ</language>
+			<language type="ko">kolíe</language>
+			<language type="ms">máliɛ</language>
+			<language type="my">bímanɛ</language>
+			<language type="ne">nunipálɛ</language>
+			<language type="nl">nilándɛ</language>
+			<language type="pa">nupunsapíɛ́</language>
+			<language type="pl">nupolonɛ́ɛ</language>
+			<language type="pt">nupɔlitukɛ́ɛ</language>
+			<language type="ro">nulumɛ́ŋɛ</language>
+			<language type="ru">nulúse</language>
+			<language type="rw">nuluándɛ́ɛ</language>
+			<language type="so">nusomalíɛ</language>
+			<language type="sv">nusuetua</language>
+			<language type="ta">nutámule</language>
+			<language type="th">nutáyɛ</language>
+			<language type="tr">nutúluke</language>
+			<language type="uk">nukeleniɛ́ŋɛ</language>
+			<language type="ur">nulutú</language>
+			<language type="vi">nufiɛtnamíɛŋ</language>
+			<language type="yav">nuasue</language>
+			<language type="yo">nuyolúpa</language>
+			<language type="zh">sinúɛ</language>
+			<language type="zu">nusulú</language>
+		</languages>
+		<territories>
+			<territory type="AD">Aŋtúla</territory>
+			<territory type="AE">imiláat i paaláap</territory>
+			<territory type="AF">Afkanistáŋ</territory>
+			<territory type="AG">Aŋtíka na Palpúta</territory>
+			<territory type="AI">Aŋkíla</territory>
+			<territory type="AL">Alpaní</territory>
+			<territory type="AM">Almanía</territory>
+			<territory type="AO">Aŋkúla</territory>
+			<territory type="AR">Alsaŋtín</territory>
+			<territory type="AS">Sámua u Amelíka</territory>
+			<territory type="AT">Otilís</territory>
+			<territory type="AU">Otalalí</territory>
+			<territory type="AW">Alúpa</territory>
+			<territory type="AZ">Asɛlpaisáŋ</territory>
+			<territory type="BA">Pusiní-ɛlkofína</territory>
+			<territory type="BB">Palpatós</territory>
+			<territory type="BD">Paŋkalatɛs</territory>
+			<territory type="BE">Pɛlsíik</territory>
+			<territory type="BF">Pulikínafásó</territory>
+			<territory type="BG">Pulukalíi</territory>
+			<territory type="BH">Palɛŋ</territory>
+			<territory type="BI">Púlúndí</territory>
+			<territory type="BJ">Penɛŋ</territory>
+			<territory type="BM">Pɛlmúta</territory>
+			<territory type="BN">Pulunéy</territory>
+			<territory type="BO">Polífia</territory>
+			<territory type="BR">Pilesíl</territory>
+			<territory type="BS">Pahámas</territory>
+			<territory type="BT">Putaŋ</territory>
+			<territory type="BW">Posuána</territory>
+			<territory type="BY">Pelalús</territory>
+			<territory type="BZ">Pelíse</territory>
+			<territory type="CA">Kánáta</territory>
+			<territory type="CD">kitɔŋ kí kongó</territory>
+			<territory type="CF">Santalafilíik</territory>
+			<territory type="CG">Kongó</territory>
+			<territory type="CH">suwíis</territory>
+			<territory type="CI">Kótifualɛ</territory>
+			<territory type="CK">Kúuke</territory>
+			<territory type="CL">Silí</territory>
+			<territory type="CM">Kemelún</territory>
+			<territory type="CN">Síine</territory>
+			<territory type="CO">Kɔlɔ́mbía</territory>
+			<territory type="CR">Kóstálíka</territory>
+			<territory type="CU">kúpa</territory>
+			<territory type="CV">Kápfɛl</territory>
+			<territory type="CY">síplɛ</territory>
+			<territory type="CZ">kitɔŋ kí cɛ́k</territory>
+			<territory type="DE">nsáman</territory>
+			<territory type="DJ">síputí</territory>
+			<territory type="DK">tanemálk</territory>
+			<territory type="DM">túmúnéke</territory>
+			<territory type="DO">kitɔŋ kí tumunikɛ́ŋ</territory>
+			<territory type="DZ">Alselí</territory>
+			<territory type="EC">ekuatɛ́l</territory>
+			<territory type="EE">ɛstoni</territory>
+			<territory type="EG">isípit</territory>
+			<territory type="ER">elitée</territory>
+			<territory type="ES">panyá</territory>
+			<territory type="ET">etiopí</territory>
+			<territory type="FI">fɛnlánd</territory>
+			<territory type="FJ">físi</territory>
+			<territory type="FK">maluwín</territory>
+			<territory type="FM">mikolonesí</territory>
+			<territory type="FR">felensí</territory>
+			<territory type="GA">kapɔ́ŋ</territory>
+			<territory type="GB">ingilíís</territory>
+			<territory type="GD">kelenáat</territory>
+			<territory type="GE">sɔlsíi</territory>
+			<territory type="GF">kuyáan u felensí</territory>
+			<territory type="GH">kaná</territory>
+			<territory type="GI">sílpalatáal</territory>
+			<territory type="GL">kuluɛnlánd</territory>
+			<territory type="GM">kambíi</territory>
+			<territory type="GN">kiiné</territory>
+			<territory type="GP">kuatelúup</territory>
+			<territory type="GQ">kinéekuatolial</territory>
+			<territory type="GR">kilɛ́ɛk</territory>
+			<territory type="GT">kuatemalá</territory>
+			<territory type="GU">kuamiɛ</territory>
+			<territory type="GW">kiinépisaó</territory>
+			<territory type="GY">kuyáan</territory>
+			<territory type="HN">ɔndúlas</territory>
+			<territory type="HR">Kolowasíi</territory>
+			<territory type="HT">ayíti</territory>
+			<territory type="HU">ɔngilí</territory>
+			<territory type="ID">ɛndonesí</territory>
+			<territory type="IE">ililánd</territory>
+			<territory type="IL">ísilayɛ́l</territory>
+			<territory type="IN">ɛ́ɛnd</territory>
+			<territory type="IO">Kɔɔ́m kí ndián yi ngilís</territory>
+			<territory type="IQ">ilák</territory>
+			<territory type="IR">iláŋ</territory>
+			<territory type="IS">isláand</territory>
+			<territory type="IT">italí</territory>
+			<territory type="JM">samayíik</territory>
+			<territory type="JO">sɔltaní</territory>
+			<territory type="JP">sapɔ́ɔŋ</territory>
+			<territory type="KE">kénia</territory>
+			<territory type="KG">kilikisistáŋ</territory>
+			<territory type="KH">Kámbóse</territory>
+			<territory type="KI">kilipatí</territory>
+			<territory type="KM">Kɔmɔ́ɔl</territory>
+			<territory type="KN">sɛ́ŋkilistɔ́f eniɛ́f</territory>
+			<territory type="KP">kɔlé u muɛnɛ́</territory>
+			<territory type="KR">kɔlé wu mbát</territory>
+			<territory type="KW">kowéet</territory>
+			<territory type="KY">Káyímanɛ</territory>
+			<territory type="KZ">kasaksitáŋ</territory>
+			<territory type="LA">lawós</territory>
+			<territory type="LB">lipáŋ</territory>
+			<territory type="LC">sɛ́ŋtɛ́lusí</territory>
+			<territory type="LI">lístɛ́nsitáyin</territory>
+			<territory type="LK">silíláŋka</territory>
+			<territory type="LR">lipélia</territory>
+			<territory type="LS">lesotó</territory>
+			<territory type="LT">litiyaní</territory>
+			<territory type="LU">liksambúul</territory>
+			<territory type="LV">letoní</territory>
+			<territory type="LY">lipíi</territory>
+			<territory type="MA">malóok</territory>
+			<territory type="MC">monakó</territory>
+			<territory type="MD">moltafí</territory>
+			<territory type="MG">matakaskáal</territory>
+			<territory type="MH">ílmalasáal</territory>
+			<territory type="ML">malí</territory>
+			<territory type="MM">miaŋmáal</territory>
+			<territory type="MN">mongolí</territory>
+			<territory type="MP">il maliyanɛ u muɛnɛ́</territory>
+			<territory type="MQ">maltiníik</territory>
+			<territory type="MR">molitaní</territory>
+			<territory type="MS">mɔŋsilá</territory>
+			<territory type="MT">málɛ́t</territory>
+			<territory type="MU">molís</territory>
+			<territory type="MV">maletíif</territory>
+			<territory type="MW">malawí</territory>
+			<territory type="MX">mɛksíik</territory>
+			<territory type="MY">malesí</territory>
+			<territory type="MZ">mosambík</territory>
+			<territory type="NA">namipí</territory>
+			<territory type="NC">nufɛ́l kaletoní</territory>
+			<territory type="NE">nisɛ́ɛl</territory>
+			<territory type="NF">il nɔ́lfɔ́lɔk</territory>
+			<territory type="NG">nisélia</territory>
+			<territory type="NI">nikalaká</territory>
+			<territory type="NL">nitililáand</territory>
+			<territory type="NO">nɔlfɛ́ɛs</territory>
+			<territory type="NP">nepáal</territory>
+			<territory type="NR">nawulú</territory>
+			<territory type="NU">niyuwé</territory>
+			<territory type="NZ">nufɛ́l seláand</territory>
+			<territory type="OM">omáŋ</territory>
+			<territory type="PA">panamá</territory>
+			<territory type="PE">pelú</territory>
+			<territory type="PF">polinesí u felensí</territory>
+			<territory type="PG">papuasí nufɛ́l kiiné</territory>
+			<territory type="PH">filipíin</territory>
+			<territory type="PK">pakistáŋ</territory>
+			<territory type="PL">pɔlɔ́ɔny</territory>
+			<territory type="PM">sɛ́ŋpiɛ́l e mikelɔ́ŋ</territory>
+			<territory type="PN">pitikɛ́ɛlínɛ́</territory>
+			<territory type="PR">pólótolíko</territory>
+			<territory type="PS">kitɔŋ ki palɛstíin</territory>
+			<territory type="PT">pɔltukáal</territory>
+			<territory type="PW">palawú</territory>
+			<territory type="PY">palakúé</territory>
+			<territory type="QA">katáal</territory>
+			<territory type="RE">elewuniɔ́ŋ</territory>
+			<territory type="RO">ulumaní</territory>
+			<territory type="RU">ulusí</territory>
+			<territory type="RW">uluándá</territory>
+			<territory type="SA">alapísawutíit</territory>
+			<territory type="SB">il salomɔ́ŋ</territory>
+			<territory type="SC">sesɛ́ɛl</territory>
+			<territory type="SD">sutáaŋ</territory>
+			<territory type="SE">suɛ́t</territory>
+			<territory type="SG">singapúul</territory>
+			<territory type="SH">sɛ́ŋtɛ́ elɛ́ɛnɛ</territory>
+			<territory type="SI">silofení</territory>
+			<territory type="SK">silofakí</territory>
+			<territory type="SL">sieláleyɔ́ɔn</territory>
+			<territory type="SM">san malíno</territory>
+			<territory type="SN">senekáal</territory>
+			<territory type="SO">somalí</territory>
+			<territory type="SR">sulináam</territory>
+			<territory type="ST">sáwó tomé e pelensípe</territory>
+			<territory type="SV">salfatɔ́ɔl</territory>
+			<territory type="SZ">suasiláand</territory>
+			<territory type="TC">túluk na káyiik</territory>
+			<territory type="TD">Sáat</territory>
+			<territory type="TG">tokó</territory>
+			<territory type="TH">tayiláand</territory>
+			<territory type="TJ">tasikistáaŋ</territory>
+			<territory type="TK">tokeló</territory>
+			<territory type="TL">timɔ́ɔl u nipálɛ́n</territory>
+			<territory type="TM">tulukmenisitáaŋ</territory>
+			<territory type="TN">tunusí</territory>
+			<territory type="TO">tɔ́ŋka</territory>
+			<territory type="TR">tulukíi</territory>
+			<territory type="TT">tilinitáat na tupákɔ</territory>
+			<territory type="TV">tufalú</territory>
+			<territory type="TW">tayiwáan</territory>
+			<territory type="TZ">taŋsaní</territory>
+			<territory type="UA">ukilɛ́ɛn</territory>
+			<territory type="UG">ukánda</territory>
+			<territory type="US">amálíka</territory>
+			<territory type="UY">ulukuéy</territory>
+			<territory type="UZ">usupekistáaŋ</territory>
+			<territory type="VA">fatikáaŋ</territory>
+			<territory type="VC">sɛ́ŋ fɛŋsáŋ elekelenatíin</territory>
+			<territory type="VE">fenesuwelá</territory>
+			<territory type="VG">Filisíin ungilís</territory>
+			<territory type="VI">pindisúlɛ́ pi amálíka</territory>
+			<territory type="VN">fiɛtnáam</territory>
+			<territory type="VU">fanuatú</territory>
+			<territory type="WF">walíis na futúna</territory>
+			<territory type="WS">samowá</territory>
+			<territory type="YE">yémɛn</territory>
+			<territory type="YT">mayɔ́ɔt</territory>
+			<territory type="ZA">afilí mbátɛ́</territory>
+			<territory type="ZM">saambíi</territory>
+			<territory type="ZW">simbapuwé</territory>
+		</territories>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a á à â ǎ ā b c d e é è ɛ {ɛ\u0301} {ɛ\u0300} f h i í ì î ī k l m {mb} n {ny} ŋ {ŋg} o ó ò ô ǒ ō ɔ {ɔ\u0301} {ɔ\u0300} p s t u ú ù û ǔ ū v w y]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[g j q r x z]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B C D E Ɛ F H I K L M N Ŋ O Ɔ P S T U V W Y]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[  \- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart>«</quotationStart>
+		<quotationEnd>»</quotationEnd>
+		<alternateQuotationStart>«</alternateQuotationStart>
+		<alternateQuotationEnd>»</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d/M/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="Ed">E d</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">E d/M</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E d MMM</dateFormatItem>
+						<dateFormatItem id="ms">m:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMd">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E d/M/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E d MMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">o.1</month>
+							<month type="2">o.2</month>
+							<month type="3">o.3</month>
+							<month type="4">o.4</month>
+							<month type="5">o.5</month>
+							<month type="6">o.6</month>
+							<month type="7">o.7</month>
+							<month type="8">o.8</month>
+							<month type="9">o.9</month>
+							<month type="10">o.10</month>
+							<month type="11">o.11</month>
+							<month type="12">o.12</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">pikítíkítie, oólí ú kutúan</month>
+							<month type="2">siɛyɛ́, oóli ú kándíɛ</month>
+							<month type="3">ɔnsúmbɔl, oóli ú kátátúɛ</month>
+							<month type="4">mesiŋ, oóli ú kénie</month>
+							<month type="5">ensil, oóli ú kátánuɛ</month>
+							<month type="6">ɔsɔn</month>
+							<month type="7">efute</month>
+							<month type="8">pisuyú</month>
+							<month type="9">imɛŋ i puɔs</month>
+							<month type="10">imɛŋ i putúk,oóli ú kátíɛ</month>
+							<month type="11">makandikɛ</month>
+							<month type="12">pilɔndɔ́</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">sd</day>
+							<day type="mon">md</day>
+							<day type="tue">mw</day>
+							<day type="wed">et</day>
+							<day type="thu">kl</day>
+							<day type="fri">fl</day>
+							<day type="sat">ss</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">sɔ́ndiɛ</day>
+							<day type="mon">móndie</day>
+							<day type="tue">muányáŋmóndie</day>
+							<day type="wed">metúkpíápɛ</day>
+							<day type="thu">kúpélimetúkpiapɛ</day>
+							<day type="fri">feléte</day>
+							<day type="sat">séselé</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="narrow">
+							<day type="sun">s</day>
+							<day type="mon">m</day>
+							<day type="tue">m</day>
+							<day type="wed">e</day>
+							<day type="thu">k</day>
+							<day type="fri">f</day>
+							<day type="sat">s</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">Q1</quarter>
+							<quarter type="2">Q2</quarter>
+							<quarter type="3">Q3</quarter>
+							<quarter type="4">Q4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">ndátúɛ 1</quarter>
+							<quarter type="2">ndátúɛ 2</quarter>
+							<quarter type="3">ndátúɛ 3</quarter>
+							<quarter type="4">ndátúɛ 4</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">kiɛmɛ́ɛm</dayPeriod>
+							<dayPeriod type="pm">kisɛ́ndɛ</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">kiɛmɛ́ɛm</dayPeriod>
+							<dayPeriod type="pm">kisɛ́ndɛ</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">katikupíen Yésuse</era>
+						<era type="1">ékélémkúnupíén n</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">k.Y.</era>
+						<era type="1">+J.C.</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d/M/y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="Ed">E d</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">E d/M</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E d MMM</dateFormatItem>
+						<dateFormatItem id="ms">m:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMd">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E d/M/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E d MMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>kipéŋén</displayName>
+			</field>
+			<field type="year">
+				<displayName>yɔɔŋ</displayName>
+			</field>
+			<field type="month">
+				<displayName>oóli</displayName>
+			</field>
+			<field type="week">
+				<displayName>sɔ́ndiɛ</displayName>
+			</field>
+			<field type="day">
+				<displayName>puɔ́sɛ́</displayName>
+				<relative type="-1">púyoó</relative>
+				<relative type="0">ínaan</relative>
+				<relative type="1">nakinyám</relative>
+			</field>
+			<field type="weekday">
+				<displayName>metúk mɔ́sɔ́ndiɛ</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>kiɛmɛ́ɛm,kisɛ́ndɛ</displayName>
+			</field>
+			<field type="hour">
+				<displayName>kisikɛl,</displayName>
+			</field>
+			<field type="minute">
+				<displayName>minít</displayName>
+			</field>
+			<field type="second">
+				<displayName>síkɛn</displayName>
+			</field>
+			<field type="zone">
+				<displayName>kinúki kisikɛl ɔ́ pitɔŋ</displayName>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group> </group>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<percentFormats numberSystem="latn">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern>#,##0%</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>#,##0.00 ¤</pattern>
+				</currencyFormat>
+				<currencyFormat type="accounting">
+					<pattern>#,##0.00 ¤;(#,##0.00 ¤)</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="other" draft="provisional">0K ¤</pattern>
+					<pattern type="10000" count="other" draft="provisional">00K ¤</pattern>
+					<pattern type="100000" count="other" draft="provisional">000K ¤</pattern>
+					<pattern type="1000000" count="other" draft="provisional">0M ¤</pattern>
+					<pattern type="10000000" count="other" draft="provisional">00M ¤</pattern>
+					<pattern type="100000000" count="other" draft="provisional">000M ¤</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">0G ¤</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">00G ¤</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">000G ¤</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">0T ¤</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">00T ¤</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">000T ¤</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="AOA">
+				<displayName>kuansa wu angolá</displayName>
+			</currency>
+			<currency type="AUD">
+				<displayName>toláal wu ostalalí</displayName>
+			</currency>
+			<currency type="BHD">
+				<displayName>tináal wu paaléen</displayName>
+			</currency>
+			<currency type="BIF">
+				<displayName>faláŋɛ u pulundí</displayName>
+			</currency>
+			<currency type="BWP">
+				<displayName>pula pu posuána</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName>toláal u kanáta</displayName>
+			</currency>
+			<currency type="CDF">
+				<displayName>́faláŋɛ u kongó</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>yuan ɛlɛnmimbí</displayName>
+			</currency>
+			<currency type="CVE">
+				<displayName>ɛskúdo u kápfɛ́ɛl</displayName>
+			</currency>
+			<currency type="DJF">
+				<displayName>́faláŋɛ u síputí</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName>tináal wu alselí</displayName>
+			</currency>
+			<currency type="EGP">
+				<displayName>lífilɛ wu isípit</displayName>
+			</currency>
+			<currency type="ERN">
+				<displayName>náfka wu elitilée</displayName>
+			</currency>
+			<currency type="ETB">
+				<displayName>píil wu etiopí</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>olóo</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>lífilɛ sitelelíiŋ</displayName>
+			</currency>
+			<currency type="GHC">
+				<displayName>setí</displayName>
+			</currency>
+			<currency type="GMD">
+				<displayName>talasí u kaambí</displayName>
+			</currency>
+			<currency type="GNS">
+				<displayName>silí u kiiné</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName>ulupí</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>yɛ́ɛn u sapɔ́ɔŋ</displayName>
+			</currency>
+			<currency type="KES">
+				<displayName>síliŋ u kénia</displayName>
+			</currency>
+			<currency type="KMF">
+				<displayName>́faláŋɛ u kɔmɔ́ɔl</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<posix>
+		<messages>
+			<yesstr>ɛ́ɛ́ɛ:ɛ</yesstr>
+			<nostr>aákó:a</nostr>
+		</messages>
+	</posix>
+</ldml>

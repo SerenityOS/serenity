@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            elementFormDefault="qualified"
+            targetNamespace="foo"
+            xmlns="foo"
+        >
+    <xsd:element name="e1" type="xsd:boolean" />
+    <xsd:element name="foo" substitutionGroup="e1" type="xsd:boolean" />
+
+    <xsd:element name="root" type="B" />
+
+    <xsd:complexType name="B">
+        <xsd:choice maxOccurs="1000">
+            <xsd:element ref="e1" />
+            <xsd:element name="foo" type="xsd:int" form="unqualified"/>
+        </xsd:choice>
+    </xsd:complexType>
+
+</xsd:schema>

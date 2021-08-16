@@ -1,0 +1,8 @@
+// How to create key4.db and cert9.db
+cd <path-for-db>
+echo "" > 1
+echo "test12" > 2
+modutil -create -force -dbdir sql:/$(pwd)
+modutil -list "NSS Internal PKCS #11 Module" -dbdir sql:/$(pwd)
+modutil -changepw "NSS Certificate DB" -force -dbdir sql:/$(pwd) -pwfile $(pwd)/1 -newpwfile $(pwd)/2
+

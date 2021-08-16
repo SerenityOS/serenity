@@ -1,0 +1,4 @@
+Dep.java:11:1: compiler.warn.missing.deprecated.annotation
+- compiler.err.warnings.and.werror
+1 error
+1 warning

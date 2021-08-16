@@ -1,0 +1,4 @@
+SynthName2.java:33:9: compiler.err.cannot.generate.class: InnClass, (compiler.misc.synthetic.name.conflict: val$zzz, InnClass)
+SynthName2.java:34:17: compiler.err.cannot.generate.class: InnClass, (compiler.misc.synthetic.name.conflict: val$prm1, InnClass)
+SynthName2.java:35:17: compiler.err.cannot.generate.class: InnClass, (compiler.misc.synthetic.name.conflict: val$zzz, InnClass)
+3 errors

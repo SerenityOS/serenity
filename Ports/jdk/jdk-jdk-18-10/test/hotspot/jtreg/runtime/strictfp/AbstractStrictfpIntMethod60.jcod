@@ -1,0 +1,70 @@
+/*
+ * Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+// Code below is equivalent to:
+// public interface AbstractStrictfpIntMethod60 {
+//    public abstract double bar();
+// }
+
+class AbstractStrictfpIntMethod60 {
+  0xCAFEBABE;
+  0; // minor version
+  60; // version
+  [9] { // Constant Pool
+    ; // first element is empty
+    class #2; // #1     at 0x0A
+    Utf8 "AbstractStrictfpIntMethod60"; // #2     at 0x0D
+    class #4; // #3     at 0x2B
+    Utf8 "java/lang/Object"; // #4     at 0x2E
+    Utf8 "bar"; // #5     at 0x41
+    Utf8 "()D"; // #6     at 0x47
+    Utf8 "SourceFile"; // #7     at 0x4D
+    Utf8 "AbstractStrictfpIntMethod60.java"; // #8     at 0x5A
+  } // Constant Pool
+
+  0x0601; // access [ ACC_PUBLIC ACC_INTERFACE ]
+  #1;// this_cpx
+  #3;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // Fields
+  } // Fields
+
+  [1] { // Methods
+    {  // method at 0x89
+      0x0C01; // access [public abstract strictfp]
+      #5; // name_index       : bar
+      #6; // descriptor_index : ()D
+      [0] { // Attributes
+      } // Attributes
+    }
+  } // Methods
+
+  [1] { // Attributes
+    Attr(#7, 2) { // SourceFile at 0x93
+      #8;
+    } // end SourceFile
+  } // Attributes
+} // end class AbstractStrictfpIntMethod60

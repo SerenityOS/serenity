@@ -1,0 +1,2 @@
+MostSpecific19.java:17:9: compiler.err.ref.ambiguous: m1, kindname.method, m1(MostSpecific19.F1), MostSpecific19, kindname.method, m1(MostSpecific19.F2), MostSpecific19
+1 error

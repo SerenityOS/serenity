@@ -1,0 +1,2 @@
+ClassIsAbstract.java:16:9: compiler.err.abstract.cant.be.instantiated: Abs
+1 error

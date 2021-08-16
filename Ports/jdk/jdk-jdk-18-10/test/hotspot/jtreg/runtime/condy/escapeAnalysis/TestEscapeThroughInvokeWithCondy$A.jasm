@@ -1,0 +1,69 @@
+/*
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+package runtime/condy;
+
+super class TestEscapeThroughInvokeWithCondy$A
+        version 55:0
+{
+
+private Field saved:"Lruntime/condy/TestEscapeThroughInvokeWithCondy$A;";
+
+public Method "<init>":"(Ljava/lang/Integer;)V"
+	stack 1 locals 2
+{
+		aload_0;
+		invokespecial	Method java/lang/Object."<init>":"()V";
+		return;
+}
+
+public Method saveInto:"(Lruntime/condy/TestEscapeThroughInvokeWithCondy$A;Ljava/lang/Integer;)V"
+	stack 2 locals 3
+{
+		aload_1;
+		aload_0;
+		putfield	Field saved:"Lruntime/condy/TestEscapeThroughInvokeWithCondy$A;";
+		return;
+}
+
+public Method check:"(Lruntime/condy/TestEscapeThroughInvokeWithCondy$A;)V"
+	stack 3 locals 2
+{
+		aload_0;
+		getfield	Field saved:"Lruntime/condy/TestEscapeThroughInvokeWithCondy$A;";
+		aload_1;
+		if_acmpeq	L18;
+		new	class java/lang/RuntimeException;
+		dup;
+		ldc	String "TEST FAILED: Objects not equal.";
+		invokespecial	Method java/lang/RuntimeException."<init>":"(Ljava/lang/String;)V";
+		athrow;
+	L18:	stack_frame_type same;
+		return;
+}
+
+NestHost TestEscapeThroughInvokeWithCondy;
+static InnerClass A=class TestEscapeThroughInvokeWithCondy$A of class TestEscapeThroughInvokeWithCondy;
+
+} // end Class TestEscapeThroughInvokeWithCondy$A

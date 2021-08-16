@@ -1,0 +1,2 @@
+ResourceInterface.java:15:23: compiler.err.unreported.exception.implicit.close: ResourceInterface.E1, r2
+1 error

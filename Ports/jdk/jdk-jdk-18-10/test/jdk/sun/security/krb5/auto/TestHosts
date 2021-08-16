@@ -1,0 +1,16 @@
+127.0.0.1 host.rabbit.hole
+127.0.0.1 kdc.rabbit.hole
+127.0.0.1 kdc.snake.hole
+127.0.0.1 kdc.web.domain
+127.0.0.1 host.web.domain
+127.0.0.1 host.proxy.domain
+127.0.0.1 kdc.proxy.domain
+127.0.0.1 client.rabbit.hole
+127.0.0.1 localhost
+127.0.0.1 host.r3.local
+127.0.0.1 kdc.r1
+127.0.0.1 kdc.r2
+127.0.0.1 kdc.r3
+127.0.0.1 host.realm
+127.0.0.1 realm
+127.0.0.1 irlga09

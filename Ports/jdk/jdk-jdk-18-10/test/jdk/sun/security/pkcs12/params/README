@@ -1,0 +1,57 @@
+1. Preparing data in this directory
+Do not use OpenSSL 3.0.0. The default algorithms for pkcs12 are changed.
+
+(
+mkdir tmp
+cd tmp
+keytool -keystore ks -keyalg ec -genkeypair -storepass changeit -alias a -dname CN=A
+openssl pkcs12 -in ks -nodes -out kandc -passin pass:changeit
+openssl pkcs12 -export -in kandc -out os2 -name a -passout pass:changeit \
+        -certpbe NONE -nomac
+openssl pkcs12 -export -in kandc -out os3 -name a -passout pass:changeit \
+        -certpbe NONE
+openssl pkcs12 -export -in kandc -out os4 -name a -passout pass:changeit \
+        -certpbe PBE-SHA1-RC4-128 -keypbe PBE-SHA1-RC4-128 -macalg SHA224
+openssl pkcs12 -export -in kandc -out os5 -name a -passout pass:changeit \
+        -certpbe AES-256-CBC -keypbe AES-256-CBC -macalg SHA512
+for a in *; do
+    openssl base64 -in $a -out ../$a
+done
+cd ..
+rm -rf tmp
+)
+
+2. After running the test, we can go to the scratch directory and run the
+following commands to check keytool -> openssl interoperability.
+OpenSSL 1.1.0i is used here. Earlier versions might generate different info.
+
+(
+openssl pkcs12 -in ksnormal -passin pass:changeit -info -nokeys -nocerts 2> t2 || exit 20
+grep "MAC: sha256, Iteration 10000" t2 || exit 21
+grep "Shrouded Keybag: PBES2, PBKDF2, AES-256-CBC, Iteration 10000, PRF hmacWithSHA256" t2 || exit 23
+grep "PKCS7 Encrypted data: PBES2, PBKDF2, AES-256-CBC, Iteration 10000, PRF hmacWithSHA256" t2 || exit 24
+
+openssl pkcs12 -in ksnormaldup -passin pass:changeit -info -nokeys -nocerts 2> t22 || exit 25
+diff t2 t22 || exit 26
+
+openssl pkcs12 -in ksnopass -passin pass:changeit -info -nokeys -nocerts && exit 30
+
+openssl pkcs12 -in ksnopass -passin pass:changeit -info -nokeys -nocerts -nomacver 2> t3 || exit 31
+grep "PKCS7 Encrypted data:" t3 && exit 33
+grep "Shrouded Keybag: PBES2, PBKDF2, AES-256-CBC, Iteration 10000, PRF hmacWithSHA256" t3 || exit 34
+grep "Shrouded Keybag: pbeWithSHA1And128BitRC4, Iteration 10000" t3 || exit 35
+
+openssl pkcs12 -in ksnopassdup -passin pass:changeit -info -nokeys -nocerts -nomacver 2> t33 || exit 36
+diff t3 t33 || exit 37
+
+openssl pkcs12 -in ksnewic -passin pass:changeit -info -nokeys -nocerts 2> t4 || exit 40
+grep "MAC: sha256, Iteration 5555" t4 || exit 41
+grep "Shrouded Keybag: PBES2, PBKDF2, AES-256-CBC, Iteration 7777, PRF hmacWithSHA256" t4 || exit 43
+grep "Shrouded Keybag: pbeWithSHA1And128BitRC4, Iteration 10000" t4 || exit 44
+grep "PKCS7 Encrypted data: PBES2, PBKDF2, AES-256-CBC, Iteration 6666, PRF hmacWithSHA256" t4 || exit 45
+
+openssl pkcs12 -in ksnewicdup -passin pass:changeit -info -nokeys -nocerts 2> t44 || exit 46
+diff t4 t44 || exit 47
+
+echo Succeed
+)

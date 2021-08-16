@@ -1,0 +1,4 @@
+R.java:9:29: compiler.warn.has.been.deprecated: pDep_qDep_rUnd(), Q
+R.java:15:29: compiler.warn.has.been.deprecated: pDep_qInh_rUnd(), P
+R.java:18:29: compiler.warn.has.been.deprecated: pUnd_qDep_rUnd(), Q
+3 warnings

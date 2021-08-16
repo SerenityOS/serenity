@@ -1,0 +1,5 @@
+T6711619b.java:16:22: compiler.err.report.access: i, private, T6711619b.X1
+T6711619b.java:23:22: compiler.err.report.access: i, private, T6711619b.X2
+T6711619b.java:31:22: compiler.err.report.access: i, private, T6711619b.X3
+T6711619b.java:38:22: compiler.err.report.access: i, private, T6711619b.X4
+4 errors

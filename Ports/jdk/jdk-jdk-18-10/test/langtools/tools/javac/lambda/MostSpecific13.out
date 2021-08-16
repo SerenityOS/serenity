@@ -1,0 +1,3 @@
+MostSpecific13.java:16:9: compiler.err.ref.ambiguous: m, kindname.method, <T>m(MostSpecific13.UnaryOp<T>), MostSpecific13, kindname.method, m(MostSpecific13.IntegerToNumber), MostSpecific13
+MostSpecific13.java:17:9: compiler.err.ref.ambiguous: m, kindname.method, <T>m(MostSpecific13.UnaryOp<T>), MostSpecific13, kindname.method, m(MostSpecific13.IntegerToNumber), MostSpecific13
+2 errors

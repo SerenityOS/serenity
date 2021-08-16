@@ -1,0 +1,1053 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="mi"/>
+	</identity>
+	<localeDisplayNames>
+		<localeDisplayPattern>
+			<localePattern>{0} ({1})</localePattern>
+			<localeSeparator>{0}, {1}</localeSeparator>
+			<localeKeyTypePattern>{0}: {1}</localeKeyTypePattern>
+		</localeDisplayPattern>
+		<languages>
+			<language type="de">Tiamana</language>
+			<language type="de_AT">Tiamana Atiria</language>
+			<language type="de_CH">Tiamana Ōkawa Huiterangi</language>
+			<language type="en">Ingarihi</language>
+			<language type="en_AU">Ingarihi Ahitereiriana</language>
+			<language type="en_CA">Ingarihi Kānata</language>
+			<language type="en_GB">Ingarihi Piritene</language>
+			<language type="en_GB" alt="short">Ingarihi UK</language>
+			<language type="en_US">Ingarihi Amerikana</language>
+			<language type="en_US" alt="short">Ingarihi US</language>
+			<language type="es">Paniora</language>
+			<language type="es_419">Paniora Amerika ki te Tonga</language>
+			<language type="es_ES">Paniora Uropi</language>
+			<language type="es_MX">Paniora Mēhikana</language>
+			<language type="fr">Wīwī</language>
+			<language type="fr_CA">Wīwī Kānata</language>
+			<language type="fr_CH">Wīwī Huiterangi</language>
+			<language type="it">Ītariana</language>
+			<language type="ja">Hapanihi</language>
+			<language type="mi">te reo Māori</language>
+			<language type="pt">Pōtikī</language>
+			<language type="pt_BR">Pōtikī Parahi</language>
+			<language type="pt_PT">Pōtikī Uropi</language>
+			<language type="ru">Ruhiana</language>
+			<language type="und">Reo Tē Mōhiotia</language>
+			<language type="zh">Hainamana</language>
+			<language type="zh" alt="menu">Hainamana Manarini</language>
+			<language type="zh_Hans">Hainamana Māmā</language>
+			<language type="zh_Hant">Hainamana Tukuiho</language>
+		</languages>
+		<scripts>
+			<script type="Arab">Arapika</script>
+			<script type="Cyrl">Hīririki</script>
+			<script type="Hans">Māmā</script>
+			<script type="Hans" alt="stand-alone">Hana Māmā</script>
+			<script type="Hant">Tukuiho</script>
+			<script type="Hant" alt="stand-alone">Hana Tukuiho</script>
+			<script type="Latn">Rātina</script>
+			<script type="Zxxx">Tuhikore</script>
+			<script type="Zzzz">Momotuhi Tē Mōhiotia</script>
+		</scripts>
+		<territories>
+			<territory type="BR">Parahi</territory>
+			<territory type="CN">Haina</territory>
+			<territory type="DE">Tiamana</territory>
+			<territory type="FR">Wīwī</territory>
+			<territory type="GB">Hononga o Piritene</territory>
+			<territory type="IN">Inia</territory>
+			<territory type="IT">Itāria</territory>
+			<territory type="JP">Hapani</territory>
+			<territory type="MK">Makerōnia ki te Raki</territory>
+			<territory type="NZ">Aotearoa</territory>
+			<territory type="RU">Rūhia</territory>
+			<territory type="US">Hononga o Amerika</territory>
+			<territory type="ZZ">Rohe Tē Mōhiotia</territory>
+		</territories>
+		<types>
+			<type key="calendar" type="gregorian">Maramataka Pākehā</type>
+			<type key="collation" type="standard">Raupapa Kōmaka Arowhānui</type>
+			<type key="numbers" type="latn">Ngā Mati Pākehā</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">Ngahuru</measurementSystemName>
+			<measurementSystemName type="UK">UK</measurementSystemName>
+			<measurementSystemName type="US">US</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language">Reo: {0}</codePattern>
+			<codePattern type="script">Momotuhi: {0}</codePattern>
+			<codePattern type="territory">Rohe: {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a ā e ē h i ī k m n {ng} o ō p r t u ū w {wh}]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[b c d f g j l q s v x y z]</exemplarCharacters>
+		<exemplarCharacters type="index">[A E H I K M N O P R T U W]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart>“</quotationStart>
+		<quotationEnd>”</quotationEnd>
+		<alternateQuotationStart>‘</alternateQuotationStart>
+		<alternateQuotationEnd>’</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd-MM-y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<intervalFormats>
+						<intervalFormatFallback>{0} ki te {1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d">d–d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M">MM–MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">MM-dd – MM-dd</greatestDifference>
+							<greatestDifference id="M">MM-dd – MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">MM-dd, E – MM-dd, E</greatestDifference>
+							<greatestDifference id="M">MM-dd, E – MM-dd, E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M">LLL–LLL</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">MMM d–d</greatestDifference>
+							<greatestDifference id="M">MMM d – MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">MMM d, E – MMM d, E</greatestDifference>
+							<greatestDifference id="M">MMM d, E – MMM d, E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y">G y–y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">GGGGG y-MM – y-MM</greatestDifference>
+							<greatestDifference id="y">GGGGG y-MM – y-MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">GGGGG y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="M">GGGGG y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="y">GGGGG y-MM-dd – y-MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">GGGGG y-MM-dd, E – y-MM-dd, E</greatestDifference>
+							<greatestDifference id="M">GGGGG y-MM-dd, E – y-MM-dd, E</greatestDifference>
+							<greatestDifference id="y">GGGGG y-MM-dd, E – y-MM-dd, E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M">G y MMM–MMM</greatestDifference>
+							<greatestDifference id="y">G y MMM – y MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">G y MMM d–d</greatestDifference>
+							<greatestDifference id="M">G y MMM d – MMM d</greatestDifference>
+							<greatestDifference id="y">G y MMM d – y MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">G y MMM d, E – MMM d, E</greatestDifference>
+							<greatestDifference id="M">G y MMM d, E – MMM d, E</greatestDifference>
+							<greatestDifference id="y">G y MMM d, E – y MMM d, E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M">G y MMMM–MMMM</greatestDifference>
+							<greatestDifference id="y">G y MMMM – y MMMM</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">Kohi</month>
+							<month type="2">Hui</month>
+							<month type="3">Pou</month>
+							<month type="4">Pae</month>
+							<month type="5">Hara</month>
+							<month type="6">Pipi</month>
+							<month type="7">Hōngo</month>
+							<month type="8">Here</month>
+							<month type="9">Mahu</month>
+							<month type="10">Nuku</month>
+							<month type="11">Rangi</month>
+							<month type="12">Haki</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">K</month>
+							<month type="2">H</month>
+							<month type="3">P</month>
+							<month type="4">P</month>
+							<month type="5">H</month>
+							<month type="6">P</month>
+							<month type="7">H</month>
+							<month type="8">H</month>
+							<month type="9">M</month>
+							<month type="10">N</month>
+							<month type="11">R</month>
+							<month type="12">H</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Kohitātea</month>
+							<month type="2">Huitanguru</month>
+							<month type="3">Poutūterangi</month>
+							<month type="4">Paengawhāwhā</month>
+							<month type="5">Haratua</month>
+							<month type="6">Pipiri</month>
+							<month type="7">Hōngongoi</month>
+							<month type="8">Hereturikōkā</month>
+							<month type="9">Mahuru</month>
+							<month type="10">Whiringa-ā-nuku</month>
+							<month type="11">Whiringa-ā-rangi</month>
+							<month type="12">Hakihea</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">Kohi</month>
+							<month type="2">Hui</month>
+							<month type="3">Pou</month>
+							<month type="4">Pae</month>
+							<month type="5">Hara</month>
+							<month type="6">Pipi</month>
+							<month type="7">Hōngo</month>
+							<month type="8">Here</month>
+							<month type="9">Mahu</month>
+							<month type="10">Nuku</month>
+							<month type="11">Rangi</month>
+							<month type="12">Haki</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">K</month>
+							<month type="2">H</month>
+							<month type="3">P</month>
+							<month type="4">P</month>
+							<month type="5">H</month>
+							<month type="6">P</month>
+							<month type="7">H</month>
+							<month type="8">H</month>
+							<month type="9">M</month>
+							<month type="10">N</month>
+							<month type="11">R</month>
+							<month type="12">H</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Kohitātea</month>
+							<month type="2">Huitanguru</month>
+							<month type="3">Poutūterangi</month>
+							<month type="4">Paengawhāwhā</month>
+							<month type="5">Haratua</month>
+							<month type="6">Pipiri</month>
+							<month type="7">Hōngongoi</month>
+							<month type="8">Hereturikōkā</month>
+							<month type="9">Mahuru</month>
+							<month type="10">Whiringa-ā-nuku</month>
+							<month type="11">Whiringa-ā-rangi</month>
+							<month type="12">Hakihea</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Tap</day>
+							<day type="mon">Hin</day>
+							<day type="tue">Tū</day>
+							<day type="wed">Apa</day>
+							<day type="thu">Par</day>
+							<day type="fri">Mer</day>
+							<day type="sat">Hor</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">T</day>
+							<day type="mon">H</day>
+							<day type="tue">T</day>
+							<day type="wed">A</day>
+							<day type="thu">P</day>
+							<day type="fri">M</day>
+							<day type="sat">H</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">Tap</day>
+							<day type="mon">Hin</day>
+							<day type="tue">Tū</day>
+							<day type="wed">Apa</day>
+							<day type="thu">Par</day>
+							<day type="fri">Mer</day>
+							<day type="sat">Hor</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Rātapu</day>
+							<day type="mon">Rāhina</day>
+							<day type="tue">Rātū</day>
+							<day type="wed">Rāapa</day>
+							<day type="thu">Rāpare</day>
+							<day type="fri">Rāmere</day>
+							<day type="sat">Rāhoroi</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">Tap</day>
+							<day type="mon">Hin</day>
+							<day type="tue">Tū</day>
+							<day type="wed">Apa</day>
+							<day type="thu">Par</day>
+							<day type="fri">Mer</day>
+							<day type="sat">Hor</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">T</day>
+							<day type="mon">H</day>
+							<day type="tue">T</day>
+							<day type="wed">A</day>
+							<day type="thu">P</day>
+							<day type="fri">M</day>
+							<day type="sat">H</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">Tap</day>
+							<day type="mon">Hin</day>
+							<day type="tue">Tū</day>
+							<day type="wed">Apa</day>
+							<day type="thu">Par</day>
+							<day type="fri">Mer</day>
+							<day type="sat">Hor</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Rātapu</day>
+							<day type="mon">Rāhina</day>
+							<day type="tue">Rātū</day>
+							<day type="wed">Rāapa</day>
+							<day type="thu">Rāpare</day>
+							<day type="fri">Rāmere</day>
+							<day type="sat">Rāhoroi</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">HW1</quarter>
+							<quarter type="2">HW2</quarter>
+							<quarter type="3">HW3</quarter>
+							<quarter type="4">HW4</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">1</quarter>
+							<quarter type="2">2</quarter>
+							<quarter type="3">3</quarter>
+							<quarter type="4">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">Hauwhā tuatahi</quarter>
+							<quarter type="2">Hauwhā tuarua</quarter>
+							<quarter type="3">Hauwhā tuatoru</quarter>
+							<quarter type="4">Hauwhā tuawhā</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">HW1</quarter>
+							<quarter type="2">HW2</quarter>
+							<quarter type="3">HW3</quarter>
+							<quarter type="4">HW4</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">1</quarter>
+							<quarter type="2">2</quarter>
+							<quarter type="3">3</quarter>
+							<quarter type="4">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">Hauwhā tuatahi</quarter>
+							<quarter type="2">Hauwhā tuarua</quarter>
+							<quarter type="3">Hauwhā tuatoru</quarter>
+							<quarter type="4">Hauwhā tuawhā</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">AM</dayPeriod>
+							<dayPeriod type="pm">PM</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">AM</dayPeriod>
+							<dayPeriod type="pm">PM</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">AM</dayPeriod>
+							<dayPeriod type="pm">PM</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">AM</dayPeriod>
+							<dayPeriod type="pm">PM</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">AM</dayPeriod>
+							<dayPeriod type="pm">PM</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">AM</dayPeriod>
+							<dayPeriod type="pm">PM</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">BCE</era>
+						<era type="0" alt="variant">BCE</era>
+						<era type="1">CE</era>
+						<era type="1" alt="variant">CE</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">BCE</era>
+						<era type="1">CE</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd-MM-y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>h:mm:ss a zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>h:mm:ss a z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>h:mm:ss a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>h:mm a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="Bh">h B</dateFormatItem>
+						<dateFormatItem id="Bhm">h:mm B</dateFormatItem>
+						<dateFormatItem id="Bhms">h:mm:ss B</dateFormatItem>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="E">ccc</dateFormatItem>
+						<dateFormatItem id="EBhm">E h:mm B</dateFormatItem>
+						<dateFormatItem id="EBhms">E h:mm:ss B</dateFormatItem>
+						<dateFormatItem id="Ed">E, d</dateFormatItem>
+						<dateFormatItem id="Ehm">E h:mm a</dateFormatItem>
+						<dateFormatItem id="EHm">E HH:mm</dateFormatItem>
+						<dateFormatItem id="Ehms">E h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="EHms">E HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="Gy">y G</dateFormatItem>
+						<dateFormatItem id="GyMMM">MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMd">d MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E, d MMM y G</dateFormatItem>
+						<dateFormatItem id="h">h a</dateFormatItem>
+						<dateFormatItem id="H">HH</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="hmsv">h:mm:ss a v</dateFormatItem>
+						<dateFormatItem id="Hmsv">HH:mm:ss v</dateFormatItem>
+						<dateFormatItem id="hmv">h:mm a v</dateFormatItem>
+						<dateFormatItem id="Hmv">HH:mm v</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">dd-MM</dateFormatItem>
+						<dateFormatItem id="MEd">E, dd-MM</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, d MMM</dateFormatItem>
+						<dateFormatItem id="MMMMd">d MMMM</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="other">'wiki' W 'o' MMMM</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">MM-y</dateFormatItem>
+						<dateFormatItem id="yMd">dd-MM-y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, dd-MM-y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+						<dateFormatItem id="yw" count="other">'wiki' w 'o' Y</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback>{0} ki te {1}</intervalFormatFallback>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>wā</displayName>
+			</field>
+			<field type="year">
+				<displayName>tau</displayName>
+			</field>
+			<field type="year-short">
+				<displayName>t</displayName>
+			</field>
+			<field type="year-narrow">
+				<displayName>t</displayName>
+			</field>
+			<field type="quarter">
+				<displayName>hauwhā</displayName>
+			</field>
+			<field type="quarter-short">
+				<displayName>hw</displayName>
+			</field>
+			<field type="quarter-narrow">
+				<displayName>hw</displayName>
+			</field>
+			<field type="month">
+				<displayName>marama</displayName>
+			</field>
+			<field type="month-short">
+				<displayName>m</displayName>
+			</field>
+			<field type="month-narrow">
+				<displayName>m</displayName>
+			</field>
+			<field type="week">
+				<displayName>wiki</displayName>
+			</field>
+			<field type="week-short">
+				<displayName>w</displayName>
+			</field>
+			<field type="week-narrow">
+				<displayName>w</displayName>
+			</field>
+			<field type="day">
+				<displayName>rā</displayName>
+				<relative type="-1">inanahi</relative>
+				<relative type="0">āianei</relative>
+				<relative type="1">āpōpō</relative>
+			</field>
+			<field type="day-short">
+				<displayName>rā</displayName>
+			</field>
+			<field type="day-narrow">
+				<displayName>rā</displayName>
+			</field>
+			<field type="weekday">
+				<displayName>rā o te wiki</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>AM/PM</displayName>
+			</field>
+			<field type="hour">
+				<displayName>hāora</displayName>
+			</field>
+			<field type="hour-short">
+				<displayName>hr</displayName>
+			</field>
+			<field type="hour-narrow">
+				<displayName>hr</displayName>
+			</field>
+			<field type="minute">
+				<displayName>meneti</displayName>
+			</field>
+			<field type="minute-short">
+				<displayName>men</displayName>
+			</field>
+			<field type="minute-narrow">
+				<displayName>men</displayName>
+			</field>
+			<field type="second">
+				<displayName>hēkona</displayName>
+			</field>
+			<field type="second-short">
+				<displayName>hēk</displayName>
+			</field>
+			<field type="second-narrow">
+				<displayName>hēk</displayName>
+			</field>
+			<field type="zone">
+				<displayName>rohe wā</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<hourFormat>+HH:mm;-HH:mm</hourFormat>
+			<gmtFormat>GMT{0}</gmtFormat>
+			<gmtZeroFormat>GMT</gmtZeroFormat>
+			<regionFormat>{0}</regionFormat>
+			<regionFormat type="daylight">{0} (+1)</regionFormat>
+			<regionFormat type="standard">{0} (+0)</regionFormat>
+			<fallbackFormat>{1} ({0})</fallbackFormat>
+			<zone type="Etc/UTC">
+				<long>
+					<standard>Wā Aonui Kōtuitui</standard>
+				</long>
+			</zone>
+			<zone type="Etc/Unknown">
+				<exemplarCity>Tāone Tē Mōhiotia</exemplarCity>
+			</zone>
+			<zone type="America/Argentina/Rio_Gallegos">
+				<exemplarCity>Rio Gallegos</exemplarCity>
+			</zone>
+			<zone type="America/Mendoza">
+				<exemplarCity>Mendoza</exemplarCity>
+			</zone>
+			<zone type="America/Argentina/San_Juan">
+				<exemplarCity>San Juan</exemplarCity>
+			</zone>
+			<zone type="America/Argentina/Ushuaia">
+				<exemplarCity>Ushuaia</exemplarCity>
+			</zone>
+			<zone type="America/Argentina/La_Rioja">
+				<exemplarCity>La Rioja</exemplarCity>
+			</zone>
+			<zone type="America/Argentina/San_Luis">
+				<exemplarCity>San Luis</exemplarCity>
+			</zone>
+			<zone type="America/Catamarca">
+				<exemplarCity>Catamarca</exemplarCity>
+			</zone>
+			<zone type="America/Argentina/Salta">
+				<exemplarCity>Salta</exemplarCity>
+			</zone>
+			<zone type="America/Jujuy">
+				<exemplarCity>Jujuy</exemplarCity>
+			</zone>
+			<zone type="America/Argentina/Tucuman">
+				<exemplarCity>Tucuman</exemplarCity>
+			</zone>
+			<zone type="America/Cordoba">
+				<exemplarCity>Cordoba</exemplarCity>
+			</zone>
+			<zone type="America/Buenos_Aires">
+				<exemplarCity>Buenos Aires</exemplarCity>
+			</zone>
+			<zone type="America/La_Paz">
+				<exemplarCity>La Paz</exemplarCity>
+			</zone>
+			<zone type="America/Eirunepe">
+				<exemplarCity>Eirunepe</exemplarCity>
+			</zone>
+			<zone type="America/Rio_Branco">
+				<exemplarCity>Rio Branco</exemplarCity>
+			</zone>
+			<zone type="America/Porto_Velho">
+				<exemplarCity>Porto Velho</exemplarCity>
+			</zone>
+			<zone type="America/Boa_Vista">
+				<exemplarCity>Boa Vista</exemplarCity>
+			</zone>
+			<zone type="America/Manaus">
+				<exemplarCity>Manaus</exemplarCity>
+			</zone>
+			<zone type="America/Cuiaba">
+				<exemplarCity>Cuiaba</exemplarCity>
+			</zone>
+			<zone type="America/Santarem">
+				<exemplarCity>Santarem</exemplarCity>
+			</zone>
+			<zone type="America/Campo_Grande">
+				<exemplarCity>Campo Grande</exemplarCity>
+			</zone>
+			<zone type="America/Belem">
+				<exemplarCity>Belem</exemplarCity>
+			</zone>
+			<zone type="America/Araguaina">
+				<exemplarCity>Araguaina</exemplarCity>
+			</zone>
+			<zone type="America/Sao_Paulo">
+				<exemplarCity>Sao Paulo</exemplarCity>
+			</zone>
+			<zone type="America/Bahia">
+				<exemplarCity>Bahia</exemplarCity>
+			</zone>
+			<zone type="America/Fortaleza">
+				<exemplarCity>Fortaleza</exemplarCity>
+			</zone>
+			<zone type="America/Maceio">
+				<exemplarCity>Maceio</exemplarCity>
+			</zone>
+			<zone type="America/Recife">
+				<exemplarCity>Recife</exemplarCity>
+			</zone>
+			<zone type="America/Noronha">
+				<exemplarCity>Noronha</exemplarCity>
+			</zone>
+			<zone type="Pacific/Easter">
+				<exemplarCity>Easter</exemplarCity>
+			</zone>
+			<zone type="America/Santiago">
+				<exemplarCity>Santiago</exemplarCity>
+			</zone>
+			<zone type="America/Bogota">
+				<exemplarCity>Bogota</exemplarCity>
+			</zone>
+			<zone type="Pacific/Galapagos">
+				<exemplarCity>Galapagos</exemplarCity>
+			</zone>
+			<zone type="America/Guayaquil">
+				<exemplarCity>Guayaquil</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Stanley">
+				<exemplarCity>Stanley</exemplarCity>
+			</zone>
+			<zone type="America/Cayenne">
+				<exemplarCity>Cayenne</exemplarCity>
+			</zone>
+			<zone type="America/Guyana">
+				<exemplarCity>Guyana</exemplarCity>
+			</zone>
+			<zone type="Pacific/Chatham">
+				<exemplarCity>Rēkohu</exemplarCity>
+			</zone>
+			<zone type="Pacific/Auckland">
+				<exemplarCity>Tāmaki Makaurau</exemplarCity>
+			</zone>
+			<zone type="America/Lima">
+				<exemplarCity>Lima</exemplarCity>
+			</zone>
+			<zone type="America/Asuncion">
+				<exemplarCity>Asuncion</exemplarCity>
+			</zone>
+			<zone type="America/Paramaribo">
+				<exemplarCity>Paramaribo</exemplarCity>
+			</zone>
+			<zone type="America/Montevideo">
+				<exemplarCity>Montevideo</exemplarCity>
+			</zone>
+			<zone type="America/Caracas">
+				<exemplarCity>Caracas</exemplarCity>
+			</zone>
+			<metazone type="America_Central">
+				<long>
+					<generic>Wā Waenga</generic>
+					<standard>Wā Arowhānui Waenga</standard>
+					<daylight>Wā Awatea Waenga</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic>Wā Rāwhiti</generic>
+					<standard>Wā Arowhānui Rāwhiti</standard>
+					<daylight>Wā Awatea Rāwhiti</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic>Wā Maunga</generic>
+					<standard>Wā Arowhānui Maunga</standard>
+					<daylight>Wā Awatea Maunga</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic>Wā Kiwa</generic>
+					<standard>Wā Arowhānui Kiwa</standard>
+					<daylight>Wā Awatea Kiwa</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<generic>Wā Ranatiki</generic>
+					<standard>Wā Arowhānui Ranatiki</standard>
+					<daylight>Wā Awatea Ranatiki</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>Wā Uropi Waenga</generic>
+					<standard>Wā Arowhānui Uropi Waenga</standard>
+					<daylight>Wā Raumati Uropi Waenga</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic>Wā Uropi Rāwhiti</generic>
+					<standard>Wā Arowhānui Uropi Rāwhiti</standard>
+					<daylight>Wā Raumati Uropi Rāwhiti</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>Wā Uropi Uru</generic>
+					<standard>Wā Arowhānui Uropi Uru</standard>
+					<daylight>Wā Raumati Uropi Uru</daylight>
+				</long>
+			</metazone>
+			<metazone type="GMT">
+				<long>
+					<standard>Wā Toharite Greenwich</standard>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<decimal>.</decimal>
+			<group>,</group>
+			<percentSign>%</percentSign>
+			<plusSign>+</plusSign>
+			<minusSign>-</minusSign>
+			<exponential>E</exponential>
+			<superscriptingExponent>×</superscriptingExponent>
+			<perMille>‰</perMille>
+			<infinity>∞</infinity>
+			<nan>NaN</nan>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+			<decimalFormatLength type="long">
+				<decimalFormat>
+					<pattern type="1000" count="other">0K</pattern>
+					<pattern type="10000" count="other">00K</pattern>
+					<pattern type="100000" count="other">000K</pattern>
+					<pattern type="1000000" count="other">0M</pattern>
+					<pattern type="10000000" count="other">00M</pattern>
+					<pattern type="100000000" count="other">000M</pattern>
+					<pattern type="1000000000" count="other">0G</pattern>
+					<pattern type="10000000000" count="other">00G</pattern>
+					<pattern type="100000000000" count="other">000G</pattern>
+					<pattern type="1000000000000" count="other">0T</pattern>
+					<pattern type="10000000000000" count="other">00T</pattern>
+					<pattern type="100000000000000" count="other">000T</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+			<decimalFormatLength type="short">
+				<decimalFormat>
+					<pattern type="1000" count="other">0K</pattern>
+					<pattern type="10000" count="other">00K</pattern>
+					<pattern type="100000" count="other">000K</pattern>
+					<pattern type="1000000" count="other">0M</pattern>
+					<pattern type="10000000" count="other">00M</pattern>
+					<pattern type="100000000" count="other">000M</pattern>
+					<pattern type="1000000000" count="other">0G</pattern>
+					<pattern type="10000000000" count="other">00G</pattern>
+					<pattern type="100000000000" count="other">000G</pattern>
+					<pattern type="1000000000000" count="other">0T</pattern>
+					<pattern type="10000000000000" count="other">00T</pattern>
+					<pattern type="100000000000000" count="other">000T</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<scientificFormats numberSystem="latn">
+			<scientificFormatLength>
+				<scientificFormat>
+					<pattern>#E0</pattern>
+				</scientificFormat>
+			</scientificFormatLength>
+		</scientificFormats>
+		<percentFormats numberSystem="latn">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern>#,##0%</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤ #,##0.00</pattern>
+				</currencyFormat>
+				<currencyFormat type="accounting">
+					<pattern>¤ #,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="other">¤ 0K</pattern>
+					<pattern type="10000" count="other">¤ 00K</pattern>
+					<pattern type="100000" count="other">¤ 000K</pattern>
+					<pattern type="1000000" count="other">¤ 0M</pattern>
+					<pattern type="10000000" count="other">¤ 00M</pattern>
+					<pattern type="100000000" count="other">¤ 000M</pattern>
+					<pattern type="1000000000" count="other">¤ 0G</pattern>
+					<pattern type="10000000000" count="other">¤ 00G</pattern>
+					<pattern type="100000000000" count="other">¤ 000G</pattern>
+					<pattern type="1000000000000" count="other">¤ 0T</pattern>
+					<pattern type="10000000000000" count="other">¤ 00T</pattern>
+					<pattern type="100000000000000" count="other">¤ 000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<unitPattern count="other">{0} {1}</unitPattern>
+		</currencyFormats>
+		<currencies>
+			<currency type="BRL">
+				<displayName>Real Parahi</displayName>
+				<displayName count="other">real Parahi</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>Yuan Haina</displayName>
+				<displayName count="other">yuan Haina</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>Euro</displayName>
+				<displayName count="other">euro</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>Pāuna Piritene</displayName>
+				<displayName count="other">pāuna Piritene</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName>Rupī Iniana</displayName>
+				<displayName count="other">rupī Iniana</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>Yen Hapanihi</displayName>
+				<displayName count="other">yen Hapanihi</displayName>
+				<symbol draft="contributed">¥</symbol>
+			</currency>
+			<currency type="NZD">
+				<displayName>Tāra o Aotearoa</displayName>
+				<displayName count="other">tāra o Aotearoa</displayName>
+				<symbol>$</symbol>
+			</currency>
+			<currency type="RUB">
+				<displayName>Rūpera Ruhiana</displayName>
+				<displayName count="other">rūpera Ruhiana</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>Tāra US</displayName>
+				<displayName count="other">tāra US</displayName>
+			</currency>
+			<currency type="XXX">
+				<displayName>Moni Tē Mōhiotia</displayName>
+				<displayName count="other">(moni tē mōhiotia)</displayName>
+			</currency>
+		</currencies>
+		<miscPatterns numberSystem="latn">
+			<pattern type="atLeast">⩾{0}</pattern>
+			<pattern type="range">{0}–{1}</pattern>
+		</miscPatterns>
+	</numbers>
+	<units>
+		<durationUnit type="hm">
+			<durationUnitPattern>h:mm</durationUnitPattern>
+		</durationUnit>
+		<durationUnit type="hms">
+			<durationUnitPattern>h:mm:ss</durationUnitPattern>
+		</durationUnit>
+		<durationUnit type="ms">
+			<durationUnitPattern>m:ss</durationUnitPattern>
+		</durationUnit>
+	</units>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0}, {1}</listPatternPart>
+			<listPatternPart type="2">{0}, {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<yesstr>āe:ā</yesstr>
+			<nostr>kāo:k</nostr>
+		</messages>
+	</posix>
+</ldml>

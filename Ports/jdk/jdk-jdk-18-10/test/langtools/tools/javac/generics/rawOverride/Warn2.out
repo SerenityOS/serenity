@@ -1,0 +1,4 @@
+Warn2.java:17:19: compiler.warn.override.unchecked.ret: (compiler.misc.unchecked.implement: foo(), C3, <T>foo(), I3), java.lang.Object, T
+- compiler.err.warnings.and.werror
+1 error
+1 warning

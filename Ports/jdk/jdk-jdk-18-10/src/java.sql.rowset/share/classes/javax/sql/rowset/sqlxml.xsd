@@ -1,0 +1,162 @@
+<?xml version="1.0"?>
+
+<!--
+ Copyright (c) 2003, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+
+<xsd:schema 
+      xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+      targetNamespace="http://standards.iso.org/iso/9075/2002/12/sqlxml"
+      xmlns:sqlxml="http://standards.iso.org/iso/9075/2002/12/sqlxml">
+  <xsd:annotation>
+    <xsd:documentation>
+      ISO/IEC 9075-14:2003 (SQL/XML)
+      This document contains definitions of types and 
+      annotations as specified in ISO/IEC 9075-14:2003.
+    </xsd:documentation>
+  </xsd:annotation>
+
+  <xsd:simpleType name="kindKeyword">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="PREDEFINED"/>
+      <xsd:enumeration value="DOMAIN"/>
+      <xsd:enumeration value="ROW"/>
+      <xsd:enumeration value="DISTINCT"/>
+      <xsd:enumeration value="ARRAY"/>
+      <xsd:enumeration value="MULTISET"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="typeKeyword">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="CHAR"/>
+      <xsd:enumeration value="VARCHAR"/>
+      <xsd:enumeration value="CLOB"/>
+      <xsd:enumeration value="BLOB"/>
+      <xsd:enumeration value="NUMERIC"/>
+      <xsd:enumeration value="DECIMAL"/>
+      <xsd:enumeration value="INTEGER"/>
+      <xsd:enumeration value="SMALLINT"/>
+      <xsd:enumeration value="BIGINT"/>
+      <xsd:enumeration value="FLOAT"/>
+      <xsd:enumeration value="REAL"/>
+      <xsd:enumeration value="DOUBLE PRECISION"/>
+      <xsd:enumeration value="BOOLEAN"/>
+      <xsd:enumeration value="DATE"/>
+      <xsd:enumeration value="TIME"/>
+      <xsd:enumeration value="TIME WITH TIME ZONE"/>
+      <xsd:enumeration value="TIMESTAMP"/>
+      <xsd:enumeration value="TIMESTAMP WITH TIME ZONE"/>
+      <xsd:enumeration value="INTERVAL YEAR"/>
+      <xsd:enumeration value="INTERVAL YEAR TO MONTH"/>
+      <xsd:enumeration value="INTERVAL MONTH"/>
+      <xsd:enumeration value="INTERVAL DAY"/>
+      <xsd:enumeration value="INTERVAL DAY TO HOUR"/>
+      <xsd:enumeration value="INTERVAL DAY TO MINUTE"/>
+      <xsd:enumeration value="INTERVAL DAY TO SECOND"/>
+      <xsd:enumeration value="INTERVAL HOUR"/>
+      <xsd:enumeration value="INTERVAL HOUR TO MINUTE"/>
+      <xsd:enumeration value="INTERVAL HOUR TO SECOND"/>
+      <xsd:enumeration value="INTERVAL MINUTE"/>
+      <xsd:enumeration value="INTERVAL MINUTE TO SECOND"/>
+      <xsd:enumeration value="INTERVAL SECOND"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:complexType name="fieldType">
+    <xsd:attribute name="name" type="xsd:string"/>
+    <xsd:attribute name="mappedType" type="xsd:string"/>
+  </xsd:complexType>
+
+  <xsd:element name="sqltype">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="field" type="sqlxml:fieldType"
+                        minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="kind"
+                        type="sqlxml:kindKeyword"/>
+      <xsd:attribute name="name" 
+                        type="sqlxml:typeKeyword" use="optional"/>
+      <xsd:attribute name="length" type="xsd:integer"
+                        use="optional"/>
+      <xsd:attribute name="maxLength" type="xsd:integer"
+                        use="optional"/>
+      <xsd:attribute name="characterSetName" type="xsd:string"
+                        use="optional"/>
+      <xsd:attribute name="collation" type="xsd:string"
+                        use="optional"/>
+      <xsd:attribute name="precision" type="xsd:integer"
+                        use="optional"/>
+      <xsd:attribute name="scale" type="xsd:integer"
+                        use="optional"/>
+      <xsd:attribute name="maxExponent" type="xsd:integer"
+                        use="optional"/>
+      <xsd:attribute name="minExponent" type="xsd:integer"
+                        use="optional"/>
+      <xsd:attribute name="userPrecision" type="xsd:integer"
+                        use="optional"/>
+      <xsd:attribute name="leadingPrecision" type="xsd:integer"
+                        use="optional"/>
+      <xsd:attribute name="maxElements" type="xsd:integer"
+                        use="optional"/>
+      <xsd:attribute name="catalogName" type="xsd:string"
+                        use="optional"/>
+      <xsd:attribute name="schemaName" type="xsd:string"
+                        use="optional"/>
+      <xsd:attribute name="domainName" type="xsd:string"
+                        use="optional"/>
+      <xsd:attribute name="typeName" type="xsd:string"
+                        use="optional"/>
+      <xsd:attribute name="mappedType" type="xsd:string"
+                        use="optional"/>
+      <xsd:attribute name="mappedElementType" type="xsd:string"
+                        use="optional"/>
+      <xsd:attribute name="final" type="xsd:boolean"
+                        use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:simpleType name="objectType">
+     <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="CATALOG" />
+        <xsd:enumeration value="SCHEMA" />
+        <xsd:enumeration value="BASE TABLE" />
+        <xsd:enumeration value="VIEWED TABLE" />
+        <xsd:enumeration value="CHARACTER SET" />
+        <xsd:enumeration value="COLLATION" />
+     </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:element name="sqlname">
+     <xsd:complexType>
+        <xsd:attribute name="type" type="sqlxml:objectType"
+                          use="required" />
+        <xsd:attribute name="catalogName" type="xsd:string" />
+        <xsd:attribute name="schemaName" type="xsd:string" />
+        <xsd:attribute name="localName" type="xsd:string" />
+     </xsd:complexType>
+  </xsd:element>
+
+</xsd:schema>

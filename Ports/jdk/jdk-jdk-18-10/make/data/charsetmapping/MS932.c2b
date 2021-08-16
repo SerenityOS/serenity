@@ -1,0 +1,21 @@
+#
+# (1)entries that exist only in MS932DB.c2b.private
+#    (diff result of MS932DB.b2c.private and MS932DB.c2b.private)
+# (2)added the jis0201 c->b only entries
+#     u+203e -> 0x7e
+#     u+00a5 -> 0x5c
+#
+0x7e     0x203e
+0x5c     0x00a5
+#
+0x8143   0x00b8	# CEDILLA
+0x8145   0x00b7	# MIDDLE DOT
+0x8150   0x00af	# MACRON
+0x8191   0x00a2	# CENT SIGN
+0x8192   0x00a3	# POUND SIGN
+0x81ca   0x00ac	# NOT SIGN
+0x81e1   0x00ab	# LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
+0x81e2   0x00bb	# RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
+0x8394   0x3094	# HIRAGANA LETTER VU
+0x83ca   0x00b5	# MICRO SIGN
+

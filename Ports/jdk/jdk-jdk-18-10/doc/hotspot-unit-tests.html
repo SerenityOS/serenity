@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Native/Unit Test Development Guidelines</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="../make/data/docs-resources/resources/jdk-default.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Native/Unit Test Development Guidelines</h1>
+</header>
+<nav id="TOC">
+<ul>
+<li><a href="#good-test-properties">Good test properties</a><ul>
+<li><a href="#lightness">Lightness</a></li>
+<li><a href="#isolation">Isolation</a></li>
+<li><a href="#atomicity-and-self-containment">Atomicity and self-containment</a></li>
+<li><a href="#repeatability">Repeatability</a></li>
+<li><a href="#informativeness">Informativeness</a></li>
+<li><a href="#testing-instead-of-visiting">Testing instead of visiting</a></li>
+<li><a href="#nearness">Nearness</a></li>
+</ul></li>
+<li><a href="#asserts">Asserts</a><ul>
+<li><a href="#several-checks">Several checks</a></li>
+<li><a href="#first-parameter-is-expected-value">First parameter is expected value</a></li>
+<li><a href="#floating-point-comparison">Floating-point comparison</a></li>
+<li><a href="#c-string-comparison">C string comparison</a></li>
+<li><a href="#error-messages">Error messages</a></li>
+<li><a href="#uncluttered-output">Uncluttered output</a></li>
+<li><a href="#failures-propagation">Failures propagation</a></li>
+</ul></li>
+<li><a href="#naming-and-grouping">Naming and Grouping</a><ul>
+<li><a href="#test-group-names">Test group names</a></li>
+<li><a href="#filename">Filename</a></li>
+<li><a href="#file-location">File location</a></li>
+<li><a href="#test-names">Test names</a></li>
+<li><a href="#fixture-classes">Fixture classes</a></li>
+<li><a href="#friend-classes">Friend classes</a></li>
+<li><a href="#oscpu-specific-tests">OS/CPU specific tests</a></li>
+</ul></li>
+<li><a href="#miscellaneous">Miscellaneous</a><ul>
+<li><a href="#hotspot-style">Hotspot style</a></li>
+<li><a href="#codetest-metrics">Code/test metrics</a></li>
+<li><a href="#access-to-non-public-members">Access to non-public members</a></li>
+<li><a href="#death-tests">Death tests</a></li>
+<li><a href="#external-flags">External flags</a></li>
+<li><a href="#test-specific-flags">Test-specific flags</a></li>
+<li><a href="#flag-restoring">Flag restoring</a></li>
+<li><a href="#googletest-documentation">GoogleTest documentation</a></li>
+</ul></li>
+<li><a href="#todo">TODO</a></li>
+</ul>
+</nav>
+<p>The purpose of these guidelines is to establish a shared vision on what kind of native tests and how we want to develop them for Hotspot using GoogleTest. Hence these guidelines include style items as well as test approach items.</p>
+<p>First section of this document describes properties of good tests which are common for almost all types of test regardless of language, framework, etc. Further sections provide recommendations to achieve those properties and other HotSpot and/or GoogleTest specific guidelines.</p>
+<h2 id="good-test-properties">Good test properties</h2>
+<h3 id="lightness">Lightness</h3>
+<p>Use the most lightweight type of tests.</p>
+<p>In Hotspot, there are 3 different types of tests regarding their dependency on a JVM, each next level is slower than previous</p>
+<ul>
+<li><p><code>TEST</code> : a test does not depend on a JVM</p></li>
+<li><p><code>TEST_VM</code> : a test does depend on an initialized JVM, but are supposed not to break a JVM, i.e. leave it in a workable state.</p></li>
+<li><p><code>TEST_OTHER_VM</code> : a test depends on a JVM and requires a freshly initialized JVM or leaves a JVM in non-workable state</p></li>
+</ul>
+<h3 id="isolation">Isolation</h3>
+<p>Tests have to be isolated: not to have visible side-effects, influences on other tests results.</p>
+<p>Results of one test should not depend on test execution order, other tests, otherwise it is becoming almost impossible to find out why a test failed. Due to hotspot-specific, it is not so easy to get a full isolation, e.g. we share an initialized JVM between all <code>TEST_VM</code> tests, so if your test changes JVM's state too drastically and does not change it back, you had better consider <code>TEST_OTHER_VM</code>.</p>
+<h3 id="atomicity-and-self-containment">Atomicity and self-containment</h3>
+<p>Tests should be <em>atomic</em> and <em>self-contained</em> at the same time.</p>
+<p>One test should check a particular part of a class, subsystem, functionality, etc. Then it is quite easy to determine what parts of a product are broken basing on test failures. On the other hand, a test should test that part more-or-less entirely, because when one sees a test <code>FooTest::bar</code>, they assume all aspects of bar from <code>Foo</code> are tested.</p>
+<p>However, it is impossible to cover all aspects even of a method, not to mention a subsystem. In such cases, it is recommended to have several tests, one for each aspect of a thing under test. For example one test to tests how <code>Foo::bar</code> works if an argument is <code>null</code>, another test to test how it works if an argument is acceptable but <code>Foo</code> is not in the right state to accept it and so on. This helps not only to make tests atomic, self-contained but also makes test name self-descriptive (discussed in more details in <a href="#test-names">Test names</a>).</p>
+<h3 id="repeatability">Repeatability</h3>
+<p>Tests have to be repeatable.</p>
+<p>Reproducibility is very crucial for a test. No one likes sporadic test failures, they are hard to investigate, fix and verify a fix.</p>
+<p>In some cases, it is quite hard to write a 100% repeatable test, since besides a test there can be other moving parts, e.g. in case of <code>TEST_VM</code> there are several concurrently running threads. Despite this, we should try to make a test as reproducible as possible.</p>
+<h3 id="informativeness">Informativeness</h3>
+<p>In case of a failure, a test should be as <em>informative</em> as possible.</p>
+<p>Having more information about a test failure than just compared values can be very useful for failure troubleshooting, it can reduce or even completely eliminate debugging hours. This is even more important in case of not 100% reproducible failures.</p>
+<p>Achieving this property, one can easily make a test too verbose, so it will be really hard to find useful information in the ocean of useless information. Hence they should not only think about how to provide <a href="#error-messages">good information</a>, but also <a href="#uncluttered-output">when to do it</a>.</p>
+<h3 id="testing-instead-of-visiting">Testing instead of visiting</h3>
+<p>Tests should <em>test</em>.</p>
+<p>It is not enough just to &quot;visit&quot; some code, a test should check that code does that it has to do, compare return values with expected values, check that desired side effects are done, and undesired are not, and so on. In other words, a test should contain at least one GoogleTest assertion and do not rely on JVM asserts.</p>
+<p>Generally speaking to write a good test, one should create a model of the system under tests, a model of possible bugs (or bugs which one wants to find) and design tests using those models.</p>
+<h3 id="nearness">Nearness</h3>
+<p>Prefer having checks inside test code.</p>
+<p>Not only does having test logic outside, e.g. verification method, depending on asserts in product code contradict with several items above but also decreases test’s readability and stability. It is much easier to understand that a test is testing when all testing logic is located inside a test or nearby in shared test libraries. As a rule of thumb, the closer a check to a test, the better.</p>
+<h2 id="asserts">Asserts</h2>
+<h3 id="several-checks">Several checks</h3>
+<p>Prefer <code>EXPECT</code> over <code>ASSERT</code> if possible.</p>
+<p>This is related to the <a href="#informativeness">informativeness</a> property of tests, information for other checks can help to better localize a defect’s root-cause. One should use <code>ASSERT</code> if it is impossible to continue test execution or if it does not make much sense. Later in the text, <code>EXPECT</code> forms will be used to refer to both <code>ASSERT/EXPECT</code>.</p>
+<p>When it is possible to make several different checks, but impossible to continue test execution if at least one check fails, you can use <code>::testing::Test::HasNonfatalFailure()</code> function. The recommended way to express that is <code>ASSERT_FALSE(::testing::Test::HasNonfatalFailure())</code>. Besides making it clear why a test is aborted, it also allows you to provide more information about a failure.</p>
+<h3 id="first-parameter-is-expected-value">First parameter is expected value</h3>
+<p>In all equality assertions, expected values should be passed as the first parameter.</p>
+<p>This convention is adopted by GoogleTest, and there is a slight difference in how GoogleTest treats parameters, the most important one is <code>null</code> detection. Due to different reasons, <code>null</code> detection is enabled only for the first parameter, that is to said <code>EXPECT_EQ(NULL, object)</code> checks that object is <code>null</code>, while <code>EXPECT_EQ(object, NULL)</code> checks that object equals to <code>NULL</code>, GoogleTest is very strict regarding types of compared values so the latter will generates a compile-time error.</p>
+<h3 id="floating-point-comparison">Floating-point comparison</h3>
+<p>Use floating-point special macros to compare <code>float/double</code> values.</p>
+<p>Because of floating-point number representations and round-off errors, regular equality comparison will not return true in most cases. There are special <code>EXPECT_FLOAT_EQ/EXPECT_DOUBLE_EQ</code> assertions which check that the distance between compared values is not more than 4 ULPs, there is also <code>EXPECT_NEAR(v1, v2, eps)</code> which checks that the absolute value of the difference between <code>v1</code> and <code>v2</code> is not greater than <code>eps</code>.</p>
+<h3 id="c-string-comparison">C string comparison</h3>
+<p>Use string special macros for C strings comparisons.</p>
+<p><code>EXPECT_EQ</code> just compares pointers’ values, which is hardly what one wants comparing C strings. GoogleTest provides <code>EXPECT_STREQ</code> and <code>EXPECT_STRNE</code> macros to compare C string contents. There are also case-insensitive versions <code>EXPECT_STRCASEEQ</code>, <code>EXPECT_STRCASENE</code>.</p>
+<h3 id="error-messages">Error messages</h3>
+<p>Provide informative, but not too verbose error messages.</p>
+<p>All GoogleTest asserts print compared expressions and their values, so there is no need to have them in error messages. Asserts print only compared values, they do not print any of interim variables, e.g. <code>ASSERT_TRUE((val1 == val2 &amp;&amp; isFail(foo(8)) || i == 18)</code> prints only one value. If you use some complex predicates, please consider <code>EXPECT_PRED*</code> or <code>EXPECT_FORMAT_PRED</code> assertions family, they check that a predicate returns true/success and print out all parameters values.</p>
+<p>However in some cases, default information is not enough, a commonly used example is an assert inside a loop, GoogleTest will not print iteration values (unless it is an assert's parameter). Other demonstrative examples are printing error code and a corresponding error message; printing internal states which might have an impact on results. One should add this information to assert message using <code>&lt;&lt;</code> operator.</p>
+<h3 id="uncluttered-output">Uncluttered output</h3>
+<p>Print information only if it is needed.</p>
+<p>Too verbose tests which print all information even if they pass are very bad practice. They just pollute output, so it becomes harder to find useful information. In order not print information till it is really needed, one should consider saving it to a temporary buffer and pass to an assert. <a href="https://hg.openjdk.java.net/jdk/jdk/file/tip/test/hotspot/gtest/gc/shared/test_memset_with_concurrent_readers.cpp" class="uri">https://hg.openjdk.java.net/jdk/jdk/file/tip/test/hotspot/gtest/gc/shared/test_memset_with_concurrent_readers.cpp</a> has a good example how to do that.</p>
+<h3 id="failures-propagation">Failures propagation</h3>
+<p>Wrap a subroutine call into <code>EXPECT_NO_FATAL_FAILURE</code> macro to propagate failures.</p>
+<p><code>ASSERT</code> and <code>FAIL</code> abort only the current function, so if you have them in a subroutine, a test will not be aborted after the subroutine even if <code>ASSERT</code> or <code>FAIL</code> fails. You should call such subroutines in <code>ASSERT_NO_FATAL_FAILURE</code> macro to propagate fatal failures and abort a test. <code>(EXPECT|ASSERT)_NO_FATAL_FAILURE</code> can also be used to provide more information.</p>
+<p>Due to obvious reasons, there are no <code>(EXPECT|ASSERT)_NO_NONFATAL_FAILURE</code> macros. However, if you need to check if a subroutine generated a nonfatal failure (failed an <code>EXPECT</code>), you can use <code>::testing::Test::HasNonfatalFailure</code> function, or <code>::testing::Test::HasFailure</code> function to check if a subroutine generated any failures, see <a href="#several-checks">Several checks</a>.</p>
+<h2 id="naming-and-grouping">Naming and Grouping</h2>
+<h3 id="test-group-names">Test group names</h3>
+<p>Test group names should be in CamelCase, start and end with a letter. A test group should be named after tested class, functionality, subsystem, etc.</p>
+<p>This naming scheme helps to find tests, filter them and simplifies test failure analysis. For example, class <code>Foo</code> - test group <code>Foo</code>, compiler logging subsystem - test group <code>CompilerLogging</code>, G1 GC — test group <code>G1GC</code>, and so forth.</p>
+<h3 id="filename">Filename</h3>
+<p>A test file must have <code>test_</code> prefix and <code>.cpp</code> suffix.</p>
+<p>Both are actually requirements from the current build system to recognize your tests.</p>
+<h3 id="file-location">File location</h3>
+<p>Test file location should reflect a location of the tested part of the product.</p>
+<ul>
+<li><p>All unit tests for a class from <code>foo/bar/baz.cpp</code> should be placed <code>foo/bar/test_baz.cpp</code> in <code>hotspot/test/native/</code> directory. Having all tests for a class in one file is a common practice for unit tests, it helps to see all existing tests at once, share functions and/or resources without losing encapsulation.</p></li>
+<li><p>For tests which test more than one class, directory hierarchy should be the same as product hierarchy, and file name should reflect the name of the tested subsystem/functionality. For example, if a sub-system under tests belongs to <code>gc/g1</code>, tests should be placed in <code>gc/g1</code> directory.</p></li>
+</ul>
+<p>Please note that framework prepends directory name to a test group name. For example, if <code>TEST(foo, check_this)</code> and <code>TEST(bar, check_that)</code> are defined in <code>hotspot/test/native/gc/shared/test_foo.cpp</code> file, they will be reported as <code>gc/shared/foo::check_this</code> and <code>gc/shared/bar::check_that</code>.</p>
+<h3 id="test-names">Test names</h3>
+<p>Test names should be in small_snake_case, start and end with a letter. A test name should reflect that a test checks.</p>
+<p>Such naming makes tests self-descriptive and helps a lot during the whole test life cycle. It is easy to do test planning, test inventory, to see what things are not tested, to review tests, to analyze test failures, to evolve a test, etc. For example <code>foo_return_0_if_name_is_null</code> is better than <code>foo_sanity</code> or <code>foo_basic</code> or just <code>foo</code>, <code>humongous_objects_can_not_be_moved_by_young_gc</code> is better than <code>ho_young_gc</code>.</p>
+<p>Actually using underscore is against GoogleTest project convention, because it can lead to illegal identifiers, however, this is too strict. Restricting usage of underscore for test names only and prohibiting test name starts or ends with an underscore are enough to be safe.</p>
+<h3 id="fixture-classes">Fixture classes</h3>
+<p>Fixture classes should be named after tested classes, subsystems, etc (follow <a href="#test-group-names">Test group names rule</a>) and have <code>Test</code> suffix to prevent class name conflicts.</p>
+<h3 id="friend-classes">Friend classes</h3>
+<p>All test purpose friends should have either <code>Test</code> or <code>Testable</code> suffix.</p>
+<p>It greatly simplifies understanding of friendship’s purpose and allows statically check that private members are not exposed unexpectedly. Having <code>FooTest</code> as a friend of <code>Foo</code> without any comments will be understood as a necessary evil to get testability.</p>
+<h3 id="oscpu-specific-tests">OS/CPU specific tests</h3>
+<p>Guard OS/CPU specific tests by <code>#ifdef</code> and have OS/CPU name in filename.</p>
+<p>For the time being, we do not support separate directories for OS, CPU, OS-CPU specific tests, in case we will have lots of such tests, we will change directory layout and build system to support that in the same way it is done in hotspot.</p>
+<h2 id="miscellaneous">Miscellaneous</h2>
+<h3 id="hotspot-style">Hotspot style</h3>
+<p>Abide the norms and rules accepted in Hotspot style guide.</p>
+<p>Tests are a part of Hotspot, so everything (if applicable) we use for Hotspot, should be used for tests as well. Those guidelines cover test-specific things.</p>
+<h3 id="codetest-metrics">Code/test metrics</h3>
+<p>Coverage information and other code/test metrics are quite useful to decide what tests should be written, what tests should be improved and what can be removed.</p>
+<p>For unit tests, widely used and well-known coverage metric is branch coverage, which provides good quality of tests with relatively easy test development process. For other levels of testing, branch coverage is not as good, and one should consider others metrics, e.g. transaction flow coverage, data flow coverage.</p>
+<h3 id="access-to-non-public-members">Access to non-public members</h3>
+<p>Use explicit friend class to get access to non-public members.</p>
+<p>We do not use GoogleTest macro to declare friendship relation, because, from our point of view, it is less clear than an explicit declaration.</p>
+<p>Declaring a test fixture class as a friend class of a tested test is the easiest and the clearest way to get access. However, it has some disadvantages, here is some of them:</p>
+<ul>
+<li>Each test has to be declared as a friend</li>
+<li>Subclasses do not inheritance friendship relation</li>
+</ul>
+<p>In other words, it is harder to share code between tests. Hence if you want to share code or expect it to be useful in other tests, you should consider making members in a tested class protected and introduce a shared test-only class which expose those members via public functions, or even making members publicly accessible right away in a product class. If it is not an option to change members visibility, one can create a friend class which exposes members.</p>
+<h3 id="death-tests">Death tests</h3>
+<p>You can not use death tests inside <code>TEST_OTHER_VM</code> and <code>TEST_VM_ASSERT*</code>.</p>
+<p>We tried to make Hotspot-GoogleTest integration as transparent as possible, however, due to the current implementation of <code>TEST_OTHER_VM</code> and <code>TEST_VM_ASSERT*</code> tests, you cannot use death test functionality in them. These tests are implemented as GoogleTest death tests, and GoogleTest does not allow to have a death test inside another death test.</p>
+<h3 id="external-flags">External flags</h3>
+<p>Passing external flags to a tested JVM is not supported.</p>
+<p>The rationality of such design decision is to simplify both tests and a test framework and to avoid failures related to incompatible flags combination till there is a good solution for that. However there are cases when one wants to test a JVM with specific flags combination, <code>_JAVA_OPTIONS</code> environment variable can be used to do that. Flags from <code>_JAVA_OPTIONS</code> will be used in <code>TEST_VM</code>, <code>TEST_OTHER_VM</code> and <code>TEST_VM_ASSERT*</code> tests.</p>
+<h3 id="test-specific-flags">Test-specific flags</h3>
+<p>Passing flags to a tested JVM in <code>TEST_OTHER_VM</code> and <code>TEST_VM_ASSERT*</code> should be possible, but is not implemented yet.</p>
+<p>Facility to pass test-specific flags is needed for system, regression or other types of tests which require a fully initialized JVM in some particular configuration, e.g. with Serial GC selected. There is no support for such tests now, however, there is a plan to add that in upcoming releases.</p>
+<p>For now, if a test depends on flags values, it should have <code>if (!&lt;flag&gt;) { return }</code> guards in the very beginning and <code>@requires</code> comment similar to jtreg <code>@requires</code> directive right before test macros. <a href="https://hg.openjdk.java.net/jdk/jdk/file/tip/test/hotspot/gtest/gc/g1/test_g1IHOPControl.cpp" class="uri">https://hg.openjdk.java.net/jdk/jdk/file/tip/test/hotspot/gtest/gc/g1/test_g1IHOPControl.cpp</a> ha an example of this temporary workaround. It is important to follow that pattern as it allows us to easily find all such tests and update them as soon as there is an implementation of flag passing facility.</p>
+<p>In long-term, we expect jtreg to support GoogleTest tests as first class citizens, that is to say, jtreg will parse <span class="citation" data-cites="requires">@requires</span> comments and filter out inapplicable tests.</p>
+<h3 id="flag-restoring">Flag restoring</h3>
+<p>Restore changed flags.</p>
+<p>It is quite common for tests to configure JVM in a certain way changing flags’ values. GoogleTest provides two ways to set up environment before a test and restore it afterward: using either constructor and destructor or <code>SetUp</code> and <code>TearDown</code> functions. Both ways require to use a test fixture class, which sometimes is too wordy. The simpler facilities like <code>FLAG_GUARD</code> macro or <code>*FlagSetting</code> classes could be used in such cases to restore/set values.</p>
+<p>Caveats:</p>
+<ul>
+<li><p>Changing a flag’s value could break the invariants between flags' values and hence could lead to unexpected/unsupported JVM state.</p></li>
+<li><p><code>FLAG_SET_*</code> macros can change more than one flag (in order to maintain invariants) so it is hard to predict what flags will be changed and it makes restoring all changed flags a nontrivial task. Thus in case one uses <code>FLAG_SET_*</code> macros, they should use <code>TEST_OTHER_VM</code> test type.</p></li>
+</ul>
+<h3 id="googletest-documentation">GoogleTest documentation</h3>
+<p>In case you have any questions regarding GoogleTest itself, its asserts, test declaration macros, other macros, etc, please consult its documentation.</p>
+<h2 id="todo">TODO</h2>
+<p>Although this document provides guidelines on the most important parts of test development using GTest, it still misses a few items:</p>
+<ul>
+<li><p>Examples, esp for <a href="#access-to-non-public-members">access to non-public members</a></p></li>
+<li>test types: purpose, drawbacks, limitation
+<ul>
+<li><code>TEST_VM</code></li>
+<li><code>TEST_VM_F</code></li>
+<li><code>TEST_OTHER_VM</code></li>
+<li><code>TEST_VM_ASSERT</code></li>
+<li><code>TEST_VM_ASSERT_MSG</code></li>
+</ul></li>
+<li>Miscellaneous
+<ul>
+<li>Test libraries
+<ul>
+<li>where to place</li>
+<li>how to write</li>
+<li>how to use</li>
+</ul></li>
+<li>test your tests
+<ul>
+<li>how to run tests in random order</li>
+<li>how to run only specific tests</li>
+<li>how to run each test separately</li>
+<li>check that a test can find bugs it is supposed to by introducing them</li>
+</ul></li>
+<li>mocks/stubs/dependency injection</li>
+<li>setUp/tearDown
+<ul>
+<li>vs c-tor/d-tor</li>
+<li>empty test to test them</li>
+</ul></li>
+<li>internal (declared in .cpp) struct/classes</li>
+</ul></li>
+</ul>
+</body>
+</html>

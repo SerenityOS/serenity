@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ko"/>
+		<territory type="KP"/>
+	</identity>
+	<localeDisplayNames>
+		<territories>
+			<territory type="KP">조선민주주의인민공화국</territory>
+		</territories>
+	</localeDisplayNames>
+	<dates>
+		<timeZoneNames>
+			<metazone type="Korea">
+				<long>
+					<generic>조선 시간</generic>
+					<standard>조선 표준시</standard>
+					<daylight>조선 하계 표준시</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+</ldml>

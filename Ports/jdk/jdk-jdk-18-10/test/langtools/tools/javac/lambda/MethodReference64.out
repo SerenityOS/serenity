@@ -1,0 +1,13 @@
+MethodReference64.java:28:27: compiler.err.abstract.cant.be.instantiated: MethodReference64.Anno
+MethodReference64.java:29:27: compiler.err.enum.cant.be.instantiated
+MethodReference64.java:30:27: compiler.err.abstract.cant.be.instantiated: MethodReference64.I
+MethodReference64.java:31:30: compiler.err.type.found.req: ?, (compiler.misc.type.req.exact)
+MethodReference64.java:32:27: compiler.err.unexpected.type: kindname.class, kindname.value
+MethodReference64.java:34:48: compiler.err.generic.array.creation
+MethodReference64.java:38:11: compiler.err.abstract.cant.be.instantiated: MethodReference64.Anno
+MethodReference64.java:39:11: compiler.err.enum.cant.be.instantiated
+MethodReference64.java:40:11: compiler.err.abstract.cant.be.instantiated: MethodReference64.I
+MethodReference64.java:41:14: compiler.err.type.found.req: ?, (compiler.misc.type.req.exact)
+MethodReference64.java:42:11: compiler.err.unexpected.type: kindname.class, kindname.value
+MethodReference64.java:44:32: compiler.err.generic.array.creation
+12 errors

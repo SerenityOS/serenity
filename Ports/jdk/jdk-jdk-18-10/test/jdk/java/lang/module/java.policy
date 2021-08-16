@@ -1,0 +1,4 @@
+grant {
+    // ModuleFinder.ofSystem() needs this
+    permission java.lang.RuntimePermission "accessSystemModules";
+};

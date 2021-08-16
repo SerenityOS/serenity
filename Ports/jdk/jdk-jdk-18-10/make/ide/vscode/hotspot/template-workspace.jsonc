@@ -1,0 +1,63 @@
+{
+	"folders": [
+		{
+			"name": "Source root",
+			"path": "{{TOPDIR}}"
+		},
+		// {{EXTRA_WORKSPACE_ROOT}}
+		{
+			"name": "Build artifacts",
+			"path": "{{OUTPUTDIR}}"
+		}
+	],
+	"extensions": {
+		"recommendations": [
+			// {{INDEXER_EXTENSIONS}}
+		]
+	},
+	"settings": {
+		// {{INDEXER_SETTINGS}}
+
+		// Additional conventions
+		"files.associations": {
+			"*.gmk": "makefile"
+		},
+
+		// Having these enabled slow down task execution
+		"typescript.tsc.autoDetect": "off",
+		"gulp.autoDetect": "off",
+		"npm.autoDetect": "off",
+		"grunt.autoDetect": "off",
+		"jake.autoDetect": "off",
+
+		// Certain types of files are not relevant for the file browser
+		"files.exclude": {
+			"**/.git": true,
+			"**/.hg": true,
+			"**/.DS_Store": true,
+		},
+
+		// Files that may be interesting to browse manually, but avoided during searches
+		"search.exclude": {
+			"**/*.class": true,
+			"**/*.jsa": true,
+			"**/*.vardeps": true,
+			"**/*.o": true,
+			"**/*.obj": true,
+			"**/*.d": true,
+			"**/*.d.*": true,
+			"**/*_batch*": true,
+			"**/*.marker": true,
+			"**/compile-commands/": true,
+			"**/objs": true,
+			"**/launcher-objs": true,
+			"**/*.cmdline": true,
+			"**/*.log": true,
+			".vscode": true,
+			".clangd": true
+		},
+
+		// Trailing whitespace should never be used in this project
+		"files.trimTrailingWhitespace": true
+	}
+}

@@ -1,0 +1,126 @@
+//
+// Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.  Oracle designates this
+// particular file as subject to the "Classpath" exception as provided
+// by Oracle in the LICENSE file that accompanied this code.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+
+#define JDK_COMMENTS Java Access Bridge
+#define JDK_FILEOS 0x40004L
+
+#include "version.rc"
+
+#include "resource.h"
+#include "accessBridgeResource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_READONLY_SYMBOLS
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+ACCESSBRIDGESTATUSWINDOW DIALOGEX 160, 78, 209, 163
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CLIENTEDGE
+CAPTION "Access Bridge status"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    EDITTEXT        cVMID,67,23,121,13,ES_READONLY
+    EDITTEXT        cStatusText,40,147,162,13,ES_READONLY
+    LTEXT           "Java VM ID:",IDC_STATIC,23,25,40,8
+    LTEXT           "Status:",IDC_STATIC,11,149,23,8
+    EDITTEXT        cWindowsID,67,39,121,13,ES_READONLY
+    LTEXT           "Windows ID:",IDC_STATIC,21,41,42,8
+    EDITTEXT        cCallInfo,12,65,184,75,ES_MULTILINE | ES_AUTOVSCROLL |
+                    ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
+    GROUPBOX        "Call info",IDC_STATIC,4,55,197,90
+    EDITTEXT        cInvokedByText,67,1,121,13,ES_READONLY
+    LTEXT           "Invoked by:",IDC_STATIC,25,3,38,8
+END
+
+IDD_DIALOG1 DIALOG DISCARDABLE  0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
+END
+
+#ifdef APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    "ACCESSBRIDGESTATUSWINDOW", DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 202
+        BOTTOMMARGIN, 160
+    END
+
+    "IDD_DIALOG1", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+END
+
+#endif    // APSTUDIO_INVOKED

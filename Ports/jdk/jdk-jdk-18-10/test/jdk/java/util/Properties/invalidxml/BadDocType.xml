@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE namevaluepairs SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!-- The root element for a XML properties document is properties -->
+
+<properties>
+<entry key="foo">bar</entry>
+<entry key="gus">baz</entry>
+</properties>

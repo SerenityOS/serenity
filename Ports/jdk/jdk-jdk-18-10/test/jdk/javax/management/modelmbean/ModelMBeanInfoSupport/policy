@@ -1,0 +1,14 @@
+grant {
+  permission javax.management.MBeanServerPermission "createMBeanServer";
+  permission javax.management.MBeanPermission "javax.management.modelmbean.RequiredModelMBean#-[-]", "instantiate";
+  permission javax.management.MBeanPermission "javax.management.modelmbean.RequiredModelMBean#-[*:*]", "registerMBean";
+  permission javax.management.MBeanPermission "javax.management.modelmbean.RequiredModelMBean#*[*:*]", "getAttribute";
+  permission javax.management.MBeanPermission "javax.management.modelmbean.RequiredModelMBean#*[*:*]", "setAttribute";
+  permission javax.management.MBeanPermission "javax.management.modelmbean.RequiredModelMBean#*[*:*]", "invoke";
+  permission javax.management.MBeanPermission "GetAllDescriptorsTest$Resource#-[*:*]", "registerMBean";
+  permission javax.management.MBeanPermission "GetAllDescriptorsTest$Resource#*[*:*]", "invoke";
+  permission javax.management.MBeanPermission "GetAllDescriptorsTest$Resource#*[*:*]", "getAttribute";
+  permission javax.management.MBeanPermission "GetAllDescriptorsTest$Resource#*[*:*]", "setAttribute";
+  permission javax.management.MBeanPermission "GetAllDescriptorsTest$Resource#*[*:*]", "getMBeanInfo";
+
+};

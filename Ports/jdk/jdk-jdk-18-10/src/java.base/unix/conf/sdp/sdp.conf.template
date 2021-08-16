@@ -1,0 +1,30 @@
+#
+# Configuration file to enable InfiniBand Sockets Direct Protocol.
+#
+# Each line that does not start with a comment (#) is a rule to indicate when
+# the SDP transport protocol should be used. The format of a rule is as follows:
+#   ("bind"|"connect") 1*LWSP-char (hostname|ipaddress["/"prefix]) 1*LWSP-char ("*"|port)["-"("*"|port)]
+#
+# A "bind" rule indicates that the SDP protocol transport should be used when
+# a TCP socket binds to an address/port that matches the rule. A "connect" rule
+# indicates that the SDP protocol transport should be used when an unbound
+# TCP socket attempts to connect to an address/port that matches the rule.
+# Addresses may be specified as hostnames or literal Internet Protocol (IP)
+# addresses. When a literal IP address is used then a prefix length may be used
+# to indicate the number of bits for matching (useful when a block of addresses
+# or subnet is allocated to the InfiniBand fabric). 
+
+# Use SDP for all sockets that bind to specific local addresses
+#bind    192.168.1.1    *
+#bind    fe80::21b:24ff:fe3d:7896    *
+
+# Use SDP for all sockets that bind to the wildcard address in a port range
+#bind    0.0.0.0    5000-5999
+#bind    ::0        5000-5999
+
+# Use SDP when connecting to all application services on 192.168.1.*
+#connect 192.168.1.0/24       1024-*
+
+# Use SDP when connecting to the http server or MySQL database on hpccluster.
+#connect hpccluster.foo.com   80
+#connect hpccluster.foo.com   3306

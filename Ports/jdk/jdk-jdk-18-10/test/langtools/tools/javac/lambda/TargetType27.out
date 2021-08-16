@@ -1,0 +1,2 @@
+TargetType27.java:18:10: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.assignment.exists: A,R, (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.not.a.functional.intf: java.lang.Object)))
+1 error

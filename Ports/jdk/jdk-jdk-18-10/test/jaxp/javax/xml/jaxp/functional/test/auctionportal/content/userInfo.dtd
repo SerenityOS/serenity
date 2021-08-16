@@ -1,0 +1,6 @@
+<!ELEMENT userInfo (user+)>
+<!ELEMENT user (FirstName,LastName,UserID)>
+<!ELEMENT FirstName (#PCDATA)>
+<!ELEMENT LastName (#PCDATA)>
+<!ELEMENT UserID (#PCDATA)>
+<!ATTLIST user accountID CDATA "100">

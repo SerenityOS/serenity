@@ -1,0 +1,2 @@
+MethodReference69.java:19:12: compiler.err.invalid.mref: kindname.method, (compiler.misc.cant.resolve.location.args: kindname.method, getName, , , (compiler.misc.location: kindname.class, MethodReference69.Foo, null))
+1 error

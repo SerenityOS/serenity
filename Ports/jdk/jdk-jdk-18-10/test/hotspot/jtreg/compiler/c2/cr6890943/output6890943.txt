@@ -1,0 +1,50 @@
+Case #1: Yes 2
+Case #2: Yes 2
+Case #3: Yes 1
+Case #4: Yes 0
+Case #5: No
+Case #6: No
+Case #7: Yes 6
+Case #8: Yes 6
+Case #9: No
+Case #10: Yes 1
+Case #11: Yes 6
+Case #12: Yes 0
+Case #13: No
+Case #14: Yes 22
+Case #15: Yes 1225
+Case #16: Yes 178
+Case #17: No
+Case #18: Yes 1
+Case #19: Yes 7
+Case #20: Yes 2
+Case #21: Yes 1
+Case #22: No
+Case #23: Yes 3
+Case #24: Yes 1
+Case #25: Yes 7
+Case #26: No
+Case #27: Yes 2
+Case #28: Yes 4
+Case #29: Yes 2
+Case #30: Yes 1
+Case #31: Yes 2
+Case #32: Yes 20
+Case #33: Yes 161
+Case #34: Yes 48
+Case #35: No
+Case #36: Yes 218
+Case #37: Yes 51
+Case #38: Yes 247
+Case #39: Yes 32
+Case #40: Yes 31
+Case #41: Yes 31
+Case #42: Yes 25
+Case #43: Yes 17
+Case #44: Yes 2
+Case #45: Yes 61
+Case #46: Yes 25
+Case #47: No
+Case #48: No
+Case #49: Yes 8
+Case #50: Yes 0

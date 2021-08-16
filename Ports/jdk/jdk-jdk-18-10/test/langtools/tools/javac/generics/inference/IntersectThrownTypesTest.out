@@ -1,0 +1,3 @@
+IntersectThrownTypesTest.java:21:14: compiler.err.unreported.exception.need.to.catch.or.throw: java.io.IOException
+IntersectThrownTypesTest.java:25:14: compiler.err.unreported.exception.need.to.catch.or.throw: java.io.IOException
+2 errors

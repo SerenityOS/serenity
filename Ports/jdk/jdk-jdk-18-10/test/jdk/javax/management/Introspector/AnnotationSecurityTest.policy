@@ -1,0 +1,15 @@
+grant {
+     // JMX permissions
+    permission javax.management.MBeanServerPermission "*";
+    // Add permission to create and register 1 specific Described MBean
+    permission javax.management.MBeanPermission "Described#-[defaultDomain:class=Described]", "instantiate";
+    permission javax.management.MBeanPermission "Described#-[defaultDomain:class=Described]", "registerMBean";
+    // Add permission to create and register 1 specific Described MXBean
+    permission javax.management.MBeanPermission "DescribedMX#-[defaultDomain:class=DescribedMX]", "instantiate";
+    permission javax.management.MBeanPermission "DescribedMX#-[defaultDomain:class=DescribedMX]", "registerMBean";
+    // Add permission to create and register 1 specific UnDescribed MBean
+    permission javax.management.MBeanPermission "UnDescribed#-[defaultDomain:class=UnDescribed]", "instantiate";
+    permission javax.management.MBeanPermission "UnDescribed#-[defaultDomain:class=UnDescribed]", "registerMBean";
+    //
+    permission javax.management.MBeanTrustPermission "*";
+};

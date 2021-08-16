@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE stylesheet []>
+
+<maps>
+	<map1 type="key1">map1key1value</map1>
+	<map1 type="key2">map1key2value</map1>
+
+	<map2 type="key1">map2key1value</map2>
+	<map2 type="key2">map2key2value</map2>
+</maps>

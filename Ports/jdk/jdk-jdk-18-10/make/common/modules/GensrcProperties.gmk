@@ -1,0 +1,124 @@
+#
+# Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# This file defines macros that sets up rules for generating java classes
+# from resource bundle properties files.
+
+################################################################################
+# Helper macro for SetupCopy-zh_HK.
+define SetupOneCopy-zh_HK
+  $1_$2_TARGET := $$(patsubst $(TOPDIR)/src/$(MODULE)/share/classes/%, \
+      $(SUPPORT_OUTPUTDIR)/gensrc/$(MODULE)/%, \
+      $$(subst _zh_TW,_zh_HK, $2))
+
+  $$($1_$2_TARGET): $2
+	$$(call MakeTargetDir)
+	$(CAT) $$< | $(SED) -e '/class/s/_zh_TW/_zh_HK/' > $$@
+
+  $1 += $$($1_$2_TARGET)
+endef
+
+################################################################################
+# Creates rules for copying zh_TW resources to zh_HK.
+# Param 1 - Variable to add targets to
+# Param 2 - Files to copy from
+define SetupCopy-zh_HK
+  $$(foreach f, $2, $$(eval $$(call SetupOneCopy-zh_HK,$1,$$f)))
+endef
+
+################################################################################
+# Setup make rules that runs CompileProperties on a set of properties files.
+#
+# Parameter 1 is the name of the rule. This name is used as variable prefix,
+# and the targets generated are listed in a variable by that name.
+#
+# Remaining parameters are named arguments. These include:
+# SRC_DIRS   Directories containing properties files to process.
+# EXCLUDE   Exclude files matching this pattern.
+# CLASS   The super class for the generated classes.
+# MODULE_PATH_ROOT   Module path root, defaults to $(TOPDIR)/src.
+# KEEP_ALL_TRANSLATIONS Set to true to skip filtering of excluded translations.
+SetupCompileProperties = $(NamedParamsMacroTemplate)
+define SetupCompilePropertiesBody
+  # Set default value unless overridden
+  ifeq ($$($1_MODULE_PATH_ROOT), )
+    $1_MODULE_PATH_ROOT := $(TOPDIR)/src
+  endif
+
+  # Locate all properties files in the given source dirs.
+  $1_SRC_FILES := $$(call FindFiles, $$($1_SRC_DIRS), *.properties)
+
+  ifneq ($$($1_EXCLUDE), )
+    $1_SRC_FILES := $$(filter-out $$($1_EXCLUDE), $$($1_SRC_FILES))
+  endif
+
+  # Filter out any excluded translations
+  ifneq ($$($1_KEEP_ALL_TRANSLATIONS), true)
+    $1_SRC_FILES := $$(call FilterExcludedTranslations, $$($1_SRC_FILES), .properties)
+  endif
+
+  # Convert .../src/<module>/share/classes/com/sun/tools/javac/resources/javac_zh_CN.properties
+  # to .../support/gensrc/<module>/com/sun/tools/javac/resources/javac_zh_CN.java
+  $1_JAVAS := $$(patsubst $$($1_MODULE_PATH_ROOT)/%, \
+      $(SUPPORT_OUTPUTDIR)/gensrc/%, \
+      $$(patsubst %.properties, %.java, \
+      $$(subst /$(OPENJDK_TARGET_OS)/classes,, \
+      $$(subst /$(OPENJDK_TARGET_OS_TYPE)/classes,, \
+      $$(subst /share/classes,, $$($1_SRC_FILES))))))
+
+  # Generate the package dirs for the to be generated java files. Sort to remove
+  # duplicates.
+  $1_DIRS := $$(sort $$(dir $$($1_JAVAS)))
+
+  # Now generate a sequence of:
+  # "-compile ...javac_zh_CN.properties ...javac_zh_CN.java java.util.ListResourceBundle"
+  # suitable to be fed into the CompileProperties command.
+  $1_CMDLINE := $$(subst _SPACE_, $(SPACE), \
+      $$(join $$(addprefix -compile_SPACE_, $$($1_SRC_FILES)), \
+      $$(addsuffix _SPACE_$$($1_CLASS), \
+      $$(addprefix _SPACE_, $$($1_JAVAS)))))
+
+  $1_TARGET := $(SUPPORT_OUTPUTDIR)/gensrc/$(MODULE)/_the.$1.marker
+  $1_CMDLINE_FILE := $(SUPPORT_OUTPUTDIR)/gensrc/$(MODULE)/_the.$1.cmdline
+
+  # Now setup the rule for the generation of the resource bundles.
+  $$($1_TARGET): $$($1_SRC_FILES) $$($1_JAVAS) $(BUILD_TOOLS_JDK)
+	$$(call LogWarn, Compiling $$(words $$($1_SRC_FILES)) properties into resource bundles for $(MODULE))
+	$$(call MakeDir, $$(@D) $$($1_DIRS))
+	$$(eval $$(call ListPathsSafely, $1_CMDLINE, $$($1_CMDLINE_FILE)))
+	$(TOOL_COMPILEPROPERTIES) -quiet @$$($1_CMDLINE_FILE)
+	$(TOUCH) $$@
+
+  $$($1_JAVAS): $$($1_SRC_FILES)
+
+  # Create zh_HK versions of all zh_TW files created above
+  $$(eval $$(call SetupCopy-zh_HK,$1_HK,$$(filter %_zh_TW.java, $$($1_JAVAS))))
+  # The zh_HK copy must wait for the compile properties tool to run
+  $$($1_HK): $$($1_TARGET)
+
+  $1 += $$($1_JAVAS) $$($1_TARGET) $$($1_HK)
+endef
+
+################################################################################

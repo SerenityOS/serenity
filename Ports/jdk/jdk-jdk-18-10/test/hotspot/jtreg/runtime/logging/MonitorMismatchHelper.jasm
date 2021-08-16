@@ -1,0 +1,114 @@
+/*
+ * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+super public class MonitorMismatchHelper
+	version 52:0
+{
+
+private Field c:I;
+
+public Method "<init>":"()V"
+	stack 2 locals 1
+{
+		aload_0;
+		invokespecial	Method java/lang/Object."<init>":"()V";
+		aload_0;
+		iconst_0;
+		putfield	Field c:"I";
+		return;
+}
+
+public synchronized Method increment:"()V"
+	stack 3 locals 1
+{
+		aload_0;
+		dup;
+		getfield	Field c:"I";
+		iconst_1;
+		iadd;
+		putfield	Field c:"I";
+		return;
+}
+
+public synchronized Method decrement:"()V"
+	stack 3 locals 1
+{
+		aload_0;
+		dup;
+		getfield	Field c:"I";
+		iconst_1;
+		isub;
+		putfield	Field c:"I";
+		return;
+}
+
+public synchronized Method value:"()I"
+	stack 1 locals 1
+{
+		aload_0;
+		getfield	Field c:"I";
+		ireturn;
+}
+
+public static varargs Method main:"([Ljava/lang/String;)V"
+	stack 2 locals 4
+{
+		new	class MonitorMismatchHelper;
+		dup;
+		invokespecial	Method "<init>":"()V";
+		astore_1;
+		aload_1;
+		dup;
+		astore_2;
+		monitorenter;
+		try t0;
+		aload_1;
+		invokevirtual	Method increment:"()V";
+		aload_1;
+		invokevirtual	Method increment:"()V";
+		aload_1;
+		invokevirtual	Method decrement:"()V";
+		getstatic	Field java/lang/System.out:"Ljava/io/PrintStream;";
+		aload_1;
+		invokevirtual	Method value:"()I";
+		invokevirtual	Method java/io/PrintStream.print:"(I)V";
+		aload_2;
+		monitorexit;
+		endtry t0;
+		goto	L44;
+		catch t0 #0;
+		catch t1 #0;
+		try t1;
+		stack_frame_type full;
+		locals_map class "[Ljava/lang/String;", class MonitorMismatchHelper, class java/lang/Object;
+		stack_map class java/lang/Throwable;
+		astore_3;
+		aload_2;
+		endtry t1;
+		aload_3;
+		athrow;
+	L44:	stack_frame_type chop1;
+		return;
+}
+
+} // end Class MonitorMismatchHelper

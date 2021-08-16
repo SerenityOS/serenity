@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="sw"/>
+		<territory type="CD"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ak">Kiakan</language>
+			<language type="ar_001">Kiarabu cha Dunia Kilichosanifishwa</language>
+			<language type="arq">Kiarabu cha Aljeria</language>
+			<language type="az">Kiazabajani</language>
+			<language type="gv">Kimanksi</language>
+			<language type="gwi">Kigwichiin</language>
+			<language type="hup">Kihupa</language>
+			<language type="jbo">Kilojban</language>
+			<language type="kac">Kikachin</language>
+			<language type="kkj">Kikako</language>
+			<language type="koi">Kikomipermyak</language>
+			<language type="kru">Kikurukh</language>
+			<language type="kum">Kikumyk</language>
+			<language type="ky">Kikirigizi</language>
+			<language type="lam">Kilamba</language>
+			<language type="li">Kilimburgi</language>
+			<language type="mdf">Kimoksha</language>
+			<language type="mic">Kimikmaki</language>
+			<language type="mk">Kimasedonia</language>
+			<language type="moh">Kimohoki</language>
+			<language type="mos">Kimossi</language>
+			<language type="nnh">Kingiemboon</language>
+			<language type="nqo">Kiinko</language>
+			<language type="pcm">Pijini ya Nijeria</language>
+			<language type="quc">Kikiiche</language>
+			<language type="shu">Kiarabu cha Chadi</language>
+			<language type="srn">Kitongo cha Sranan</language>
+			<language type="swb">Kikomoro</language>
+			<language type="syr">Kisiria</language>
+			<language type="udm">Kiudumurti</language>
+			<language type="yi">Kiyidi</language>
+		</languages>
+		<territories>
+			<territory type="030">Asia Mashariki</territory>
+			<territory type="AF">Afuganistani</territory>
+			<territory type="AZ">Azabajani</territory>
+			<territory type="BJ">Benini</territory>
+			<territory type="CI">Kodivaa</territory>
+			<territory type="CX">Kisiwa cha Christmas</territory>
+			<territory type="HR">Kroeshia</territory>
+			<territory type="JO">Yordani</territory>
+			<territory type="LB">Lebanoni</territory>
+			<territory type="LI">Lishenteni</territory>
+			<territory type="LU">Lasembagi</territory>
+			<territory type="LV">Lativia</territory>
+			<territory type="MA">Moroko</territory>
+			<territory type="MM">Myama</territory>
+			<territory type="NE">Nijeri</territory>
+			<territory type="NG">Nijeria</territory>
+			<territory type="NO">Norwe</territory>
+			<territory type="NP">Nepali</territory>
+			<territory type="OM">Omani</territory>
+			<territory type="PR">Puetoriko</territory>
+			<territory type="QA">Katari</territory>
+			<territory type="SD">Sudani</territory>
+			<territory type="ST">Sao Tome na Prinsipe</territory>
+			<territory type="TD">Chadi</territory>
+			<territory type="TL">Timori ya Mashariki</territory>
+		</territories>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a b c d e f g h i j k l m n o p r s t u v w y z]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[q x]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="MMMEd">E d MMM</dateFormatItem>
+						<dateFormatItem id="ms">m:ss</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>Wakati</displayName>
+			</field>
+			<field type="week">
+				<displayName>Juma</displayName>
+			</field>
+			<field type="weekday">
+				<displayName>Siku ya juma</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>Muda wa siku</displayName>
+			</field>
+			<field type="zone">
+				<displayName>Majira ya saa</displayName>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group>.</group>
+		</symbols>
+		<currencies>
+			<currency type="CDF">
+				<symbol>FC</symbol>
+			</currency>
+			<currency type="CNY">
+				<displayName>Yuan Renminbi ya China</displayName>
+			</currency>
+			<currency type="ETB">
+				<displayName>Bir ya Uhabeshi</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>Sarafu ya Kijapani</displayName>
+			</currency>
+			<currency type="MGA">
+				<displayName>Ariary ya Bukini</displayName>
+			</currency>
+			<currency type="MRO">
+				<displayName>Ugwiya ya Moritania (1973–2017)</displayName>
+			</currency>
+			<currency type="MRU">
+				<displayName>Ugwiya ya Moritania</displayName>
+			</currency>
+			<currency type="SCR">
+				<displayName>Rupia ya Shelisheli</displayName>
+			</currency>
+			<currency type="XAF">
+				<displayName>Faranga CFA BEAC</displayName>
+			</currency>
+			<currency type="XOF">
+				<displayName>Faranga CFA BCEAO</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+</ldml>

@@ -1,0 +1,16 @@
+To recreate P1.jar/P2.jar, although I doubt this will ever be necessary, do
+the following.
+
+mkdir classes
+javac -d classes \
+    P1SecretKeyFactory.java Provider1.java \
+    P2SecretKeyFactory.java Provider2.java
+
+cd classes
+jar -cvf ../P1.jar com/p1
+jar -cvf ../P2.jar com/p2
+cd ..
+rm -rf classes
+
+jarsigner -keystore YourJCESigningKeyKeyStore.ks P1.jar yourKeySigningAlias
+jarsigner -keystore YourJCESigningKeyKeyStore.ks P2.jar yourKeySigningAlias

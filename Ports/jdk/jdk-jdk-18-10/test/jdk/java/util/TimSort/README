@@ -1,0 +1,4 @@
+This directory contains benchmark programs used to compare the
+performance of the TimSort algorithm against the historic 1997
+implementation of Arrays.sort.  Any future benchmarking will require
+minor modifications.

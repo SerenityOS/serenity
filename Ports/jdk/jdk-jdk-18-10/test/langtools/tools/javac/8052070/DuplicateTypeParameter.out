@@ -1,0 +1,5 @@
+DuplicateTypeParameter.java:8:40: compiler.err.already.defined: kindname.type.variable, T, kindname.class, DuplicateTypeParameter
+DuplicateTypeParameter.java:9:21: compiler.err.already.defined: kindname.type.variable, P, kindname.class, DuplicateTypeParameter.Inner
+DuplicateTypeParameter.java:15:20: compiler.err.already.defined: kindname.type.variable, D, kindname.class, Secondary
+DuplicateTypeParameter.java:11:25: compiler.err.already.defined: kindname.type.variable, M, kindname.class, Local
+4 errors

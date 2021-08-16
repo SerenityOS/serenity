@@ -1,0 +1,50 @@
+This directory contains the juicer and two benchmark tests.  
+Taken together, these tests form the RMI reliability 
+suite.  These three tests each function in two modes:
+
+  1) as short running JTREG regression tests
+
+  2) as long running RMI reliability tests
+
+In addition, the two benchmark tests serves a third role:
+
+  3) as RMI and Serialization Performance tests run by
+     the Performance Group (http://perfwww.ireland/)
+
+All of the ksh scripts under this directory are used 
+to run the RMI reliability suite and are not used
+to run the JTREG regression tests.  The one exception
+to this is the scripts/create_benchmark_jars.ksh
+script which creates the JAR files for the benchmarks
+that are transfered to the Performance Group.
+
+------------------------------------------------------
+
+The remainder of this file describes how to run the 
+RMI reliability suite:
+
+The launch_reliability.ksh script will build the
+reliability suite, execute it, and clean up after itself.
+It can be run from any directory with the proper 
+command line args. 
+
+For example, to run for 72 hours:
+
+export SUITE_DIR=<path to this directory>
+export JDK_DIR=<path to JDK being tested>
+export RES_DIR=<path to results dir for this run>
+export WORK_DIR=<path to temp working dir for this run>
+export VMOPTS="-server -showversion"
+
+rm -rf $RES_DIR $WORK_DIR
+mkdir -p $RES_DIR $WORK_DIR
+
+${SUITE_DIR}/launch_reliability.ksh \
+        $JDK_DIR \
+        $WORK_DIR \
+        $RES_DIR \
+        ksh \
+        $SUITE_DIR \
+        72 \
+        $VMOPTS >> $RES_DIR/launch_reliability.log 2>&1 &
+

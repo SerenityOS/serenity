@@ -1,0 +1,10 @@
+B.java:15:36: compiler.warn.has.been.deprecated: iDep_aInh_bUnd(), I
+B.java:8:36: compiler.warn.missing.deprecated.annotation
+B.java:9:36: compiler.warn.has.been.deprecated: iDep_aDep_bUnd(), A
+B.java:11:36: compiler.warn.missing.deprecated.annotation
+B.java:14:36: compiler.warn.missing.deprecated.annotation
+B.java:17:36: compiler.warn.missing.deprecated.annotation
+B.java:18:36: compiler.warn.has.been.deprecated: iUnd_aDep_bUnd(), A
+B.java:20:36: compiler.warn.missing.deprecated.annotation
+B.java:23:36: compiler.warn.missing.deprecated.annotation
+9 warnings

@@ -1,0 +1,12 @@
+DiamondFields.java:12:49: compiler.warn.diamond.redundant.args
+DiamondFields.java:13:49: compiler.warn.diamond.redundant.args
+DiamondFields.java:14:49: compiler.warn.diamond.redundant.args
+DiamondFields.java:15:49: compiler.warn.diamond.redundant.args
+DiamondFields.java:16:49: compiler.warn.diamond.redundant.args
+DiamondFields.java:19:41: compiler.warn.diamond.redundant.args
+DiamondFields.java:20:47: compiler.warn.diamond.redundant.args
+DiamondFields.java:21:53: compiler.warn.diamond.redundant.args
+DiamondFields.java:25:41: compiler.warn.diamond.redundant.args
+DiamondFields.java:26:47: compiler.warn.diamond.redundant.args
+DiamondFields.java:27:53: compiler.warn.diamond.redundant.args
+11 warnings

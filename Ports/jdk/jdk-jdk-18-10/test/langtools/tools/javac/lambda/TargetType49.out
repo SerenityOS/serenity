@@ -1,0 +1,3 @@
+TargetType49.java:15:12: compiler.err.override.weaker.access: (compiler.misc.cant.implement: clone(), java.lang.Object, clone(), TargetType49.F), public
+TargetType49.java:16:12: compiler.err.override.weaker.access: (compiler.misc.cant.implement: clone(), java.lang.Object, clone(), TargetType49.F), public
+2 errors

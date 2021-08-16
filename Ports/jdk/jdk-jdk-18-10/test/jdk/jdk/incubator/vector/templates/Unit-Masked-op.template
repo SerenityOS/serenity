@@ -1,0 +1,7 @@
+
+    @Test(dataProvider = "$type$UnaryOpMaskProvider")
+    static void [[TEST]]Masked$vectorteststype$(IntFunction<$type$[]> fa,
+                                                IntFunction<boolean[]> fm) {
+[[KERNEL]]
+        assertArraysEquals(r, a, mask, $vectorteststype$::[[TEST]]);
+    }

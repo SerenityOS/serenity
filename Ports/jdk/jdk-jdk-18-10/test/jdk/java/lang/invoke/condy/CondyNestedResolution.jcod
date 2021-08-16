@@ -1,0 +1,427 @@
+/*
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+Pseudo Java code:
+
+class CondyNestedResolution {
+    public static Object bsm1arg(MethodHandles$Lookup p1, String p2, Object p3, Object p4) {
+        System.out.println("In bsm1arg");
+        System.out.println(p4);
+        return p4;
+    }
+    public static Object bsm2arg(MethodHandles$Lookup p1, String p2, Object p3, Object p4, Object p5) {
+        System.out.println("In bsm2arg");
+        System.out.println(p4);
+        System.out.println(p5);
+        return p4;
+    }
+    public static Object bsm3arg(MethodHandles$Lookup p1, String p2, Object p3, Object p4, Object p5, Object p6) {
+        System.out.println("In bsm3arg");
+        System.out.println(p4);
+        System.out.println(p5);
+        System.out.println(p6);
+        return p4;
+    }
+    public static Object bsm4arg(MethodHandles$Lookup p1, String p2, Object p3, Object p4, Object p5, Object p6, Object p7) {
+        System.out.println("In bsm4arg");
+        System.out.println(p4);
+        System.out.println(p5);
+        System.out.println(p6);
+        System.out.println(p7);
+        return p4;
+    }
+
+    public static void test_condy() {
+        // The following condy of BSM#8 results in the invocation of bootstrap method bsm4arg with the following
+        // parameters:
+        // bsm4arg(bsm1arg("hello1"),
+        //         bsm1arg("hello2"),
+        //         bsm3arg(bsm1arg("hello4"), bsm2arg(bsm1arg("hello6"), (circular reference to BSM#8)), bsm1arg("hello5")),
+        //         bsm1arg("hello3"));
+        // JVMS 5.4.3.6 Dynamically-Computed Constant and Call Site Resolution
+        // Ensure that calls to bsm1arg("hello5") and bsm1arg("hello3") are never resolved due to the nested condy circularity
+        // which results in a StackOverflowError.
+        //
+        ldc Dynamic BSM#8;
+    }
+    public static void main(String args[]) {
+        CondyNestedResolution.test_condy();
+    }
+}
+
+BootstrapMethods:
+  BSM0=invokestatic CondyNestedResolution.bsm1arg("hello1");
+  BSM1=invokestatic CondyNestedResolution.bsm1arg("hello2");
+  BSM2=invokestatic CondyNestedResolution.bsm1arg("hello4");
+  BSM3=invokestatic CondyNestedResolution.bsm1arg("hello6");
+  BSM4=invokestatic CondyNestedResolution.bsm2arg(BSM#3, BSM#8);
+  BSM5=invokestatic CondyNestedResolution.bsm1arg("hello5");
+  BSM6=invokestatic CondyNestedResolution.bsm3arg(BSM#2, BSM#4, BSM#5);
+  BSM7=invokestatic CondyNestedResolution.bsm1arg("hello3");
+  BSM8=invokestatic CondyNestedResolution.bsm4arg(BSM#0, BSM#1, BSM#6, BSM#7);
+
+Expected output:
+  In bsm1arg
+  hello1
+  In bsm1arg
+  hello2
+  In bsm1arg
+  hello4
+  In bsm1arg
+  hello6
+  Exception in thread "main" java.lang.StackOverflowError
+          at java.base/java.lang.invoke.MethodHandleNatives.copyOutBootstrapArguments(Native Method)
+*/
+
+
+class CondyNestedResolution {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [85] { // Constant Pool
+    ; // first element is empty
+    String #22; // #1     at 0x0A
+    String #61; // #2     at 0x0D
+    String #11; // #3     at 0x10
+    Dynamic 8s #12; // #4     at 0x13
+    Method #51 #10; // #5     at 0x18
+    Method #13 #39; // #6     at 0x1D
+    Field #50 #81; // #7     at 0x22
+    Method #84 #45; // #8     at 0x27
+    Utf8 "java/io/PrintStream"; // #9     at 0x2C
+    NameAndType #71 #47; // #10     at 0x42
+    Utf8 "In bsm1arg"; // #11     at 0x47
+    NameAndType #18 #17; // #12     at 0x54
+    class #9; // #13     at 0x59
+    Utf8 "SourceFile"; // #14     at 0x5C
+    Utf8 "bsm3arg"; // #15     at 0x69
+    Utf8 "CondyNestedResolution.jasm"; // #16     at 0x73
+    Utf8 "Ljava/lang/String;"; // #17     at 0x90
+    Utf8 "name"; // #18     at 0xA5
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"; // #19     at 0xAC
+    Utf8 "test_condy"; // #20     at 0x0144
+    NameAndType #15 #19; // #21     at 0x0151
+    Utf8 "In bsm2arg"; // #22     at 0x0156
+    Utf8 "Code"; // #23     at 0x0163
+    Utf8 "([Ljava/lang/String;)V"; // #24     at 0x016A
+    Utf8 "bsm4arg"; // #25     at 0x0183
+    Utf8 "out"; // #26     at 0x018D
+    NameAndType #69 #55; // #27     at 0x0193
+    Utf8 "BootstrapMethods"; // #28     at 0x0198
+    MethodHandle 6b #44; // #29     at 0x01AB
+    Method #84 #63; // #30     at 0x01AF
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"; // #31     at 0x01B4
+    Method #84 #27; // #32     at 0x0228
+    MethodHandle 6b #30; // #33     at 0x022D
+    MethodHandle 6b #30; // #34     at 0x0231
+    MethodHandle 6b #30; // #35     at 0x0235
+    MethodHandle 6b #30; // #36     at 0x0239
+    MethodHandle 6b #30; // #37     at 0x023D
+    MethodHandle 6b #30; // #38     at 0x0241
+    NameAndType #40 #41; // #39     at 0x0245
+    Utf8 "println"; // #40     at 0x024A
+    Utf8 "(Ljava/lang/Object;)V"; // #41     at 0x0254
+    Utf8 "java/lang/Object"; // #42     at 0x026C
+    Utf8 "java/lang/System"; // #43     at 0x027F
+    Method #84 #21; // #44     at 0x0292
+    NameAndType #20 #47; // #45     at 0x0297
+    MethodHandle 6b #82; // #46     at 0x029C
+    Utf8 "()V"; // #47     at 0x02A0
+    String #62; // #48     at 0x02A6
+    String #64; // #49     at 0x02A9
+    class #43; // #50     at 0x02AC
+    class #42; // #51     at 0x02AF
+    String #65; // #52     at 0x02B2
+    String #66; // #53     at 0x02B5
+    String #67; // #54     at 0x02B8
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"; // #55     at 0x02BB
+    Utf8 "main"; // #56     at 0x0341
+    String #68; // #57     at 0x0348
+    MethodHandle 6b #32; // #58     at 0x034B
+    Utf8 "bsm1arg"; // #59     at 0x034F
+    NameAndType #25 #83; // #60     at 0x0359
+    Utf8 "In bsm4arg"; // #61     at 0x035E
+    Utf8 "hello6"; // #62     at 0x036B
+    NameAndType #59 #31; // #63     at 0x0374
+    Utf8 "hello5"; // #64     at 0x0379
+    Utf8 "hello4"; // #65     at 0x0382
+    Utf8 "hello3"; // #66     at 0x038B
+    Utf8 "hello2"; // #67     at 0x0394
+    Utf8 "hello1"; // #68     at 0x039D
+    Utf8 "bsm2arg"; // #69     at 0x03A6
+    Utf8 "Ljava/io/PrintStream;"; // #70     at 0x03B0
+    Utf8 "<init>"; // #71     at 0x03C8
+    Utf8 "CondyNestedResolution"; // #72     at 0x03D1
+    Dynamic 7s #12; // #73     at 0x03E9
+    Dynamic 6s #12; // #74     at 0x03EE
+    Dynamic 5s #12; // #75     at 0x03F3
+    Dynamic 4s #12; // #76     at 0x03F8
+    Dynamic 3s #12; // #77     at 0x03FD
+    Dynamic 0s #12; // #78     at 0x0402
+    Dynamic 1s #12; // #79     at 0x0407
+    Dynamic 2s #12; // #80     at 0x040C
+    NameAndType #26 #70; // #81     at 0x0411
+    Method #84 #60; // #82     at 0x0416
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"; // #83     at 0x041B
+    class #72; // #84     at 0x04C5
+  } // Constant Pool
+
+  0x0000; // access [ ]
+  #84;// this_cpx
+  #51;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [7] { // methods
+    { // Member at 0x04D4
+      0x0001; // access
+      #71; // name_cpx
+      #47; // sig_cpx
+      [1] { // Attributes
+        Attr(#23, 17) { // Code at 0x04DC
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70005B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x04F3
+      0x0009; // access
+      #59; // name_cpx
+      #31; // sig_cpx
+      [1] { // Attributes
+        Attr(#23, 29) { // Code at 0x04FB
+          4; // max_stack
+          4; // max_locals
+          Bytes[17]{
+            0xB200071203B60006;
+            0xB200072DB600062D;
+            0xB0;
+          }
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x051E
+      0x0009; // access
+      #69; // name_cpx
+      #55; // sig_cpx
+      [1] { // Attributes
+        Attr(#23, 37) { // Code at 0x0526
+          8; // max_stack
+          8; // max_locals
+          Bytes[25]{
+            0xB200071201B60006;
+            0xB200072DB60006B2;
+            0x00071904B600062D;
+            0xB0;
+          }
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0551
+      0x0009; // access
+      #15; // name_cpx
+      #19; // sig_cpx
+      [1] { // Attributes
+        Attr(#23, 45) { // Code at 0x0559
+          19; // max_stack
+          19; // max_locals
+          Bytes[33]{
+            0xB200071202B60006;
+            0xB200072DB60006B2;
+            0x00071904B60006B2;
+            0x00071905B600062D;
+            0xB0;
+          }
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x058C
+      0x0009; // access
+      #25; // name_cpx
+      #83; // sig_cpx
+      [1] { // Attributes
+        Attr(#23, 53) { // Code at 0x0594
+          19; // max_stack
+          19; // max_locals
+          Bytes[41]{
+            0xB200071202B60006;
+            0xB200072DB60006B2;
+            0x00071904B60006B2;
+            0x00071905B60006B2;
+            0x00071906B600062D;
+            0xB0;
+          }
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x05CF
+      0x0009; // access
+      #20; // name_cpx
+      #47; // sig_cpx
+      [1] { // Attributes
+        Attr(#23, 15) { // Code at 0x05D7
+          12; // max_stack
+          12; // max_locals
+          Bytes[3]{
+            0x1204B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x05EC
+      0x0009; // access
+      #56; // name_cpx
+      #24; // sig_cpx
+      [1] { // Attributes
+        Attr(#23, 16) { // Code at 0x05F4
+          2; // max_stack
+          2; // max_locals
+          Bytes[4]{
+            0xB80008B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [2] { // Attributes
+    Attr(#14, 2) { // SourceFile at 0x060C
+      #16;
+    } // end SourceFile
+    ;
+    Attr(#28, 68) { // BootstrapMethods at 0x0614
+      [9] { // bootstrap_methods
+        {  //  bootstrap_method
+          #36; // bootstrap_method_ref
+          [1] { // bootstrap_arguments
+            #57; //  at 0x0622
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #37; // bootstrap_method_ref
+          [1] { // bootstrap_arguments
+            #54; //  at 0x0628
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #38; // bootstrap_method_ref
+          [1] { // bootstrap_arguments
+            #52; //  at 0x062E
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #35; // bootstrap_method_ref
+          [1] { // bootstrap_arguments
+            #48; //  at 0x0634
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #58; // bootstrap_method_ref
+          [2] { // bootstrap_arguments
+            #77; //  at 0x063A
+            #4; //  at 0x063C
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #34; // bootstrap_method_ref
+          [1] { // bootstrap_arguments
+            #49; //  at 0x0642
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #29; // bootstrap_method_ref
+          [3] { // bootstrap_arguments
+            #80; //  at 0x0648
+            #76; //  at 0x064A
+            #75; //  at 0x064C
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #33; // bootstrap_method_ref
+          [1] { // bootstrap_arguments
+            #53; //  at 0x0652
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #46; // bootstrap_method_ref
+          [4] { // bootstrap_arguments
+            #78; //  at 0x0658
+            #79; //  at 0x065A
+            #74; //  at 0x065C
+            #73; //  at 0x065E
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+      }
+    } // end BootstrapMethods
+  } // Attributes
+} // end class CondyNestedResolution

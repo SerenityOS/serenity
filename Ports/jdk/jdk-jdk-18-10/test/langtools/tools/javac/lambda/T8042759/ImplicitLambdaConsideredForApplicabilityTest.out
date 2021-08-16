@@ -1,0 +1,2 @@
+ImplicitLambdaConsideredForApplicabilityTest.java:26:9: compiler.err.ref.ambiguous: foo, kindname.method, foo(ImplicitLambdaConsideredForApplicabilityTest.A), ImplicitLambdaConsideredForApplicabilityTest, kindname.method, foo(ImplicitLambdaConsideredForApplicabilityTest.C), ImplicitLambdaConsideredForApplicabilityTest
+1 error

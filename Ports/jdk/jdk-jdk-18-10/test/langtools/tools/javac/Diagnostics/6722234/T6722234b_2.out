@@ -1,0 +1,4 @@
+T6722234b.java:16:9: compiler.err.cant.apply.symbol: kindname.method, m, List<T>,List<T>, List<compiler.misc.captured.type: 1>,List<compiler.misc.captured.type: 2>, kindname.class, T6722234b, (compiler.misc.incompatible.eq.bounds: T, compiler.misc.captured.type: 2,compiler.misc.captured.type: 1)
+- compiler.misc.where.description.typevar: T,{(compiler.misc.where.typevar: T, Object, kindname.method, <T>m(List<T>,List<T>))}
+- compiler.misc.where.description.captured.1: compiler.misc.captured.type: 1,compiler.misc.captured.type: 2,{(compiler.misc.where.captured.1: compiler.misc.captured.type: 1, T6722234b, compiler.misc.type.null, ? extends T6722234b),(compiler.misc.where.captured.1: compiler.misc.captured.type: 2, T6722234b, compiler.misc.type.null, ? extends T6722234b)}
+1 error

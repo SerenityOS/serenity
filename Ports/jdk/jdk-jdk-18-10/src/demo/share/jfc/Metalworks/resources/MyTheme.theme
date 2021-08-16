@@ -1,0 +1,17 @@
+# This is an example of a Theme contained in a text file.
+# Use a PropertyMetalTheme object to load it.
+
+# This isn't really meant to be a great theme, but is just
+# an example of how to create one from a text file.
+
+# See MetalworksFrame.java for an example of how to load this.
+
+name=Charcoal
+primary1=33,66,66
+primary2=66,99,99
+primary3=99,99,99
+secondary1=0,0,0
+secondary2=51,51,51
+secondary3=102,102,102
+black=255,255,255
+white=0,0,0

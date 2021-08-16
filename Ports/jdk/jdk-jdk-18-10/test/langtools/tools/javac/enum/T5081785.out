@@ -1,0 +1,7 @@
+- compiler.warn.source.no.system.modules.path: 15
+T5081785.java:30:9: compiler.err.static.declaration.not.allowed.in.inner.classes
+T5081785.java:13:13: compiler.err.static.declaration.not.allowed.in.inner.classes
+T5081785.java:20:27: compiler.err.static.declaration.not.allowed.in.inner.classes
+T5081785.java:25:31: compiler.err.static.declaration.not.allowed.in.inner.classes
+4 errors
+1 warning

@@ -1,0 +1,23 @@
+#
+# This is my own security properties file.
+#
+
+foo.1=1
+foo.2=4
+foo.3=5
+foo.4=6a
+foo.5=8
+foo.6=9a
+foo.7=10
+foo.8=12
+crypto.policy=somepolicy
+
+package.access=sun.,\
+               solaris.,\
+               one.more,\
+               two.more
+
+package.definition=sun.,\
+                   solaris.,\
+                   one.more,\
+                   two.more,\

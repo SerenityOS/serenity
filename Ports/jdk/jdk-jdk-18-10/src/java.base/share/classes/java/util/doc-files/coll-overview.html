@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<!--
+ Copyright (c) 1998, 2021, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Collections Framework Overview</title>
+<style>
+#impls {
+  border: 1px solid black;
+  border-collapse: collapse;
+  margin: 0 auto;
+}
+#impls caption {
+    font-weight: bold;
+    font-size: smaller;
+}
+#impls, #impls th, #impls td {
+  border: 1px solid black;
+  padding: 2px .5em;
+}
+#impls tbody th {
+  font-weight: normal;
+  text-align:left;
+}
+</style>
+</head>
+<body>
+<h1>Collections Framework Overview</h1>
+<!-- Body text begins here -->
+<h2>Introduction</h2>
+The Java platform includes a <i>collections framework</i>. A
+<i>collection</i> is an object that represents a group of objects
+(such as the classic <a href="../ArrayList.html">ArrayList</a> class).
+A collections framework is a unified architecture for representing
+and manipulating collections, enabling collections to be
+manipulated independently of implementation details.
+<p>The primary advantages of a collections framework are that
+it:</p>
+<ul>
+<li><strong>Reduces programming effort</strong> by providing data
+structures and algorithms so you don't have to write them
+yourself.</li>
+<li><strong>Increases performance</strong> by providing
+high-performance implementations of data structures and algorithms.
+Because the various implementations of each interface are
+interchangeable, programs can be tuned by switching
+implementations.</li>
+<li><strong>Provides interoperability between unrelated
+APIs</strong> by establishing a common language to pass collections
+back and forth.</li>
+<li><strong>Reduces the effort required to learn APIs</strong> by
+requiring you to learn multiple ad hoc collection APIs.</li>
+<li><strong>Reduces the effort required to design and implement
+APIs</strong> by not requiring you to produce ad hoc collections
+APIs.</li>
+<li><strong>Fosters software reuse</strong> by providing a standard
+interface for collections and algorithms with which to manipulate
+them.</li>
+</ul>
+<p>The collections framework consists of:</p>
+<ul>
+<li><strong>Collection interfaces</strong>. Represent different
+types of collections, such as sets, lists, and maps. These
+interfaces form the basis of the framework.</li>
+<li><strong>General-purpose implementations</strong>. Primary
+implementations of the collection interfaces.</li>
+<li><strong>Legacy implementations</strong>. The collection classes
+from earlier releases, <code>Vector</code> and <code>Hashtable</code>, were
+retrofitted to implement the collection interfaces.</li>
+<li><strong>Special-purpose implementations</strong>.
+Implementations designed for use in special situations. These
+implementations display nonstandard performance characteristics,
+usage restrictions, or behavior.</li>
+<li><strong>Concurrent implementations</strong>. Implementations
+designed for highly concurrent use.</li>
+<li><strong>Wrapper implementations</strong>. Add functionality,
+such as synchronization, to other implementations.</li>
+<li><strong>Convenience implementations</strong>. High-performance
+"mini-implementations" of the collection interfaces.</li>
+<li><strong>Abstract implementations</strong>. Partial
+implementations of the collection interfaces to facilitate custom
+implementations.</li>
+<li><strong>Algorithms</strong>. Static methods that perform useful
+functions on collections, such as sorting a list.</li>
+<li><strong>Infrastructure</strong>. Interfaces that provide
+essential support for the collection interfaces.</li>
+<li><strong>Array Utilities</strong>. Utility functions for arrays
+of primitive types and reference objects. Not, strictly speaking, a
+part of the collections framework, this feature was added to the
+Java platform at the same time as the collections framework and
+relies on some of the same infrastructure.</li>
+</ul>
+<hr />
+<h2>Collection Interfaces</h2>
+<p>The <i>collection interfaces</i> are divided into two groups.
+The most basic interface, <code><a href=
+"../Collection.html">java.util.Collection</a></code>,
+has the following descendants:</p>
+<ul>
+<li><code><a href=
+"../Set.html">java.util.Set</a></code></li>
+<li><code><a href=
+"../SortedSet.html">java.util.SortedSet</a></code></li>
+<li><code><a href=
+"../NavigableSet.html">java.util.NavigableSet</a></code></li>
+<li><code><a href=
+"../List.html">java.util.List</a></code></li>
+<li><code><a href=
+"../Queue.html">java.util.Queue</a></code></li>
+<li><code><a href=
+"../concurrent/BlockingQueue.html">java.util.concurrent.BlockingQueue</a></code></li>
+<li><code><a href=
+"../concurrent/TransferQueue.html">java.util.concurrent.TransferQueue</a></code></li>
+<li><code><a href=
+"../Deque.html">java.util.Deque</a></code></li>
+<li><code><a href=
+"../concurrent/BlockingDeque.html">java.util.concurrent.BlockingDeque</a></code></li>
+</ul>
+<p>The other collection interfaces are based on <code><a href=
+"../Map.html">java.util.Map</a></code> and are
+not true collections. However, these interfaces contain
+<i>collection-view</i> operations, which enable them to be
+manipulated as collections. <code>Map</code> has the following
+offspring:</p>
+<ul>
+<li><code><a href=
+"../SortedMap.html">java.util.SortedMap</a></code></li>
+<li><code><a href=
+"../NavigableMap.html">java.util.NavigableMap</a></code></li>
+<li><code><a href=
+"../concurrent/ConcurrentMap.html">java.util.concurrent.ConcurrentMap</a></code></li>
+<li><code><a href=
+"../concurrent/ConcurrentNavigableMap.html">java.util.concurrent.ConcurrentNavigableMap</a></code></li>
+</ul>
+<p>Many of the modification methods in the collection interfaces
+are labeled <i>optional</i>. Implementations are permitted to not
+perform one or more of these operations, throwing a runtime
+exception (<code>UnsupportedOperationException</code>) if they are
+attempted. The documentation for each implementation must specify
+which optional operations are supported. Several terms are
+introduced to aid in this specification:</p>
+<ul>
+<li>Collections that do not support modification operations (such
+as <code>add</code>, <code>remove</code> and <code>clear</code>) are referred
+to as <i>unmodifiable</i>. Collections that are not unmodifiable
+are <i>modifiable.</i></li>
+<li>Collections that additionally guarantee that no change in the
+<code>Collection</code> object will be visible are referred to as
+<i>immutable</i>. Collections that are not immutable are
+<i>mutable</i>.</li>
+<li>Lists that guarantee that their size remains constant even
+though the elements can change are referred to as
+<i>fixed-size</i>. Lists that are not fixed-size are referred to as
+<i>variable-size</i>.</li>
+<li>Lists that support fast (generally constant time) indexed
+element access are known as <i>random access</i> lists. Lists that
+do not support fast indexed element access are known as
+<i>sequential access</i> lists. The <code><a href=
+"../RandomAccess.html">RandomAccess</a></code>
+marker interface enables lists to advertise the fact that they
+support random access. This enables generic algorithms to change
+their behavior to provide good performance when applied to either
+random or sequential access lists.</li>
+</ul>
+<p>Some implementations restrict what elements (or in the case of
+<code>Maps</code>, keys and values) can be stored. Possible
+restrictions include requiring elements to:</p>
+<ul>
+<li>Be of a particular type.</li>
+<li>Be not null.</li>
+<li>Obey some arbitrary predicate.</li>
+</ul>
+<p>Attempting to add an element that violates an implementation's
+restrictions results in a runtime exception, typically a
+<code>ClassCastException</code>, an <code>IllegalArgumentException</code>,
+or a <code>NullPointerException</code>. Attempting to remove or test
+for the presence of an element that violates an implementation's
+restrictions can result in an exception. Some restricted
+collections permit this usage.</p>
+<hr>
+<h2>Collection Implementations</h2>
+<p>Classes that implement the collection interfaces typically have
+names in the form of
+&lt;<em>Implementation-style</em>&gt;&lt;<em>Interface</em>&gt;.
+The general purpose implementations are summarized in the following
+table:</p>
+<table id="impls">
+<caption>General purpose implementations</caption>
+<thead>
+<tr>
+<th scope="col">Interface</th>
+<th scope="col">Hash Table</th>
+<th scope="col">Resizable Array</th>
+<th scope="col">Balanced Tree</th>
+<th scope="col">Linked List</th>
+<th scope="col">Hash Table + Linked List</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row"><code>Set</code></th>
+<td><a href="../HashSet.html"><code>HashSet</code></a></td>
+<td>&nbsp;</td>
+<td><a href="../TreeSet.html"><code>TreeSet</code></a></td>
+<td>&nbsp;</td>
+<td><a href=
+"../LinkedHashSet.html"><code>LinkedHashSet</code></a></td>
+</tr>
+<tr>
+<th scope="row"><code>List</code></th>
+<td>&nbsp;</td>
+<td><a href="../ArrayList.html"><code>ArrayList</code></a></td>
+<td>&nbsp;</td>
+<td><a href="../LinkedList.html"><code>LinkedList</code></a></td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<th scope="row"><code>Queue, Deque</code></th>
+<td>&nbsp;</td>
+<td><a href="../ArrayDeque.html"><code>ArrayDeque</code></a></td>
+<td>&nbsp;</td>
+<td><a href="../LinkedList.html"><code>LinkedList</code></a></td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<th scope="row"><code>Map</code></th>
+<td><a href="../HashMap.html"><code>HashMap</code></a></td>
+<td>&nbsp;</td>
+<td><a href="../TreeMap.html"><code>TreeMap</code></a></td>
+<td>&nbsp;</td>
+<td><a href="../LinkedHashMap.html"><code>LinkedHashMap</code></a></td>
+</tr>
+</tbody>
+</table>
+<p>The general-purpose implementations support all of the
+<i>optional operations</i> in the collection interfaces and have no
+restrictions on the elements they may contain. They are
+unsynchronized, but the <code>Collections</code> class contains static
+factories called <a href=
+"../Collections.html#synchronizedCollection(java.util.Collection)">
+<em>synchronization wrappers</em></a> that can be used to add
+synchronization to many unsynchronized collections. All of the new
+implementations have <i>fail-fast iterators</i>, which detect
+invalid concurrent modification, and fail quickly and cleanly
+(rather than behaving erratically).</p>
+<p>The <code>AbstractCollection</code>, <code>AbstractSet</code>,
+<code>AbstractList</code>, <code>AbstractSequentialList</code> and
+<code>AbstractMap</code> classes provide basic implementations of the
+core collection interfaces, to minimize the effort required to
+implement them. The API documentation for these classes describes
+precisely how each method is implemented so the implementer knows
+which methods must be overridden, given the performance of the
+basic operations of a specific implementation.</p>
+<hr>
+<h2>Concurrent Collections</h2>
+<p>Applications that use collections from more than one thread must
+be carefully programmed. In general, this is known as <i>concurrent
+programming</i>. The Java platform includes extensive support for
+concurrent programming. See <a href=
+"../concurrent/package-summary.html">Java Concurrency
+Utilities</a> for details.</p>
+<p>Collections are so frequently used that various concurrent
+friendly interfaces and implementations of collections are included
+in the APIs. These types go beyond the synchronization wrappers
+discussed previously to provide features that are frequently needed
+in concurrent programming.</p>
+<p>These concurrent-aware interfaces are available:</p>
+<ul>
+<li><code><a href=
+"../concurrent/BlockingQueue.html">BlockingQueue</a></code></li>
+<li><code><a href=
+"../concurrent/TransferQueue.html">TransferQueue</a></code></li>
+<li><code><a href=
+"../concurrent/BlockingDeque.html">BlockingDeque</a></code></li>
+<li><code><a href=
+"../concurrent/ConcurrentMap.html">ConcurrentMap</a></code></li>
+<li><code><a href=
+"../concurrent/ConcurrentNavigableMap.html">ConcurrentNavigableMap</a></code></li>
+</ul>
+<p>The following concurrent-aware implementation classes are
+available. See the API documentation for the correct usage of these
+implementations.</p>
+<ul>
+<li><code><a href=
+"../concurrent/LinkedBlockingQueue.html">LinkedBlockingQueue</a></code></li>
+<li><code><a href=
+"../concurrent/ArrayBlockingQueue.html">ArrayBlockingQueue</a></code></li>
+<li><code><a href=
+"../concurrent/PriorityBlockingQueue.html">PriorityBlockingQueue</a></code></li>
+<li><code><a href=
+"../concurrent/DelayQueue.html">DelayQueue</a></code></li>
+<li><code><a href=
+"../concurrent/SynchronousQueue.html">SynchronousQueue</a></code></li>
+<li><a href=
+"../concurrent/LinkedBlockingDeque.html"><code>LinkedBlockingDeque</code></a></li>
+<li><a href=
+"../concurrent/LinkedTransferQueue.html"><code>LinkedTransferQueue</code></a></li>
+<li><code><a href=
+"../concurrent/CopyOnWriteArrayList.html">CopyOnWriteArrayList</a></code></li>
+<li><code><a href=
+"../concurrent/CopyOnWriteArraySet.html">CopyOnWriteArraySet</a></code></li>
+<li><code><a href=
+"../concurrent/ConcurrentSkipListSet.html">ConcurrentSkipListSet</a></code></li>
+<li><code><a href=
+"../concurrent/ConcurrentHashMap.html">ConcurrentHashMap</a></code></li>
+<li><code><a href=
+"../concurrent/ConcurrentSkipListMap.html">ConcurrentSkipListMap</a></code></li>
+</ul>
+<hr>
+<h2>Design Goals</h2>
+<p>The main design goal was to produce an API that was small in
+size and, more importantly, in &quot;conceptual weight.&quot; It
+was critical that the new functionality not seem too different to
+current Java programmers; it had to augment current facilities,
+rather than replace them. At the same time, the new API had to be
+powerful enough to provide all the advantages described
+previously.</p>
+<p>To keep the number of core interfaces small, the interfaces do
+not attempt to capture such subtle distinctions as mutability,
+modifiability, and resizability. Instead, certain calls in the core
+interfaces are <i>optional</i>, enabling implementations to throw
+an <code>UnsupportedOperationException</code> to indicate that they do
+not support a specified optional operation. Collection implementers
+must clearly document which optional operations are supported by an
+implementation.</p>
+<p>To keep the number of methods in each core interface small, an
+interface contains a method only if either:</p>
+<ul>
+<li>It is a truly <i>fundamental operation</i>: a basic operations
+in terms of which others could be reasonably defined,</li>
+<li>There is a compelling performance reason why an important
+implementation would want to override it.</li>
+</ul>
+<p>It was critical that all reasonable representations of
+collections interoperate well. This included arrays, which cannot
+be made to implement the <code>Collection</code> interface directly
+without changing the language. Thus, the framework includes methods
+to enable collections to be moved into arrays, arrays to be viewed
+as collections, and maps to be viewed as collections.</p>
+<hr>
+<p style="font-size:smaller">
+Copyright &copy; 1998, 2021, Oracle and/or its affiliates. 500 Oracle Parkway<br>
+    Redwood Shores, CA 94065 USA. All rights reserved.</p>
+<!-- Body text ends here -->
+</body>
+</html>

@@ -1,0 +1,2 @@
+NewGeneric.java:13:28: compiler.err.type.found.req: (compiler.misc.type.parameter: T), (compiler.misc.type.req.class)
+1 error

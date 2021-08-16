@@ -1,0 +1,7 @@
+ClassBlockExitsErrors.java:11:13: compiler.err.ret.outside.meth
+ClassBlockExitsErrors.java:18:13: compiler.err.break.outside.switch.loop
+ClassBlockExitsErrors.java:25:13: compiler.err.cont.outside.loop
+ClassBlockExitsErrors.java:10:9: compiler.err.initializer.must.be.able.to.complete.normally
+ClassBlockExitsErrors.java:17:9: compiler.err.initializer.must.be.able.to.complete.normally
+ClassBlockExitsErrors.java:24:9: compiler.err.initializer.must.be.able.to.complete.normally
+6 errors

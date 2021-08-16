@@ -1,0 +1,7 @@
+grant {
+    permission java.util.PropertyPermission "test.src", "read";
+    permission java.io.FilePermission "${test.src}${/}*", "read";
+
+    permission javax.security.auth.AuthPermission
+		"createLoginConfiguration.JavaLoginConfig";
+};

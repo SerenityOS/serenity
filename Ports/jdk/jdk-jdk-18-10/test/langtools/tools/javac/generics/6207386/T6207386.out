@@ -1,0 +1,2 @@
+T6207386.java:13:30: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: X, T6207386.F<? super X>)
+1 error

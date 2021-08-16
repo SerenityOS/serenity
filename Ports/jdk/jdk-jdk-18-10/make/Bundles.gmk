@@ -1,0 +1,506 @@
+#
+# Copyright (c) 2016, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+
+PRODUCT_TARGETS :=
+LEGACY_TARGETS :=
+TEST_TARGETS :=
+DOCS_TARGETS :=
+
+# On Windows tar frequently complains that "file changed as we read it" for
+# some random source files. This seems to be cause by anti virus scanners and
+# is most likely safe to ignore. When it happens, tar returns '1'.
+ifeq ($(call isBuildOs, windows), true)
+  TAR_IGNORE_EXIT_VALUE := || test "$$$$?" = "1"
+endif
+
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, Bundles-pre.gmk))
+################################################################################
+# BUNDLE : Name of bundle to create
+# FILES : Files in BASE_DIRS to add to bundle
+# SPECIAL_INCLUDES : List of directories inside BASE_DIRS to look for additional
+#     files in. These files will not get proper dependency handling. Use when
+#     files or directories may contain spaces.
+# BASE_DIRS : Base directories for the root dir in the bundle.
+# SUBDIR : Optional name of root dir in bundle.
+# OUTPUTDIR : Optionally override output dir
+SetupBundleFile = $(NamedParamsMacroTemplate)
+define SetupBundleFileBody
+
+  $$(foreach d, $$($1_BASE_DIRS), \
+    $$(eval $1_$$d_RELATIVE_FILES := $$$$(patsubst $$d/%, %, \
+        $$$$(filter $$d/%, $$$$($1_FILES)))) \
+    $$(eval $1_$$d_LIST_FILE := \
+        $(SUPPORT_OUTPUTDIR)/bundles/_$1_$$$$(subst /,_,$$$$(patsubst $(OUTPUTDIR)/%,%,$$d)_files)) \
+  )
+
+  ifneq ($$(filter %.tar.gz, $$($1_BUNDLE_NAME)), )
+    $1_TYPE := tar.gz
+  else ifneq ($$(filter %.zip, $$($1_BUNDLE_NAME)), )
+    $1_TYPE := zip
+  else
+    $$(error Unknown bundle type $$($1_BUNDLE_NAME))
+  endif
+
+  $$(call SetIfEmpty, $1_UNZIP_DEBUGINFO, false)
+
+  $$(call SetIfEmpty, $1_OUTPUTDIR, $$(BUNDLES_OUTPUTDIR))
+
+  $$($1_OUTPUTDIR)/$$($1_BUNDLE_NAME): $$($1_FILES)
+	$$(call MakeTargetDir)
+	$$(call LogWarn, Creating $$($1_BUNDLE_NAME))
+        # If any of the files contain a space in the file name, FindFiles
+        # will have replaced it with ?. Tar does not accept that so need to
+        # switch it back.
+	$$(foreach d, $$($1_BASE_DIRS), \
+	  $$(eval $$(call ListPathsSafely, \
+	      $1_$$d_RELATIVE_FILES, $$($1_$$d_LIST_FILE))) \
+	  $$(CAT) $$($1_$$d_LIST_FILE) | $$(TR) '?' ' ' > $$($1_$$d_LIST_FILE).tmp \
+	      && $(MV) $$($1_$$d_LIST_FILE).tmp $$($1_$$d_LIST_FILE) $$(NEWLINE) \
+	)
+        ifneq ($$($1_SPECIAL_INCLUDES), )
+	  $$(foreach i, $$($1_SPECIAL_INCLUDES), \
+	    $$(foreach d, $$($1_BASE_DIRS), \
+	      ($(CD) $$d && $(FIND) $$i >> $$($1_$$d_LIST_FILE)) ; ))
+        endif
+        ifeq ($$($1_SUBDIR)-$$($1_TYPE)-$$($1_UNZIP_DEBUGINFO), .-zip-false)
+          # If no subdir is specified, zip can be done directly from BASE_DIRS.
+	  $$(foreach d, $$($1_BASE_DIRS), \
+	    ( $(CD) $$d \
+	    && $(ZIPEXE) -qru $$@ . -i@$$($1_$$d_LIST_FILE) \
+	    || test "$$$$?" = "12" )$$(NEWLINE))
+        else ifeq ($$($1_SUBDIR)-$$($1_TYPE)-$$($1_UNZIP_DEBUGINFO)-$$(words $$($1_BASE_DIRS)), \
+            .-tar.gz-false-1)
+          # If no subdir is specified and only one BASE_DIR, tar.gz can be done
+          # directly from BASE_DIR.
+	  $(CD) $$($1_BASE_DIRS) \
+	      && ( $(TAR) cf - \
+	          -$(TAR_INCLUDE_PARAM) $$($1_$$($1_BASE_DIRS)_LIST_FILE) \
+	          $(TAR_IGNORE_EXIT_VALUE) ) \
+	      | $(GZIP) > $$@
+        else ifeq ($$($1_TYPE)-$(TAR_SUPPORTS_TRANSFORM)-$$($1_UNZIP_DEBUGINFO)-$$(words $$($1_BASE_DIRS)), \
+            tar.gz-true-false-1)
+          # If only one BASE_DIR, but with a SUBDIR set, tar.gz can use the
+          # transform option to create bundle directly from the BASE_DIR.
+	  $(CD) $$($1_BASE_DIRS) \
+	      && ( $(TAR) cf - \
+	          -$(TAR_INCLUDE_PARAM) $$($1_$$($1_BASE_DIRS)_LIST_FILE) \
+	          $$(if $$($1_SUBDIR), --transform 's|^|$$($1_SUBDIR)/|S') \
+	          $(TAR_IGNORE_EXIT_VALUE) ) \
+	      | $(GZIP) > $$@
+        else
+          # In all other cases, need to copy all files into a temporary location
+          # before creation bundle.
+	  $(RM) -r $(SUPPORT_OUTPUTDIR)/bundles/$1/$$($1_SUBDIR)
+	  $(MKDIR) -p $(SUPPORT_OUTPUTDIR)/bundles/$1/$$($1_SUBDIR)
+	  $$(foreach d, $$($1_BASE_DIRS), \
+	    ( $(CD) $$d \
+	    && $(TAR) cf - -$(TAR_INCLUDE_PARAM) $$($1_$$d_LIST_FILE) \
+	        $(TAR_IGNORE_EXIT_VALUE) ) \
+	    | ( $(CD) $(SUPPORT_OUTPUTDIR)/bundles/$1/$$($1_SUBDIR) && $(TAR) xf - )$$(NEWLINE) )
+          # Rename stripped pdb files
+          ifeq ($(call isTargetOs, windows)+$(SHIP_DEBUG_SYMBOLS), true+public)
+	    for f in `$(FIND) $(SUPPORT_OUTPUTDIR)/bundles/$1/$$($1_SUBDIR) -name "*.stripped.pdb"`; do \
+	      $(ECHO) Renaming $$$${f} to $$$${f%stripped.pdb}pdb $(LOG_INFO); \
+	      $(MV) $$$${f} $$$${f%stripped.pdb}pdb; \
+	    done
+          endif
+          # Unzip any zipped debuginfo files
+          ifeq ($$($1_UNZIP_DEBUGINFO), true)
+	    for f in `$(FIND) $(SUPPORT_OUTPUTDIR)/bundles/$1/$$($1_SUBDIR) -name "*.diz"`; do \
+	      $(CD) $$$${f%/*} && $(UNZIP) -q $$$${f} && $(RM) $$$${f}; \
+	    done
+          endif
+          ifeq ($$($1_TYPE), tar.gz)
+	    $(CD) $(SUPPORT_OUTPUTDIR)/bundles/$1 && \
+	    ( $(TAR) cf - \
+	        $$(if $$($1_SUBDIR), $$($1_SUBDIR), .) $(TAR_IGNORE_EXIT_VALUE) ) \
+	    | $(GZIP) > $$@
+          else ifeq ($$($1_TYPE), zip)
+	    $(CD) $(SUPPORT_OUTPUTDIR)/bundles/$1 && $(ZIPEXE) -qr $$@ .
+          endif
+        endif
+
+  $1 += $$($1_OUTPUTDIR)/$$($1_BUNDLE_NAME)
+
+endef
+
+################################################################################
+
+# On Macosx, we bundle up the macosx specific images which already have the
+# correct base directories.
+ifeq ($(call isTargetOs, macosx)+$(DEBUG_LEVEL), true+release)
+  JDK_IMAGE_DIR := $(JDK_MACOSX_BUNDLE_DIR)
+  JRE_IMAGE_DIR := $(JRE_MACOSX_BUNDLE_DIR)
+  JDK_IMAGE_HOMEDIR := $(JDK_MACOSX_CONTENTS_DIR)/Home
+  JRE_IMAGE_HOMEDIR := $(JRE_MACOSX_CONTENTS_DIR)/Home
+  JDK_BUNDLE_SUBDIR :=
+  JRE_BUNDLE_SUBDIR :=
+  # In certain situations, the JDK_IMAGE_DIR points to an image without the
+  # the symbols and demos. If so, the symobls and demos can be found in a
+  # separate image. These variables allow for overriding from a custom makefile.
+  JDK_SYMBOLS_IMAGE_DIR ?= $(JDK_IMAGE_DIR)
+  JDK_DEMOS_IMAGE_DIR ?= $(JDK_IMAGE_DIR)
+  JDK_DEMOS_IMAGE_HOMEDIR ?= $(JDK_DEMOS_IMAGE_DIR)/$(JDK_MACOSX_CONTENTS_SUBDIR)/Home
+else
+  JDK_IMAGE_HOMEDIR := $(JDK_IMAGE_DIR)
+  JRE_IMAGE_HOMEDIR := $(JRE_IMAGE_DIR)
+  JDK_BUNDLE_SUBDIR := jdk-$(VERSION_NUMBER)
+  JRE_BUNDLE_SUBDIR := jre-$(VERSION_NUMBER)
+  ifneq ($(DEBUG_LEVEL), release)
+    JDK_BUNDLE_SUBDIR := $(JDK_BUNDLE_SUBDIR)/$(DEBUG_LEVEL)
+    JRE_BUNDLE_SUBDIR := $(JRE_BUNDLE_SUBDIR)/$(DEBUG_LEVEL)
+  endif
+  # In certain situations, the JDK_IMAGE_DIR points to an image without the
+  # the symbols and demos. If so, the symobls and demos can be found in a
+  # separate image. These variables allow for overriding from a custom makefile.
+  JDK_SYMBOLS_IMAGE_DIR ?= $(JDK_IMAGE_DIR)
+  JDK_DEMOS_IMAGE_DIR ?= $(JDK_IMAGE_DIR)
+  JDK_DEMOS_IMAGE_HOMEDIR ?= $(JDK_DEMOS_IMAGE_DIR)
+endif
+
+################################################################################
+
+ifneq ($(filter product-bundles% legacy-bundles, $(MAKECMDGOALS)), )
+
+  SYMBOLS_EXCLUDE_PATTERN := %.debuginfo %.diz %.map
+
+  # There may be files with spaces in the names, so use ShellFindFiles
+  # explicitly.
+  ALL_JDK_FILES := $(call ShellFindFiles, $(JDK_IMAGE_DIR))
+  ifneq ($(JDK_IMAGE_DIR), $(JDK_SYMBOLS_IMAGE_DIR))
+    ALL_JDK_SYMBOLS_FILES := $(call ShellFindFiles, $(JDK_SYMBOLS_IMAGE_DIR))
+  else
+    ALL_JDK_SYMBOLS_FILES := $(ALL_JDK_FILES)
+  endif
+  ifneq ($(JDK_IMAGE_DIR), $(JDK_DEMOS_IMAGE_DIR))
+    ALL_JDK_DEMOS_FILES := $(call ShellFindFiles, $(JDK_DEMOS_IMAGE_DIR))
+  else
+    ALL_JDK_DEMOS_FILES := $(ALL_JDK_FILES)
+  endif
+
+  # Create special filter rules when dealing with unzipped .dSYM directories on
+  # macosx
+  ifeq ($(call isTargetOs, macosx), true)
+    ifeq ($(ZIP_EXTERNAL_DEBUG_SYMBOLS), false)
+      JDK_SYMBOLS_EXCLUDE_PATTERN := $(addprefix %, \
+          $(call containing, .dSYM/, $(patsubst $(JDK_IMAGE_DIR)/%, %, \
+          $(ALL_JDK_SYMBOLS_FILES))))
+    endif
+  endif
+
+  # Create special filter rules when dealing with debug symbols on windows
+  ifeq ($(call isTargetOs, windows), true)
+    ifeq ($(SHIP_DEBUG_SYMBOLS), )
+      JDK_SYMBOLS_EXCLUDE_PATTERN := %.pdb
+    else
+      ifeq ($(SHIP_DEBUG_SYMBOLS), public)
+        JDK_SYMBOLS_EXCLUDE_PATTERN := \
+            $(filter-out \
+                %.stripped.pdb, \
+                $(filter %.pdb, $(ALL_JDK_FILES)) \
+            )
+      endif
+    endif
+  endif
+
+  JDK_BUNDLE_FILES := \
+      $(filter-out \
+          $(JDK_SYMBOLS_EXCLUDE_PATTERN) \
+          $(JDK_EXTRA_EXCLUDES) \
+          $(SYMBOLS_EXCLUDE_PATTERN) \
+          $(JDK_IMAGE_HOMEDIR)/demo/% \
+          , \
+          $(ALL_JDK_FILES) \
+      )
+
+  JDK_SYMBOLS_BUNDLE_FILES := \
+      $(call FindFiles, $(SYMBOLS_IMAGE_DIR))
+
+  TEST_DEMOS_BUNDLE_FILES := $(filter $(JDK_DEMOS_IMAGE_HOMEDIR)/demo/%, \
+      $(ALL_JDK_DEMOS_FILES))
+
+  ALL_JRE_FILES := $(call ShellFindFiles, $(JRE_IMAGE_DIR))
+
+  # Create special filter rules when dealing with unzipped .dSYM directories on
+  # macosx
+  ifeq ($(OPENJDK_TARGET_OS), macosx)
+    ifeq ($(ZIP_EXTERNAL_DEBUG_SYMBOLS), false)
+      JRE_SYMBOLS_EXCLUDE_PATTERN := $(addprefix %, \
+          $(call containing, .dSYM/, $(patsubst $(JRE_IMAGE_DIR)/%, %, $(ALL_JRE_FILES))))
+    endif
+  endif
+
+  # Create special filter rules when dealing with debug symbols on windows
+  ifeq ($(call isTargetOs, windows), true)
+    ifeq ($(SHIP_DEBUG_SYMBOLS), )
+      JRE_SYMBOLS_EXCLUDE_PATTERN := %.pdb
+    else
+      ifeq ($(SHIP_DEBUG_SYMBOLS), public)
+        JRE_SYMBOLS_EXCLUDE_PATTERN := \
+            $(filter-out \
+                %.stripped.pdb, \
+                $(filter %.pdb, $(ALL_JRE_FILES)) \
+            )
+      endif
+    endif
+  endif
+
+  JRE_BUNDLE_FILES := $(filter-out \
+      $(JRE_SYMBOLS_EXCLUDE_PATTERN) \
+      $(SYMBOLS_EXCLUDE_PATTERN), \
+      $(ALL_JRE_FILES))
+
+  # On Macosx release builds, when there is a code signing certificate available,
+  # the final bundle layout can be signed.
+  SIGN_BUNDLE := false
+  ifeq ($(call isTargetOs, macosx)+$(DEBUG_LEVEL), true+release)
+    ifneq ($(CODESIGN), )
+      SIGN_BUNDLE := true
+    endif
+  endif
+
+  ifeq ($(SIGN_BUNDLE), true)
+    # Macosx release build and code signing available.
+
+    ################################################################################
+    # JDK bundle
+    $(eval $(call SetupCopyFiles, CREATE_JDK_BUNDLE_DIR_SIGNED, \
+        SRC := $(JDK_IMAGE_DIR), \
+        FILES := $(JDK_BUNDLE_FILES), \
+        DEST := $(JDK_MACOSX_BUNDLE_DIR_SIGNED), \
+    ))
+
+    JDK_SIGNED_CODE_RESOURCES := \
+        $(JDK_MACOSX_BUNDLE_DIR_SIGNED)/$(JDK_MACOSX_CONTENTS_SUBDIR)/_CodeSignature/CodeResources
+
+    $(JDK_SIGNED_CODE_RESOURCES): $(CREATE_JDK_BUNDLE_DIR_SIGNED)
+	$(call LogWarn, Signing $(JDK_BUNDLE_NAME))
+	$(CODESIGN) -s "$(MACOSX_CODESIGN_IDENTITY)" \
+	    --timestamp --options runtime --deep --force \
+	    $(JDK_MACOSX_BUNDLE_DIR_SIGNED)/$(JDK_MACOSX_BUNDLE_TOP_DIR) $(LOG_DEBUG)
+	$(TOUCH) $@
+
+    $(eval $(call SetupBundleFile, BUILD_JDK_BUNDLE, \
+        BUNDLE_NAME := $(JDK_BUNDLE_NAME), \
+        FILES := \
+            $(CREATE_JDK_BUNDLE_DIR_SIGNED) \
+            $(JDK_SIGNED_CODE_RESOURCES), \
+        BASE_DIRS := $(JDK_MACOSX_BUNDLE_DIR_SIGNED), \
+        SUBDIR := $(JDK_BUNDLE_SUBDIR), \
+    ))
+
+    PRODUCT_TARGETS += $(BUILD_JDK_BUNDLE)
+
+    ################################################################################
+    # JRE bundle
+    $(eval $(call SetupCopyFiles, CREATE_JRE_BUNDLE_DIR_SIGNED, \
+        SRC := $(JRE_IMAGE_DIR), \
+        FILES := $(JRE_BUNDLE_FILES), \
+        DEST := $(JRE_MACOSX_BUNDLE_DIR_SIGNED), \
+    ))
+
+    JRE_SIGNED_CODE_RESOURCES := \
+        $(JRE_MACOSX_BUNDLE_DIR_SIGNED)/$(JRE_MACOSX_CONTENTS_SUBDIR)/_CodeSignature/CodeResources
+
+    $(JRE_SIGNED_CODE_RESOURCES): $(CREATE_JRE_BUNDLE_DIR_SIGNED)
+	$(call LogWarn, Signing $(JRE_BUNDLE_NAME))
+	$(CODESIGN) -s "$(MACOSX_CODESIGN_IDENTITY)" \
+	    --timestamp --options runtime --deep --force \
+	    $(JRE_MACOSX_BUNDLE_DIR_SIGNED)/$(JRE_MACOSX_BUNDLE_TOP_DIR) $(LOG_DEBUG)
+	$(TOUCH) $@
+
+    $(eval $(call SetupBundleFile, BUILD_JRE_BUNDLE, \
+        BUNDLE_NAME := $(JRE_BUNDLE_NAME), \
+        FILES := \
+            $(CREATE_JRE_BUNDLE_DIR_SIGNED) \
+            $(JRE_SIGNED_CODE_RESOURCES), \
+        BASE_DIRS := $(JRE_MACOSX_BUNDLE_DIR_SIGNED), \
+        SUBDIR := $(JRE_BUNDLE_SUBDIR), \
+    ))
+
+    LEGACY_TARGETS += $(BUILD_JRE_BUNDLE)
+  else
+    # Not a Macosx release build or code signing not available.
+    $(eval $(call SetupBundleFile, BUILD_JDK_BUNDLE, \
+        BUNDLE_NAME := $(JDK_BUNDLE_NAME), \
+        FILES := $(JDK_BUNDLE_FILES), \
+        SPECIAL_INCLUDES := $(JDK_SPECIAL_INCLUDES), \
+        BASE_DIRS := $(JDK_IMAGE_DIR), \
+        SUBDIR := $(JDK_BUNDLE_SUBDIR), \
+    ))
+
+    PRODUCT_TARGETS += $(BUILD_JDK_BUNDLE)
+
+    $(eval $(call SetupBundleFile, BUILD_JRE_BUNDLE, \
+        BUNDLE_NAME := $(JRE_BUNDLE_NAME), \
+        FILES := $(JRE_BUNDLE_FILES), \
+        BASE_DIRS := $(JRE_IMAGE_DIR), \
+        SUBDIR := $(JRE_BUNDLE_SUBDIR), \
+    ))
+
+    LEGACY_TARGETS += $(BUILD_JRE_BUNDLE)
+  endif
+
+  ifeq ($(COPY_DEBUG_SYMBOLS), true)
+    $(eval $(call SetupBundleFile, BUILD_JDK_SYMBOLS_BUNDLE, \
+        BUNDLE_NAME := $(JDK_SYMBOLS_BUNDLE_NAME), \
+        FILES := $(JDK_SYMBOLS_BUNDLE_FILES), \
+        BASE_DIRS := $(SYMBOLS_IMAGE_DIR), \
+        SUBDIR := $(JDK_BUNDLE_SUBDIR), \
+        UNZIP_DEBUGINFO := true, \
+    ))
+
+    PRODUCT_TARGETS += $(BUILD_JDK_SYMBOLS_BUNDLE)
+  endif
+
+  # The demo bundle is only created to support client tests. Ideally it should
+  # be built with the main test bundle, but since the prerequisites match
+  # better with the product build, it makes more sense to keep it there for now.
+  $(eval $(call SetupBundleFile, BUILD_TEST_DEMOS_BUNDLE, \
+      BUNDLE_NAME := $(TEST_DEMOS_BUNDLE_NAME), \
+      FILES := $(TEST_DEMOS_BUNDLE_FILES), \
+      BASE_DIRS := $(JDK_DEMOS_IMAGE_DIR), \
+      SUBDIR := $(JDK_BUNDLE_SUBDIR), \
+  ))
+
+  PRODUCT_TARGETS += $(BUILD_TEST_DEMOS_BUNDLE)
+endif
+
+################################################################################
+
+ifneq ($(filter test-bundles, $(MAKECMDGOALS)), )
+  TEST_BUNDLE_FILES := $(call FindFiles, $(TEST_IMAGE_DIR))
+
+  $(eval $(call SetupBundleFile, BUILD_TEST_BUNDLE, \
+      BUNDLE_NAME := $(TEST_BUNDLE_NAME), \
+      FILES := $(TEST_BUNDLE_FILES), \
+      BASE_DIRS := $(TEST_IMAGE_DIR), \
+  ))
+
+  TEST_TARGETS += $(BUILD_TEST_BUNDLE)
+endif
+
+################################################################################
+
+ifneq ($(filter docs-jdk-bundles, $(MAKECMDGOALS)), )
+  DOCS_JDK_BUNDLE_FILES := $(call FindFiles, $(DOCS_JDK_IMAGE_DIR))
+
+  $(eval $(call SetupBundleFile, BUILD_DOCS_JDK_BUNDLE, \
+      BUNDLE_NAME := $(DOCS_JDK_BUNDLE_NAME), \
+      FILES := $(DOCS_JDK_BUNDLE_FILES), \
+      BASE_DIRS := $(DOCS_JDK_IMAGE_DIR), \
+      SUBDIR := docs, \
+  ))
+
+  DOCS_JDK_TARGETS += $(BUILD_DOCS_JDK_BUNDLE)
+endif
+
+ifneq ($(filter docs-javase-bundles, $(MAKECMDGOALS)), )
+  DOCS_JAVASE_BUNDLE_FILES := $(call FindFiles, $(DOCS_JAVASE_IMAGE_DIR))
+
+  $(eval $(call SetupBundleFile, BUILD_DOCS_JAVASE_BUNDLE, \
+      BUNDLE_NAME := $(DOCS_JAVASE_BUNDLE_NAME), \
+      FILES := $(DOCS_JAVASE_BUNDLE_FILES), \
+      BASE_DIRS := $(DOCS_JAVASE_IMAGE_DIR), \
+      SUBDIR := docs-javase, \
+  ))
+
+  DOCS_JAVASE_TARGETS += $(BUILD_DOCS_JAVASE_BUNDLE)
+endif
+
+ifneq ($(filter docs-reference-bundles, $(MAKECMDGOALS)), )
+  DOCS_REFERENCE_BUNDLE_FILES := $(call FindFiles, $(DOCS_REFERENCE_IMAGE_DIR))
+
+  $(eval $(call SetupBundleFile, BUILD_DOCS_REFERENCE_BUNDLE, \
+      BUNDLE_NAME := $(DOCS_REFERENCE_BUNDLE_NAME), \
+      FILES := $(DOCS_REFERENCE_BUNDLE_FILES), \
+      BASE_DIRS := $(DOCS_REFERENCE_IMAGE_DIR), \
+      SUBDIR := docs-reference, \
+  ))
+
+  DOCS_REFERENCE_TARGETS += $(BUILD_DOCS_REFERENCE_BUNDLE)
+endif
+
+################################################################################
+
+ifneq ($(filter jcov-bundles, $(MAKECMDGOALS)), )
+  JCOV_BUNDLE_FILES := $(call FindFiles, $(JCOV_IMAGE_DIR))
+
+  $(eval $(call SetupBundleFile, BUILD_JCOV_BUNDLE, \
+      BUNDLE_NAME := $(JCOV_BUNDLE_NAME), \
+      FILES := $(JCOV_BUNDLE_FILES), \
+      BASE_DIRS := $(JCOV_IMAGE_DIR), \
+      SUBDIR := $(JDK_BUNDLE_SUBDIR), \
+  ))
+
+  JCOV_TARGETS += $(BUILD_JCOV_BUNDLE)
+endif
+
+################################################################################
+
+ifneq ($(filter static-libs-bundles, $(MAKECMDGOALS)), )
+  STATIC_LIBS_BUNDLE_FILES := $(call FindFiles, $(STATIC_LIBS_IMAGE_DIR))
+
+  ifeq ($(OPENJDK_TARGET_OS)-$(DEBUG_LEVEL), macosx-release)
+    STATIC_LIBS_BUNDLE_SUBDIR := $(JDK_MACOSX_CONTENTS_SUBDIR)/Home
+  else
+    STATIC_LIBS_BUNDLE_SUBDIR := $(JDK_BUNDLE_SUBDIR)
+  endif
+
+  $(eval $(call SetupBundleFile, BUILD_STATIC_LIBS_BUNDLE, \
+      BUNDLE_NAME := $(STATIC_LIBS_BUNDLE_NAME), \
+      FILES := $(STATIC_LIBS_BUNDLE_FILES), \
+      BASE_DIRS := $(STATIC_LIBS_IMAGE_DIR), \
+      SUBDIR := $(STATIC_LIBS_BUNDLE_SUBDIR), \
+  ))
+
+  STATIC_LIBS_TARGETS += $(BUILD_STATIC_LIBS_BUNDLE)
+endif
+
+################################################################################
+
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, Bundles.gmk))
+
+################################################################################
+
+product-bundles: $(PRODUCT_TARGETS)
+legacy-bundles: $(LEGACY_TARGETS)
+test-bundles: $(TEST_TARGETS)
+docs-jdk-bundles: $(DOCS_JDK_TARGETS)
+docs-javase-bundles: $(DOCS_JAVASE_TARGETS)
+docs-reference-bundles: $(DOCS_REFERENCE_TARGETS)
+static-libs-bundles: $(STATIC_LIBS_TARGETS)
+jcov-bundles: $(JCOV_TARGETS)
+
+.PHONY: all default product-bundles test-bundles \
+    docs-jdk-bundles docs-javase-bundles docs-reference-bundles \
+    static-libs-bundles jcov-bundles

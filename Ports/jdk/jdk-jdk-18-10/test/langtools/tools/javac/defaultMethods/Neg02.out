@@ -1,0 +1,2 @@
+Neg02.java:16:13: compiler.err.types.incompatible: Neg02.A, Neg02.B, (compiler.misc.incompatible.unrelated.defaults: kindname.class, Neg02.X, m, , Neg02.A, Neg02.B)
+1 error

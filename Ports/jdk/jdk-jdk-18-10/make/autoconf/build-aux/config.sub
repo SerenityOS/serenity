@@ -1,0 +1,87 @@
+#!/bin/sh
+#
+# Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# This is a wrapper for the config.guess from autoconf. The latter
+# does not know about all of our platforms. Instead of patching the
+# autoconf system (which might easily get lost in a future update), we
+# wrap it and fix the broken property, if needed.
+
+DIR=`dirname $0`
+
+if echo $* | grep linux-musl >/dev/null ; then
+    echo $*
+    exit
+fi
+
+# Allow wsl
+if echo $* | grep pc-wsl >/dev/null ; then
+    echo $*
+    exit
+fi
+
+# Allow msys2
+if echo $* | grep pc-msys >/dev/null ; then
+    echo $*
+    exit
+fi
+
+# Allow serenity
+if echo $* | grep serenity >/dev/null ; then
+    echo $*
+    exit
+fi
+
+# Filter out everything that doesn't begin with "aarch64-"
+if ! echo $* | grep '^aarch64-' >/dev/null ; then
+    . $DIR/autoconf-config.sub "$@"
+    # autoconf-config.sub exits, so we never reach here, but just in
+    # case we do:
+    exit
+fi
+
+while test $# -gt 0 ; do
+    case $1 in
+        -- )   # Stop option processing
+            shift; break ;;
+        aarch64-* )
+            config=`echo $1 | sed 's/^aarch64-/arm-/'`
+            sub_args="$sub_args $config"
+            shift; ;;
+        - )    # Use stdin as input.
+            sub_args="$sub_args $1"
+            shift; break ;;
+        * )
+            sub_args="$sub_args $1"
+            shift; ;;
+    esac
+done
+
+result=`. $DIR/autoconf-config.sub $sub_args "$@"`
+exitcode=$?
+
+result=`echo $result | sed "s/^arm-/aarch64-/"`
+
+echo $result
+exit $exitcode
+

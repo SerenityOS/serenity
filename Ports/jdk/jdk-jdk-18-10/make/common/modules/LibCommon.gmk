@@ -1,0 +1,55 @@
+#
+# Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include JdkNativeCompilation.gmk
+
+################################################################################
+
+# Absolute paths to lib files on windows for use in LIBS. Should figure out a more
+# elegant solution to this.
+WIN_JAVA_LIB := $(SUPPORT_OUTPUTDIR)/native/java.base/libjava/java.lib
+
+# Tell the compiler not to export any functions unless declared so in
+# the source code. On Windows, this is the default and cannot be changed.
+# On Mac, we have always exported all symbols, probably due to oversight
+# and/or misunderstanding. To emulate this, don't hide any symbols
+# by default.
+# On AIX/xlc we need at least xlc 13.1 for the symbol hiding (see JDK-8214063)
+# Also provide an override for non-conformant libraries.
+ifeq ($(TOOLCHAIN_TYPE), gcc)
+  CFLAGS_JDKLIB += -fvisibility=hidden
+  CXXFLAGS_JDKLIB += -fvisibility=hidden
+  LDFLAGS_JDKLIB += -Wl,--exclude-libs,ALL
+  EXPORT_ALL_SYMBOLS := -fvisibility=default
+else ifeq ($(TOOLCHAIN_TYPE), clang)
+  CFLAGS_JDKLIB += -fvisibility=hidden
+  CXXFLAGS_JDKLIB += -fvisibility=hidden
+  EXPORT_ALL_SYMBOLS := -fvisibility=default
+endif
+
+# Put the libraries here.
+INSTALL_LIBRARIES_HERE := $(call FindLibDirForModule, $(MODULE))
+
+################################################################################

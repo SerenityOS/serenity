@@ -1,0 +1,4 @@
+PreviewAPIsWithRelease.java:12:11: compiler.err.is.preview: stripIndent()
+PreviewAPIsWithRelease.java:13:22: compiler.warn.is.preview.reflective: RECORD
+1 error
+1 warning

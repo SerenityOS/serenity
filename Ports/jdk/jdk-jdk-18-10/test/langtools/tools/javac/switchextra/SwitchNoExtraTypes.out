@@ -1,0 +1,6 @@
+SwitchNoExtraTypes.java:11:16: compiler.err.preview.feature.disabled.plural: (compiler.misc.feature.pattern.switch)
+SwitchNoExtraTypes.java:12:18: compiler.err.constant.label.not.compatible: boolean, boolean
+SwitchNoExtraTypes.java:18:18: compiler.err.constant.label.not.compatible: int, long
+SwitchNoExtraTypes.java:24:18: compiler.err.constant.label.not.compatible: int, float
+SwitchNoExtraTypes.java:30:18: compiler.err.constant.label.not.compatible: int, double
+5 errors

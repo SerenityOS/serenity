@@ -1,0 +1,6 @@
+<?xml version='1.0'?>
+<document xmlns:xi="http://www.w3.org/2001/XInclude">
+	<p>The following is the source of the "data.xml" resource:</p>
+	<example><xi:include href="tasks.xml" parse="xml"/></example>
+</document>
+

@@ -1,0 +1,3 @@
+DiagnosticRewriterTest.java:12:15: compiler.err.prob.found.req: (compiler.misc.possible.loss.of.precision: long, int)
+- compiler.note.compressed.diags
+1 error

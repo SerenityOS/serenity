@@ -1,0 +1,4 @@
+FinallyWarn.java:16:9: compiler.warn.finally.cannot.complete
+- compiler.err.warnings.and.werror
+1 error
+1 warning

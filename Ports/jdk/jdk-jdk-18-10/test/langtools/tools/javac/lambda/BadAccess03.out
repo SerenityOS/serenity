@@ -1,0 +1,2 @@
+BadAccess03.java:13:29: compiler.err.cant.ref.non.effectively.final.var: k, (compiler.misc.lambda)
+1 error

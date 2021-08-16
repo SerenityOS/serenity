@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<unit:A xmlns:unit="xslt.unittests"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="xslt.unittests otherNamespace.xsd"
+        attr="typeX">
+</unit:A>

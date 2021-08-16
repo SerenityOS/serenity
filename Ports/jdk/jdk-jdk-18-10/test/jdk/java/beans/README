@@ -1,0 +1,76 @@
+How to create regression tests for JavaBeans
+============================================
+
+All regression tests are developed to run under JavaTest 3.2.2.
+
+
+
+TEST HIERARCHY
+--------------
+
+You should choose an appropriate folder from the following list:
+ - The Beans folder contains tests for the java.beans.Beans class
+ - The EventHandler folder contains tests for the java.beans.EventHandler class
+ - The Introspector folder contains tests for introspection
+ - The PropertyChangeSupport folder contains tests for the bound properties
+ - The VetoableChangeSupport folder contains tests for the constrained properties
+ - The PropertyEditor folder contains tests for all property editors
+ - The Statement folder contains tests for statements and expressions
+ - The XMLDecoder folder contains tests for XMLDecoder
+ - The XMLEncoder folder contains tests for XMLEncoder
+ - The Performance folder contains manual tests for performance
+ - The beancontext folder contains tests for classes
+   from the java.beans.beancontext package
+
+
+
+NAME CONVENTIONS FOR TEST CLASSES
+---------------------------------
+
+Usually a class name should start with the "Test" word
+followed by 7-digit CR number. For example:
+	Beans/Test4067824.java
+
+If your test contains additional files you should create
+a subfolder with the CR number as its name. For example:
+	Introspector/4168475/Test4168475.java
+	Introspector/4168475/infos/ComponentBeanInfo.java
+
+If you have several tests for the same CR number you should also
+create a subfolder with the CR number as its name. For example:
+	XMLEncoder/4741757/AbstractTest.java
+	XMLEncoder/4741757/TestFieldAccess.java
+	XMLEncoder/4741757/TestSecurityManager.java
+	XMLEncoder/4741757/TestStackOverflow.java
+
+Every JAR file should contain source files for all class files. For example:
+	XMLDecoder/4676532/test.jar#test/Test.class
+	XMLDecoder/4676532/test.jar#test/Test.java
+
+
+
+USEFUL UTILITY CLASSES
+----------------------
+
+For Introspector tests you can use the BeanUtils class.
+This class provides helpful methods to get
+property descriptors for the specified type.
+
+
+For XMLEncoder tests you can use the AbstractTest class.
+This class is intended to simplify tests creating.
+It contains methods to encode an object to XML,
+decode XML and validate the result.
+The validate() method is applied to compare
+the object before encoding with the object after decoding.
+If the test fails the Error is thrown.
+1) The getObject() method should be implemented
+   to return the object to test.
+   This object will be encoded and decoded
+   and the object creation will be tested.
+2) The getAnotherObject() method can be overridden
+   to return a different object to test.
+   If this object is not null it will be encoded and decoded.
+   Also the object updating will be tested in this case.
+The test() method has a boolean parameter,
+which indicates that the test should be started in secure context.

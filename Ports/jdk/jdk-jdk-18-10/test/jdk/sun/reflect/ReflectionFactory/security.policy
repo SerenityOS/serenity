@@ -1,0 +1,11 @@
+// Individual Permissions for ReflectionFactoryTest
+grant {
+        // Permissions needed to run the test
+        permission java.util.PropertyPermission "*", "read";
+        permission java.io.FilePermission "<<ALL FILES>>", "read,write,delete,execute";
+
+        permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+        permission java.lang.RuntimePermission "accessDeclaredMembers";
+        permission java.lang.RuntimePermission "accessClassInPackage.sun.reflect";
+        permission java.lang.RuntimePermission "reflectionFactoryAccess";
+};

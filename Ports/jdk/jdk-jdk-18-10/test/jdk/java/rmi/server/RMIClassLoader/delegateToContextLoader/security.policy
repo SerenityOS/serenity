@@ -1,0 +1,21 @@
+/*
+ * security policy used by the test process
+ */
+
+grant {
+  // test must create a context loader for the current thread.
+  permission java.lang.RuntimePermission "createClassLoader";
+  permission java.lang.RuntimePermission "setContextClassLoader";
+
+  // need to move some classes out of the test's classpath; specific to this test
+  permission java.io.FilePermission "${test.classes}", "read,write,delete";
+  permission java.io.FilePermission "${test.classes}${/}-", "read,write,delete";
+
+  permission java.io.FilePermission ".${/}codebase", "read,write,delete";
+  permission java.io.FilePermission ".${/}codebase${/}-", "read,write,delete";
+
+  // used by TestLibrary to determine test environment 
+  permission java.util.PropertyPermission "test.*", "read";
+  permission java.util.PropertyPermission "user.dir", "read";
+  permission java.util.PropertyPermission "java.home", "read";
+};

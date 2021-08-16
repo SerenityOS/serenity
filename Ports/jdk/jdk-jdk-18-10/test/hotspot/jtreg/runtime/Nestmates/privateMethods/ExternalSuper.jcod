@@ -1,0 +1,129 @@
+/*
+ * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+// Generated from the source in TestInvokeHierarchy.java
+// with priv_invoke access modifier changed to private
+
+class ExternalSuper {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #4 #16; // #1    
+    class #17; // #2    
+    String #18; // #3    
+    class #19; // #4    
+    Utf8 "ID"; // #5    
+    Utf8 "Ljava/lang/String;"; // #6    
+    Utf8 "ConstantValue"; // #7    
+    Utf8 "<init>"; // #8    
+    Utf8 "()V"; // #9    
+    Utf8 "Code"; // #10    
+    Utf8 "LineNumberTable"; // #11    
+    Utf8 "priv_invoke_s"; // #12    
+    Utf8 "()Ljava/lang/String;"; // #13    
+    Utf8 "SourceFile"; // #14    
+    Utf8 "TestInvokeHierarchy.java"; // #15    
+    NameAndType #8 #9; // #16    
+    Utf8 "ExternalSuper"; // #17    
+    Utf8 "ExternalSuper::priv_invoke_s"; // #18    
+    Utf8 "java/lang/Object"; // #19    
+  } // Constant Pool
+
+  0x0020; // access
+  #2;// this_cpx
+  #4;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+    { // Member
+      0x0018; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // ConstantValue
+          #3;
+        } // end ConstantValue
+      } // Attributes
+    } // Member
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #8; // name_cpx
+      #9; // sig_cpx
+      [] { // Attributes
+        Attr(#10) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#11) { // LineNumberTable
+              [] { // LineNumberTable
+                0  119;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0002; // access - private
+      #12; // name_cpx
+      #13; // sig_cpx
+      [] { // Attributes
+        Attr(#10) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x1203B0;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#11) { // LineNumberTable
+              [] { // LineNumberTable
+                0  124;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#14) { // SourceFile
+      #15;
+    } // end SourceFile
+  } // Attributes
+} // end class ExternalSuper

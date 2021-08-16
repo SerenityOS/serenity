@@ -1,0 +1,7 @@
+RawTypeBindingWarning.java:9:29: compiler.warn.raw.class.use: RawTypeBindingWarning, RawTypeBindingWarning<T>
+RawTypeBindingWarning.java:13:18: compiler.warn.raw.class.use: RawTypeBindingWarning, RawTypeBindingWarning<T>
+RawTypeBindingWarning.java:17:19: compiler.warn.raw.class.use: RawTypeBindingWarning, RawTypeBindingWarning<T>
+RawTypeBindingWarning.java:21:19: compiler.warn.raw.class.use: RawTypeBindingWarning, RawTypeBindingWarning<T>
+- compiler.note.preview.filename: RawTypeBindingWarning.java, DEFAULT
+- compiler.note.preview.recompile
+4 warnings

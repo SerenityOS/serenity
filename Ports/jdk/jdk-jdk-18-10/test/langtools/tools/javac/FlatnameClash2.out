@@ -1,0 +1,3 @@
+FlatnameClash2.java:32:22: compiler.err.cant.resolve.location: kindname.class, T1$Inner1, , , (compiler.misc.location: kindname.package, tests, null)
+FlatnameClash2.java:28:14: compiler.err.cant.apply.symbol: kindname.method, print, tests.T1.Inner1, tests.T2.Inner2, kindname.class, tests.T1, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: tests.T2.Inner2, tests.T1.Inner1))
+2 errors

@@ -1,0 +1,2 @@
+DuplicateTypeAnnotation.java:11:32: compiler.err.duplicate.annotation.missing.container: A
+1 error

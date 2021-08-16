@@ -1,0 +1,6 @@
+grant {
+    permission DebugPermissionBad "hello";
+    permission DebugPermission0;
+    permission DebugPermission1 "1";
+    permission DebugPermission2 "1", "2";
+};

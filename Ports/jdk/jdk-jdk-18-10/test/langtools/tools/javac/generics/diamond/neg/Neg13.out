@@ -1,0 +1,5 @@
+Neg13.java:36:23: compiler.err.does.not.override.abstract: compiler.misc.anonymous.class: Neg13$3, foo(), Neg13.A
+Neg13.java:40:24: compiler.err.does.not.override.abstract: compiler.misc.anonymous.class: Neg13$4, foo(), Neg13.A
+Neg13.java:44:13: compiler.err.abstract.cant.be.instantiated: Neg13.A
+Neg13.java:47:14: compiler.err.abstract.cant.be.instantiated: Neg13.A
+4 errors

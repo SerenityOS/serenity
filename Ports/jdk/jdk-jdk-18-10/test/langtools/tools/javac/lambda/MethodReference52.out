@@ -1,0 +1,3 @@
+MethodReference52.java:35:25: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.mref: (compiler.misc.inconvertible.types: int[], long[]))
+MethodReference52.java:37:28: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.mref: (compiler.misc.inconvertible.types: java.lang.Class<? extends java.util.List>, java.lang.Class<java.util.List<java.lang.String>>))
+2 errors

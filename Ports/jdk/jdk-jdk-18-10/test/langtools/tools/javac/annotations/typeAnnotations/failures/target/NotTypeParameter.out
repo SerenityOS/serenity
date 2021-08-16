@@ -1,0 +1,4 @@
+NotTypeParameter.java:13:3: compiler.err.annotation.type.not.applicable
+NotTypeParameter.java:20:3: compiler.err.annotation.type.not.applicable
+NotTypeParameter.java:21:14: compiler.err.annotation.type.not.applicable
+3 errors

@@ -1,0 +1,72 @@
+setDocumentLocator...
+startDocument...
+startElement...
+namespaceURI: <> localName: <> qName: <html> Number of Attributes: <2> Line# <3>
+characters...length is:3
+<
+  >
+startElement...
+namespaceURI: <> localName: <> qName: <head> Number of Attributes: <0> Line# <4>
+characters...length is:5
+<
+    >
+startElement...
+namespaceURI: <> localName: <> qName: <title> Number of Attributes: <0> Line# <5>
+characters...length is:10
+<Typography>
+endElement...
+namespaceURI: <> localName: <> qName: <title>
+characters...length is:3
+<
+  >
+endElement...
+namespaceURI: <> localName: <> qName: <head>
+characters...length is:4
+<
+
+  >
+startElement...
+namespaceURI: <> localName: <> qName: <body> Number of Attributes: <0> Line# <8>
+characters...length is:5
+<
+    >
+startElement...
+namespaceURI: <> localName: <> qName: <p> Number of Attributes: <0> Line# <9>
+characters...length is:77
+< Welcome to the world of typography! Here is a book that you may find useful.>
+endElement...
+namespaceURI: <> localName: <> qName: <p>
+characters...length is:5
+<
+    >
+startElement...
+namespaceURI: <> localName: <> qName: <b:title> Number of Attributes: <1> Line# <10>
+characters...length is:18
+<Digital Typography>
+endElement...
+namespaceURI: <> localName: <> qName: <b:title>
+characters...length is:5
+<
+    >
+startElement...
+namespaceURI: <> localName: <> qName: <b:author> Number of Attributes: <0> Line# <11>
+characters...length is:12
+<Donald Knuth>
+endElement...
+namespaceURI: <> localName: <> qName: <b:author>
+characters...length is:5
+<
+    >
+processingInstruction...target:<netscape> data: <http://www.hotmail.com>
+characters...length is:3
+<
+  >
+endElement...
+namespaceURI: <> localName: <> qName: <body>
+characters...length is:2
+<
+
+>
+endElement...
+namespaceURI: <> localName: <> qName: <html>
+endDocument...

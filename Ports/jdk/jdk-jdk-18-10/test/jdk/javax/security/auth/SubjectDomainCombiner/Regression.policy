@@ -1,0 +1,12 @@
+grant {
+    permission javax.security.auth.AuthPermission "modifyPrincipals";
+};
+
+grant principal com.sun.security.auth.NTUserPrincipal "test1" {
+    permission java.lang.RuntimePermission "createClassLoader";
+};
+
+grant principal com.sun.security.auth.NTUserPrincipal "test1",
+      principal com.sun.security.auth.NTUserPrincipal "test2" {
+    permission java.lang.RuntimePermission "queuePrintJob";
+};

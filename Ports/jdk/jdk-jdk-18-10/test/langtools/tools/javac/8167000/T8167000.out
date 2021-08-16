@@ -1,0 +1,4 @@
+T8167000.java:31:36: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.util.List, java.util.List<java.lang.String>
+- compiler.err.warnings.and.werror
+1 error
+1 warning

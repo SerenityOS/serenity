@@ -1,0 +1,4 @@
+UseWrongRepeatable.java:17:1: compiler.err.invalid.repeatable.annotation.value.return: java.lang.annotation.Target, java.lang.annotation.ElementType[], UseWrongRepeatable[]
+UseWrongRepeatable.java:17:21: compiler.err.invalid.repeatable.annotation.value.return: java.lang.annotation.Target, java.lang.annotation.ElementType[], UseWrongRepeatable[]
+UseWrongRepeatable.java:14:1: compiler.err.invalid.repeatable.annotation.value.return: java.lang.annotation.Target, java.lang.annotation.ElementType[], UseWrongRepeatable[]
+3 errors

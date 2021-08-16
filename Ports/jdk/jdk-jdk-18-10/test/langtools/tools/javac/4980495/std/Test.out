@@ -1,0 +1,3 @@
+Test.java:11:1: compiler.err.already.defined.single.import: p1.A1.f
+Test.java:16:13: compiler.err.ref.ambiguous: f, kindname.class, p1.A1.f, p1.A1, kindname.class, p2.A2.f, p2.A2
+2 errors

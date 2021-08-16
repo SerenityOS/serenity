@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: com.sun.hotspot.igv.svg
+OpenIDE-Module-Localizing-Bundle: com/sun/hotspot/igv/svg/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

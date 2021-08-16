@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="fr"/>
+		<territory type="SN"/>
+	</identity>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="midnight" draft="contributed">min.</dayPeriod>
+							<dayPeriod type="noon" draft="contributed">midi</dayPeriod>
+							<dayPeriod type="morning1" draft="contributed">mat.</dayPeriod>
+							<dayPeriod type="afternoon1" draft="contributed">ap.m.</dayPeriod>
+							<dayPeriod type="evening1" draft="contributed">soir</dayPeriod>
+							<dayPeriod type="night1" draft="contributed">nuit</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="midnight" draft="contributed">min.</dayPeriod>
+							<dayPeriod type="noon" draft="contributed">midi</dayPeriod>
+							<dayPeriod type="morning1" draft="contributed">mat.</dayPeriod>
+							<dayPeriod type="afternoon1" draft="contributed">ap.m.</dayPeriod>
+							<dayPeriod type="evening1" draft="contributed">soir</dayPeriod>
+							<dayPeriod type="night1" draft="contributed">nuit</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="midnight" draft="contributed">min.</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="midnight" draft="contributed">min.</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+			</calendar>
+		</calendars>
+	</dates>
+</ldml>

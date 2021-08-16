@@ -1,0 +1,4 @@
+T7030687.java:15:30: compiler.err.cant.apply.diamond.1: T7030687<X>.Member, (compiler.misc.diamond.non.generic: T7030687<X>.Member)
+T7030687.java:16:30: compiler.err.cant.apply.diamond.1: T7030687.Nested, (compiler.misc.diamond.non.generic: T7030687.Nested)
+T7030687.java:17:28: compiler.err.cant.apply.diamond.1: Local, (compiler.misc.diamond.non.generic: Local)
+3 errors

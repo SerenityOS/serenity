@@ -1,0 +1,6 @@
+grant {
+    // do not grant this:
+    //
+    // permission java.security.SecurityPermission
+    //			"createPolicy.JavaPolicy";
+};

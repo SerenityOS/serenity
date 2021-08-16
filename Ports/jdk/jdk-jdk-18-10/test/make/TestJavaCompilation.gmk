@@ -1,0 +1,350 @@
+#
+# Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include JarArchive.gmk
+include JavaCompilation.gmk
+include UtilsForTests.gmk
+
+THIS_FILE := $(TOPDIR)/test/make/TestJavaCompilation.gmk
+DEPS := $(THIS_FILE) \
+    $(TOPDIR)/make/common/MakeBase.gmk \
+    $(TOPDIR)/make/common/JavaCompilation.gmk \
+    #
+
+OUTPUT_DIR := $(TESTMAKE_OUTPUTDIR)/java-compilation
+
+################################################################################
+# Test: jar1
+# Creates a simple jar file and unzips it to verify that the files have not
+# changed.
+
+JAR1_SRC_ROOT := $(OUTPUT_DIR)/jar1src
+JAR1_UNZIP := $(OUTPUT_DIR)/jar1unzip
+JAR1_FILE := $(OUTPUT_DIR)/jar1.jar
+JAR1_MANIFEST := $(OUTPUT_DIR)/jar1_manifest
+
+clean-jar1:
+	$(RM) -r $(OUTPUT_DIR)/_jar1* $(OUTPUT_DIR)/jar1*
+
+$(JAR1_MANIFEST): | $(OUTPUT_DIR)/_jar1_created
+	$(ECHO) "Test-Attribute: value" > $(JAR1_MANIFEST)
+
+$(OUTPUT_DIR)/_jar1_created: $(DEPS)
+	$(RM) -r $(JAR1_SRC_ROOT)
+	$(RM) $(JAR1_FILE)
+	$(RM) -r $(JAR1_UNZIP)
+	$(MKDIR) -p $(JAR1_SRC_ROOT)
+	$(MKDIR) -p $(JAR1_SRC_ROOT)/dir1
+	$(MKDIR) -p $(JAR1_SRC_ROOT)/dir2
+	$(MKDIR) -p $(JAR1_SRC_ROOT)/META-INF
+	$(TOUCH) $(JAR1_SRC_ROOT)/dir1/file1.class
+	$(TOUCH) $(JAR1_SRC_ROOT)/dir2/file2.class
+	$(TOUCH) $(JAR1_SRC_ROOT)/META-INF/metafile
+	$(TOUCH) $@
+
+$(eval $(call SetupJarArchive, BUILD_JAR1, \
+    DEPENDENCIES := $(OUTPUT_DIR)/_jar1_created, \
+    SRCS := $(JAR1_SRC_ROOT), \
+    MANIFEST := $(JAR1_MANIFEST), \
+    JAR := $(JAR1_FILE), \
+))
+
+$(OUTPUT_DIR)/_jar1_verified: $(BUILD_JAR1)
+	$(RM) -r $(JAR1_UNZIP)
+	$(MKDIR) -p $(JAR1_UNZIP)
+	$(CD) $(JAR1_UNZIP) && $(UNZIP) $(JAR1_FILE) $(LOG_DEBUG)
+	$(DIFF) -r $(JAR1_SRC_ROOT)/dir1 $(JAR1_UNZIP)/dir1
+	$(DIFF) -r $(JAR1_SRC_ROOT)/dir2 $(JAR1_UNZIP)/dir2
+	$(DIFF) -r $(JAR1_SRC_ROOT)/META-INF/metafile $(JAR1_UNZIP)/META-INF/metafile
+	if [ "`$(GREP) 'Test-Attribute: value' $(JAR1_UNZIP)/META-INF/MANIFEST.MF`" = "" ]; then \
+	  $(ECHO) "Could not find Test-Attribute in manifest of $(JAR1_FILE)"; \
+	  exit 1; \
+	fi
+	$(TOUCH) $@
+
+create-jar2: $(OUTPUT_DIR)/_jar1_verified
+TEST_TARGETS += $(OUTPUT_DIR)/_jar1_verified
+
+# Change a source file and call this makefile again to force the jar to be
+# updated.
+$(OUTPUT_DIR)/_jar1_updated: $(OUTPUT_DIR)/_jar1_verified
+	$(ECHO) updated > $(JAR1_SRC_ROOT)/dir1/file1.class
+	$(ECHO) updated > $(JAR1_SRC_ROOT)/META-INF/metafile
+	$(TOUCH) $(OUTPUT_DIR)/_jar1_created
+	+$(MAKE) -f $(THIS_FILE) $(OUTPUT_DIR)/_jar1_verified
+	$(TOUCH) $@
+
+update-jar1: $(OUTPUT_DIR)_jar1_updated
+
+# Change the manifest file and call this makefile again to force the jar
+# to be updated
+$(OUTPUT_DIR)/_jar1_updated_manifest: $(OUTPUT_DIR)/_jar1_updated
+	$(SLEEP_ON_MAC)
+	$(ECHO) "Test-Attribute: foobar" > $(JAR1_MANIFEST)
+	+$(MAKE) -f $(THIS_FILE) $(BUILD_JAR1)
+	$(RM) -r $(JAR1_UNZIP)
+	$(MKDIR) -p $(JAR1_UNZIP)
+	$(CD) $(JAR1_UNZIP) && $(UNZIP) $(JAR1_FILE) $(LOG_DEBUG)
+	if [ "`$(GREP) 'Test-Attribute: foobar' $(JAR1_UNZIP)/META-INF/MANIFEST.MF`" = "" ]; then \
+	  $(ECHO) "Could not find Test-Attribute in manifest of $(JAR1_FILE)"; \
+	  exit 1; \
+	fi
+	$(TOUCH) $@
+
+update-jar1-manifest: $(OUTPUT_DIR)/_jar1_updated_manifest
+
+TEST_TARGETS += $(OUTPUT_DIR)/_jar1_updated $(OUTPUT_DIR)/_jar1_updated_manifest
+
+.PHONY: clean-jar1 create-jar1 update-jar1 update-jar1-manifest
+
+################################################################################
+# Test: jar2
+# Creates a jar file based on 2 source roots
+
+JAR2_SRC_ROOT1 := $(OUTPUT_DIR)/jar2src1
+JAR2_SRC_ROOT2 := $(OUTPUT_DIR)/jar2src2
+JAR2_UNZIP := $(OUTPUT_DIR)/jar2unzip
+JAR2_FILE := $(OUTPUT_DIR)/jar2.jar
+
+clean-jar2:
+	$(RM) -r $(OUTPUT_DIR)/_jar2* $(OUTPUT_DIR)/jar2*
+
+$(OUTPUT_DIR)/_jar2_created: $(DEPS)
+	$(RM) -r $(JAR2_SRC_ROOT1)
+	$(RM) -r $(JAR2_SRC_ROOT2)
+	$(RM) $(JAR2_FILE)
+	$(RM) -r $(JAR2_UNZIP)
+	$(MKDIR) -p $(JAR2_SRC_ROOT1)/dir1
+	$(MKDIR) -p $(JAR2_SRC_ROOT2)/dir2
+	$(TOUCH) $(JAR2_SRC_ROOT1)/dir1/file1.class
+	$(TOUCH) $(JAR2_SRC_ROOT2)/dir2/file2.class
+	$(TOUCH) $@
+
+$(eval $(call SetupJarArchive, BUILD_JAR2, \
+    DEPENDENCIES := $(OUTPUT_DIR)/_jar2_created, \
+    SRCS := $(JAR2_SRC_ROOT1) $(JAR2_SRC_ROOT2), \
+    JAR := $(JAR2_FILE), \
+))
+
+$(OUTPUT_DIR)/_jar2_verified: $(BUILD_JAR2)
+	$(RM) -r $(JAR2_UNZIP)
+	$(MKDIR) -p $(JAR2_UNZIP)
+	$(CD) $(JAR2_UNZIP) && $(UNZIP) $(JAR2_FILE) $(LOG_DEBUG)
+	$(DIFF) -r $(JAR2_SRC_ROOT1)/dir1 $(JAR2_UNZIP)/dir1
+	$(DIFF) -r $(JAR2_SRC_ROOT2)/dir2 $(JAR2_UNZIP)/dir2
+	$(TOUCH) $@
+
+create-jar2: $(OUTPUT_DIR)/_jar2_verified
+TEST_TARGETS += $(OUTPUT_DIR)/_jar2_verified
+
+$(OUTPUT_DIR)/_jar2_updated: $(OUTPUT_DIR)/_jar2_verified
+	$(ECHO) updated > $(JAR2_SRC_ROOT1)/dir1/file1.class
+	$(TOUCH) $(OUTPUT_DIR)/_jar2_created
+	+$(MAKE) -f $(THIS_FILE) $(OUTPUT_DIR)/_jar2_verified
+	$(TOUCH) $@
+
+update-jar2: $(OUTPUT_DIR)/_jar2_updated
+TEST_TARGETS += $(OUTPUT_DIR)/_jar2_updated
+
+.PHONY: clean-jar2 create-jar2 update-jar2
+
+################################################################################
+# Test: jar3
+# Creates a jar file based on 2 source roots with an extra file
+
+JAR3_SRC_ROOT1 := $(OUTPUT_DIR)/jar3src1
+JAR3_SRC_ROOT2 := $(OUTPUT_DIR)/jar3src2
+JAR3_UNZIP := $(OUTPUT_DIR)/jar3unzip
+JAR3_FILE := $(OUTPUT_DIR)/jar3.jar
+
+clean-jar3:
+	$(RM) -r $(OUTPUT_DIR)/_jar3* $(OUTPUT_DIR)/jar3*
+
+$(OUTPUT_DIR)/_jar3_created: $(DEPS)
+	$(RM) -r $(JAR3_SRC_ROOT1)
+	$(RM) -r $(JAR3_SRC_ROOT2)
+	$(RM) $(JAR3_FILE)
+	$(RM) -r $(JAR3_UNZIP)
+	$(MKDIR) -p $(JAR3_SRC_ROOT1)/dir1
+	$(MKDIR) -p $(JAR3_SRC_ROOT2)/dir2
+	$(TOUCH) $(JAR3_SRC_ROOT1)/dir1/file1\$$foo.class
+	$(TOUCH) $(JAR3_SRC_ROOT2)/dir2/file2.class
+	$(TOUCH) $(JAR3_SRC_ROOT2)/extra-file
+	$(TOUCH) $(JAR3_SRC_ROOT2)/extra-file-abs
+	$(TOUCH) $(JAR3_SRC_ROOT2)/dir2/file\$$foo.dollar
+	$(TOUCH) $@
+
+$(eval $(call SetupJarArchive, BUILD_JAR3, \
+    DEPENDENCIES := $(OUTPUT_DIR)/_jar3_created, \
+    SRCS := $(JAR3_SRC_ROOT1) $(JAR3_SRC_ROOT2), \
+    EXTRA_FILES := extra-file \
+        dir2/file$$foo.dollar \
+        $(JAR3_SRC_ROOT2)/extra-file-abs, \
+    EXCLUDE_FILES := dir1/file1$$foo.class, \
+    JAR := $(JAR3_FILE), \
+))
+
+$(OUTPUT_DIR)/_jar3_verified: $(BUILD_JAR3)
+	$(RM) -r $(JAR3_UNZIP)
+	$(MKDIR) -p $(JAR3_UNZIP)
+	$(CD) $(JAR3_UNZIP) && $(UNZIP) $(JAR3_FILE) $(LOG_DEBUG)
+	if [ -d "$(JAR3_UNZIP)/dir1" ]; then \
+	  echo Should not be included $(JAR3_UNZIP)/dir1; \
+	  exit 1; \
+        fi
+	$(DIFF) -r $(JAR3_SRC_ROOT2)/dir2 $(JAR3_UNZIP)/dir2
+	$(DIFF) -r $(JAR3_SRC_ROOT2)/extra-file $(JAR3_UNZIP)/extra-file
+	$(TOUCH) $@
+
+create-jar3: $(OUTPUT_DIR)/_jar3_verified
+TEST_TARGETS += $(OUTPUT_DIR)/_jar3_verified
+
+$(OUTPUT_DIR)/_jar3_updated: $(OUTPUT_DIR)/_jar3_verified
+	$(ECHO) updated > $(JAR3_SRC_ROOT2)/extra-file
+	$(TOUCH) $(OUTPUT_DIR)/_jar3_created
+	+$(MAKE) -f $(THIS_FILE) $(OUTPUT_DIR)/_jar3_verified
+	$(TOUCH) $@
+
+update-jar3: $(OUTPUT_DIR)/_jar3_updated
+TEST_TARGETS += $(OUTPUT_DIR)/_jar3_updated
+
+.PHONY: clean-jar3 create-jar3 update-jar3
+
+################################################################################
+# Test SetupJavaCompilation overrides of java files
+
+JAVA_SRC_ROOT1 := $(OUTPUT_DIR)/javaroot1
+JAVA_SRC_ROOT2 := $(OUTPUT_DIR)/javaroot2
+
+# Since this makefile calls itself a number of times, protect this macro from
+# being executed more than once.
+# Param 1 - File name
+# Param 2 - Package name
+# Param 3 - Class name
+# Param 4 - Message
+CreateJavaSrc = \
+    $(if $(wildcard $1),,$(shell \
+        $(MKDIR) -p $(dir $1); \
+        $(ECHO) "package $2;" > $1; \
+        $(ECHO) "public class $3 {" >> $1; \
+        $(ECHO) "    public static void main(String[] args) {" >> $1; \
+        $(ECHO) "        System.out.print(\"$4\");" >> $1; \
+        $(ECHO) "    }" >> $1; \
+        $(ECHO) "}" >> $1; \
+    ))
+
+# Since this makefile calls itself a number of times, protect this macro from
+# being executed more than once.
+# Param 1 - File name
+# Param 2 - Message
+CreateTextFile = \
+    $(if $(wildcard $1),,$(shell \
+        $(MKDIR) -p $(dir $1); \
+        $(PRINTF) '$2' > $1; \
+    ))
+
+$(call CreateJavaSrc,$(JAVA_SRC_ROOT1)/a/A.java,a,A,javaroot1)
+$(call CreateJavaSrc,$(JAVA_SRC_ROOT2)/a/A.java,a,A,javaroot2)
+$(call CreateTextFile,$(JAVA_SRC_ROOT1)/a/b.txt,javaroot1\n)
+$(call CreateTextFile,$(JAVA_SRC_ROOT2)/a/b.txt,javaroot2\n)
+$(call CreateTextFile,$(JAVA_SRC_ROOT1)/a/c.properties,#javaroot1\nname=value1\n)
+$(call CreateTextFile,$(JAVA_SRC_ROOT2)/a/c.properties,#javaroot2\nname=value2\n)
+
+# Due to a bug in gnu make 3.81, need to add the src roots with trailing slash,
+# otherwise $(wildcard ) will not find the directories and the sanity check in
+# SetupJavaCompilation will fail.
+$(eval $(call SetupJavaCompilation, BUILD_ROOT1_FIRST, \
+    TARGET_RELEASE := $(TARGET_RELEASE_BOOTJDK), \
+    SRC := $(JAVA_SRC_ROOT1)/ $(JAVA_SRC_ROOT2)/, \
+    COPY := .txt .java, \
+    CLEAN := .properties, \
+    BIN := $(OUTPUT_DIR)/root1first/, \
+))
+
+$(BUILD_ROOT1_FIRST):
+
+verify-root1-first: $(BUILD_ROOT1_FIRST)
+	$(JAVA_SMALL) -cp $(OUTPUT_DIR)/root1first a.A > $(OUTPUT_DIR)/root1first.output
+	if [ "`$(CAT) $(OUTPUT_DIR)/root1first.output`" != "javaroot1" ]; then \
+	  $(ECHO) "The wrong class was compiled. Expected >javaroot1<"; \
+	  $(ECHO) "Got >`$(CAT) $(OUTPUT_DIR)/root1first.output`<"; \
+	  false; \
+	fi
+	if [ "`$(CAT) $(OUTPUT_DIR)/root1first/a/b.txt`" != "javaroot1" ]; then \
+	  $(ECHO) "The wrong file was copied. Expected >javaroot1<"; \
+	  $(ECHO) "Got >`$(CAT) $(OUTPUT_DIR)/root1first/a/b.txt`<"; \
+	  false; \
+	fi
+	if [ ! -e "$(OUTPUT_DIR)/root1first/a/A.java" ]; then \
+	  $(ECHO) "Missed copying $(OUTPUT_DIR)/root1first/a/A.java"; \
+	  false; \
+	fi
+	if [ "`$(CAT) $(OUTPUT_DIR)/root1first/a/c.properties`" != "name=value1" ]; then \
+	  $(ECHO) "The wrong file was cleaned. Expected >name=value1<"; \
+	  $(ECHO) "Got >`$(CAT) $(OUTPUT_DIR)/root1first/a/c.properties`<"; \
+	  false; \
+	fi
+
+$(eval $(call SetupJavaCompilation, BUILD_ROOT2_FIRST, \
+    TARGET_RELEASE := $(TARGET_RELEASE_BOOTJDK), \
+    SRC := $(JAVA_SRC_ROOT2)/ $(JAVA_SRC_ROOT1)/, \
+    COPY := .txt, \
+    CLEAN := .properties, \
+    BIN := $(OUTPUT_DIR)/root2first/, \
+))
+
+$(BUILD_ROOT2_FIRST):
+
+verify-root2-first: $(BUILD_ROOT2_FIRST)
+	$(JAVA_SMALL) -cp $(OUTPUT_DIR)/root2first a.A > $(OUTPUT_DIR)/root2first.output
+	if [ "`$(CAT) $(OUTPUT_DIR)/root2first.output`" != "javaroot2" ]; then \
+	  $(ECHO) "The wrong class was compiled. Expected >javaroot2<"; \
+	  $(ECHO) "Got >`$(CAT) $(OUTPUT_DIR)/root2first.output`<"; \
+	  false; \
+	fi
+	if [ "`$(CAT) $(OUTPUT_DIR)/root2first/a/b.txt`" != "javaroot2" ]; then \
+	  $(ECHO) "The wrong file was cleaned. Expected >javaroot2<"; \
+	  $(ECHO) "Got >`$(CAT) $(OUTPUT_DIR)/root2first/a/b.txt`<"; \
+	  false; \
+	fi
+	if [ "`$(CAT) $(OUTPUT_DIR)/root2first/a/c.properties`" != "name=value2" ]; then \
+	  $(ECHO) "The wrong file was cleaned. Expected >name=value2<"; \
+	  $(ECHO) "Got >`$(CAT) $(OUTPUT_DIR)/root2first/a/c.properties`<"; \
+	  false; \
+	fi
+
+TEST_TARGETS += verify-root1-first verify-root2-first
+
+.PHONY: verify-root1-first verify-root2-first
+
+################################################################################
+
+all: $(TEST_TARGETS)
+
+.PHONY: default all

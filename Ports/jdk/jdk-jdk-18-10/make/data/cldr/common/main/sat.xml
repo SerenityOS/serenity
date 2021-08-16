@@ -1,0 +1,607 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="sat"/>
+	</identity>
+	<localeDisplayNames>
+		<localeDisplayPattern>
+			<localeKeyTypePattern>{0}: {1}</localeKeyTypePattern>
+		</localeDisplayPattern>
+		<languages>
+			<language type="de">ᱡᱟᱨᱢᱟᱱ</language>
+			<language type="de_AT">ᱚᱥᱴᱨᱤᱭᱟ ᱡᱟᱨᱢᱟᱱ</language>
+			<language type="de_CH">ᱥᱩᱣᱤᱥ ᱦᱟᱤ ᱡᱟᱨᱢᱟᱱ</language>
+			<language type="en">ᱟᱝᱜᱽᱨᱮᱡᱤ</language>
+			<language type="en_AU">ᱚᱥᱴᱨᱮᱞᱤᱭᱟᱱ ᱟᱝᱜᱽᱨᱮᱡᱤ</language>
+			<language type="en_CA">ᱠᱟᱱᱟᱰᱤᱭᱟᱱ ᱟᱝᱜᱽᱨᱮᱡᱤ</language>
+			<language type="en_GB">ᱵᱨᱤᱴᱤᱥ ᱟᱝᱜᱽᱨᱮᱡᱤ</language>
+			<language type="en_GB" alt="short">ᱭᱩᱠᱮ ᱟᱝᱜᱽᱨᱮᱡᱤ</language>
+			<language type="en_US">ᱟᱢᱮᱨᱤᱠᱟᱱ ᱟᱝᱜᱽᱨᱮᱡᱤ</language>
+			<language type="en_US" alt="short">ᱭᱩᱮᱥ ᱟᱝᱜᱽᱨᱮᱡᱤ</language>
+			<language type="es">ᱮᱥᱯᱮᱱᱤᱥ</language>
+			<language type="es_419">ᱞᱮᱴᱤᱱ ᱟᱢᱮᱨᱤᱠᱟᱱ ᱮᱥᱯᱮᱱᱤᱥ</language>
+			<language type="es_ES">ᱨᱩᱥᱤᱭᱟᱱ ᱮᱥᱯᱮᱱᱤᱥ</language>
+			<language type="es_MX">ᱢᱮᱠᱥᱤᱠᱟᱱ ᱮᱥᱯᱮᱱᱤᱥ</language>
+			<language type="fr">ᱯᱷᱨᱮᱧᱪ</language>
+			<language type="fr_CA">ᱠᱟᱱᱟᱰᱤᱭᱟᱱ ᱯᱷᱨᱮᱧᱪ</language>
+			<language type="fr_CH">ᱥᱩᱣᱤᱥ ᱯᱷᱨᱮᱧᱪ</language>
+			<language type="it">ᱤᱴᱟᱞᱤᱟᱱ</language>
+			<language type="ja">ᱡᱟᱯᱟᱱᱤ</language>
+			<language type="pt">ᱯᱩᱨᱛᱜᱟᱞᱤ</language>
+			<language type="pt_BR">ᱵᱨᱟᱡᱤᱞᱤᱭᱟᱱ ᱯᱩᱨᱛᱜᱟᱞᱤ</language>
+			<language type="pt_PT">ᱭᱩᱨᱚᱯᱤᱭᱟᱱ ᱯᱩᱨᱛᱜᱟᱞᱤ</language>
+			<language type="ru">ᱨᱩᱥᱤᱭᱟᱱ</language>
+			<language type="sat">ᱥᱟᱱᱛᱟᱲᱤ</language>
+			<language type="und">ᱵᱟᱝ ᱩᱨᱩᱢ ᱯᱟᱹᱨᱥᱤ</language>
+			<language type="zh">ᱪᱟᱭᱱᱤᱡᱽ</language>
+			<language type="zh" alt="menu">ᱪᱟᱭᱱᱤᱡᱽ, ᱢᱟᱱᱰᱟᱨᱤᱱ</language>
+			<language type="zh_Hans">ᱟᱞᱜᱟᱣᱟᱠᱟᱱ ᱪᱟᱭᱱᱤᱡᱽ</language>
+			<language type="zh_Hans" alt="long">ᱟᱞᱜᱟᱣᱟᱠᱟᱱ ᱢᱟᱫᱟᱨᱤᱱ ᱪᱟᱭᱱᱤᱡᱽ</language>
+			<language type="zh_Hant">ᱴᱨᱮᱰᱤᱥᱱᱟᱞ ᱪᱟᱭᱱᱤᱡᱽ</language>
+			<language type="zh_Hant" alt="long">ᱴᱨᱮᱰᱤᱥᱱᱟᱞ ᱢᱟᱫᱟᱨᱤᱱ ᱪᱟᱭᱱᱤᱡᱽ</language>
+		</languages>
+		<scripts>
+			<script type="Arab">ᱟᱨᱵᱤᱠ</script>
+			<script type="Cyrl">ᱥᱤᱨᱤᱞᱤᱠ</script>
+			<script type="Deva" draft="contributed">ᱫᱮᱣᱟᱱᱟᱜᱟᱨᱤ</script>
+			<script type="Hans">ᱥᱤᱢᱯᱞᱤᱯᱟᱭᱤᱰ</script>
+			<script type="Hans" alt="stand-alone">ᱥᱤᱢᱯᱞᱤᱯᱟᱭᱤᱰ ᱦᱟᱱ</script>
+			<script type="Hant">ᱴᱨᱮᱰᱤᱥᱚᱱ</script>
+			<script type="Hant" alt="stand-alone">ᱴᱨᱮᱰᱤᱥᱚᱱ ᱦᱟᱱ</script>
+			<script type="Latn">ᱞᱮᱴᱤᱱ</script>
+			<script type="Olck">ᱚᱞ ᱪᱤᱠᱤ</script>
+			<script type="Zxxx">ᱵᱟᱝ ᱚᱞ ᱟᱠᱟᱱ</script>
+			<script type="Zzzz">ᱵᱟᱝ ᱩᱨᱩᱢ ᱪᱤᱠᱤ</script>
+		</scripts>
+		<territories>
+			<territory type="BR">ᱵᱨᱟᱡᱤᱞ</territory>
+			<territory type="CN">ᱪᱤᱱ</territory>
+			<territory type="DE">ᱡᱟᱨᱢᱟᱱᱤ</territory>
+			<territory type="FR">ᱯᱷᱨᱟᱱᱥ</territory>
+			<territory type="GB">ᱭᱩᱱᱤᱭᱴᱮᱰ ᱠᱤᱝᱰᱚᱢ</territory>
+			<territory type="IN">ᱤᱱᱰᱤᱭᱟ</territory>
+			<territory type="IT">ᱤᱴᱞᱤ</territory>
+			<territory type="JP">ᱡᱟᱯᱟᱱ</territory>
+			<territory type="RU">ᱨᱩᱥ</territory>
+			<territory type="US">ᱭᱩᱱᱟᱭᱴᱮᱰ ᱮᱥᱴᱮᱴ</territory>
+			<territory type="ZZ">ᱵᱟᱝᱩᱨᱩᱢ ᱴᱚᱴᱷᱟ</territory>
+		</territories>
+		<types>
+			<type key="calendar" type="gregorian">ᱜᱨᱮᱜᱚᱨᱤᱭᱟᱱ ᱠᱟᱞᱮᱱᱰᱟᱨ</type>
+			<type key="collation" type="standard">ᱮᱥᱴᱮᱱᱰᱟᱨᱰ ᱛᱷᱟᱨ ᱟᱸᱫᱮ</type>
+			<type key="numbers" type="latn">ᱣᱮᱥᱴᱟᱨᱱ ᱮᱞ</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">ᱢᱮᱴᱨᱤᱠ</measurementSystemName>
+			<measurementSystemName type="UK">ᱭᱩᱠᱮ</measurementSystemName>
+			<measurementSystemName type="US">ᱭᱩᱮᱥ</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language">ᱯᱟᱹᱨᱥᱤ: {0}</codePattern>
+			<codePattern type="script">ᱪᱤᱠᱤ/ᱦᱟᱨᱚᱯᱺ {0}</codePattern>
+			<codePattern type="territory">ᱴᱚᱴᱷᱟᱺ {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters draft="contributed">[ᱚ ᱛ ᱜ ᱝ ᱞ ᱟ ᱠ ᱡ ᱢ ᱣ ᱤ ᱥ ᱦ ᱧ ᱨ ᱩ ᱪ ᱫ ᱬ ᱭ ᱮ ᱯ ᱰ ᱱ ᱲ ᱳ ᱴ ᱵ ᱶ ᱷ ᱸ ᱹ ᱺ ᱻ ᱼ ᱽ]</exemplarCharacters>
+		<exemplarCharacters type="numbers" draft="contributed">[\- ‑ , . % + 0᱐ 1᱑ 2᱒ 3᱓ 4᱔ 5᱕ 6᱖ 7᱗ 8᱘ 9᱙]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart>“</quotationStart>
+		<quotationEnd>”</quotationEnd>
+		<alternateQuotationStart>‘</alternateQuotationStart>
+		<alternateQuotationEnd>’</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>G y MMMM d, EEEE</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>G y MMMM d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>G y MMM d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>GGGGG y-MM-dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">ᱡᱟᱱ</month>
+							<month type="2">ᱯᱷᱟ</month>
+							<month type="3">ᱢᱟᱨ</month>
+							<month type="4">ᱟᱯᱨ</month>
+							<month type="5">ᱢᱮ</month>
+							<month type="6">ᱡᱩᱱ</month>
+							<month type="7">ᱡᱩᱞ</month>
+							<month type="8">ᱟᱜᱟ</month>
+							<month type="9">ᱥᱮᱯ</month>
+							<month type="10">ᱚᱠᱴ</month>
+							<month type="11">ᱱᱟᱣ</month>
+							<month type="12">ᱫᱤᱥ</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">ᱡ</month>
+							<month type="2">ᱯ</month>
+							<month type="3">ᱢ</month>
+							<month type="4">ᱟ</month>
+							<month type="5">ᱢ</month>
+							<month type="6">ᱡ</month>
+							<month type="7">ᱡ</month>
+							<month type="8">ᱟ</month>
+							<month type="9">ᱥ</month>
+							<month type="10">ᱚ</month>
+							<month type="11">ᱱ</month>
+							<month type="12">ᱫ</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">ᱡᱟᱱᱣᱟᱨᱤ</month>
+							<month type="2">ᱯᱷᱟᱨᱣᱟᱨᱤ</month>
+							<month type="3">ᱢᱟᱨᱪ</month>
+							<month type="4">ᱟᱯᱨᱮᱞ</month>
+							<month type="5">ᱢᱮ</month>
+							<month type="6">ᱡᱩᱱ</month>
+							<month type="7">ᱡᱩᱞᱟᱭ</month>
+							<month type="8">ᱟᱜᱟᱥᱛ</month>
+							<month type="9">ᱥᱮᱯᱴᱮᱢᱵᱟᱨ</month>
+							<month type="10">ᱚᱠᱴᱚᱵᱟᱨ</month>
+							<month type="11">ᱱᱟᱣᱟᱢᱵᱟᱨ</month>
+							<month type="12">ᱫᱤᱥᱟᱢᱵᱟᱨ</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">ᱡᱟᱱ</month>
+							<month type="2">ᱯᱷᱟ</month>
+							<month type="3">ᱢᱟᱨ</month>
+							<month type="4">ᱟᱯᱨ</month>
+							<month type="5">ᱢᱮ</month>
+							<month type="6">ᱡᱩᱱ</month>
+							<month type="7">ᱡᱩᱞ</month>
+							<month type="8">ᱟᱜᱟ</month>
+							<month type="9">ᱥᱮᱯ</month>
+							<month type="10">ᱚᱠᱴ</month>
+							<month type="11">ᱱᱟᱣ</month>
+							<month type="12">ᱫᱤᱥ</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">ᱡ</month>
+							<month type="2">ᱯ</month>
+							<month type="3">ᱢ</month>
+							<month type="4">ᱟ</month>
+							<month type="5">ᱢ</month>
+							<month type="6">ᱡ</month>
+							<month type="7">ᱡ</month>
+							<month type="8">ᱟ</month>
+							<month type="9">ᱥ</month>
+							<month type="10">ᱚ</month>
+							<month type="11">ᱱ</month>
+							<month type="12">ᱫ</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">ᱥᱤᱸ</day>
+							<day type="mon">ᱚᱛ</day>
+							<day type="tue">ᱵᱟ</day>
+							<day type="wed">ᱥᱟᱹ</day>
+							<day type="thu">ᱥᱟᱹᱨ</day>
+							<day type="fri">ᱡᱟᱹ</day>
+							<day type="sat">ᱧᱩ</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">ᱥ</day>
+							<day type="mon">ᱚ</day>
+							<day type="tue">ᱵ</day>
+							<day type="wed">ᱥ</day>
+							<day type="thu">ᱥ</day>
+							<day type="fri">ᱡ</day>
+							<day type="sat">ᱧ</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">ᱥᱤᱸᱜᱮ</day>
+							<day type="mon">ᱚᱛᱮ</day>
+							<day type="tue">ᱵᱟᱞᱮ</day>
+							<day type="wed">ᱥᱟᱹᱜᱩᱱ</day>
+							<day type="thu">ᱥᱟᱹᱨᱫᱤ</day>
+							<day type="fri">ᱡᱟᱹᱨᱩᱢ</day>
+							<day type="sat">ᱧᱩᱦᱩᱢ</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">ᱥᱤᱸ</day>
+							<day type="mon">ᱚᱛ</day>
+							<day type="tue">ᱵᱟ</day>
+							<day type="wed">ᱥᱟᱹ</day>
+							<day type="thu">ᱥᱟᱹᱨ</day>
+							<day type="fri">ᱡᱟᱹ</day>
+							<day type="sat">ᱧᱩ</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">ᱥ</day>
+							<day type="mon">ᱚ</day>
+							<day type="tue">ᱵ</day>
+							<day type="wed">ᱥ</day>
+							<day type="thu">ᱥ</day>
+							<day type="fri">ᱡ</day>
+							<day type="sat">ᱧ</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">᱑ᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ</quarter>
+							<quarter type="2">᱒ᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ</quarter>
+							<quarter type="3">᱓ᱭᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ</quarter>
+							<quarter type="4">᱔ᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">᱑</quarter>
+							<quarter type="2">᱒</quarter>
+							<quarter type="3">᱓</quarter>
+							<quarter type="4">᱔</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">᱑ᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ</quarter>
+							<quarter type="2">᱒ᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ</quarter>
+							<quarter type="3">᱓ᱭᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ</quarter>
+							<quarter type="4">᱔ᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="narrow">
+							<quarter type="1">᱑</quarter>
+							<quarter type="2">᱒</quarter>
+							<quarter type="3">᱓</quarter>
+							<quarter type="4">᱔</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">᱑ᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ</quarter>
+							<quarter type="2">᱒ᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ</quarter>
+							<quarter type="3">᱓ᱭᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ</quarter>
+							<quarter type="4">᱔ᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">ᱥᱮᱛᱟᱜ</dayPeriod>
+							<dayPeriod type="pm">ᱧᱤᱫᱟᱹ</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraAbbr>
+						<era type="0">ᱥᱮᱨᱢᱟ ᱞᱟᱦᱟ</era>
+						<era type="1">ᱤᱥᱣᱤ</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d/M/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>h:mm:ss a zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>h:mm:ss a z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>h:mm:ss a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>h:mm a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>ᱡᱩᱜᱽ</displayName>
+			</field>
+			<field type="year">
+				<displayName>ᱥᱮᱨᱢᱟ/ᱵᱚᱪᱷᱚᱞᱨ</displayName>
+			</field>
+			<field type="quarter">
+				<displayName>ᱯᱮᱪᱟᱸᱫᱚ</displayName>
+			</field>
+			<field type="quarter-short">
+				<displayName>ᱯᱮᱪᱟᱸᱫᱚ</displayName>
+			</field>
+			<field type="quarter-narrow">
+				<displayName>ᱯᱮᱪᱟᱸᱫᱚ</displayName>
+			</field>
+			<field type="month">
+				<displayName>ᱪᱟᱸᱫᱚ</displayName>
+			</field>
+			<field type="month-short">
+				<displayName>ᱪᱟᱸᱫᱚ</displayName>
+			</field>
+			<field type="month-narrow">
+				<displayName>ᱪᱟᱸᱫᱚ</displayName>
+			</field>
+			<field type="week">
+				<displayName>ᱦᱟᱯᱛᱟ/ᱮᱢᱦᱟ</displayName>
+			</field>
+			<field type="week-short">
+				<displayName>ᱦᱟᱯᱛᱟ/ᱮᱢᱦᱟ</displayName>
+			</field>
+			<field type="week-narrow">
+				<displayName>ᱦᱟᱯᱛᱟ/ᱮᱢᱦᱟ</displayName>
+			</field>
+			<field type="day">
+				<displayName>ᱢᱟᱦᱟ</displayName>
+				<relative type="-1">ᱦᱚᱞᱟ</relative>
+				<relative type="0">ᱛᱮᱦᱮᱧ</relative>
+				<relative type="1">ᱜᱟᱯᱟ</relative>
+			</field>
+			<field type="day-short">
+				<displayName>ᱢᱟᱦᱟ</displayName>
+			</field>
+			<field type="day-narrow">
+				<displayName>ᱢᱟᱦᱟ</displayName>
+			</field>
+			<field type="weekday">
+				<displayName>ᱦᱟᱯᱛᱟ ᱨᱮᱭᱟᱜ ᱢᱟᱦᱟ</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>ᱥᱮᱛᱟᱜ/ᱟᱹᱭᱩᱵ</displayName>
+			</field>
+			<field type="hour">
+				<displayName>ᱴᱟᱲᱟᱝ</displayName>
+			</field>
+			<field type="minute">
+				<displayName>ᱴᱤᱯᱤᱡ</displayName>
+			</field>
+			<field type="second">
+				<displayName>ᱴᱤᱡ</displayName>
+			</field>
+			<field type="zone">
+				<displayName>ᱴᱚᱴᱷᱟ</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<gmtFormat>ᱡᱤᱮᱢᱴᱤ{0}</gmtFormat>
+			<gmtZeroFormat>ᱡᱤᱮᱢᱴᱤ</gmtZeroFormat>
+			<regionFormat>{0} ᱚᱠᱛᱚ</regionFormat>
+			<regionFormat type="daylight">{0} ᱫᱤᱱᱵᱮᱲᱟ ᱚᱠᱛᱚ</regionFormat>
+			<regionFormat type="standard">{0} ᱮᱴᱮᱱᱰᱟᱨᱰ ᱚᱠᱛᱚ</regionFormat>
+			<zone type="Etc/UTC">
+				<long>
+					<standard>ᱠᱚᱨᱰᱤᱱᱮᱴᱮᱰ ᱭᱩᱱᱤᱣᱟᱨᱥᱟᱞ ᱚᱠᱛᱚ</standard>
+				</long>
+			</zone>
+			<zone type="Etc/Unknown">
+				<exemplarCity>ᱵᱟᱝ ᱪᱤᱱᱦᱟᱹᱣ ᱵᱟᱡᱟᱨ</exemplarCity>
+			</zone>
+			<metazone type="America_Central">
+				<long>
+					<generic>ᱛᱟᱱᱟᱞᱟ ᱚᱠᱛᱚ</generic>
+					<standard>ᱛᱟᱱᱟᱞᱟ ᱮᱥᱴᱮᱱᱰᱟᱨᱰ ᱚᱠᱛᱚ</standard>
+					<daylight>ᱛᱟᱱᱟᱞᱟ ᱥᱤᱧᱟᱜ ᱚᱠᱛᱚ</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic>ᱤᱥᱴᱟᱨᱱ ᱚᱠᱛᱚ</generic>
+					<standard>ᱤᱥᱴᱟᱨᱱ ᱮᱥᱴᱮᱱᱰᱟᱨᱰ ᱚᱠᱛᱚ</standard>
+					<daylight>ᱤᱥᱴᱟᱨᱱ ᱥᱤᱧᱟᱜ ᱵᱚᱠᱛᱚ</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic>ᱢᱟᱩᱱᱴᱮᱱ ᱚᱠᱛᱚ</generic>
+					<standard>ᱢᱟᱩᱱᱴᱮᱱ ᱮᱥᱴᱮᱱᱰᱟᱨᱰ ᱚᱠᱛᱚ</standard>
+					<daylight>ᱢᱟᱩᱱᱴᱮᱱ ᱥᱤᱧᱟᱜ ᱚᱠᱛᱚ</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic>ᱯᱮᱥᱤᱯᱷᱤᱠ ᱚᱠᱛᱚ</generic>
+					<standard>ᱯᱮᱥᱤᱯᱷᱤᱠ ᱮᱥᱴᱮᱱᱰᱟᱨᱰ ᱚᱠᱛᱚ</standard>
+					<daylight>ᱯᱮᱥᱤᱯᱷᱤᱠ ᱥᱤᱧᱟᱜ ᱚᱠᱛᱚ</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<generic>ᱮᱴᱞᱟᱱᱴᱤᱠ ᱚᱠᱛᱚ</generic>
+					<standard>ᱮᱴᱞᱟᱱᱴᱤᱠ ᱮᱥᱴᱮᱱᱰᱟᱨᱰ ᱚᱠᱛᱚ</standard>
+					<daylight>ᱮᱴᱞᱟᱱᱴᱤᱠ ᱥᱤᱧᱟᱜ ᱚᱠᱛᱚ</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>ᱥᱮᱱᱴᱨᱟᱞ ᱩᱨᱚᱯᱤᱭᱟᱱ ᱚᱠᱛᱚ</generic>
+					<standard>ᱥᱮᱱᱴᱨᱟᱞ ᱩᱨᱚᱯᱤᱭᱟᱱ ᱮᱥᱴᱮᱱᱰᱟᱨᱰ ᱚᱠᱛᱚ</standard>
+					<daylight>ᱥᱮᱱᱴᱨᱟᱞ ᱩᱨᱚᱯᱤᱭᱟᱱ ᱥᱟᱢᱟᱨ ᱚᱠᱛᱚ</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic>ᱤᱥᱴᱟᱨᱱ ᱩᱨᱚᱯᱤᱭᱟᱱ ᱚᱠᱛᱚ</generic>
+					<standard>ᱤᱥᱴᱟᱨᱱ ᱩᱨᱚᱯᱤᱭᱟᱱ ᱮᱥᱴᱮᱱᱰᱟᱨᱰ ᱚᱠᱛᱚ</standard>
+					<daylight>ᱤᱥᱴᱟᱨᱱ ᱩᱨᱚᱯᱤᱭᱟᱱ ᱥᱟᱢᱟᱨ ᱚᱠᱛᱚ</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>ᱣᱮᱥᱴᱟᱨᱱ ᱩᱨᱚᱯᱤᱭᱟᱱ ᱚᱠᱛᱚ</generic>
+					<standard>ᱣᱮᱥᱴᱟᱨᱱ ᱩᱨᱚᱯᱤᱭᱟᱱ ᱮᱥᱴᱮᱱᱰᱟᱨᱰ ᱚᱠᱛᱚ</standard>
+					<daylight>ᱣᱮᱥᱴᱟᱨᱱ ᱩᱨᱚᱯᱤᱭᱟᱱ ᱥᱟᱢᱟᱨ ᱚᱠᱛᱚ</daylight>
+				</long>
+			</metazone>
+			<metazone type="GMT">
+				<long>
+					<standard>ᱜᱨᱤᱱᱣᱤᱪ ᱢᱤᱱ ᱚᱠᱛᱚ</standard>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>olck</defaultNumberingSystem>
+		<symbols numberSystem="latn">
+			<decimal>.</decimal>
+			<group>,</group>
+			<percentSign>%</percentSign>
+			<plusSign>+</plusSign>
+			<minusSign>-</minusSign>
+		</symbols>
+		<currencies>
+			<currency type="BRL">
+				<displayName>ᱵᱨᱟᱡᱤᱞᱤᱭᱟᱱ ᱨᱤᱭᱟᱹᱞ</displayName>
+				<displayName count="one">ᱵᱨᱟᱡᱤᱞᱤᱭᱟᱱ ᱨᱤᱭᱟᱹᱞ</displayName>
+				<displayName count="two">ᱵᱨᱟᱡᱤᱞᱤᱭᱟᱱ ᱨᱤᱭᱟᱹᱞᱥ</displayName>
+				<displayName count="other">ᱵᱨᱟᱡᱤᱞᱤᱭᱟᱱ ᱨᱤᱭᱟᱹᱞᱥ</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>ᱪᱤᱱᱤ ᱭᱩᱣᱟᱱ</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>ᱭᱩᱨᱚ</displayName>
+				<displayName count="one">ᱭᱩᱨᱚ</displayName>
+				<displayName count="two">ᱭᱩᱨᱚ</displayName>
+				<displayName count="other">ᱭᱩᱨᱚ</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>ᱵᱨᱤᱴᱤᱥ ᱯᱟᱣᱩᱸᱰ</displayName>
+				<displayName count="one">ᱵᱨᱤᱴᱤᱥ ᱯᱟᱣᱩᱸᱰ</displayName>
+				<displayName count="two">ᱵᱨᱤᱴᱤᱥ ᱯᱟᱣᱩᱸᱰᱥ</displayName>
+				<displayName count="other">ᱵᱨᱤᱴᱤᱥ ᱯᱟᱣᱩᱸᱰᱥ</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName>ᱥᱤᱧᱚᱛ ᱨᱮᱱᱟᱜ ᱴᱟᱠᱟ</displayName>
+				<displayName count="one">ᱥᱤᱧᱚᱛ ᱨᱮᱱᱟᱜ ᱴᱟᱠᱟ</displayName>
+				<displayName count="two">ᱥᱤᱧᱚᱛ ᱨᱮᱱᱟᱜ ᱴᱟᱠᱟ</displayName>
+				<displayName count="other">ᱥᱤᱧᱚᱛ ᱨᱮᱱᱟᱜ ᱴᱟᱠᱟ</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>ᱡᱟᱯᱟᱱᱤ ᱭᱮᱱ</displayName>
+				<displayName count="one">ᱡᱟᱯᱟᱱᱤ ᱭᱮᱱ</displayName>
+				<displayName count="two">ᱡᱟᱯᱟᱱᱤ ᱭᱮᱱ</displayName>
+				<displayName count="other">ᱡᱟᱯᱟᱱᱤ ᱭᱮᱱ</displayName>
+			</currency>
+			<currency type="RUB">
+				<displayName>ᱨᱩᱥᱤ ᱨᱩᱵᱟᱹᱞ</displayName>
+				<displayName count="one">ᱨᱩᱥᱤ ᱨᱩᱵᱟᱹᱞ</displayName>
+				<displayName count="two">ᱨᱩᱥᱤ ᱨᱩᱵᱟᱹᱞᱥ</displayName>
+				<displayName count="other">ᱨᱩᱥᱤ ᱨᱩᱵᱟᱹᱞᱥ</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>ᱭᱩᱮᱥ ᱰᱚᱞᱟᱨ</displayName>
+				<displayName count="one">ᱭᱩᱮᱥ ᱰᱚᱞᱟᱨ</displayName>
+				<displayName count="two">ᱭᱩᱮᱥ ᱰᱚᱞᱟᱨ</displayName>
+				<displayName count="other">ᱭᱩᱮᱥ ᱰᱚᱞᱟᱨ</displayName>
+			</currency>
+			<currency type="XXX">
+				<displayName>ᱵᱟᱝᱩᱨᱩᱢ ᱠᱟᱨᱮᱱᱥᱤ</displayName>
+				<displayName count="one">ᱵᱟᱝᱩᱨᱩᱢ ᱠᱟᱨᱮᱱᱥᱤ</displayName>
+				<displayName count="two">ᱵᱟᱝᱩᱨᱩᱢ ᱠᱟᱨᱮᱱᱥᱤ</displayName>
+				<displayName count="other">ᱵᱟᱝᱩᱨᱩᱢ ᱠᱟᱨᱮᱱᱥᱤ</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<posix>
+		<messages>
+			<yesstr>ᱦᱚᱸᱺᱦ</yesstr>
+			<nostr>ᱵᱟᱝᱺᱵ</nostr>
+		</messages>
+	</posix>
+</ldml>

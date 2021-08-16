@@ -1,0 +1,2 @@
+T8021567.java:21:9: compiler.err.ref.ambiguous: m, kindname.method, m(T8021567.I_byte), T8021567, kindname.method, m(T8021567.I_char), T8021567
+1 error

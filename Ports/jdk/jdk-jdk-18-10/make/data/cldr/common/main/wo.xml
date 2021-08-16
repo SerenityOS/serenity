@@ -1,0 +1,1676 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="wo"/>
+	</identity>
+	<localeDisplayNames>
+		<localeDisplayPattern>
+			<localePattern>{0} ({1})</localePattern>
+			<localeSeparator>{0}, {1}</localeSeparator>
+			<localeKeyTypePattern>{0}: {1}</localeKeyTypePattern>
+		</localeDisplayPattern>
+		<languages>
+			<language type="af">Afrikaans</language>
+			<language type="am">Amharik</language>
+			<language type="ar">Araab</language>
+			<language type="as">Asame</language>
+			<language type="az">Aserbayjane</language>
+			<language type="ba">Baskir</language>
+			<language type="ban">Bali</language>
+			<language type="be">Belaris</language>
+			<language type="bem">Bemba</language>
+			<language type="bg">Bilgaar</language>
+			<language type="bn">Baŋla</language>
+			<language type="bo">Tibetan</language>
+			<language type="br">Breton</language>
+			<language type="bs">Bosñak</language>
+			<language type="ca">Katalan</language>
+			<language type="ceb">Sibiyanoo</language>
+			<language type="chm">Mari</language>
+			<language type="chr">Ceroki</language>
+			<language type="ckb">Kurdi gu Diggu</language>
+			<language type="co">Kors</language>
+			<language type="cs">Cek</language>
+			<language type="cy">Wels</language>
+			<language type="da">Danuwa</language>
+			<language type="de">Almaa</language>
+			<language type="de_AT">Almaa bu Ótiriis</language>
+			<language type="de_CH">Almaa bu Kawe bu Swis</language>
+			<language type="dsb">Sorab-Suuf</language>
+			<language type="dv">Diweyi</language>
+			<language type="dz">Dsongkaa</language>
+			<language type="el">Gereg</language>
+			<language type="en">Àngale</language>
+			<language type="en_AU">Àngale bu Óstraali</language>
+			<language type="en_CA">Àngale bu Kanadaa</language>
+			<language type="en_GB">Àngale bu Grànd Brëtaañ</language>
+			<language type="en_GB" alt="short">Àngale (RI)</language>
+			<language type="en_US">Àngale bu Amerik</language>
+			<language type="en_US" alt="short">Àngale (ES)</language>
+			<language type="eo">Esperantoo</language>
+			<language type="es">Español</language>
+			<language type="es_419">Español bu Amerik Latin</language>
+			<language type="es_ES">Español bu Tugël</language>
+			<language type="es_MX">Español bu Meksik</language>
+			<language type="et">Estoñiye</language>
+			<language type="eu">Bask</language>
+			<language type="fa">Pers</language>
+			<language type="ff">Pël</language>
+			<language type="fi">Feylànde</language>
+			<language type="fil">Filipiye</language>
+			<language type="fo">Feroos</language>
+			<language type="fr">Farañse</language>
+			<language type="fr_CA">Frañse bu Kanadaa</language>
+			<language type="fr_CH">Frañse bu Swis</language>
+			<language type="ga">Irlànde</language>
+			<language type="gd">Galuwaa bu Ekos</language>
+			<language type="gl">Galisiye</language>
+			<language type="gn">Garani</language>
+			<language type="gu">Gujarati</language>
+			<language type="ha">Hawsa</language>
+			<language type="haw">Hawaye</language>
+			<language type="he">Ebrë</language>
+			<language type="hi">Endo</language>
+			<language type="hil">Hiligaynon</language>
+			<language type="hr">Krowat</language>
+			<language type="hsb">Sorab-Kaw</language>
+			<language type="ht">Kereyolu Ayti</language>
+			<language type="hu">Ongruwaa</language>
+			<language type="hy">Armaniye</language>
+			<language type="hz">Herero</language>
+			<language type="ibb">Ibibiyo</language>
+			<language type="id">Endonesiye</language>
+			<language type="ig">Igbo</language>
+			<language type="is">Islànde</language>
+			<language type="it">Italiye</language>
+			<language type="iu">Inuktitit</language>
+			<language type="ja">Sapone</language>
+			<language type="ka">Sorsiye</language>
+			<language type="kk">Kasax</language>
+			<language type="km">Xmer</language>
+			<language type="kn">Kannadaa</language>
+			<language type="ko">Koreye</language>
+			<language type="kok">Konkani</language>
+			<language type="kr">Kanuri</language>
+			<language type="kru">Kuruks</language>
+			<language type="ks">Kashmiri</language>
+			<language type="ku">Kurdi</language>
+			<language type="ky">Kirgiis</language>
+			<language type="la">Latin</language>
+			<language type="lb">Liksàmbursuwaa</language>
+			<language type="lo">Laaw</language>
+			<language type="lt">Lituyaniye</language>
+			<language type="lv">Letoniye</language>
+			<language type="men">Mende</language>
+			<language type="mg">Malagasi</language>
+			<language type="mi">Mawri</language>
+			<language type="mk">Maseduwaane</language>
+			<language type="ml">Malayalam</language>
+			<language type="mn">Mongoliye</language>
+			<language type="mni">Manipuri</language>
+			<language type="moh">Mowak</language>
+			<language type="mr">Marati</language>
+			<language type="ms">Malay</language>
+			<language type="mt">Malt</language>
+			<language type="my">Birmes</language>
+			<language type="ne">Nepale</language>
+			<language type="niu">Niweyan</language>
+			<language type="nl">Neyerlànde</language>
+			<language type="no">Nerwesiye</language>
+			<language type="ny">Sewa</language>
+			<language type="oc">Ositan</language>
+			<language type="om">Oromo</language>
+			<language type="or">Oja</language>
+			<language type="pa">Punjabi</language>
+			<language type="pap">Papiyamento</language>
+			<language type="pl">Polone</language>
+			<language type="ps">Pasto</language>
+			<language type="pt">Purtugees</language>
+			<language type="pt_BR">Purtugees bu Bresil</language>
+			<language type="pt_PT">Portugees bu Tugël</language>
+			<language type="qu">Kesuwa</language>
+			<language type="quc">Kishe</language>
+			<language type="rm">Romaas</language>
+			<language type="ro">Rumaniyee</language>
+			<language type="ru">Rus</language>
+			<language type="rw">Kinyarwànda</language>
+			<language type="sa">Sanskrit</language>
+			<language type="sah">Saxa</language>
+			<language type="sat">Santali</language>
+			<language type="sd">Sindi</language>
+			<language type="se">Penku Sami</language>
+			<language type="si">Sinala</language>
+			<language type="sk">Eslowaki (Eslowak)</language>
+			<language type="sl">Esloweniye</language>
+			<language type="sma">Sami gu Saalum</language>
+			<language type="smj">Lule Sami</language>
+			<language type="smn">Inari Sami</language>
+			<language type="sms">Eskolt Sami</language>
+			<language type="so">Somali (làkk)</language>
+			<language type="sq">Albane</language>
+			<language type="sr">Serb</language>
+			<language type="sv">Suweduwaa</language>
+			<language type="syr">Siryak</language>
+			<language type="ta">Tamil</language>
+			<language type="te">Telugu</language>
+			<language type="tg">Tajis</language>
+			<language type="th">Tay</language>
+			<language type="ti">Tigriña</language>
+			<language type="tk">Tirkmen</language>
+			<language type="to">Tongan</language>
+			<language type="tr">Tirk</language>
+			<language type="tt">Tatar</language>
+			<language type="tzm">Tamasis gu Digg Atlaas</language>
+			<language type="ug">Uygur</language>
+			<language type="uk">Ikreniye</language>
+			<language type="und">Làkk wuñ xamul</language>
+			<language type="ur">Urdu</language>
+			<language type="uz">Usbek</language>
+			<language type="ve">Wenda</language>
+			<language type="vi">Wiyetnaamiye</language>
+			<language type="wo">Wolof</language>
+			<language type="yi">Yidis</language>
+			<language type="yo">Yoruba</language>
+			<language type="zh">Sinuwaa</language>
+			<language type="zh_Hans">Sinuwaa buñ woyofal</language>
+			<language type="zh_Hans" alt="long">Sinuwaa buñ woyofal</language>
+			<language type="zh_Hant">Sinuwaa bu cosaan</language>
+			<language type="zh_Hant" alt="long">Sinuwaa bu cosaan</language>
+		</languages>
+		<scripts>
+			<script type="Arab">Araab</script>
+			<script type="Cyrl">Sirilik</script>
+			<script type="Hans">Buñ woyofal</script>
+			<script type="Hans" alt="stand-alone">Han buñ woyofal</script>
+			<script type="Hant">Cosaan</script>
+			<script type="Hant" alt="stand-alone">Han u cosaan</script>
+			<script type="Latn">Latin</script>
+			<script type="Zxxx">Luñ bindul</script>
+			<script type="Zzzz">Mbind muñ xamul</script>
+		</scripts>
+		<territories>
+			<territory type="AD">Andoor</territory>
+			<territory type="AE">Emira Arab Ini</territory>
+			<territory type="AF">Afganistaŋ</territory>
+			<territory type="AG">Antiguwa ak Barbuda</territory>
+			<territory type="AI">Angiiy</territory>
+			<territory type="AL">Albani</territory>
+			<territory type="AM">Armeni</territory>
+			<territory type="AO">Àngolaa</territory>
+			<territory type="AQ">Antarktik</territory>
+			<territory type="AR">Arsàntin</territory>
+			<territory type="AS">Samowa bu Amerig</territory>
+			<territory type="AT">Ótiriis</territory>
+			<territory type="AU">Ostarali</territory>
+			<territory type="AW">Aruba</territory>
+			<territory type="AX">Duni Aalànd</territory>
+			<territory type="AZ">Aserbayjaŋ</territory>
+			<territory type="BA">Bosni Ersegowin</territory>
+			<territory type="BB">Barbad</territory>
+			<territory type="BD">Bengalades</territory>
+			<territory type="BE">Belsig</territory>
+			<territory type="BF">Burkina Faaso</territory>
+			<territory type="BG">Bilgari</territory>
+			<territory type="BH">Bahreyin</territory>
+			<territory type="BI">Burundi</territory>
+			<territory type="BJ">Benee</territory>
+			<territory type="BL">Saŋ Bartalemi</territory>
+			<territory type="BM">Bermid</territory>
+			<territory type="BN">Burney</territory>
+			<territory type="BO">Boliwi</territory>
+			<territory type="BR">Beresil</territory>
+			<territory type="BS">Bahamas</territory>
+			<territory type="BT">Butaŋ</territory>
+			<territory type="BV">Dunu Buwet</territory>
+			<territory type="BW">Botswana</territory>
+			<territory type="BY">Belaris</territory>
+			<territory type="BZ">Belis</territory>
+			<territory type="CA">Kanadaa</territory>
+			<territory type="CC">Duni Koko (Kilin)</territory>
+			<territory type="CD" alt="variant">Kongo (R K D)</territory>
+			<territory type="CF">Repiblik Sàntar Afrik</territory>
+			<territory type="CG" alt="variant">Réewum Kongo</territory>
+			<territory type="CH">Siwis</territory>
+			<territory type="CI">Kodiwaar</territory>
+			<territory type="CK">Duni Kuuk</territory>
+			<territory type="CL">Sili</territory>
+			<territory type="CM">Kamerun</territory>
+			<territory type="CN">Siin</territory>
+			<territory type="CO">Kolombi</territory>
+			<territory type="CR">Kosta Rika</territory>
+			<territory type="CU">Kuba</territory>
+			<territory type="CV">Kabo Werde</territory>
+			<territory type="CW">Kursawo</territory>
+			<territory type="CX">Dunu Kirismas</territory>
+			<territory type="CY">Siipar</territory>
+			<territory type="CZ">Réewum Cek</territory>
+			<territory type="DE">Almaañ</territory>
+			<territory type="DJ">Jibuti</territory>
+			<territory type="DK">Danmàrk</territory>
+			<territory type="DM">Dominik</territory>
+			<territory type="DO">Repiblik Dominiken</territory>
+			<territory type="DZ">Alseri</territory>
+			<territory type="EC">Ekwaatër</territory>
+			<territory type="EE">Estoni</territory>
+			<territory type="EG">Esipt</territory>
+			<territory type="ER">Eritere</territory>
+			<territory type="ES">Españ</territory>
+			<territory type="ET">Ecopi</territory>
+			<territory type="FI">Finlànd</territory>
+			<territory type="FJ">Fijji</territory>
+			<territory type="FK">Duni Falkland</territory>
+			<territory type="FM">Mikoronesi</territory>
+			<territory type="FO">Duni Faro</territory>
+			<territory type="FR">Faraans</territory>
+			<territory type="GA">Gaboŋ</territory>
+			<territory type="GB">Ruwaayom Ini</territory>
+			<territory type="GD">Garanad</territory>
+			<territory type="GE">Seworsi</territory>
+			<territory type="GF">Guyaan Farañse</territory>
+			<territory type="GG">Gernase</territory>
+			<territory type="GH">Gana</territory>
+			<territory type="GI">Sibraltaar</territory>
+			<territory type="GL">Girinlànd</territory>
+			<territory type="GM">Gàmbi</territory>
+			<territory type="GN">Gine</territory>
+			<territory type="GP">Guwaadelup</territory>
+			<territory type="GQ">Gine Ekuwatoriyal</territory>
+			<territory type="GR">Gerees</territory>
+			<territory type="GS">Seworsi di Sid ak Duni Sàndwiis di Sid</territory>
+			<territory type="GT">Guwatemala</territory>
+			<territory type="GU">Guwam</territory>
+			<territory type="GW">Gine-Bisaawóo</territory>
+			<territory type="GY">Giyaan</territory>
+			<territory type="HK" alt="short">Ooŋ Koŋ</territory>
+			<territory type="HM">Duni Hërd ak Duni MakDonald</territory>
+			<territory type="HN">Onduraas</territory>
+			<territory type="HR">Korowasi</territory>
+			<territory type="HT">Ayti</territory>
+			<territory type="HU">Ongari</territory>
+			<territory type="ID">Indonesi</territory>
+			<territory type="IE">Irlànd</territory>
+			<territory type="IL">Israyel</territory>
+			<territory type="IM">Dunu Maan</territory>
+			<territory type="IN">End</territory>
+			<territory type="IO">Terituwaaru Brëtaañ ci Oseyaa Enjeŋ</territory>
+			<territory type="IQ">Irag</territory>
+			<territory type="IR">Iraŋ</territory>
+			<territory type="IS">Islànd</territory>
+			<territory type="IT">Itali</territory>
+			<territory type="JE">Serse</territory>
+			<territory type="JM">Samayig</territory>
+			<territory type="JO">Sordani</territory>
+			<territory type="JP">Sàppoŋ</territory>
+			<territory type="KE">Keeña</territory>
+			<territory type="KG">Kirgistaŋ</territory>
+			<territory type="KH">Kàmboj</territory>
+			<territory type="KI">Kiribati</territory>
+			<territory type="KM">Komoor</territory>
+			<territory type="KN">Saŋ Kits ak Newis</territory>
+			<territory type="KP">Kore Noor</territory>
+			<territory type="KW">Kowet</territory>
+			<territory type="KY">Duni Kaymaŋ</territory>
+			<territory type="KZ">Kasaxstaŋ</territory>
+			<territory type="LA">Lawos</territory>
+			<territory type="LB">Libaa</territory>
+			<territory type="LC">Saŋ Lusi</territory>
+			<territory type="LI">Liktensteyin</territory>
+			<territory type="LK">Siri Lànka</territory>
+			<territory type="LR">Liberiya</territory>
+			<territory type="LS">Lesoto</territory>
+			<territory type="LT">Litiyani</territory>
+			<territory type="LU">Liksàmbur</territory>
+			<territory type="LV">Letoni</territory>
+			<territory type="LY">Libi</territory>
+			<territory type="MA">Marog</territory>
+			<territory type="MC">Monako</territory>
+			<territory type="MD">Moldawi</territory>
+			<territory type="ME">Montenegoro</territory>
+			<territory type="MF">Saŋ Marteŋ</territory>
+			<territory type="MG">Madagaskaar</territory>
+			<territory type="MH">Duni Marsaal</territory>
+			<territory type="MK">Maseduwaan bëj Gànnaar</territory>
+			<territory type="ML">Mali</territory>
+			<territory type="MM">Miyanmaar</territory>
+			<territory type="MN">Mongoli</territory>
+			<territory type="MO" alt="short">Makaawo</territory>
+			<territory type="MP">Duni Mariyaan Noor</territory>
+			<territory type="MQ">Martinik</territory>
+			<territory type="MR">Mooritani</territory>
+			<territory type="MS">Mooseraa</territory>
+			<territory type="MT">Malt</territory>
+			<territory type="MU">Moriis</territory>
+			<territory type="MV">Maldiiw</territory>
+			<territory type="MW">Malawi</territory>
+			<territory type="MX">Meksiko</territory>
+			<territory type="MY">Malesi</territory>
+			<territory type="MZ">Mosàmbig</territory>
+			<territory type="NA">Namibi</territory>
+			<territory type="NC">Nuwel Kaledoni</territory>
+			<territory type="NE">Niiseer</territory>
+			<territory type="NF">Dunu Norfolk</territory>
+			<territory type="NG">Niseriya</territory>
+			<territory type="NI">Nikaraguwa</territory>
+			<territory type="NL">Peyi Baa</territory>
+			<territory type="NO">Norwees</territory>
+			<territory type="NP">Nepaal</territory>
+			<territory type="NR">Nawru</territory>
+			<territory type="NU">Niw</territory>
+			<territory type="NZ">Nuwel Selànd</territory>
+			<territory type="OM">Omaan</territory>
+			<territory type="PA">Panama</territory>
+			<territory type="PE">Peru</territory>
+			<territory type="PF">Polinesi Farañse</territory>
+			<territory type="PG">Papuwasi Gine Gu Bees</territory>
+			<territory type="PH">Filipin</territory>
+			<territory type="PK">Pakistaŋ</territory>
+			<territory type="PL">Poloñ</territory>
+			<territory type="PM">Saŋ Peer ak Mikeloŋ</territory>
+			<territory type="PN">Duni Pitkayirn</territory>
+			<territory type="PR">Porto Riko</territory>
+			<territory type="PT">Portigaal</territory>
+			<territory type="PW">Palaw</territory>
+			<territory type="PY">Paraguwe</territory>
+			<territory type="QA">Kataar</territory>
+			<territory type="RE">Reeñoo</territory>
+			<territory type="RO">Rumani</territory>
+			<territory type="RS">Serbi</territory>
+			<territory type="RU">Risi</territory>
+			<territory type="RW">Ruwànda</territory>
+			<territory type="SA">Arabi Sawudi</territory>
+			<territory type="SB">Duni Salmoon</territory>
+			<territory type="SC">Seysel</territory>
+			<territory type="SD">Sudaŋ</territory>
+			<territory type="SE">Suwed</territory>
+			<territory type="SG">Singapuur</territory>
+			<territory type="SH">Saŋ Eleen</territory>
+			<territory type="SI">Esloweni</territory>
+			<territory type="SJ">Swalbaar ak Jan Mayen</territory>
+			<territory type="SK">Eslowaki</territory>
+			<territory type="SL">Siyera Lewon</territory>
+			<territory type="SM">San Marino</territory>
+			<territory type="SN">Senegaal</territory>
+			<territory type="SO">Somali</territory>
+			<territory type="SR">Sirinam</territory>
+			<territory type="SS">Sudaŋ di Sid</territory>
+			<territory type="ST">Sawo Tome ak Pirinsipe</territory>
+			<territory type="SV">El Salwadoor</territory>
+			<territory type="SX">Sin Marten</territory>
+			<territory type="SY">Siri</territory>
+			<territory type="SZ">Suwasilànd</territory>
+			<territory type="TC">Duni Tirk ak Kaykos</territory>
+			<territory type="TD">Càdd</territory>
+			<territory type="TF">Teer Ostraal gu Fraas</territory>
+			<territory type="TG">Togo</territory>
+			<territory type="TH">Taylànd</territory>
+			<territory type="TJ">Tajikistaŋ</territory>
+			<territory type="TK">Tokoloo</territory>
+			<territory type="TL">Timor Leste</territory>
+			<territory type="TM">Tirkmenistaŋ</territory>
+			<territory type="TN">Tinisi</territory>
+			<territory type="TO">Tonga</territory>
+			<territory type="TR">Tirki</territory>
+			<territory type="TT">Tirinite ak Tobago</territory>
+			<territory type="TV">Tuwalo</territory>
+			<territory type="TW">Taywan</territory>
+			<territory type="TZ">Taŋsani</territory>
+			<territory type="UA">Ikeren</territory>
+			<territory type="UG">Ugànda</territory>
+			<territory type="UM">Duni Amerig Utar meer</territory>
+			<territory type="US">Etaa Sini</territory>
+			<territory type="UY">Uruge</territory>
+			<territory type="UZ">Usbekistaŋ</territory>
+			<territory type="VA">Site bu Watikaa</territory>
+			<territory type="VC">Saŋ Weesaa ak Garanadin</territory>
+			<territory type="VE">Wenesiyela</territory>
+			<territory type="VG">Duni Wirsin yu Brëtaañ</territory>
+			<territory type="VI">Duni Wirsin yu Etaa-sini</territory>
+			<territory type="VN">Wiyetnam</territory>
+			<territory type="VU">Wanuatu</territory>
+			<territory type="WF">Walis ak Futuna</territory>
+			<territory type="WS">Samowa</territory>
+			<territory type="XK">Kosowo</territory>
+			<territory type="YE">Yaman</territory>
+			<territory type="YT">Mayot</territory>
+			<territory type="ZA">Afrik di Sid</territory>
+			<territory type="ZM">Sàmbi</territory>
+			<territory type="ZW">Simbabwe</territory>
+			<territory type="ZZ">Gox buñ xamul</territory>
+		</territories>
+		<types>
+			<type key="calendar" type="gregorian">Arminaatu Gregoriyee</type>
+			<type key="collation" type="standard">SSO (Toftalin wiñ gën a xam)</type>
+			<type key="numbers" type="latn">Siifari Tugal</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">Metrik</measurementSystemName>
+			<measurementSystemName type="UK">UK</measurementSystemName>
+			<measurementSystemName type="US">US</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language">{0}</codePattern>
+			<codePattern type="script">{0}</codePattern>
+			<codePattern type="territory">{0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a à b c d e é ë f g i j k l m n ñ ŋ o ó p q r s t u w x y]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[ã h v z]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B C D E F G H I J K L M N Ŋ O P Q R S T U V W X Y Z]</exemplarCharacters>
+		<exemplarCharacters type="numbers" draft="contributed">[\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+		<exemplarCharacters type="punctuation" draft="contributed">[\- ‑ , ; \: ! ? . ( ) \[ \] \{ \}]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart>“</quotationStart>
+		<quotationEnd>”</quotationEnd>
+		<alternateQuotationStart>‘</alternateQuotationStart>
+		<alternateQuotationEnd>’</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMM, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd-MM-y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} 'ci' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} 'ci' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} - {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} - {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="E">ccc</dateFormatItem>
+						<dateFormatItem id="Ed">E, d</dateFormatItem>
+						<dateFormatItem id="Gy">y G</dateFormatItem>
+						<dateFormatItem id="GyMMM">MMM, y G</dateFormatItem>
+						<dateFormatItem id="GyMMMd">d MMM, y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E, d MMM, y G</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">dd-MM</dateFormatItem>
+						<dateFormatItem id="MEd">E, dd-MM</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, d MMM</dateFormatItem>
+						<dateFormatItem id="MMMMd">d MMMM</dateFormatItem>
+						<dateFormatItem id="y">y G</dateFormatItem>
+						<dateFormatItem id="yyyy">y G</dateFormatItem>
+						<dateFormatItem id="yyyyM">MM y GGGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMd">d/M/y GGGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMEd">E, dd/MM/y GGGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMMM">MMM y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMd">d/MM/y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMEd">E, d MMM y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMM">MMMM y G</dateFormatItem>
+						<dateFormatItem id="yyyyQQQ">QQQ y G</dateFormatItem>
+						<dateFormatItem id="yyyyQQQQ">QQQQ y G</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">Sam</month>
+							<month type="2">Few</month>
+							<month type="3">Mar</month>
+							<month type="4">Awr</month>
+							<month type="5">Mee</month>
+							<month type="6">Suw</month>
+							<month type="7">Sul</month>
+							<month type="8">Ut</month>
+							<month type="9">Sàt</month>
+							<month type="10">Okt</month>
+							<month type="11">Now</month>
+							<month type="12">Des</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">1</month>
+							<month type="2">2</month>
+							<month type="3">3</month>
+							<month type="4">4</month>
+							<month type="5">5</month>
+							<month type="6">6</month>
+							<month type="7">7</month>
+							<month type="8">8</month>
+							<month type="9">9</month>
+							<month type="10">10</month>
+							<month type="11">11</month>
+							<month type="12">12</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Samwiyee</month>
+							<month type="2">Fewriyee</month>
+							<month type="3">Mars</month>
+							<month type="4">Awril</month>
+							<month type="5">Mee</month>
+							<month type="6">Suwe</month>
+							<month type="7">Sulet</month>
+							<month type="8">Ut</month>
+							<month type="9">Sàttumbar</month>
+							<month type="10">Oktoobar</month>
+							<month type="11">Nowàmbar</month>
+							<month type="12">Desàmbar</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">Sam</month>
+							<month type="2">Few</month>
+							<month type="3">Mar</month>
+							<month type="4">Awr</month>
+							<month type="5">Mee</month>
+							<month type="6">Suw</month>
+							<month type="7">Sul</month>
+							<month type="8">Ut</month>
+							<month type="9">Sàt</month>
+							<month type="10">Okt</month>
+							<month type="11">Now</month>
+							<month type="12">Des</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">1</month>
+							<month type="2">2</month>
+							<month type="3">3</month>
+							<month type="4">4</month>
+							<month type="5">5</month>
+							<month type="6">6</month>
+							<month type="7">7</month>
+							<month type="8">8</month>
+							<month type="9">9</month>
+							<month type="10">10</month>
+							<month type="11">11</month>
+							<month type="12">12</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Samwiyee</month>
+							<month type="2">Fewriyee</month>
+							<month type="3">Mars</month>
+							<month type="4">Awril</month>
+							<month type="5">Mee</month>
+							<month type="6">Suwe</month>
+							<month type="7">Sulet</month>
+							<month type="8">Ut</month>
+							<month type="9">Sàttumbar</month>
+							<month type="10">Oktoobar</month>
+							<month type="11">Nowàmbar</month>
+							<month type="12">Desàmbar</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Dib</day>
+							<day type="mon">Alt</day>
+							<day type="tue">Tal</day>
+							<day type="wed">Àla</day>
+							<day type="thu">Alx</day>
+							<day type="fri">Àjj</day>
+							<day type="sat">Ase</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">Dib</day>
+							<day type="mon">Alt</day>
+							<day type="tue">Tal</day>
+							<day type="wed">Àla</day>
+							<day type="thu">Alx</day>
+							<day type="fri">Àjj</day>
+							<day type="sat">Ase</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">Dib</day>
+							<day type="mon">Alt</day>
+							<day type="tue">Tal</day>
+							<day type="wed">Àla</day>
+							<day type="thu">Alx</day>
+							<day type="fri">Àjj</day>
+							<day type="sat">Ase</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Dibéer</day>
+							<day type="mon">Altine</day>
+							<day type="tue">Talaata</day>
+							<day type="wed">Àlarba</day>
+							<day type="thu">Alxamis</day>
+							<day type="fri">Àjjuma</day>
+							<day type="sat">Aseer</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">Dib</day>
+							<day type="mon">Alt</day>
+							<day type="tue">Tal</day>
+							<day type="wed">Àla</day>
+							<day type="thu">Alx</day>
+							<day type="fri">Àjj</day>
+							<day type="sat">Ase</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">Dib</day>
+							<day type="mon">Alt</day>
+							<day type="tue">Tal</day>
+							<day type="wed">Àla</day>
+							<day type="thu">Alx</day>
+							<day type="fri">Àjj</day>
+							<day type="sat">Ase</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">Dib</day>
+							<day type="mon">Alt</day>
+							<day type="tue">Tal</day>
+							<day type="wed">Àla</day>
+							<day type="thu">Alx</day>
+							<day type="fri">Àjj</day>
+							<day type="sat">Ase</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Dibéer</day>
+							<day type="mon">Altine</day>
+							<day type="tue">Talaata</day>
+							<day type="wed">Àlarba</day>
+							<day type="thu">Alxamis</day>
+							<day type="fri">Àjjuma</day>
+							<day type="sat">Aseer</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">1er Tri</quarter>
+							<quarter type="2">2e Tri</quarter>
+							<quarter type="3">3e Tri</quarter>
+							<quarter type="4">4e Tri</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">1</quarter>
+							<quarter type="2">2</quarter>
+							<quarter type="3">3</quarter>
+							<quarter type="4">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">1er Trimestar</quarter>
+							<quarter type="2">2e Trimestar</quarter>
+							<quarter type="3">3e Trimestar</quarter>
+							<quarter type="4">4e Trimestar</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">1er Tri</quarter>
+							<quarter type="2">2e Tri</quarter>
+							<quarter type="3">3e Tri</quarter>
+							<quarter type="4">4e Tri</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">1</quarter>
+							<quarter type="2">2</quarter>
+							<quarter type="3">3</quarter>
+							<quarter type="4">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">1er Trimestar</quarter>
+							<quarter type="2">2e Trimestar</quarter>
+							<quarter type="3">3e Trimestar</quarter>
+							<quarter type="4">4e Trimestar</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">Sub</dayPeriod>
+							<dayPeriod type="pm">Ngo</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">Sub</dayPeriod>
+							<dayPeriod type="pm">Ngo</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">Sub</dayPeriod>
+							<dayPeriod type="pm">Ngo</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">Sub</dayPeriod>
+							<dayPeriod type="pm">Ngo</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">Sub</dayPeriod>
+							<dayPeriod type="pm">Ngo</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">Sub</dayPeriod>
+							<dayPeriod type="pm">Ngo</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">av. JC</era>
+						<era type="1">AD</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">JC</era>
+						<era type="0" alt="variant">BCE</era>
+						<era type="1">AD</era>
+						<era type="1" alt="variant">CE</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMM, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd-MM-y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} 'ci' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} 'ci' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} - {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} - {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="E">ccc</dateFormatItem>
+						<dateFormatItem id="Ed">E, d</dateFormatItem>
+						<dateFormatItem id="Ehm">E h:mm a</dateFormatItem>
+						<dateFormatItem id="EHm">E HH:mm</dateFormatItem>
+						<dateFormatItem id="Ehms">E h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="EHms">E HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="Gy">y G</dateFormatItem>
+						<dateFormatItem id="GyMMM">MMM, y G</dateFormatItem>
+						<dateFormatItem id="GyMMMd">d MMM, y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E, d MMM, y G</dateFormatItem>
+						<dateFormatItem id="h">h a</dateFormatItem>
+						<dateFormatItem id="H">HH</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="hmsv">h:mm:ss a v</dateFormatItem>
+						<dateFormatItem id="Hmsv">HH:mm:ss v</dateFormatItem>
+						<dateFormatItem id="hmv">h:mm a v</dateFormatItem>
+						<dateFormatItem id="Hmv">HH:mm v</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">dd-MM</dateFormatItem>
+						<dateFormatItem id="MEd">E, dd-MM</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, d MMM</dateFormatItem>
+						<dateFormatItem id="MMMMd">d MMMM</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">MM-y</dateFormatItem>
+						<dateFormatItem id="yMd">dd-MM-y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, dd-MM-y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+					<appendItems>
+						<appendItem request="Timezone">{0} {1}</appendItem>
+					</appendItems>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>jamono</displayName>
+			</field>
+			<field type="year">
+				<displayName>at</displayName>
+				<relative type="-1">daaw</relative>
+				<relative type="0">ren</relative>
+				<relative type="1">dewen</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} at</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} at ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-short">
+				<displayName>at.</displayName>
+				<relative type="-1">daaw</relative>
+				<relative type="0">ren</relative>
+				<relative type="1">dewen</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} at</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} at ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-narrow">
+				<displayName>at.</displayName>
+				<relative type="-1">daaw</relative>
+				<relative type="0">ren</relative>
+				<relative type="1">dewen</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} at</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} at ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter">
+				<displayName>ñeenti-weer</displayName>
+				<relative type="-1">trimestre bi weesu</relative>
+				<relative type="0">trimestre bii</relative>
+				<relative type="1">trimestre biy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} trimestre</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} trimestre ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter-short">
+				<displayName>ñw.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} trim.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} trim. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter-narrow">
+				<displayName>ñw.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} trim.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} trim. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month">
+				<displayName>weer</displayName>
+				<relative type="-1">weer wi weesu</relative>
+				<relative type="0">weer wii</relative>
+				<relative type="1">weer wiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} weer</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} weer ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month-short">
+				<displayName>we.</displayName>
+				<relative type="-1">we. wi wees</relative>
+				<relative type="0">we. wii</relative>
+				<relative type="1">we. wiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} we.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} we. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month-narrow">
+				<displayName>we.</displayName>
+				<relative type="-1">we. wi wees</relative>
+				<relative type="0">we. wii</relative>
+				<relative type="1">we. wiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} we.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} we. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week">
+				<displayName>ayu-bis</displayName>
+				<relative type="-1">ayu-bis bi weesu</relative>
+				<relative type="0">ayu-bis bii</relative>
+				<relative type="1">ayu-bis biy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} ayi-bis</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} ayi-bis ci ginaaw</relativeTimePattern>
+				</relativeTime>
+				<relativePeriod>ayu-bisu {0}</relativePeriod>
+			</field>
+			<field type="week-short">
+				<displayName>ayu-b.</displayName>
+				<relative type="-1">ayu-b bi wees</relative>
+				<relative type="0">ayu-b bii</relative>
+				<relative type="1">ayu-b. ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} ayi-b.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} ayi-b. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+				<relativePeriod>ayu-b. {0}</relativePeriod>
+			</field>
+			<field type="week-narrow">
+				<displayName>ayu-b.</displayName>
+				<relative type="-1">ayu-b bi wees</relative>
+				<relative type="0">ayu-b bii</relative>
+				<relative type="1">ayu-b. ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} ayi-b.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} ayi-b. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+				<relativePeriod>ayu-b. {0}</relativePeriod>
+			</field>
+			<field type="weekOfMonth">
+				<displayName>ayu-bisu weer</displayName>
+			</field>
+			<field type="weekOfMonth-short">
+				<displayName>ayu-b. we.</displayName>
+			</field>
+			<field type="weekOfMonth-narrow">
+				<displayName>ayu-b. we.</displayName>
+			</field>
+			<field type="day">
+				<displayName>fan</displayName>
+				<relative type="-1">démb</relative>
+				<relative type="0">tay</relative>
+				<relative type="1">suba</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} fan</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} fan ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day-short">
+				<displayName>fan</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} fan</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} fan ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day-narrow">
+				<displayName>fan</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} fan</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} fan ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="dayOfYear">
+				<displayName>bisu at mi</displayName>
+			</field>
+			<field type="dayOfYear-short">
+				<displayName>bisu at</displayName>
+			</field>
+			<field type="dayOfYear-narrow">
+				<displayName>bisu at</displayName>
+			</field>
+			<field type="weekday">
+				<displayName>bisu ayu-bis</displayName>
+			</field>
+			<field type="weekdayOfMonth">
+				<displayName>bisu ayu-bisu weer wi</displayName>
+			</field>
+			<field type="weekdayOfMonth-short">
+				<displayName>bisu ayu-b. weer</displayName>
+			</field>
+			<field type="weekdayOfMonth-narrow">
+				<displayName>bisu ayu-b. weer</displayName>
+			</field>
+			<field type="sun">
+				<relative type="-1">dibéer bi weesu</relative>
+				<relative type="0">tay ci dibéer bi</relative>
+				<relative type="1">dibéer biy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} dibéer</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} dibéer ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sun-short">
+				<relative type="-1">dib. bi weesu</relative>
+				<relative type="0">tay ci dib. bi</relative>
+				<relative type="1">dib. biy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} dib.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} dib. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sun-narrow">
+				<relative type="-1">dib. bi weesu</relative>
+				<relative type="0">tay ci dib. bi</relative>
+				<relative type="1">dib. biy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} dib.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} dib. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon">
+				<relative type="-1">altine ji weesu</relative>
+				<relative type="0">tay ci altine ji</relative>
+				<relative type="1">altine jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} altine</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} altine ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon-short">
+				<relative type="-1">alti. ji weesu</relative>
+				<relative type="0">tay ci alti. ji</relative>
+				<relative type="1">alti. jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} alti.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} alti. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon-narrow">
+				<relative type="-1">alt. ji weesu</relative>
+				<relative type="0">tay ci alt. ji</relative>
+				<relative type="1">alt. jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} alt.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} alt. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue">
+				<relative type="-1">talaata ji weesu</relative>
+				<relative type="0">tay ci talaata ji</relative>
+				<relative type="1">talaata jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} talaata</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} talaata ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue-short">
+				<relative type="-1">tal. ji weesu</relative>
+				<relative type="0">tay ci tal. ji</relative>
+				<relative type="1">tal. jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} tal.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} tal. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue-narrow">
+				<relative type="-1">ta. ji weesu</relative>
+				<relative type="0">tay ci ta. ji</relative>
+				<relative type="1">ta. jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} ta.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} ta. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed">
+				<relative type="-1">àllarba ji weesu</relative>
+				<relative type="0">tay ci àllarba ji</relative>
+				<relative type="1">àllarba jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} àllarba</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} àllarba ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed-short">
+				<relative type="-1">àlla. ji weesu</relative>
+				<relative type="0">tay ci àlla. ji</relative>
+				<relative type="1">àlla. jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} àlla.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} àlla. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed-narrow">
+				<relative type="-1">àla. ji weesu</relative>
+				<relative type="0">tay ci àla. ji</relative>
+				<relative type="1">àla. jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} àla.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} àla. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu">
+				<relative type="-1">alxamis ji weesu</relative>
+				<relative type="0">tay ci alxamis ji</relative>
+				<relative type="1">alxamis jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} alxamis</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} alxamis ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu-short">
+				<relative type="-1">alxa. ji weesu</relative>
+				<relative type="0">tay ci alxa. ji</relative>
+				<relative type="1">alxa. jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} alxa.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} alxa. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu-narrow">
+				<relative type="-1">alx. ji weesu</relative>
+				<relative type="0">tay ci alx. ji</relative>
+				<relative type="1">alx. jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} alx.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} alx. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri">
+				<relative type="-1">àjjuma ji weesu</relative>
+				<relative type="0">tay ci àjjuma ji</relative>
+				<relative type="1">àjjuma jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} àjjuma</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} àjjuma ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri-short">
+				<relative type="-1">àjj. ji weesu</relative>
+				<relative type="0">tay ci àjj. ji</relative>
+				<relative type="1">àjj. jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} àjj.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} àjj. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri-narrow">
+				<relative type="-1">àj. ji weesu</relative>
+				<relative type="0">tay ci àj. ji</relative>
+				<relative type="1">àj. jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} àj.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} àj. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat">
+				<relative type="-1">gàwwu ji weesu</relative>
+				<relative type="0">tay ci gàwwu ji</relative>
+				<relative type="1">gàwwu jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} gàwwu</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} gàwwu ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat-short">
+				<relative type="-1">gàw. ji weesu</relative>
+				<relative type="0">tay ci gàw. ji</relative>
+				<relative type="1">gàw. jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} gàw.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} gàw. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat-narrow">
+				<relative type="-1">gà. ji weesu</relative>
+				<relative type="0">tay ci gà. ji</relative>
+				<relative type="1">gà. jiy ñëw</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} gà.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} gà. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="dayperiod">
+				<displayName>Sub/Ngo</displayName>
+			</field>
+			<field type="hour">
+				<displayName>waxt</displayName>
+				<relative type="0">ci waxtu wii</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} waxtu</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} waxtu ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="hour-short">
+				<displayName>wxt.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} wax.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} wax. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="hour-narrow">
+				<displayName>wxt.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} wax.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} wax. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute">
+				<displayName>simili</displayName>
+				<relative type="0">ci simili bii</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} simili</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} simili ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute-short">
+				<displayName>sim.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} sim.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} sim. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute-narrow">
+				<displayName>sim.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} sim.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} sim. ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second">
+				<displayName>saa</displayName>
+				<relative type="0">leegi</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} saa</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} saa ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second-short">
+				<displayName>saa.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} saa</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} saa ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second-narrow">
+				<displayName>saa.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">fileek {0} saa</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0} saa ci ginaaw</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="zone">
+				<displayName>goxu waxtu</displayName>
+			</field>
+			<field type="zone-short">
+				<displayName>goxu</displayName>
+			</field>
+			<field type="zone-narrow">
+				<displayName>gox</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<hourFormat>+HH:mm;-HH:mm</hourFormat>
+			<gmtFormat>GMT{0}</gmtFormat>
+			<gmtZeroFormat>GMT</gmtZeroFormat>
+			<regionFormat>{0}</regionFormat>
+			<regionFormat type="daylight">{0} (+1)</regionFormat>
+			<regionFormat type="standard">{0} (+0)</regionFormat>
+			<fallbackFormat>{1} ({0})</fallbackFormat>
+			<zone type="Etc/UTC">
+				<long>
+					<standard>CUT (waxtu iniwelsel yuñ boole)</standard>
+				</long>
+			</zone>
+			<zone type="Etc/Unknown">
+				<exemplarCity>Dëkk buñ xamul</exemplarCity>
+			</zone>
+			<zone type="Africa/Dakar">
+				<exemplarCity>Dakar</exemplarCity>
+			</zone>
+			<metazone type="America_Central">
+				<long>
+					<generic>CT (waxtu sàntaral)</generic>
+					<standard>CST (waxtu estàndaaru sàntaraal)</standard>
+					<daylight>CDT (waxtu bëccëgu sàntaraal</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic>ET waxtu penku</generic>
+					<standard>EST (waxtu estàndaaru penku)</standard>
+					<daylight>EDT (waxtu bëccëgu penku)</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic>MT (waxtu tundu)</generic>
+					<standard>MST (waxtu estàndaaru tundu)</standard>
+					<daylight>MDT (waxtu bëccëgu tundu)</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic>PT (waxtu pasifik)</generic>
+					<standard>PST (waxtu estàndaaru pasifik)</standard>
+					<daylight>PDT (waxtu bëccëgu pasifik)</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<generic>AT (waxtu atlàntik)</generic>
+					<standard>AST (waxtu estàndaaru penku)</standard>
+					<daylight>ADT (waxtu bëccëgu atlàntik)</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>CTE (waxtu ëroop sàntaraal)</generic>
+					<standard>CEST (waxtu estàndaaru ëroop sàntaraal)</standard>
+					<daylight>CEST (waxtu ete wu ëroop sàntaraal)</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic>EET (waxtu ëroop u penku)</generic>
+					<standard>EEST (waxtu estàndaaru ëroop u penku)</standard>
+					<daylight>EEST (waxtu ete wu ëroop u penku)</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>WET (waxtu ëroop u sowwu-jant</generic>
+					<standard>WEST (waxtu estàndaaru ëroop u sowwu-jant)</standard>
+					<daylight>WEST (waxtu ete wu ëroop u sowwu-jant)</daylight>
+				</long>
+			</metazone>
+			<metazone type="GMT">
+				<long>
+					<standard>GMT (waxtu Greenwich)</standard>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem draft="contributed">latn</defaultNumberingSystem>
+		<otherNumberingSystems>
+			<native draft="contributed">latn</native>
+		</otherNumberingSystems>
+		<minimumGroupingDigits draft="contributed">1</minimumGroupingDigits>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group>.</group>
+			<percentSign>%</percentSign>
+			<plusSign>+</plusSign>
+			<minusSign>-</minusSign>
+			<exponential>E</exponential>
+			<superscriptingExponent>×</superscriptingExponent>
+			<perMille>‰</perMille>
+			<infinity>∞</infinity>
+			<nan>NaN</nan>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<scientificFormats numberSystem="latn">
+			<scientificFormatLength>
+				<scientificFormat>
+					<pattern>#E0</pattern>
+				</scientificFormat>
+			</scientificFormatLength>
+		</scientificFormats>
+		<percentFormats numberSystem="latn">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern>#,##0%</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤ #,##0.00</pattern>
+				</currencyFormat>
+				<currencyFormat type="accounting">
+					<pattern>¤ #,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<unitPattern count="other">{0} {1}</unitPattern>
+		</currencyFormats>
+		<currencies>
+			<currency type="BRL">
+				<displayName>Real bu Bresil</displayName>
+				<displayName count="other">Real yu Bresil</displayName>
+				<symbol draft="contributed">R$</symbol>
+				<symbol alt="narrow" draft="contributed">R$</symbol>
+			</currency>
+			<currency type="CNY">
+				<displayName>Yuan bu Siin</displayName>
+				<displayName count="other">Yuan yu Siin</displayName>
+				<symbol draft="contributed">CN¥</symbol>
+				<symbol alt="narrow" draft="contributed">¥</symbol>
+			</currency>
+			<currency type="EUR">
+				<displayName>Euro</displayName>
+				<displayName count="other">euro</displayName>
+				<symbol draft="contributed">€</symbol>
+				<symbol alt="narrow" draft="contributed">€</symbol>
+			</currency>
+			<currency type="GBP">
+				<displayName>Pound bu Grànd Brëtaañ</displayName>
+				<displayName count="other">Pound yu Grànd Brëtaañ</displayName>
+				<symbol draft="contributed">£</symbol>
+				<symbol alt="narrow" draft="contributed">£</symbol>
+			</currency>
+			<currency type="INR">
+				<displayName>Rupee bu End</displayName>
+				<displayName count="other">Rupee yu End</displayName>
+				<symbol draft="contributed">₹</symbol>
+				<symbol alt="narrow" draft="contributed">₹</symbol>
+			</currency>
+			<currency type="JPY">
+				<displayName>Yen bu Sapoŋ</displayName>
+				<displayName count="other">Yen yu Sapoŋ</displayName>
+				<symbol draft="contributed">JP¥</symbol>
+				<symbol alt="narrow" draft="contributed">¥</symbol>
+			</currency>
+			<currency type="RUB">
+				<displayName>Ruble bi Rsis</displayName>
+				<displayName count="other">Ruble yu Risi</displayName>
+				<symbol draft="contributed">RUB</symbol>
+				<symbol alt="narrow" draft="contributed">₽</symbol>
+			</currency>
+			<currency type="USD">
+				<displayName>Dolaaru US</displayName>
+				<displayName count="other">Dolaari US</displayName>
+				<symbol draft="contributed">$</symbol>
+				<symbol alt="narrow" draft="contributed">$</symbol>
+			</currency>
+			<currency type="XOF">
+				<displayName>Franc CFA bu Afrik Sowwu-jant</displayName>
+				<displayName count="other">Franc CFA yu Afrik Sowwu-jant</displayName>
+				<symbol draft="contributed">F CFA</symbol>
+			</currency>
+			<currency type="XXX">
+				<displayName>Xaalis buñ Xamul</displayName>
+				<displayName count="other">(xaalis buñ xamul)</displayName>
+			</currency>
+		</currencies>
+		<miscPatterns numberSystem="latn">
+			<pattern type="atLeast">⩾{0}</pattern>
+			<pattern type="range">{0}–{1}</pattern>
+		</miscPatterns>
+	</numbers>
+	<units>
+		<durationUnit type="hm">
+			<durationUnitPattern>h:mm</durationUnitPattern>
+		</durationUnit>
+		<durationUnit type="hms">
+			<durationUnitPattern>h:mm:ss</durationUnitPattern>
+		</durationUnit>
+		<durationUnit type="ms">
+			<durationUnitPattern>m:ss</durationUnitPattern>
+		</durationUnit>
+	</units>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0}, {1}</listPatternPart>
+			<listPatternPart type="2">{0}, {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<yesstr>waaw:wa</yesstr>
+			<nostr>déedet:dé</nostr>
+		</messages>
+	</posix>
+</ldml>

@@ -1,0 +1,153 @@
+#
+# Copyright (c) 2018, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# This must be the first rule
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include JavaCompilation.gmk
+include TestFilesCompilation.gmk
+
+ifeq ($(JMH_CORE_JAR), )
+  $(info Error: JMH is missing. Please use configure --with-jmh.)
+  $(error Cannot continue)
+endif
+
+#### Variables
+
+MICROBENCHMARK_SRC := $(TOPDIR)/test/micro
+MICROBENCHMARK_IMAGE_DIR := $(TEST_IMAGE_DIR)/micro
+MICROBENCHMARK_JAR := $(MICROBENCHMARK_IMAGE_DIR)/benchmarks.jar
+
+MICROBENCHMARK_OUTPUT := $(SUPPORT_OUTPUTDIR)/test/micro
+MICROBENCHMARK_CLASSES := $(MICROBENCHMARK_OUTPUT)/classes
+MICROBENCHMARK_JAR_BIN := $(MICROBENCHMARK_OUTPUT)/jar
+
+MICROBENCHMARK_TOOLS_CLASSES := $(MICROBENCHMARK_OUTPUT)/tools-classes
+MICROBENCHMARK_INDIFY_DONE := $(MICROBENCHMARK_CLASSES)/_indify.marker
+
+JMH_UNPACKED_DIR := $(MICROBENCHMARK_OUTPUT)/jmh_jars
+JMH_UNPACKED_JARS_DONE := $(JMH_UNPACKED_DIR)/_unpacked.marker
+
+# External dependencies
+JMH_COMPILE_JARS := $(JMH_CORE_JAR) $(JMH_GENERATOR_JAR)
+JMH_RUNTIME_JARS := $(JMH_CORE_JAR) $(JMH_COMMONS_MATH_JAR) $(JMH_JOPT_SIMPLE_JAR)
+
+MICROBENCHMARK_CLASSPATH := $(call PathList, $(JMH_COMPILE_JARS))
+
+# Native dependencies
+MICROBENCHMARK_NATIVE_SRC_DIRS := $(MICROBENCHMARK_SRC)
+MICROBENCHMARK_NATIVE_OUTPUT := $(MICROBENCHMARK_OUTPUT)/native
+MICROBENCHMARK_NATIVE_EXCLUDE :=
+
+###
+
+# Need double \n to get new lines and no trailing spaces
+MICROBENCHMARK_MANIFEST := Build: $(FULL_VERSION)\n\
+\nJMH-Version: $(JMH_VERSION)\n\
+\nName: OpenJDK Microbenchmark Suite
+
+#### Compile Indify tool
+
+$(eval $(call SetupJavaCompilation, BUILD_INDIFY, \
+    TARGET_RELEASE := $(TARGET_RELEASE_BOOTJDK), \
+    SRC := $(TOPDIR)/test/jdk/java/lang/invoke, \
+    INCLUDE_FILES := indify/Indify.java, \
+    DISABLED_WARNINGS := rawtypes serial options, \
+    BIN := $(MICROBENCHMARK_TOOLS_CLASSES), \
+    JAVAC_FLAGS := -XDstringConcat=inline -Xprefer:newer, \
+))
+
+#### Compile Targets
+
+# Building microbenchmark requires the jdk.unsupported and java.management modules.
+# sun.security.util is required to compile Cache benchmark
+
+# Build microbenchmark suite for the current JDK
+$(eval $(call SetupJavaCompilation, BUILD_JDK_MICROBENCHMARK, \
+    TARGET_RELEASE := $(TARGET_RELEASE_NEWJDK_UPGRADED), \
+    SMALL_JAVA := false, \
+    CLASSPATH := $(MICROBENCHMARK_CLASSPATH), \
+    DISABLED_WARNINGS := processing rawtypes cast serial, \
+    SRC := $(MICROBENCHMARK_SRC), \
+    BIN := $(MICROBENCHMARK_CLASSES), \
+    JAVAC_FLAGS := --add-exports java.base/sun.security.util=ALL-UNNAMED, \
+    JAVA_FLAGS := --add-modules jdk.unsupported --limit-modules java.management, \
+))
+
+$(BUILD_JDK_MICROBENCHMARK): $(JMH_COMPILE_JARS)
+
+# Run Indify
+$(MICROBENCHMARK_INDIFY_DONE): $(BUILD_INDIFY) $(BUILD_JDK_MICROBENCHMARK)
+	$(call LogWarn, Running Indify on microbenchmark classes)
+	$(JAVA_SMALL) -cp $(MICROBENCHMARK_TOOLS_CLASSES) \
+	    indify.Indify --overwrite $(MICROBENCHMARK_CLASSES) \
+	    $(LOG_DEBUG) 2>&1
+	$(TOUCH) $@
+
+# Unpacking dependencies for inclusion in the benchmark JARs
+$(JMH_UNPACKED_JARS_DONE): $(JMH_RUNTIME_JARS)
+	$(RM) -r $(JMH_UNPACKED_DIR)
+	$(MKDIR) -p $(JMH_UNPACKED_DIR)
+	$(foreach jar, $(JMH_RUNTIME_JARS), \
+            $$($(UNZIP) -oq $(jar) -d $(JMH_UNPACKED_DIR)))
+	$(RM) -r $(JMH_UNPACKED_DIR)/META-INF
+	$(RM) $(JMH_UNPACKED_DIR)/*.xml
+	$(TOUCH) $@
+
+# Create benchmarks JAR file with benchmarks for both the old and new JDK
+$(eval $(call SetupJarArchive, BUILD_JDK_JAR, \
+    DEPENDENCIES := $(BUILD_JDK_MICROBENCHMARK) $(JMH_UNPACKED_JARS_DONE) \
+        $(MICROBENCHMARK_INDIFY_DONE), \
+    SRCS := $(MICROBENCHMARK_CLASSES) $(JMH_UNPACKED_DIR), \
+    BIN := $(MICROBENCHMARK_JAR_BIN), \
+    SUFFIXES := .*, \
+    EXCLUDE_FILES:= _the.BUILD_JDK_MICROBENCHMARK_batch \
+        _the.BUILD_JDK_MICROBENCHMARK.vardeps _unpacked.marker, \
+    EXTRA_MANIFEST_ATTR := $(MICROBENCHMARK_MANIFEST), \
+    JARMAIN := org.openjdk.jmh.Main, \
+    JAR := $(MICROBENCHMARK_JAR), \
+))
+
+# Setup compilation of native library dependencies
+$(eval $(call SetupTestFilesCompilation, BUILD_MICROBENCHMARK_LIBRARIES, \
+    TYPE := LIBRARY, \
+    SOURCE_DIRS := $(MICROBENCHMARK_NATIVE_SRC_DIRS), \
+    OUTPUT_DIR := $(MICROBENCHMARK_NATIVE_OUTPUT), \
+    EXCLUDE := $(MICROBENCHMARK_NATIVE_EXCLUDE), \
+))
+
+# Setup copy of native dependencies to image output dir
+$(eval $(call SetupCopyFiles, COPY_MICROBENCHMARK_NATIVE, \
+    SRC := $(MICROBENCHMARK_NATIVE_OUTPUT), \
+    DEST := $(MICROBENCHMARK_IMAGE_DIR)/native, \
+    FILES := $(BUILD_MICROBENCHMARK_LIBRARIES), \
+    FLATTEN := true, \
+))
+
+all: $(MICROBENCHMARK_JAR) $(BUILD_MICROBENCHMARK_LIBRARIES) $(COPY_MICROBENCHMARK_NATIVE)
+
+.PHONY: all

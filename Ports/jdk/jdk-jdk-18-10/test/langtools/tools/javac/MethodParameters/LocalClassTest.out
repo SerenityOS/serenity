@@ -1,0 +1,21 @@
+class LocalClassTest$1 -- anon
+LocalClassTest$1.<init>(final this$0/*implicit*/, final j, final val$i/*synthetic*/)
+class LocalClassTest$1CapturingLocal$1 -- anon
+LocalClassTest$1CapturingLocal$1.<init>(final val$this$0/*synthetic*/, final val$val$i/*synthetic*/)
+LocalClassTest$1CapturingLocal$1.test()
+class LocalClassTest$1CapturingLocal -- inner
+LocalClassTest$1CapturingLocal.<init>(final this$0/*implicit*/, final j, final val$i/*synthetic*/)
+LocalClassTest$1CapturingLocal.<init>(final this$0/*implicit*/, o, final val$i/*synthetic*/)
+class LocalClassTest$1Local_default_constructor -- inner
+LocalClassTest$1Local_default_constructor.<init>(final this$0/*implicit*/)
+LocalClassTest$1Local_default_constructor.foo()
+LocalClassTest$1Local_default_constructor.foo(m, nm)
+class LocalClassTest$1Local_has_constructor -- inner
+LocalClassTest$1Local_has_constructor.<init>(final this$0/*implicit*/)
+LocalClassTest$1Local_has_constructor.<init>(final this$0/*implicit*/, a, ba)
+LocalClassTest$1Local_has_constructor.foo()
+LocalClassTest$1Local_has_constructor.foo(m, nm)
+class LocalClassTest -- 
+LocalClassTest.<init>()
+LocalClassTest.foo()
+LocalClassTest.test(final i)

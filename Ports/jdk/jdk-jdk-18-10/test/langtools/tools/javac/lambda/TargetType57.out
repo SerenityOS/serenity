@@ -1,0 +1,2 @@
+TargetType57.java:14:42: compiler.err.cant.resolve.location.args: kindname.method, nonExistentMethod, , , (compiler.misc.location.1: kindname.variable, s, java.lang.Integer)
+1 error

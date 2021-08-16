@@ -1,0 +1,96 @@
+#
+# Copyright (c) 2011, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include GendataCommon.gmk
+
+include gendata/GendataBreakIterator.gmk
+
+include gendata/GendataTZDB.gmk
+
+include gendata/GendataBlockedCerts.gmk
+
+include gendata/GendataCryptoPolicy.gmk
+
+include gendata/GendataPublicSuffixList.gmk
+
+################################################################################
+
+GENDATA_UNINAME := $(JDK_OUTPUTDIR)/modules/java.base/java/lang/uniName.dat
+
+$(GENDATA_UNINAME): $(TOPDIR)/make/data/unicodedata/UnicodeData.txt $(BUILD_TOOLS_JDK)
+	$(call MakeDir, $(@D))
+	$(TOOL_CHARACTERNAME) $< $@
+
+TARGETS += $(GENDATA_UNINAME)
+
+################################################################################
+
+GENDATA_CURDATA := $(JDK_OUTPUTDIR)/modules/java.base/java/util/currency.data
+
+$(GENDATA_CURDATA): $(TOPDIR)/make/data/currency/CurrencyData.properties $(BUILD_TOOLS_JDK)
+	$(call MakeDir, $(@D))
+	$(RM) $@
+	$(TOOL_GENERATECURRENCYDATA) -o $@.tmp -i $<
+	$(MV) $@.tmp $@
+	$(CHMOD) 444 $@
+
+TARGETS += $(GENDATA_CURDATA)
+
+################################################################################
+
+GENDATA_CACERTS_SRC := $(TOPDIR)/make/data/cacerts/
+GENDATA_CACERTS := $(SUPPORT_OUTPUTDIR)/modules_libs/java.base/security/cacerts
+
+$(GENDATA_CACERTS): $(BUILD_TOOLS_JDK) $(wildcard $(GENDATA_CACERTS_SRC)/*)
+	$(call LogInfo, Generating cacerts)
+	$(call MakeTargetDir)
+	$(TOOL_GENERATECACERTS) $(GENDATA_CACERTS_SRC) $@
+
+ifeq ($(CACERTS_FILE), )
+  TARGETS += $(GENDATA_CACERTS)
+endif
+
+################################################################################
+
+GENDATA_JAVA_SECURITY_SRC := $(TOPDIR)/src/java.base/share/conf/security/java.security
+GENDATA_JAVA_SECURITY := $(SUPPORT_OUTPUTDIR)/modules_conf/java.base/security/java.security
+
+ifeq ($(UNLIMITED_CRYPTO), true)
+    CRYPTO.POLICY := unlimited
+else
+    CRYPTO.POLICY := limited
+endif
+
+# RESTRICTED_PKGS_SRC is optionally set in custom extension for this makefile
+
+$(GENDATA_JAVA_SECURITY): $(BUILD_TOOLS_JDK) $(GENDATA_JAVA_SECURITY_SRC) $(RESTRICTED_PKGS_SRC)
+	$(call LogInfo, Generating java.security)
+	$(call MakeTargetDir)
+	$(TOOL_MAKEJAVASECURITY) $(GENDATA_JAVA_SECURITY_SRC) $@ $(OPENJDK_TARGET_OS) \
+	    $(OPENJDK_TARGET_CPU_ARCH) $(CRYPTO.POLICY) $(RESTRICTED_PKGS_SRC)
+
+TARGETS += $(GENDATA_JAVA_SECURITY)
+
+################################################################################

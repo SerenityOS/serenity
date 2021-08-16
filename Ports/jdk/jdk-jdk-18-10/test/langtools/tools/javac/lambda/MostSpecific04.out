@@ -1,0 +1,2 @@
+MostSpecific04.java:25:11: compiler.err.ref.ambiguous: map, kindname.method, map(MostSpecific04.DoubleMapper<? super E>), MostSpecific04.MyList, kindname.method, map(MostSpecific04.LongMapper<? super E>), MostSpecific04.MyList
+1 error

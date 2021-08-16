@@ -1,0 +1,8 @@
+T6665356.java:31:55: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6665356.Outer<java.lang.Integer>.Inner<java.lang.Long>, T6665356.Outer<? super java.lang.Number>.Inner<java.lang.Long>)
+T6665356.java:35:58: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6665356.Outer<java.lang.Integer>.Inner<java.lang.Long>, T6665356.Outer<java.lang.Integer>.Inner<? super java.lang.Number>)
+T6665356.java:39:65: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6665356.Outer<java.lang.Integer>.Inner<java.lang.Long>, T6665356.Outer<? super java.lang.Number>.Inner<? super java.lang.Number>)
+T6665356.java:43:57: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6665356.Outer<java.lang.Integer>.Inner<java.lang.Long>, T6665356.Outer<? extends java.lang.String>.Inner<java.lang.Long>)
+T6665356.java:47:60: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6665356.Outer<java.lang.Integer>.Inner<java.lang.Long>, T6665356.Outer<java.lang.Integer>.Inner<? extends java.lang.String>)
+T6665356.java:51:55: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6665356.Outer<java.lang.Integer>.Inner<java.lang.Long>, T6665356.Outer<? super java.lang.String>.Inner<java.lang.Long>)
+T6665356.java:55:58: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6665356.Outer<java.lang.Integer>.Inner<java.lang.Long>, T6665356.Outer<java.lang.Integer>.Inner<? super java.lang.String>)
+7 errors

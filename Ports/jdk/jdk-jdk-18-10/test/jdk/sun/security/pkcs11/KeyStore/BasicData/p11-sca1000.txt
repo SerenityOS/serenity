@@ -1,0 +1,31 @@
+name = sca1000
+
+slot = 0
+
+#password = password
+
+library = /opt/SUNWconn/lib/libpkcs11.so
+
+attributes(import,CKO_PRIVATE_KEY,*) = {
+  CKA_SENSITIVE = true
+  CKA_EXTRACTABLE = false
+}
+
+attributes(*,CKO_PRIVATE_KEY,CKK_RSA) = {
+  CKA_SENSITIVE = true
+  CKA_EXTRACTABLE = false
+#  CKA_DECRYPT = true
+  CKA_SIGN = true
+#  CKA_SIGN_RECOVER = true
+#  CKA_UNWRAP = true
+}
+
+attributes(*,CKO_SECRET_KEY,*) = {
+  CKA_TOKEN = false
+  CKA_SENSITIVE = true
+  CKA_EXTRACTABLE = false
+  CKA_ENCRYPT = true
+  CKA_DECRYPT = true
+#  CKA_WRAP = true
+#  CKA_UNWRAP = true
+}

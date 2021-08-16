@@ -1,0 +1,14 @@
+grant {
+    permission java.util.PropertyPermission "*", "read, write";
+    permission java.lang.RuntimePermission "loadLibrary.*";
+    permission java.lang.RuntimePermission "accessClassInPackage.apple.*";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.*";
+    permission java.lang.RuntimePermission "getProtectionDomain";
+    permission java.lang.RuntimePermission "setSecurityManager";
+    permission java.security.SecurityPermission "putProviderProperty.*";
+
+
+    permission java.io.FilePermission "<<ALL FILES>>", "read";
+    permission java.security.SecurityPermission "setProperty.auth.login.defaultCallbackHandler";
+    permission java.security.SecurityPermission "authProvider.SunPKCS11-NSS";
+};

@@ -1,0 +1,70 @@
+########################################################################
+# This file contains example scripts and property files for collecting
+# code coverage data of the RMI regression suite.
+#
+# Since many RMI regression tests spawn child VMs,
+# special support is required for setting
+# command line options and arguments needed by jcov - the code coverage
+# instrumentation and collection tool.  This special support is provided
+# by properties in the test.props file.  If a file named ../../test.props
+# exists (assuming the working directory is "<path>/JTwork/scratch", this
+# will find "<path>/test.props"), then it will be used by test library
+# code that spawns VMs.  See the example test.props
+# file below for the properties that may be defined.
+
+
+########################################################################
+# The following is a script used to execute RMI regression tests
+# on Solaris and collect code coverage data.
+
+#!/bin/ksh
+export JAVA_HOME=<path to special JDK jcov instrumented build>
+export JT_HOME=<path to special JTREG build with jcov hooks>
+export CLASSPATH=.:${JT_HOME}/javatest.jar
+export OPTS="-Xms256m -Xmx256m -XX:+UseUnsupportedDeprecatedJVMPI -XX:+EnableJVMPIInstructionStartEvent -XX:-UseFastEmptyMethods -XX:-UseFastAccessorMethods -timeoutFactor:4"
+export TESTBASE=/files/<JDK workspace>/test
+${JT_HOME}/solaris/bin/jtreg -Xrunjcov:file=/files/rmi.jcov ${OPTS} -va -w:/tmp/JT -r:/tmp/JTreport -jdk:${JAVA_HOME} ${TESTBASE}
+
+
+########################################################################
+# The following section is an example test.props property file
+# used for collecting code coverage data for JDK 1.6.  These properties
+# are currently supported:
+#   jcov.options are the jcov options that should be added to VMs
+#                system properties
+#   jcov.sleep.multiplier is an integer that will be multiplied by
+#                         various wait times in the test library; the
+#                         default value used is '1'
+
+jcov.options=-Xrunjcov:file=/files/rmi.jcov -Xms256m -Xmx256m -XX:+UseUnsupportedDeprecatedJVMPI -XX:+EnableJVMPIInstructionStartEvent -XX:-UseFastEmptyMethods -XX:-UseFastAccessorMethods
+
+jcov.sleep.multiplier=3
+
+
+########################################################################
+# The following section is an example script that generates the
+# jcov report.  The important documentation here is the list of Java
+# packages and classes that are included in the RMI coverage report.
+
+#!/bin/ksh
+
+export CLASSPATH=<path to jcov.jar>
+export SRCS=<path to sources of the instrumented JDK build>
+java com.sun.tdk.jcov.MergerMain <path to jcov 'A' template for the build>template_a.jcov /files/rmi.jcov
+java -Xms256m -Xmx512m com.sun.tdk.jcov.RepGenMain -fmt=html_ns -src_root=${SRCS} \
+        -include=java.rmi.* \
+        -include=java.rmi.dgc.* \
+        -include=java.rmi.registry.* \
+        -include=java.rmi.server.* \
+        -include=sun.rmi.log.* \
+        -include=sun.rmi.registry.* \
+        -include=sun.rmi.runtime.* \
+        -include=sun.rmi.server.* \
+        -include=sun.rmi.transport.* \
+        -include=sun.rmi.transport.proxy.* \
+        -include=sun.rmi.transport.tcp.* \
+        -include=java.lang.reflect.Proxy \
+        -include=sun.misc.ProxyGenerator \
+        -exclude=javax.rmi.ssl.* \
+        java.jcov
+

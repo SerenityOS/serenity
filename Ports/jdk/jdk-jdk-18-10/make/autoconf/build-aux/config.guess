@@ -1,0 +1,133 @@
+#!/bin/sh
+#
+# Copyright (c) 2012, 2021, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2021, Azul Systems, Inc. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# This is a wrapper for the config.guess from autoconf. The latter does not
+# properly detect 64 bit systems on all platforms. Instead of patching the
+# autoconf system (which might easily get lost in a future update), we wrap it
+# and fix the broken property, if needed.
+
+DIR=`dirname $0`
+OUT=`. $DIR/autoconf-config.guess`
+
+# Detect C library.
+# Use '-gnu'  suffix on systems that use glibc.
+# Use '-musl' suffix on systems that use the musl libc.
+echo $OUT | grep -- -linux- > /dev/null 2> /dev/null
+if test $? = 0; then
+  libc_vendor=`ldd --version 2>&1 | sed -n '1s/.*\(musl\).*/\1/p'`
+  if [ x"${libc_vendor}" = x"musl" ]; then
+    OUT=`echo $OUT | sed 's/-gnu/-musl/'`
+  fi
+fi
+
+# Test and fix cygwin on x86_64
+echo $OUT | grep 86-pc-cygwin > /dev/null 2> /dev/null
+if test $? != 0; then
+  echo $OUT | grep 86-pc-mingw > /dev/null 2> /dev/null
+fi
+if test $? = 0; then
+  case `echo $PROCESSOR_IDENTIFIER | cut -f1 -d' '` in
+    intel64|Intel64|INTEL64|em64t|EM64T|amd64|AMD64|8664|x86_64)
+      REAL_CPU=x86_64
+      OUT=$REAL_CPU`echo $OUT | sed -e 's/[^-]*//'`
+      ;;
+  esac
+fi
+
+# Test and fix wsl
+echo $OUT | grep unknown-linux-gnu > /dev/null 2> /dev/null
+if test $? = 0; then
+  uname -r | grep -i microsoft > /dev/null 2> /dev/null
+  if test $? = 0; then
+    OUT=`echo $OUT | sed -e 's/unknown-linux-gnu/pc-wsl/'`
+  fi
+fi
+
+# Test and fix architecture string on AIX
+# On AIX 'config.guess' returns 'powerpc' as architecture but 'powerpc' is
+# implicitely handled as 32-bit architecture in 'platform.m4' so we check
+# for the kernel mode rewrite it to 'powerpc64' if we'Re running in 64-bit mode.
+# The check could also be done with `/usr/sbin/prtconf | grep "Kernel Type" | grep "64-bit"`
+echo $OUT | grep powerpc-ibm-aix > /dev/null 2> /dev/null
+if test $? = 0; then
+  if [ -x /bin/getconf ] ; then
+    KERNEL_BITMODE=`getconf KERNEL_BITMODE`
+    if  [ "$KERNEL_BITMODE" = "32" ]; then
+      KERNEL_BITMODE=""
+    fi
+  fi
+  OUT=powerpc$KERNEL_BITMODE`echo $OUT | sed -e 's/[^-]*//'`
+fi
+
+# Test and fix little endian PowerPC64.
+# TODO: should be handled by autoconf-config.guess.
+if [ "x$OUT" = x ]; then
+  if [ `uname -m` = ppc64le ]; then
+    if [ `uname -s` = Linux ]; then
+      OUT=powerpc64le-unknown-linux-gnu
+    fi
+  fi
+fi
+
+# Test and fix little endian MIPS.
+if [ "x$OUT" = x ]; then
+  if [ `uname -s` = Linux ]; then
+    if [ `uname -m` = mipsel ]; then
+      OUT=mipsel-unknown-linux-gnu
+    elif [ `uname -m` = mips64el ]; then
+      OUT=mips64el-unknown-linux-gnu
+    fi
+  fi
+fi
+
+# Test and fix LoongArch64.
+if [ "x$OUT" = x ]; then
+  if [ `uname -s` = Linux ]; then
+    if [ `uname -m` = loongarch64 ]; then
+      OUT=loongarch64-unknown-linux-gnu
+    fi
+  fi
+fi
+
+# Test and fix cpu on macos-aarch64, uname -p reports arm, buildsys expects aarch64
+echo $OUT | grep arm-apple-darwin > /dev/null 2> /dev/null
+if test $? != 0; then
+  # The GNU version of uname may be on the PATH which reports arm64 instead
+  echo $OUT | grep arm64-apple-darwin > /dev/null 2> /dev/null
+fi
+if test $? = 0; then
+  if [ `uname -m` = arm64 ]; then
+    OUT=aarch64`echo $OUT | sed -e 's/[^-]*//'`
+  fi
+fi
+
+# Test and fix cpu on Macosx when C preprocessor is not on the path
+echo $OUT | grep i386-apple-darwin > /dev/null 2> /dev/null
+if test $? = 0; then
+  REAL_CPU=`uname -m`
+  OUT=$REAL_CPU`echo $OUT | sed -e 's/[^-]*//'`
+fi
+
+echo $OUT

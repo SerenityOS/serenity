@@ -1,0 +1,2 @@
+T7005095neg.java:13:25: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T7005095pos.FooImpl, T7005095pos.Foo<T>)
+1 error

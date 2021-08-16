@@ -1,0 +1,196 @@
+//
+// Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.  Oracle designates this
+// particular file as subject to the "Classpath" exception as provided
+// by Oracle in the LICENSE file that accompanied this code.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+
+#include "version.rc"
+#include "jaccessinspectorResource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_READONLY_SYMBOLS
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+JACCESSINSPECTORWINDOW DIALOG  160, 78, 354, 214
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "jaccessinspector"
+MENU cjaccessinspectorMenus
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        cjaccessinspectorText,4,24,340,184,ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    PUSHBUTTON      "&First Message",cFirstMessage,4,4,60,14
+    PUSHBUTTON      "&Previous Message",cPreviousMessage,70,4,60,14
+    EDITTEXT        cMessageNumber,134,4,80,14,ES_CENTER | ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "&Next Message",cNextMessage,218,4,60,14
+    PUSHBUTTON      "&Last Message",cLastMessage,284,4,60,14
+END
+
+IDD_GO_TO_MESSAGE DIALOGEX 0, 0, 186, 66
+STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Go To Message"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Message Number:",IDC_STATIC,14,14,64,8
+    EDITTEXT        IDC_MESSAGE_NUMBER_EDIT,80,14,90,14,ES_AUTOHSCROLL | ES_NUMBER
+    DEFPUSHBUTTON   "OK",IDOK,35,45,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,101,45,50,14
+END
+
+
+#ifdef APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE
+BEGIN
+    "jaccessinspectorResource.h\0"
+END
+
+2 TEXTINCLUDE
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+GUIDELINES DESIGNINFO
+BEGIN
+    "JACCESSINSPECTORWINDOW", DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 347
+    END
+
+    IDD_GO_TO_MESSAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 59
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+cjaccessinspectorMenus MENU
+BEGIN
+    POPUP "File"
+    BEGIN
+        MENUITEM "AccessBridge DLL Loaded",     cAccessBridgeDLLLoaded
+        MENUITEM "Exit",                        cExitMenuItem
+    END
+    POPUP "UpdateSettings"
+    BEGIN
+        MENUITEM "Update from Mouse",           cUpdateFromMouseMenuItem
+        MENUITEM "Update with F2 (mouse HWND)", cUpdateWithF2Item
+        MENUITEM "Update with F1 (mouse point)", cUpdateWithF1Item
+    END
+    POPUP "JavaEvents"
+    BEGIN
+        MENUITEM "Track Java Shutdown Events",  cTrackShutdownMenuItem
+        MENUITEM SEPARATOR
+        MENUITEM "Track Mouse Entered Events",  cTrackMouseMenuItem
+        MENUITEM "Track Mouse Exited Events",   cTrackMouseExitedMenuItem
+        MENUITEM "Track Mouse Clicked Events",  cTrackMouseClickedMenuItem
+        MENUITEM "Track Mouse Pressed Events",  cTrackMousePressedMenuItem
+        MENUITEM "Track Mouse Released Events", cTrackMouseReleasedMenuItem
+        MENUITEM SEPARATOR
+        MENUITEM "Track Focus Gained Events",   cTrackFocusMenuItem
+        MENUITEM "Track Focus Lost Events",     cTrackFocusLostMenuItem
+        MENUITEM "Track Caret Events",          cTrackCaretMenuItem
+        MENUITEM SEPARATOR
+        MENUITEM "Track Menu Selected Events",  cTrackMenuSelectedMenuItem
+        MENUITEM "Track Menu Deselected Events", cTrackMenuDeselectedMenuItem
+        MENUITEM "Track Menu Canceled Events",  cTrackMenuCanceledItem
+        MENUITEM "Track Popup Visible Events",  cTrackPopupBecomeVisibleMenuItem
+        MENUITEM "Track Popup Inviible Events", cTrackPopupBecomeInvisibleMenuItem
+        MENUITEM "Track Popup Canceled Events", cTrackPopupCanceledItem
+    END
+    POPUP "AccessibilityEvents"
+    BEGIN
+        MENUITEM "Track Name Property Events",  cTrackPropertyNameItem
+        MENUITEM "Track Description Property Events", cTrackPropertyDescriptionItem
+        MENUITEM "Track State Property Events", cTrackPropertyStateItem
+        MENUITEM "Track Value Property Events", cTrackPropertyValueItem
+        MENUITEM "Track Selection Property Events", cTrackPropertySelectionItem
+        MENUITEM "Track Text Property Events",  cTrackPropertyTextItem
+        MENUITEM "Track Caret Property Events", cTrackPropertyCaretItem
+        MENUITEM "Track Visible Data Property Events", cTrackPropertyVisibleDataItem
+        MENUITEM "Track Child Property Events", cTrackPropertyChildItem
+        MENUITEM "Track Active Descendent Property Events", cTrackPropertyActiveDescendentItem
+        MENUITEM "Track Table Model Change Property Events", cTrackPropertyTableModelChangeItem
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "&Monitor the same events as JAWS", cMonitorTheSameEventsAsJAWS
+        MENUITEM "Monitor &All Events",         cMonitorAllEvents
+        MENUITEM "&Reset All Events",           cResetAllEvents
+        MENUITEM "&Go To Message",              cGoToMessage
+        MENUITEM "&Clear Message History",      cClearMessageHistory
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATOR ACCELERATORS
+BEGIN
+    VK_HOME,        cFirstMessage,          VIRTKEY, CONTROL, ALT, NOINVERT
+    "G",            cGoToMessage,           VIRTKEY, CONTROL, NOINVERT
+    VK_END,         cLastMessage,           VIRTKEY, CONTROL, ALT, NOINVERT
+    VK_NEXT,        cNextMessage,           VIRTKEY, CONTROL, NOINVERT
+    VK_PRIOR,       cPreviousMessage,       VIRTKEY, CONTROL, NOINVERT
+    "X",            cClearMessageHistory,   VIRTKEY, CONTROL, NOINVERT
+END

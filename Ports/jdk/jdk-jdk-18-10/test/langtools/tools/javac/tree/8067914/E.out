@@ -1,0 +1,16 @@
+
+class E extends S {
+    
+    E() {
+        super();
+    }
+    {
+        t = new C();
+        new I(<*nullchk*>((C)t)){
+            
+            (.C x0) {
+                x0.super();
+            }
+        };
+    }
+}

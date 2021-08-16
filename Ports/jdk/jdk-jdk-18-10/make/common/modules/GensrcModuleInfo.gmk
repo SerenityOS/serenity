@@ -1,0 +1,104 @@
+#
+# Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+################################################################################
+# This file makes modifications to module-info.java files based on the build
+# configuration.
+#
+# Depending on build platform, imported modules and optional parts of the build
+# being active, some modules need to have extra exports, provides or uses
+# declarations added to them. These optional extras are defined in .extra files:
+#
+# src/<module>/<share,platform>/classes/module-info.java.extra
+#
+# The contents of the .extra files are simply extra lines that could fit into
+# the module-info file.
+#
+# This makefile is called once for each from-module with the variable
+# MODULE naming the from-module.
+#
+# The modified module-info.java files are put in the gensrc directory where
+# they will automatically override the static versions in the src tree.
+#
+################################################################################
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include Modules.gmk
+
+################################################################################
+# Define this here since jdk/make/Tools.gmk cannot be included from the top
+# make directory. Should probably move some tools away from the jdk repo.
+TOOL_GENMODULEINFOSOURCE = $(JAVA_SMALL) \
+    $(INTERIM_LANGTOOLS_ARGS) \
+    -cp "$(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes" \
+    build.tools.module.GenModuleInfoSource
+
+################################################################################
+
+# Name of modification file.
+MOD_FILENAME := module-info.java.extra
+
+# Construct all possible src directories for the module.
+MODULE_CLASSES_DIRS := $(call FindModuleSrcDirs, $(MODULE))
+
+# Find all the .extra files in the src dirs.
+MOD_FILES := $(wildcard $(foreach f, $(MOD_FILENAME), $(addsuffix /$(f), \
+    $(MODULE_CLASSES_DIRS))))
+
+ifneq ($(MOD_FILES), )
+  # Only make this call if modification files are found for this module
+  ALL_MODULES := $(call FindAllModules)
+
+  $(SUPPORT_OUTPUTDIR)/gensrc/$(MODULE)/module-info.java: \
+      $(firstword $(call FindAllModuleInfos, $(MODULE))) \
+      $(BUILD_TOOLS_JDK) \
+      $(MOD_FILES) \
+      $(call DependOnVariable, ALL_MODULES)
+		$(call MakeTargetDir)
+		$(RM) $@ $@.tmp
+		$(TOOL_GENMODULEINFOSOURCE) \
+		    $(if $(call equals, $(ALLOW_ABSOLUTE_PATHS_IN_OUTPUT), true), -d) \
+		    -o $@.tmp \
+		    --source-file $< \
+		    --modules $(call CommaList, $(ALL_MODULES)) \
+		    $(MOD_FILES)
+		$(MV) $@.tmp $@
+
+  TARGETS += $(SUPPORT_OUTPUTDIR)/gensrc/$(MODULE)/module-info.java
+
+else
+  # If no modifications are found for this module, remove any module-info.java
+  # created by a previous build since that is no longer valid.
+  ifneq ($(wildcard $(SUPPORT_OUTPUTDIR)/gensrc/$(MODULE)/module-info.java), )
+    $(shell $(RM) $(SUPPORT_OUTPUTDIR)/gensrc/$(MODULE)/module-info.java)
+  endif
+endif
+
+################################################################################
+
+all: $(TARGETS)

@@ -1,0 +1,2 @@
+MostSpecific28.java:16:9: compiler.err.ref.ambiguous: m1, kindname.method, m1(MostSpecific28.Pred<? super java.lang.Integer>), MostSpecific28, kindname.method, m1(MostSpecific28.Fun<java.lang.Number,java.lang.Boolean>), MostSpecific28
+1 error

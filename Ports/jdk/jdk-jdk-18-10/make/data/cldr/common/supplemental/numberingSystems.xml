@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE supplementalData SYSTEM "../../common/dtd/ldmlSupplemental.dtd">
+<!--
+Copyright © 1991-2016 Unicode, Inc.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+For terms of use, see http://www.unicode.org/copyright.html
+-->
+<supplementalData>
+    <version number="$Revision$"/>
+    <numberingSystems>
+        <numberingSystem id="adlm" type="numeric" digits="&#x1E950;&#x1E951;&#x1E952;&#x1E953;&#x1E954;&#x1E955;&#x1E956;&#x1E957;&#x1E958;&#x1E959;"/>
+        <numberingSystem id="ahom" type="numeric" digits="&#x11730;&#x11731;&#x11732;&#x11733;&#x11734;&#x11735;&#x11736;&#x11737;&#x11738;&#x11739;"/>
+        <numberingSystem id="arab" type="numeric" digits="٠١٢٣٤٥٦٧٨٩"/>
+        <numberingSystem id="arabext" type="numeric" digits="۰۱۲۳۴۵۶۷۸۹"/>
+        <numberingSystem id="armn" type="algorithmic" rules="armenian-upper"/>
+        <numberingSystem id="armnlow" type="algorithmic" rules="armenian-lower"/>
+        <numberingSystem id="bali" type="numeric" digits="᭐᭑᭒᭓᭔᭕᭖᭗᭘᭙"/>
+        <numberingSystem id="beng" type="numeric" digits="০১২৩৪৫৬৭৮৯"/>
+        <numberingSystem id="bhks" type="numeric" digits="&#x11C50;&#x11C51;&#x11C52;&#x11C53;&#x11C54;&#x11C55;&#x11C56;&#x11C57;&#x11C58;&#x11C59;"/>
+        <numberingSystem id="brah" type="numeric" digits="&#x11066;&#x11067;&#x11068;&#x11069;&#x1106A;&#x1106B;&#x1106C;&#x1106D;&#x1106E;&#x1106F;"/>
+        <numberingSystem id="cakm" type="numeric" digits="&#x11136;&#x11137;&#x11138;&#x11139;&#x1113A;&#x1113B;&#x1113C;&#x1113D;&#x1113E;&#x1113F;"/>
+        <numberingSystem id="cham" type="numeric" digits="꩐꩑꩒꩓꩔꩕꩖꩗꩘꩙"/>
+        <numberingSystem id="cyrl" type="algorithmic" rules="cyrillic-lower"/>
+        <numberingSystem id="deva" type="numeric" digits="०१२३४५६७८९"/>
+        <numberingSystem id="diak" type="numeric" digits="&#x11950;&#x11951;&#x11952;&#x11953;&#x11954;&#x11955;&#x11956;&#x11957;&#x11958;&#x11959;"/>
+        <numberingSystem id="ethi" type="algorithmic" rules="ethiopic"/>
+        <numberingSystem id="fullwide" type="numeric" digits="０１２３４５６７８９"/>
+        <numberingSystem id="geor" type="algorithmic" rules="georgian"/>
+        <numberingSystem id="gong" type="numeric" digits="&#x11DA0;&#x11DA1;&#x11DA2;&#x11DA3;&#x11DA4;&#x11DA5;&#x11DA6;&#x11DA7;&#x11DA8;&#x11DA9;"/>
+        <numberingSystem id="gonm" type="numeric" digits="&#x11D50;&#x11D51;&#x11D52;&#x11D53;&#x11D54;&#x11D55;&#x11D56;&#x11D57;&#x11D58;&#x11D59;"/>
+        <numberingSystem id="grek" type="algorithmic" rules="greek-upper"/>
+        <numberingSystem id="greklow" type="algorithmic" rules="greek-lower"/>
+        <numberingSystem id="gujr" type="numeric" digits="૦૧૨૩૪૫૬૭૮૯"/>
+        <numberingSystem id="guru" type="numeric" digits="੦੧੨੩੪੫੬੭੮੯"/>
+        <numberingSystem id="hanidays" type="algorithmic" rules="zh/SpelloutRules/spellout-numbering-days"/>
+        <numberingSystem id="hanidec" type="numeric" digits="〇一二三四五六七八九"/>
+        <numberingSystem id="hans" type="algorithmic" rules="zh/SpelloutRules/spellout-cardinal"/>
+        <numberingSystem id="hansfin" type="algorithmic" rules="zh/SpelloutRules/spellout-cardinal-financial"/>
+        <numberingSystem id="hant" type="algorithmic" rules="zh_Hant/SpelloutRules/spellout-cardinal"/>
+        <numberingSystem id="hantfin" type="algorithmic" rules="zh_Hant/SpelloutRules/spellout-cardinal-financial"/>
+        <numberingSystem id="hebr" type="algorithmic" rules="hebrew"/>
+        <numberingSystem id="hmng" type="numeric" digits="&#x16B50;&#x16B51;&#x16B52;&#x16B53;&#x16B54;&#x16B55;&#x16B56;&#x16B57;&#x16B58;&#x16B59;"/>
+        <numberingSystem id="hmnp" type="numeric" digits="&#x1E140;&#x1E141;&#x1E142;&#x1E143;&#x1E144;&#x1E145;&#x1E146;&#x1E147;&#x1E148;&#x1E149;"/>
+        <numberingSystem id="java" type="numeric" digits="꧐꧑꧒꧓꧔꧕꧖꧗꧘꧙"/>
+        <numberingSystem id="jpan" type="algorithmic" rules="ja/SpelloutRules/spellout-cardinal"/>
+        <numberingSystem id="jpanfin" type="algorithmic" rules="ja/SpelloutRules/spellout-cardinal-financial"/>
+        <numberingSystem id="jpanyear" type="algorithmic" rules="ja/SpelloutRules/spellout-numbering-year-latn"/>
+        <numberingSystem id="kali" type="numeric" digits="꤀꤁꤂꤃꤄꤅꤆꤇꤈꤉"/>
+        <numberingSystem id="khmr" type="numeric" digits="០១២៣៤៥៦៧៨៩"/>
+        <numberingSystem id="knda" type="numeric" digits="೦೧೨೩೪೫೬೭೮೯"/>
+        <numberingSystem id="lana" type="numeric" digits="᪀᪁᪂᪃᪄᪅᪆᪇᪈᪉"/>
+        <numberingSystem id="lanatham" type="numeric" digits="᪐᪑᪒᪓᪔᪕᪖᪗᪘᪙"/>
+        <numberingSystem id="laoo" type="numeric" digits="໐໑໒໓໔໕໖໗໘໙"/>
+        <numberingSystem id="latn" type="numeric" digits="0123456789"/>
+        <numberingSystem id="lepc" type="numeric" digits="᱀᱁᱂᱃᱄᱅᱆᱇᱈᱉"/>
+        <numberingSystem id="limb" type="numeric" digits="᥆᥇᥈᥉᥊᥋᥌᥍᥎᥏"/>
+        <numberingSystem id="mathbold" type="numeric" digits="&#x1D7CE;&#x1D7CF;&#x1D7D0;&#x1D7D1;&#x1D7D2;&#x1D7D3;&#x1D7D4;&#x1D7D5;&#x1D7D6;&#x1D7D7;"/>
+        <numberingSystem id="mathdbl" type="numeric" digits="&#x1D7D8;&#x1D7D9;&#x1D7DA;&#x1D7DB;&#x1D7DC;&#x1D7DD;&#x1D7DE;&#x1D7DF;&#x1D7E0;&#x1D7E1;"/>
+        <numberingSystem id="mathmono" type="numeric" digits="&#x1D7F6;&#x1D7F7;&#x1D7F8;&#x1D7F9;&#x1D7FA;&#x1D7FB;&#x1D7FC;&#x1D7FD;&#x1D7FE;&#x1D7FF;"/>
+        <numberingSystem id="mathsanb" type="numeric" digits="&#x1D7EC;&#x1D7ED;&#x1D7EE;&#x1D7EF;&#x1D7F0;&#x1D7F1;&#x1D7F2;&#x1D7F3;&#x1D7F4;&#x1D7F5;"/>
+        <numberingSystem id="mathsans" type="numeric" digits="&#x1D7E2;&#x1D7E3;&#x1D7E4;&#x1D7E5;&#x1D7E6;&#x1D7E7;&#x1D7E8;&#x1D7E9;&#x1D7EA;&#x1D7EB;"/>
+        <numberingSystem id="mlym" type="numeric" digits="൦൧൨൩൪൫൬൭൮൯"/>
+        <numberingSystem id="modi" type="numeric" digits="&#x11650;&#x11651;&#x11652;&#x11653;&#x11654;&#x11655;&#x11656;&#x11657;&#x11658;&#x11659;"/>
+        <numberingSystem id="mong" type="numeric" digits="᠐᠑᠒᠓᠔᠕᠖᠗᠘᠙"/>
+        <numberingSystem id="mroo" type="numeric" digits="&#x16A60;&#x16A61;&#x16A62;&#x16A63;&#x16A64;&#x16A65;&#x16A66;&#x16A67;&#x16A68;&#x16A69;"/>
+        <numberingSystem id="mtei" type="numeric" digits="꯰꯱꯲꯳꯴꯵꯶꯷꯸꯹"/>
+        <numberingSystem id="mymr" type="numeric" digits="၀၁၂၃၄၅၆၇၈၉"/>
+        <numberingSystem id="mymrshan" type="numeric" digits="႐႑႒႓႔႕႖႗႘႙"/>
+        <numberingSystem id="mymrtlng" type="numeric" digits="&#xA9F0;&#xA9F1;&#xA9F2;&#xA9F3;&#xA9F4;&#xA9F5;&#xA9F6;&#xA9F7;&#xA9F8;&#xA9F9;"/>
+        <numberingSystem id="newa" type="numeric" digits="&#x11450;&#x11451;&#x11452;&#x11453;&#x11454;&#x11455;&#x11456;&#x11457;&#x11458;&#x11459;"/>
+        <numberingSystem id="nkoo" type="numeric" digits="߀߁߂߃߄߅߆߇߈߉"/>
+        <numberingSystem id="olck" type="numeric" digits="᱐᱑᱒᱓᱔᱕᱖᱗᱘᱙"/>
+        <numberingSystem id="orya" type="numeric" digits="୦୧୨୩୪୫୬୭୮୯"/>
+        <numberingSystem id="osma" type="numeric" digits="&#x104A0;&#x104A1;&#x104A2;&#x104A3;&#x104A4;&#x104A5;&#x104A6;&#x104A7;&#x104A8;&#x104A9;"/>
+        <numberingSystem id="rohg" type="numeric" digits="&#x10D30;&#x10D31;&#x10D32;&#x10D33;&#x10D34;&#x10D35;&#x10D36;&#x10D37;&#x10D38;&#x10D39;"/>
+        <numberingSystem id="roman" type="algorithmic" rules="roman-upper"/>
+        <numberingSystem id="romanlow" type="algorithmic" rules="roman-lower"/>
+        <numberingSystem id="saur" type="numeric" digits="꣐꣑꣒꣓꣔꣕꣖꣗꣘꣙"/>
+        <numberingSystem id="segment" type="numeric" digits="&#x1FBF0;&#x1FBF1;&#x1FBF2;&#x1FBF3;&#x1FBF4;&#x1FBF5;&#x1FBF6;&#x1FBF7;&#x1FBF8;&#x1FBF9;"/>
+        <numberingSystem id="shrd" type="numeric" digits="&#x111D0;&#x111D1;&#x111D2;&#x111D3;&#x111D4;&#x111D5;&#x111D6;&#x111D7;&#x111D8;&#x111D9;"/>
+        <numberingSystem id="sind" type="numeric" digits="&#x112F0;&#x112F1;&#x112F2;&#x112F3;&#x112F4;&#x112F5;&#x112F6;&#x112F7;&#x112F8;&#x112F9;"/>
+        <numberingSystem id="sinh" type="numeric" digits="&#x0DE6;&#x0DE7;&#x0DE8;&#x0DE9;&#x0DEA;&#x0DEB;&#x0DEC;&#x0DED;&#x0DEE;&#x0DEF;"/>
+        <numberingSystem id="sora" type="numeric" digits="&#x110F0;&#x110F1;&#x110F2;&#x110F3;&#x110F4;&#x110F5;&#x110F6;&#x110F7;&#x110F8;&#x110F9;"/>
+        <numberingSystem id="sund" type="numeric" digits="᮰᮱᮲᮳᮴᮵᮶᮷᮸᮹"/>
+        <numberingSystem id="takr" type="numeric" digits="&#x116C0;&#x116C1;&#x116C2;&#x116C3;&#x116C4;&#x116C5;&#x116C6;&#x116C7;&#x116C8;&#x116C9;"/>
+        <numberingSystem id="talu" type="numeric" digits="᧐᧑᧒᧓᧔᧕᧖᧗᧘᧙"/>
+        <numberingSystem id="taml" type="algorithmic" rules="tamil"/>
+        <numberingSystem id="tamldec" type="numeric" digits="௦௧௨௩௪௫௬௭௮௯"/>
+        <numberingSystem id="telu" type="numeric" digits="౦౧౨౩౪౫౬౭౮౯"/>
+        <numberingSystem id="thai" type="numeric" digits="๐๑๒๓๔๕๖๗๘๙"/>
+        <numberingSystem id="tibt" type="numeric" digits="༠༡༢༣༤༥༦༧༨༩"/>
+        <numberingSystem id="tirh" type="numeric" digits="&#x114D0;&#x114D1;&#x114D2;&#x114D3;&#x114D4;&#x114D5;&#x114D6;&#x114D7;&#x114D8;&#x114D9;"/>
+        <numberingSystem id="vaii" type="numeric" digits="꘠꘡꘢꘣꘤꘥꘦꘧꘨꘩"/>
+        <numberingSystem id="wara" type="numeric" digits="&#x118E0;&#x118E1;&#x118E2;&#x118E3;&#x118E4;&#x118E5;&#x118E6;&#x118E7;&#x118E8;&#x118E9;"/>
+        <numberingSystem id="wcho" type="numeric" digits="&#x1E2F0;&#x1E2F1;&#x1E2F2;&#x1E2F3;&#x1E2F4;&#x1E2F5;&#x1E2F6;&#x1E2F7;&#x1E2F8;&#x1E2F9;"/>
+    </numberingSystems>
+</supplementalData>

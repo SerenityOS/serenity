@@ -1,0 +1,25 @@
+var mixedNodeColor   = java.awt.Color.decode("#ffaabb");
+var controlNodeColor = java.awt.Color.decode("#ee8866");
+var otherNodeColor   = java.awt.Color.decode("#eedd88");
+var dataNodeColor    = java.awt.Color.decode("#adcbea");
+var memoryNodeColor  = java.awt.Color.decode("#babb00");
+
+var mixedEdgeColor   = java.awt.Color.decode("#ff7f99");
+var controlEdgeColor = java.awt.Color.decode("#e75828");
+var otherEdgeColor   = java.awt.Color.decode("#dfc025");
+var dataEdgeColor    = java.awt.Color.decode("#3178c2");
+var memoryEdgeColor  = java.awt.Color.decode("#828200");
+
+colorize("category", "data", dataNodeColor);
+colorize("category", "memory", memoryNodeColor);
+colorize("category", "mixed", mixedNodeColor);
+colorize("category", "control", controlNodeColor);
+colorize("category", "other", otherNodeColor);
+
+var f = new ColorFilter("Line Style filter");
+f.addRule(new ColorFilter.ColorRule(new MatcherSelector(new Properties.StringPropertyMatcher("category", "data")), null, dataEdgeColor, null));
+f.addRule(new ColorFilter.ColorRule(new MatcherSelector(new Properties.StringPropertyMatcher("category", "memory")), null, memoryEdgeColor, null));
+f.addRule(new ColorFilter.ColorRule(new MatcherSelector(new Properties.StringPropertyMatcher("category", "mixed")), null, mixedEdgeColor, null));
+f.addRule(new ColorFilter.ColorRule(new MatcherSelector(new Properties.StringPropertyMatcher("category", "control")), null, controlEdgeColor, null));
+f.addRule(new ColorFilter.ColorRule(new MatcherSelector(new Properties.StringPropertyMatcher("category", "other")), null, otherEdgeColor, null));
+f.apply(graph);

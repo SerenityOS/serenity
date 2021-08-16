@@ -1,0 +1,2 @@
+CaptureLowerBoundNeg.java:17:29: compiler.err.cant.apply.symbol: kindname.method, take, compiler.misc.type.captureof: 1, ? extends java.lang.Object, java.lang.Object, kindname.class, CaptureLowerBoundNeg.D<T>, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.Object, compiler.misc.type.captureof: 1, ? extends java.lang.Object))
+1 error

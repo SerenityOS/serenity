@@ -1,0 +1,144 @@
+Copyright (c) 2008, 2019, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+The Universal Permissive License (UPL), Version 1.0
+
+Subject to the condition set forth below, permission is hereby granted to
+any person obtaining a copy of this software, associated documentation
+and/or data (collectively the "Software"), free of charge and under any
+and all copyright rights in the Software, and any and all patent rights
+owned or freely licensable by each licensor hereunder covering either (i)
+the unmodified Software as contributed to or provided by such licensor,
+or (ii) the Larger Works (as defined below), to deal in both
+
+(a) the Software, and
+
+(b) any piece of software and/or hardware listed in the lrgrwrks.txt file
+if one is included with the Software (each a "Larger Work" to which the
+Software is contributed by such licensors),
+
+without restriction, including without limitation the rights to copy,
+create derivative works of, display, perform, and distribute the Software
+and make, use, sell, offer for sale, import, export, have made, and have
+sold the Software and the Larger Work(s), and to sublicense the foregoing
+rights on either these or other terms.
+
+This license is subject to the following condition:
+
+The above copyright notice and either this complete permission notice or
+at a minimum a reference to the UPL must be included in all copies or
+substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+________________________________________________________________________
+
+'hsdis':  A HotSpot plugin for disassembling dynamically generated code.
+
+The files in this directory (Makefile, hsdis.[ch], hsdis-demo.c)
+are built independently of the HotSpot JVM.
+
+To use the plugin with a JVM, you need a new version that can load it.
+If the product mode of your JVM does not accept -XX:+PrintAssembly,
+you do not have a version that is new enough.
+
+* Building
+
+To build this project you need a copy of GNU binutils to build against.
+It is known to work with binutils 2.29.1, 2.30, and 2.31.1. Building
+against versions older than 2.29 is no longer supported. Download a
+copy of the software from http://directory.fsf.org/project/binutils or
+one of its mirrors.  Builds targetting windows currently require the
+use of a cross compiler.
+
+Binutils should be configured with the '--disable-nls' flag to disable
+Native Language Support, otherwise you might get an "undefined
+reference to `libintl_gettext'" if you try to load hsdis.so on systems
+which don't have NLS by default.  It also avoids build problems on
+other configurations that don't include the full NLS support.
+
+The makefile looks for the sources in build/binutils or you can
+specify its location to the makefile using BINUTILS=path.  It will
+configure binutils and build it first and then build and link the
+disassembly adapter.  Make all will build the default target for your
+platform.  If your platform supports both 32 and 64 simultaneously then
+"make both" will build them both at once.  "make all64" will
+explicitly build the 64 bit version.  By default this will build the
+disassembler library only.  If you build demo it will build a demo
+program that attempts to exercise the library.
+
+With recent version of binutils (i.e. binutils-2.23.2) you may get the
+following build error:
+
+WARNING: `makeinfo' is missing on your system.  You should only need it if
+         you modified a `.texi' or `.texinfo' file, or any other file
+         ...
+
+This is because of "Bug 15345 - binutils-2.23.2 tarball doesn't build
+without makeinfo" [2]. The easiest way to work around this problem is
+by doing a "touch $BINUTILS/bfd/doc/bfd.info".
+
+Windows
+
+In theory this should be buildable on Windows but getting a working
+GNU build environment on Windows has proven difficult.  MINGW should
+be able to do it but at the time of this writing I was unable to get
+this working.  Instead you can use the mingw cross compiler on linux
+to produce the windows binaries.  For 32-bit windows you can install
+mingw32 using your package manager and it will be added to your path
+automatically.  For 64-bit you need to download the 64 bit mingw from
+http://sourceforge.net/projects/mingw-w64.  Grab a copy of the
+complete toolchain and unpack it somewhere.  Put the bin directory of
+the toolchain in your path.  The mingw installs contain cross compile
+versions of gcc that are named with a prefix to indicate what they are
+targeting and you must tell the Makefile which one to use.  This
+should either be i586-mingw32msvc or x86_64-pc-mingw32 depending on
+which one you are targeting and there should be a version of gcc in
+your path named i586-mingw32msvc-gcc or x86_64-pc-mingw32-gcc.  Tell
+the makefile what prefix to use to find the mingw tools by using
+MINGW=.  For example:
+
+make MINGW=i586-mingw32msvc BINUTILS=build/binutils-2.31.1
+
+will build the Win32 cross compiled version of hsdis based on 2.31.1.
+
+* Installing
+
+Products are named like build/$OS-$LIBARCH/hsdis-$LIBARCH.so. You can
+install them next to your libjvm.so inside your JRE/JDK or alternatively
+put it anywhere on your LD_LIBRARY_PATH. The search path in the JVM is:
+
+1. <home>/lib/<vm>/libhsdis-<arch>.so
+2. <home>/lib/<vm>/hsdis-<arch>.so
+3. <home>/lib/hsdis-<arch>.so
+4. hsdis-<arch>.so  (using LD_LIBRARY_PATH)
+
+Now test:
+
+  export LD_LIBRARY_PATH .../hsdis/build/$OS-$LIBARCH:$LD_LIBRARY_PATH
+  dargs='-XX:+UnlockDiagnosticVMOptions -XX:+PrintAssembly'
+  dargs=$dargs' -XX:PrintAssemblyOptions=hsdis-print-bytes'
+  java $dargs -Xbatch CompileCommand=print,*String.hashCode HelloWorld
+
+If the product mode of the JVM does not accept -XX:+PrintAssembly,
+you do not have a version new enough to use the hsdis plugin.
+
+* Wiki
+
+More information can be found in the OpenJDK HotSpot Wiki [1].
+
+
+Resources:
+
+[1] https://wiki.openjdk.java.net/display/HotSpot/PrintAssembly
+[2] http://sourceware.org/bugzilla/show_bug.cgi?id=15345

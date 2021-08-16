@@ -1,0 +1,2 @@
+T6295056.java:13:29: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), T6295056.Foo, T6295056.Bar<java.lang.Object>
+1 warning

@@ -1,0 +1,2 @@
+T6245699b.java:23:23: compiler.err.override.meth: (compiler.misc.cant.override: doIt(), T6245699b.Bar, doIt(), T6245699b.Foo), final
+1 error

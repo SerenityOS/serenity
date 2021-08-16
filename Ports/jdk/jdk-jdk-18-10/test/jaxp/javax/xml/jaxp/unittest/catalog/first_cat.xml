@@ -1,0 +1,6 @@
+<catalog prefer="system" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+
+    <system systemId="http://www.oracle.com/sequence.dtd" uri="first.dtd"/>
+    <nextCatalog catalog="next_cat.xml"/>
+
+</catalog>

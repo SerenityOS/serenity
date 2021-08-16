@@ -1,0 +1,4 @@
+UncheckedCovariance.java:17:13: compiler.warn.override.unchecked.ret: (compiler.misc.unchecked.override: f(), UncheckedCovariance.B, f(), UncheckedCovariance.A), UncheckedCovariance.Box, UncheckedCovariance.Box<java.lang.Integer>
+- compiler.err.warnings.and.werror
+1 error
+1 warning

@@ -1,0 +1,2 @@
+Cycle1.java:13:9: compiler.err.cyclic.annotation.element: cycle1.Foo
+1 error

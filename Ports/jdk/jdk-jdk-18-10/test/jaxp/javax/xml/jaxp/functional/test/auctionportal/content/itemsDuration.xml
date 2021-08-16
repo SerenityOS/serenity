@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<item xmlns="http://www.hibid.com/items" itemID="i1" name="Warn Bros Pitcher" category="other" country="US">
+   <description> 20th century vase. Really unique . Really antique</description>
+   <ownerID>2</ownerID>
+   <sellStartDateTime> 2002-03-11T15:23:45</sellStartDateTime>
+   <sellStartDate> 2002-03-11</sellStartDate>
+   <sellStartTime> 15:23:45</sellStartTime>
+   <sellDuration>P365D</sellDuration>
+   <bidderID>a2</bidderID>
+   <bidPrice></bidPrice>
+   <elapsedTime></elapsedTime>
+
+</item>

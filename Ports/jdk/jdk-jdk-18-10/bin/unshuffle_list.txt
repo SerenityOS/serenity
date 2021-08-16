@@ -1,0 +1,192 @@
+#
+# Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+src/bsd : jdk/src/bsd
+src/demo : jdk/src/demo
+src/java.activation : jaxws/src/java.activation
+src/java.base : jdk/src/java.base
+src/java.compiler : langtools/src/java.compiler
+src/java.corba : corba/src/java.corba
+src/java.datatransfer : jdk/src/java.datatransfer
+src/java.desktop : jdk/src/java.desktop
+src/java.instrument : jdk/src/java.instrument
+src/java.logging : jdk/src/java.logging
+src/java.management : jdk/src/java.management
+src/java.management.rmi : jdk/src/java.management.rmi
+src/java.naming : jdk/src/java.naming
+src/java.prefs : jdk/src/java.prefs
+src/java.rmi : jdk/src/java.rmi
+src/java.scripting : jdk/src/java.scripting
+src/java.se : jdk/src/java.se
+src/java.security.jgss : jdk/src/java.security.jgss
+src/java.security.sasl : jdk/src/java.security.sasl
+src/java.se.ee : jdk/src/java.se.ee
+src/java.smartcardio : jdk/src/java.smartcardio
+src/java.sql : jdk/src/java.sql
+src/java.sql.rowset : jdk/src/java.sql.rowset
+src/java.transaction : jdk/src/java.transaction
+src/java.xml : jaxp/src/java.xml
+src/java.xml.bind : jaxws/src/java.xml.bind
+src/java.xml.crypto : jdk/src/java.xml.crypto
+src/java.xml.ws : jaxws/src/java.xml.ws
+src/java.xml.ws.annotation : jaxws/src/java.xml.ws.annotation
+src/jdk.accessibility : jdk/src/jdk.accessibility
+src/jdk.aot : hotspot/src/jdk.aot
+src/jdk.attach : jdk/src/jdk.attach
+src/jdk.charsets : jdk/src/jdk.charsets
+src/jdk.compiler : jdk/src/jdk.compiler  langtools/src/jdk.compiler
+src/jdk.crypto.cryptoki : jdk/src/jdk.crypto.cryptoki
+src/jdk.crypto.ec : jdk/src/jdk.crypto.ec
+src/jdk.crypto.mscapi : jdk/src/jdk.crypto.mscapi
+src/jdk.dynalink : nashorn/src/jdk.dynalink
+src/jdk.editpad : jdk/src/jdk.editpad
+src/jdk.hotspot.agent : hotspot/src/jdk.hotspot.agent
+src/jdk.httpserver : jdk/src/jdk.httpserver
+src/jdk.incubator.httpclient : jdk/src/jdk.incubator.httpclient
+src/jdk.internal.ed : jdk/src/jdk.internal.ed
+src/jdk.internal.jvmstat : jdk/src/jdk.internal.jvmstat
+src/jdk.internal.le : jdk/src/jdk.internal.le
+src/jdk.internal.opt : jdk/src/jdk.internal.opt
+src/jdk.internal.vm.ci : hotspot/src/jdk.internal.vm.ci
+src/jdk.internal.vm.compiler : hotspot/src/jdk.internal.vm.compiler
+src/jdk.jartool : jdk/src/jdk.jartool
+src/jdk.javadoc : langtools/src/jdk.javadoc
+src/jdk.jcmd : jdk/src/jdk.jcmd
+src/jdk.jconsole : jdk/src/jdk.jconsole
+src/jdk.jdeps : langtools/src/jdk.jdeps
+src/jdk.jdi : jdk/src/jdk.jdi
+src/jdk.jdwp.agent : jdk/src/jdk.jdwp.agent
+src/jdk.jlink : jdk/src/jdk.jlink
+src/jdk.jshell : langtools/src/jdk.jshell
+src/jdk.jsobject : jdk/src/jdk.jsobject
+src/jdk.jstatd : jdk/src/jdk.jstatd
+src/jdk.localedata : jdk/src/jdk.localedata
+src/jdk.management : jdk/src/jdk.management
+src/jdk.management.agent : jdk/src/jdk.management.agent
+src/jdk.naming.dns : jdk/src/jdk.naming.dns
+src/jdk.naming.rmi : jdk/src/jdk.naming.rmi
+src/jdk.net : jdk/src/jdk.net
+src/jdk.pack : jdk/src/jdk.pack
+src/jdk.scripting.nashorn : nashorn/src/jdk.scripting.nashorn
+src/jdk.scripting.nashorn.shell : nashorn/src/jdk.scripting.nashorn.shell
+src/jdk.sctp : jdk/src/jdk.sctp
+src/jdk.security.auth : jdk/src/jdk.security.auth
+src/jdk.security.jgss : jdk/src/jdk.security.jgss
+src/jdk.unsupported : jdk/src/jdk.unsupported
+src/jdk.xml.bind : jaxws/src/jdk.xml.bind
+src/jdk.xml.dom : jaxp/src/jdk.xml.dom
+src/jdk.xml.ws : jaxws/src/jdk.xml.ws
+src/jdk.zipfs : jdk/src/jdk.zipfs
+src/langtools/sample : langtools/src/sample
+src/linux : jdk/src/linux
+src/sample : jdk/src/sample
+src/hotspot/share : hotspot/src/share/vm
+src/hotspot/cpu/aarch64 : hotspot/src/cpu/aarch64/vm
+src/hotspot/cpu/arm : hotspot/src/cpu/arm/vm
+src/hotspot/cpu/ppc : hotspot/src/cpu/ppc/vm
+src/hotspot/cpu/s390 : hotspot/src/cpu/s390/vm
+src/hotspot/cpu/x86 : hotspot/src/cpu/x86/vm
+src/hotspot/cpu/zero : hotspot/src/cpu/zero/vm
+src/hotspot/os/aix : hotspot/src/os/aix/vm
+src/hotspot/os/bsd : hotspot/src/os/bsd/vm
+src/hotspot/os/linux : hotspot/src/os/linux/vm
+src/hotspot/os/posix/dtrace : hotspot/src/os/posix/dtrace
+src/hotspot/os/posix : hotspot/src/os/posix/vm
+src/hotspot/os/windows : hotspot/src/os/windows/vm
+src/hotspot/os_cpu/aix_ppc : hotspot/src/os_cpu/aix_ppc/vm
+src/hotspot/os_cpu/bsd_x86 : hotspot/src/os_cpu/bsd_x86/vm
+src/hotspot/os_cpu/bsd_zero : hotspot/src/os_cpu/bsd_zero/vm
+src/hotspot/os_cpu/linux_aarch64 : hotspot/src/os_cpu/linux_aarch64/vm
+src/hotspot/os_cpu/linux_arm : hotspot/src/os_cpu/linux_arm/vm
+src/hotspot/os_cpu/linux_ppc : hotspot/src/os_cpu/linux_ppc/vm
+src/hotspot/os_cpu/linux_s390 : hotspot/src/os_cpu/linux_s390/vm
+src/hotspot/os_cpu/linux_x86 : hotspot/src/os_cpu/linux_x86/vm
+src/hotspot/os_cpu/linux_zero : hotspot/src/os_cpu/linux_zero/vm
+src/hotspot/os_cpu/windows_x86 : hotspot/src/os_cpu/windows_x86/vm
+src/hotspot : hotspot/src
+src/utils/IdealGraphVisualizer : hotspot/src/share/tools/IdealGraphVisualizer
+src/utils/LogCompilation : hotspot/src/share/tools/LogCompilation
+src/utils/hsdis : hotspot/src/share/tools/hsdis
+src/utils/reorder : jdk/make/non-build-utils/reorder
+src/utils/src/build : jdk/make/non-build-utils/src/build
+make/BuildNashorn.gmk : nashorn/make/BuildNashorn.gmk
+make/CompileDemos.gmk : jdk/make/CompileDemos.gmk
+make/CompileInterimLangtools.gmk : langtools/make/CompileInterim.gmk
+make/CompileModuleTools.gmk : jdk/make/CompileModuleTools.gmk
+make/CompileToolsHotspot.gmk : hotspot/make/CompileTools.gmk
+make/CompileToolsJdk.gmk : jdk/make/CompileTools.gmk
+make/CopyInterimCLDRConverter.gmk : jdk/make/CopyInterimCLDRConverter.gmk
+make/GenerateModuleSummary.gmk : jdk/make/GenerateModuleSummary.gmk
+make/ModuleTools.gmk : jdk/make/ModuleTools.gmk
+make/ToolsJdk.gmk : jdk/make/Tools.gmk
+make/ToolsLangtools.gmk : langtools/make/Tools.gmk
+make/UnpackSecurity.gmk : jdk/make/UnpackSecurity.gmk
+make/autoconf : common/autoconf
+make/conf : common/conf
+make/copy : jdk/make/copy
+make/copy/Copy-java.corba.gmk : corba/make/copy/Copy-java.corba.gmk
+make/corba : corba/make
+make/data : jdk/make/data
+make/gendata : jdk/make/gendata
+make/gendata/Gendata-jdk.compiler.gmk : langtools/make/gendata/Gendata-jdk.compiler.gmk
+make/gensrc : jdk/make/gensrc
+make/gensrc/Gensrc-java.corba.gmk : corba/make/gensrc/Gensrc-java.corba.gmk
+make/gensrc/Gensrc-jdk.compiler.gmk : langtools/make/gensrc/Gensrc-jdk.compiler.gmk
+make/gensrc/Gensrc-jdk.hotspot.agent.gmk : hotspot/make/gensrc/Gensrc-jdk.hotspot.agent.gmk
+make/gensrc/Gensrc-jdk.internal.vm.compiler.gmk : hotspot/make/gensrc/Gensrc-jdk.internal.vm.compiler.gmk
+make/gensrc/Gensrc-jdk.javadoc.gmk : langtools/make/gensrc/Gensrc-jdk.javadoc.gmk
+make/gensrc/Gensrc-jdk.jdeps.gmk : langtools/make/gensrc/Gensrc-jdk.jdeps.gmk
+make/gensrc/Gensrc-jdk.jshell.gmk : langtools/make/gensrc/Gensrc-jdk.jshell.gmk
+make/gensrc/GensrcCommonLangtools.gmk : langtools/make/gensrc/GensrcCommon.gmk
+make/hotspot : hotspot/make
+make/jdk : jdk/make
+make/langtools : langtools/make
+make/launcher : jdk/make/launcher
+make/lib : jdk/make/lib
+make/lib/Lib-jdk.hotspot.agent.gmk : hotspot/make/lib/Lib-jdk.hotspot.agent.gmk
+make/mapfiles : jdk/make/mapfiles
+make/mapfiles/libjsig : hotspot/make/mapfiles/libjsig
+make/mapfiles/libjvm_db : hotspot/make/mapfiles/libjvm_db
+make/mapfiles/libjvm_dtrace : hotspot/make/mapfiles/libjvm_dtrace
+make/mapfiles/libsaproc : hotspot/make/mapfiles/libsaproc
+make/nashorn : nashorn/make
+make/nb_native : common/nb_native
+make/scripts/addNotices.sh : jdk/make/scripts/addNotices.sh
+make/scripts/compare.sh : common/bin/compare.sh
+make/scripts/compare_exceptions.sh.incl : common/bin/compare_exceptions.sh.incl
+make/scripts/genExceptions.sh : jdk/make/scripts/genExceptions.sh
+make/scripts/hide_important_warnings_from_javac.sh : common/bin/hide_important_warnings_from_javac.sh
+make/scripts/logger.sh : common/bin/logger.sh
+make/src/native/fixpath.c : common/src/fixpath.c
+make/test/JtregNativeHotspot.gmk : hotspot/make/test/JtregNative.gmk
+make/test/JtregNativeJdk.gmk : jdk/make/test/JtregNative.gmk
+test/jdk : jdk/test
+test/langtools : langtools/test
+test/nashorn : nashorn/test
+test/jaxp : jaxp/test
+test/hotspot/gtest : hotspot/test/native
+test/hotspot/jtreg : hotspot/test
+bin : common/bin
+bin/nashorn : nashorn/bin
+doc : common/doc
+doc/nashorn : nashorn/docs

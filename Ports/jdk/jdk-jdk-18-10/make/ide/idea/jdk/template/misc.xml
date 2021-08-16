@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="EntryPointsManager">
+    <entry_points version="2.0" />
+  </component>
+  <component name="JTRegService">
+    <path>###JTREG_HOME###</path>
+    <workDir>###BUILD_DIR###</workDir>
+    <jre alt="true" value="###IMAGES_DIR###" />
+    <options></options>
+    <ant>
+      <target file="file://###ROOT_DIR###/make/ide/idea/jdk/build.xml" name="images" />
+    </ant>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_X" assert-keyword="true" project-jdk-type="JavaSDK">
+    <output url="file://###BUILD_DIR###/idea" />
+  </component>
+</project>

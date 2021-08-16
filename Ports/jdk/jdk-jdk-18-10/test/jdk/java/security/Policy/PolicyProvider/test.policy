@@ -1,0 +1,9 @@
+grant {
+  permission java.lang.RuntimePermission "createSecurityManager";
+  permission java.lang.RuntimePermission "setSecurityManager";
+  permission java.security.SecurityPermission "setProperty.policy.provider";
+  permission java.security.SecurityPermission "getPolicy";
+  permission java.util.PropertyPermission "user.home", "read";
+  permission java.lang.RuntimePermission "getProtectionDomain";
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.security.provider";
+};

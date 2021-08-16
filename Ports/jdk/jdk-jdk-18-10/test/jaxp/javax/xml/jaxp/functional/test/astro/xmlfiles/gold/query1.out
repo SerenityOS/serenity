@@ -1,0 +1,24 @@
+<html xmlns:astro="http://www.astro.com/astro">
+    <h1>Bright Star Catalog Extract</h1>
+    <body>
+        <b>Star Id: </b>7
+        <br>
+        <b>Constellation: </b>Cas
+        <br>
+        <b>Description: </b>10    Cas
+        <br>
+        <b>RA J2000: </b>00:06:26.5
+        <br>
+        <b>DEC J2000: </b>64:11:46
+        <br>
+        <b>Visual Magnitude: </b>5.59
+        <br>
+        <b>Spectral Type: </b>B9III
+        <br>
+        <b>Galactic Longitude: </b>118.06
+        <br>
+        <b>Galactic Latitude: </b>1.75
+        <br>
+        <hr>
+    </body>
+</html>

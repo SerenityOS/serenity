@@ -1,0 +1,4 @@
+TargetType22.java:29:21: compiler.warn.unchecked.varargs.non.reifiable.type: A
+TargetType22.java:40:9: compiler.err.ref.ambiguous: call, kindname.method, call(TargetType22.Sam1<java.lang.String>), TargetType22, kindname.method, call(TargetType22.SamX<java.lang.String>), TargetType22
+1 error
+1 warning

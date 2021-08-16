@@ -1,0 +1,10 @@
+keystore "file:keystore.jks";
+keystorePasswordURL "file:keypass";
+
+grant signedBy "JavaTest" {
+    permission java.lang.RuntimePermission "setIO";
+};
+
+grant signedBy "other" {
+    permission java.lang.RuntimePermission "setFactory";
+};

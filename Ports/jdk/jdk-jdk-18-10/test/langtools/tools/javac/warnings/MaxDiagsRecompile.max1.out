@@ -1,0 +1,3 @@
+MaxDiagsRecompile.java:9:3: compiler.err.cant.resolve.location: kindname.class, NoSuchSymbol1, , , (compiler.misc.location: kindname.class, MaxDiagsRecompile, null)
+1 error
+only showing the first 1 errors, of 4 total; use -Xmaxerrs if you would like to see more

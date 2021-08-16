@@ -1,0 +1,8 @@
+int + test: 72 should equal 72
+long + test: 72 should equal 72
+double + test: 72.0 should equal 72.0
+float + test: 72.0 should equal 72.0
+int += test: 72 should equal 72
+long += test: 72 should equal 72
+double += test: 72.0 should equal 72.0
+float += test: 72.0 should equal 72.0

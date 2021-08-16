@@ -1,0 +1,5 @@
+ReifiableOld.java:11:18: compiler.err.feature.not.supported.in.source.plural: (compiler.misc.feature.reifiable.types.instanceof), 15, 16
+ReifiableOld.java:13:16: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: ReifiableOld.List<java.lang.String>, ReifiableOld.ListImpl<ReifiableOld>)
+ReifiableOld.java:14:39: compiler.err.not.within.bounds: java.lang.String, T
+ReifiableOld.java:15:16: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: ReifiableOld.List<ReifiableOld>, ReifiableOld.Unrelated<ReifiableOld>)
+4 errors

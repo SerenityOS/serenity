@@ -1,0 +1,5 @@
+MethodReference08.java:14:17: compiler.warn.raw.class.use: MethodReference08.Foo, MethodReference08.Foo<X>
+MethodReference08.java:21:19: compiler.warn.raw.class.use: MethodReference08.Foo, MethodReference08.Foo<X>
+- compiler.err.warnings.and.werror
+1 error
+2 warnings

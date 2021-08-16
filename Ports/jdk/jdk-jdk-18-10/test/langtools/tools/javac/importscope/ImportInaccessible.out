@@ -1,0 +1,2 @@
+ImportInaccessible.java:11:35: compiler.err.cant.resolve.location: kindname.class, Inner, , , (compiler.misc.location: kindname.class, p.ImportInaccessible, null)
+1 error

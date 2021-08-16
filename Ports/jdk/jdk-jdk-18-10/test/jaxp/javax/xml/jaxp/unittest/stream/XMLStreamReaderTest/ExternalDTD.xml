@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding ="utf-8"?>
+<!DOCTYPE document SYSTEM "ExternalDTD.dtd" [
+<!ENTITY max "Substituted text">
+]>
+<!-- ExternalDTD throws a Negative array size Exception when 
+trying to parse with the above DTD reference AND an entity declaration-->
+<document>
+	<title>The Publishers </title>
+	<publisher>        
+	Alfred Publishing
+	15535 Morrison
+	South Oaks CA 91403
+        &max;
+	</publisher>
+	<book price="$100" author = "Herold" number = "no_11">eXtensible Markup Language</book>
+  	<bookurn xmlns='urn:loc.gov:books' xmlns:isbn='urn:ISBN:0-395-36341-6'/> 
+        <pb/>
+	<pages />
+</document>

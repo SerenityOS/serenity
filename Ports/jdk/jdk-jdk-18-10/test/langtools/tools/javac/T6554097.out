@@ -1,0 +1,19 @@
+T6554097.java:13:42: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:13:65: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:14:42: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:14:65: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:17:50: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:17:73: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:18:50: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:18:73: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:21:11: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:21:34: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:22:11: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:22:34: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:25:15: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:25:38: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:26:15: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6554097.java:26:38: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+- compiler.err.warnings.and.werror
+1 error
+16 warnings

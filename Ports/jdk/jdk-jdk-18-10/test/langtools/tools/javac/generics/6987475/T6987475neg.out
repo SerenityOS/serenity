@@ -1,0 +1,3 @@
+T6987475neg.java:27:12: compiler.err.does.not.override.abstract: T6987475neg.Impl1, go(java.lang.String), T6987475neg.Sub
+T6987475neg.java:28:12: compiler.err.does.not.override.abstract: T6987475neg.Impl2, go(java.lang.String), T6987475neg.SubReverse
+2 errors

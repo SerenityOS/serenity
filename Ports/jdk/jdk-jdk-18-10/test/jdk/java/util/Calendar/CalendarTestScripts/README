@@ -1,0 +1,566 @@
+Copyright (c) 2005, 2018, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+ 
+			   CALENDAR TEST SCRIPT
+
+			     Masayoshi Okutsu
+				2005-03-18
+
+Introduction
+------------
+
+Calendar Test Script is a simple scripting language to describe test cases
+for java.util.Calendar and its subclasses. It should be much more
+productive to use this script language than writing test programs in Java.
+
+A script looks like below.
+
+1    locale ja JP JP
+2    timezone Asia/Tokyo
+3    new instance jcal
+4    test day of week on Heisei 1 Jan 8
+5	use jcal
+6	    clear all
+7	    set date Heisei 1 Jan 8
+8	    check day_of_week Sun
+
+The first line defines a Locale to be used for creating Calendar
+instances. Line 2 defines the current TimeZone to be Asia/Tokyo that is
+used creating Calendar instances. Line 3 creates a Calendar instance with
+the Locale and TimeZone instances. Its reference name is `jcal'. Line 4
+indicates a start point for a test case with a short test case
+description. Line 5 designates `jcal' as the current Calendar
+instance. All calendar operation commands are applied to the current
+Calendar instance. Line 6 clears all of the calendar fields (e.g., ERA,
+YEAR, MONTH, etc.). Line 7 sets the ERA, YEAR, MONTH and DAY_OF_MONTH
+fields to Heisei, 1, JANUARY and 8, respectively. Line 8 checks if the
+DAY_OF_WEEK value is SUNDAY. If it's not, then a RuntimeException is
+thrown.
+
+Script Grammar
+--------------
+
+A line is a comment, blank or command line. Any text after '#' is always
+treated as a comment and ignored, like a shell script.
+
+    # This is a comment line.
+
+A command line consists of a command and its parameters, optionally
+followed by a comment. For example,
+
+    set date Heisei 1 Jan 8     # The first day of Heisei
+
+`set' is a command to set `date' to Heisei year 1 January 8th. `Heisei' is
+a constant for the Japanese Heisei era value which is consistent with the
+Japanese imperial calendar implementation. `Jan' is a constant for
+Calendar.SUNDAY. The text after '#' is ignored.
+
+Keywords are case-insensitive.
+
+    set DAY_OF_WEEK MON
+    SET day_of_week Mon
+
+are the same thing.
+
+Lexical analysis is very simple. A command must be complete in a single
+line. Keywords and symbols must be separated by white space. For example,
+"$result+1" is parsed as one token. It must be written as "$result + 1".
+
+Variables
+---------
+
+Variables can be used in any context to store an integer value and are
+referenced in any contexts where an integer value is required. A variable
+name must start with a '$', such as `$maxyear'. The integer value is
+handled as a long.
+
+`$result' is reserved for storing a result of a get commend operation. For
+example, executing the following command:
+
+    get day_of_month
+
+sets $result to the get(Calendar.DAY_OF_MONTH) value of the current
+Calendar instance. (See NEW and USE commands for the current Calendar
+instance.)
+
+Commands
+--------
+
+The following defines each command and its syntax. Keywords are described
+in upper case below.
+
+LOCALE language [country [variant]]
+
+    Creates a Locale instance by calling new Locale(language, country,
+    variant). country and variant are optional. Defining LOCALE overrides
+    the previously defined Locale value if any. The initial Locale value
+    is Locale.getDefault().
+
+TIMEZONE tzid
+
+    Creates a TimeZone instance by calling
+    TimeZone.getTimeZone(tzid). Defining TIMEZONE overrides the previously
+    defined Locale value if any. The initial TimeZone value is
+    TimeZone.getDefault().
+
+NEW INSTANCE calendarname
+
+    Creates a Calendar instance by calling Calendar.getInstance(TimeZone,
+    Locale). TimeZone and Locale are those defined by TIMEZONE and LOCALE
+    commands (or their initial values), respectively. The instance is
+    associated with `calendarname' and becomes the current Calendar
+    instance to be used for testing.
+
+NEW GREGORIAN calendarname
+
+    Creates a Calendar instance by calling new GregorianCalendar(TimeZone,
+    Locale). TimeZone and Locale are those defined by TIMEZONE and LOCALE
+    commands (or their initial values), respectively. The instance is
+    associated with `calendarname' and becomes the current Calendar
+    instance to be used for testing.
+
+TEST [comments...]
+
+    Declares the beginning of a test case. `comments...' gives a short
+    description of a test case. (Multiple lines are not supported.) The
+    test system displays `comments...' to System.out. For example, the
+    following command:
+
+       test A test case for non-lenient mode
+
+    will output:
+
+       Test #n: A test case for non-lenient mode
+
+    where `n' is a sequence number of TEST command lines appeared in a
+    test script file.
+
+USE calendarname
+
+    Specifies the current Calendar instance to use for testing by
+    `calendarname'. If you need to use more than one Calendar instances,
+    then you have to switch those Calendar instances by the USE command.
+
+ASSIGN value variable
+
+    Assigns `value' to `variable'. `value' can be an integer literal, a
+    variable name or a constant. Examples are:
+
+	assign 2005 $year
+	assign $result $temp
+	assign Sun $Microsystems
+
+ASSIGN value variable IF condition
+
+    Assigns `value' to `variable' if `condition' is true. `condition' is a
+    relational expression as:
+
+        value1 relOp value2
+
+    `relOp' must be one of >, >=, ==, !=, <=, <.
+
+EVAL expression
+
+    Evaluates the given *simple* expression and assigns the expression
+    value to $result if `op' is one of the arithmetic operators (+, -, *,
+    /, %). If `op' is one of the relational operators (>, >=, ==, !=, <=,
+    <), then EVAL throws an exception if the expression value is false, or
+    does nothing if the value is true. Note that an operator and values
+    must be separated by white space.
+
+    The following is an example of the ASSIGN and EVAL commands usage to
+    get the next day of week value. Then, it's used to check the
+    roll(DAY_OF_WEEK) result.
+
+        get day_of_week
+	eval $result + 1
+	assign $result $nextDayOfWeek
+	assign Sun $nextDayOfWeek if $nextDayOfWeek > Sat
+        roll day_of_week 1
+        check day_of_week $nextDayOfWeek
+
+CLEAR ALL
+
+    Clears all the calendar fields of the current Calendar instance by
+    calling Calendar.clear().
+
+CLEAR field
+
+    Clears the specified calendar `field' of the current Calendar instance
+    by calling Calendar.clear(field).`field' must be one of the Calendar
+    field indices, ERA, YEAR, MONTH, DAY_OF_MONTH, WEEK_OF_YEAR, etc.
+
+GET MILLIS
+
+    Gets the millisecond value of the current Calendar instance by calling
+    Calendar.getTimeInMillis(). The value is assigned to $result.
+
+GET field
+
+    Gets the `field' value specified of the current Calendar instance by
+    calling Calendar.get(field). The value is assigned to $result.
+
+GET MIN field
+
+    Gets the minimum value of the specified `field' of the current
+    Calendar instance by calling Calendar.getMinimum(field). The value is
+    assigned to $result.
+
+GET GREATESTMIN field
+
+    Gets the greatest minimum value of the specified `field' of the
+    current Calendar instance by calling
+    Calendar.getGreatestMinimum(field). The value is assigned to $result.
+
+GET ACTUALMIN field
+
+    Gets the actual minimum value of the specified `field' of the current
+    Calendar instance by calling Calendar.getActualMinimum(field). The
+    value is assigned to $result.
+
+GET MAX field
+
+    Gets the maximum value of the specified `field' of the current
+    Calendar instance by calling Calendar.getMaximum(field). The value is
+    assigned to $result.
+
+GET LEASTMAX field
+
+    Gets the least maximum value of the specified `field' of the current
+    Calendar instance by calling Calendar.getLeastMaximum(field). The
+    value is assigned to $result.
+
+GET ACTUALMAX field
+
+    Gets the actual maximum value of the specified `field' of the current
+    Calendar instance by calling Calendar.getActualMaximum(field). The
+    value is assigned to $result.
+
+GET FIRSTDAYOFWEEK
+
+    Gets the first day of week value of the current Calendar instance by
+    calling Calendar.getFirstDayOfWeek(). The value is assigned to
+    $result.
+
+GET MINIMALDAYSINFIRSTWEEK
+
+    Gets the minimal days in first week value of the current Calendar
+    instance by calling Calendar.getMinimalDaysInFirstWeek(). The value is
+    assigned to $result.
+
+ADD field amount
+
+    Adds `amount' to the specified `field' of the current Calendar
+    instance by calling Calendar.add(field, amount).
+
+ROLL field amount
+
+    Rolls `amount' of the specified `field' of the current Calendar
+    instance by calling Calendar.roll(field, amount).
+
+SET MILLIS value
+
+    Sets the millisecond value of the current Calendar instance to `value'
+    by calling Calendar.setTimeInMillis(value).
+
+SET field value
+
+    Sets the `field' value of the current Calendar instance to `value' by
+    calling Calendar.set(field, value).
+
+SET DATE era year month dayOfMonth
+
+    Sets the date of the current Calendar instance to the date specified
+    by `era', `year', `month' and `dayOfMonth' by calling
+    Calendar.set(ERA, era) and Calendar.set(year, month,
+    dayOfMonth). Please note that `month' follows the Calendar convention
+    and is 0-based. (e.g., JANUARY is 0)
+
+SET DATE year month dayOfMonth
+
+    Sets the date of the current Calendar instance to the date specified
+    by `year', `month' and `dayOfMonth' by calling
+    Calendar.set(year, month, dayOfMont). Please note that `month'
+    follows the Calendar convention and is 0-based. (e.g., JANUARY is 0)
+
+SET DATETIME year month dayOfMonth hourOfDay minute second
+
+    Sets the date and time of the current Calendar instance to the date
+    and time specified by `year', `month', `dayOfMonth', `hourOfDay',
+    `minute', and `second' by calling Calendar.set(year, month,
+    dayOfMonth, hourOfDay, minute, second). Please note that `hourOfDay'
+    is the 24-hour clock.
+
+SET TIMEOFDAY hourOfDay minute second millisecond
+
+    Sets the date and time of the current Calendar instance to the date
+    and time specified by `year', `month', `dayOfMonth', `hourOfDay',
+    `minute', and `second' by calling Calendar.set(HOUR_OF_DAY,
+    hourOfDay), Calendar.set(MINUTE, minute), and Calendar.set(SECOND,
+    second).
+
+SET FIRSTDAYOFWEEK value
+
+    Sets the first day of week value of the current Calendar instance to
+    `value' by calling Calendar.setFirstDayOfWeek(value).
+
+SET MINIMALDAYSINFIRSTWEEK value
+
+    Sets the minimal days in the first week value of the current Calendar
+    instance to `value' by calling Calendar.setMinimalDaysInFirstWeek(value).
+
+SET LENIENT
+
+    Sets the lenient mode in the current Calendar instance by calling
+    Calendar.setLenient(true).
+
+SET NON-LENIENT
+
+    Sets the non-lenient mode in the current Calendar instance by calling
+    Calendar.setLenient(false).
+
+CHECK MILLIS value
+
+    Checks if the specified `value' is the same as the millisecond value
+    of the current Calendar instance given by calling
+    Calendar.getTimeInMillis(). If the values are different, an exception
+    is thrown.
+
+CHECK DATE era year month dayOfMonth
+
+    Checks if the date specified by `era', `year', `month' and
+    `dayOfMonth' is the same date of the current Calendar instance. The
+    calendar date is given by calling Calendar.get(ERA),
+    Calendar.get(YEAR), Calendar.get(MONTH), and
+    Calendar.get(DAY_OF_MONTH). If the dates are different, an exception
+    is thrown.
+
+CHECK DATE year month dayOfMonth
+
+    Checks if the date specified by `year', `month' and `dayOfMonth' is
+    the same date of the current Calendar instance. The calendar date is
+    given by calling Calendar.get(YEAR), Calendar.get(MONTH), and
+    Calendar.get(DAY_OF_MONTH). If the dates are different, an exception
+    is thrown.
+
+CHECK DATETIME year month dayOfMonth hourOfDay minute second
+
+    Checks if the date and time specified by `year', `month',
+    `dayOfMonth', `hourOfDay', `minute', and `second' are the same ones of
+    the current Calendar instance. The calendar date and time are given by
+    calling Calendar.get(YEAR), Calendar.get(MONTH),
+    Calendar.get(DAY_OF_MONTH), Calendar.get(HOUR_OF_DAY),
+    Calendar.get(MINUTE) and Calendar.get(SECOND). If the dates or times
+    are different, an exception is thrown.
+
+CHECK DATETIME year month dayOfMonth hourOfDay minute second millisecond
+
+    Checks if the date and time specified by `year', `month',
+    `dayOfMonth', `hourOfDay', `minute', `second' and `millisecond' are
+    the same ones of the current Calendar instance. The calendar date and
+    time are given by calling Calendar.get(YEAR), Calendar.get(MONTH),
+    Calendar.get(DAY_OF_MONTH), Calendar.get(HOUR_OF_DAY),
+    Calendar.get(MINUTE), Calendar.get(SECOND) and
+    Calendar.get(MILLISECOND). If the dates or times are different, an
+    exception is thrown.
+
+CHECK TIMEOFDAY hourOfDay minute second millisecond
+
+    Checks if the time of day specified by `hourOfDay', `minute', `second'
+    and `millisecond' are the same ones of the current Calendar
+    instance. The calendar date and time are given by calling
+    Calendar.get(HOUR_OF_DAY), Calendar.get(MINUTE), Calendar.get(SECOND)
+    and Calendar.get(MILLISECOND). If the times are different, an
+    exception is thrown.
+
+CHECK field value
+
+    Checks if the value of the given `field' of the current Calendar
+    instance is equal to the given `value'. If it doesn't, an exception is
+    thrown.
+
+CHECK MIN field value
+
+    Checks if the minimum value of the specified `field' of the current
+    Calendar instance is equal to the specified `value'. If not, an
+    exception is thrown.
+
+CHECK GREATESTMIN field value
+
+    Checks if the greatest minimum value of the specified `field' of the
+    current Calendar instance is equal to the specified `value'. If not,
+    an exception is thrown.
+
+CHECK ACTUALMIN field value
+
+    Checks if the actual minimum value of the specified `field' of the
+    current Calendar instance is equal to the specified `value'. If not,
+    an exception is thrown.
+
+CHECK MAX field value
+
+    Checks if the maximum value of the specified `field' of the current
+    Calendar instance is equal to the specified `value'. If not, an
+    exception is thrown.
+
+CHECK LEASTMAX field value
+
+    Checks if the least maximum value of the specified `field' of the
+    current Calendar instance is equal to the specified `value'. If not,
+    an exception is thrown.
+
+CHECK ACTUALMAX field value
+
+    Checks if the actual maximum value of the specified `field' of the
+    current Calendar instance is equal to the specified `value'. If not,
+    an exception is thrown.
+
+EXCEPTION exceptionname
+
+    Checks if the previous command threw the specified exception by
+    `exceptionname'. For example, the following tests invalid date
+    detection in non-lenient.
+
+	set non-lenient
+	set date 2005 Feb 29 # 2005 isn't a leap year.
+	get millis
+	exception IllegalArgumentException
+
+PRINT variable
+
+    Prints the value of `variable'.
+
+PRINT INSTANCE [calendarname]
+
+    Prints the Calendar.toString() value of the current Calendar instance
+    or the instance given by `calendarname'.
+
+PRINT field
+
+    Prints the value of the specified `field' of the current Calendar
+    instance. The value is obtained by calling Calendar.get(field).
+
+PRINT MILLIS
+
+    Prints the millisecond value of the current Calendar instance. The
+    value is obtained by calling Calendar.getTimeInMillis().
+
+PRINT MIN field
+
+    Prints the minimum value of the specified field by `field' of the
+    current Calendar instance. The value is obtained by calling
+    Calendar.getMinimum(field).
+
+PRINT GREATESTMIN field
+
+    Prints the greatest minimum value of the specified field by `field' of
+    the current Calendar instance. The value is obtained by calling
+    Calendar.getGreatestMinimum(field).
+
+PRINT ACTUALMIN field
+
+    Prints the actual minimum value of the specified field by `field' of
+    the current Calendar instance by calling
+    Calendar.getActualMinimum(field).
+
+PRINT MAX field
+
+    Prints the maximum value of the specified field by `field' of the
+    current Calendar instance. The value is obtained by calling
+    Calendar.getMaximum(field).
+
+PRINT LEASTMAX field
+
+    Prints the least maximum value of the specified field by `field' of
+    the current Calendar instance. The value is obtained by calling
+    Calendar.getLeastMaximum(field).
+
+PRINT ACTUALMAX field
+
+    Prints the actual maximum value of the specified field by `field' of
+    the current Calendar instance. The value is obtained by calling
+    Calendar.getActualMaximum(field).
+
+PRINT DATE
+
+    Prints the date of the current Calendar instance in format
+    "[ERA] yyyy-MM-dd". The date is obtained by calling Calendar.get(ERA),
+    Calendar.get(YEAR), Calendar.get(MONTH), and
+    Calendar.get(DAY_OF_MONTH).
+
+PRINT DATETIME
+
+    Prints the date and time of the current Calendar instance in an ISO
+    8601-style format "[ERA] yyyy-MM-ddTHH:mm:ss.SSS{Z|{+|-}hhmm}". The
+    date and time are obtained by calling Calendar.get(ERA),
+    Calendar.get(YEAR), Calendar.get(MONTH), Calendar.get(DAY_OF_MONTH),
+    Calendar.get(HOUR_OF_DAY), Calendar.get(MINUTE), Calendar.get(SECOND),
+    Calendar.get(MILLISECOND), Calendar.get(ZONE_OFFSET), and
+    Calendar.get(DST_OFFSET).
+
+PRINT TIMEZONE
+
+    Prints the toString() value of the current TimeZone.
+
+PRINT LOCALE
+
+    Prints the toString() value of the current Locale.
+
+Usage
+-----
+
+The usage of the test script system at this directory is:
+
+   $ javac -d classes --add-exports java.base/sun.util=ALL-UNNAMED --add-exports java.base/sun.util.calendar=ALL-UNNAMED *.java
+   $ java -cp classes CalendarTestEngine scriptfiles...
+
+A script file has suffix ".cts" by convention. If multiple script files
+are specified. Those files are sequentially executed as if those are a
+single test script. For example, if we have the following script files:
+
+   file1.cts:
+        locale ja JP JP
+        timezone Asia/Tokyo
+   file2.cts:
+        new instance jcal
+        new gregorian gcal
+        test example
+            use jcal
+                print datetime
+		get millis
+		print $result
+            use gcal
+		set millis $result
+		print datetime
+
+running CalendarTestEngine with those files will produce:
+
+    $ java -cp classes CalendarTestEngine file1.cts file2.cts
+    Starting file1.cts...
+    Completed file1.cts
+    Starting file2.cts...
+    Test #1: example
+    file2.cts:5: Heisei 0017-03-18T20:00:25.402+0900
+    file2.cts:7: $result=1111143625402
+    file2.cts:10: 2005-03-18T20:00:25.402+0900
+    Completed file2.cts	
+
+[end of README]

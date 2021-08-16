@@ -1,0 +1,3 @@
+var f = new RemoveFilter("Hide memory subgraph");
+f.addRule(new RemoveFilter.RemoveRule(new MatcherSelector(new Properties.StringPropertyMatcher("category", "memory"))));
+f.apply(graph);

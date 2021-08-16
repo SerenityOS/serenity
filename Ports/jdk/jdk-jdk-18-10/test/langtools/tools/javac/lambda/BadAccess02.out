@@ -1,0 +1,3 @@
+BadAccess02.java:21:52: compiler.err.cant.ref.non.effectively.final.var: j, (compiler.misc.lambda)
+BadAccess02.java:29:56: compiler.err.cant.ref.non.effectively.final.var: j, (compiler.misc.lambda)
+2 errors

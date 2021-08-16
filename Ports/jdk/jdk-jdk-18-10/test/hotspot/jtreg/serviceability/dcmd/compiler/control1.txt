@@ -1,0 +1,17 @@
+[
+  {    
+    match: "foo/bar.*",
+    PrintAssembly: false,
+    c1:  {
+      BreakAtExecute: false,
+    },
+    inline : [ "+javax/util.*", "-comx/sun.*"],
+    PrintAssembly: false,
+  },
+  {
+    match: ["baz.*","frob.*"],     
+    inline : [ "+java/util.*", "-com/sun.*" ],
+    PrintAssembly: false,
+    BreakAtExecute: false,    
+  }
+]

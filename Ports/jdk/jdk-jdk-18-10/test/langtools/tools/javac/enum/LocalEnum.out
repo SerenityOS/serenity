@@ -1,0 +1,4 @@
+- compiler.warn.source.no.system.modules.path: 15
+LocalEnum.java:12:9: compiler.err.local.enum
+1 error
+1 warning

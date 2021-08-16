@@ -1,0 +1,14 @@
+#Here is the script I used to run this test. The "rm" are critical to
+#the test.
+java -version
+javac WriteAddedSuperClass.java
+java WriteAddedSuperClass
+rm A.class AddedSuperClass.class
+javac ReadAddedSuperClass.java
+java ReadAddedSuperClass
+rm A.class
+javac WriteAddedSuperClass.java
+java WriteAddedSuperClass
+rm A.class AddedSuperClass.class
+javac ReadAddedSuperClass2.java
+java ReadAddedSuperClass2

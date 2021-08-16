@@ -1,0 +1,591 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="lkt"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ab">Abkhaz Iyápi</language>
+			<language type="ady">Adyghe Iyápi</language>
+			<language type="ae">Avestan Iyápi</language>
+			<language type="af">Afrikaans Iyápi</language>
+			<language type="alt">Itóǧata Altai Iyápi</language>
+			<language type="am">Amharic Iyápi</language>
+			<language type="ar">Arab Iyápi</language>
+			<language type="arp">Maȟpíya Tȟó Iyápi</language>
+			<language type="as">Assamese Iyápi</language>
+			<language type="av">Avaric Iyápi</language>
+			<language type="az">Azerbaijani Iyápi</language>
+			<language type="ba">Bashkir Iyápi</language>
+			<language type="bal">Baluchi Iyápi</language>
+			<language type="bax">Bamun Iyápi</language>
+			<language type="be">Belarus Iyápi</language>
+			<language type="bej">Beja Iyápi</language>
+			<language type="bg">Bulgar Iyápi</language>
+			<language type="bn">Bengali Iyápi</language>
+			<language type="bo">Tibetan Iyápi</language>
+			<language type="bs">Bosnia Iyápi</language>
+			<language type="bua">Buriat Iyápi</language>
+			<language type="ca">Catalan Iyápi</language>
+			<language type="ce">Chechen Iyápi</language>
+			<language type="chm">Mari Iyápi</language>
+			<language type="chr">Cherokee Iyápi</language>
+			<language type="chy">Šahíyela Iyápi</language>
+			<language type="cop">Coptic Iyápi</language>
+			<language type="cr">Maštíŋča Oyáte Iyápi</language>
+			<language type="crh">Crimean Turkish Iyápi</language>
+			<language type="cs">Czech Iyápi</language>
+			<language type="cv">Chuvash Iyápi</language>
+			<language type="cy">Wales Iyápi</language>
+			<language type="da">Dane Iyápi</language>
+			<language type="dak">Dakȟótiyapi</language>
+			<language type="dar">Dargwa Iyápi</language>
+			<language type="de">Iyášiča Iyápi</language>
+			<language type="doi">Dogri Iyápi</language>
+			<language type="el">Greece Iyápi</language>
+			<language type="en">Wašíčuiyapi</language>
+			<language type="en_GB">Šagláša Wašíčuiyapi</language>
+			<language type="en_US">Mílahaŋska Wašíčuiyapi</language>
+			<language type="eo">Esperanto Iyápi</language>
+			<language type="es">Spayóla Iyápi</language>
+			<language type="es_419">Wiyóȟpeyata Spayóla Iyápi</language>
+			<language type="es_ES">Spayólaȟča Iyápi</language>
+			<language type="et">Estonia Iyápi</language>
+			<language type="eu">Basque Iyápi</language>
+			<language type="fa">Persian Iyápi</language>
+			<language type="fi">Finnish Iyápi</language>
+			<language type="fil">Filipino Iyápi</language>
+			<language type="fj">Fiji Iyápi</language>
+			<language type="fo">Faroese Iyápi</language>
+			<language type="fr">Wašíču Ikčéka Iyápi</language>
+			<language type="ga">Irish Iyápi</language>
+			<language type="gba">Gbaya Iyápi</language>
+			<language type="gl">Galician Iyápi</language>
+			<language type="gn">Guarani Iyápi</language>
+			<language type="gu">Gujarati Iyápi</language>
+			<language type="ha">Hausa Iyápi</language>
+			<language type="haw">Hawaiian Iyápi</language>
+			<language type="he">Hebrew Iyápi</language>
+			<language type="hi">Hindi Iyápi</language>
+			<language type="hr">Croatian Iyápi</language>
+			<language type="ht">Haiti Iyápi</language>
+			<language type="hu">Hungary Iyápi</language>
+			<language type="hy">Armenia Iyápi</language>
+			<language type="id">Indonesia Iyápi</language>
+			<language type="ig">Igbo Iyápi</language>
+			<language type="inh">Ingush Iyápi</language>
+			<language type="is">Iceland Iyápi</language>
+			<language type="it">Italia Iyápi</language>
+			<language type="ja">Kisúŋla Iyápi</language>
+			<language type="jv">Java Iyápi</language>
+			<language type="ka">Georia Iyápi</language>
+			<language type="kaa">Kara-Kalpak Iyápi</language>
+			<language type="kbd">Kabardian Iyápi</language>
+			<language type="kk">Kazakh Iyápi</language>
+			<language type="km">Khmer Iyápi</language>
+			<language type="kn">Kannada Iyápi</language>
+			<language type="ko">Korea Iyápi</language>
+			<language type="ks">Kashmir Iyápi</language>
+			<language type="ku">Kurd Iyápi</language>
+			<language type="ky">Kirghiz Iyápi</language>
+			<language type="la">Latin Iyápi</language>
+			<language type="lah">Lahnda Iyápi</language>
+			<language type="lb">Luxembourg Iyápi</language>
+			<language type="lkt">Lakȟólʼiyapi</language>
+			<language type="lo">Lao Iyápi</language>
+			<language type="lt">Lithuania Iyápilt</language>
+			<language type="lus">Mizo Iyápi</language>
+			<language type="lv">Latvia Iyápi</language>
+			<language type="mg">Malagasy Iyápi</language>
+			<language type="mi">Maori Iyápi</language>
+			<language type="mk">Macedonia Iyápi</language>
+			<language type="ml">Malayalam Iyápi</language>
+			<language type="mni">Namipuri Iyápi</language>
+			<language type="mr">Marathi Iyápi</language>
+			<language type="ms">Malay Iyápi</language>
+			<language type="mt">Maltese Iyápi</language>
+			<language type="my">Burmese Iyápi</language>
+			<language type="ne">Nepal Iyápi</language>
+			<language type="nl">Dutch Iyápi</language>
+			<language type="nl_BE">Flemish Iyápi</language>
+			<language type="nv">Šináglegleǧa Iyápi</language>
+			<language type="oj">Ȟaȟátȟuŋwaŋ Iyápi</language>
+			<language type="or">Oriya Iyápi</language>
+			<language type="pa">Punjabi Iyápi</language>
+			<language type="pl">Polish Iyápi</language>
+			<language type="ps">Pashto Iyápi</language>
+			<language type="pt">Portuguese Iyápi</language>
+			<language type="qu">Quechua Iyápi</language>
+			<language type="rm">Romansh Iyápi</language>
+			<language type="ro">Romanian Iyápi</language>
+			<language type="ru">Russia Iyápi</language>
+			<language type="sa">Sanskrit Iyápi</language>
+			<language type="sd">Sindhi Iyápi</language>
+			<language type="si">Sinhala Iyápi</language>
+			<language type="sk">Slovak Iyápi</language>
+			<language type="sl">Slovenian Iyápi</language>
+			<language type="so">Somali Iyápi</language>
+			<language type="sq">Albanian Iyápi</language>
+			<language type="sr">Serbia Iyápi</language>
+			<language type="su">Sundanese Iyápi</language>
+			<language type="sv">Swedish Iyápi</language>
+			<language type="sw">Swahili Iyápi</language>
+			<language type="swb">Comonian Iyápi</language>
+			<language type="ta">Tamil Iyápi</language>
+			<language type="te">Telugu Iyápi</language>
+			<language type="tg">Tajik Iyápi</language>
+			<language type="th">Thai Iyápi</language>
+			<language type="ti">Tigrinya Iyápi</language>
+			<language type="tk">Turkmen Iyápi</language>
+			<language type="to">Tongan Iyápi</language>
+			<language type="tr">Turkish Iyápi</language>
+			<language type="tt">Tatar Iyápi</language>
+			<language type="ug">Uyghur Iyápi</language>
+			<language type="uk">Ukrain Iyápi</language>
+			<language type="und">Tukté iyápi tȟaŋíŋ šni</language>
+			<language type="ur">Urdu Iyápi</language>
+			<language type="uz">Uzbek Iyápi</language>
+			<language type="vi">Vietnamese Iyápi</language>
+			<language type="wo">Wolof Iyápi</language>
+			<language type="xh">Xhosa Iyápi</language>
+			<language type="yo">Yoruba Iyápi</language>
+			<language type="zh">Pȟečhókaŋ Háŋska Iyápi</language>
+			<language type="zh_Hans">Pȟečhókaŋ Háŋska Iyápi Ikčéka</language>
+			<language type="zh_Hant">Pȟečhókaŋ Háŋska Iyápi Ȟče</language>
+			<language type="zu">Zulu Iyápi</language>
+			<language type="zza">Zaza Iyápi</language>
+		</languages>
+		<territories>
+			<territory type="001">Makȟásitomni</territory>
+			<territory type="002">Hásapa Makȟáwita</territory>
+			<territory type="019">Khéya Wíta</territory>
+			<territory type="142">Hazíla Makȟáwita</territory>
+			<territory type="150">Wašíču Makȟáwita</territory>
+			<territory type="CA">Uŋčíyapi Makȟóčhe</territory>
+			<territory type="CN">Pȟečhókaŋhaŋska Makȟóčhe</territory>
+			<territory type="DE">Iyášiča Makȟóčhe</territory>
+			<territory type="ES">Spayólaȟče Makȟóčhe</territory>
+			<territory type="JP">Kisúŋla Makȟóčhe</territory>
+			<territory type="MX">Spayóla Makȟóčhe</territory>
+			<territory type="US">Mílahaŋska Tȟamákȟočhe</territory>
+		</territories>
+		<measurementSystemNames>
+			<measurementSystemName type="US">US</measurementSystemName>
+		</measurementSystemNames>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a á {aŋ} b č {čh} {čʼ} e é g ǧ h ȟ i í {iŋ} k {kh} {kȟ} {kʼ} l m n ŋ o ó p {ph} {pȟ} {pʼ} s š t {th} {tȟ} {tʼ} u ú {uŋ} w y z ž ʼ]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[c d f {ȟʼ} j q r {sʼ} {šʼ} v x]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B Č E G Ǧ H Ȟ I K L M N Ŋ O P S Š T U W Y Z Ž]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+		<exemplarCharacters type="punctuation">[\- ‐ ‑ – — , ; \: ! ? . &quot; “ ” ( ) \[ \] @ * / \&amp; #]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern draft="unconfirmed">EEEE, MMMM d, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern draft="unconfirmed">MMMM d, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern draft="unconfirmed">MMM d, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="unconfirmed">M/d/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="wide">
+							<month type="1">Wiótheȟika Wí</month>
+							<month type="2">Thiyóȟeyuŋka Wí</month>
+							<month type="3">Ištáwičhayazaŋ Wí</month>
+							<month type="4">Pȟežítȟo Wí</month>
+							<month type="5">Čhaŋwápetȟo Wí</month>
+							<month type="6">Wípazukȟa-wašté Wí</month>
+							<month type="7">Čhaŋpȟásapa Wí</month>
+							<month type="8">Wasútȟuŋ Wí</month>
+							<month type="9">Čhaŋwápeǧi Wí</month>
+							<month type="10">Čhaŋwápe-kasná Wí</month>
+							<month type="11">Waníyetu Wí</month>
+							<month type="12">Tȟahékapšuŋ Wí</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="narrow">
+							<day type="sun">A</day>
+							<day type="mon">W</day>
+							<day type="tue">N</day>
+							<day type="wed">Y</day>
+							<day type="thu">T</day>
+							<day type="fri">Z</day>
+							<day type="sat">O</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Aŋpétuwakȟaŋ</day>
+							<day type="mon">Aŋpétuwaŋži</day>
+							<day type="tue">Aŋpétunuŋpa</day>
+							<day type="wed">Aŋpétuyamni</day>
+							<day type="thu">Aŋpétutopa</day>
+							<day type="fri">Aŋpétuzaptaŋ</day>
+							<day type="sat">Owáŋgyužažapi</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern draft="contributed">EEEE, MMMM d, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern draft="contributed">MMMM d, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern draft="contributed">MMM d, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="contributed">M/d/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern draft="contributed">h:mm:ss a zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern draft="contributed">h:mm:ss a z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern draft="contributed">h:mm:ss a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern draft="contributed">h:mm a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="year">
+				<displayName>Ómakȟa</displayName>
+				<relative type="-1">Ómakȟa kʼuŋ héhaŋ</relative>
+				<relative type="0">Lé ómakȟa kiŋ</relative>
+				<relative type="1">Tȟokáta ómakȟa kiŋháŋ</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">Letáŋhaŋ ómakȟa {0} kiŋháŋ</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">Hékta ómakȟa {0} kʼuŋ héhaŋ</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month">
+				<displayName>Wí</displayName>
+				<relative type="-1">Wí kʼuŋ héhaŋ</relative>
+				<relative type="0">Lé wí kiŋ</relative>
+				<relative type="1">Tȟokáta wí kiŋháŋ</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">Letáŋhaŋ wíyawapi {0} kiŋháŋ</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">Hékta wíyawapi {0} kʼuŋ héhaŋ</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week">
+				<displayName>Okó</displayName>
+				<relative type="-1">Okó kʼuŋ héhaŋ</relative>
+				<relative type="0">Lé okó kiŋ</relative>
+				<relative type="1">Tȟokáta okó kiŋháŋ</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">Letáŋhaŋ okó {0} kiŋháŋ</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">Hékta okó {0} kʼuŋ héhaŋ</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day">
+				<displayName>Aŋpétu</displayName>
+				<relative type="-1">Ȟtálehaŋ</relative>
+				<relative type="0">Lé aŋpétu kiŋ</relative>
+				<relative type="1">Híŋhaŋni kiŋháŋ</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">Letáŋhaŋ {0}-čháŋ kiŋháŋ</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">Hékta {0}-čháŋ k’uŋ héhaŋ</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="weekday">
+				<displayName>Okó-aŋpétu</displayName>
+			</field>
+			<field type="sun">
+				<relative type="-1">Aŋpétuwakȟáŋ kʼuŋ héhaŋ</relative>
+				<relative type="0">Aŋpétuwakȟáŋ kiŋ lé</relative>
+				<relative type="1">Aŋpétuwakȟáŋ kiŋháŋ</relative>
+			</field>
+			<field type="mon">
+				<relative type="-1">Aŋpétutȟokahe kʼuŋ héhaŋ</relative>
+				<relative type="0">Aŋpétutȟokahe kiŋ lé</relative>
+				<relative type="1">Aŋpétutȟokahe kiŋháŋ</relative>
+			</field>
+			<field type="tue">
+				<relative type="-1">Aŋpétunuŋpa kʼuŋ héhaŋ</relative>
+				<relative type="0">Aŋpétunuŋpa kiŋ lé</relative>
+				<relative type="1">Aŋpétunuŋpa kiŋháŋ</relative>
+			</field>
+			<field type="wed">
+				<relative type="-1">Aŋpétuyamni kʼuŋ héhaŋ</relative>
+				<relative type="0">Aŋpétuyamni kiŋ lé</relative>
+				<relative type="1">Aŋpétuyamni kiŋháŋ</relative>
+			</field>
+			<field type="thu">
+				<relative type="-1">Aŋpétutopa kʼuŋ héhaŋ</relative>
+				<relative type="0">Aŋpétutopa kiŋ lé</relative>
+				<relative type="1">Aŋpétutopa kiŋháŋ</relative>
+			</field>
+			<field type="fri">
+				<relative type="-1">Aŋpétuzaŋptaŋ kʼuŋ héhaŋ</relative>
+				<relative type="0">Apétuzaptaŋ kiŋ lé</relative>
+				<relative type="1">Aŋpétuzaptaŋ kiŋháŋ</relative>
+			</field>
+			<field type="sat">
+				<relative type="-1">Owáŋkayužažapi kʼuŋ héhaŋ</relative>
+				<relative type="0">Owáŋkayužažapi kiŋ lé</relative>
+				<relative type="1">Owáŋkayužažapi kiŋháŋ</relative>
+			</field>
+			<field type="hour">
+				<displayName>Owápȟe</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">Letáŋhaŋ owápȟe {0} kiŋháŋ</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">Hékta owápȟe {0} kʼuŋ héhaŋ</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute">
+				<displayName>Owápȟe oȟʼáŋkȟo</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">Letáŋhaŋ oȟ’áŋkȟo {0} kiŋháŋ</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">Hékta oȟ’áŋkȟo {0} k’uŋ héhaŋ</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second">
+				<displayName>Okpí</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="other">Letáŋhaŋ okpí {0} kiŋháŋ</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">Hékta okpí {0} k’uŋ héhaŋ</relativeTimePattern>
+				</relativeTime>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<decimal draft="unconfirmed">.</decimal>
+			<group draft="unconfirmed">,</group>
+			<list draft="unconfirmed">;</list>
+			<percentSign draft="unconfirmed">%</percentSign>
+			<plusSign draft="unconfirmed">+</plusSign>
+			<minusSign draft="unconfirmed">-</minusSign>
+			<exponential draft="unconfirmed">E</exponential>
+			<perMille draft="unconfirmed">‰</perMille>
+			<infinity draft="unconfirmed">∞</infinity>
+			<nan draft="unconfirmed">NaN</nan>
+		</symbols>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="other" draft="provisional">¤ 0K</pattern>
+					<pattern type="10000" count="other" draft="provisional">¤ 00K</pattern>
+					<pattern type="100000" count="other" draft="provisional">¤ 000K</pattern>
+					<pattern type="1000000" count="other" draft="provisional">¤ 0M</pattern>
+					<pattern type="10000000" count="other" draft="provisional">¤ 00M</pattern>
+					<pattern type="100000000" count="other" draft="provisional">¤ 000M</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">¤ 0G</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">¤ 00G</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">¤ 000G</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">¤ 0T</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">¤ 00T</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">¤ 000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="USD">
+				<symbol>$</symbol>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="duration-year">
+				<displayName draft="provisional">ómakȟa</displayName>
+				<unitPattern count="other">ómakȟa {0}</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="provisional">Wíyawapi</displayName>
+				<unitPattern count="other">Wíyawapi {0}</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName draft="provisional">okó</displayName>
+				<unitPattern count="other">okó {0}</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="provisional">-čháŋ</displayName>
+				<unitPattern count="other">{0}-čháŋ</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName draft="provisional">Owápȟe</displayName>
+				<unitPattern count="other">Owápȟe {0}</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName draft="provisional">Okpí</displayName>
+				<unitPattern count="other">Okpí {0}</unitPattern>
+			</unit>
+			<unit type="length-mile">
+				<displayName draft="provisional">makhíyutȟapi</displayName>
+				<unitPattern count="other">makhíyutȟapi {0}</unitPattern>
+			</unit>
+			<unit type="length-yard">
+				<displayName draft="provisional">čhaéglepi</displayName>
+				<unitPattern count="other">čhaéglepi {0}</unitPattern>
+			</unit>
+			<unit type="length-foot">
+				<displayName draft="provisional">siíyutȟapi</displayName>
+				<unitPattern count="other">siíyutȟapi {0}</unitPattern>
+			</unit>
+			<unit type="length-inch">
+				<displayName draft="provisional">oíyutȟe čísčila</displayName>
+				<unitPattern count="other">oíyutȟe čísčila {0}</unitPattern>
+			</unit>
+			<unit type="mass-pound">
+				<displayName draft="provisional">tkeíyutȟapi</displayName>
+				<unitPattern count="other">tkeíyutȟapi {0}</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="duration-year">
+				<displayName draft="provisional">ómakȟa</displayName>
+				<unitPattern count="other">ómakȟa {0}</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="provisional">Wíyawapi</displayName>
+				<unitPattern count="other">Wíyawapi {0}</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName draft="provisional">okó</displayName>
+				<unitPattern count="other">okó {0}</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="provisional">-čháŋ</displayName>
+				<unitPattern count="other">{0}-čháŋ</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName draft="provisional">Owápȟe</displayName>
+				<unitPattern count="other">Owápȟe {0}</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName draft="provisional">Okpí</displayName>
+				<unitPattern count="other">Okpí {0}</unitPattern>
+			</unit>
+			<unit type="length-mile">
+				<displayName draft="provisional">makhíyutȟapi</displayName>
+				<unitPattern count="other">makhíyutȟapi {0}</unitPattern>
+			</unit>
+			<unit type="length-yard">
+				<displayName draft="provisional">čhaéglepi</displayName>
+				<unitPattern count="other">čhaéglepi {0}</unitPattern>
+			</unit>
+			<unit type="length-foot">
+				<displayName draft="provisional">siíyutȟapi</displayName>
+				<unitPattern count="other">siíyutȟapi {0}</unitPattern>
+			</unit>
+			<unit type="length-inch">
+				<displayName draft="provisional">oíyutȟe čísčila</displayName>
+				<unitPattern count="other">oíyutȟe čísčila {0}</unitPattern>
+			</unit>
+			<unit type="mass-pound">
+				<displayName draft="provisional">tkeíyutȟapi</displayName>
+				<unitPattern count="other">tkeíyutȟapi {0}</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="narrow">
+			<unit type="duration-year">
+				<unitPattern count="other">ómakȟa {0}</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<unitPattern count="other">Wí {0}</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<unitPattern count="other">okó {0}</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<unitPattern count="other">{0}-čháŋ</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<unitPattern count="other">Owápȟe {0}</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<unitPattern count="other">Okpí {0}</unitPattern>
+			</unit>
+			<unit type="length-mile">
+				<unitPattern count="other">{0} makh</unitPattern>
+			</unit>
+			<unit type="length-yard">
+				<unitPattern count="other">čhaéglepi {0}</unitPattern>
+			</unit>
+			<unit type="length-foot">
+				<unitPattern count="other">siíyutȟapi {0}</unitPattern>
+			</unit>
+			<unit type="length-inch">
+				<unitPattern count="other">{0}″</unitPattern>
+			</unit>
+			<unit type="mass-pound">
+				<unitPattern count="other">{0}#</unitPattern>
+			</unit>
+			<unit type="temperature-celsius">
+				<unitPattern count="other">{0}°C</unitPattern>
+			</unit>
+			<unit type="temperature-fahrenheit">
+				<unitPattern count="other">{0}°</unitPattern>
+			</unit>
+		</unitLength>
+	</units>
+</ldml>

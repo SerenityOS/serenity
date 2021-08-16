@@ -1,0 +1,3 @@
+T6862608a.java:19:33: compiler.err.cant.apply.symbol: kindname.method, compound, java.lang.Iterable<? extends java.util.Comparator<? super T>>, java.util.List<java.util.Comparator<?>>, kindname.class, T6862608a, (compiler.misc.infer.no.conforming.assignment.exists: T, (compiler.misc.inconvertible.types: java.util.List<java.util.Comparator<?>>, java.lang.Iterable<? extends java.util.Comparator<? super T>>))
+- compiler.misc.where.description.typevar: T,{(compiler.misc.where.typevar: T, java.lang.Object, kindname.method, <T>compound(java.lang.Iterable<? extends java.util.Comparator<? super T>>))}
+1 error

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:h="http://www.w3.org/1999/xhtml"
+            xmlns:sn="http://openjdk_java_net/test.xml"
+            targetNamespace="http://openjdk_java_net/test.xml" elementFormDefault="qualified">
+    <xsd:element name="test" type="sn:object">
+        <xsd:unique name="testunique">
+            <xsd:selector xpath="sn:innerObject"/>
+            <xsd:field xpath="sn:innerInnerObject/@test-unique-attribute"/>
+        </xsd:unique>
+    </xsd:element>
+    <xsd:complexType name="object">
+        <xsd:sequence>
+            <xsd:element name="innerObject" maxOccurs="unbounded" type="sn:testType" />
+        </xsd:sequence>
+    </xsd:complexType>
+    <xsd:complexType name="testType">
+        <xsd:sequence>
+            <xsd:element name="innerInnerObject" maxOccurs="unbounded" type="sn:testObjectType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <xsd:complexType name="testObjectType">
+        <xsd:attribute use="optional" name="test-unique-attribute" type="xsd:int" />
+    </xsd:complexType>
+</xsd:schema>

@@ -1,0 +1,155 @@
+#
+# Copyright (c) 2016, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+$(eval $(call IncludeCustomExtension, hotspot/lib/CompileGtest.gmk))
+
+GTEST_TEST_SRC += $(TOPDIR)/test/hotspot/gtest
+GTEST_LAUNCHER_SRC := $(TOPDIR)/test/hotspot/gtest/gtestLauncher.cpp
+
+# On Windows, there are no internal debug symbols so must set copying to true
+# to get any at all.
+ifeq ($(call isTargetOs, windows), true)
+  GTEST_COPY_DEBUG_SYMBOLS := true
+else
+  GTEST_COPY_DEBUG_SYMBOLS := false
+endif
+
+################################################################################
+
+
+$(eval $(call SetupJdkLibrary, BUILD_GTEST_LIBGTEST, \
+    NAME := gtest, \
+    TYPE := STATIC_LIBRARY, \
+    TOOLCHAIN := TOOLCHAIN_LINK_CXX, \
+    OUTPUT_DIR := $(JVM_OUTPUTDIR)/libgtest, \
+    OBJECT_DIR := $(JVM_OUTPUTDIR)/libgtest/objs, \
+    SRC := \
+        $(GTEST_FRAMEWORK_SRC)/googletest/src \
+        $(GTEST_FRAMEWORK_SRC)/googlemock/src, \
+    INCLUDE_FILES := gtest-all.cc gmock-all.cc, \
+    DISABLED_WARNINGS_gcc := undef unused-result format-nonliteral, \
+    DISABLED_WARNINGS_clang := undef unused-result format-nonliteral, \
+    CFLAGS := $(JVM_CFLAGS) \
+        -I$(GTEST_FRAMEWORK_SRC)/googletest \
+        -I$(GTEST_FRAMEWORK_SRC)/googletest/include \
+        -I$(GTEST_FRAMEWORK_SRC)/googlemock \
+        -I$(GTEST_FRAMEWORK_SRC)/googlemock/include, \
+    CFLAGS_windows := -EHsc, \
+    CFLAGS_macosx := -DGTEST_OS_MAC=1, \
+    OPTIMIZATION := $(JVM_OPTIMIZATION), \
+    COPY_DEBUG_SYMBOLS := $(GTEST_COPY_DEBUG_SYMBOLS), \
+    ZIP_EXTERNAL_DEBUG_SYMBOLS := false, \
+    STRIP_SYMBOLS := false, \
+))
+
+TARGETS += $(BUILD_GTEST_LIBGTEST)
+
+################################################################################
+
+ifeq ($(call isTargetOs, windows), true)
+  GTEST_JVM_MAPFILE := $(JVM_MAPFILE)
+else
+  GTEST_JVM_MAPFILE := $(JVM_OUTPUTDIR)/gtest/mapfile
+
+  $(JVM_OUTPUTDIR)/gtest/symbols: $(JVM_OUTPUTDIR)/symbols
+	$(call MakeDir, $(@D))
+	( $(CAT) $< ; echo "runUnitTests" ) > $@
+
+  $(GTEST_JVM_MAPFILE): $(JVM_OUTPUTDIR)/gtest/symbols
+	$(call create-mapfile)
+endif
+
+# Additional disabled warnings are due to code in the test source.
+
+$(eval $(call SetupJdkLibrary, BUILD_GTEST_LIBJVM, \
+    NAME := jvm, \
+    TOOLCHAIN := TOOLCHAIN_LINK_CXX, \
+    OUTPUT_DIR := $(JVM_OUTPUTDIR)/gtest, \
+    OBJECT_DIR := $(JVM_OUTPUTDIR)/gtest/objs, \
+    SRC := $(GTEST_TEST_SRC), \
+    EXCLUDES := $(JVM_EXCLUDES), \
+    EXCLUDE_FILES := gtestLauncher.cpp, \
+    EXCLUDE_PATTERNS := $(JVM_EXCLUDE_PATTERNS), \
+    EXTRA_OBJECT_FILES := $(filter-out %/operator_new$(OBJ_SUFFIX), \
+        $(BUILD_LIBJVM_ALL_OBJS)), \
+    CFLAGS := $(JVM_CFLAGS) \
+        -I$(GTEST_FRAMEWORK_SRC)/googletest/include \
+        -I$(GTEST_FRAMEWORK_SRC)/googlemock/include \
+        $(addprefix -I,$(GTEST_TEST_SRC)), \
+    CFLAGS_windows := -EHsc, \
+    CFLAGS_macosx := -DGTEST_OS_MAC=1, \
+    DISABLED_WARNINGS_gcc := $(DISABLED_WARNINGS_gcc) \
+        undef, \
+    DISABLED_WARNINGS_clang := $(DISABLED_WARNINGS_clang) \
+        undef switch format-nonliteral tautological-undefined-compare \
+        self-assign-overloaded, \
+    DISABLED_WARNINGS_microsoft := $(DISABLED_WARNINGS_microsoft), \
+    LDFLAGS := $(JVM_LDFLAGS), \
+    LDFLAGS_unix := -L$(JVM_OUTPUTDIR)/libgtest, \
+    LIBS := $(JVM_LIBS), \
+    LIBS_unix := -lgtest, \
+    LIBS_windows := $(JVM_OUTPUTDIR)/libgtest/gtest.lib, \
+    OPTIMIZATION := $(JVM_OPTIMIZATION), \
+    MAPFILE := $(GTEST_JVM_MAPFILE), \
+    USE_MAPFILE_FOR_SYMBOLS := true, \
+    COPY_DEBUG_SYMBOLS := $(GTEST_COPY_DEBUG_SYMBOLS), \
+    ZIP_EXTERNAL_DEBUG_SYMBOLS := false, \
+    STRIP_SYMBOLS := false, \
+    PRECOMPILED_HEADER := $(JVM_PRECOMPILED_HEADER), \
+    PRECOMPILED_HEADER_EXCLUDE := gtestMain.cpp, \
+))
+
+$(BUILD_GTEST_LIBJVM) : $(BUILD_GTEST_LIBGTEST)
+
+TARGETS += $(BUILD_GTEST_LIBJVM)
+
+################################################################################
+
+$(eval $(call SetupJdkExecutable, BUILD_GTEST_LAUNCHER, \
+    TOOLCHAIN := TOOLCHAIN_LINK_CXX, \
+    NAME := gtestLauncher, \
+    TYPE := EXECUTABLE, \
+    OUTPUT_DIR := $(JVM_OUTPUTDIR)/gtest, \
+    EXTRA_FILES := $(GTEST_LAUNCHER_SRC), \
+    OBJECT_DIR := $(JVM_OUTPUTDIR)/gtest/launcher-objs, \
+    CFLAGS := $(JVM_CFLAGS) \
+        -I$(GTEST_FRAMEWORK_SRC)/googletest \
+        -I$(GTEST_FRAMEWORK_SRC)/googletest/include \
+        -I$(GTEST_FRAMEWORK_SRC)/googlemock \
+        -I$(GTEST_FRAMEWORK_SRC)/googlemock/include, \
+    LDFLAGS := $(LDFLAGS_JDKEXE), \
+    LDFLAGS_unix := -L$(JVM_OUTPUTDIR)/gtest $(call SET_SHARED_LIBRARY_ORIGIN), \
+    LIBS_linux := $(LIBCXX), \
+    LIBS_unix := -ljvm, \
+    LIBS_windows := $(JVM_OUTPUTDIR)/gtest/objs/jvm.lib, \
+    COPY_DEBUG_SYMBOLS := $(GTEST_COPY_DEBUG_SYMBOLS), \
+    ZIP_EXTERNAL_DEBUG_SYMBOLS := false, \
+))
+
+$(BUILD_GTEST_LAUNCHER): $(BUILD_GTEST_LIBJVM)
+
+TARGETS += $(BUILD_GTEST_LAUNCHER)
+
+################################################################################

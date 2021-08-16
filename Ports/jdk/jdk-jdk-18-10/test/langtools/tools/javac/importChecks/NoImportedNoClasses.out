@@ -1,0 +1,2 @@
+NoImportedNoClasses.java:10:1: compiler.err.cant.resolve.location: kindname.static, UNKNOWN, null, null, (compiler.misc.location: kindname.interface, java.lang.Runnable, null)
+1 error

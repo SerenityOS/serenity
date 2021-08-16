@@ -1,0 +1,4 @@
+grant {
+    // This permission is required for the test to run to completion
+    permission java.security.SecurityPermission "authProvider.SunMSCAPI";
+};

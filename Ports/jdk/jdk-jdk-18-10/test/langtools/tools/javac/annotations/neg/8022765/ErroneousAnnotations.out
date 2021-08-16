@@ -1,0 +1,9 @@
+ErroneousAnnotations.java:24:9: compiler.err.cant.resolve.location: kindname.class, Undefined, , , (compiler.misc.location: kindname.annotation, ErroneousAnnotations.Annot, null)
+ErroneousAnnotations.java:8:6: compiler.err.cant.resolve.location: kindname.class, Undefined, , , (compiler.misc.location: kindname.class, ErroneousAnnotations, null)
+ErroneousAnnotations.java:10:6: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.String, java.lang.annotation.Annotation)
+ErroneousAnnotations.java:12:13: compiler.err.cant.resolve.location: kindname.class, Undefined, , , (compiler.misc.location: kindname.class, ErroneousAnnotations, null)
+ErroneousAnnotations.java:16:16: compiler.err.annotation.not.valid.for.type: int
+ErroneousAnnotations.java:16:17: compiler.err.cant.resolve.location: kindname.class, Undefined, , , (compiler.misc.location: kindname.class, ErroneousAnnotations, null)
+ErroneousAnnotations.java:18:16: compiler.err.annotation.not.valid.for.type: int
+ErroneousAnnotations.java:20:21: compiler.err.not.annotation.type: ErroneousAnnotations.PrimitiveImpl
+8 errors

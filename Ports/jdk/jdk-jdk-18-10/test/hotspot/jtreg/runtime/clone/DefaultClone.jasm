@@ -1,0 +1,145 @@
+/*
+ * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+/*
+ * @test
+ * @bug 8154587
+ * @summary Check that a default method named clone() does not get masked by
+ *          java.lang.Object.clone() during resolution.
+ * @compile DefaultClone.jasm
+ * @run main DefaultClone
+ */
+
+// The below .jasm code implements the following java code:
+//
+// public class DefaultClone {
+//
+//     interface I1 {
+//         default Object clone() {
+//             return "In I1's clone()";
+//         }
+//     }
+// 
+//
+//     interface I2 extends I1 { }
+// 
+//
+//     static class C implements I2 {
+//         public Object clone() {
+//             return "In C's clone()";
+//         }
+//     }
+// 
+// 
+//     static Object test(I2 i) { return i.clone(); }
+//
+//     public static void main(String[] args) {
+//         String s = (String)test(new C());
+//         if (!s.equals("In C's clone()")) {
+//             throw new RuntimeException("Wrong clone() called");
+//         }
+//     }
+// }
+
+
+interface  DefaultClone$I1 version 53:0 {
+
+    public Method clone:"()Ljava/lang/Object;" stack 1 locals 1 {
+        ldc    String "In I1\'s clone()";
+        areturn;
+    }
+
+    static abstract interface InnerClass I1=class DefaultClone$I1 of class DefaultClone;
+
+} // end Class DefaultClone$I1
+
+
+
+interface  DefaultClone$I2 implements DefaultClone$I1 version 53:0 {
+
+    static abstract interface InnerClass I2=class DefaultClone$I2 of class DefaultClone;
+    static abstract interface InnerClass I1=class DefaultClone$I1 of class DefaultClone;
+
+} // end Class DefaultClone$I2
+
+
+super class DefaultClone$C implements DefaultClone$I2 version 53:0 {
+
+    Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial    Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    public Method clone:"()Ljava/lang/Object;" stack 1 locals 1 {
+        ldc    String "In C\'s clone()";
+        areturn;
+    }
+
+    static InnerClass C=class DefaultClone$C of class DefaultClone;
+    static abstract interface InnerClass I2=class DefaultClone$I2 of class DefaultClone;
+
+} // end Class DefaultClone$C
+
+
+super public class DefaultClone version 53:0 {
+
+    public Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial    Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    static Method test:"(LDefaultClone$I2;)Ljava/lang/Object;" stack 1 locals 1 {
+        aload_0;
+        invokeinterface    InterfaceMethod DefaultClone$I2.clone:"()Ljava/lang/Object;",  1;
+        areturn;
+    }
+
+    public static Method main:"([Ljava/lang/String;)V" stack 3 locals 2 {
+        new    class DefaultClone$C;
+        dup;
+        invokespecial    Method DefaultClone$C."<init>":"()V";
+        invokestatic    Method test:"(LDefaultClone$I2;)Ljava/lang/Object;";
+        checkcast    class java/lang/String;
+        astore_1;
+        aload_1;
+        ldc    String "In C\'s clone()";
+        invokevirtual    Method java/lang/String.equals:"(Ljava/lang/Object;)Z";
+        ifne    L33;
+        new    class java/lang/RuntimeException;
+        dup;
+        ldc    String "Wrong clone() called";
+        invokespecial    Method java/lang/RuntimeException."<init>":"(Ljava/lang/String;)V";
+        athrow;
+    L33:    stack_frame_type append;
+        locals_map class java/lang/String;
+        return;
+    }
+
+    static InnerClass C=class DefaultClone$C of class DefaultClone;
+    static abstract interface InnerClass I2=class DefaultClone$I2 of class DefaultClone;
+    static abstract interface InnerClass I1=class DefaultClone$I1 of class DefaultClone;
+
+} // end Class DefaultClone

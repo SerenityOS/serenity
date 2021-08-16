@@ -1,0 +1,28 @@
+UsesTest.java:13: error: invalid use of @uses
+ * @uses NotFound
+   ^
+UsesTest.java:13: error: service-type not found
+ * @uses NotFound
+   ^
+UsesTest.java:13: error: reference not found
+ * @uses NotFound
+         ^
+UsesTest.java:19: error: invalid use of @uses
+     * @uses NotFound Test description.
+       ^
+UsesTest.java:19: error: service-type not found
+     * @uses NotFound Test description.
+       ^
+UsesTest.java:19: error: reference not found
+     * @uses NotFound Test description.
+             ^
+UsesTest.java:26: error: invalid use of @uses
+     * @uses NotFound Test description.
+       ^
+UsesTest.java:26: error: service-type not found
+     * @uses NotFound Test description.
+       ^
+UsesTest.java:26: error: reference not found
+     * @uses NotFound Test description.
+             ^
+9 errors

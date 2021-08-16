@@ -1,0 +1,8 @@
+AnnotatedClassExpr.java:12:29: compiler.err.no.annotations.on.dot.class
+AnnotatedClassExpr.java:13:27: compiler.err.no.annotations.on.dot.class
+AnnotatedClassExpr.java:14:27: compiler.err.no.annotations.on.dot.class
+AnnotatedClassExpr.java:15:30: compiler.err.no.annotations.on.dot.class
+AnnotatedClassExpr.java:16:41: compiler.err.no.annotations.on.dot.class
+AnnotatedClassExpr.java:17:44: compiler.err.no.annotations.on.dot.class
+AnnotatedClassExpr.java:18:37: compiler.err.no.annotations.on.dot.class
+7 errors

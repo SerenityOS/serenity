@@ -1,0 +1,90 @@
+#
+# Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include LauncherCommon.gmk
+
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, modules/java.base/Launcher.gmk))
+
+JAVA_VERSION_INFO_RESOURCE := $(TOPDIR)/src/java.base/windows/native/launcher/java.rc
+
+JAVA_RCFLAGS ?= -I$(TOPDIR)/src/java.base/windows/native/launcher/icons
+
+################################################################################
+
+$(eval $(call SetupBuildLauncher, java, \
+    CFLAGS := -DEXPAND_CLASSPATH_WILDCARDS -DENABLE_ARG_FILES, \
+    EXTRA_RCFLAGS := $(JAVA_RCFLAGS), \
+    VERSION_INFO_RESOURCE := $(JAVA_VERSION_INFO_RESOURCE), \
+    OPTIMIZATION := HIGH, \
+))
+
+ifeq ($(call isTargetOs, windows), true)
+  $(eval $(call SetupBuildLauncher, javaw, \
+      CFLAGS := -DJAVAW -DEXPAND_CLASSPATH_WILDCARDS -DENABLE_ARG_FILES, \
+      EXTRA_RCFLAGS := $(JAVA_RCFLAGS), \
+      VERSION_INFO_RESOURCE := $(JAVA_VERSION_INFO_RESOURCE), \
+  ))
+endif
+
+$(eval $(call SetupBuildLauncher, keytool, \
+    MAIN_CLASS := sun.security.tools.keytool.Main, \
+))
+
+################################################################################
+
+ifeq ($(call isTargetOs, linux), true)
+  $(eval $(call SetupJdkExecutable, BUILD_JEXEC, \
+      NAME := jexec, \
+      SRC := $(TOPDIR)/src/$(MODULE)/unix/native/launcher, \
+      INCLUDE_FILES := jexec.c, \
+      OPTIMIZATION := LOW, \
+      CFLAGS := $(CFLAGS_JDKEXE) \
+          -I$(TOPDIR)/src/$(MODULE)/share/native/libjli, \
+      CFLAGS_linux := -fPIC, \
+      LDFLAGS := $(LDFLAGS_JDKEXE), \
+      OUTPUT_DIR := $(SUPPORT_OUTPUTDIR)/modules_libs/$(MODULE), \
+  ))
+
+  TARGETS += $(BUILD_JEXEC)
+endif
+
+################################################################################
+
+ifeq ($(call isTargetOs, macosx aix linux), true)
+  $(eval $(call SetupJdkExecutable, BUILD_JSPAWNHELPER, \
+      NAME := jspawnhelper, \
+      SRC := $(TOPDIR)/src/$(MODULE)/unix/native/jspawnhelper, \
+      OPTIMIZATION := LOW, \
+      CFLAGS := $(CFLAGS_JDKEXE) -I$(TOPDIR)/src/$(MODULE)/unix/native/libjava, \
+      EXTRA_OBJECT_FILES := $(SUPPORT_OUTPUTDIR)/native/$(MODULE)/libjava/childproc.o, \
+      LDFLAGS := $(LDFLAGS_JDKEXE), \
+      OUTPUT_DIR := $(SUPPORT_OUTPUTDIR)/modules_libs/$(MODULE), \
+  ))
+
+  TARGETS += $(BUILD_JSPAWNHELPER)
+endif
+
+################################################################################

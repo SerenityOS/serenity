@@ -1,0 +1,25 @@
+This is a very rough tool for parsing -XX:+LogCompilation output.
+It's main purpose is to recreate output similar to
+-XX:+PrintCompilation -XX:+PrintInlining output from a debug JVM.  It
+requires a 1.5 JDK to build and simply typing make should build it.
+
+It produces a jar file, logc.jar, that can be run on the
+HotSpot log (by default, hotspot_pid{pid}.log) from LogCompilation output like this:
+
+  java -jar logc.jar hotspot_pid1234.log
+
+This will produce something like the normal PrintCompilation output.
+Adding the -i option with also report inlining like PrintInlining.
+
+More information about the LogCompilation output can be found at
+
+https://wiki.openjdk.java.net/display/HotSpot/LogCompilation+overview
+https://wiki.openjdk.java.net/display/HotSpot/PrintCompilation
+https://wiki.openjdk.java.net/display/HotSpot/LogCompilation+tool
+
+The project layout is now for Maven. To build the project with Maven do:
+
+  mvn clean install
+
+The build also copies the resulting target jar to ./logc.jar for easy 
+interop with the Makefile build.

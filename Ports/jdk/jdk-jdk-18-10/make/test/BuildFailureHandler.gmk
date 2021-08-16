@@ -1,0 +1,108 @@
+#
+# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+default: build
+
+include $(SPEC)
+include MakeBase.gmk
+include JavaCompilation.gmk
+include NativeCompilation.gmk
+
+TARGETS :=
+
+################################################################################
+
+FH_BASEDIR := $(TOPDIR)/test/failure_handler
+FH_SUPPORT := $(SUPPORT_OUTPUTDIR)/test/failure_handler
+FH_JAR := $(FH_SUPPORT)/jtregFailureHandler.jar
+
+JTREG_JAR := $(JT_HOME)/lib/jtreg.jar
+ifeq ($(wildcard $(JTREG_JAR)), )
+  $(error Cannot build failure handler without jtreg)
+endif
+# tools.jar is only needed if it exists in the boot jdk
+TOOLS_JAR := $(wildcard $(BOOT_JDK)/lib/tools.jar)
+
+FH_CLASSPATH := $(call PathList, $(JTREG_JAR) $(TOOLS_JAR))
+
+$(eval $(call SetupJavaCompilation, BUILD_FAILURE_HANDLER, \
+    TARGET_RELEASE := $(TARGET_RELEASE_BOOTJDK), \
+    SRC := $(FH_BASEDIR)/src/share/classes $(FH_BASEDIR)/src/share/conf, \
+    BIN := $(FH_SUPPORT)/classes, \
+    DISABLED_WARNINGS := options serial try, \
+    COPY := .properties, \
+    CLASSPATH := $(JTREG_JAR) $(TOOLS_JAR), \
+    JAR := $(FH_JAR), \
+    JAVAC_FLAGS := -XDstringConcat=inline, \
+))
+
+TARGETS += $(BUILD_FAILURE_HANDLER)
+
+################################################################################
+# Targets for building test-image.
+################################################################################
+
+# Copy to hotspot jtreg test image
+$(eval $(call SetupCopyFiles, COPY_FH, \
+    SRC := $(FH_SUPPORT), \
+    DEST := $(TEST_IMAGE_DIR)/failure_handler, \
+    FILES := $(FH_JAR) $(BUILD_LIBTIMEOUT_HANDLER), \
+))
+
+IMAGES_TARGETS += $(COPY_FH)
+
+################################################################################
+# Test the failure handler itself
+################################################################################
+#
+# Use JTREG_TEST_OPTS for test VM options
+# Use JTREG_TESTS for jtreg tests parameter
+#
+RUN_DIR := $(FH_SUPPORT)/test
+
+test:
+	$(RM) -r $(RUN_DIR)
+	$(MKDIR) -p $(RUN_DIR)
+	$(CD) $(FH_BASEDIR)/test && $(JAVA) -Dprogram=jtreg \
+	    -jar $(JT_HOME)/lib/jtreg.jar \
+	    -jdk:$(BOOT_JDK) \
+	    $(JTREG_TEST_OPTS) \
+	    -timeout:0.1 -va -retain:all \
+	    -noreport \
+	    -agentvm \
+	    -thd:$(FH_JAR) \
+	    -th:jdk.test.failurehandler.jtreg.GatherProcessInfoTimeoutHandler \
+	    -od:$(FH_JAR) \
+	    -o:jdk.test.failurehandler.jtreg.GatherDiagnosticInfoObserver \
+	    -w:$(RUN_DIR)/JTwork -r:$(RUN_DIR)/JTreport \
+	    $(if $(JTREG_TESTS), $(JTREG_TESTS), .) \
+	    || true
+
+################################################################################
+
+build: $(TARGETS)
+images: $(IMAGES_TARGETS)
+
+.PHONY: all images test

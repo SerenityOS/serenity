@@ -1,0 +1,3 @@
+MostSpecific14.java:24:9: compiler.err.ref.ambiguous: m2, kindname.method, m2(MostSpecific14.Factory<MostSpecific14.Factory<java.lang.Number>>), MostSpecific14, kindname.method, m2(MostSpecific14.ToToNumber), MostSpecific14
+MostSpecific14.java:28:9: compiler.err.ref.ambiguous: m2, kindname.method, m2(MostSpecific14.Factory<MostSpecific14.Factory<java.lang.Number>>), MostSpecific14, kindname.method, m2(MostSpecific14.ToToNumber), MostSpecific14
+2 errors

@@ -1,0 +1,1058 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="sw"/>
+		<territory type="KE"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ar_001">Kiarabu sanifu</language>
+			<language type="arq">Kiarabu cha Aljeria</language>
+			<language type="as">Kiasamisi</language>
+			<language type="chr">Kicheroki</language>
+			<language type="cu">Kislovakia cha Kanisa la Jadi</language>
+			<language type="gaa">Kiga</language>
+			<language type="grc">Kigiriki cha Kale</language>
+			<language type="gwi">Kigwichʼin</language>
+			<language type="hsb">Kisorbia cha Juu</language>
+			<language type="hup">Kihupa</language>
+			<language type="hy">Kiamenia</language>
+			<language type="inh">Kiingushi</language>
+			<language type="jbo">Kilojbani</language>
+			<language type="kac">Kikachini</language>
+			<language type="khq">Kikoyrachiini</language>
+			<language type="kkj">Kikako</language>
+			<language type="km">Kikhmeri</language>
+			<language type="kn">Kikanada</language>
+			<language type="koi">Kikomipermyak</language>
+			<language type="kru">Kikurukh</language>
+			<language type="lag">Kilangi</language>
+			<language type="lam">Kilamba</language>
+			<language type="li">Kilimbugishi</language>
+			<language type="mdf">Kimoksha</language>
+			<language type="mic">Kimi'kmak</language>
+			<language type="mk">Kimasedonia</language>
+			<language type="moh">Kimohoki</language>
+			<language type="nnh">Kiingiemboon</language>
+			<language type="nqo">Kiin’ko</language>
+			<language type="or">Kiodia</language>
+			<language type="pcm">Kipijini cha Nigeria</language>
+			<language type="ro_MD">Kimoldova cha Romania</language>
+			<language type="ses">Kikoyraborosenni</language>
+			<language type="shu">Kiarabu cha Chadi</language>
+			<language type="srn">Kisranantongo</language>
+			<language type="sw_CD">Kiswahili cha Kongo</language>
+			<language type="swb">Kikomoro</language>
+			<language type="syr">Kisiria</language>
+			<language type="tw">Kitwi</language>
+			<language type="udm">Kiudumurti</language>
+			<language type="ug">Kiuiguri</language>
+			<language type="zgh">Kitamazighati Sanifu cha Moroko</language>
+			<language type="zh" alt="menu">Kichina, Kimandarini</language>
+			<language type="zh_Hans" alt="long">Kichina cha Kimandarini Rahisi</language>
+			<language type="zh_Hant" alt="long">Kichina cha Kimandarini cha Jadi</language>
+		</languages>
+		<scripts>
+			<script type="Brai">Breli</script>
+			<script type="Ethi">Kihabeshi</script>
+			<script type="Hebr">Kihibrania</script>
+			<script type="Hira">Kihiragana</script>
+			<script type="Jamo">Kijamo</script>
+			<script type="Mymr">Kimyama</script>
+			<script type="Orya">Kiodia</script>
+			<script type="Taml">Kitamili</script>
+		</scripts>
+		<territories>
+			<territory type="202">Kusini mwa Jangwa la Sahara</territory>
+			<territory type="AF">Afghanistani</territory>
+			<territory type="AI">Anguila</territory>
+			<territory type="AQ">Antaktika</territory>
+			<territory type="AZ">Azabajani</territory>
+			<territory type="BJ">Benini</territory>
+			<territory type="BT">Bhutani</territory>
+			<territory type="BY">Belarusi</territory>
+			<territory type="CC">Visiwa vya Kokos (Keeling)</territory>
+			<territory type="CD">Kongo - Kinshasa</territory>
+			<territory type="CV">Kepuvede</territory>
+			<territory type="EA">Keuta na Melilla</territory>
+			<territory type="EC">Ekwado</territory>
+			<territory type="GA">Gaboni</territory>
+			<territory type="GL">Grinilandi</territory>
+			<territory type="GP">Gwadelupe</territory>
+			<territory type="GS">Visiwa vya Jojia ya Kusini na Sandwich ya Kusini</territory>
+			<territory type="GU">Guami</territory>
+			<territory type="HR">Kroashia</territory>
+			<territory type="IO">Himaya ya Uingereza katika Bahari Hindi</territory>
+			<territory type="JO">Yordani</territory>
+			<territory type="KY">Visiwa vya Kaimani</territory>
+			<territory type="LA">Laosi</territory>
+			<territory type="LB">Lebanoni</territory>
+			<territory type="LI">Lishenteni</territory>
+			<territory type="LS">Lesotho</territory>
+			<territory type="LU">Lasembagi</territory>
+			<territory type="LV">Lativia</territory>
+			<territory type="MA">Moroko</territory>
+			<territory type="MC">Monako</territory>
+			<territory type="MK">Masedonia</territory>
+			<territory type="MM">Myama (Burma)</territory>
+			<territory type="MQ">Martiniki</territory>
+			<territory type="MS">Montserati</territory>
+			<territory type="NC">Nyukaledonia</territory>
+			<territory type="NE">Nijeri</territory>
+			<territory type="NO">Norwe</territory>
+			<territory type="NP">Nepali</territory>
+			<territory type="OM">Omani</territory>
+			<territory type="PF">Polinesia ya Ufaransa</territory>
+			<territory type="PG">Papua Guinea Mpya</territory>
+			<territory type="PL">Polandi</territory>
+			<territory type="PR">Puetoriko</territory>
+			<territory type="PS">Himaya za Palestina</territory>
+			<territory type="PY">Paragwai</territory>
+			<territory type="QA">Katari</territory>
+			<territory type="SG">Singapuri</territory>
+			<territory type="SR">Surinamu</territory>
+			<territory type="ST">Sao Tome na Prinsipe</territory>
+			<territory type="SY">Shamu</territory>
+			<territory type="TD">Chadi</territory>
+			<territory type="TH">Thailandi</territory>
+			<territory type="TM">Turukimenstani</territory>
+			<territory type="TW">Taiwani</territory>
+			<territory type="UA">Ukreni</territory>
+			<territory type="UY">Urugwai</territory>
+			<territory type="VA">Mji wa Vatikani</territory>
+			<territory type="VG">Visiwa vya Virgin vya Uingereza</territory>
+			<territory type="VI">Visiwa vya Virgin vya Marekani</territory>
+			<territory type="XA">Kiinitoni cha kigeni</territory>
+			<territory type="XB">Pseudo-Bidi</territory>
+			<territory type="YT">Mayote</territory>
+		</territories>
+		<keys>
+			<key type="hc">Kipindi cha saa (12 dhidi ya 24)</key>
+			<key type="va">Tofauti ya Lugha</key>
+		</keys>
+		<types>
+			<type key="calendar" type="dangi">Kalenda ya Kidangi</type>
+			<type key="calendar" type="ethiopic">Kalenda ya Kihabeshi</type>
+			<type key="calendar" type="hebrew">Kalenda ya kihibrania</type>
+			<type key="numbers" type="ethi">Nambari za Kihabeshi</type>
+			<type key="numbers" type="geor">Nambari za Kijiojia</type>
+			<type key="numbers" type="hebr">Nambari za Kihibrania</type>
+			<type key="numbers" type="mlym">Nambari za Kimalayalam</type>
+			<type key="numbers" type="mymr">Nambari za Kimyama</type>
+			<type key="numbers" type="tamldec">Nambari za Kitamili</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">Kipimo</measurementSystemName>
+		</measurementSystemNames>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters draft="contributed">[a b c d e f g h i j k l m n o p q r s t u v w x y z]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd/MM/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} 'saa' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} 'saa' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<timeZoneNames>
+			<zone type="Etc/UTC">
+				<long>
+					<standard>Saa ya Ulimwenguni</standard>
+				</long>
+			</zone>
+			<zone type="Antarctica/Macquarie">
+				<exemplarCity>Makwuarie</exemplarCity>
+			</zone>
+			<zone type="America/Barbados">
+				<exemplarCity>Babadosi</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Bermuda">
+				<exemplarCity>Bamuda</exemplarCity>
+			</zone>
+			<zone type="America/Costa_Rica">
+				<exemplarCity>Kostarika</exemplarCity>
+			</zone>
+			<zone type="Indian/Christmas">
+				<exemplarCity>Krismasi</exemplarCity>
+			</zone>
+			<zone type="America/Dominica">
+				<exemplarCity>Dominika</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Canary">
+				<exemplarCity>Kanari</exemplarCity>
+			</zone>
+			<zone type="America/Guadeloupe">
+				<exemplarCity>Guadalupe</exemplarCity>
+			</zone>
+			<zone type="America/Port-au-Prince">
+				<exemplarCity>Bandari ya au-Prince</exemplarCity>
+			</zone>
+			<zone type="America/Jamaica">
+				<exemplarCity>Jamaika</exemplarCity>
+			</zone>
+			<zone type="Asia/Colombo">
+				<exemplarCity>Kolombo</exemplarCity>
+			</zone>
+			<zone type="Asia/Rangoon">
+				<exemplarCity>Yangon</exemplarCity>
+			</zone>
+			<zone type="Asia/Macau">
+				<exemplarCity>Makao</exemplarCity>
+			</zone>
+			<zone type="America/Martinique">
+				<exemplarCity>Matinikiu</exemplarCity>
+			</zone>
+			<zone type="Indian/Maldives">
+				<exemplarCity>Maldivi</exemplarCity>
+			</zone>
+			<zone type="Asia/Singapore">
+				<exemplarCity>Singapoo</exemplarCity>
+			</zone>
+			<zone type="America/El_Salvador">
+				<exemplarCity>Elsalvado</exemplarCity>
+			</zone>
+			<zone type="America/Port_of_Spain">
+				<exemplarCity>Bandari ya Uhispania</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/Beulah">
+				<exemplarCity>Beulah, Dakota Kaskazini</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/New_Salem">
+				<exemplarCity>New Salem, Dakota Kaskazini</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/Center">
+				<exemplarCity>Center, Dakota Kaskazini</exemplarCity>
+			</zone>
+			<zone type="Asia/Saigon">
+				<exemplarCity>Jiji la Ho Chi Minh</exemplarCity>
+			</zone>
+			<metazone type="Afghanistan">
+				<long>
+					<standard>Saa za Afghanistani</standard>
+				</long>
+			</metazone>
+			<metazone type="Argentina">
+				<long>
+					<generic>Saa za Ajentina</generic>
+					<standard>Saa za Wastani za Ajentina</standard>
+					<daylight>Saa za Majira Joto za Ajentina</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina_Western">
+				<long>
+					<generic>Saa za Magharibi mwa Ajentina</generic>
+					<standard>Saa za Wastani za Magharibi mwa Ajentina</standard>
+					<daylight>Saa za Majira ya Joto za Magharibi mwa Ajentina</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_CentralWestern">
+				<long>
+					<generic>Saa za Magharibi mwa Austrialia ya Kati</generic>
+					<standard>Saa za Wastani za Magharibi mwa Australia ya Kati</standard>
+					<daylight>Saa za Mchana za Magharibi mwa Australia ya Kati</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azerbaijan">
+				<long>
+					<generic>Saa za Azabajani</generic>
+					<standard>Saa za Wastani za Azabajani</standard>
+					<daylight>Saa za Majira ya Joto za Azabajani</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bangladesh">
+				<long>
+					<generic>Saa za Bangladeshi</generic>
+					<standard>Saa za Wastani za Bangladeshi</standard>
+					<daylight>Saa za Majira ya Joto za Bangladeshi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bhutan">
+				<long>
+					<standard>Saa za Butani</standard>
+				</long>
+			</metazone>
+			<metazone type="Brasilia">
+				<long>
+					<generic>Saa za Brazili</generic>
+					<standard>Saa za Wastani za Brazili</standard>
+					<daylight>Saa za Majira ya Joto za Brazili</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cape_Verde">
+				<long>
+					<generic>Saa za Kepuvede</generic>
+					<standard>Saa za Wastani za Kepuvede</standard>
+					<daylight>Saa za Majira ya Joto za Kepuvede</daylight>
+				</long>
+			</metazone>
+			<metazone type="Colombia">
+				<long>
+					<generic>Saa za Kolombia</generic>
+					<standard>Saa za Wastani za Kolombia</standard>
+					<daylight>Saa za Majira ya Joto za Kolombia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cook">
+				<long>
+					<generic>Saa za Visiwa vya Cook</generic>
+					<standard>Saa za Wastani za Visiwa vya Cook</standard>
+					<daylight>Saa za Majira Nusu ya Joto za Visiwa vya Cook</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cuba">
+				<long>
+					<generic>Saa za Kuba</generic>
+					<standard>Saa za Wastani za Kuba</standard>
+					<daylight>Saa za Mchana za Kuba</daylight>
+				</long>
+			</metazone>
+			<metazone type="Easter">
+				<long>
+					<generic>Saa za Kisiwa cha Easter</generic>
+					<standard>Saa za Wastani za Kisiwa cha Easter</standard>
+					<daylight>Saa za Majira ya Joto za Kisiwa cha Easter</daylight>
+				</long>
+			</metazone>
+			<metazone type="French_Guiana">
+				<long>
+					<standard>Saa za Guiana</standard>
+				</long>
+			</metazone>
+			<metazone type="Georgia">
+				<long>
+					<generic>Saa za Jiojia</generic>
+					<standard>Saa za Wastani za Jiojia</standard>
+					<daylight>Saa za Majira ya Joto za Jiojia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gulf">
+				<long>
+					<standard>Saa za Wastani za Ghuba</standard>
+				</long>
+			</metazone>
+			<metazone type="Iran">
+				<long>
+					<generic>Saa za Irani</generic>
+					<standard>Saa za Wastani za Irani</standard>
+					<daylight>Saa za Mchana za Irani</daylight>
+				</long>
+			</metazone>
+			<metazone type="Japan">
+				<long>
+					<generic>Saa za Japani</generic>
+					<standard>Saa za Wastani za Japani</standard>
+					<daylight>Saa za Mchana za Japani</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Eastern">
+				<long>
+					<standard>Saa za Kazakistani Mashariki</standard>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Western">
+				<long>
+					<standard>Saa za Kazakistani Magharibi</standard>
+				</long>
+			</metazone>
+			<metazone type="Macquarie">
+				<long>
+					<standard>Saa za Makwuarie</standard>
+				</long>
+			</metazone>
+			<metazone type="Malaysia">
+				<long>
+					<standard>Saa za Malesia</standard>
+				</long>
+			</metazone>
+			<metazone type="Maldives">
+				<long>
+					<standard>Saa za Maldivi</standard>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Northwest">
+				<long>
+					<generic>Saa za Kaskazini Magharibi mwa Meksiko</generic>
+					<standard>Saa za Wastani za Kaskazini Magharibi mwa Meksiko</standard>
+					<daylight>Saa za Mchana za Kaskazini Magharibi mwa Meksiko</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mongolia">
+				<long>
+					<generic>Saa za Ulaanbataar</generic>
+					<standard>Saa za Wastani za Ulaanbataar</standard>
+					<daylight>Saa za Majira ya Joto za Ulaanbaatar</daylight>
+				</long>
+			</metazone>
+			<metazone type="Myanmar">
+				<long>
+					<standard>Saa za Myama</standard>
+				</long>
+			</metazone>
+			<metazone type="Nepal">
+				<long>
+					<standard>Saa za Nepali</standard>
+				</long>
+			</metazone>
+			<metazone type="New_Caledonia">
+				<long>
+					<generic>Saa za Kaledonia Mpya</generic>
+					<standard>Saa za Wastani za Kaledonia Mpya</standard>
+					<daylight>Saa za Majira ya Joto za Kaledonia Mpya</daylight>
+				</long>
+			</metazone>
+			<metazone type="New_Zealand">
+				<long>
+					<generic>Saa za Nyuzilandi</generic>
+					<standard>Saa za Wastani za Nyuzilandi</standard>
+					<daylight>Saa za Mchana za Nyuzilandi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pakistan">
+				<long>
+					<generic>Saa za Pakistani</generic>
+					<standard>Saa za Wastani za Pakistani</standard>
+					<daylight>Saa za Majira ya Joto za Pakistani</daylight>
+				</long>
+			</metazone>
+			<metazone type="Papua_New_Guinea">
+				<long>
+					<standard>Saa za Papua</standard>
+				</long>
+			</metazone>
+			<metazone type="Paraguay">
+				<long>
+					<generic>Saa za Paragwai</generic>
+					<standard>Saa za Wastani za Paragwai</standard>
+					<daylight>Saa za Majira ya Joto za Paragwai</daylight>
+				</long>
+			</metazone>
+			<metazone type="Phoenix_Islands">
+				<long>
+					<standard>Saa za Visiwa vya Finiksi</standard>
+				</long>
+			</metazone>
+			<metazone type="Singapore">
+				<long>
+					<standard>Saa za Wastani za Singapoo</standard>
+				</long>
+			</metazone>
+			<metazone type="South_Georgia">
+				<long>
+					<standard>Saa za Jojia Kusini</standard>
+				</long>
+			</metazone>
+			<metazone type="Tajikistan">
+				<long>
+					<standard>Saaza Tajikistani</standard>
+				</long>
+			</metazone>
+			<metazone type="Turkmenistan">
+				<long>
+					<generic>Saa za Turkmenistani</generic>
+					<standard>Saa za Wastani za Turkmenistani</standard>
+					<daylight>Saa za Majira ya Joto za Turkmenistani</daylight>
+				</long>
+			</metazone>
+			<metazone type="Uruguay">
+				<long>
+					<generic>Saa za Uruagwai</generic>
+					<standard>Saa za Wastani za Urugwai</standard>
+					<daylight>Saa za Majira ya Joto za Urugwai</daylight>
+				</long>
+			</metazone>
+			<metazone type="Uzbekistan">
+				<long>
+					<generic>Saa za Uzbekistani</generic>
+					<standard>Saa za wastani za Uzbekistani</standard>
+					<daylight>Saa za Majira ya Joto za Uzbekistani</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength type="long">
+				<decimalFormat>
+					<pattern type="1000" count="one">elfu 0;elfu -0</pattern>
+					<pattern type="1000" count="other">elfu 0;elfu -0</pattern>
+					<pattern type="10000" count="one">elfu 00;elfu -00</pattern>
+					<pattern type="10000" count="other">elfu 00</pattern>
+					<pattern type="100000" count="one">elfu 000</pattern>
+					<pattern type="100000" count="other">elfu 000</pattern>
+					<pattern type="1000000" count="one">milioni 0</pattern>
+					<pattern type="1000000" count="other">milioni 0</pattern>
+					<pattern type="10000000" count="one">milioni 00</pattern>
+					<pattern type="10000000" count="other">milioni 00</pattern>
+					<pattern type="100000000" count="one">milioni 000</pattern>
+					<pattern type="100000000" count="other">milioni 000</pattern>
+					<pattern type="1000000000" count="one">bilioni 0</pattern>
+					<pattern type="1000000000" count="other">bilioni 0</pattern>
+					<pattern type="10000000000" count="one">bilioni 00</pattern>
+					<pattern type="10000000000" count="other">bilioni 00</pattern>
+					<pattern type="100000000000" count="one">bilioni 000</pattern>
+					<pattern type="100000000000" count="other">bilioni 000</pattern>
+					<pattern type="1000000000000" count="one">trilioni 0</pattern>
+					<pattern type="1000000000000" count="other">trilioni 0</pattern>
+					<pattern type="10000000000000" count="one">trilioni 00</pattern>
+					<pattern type="10000000000000" count="other">trilioni 00</pattern>
+					<pattern type="100000000000000" count="one">trilioni 000</pattern>
+					<pattern type="100000000000000" count="other">trilioni 000</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+			<decimalFormatLength type="short">
+				<decimalFormat>
+					<pattern type="1000" count="one">elfu 0</pattern>
+					<pattern type="1000" count="other">elfu 0</pattern>
+					<pattern type="10000" count="one">elfu 00</pattern>
+					<pattern type="10000" count="other">elfu 00</pattern>
+					<pattern type="100000" count="one">elfu 000</pattern>
+					<pattern type="100000" count="other">elfu 000</pattern>
+					<pattern type="1000000" count="one">M0</pattern>
+					<pattern type="1000000" count="other">M0</pattern>
+					<pattern type="10000000" count="one">M00</pattern>
+					<pattern type="10000000" count="other">M00</pattern>
+					<pattern type="100000000" count="one">M000</pattern>
+					<pattern type="100000000" count="other">M000</pattern>
+					<pattern type="1000000000" count="one">B0</pattern>
+					<pattern type="1000000000" count="other">B0</pattern>
+					<pattern type="10000000000" count="one">B00</pattern>
+					<pattern type="10000000000" count="other">B00</pattern>
+					<pattern type="100000000000" count="one">B000</pattern>
+					<pattern type="100000000000" count="other">B000</pattern>
+					<pattern type="1000000000000" count="one">T0</pattern>
+					<pattern type="1000000000000" count="other">T0</pattern>
+					<pattern type="10000000000000" count="one">T00</pattern>
+					<pattern type="10000000000000" count="other">T00</pattern>
+					<pattern type="100000000000000" count="one">T000</pattern>
+					<pattern type="100000000000000" count="other">T000</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000000" count="one">¤ M0;¤-M0</pattern>
+					<pattern type="1000000" count="other">¤ M0</pattern>
+					<pattern type="10000000" count="one">¤ M00;¤M-M00</pattern>
+					<pattern type="10000000" count="other">¤ M00;¤-M00</pattern>
+					<pattern type="100000000" count="one">¤ M000;¤M-000</pattern>
+					<pattern type="100000000" count="other">¤ M000</pattern>
+					<pattern type="1000000000" count="one">¤ B0;¤-B0</pattern>
+					<pattern type="1000000000" count="other">¤ B0;¤-B0</pattern>
+					<pattern type="10000000000" count="one">¤ B00;¤-B00</pattern>
+					<pattern type="10000000000" count="other">¤ B00;¤-B00</pattern>
+					<pattern type="100000000000" count="one">¤ B000;¤-B000</pattern>
+					<pattern type="100000000000" count="other">¤ B000;¤-B000</pattern>
+					<pattern type="1000000000000" count="one">¤ T0;¤-T0</pattern>
+					<pattern type="1000000000000" count="other">¤ T0</pattern>
+					<pattern type="10000000000000" count="one">¤ T00;¤-T00</pattern>
+					<pattern type="10000000000000" count="other">¤ T00</pattern>
+					<pattern type="100000000000000" count="one">¤ T000;¤-T000</pattern>
+					<pattern type="100000000000000" count="other">¤ T000;¤-T000</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="AED">
+				<displayName>Diramu ya Falme za Kiarabu</displayName>
+				<displayName count="one">diramu ya Falme za Kiarabu</displayName>
+				<displayName count="other">diramu za Falme za Kiarabu</displayName>
+			</currency>
+			<currency type="AFN">
+				<displayName>Afghani ya Afghanistani</displayName>
+				<displayName count="one">afghani ya Afghanistani</displayName>
+				<displayName count="other">afghani za Afghanistani</displayName>
+			</currency>
+			<currency type="ANG">
+				<displayName>Gilda ya Antili ya Uholanzi</displayName>
+				<displayName count="one">gilda ya Antili ya Uholanzi</displayName>
+				<displayName count="other">gilda za Antili ya Uholanzi</displayName>
+			</currency>
+			<currency type="AWG">
+				<displayName count="one">florin ya Aruba</displayName>
+				<displayName count="other">florin ya Aruba</displayName>
+			</currency>
+			<currency type="AZN">
+				<displayName>Manati ya Azabajani</displayName>
+				<displayName count="one">manati ya Azabajani</displayName>
+				<displayName count="other">manati za Azabajani</displayName>
+			</currency>
+			<currency type="BAM">
+				<displayName>Maki ya Bosnia na Hezegovina Inayoweza Kubadilishwa</displayName>
+				<displayName count="one">maki ya Bosnia na Hezegovina inayoweza kubadilishwa</displayName>
+				<displayName count="other">maki za Bosnia na Hezegovina zinazoweza kubadilishwa</displayName>
+			</currency>
+			<currency type="BBD">
+				<displayName>Dola ya Babadosi</displayName>
+				<displayName count="one">dola ya Babadosi</displayName>
+				<displayName count="other">dola za Babadosi</displayName>
+			</currency>
+			<currency type="BDT">
+				<displayName>Taka ya Bangladeshi</displayName>
+				<displayName count="one">taka ya Bangladeshi</displayName>
+				<displayName count="other">taka za Bangladeshi</displayName>
+			</currency>
+			<currency type="BMD">
+				<displayName>Dola ya Bamuda</displayName>
+				<displayName count="one">dola ya Bamuda</displayName>
+				<displayName count="other">dola za Bamuda</displayName>
+			</currency>
+			<currency type="BOB">
+				<displayName count="one">boliviano ya Bolivia</displayName>
+				<displayName count="other">boliviano za Bolivia</displayName>
+			</currency>
+			<currency type="BRL">
+				<displayName>Reale ya Brazili</displayName>
+				<displayName count="one">reale ya Brazili</displayName>
+				<displayName count="other">reale za Brazili</displayName>
+			</currency>
+			<currency type="BSD">
+				<displayName>Dola ya Bahama</displayName>
+				<displayName count="one">dola ya Bahama</displayName>
+				<displayName count="other">dola za Bahama</displayName>
+			</currency>
+			<currency type="BTN">
+				<displayName>Ngultrumi ya Bhutani</displayName>
+				<displayName count="one">ngultrumi ya Bhutani</displayName>
+				<displayName count="other">ngultrumi za Bhutani</displayName>
+			</currency>
+			<currency type="BYN">
+				<displayName>Ruble ya Belarusi</displayName>
+				<displayName count="one">ruble ya Belarusi</displayName>
+				<displayName count="other">ruble za Belarusi</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName>Dola ya Kanada</displayName>
+				<displayName count="one">dola ya Kanada</displayName>
+				<displayName count="other">dola za Kanada</displayName>
+			</currency>
+			<currency type="CLP">
+				<displayName count="one">peso ya Chile</displayName>
+				<displayName count="other">peso za Chile</displayName>
+			</currency>
+			<currency type="CNH">
+				<displayName>Yuan ya China (huru)</displayName>
+				<displayName count="one">yuan ya China (huru)</displayName>
+				<displayName count="other">yuan ya China (huru)</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>Yuan ya China</displayName>
+				<displayName count="one">yuan ya China</displayName>
+				<displayName count="other">yuan za China</displayName>
+			</currency>
+			<currency type="CVE">
+				<displayName>Eskudo ya Kepuvede</displayName>
+				<displayName count="one">eskudo ya Kepuvede</displayName>
+				<displayName count="other">eskudo za Kepuvede</displayName>
+			</currency>
+			<currency type="CZK">
+				<displayName>Koruna ya Cheki</displayName>
+				<displayName count="one">koruna ya Cheki</displayName>
+				<displayName count="other">koruna za Cheki</displayName>
+			</currency>
+			<currency type="DKK">
+				<displayName>Kroni ya Denmaki</displayName>
+				<displayName count="one">kroni ya Denmaki</displayName>
+				<displayName count="other">kroni za Denmaki</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName>Dinari ya Aljeria</displayName>
+				<displayName count="one">dinari ya Aljeria</displayName>
+				<displayName count="other">dinari za Aljeria</displayName>
+			</currency>
+			<currency type="FKP">
+				<displayName count="one">pauni ya Visiwa vya Falkland</displayName>
+				<displayName count="other">pauni za Visiwa vya Falkland</displayName>
+			</currency>
+			<currency type="GEL">
+				<displayName>Lari ya Jiojia</displayName>
+				<displayName count="one">lari ya Jiojia</displayName>
+				<displayName count="other">lari za Jiojia</displayName>
+			</currency>
+			<currency type="GHS">
+				<displayName>Sidi ya Ghana</displayName>
+				<displayName count="one">sidi ya Ghana</displayName>
+				<displayName count="other">sidi za Ghana</displayName>
+			</currency>
+			<currency type="GIP">
+				<displayName>Pauni ya Jibrata</displayName>
+				<displayName count="one">pauni ya Jibrata</displayName>
+				<displayName count="other">pauni za Jibrata</displayName>
+			</currency>
+			<currency type="HRK">
+				<displayName>Kuna ya Kroeshia</displayName>
+				<displayName count="one">kuna ya Kroeshia</displayName>
+				<displayName count="other">kuna za Kroeshia</displayName>
+			</currency>
+			<currency type="HTG">
+				<displayName>Godi ya Haiti</displayName>
+				<displayName count="one">godi ya Haiti</displayName>
+				<displayName count="other">godi za Haiti</displayName>
+			</currency>
+			<currency type="HUF">
+				<displayName>Forinti ya Hungaria</displayName>
+				<displayName count="one">forinti ya Hungaria</displayName>
+				<displayName count="other">forinti za Hungaria</displayName>
+			</currency>
+			<currency type="IDR">
+				<displayName>Rupia ya Indonesia</displayName>
+				<displayName count="one">rupia ya Indonesia</displayName>
+				<displayName count="other">rupia za Indonesia</displayName>
+			</currency>
+			<currency type="IRR">
+				<displayName>Riali ya Irani</displayName>
+				<displayName count="one">riali ya Irani</displayName>
+				<displayName count="other">riali za Irani</displayName>
+			</currency>
+			<currency type="JOD">
+				<displayName>Dinari ya Yordani</displayName>
+				<displayName count="one">dinari ya Yordani</displayName>
+				<displayName count="other">dinari za Yordani</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>Yeni ya Japani</displayName>
+				<displayName count="one">yeni ya japani</displayName>
+				<displayName count="other">yeni za japani</displayName>
+			</currency>
+			<currency type="KHR">
+				<displayName>Rieli ya Kambodia</displayName>
+				<displayName count="one">rieli ya Kambodia</displayName>
+				<displayName count="other">rieli za Kambodia</displayName>
+			</currency>
+			<currency type="KZT">
+				<displayName>Tenge ya Kazakistani</displayName>
+				<displayName count="one">tenge ya Kazakistani</displayName>
+				<displayName count="other">tenge za Kazakistani</displayName>
+			</currency>
+			<currency type="LBP">
+				<displayName>Pauni ya Lebanoni</displayName>
+				<displayName count="one">pauni ya Lebanoni</displayName>
+				<displayName count="other">pauni za Lebanoni</displayName>
+			</currency>
+			<currency type="MAD">
+				<displayName>Diramu ya Moroko</displayName>
+				<displayName count="one">diramu ya Moroko</displayName>
+				<displayName count="other">diramu za Moroko</displayName>
+			</currency>
+			<currency type="MGA">
+				<displayName count="one">ariari ya Madagaska</displayName>
+				<displayName count="other">Ariari za Madagaska</displayName>
+			</currency>
+			<currency type="MKD">
+				<displayName>Dinari ya Masedonia</displayName>
+				<displayName count="one">dinari ya Masedonia</displayName>
+				<displayName count="other">dinari za Masedonia</displayName>
+			</currency>
+			<currency type="MMK">
+				<displayName>Kiati ya Myama</displayName>
+				<displayName count="one">kiati ya Myama</displayName>
+				<displayName count="other">kiati za Myama</displayName>
+			</currency>
+			<currency type="MOP">
+				<displayName>Pataka ya Macau</displayName>
+				<displayName count="one">pataka ya Macau</displayName>
+				<displayName count="other">pataka za Macau</displayName>
+			</currency>
+			<currency type="MVR">
+				<displayName>Rufiyaa ya Maldivi</displayName>
+				<displayName count="one">rufiyaa ya Maldivi</displayName>
+				<displayName count="other">rufiyaa za Maldivi</displayName>
+			</currency>
+			<currency type="MYR">
+				<displayName>Ringgiti ya Malesia</displayName>
+				<displayName count="one">ringgiti ya Malesia</displayName>
+				<displayName count="other">ringgiti za Malesia</displayName>
+			</currency>
+			<currency type="NGN">
+				<displayName>Naira ya Naijeria</displayName>
+				<displayName count="one">naira ya Naijeria</displayName>
+				<displayName count="other">Naira za Naijeria</displayName>
+			</currency>
+			<currency type="NOK">
+				<displayName>Kroni ya Norwe</displayName>
+				<displayName count="one">kroni ya Norwe</displayName>
+				<displayName count="other">kroni za Norwe</displayName>
+			</currency>
+			<currency type="NPR">
+				<displayName>Rupia ya Nepali</displayName>
+				<displayName count="one">rupia ya Nepali</displayName>
+				<displayName count="other">rupia za Nepali</displayName>
+			</currency>
+			<currency type="OMR">
+				<displayName>Riali ya Omani</displayName>
+				<displayName count="one">riali ya Omani</displayName>
+				<displayName count="other">riali za Omani</displayName>
+			</currency>
+			<currency type="PAB">
+				<displayName count="one">balboa ya Panama</displayName>
+				<displayName count="other">balboa za Panama</displayName>
+			</currency>
+			<currency type="PKR">
+				<displayName>Rupia ya Pakistani</displayName>
+				<displayName count="one">rupia ya Pakistani</displayName>
+				<displayName count="other">rupia za Pakistani</displayName>
+			</currency>
+			<currency type="PLN">
+				<displayName>Zloti ya Polandi</displayName>
+				<displayName count="one">zloti ya Polandi</displayName>
+				<displayName count="other">zloti za Polandi</displayName>
+			</currency>
+			<currency type="QAR">
+				<displayName>Riali ya Katari</displayName>
+				<displayName count="one">riali ya Katari</displayName>
+				<displayName count="other">riali za Katari</displayName>
+			</currency>
+			<currency type="RSD">
+				<displayName>Dinari ya Serbia</displayName>
+				<displayName count="one">dinari ya Serbia</displayName>
+				<displayName count="other">dinari za Serbia</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName>Riyali ya Saudia</displayName>
+				<displayName count="one">riyali ya Saudia</displayName>
+				<displayName count="other">riyali za Saudia</displayName>
+			</currency>
+			<currency type="SBD">
+				<displayName>Dola ya Visiwa vya Solomoni</displayName>
+				<displayName count="one">dola ya Visiwa vya Solomoni</displayName>
+				<displayName count="other">dola za Visiwa vya Solomoni</displayName>
+			</currency>
+			<currency type="SDG">
+				<displayName>Pauni ya Sudani</displayName>
+				<displayName count="one">pauni ya Sudani</displayName>
+				<displayName count="other">pauni za Sudani</displayName>
+			</currency>
+			<currency type="SGD">
+				<displayName>Dola ya Singapoo</displayName>
+				<displayName count="one">dola ya Singapoo</displayName>
+				<displayName count="other">dola za Singapoo</displayName>
+			</currency>
+			<currency type="SLL">
+				<displayName>Leoni ya Siera Leoni</displayName>
+				<displayName count="one">leoni ya Siera Leoni</displayName>
+				<displayName count="other">leoni za Siera Leoni</displayName>
+			</currency>
+			<currency type="SSP">
+				<displayName>Pauni ya Sudani Kusini</displayName>
+				<displayName count="one">pauni ya Sudani Kusini</displayName>
+				<displayName count="other">pauni za Sudani Kusini</displayName>
+			</currency>
+			<currency type="SZL">
+				<displayName count="one">lilangeni ya Uswazi</displayName>
+				<displayName count="other">lilangeni za Uswazi</displayName>
+			</currency>
+			<currency type="THB">
+				<displayName>Bahti ya Tailandi</displayName>
+				<displayName count="one">bahti ya Tailandi</displayName>
+				<displayName count="other">bahti za Tailandi</displayName>
+			</currency>
+			<currency type="TJS">
+				<displayName>Somoni ya Tajikistani</displayName>
+				<displayName count="one">somoni ya Tajikistani</displayName>
+				<displayName count="other">somoni za Tajikistani</displayName>
+			</currency>
+			<currency type="TMT">
+				<displayName>Manati ya Turkmenistani</displayName>
+				<displayName count="one">manati ya Turkmenistani</displayName>
+				<displayName count="other">manati za Turkmenistani</displayName>
+			</currency>
+			<currency type="TTD">
+				<displayName>Dola ya Trinidadi na Tobago</displayName>
+				<displayName count="one">dola ya Trinidadi na Tobago</displayName>
+				<displayName count="other">dola za Trinidadi na Tobago</displayName>
+			</currency>
+			<currency type="TWD">
+				<displayName>Dola ya Taiwani</displayName>
+				<displayName count="one">dola ya Taiwani</displayName>
+				<displayName count="other">dola za Taiwani</displayName>
+			</currency>
+			<currency type="UAH">
+				<displayName>Hryvnia ya Ukraini</displayName>
+				<displayName count="one">hryvnia ya Ukraini</displayName>
+				<displayName count="other">hryvnia za Ukraini</displayName>
+			</currency>
+			<currency type="USD">
+				<symbol draft="contributed">$</symbol>
+			</currency>
+			<currency type="UZS">
+				<displayName>Som ya Uzbekistani</displayName>
+				<displayName count="one">som ya Uzbekistani</displayName>
+				<displayName count="other">som za Uzbekistani</displayName>
+			</currency>
+			<currency type="VES">
+				<displayName>Boliva ya Venezuela</displayName>
+				<displayName count="one">boliva ya Venezuele</displayName>
+				<displayName count="other">boliva za Venezuela</displayName>
+			</currency>
+			<currency type="VND">
+				<displayName>Dong ya Vietnamu</displayName>
+				<displayName count="one">dong ya Vietnamu</displayName>
+				<displayName count="other">Dong za Vietnamu</displayName>
+			</currency>
+			<currency type="XAF">
+				<displayName>Faranga ya CFA ya Afrika ya Kati</displayName>
+				<displayName count="one">faranga ya CFA ya Afrika ya Kati</displayName>
+				<displayName count="other">faranga ya CFA ya Afrika ya Kati</displayName>
+			</currency>
+			<currency type="XOF">
+				<displayName>Faranga ya CFA ya Afrika Magharibi</displayName>
+				<displayName count="one">faranga ya CFA ya Afrika Magharibi</displayName>
+				<displayName count="other">faranga za CFA ya Afrika Magharibi</displayName>
+			</currency>
+			<currency type="XXX">
+				<displayName>Sarafu Isiyojulikana</displayName>
+			</currency>
+			<currency type="YER">
+				<displayName>Riali ya Yemeni</displayName>
+				<displayName count="one">riali ya Yemeni</displayName>
+				<displayName count="other">riali za Yemeni</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="duration-decade">
+				<displayName>mwongo</displayName>
+			</unit>
+			<unit type="duration-microsecond">
+				<displayName>maikrosekunde</displayName>
+				<unitPattern count="one">maikroseunde {0}</unitPattern>
+				<unitPattern count="other">maikrosekunde {0}</unitPattern>
+			</unit>
+			<unit type="graphics-em">
+				<displayName>ukubwa wa nafasi ya fonti</displayName>
+			</unit>
+			<unit type="graphics-pixel-per-inch">
+				<unitPattern count="one">pikseli {0} kwa kila sekunde</unitPattern>
+				<unitPattern count="other">pikseli {0} kwa kila sekunde</unitPattern>
+			</unit>
+			<unit type="graphics-dot-per-centimeter">
+				<displayName>nukta kwa kila sentimita</displayName>
+				<unitPattern count="one">nukta {0} kwa kila sentimita</unitPattern>
+				<unitPattern count="other">nukta {0} kwa kila sentimita</unitPattern>
+			</unit>
+			<unit type="graphics-dot-per-inch">
+				<displayName>nukta kwa kila inchi</displayName>
+				<unitPattern count="one">nuka {0} kwa kila inchi</unitPattern>
+				<unitPattern count="other">nukta {0} kwa kila inchi</unitPattern>
+			</unit>
+			<unit type="length-micrometer">
+				<displayName>maikromita</displayName>
+				<unitPattern count="one">maikromita {0}</unitPattern>
+				<unitPattern count="other">maikromita {0}</unitPattern>
+			</unit>
+			<unit type="length-light-year">
+				<unitPattern count="one">miaka {0} ya mwanga</unitPattern>
+				<unitPattern count="other">miaka {0} ya mwanga</unitPattern>
+			</unit>
+			<unit type="length-solar-radius">
+				<unitPattern count="one">nusu kipenyo {0} cha jua</unitPattern>
+				<unitPattern count="other">nusu vipenyo {0} vya jua</unitPattern>
+			</unit>
+			<unit type="pressure-bar">
+				<displayName>baa</displayName>
+				<unitPattern count="one">baa {0}</unitPattern>
+				<unitPattern count="other">baa {0}</unitPattern>
+			</unit>
+			<unit type="pressure-pascal">
+				<unitPattern count="one">Pa {0}</unitPattern>
+				<unitPattern count="other">Pa {0}</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="area-square-centimeter">
+				<displayName>cm²</displayName>
+			</unit>
+			<unit type="consumption-mile-per-gallon-imperial">
+				<displayName>maili/gal Imp</displayName>
+			</unit>
+			<unit type="duration-decade">
+				<displayName>mwongo</displayName>
+			</unit>
+			<unit type="graphics-pixel">
+				<unitPattern count="one">pikseli {0}</unitPattern>
+				<unitPattern count="other">pikseli {0}</unitPattern>
+			</unit>
+			<unit type="graphics-megapixel">
+				<displayName>megapikseli</displayName>
+			</unit>
+			<unit type="length-micrometer">
+				<displayName>maikromita</displayName>
+				<unitPattern count="one">maikromita {0}</unitPattern>
+				<unitPattern count="other">maikromita {0}</unitPattern>
+			</unit>
+			<unit type="length-parsec">
+				<unitPattern count="one">pc {0}</unitPattern>
+				<unitPattern count="other">kila sekunde {0}</unitPattern>
+			</unit>
+			<unit type="length-astronomical-unit">
+				<displayName>kipimo cha astronomia</displayName>
+			</unit>
+			<unit type="pressure-millimeter-ofhg">
+				<unitPattern count="one">mmHg {0}</unitPattern>
+				<unitPattern count="other">mm Hg {0}</unitPattern>
+			</unit>
+			<unit type="pressure-bar">
+				<displayName>baa</displayName>
+				<unitPattern count="one">baa {0}</unitPattern>
+				<unitPattern count="other">baa {0}</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="narrow">
+			<unit type="length-millimeter">
+				<unitPattern count="one">mm{0}</unitPattern>
+				<unitPattern count="other">mm{0}</unitPattern>
+			</unit>
+		</unitLength>
+	</units>
+</ldml>

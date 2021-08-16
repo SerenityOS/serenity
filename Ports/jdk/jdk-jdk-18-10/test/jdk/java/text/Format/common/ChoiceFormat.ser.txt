@@ -1,0 +1,37 @@
+#
+# Copyright (c) 2003, 2016, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# Hex dump of a serialized ChoiceFormat for Bug4769840.
+
+aced0005737200166a6176612e746578742e43686f696365466f726d617418e9
+c6bee365b6040200025b000d63686f696365466f726d6174737400135b4c6a61
+76612f6c616e672f537472696e673b5b000c63686f6963654c696d6974737400
+025b44787200166a6176612e746578742e4e756d626572466f726d6174dff6b3
+bf137d07e80200065a000c67726f7570696e67557365644200116d6178467261
+6374696f6e4469676974734200106d6178496e74656765724469676974734200
+116d696e4672616374696f6e4469676974734200106d696e496e746567657244
+69676974735a00107061727365496e74656765724f6e6c79787200106a617661
+2e746578742e466f726d6174fbd8bc12e90f1843020000787001032800010075
+7200135b4c6a6176612e6c616e672e537472696e673badd256e7e91d7b470200
+0078700000000274000420666f6f74000420626172757200025b443ea68c14ab
+635a1e02000078700000000200000000000000003ff0000000000000

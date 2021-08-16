@@ -1,0 +1,1166 @@
+/*
+ * Copyright (c) 2015, 2019, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+package java.lang.invoke;
+
+import jdk.internal.util.Preconditions;
+import jdk.internal.vm.annotation.ForceInline;
+
+import java.lang.invoke.VarHandle.VarHandleDesc;
+import java.util.Objects;
+import java.util.Optional;
+
+import static java.lang.invoke.MethodHandleStatics.UNSAFE;
+
+#warn
+
+final class VarHandle$Type$s {
+
+    static class FieldInstanceReadOnly extends VarHandle {
+        final long fieldOffset;
+        final Class<?> receiverType;
+#if[Object]
+        final Class<?> fieldType;
+#end[Object]
+
+        FieldInstanceReadOnly(Class<?> receiverType, long fieldOffset{#if[Object]?, Class<?> fieldType}) {
+            this(receiverType, fieldOffset{#if[Object]?, fieldType}, FieldInstanceReadOnly.FORM, false);
+        }
+
+        protected FieldInstanceReadOnly(Class<?> receiverType, long fieldOffset{#if[Object]?, Class<?> fieldType},
+                                        VarForm form, boolean exact) {
+            super(form, exact);
+            this.fieldOffset = fieldOffset;
+            this.receiverType = receiverType;
+#if[Object]
+            this.fieldType = fieldType;
+#end[Object]
+        }
+
+        @Override
+        public FieldInstanceReadOnly withInvokeExactBehavior() {
+            return hasInvokeExactBehavior()
+                ? this
+                : new FieldInstanceReadOnly(receiverType, fieldOffset{#if[Object]?, fieldType}, vform, true);
+        }
+
+        @Override
+        public FieldInstanceReadOnly withInvokeBehavior() {
+            return !hasInvokeExactBehavior()
+                ? this
+                : new FieldInstanceReadOnly(receiverType, fieldOffset{#if[Object]?, fieldType}, vform, false);
+        }
+
+        @Override
+        final MethodType accessModeTypeUncached(AccessType at) {
+            return at.accessModeType(receiverType, {#if[Object]?fieldType:$type$.class});
+        }
+
+        @Override
+        public Optional<VarHandleDesc> describeConstable() {
+            var receiverTypeRef = receiverType.describeConstable();
+            var fieldTypeRef = {#if[Object]?fieldType:$type$.class}.describeConstable();
+            if (!receiverTypeRef.isPresent() || !fieldTypeRef.isPresent())
+                return Optional.empty();
+
+            // Reflect on this VarHandle to extract the field name
+            String name = VarHandles.getFieldFromReceiverAndOffset(
+                receiverType, fieldOffset, {#if[Object]?fieldType:$type$.class}).getName();
+            return Optional.of(VarHandleDesc.ofField(receiverTypeRef.get(), name, fieldTypeRef.get()));
+        }
+
+        @ForceInline
+        static $type$ get(VarHandle ob, Object holder) {
+            FieldInstanceReadOnly handle = (FieldInstanceReadOnly)ob;
+            return UNSAFE.get$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                 handle.fieldOffset);
+        }
+
+        @ForceInline
+        static $type$ getVolatile(VarHandle ob, Object holder) {
+            FieldInstanceReadOnly handle = (FieldInstanceReadOnly)ob;
+            return UNSAFE.get$Type$Volatile(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                 handle.fieldOffset);
+        }
+
+        @ForceInline
+        static $type$ getOpaque(VarHandle ob, Object holder) {
+            FieldInstanceReadOnly handle = (FieldInstanceReadOnly)ob;
+            return UNSAFE.get$Type$Opaque(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                 handle.fieldOffset);
+        }
+
+        @ForceInline
+        static $type$ getAcquire(VarHandle ob, Object holder) {
+            FieldInstanceReadOnly handle = (FieldInstanceReadOnly)ob;
+            return UNSAFE.get$Type$Acquire(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                 handle.fieldOffset);
+        }
+
+        static final VarForm FORM = new VarForm(FieldInstanceReadOnly.class, Object.class, $type$.class);
+    }
+
+    static final class FieldInstanceReadWrite extends FieldInstanceReadOnly {
+
+        FieldInstanceReadWrite(Class<?> receiverType, long fieldOffset{#if[Object]?, Class<?> fieldType}) {
+            this(receiverType, fieldOffset{#if[Object]?, fieldType}, false);
+        }
+
+        private FieldInstanceReadWrite(Class<?> receiverType, long fieldOffset{#if[Object]?, Class<?> fieldType},
+                                       boolean exact) {
+            super(receiverType, fieldOffset{#if[Object]?, fieldType}, FieldInstanceReadWrite.FORM, exact);
+        }
+
+        @Override
+        public FieldInstanceReadWrite withInvokeExactBehavior() {
+            return hasInvokeExactBehavior()
+                ? this
+                : new FieldInstanceReadWrite(receiverType, fieldOffset{#if[Object]?, fieldType}, true);
+        }
+
+        @Override
+        public FieldInstanceReadWrite withInvokeBehavior() {
+            return !hasInvokeExactBehavior()
+                ? this
+                : new FieldInstanceReadWrite(receiverType, fieldOffset{#if[Object]?, fieldType}, false);
+        }
+
+        @ForceInline
+        static void set(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            UNSAFE.put$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                             handle.fieldOffset,
+                             {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static void setVolatile(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            UNSAFE.put$Type$Volatile(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                     handle.fieldOffset,
+                                     {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static void setOpaque(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            UNSAFE.put$Type$Opaque(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                   handle.fieldOffset,
+                                   {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static void setRelease(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            UNSAFE.put$Type$Release(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                    handle.fieldOffset,
+                                    {#if[Object]?handle.fieldType.cast(value):value});
+        }
+#if[CAS]
+
+        @ForceInline
+        static boolean compareAndSet(VarHandle ob, Object holder, $type$ expected, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.compareAndSet$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static $type$ compareAndExchange(VarHandle ob, Object holder, $type$ expected, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.compareAndExchange$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static $type$ compareAndExchangeAcquire(VarHandle ob, Object holder, $type$ expected, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.compareAndExchange$Type$Acquire(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static $type$ compareAndExchangeRelease(VarHandle ob, Object holder, $type$ expected, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.compareAndExchange$Type$Release(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static boolean weakCompareAndSetPlain(VarHandle ob, Object holder, $type$ expected, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.weakCompareAndSet$Type$Plain(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static boolean weakCompareAndSet(VarHandle ob, Object holder, $type$ expected, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.weakCompareAndSet$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static boolean weakCompareAndSetAcquire(VarHandle ob, Object holder, $type$ expected, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.weakCompareAndSet$Type$Acquire(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static boolean weakCompareAndSetRelease(VarHandle ob, Object holder, $type$ expected, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.weakCompareAndSet$Type$Release(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static $type$ getAndSet(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndSet$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                          handle.fieldOffset,
+                                          {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static $type$ getAndSetAcquire(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndSet$Type$Acquire(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                          handle.fieldOffset,
+                                          {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static $type$ getAndSetRelease(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndSet$Type$Release(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                          handle.fieldOffset,
+                                          {#if[Object]?handle.fieldType.cast(value):value});
+        }
+#end[CAS]
+#if[AtomicAdd]
+
+        @ForceInline
+        static $type$ getAndAdd(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndAdd$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndAddAcquire(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndAdd$Type$Acquire(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndAddRelease(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndAdd$Type$Release(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+#end[AtomicAdd]
+#if[Bitwise]
+
+        @ForceInline
+        static $type$ getAndBitwiseOr(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndBitwiseOr$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseOrRelease(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndBitwiseOr$Type$Release(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseOrAcquire(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndBitwiseOr$Type$Acquire(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseAnd(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndBitwiseAnd$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseAndRelease(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndBitwiseAnd$Type$Release(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseAndAcquire(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndBitwiseAnd$Type$Acquire(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseXor(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndBitwiseXor$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseXorRelease(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndBitwiseXor$Type$Release(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseXorAcquire(VarHandle ob, Object holder, $type$ value) {
+            FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            return UNSAFE.getAndBitwiseXor$Type$Acquire(Objects.requireNonNull(handle.receiverType.cast(holder)),
+                                       handle.fieldOffset,
+                                       value);
+        }
+#end[Bitwise]
+
+        static final VarForm FORM = new VarForm(FieldInstanceReadWrite.class, Object.class, $type$.class);
+    }
+
+
+    static class FieldStaticReadOnly extends VarHandle {
+        final Object base;
+        final long fieldOffset;
+#if[Object]
+        final Class<?> fieldType;
+#end[Object]
+
+        FieldStaticReadOnly(Object base, long fieldOffset{#if[Object]?, Class<?> fieldType}) {
+            this(base, fieldOffset{#if[Object]?, fieldType}, FieldStaticReadOnly.FORM, false);
+        }
+
+        protected FieldStaticReadOnly(Object base, long fieldOffset{#if[Object]?, Class<?> fieldType},
+                                      VarForm form, boolean exact) {
+            super(form, exact);
+            this.base = base;
+            this.fieldOffset = fieldOffset;
+#if[Object]
+            this.fieldType = fieldType;
+#end[Object]
+        }
+
+        @Override
+        public FieldStaticReadOnly withInvokeExactBehavior() {
+            return hasInvokeExactBehavior()
+                ? this
+                : new FieldStaticReadOnly(base, fieldOffset{#if[Object]?, fieldType}, vform, true);
+        }
+
+        @Override
+        public FieldStaticReadOnly withInvokeBehavior() {
+            return !hasInvokeExactBehavior()
+                ? this
+                : new FieldStaticReadOnly(base, fieldOffset{#if[Object]?, fieldType}, vform, false);
+        }
+
+        @Override
+        public Optional<VarHandleDesc> describeConstable() {
+            var fieldTypeRef = {#if[Object]?fieldType:$type$.class}.describeConstable();
+            if (!fieldTypeRef.isPresent())
+                return Optional.empty();
+
+            // Reflect on this VarHandle to extract the field name
+            var staticField = VarHandles.getStaticFieldFromBaseAndOffset(
+                base, fieldOffset, {#if[Object]?fieldType:$type$.class});
+            var receiverTypeRef = staticField.getDeclaringClass().describeConstable();
+            if (!receiverTypeRef.isPresent())
+                return Optional.empty();
+            return Optional.of(VarHandleDesc.ofStaticField(receiverTypeRef.get(), staticField.getName(), fieldTypeRef.get()));
+        }
+
+        @Override
+        final MethodType accessModeTypeUncached(AccessType at) {
+            return at.accessModeType(null, {#if[Object]?fieldType:$type$.class});
+        }
+
+        @ForceInline
+        static $type$ get(VarHandle ob) {
+            FieldStaticReadOnly handle = (FieldStaticReadOnly)ob;
+            return UNSAFE.get$Type$(handle.base,
+                                 handle.fieldOffset);
+        }
+
+        @ForceInline
+        static $type$ getVolatile(VarHandle ob) {
+            FieldStaticReadOnly handle = (FieldStaticReadOnly)ob;
+            return UNSAFE.get$Type$Volatile(handle.base,
+                                 handle.fieldOffset);
+        }
+
+        @ForceInline
+        static $type$ getOpaque(VarHandle ob) {
+            FieldStaticReadOnly handle = (FieldStaticReadOnly)ob;
+            return UNSAFE.get$Type$Opaque(handle.base,
+                                 handle.fieldOffset);
+        }
+
+        @ForceInline
+        static $type$ getAcquire(VarHandle ob) {
+            FieldStaticReadOnly handle = (FieldStaticReadOnly)ob;
+            return UNSAFE.get$Type$Acquire(handle.base,
+                                 handle.fieldOffset);
+        }
+
+        static final VarForm FORM = new VarForm(FieldStaticReadOnly.class, null, $type$.class);
+    }
+
+    static final class FieldStaticReadWrite extends FieldStaticReadOnly {
+
+        FieldStaticReadWrite(Object base, long fieldOffset{#if[Object]?, Class<?> fieldType}) {
+            this(base, fieldOffset{#if[Object]?, fieldType}, false);
+        }
+
+        private FieldStaticReadWrite(Object base, long fieldOffset{#if[Object]?, Class<?> fieldType},
+                                     boolean exact) {
+            super(base, fieldOffset{#if[Object]?, fieldType}, FieldStaticReadWrite.FORM, exact);
+        }
+
+        @Override
+        public FieldStaticReadWrite withInvokeExactBehavior() {
+            return hasInvokeExactBehavior()
+                ? this
+                : new FieldStaticReadWrite(base, fieldOffset{#if[Object]?, fieldType}, true);
+        }
+
+        @Override
+        public FieldStaticReadWrite withInvokeBehavior() {
+            return !hasInvokeExactBehavior()
+                ? this
+                : new FieldStaticReadWrite(base, fieldOffset{#if[Object]?, fieldType}, false);
+        }
+
+        @ForceInline
+        static void set(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            UNSAFE.put$Type$(handle.base,
+                             handle.fieldOffset,
+                             {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static void setVolatile(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            UNSAFE.put$Type$Volatile(handle.base,
+                                     handle.fieldOffset,
+                                     {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static void setOpaque(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            UNSAFE.put$Type$Opaque(handle.base,
+                                   handle.fieldOffset,
+                                   {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static void setRelease(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            UNSAFE.put$Type$Release(handle.base,
+                                    handle.fieldOffset,
+                                    {#if[Object]?handle.fieldType.cast(value):value});
+        }
+#if[CAS]
+
+        @ForceInline
+        static boolean compareAndSet(VarHandle ob, $type$ expected, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.compareAndSet$Type$(handle.base,
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+
+        @ForceInline
+        static $type$ compareAndExchange(VarHandle ob, $type$ expected, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.compareAndExchange$Type$(handle.base,
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static $type$ compareAndExchangeAcquire(VarHandle ob, $type$ expected, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.compareAndExchange$Type$Acquire(handle.base,
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static $type$ compareAndExchangeRelease(VarHandle ob, $type$ expected, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.compareAndExchange$Type$Release(handle.base,
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static boolean weakCompareAndSetPlain(VarHandle ob, $type$ expected, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.weakCompareAndSet$Type$Plain(handle.base,
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static boolean weakCompareAndSet(VarHandle ob, $type$ expected, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.weakCompareAndSet$Type$(handle.base,
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static boolean weakCompareAndSetAcquire(VarHandle ob, $type$ expected, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.weakCompareAndSet$Type$Acquire(handle.base,
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static boolean weakCompareAndSetRelease(VarHandle ob, $type$ expected, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.weakCompareAndSet$Type$Release(handle.base,
+                                               handle.fieldOffset,
+                                               {#if[Object]?handle.fieldType.cast(expected):expected},
+                                               {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static $type$ getAndSet(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndSet$Type$(handle.base,
+                                          handle.fieldOffset,
+                                          {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static $type$ getAndSetAcquire(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndSet$Type$Acquire(handle.base,
+                                          handle.fieldOffset,
+                                          {#if[Object]?handle.fieldType.cast(value):value});
+        }
+
+        @ForceInline
+        static $type$ getAndSetRelease(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndSet$Type$Release(handle.base,
+                                          handle.fieldOffset,
+                                          {#if[Object]?handle.fieldType.cast(value):value});
+        }
+#end[CAS]
+#if[AtomicAdd]
+
+        @ForceInline
+        static $type$ getAndAdd(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndAdd$Type$(handle.base,
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndAddAcquire(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndAdd$Type$Acquire(handle.base,
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndAddRelease(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndAdd$Type$Release(handle.base,
+                                       handle.fieldOffset,
+                                       value);
+        }
+#end[AtomicAdd]
+#if[Bitwise]
+
+        @ForceInline
+        static $type$ getAndBitwiseOr(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndBitwiseOr$Type$(handle.base,
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseOrRelease(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndBitwiseOr$Type$Release(handle.base,
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseOrAcquire(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndBitwiseOr$Type$Acquire(handle.base,
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseAnd(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndBitwiseAnd$Type$(handle.base,
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseAndRelease(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndBitwiseAnd$Type$Release(handle.base,
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseAndAcquire(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndBitwiseAnd$Type$Acquire(handle.base,
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseXor(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndBitwiseXor$Type$(handle.base,
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseXorRelease(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndBitwiseXor$Type$Release(handle.base,
+                                       handle.fieldOffset,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseXorAcquire(VarHandle ob, $type$ value) {
+            FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+            return UNSAFE.getAndBitwiseXor$Type$Acquire(handle.base,
+                                       handle.fieldOffset,
+                                       value);
+        }
+#end[Bitwise]
+
+        static final VarForm FORM = new VarForm(FieldStaticReadWrite.class, null, $type$.class);
+    }
+
+
+    static final class Array extends VarHandle {
+        final int abase;
+        final int ashift;
+#if[Object]
+        final Class<{#if[Object]??:$type$[]}> arrayType;
+        final Class<?> componentType;
+#end[Object]
+
+        Array(int abase, int ashift{#if[Object]?, Class<?> arrayType}) {
+            this(abase, ashift{#if[Object]?, arrayType}, false);
+        }
+
+        private Array(int abase, int ashift{#if[Object]?, Class<?> arrayType}, boolean exact) {
+            super(Array.FORM, exact);
+            this.abase = abase;
+            this.ashift = ashift;
+#if[Object]
+            this.arrayType = {#if[Object]?arrayType:$type$[].class};
+            this.componentType = arrayType.getComponentType();
+#end[Object]
+        }
+
+        @Override
+        public Array withInvokeExactBehavior() {
+            return hasInvokeExactBehavior()
+                ? this
+                : new Array(abase, ashift{#if[Object]?, arrayType}, true);
+        }
+
+        @Override
+        public Array withInvokeBehavior() {
+            return !hasInvokeExactBehavior()
+                ? this
+                : new Array(abase, ashift{#if[Object]?, arrayType}, false);
+        }
+
+        @Override
+        public Optional<VarHandleDesc> describeConstable() {
+            var arrayTypeRef = {#if[Object]?arrayType:$type$[].class}.describeConstable();
+            if (!arrayTypeRef.isPresent())
+                return Optional.empty();
+
+            return Optional.of(VarHandleDesc.ofArray(arrayTypeRef.get()));
+        }
+
+        @Override
+        final MethodType accessModeTypeUncached(AccessType at) {
+            return at.accessModeType({#if[Object]?arrayType:$type$[].class}, {#if[Object]?arrayType.getComponentType():$type$.class}, int.class);
+        }
+
+#if[Object]
+        @ForceInline
+        static Object runtimeTypeCheck(Array handle, Object[] oarray, Object value) {
+            if (handle.arrayType == oarray.getClass()) {
+                // Fast path: static array type same as argument array type
+                return handle.componentType.cast(value);
+            } else {
+                // Slow path: check value against argument array component type
+                return reflectiveTypeCheck(oarray, value);
+            }
+        }
+
+        @ForceInline
+        static Object reflectiveTypeCheck(Object[] oarray, Object value) {
+            try {
+                return oarray.getClass().getComponentType().cast(value);
+            } catch (ClassCastException e) {
+                throw new ArrayStoreException();
+            }
+        }
+#end[Object]
+
+        @ForceInline
+        static $type$ get(VarHandle ob, Object oarray, int index) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return array[index];
+        }
+
+        @ForceInline
+        static void set(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            array[index] = {#if[Object]?handle.componentType.cast(value):value};
+        }
+
+        @ForceInline
+        static $type$ getVolatile(VarHandle ob, Object oarray, int index) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return UNSAFE.get$Type$Volatile(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase);
+        }
+
+        @ForceInline
+        static void setVolatile(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            UNSAFE.put$Type$Volatile(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    {#if[Object]?runtimeTypeCheck(handle, array, value):value});
+        }
+
+        @ForceInline
+        static $type$ getOpaque(VarHandle ob, Object oarray, int index) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return UNSAFE.get$Type$Opaque(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase);
+        }
+
+        @ForceInline
+        static void setOpaque(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            UNSAFE.put$Type$Opaque(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    {#if[Object]?runtimeTypeCheck(handle, array, value):value});
+        }
+
+        @ForceInline
+        static $type$ getAcquire(VarHandle ob, Object oarray, int index) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return UNSAFE.get$Type$Acquire(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase);
+        }
+
+        @ForceInline
+        static void setRelease(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            UNSAFE.put$Type$Release(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    {#if[Object]?runtimeTypeCheck(handle, array, value):value});
+        }
+#if[CAS]
+
+        @ForceInline
+        static boolean compareAndSet(VarHandle ob, Object oarray, int index, $type$ expected, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return UNSAFE.compareAndSet$Type$(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    {#if[Object]?handle.componentType.cast(expected):expected},
+                    {#if[Object]?runtimeTypeCheck(handle, array, value):value});
+        }
+
+        @ForceInline
+        static $type$ compareAndExchange(VarHandle ob, Object oarray, int index, $type$ expected, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return UNSAFE.compareAndExchange$Type$(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    {#if[Object]?handle.componentType.cast(expected):expected},
+                    {#if[Object]?runtimeTypeCheck(handle, array, value):value});
+        }
+
+        @ForceInline
+        static $type$ compareAndExchangeAcquire(VarHandle ob, Object oarray, int index, $type$ expected, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return UNSAFE.compareAndExchange$Type$Acquire(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    {#if[Object]?handle.componentType.cast(expected):expected},
+                    {#if[Object]?runtimeTypeCheck(handle, array, value):value});
+        }
+
+        @ForceInline
+        static $type$ compareAndExchangeRelease(VarHandle ob, Object oarray, int index, $type$ expected, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return UNSAFE.compareAndExchange$Type$Release(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    {#if[Object]?handle.componentType.cast(expected):expected},
+                    {#if[Object]?runtimeTypeCheck(handle, array, value):value});
+        }
+
+        @ForceInline
+        static boolean weakCompareAndSetPlain(VarHandle ob, Object oarray, int index, $type$ expected, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return UNSAFE.weakCompareAndSet$Type$Plain(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    {#if[Object]?handle.componentType.cast(expected):expected},
+                    {#if[Object]?runtimeTypeCheck(handle, array, value):value});
+        }
+
+        @ForceInline
+        static boolean weakCompareAndSet(VarHandle ob, Object oarray, int index, $type$ expected, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return UNSAFE.weakCompareAndSet$Type$(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    {#if[Object]?handle.componentType.cast(expected):expected},
+                    {#if[Object]?runtimeTypeCheck(handle, array, value):value});
+        }
+
+        @ForceInline
+        static boolean weakCompareAndSetAcquire(VarHandle ob, Object oarray, int index, $type$ expected, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return UNSAFE.weakCompareAndSet$Type$Acquire(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    {#if[Object]?handle.componentType.cast(expected):expected},
+                    {#if[Object]?runtimeTypeCheck(handle, array, value):value});
+        }
+
+        @ForceInline
+        static boolean weakCompareAndSetRelease(VarHandle ob, Object oarray, int index, $type$ expected, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return UNSAFE.weakCompareAndSet$Type$Release(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    {#if[Object]?handle.componentType.cast(expected):expected},
+                    {#if[Object]?runtimeTypeCheck(handle, array, value):value});
+        }
+
+        @ForceInline
+        static $type$ getAndSet(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return UNSAFE.getAndSet$Type$(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    {#if[Object]?runtimeTypeCheck(handle, array, value):value});
+        }
+
+        @ForceInline
+        static $type$ getAndSetAcquire(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return UNSAFE.getAndSet$Type$Acquire(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    {#if[Object]?runtimeTypeCheck(handle, array, value):value});
+        }
+
+        @ForceInline
+        static $type$ getAndSetRelease(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+#if[Object]
+            Object[] array = (Object[]) handle.arrayType.cast(oarray);
+#else[Object]
+            $type$[] array = ($type$[]) oarray;
+#end[Object]
+            return UNSAFE.getAndSet$Type$Release(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    {#if[Object]?runtimeTypeCheck(handle, array, value):value});
+        }
+#end[CAS]
+#if[AtomicAdd]
+
+        @ForceInline
+        static $type$ getAndAdd(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+            $type$[] array = ($type$[]) oarray;
+            return UNSAFE.getAndAdd$Type$(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    value);
+        }
+
+        @ForceInline
+        static $type$ getAndAddAcquire(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+            $type$[] array = ($type$[]) oarray;
+            return UNSAFE.getAndAdd$Type$Acquire(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    value);
+        }
+
+        @ForceInline
+        static $type$ getAndAddRelease(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+            $type$[] array = ($type$[]) oarray;
+            return UNSAFE.getAndAdd$Type$Release(array,
+                    (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                    value);
+        }
+#end[AtomicAdd]
+#if[Bitwise]
+
+        @ForceInline
+        static $type$ getAndBitwiseOr(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+            $type$[] array = ($type$[]) oarray;
+            return UNSAFE.getAndBitwiseOr$Type$(array,
+                                       (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseOrRelease(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+            $type$[] array = ($type$[]) oarray;
+            return UNSAFE.getAndBitwiseOr$Type$Release(array,
+                                       (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseOrAcquire(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+            $type$[] array = ($type$[]) oarray;
+            return UNSAFE.getAndBitwiseOr$Type$Acquire(array,
+                                       (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseAnd(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+            $type$[] array = ($type$[]) oarray;
+            return UNSAFE.getAndBitwiseAnd$Type$(array,
+                                       (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseAndRelease(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+            $type$[] array = ($type$[]) oarray;
+            return UNSAFE.getAndBitwiseAnd$Type$Release(array,
+                                       (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseAndAcquire(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+            $type$[] array = ($type$[]) oarray;
+            return UNSAFE.getAndBitwiseAnd$Type$Acquire(array,
+                                       (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseXor(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+            $type$[] array = ($type$[]) oarray;
+            return UNSAFE.getAndBitwiseXor$Type$(array,
+                                       (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseXorRelease(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+            $type$[] array = ($type$[]) oarray;
+            return UNSAFE.getAndBitwiseXor$Type$Release(array,
+                                       (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                                       value);
+        }
+
+        @ForceInline
+        static $type$ getAndBitwiseXorAcquire(VarHandle ob, Object oarray, int index, $type$ value) {
+            Array handle = (Array)ob;
+            $type$[] array = ($type$[]) oarray;
+            return UNSAFE.getAndBitwiseXor$Type$Acquire(array,
+                                       (((long) Preconditions.checkIndex(index, array.length, Preconditions.AIOOBE_FORMATTER)) << handle.ashift) + handle.abase,
+                                       value);
+        }
+#end[Bitwise]
+
+        static final VarForm FORM = new VarForm(Array.class, {#if[Object]?Object[].class:$type$[].class}, {#if[Object]?Object.class:$type$.class}, int.class);
+    }
+}

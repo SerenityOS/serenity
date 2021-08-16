@@ -1,0 +1,2 @@
+Neg07.java:14:56: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Class<compiler.misc.type.captureof: 1, ? extends Neg07.ParentException>, java.lang.Class<? extends Neg07.HasFoo>)
+1 error

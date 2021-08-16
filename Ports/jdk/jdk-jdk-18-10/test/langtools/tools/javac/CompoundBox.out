@@ -1,0 +1,2 @@
+CompoundBox.java:12:19: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: int, java.lang.Float)
+1 error

@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE main [
+<!ELEMENT main (table)*>
+<!ELEMENT table (column)*>
+<!ATTLIST table name NMTOKEN #REQUIRED>
+<!ELEMENT column ANY>
+<!ATTLIST column name NMTOKEN #REQUIRED>
+<!ATTLIST column expr CDATA #REQUIRED>
+<!ENTITY mkm "mkrishnamohan">
+<!ENTITY ee SYSTEM "ee.xml">
+]>
+
+<main>
+&ee;
+</main>

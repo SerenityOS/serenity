@@ -1,0 +1,17 @@
+[attribute A]
+[attribute A1]
+[attribute A2]
+[flow A]
+[flow A1]
+[flow A2]
+[desugar A]
+[desugar A1]
+[desugar A2]
+[generate code A]
+[generate code A1]
+[generate code A2]
+[attribute B]
+[attribute B1]
+B.java:12:9: compiler.err.cant.resolve.location: kindname.variable, x, , , (compiler.misc.location: kindname.class, B1, null)
+[attribute B2]
+1 error

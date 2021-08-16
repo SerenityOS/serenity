@@ -1,0 +1,2 @@
+TargetType14.java:20:29: compiler.err.prob.found.req: (compiler.misc.incompatible.bounds: X, (compiler.misc.eq.bounds: java.lang.Integer), (compiler.misc.lower.bounds: java.lang.String))
+1 error

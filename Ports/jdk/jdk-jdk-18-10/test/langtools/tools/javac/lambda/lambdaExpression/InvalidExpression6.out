@@ -1,0 +1,3 @@
+InvalidExpression6.java:16:30: compiler.err.break.outside.switch.loop
+InvalidExpression6.java:17:26: compiler.err.cont.outside.loop
+2 errors

@@ -1,0 +1,106 @@
+<HTML>
+<HEAD>
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+  <META NAME="GENERATOR" CONTENT="Mozilla/4.02 [en] (X11; U; SunOS 5.6 sun4u) [Netscape]">
+  <TITLE>Java L&amp;F</TITLE>
+</HEAD>
+<BODY>
+
+<H1>
+About the Java L&amp;F</H1>
+The Java Look and Feel is a cross-platform look &amp; feel being provided by Javasoft.
+Here is some information about the Java L&amp;F you might find useful.
+
+<P>The Java L&amp;F implements all of the basic Swing functionality,
+but also extends it in several areas including:
+<UL>
+<LI>
+Themes</LI>
+
+<LI>
+Sliders</LI>
+
+<LI>
+Toolbars</LI>
+
+<LI>
+Trees</LI>
+</UL>
+
+<P/>
+<H1>
+Themes</H1>
+<P>One of the first things we learned while implementing the Java L&amp;F
+was than many developers feel very strongly about how colors are used in
+their software. To help accommodate this we created a Theme mechanism
+which allows a developer to easily specify the default colors, fonts and
+icons used by the L&amp;F.</P>
+
+<P>The theme mechanism is designed to allow developers to create
+their own themes. For an example of this, see the themes
+which are included with Metalworks. Note, like all of the L&amp;F packages,
+the metal package is not yet frozen and the theme mechanism may change as 
+we get developer feedback on how to improve it.</P>
+
+<H1>
+Sliders</H1>
+<P>There are several areas where the Java L&amp;F introduces some optional
+"value-added" features above the base line capabilities of swing.&nbsp;
+One is the option of Filled Sliders. These are ideal for things like
+volume controls. To access the Java L&amp;F "value-added" features you
+pass in a token to the component's putClientProperty method.&nbsp;Here
+is an example:</P>
+
+<PRE>
+JSlider slider = new JSlider();<BR>
+slider.putClientProperty("JSlider.isFilled", 
+                         Boolean.TRUE);<BR> <BR>
+</PRE>
+
+<P>Note that if a UI such as Windows or Motif encounters a property such as
+JSlider.fill which is does not understand that property will be ignored.&nbsp;
+Thus you don't have to worry about problems which could arise if you switch
+to a different L&amp;F.</P>
+
+<H1>
+ToolBars</H1>
+<P>Many popular applications support "roll-over" effects on buttons in toolbars. 
+The Java L&amp;F provides an easy way to do this. Here is a code snippit:</P>
+
+<PRE>
+JToolBar toolbar = new JToolBar();<BR>
+
+// add your buttons here<BR>
+
+toolbar.putClientProperty("JToolBar.isRollover", 
+                          Boolean.TRUE);<BR>
+</PRE>
+
+<P>This will remove the borders from around all the buttons in the tool
+bar, and only show them when the mouse is over a given button.&nbsp; This
+is a nice effect for many applications.</P>
+
+<H1>
+Trees</H1>
+<P>Java L&amp;F allows you to control the line style used in the JTree component. Here are some code snippits:</P>
+
+<PRE>
+JTree myTree = new JTree();
+
+// This will provide parent-child connector lines
+myTree.putClientProperty("JTree.lineStyle",
+                         "Angled");
+
+// This will remove lines from the tree
+myTree.putClientProperty("JTree.lineStyle",
+                         "None");
+
+// This will provide lines separating root notes
+// it is the default setting
+myTree.putClientProperty("JTree.lineStyle",
+                         "Horizontal"); 
+</PRE>
+
+<P><A HREF="toc.html"><IMG alt="Back"  SRC="back.gif" BORDER=0 HEIGHT=22 WIDTH=42 ALIGN=BOTTOM>Back</A>
+</BODY>
+</HTML>

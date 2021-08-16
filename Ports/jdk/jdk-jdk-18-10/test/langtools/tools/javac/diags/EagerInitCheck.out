@@ -1,0 +1,2 @@
+IEagerInitCheck.java:4:17: compiler.err.prob.found.req: (compiler.misc.possible.loss.of.precision: double, float)
+1 error

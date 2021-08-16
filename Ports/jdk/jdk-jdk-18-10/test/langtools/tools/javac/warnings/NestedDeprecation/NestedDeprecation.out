@@ -1,0 +1,9 @@
+NestedDeprecation.java:14:9: compiler.warn.has.been.deprecated: p.Dep2, p
+NestedDeprecation.java:15:9: compiler.warn.has.been.deprecated: p.Dep2, p
+NestedDeprecation.java:19:5: compiler.warn.has.been.deprecated: p.Dep1.A, p.Dep1
+NestedDeprecation.java:20:5: compiler.warn.has.been.deprecated: p.Dep2, p
+NestedDeprecation.java:21:5: compiler.warn.has.been.deprecated: p.Dep1.B, p.Dep1
+NestedDeprecation.java:23:5: compiler.warn.has.been.deprecated: p.Dep2.D, p.Dep2
+NestedDeprecation.java:26:9: compiler.warn.has.been.deprecated: method(), p.Dep1
+NestedDeprecation.java:27:20: compiler.warn.has.been.deprecated: field, p.Dep1
+8 warnings

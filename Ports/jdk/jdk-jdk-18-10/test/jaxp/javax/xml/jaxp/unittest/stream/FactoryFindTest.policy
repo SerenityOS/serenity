@@ -1,0 +1,23 @@
+grant {
+	permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+	permission java.lang.RuntimePermission "accessDeclaredMembers";
+	
+	permission java.io.FilePermission "${test.classes}/../../-", "read, write, delete";
+	permission java.io.FilePermission ".", "read, write, delete";
+	permission java.util.PropertyPermission "*", "read, write";
+	
+    permission java.lang.RuntimePermission "setSecurityManager";
+    permission java.lang.RuntimePermission "createSecurityManager";
+    permission java.lang.RuntimePermission "createClassLoader";
+    permission java.lang.RuntimePermission "setIO";
+	permission java.lang.RuntimePermission "setContextClassLoader"; 
+	permission java.security.SecurityPermission "getPolicy";
+    
+    permission java.io.FilePermission "${test.src}/-", "read, write, delete";
+    permission java.io.FilePermission "${user.dir}/-", "read, write, delete";
+    permission java.io.FilePermission "${java.io.tmpdir}/-", "read, write, delete";
+    
+    
+    permission java.io.FilePermission "${java.home}/lib/stax.properties", "read, write, delete";
+
+};

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+  <SignedInfo>
+    <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+    <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#dsa-sha1" />
+    <Reference URI="http://www.w3.org/TR/xml-stylesheet">
+      <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+      <DigestValue>60NvZvtdTB+7UnlLp/H24p7h4bs=</DigestValue>
+    </Reference>
+  </SignedInfo>
+  <SignatureValue>
+    GCQVmBq+1H7e9IjvKfe+egLM1Jlp3L1JCGkl9SlJ0eaDh2MKYUUnHA==
+  </SignatureValue>
+  <KeyInfo>
+    <X509Data>
+      <X509Certificate>
+        MIIDUDCCAxCgAwIBAgIGAOz5IVHTMAkGByqGSM44BAMwdjELMAkGA1UEBhMCSUUx
+        DzANBgNVBAgTBkR1YmxpbjEkMCIGA1UEChMbQmFsdGltb3JlIFRlY2hub2xvZ2ll
+        cyBMdGQuMREwDwYDVQQLEwhYL1NlY3VyZTEdMBsGA1UEAxMUQW5vdGhlciBUcmFu
+        c2llbnQgQ0EwHhcNMDIwNDAyMjM1OTUyWhcNMTIwNDAyMjI1OTQ2WjBoMQswCQYD
+        VQQGEwJJRTEPMA0GA1UECBMGRHVibGluMSQwIgYDVQQKExtCYWx0aW1vcmUgVGVj
+        aG5vbG9naWVzIEx0ZC4xETAPBgNVBAsTCFgvU2VjdXJlMQ8wDQYDVQQDEwZNb3Jp
+        Z3UwggG2MIIBKwYHKoZIzjgEATCCAR4CgYEAhIqwSieM0aAez+6H71gqCfBnwG3d
+        Pu7JAElb13GkwXRw9RfPh0VtIVjhDJbyKAIuzCk5r54ccRixa8TQ2vWVwodQ9eru
+        7jUknAc2rVEAV5mJTrBr7UUve/X9PWsCDN6lXvFLiJp/Pi/F0cyV/CAp+jIp+rol
+        TXOhUz9qEjnFYMMCFQCYS/p4gmsHgo3R89EAE/Hc0dhyWQKBgCWG5hn8DM+1rv5s
+        TkJBqyZJXNzy4z974s3sAGURfBBGTpB9kFxfxNt480TxkWeDhR+39DMA5TEAsRPu
+        QoB6Tgl7K2nNzRdgJjK4YkBObgX1ljWkAnnJCZSbC8Nh2VpkniV0bM79HnsS+eCf
+        8bi2qOOiLSzHeOrtzO8PB0YeeTLQA4GEAAKBgH1NBJ9Az5TwY4tDE0dPYVHHABt+
+        yLspnT3k9G6YWUMFhZ/+3RuqEPjnKrPfUoXTTJGIACgPU3/PkqwrPVD0JMdpOcnZ
+        LHiJ/P7QRQeMwDRoBrs7genB1bDd4pSJrEUcjrkA5uRrIj2Z5fL+UuLiLGPO2rM7
+        BNQRIq3QFPdX++NuozowODAOBgNVHQ8BAf8EBAMCB4AwEQYDVR0OBAoECIK7Ljjh
+        +EsfMBMGA1UdIwQMMAqACIocVjBaMhJ9MAkGByqGSM44BAMDLwAwLAIUEJJCOHw8
+        ppxoRyz3s+Vmb4NKIfMCFDgJoZn9zh/3WoYNBURODwLvyBOy
+      </X509Certificate>
+    </X509Data>
+  </KeyInfo>
+</Signature>

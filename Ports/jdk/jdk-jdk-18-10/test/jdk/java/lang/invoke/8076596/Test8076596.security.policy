@@ -1,0 +1,8 @@
+/*
+ * Security policy used by the Test8076596.
+ * Must allow file reads so that jtreg itself can run.
+ */
+
+grant {
+  permission java.io.FilePermission "*", "read";
+};

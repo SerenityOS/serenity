@@ -1,0 +1,2 @@
+CaptureLowerBoundArray.java:18:30: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Exception, compiler.misc.type.captureof: 1, ? extends java.lang.Exception)
+1 error

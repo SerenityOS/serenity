@@ -1,0 +1,15 @@
+Everything in this directory is dedicated to building the EvilProvider
+used with the SecKeyFacSunJCEPRF test (JDK-8218723).
+
+The makefile does require a JDK image path to be provided through the
+JAVA_BASE makefile variable.  As an example:
+
+make JAVA_BASE=/usr/java/jdk-11.0.1 evilprov
+
+Since the EvilProvider is a modular jar, JDK 9 or later should be used.
+
+For OpenJDK, no signing is required.  If signing is required (for use
+with Oracle JDK, for instance), you must obtain a JCE signing certificate
+and place it in a keystore, then run the "signed" makefile target (it will
+build the jar file if it does not already exist).
+

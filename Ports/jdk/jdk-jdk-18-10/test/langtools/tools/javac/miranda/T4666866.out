@@ -1,0 +1,2 @@
+T4666866.java:10:1: compiler.err.does.not.override.abstract: t, run(), java.lang.Runnable
+1 error

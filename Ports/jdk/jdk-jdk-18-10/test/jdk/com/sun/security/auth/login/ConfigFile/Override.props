@@ -1,0 +1,2 @@
+login.config.url.1=file:${test.src}/Override.bad.config
+

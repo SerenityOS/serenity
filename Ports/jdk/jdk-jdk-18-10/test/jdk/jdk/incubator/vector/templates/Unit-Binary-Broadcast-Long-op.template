@@ -1,0 +1,6 @@
+
+    @Test(dataProvider = "$type$BinaryOpProvider")
+    static void [[TEST]]$vectorteststype$BroadcastLongSmokeTest(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb) {
+[[KERNEL]]
+        assertBroadcastLongArraysEquals(r, a, b, $vectorteststype$::[[TEST]]);
+    }

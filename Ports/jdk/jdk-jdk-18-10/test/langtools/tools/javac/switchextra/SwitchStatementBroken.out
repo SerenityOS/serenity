@@ -1,0 +1,2 @@
+SwitchStatementBroken.java:15:13: compiler.err.switch.mixing.case.types
+1 error

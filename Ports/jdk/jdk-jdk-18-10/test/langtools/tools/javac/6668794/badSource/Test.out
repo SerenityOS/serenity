@@ -1,0 +1,2 @@
+Test.java:10:6: compiler.err.cant.access: p.A, (compiler.misc.bad.source.file.header: A.java, (compiler.misc.file.doesnt.contain.class: p.A))
+1 error

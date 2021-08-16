@@ -1,0 +1,6 @@
+SwitchUndefinedSelector.java:11:17: compiler.err.cant.resolve.location: kindname.variable, undefined, , , (compiler.misc.location: kindname.class, SwitchUndefinedSelector, null)
+SwitchUndefinedSelector.java:16:25: compiler.err.cant.resolve.location: kindname.variable, undefined, , , (compiler.misc.location: kindname.class, SwitchUndefinedSelector, null)
+SwitchUndefinedSelector.java:21:17: compiler.err.cant.resolve.location: kindname.variable, undefined, , , (compiler.misc.location: kindname.class, SwitchUndefinedSelector, null)
+SwitchUndefinedSelector.java:22:41: compiler.err.string.const.req
+SwitchUndefinedSelector.java:23:41: compiler.err.cant.resolve.location: kindname.variable, UNDEF, , , (compiler.misc.location: kindname.class, SwitchUndefinedSelector, null)
+5 errors

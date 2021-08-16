@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://xsdtesting">
+  <xsd:element name="foo">
+    <xsd:complexType>
+      <xsd:choice maxOccurs="10">
+        <xsd:any namespace="A" processContents="lax"/>
+        <xsd:any namespace="A"/>
+      </xsd:choice>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="bar"/>
+
+</xsd:schema>

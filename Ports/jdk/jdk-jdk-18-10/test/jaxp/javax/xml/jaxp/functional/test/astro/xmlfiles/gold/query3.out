@@ -1,0 +1,62 @@
+<html xmlns:astro="http://www.astro.com/astro">
+    <h1>Bright Star Catalog Extract</h1>
+    <body>
+        <b>Star Id: </b>2
+        <br>
+        <b>Constellation: </b>
+        <br>
+        <b>Description: </b>
+        <br>
+        <b>RA J2000: </b>00:05:03.8
+        <br>
+        <b>DEC J2000: </b>00:30:11
+        <br>
+        <b>Visual Magnitude: </b>6.29
+        <br>
+        <b>Spectral Type: </b>gG9
+        <br>
+        <b>Galactic Longitude: </b>98.33
+        <br>
+        <b>Galactic Latitude: </b>-61.14
+        <br>
+        <hr>
+        <b>Star Id: </b>4
+        <br>
+        <b>Constellation: </b>Peg
+        <br>
+        <b>Description: </b>86    Peg
+        <br>
+        <b>RA J2000: </b>00:05:42.0
+        <br>
+        <b>DEC J2000: </b>13:23:46
+        <br>
+        <b>Visual Magnitude: </b>5.51
+        <br>
+        <b>Spectral Type: </b>G5III
+        <br>
+        <b>Galactic Longitude: </b>106.19
+        <br>
+        <b>Galactic Latitude: </b>-47.98
+        <br>
+        <hr>
+        <b>Star Id: </b>5
+        <br>
+        <b>Constellation: </b>
+        <br>
+        <b>Description: </b>
+        <br>
+        <b>RA J2000: </b>00:06:16.0
+        <br>
+        <b>DEC J2000: </b>58:26:12
+        <br>
+        <b>Visual Magnitude: </b>5.96
+        <br>
+        <b>Spectral Type: </b>G5V
+        <br>
+        <b>Galactic Longitude: </b>117.03
+        <br>
+        <b>Galactic Latitude: </b>-03.92
+        <br>
+        <hr>
+    </body>
+</html>

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ar"/>
+		<territory type="IQ"/>
+	</identity>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">كانون الثاني</month>
+							<month type="2">شباط</month>
+							<month type="3">آذار</month>
+							<month type="4">نيسان</month>
+							<month type="5">أيار</month>
+							<month type="6">حزيران</month>
+							<month type="7">تموز</month>
+							<month type="8">آب</month>
+							<month type="9">أيلول</month>
+							<month type="10">تشرين الأول</month>
+							<month type="11">تشرين الثاني</month>
+							<month type="12">كانون الأول</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1" draft="contributed">ك</month>
+							<month type="2" draft="contributed">ش</month>
+							<month type="3" draft="contributed">آ</month>
+							<month type="4" draft="contributed">ن</month>
+							<month type="5" draft="contributed">أ</month>
+							<month type="6" draft="contributed">ح</month>
+							<month type="7" draft="contributed">ت</month>
+							<month type="8" draft="contributed">آ</month>
+							<month type="9" draft="contributed">أ</month>
+							<month type="10" draft="contributed">ت</month>
+							<month type="11" draft="contributed">ت</month>
+							<month type="12" draft="contributed">ك</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">كانون الثاني</month>
+							<month type="2">شباط</month>
+							<month type="3">آذار</month>
+							<month type="4">نيسان</month>
+							<month type="5">أيار</month>
+							<month type="6">حزيران</month>
+							<month type="7">تموز</month>
+							<month type="8">آب</month>
+							<month type="9">أيلول</month>
+							<month type="10">تشرين الأول</month>
+							<month type="11">تشرين الثاني</month>
+							<month type="12">كانون الأول</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">كانون الثاني</month>
+							<month type="2">شباط</month>
+							<month type="3">آذار</month>
+							<month type="4">نيسان</month>
+							<month type="5">أيار</month>
+							<month type="6">حزيران</month>
+							<month type="7">تموز</month>
+							<month type="8">آب</month>
+							<month type="9">أيلول</month>
+							<month type="10">تشرين الأول</month>
+							<month type="11">تشرين الثاني</month>
+							<month type="12">كانون الأول</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1" draft="contributed">ك</month>
+							<month type="2" draft="contributed">ش</month>
+							<month type="3" draft="contributed">آ</month>
+							<month type="4" draft="contributed">ن</month>
+							<month type="5" draft="contributed">أ</month>
+							<month type="6" draft="contributed">ح</month>
+							<month type="7" draft="contributed">ت</month>
+							<month type="8" draft="contributed">آ</month>
+							<month type="9" draft="contributed">أ</month>
+							<month type="10" draft="contributed">ت</month>
+							<month type="11" draft="contributed">ت</month>
+							<month type="12" draft="contributed">ك</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">كانون الثاني</month>
+							<month type="2">شباط</month>
+							<month type="3">آذار</month>
+							<month type="4">نيسان</month>
+							<month type="5">أيار</month>
+							<month type="6">حزيران</month>
+							<month type="7">تموز</month>
+							<month type="8">آب</month>
+							<month type="9">أيلول</month>
+							<month type="10">تشرين الأول</month>
+							<month type="11">تشرين الثاني</month>
+							<month type="12">كانون الأول</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+			</calendar>
+		</calendars>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>arab</defaultNumberingSystem>
+	</numbers>
+</ldml>

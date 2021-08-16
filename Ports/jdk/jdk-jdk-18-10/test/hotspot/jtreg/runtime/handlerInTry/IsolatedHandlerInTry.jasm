@@ -1,0 +1,124 @@
+/*
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ * IsolatedHandlerInTry contains a try block in a ctor whose handler is inside
+ * the same try block but the handler can only be reached if an exception
+ * occurs.  The handler does a return.  So, a VerifyException should be thrown.
+ * The try block starts at line 77 (try t2;) and ends at line 113 (endtry t2;).
+ * Its handler starts at line 107 (catch t2 #0;).  The handler can only be reached
+ * by exception because of the athrow at line 106.
+ */
+super public class IsolatedHandlerInTry
+    version 51:0
+{
+
+public static final synthetic Field ___transactionFactory_2002349702336125:"Ljava/lang/Object;";
+
+public Method "<init>":"(Ljava/lang/Object;)V"
+    stack 5 locals 5
+{
+        invokestatic    Method ThreadLocalTransaction.getThreadLocalTransaction:"()Ljava/lang/Object;";
+        checkcast    class java/lang/Object;
+        astore_2;
+        aload_2;
+        invokestatic    Method TransactionLogicDonor.isActiveTransaction:"(Ljava/lang/Object;)Z";
+        ifeq    L21;
+        aload_0;
+        aload_1;
+        aload_2;
+        invokespecial    Method "<init>":"(Ljava/lang/Object;Ljava/lang/Object;)V";
+        return;
+    L21:    stack_frame_type append;
+        locals_map class java/lang/Object;
+        aload_2;
+        getstatic    Field ___transactionFactory_2002349702336125:"Ljava/lang/Object;";
+        invokestatic    Method TransactionLogicDonor.createTransaction:"(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+        astore_2;
+        aload_2;
+        iconst_1;
+        pop;
+        aload_2;
+        invokestatic    Method ThreadLocalTransaction.setThreadLocalTransaction:"(Ljava/lang/Object;)V";
+        try t0, t1;
+        aload_0;
+        aload_1;
+        aload_2;
+        invokespecial    Method "<init>":"(Ljava/lang/Object;Ljava/lang/Object;)V";
+        aload_2;
+        pop;
+        aconst_null;
+        astore_2;
+        endtry t0, t1;
+        invokestatic    Method ThreadLocalTransaction.clearThreadLocalTransaction:"()V";
+        pop;
+        goto    L107;
+        catch t0 java/lang/Throwable;
+        try t2;
+        stack_frame_type full;
+        locals_map bogus, class java/lang/Object, class java/lang/Object;
+        stack_map class java/lang/Throwable;
+        astore_3;
+        aload_2;
+        pop;
+        aload_3;
+        instanceof    class ControlFlowError;
+        ifeq    L82;
+        new    class java/lang/NullPointerException;
+        dup;
+        invokespecial    Method java/lang/NullPointerException."<init>":"()V";
+        athrow;
+    L82:    stack_frame_type append;
+        locals_map class java/lang/Throwable;
+        aload_3;
+        instanceof    class java/lang/Error;
+        ifeq    L94;
+        aload_3;
+        checkcast    class java/lang/Error;
+        athrow;
+    L94:    stack_frame_type same;
+        aload_3;
+        checkcast    class java/lang/Exception;
+        catch t1 #0;
+        stack_frame_type full;
+        locals_map bogus, class java/lang/Object, class java/lang/Object;
+        stack_map class java/lang/Throwable;
+        athrow;
+        catch t2 #0;
+        stack_frame_type full;
+        locals_map bogus, class java/lang/Object, class java/lang/Object;
+        stack_map class java/lang/Throwable;
+        astore    4;
+        return;
+        endtry t2;
+        stack_frame_type full;
+        locals_map bogus, class java/lang/Object, class java/lang/Object, class java/lang/Object;
+        stack_map class java/lang/Throwable;
+        invokestatic    Method ThreadLocalTransaction.clearThreadLocalTransaction:"()V";
+        athrow;
+    L107:    stack_frame_type full;
+        locals_map class IsolatedHandlerInTry, class java/lang/Object, null;
+        return;
+}
+
+} // end Class IsolatedHandlerInTry

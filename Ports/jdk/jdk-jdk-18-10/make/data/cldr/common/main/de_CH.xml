@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="de"/>
+		<territory type="CH"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ace">Aceh-Sprache</language>
+			<language type="ach">Acholi-Sprache</language>
+			<language type="ar_001">Modernes Hocharabisch</language>
+			<language type="ars">Nadschd-Arabisch</language>
+			<language type="bas">Basaa-Sprache</language>
+			<language type="bik">Bikol-Sprache</language>
+			<language type="bin">Bini-Sprache</language>
+			<language type="chb">Chibcha-Sprache</language>
+			<language type="de_CH">Schweizer Hochdeutsch</language>
+			<language type="din">Dinka-Sprache</language>
+			<language type="fan">Pangwe-Sprache</language>
+			<language type="gba">Gbaya-Sprache</language>
+			<language type="kmb">Kimbundu-Sprache</language>
+			<language type="mus">Muskogee-Sprache</language>
+			<language type="nl_BE">Flämisch</language>
+			<language type="prg">Altpreussisch</language>
+			<language type="zh_Hans">Chinesisch (vereinfacht)</language>
+			<language type="zh_Hans" alt="long">Hochchinesisch (vereinfacht)</language>
+			<language type="zh_Hant">Chinesisch (traditionell)</language>
+			<language type="zh_Hant" alt="long">Hochchinesisch (traditionell)</language>
+		</languages>
+		<territories>
+			<territory type="BN">Brunei</territory>
+			<territory type="BW">Botswana</territory>
+			<territory type="CV">Kapverden</territory>
+			<territory type="GB">Grossbritannien</territory>
+			<territory type="QO">Äusseres Ozeanien</territory>
+			<territory type="SB">Salomon-Inseln</territory>
+			<territory type="TL">Osttimor</territory>
+			<territory type="ZW">Zimbabwe</territory>
+		</territories>
+		<keys>
+			<key type="colCaseFirst">Sortierung nach Gross- bzw. Kleinbuchstaben</key>
+			<key type="colCaseLevel">Sortierung nach Gross- oder Kleinschreibung</key>
+			<key type="ms">Mass-System</key>
+		</keys>
+		<types>
+			<type key="colCaseFirst" type="upper" draft="contributed">Grossbuchstaben zuerst aufführen</type>
+			<type key="colCaseLevel" type="no" draft="contributed">Ohne Gross-/Kleinschreibung sortieren</type>
+			<type key="colCaseLevel" type="yes" draft="contributed">Nach Gross-/Kleinschreibung sortieren</type>
+			<type key="ms" type="uksystem">britisches Mass-System</type>
+			<type key="ms" type="ussystem">US Mass-System</type>
+		</types>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a ä b c d e f g h i j k l m n o ö p q r s t u ü v w x y z]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\- ‑ . ’ % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+		<parseLenients scope="general" level="lenient">
+			<parseLenient sample="’" draft="contributed">['ʼ՚᾽᾿’＇]</parseLenient>
+		</parseLenients>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<days>
+					<dayContext type="format">
+						<dayWidth type="short">
+							<day type="sun">So</day>
+							<day type="mon">Mo</day>
+							<day type="tue">Di</day>
+							<day type="wed">Mi</day>
+							<day type="thu">Do</day>
+							<day type="fri">Fr</day>
+							<day type="sat">Sa</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era-narrow">
+				<displayName>Epoche</displayName>
+			</field>
+			<field type="weekOfMonth">
+				<displayName>Woche im Monat</displayName>
+			</field>
+			<field type="weekOfMonth-short">
+				<displayName>Wo. i. M.</displayName>
+			</field>
+			<field type="weekOfMonth-narrow">
+				<displayName>W. i. Mon.</displayName>
+			</field>
+			<field type="dayOfYear-short">
+				<displayName>Tag d. J.</displayName>
+			</field>
+			<field type="weekday-narrow">
+				<displayName>Wochentag</displayName>
+			</field>
+			<field type="weekdayOfMonth">
+				<displayName>Wochentag im Monat</displayName>
+			</field>
+			<field type="weekdayOfMonth-short">
+				<displayName>Wochent. i. Mo.</displayName>
+			</field>
+			<field type="weekdayOfMonth-narrow">
+				<displayName>Wochent. i. Mon.</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<zone type="Asia/Brunei">
+				<exemplarCity>Brunei</exemplarCity>
+			</zone>
+			<zone type="Asia/Macau">
+				<exemplarCity>Macao</exemplarCity>
+			</zone>
+			<zone type="Europe/Saratov">
+				<exemplarCity>Saratov</exemplarCity>
+			</zone>
+			<metazone type="Brunei">
+				<long>
+					<standard>Brunei-Zeit</standard>
+				</long>
+			</metazone>
+			<metazone type="Solomon">
+				<long>
+					<standard>Salomoninseln-Zeit</standard>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<decimal>.</decimal>
+			<group>’</group>
+		</symbols>
+		<percentFormats numberSystem="latn">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern>#,##0%</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤ #,##0.00;¤-#,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="BYN">
+				<displayName>Weissrussischer Rubel</displayName>
+				<displayName count="one">Weissrussischer Rubel</displayName>
+				<displayName count="other">Weissrussische Rubel</displayName>
+			</currency>
+			<currency type="BYR">
+				<displayName>Weissrussischer Rubel (2000–2016)</displayName>
+				<displayName count="one">Weissrussischer Rubel (2000–2016)</displayName>
+				<displayName count="other">Weissrussische Rubel (2000–2016)</displayName>
+			</currency>
+			<currency type="EUR">
+				<symbol draft="contributed">EUR</symbol>
+				<symbol alt="narrow" draft="contributed">EUR</symbol>
+			</currency>
+			<currency type="STN">
+				<displayName>São-toméischer Dobra (2018)</displayName>
+				<displayName count="one">São-toméischer Dobra (2018)</displayName>
+				<displayName count="other">São-toméischer Dobra (2018)</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="area-square-foot">
+				<displayName>Quadratfuss</displayName>
+				<unitPattern count="one">{0} Quadratfuss</unitPattern>
+				<unitPattern count="one" case="accusative">{0} Quadratfuss</unitPattern>
+				<unitPattern count="one" case="dative">{0} Quadratfuss</unitPattern>
+				<unitPattern count="one" case="genitive">{0} Quadratfusses</unitPattern>
+				<unitPattern count="other">{0} Quadratfuss</unitPattern>
+				<unitPattern count="other" case="accusative">{0} Quadratfuss</unitPattern>
+				<unitPattern count="other" case="dative">{0} Quadratfuss</unitPattern>
+				<unitPattern count="other" case="genitive">{0} Quadratfuss</unitPattern>
+			</unit>
+			<unit type="concentr-milligram-ofglucose-per-deciliter">
+				<displayName>mg/dL</displayName>
+			</unit>
+			<unit type="length-foot">
+				<displayName>Fuss</displayName>
+				<unitPattern count="one">{0} Fuss</unitPattern>
+				<unitPattern count="one" case="accusative">{0} Fuss</unitPattern>
+				<unitPattern count="one" case="dative">{0} Fuss</unitPattern>
+				<unitPattern count="one" case="genitive">{0} Fusses</unitPattern>
+				<unitPattern count="other">{0} Fuss</unitPattern>
+				<unitPattern count="other" case="accusative">{0} Fuss</unitPattern>
+				<unitPattern count="other" case="dative">{0} Fuss</unitPattern>
+				<unitPattern count="other" case="genitive">{0} Fuss</unitPattern>
+				<perUnitPattern>{0} pro Fuss</perUnitPattern>
+			</unit>
+			<unit type="mass-grain">
+				<displayName>Messerspitze</displayName>
+			</unit>
+			<unit type="volume-cubic-foot">
+				<displayName>Kubikfuss</displayName>
+				<unitPattern count="one">{0} Kubikfuss</unitPattern>
+				<unitPattern count="one" case="accusative">{0} Kubikfuss</unitPattern>
+				<unitPattern count="one" case="dative">{0} Kubikfuss</unitPattern>
+				<unitPattern count="one" case="genitive">{0} Kubikfusses</unitPattern>
+				<unitPattern count="other">{0} Kubikfuss</unitPattern>
+				<unitPattern count="other" case="accusative">{0} Kubikfuss</unitPattern>
+				<unitPattern count="other" case="dative">{0} Kubikfuss</unitPattern>
+				<unitPattern count="other" case="genitive">{0} Kubikfuss</unitPattern>
+			</unit>
+			<unit type="volume-gallon-imperial">
+				<unitPattern count="one">{0} gal Imp.</unitPattern>
+				<unitPattern count="other">{0} gal Imp.</unitPattern>
+				<perUnitPattern>{0}/gal Imp.</perUnitPattern>
+			</unit>
+			<unit type="volume-jigger">
+				<displayName>Schuss</displayName>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="length-foot">
+				<displayName>Fuss</displayName>
+			</unit>
+			<unit type="mass-grain">
+				<displayName>Messerspitze</displayName>
+				<unitPattern count="other">{0} Msp.</unitPattern>
+			</unit>
+			<unit type="volume-gallon-imperial">
+				<unitPattern count="one">{0} gal Imp.</unitPattern>
+				<unitPattern count="other">{0} gal Imp.</unitPattern>
+				<perUnitPattern>{0}/gal Imp.</perUnitPattern>
+			</unit>
+			<unit type="volume-dram">
+				<displayName>Dram</displayName>
+				<unitPattern count="one">{0} dr.</unitPattern>
+				<unitPattern count="other">{0} dr.</unitPattern>
+			</unit>
+			<unit type="volume-jigger">
+				<displayName>Schuss</displayName>
+				<unitPattern count="one">Schuss</unitPattern>
+				<unitPattern count="other">{0} Schuss</unitPattern>
+			</unit>
+			<unit type="volume-pinch">
+				<unitPattern count="one">{0} Prise</unitPattern>
+				<unitPattern count="other">{0} Prise</unitPattern>
+			</unit>
+		</unitLength>
+	</units>
+	<typographicNames>
+		<axisName type="opsz">optische Grösse</axisName>
+		<styleName type="opsz" subtype="8">Konsultationsgrösse</styleName>
+		<styleName type="opsz" subtype="12">Lesegrösse</styleName>
+		<styleName type="opsz" subtype="18">Schaugrösse</styleName>
+		<styleName type="opsz" subtype="72">Plakatgrösse</styleName>
+		<styleName type="opsz" subtype="144">Ferngrösse</styleName>
+		<styleName type="wght" subtype="500">medium</styleName>
+	</typographicNames>
+</ldml>

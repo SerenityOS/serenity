@@ -1,0 +1,15 @@
+[domain_realm]
+
+[libdefaults]
+	default_realm = "MAC.LOCAL"
+	dns_fallback = "no"
+
+[logging]
+	admin_server = "FILE:/var/log/krb5kdc/kadmin.log"
+	kdc = "FILE:/var/log/krb5kdc/kdc.log"
+
+[realms]
+	MAC.LOCAL = {
+		kdc = "kdc.mac.local:88"
+	}
+

@@ -1,0 +1,2 @@
+Neg20.java:31:28: compiler.err.cant.apply.diamond.1: (compiler.misc.diamond: Neg20.Foo), (compiler.misc.diamond.invalid.arg: E, (compiler.misc.diamond: Neg20.Foo))
+1 error

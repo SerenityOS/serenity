@@ -1,0 +1,2 @@
+T7022054neg1.java:15:30: compiler.err.name.clash.same.erasure.no.override: m, X, T7022054neg1.B, m, java.lang.String, T7022054neg1.A
+1 error

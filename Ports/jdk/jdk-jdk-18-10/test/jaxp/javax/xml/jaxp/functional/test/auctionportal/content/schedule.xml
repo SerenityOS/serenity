@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schedule xmlns:xi="http://www.w3.org/2001/XInclude" >
+    <task xmlns:xi="http://www.w3.org/2001/XInclude">
+        <xi:include href="inclusion.xml" parse="xml" />
+    </task>
+    <task xmlns:xi="http://www.w3.org/2001/XInclude">
+        <xi:include href="inclusion.xml" parse="xml" />
+    </task>
+</schedule>

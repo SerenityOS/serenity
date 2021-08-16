@@ -1,0 +1,5 @@
+var f = new ConnectionFilter("Hide control edges");
+f.addRule(new ConnectionFilter.ConnectionStyleRule(new MatcherSelector(new Properties.StringPropertyMatcher("category", "control")),
+                                                   white,
+                                                   Connection.ConnectionStyle.INVISIBLE));
+f.apply(graph);

@@ -1,0 +1,10 @@
+package  p;
+
+public interface  Outer$I
+	version 49:0
+{
+
+
+public static interface InnerClass I=class Outer$I of class Outer;
+
+} // end Class Outer$I

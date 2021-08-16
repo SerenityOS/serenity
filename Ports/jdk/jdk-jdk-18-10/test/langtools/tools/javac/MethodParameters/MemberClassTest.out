@@ -1,0 +1,33 @@
+static class MemberClassTest$Static_Member -- inner
+MemberClassTest$Static_Member.<init>()
+MemberClassTest$Static_Member.<init>(arg, barg)
+MemberClassTest$Static_Member.m(s, ts)
+MemberClassTest$Static_Member.m()
+public class MemberClassTest$Member -- inner
+MemberClassTest$Member.<init>(final this$0/*implicit*/)
+MemberClassTest$Member.<init>(final this$0/*implicit*/, a, ba)
+MemberClassTest$Member.m(s, ts)
+MemberClassTest$Member.m()
+public class MemberClassTest$Member$Member_Member -- inner
+MemberClassTest$Member$Member_Member.<init>(final this$1/*implicit*/)
+MemberClassTest$Member$Member_Member.<init>(final this$1/*implicit*/, x, yx)
+class MemberClassTest$1 -- anon
+MemberClassTest$1.<init>(final this$0/*implicit*/)
+MemberClassTest$1.m()
+MemberClassTest$1.m(s, ts)
+static public class MemberClassTest$Static_Member$Static_Member_Static_Member -- inner
+MemberClassTest$Static_Member$Static_Member_Static_Member.<init>()
+MemberClassTest$Static_Member$Static_Member_Static_Member.<init>(x, yx)
+public class MemberClassTest$Static_Member$Static_Member_Member -- inner
+MemberClassTest$Static_Member$Static_Member_Member.<init>(final this$0/*implicit*/)
+MemberClassTest$Static_Member$Static_Member_Member.<init>(final this$0/*implicit*/, x, yx)
+class MemberClassTest -- 
+MemberClassTest.<init>(final a, ba)
+MemberClassTest.<init>()
+MemberClassTest.foo()
+static interface MemberClassTest$I -- inner
+MemberClassTest$I.m()
+MemberClassTest$I.m(x, yx)
+class MemberClassTest$1$Anonymous_Member -- inner
+MemberClassTest$1$Anonymous_Member.<init>(final this$1/*implicit*/)
+MemberClassTest$1$Anonymous_Member.<init>(final this$1/*implicit*/, x, yx)

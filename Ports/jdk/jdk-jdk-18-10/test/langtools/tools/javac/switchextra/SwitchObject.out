@@ -1,0 +1,4 @@
+SwitchObject.java:10:16: compiler.err.preview.feature.disabled.plural: (compiler.misc.feature.pattern.switch)
+SwitchObject.java:11:18: compiler.err.constant.label.not.compatible: int, java.lang.Object
+SwitchObject.java:12:18: compiler.err.constant.label.not.compatible: java.lang.String, java.lang.Object
+3 errors

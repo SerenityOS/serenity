@@ -1,0 +1,5 @@
+<?xml version='1.0'?>
+<!DOCTYPE root [
+	<!ELEMENT root (#PCDATA)>
+]>
+<root>xxx</root>

@@ -1,0 +1,4 @@
+Neg12.java:21:12: compiler.err.does.not.override.abstract: Neg12.D, m(java.lang.String), Neg12.I2
+Neg12.java:24:10: compiler.err.cant.apply.symbols: kindname.method, m, compiler.misc.no.args,{(compiler.misc.inapplicable.method: kindname.method, Neg12.I1, m(java.lang.String), (compiler.misc.arg.length.mismatch)),(compiler.misc.inapplicable.method: kindname.method, Neg12.B, m(java.lang.Integer), (compiler.misc.arg.length.mismatch))}
+Neg12.java:25:10: compiler.err.cant.apply.symbol: kindname.method, m, java.lang.Integer, compiler.misc.no.args, kindname.class, Neg12.B, (compiler.misc.arg.length.mismatch)
+3 errors

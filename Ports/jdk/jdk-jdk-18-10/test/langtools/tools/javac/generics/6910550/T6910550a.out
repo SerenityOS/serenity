@@ -1,0 +1,2 @@
+T6910550a.java:13:10: compiler.err.name.clash.same.erasure: m(java.util.List<java.lang.Integer>), m(java.util.List<java.lang.String>)
+1 error

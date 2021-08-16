@@ -1,0 +1,2 @@
+T5090220.java:16:9: compiler.err.ref.ambiguous: foo, kindname.method, foo(int,java.lang.Integer), T5090220, kindname.method, foo(java.lang.Integer,double), T5090220
+1 error

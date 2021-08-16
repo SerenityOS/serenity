@@ -1,0 +1,16 @@
+The unit tests in this directory depend on a native launcher library
+(libInheritedChannel.so). This library is built by executing
+
+$ make test-image-jdk-jtreg-native
+
+in the root directory of the OpenJDK clone. It will generate
+libInheritedChannel.so in two locations:
+
+$ $JDK_ROOT/build/$PLATFORM/support/test/jdk/jtreg/native/lib/libInheritedChannel.so
+$ $JDK_ROOT/build/$PLATFORM/images/test/jdk/jtreg/native/libInheritedChannel.so
+
+The test may then be run using jtreg for example as follows:
+
+$ jtreg -s -w:/tmp -r:/tmp -va -dir:$JDK_ROOT/test/jdk \
+-nativepath:$JDK_ROOT/build/$PLATFORM/support/test/jdk/jtreg/native/lib \
+java/nio/channels/spi/SelectorProvider/inheritedChannel/InheritedChannelTest.java

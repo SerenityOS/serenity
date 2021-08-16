@@ -1,0 +1,7 @@
+# data file for deflocale.sh. Each line must have two locales in the following order.
+#
+#       LC_CTYPE        LC_MESSAGES
+ 
+        ja_JP.UTF-8     zh_CN.UTF-8
+        zh_CN.UTF-8     en_US.UTF-8
+        C               zh_CN.UTF-8

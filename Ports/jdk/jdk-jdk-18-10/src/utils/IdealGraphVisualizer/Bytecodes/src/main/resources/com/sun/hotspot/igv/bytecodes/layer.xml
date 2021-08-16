@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.1//EN" "http://www.netbeans.org/dtds/filesystem-1_1.dtd">
+<filesystem>
+    <folder name="Actions">
+        <folder name="Edit">
+            <file name="com-sun-hotspot-igv-bytecodes-SelectBytecodesAction.instance"/>
+        </folder>
+        <folder name="Window">
+            <file name="com-sun-hotspot-igv-bytecodes-BytecodeViewAction.instance"/>
+        </folder>
+    </folder>
+    <folder name="Menu">
+        <folder name="Window">
+            <file name="BytecodeViewAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Window/com-sun-hotspot-igv-bytecodes-BytecodeViewAction.instance"/>
+            </file>
+        </folder>
+    </folder>
+    <folder name="Windows2">
+        <folder name="Components">
+            <file name="BytecodeViewTopComponent.settings" url="BytecodeViewTopComponentSettings.xml"/>
+        </folder>
+        <folder name="Modes">
+            <folder name="customRightTopMode">
+                <file name="BytecodeViewTopComponent.wstcref" url="BytecodeViewTopComponentWstcref.xml"/>
+            </folder>
+        </folder>
+    </folder>
+</filesystem>

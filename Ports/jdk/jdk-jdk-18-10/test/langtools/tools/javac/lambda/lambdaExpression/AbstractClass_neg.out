@@ -1,0 +1,2 @@
+AbstractClass_neg.java:16:17: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: AbstractClass_neg.SAM)
+1 error

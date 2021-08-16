@@ -1,0 +1,3 @@
+ForbidAccessToFieldUsingSuperTest.java:24:19: compiler.err.not.encl.class: ForbidAccessToFieldUsingSuperTest.T1
+ForbidAccessToFieldUsingSuperTest.java:25:19: compiler.err.not.encl.class: ForbidAccessToFieldUsingSuperTest.T1
+2 errors

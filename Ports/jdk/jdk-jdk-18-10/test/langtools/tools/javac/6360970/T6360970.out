@@ -1,0 +1,2 @@
+T6360970.java:24:14: compiler.err.ref.ambiguous: i, kindname.variable, i, T6360970.D, kindname.variable, i, T6360970.A
+1 error

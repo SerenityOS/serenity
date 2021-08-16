@@ -1,0 +1,698 @@
+    @ForceInline
+    public $type$ get$Type$(Scope scope, Object base, long offset) {
+        try {
+            return get$Type$Internal(scope, base, offset);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ get$Type$Internal(Scope scope, Object base, long offset) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.get$Type$(base, offset);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public void put$Type$(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            put$Type$Internal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private void put$Type$Internal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            UNSAFE.put$Type$(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+#if[Unaligned]
+    @ForceInline
+    public $type$ get$Type$Unaligned(Scope scope, Object base, long offset, boolean be) {
+        try {
+            return get$Type$UnalignedInternal(scope, base, offset, be);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ get$Type$UnalignedInternal(Scope scope, Object base, long offset, boolean be) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.get$Type$Unaligned(base, offset, be);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public void put$Type$Unaligned(Scope scope, Object base, long offset, $type$ value, boolean be) {
+        try {
+            put$Type$UnalignedInternal(scope, base, offset, value, be);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private void put$Type$UnalignedInternal(Scope scope, Object base, long offset, $type$ value, boolean be) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            UNSAFE.put$Type$Unaligned(base, offset, value, be);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+#end[Unaligned]
+
+    @ForceInline
+    public $type$ get$Type$Volatile(Scope scope, Object base, long offset) {
+        try {
+            return get$Type$VolatileInternal(scope, base, offset);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ get$Type$VolatileInternal(Scope scope, Object base, long offset) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.get$Type$Volatile(base, offset);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public void put$Type$Volatile(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            put$Type$VolatileInternal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private void put$Type$VolatileInternal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            UNSAFE.put$Type$Volatile(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ get$Type$Acquire(Scope scope, Object base, long offset) {
+        try {
+            return get$Type$AcquireInternal(scope, base, offset);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ get$Type$AcquireInternal(Scope scope, Object base, long offset) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.get$Type$Acquire(base, offset);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public void put$Type$Release(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            put$Type$ReleaseInternal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private void put$Type$ReleaseInternal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            UNSAFE.put$Type$Release(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ get$Type$Opaque(Scope scope, Object base, long offset) {
+        try {
+            return get$Type$OpaqueInternal(scope, base, offset);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ get$Type$OpaqueInternal(Scope scope, Object base, long offset) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.get$Type$Opaque(base, offset);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+    @ForceInline
+    public void put$Type$Opaque(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            put$Type$OpaqueInternal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private void put$Type$OpaqueInternal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            UNSAFE.put$Type$Opaque(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+#if[CAS]
+    @ForceInline
+    public boolean compareAndSet$Type$(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            return compareAndSet$Type$Internal(scope, base, offset, expected, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private boolean compareAndSet$Type$Internal(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.compareAndSet$Type$(base, offset, expected, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ compareAndExchange$Type$(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            return compareAndExchange$Type$Internal(scope, base, offset, expected, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ compareAndExchange$Type$Internal(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.compareAndExchange$Type$(base, offset, expected, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ compareAndExchange$Type$Acquire(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            return compareAndExchange$Type$AcquireInternal(scope, base, offset, expected, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ compareAndExchange$Type$AcquireInternal(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.compareAndExchange$Type$Acquire(base, offset, expected, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ compareAndExchange$Type$Release(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            return compareAndExchange$Type$ReleaseInternal(scope, base, offset, expected, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ compareAndExchange$Type$ReleaseInternal(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.compareAndExchange$Type$Release(base, offset, expected, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public boolean weakCompareAndSet$Type$Plain(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            return weakCompareAndSet$Type$PlainInternal(scope, base, offset, expected, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private boolean weakCompareAndSet$Type$PlainInternal(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.weakCompareAndSet$Type$Plain(base, offset, expected, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public boolean weakCompareAndSet$Type$(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            return weakCompareAndSet$Type$Internal(scope, base, offset, expected, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private boolean weakCompareAndSet$Type$Internal(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.weakCompareAndSet$Type$(base, offset, expected, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public boolean weakCompareAndSet$Type$Acquire(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            return weakCompareAndSet$Type$AcquireInternal(scope, base, offset, expected, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private boolean weakCompareAndSet$Type$AcquireInternal(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.weakCompareAndSet$Type$Acquire(base, offset, expected, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public boolean weakCompareAndSet$Type$Release(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            return weakCompareAndSet$Type$ReleaseInternal(scope, base, offset, expected, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private boolean weakCompareAndSet$Type$ReleaseInternal(Scope scope, Object base, long offset, $type$ expected, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.weakCompareAndSet$Type$Release(base, offset, expected, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ getAndSet$Type$(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            return getAndSet$Type$Internal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndSet$Type$Internal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndSet$Type$(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ getAndSet$Type$Acquire(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            return getAndSet$Type$AcquireInternal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndSet$Type$AcquireInternal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndSet$Type$Acquire(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ getAndSet$Type$Release(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            return getAndSet$Type$ReleaseInternal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndSet$Type$ReleaseInternal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndSet$Type$Release(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+#end[CAS]
+
+#if[AtomicAdd]
+    @ForceInline
+    public $type$ getAndAdd$Type$(Scope scope, Object base, long offset, $type$ delta) {
+        try {
+            return getAndAdd$Type$Internal(scope, base, offset, delta);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndAdd$Type$Internal(Scope scope, Object base, long offset, $type$ delta) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndAdd$Type$(base, offset, delta);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ getAndAdd$Type$Acquire(Scope scope, Object base, long offset, $type$ delta) {
+        try {
+            return getAndAdd$Type$AcquireInternal(scope, base, offset, delta);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndAdd$Type$AcquireInternal(Scope scope, Object base, long offset, $type$ delta) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndAdd$Type$Acquire(base, offset, delta);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ getAndAdd$Type$Release(Scope scope, Object base, long offset, $type$ delta) {
+        try {
+            return getAndAdd$Type$ReleaseInternal(scope, base, offset, delta);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndAdd$Type$ReleaseInternal(Scope scope, Object base, long offset, $type$ delta) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndAdd$Type$Release(base, offset, delta);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+#end[AtomicAdd]
+
+#if[Bitwise]
+    @ForceInline
+    public $type$ getAndBitwiseOr$Type$(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            return getAndBitwiseOr$Type$Internal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndBitwiseOr$Type$Internal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndBitwiseOr$Type$(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ getAndBitwiseOr$Type$Acquire(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            return getAndBitwiseOr$Type$AcquireInternal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndBitwiseOr$Type$AcquireInternal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndBitwiseOr$Type$Acquire(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ getAndBitwiseOr$Type$Release(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            return getAndBitwiseOr$Type$ReleaseInternal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndBitwiseOr$Type$ReleaseInternal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndBitwiseOr$Type$Release(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ getAndBitwiseAnd$Type$(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            return getAndBitwiseAnd$Type$Internal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndBitwiseAnd$Type$Internal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndBitwiseAnd$Type$(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ getAndBitwiseAnd$Type$Acquire(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            return getAndBitwiseAnd$Type$AcquireInternal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndBitwiseAnd$Type$AcquireInternal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndBitwiseAnd$Type$Acquire(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ getAndBitwiseAnd$Type$Release(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            return getAndBitwiseAnd$Type$ReleaseInternal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndBitwiseAnd$Type$ReleaseInternal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndBitwiseAnd$Type$Release(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ getAndBitwiseXor$Type$(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            return getAndBitwiseXor$Type$Internal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndBitwiseXor$Type$Internal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndBitwiseXor$Type$(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ getAndBitwiseXor$Type$Acquire(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            return getAndBitwiseXor$Type$AcquireInternal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndBitwiseXor$Type$AcquireInternal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndBitwiseXor$Type$Acquire(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public $type$ getAndBitwiseXor$Type$Release(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            return getAndBitwiseXor$Type$ReleaseInternal(scope, base, offset, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private $type$ getAndBitwiseXor$Type$ReleaseInternal(Scope scope, Object base, long offset, $type$ value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return UNSAFE.getAndBitwiseXor$Type$Release(base, offset, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+#end[Bitwise]

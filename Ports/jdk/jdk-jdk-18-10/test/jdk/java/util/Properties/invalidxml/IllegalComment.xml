@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!-- The dtd allows zero or one comment element -->
+
+<properties>
+<comment>comment1</comment>
+<comment>comment2</comment>
+<entry key="firstKey">value of the first key</entry>
+</properties>

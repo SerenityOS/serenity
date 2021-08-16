@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="xpns1.org" xmlns:xpns="xpns1.org">
+	<xsd:element name="xsid" type="xsd:string"/>
+	<xsd:element name="xiid">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="xiid2" type="xsd:string" maxOccurs="unbounded"/>
+			</xsd:sequence>
+			<xsd:attribute name="val" type="xsd:string"/>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

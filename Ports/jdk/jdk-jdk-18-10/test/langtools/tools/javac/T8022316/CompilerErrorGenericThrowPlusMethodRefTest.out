@@ -1,0 +1,2 @@
+CompilerErrorGenericThrowPlusMethodRefTest.java:30:26: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.Exception
+1 error

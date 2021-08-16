@@ -1,0 +1,5 @@
+NonSAM2.java:13:1: compiler.err.types.incompatible: Bar1, Foo1, (compiler.misc.incompatible.diff.ret: getAge, java.lang.String)
+NonSAM2.java:15:1: compiler.err.name.clash.same.erasure.no.override: getOldest, java.util.List<?>, C, getOldest, java.util.List<java.lang.Number>, A
+NonSAM2.java:17:1: compiler.err.name.clash.same.erasure.no.override: getOldest, java.util.List<java.lang.Integer>, D, getOldest, java.util.List<java.lang.Number>, A
+NonSAM2.java:21:1: compiler.err.name.clash.same.erasure.no.override: m, T2, Bar2, m, T1, Foo2
+4 errors

@@ -1,0 +1,3 @@
+AnnotatedMethodSelectorTest2.java:12:42: compiler.err.annotation.type.not.applicable.to.type: AnnotatedMethodSelectorTest2.A
+AnnotatedMethodSelectorTest2.java:13:23: compiler.err.annotation.type.not.applicable.to.type: AnnotatedMethodSelectorTest2.A
+2 errors

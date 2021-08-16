@@ -1,0 +1,6 @@
+T6227617.java:14:18: compiler.warn.redundant.cast: int
+T6227617.java:19:20: compiler.warn.redundant.cast: java.lang.String
+T6227617.java:23:22: compiler.warn.redundant.cast: java.lang.Integer
+T6227617.java:33:27: compiler.warn.redundant.cast: int
+T6227617.java:36:29: compiler.warn.redundant.cast: java.lang.String
+5 warnings

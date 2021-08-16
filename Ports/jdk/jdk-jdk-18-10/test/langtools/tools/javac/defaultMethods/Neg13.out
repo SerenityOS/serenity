@@ -1,0 +1,12 @@
+Neg13.java:7:30: compiler.err.mod.not.allowed.here: protected
+Neg13.java:9:28: compiler.err.mod.not.allowed.here: protected
+Neg13.java:8:21: compiler.err.default.overrides.object.member: equals, kindname.interface, Neg13
+Neg13.java:10:22: compiler.err.override.meth: (compiler.misc.cant.override: getClass(), Neg13, getClass(), java.lang.Object), final
+Neg13.java:11:17: compiler.err.default.overrides.object.member: hashCode, kindname.interface, Neg13
+Neg13.java:12:18: compiler.err.override.meth: (compiler.misc.cant.override: notify(), Neg13, notify(), java.lang.Object), final
+Neg13.java:13:18: compiler.err.override.meth: (compiler.misc.cant.override: notifyAll(), Neg13, notifyAll(), java.lang.Object), final
+Neg13.java:14:20: compiler.err.default.overrides.object.member: toString, kindname.interface, Neg13
+Neg13.java:15:18: compiler.err.override.meth: (compiler.misc.cant.override: wait(), Neg13, wait(), java.lang.Object), final
+Neg13.java:16:18: compiler.err.override.meth: (compiler.misc.cant.override: wait(long), Neg13, wait(long), java.lang.Object), final
+Neg13.java:17:18: compiler.err.override.meth: (compiler.misc.cant.override: wait(long,int), Neg13, wait(long,int), java.lang.Object), final
+11 errors

@@ -1,0 +1,4 @@
+T6425594.java:10:28: compiler.warn.self.ref: x
+T6425594.java:11:26: compiler.err.illegal.forward.ref
+1 error
+1 warning

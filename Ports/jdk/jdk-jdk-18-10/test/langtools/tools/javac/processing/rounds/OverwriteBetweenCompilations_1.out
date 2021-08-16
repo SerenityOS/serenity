@@ -1,0 +1,45 @@
+round: 1
+round: 2
+
+@java.lang.Deprecated
+public class GeneratedSource<T> extends java.util.ArrayList<java.lang.String> implements java.lang.Runnable {
+
+  public GeneratedSource();
+
+  public void test(int a);
+
+  public void run();
+}
+
+@java.lang.Deprecated
+public class GeneratedClass<T> extends java.util.ArrayList<java.lang.String> implements java.lang.Runnable {
+
+  public GeneratedClass();
+
+  public void test(int a);
+
+  public void run();
+}
+round: 3
+
+@java.lang.Deprecated
+public class GeneratedSource<T> extends java.util.ArrayList<java.lang.String> implements java.lang.Runnable {
+
+  public GeneratedSource();
+
+  public void test(int a);
+
+  public void run();
+}
+
+@java.lang.Deprecated
+public class GeneratedClass<T> extends java.util.ArrayList<java.lang.String> implements java.lang.Runnable {
+
+  public GeneratedClass();
+
+  public void test(int a);
+
+  public void run();
+}
+- compiler.note.deprecated.filename: OverwriteBetweenCompilationsSource.java
+- compiler.note.deprecated.recompile

@@ -1,0 +1,2 @@
+T7175433.java:24:12: compiler.err.prob.found.req: (compiler.misc.inaccessible.varargs.type: Bar.Foo, kindname.class, T7175433)
+1 error

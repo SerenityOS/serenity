@@ -1,0 +1,110 @@
+/*
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+/**
+ * @test
+ * @bug 8079784
+ * @compile InnerClassesTest.jasm Base.java Child.java
+ * @run main com.n.InnerClassesTest
+ */
+
+// Test that if a class's InnerClasses attribute contains a class that is not
+// accessible to the class with the attribute then an IllegalAccessError
+// exception should not get thrown as a result of the class accessing other
+// classes in the InnerClasses attribute.
+//
+// In this test, class InnerClassesTest has an InnerClasses attribute with two
+// entries.  One for inaccessable (non-public) class com/g/Base and class
+// con/g/Base$Builder.  And, one entry for classes com/n/InnerClassTest and
+// com/n/InnerClasses/Test$Foo.  The test accesses com/n/InnerClsses/Test$Foo
+// by calling getSimpleName().  This should not cause an IllegalAccessError
+// exception to get thrown.
+//
+//
+// This jasm code was generated from the following Java code.  The only
+// difference is that, in the jasm code, the order of the entries in the
+// InnerClasses attributes for class InnerClassesTest were switched.
+//
+// package com.n;
+// import com.g.Child;
+//
+// public final class InnerClassesTest {
+//
+//     public static final class Foo { }
+//     void unused() {
+//         new Child().setJobName();
+//     }
+//
+//     public static void main(String[] args) {
+//         Class<?> clazz = InnerClassesTest.Foo.class;
+//         clazz.getSimpleName();
+//     }
+// }
+
+package com/n;
+
+super public final class InnerClassesTest$Foo version 53:0 {
+
+    public Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+public static final InnerClass Foo=class InnerClassesTest$Foo of class InnerClassesTest;
+
+} // end Class InnerClassesTest$Foo
+
+
+super public final class InnerClassesTest version 53:0 {
+
+
+    public Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial    Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    Method unused:"()V" stack 2 locals 1 {
+        new    class com/g/Child;
+        dup;
+        invokespecial    Method com/g/Child."<init>":"()V";
+        invokevirtual    Method com/g/Child.setJobName:"()Lcom/g/Base$Builder;";
+        pop;
+        return;
+    }
+
+    public static Method main:"([Ljava/lang/String;)V" stack 1 locals 2 {
+        ldc    class InnerClassesTest$Foo;
+        astore_1;
+        aload_1;
+        invokevirtual    Method java/lang/Class.getSimpleName:"()Ljava/lang/String;";
+        pop;
+        return;
+    }
+
+static InnerClass Builder=class com/g/Base$Builder of class com/g/Base;
+public static final InnerClass Foo=class InnerClassesTest$Foo of class InnerClassesTest;
+
+} // end Class InnerClassesTest

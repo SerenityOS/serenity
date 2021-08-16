@@ -1,0 +1,14 @@
+EffectivelyFinalTest.java:25:47: compiler.err.var.might.not.have.been.initialized: y
+EffectivelyFinalTest.java:13:45: compiler.err.local.var.accessed.from.icls.needs.final: x
+EffectivelyFinalTest.java:13:47: compiler.err.local.var.accessed.from.icls.needs.final: y
+EffectivelyFinalTest.java:19:45: compiler.err.local.var.accessed.from.icls.needs.final: x
+EffectivelyFinalTest.java:19:47: compiler.err.local.var.accessed.from.icls.needs.final: y
+EffectivelyFinalTest.java:25:45: compiler.err.local.var.accessed.from.icls.needs.final: x
+EffectivelyFinalTest.java:32:45: compiler.err.local.var.accessed.from.icls.needs.final: x
+EffectivelyFinalTest.java:32:47: compiler.err.local.var.accessed.from.icls.needs.final: y
+EffectivelyFinalTest.java:39:45: compiler.err.local.var.accessed.from.icls.needs.final: x
+EffectivelyFinalTest.java:39:47: compiler.err.local.var.accessed.from.icls.needs.final: y
+EffectivelyFinalTest.java:43:45: compiler.err.local.var.accessed.from.icls.needs.final: x
+EffectivelyFinalTest.java:48:45: compiler.err.local.var.accessed.from.icls.needs.final: x
+EffectivelyFinalTest.java:53:45: compiler.err.local.var.accessed.from.icls.needs.final: y
+13 errors

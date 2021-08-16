@@ -1,0 +1,5 @@
+T6882235.java:10:13: compiler.err.illegal.start.of.expr
+T6882235.java:11:15: compiler.err.malformed.fp.lit
+T6882235.java:11:18: compiler.err.illegal.start.of.expr
+T6882235.java:12:13: compiler.err.illegal.start.of.expr
+4 errors

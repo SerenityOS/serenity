@@ -1,0 +1,98 @@
+/*
+ * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+// NestHost attribute deleted
+
+class TestReflectionAPI$MemberNoHost {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #12; // #1
+    class #13; // #2
+    class #16; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "LineNumberTable"; // #7
+    Utf8 "SourceFile"; // #8
+    Utf8 "TestReflectionAPI.java"; // #9
+    Utf8 "NestHost"; // #10
+    class #17; // #11
+    NameAndType #4 #5; // #12
+    Utf8 "TestReflectionAPI$MemberNoHost"; // #13
+    Utf8 "MemberNoHost"; // #14
+    Utf8 "InnerClasses"; // #15
+    Utf8 "java/lang/Object"; // #16
+    Utf8 "TestReflectionAPI"; // #17
+  } // Constant Pool
+
+  0x0020; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #4; // name_cpx
+      #5; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#7) { // LineNumberTable
+              [] { // LineNumberTable
+                0  57;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#8) { // SourceFile
+      #9;
+    } // end SourceFile
+    ;
+    Attr(#15) { // InnerClasses
+      [] { // InnerClasses
+        #2 #11 #14 8;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class TestReflectionAPI$MemberNoHost

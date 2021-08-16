@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<!-- An XML properties document has the DOCTYPE declaration with the properties root element -->
+
+<properties>
+<entry key="foo">bar</entry>
+<entry key="gus">baz</entry>
+</properties>

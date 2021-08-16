@@ -1,0 +1,9 @@
+SwitchArrowBrokenConstant.java:13:20: compiler.err.expected: ')'
+SwitchArrowBrokenConstant.java:13:23: compiler.err.expected2: :, ->
+SwitchArrowBrokenConstant.java:16:20: compiler.err.expected: ')'
+SwitchArrowBrokenConstant.java:16:23: compiler.err.expected2: :, ->
+SwitchArrowBrokenConstant.java:19:19: compiler.err.expected2: :, ->
+SwitchArrowBrokenConstant.java:22:19: compiler.err.expected2: :, ->
+SwitchArrowBrokenConstant.java:25:20: compiler.err.expected2: :, ->
+SwitchArrowBrokenConstant.java:28:20: compiler.err.expected2: :, ->
+8 errors

@@ -1,0 +1,113 @@
+//
+// Copyright (c) 2018, Red Hat, Inc. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+//
+
+source_hpp %{
+#include "gc/shenandoah/shenandoahBarrierSetAssembler.hpp"
+#include "gc/shenandoah/c2/shenandoahSupport.hpp"
+%}
+
+instruct compareAndSwapP_shenandoah(rRegI res,
+                                    memory mem_ptr,
+                                    rRegP tmp1, rRegP tmp2,
+                                    rax_RegP oldval, rRegP newval,
+                                    rFlagsReg cr)
+%{
+  predicate(VM_Version::supports_cx8());
+  match(Set res (ShenandoahCompareAndSwapP mem_ptr (Binary oldval newval)));
+  match(Set res (ShenandoahWeakCompareAndSwapP mem_ptr (Binary oldval newval)));
+  effect(TEMP tmp1, TEMP tmp2, KILL cr, KILL oldval);
+
+  format %{ "shenandoah_cas_oop $mem_ptr,$newval" %}
+
+  ins_encode %{
+    ShenandoahBarrierSet::assembler()->cmpxchg_oop(&_masm,
+                                                   $res$$Register, $mem_ptr$$Address, $oldval$$Register, $newval$$Register,
+                                                   false, // swap
+                                                   $tmp1$$Register, $tmp2$$Register
+                                                   );
+  %}
+  ins_pipe( pipe_cmpxchg );
+%}
+
+instruct compareAndSwapN_shenandoah(rRegI res,
+                                    memory mem_ptr,
+                                    rRegP tmp1, rRegP tmp2,
+                                    rax_RegN oldval, rRegN newval,
+                                    rFlagsReg cr) %{
+  match(Set res (ShenandoahCompareAndSwapN mem_ptr (Binary oldval newval)));
+  match(Set res (ShenandoahWeakCompareAndSwapN mem_ptr (Binary oldval newval)));
+  effect(TEMP tmp1, TEMP tmp2, KILL cr, KILL oldval);
+
+  format %{ "shenandoah_cas_oop $mem_ptr,$newval" %}
+
+  ins_encode %{
+    ShenandoahBarrierSet::assembler()->cmpxchg_oop(&_masm,
+                                                   $res$$Register, $mem_ptr$$Address, $oldval$$Register, $newval$$Register,
+                                                   false, // swap
+                                                   $tmp1$$Register, $tmp2$$Register
+                                                   );
+  %}
+  ins_pipe( pipe_cmpxchg );
+%}
+
+instruct compareAndExchangeN_shenandoah(memory mem_ptr,
+                                        rax_RegN oldval, rRegN newval,
+                                        rRegP tmp1, rRegP tmp2,
+                                        rFlagsReg cr) %{
+  match(Set oldval (ShenandoahCompareAndExchangeN mem_ptr (Binary oldval newval)));
+  effect(TEMP tmp1, TEMP tmp2, KILL cr);
+
+  format %{ "shenandoah_cas_oop $mem_ptr,$newval" %}
+
+  ins_encode %{
+    ShenandoahBarrierSet::assembler()->cmpxchg_oop(&_masm,
+                                                   NULL, $mem_ptr$$Address, $oldval$$Register, $newval$$Register,
+                                                   true, // exchange
+                                                   $tmp1$$Register, $tmp2$$Register
+                                                   );
+  %}
+  ins_pipe( pipe_cmpxchg );
+%}
+
+instruct compareAndExchangeP_shenandoah(memory mem_ptr,
+                                        rax_RegP oldval, rRegP newval,
+                                        rRegP tmp1, rRegP tmp2,
+                                        rFlagsReg cr)
+%{
+  predicate(VM_Version::supports_cx8());
+  match(Set oldval (ShenandoahCompareAndExchangeP mem_ptr (Binary oldval newval)));
+  effect(KILL cr, TEMP tmp1, TEMP tmp2);
+  ins_cost(1000);
+
+  format %{ "shenandoah_cas_oop $mem_ptr,$newval" %}
+
+  ins_encode %{
+    ShenandoahBarrierSet::assembler()->cmpxchg_oop(&_masm,
+                                                   NULL, $mem_ptr$$Address, $oldval$$Register, $newval$$Register,
+                                                   true,  // exchange
+                                                   $tmp1$$Register, $tmp2$$Register
+                                                   );
+  %}
+  ins_pipe( pipe_cmpxchg );
+%}

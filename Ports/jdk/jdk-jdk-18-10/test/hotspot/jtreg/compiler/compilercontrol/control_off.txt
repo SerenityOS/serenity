@@ -1,0 +1,6 @@
+[
+  {    
+    match: "*.helper",
+    PrintAssembly: false,
+  }
+]

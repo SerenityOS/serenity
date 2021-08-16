@@ -1,0 +1,2 @@
+String.java:15:9: compiler.err.ref.ambiguous: Boolean, kindname.class, p2.Boolean, p2, kindname.class, java.lang.Boolean, java.lang
+1 error

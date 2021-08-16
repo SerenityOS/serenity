@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This catalog is malformed XML -->
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+    <system systemId="http://remote/dtd/doc.dtd" uri="docSys.dtd" />
+</cat>

@@ -1,0 +1,4 @@
+T8043893.java:35:9: compiler.err.cant.apply.symbol: kindname.method, m_intersection, T8043893<? super Z>, T8043893<T8043893.T2>, kindname.class, T8043893<X>, (compiler.misc.incompatible.upper.bounds: Z, T8043893.T2,T8043893.T1)
+T8043893.java:36:9: compiler.err.cant.apply.symbol: kindname.method, m_intersection, T8043893<? super Z>, T8043893<T8043893.T3>, kindname.class, T8043893<X>, (compiler.misc.incompatible.upper.bounds: Z, T8043893.T3,T8043893.T1)
+T8043893.java:40:9: compiler.err.cant.apply.symbol: kindname.method, m_class, T8043893<? super Z>, T8043893<T8043893.T5>, kindname.class, T8043893<X>, (compiler.misc.incompatible.upper.bounds: Z, T8043893.T5,T8043893.T4)
+3 errors

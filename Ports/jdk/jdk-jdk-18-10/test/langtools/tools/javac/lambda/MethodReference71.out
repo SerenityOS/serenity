@@ -1,0 +1,3 @@
+MethodReference71.java:24:10: compiler.err.ref.ambiguous: g, kindname.method, <Z>g(MethodReference71.F<Z>), MethodReference71, kindname.method, <Z>g(MethodReference71.G<Z>), MethodReference71
+MethodReference71.java:24:11: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.assignment.exists: Z, (compiler.misc.invalid.mref: kindname.method, (compiler.misc.cant.apply.symbol: kindname.method, m2, java.lang.Integer[], java.lang.Object, kindname.class, MethodReference71, (compiler.misc.varargs.argument.mismatch: (compiler.misc.inconvertible.types: java.lang.Object, java.lang.Integer)))))
+2 errors

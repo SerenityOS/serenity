@@ -1,0 +1,23 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE document PUBLIC "-//mkrishna mohan//DTD//music pub//EN/"
+		"http://sc11152338.us.oracle.com:8080/xmlsqe/jaxp/web/testfiles/JAXPREP/publishers.dtd">
+<document>
+	Publishers of the Music of New York Women Composers
+	<title>The Publishers </title>
+	<publisher>
+		<name>ACA</name>
+		<email>info@composers.com </email>
+		<homepage>http://www.composers.com/</homepage>
+		<address>
+			<street>170 West 74th St.</street>
+			<city>NY</city>
+			<state>NY</state>
+			<zip>10023</zip>
+		</address>
+		<voice>212-362-8900</voice>
+		<fax>212-874-8605</fax>
+		<!-- This comment is for LexicalHandler -->
+		&familytree;
+	</publisher>
+</document>
+

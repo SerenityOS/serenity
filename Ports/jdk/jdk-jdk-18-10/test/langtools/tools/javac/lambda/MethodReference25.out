@@ -1,0 +1,2 @@
+MethodReference25.java:25:9: compiler.err.ref.ambiguous: call, kindname.method, call(int,MethodReference25.SAM1), MethodReference25, kindname.method, call(int,MethodReference25.SAM2), MethodReference25
+1 error

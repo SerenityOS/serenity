@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.auctionportal.org/Accounts"
+           xmlns:acc="http://www.auctionportal.org/Accounts"
+           xmlns="http://www.auctionportal.org/Accounts" elementFormDefault="qualified">
+
+<xs:element name="Account">
+  <xs:complexType>
+    <xs:sequence>
+       <xs:element name="FirstName" type ="xs:string"/>
+       <xs:element name="MiddleInitial" type ="xs:string" minOccurs="0"/>
+       <xs:element ref="LastName"/>
+
+       <!-- This is to associate the account with the screenName
+            later will work on uniqueness with identity constraints
+            importing/including this schema in another one
+            -->
+       <xs:element name="UserID" type ="xs:nonNegativeInteger" />
+       <xs:element name="Role" type ="BuyOrSell" minOccurs="0" maxOccurs="1" />
+
+       <!-- This  may not make sense but this is to test the date -->
+       <xs:element name="DateOfBirth" type ="DateType" minOccurs="0" maxOccurs="1" />
+       <xs:element name="EmailQname" type ="xs:QName" minOccurs="0" maxOccurs="1" />
+       <xs:element name="AptNo" type ="xs:unsignedShort" minOccurs="0" maxOccurs="1" />
+       <xs:element name="StreetNo" type ="xs:short" minOccurs="0" maxOccurs="1" />
+    </xs:sequence>
+   <xs:attribute ref="accountID"/> 
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="LastName" type ="xs:string"/>
+
+<!-- The accountID is same as UserID This is just to check how
+   global attributes are treated-->
+<xs:attribute name="accountID" type="xs:integer"/>
+
+<xs:complexType name="BuyOrSell">
+  <xs:choice>
+     <xs:element name="Buy" type="PlaceHolder"/>
+     <xs:element name="Sell" type="PlaceHolder"/>
+  </xs:choice>
+</xs:complexType>
+
+<!-- an empty complex type declared globally-->
+<xs:complexType name="PlaceHolder">
+</xs:complexType>
+
+
+<!-- This may all not make too much sense 
+     but just to  check the date features of schema-->
+<xs:complexType name="DateType">
+  <xs:sequence>
+  <!--<xs:all>-->
+     <xs:element name="YearMonth" type="xs:gYearMonth"/>
+     <xs:element name="MonthDay" type="xs:gMonthDay"/>
+     <xs:element name="Date" type="xs:date"/>
+  <!--</xs:all>-->
+  </xs:sequence>
+</xs:complexType>
+
+</xs:schema>

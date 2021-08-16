@@ -1,0 +1,5 @@
+InferenceTest_neg1_2.java:14:13: compiler.err.ref.ambiguous: method, kindname.method, method(InferenceTest_neg1_2.SAM4<java.lang.Double,java.lang.String>), InferenceTest_neg1_2, kindname.method, method(InferenceTest_neg1_2.SAM5<java.lang.Integer>), InferenceTest_neg1_2
+InferenceTest_neg1_2.java:15:13: compiler.err.ref.ambiguous: method, kindname.method, method(InferenceTest_neg1_2.SAM4<java.lang.Double,java.lang.String>), InferenceTest_neg1_2, kindname.method, method(InferenceTest_neg1_2.SAM5<java.lang.Integer>), InferenceTest_neg1_2
+InferenceTest_neg1_2.java:16:13: compiler.err.ref.ambiguous: method, kindname.method, method(InferenceTest_neg1_2.SAM4<java.lang.Double,java.lang.String>), InferenceTest_neg1_2, kindname.method, method(InferenceTest_neg1_2.SAM5<java.lang.Integer>), InferenceTest_neg1_2
+InferenceTest_neg1_2.java:16:20: compiler.err.cant.apply.symbol: kindname.method, method, InferenceTest_neg1_2.SAM4<java.lang.Double,java.lang.String>, @21, kindname.class, InferenceTest_neg1_2, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.inconvertible.types: int, java.lang.String)))
+4 errors

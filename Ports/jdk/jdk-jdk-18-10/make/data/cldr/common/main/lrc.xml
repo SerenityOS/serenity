@@ -1,0 +1,925 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="lrc"/>
+	</identity>
+	<localeDisplayNames>
+		<localeDisplayPattern>
+			<localePattern>{0} ({1})</localePattern>
+			<localeSeparator>{0}, {1}</localeSeparator>
+			<localeKeyTypePattern>{0}: {1}</localeKeyTypePattern>
+		</localeDisplayPattern>
+		<languages>
+			<language type="ab">آذأربایئجانی</language>
+			<language type="af">آفریکانس</language>
+			<language type="agq">آقئم</language>
+			<language type="ak">آکان</language>
+			<language type="am">أمھأری</language>
+			<language type="ar">أرأڤی</language>
+			<language type="ar_001">عروی مدرن</language>
+			<language type="arn">ماپوٙچئ</language>
+			<language type="as">آسامی</language>
+			<language type="asa">آسوٙ</language>
+			<language type="az">آذأربایئجانی ھارگە</language>
+			<language type="az" alt="short">آذأری</language>
+			<language type="az_Arab">آذأری ھارگە</language>
+			<language type="ba">باشکیری</language>
+			<language type="be">بئلاروٙسی</language>
+			<language type="bem">بیما</language>
+			<language type="bez">بئنا</language>
+			<language type="bg">بولغاری</language>
+			<language type="bgn">بألوٙچی أقتوٙنئشین</language>
+			<language type="bm">بامبارا</language>
+			<language type="bn">بأنگالی</language>
+			<language type="bo">تأبأتی</language>
+			<language type="br">بئرئتون</language>
+			<language type="brx">بودو</language>
+			<language type="bs">بوسنیایی</language>
+			<language type="ca">کاتالان</language>
+			<language type="ce">چئچئنی</language>
+			<language type="cgg">چیگا</language>
+			<language type="chr">چوروٙکی</language>
+			<language type="ckb">کوردی سوٙرانی</language>
+			<language type="co">کوریسکان</language>
+			<language type="cv">چواشی</language>
+			<language type="cy">ڤئلزی</language>
+			<language type="da">دانمارکی</language>
+			<language type="dav">تایتا</language>
+			<language type="de">آلمانی</language>
+			<language type="de_AT">آلمانی ئوتریشی</language>
+			<language type="de_CH">آلمانی سوٙییسی</language>
+			<language type="dje">زارما</language>
+			<language type="dsb">سوربی ھاری</language>
+			<language type="dua">دوٙالا</language>
+			<language type="dyo">جولا فوٙنیی</language>
+			<language type="dz">زوٙنگخا</language>
+			<language type="ebu">ئمبو</language>
+			<language type="ee">ئڤئ</language>
+			<language type="el">یوٙنانی</language>
+			<language type="en">ئینگیلیسی</language>
+			<language type="en_AU">ئینگیلیسی ئوستارالیایی</language>
+			<language type="en_CA">ئینگیلیسی کانادایی</language>
+			<language type="en_GB">ئینگیلیسی بئریتانیایی</language>
+			<language type="en_GB" alt="short">ئینگیلیسی بئریتانیا گأپ</language>
+			<language type="en_US">ئینگیلیسی ئمریکایی</language>
+			<language type="en_US" alt="short">ئینگیلیسی ئمریکایی</language>
+			<language type="eo">ئسپئرانتو</language>
+			<language type="es">ئسپانیایی</language>
+			<language type="es_419">ئسپانیایی ئمریکا لاتین</language>
+			<language type="es_ES">ئسپانیایی ئوروٙپا</language>
+			<language type="es_MX">ئسپانیایی مئکزیک</language>
+			<language type="et">ئستونیایی</language>
+			<language type="eu">باسکی</language>
+			<language type="fa">فارسی</language>
+			<language type="fi">فأنلاندی</language>
+			<language type="fil">فیلیپینی</language>
+			<language type="fj">فیجی</language>
+			<language type="fo">فاروٙسی</language>
+			<language type="fr">فآرانسئ ئی</language>
+			<language type="fr_CA">فآرانسئ ئی کانادا</language>
+			<language type="fr_CH">فآرانسئ ئی سوٙییس</language>
+			<language type="fy">فئریسی أفتونئشین</language>
+			<language type="ga">ئیرلأندی</language>
+			<language type="gag">گاگائوز</language>
+			<language type="gl">گالیسی</language>
+			<language type="gn">گوٙآرانی</language>
+			<language type="gsw">آلمانی سوٙئیسی</language>
+			<language type="gu">گوجأراتی</language>
+			<language type="guz">گوٙسی</language>
+			<language type="gv">مانکس</language>
+			<language type="ha">ھائوسا</language>
+			<language type="haw">ھاڤایی</language>
+			<language type="he">عئبری</language>
+			<language type="hi">ھئنی</language>
+			<language type="hr">کوروڤاتی</language>
+			<language type="hsb">سوربی ڤارو</language>
+			<language type="ht">ھاییتی</language>
+			<language type="hu">مأجاری</language>
+			<language type="hy">أرمأنی</language>
+			<language type="id">أندونئزیایی</language>
+			<language type="ig">ئیگبو</language>
+			<language type="ii">سی چوان یی</language>
+			<language type="is">ئیسلأندی</language>
+			<language type="it">ئیتالیایی</language>
+			<language type="iu">ئینوکتیتوٙت</language>
+			<language type="ja">جاپوٙنی</language>
+			<language type="jgo">نئگوٙمبا</language>
+			<language type="jmc">ماچامئ</language>
+			<language type="jv">جاڤئ یی</language>
+			<language type="ka">گورجی</language>
+			<language type="kab">کابیلئ</language>
+			<language type="kam">کامبا</language>
+			<language type="kde">ماکوٙندئ</language>
+			<language type="kea">کاباردینو</language>
+			<language type="khq">کی یورا چینی</language>
+			<language type="ki">کیکیوٙ</language>
+			<language type="kk">قأزاق</language>
+			<language type="kl">کالالیسوٙت</language>
+			<language type="kln">کالئجین</language>
+			<language type="km">خئمئر</language>
+			<language type="kn">کاناد</language>
+			<language type="ko">کورئ یی</language>
+			<language type="koi">کومی پئرمیاک</language>
+			<language type="kok">کوٙنکانی</language>
+			<language type="ks">کأشمیری</language>
+			<language type="ksb">شامبالا</language>
+			<language type="ksf">بافیا</language>
+			<language type="ku">کوردی کورمانجی</language>
+			<language type="kw">کورنیش</language>
+			<language type="ky">قئرقیزی</language>
+			<language type="la">لاتین</language>
+			<language type="lag">لانگی</language>
+			<language type="lb">لوٙکزامبوٙرگی</language>
+			<language type="lg">گاندا</language>
+			<language type="lkt">لاکوٙتا</language>
+			<language type="ln">لینگالا</language>
+			<language type="lo">لاو</language>
+			<language type="lrc">لۊری شومالی</language>
+			<language type="lt">لیتوڤانیایی</language>
+			<language type="lu">لوٙبا کاتانگا</language>
+			<language type="luo">لوٙ</language>
+			<language type="luy">لوٙئیا</language>
+			<language type="lv">لاتوڤیایی</language>
+			<language type="mas">ماسایی</language>
+			<language type="mer">مئرو</language>
+			<language type="mfe">موٙریسی</language>
+			<language type="mg">مالاگاشی</language>
+			<language type="mgh">ماخوڤا میتو</language>
+			<language type="mgo">مئتاٛ</language>
+			<language type="mi">مائوری</language>
+			<language type="mk">مأقدوٙنی</language>
+			<language type="ml">مالایام</language>
+			<language type="mn">موغولی</language>
+			<language type="moh">موٙھاڤک</language>
+			<language type="mr">مأراتی</language>
+			<language type="ms">مالایی</language>
+			<language type="mt">مالتی</language>
+			<language type="mua">موٙندانگ</language>
+			<language type="my">بئرمئ یی</language>
+			<language type="mzn">مازأندأرانی</language>
+			<language type="naq">ناما</language>
+			<language type="nb">نورڤئجی بوٙکمال</language>
+			<language type="nd">نئدئبئلئ شومالی</language>
+			<language type="nds">آلمانی ھاری</language>
+			<language type="nds_NL">آلمانی ھارگە جا</language>
+			<language type="ne">نئپالی</language>
+			<language type="nl">ھولأندی</language>
+			<language type="nl_BE">فئلاماندی</language>
+			<language type="nmg">کئڤاسیوٙ</language>
+			<language type="nn">نورڤئجی نینورسک</language>
+			<language type="nqo">نئکوٙ</language>
+			<language type="nus">نیوٙئر</language>
+			<language type="nyn">نیان کوٙلئ</language>
+			<language type="om">ئوروموٙ</language>
+			<language type="or">ئوریا</language>
+			<language type="pa">پأنجابی</language>
+			<language type="pl">لأھئستانی</language>
+			<language type="ps">پأشتوٙ</language>
+			<language type="pt">پورتئغالی</language>
+			<language type="pt_BR">پورتئغالی بئرئزیل</language>
+			<language type="pt_PT">پورتئغالی ئوروٙپایی</language>
+			<language type="qu">کوچوٙا</language>
+			<language type="quc">کیچی</language>
+			<language type="rm">رومانش</language>
+			<language type="rn">راندی</language>
+			<language type="ro">رومانیایی</language>
+			<language type="ro_MD">رومانیایی مولداڤی</language>
+			<language type="rof">رومبو</language>
+			<language type="ru">روٙسی</language>
+			<language type="rw">کینیاروآندا</language>
+			<language type="rwk">رئڤا</language>
+			<language type="sa">سانسکئریت</language>
+			<language type="saq">سامبوٙروٙ</language>
+			<language type="sbp">سانگوٙ</language>
+			<language type="sd">سئندی</language>
+			<language type="sdh">کوردی ھارگە</language>
+			<language type="se">سامی شومالی</language>
+			<language type="seh">سئنا</language>
+			<language type="ses">کیارابورو سئنی</language>
+			<language type="sg">سانگو</language>
+			<language type="shi">تاچئلھیت</language>
+			<language type="si">سینھالا</language>
+			<language type="sk">ئسلوڤاکی</language>
+			<language type="sl">ئسلوڤئنیایی</language>
+			<language type="sma">سامی ھارگە</language>
+			<language type="smj">لۉلئ سامی</language>
+			<language type="smn">ئیناری سامی</language>
+			<language type="sms">ئسکولت سامی</language>
+			<language type="sn">شونا</language>
+			<language type="so">سوٙمالی</language>
+			<language type="sq">آلبانی</language>
+			<language type="sr">سئربی</language>
+			<language type="su">سوٙدانی</language>
+			<language type="sv">سوٙئدی</language>
+			<language type="sw">سأڤاحیلی</language>
+			<language type="sw_CD">سأڤاحیلی کونگو</language>
+			<language type="ta">تامیل</language>
+			<language type="te">تئلئگو</language>
+			<language type="teo">تئسو</language>
+			<language type="tg">تاجیکی</language>
+			<language type="th">تایلأندی</language>
+			<language type="ti">تیگرینیا</language>
+			<language type="tk">تورکأمأنی</language>
+			<language type="to">توٙنگان</language>
+			<language type="tr">تورکی</language>
+			<language type="tt">تاتار</language>
+			<language type="twq">تاساڤاق</language>
+			<language type="tzm">تامازیغ مینجایی</language>
+			<language type="ug">ئویغوٙر</language>
+			<language type="uk">ئوکراینی</language>
+			<language type="und">زوٙن نادیار</language>
+			<language type="ur">ئوردوٙ</language>
+			<language type="uz">ئوزبأکی</language>
+			<language type="vai">ڤای</language>
+			<language type="vi">ڤییئتنامی</language>
+			<language type="vun">ڤوٙنجوٙ</language>
+			<language type="wbp">ڤارلپیری</language>
+			<language type="wo">ڤولوف</language>
+			<language type="xh">خوٙسا</language>
+			<language type="xog">سوٙگا</language>
+			<language type="yo">یوروبا</language>
+			<language type="zgh">تامازیغ مأراکئشی</language>
+			<language type="zh">چینی</language>
+			<language type="zh_Hans">چینی سادە بیە</language>
+			<language type="zh_Hant">چینی سونأتی</language>
+			<language type="zu">زولو</language>
+			<language type="zxx">بی نئشوٙ</language>
+		</languages>
+		<scripts>
+			<script type="Arab">عأرأڤی</script>
+			<script type="Armn">أرمأنی</script>
+			<script type="Beng">بأنگالی</script>
+			<script type="Bopo">بوٙپوٙ</script>
+			<script type="Brai">بئرئیل</script>
+			<script type="Cyrl">سیریلیک</script>
+			<script type="Deva">دیڤانگأری</script>
+			<script type="Ethi">ئتوٙیوٙپیایی</script>
+			<script type="Geor">گورجی</script>
+			<script type="Grek">یوٙنانی</script>
+			<script type="Gujr">گوجأراتی</script>
+			<script type="Guru">گوٙروٙمخی</script>
+			<script type="Hang">ھانگوٙل</script>
+			<script type="Hani">ھانی</script>
+			<script type="Hans">سادە بیە</script>
+			<script type="Hans" alt="stand-alone">بیتار سادە بیە</script>
+			<script type="Hant">سونأتی</script>
+			<script type="Hant" alt="stand-alone">سونأتی بیتار</script>
+			<script type="Hebr">عئبری</script>
+			<script type="Hira">ھیراگانا</script>
+			<script type="Jpan">جاپوٙنی</script>
+			<script type="Kana">کاتانگا</script>
+			<script type="Khmr">خئمئر</script>
+			<script type="Knda">کانادا</script>
+			<script type="Kore">کورئ یی</script>
+			<script type="Laoo">لائو</script>
+			<script type="Latn">لاتین</script>
+			<script type="Mlym">مالایام</script>
+			<script type="Mong">موغولی</script>
+			<script type="Mymr">میانمار</script>
+			<script type="Orya">ئوریا</script>
+			<script type="Sinh">سیناھالا</script>
+			<script type="Taml">تامیل</script>
+			<script type="Telu">تئلئگو</script>
+			<script type="Thaa">تانا</script>
+			<script type="Thai">تایلأندی</script>
+			<script type="Tibt">تأبأتی</script>
+			<script type="Zsym">نئشوٙنە یا</script>
+			<script type="Zxxx">نیسئسە نأبیە</script>
+			<script type="Zyyy">جائوفتاأ</script>
+			<script type="Zzzz">نیسئسە نادیار</script>
+		</scripts>
+		<territories>
+			<territory type="001">دونیا</territory>
+			<territory type="002">ئفریقا</territory>
+			<territory type="003">ئمریکا شومالی</territory>
+			<territory type="005">ئمریکا ھارگە</territory>
+			<territory type="009">ھوم پئڤأند جأھوٙن آڤ</territory>
+			<territory type="013">مینجا ئمریکا</territory>
+			<territory type="019">ئمریکا</territory>
+			<territory type="021">ئمریکا ڤارو</territory>
+			<territory type="029">کارائیب</territory>
+			<territory type="142">آسیا</territory>
+			<territory type="150">ئوروٙپا</territory>
+			<territory type="419">ئمریکا لاتین</territory>
+			<territory type="BR">بئرئزیل</territory>
+			<territory type="CN">چین</territory>
+			<territory type="DE">آلمان</territory>
+			<territory type="FR">فأرانسە</territory>
+			<territory type="GB">بیریتانیا گأپ</territory>
+			<territory type="IN">ھئن</territory>
+			<territory type="IT">ئیتالیا</territory>
+			<territory type="JP">جاپوٙن</territory>
+			<territory type="RU">روٙسیە</territory>
+			<territory type="US">ڤولاتیا یأکاگئرتە</territory>
+			<territory type="ZZ">راساگە نادیار</territory>
+		</territories>
+		<types>
+			<type key="calendar" type="gregorian">تأقڤیم گأرئگوٙری</type>
+			<type key="collation" type="standard">کوٙلاتی ئستاندارد</type>
+			<type key="numbers" type="arab">أدأدیا عأرأڤی</type>
+			<type key="numbers" type="latn">عأدأدیا لاتین</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">مئتری</measurementSystemName>
+			<measurementSystemName type="UK">بئریتانیا گأپ</measurementSystemName>
+			<measurementSystemName type="US">ڤولاتیا یأکاگئرته</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language">{0}</codePattern>
+			<codePattern type="script">{0}</codePattern>
+			<codePattern type="territory">{0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<layout>
+		<orientation>
+			<characterOrder>right-to-left</characterOrder>
+			<lineOrder>top-to-bottom</lineOrder>
+		</orientation>
+	</layout>
+	<characters>
+		<exemplarCharacters>[\u0659 \u065B آ أ ؤ ئ ا ب پ ت ث ج چ ح خ د ذ ر ز ژ س ش ص ض ط ظ ع غ ف ڤ ق ک گ ل م ن ھ ە و ۉ ۊ ی ؽ]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[\u200B\u200C\u200D\u200E\u200F \u064B \u064C \u064D \u064E \u064F \u0650 \u0651 \u0652 \u0654 إ ة ك ه ى ي]</exemplarCharacters>
+		<exemplarCharacters type="index">[آ ا ب پ ت ث ج چ ح خ د ذ ر ز ژ س ش ص ض ط ظ ع غ ف ق ک گ ل م ن ھ و ی]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+		<exemplarCharacters type="punctuation">[\- ‐ ‑ ، ٫ ٬ ؛ \: ! ؟ . … ‹ › « » ( ) \[ \] * / \\]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart>“</quotationStart>
+		<quotationEnd>”</quotationEnd>
+		<alternateQuotationStart>‘</alternateQuotationStart>
+		<alternateQuotationEnd>’</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>G y MMMM d, EEEE</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>G y MMMM d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>G y MMM d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>GGGGG y-MM-dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">جانڤیە</month>
+							<month type="2">فئڤریە</month>
+							<month type="3">مارس</month>
+							<month type="4">آڤریل</month>
+							<month type="5">مئی</month>
+							<month type="6">جوٙأن</month>
+							<month type="7">جوٙلا</month>
+							<month type="8">آگوست</month>
+							<month type="9">سئپتامر</month>
+							<month type="10">ئوکتوڤر</month>
+							<month type="11">نوڤامر</month>
+							<month type="12">دئسامر</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">1</month>
+							<month type="2">2</month>
+							<month type="3">3</month>
+							<month type="4">4</month>
+							<month type="5">5</month>
+							<month type="6">6</month>
+							<month type="7">7</month>
+							<month type="8">8</month>
+							<month type="9">9</month>
+							<month type="10">10</month>
+							<month type="11">11</month>
+							<month type="12">12</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">جانڤیە</month>
+							<month type="2">فئڤریە</month>
+							<month type="3">مارس</month>
+							<month type="4">آڤریل</month>
+							<month type="5">مئی</month>
+							<month type="6">جوٙأن</month>
+							<month type="7">جوٙلا</month>
+							<month type="8">آگوست</month>
+							<month type="9">سئپتامر</month>
+							<month type="10">ئوکتوڤر</month>
+							<month type="11">نوڤامر</month>
+							<month type="12">دئسامر</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">جانڤیە</month>
+							<month type="2">فئڤریە</month>
+							<month type="3">مارس</month>
+							<month type="4">آڤریل</month>
+							<month type="5">مئی</month>
+							<month type="6">جوٙأن</month>
+							<month type="7">جوٙلا</month>
+							<month type="8">آگوست</month>
+							<month type="9">سئپتامر</month>
+							<month type="10">ئوکتوڤر</month>
+							<month type="11">نوڤامر</month>
+							<month type="12">دئسامر</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">1</month>
+							<month type="2">2</month>
+							<month type="3">3</month>
+							<month type="4">4</month>
+							<month type="5">5</month>
+							<month type="6">6</month>
+							<month type="7">7</month>
+							<month type="8">8</month>
+							<month type="9">9</month>
+							<month type="10">10</month>
+							<month type="11">11</month>
+							<month type="12">12</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">جانڤیە</month>
+							<month type="2">فئڤریە</month>
+							<month type="3">مارس</month>
+							<month type="4">آڤریل</month>
+							<month type="5">مئی</month>
+							<month type="6">جوٙأن</month>
+							<month type="7">جوٙلا</month>
+							<month type="8">آگوست</month>
+							<month type="9">سئپتامر</month>
+							<month type="10">ئوکتوڤر</month>
+							<month type="11">نوڤامر</month>
+							<month type="12">دئسامر</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Sun</day>
+							<day type="mon">Mon</day>
+							<day type="tue">Tue</day>
+							<day type="wed">Wed</day>
+							<day type="thu">Thu</day>
+							<day type="fri">Fri</day>
+							<day type="sat">Sat</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">S</day>
+							<day type="mon">M</day>
+							<day type="tue">T</day>
+							<day type="wed">W</day>
+							<day type="thu">T</day>
+							<day type="fri">F</day>
+							<day type="sat">S</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Sun</day>
+							<day type="mon">Mon</day>
+							<day type="tue">Tue</day>
+							<day type="wed">Wed</day>
+							<day type="thu">Thu</day>
+							<day type="fri">Fri</day>
+							<day type="sat">Sat</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">Sun</day>
+							<day type="mon">Mon</day>
+							<day type="tue">Tue</day>
+							<day type="wed">Wed</day>
+							<day type="thu">Thu</day>
+							<day type="fri">Fri</day>
+							<day type="sat">Sat</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">S</day>
+							<day type="mon">M</day>
+							<day type="tue">T</day>
+							<day type="wed">W</day>
+							<day type="thu">T</day>
+							<day type="fri">F</day>
+							<day type="sat">S</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Sun</day>
+							<day type="mon">Mon</day>
+							<day type="tue">Tue</day>
+							<day type="wed">Wed</day>
+							<day type="thu">Thu</day>
+							<day type="fri">Fri</day>
+							<day type="sat">Sat</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">Q1</quarter>
+							<quarter type="2">Q2</quarter>
+							<quarter type="3">Q3</quarter>
+							<quarter type="4">Q4</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">1</quarter>
+							<quarter type="2">2</quarter>
+							<quarter type="3">3</quarter>
+							<quarter type="4">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">Q1</quarter>
+							<quarter type="2">Q2</quarter>
+							<quarter type="3">Q3</quarter>
+							<quarter type="4">Q4</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">چارأک أڤأل</quarter>
+							<quarter type="2">Q2</quarter>
+							<quarter type="3">Q3</quarter>
+							<quarter type="4">Q4</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">1</quarter>
+							<quarter type="2">2</quarter>
+							<quarter type="3">3</quarter>
+							<quarter type="4">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">چارأک أڤأل</quarter>
+							<quarter type="2">چارأک دویوم</quarter>
+							<quarter type="3">چارأک سئیوم</quarter>
+							<quarter type="4">چارأک چاروم</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">AM</dayPeriod>
+							<dayPeriod type="pm">PM</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">AM</dayPeriod>
+							<dayPeriod type="pm">PM</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraAbbr>
+						<era type="0">BCE</era>
+						<era type="1">CE</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>y MMMM d, EEEE</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>y MMMM d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>y MMM d</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>y-MM-dd</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>سأرۉ</displayName>
+			</field>
+			<field type="year">
+				<displayName>سال</displayName>
+			</field>
+			<field type="year-short">
+				<displayName>سال</displayName>
+			</field>
+			<field type="year-narrow">
+				<displayName>سال</displayName>
+			</field>
+			<field type="quarter">
+				<displayName>چارأک</displayName>
+			</field>
+			<field type="quarter-short">
+				<displayName>چارأک</displayName>
+			</field>
+			<field type="quarter-narrow">
+				<displayName>چارأک</displayName>
+			</field>
+			<field type="month">
+				<displayName>ما</displayName>
+			</field>
+			<field type="month-short">
+				<displayName>ما</displayName>
+			</field>
+			<field type="month-narrow">
+				<displayName>ما</displayName>
+			</field>
+			<field type="week">
+				<displayName>ھأفتە</displayName>
+			</field>
+			<field type="week-short">
+				<displayName>ھأفتە</displayName>
+			</field>
+			<field type="week-narrow">
+				<displayName>ھأفتە</displayName>
+			</field>
+			<field type="day">
+				<displayName>روٙز</displayName>
+				<relative type="-1">دیروٙز</relative>
+				<relative type="0">أمروٙ</relative>
+				<relative type="1">شوٙصوٙ</relative>
+			</field>
+			<field type="day-short">
+				<displayName>روٙز</displayName>
+			</field>
+			<field type="day-narrow">
+				<displayName>روٙز</displayName>
+			</field>
+			<field type="weekday">
+				<displayName>روٙز ھأفتە</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>گات روٙز</displayName>
+			</field>
+			<field type="hour">
+				<displayName>ساأت</displayName>
+			</field>
+			<field type="hour-short">
+				<displayName>ساأت</displayName>
+			</field>
+			<field type="hour-narrow">
+				<displayName>ساأت</displayName>
+			</field>
+			<field type="minute">
+				<displayName>دئیقە</displayName>
+			</field>
+			<field type="minute-short">
+				<displayName>دئیقە</displayName>
+			</field>
+			<field type="minute-narrow">
+				<displayName>دئیقە</displayName>
+			</field>
+			<field type="second">
+				<displayName>ثانیە</displayName>
+			</field>
+			<field type="second-short">
+				<displayName>ثانیە</displayName>
+			</field>
+			<field type="second-narrow">
+				<displayName>ثانیە</displayName>
+			</field>
+			<field type="zone">
+				<displayName>راساگە</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<regionFormat>{0}</regionFormat>
+			<zone type="Etc/Unknown">
+				<exemplarCity>نادیار</exemplarCity>
+			</zone>
+			<metazone type="America_Central">
+				<long>
+					<generic>گاٛت مینجاٛیی</generic>
+					<standard>گاٛت مینجاٛیی ئستاٛنداٛرد</standard>
+					<daylight>روٙشنایی نئهادار روٙز</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>arabext</defaultNumberingSystem>
+		<otherNumberingSystems>
+			<native>arabext</native>
+		</otherNumberingSystems>
+		<symbols numberSystem="arabext">
+			<timeSeparator>:</timeSeparator>
+		</symbols>
+		<symbols numberSystem="latn">
+			<decimal>.</decimal>
+			<group>,</group>
+			<percentSign>%</percentSign>
+			<plusSign>+</plusSign>
+			<minusSign>-</minusSign>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<scientificFormats numberSystem="latn">
+			<scientificFormatLength>
+				<scientificFormat>
+					<pattern>#E0</pattern>
+				</scientificFormat>
+			</scientificFormatLength>
+		</scientificFormats>
+		<percentFormats numberSystem="latn">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern>#,##0%</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤ #,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<unitPattern count="other">{0} {1}</unitPattern>
+		</currencyFormats>
+		<currencies>
+			<currency type="BRL">
+				<displayName>رئال بئرئزیل</displayName>
+				<displayName count="other">رئال بئرئزیل</displayName>
+				<symbol draft="contributed">R$</symbol>
+				<symbol alt="narrow" draft="contributed">R$</symbol>
+			</currency>
+			<currency type="CNY">
+				<displayName>یوان چین</displayName>
+				<displayName count="other">یوان چین</displayName>
+				<symbol draft="contributed">CN¥</symbol>
+				<symbol alt="narrow" draft="contributed">¥</symbol>
+			</currency>
+			<currency type="EUR">
+				<displayName>یورو</displayName>
+				<displayName count="other">یورو</displayName>
+				<symbol draft="contributed">€</symbol>
+				<symbol alt="narrow" draft="contributed">€</symbol>
+			</currency>
+			<currency type="GBP">
+				<displayName>پوند بئریتانیا</displayName>
+				<displayName count="other">پوند بئریتانیا</displayName>
+				<symbol draft="contributed">£</symbol>
+				<symbol alt="narrow" draft="contributed">£</symbol>
+			</currency>
+			<currency type="INR">
+				<displayName>روٙپیه هئن</displayName>
+				<displayName count="other">روٙپیه هئن</displayName>
+				<symbol draft="contributed">₹</symbol>
+				<symbol alt="narrow" draft="contributed">₹</symbol>
+			</currency>
+			<currency type="IQD">
+				<symbol>د.ع.‏</symbol>
+			</currency>
+			<currency type="JPY">
+				<displayName>یئن جاپوٙن</displayName>
+				<displayName count="other">یئن جاپوٙن</displayName>
+				<symbol draft="contributed">JP¥</symbol>
+				<symbol alt="narrow" draft="contributed">¥</symbol>
+			</currency>
+			<currency type="RUB">
+				<displayName>روٙبل روٙسیه</displayName>
+				<displayName count="other">روٙبل روٙسیه</displayName>
+				<symbol draft="contributed">RUB</symbol>
+				<symbol alt="narrow" draft="contributed">₽</symbol>
+			</currency>
+			<currency type="USD">
+				<symbol draft="contributed">US$</symbol>
+				<symbol alt="narrow" draft="contributed">$</symbol>
+			</currency>
+			<currency type="XXX">
+				<displayName>پیل نادیار</displayName>
+				<displayName count="other">پیل نادیار</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="area-square-kilometer">
+				<unitPattern count="other">{0} km²</unitPattern>
+			</unit>
+		</unitLength>
+		<durationUnit type="hm">
+			<durationUnitPattern>h:mm</durationUnitPattern>
+		</durationUnit>
+		<durationUnit type="hms">
+			<durationUnitPattern>h:mm:ss</durationUnitPattern>
+		</durationUnit>
+		<durationUnit type="ms">
+			<durationUnitPattern>m:ss</durationUnitPattern>
+		</durationUnit>
+	</units>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0}, {1}</listPatternPart>
+			<listPatternPart type="2">{0}, {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<yesstr>هأری:ه</yesstr>
+			<nostr>نه:ن</nostr>
+		</messages>
+	</posix>
+</ldml>

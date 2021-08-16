@@ -1,0 +1,3 @@
+NullsInPatterns.java:12:18: compiler.err.instanceof.pattern.no.subtype: compiler.misc.type.null, java.util.List
+NullsInPatterns.java:23:18: compiler.err.instanceof.pattern.no.subtype: compiler.misc.type.null, java.util.List<?>
+2 errors

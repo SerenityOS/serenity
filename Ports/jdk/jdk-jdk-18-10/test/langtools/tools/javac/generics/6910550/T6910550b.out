@@ -1,0 +1,3 @@
+T6910550b.java:12:10: compiler.err.name.clash.same.erasure: m(Y), m(X)
+T6910550b.java:13:10: compiler.err.name.clash.same.erasure: m(Z), m(X)
+2 errors

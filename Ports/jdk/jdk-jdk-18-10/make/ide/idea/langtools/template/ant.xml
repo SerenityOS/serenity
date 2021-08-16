@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AntConfiguration">
+    <buildFile url="file://$PROJECT_DIR$/make/ide/idea/langtools/build.xml">
+      <properties>
+	    <property name="langtools.jdk.home" value="@IDEA_TARGET_JDK@" />
+        <property name="intellij.ismake" value="$IsMake$" />
+      </properties>
+      <executeOn event="afterCompilation" target="post-make" />
+    </buildFile>
+  </component>
+</project>

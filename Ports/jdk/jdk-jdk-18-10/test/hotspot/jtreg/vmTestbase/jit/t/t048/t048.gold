@@ -1,0 +1,28 @@
+t6 = 1
+t5 = 1
+t5 = 1
+t4 = 1
+t1 == 1
+i: 13, j: 12, res: 1
+i: 11, j: 10, res: 1
+i: 9, j: 8, res: 1
+i: 7, j: 6, res: 1
+i: 5, j: 4, res: 1
+i: 3, j: 2, res: 1
+i: 1, j: 1, res: 1
+i: 1, j: 1, res: 1
+i: 1, j: 1, res: 1
+i: 1, j: 1, res: 1
+i: 1, j: 1, res: 1
+Int: 1
+Long: 1
+Float: 0.61382884
+Float: 1.0
+Float: 1.6291187
+Float: 2.6540277
+Float: 4.323726
+Float: 7.043863
+Float: 11.475288
+Float: 18.694607
+Float: 30.455732
+Double: 0.6138289446560126

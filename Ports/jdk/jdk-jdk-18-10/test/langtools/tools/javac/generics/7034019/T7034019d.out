@@ -1,0 +1,3 @@
+T7034019d.java:18:21: compiler.err.name.clash.same.erasure.no.override: foo, , T7034019c.B, foo, , T7034019c.A
+T7034019d.java:20:13: compiler.err.ref.ambiguous: foo, kindname.method, <T>foo(), T7034019c.B, kindname.method, <T>foo(), T7034019c.A
+2 errors

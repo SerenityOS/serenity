@@ -1,0 +1,139 @@
+#
+# Copyright (c) 2011, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+ifndef _TOOLS_GMK
+_TOOLS_GMK := 1
+
+include JavaCompilation.gmk
+
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, Tools.gmk))
+
+################################################################################
+# To avoid reevaluating the compilation setup for the tools each time this file
+# is included, the actual compilation is handled by CompileTools.gmk. The
+# following trick is used to be able to declare a dependency on the built tools.
+BUILD_TOOLS_JDK := $(call SetupJavaCompilationCompileTarget, \
+    BUILD_TOOLS_JDK, $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes)
+
+################################################################################
+
+TOOL_COMPILEFONTCONFIG = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    --add-exports java.desktop/sun.awt=ALL-UNNAMED \
+    build.tools.compilefontconfig.CompileFontConfig
+
+TOOL_COMPILEPROPERTIES = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.compileproperties.CompileProperties
+
+TOOL_GENERATECHARACTER = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.generatecharacter.GenerateCharacter
+
+TOOL_CHARACTERNAME = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.generatecharacter.CharacterName
+
+TOOL_DTDBUILDER = $(JAVA_SMALL) -Ddtd_home=$(TOPDIR)/make/data/dtdbuilder \
+    -Djava.awt.headless=true \
+    -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes build.tools.dtdbuilder.DTDBuilder
+
+TOOL_GENERATEBREAKITERATORDATA = $(JAVA_SMALL) \
+    -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.generatebreakiteratordata.GenerateBreakIteratorData
+
+TOOL_GENERATECURRENCYDATA = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.generatecurrencydata.GenerateCurrencyData
+
+TOOL_TZDB = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.tzdb.TzdbZoneRulesCompiler
+
+TOOL_BLOCKED_CERTS = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    --add-exports java.base/sun.security.util=ALL-UNNAMED \
+    build.tools.blockedcertsconverter.BlockedCertsConverter
+
+TOOL_MAKEJAVASECURITY = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.makejavasecurity.MakeJavaSecurity
+
+TOOL_GENERATECACERTS = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.generatecacerts.GenerateCacerts
+
+TOOL_GENERATEEMOJIDATA = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.generateemojidata.GenerateEmojiData
+
+
+# TODO: There are references to the jdwpgen.jar in jdk/make/netbeans/jdwpgen/build.xml
+# and nbproject/project.properties in the same dir. Needs to be looked at.
+TOOL_JDWPGEN = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes build.tools.jdwpgen.Main
+
+# TODO: Lots of files in jdk/make/tools/CharsetMapping dir
+TOOL_CHARSETMAPPING = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.charsetmapping.Main $(LOG_INFO)
+
+TOOL_SPP = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes build.tools.spp.Spp
+
+# Nimbus is used somewhere in the swing build.
+TOOL_GENERATENIMBUS = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.generatenimbus.Generator
+
+TOOL_WRAPPERGENERATOR = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.x11wrappergen.WrapperGenerator
+
+TOOL_AWT_TOBIN = $(JAVA_SMALL) -Djava.awt.headless=true -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.icondata.awt.ToBin
+
+TOOL_OSX_TOBIN = $(JAVA_SMALL) -Djava.awt.headless=true -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.icondata.osxapp.ToBin
+
+TOOL_CLDRCONVERTER = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.cldrconverter.CLDRConverter
+
+TOOL_INTPOLY = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.intpoly.FieldGen
+
+TOOL_GENERATELSREQUIVMAPS = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.generatelsrequivmaps.EquivMapsGenerator
+
+TOOL_GENMODULEINFOSOURCE = $(JAVA_SMALL) $(INTERIM_LANGTOOLS_BOOTCLASSPATH) \
+    -cp $(call PathList, $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes) \
+    build.tools.module.GenModuleInfoSource
+
+TOOL_GENCLASSLOADERMAP = $(JAVA_SMALL) $(INTERIM_LANGTOOLS_BOOTCLASSPATH) \
+    -cp $(call PathList, $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes) \
+    build.tools.module.GenModuleLoaderMap
+
+TOOL_PUBLICSUFFIXLIST = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.publicsuffixlist.GeneratePublicSuffixList
+
+TOOL_FIXUPPANDOC = $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    build.tools.fixuppandoc.Main
+
+##########################################################################################
+
+# Executable javascript filter for man page generation using pandoc.
+
+PANDOC_TROFF_MANPAGE_FILTER := $(BUILDTOOLS_OUTPUTDIR)/manpages/pandoc-troff-manpage-filter
+PANDOC_HTML_MANPAGE_FILTER := $(BUILDTOOLS_OUTPUTDIR)/manpages/pandoc-html-manpage-filter
+
+##########################################################################################
+
+endif # _TOOLS_GMK

@@ -1,0 +1,46 @@
+Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+Test garbage collector compaction.
+
+The test starts several threads which create objects using
+given garbage producer until OOM. The references are kept
+in an array. The references to even elements are cleared
+and objects of double size are created until OOM. The garbage
+collector will have to compact free space to free memory for
+new objects.
+
+The tests differ by object types used for first and second phase:
+- _Arrays tests randomly use arrays of basic types and Object[] arrays.
+- _Strings tests use random strings.
+- _NonbranchyTree tests use nonbranchy trees.
+- _InternedStrings use interned strings.
+- _ArrayOf tests use array with two elements for second phase,
+the elements of which point to objects of same type.
+- _TwoFields tests use object with two fields for second phase,
+which point to objects of same type.
+
+Each *1 test is the single-threaded version of corresponding test.
+
+The Humongous tests are similar to compact tests. However they used
+the fixed size of objects which allocation requre compaction. The
+size is specific for G1 GC (about 1M and 5M) and require humongous
+object creation in G1.

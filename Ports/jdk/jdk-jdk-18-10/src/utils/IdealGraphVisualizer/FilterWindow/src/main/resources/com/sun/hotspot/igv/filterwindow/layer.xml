@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.1//EN" "http://www.netbeans.org/dtds/filesystem-1_1.dtd">
+<filesystem>
+    <folder name="Edit">
+        <file name="com-sun-hotspot-igv-filterwindow-actions-MoveFilterDownAction.instance">
+            <attr name="position" intvalue="300"/>
+        </file>
+        <file name="com-sun-hotspot-igv-filterwindow-actions-MoveFilterUpAction.instance">
+            <attr name="position" intvalue="400"/>
+        </file>
+        <file name="com-sun-hotspot-igv-filterwindow-actions-RemoveFilterAction.instance">
+            <attr name="position" intvalue="500"/>
+        </file>
+        <file name="com-sun-hotspot-igv-filterwindow-actions-RemoveFilterSettingsAction.instance">
+            <attr name="position" intvalue="600"/>
+        </file>
+        <file name="com-sun-hotspot-igv-filterwindow-actions-SaveFilterSettingsAction.instance">
+            <attr name="position" intvalue="900"/>
+        </file>
+    </folder>
+    
+    <folder name="Actions">
+        <folder name="Window">
+            <file name="com-sun-hotspot-igv-filterwindow-actions-FilterAction.instance"/>
+        </folder>
+    </folder>
+    <folder name="Menu">
+        <folder name="Window">
+            <file name="FilterAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Window/com-sun-hotspot-igv-filterwindow-actions-FilterAction.instance"/>
+            </file>
+        </folder>
+    </folder>
+    <folder name="Windows2">
+        <folder name="Components">
+            <file name="FilterTopComponent.settings" url="FilterTopComponentSettings.xml"/>
+        </folder>
+        <folder name="Modes">
+            <file name="customRightTopMode.wsmode" url="customRightTopWsmode.xml"/>
+            <folder name="customRightTopMode">
+                <file name="FilterTopComponent.wstcref" url="FilterTopComponentWstcref.xml"/>
+            </folder>
+        </folder>
+    </folder>
+</filesystem>

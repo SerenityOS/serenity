@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" xml:base="http://local/base/dtd/">
+    <uri name="http://remote/dtd/uri/alice/docAlice.dtd" uri="http://local/dtd/docAliceURI.dtd" />
+
+    <uri name="http://remote/dtd/bob/docBob.dtd" uri="docBobURI.dtd" />
+
+    <uri name="http://remote/dtd/carl/docCarl.dtd" uri="docCarlURI.dtd" xml:base="http://local/carlBase/dtd/" />
+
+    <uri name="http://remote/dtd/david/docDavid.dtd" uri="docDavidURI1.dtd" />
+    <uri name="http://remote/dtd/david/docDavid.dtd" uri="docDavidURI2.dtd" />
+</catalog>

@@ -1,0 +1,4 @@
+Neg12.java:25:24: compiler.err.cant.apply.diamond.1: (compiler.misc.diamond: Neg12.Foo), (compiler.misc.diamond.invalid.arg: Neg12.Foo<compiler.misc.type.captureof: 1, ? extends java.lang.Integer>, (compiler.misc.diamond: Neg12.Foo))
+Neg12.java:28:38: compiler.err.cant.apply.diamond.1: (compiler.misc.diamond: Neg12.DoubleFoo), (compiler.misc.diamond.invalid.args: Neg12.Foo<compiler.misc.type.captureof: 1, ? extends java.lang.Integer>,Neg12.Foo<compiler.misc.type.captureof: 2, ? extends java.lang.Double>, (compiler.misc.diamond: Neg12.DoubleFoo))
+Neg12.java:31:40: compiler.err.cant.apply.diamond.1: (compiler.misc.diamond: Neg12.TripleFoo), (compiler.misc.diamond.invalid.args: Neg12.Foo<compiler.misc.type.captureof: 1, ? extends java.lang.Integer>,Neg12.Foo<compiler.misc.type.captureof: 2, ? extends java.lang.Double>, (compiler.misc.diamond: Neg12.TripleFoo))
+3 errors

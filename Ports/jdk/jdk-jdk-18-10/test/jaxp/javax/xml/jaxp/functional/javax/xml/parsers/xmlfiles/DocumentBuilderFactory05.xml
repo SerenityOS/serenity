@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!DOCTYPE note [
+<!ELEMENT note    (to,from,heading,body)>
+<!ELEMENT to      (#PCDATA)>
+<!ELEMENT from    (#PCDATA)>
+<!ELEMENT heading (#PCDATA)>
+<!ELEMENT body    (#PCDATA)>
+]>
+<note xmlns:ar="http://www.xml.com/books">
+      xmlns:br="http://www.abc.com">
+<to>Tove</to>
+<ar:from>Jani</ar:from>
+<br:from>Next</br:from>
+<heading>Reminder</heading>
+<body> weekend!</body>
+</note> 

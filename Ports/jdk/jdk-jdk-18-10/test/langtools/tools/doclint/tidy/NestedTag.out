@@ -1,0 +1,7 @@
+NestedTag.java:14: warning: nested tag not allowed: <b>
+ * <b><b> text </b></b>
+      ^
+NestedTag.java:15: warning: nested tag not allowed: <code>
+ * {@link java.lang.String <code>String</code>}
+                           ^
+2 warnings

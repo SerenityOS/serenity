@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+    <delegatePublic publicIdStartString="-//REMOTE//DTD ALICE DOCALICE" catalog="delegatePublic-alice.xml" />
+
+    <!-- delegateSystem-bobDummy.xml is not existing -->
+    <delegatePublic publicIdStartString="-//REMOTE//DTD BOB DOCBOB" catalog="delegatePublic-bob.xml" />
+    <delegatePublic publicIdStartString="-//REMOTE//DTD BOB DOCBOB" catalog="delegatePublic-bobDummy.xml" />
+
+    <!-- delegateSystem-carlDummy.xml is not existing -->
+    <delegatePublic publicIdStartString="-//REMOTE//DTD CARL DOCCARL" catalog="delegatePublic-carlDummy.xml" />
+    <delegatePublic publicIdStartString="-//REMOTE//DTD CARL DOCCARL XML" catalog="delegatePublic-carl.xml" />
+
+    <!-- delegateSystem-david.xml is not existing -->
+    <delegatePublic publicIdStartString="-//REMOTE//DTD DAVID DOCDAVID" catalog="delegatePublic-david.xml" />
+</catalog>

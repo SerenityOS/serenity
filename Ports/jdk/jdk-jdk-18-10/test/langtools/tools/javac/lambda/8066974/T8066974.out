@@ -1,0 +1,5 @@
+T8066974.java:41:19: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.Exception
+T8066974.java:42:19: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.Exception
+T8066974.java:43:13: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.Exception
+T8066974.java:44:13: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.Exception
+4 errors

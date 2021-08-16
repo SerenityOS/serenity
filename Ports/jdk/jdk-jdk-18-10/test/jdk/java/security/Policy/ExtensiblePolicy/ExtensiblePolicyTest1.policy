@@ -1,0 +1,4 @@
+grant {
+	permission TVJar.TVPermission "channel:3-6", "watch";
+};
+

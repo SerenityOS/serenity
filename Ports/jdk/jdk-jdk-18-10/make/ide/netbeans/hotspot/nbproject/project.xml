@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.cnd.makeproject</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/make-project/1">
+            <name>OpenJDK (Native)</name>
+            <c-extensions>c,m</c-extensions>
+            <cpp-extensions>cc,cpp</cpp-extensions>
+            <header-extensions>ad,h,hh,hpp,in_out,map,txt</header-extensions>
+            <sourceEncoding>UTF-8</sourceEncoding>
+            <make-dep-projects/>
+            <sourceRootList>
+                <sourceRootElem>../..</sourceRootElem>
+            </sourceRootList>
+            <confList>
+                <confElem>
+                    <name>Mac_64</name>
+                    <type>0</type>
+                </confElem>
+                <confElem>
+                    <name>Linux_64</name>
+                    <type>0</type>
+                </confElem>
+                <confElem>
+                    <name>Windws64</name>
+                    <type>0</type>
+                </confElem>
+            </confList>
+            <formatting>
+                <project-formatting-style>false</project-formatting-style>
+            </formatting>
+        </data>
+    </configuration>
+</project>

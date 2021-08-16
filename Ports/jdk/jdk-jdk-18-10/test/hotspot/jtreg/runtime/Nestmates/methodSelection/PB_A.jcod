@@ -1,0 +1,132 @@
+/*
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+// m() is declared private
+
+class TestMethodSelection$PB_A {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #4 #15; // #1
+    String #16; // #2
+    class #17; // #3
+    class #20; // #4
+    Utf8 "<init>"; // #5
+    Utf8 "()V"; // #6
+    Utf8 "Code"; // #7
+    Utf8 "LineNumberTable"; // #8
+    Utf8 "m"; // #9
+    Utf8 "()Ljava/lang/String;"; // #10
+    Utf8 "SourceFile"; // #11
+    Utf8 "TestMethodSelection.java"; // #12
+    Utf8 "NestHost"; // #13
+    class #22; // #14
+    NameAndType #5 #6; // #15
+    Utf8 "PB_A::m"; // #16
+    Utf8 "TestMethodSelection$PB_A"; // #17
+    Utf8 "PB_A"; // #18
+    Utf8 "InnerClasses"; // #19
+    Utf8 "TestMethodSelection$A"; // #20
+    Utf8 "A"; // #21
+    Utf8 "TestMethodSelection"; // #22
+  } // Constant Pool
+
+  0x0021; // access
+  #3;// this_cpx
+  #4;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#8) { // LineNumberTable
+              [] { // LineNumberTable
+                0  119;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0002; // access - modified
+      #9; // name_cpx
+      #10; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x1202B0;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#8) { // LineNumberTable
+              [] { // LineNumberTable
+                0  120;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#11) { // SourceFile
+      #12;
+    } // end SourceFile
+    ;
+    Attr(#13) { // NestHost
+      0x000E;
+    } // end NestHost
+    ;
+    Attr(#19) { // InnerClasses
+      [] { // InnerClasses
+        #3 #14 #18 9;
+        #4 #14 #21 9;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class TestMethodSelection$PB_A

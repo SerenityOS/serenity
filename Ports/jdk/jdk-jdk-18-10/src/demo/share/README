@@ -1,0 +1,15 @@
+The source code provided with demos for the JDK is meant
+to illustrate the usage of a given feature or technique and has been
+deliberately simplified. Additional steps required for a
+production-quality application, such as security checks, input
+validation, and proper error handling, might not be present in the
+sample code.
+
+In some cases, the default security settings may block an execution
+of demo applets in a browser. To adjust the security settings, please
+refer to the following resource:
+
+http://java.com/en/download/help/java_blocked.xml
+
+Some demo applets need to be accessed through the HTTP or HTTPS
+protocols to enable access to the required resources.

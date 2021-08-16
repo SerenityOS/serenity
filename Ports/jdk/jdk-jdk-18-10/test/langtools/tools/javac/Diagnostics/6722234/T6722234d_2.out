@@ -1,0 +1,3 @@
+T6722234d.java:18:20: compiler.err.prob.found.req: (compiler.misc.incompatible.bounds: Z, (compiler.misc.upper.bounds: T6722234d.A,Object), (compiler.misc.lower.bounds: T6722234d.B,T6722234d.A))
+- compiler.misc.where.description.typevar: Z,{(compiler.misc.where.typevar: Z, Object, kindname.method, <Z>m(Z,Z))}
+1 error

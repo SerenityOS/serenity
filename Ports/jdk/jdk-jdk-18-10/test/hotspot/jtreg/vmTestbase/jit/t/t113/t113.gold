@@ -1,0 +1,2 @@
+java.lang.ClassCastException: class jit.t.t113.kid1 cannot be cast to class jit.t.t113.kid2 (jit.t.t113.kid1 and jit.t.t113.kid2 are in unnamed module of loader 'app')
+        at jit.t.t113.t113.main(t113.java:72)

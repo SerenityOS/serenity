@@ -1,0 +1,8 @@
+
+grant {
+	permission java.lang.RuntimePermission "createClassLoader";
+	permission java.lang.RuntimePermission "getClassLoader";
+	permission java.util.PropertyPermission "test.classes", "read";
+	permission java.io.FilePermission "<<ALL FILES>>", "read";
+};
+

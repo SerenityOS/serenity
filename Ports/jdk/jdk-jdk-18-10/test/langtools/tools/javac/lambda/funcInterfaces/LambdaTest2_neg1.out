@@ -1,0 +1,2 @@
+LambdaTest2_neg1.java:15:13: compiler.err.cant.apply.symbol: kindname.method, methodQooRoo, QooRoo<java.lang.Integer,java.lang.Integer,java.lang.Void>, @27, kindname.class, LambdaTest2_neg1, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.not.a.functional.intf.1: QooRoo, (compiler.misc.incompatible.abstracts: kindname.interface, QooRoo)))
+1 error

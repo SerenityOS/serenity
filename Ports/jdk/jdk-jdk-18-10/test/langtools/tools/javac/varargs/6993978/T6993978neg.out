@@ -1,0 +1,4 @@
+T6993978neg.java:15:9: compiler.warn.unchecked.generic.array.creation: java.util.List<java.lang.String>[]
+- compiler.err.warnings.and.werror
+1 error
+1 warning

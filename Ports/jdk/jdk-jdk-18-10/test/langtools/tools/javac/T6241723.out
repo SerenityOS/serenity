@@ -1,0 +1,7 @@
+T6241723.java:21:5: compiler.warn.has.been.deprecated: A1, compiler.misc.unnamed.package
+T6241723.java:23:7: compiler.warn.has.been.deprecated: A2.A21, A2
+T6241723.java:26:5: compiler.warn.has.been.deprecated: Z1, compiler.misc.unnamed.package
+T6241723.java:28:7: compiler.warn.has.been.deprecated: Z2.Z21, Z2
+- compiler.err.warnings.and.werror
+1 error
+4 warnings

@@ -1,0 +1,20 @@
+AccessTest.java:24: error: malformed HTML
+     * public a < b
+                ^
+AccessTest.java:29: error: malformed HTML
+     * protected a < b
+                   ^
+AccessTest.java:34: error: malformed HTML
+     * package-private a < b
+                         ^
+AccessTest.java:47: error: malformed HTML
+     * public a < b
+                ^
+AccessTest.java:52: error: malformed HTML
+     * protected a < b
+                   ^
+AccessTest.java:57: error: malformed HTML
+     * package-private a < b
+                         ^
+6 errors
+

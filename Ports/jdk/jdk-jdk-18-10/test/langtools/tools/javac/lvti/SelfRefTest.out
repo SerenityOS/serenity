@@ -1,0 +1,4 @@
+SelfRefTest.java:16:12: compiler.err.cant.infer.local.var.type: x, (compiler.misc.local.self.ref)
+SelfRefTest.java:17:53: compiler.err.already.defined: kindname.variable, y, kindname.method, test(boolean)
+SelfRefTest.java:18:12: compiler.err.cant.infer.local.var.type: z, (compiler.misc.local.self.ref)
+3 errors

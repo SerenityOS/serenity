@@ -1,0 +1,10 @@
+ExpressionSwitchFlow.java:11:24: compiler.err.rule.completes.normally
+ExpressionSwitchFlow.java:18:13: compiler.err.rule.completes.normally
+ExpressionSwitchFlow.java:24:24: compiler.err.rule.completes.normally
+ExpressionSwitchFlow.java:32:25: compiler.err.rule.completes.normally
+ExpressionSwitchFlow.java:38:25: compiler.err.rule.completes.normally
+ExpressionSwitchFlow.java:45:25: compiler.err.rule.completes.normally
+ExpressionSwitchFlow.java:53:9: compiler.err.switch.expression.completes.normally
+ExpressionSwitchFlow.java:61:9: compiler.err.switch.expression.completes.normally
+ExpressionSwitchFlow.java:69:9: compiler.err.switch.expression.completes.normally
+9 errors

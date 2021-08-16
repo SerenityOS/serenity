@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="fr"/>
+		<territory type="CM"/>
+	</identity>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am" draft="contributed">mat.</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">soir</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am" draft="contributed">mat.</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">soir</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am" draft="contributed">matin</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">soir</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am" draft="contributed">mat.</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">soir</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am" draft="contributed">mat.</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">soir</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am" draft="contributed">matin</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">soir</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Ehm" draft="contributed">E h:mm</dateFormatItem>
+						<dateFormatItem id="Ehms" draft="contributed">E h:mm:ss</dateFormatItem>
+						<dateFormatItem id="h" draft="contributed">h</dateFormatItem>
+						<dateFormatItem id="hm" draft="contributed">h:mm</dateFormatItem>
+						<dateFormatItem id="hms" draft="contributed">h:mm:ss</dateFormatItem>
+						<dateFormatItem id="hmsv" draft="contributed">h:mm:ss v</dateFormatItem>
+						<dateFormatItem id="hmv" draft="contributed">h:mm v</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatItem id="h">
+							<greatestDifference id="a" draft="contributed">h – h</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h – h</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="a" draft="contributed">h:mm – h:mm</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h:mm – h:mm</greatestDifference>
+							<greatestDifference id="m" draft="contributed">h:mm – h:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="a" draft="contributed">h:mm – h:mm v</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h:mm – h:mm v</greatestDifference>
+							<greatestDifference id="m" draft="contributed">h:mm – h:mm v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="a" draft="contributed">h – h v</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h – h v</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+	</dates>
+</ldml>

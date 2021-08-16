@@ -1,0 +1,23 @@
+
+grant principal javax.security.auth.x500.X500Principal "CN=foo" {
+  permission OnePermission "${{self}}";
+};
+
+grant principal javax.security.auth.x500.X500Principal "CN=foo",
+    principal javax.security.auth.x500.X500Principal "CN=bar" {
+  permission TwoPermission "${{self}}";
+};
+
+grant principal javax.security.auth.x500.X500Principal * {
+  permission ThreePermission "${{self}}";
+};
+
+grant principal * * {
+  permission FourPermission "${{self}}";
+};
+
+grant principal javax.security.auth.x500.X500Principal *,
+    principal com.sun.security.auth.UnixPrincipal "foobar" {
+  permission FivePermission "${{self}}";
+};
+

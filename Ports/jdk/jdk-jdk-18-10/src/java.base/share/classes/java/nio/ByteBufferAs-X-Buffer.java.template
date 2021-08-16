@@ -1,0 +1,260 @@
+/*
+ * Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+#warn This file is preprocessed before being compiled
+
+package java.nio;
+
+import java.util.Objects;
+import jdk.internal.access.foreign.MemorySegmentProxy;
+import jdk.internal.misc.Unsafe;
+
+class ByteBufferAs$Type$Buffer$RW$$BO$                  // package-private
+    extends {#if[ro]?ByteBufferAs}$Type$Buffer{#if[ro]?$BO$}
+{
+
+#if[rw]
+
+    protected final ByteBuffer bb;
+
+#end[rw]
+
+    ByteBufferAs$Type$Buffer$RW$$BO$(ByteBuffer bb, MemorySegmentProxy segment) {   // package-private
+#if[rw]
+        super(-1, 0,
+              bb.remaining() >> $LG_BYTES_PER_VALUE$,
+              bb.remaining() >> $LG_BYTES_PER_VALUE$, segment);
+        this.bb = bb;
+        // enforce limit == capacity
+        int cap = this.capacity();
+        this.limit(cap);
+        int pos = this.position();
+        assert (pos <= cap);
+        address = bb.address;
+#else[rw]
+        super(bb, segment);
+#end[rw]
+    }
+
+    ByteBufferAs$Type$Buffer$RW$$BO$(ByteBuffer bb,
+                                     int mark, int pos, int lim, int cap,
+                                     long addr, MemorySegmentProxy segment)
+    {
+#if[rw]
+        super(mark, pos, lim, cap, segment);
+        this.bb = bb;
+        address = addr;
+        assert address >= bb.address;
+#else[rw]
+        super(bb, mark, pos, lim, cap, addr, segment);
+#end[rw]
+    }
+
+    @Override
+    Object base() {
+        return bb.hb;
+    }
+
+    public $Type$Buffer slice() {
+        int pos = this.position();
+        int lim = this.limit();
+        int rem = (pos <= lim ? lim - pos : 0);
+        long addr = byteOffset(pos);
+        return new ByteBufferAs$Type$Buffer$RW$$BO$(bb, -1, 0, rem, rem, addr, segment);
+    }
+
+    @Override
+    public $Type$Buffer slice(int index, int length) {
+        Objects.checkFromIndexSize(index, length, limit());
+        return new ByteBufferAs$Type$Buffer$RW$$BO$(bb,
+                                                    -1,
+                                                    0,
+                                                    length,
+                                                    length,
+                                                    byteOffset(index), segment);
+    }
+
+    public $Type$Buffer duplicate() {
+        return new ByteBufferAs$Type$Buffer$RW$$BO$(bb,
+                                                    this.markValue(),
+                                                    this.position(),
+                                                    this.limit(),
+                                                    this.capacity(),
+                                                    address, segment);
+    }
+
+    public $Type$Buffer asReadOnlyBuffer() {
+#if[rw]
+        return new ByteBufferAs$Type$BufferR$BO$(bb,
+                                                 this.markValue(),
+                                                 this.position(),
+                                                 this.limit(),
+                                                 this.capacity(),
+                                                 address, segment);
+#else[rw]
+        return duplicate();
+#end[rw]
+    }
+
+#if[rw]
+
+    private int ix(int i) {
+        int off = (int) (address - bb.address);
+        return (i << $LG_BYTES_PER_VALUE$) + off;
+    }
+
+    protected long byteOffset(long i) {
+        return (i << $LG_BYTES_PER_VALUE$) + address;
+    }
+
+    public $type$ get() {
+        $memtype$ x = SCOPED_MEMORY_ACCESS.get$Memtype$Unaligned(scope(), bb.hb, byteOffset(nextGetIndex()),
+            {#if[boB]?true:false});
+        return $fromBits$(x);
+    }
+
+    public $type$ get(int i) {
+        $memtype$ x = SCOPED_MEMORY_ACCESS.get$Memtype$Unaligned(scope(), bb.hb, byteOffset(checkIndex(i)),
+            {#if[boB]?true:false});
+        return $fromBits$(x);
+    }
+
+#if[streamableType]
+   $type$ getUnchecked(int i) {
+        $memtype$ x = SCOPED_MEMORY_ACCESS.get$Memtype$Unaligned(null, bb.hb, byteOffset(i),
+            {#if[boB]?true:false});
+        return $fromBits$(x);
+    }
+#end[streamableType]
+
+#end[rw]
+
+    public $Type$Buffer put($type$ x) {
+#if[rw]
+        $memtype$ y = $toBits$(x);
+        SCOPED_MEMORY_ACCESS.put$Memtype$Unaligned(scope(), bb.hb, byteOffset(nextPutIndex()), y,
+            {#if[boB]?true:false});
+        return this;
+#else[rw]
+        throw new ReadOnlyBufferException();
+#end[rw]
+    }
+
+    public $Type$Buffer put(int i, $type$ x) {
+#if[rw]
+        $memtype$ y = $toBits$(x);
+        SCOPED_MEMORY_ACCESS.put$Memtype$Unaligned(scope(), bb.hb, byteOffset(checkIndex(i)), y,
+            {#if[boB]?true:false});
+        return this;
+#else[rw]
+        throw new ReadOnlyBufferException();
+#end[rw]
+    }
+
+    public $Type$Buffer compact() {
+#if[rw]
+        int pos = position();
+        int lim = limit();
+        assert (pos <= lim);
+        int rem = (pos <= lim ? lim - pos : 0);
+
+        ByteBuffer db = bb.duplicate();
+        db.limit(ix(lim));
+        db.position(ix(0));
+        ByteBuffer sb = db.slice();
+        sb.position(pos << $LG_BYTES_PER_VALUE$);
+        sb.compact();
+        position(rem);
+        limit(capacity());
+        discardMark();
+        return this;
+#else[rw]
+        throw new ReadOnlyBufferException();
+#end[rw]
+    }
+
+    public boolean isDirect() {
+        return bb.isDirect();
+    }
+
+    public boolean isReadOnly() {
+        return {#if[rw]?false:true};
+    }
+
+#if[char]
+
+    public String toString(int start, int end) {
+        Objects.checkFromToIndex(start, end, limit());
+        try {
+            int len = end - start;
+            char[] ca = new char[len];
+            CharBuffer cb = CharBuffer.wrap(ca);
+            CharBuffer db = this.duplicate();
+            db.position(start);
+            db.limit(end);
+            cb.put(db);
+            return new String(ca);
+        } catch (StringIndexOutOfBoundsException x) {
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+
+    // --- Methods to support CharSequence ---
+
+    public CharBuffer subSequence(int start, int end) {
+        int pos = position();
+        int lim = limit();
+        assert (pos <= lim);
+        pos = (pos <= lim ? pos : lim);
+        int len = lim - pos;
+
+        Objects.checkFromToIndex(start, end, len);
+        return new ByteBufferAsCharBuffer$RW$$BO$(bb,
+                                                  -1,
+                                                  pos + start,
+                                                  pos + end,
+                                                  capacity(),
+                                                  address, segment);
+    }
+
+#end[char]
+
+
+    public ByteOrder order() {
+#if[boB]
+        return ByteOrder.BIG_ENDIAN;
+#end[boB]
+#if[boL]
+        return ByteOrder.LITTLE_ENDIAN;
+#end[boL]
+    }
+
+#if[char]
+    ByteOrder charRegionOrder() {
+        return order();
+    }
+#end[char]
+}

@@ -1,0 +1,3 @@
+T6476118c.java:18:21: compiler.err.name.clash.same.erasure.no.override: foo, java.lang.Object, T6476118c.C, foo, java.lang.Integer, T6476118c.A
+T6476118c.java:19:21: compiler.err.name.clash.same.erasure.no.override: foo, java.lang.Number, T6476118c.C, foo, java.lang.Integer, T6476118c.B
+2 errors

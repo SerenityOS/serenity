@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
+<filesystem>
+    <folder name="Actions">
+        <folder name="File">
+            <file name="com-sun-hotspot-igv-coordinator-actions-SaveAsAction.instance"/>
+            <file name="com-sun-hotspot-igv-coordinator-actions-SaveAllAction.instance"/>
+            <file name="com-sun-hotspot-igv-coordinator-actions-ImportAction.instance"/>
+        </folder>
+        <folder name="Edit">
+            <file name="com-sun-hotspot-igv-coordinator-actions-RemoveAction.instance"/>
+            <file name="com-sun-hotspot-igv-coordinator-actions-RemoveAllAction.instance"/>
+        </folder>
+        <folder name="Window">
+            <file name="com-sun-hotspot-igv-coordinator-actions-OutlineAction.instance"/>
+        </folder>
+    </folder>
+    
+    <folder name="Menu">
+        <folder name="File">
+            <file name="Export_hidden"/>
+            <file name="Import_hidden"/>
+            <file name="Separator2.instance_hidden"/>
+            <file name="Separator3.instance_hidden"/>
+            <file name="SeparatorOpen.instance_hidden"/>
+            <file name="com-sun-hotspot-igv-coordinator-actions-ImportAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/File/com-sun-hotspot-igv-coordinator-actions-ImportAction.instance"/>
+                <attr name="position" intvalue="100"/>
+            </file>
+            <file name="SeparatorSave.instance">
+                <attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+                <attr name="position" intvalue="150"/>
+            </file>
+            <file name="com-sun-hotspot-igv-coordinator-actions-SaveAsAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/File/com-sun-hotspot-igv-coordinator-actions-SaveAsAction.instance"/>
+                <attr name="position" intvalue="200"/>
+            </file>
+            <file name="com-sun-hotspot-igv-coordinator-actions-SaveAllAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/File/com-sun-hotspot-igv-coordinator-actions-SaveAllAction.instance"/>
+                <attr name="position" intvalue="300"/>
+            </file>
+            <file name="SeparatorRemove.instance">
+                <attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+                <attr name="position" intvalue="350"/>
+            </file>
+            <file name="com-sun-hotspot-igv-coordinator-actions-RemoveAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Edit/com-sun-hotspot-igv-coordinator-actions-RemoveAction.instance"/>
+                <attr name="position" intvalue="400"/>
+            </file>
+            <file name="com-sun-hotspot-igv-coordinator-actions-RemoveAllAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Edit/com-sun-hotspot-igv-coordinator-actions-RemoveAllAction.instance"/>
+                <attr name="position" intvalue="500"/>
+            </file>
+            
+            <!-- Hidden menu entries from other modules -->
+            <file name="org-netbeans-modules-editor-ExportHtmlAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-openfile-OpenFileAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-openfile-RecentFileAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-print-action-PageSetupAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-print-action-PrintAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-project-ui-CloseProject.shadow_hidden"/>
+            <file name="org-netbeans-modules-project-ui-CustomizeProject.shadow_hidden"/>
+            <file name="org-netbeans-modules-project-ui-NewFile.shadow_hidden"/>
+            <file name="org-netbeans-modules-project-ui-NewProject.shadow_hidden"/>
+            <file name="org-netbeans-modules-project-ui-OpenProject.shadow_hidden"/>
+            <file name="org-netbeans-modules-project-ui-RecentProjects.shadow_hidden"/>
+            <file name="org-netbeans-modules-project-ui-groups-GroupsMenu.shadow_hidden"/>
+            <file name="org-openide-actions-SaveAction.shadow_hidden"/>
+            <file name="org-openide-actions-SaveAllAction.shadow_hidden"/>
+            <file name="org-openide-actions-SaveAsAction.shadow_hidden"/>
+        </folder>
+        
+        <folder name="Edit">
+            <!-- Hidden menu entries from other modules -->
+            <file name="Separator1.instance_hidden"/>
+            <file name="Separator2.instance_hidden"/>
+            <file name="SeparatorAfterFindPrevious.instance_hidden"/>
+            <file name="SeparatorAfterProjectsSearch.instance_hidden"/>
+            <file name="WhereUsedAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-editor-MainMenuAction$FindNextAction.instance_hidden"/>
+            <file name="org-netbeans-modules-editor-MainMenuAction$FindPreviousAction.instance_hidden"/>
+            <file name="org-netbeans-modules-editor-MainMenuAction$FindSelectionAction.instance_hidden"/>
+            <file name="org-netbeans-modules-editor-MainMenuAction$PasteFormattedAction.instance_hidden"/>
+            <file name="org-netbeans-modules-editor-MainMenuAction$SelectAllAction.instance_hidden"/>
+            <file name="org-netbeans-modules-editor-MainMenuAction$SelectIdentifierAction.instance_hidden"/>
+            <file name="org-netbeans-modules-editor-MainMenuAction$StartMacroRecordingAction.instance_hidden"/>
+            <file name="org-netbeans-modules-editor-MainMenuAction$StopMacroRecordingAction.instance_hidden"/>
+            <file name="org-netbeans-modules-search-FindInFilesAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-search-ReplaceInFilesAction.shadow_hidden"/>
+            <file name="org-openide-actions-CopyAction.shadow_hidden"/>
+            <file name="org-openide-actions-CutAction.shadow_hidden"/>
+            <file name="org-openide-actions-DeleteAction.shadow_hidden"/>
+            <file name="org-openide-actions-FindAction.shadow_hidden"/>
+            <file name="org-openide-actions-PasteAction.shadow_hidden"/>
+            <file name="org-openide-actions-ReplaceAction.shadow_hidden"/>
+            <file name="sep-before-reposearch.instance_hidden"/>
+        </folder>
+        
+        <folder name="View">
+            <!-- Hidden menu entries from other modules -->
+            <file name="Separator1.instance_hidden"/>
+            <file name="Separator2.instance_hidden"/>
+            <file name="org-netbeans-core-actions-HTMLViewAction.shadow_hidden"/>
+            <file name="org-netbeans-core-actions-LogAction.shadow_hidden"/>
+            <file name="org-netbeans-core-multiview-EditorsAction.instance_hidden"/>
+            <file name="org-netbeans-core-windows-actions-ToolbarsListAction.instance_hidden"/>
+            <file name="org-netbeans-modules-editor-NbCodeFoldingAction.instance_hidden"/>
+            <file name="org-netbeans-modules-project-ui-SyncEditorWithViewsAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-versioning-ShowTextAnnotationsAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-versioning-diff-ShowDiffSidebarAction.shadow_hidden"/>
+            <file name="toggle-line-numbers.shadow_hidden"/>
+            <file name="toggle-non-printable-characters.shadow_hidden"/>
+            <file name="toggle-toolbar.shadow_hidden"/>
+        </folder>
+        
+        <!-- Hidden menus -->
+        <folder name="GoTo_hidden"/>
+        <folder name="Source_hidden"/>
+        <folder name="Refactoring_hidden"/>
+        <folder name="BuildProject_hidden"/>
+        <folder name="RunProject_hidden"/>
+        <folder name="Versioning_hidden"/>
+        
+        <folder name="Tools">
+            <!-- Hidden menu entries from other modules -->
+            <file name="LibrariesCustomizerAction.shadow_hidden"/>
+            <file name="PaletteManager_hidden"/>
+            <file name="Separator1.instance_hidden"/>
+            <file name="Separator2.instance_hidden"/>
+            <file name="ServerManagerAction3.shadow_hidden"/>
+            <file name="VariablesCustomizerAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-autoupdate-ui-actions-PluginManagerAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-templates-actions-TemplatesAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-options-OptionsWindowAction-separatorBefore.instance_hidden"/>
+            <file name="org-netbeans-modules-xml-catalog-CatalogAction.shadow_hidden"/>
+            <file name="org-openide-actions-ToolsAction.shadow_hidden"/>
+        </folder>
+        
+        <folder name="Window">
+            <file name="OutlineAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Window/com-sun-hotspot-igv-coordinator-actions-OutlineAction.instance"/>
+            </file>
+            
+            <!-- Hidden menu entries from other modules -->
+            <file name="Debug_hidden"/>
+            <file name="Navigator_hidden"/>
+            <file name="Other_hidden"/>
+            <file name="Output_hidden"/>
+            <file name="ProgressListAction.shadow_hidden"/>
+            <file name="ShowPaletteAction.shadow_hidden"/>
+            <file name="SwitchToRecentDocumentAction.shadow_hidden"/>
+            <file name="Versioning_hidden"/>
+            <file name="org-netbeans-core-ide-ServicesTabAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-favorites-View.shadow_hidden"/>
+            <file name="org-netbeans-modules-project-ui-logical-tab-action.shadow_hidden"/>
+            <file name="org-netbeans-modules-project-ui-physical-tab-action.shadow_hidden"/>
+            <file name="org-netbeans-modules-tasklist-ui-TaskListAction.shadow_hidden"/>
+            <file name="CloneDocumentAction.shadow_hidden"/>
+        </folder>
+
+        <folder name="Help">
+            <!-- Hidden menu entries from other modules -->
+            <file name="Separator1.instance_hidden"/>
+            <file name="netbeans-kb.url_hidden"/>
+            <file name="org-netbeans-modules-autoupdate-ui-actions-CheckForUpdatesAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-bugzilla-ReportNBIssueAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-usersguide-master.xml_hidden"/>
+            <file name="shortcuts.xml_hidden"/>
+        </folder>
+    </folder>
+
+    <folder name="OptionsDialog">
+        <!-- Hidden option tabs from other modules -->
+        <file name="Editor.instance_hidden"/>
+        <file name="FontsAndColors.instance_hidden"/>
+        <file name="General.instance_hidden"/>
+        <file name="Keymaps.instance_hidden"/>
+        <folder name="Advanced">
+            <file name="Files.instance_hidden"/>
+            <file name="IssueTracking.instance_hidden"/>
+            <file name="JavaScript.instance_hidden"/>
+            <file name="Spellchecker.instance_hidden"/>
+            <file name="TermAdvancedOption.instance_hidden"/>
+            <file name="ToDo.instance_hidden"/>
+            <file name="Versioning.instance_hidden"/>
+        </folder>
+    </folder>
+    
+    <folder name="Windows2">
+        <folder name="Components">
+            <file name="OutlineTopComponent.settings" url="OutlineTopComponentSettings.xml"/>
+        </folder>
+        <folder name="Modes">  
+            <file name="customLeft.wsmode" url="customLeftWsmode.xml"/>
+            <folder name="customLeft">
+                <file name="OutlineTopComponent.wstcref" url="OutlineTopComponentWstcref.xml"/>
+            </folder>
+        </folder>
+    </folder>
+</filesystem>

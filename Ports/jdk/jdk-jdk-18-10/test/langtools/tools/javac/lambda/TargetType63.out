@@ -1,0 +1,9 @@
+TargetType63.java:25:11: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.ClassNotFoundException
+TargetType63.java:26:11: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.ClassNotFoundException
+TargetType63.java:30:11: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.ClassNotFoundException
+TargetType63.java:31:11: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.ClassNotFoundException
+TargetType63.java:32:11: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.ClassNotFoundException
+TargetType63.java:33:11: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.ClassNotFoundException
+TargetType63.java:37:11: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.Exception
+TargetType63.java:38:11: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.Exception
+8 errors

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd" 
+ [<!ENTITY intEnt 'value3'> ]>
+<?PITarget PIContent?>
+<properties>
+<comment>Property With Other Encoding</comment>
+<entry key="Key1">value1</entry>
+<entry key="Key2"><![CDATA[<value2>]]></entry>
+<entry key="Key3">&intEnt;</entry>
+</properties>

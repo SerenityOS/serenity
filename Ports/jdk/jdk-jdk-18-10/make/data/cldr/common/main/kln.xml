@@ -1,0 +1,787 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="kln"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ak">kutitab Aka</language>
+			<language type="am">kutitab Amariek</language>
+			<language type="ar">kutitab Arabuk</language>
+			<language type="be">kutitab Belarusa</language>
+			<language type="bg">kutitab Bulgaria</language>
+			<language type="bn">kutitab Bengali</language>
+			<language type="cs">kutitab Chek</language>
+			<language type="de">kutitab Chermani</language>
+			<language type="el">kutitab Greece</language>
+			<language type="en">kutitab Uingeresa</language>
+			<language type="es">kutitab Espianik</language>
+			<language type="fa">kutitab Persia</language>
+			<language type="fr">kutitab Kifaransa</language>
+			<language type="ha">kutitab Hausa</language>
+			<language type="hi">kutitab Maindiik</language>
+			<language type="hu">kutitab Hangari</language>
+			<language type="id">kutitab Indonesia</language>
+			<language type="ig">kutitab Igbo</language>
+			<language type="it">kutitab Talianek</language>
+			<language type="ja">kutitap Japan</language>
+			<language type="jv">kutitap Javanese</language>
+			<language type="kln">Kalenjin</language>
+			<language type="km">kutitab Kher nebo Kwen</language>
+			<language type="ko">kutitab Korea</language>
+			<language type="ms">kutitab Malay</language>
+			<language type="my">kutitab Burma</language>
+			<language type="ne">kutitab Nepali</language>
+			<language type="nl">kutitab Boa</language>
+			<language type="pa">kutitab Punjab</language>
+			<language type="pl">kutitap Poland</language>
+			<language type="pt">kutitab Portugal</language>
+			<language type="ro">kutitab Romaniek</language>
+			<language type="ru">kutitab Russia</language>
+			<language type="rw">kutitab Kinyarwanda</language>
+			<language type="so">kutitab Somaliek</language>
+			<language type="sv">kutitab Sweden</language>
+			<language type="ta">kutitab Tamil</language>
+			<language type="th">kutitab Thailand</language>
+			<language type="tr">kutitab Turkey</language>
+			<language type="uk">kutitab Ukraine</language>
+			<language type="ur">kutitab Urdu</language>
+			<language type="vi">kutitab Vietnam</language>
+			<language type="yo">kutitab Yoruba</language>
+			<language type="zh">kutitab China</language>
+			<language type="zu">kutitab Zulu</language>
+		</languages>
+		<territories>
+			<territory type="AD">Emetab Andorra</territory>
+			<territory type="AE">Emetab kibagenge nebo arabuk</territory>
+			<territory type="AF">Emetab Afghanistan</territory>
+			<territory type="AG">Emetab Antigua ak Barbuda</territory>
+			<territory type="AI">Emetab Anguilla</territory>
+			<territory type="AL">Emetab Albania</territory>
+			<territory type="AM">Emetab Armenia</territory>
+			<territory type="AO">Emetab Angola</territory>
+			<territory type="AR">Emetab Argentina</territory>
+			<territory type="AS">Emetab American Samoa</territory>
+			<territory type="AT">Emetab Austria</territory>
+			<territory type="AU">Emetab Australia</territory>
+			<territory type="AW">Emetab Aruba</territory>
+			<territory type="AZ">Emetab Azerbaijan</territory>
+			<territory type="BA">Emetab Bosnia ak Herzegovina</territory>
+			<territory type="BB">Emetab Barbados</territory>
+			<territory type="BD">Emetab Bangladesh</territory>
+			<territory type="BE">Emetab Belgium</territory>
+			<territory type="BF">Emetab Burkina Faso</territory>
+			<territory type="BG">Emetab Bulgaria</territory>
+			<territory type="BH">Emetab Bahrain</territory>
+			<territory type="BI">Emetab Burundi</territory>
+			<territory type="BJ">Emetab Benin</territory>
+			<territory type="BM">Emetab Bermuda</territory>
+			<territory type="BN">Emetab Brunei</territory>
+			<territory type="BO">Emetab Bolivia</territory>
+			<territory type="BR">Emetab Brazil</territory>
+			<territory type="BS">Emetab Bahamas</territory>
+			<territory type="BT">Emetab Bhutan</territory>
+			<territory type="BW">Emetab Botswana</territory>
+			<territory type="BY">Emetab Belarus</territory>
+			<territory type="BZ">Emetab Belize</territory>
+			<territory type="CA">Emetab Canada</territory>
+			<territory type="CD">Emetab Congo - Kinshasa</territory>
+			<territory type="CF">Emetab Afrika nebo Kwen</territory>
+			<territory type="CG">Emetab Congo - Brazzaville</territory>
+			<territory type="CH">Emetab Switzerland</territory>
+			<territory type="CI">Emetab Côte d’Ivoire</territory>
+			<territory type="CK">Ikwembeyotab Cook</territory>
+			<territory type="CL">Emetab Chile</territory>
+			<territory type="CM">Emetab Cameroon</territory>
+			<territory type="CN">Emetab China</territory>
+			<territory type="CO">Emetab Colombia</territory>
+			<territory type="CR">Emetab Costa Rica</territory>
+			<territory type="CU">Emetab Cuba</territory>
+			<territory type="CV">Ikwembeyotab Cape Verde</territory>
+			<territory type="CY">Emetab Cyprus</territory>
+			<territory type="CZ">Emetab Czech Republic</territory>
+			<territory type="DE">Emetab Geruman</territory>
+			<territory type="DJ">Emetab Djibouti</territory>
+			<territory type="DK">Emetab Denmark</territory>
+			<territory type="DM">Emetab Dominica</territory>
+			<territory type="DO">Emetab Dominican Republic</territory>
+			<territory type="DZ">Emetab Algeria</territory>
+			<territory type="EC">Emetab Ecuador</territory>
+			<territory type="EE">Emetab Estonia</territory>
+			<territory type="EG">Emetab Misiri</territory>
+			<territory type="ER">Emetab Eritrea</territory>
+			<territory type="ES">Emetab Spain</territory>
+			<territory type="ET">Emetab Ethiopia</territory>
+			<territory type="FI">Emetab Finland</territory>
+			<territory type="FJ">Emetab Fiji</territory>
+			<territory type="FK">Ikwembeyotab Falkland</territory>
+			<territory type="FM">Emetab Micronesia</territory>
+			<territory type="FR">Emetab France</territory>
+			<territory type="GA">Emetab Gabon</territory>
+			<territory type="GB">Emetab Kibagenge nebo Uingereza</territory>
+			<territory type="GD">Emetab Grenada</territory>
+			<territory type="GE">Emetab Georgia</territory>
+			<territory type="GF">Emetab Guiana nebo Ufaransa</territory>
+			<territory type="GH">Emetab Ghana</territory>
+			<territory type="GI">Emetab Gibraltar</territory>
+			<territory type="GL">Emetab Greenland</territory>
+			<territory type="GM">Emetab Gambia</territory>
+			<territory type="GN">Emetab Guinea</territory>
+			<territory type="GP">Emetab Guadeloupe</territory>
+			<territory type="GQ">Emetab Equatorial Guinea</territory>
+			<territory type="GR">Emetab Greece</territory>
+			<territory type="GT">Emetab Guatemala</territory>
+			<territory type="GU">Emetab Guam</territory>
+			<territory type="GW">Emetab Guinea-Bissau</territory>
+			<territory type="GY">Emetab Guyana</territory>
+			<territory type="HN">Emetab Honduras</territory>
+			<territory type="HR">Emetab Croatia</territory>
+			<territory type="HT">Emetab Haiti</territory>
+			<territory type="HU">Emetab Hungary</territory>
+			<territory type="ID">Emetab Indonesia</territory>
+			<territory type="IE">Emetab Ireland</territory>
+			<territory type="IL">Emetab Israel</territory>
+			<territory type="IN">Emetab India</territory>
+			<territory type="IO">Kebebertab araraitab indian Ocean nebo Uingeresa</territory>
+			<territory type="IQ">Emetab Iraq</territory>
+			<territory type="IR">Emetab Iran</territory>
+			<territory type="IS">Emetab Iceland</territory>
+			<territory type="IT">Emetab Italy</territory>
+			<territory type="JM">Emetab Jamaica</territory>
+			<territory type="JO">Emetab Jordan</territory>
+			<territory type="JP">Emetab Japan</territory>
+			<territory type="KE">Emetab Kenya</territory>
+			<territory type="KG">Emetab Kyrgyzstan</territory>
+			<territory type="KH">Emetab Cambodia</territory>
+			<territory type="KI">Emetab Kiribati</territory>
+			<territory type="KM">Emetab Comoros</territory>
+			<territory type="KN">Emetab Saint Kitts ak Nevis</territory>
+			<territory type="KP">Emetab Korea nebo murot katam</territory>
+			<territory type="KR">Emetab korea nebo murot tai</territory>
+			<territory type="KW">Emetab Kuwait</territory>
+			<territory type="KY">Ikwembeyotab Cayman</territory>
+			<territory type="KZ">Emetab Kazakhstan</territory>
+			<territory type="LA">Emetab Laos</territory>
+			<territory type="LB">Emetab Lebanon</territory>
+			<territory type="LC">Emetab Lucia Ne</territory>
+			<territory type="LI">Emetab Liechtenstein</territory>
+			<territory type="LK">Emetab Sri Lanka</territory>
+			<territory type="LR">Emetab Liberia</territory>
+			<territory type="LS">Emetab Lesotho</territory>
+			<territory type="LT">Emetab Lithuania</territory>
+			<territory type="LU">Emetab Luxembourg</territory>
+			<territory type="LV">Emetab Latvia</territory>
+			<territory type="LY">Emetab Libya</territory>
+			<territory type="MA">Emetab Morocco</territory>
+			<territory type="MC">Emetab Monaco</territory>
+			<territory type="MD">Emetab Moldova</territory>
+			<territory type="MG">Emetab Madagascar</territory>
+			<territory type="MH">Ikwembeiyotab Marshall</territory>
+			<territory type="ML">Emetab Mali</territory>
+			<territory type="MM">Emetab Myanmar</territory>
+			<territory type="MN">Emetab Mongolia</territory>
+			<territory type="MP">Ikwembeiyotab Mariana nebo murot katam</territory>
+			<territory type="MQ">Emetab Martinique</territory>
+			<territory type="MR">Emetab Mauritania</territory>
+			<territory type="MS">Emetab Montserrat</territory>
+			<territory type="MT">Emetab Malta</territory>
+			<territory type="MU">Emetab Mauritius</territory>
+			<territory type="MV">Emetab Maldives</territory>
+			<territory type="MW">Emetab Malawi</territory>
+			<territory type="MX">Emetab Mexico</territory>
+			<territory type="MY">Emetab Malaysia</territory>
+			<territory type="MZ">Emetab Mozambique</territory>
+			<territory type="NA">Emetab Namibia</territory>
+			<territory type="NC">Emetab New Caledonia</territory>
+			<territory type="NE">Emetab niger</territory>
+			<territory type="NF">Ikwembeiyotab Norfork</territory>
+			<territory type="NG">Emetab Nigeria</territory>
+			<territory type="NI">Emetab Nicaragua</territory>
+			<territory type="NL">Emetab Holand</territory>
+			<territory type="NO">Emetab Norway</territory>
+			<territory type="NP">Emetab Nepal</territory>
+			<territory type="NR">Emetab Nauru</territory>
+			<territory type="NU">Emetab Niue</territory>
+			<territory type="NZ">Emetab New Zealand</territory>
+			<territory type="OM">Emetab Oman</territory>
+			<territory type="PA">Emetab Panama</territory>
+			<territory type="PE">Emetab Peru</territory>
+			<territory type="PF">Emetab Polynesia nebo ufaransa</territory>
+			<territory type="PG">Emetab Papua New Guinea</territory>
+			<territory type="PH">Emetab Philippines</territory>
+			<territory type="PK">Emetab Pakistan</territory>
+			<territory type="PL">Emetab Poland</territory>
+			<territory type="PM">Emetab Peter Ne titil ak Miquelon</territory>
+			<territory type="PN">Emetab Pitcairn</territory>
+			<territory type="PR">Emetab Puerto Rico</territory>
+			<territory type="PS">Emetab Palestine</territory>
+			<territory type="PT">Emetab Portugal</territory>
+			<territory type="PW">Emetab Palau</territory>
+			<territory type="PY">Emetab Paraguay</territory>
+			<territory type="QA">Emetab Qatar</territory>
+			<territory type="RE">Emetab Réunion</territory>
+			<territory type="RO">Emetab Romania</territory>
+			<territory type="RU">Emetab Russia</territory>
+			<territory type="RW">Emetab Rwanda</territory>
+			<territory type="SA">Emetab Saudi Arabia</territory>
+			<territory type="SB">Ikwembeiyotab Solomon</territory>
+			<territory type="SC">Emetab Seychelles</territory>
+			<territory type="SD">Emetab Sudan</territory>
+			<territory type="SE">Emetab Sweden</territory>
+			<territory type="SG">Emetab Singapore</territory>
+			<territory type="SH">Emetab Helena Ne tilil</territory>
+			<territory type="SI">Emetab Slovenia</territory>
+			<territory type="SK">Emetab Slovakia</territory>
+			<territory type="SL">Emetab Sierra Leone</territory>
+			<territory type="SM">Emetab San Marino</territory>
+			<territory type="SN">Emetab Senegal</territory>
+			<territory type="SO">Emetab Somalia</territory>
+			<territory type="SR">Emetab Suriname</territory>
+			<territory type="ST">Emetab São Tomé and Príncipe</territory>
+			<territory type="SV">Emetab El Salvador</territory>
+			<territory type="SY">Emetab Syria</territory>
+			<territory type="SZ">Emetab Swaziland</territory>
+			<territory type="TC">Ikwembeiyotab Turks ak Caicos</territory>
+			<territory type="TD">Emetab Chad</territory>
+			<territory type="TG">Emetab Togo</territory>
+			<territory type="TH">Emetab Thailand</territory>
+			<territory type="TJ">Emetab Tajikistan</territory>
+			<territory type="TK">Emetab Tokelau</territory>
+			<territory type="TL">Emetab Timor nebo Murot tai</territory>
+			<territory type="TM">Emetab Turkmenistan</territory>
+			<territory type="TN">Emetab Tunisia</territory>
+			<territory type="TO">Emetab Tonga</territory>
+			<territory type="TR">Emetab Turkey</territory>
+			<territory type="TT">Emetab Trinidad ak Tobago</territory>
+			<territory type="TV">Emetab Tuvalu</territory>
+			<territory type="TW">Emetab Taiwan</territory>
+			<territory type="TZ">Emetab Tanzania</territory>
+			<territory type="UA">Emetab Ukrainie</territory>
+			<territory type="UG">Emetab Uganda</territory>
+			<territory type="US">Emetab amerika</territory>
+			<territory type="UY">Emetab Uruguay</territory>
+			<territory type="UZ">Emetab Uzibekistani</territory>
+			<territory type="VA">Emetab Vatican</territory>
+			<territory type="VC">Emetab Vincent netilil ak Grenadines</territory>
+			<territory type="VE">Emetab Venezuela</territory>
+			<territory type="VG">Ikwembeyotab British Virgin</territory>
+			<territory type="VI">Ikwemweiyotab Amerika</territory>
+			<territory type="VN">Emetab Vietnam</territory>
+			<territory type="VU">Emetab Vanuatu</territory>
+			<territory type="WF">Emetab Walis ak Futuna</territory>
+			<territory type="WS">Emetab Samoa</territory>
+			<territory type="YE">Emetab Yemen</territory>
+			<territory type="YT">Emetab Mayotte</territory>
+			<territory type="ZA">Emetab Afrika nebo Murot tai</territory>
+			<territory type="ZM">Emetab Zambia</territory>
+			<territory type="ZW">Emetab Zimbabwe</territory>
+		</territories>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a b c d e g h i j k l m n o p r s t u w y]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[f q v x z]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B C D E G H I J K L M N O P R S T U W Y]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart>“</quotationStart>
+		<quotationEnd>”</quotationEnd>
+		<alternateQuotationStart>‘</alternateQuotationStart>
+		<alternateQuotationEnd>’</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd/MM/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">M/d</dateFormatItem>
+						<dateFormatItem id="MEd">E, M/d</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="MMMMEd">E, MMMM d</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, M/d/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, MMM d, y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">Mul</month>
+							<month type="2">Ngat</month>
+							<month type="3">Taa</month>
+							<month type="4">Iwo</month>
+							<month type="5">Mam</month>
+							<month type="6">Paa</month>
+							<month type="7">Nge</month>
+							<month type="8">Roo</month>
+							<month type="9">Bur</month>
+							<month type="10">Epe</month>
+							<month type="11">Kpt</month>
+							<month type="12">Kpa</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Mulgul</month>
+							<month type="2">Ng’atyaato</month>
+							<month type="3">Kiptaamo</month>
+							<month type="4">Iwootkuut</month>
+							<month type="5">Mamuut</month>
+							<month type="6">Paagi</month>
+							<month type="7">Ng’eiyeet</month>
+							<month type="8">Rooptui</month>
+							<month type="9">Bureet</month>
+							<month type="10">Epeeso</month>
+							<month type="11">Kipsuunde ne taai</month>
+							<month type="12">Kipsuunde nebo aeng’</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="narrow">
+							<month type="1">M</month>
+							<month type="2">N</month>
+							<month type="3">T</month>
+							<month type="4">I</month>
+							<month type="5">M</month>
+							<month type="6">P</month>
+							<month type="7">N</month>
+							<month type="8">R</month>
+							<month type="9">B</month>
+							<month type="10">E</month>
+							<month type="11">K</month>
+							<month type="12">K</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Kts</day>
+							<day type="mon">Kot</day>
+							<day type="tue">Koo</day>
+							<day type="wed">Kos</day>
+							<day type="thu">Koa</day>
+							<day type="fri">Kom</day>
+							<day type="sat">Kol</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Kotisap</day>
+							<day type="mon">Kotaai</day>
+							<day type="tue">Koaeng’</day>
+							<day type="wed">Kosomok</day>
+							<day type="thu">Koang’wan</day>
+							<day type="fri">Komuut</day>
+							<day type="sat">Kolo</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="narrow">
+							<day type="sun">T</day>
+							<day type="mon">T</day>
+							<day type="tue">O</day>
+							<day type="wed">S</day>
+							<day type="thu">A</day>
+							<day type="fri">M</day>
+							<day type="sat">L</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">R1</quarter>
+							<quarter type="2">R2</quarter>
+							<quarter type="3">R3</quarter>
+							<quarter type="4">R4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">Robo netai</quarter>
+							<quarter type="2">Robo nebo aeng’</quarter>
+							<quarter type="3">Robo nebo somok</quarter>
+							<quarter type="4">Robo nebo ang’wan</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">krn</dayPeriod>
+							<dayPeriod type="pm">koosk</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">karoon</dayPeriod>
+							<dayPeriod type="pm">kooskoliny</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">Amait kesich Jesu</era>
+						<era type="1">Kokakesich Jesu</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">AM</era>
+						<era type="1">KO</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd/MM/y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">M/d</dateFormatItem>
+						<dateFormatItem id="MEd">E, M/d</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="MMMMEd">E, MMMM d</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, M/d/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, MMM d, y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>Ibinta</displayName>
+			</field>
+			<field type="year">
+				<displayName>Kenyit</displayName>
+			</field>
+			<field type="month">
+				<displayName>Arawet</displayName>
+			</field>
+			<field type="week">
+				<displayName>Wikit</displayName>
+			</field>
+			<field type="day">
+				<displayName>Betut</displayName>
+				<relative type="-1">Amut</relative>
+				<relative type="0">Raini</relative>
+				<relative type="1">Mutai</relative>
+			</field>
+			<field type="weekday">
+				<displayName>Betutab wikit</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>BE/KE</displayName>
+			</field>
+			<field type="hour">
+				<displayName>Sait</displayName>
+			</field>
+			<field type="minute">
+				<displayName>Minitit</displayName>
+			</field>
+			<field type="second">
+				<displayName>Sekondit</displayName>
+			</field>
+			<field type="zone">
+				<displayName>Saitab sonit</displayName>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤#,##0.00</pattern>
+				</currencyFormat>
+				<currencyFormat type="accounting">
+					<pattern>¤#,##0.00;(¤#,##0.00)</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="other" draft="provisional">¤0K</pattern>
+					<pattern type="10000" count="other" draft="provisional">¤00K</pattern>
+					<pattern type="100000" count="other" draft="provisional">¤000K</pattern>
+					<pattern type="1000000" count="other" draft="provisional">¤0M</pattern>
+					<pattern type="10000000" count="other" draft="provisional">¤00M</pattern>
+					<pattern type="100000000" count="other" draft="provisional">¤000M</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">¤0G</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">¤00G</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">¤000G</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">¤0T</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">¤00T</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">¤000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="AED">
+				<displayName>Rabisiekab Kibagegeitab arabuk</displayName>
+			</currency>
+			<currency type="AOA">
+				<displayName>Rabisiekab Angolan</displayName>
+			</currency>
+			<currency type="AUD">
+				<displayName>Dolaitab Australian</displayName>
+			</currency>
+			<currency type="BHD">
+				<displayName>Rabisiekab Bahrain</displayName>
+			</currency>
+			<currency type="BIF">
+				<displayName>Rabisiekab Burundi</displayName>
+			</currency>
+			<currency type="BWP">
+				<displayName>Rabisiekab Botswana</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName>Dolaitab Kanada</displayName>
+			</currency>
+			<currency type="CDF">
+				<displayName>Rabisiekab Congo</displayName>
+			</currency>
+			<currency type="CHF">
+				<displayName>Rabisiekab Swiss</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>Rabisiekab China</displayName>
+			</currency>
+			<currency type="CVE">
+				<displayName>Rabisiekab Kepuvede</displayName>
+			</currency>
+			<currency type="DJF">
+				<displayName>Rabisiekab Jibuti</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName>Rabisiekab Algerian</displayName>
+			</currency>
+			<currency type="EGP">
+				<displayName>Pauditab Misri</displayName>
+			</currency>
+			<currency type="ERN">
+				<displayName>Rabisiekab Eritrea</displayName>
+			</currency>
+			<currency type="ETB">
+				<displayName>Rabisiekab Ethiopia</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>Yuroit</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>pounditab Uingereza</displayName>
+			</currency>
+			<currency type="GHC">
+				<displayName>Rabisiekab Ghana</displayName>
+			</currency>
+			<currency type="GMD">
+				<displayName>Rabisiekab Gambia</displayName>
+			</currency>
+			<currency type="GNS">
+				<displayName>Rabisiekab Guinea</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName>Rabisiekab India</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>Rabisiekab Japan</displayName>
+			</currency>
+			<currency type="KES">
+				<displayName>Silingitab ya Kenya</displayName>
+				<symbol>Ksh</symbol>
+			</currency>
+			<currency type="KMF">
+				<displayName>Rabisiekab Komoro</displayName>
+			</currency>
+			<currency type="LRD">
+				<displayName>Dolaitab Liberia</displayName>
+			</currency>
+			<currency type="LSL">
+				<displayName>Rabisiekab Lesoto</displayName>
+			</currency>
+			<currency type="LYD">
+				<displayName>Rabisiekab Libya</displayName>
+			</currency>
+			<currency type="MAD">
+				<displayName>Rabisiekab Moroccan</displayName>
+			</currency>
+			<currency type="MGA">
+				<displayName>Rabisiekab Malagasy</displayName>
+			</currency>
+			<currency type="MRO">
+				<displayName>Rabisiekab Mauritania (1973–2017)</displayName>
+			</currency>
+			<currency type="MRU">
+				<displayName>Rabisiekab Mauritania</displayName>
+			</currency>
+			<currency type="MUR">
+				<displayName>Rabisiekab Mauritius</displayName>
+			</currency>
+			<currency type="MWK">
+				<displayName>Rabisiekaby Malawi</displayName>
+			</currency>
+			<currency type="MZM">
+				<displayName>Rabisiekab Msumbiji</displayName>
+			</currency>
+			<currency type="NAD">
+				<displayName>Dolaitab Namibia</displayName>
+			</currency>
+			<currency type="NGN">
+				<displayName>Rabisiekab Nigeria</displayName>
+			</currency>
+			<currency type="RWF">
+				<displayName>Rabisiekab Rwanda</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName>Rabisiekab Saudia</displayName>
+			</currency>
+			<currency type="SCR">
+				<displayName>Rabisiekab Shelisheli</displayName>
+			</currency>
+			<currency type="SDG">
+				<displayName>Pouditab Sudan</displayName>
+			</currency>
+			<currency type="SHP">
+				<displayName>Pouditab helena ne tilil</displayName>
+			</currency>
+			<currency type="SLL">
+				<displayName>Leonit</displayName>
+			</currency>
+			<currency type="SOS">
+				<displayName>siligitab Somalia</displayName>
+			</currency>
+			<currency type="STD">
+				<displayName>Rabisiekab Sao Tome ak Principe (1977–2017)</displayName>
+			</currency>
+			<currency type="STN">
+				<displayName>Rabisiekab Sao Tome ak Principe</displayName>
+			</currency>
+			<currency type="SZL">
+				<displayName>Lilangenit</displayName>
+			</currency>
+			<currency type="TND">
+				<displayName>RabisiekabTunisia</displayName>
+			</currency>
+			<currency type="TZS">
+				<displayName>silingitab Tanzania</displayName>
+			</currency>
+			<currency type="UGX">
+				<displayName>Silingitab Uganda</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>Dolaitab ya Amareka</displayName>
+			</currency>
+			<currency type="XAF">
+				<displayName>Rabisiekab CFA BEAC</displayName>
+			</currency>
+			<currency type="XOF">
+				<displayName>Rabisiekab CFA BCEAO</displayName>
+			</currency>
+			<currency type="ZAR">
+				<displayName>Randitab Afrika nebo murot tai</displayName>
+			</currency>
+			<currency type="ZMK">
+				<displayName>Kwachaitab Zambia (1968–2012)</displayName>
+			</currency>
+			<currency type="ZMW">
+				<displayName>Kwachaitab Zambia</displayName>
+			</currency>
+			<currency type="ZWD">
+				<displayName>Dolaitab ya Zimbabwe</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<posix>
+		<messages>
+			<yesstr>Wei:W</yesstr>
+			<nostr>Achicha:A</nostr>
+		</messages>
+	</posix>
+</ldml>

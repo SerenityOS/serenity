@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<?xml-stylesheet type="text/xsl" href="../resources/style/pagex.xsl"?>
+
+<my:doc xmlns:my="http://www.jenitennison.com/" xmlns="http://www.w3.org/1999/xhtml">
+
+   <p>
+	These pages are all about XSLT, an XML-based language for translating one set of XML into another set of XML, or into HTML.  Of course, there are all sorts of <my:link href="#links">other pages</my:link>	around that cover XSLT.  Jeni's XSLT Pages, though, are dedicated to helping people understand and make the most of using XSLT.
+</p>
+   <p>
+	My warmest thanks to all those people who post interesting problems on <my:link href="http://www.mulberytech.com/xsl/xsl-list/">XSL-List</my:link>, and 	especially to those of you that have encouraged me to set up this site through your kind emails.
+</p>
+
+</my:doc>

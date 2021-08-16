@@ -1,0 +1,1351 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Component Specific Properties</title>
+  <style type="text/css">tbody th {font-weight:normal;text-align:left}</style>
+</head>
+<!--
+Copyright (c) 2003, 2021, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.  Oracle designates this
+particular file as subject to the "Classpath" exception as provided
+by Oracle in the LICENSE file that accompanied this code.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+-->
+
+<body>
+<main role="main">
+<h1>Component Specific Properties</h1>
+<p> The look, and to some degree the feel of Synth
+  can be customized by way of component specific properties.
+  These properties are accessed from <a
+      href="../SynthStyle.html">SynthStyle#get</a>. Refer to <a
+      href="synthFileFormat.html#e.property">synth file format</a> for examples
+  of how to specify these properties in a synth configuration file.</p>
+<p>
+      This file specifies the expected class type each of the values
+      are to take. The behavior of supplying the wrong type is
+      unspecified: typically a <code>ClassCastException</code> is
+      thrown, but it is implementation specific.
+    </p>
+<h2>ArrowButton</h2>
+<p> ArrowButton is a special type of JButton that renders an arrow.
+ArrowButton is typically not created directly, rather some of the
+Components will create it       to render a button with an arrow. The
+      components that make       use of ArrowButton       are:
+JComboBox, JScrollBar and JSplitPane (for the buttons on the divider).
+In       addition to the <a
+ href="#buttonProperties">Button 	properties</a>, ArrowButton supports
+the following properties: </p>
+<table class="striped">
+<caption>ArrowButton Specific Properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+    <tr>
+      <th scope="row">ArrowButton.size</th>
+      <td>Integer</td>
+      <td>16 	 </td>
+      <td>Preferred size of the arrow button. </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JButton">JButton</a></h2>
+<p> JButton paints text using the TEXT_FOREGROUND ColorType. In addition
+to the <a href="#buttonProperties">Button 	properties</a>, JButton
+supports the following property: </p>
+<table class="striped">
+<caption>JButton Specific Properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+	<tr>
+      <th scope="row">Button.defaultButtonFollowsFocus</th>
+      <td>Boolean</td>
+      <td>true 	 </td>
+      <td>Whether or not the 	    default JButton should change to the
+button that is 	    receiving focus. </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JCheckBox">JCheckBox</a></h2>
+<p> JCheckBox paints text using the TEXT_FOREGROUND ColorType. In
+addition to the <a href="#buttonProperties">Button 	properties</a>,
+JCheckBox supports the following property: </p>
+<table class="striped">
+<caption>JCheckBox Specific Properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+	<tr>
+      <th scope="row">CheckBox.icon</th>
+      <td>Icon</td>
+      <td>null 	 </td>
+      <td>Icon used to render the check. </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JComboBox">JComboBox</a></h2>
+<p> JComboBox is a composite component that consists of the following
+child Components: </p>
+<table class="striped">
+<caption>JComboBox child components</caption>
+  <thead><tr>
+    <th scope="col">Name</th>
+    <th scope="col">Type</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+	<tr>
+      <th scope="row">ComboBox.arrowButton</th>
+      <td>SynthArrowButton 	 </td>
+      <td>Renders the drop down indicator. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">ComboBox.list</th>
+      <td>JList 	 </td>
+      <td>JList used to render the values. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">ComboBox.listRenderer</th>
+      <td>Component 	 </td>
+      <td>The renderer used for the JComboBox's JList. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">ComboBox.popup</th>
+      <td>JPopupMenu 	 </td>
+      <td>JPopupMenu used to show the ComboBox.list of the JComboBox. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">ComboBox.renderer</th>
+      <td>Component 	 </td>
+      <td>The renderer used for the JComboBox. This is ONLY set if
+the renderer is a UIResource. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">ComboBox.scrollPane</th>
+      <td>JScrollPane 	 </td>
+      <td>JScrollPane containing the JList. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">ComboBox.textField</th>
+      <td>JTextField 	 </td>
+      <td>The editor. </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>&nbsp;</p>
+<table class="striped">
+<caption>JComboBox Specific Properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+    <tr>
+      <th scope="row">ComboBox.showPopupOnNavigation</th>
+      <td>Boolean</td>
+      <td>false 	 </td>
+      <td>Whether or not the JPopupMenu should appear when 	 navigating
+with the keyboard. </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2>JFileChooser</h2>
+<table class="striped" style="text-align: left; width: 100%;">
+<caption>JFileChooser Specific Properties</caption>
+  <thead>
+    <tr>
+      <th scope="col" style="vertical-align: top; text-align: center;">Property</th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Expected Type<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Default Value<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Description</th>
+    </tr>
+  </thead> <tbody>
+    <tr>
+      <th scope="row" style="vertical-align: top;">FileChooser.cancelIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon<br>
+      </td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon displayed on cancel button
+of the file chooser.<br>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">FileChooser.okIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon<br>
+      </td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon displayed on the ok button
+of the file chooser.<br>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">FileView.directoryIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon<br>
+      </td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon used for directories.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">FileView.fileIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon<br>
+      </td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon used for files.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">FileView.computerIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon<br>
+      </td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon used for directories that
+            represent the computer.  Not all platforms will make use
+            of this icon.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">FileView.hardDriveIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon<br>
+      </td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon used to represent the root
+            of a hard drive.  For example, on Windows this would be
+            used when viewing the C drive.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">FileView.floppyDriveIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon<br>
+      </td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon used to represent a floppy
+          disk.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">FileChooser.newFolderIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon<br>
+      </td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon used by the button that creates a new
+          folder.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">FileChooser.upFolderIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon<br>
+      </td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon used by the button that navigates to the
+          parent folder.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">FileChooser.homeFolderIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon<br>
+      </td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon used by the button that navigates to the
+          current user's home directory.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">FileChooser.detailsViewIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon<br>
+      </td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon used by the button that toggles the
+          detailed files list view.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">FileChooser.listViewIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon<br>
+      </td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon used by the button that toggles the
+          regular files list view, showing only an icon and the name of each
+          file and directory.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">FileChooser.viewMenuIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon<br>
+      </td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon used by the button that shows popup menu
+          for selection of a view mode.
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JInternalFrame"></a>JInternalFrame</h2>
+<table class="striped" style="text-align: left; width: 100%;">
+<caption>JInternalFrame Specific Properties</caption>
+  <thead><tr>
+      <th scope="col" style="vertical-align: top; text-align: center;">Property<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Expected Type<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">DefaultValue<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Description<br>
+      </th>
+    </tr>
+  </thead> <tbody>
+    <tr>
+      <th scope="row" style="vertical-align: top;">InternalFrame.icon<br>
+      </th>
+      <td style="vertical-align: top;">Icon</td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon drawn representing the
+system<br>
+icon of the internal frame.&nbsp; If pressed<br>
+the system menu will be shown.<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JInternalFrameTitlePane"></a>JInternalFrameTitlePane</h2>
+<p>JInternalFrameTitlePane is the control bar located at the top of the
+internal frame similar to that found in a frame.<br>
+</p>
+<table class="striped" style="text-align: left; width: 100%;">
+<caption>JInternalFrameTitlePane Specific Properties</caption>
+  <thead><tr>
+      <th scope="col" style="vertical-align: top; text-align: center;">Property<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Expected Type<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Default Value<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Description<br>
+      </th>
+    </tr>
+  </thead> <tbody>
+    <tr>
+      <th scope="row" style="vertical-align: top;">InternalFrameTitlePane.maximizeIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon</td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon drawn to indicate the
+ability to maximize the internal frame.<br>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">InternalFrameTitlePane.minimizeIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon</td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon drawn to indicate the
+ability to restore the internal frame back to its previous state.<br>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">InternalFrameTitlePane.iconifyIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon</td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon drawn to indicate the
+ability to minimize the internal frame.<br>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">InternalFrameTitlePane.closeIcon<br>
+      </th>
+      <td style="vertical-align: top;">Icon</td>
+      <td style="vertical-align: top;">null<br>
+      </td>
+      <td style="vertical-align: top;">Icon drawn to indicate the
+abililty to close the internal frame.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">InternalFrameTitlePane.titleSpacing<br>
+      </th>
+      <td style="vertical-align: top;">Integer</td>
+      <td style="vertical-align: top;">2</td>
+      <td style="vertical-align: top;">Space between the
+	    buttons on the title pane and the title.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">InternalFrameTitlePane.buttonSpacing<br>
+      </th>
+      <td style="vertical-align: top;">Integer</td>
+      <td style="vertical-align: top;">2</td>
+      <td style="vertical-align: top;">Space between the buttons on
+	    the title pane.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">InternalFrameTitlePane.maxFrameIconSize<br>
+      </th>
+      <td style="vertical-align: top;">Dimension</td>
+      <td style="vertical-align: top;">16x16</td>
+      <td style="vertical-align: top;">Maximum size of the frame
+	    icon that will be rendered on the title pane.  If the icon
+	    is bigger than this size, it will be scaled down.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">InternalFrameTitlePane.titleAlignment<br>
+      </th>
+      <td style="vertical-align: top;">leading|trailing|center</td>
+      <td style="vertical-align: top;">leading</td>
+      <td style="vertical-align: top;">Alignment for the title.
+	    With a left to right component orientation leading is left
+	    and trailing right.  With a right to left component
+	    orientation leading is right and trailing left.
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JList">JList</a></h2>
+<p> JList's sets the name of the renderer to List.renderer.       JList
+supports the following properties: </p>
+<table class="striped">
+<caption>JList Specific Properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+    <tr>
+      <th scope="row">List.rendererUseListColors</th>
+      <td>Boolean</td>
+      <td>true 	 </td>
+      <td>If true the renderers state is not updated, and the 	    text
+colors come from JList's getSelectionBackground and
+getSelectionForeground methods. If false, the renderer's 	    state is
+updated and the colors will instead come from the 	    Style. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">List.rendererUseUIBorder</th>
+      <td>Boolean</td>
+      <td>true 	 </td>
+      <td>If true setBorder on the renderer will succeed 	 regardless
+of the border passed in, otherwise setBorder on 	    the renderer will
+only succeed if it is a Synth Border. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">List.cellHeight</th>
+      <td>Integer</td>
+      <td>-1 	 </td>
+      <td>Cell height of the JList. Is this is -1, 	 <code>setFixedCellHeight</code>
+is not invoked. </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="menuProperties">Menu Properties</a></h2>
+<p> The Menu classes (JCheckBoxMenuItem, JMenu, JMenuItem, and
+JRadioButtonMenuItem) all support the same set of properties and behave
+similarly.       Each component consists of two Regions: the region
+specific to the       component and Region.MENU_ITEM_ACCELERATOR.
+MENU_ITEM_ACCELERATOR is used for painting the accelerator. Both Regions
+paint text using the TEXT_FOREGROUND ColorType. The following set of
+properties are supported: </p>
+<table class="striped">
+<caption>Menu classes common properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+	<tr>
+      <th scope="row">prefix.acceleratorDelimiter</th>
+      <td>String</td>
+      <td>+ 	 </td>
+      <td>String separator between the description of the 	 modifiers
+and the key, for example <code>Ctrl 	 &lt;acceleratorDelimiter&gt; X</code>.
+	</td>
+    </tr>
+    <tr>
+      <th scope="row">prefix.arrowIcon</th>
+      <td>Icon</td>
+      <td>null 	 </td>
+      <td>Icon drawn to the right of the text (or left when the
+ComponentOrientation is right to left) of the text. This 	    is
+typically only defined for JMenu. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">prefix.checkIcon</th>
+      <td>Icon</td>
+      <td>null 	 </td>
+      <td>Icon drawn to the left of the text (or right when the
+ComponentOrientation is right to left) of the text. This 	    is
+typically only defined for JCheckBoxMenuItem and 	 JRadioButtonMenuItem
+to provide the check or radio button. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">prefix.margin</th>
+      <td>Insets</td>
+      <td>Empty Insets (0, 0, 0, 0) 	 </td>
+      <td>Margin for the JMenuItem. Refer to the javadoc of
+	    <code>javax.swing.AbstractButton#setMargin(java.awt.Insets)</code> for details
+of how the margin is used. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">prefix.textIconGap</th>
+      <td>Integer</td>
+      <td>4 	 </td>
+      <td>Padding between the icon and text. Refer to the javadoc for
+<code>javax.swing.AbstractButton#setIconTextGap(int)</code> for details of how
+this is used. </td>
+    </tr>
+  </tbody>
+</table>
+<p> <code>Prefix</code> is one of: CheckBoxMenuItem, Menu, MenuItem, or
+RadioButtonMenuItem. </p>
+<p> JMenu also supports the following properties: </p>
+<table class="striped">
+<caption>JMenu specific properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+	<tr>
+      <th scope="row">Menu.delay</th>
+      <td>Integer</td>
+      <td>200 	 </td>
+      <td>Sets the delay before the menu appears. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">Menu.shortcutKeys</th>
+      <td>int[]</td>
+      <td>KeyEvent.ALT_MASK 	 </td>
+      <td>Array of the KeyEvent modifiers to use for shortcut keys. </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JOptionPane">JOptionPane</a></h2>
+<p> JOptionPane is a composite component and may consist of numerous child
+components, they are: OptionPane.button, OptionPane.label,
+OptionPane.comboBox, OptionPane.scrollPane, OptionPane.list,
+OptionPane.textField, OptionPane.iconLabel. </p>
+<table class="striped">
+<caption>JOptionPane Specific Properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+	<tr>
+      <th scope="row">OptionPane.buttonAreaBorder</th>
+      <td>Border 	 </td>
+      <td>null 	 </td>
+      <td>Border around the button area. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.buttonClickThreshhold</th>
+      <td>Integer 	 </td>
+      <td>0 	 </td>
+      <td>Passed to the created buttons setMultiClickThreshhold. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.buttonOrientation</th>
+      <td>Integer 	 </td>
+      <td>SwingConstants.CENTER 	 </td>
+      <td>How the buttons should be layed out, one of
+SwingConstants.LEFT, SwingConstants.RIGHT or 	    SwingConstants.CENTER
+(this will be flipped when in a 	    right to left locale). 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.buttonPadding</th>
+      <td>Integer 	 </td>
+      <td>6 	 </td>
+      <td>Amount of space between buttons. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.cancelIcon</th>
+      <td>Icon 	 </td>
+      <td>null 	 </td>
+      <td>Icon for the cancel button. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.errorIcon</th>
+      <td>Icon 	 </td>
+      <td>null 	 </td>
+      <td>Icon used for ERROR_MESSAGE. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.informationIcon</th>
+      <td>Icon 	 </td>
+      <td>null 	 </td>
+      <td>Icon used for INFORMATION_MESSAGE. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.isYesLast</th>
+      <td>Boolean 	 </td>
+      <td>false 	 </td>
+      <td>If true the 'yes' button leads other buttons, 	    otherwise
+it follows the other buttons. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.questionIcon</th>
+      <td>Icon 	 </td>
+      <td>null 	 </td>
+      <td>Icon used for error QUESTION_MESSAGE. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.minimumSize</th>
+      <td>Dimension 	 </td>
+      <td>262x90</td>
+      <td>Minimum size for the JOptionPane. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.noIcon</th>
+      <td>Icon 	 </td>
+      <td>null 	 </td>
+      <td>Icon for the no button. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.okIcon</th>
+      <td>Icon 	 </td>
+      <td>null 	 </td>
+      <td>Icon for the ok button. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.sameSizeButtons</th>
+      <td>Boolean 	 </td>
+      <td>true 	 </td>
+      <td>Whether or not all the buttons should be the same size. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.separatorPadding</th>
+      <td>Integer 	 </td>
+      <td>6</td>
+      <td>Amount of padding between the message area and 	 separator. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.yesIcon</th>
+      <td>Icon 	 </td>
+      <td>null 	 </td>
+      <td>Icon for the yes button. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">OptionPane.warningIcon</th>
+      <td>Icon 	 </td>
+      <td>null 	 </td>
+      <td>Icon used for error WARNING_MESSAGE 	</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JProgressBar"></a>JProgressBar<br>
+</h2>
+<table class="striped" style="text-align: left; width: 100%;">
+<caption>JProgressBar Specific Properties</caption>
+  <thead><tr>
+      <th scope="col" style="vertical-align: top; text-align: center;">Property</th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Expected Type<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Default Value<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Description</th>
+    </tr>
+  </thead> <tbody>
+    <tr>
+      <th scope="row" style="vertical-align: top;">ProgressBar.repaintInterval<br>
+      </th>
+      <td style="vertical-align: top;">Integer<br>
+      </td>
+      <td style="vertical-align: top;">50<br>
+      </td>
+      <td style="vertical-align: top;">Number of milliseconds between
+repaints for indeterminate progress bars.<br>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">ProgressBar.cycleTime<br>
+      </th>
+      <td style="vertical-align: top;">Integer<br>
+      </td>
+      <td style="vertical-align: top;">3000<br>
+      </td>
+      <td style="vertical-align: top;">Number of milliseconds used to
+determine how far to move<br>
+the bouncing box per frame when the progress bar is indeterminate.<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<h2><a id="JRadioButton">JRadioButton</a></h2>
+<p> JRadioButton paints text using the TEXT_FOREGROUND ColorType. In
+addition to the <a href="#buttonProperties">Button 	properties</a>,
+JRadioButton supports the following property: </p>
+<table class="striped">
+<caption>JRadioButton Specific Properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+	<tr>
+      <th scope="row">RadioButton.icon</th>
+      <td>Icon</td>
+      <td>null 	 </td>
+      <td>Icon used to render the radio indicator. </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JScrollBar">JScrollBar</a></h2>
+<p> JScrollBar is a composite component that consists of the following
+child Components: </p>
+<table class="striped">
+<caption>JScrollBar child components</caption>
+  <thead><tr>
+    <th scope="col">Name</th>
+    <th scope="col">Type</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+	<tr>
+      <th scope="row">ScrollBar.button</th>
+      <td>SynthArrowButton 	 </td>
+      <td>Identifies the increment/decrement buttons. </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>&nbsp;</p>
+<table class="striped">
+<caption>JScrollBar Specific Properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+	<tr>
+      <th scope="row">ScrollBar.allowsAbsolutePositioning</th>
+      <td>Boolean 	 </td>
+      <td>false</td>
+      <td>If true, middle mouse click in the track will 	    set the
+position of the track to where the mouse is. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">ScrollBar.maximumThumbSize</th>
+      <td>Dimension</td>
+      <td>4096x4096 	 </td>
+      <td>Maximum thumb size. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">ScrollBar.minimumThumbSize</th>
+      <td>Dimension</td>
+      <td>Derived from ScrollBar.thumbHeight</td>
+      <td>The minimum thumb size.  If this is not specified the
+	    minimum thumb size is ScrollBar.thumbHeight plus the insets
+	    of the scrollbar along the opposite axis of the scrollbar
+	    and 7 along the other axis.  For example, if you have not
+	    specified Insets for a scrollbar, and the orientation of
+	    the scrollbar is vertical, than the minimum thumb
+	    size width is ScrollBar.thumbHeight with a height of 7.</td>
+    </tr>
+    <tr>
+      <th scope="row">ScrollBar.squareButtons</th>
+      <td>Boolean 	 </td>
+      <td>false</td>
+      <td>If true, the width and height of the scrollbar 	    buttons
+will be made equal. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">ScrollBar.thumbHeight</th>
+      <td>Integer</td>
+      <td>14 	 </td>
+      <td>The preferred height, when the orientation of the
+	    scrollbar is horizontal, or preferred width when the
+	    orientation of the scrollbar is vertical.</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="Separator">Separators</a></h2>
+<p> All of the separator classes, JSeparator, JPopupMenu.Separator and
+JToolBar.Separator use the same property: </p>
+<table class="striped">
+<caption>Separator classes common properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+	<tr>
+      <th scope="row">Separator.thickness</th>
+      <td>Integer</td>
+      <td>2 	 </td>
+      <td>Preferred width, for vertically aligned separators, or
+preferred height for horizontally aligned separators. The 	 resulting
+preferred size will include the Insets. </td>
+    </tr>
+  </tbody>
+</table>
+<p> JToolBar.Separator also supports the following property: </p>
+<table class="striped">
+<caption>JToolBar.Separator specific properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+	<tr>
+      <th scope="row">ToolBar.separatorSize</th>
+      <td>Dimension</td>
+      <td>null 	 </td>
+    <td>The value of this is passed to the
+      <code>javax.swing.JToolBar$Separator#setSeparatorSize(java.awt.Dimension)</code>
+      method. If unspecified <code>setSeparatorSize</code> is not invoked.
+    </td>
+  </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JScrollPane">JScrollPane</a></h2>
+<p>
+      JScrollPane is unique in that it provides a method for setting
+      the Border around the JViewport with JViewport throwing an
+      IllegalArgumentException from <code>setBorder</code>. To
+      accommodate this a special border is installed on the
+      <code>JScrollPane</code> that uses the
+      insets from the key
+      <code>ScrollPane.viewportBorderInsets</code>. The
+      <code>SynthPainter</code> method
+      <code>paintViewportBorder</code> is called to paint the
+      <code>Viewport</code>s border.
+ </p>
+<table class="striped">
+<caption>JScrollPane Specific Properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+    <tr>
+      <th scope="row">ScrollPane.viewportBorderInsets</th>
+      <td>Insets</td>
+      <td>null 	 </td>
+      <td>Insets for the viewport Border. 	</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JSplitPane">JSplitPane</a></h2>
+<p> JSplitPane is a composite component that will contain a divider and
+potentially two buttons, if setOneTouchExpandable(true) has been
+invoked. The two buttons will be named:
+SplitPaneDivider.leftOneTouchButton and
+SplitPaneDivider.rightOneTouchButton. </p>
+<table class="striped">
+<caption>JSplitPane Specific Properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+    <tr>
+      <th scope="row">SplitPane.centerOneTouchButtons</th>
+      <td>Boolean</td>
+      <td>true 	 </td>
+      <td>If true, the one touch buttons are centered on the divider. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">SplitPane.oneTouchButtonOffset</th>
+      <td>Integer</td>
+      <td>2 	 </td>
+      <td>Distance between the one touch buttons. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">SplitPane.oneTouchButtonSize</th>
+      <td>Integer</td>
+      <td>6 	 </td>
+      <td>Size to make the one touch buttons. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">SplitPane.oneTouchExpandable</th>
+      <td>Boolean</td>
+      <td>null 	 </td>
+      <td>If non null, the value of this is passed to
+setOneTouchExpandable. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">SplitPane.size</th>
+      <td>Integer</td>
+      <td>6 	 </td>
+      <td>Size of the divider </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JSlider"></a>JSlider</h2>
+<table class="striped" style="text-align: left; width: 100%;">
+<caption>JSlider Specific Properties</caption>
+  <thead><tr>
+      <th scope="col" style="vertical-align: top; text-align: center;">Property<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Expected Type<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Default Value<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Description<br>
+      </th>
+    </tr>
+  </thead> <tbody>
+    <tr>
+      <th scope="row" style="vertical-align: top;">Slider.thumbWidth<br>
+      </th>
+      <td style="vertical-align: top;">Integer<br>
+      </td>
+      <td style="vertical-align: top;">30<br>
+      </td>
+      <td style="vertical-align: top;">Width of the slider thumb<br>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">Slider.thumbHeight<br>
+      </th>
+      <td style="vertical-align: top;">Integer<br>
+      </td>
+      <td style="vertical-align: top;">14<br>
+      </td>
+      <td style="vertical-align: top;">Height of the slider thumb<br>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">Slider.trackBorder<br>
+      </th>
+      <td style="vertical-align: top;">Integer<br>
+      </td>
+      <td style="vertical-align: top;">1<br>
+      </td>
+      <td style="vertical-align: top;">Width of the track border<br>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">Slider.paintValue<br>
+      </th>
+      <td style="vertical-align: top;">Boolean<br>
+      </td>
+      <td style="vertical-align: top;">true<br>
+      </td>
+      <td style="vertical-align: top;">Whether or not to paint the
+current value<br>
+of the slider.<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JTabbedPane"></a>JTabbedPane</h2>
+<table class="striped" style="text-align: left; width: 100%;">
+<caption>JTabbedPane Specific Properties</caption>
+  <thead><tr>
+      <th scope="col" style="vertical-align: top; text-align: center;">Property</th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Expected Type<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Default Value<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Description</th>
+    </tr>
+  </thead> <tbody>
+    <tr>
+      <th scope="row" style="vertical-align: top;">TabbedPane.tabRunOverlay<br>
+      </th>
+      <td style="vertical-align: top;">Integer<br>
+      </td>
+      <td style="vertical-align: top;">0<br>
+      </td>
+      <td style="vertical-align: top;">Number of pixels to overlap
+	    tabs when there is more than one row.  <br>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">TabbedPane.textIconGap<br>
+      </th>
+      <td style="vertical-align: top;">Integer<br>
+      </td>
+      <td style="vertical-align: top;">0<br>
+      </td>
+      <td style="vertical-align: top;">Padding added between the icon
+	    and text on a tab.  If there is no text or icon this value
+	    is not used.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">TabbedPane.selectedTabPadInsets<br>
+      </th>
+      <td style="vertical-align: top;">Insets<br>
+      </td>
+      <td style="vertical-align: top;">Empty Insets (0, 0, 0, 0)<br>
+      </td>
+      <td style="vertical-align: top;">Extra insets added to the
+selected tab.<br>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">TabbedPane.selectionFollowsFocus<br>
+      </th>
+      <td style="vertical-align: top;">Boolean<br>
+      </td>
+      <td style="vertical-align: top;">true<br>
+      </td>
+      <td style="vertical-align: top;">If true the selection of the
+	    tabbed pane changes as the user navigates the tabs with a
+	    mouse.<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JTable">JTable</a></h2>
+<p> JTable sets the name of the renderer to Table.cellRenderer.
+JTable supports the following properties: </p>
+<table class="striped">
+<caption>JTable Specific Properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+    <tr>
+      <th scope="row">Table.gridColor</th>
+      <td>Color</td>
+      <td>null 	 </td>
+      <td>Color used for the grid. If null the foreground from 	    the
+style is used. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">Table.rendererUseTableColors</th>
+      <td>Boolean</td>
+      <td>true 	 </td>
+      <td>If true the renderers state is not updated, and the 	    text
+colors come from JTable's getSelectionBackground and
+getSelectionForeground methods. If false, the renderer's 	    state is
+updated and the colors will instead come from the 	    Style. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">Table.rendererUseUIBorder</th>
+      <td>Boolean</td>
+      <td>true 	 </td>
+      <td>If true setBorder on the renderer will succeed
+regardless of the border passed in, otherwise setBorder on 	    the
+renderer will only succeed if it is a Synth Border. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">Table.rowHeight</th>
+      <td>Integer</td>
+      <td>-1 	 </td>
+      <td>If not -1 setRowHeight is invoked on the JTable. </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="JTree">JTree</a></h2>
+<p> JTree sets the name of the renderer to Tree.renderer, the name of
+the editor is Tree.cellEditor.</p>
+<table class="striped">
+<caption>JTree Specific Properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+    <tr>
+      <th scope="row">Tree.collapsedIcon</th>
+      <td>Icon</td>
+      <td>null 	 </td>
+      <td>Icon to use when a node is collapsed. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">Tree.drawHorizontalLines</th>
+      <td>Boolean</td>
+      <td>true 	 </td>
+      <td>If true nodes have a horizontal connecting them to the
+leading edge of their parent. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">Tree.drawVerticalLines</th>
+      <td>Boolean</td>
+      <td>true 	 </td>
+      <td>If true a vertical line is drawn down from expanded nodes. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">Tree.expandedIcon</th>
+      <td>Icon</td>
+      <td>null 	 </td>
+      <td>Icon to use when a node has been expanded. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">Tree.leftChildIndent</th>
+      <td>Integer</td>
+      <td>0 	 </td>
+      <td>This plus Tree.rightChildIndent account for the 	    total
+space, along the y axis, to offset nodes from their 	    parent. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">Tree.rightChildIndent</th>
+      <td>Integer</td>
+      <td>0 	 </td>
+      <td>This plus Tree.leftChildIndent account for the 	    total
+space, along the y axis, to offset nodes from their 	    parent. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">Tree.rowHeight</th>
+      <td>Integer</td>
+      <td>-1 	 </td>
+      <td>Row height for the Tree.</td>
+    </tr>
+    <tr>
+      <th scope="row">Tree.scrollsHorizontallyAndVertically</th>
+      <td>Boolean</td>
+      <td>false 	 </td>
+      <td>If false and scrolling needs to happen to accommodate 	 cells
+it will only happen along the vertical axis, if 	    true, scrolling
+may happen along both the horizontal and 	    vertical axis. 	</td>
+    </tr>
+    <tr>
+      <th scope="row">Tree.scrollsOnExpand</th>
+      <td>Boolean</td>
+      <td>true 	 </td>
+      <td>Whether or not the JTree should scroll when a node is
+expanded. </td>
+    </tr>
+    <tr>
+      <th scope="row">Tree.linesStyle</th>
+      <td>String</td>
+      <td>      </td>
+      <td>The styles of the lines in the tree. Synth supports solid lines
+(empty value) and dashed lines ("dashed" value). It is possible to add new
+styles by creating a new <a href="../SynthGraphicsUtils.html">SynthGraphicsUtils</a>
+and <a href="synthFileFormat.html#e.graphicsUtils">binding it</a> to the tree.</td>
+    </tr>
+  </tbody>
+</table>
+<h2><a id="JToggleButton">JToggleButton</a></h2>
+<p> JToggleButton paints text using the TEXT_FOREGROUND ColorType. In
+addition to the <a href="#buttonProperties">Button 	properties</a>,
+JToggleButton supports the following property: </p>
+<table class="striped">
+<caption>JToggleButton Specific Properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+	<tr>
+      <th scope="row">ToggleButton.icon</th>
+      <td>Icon</td>
+      <td>null 	 </td>
+      <td>Icon used to render the radio indicator. </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a id="buttonProperties">Button Properties</a></h2>
+<p> Each of the Button classes (JButton, JCheckBox, JRadioButton,
+JToggleButton and SynthArrowButton) support a similar set of properties.
+These properties are: </p>
+<table class="striped">
+<caption>Button classes common properties</caption>
+  <thead><tr>
+    <th scope="col">Property</th>
+    <th scope="col">Expected Type</th>
+    <th scope="col">Default Value</th>
+    <th scope="col">Description </th>
+  </tr>
+  </thead> <tbody>
+	<tr>
+      <th scope="row">prefix.contentAreaFilled</th>
+      <td>Integer</td>
+      <td>true 	 </td>
+    <td>Refer to the javadoc of
+      <code>javax.swing.AbstractButton#contentAreaFilled(boolean)</code>
+      for details of how this is used. It is up to the Painter to properly honor
+      this property.
+    </td>
+  </tr>
+    <tr>
+      <th scope="row">prefix.iconTextGap</th>
+      <td>Integer</td>
+      <td>If unspecified, JButton.setIconTextGap is not invoked.</td>
+      <td>Padding between the icon and text. Refer to the javadoc of
+        <code>javax.swing.AbstractButton#setIconTextGap(int)</code>
+        for details of how this is used.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row">prefix.margin</th>
+      <td>Insets</td>
+      <td>Empty Insets (0, 0, 0, 0) 	 </td>
+      <td>Margin for the JButton. Refer to the javadoc of
+        <code>javax.swing.AbstractButton#setMargin(java.awt.Insets)</code> for
+        details of how the margin is used.
+      </td>
+    </tr>
+    <tr>
+      <th scope="row">prefix.textShiftOffset</th>
+      <td>Integer</td>
+      <td>0 	 </td>
+      <td>Amount to shift the text and icon, along the x and y 	 axis,
+from where it would normally be layed out. This is 	    only used when
+the button is in a pressed state and does 	    not have a pressed icon. </td>
+    </tr>
+  </tbody>
+</table>
+<p> <code>Prefix</code> is one of: Button, CheckBox, RadioButton or
+JToggleButton.<br>
+</p>
+<h2><a id="textProperties"></a>Text Properties<br>
+</h2>
+<table class="striped" style="text-align: left; width: 100%;">
+<caption>Text classes common properties</caption>
+  <thead><tr>
+      <th scope="col" style="vertical-align: top; text-align: center;">Property</th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Expected Type<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Default Value<br>
+      </th>
+      <th scope="col" style="vertical-align: top; text-align: center;">Description<br>
+      </th>
+    </tr>
+  </thead> <tbody>
+    <tr>
+      <th scope="row" style="vertical-align: top;">prefix.caretForeground<br>
+      </th>
+      <td style="vertical-align: top;">Color<br>
+      </td>
+      <td style="vertical-align: top;">#000000</td>
+      <td style="vertical-align: top;">Color of the caret.<br>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">prefix.margin<br>
+      </th>
+      <td style="vertical-align: top;">Insets</td>
+      <td style="vertical-align: top;">Empty Insets (0, 0, 0, 0),<br>
+EditorPane and TextPane (3, 3, 3, 3)<br>
+      </td>
+      <td style="vertical-align: top;">Margins of the text component.<br>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row" style="vertical-align: top;">prefix.caretBlinkRate<br>
+      </th>
+      <td style="vertical-align: top;">Integer<br>
+      </td>
+      <td style="vertical-align: top;">500<br>
+      </td>
+      <td style="vertical-align: top;">Number of milliseconds defining
+the blink rate fo the caret.<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p><code>Prefix</code> is one of: EditorPane, FormattedTextField,
+PasswordField, TextArea, TextField or TextPane.<br>
+</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,2 @@
+MethodRefToInnerWithoutOuter.java:22:31: compiler.err.invalid.mref: kindname.constructor, (compiler.misc.cant.access.inner.cls.constr: TestString, , MethodRefToInnerBase)
+1 error

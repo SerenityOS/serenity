@@ -1,0 +1,7 @@
+VoidArray.java:12:9: compiler.err.expected: token.identifier
+VoidArray.java:12:13: compiler.err.expected: token.identifier
+VoidArray.java:14:9: compiler.err.expected: token.identifier
+VoidArray.java:14:12: compiler.err.invalid.meth.decl.ret.type.req
+VoidArray.java:14:24: compiler.err.expected: token.identifier
+VoidArray.java:14:28: compiler.err.expected3: ',', ')', '['
+6 errors

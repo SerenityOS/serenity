@@ -1,0 +1,3 @@
+TargetType39.java:19:13: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.assignment.exists: U,V, (compiler.misc.incompatible.type.in.conditional: (compiler.misc.inconvertible.types: TargetType39.SAM<java.lang.String,java.lang.Void>, TargetType39.SAM<java.lang.Object,V>)))
+TargetType39.java:20:13: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.assignment.exists: U,V, (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.incompatible.type.in.conditional: (compiler.misc.not.a.functional.intf: java.lang.Object))))
+2 errors

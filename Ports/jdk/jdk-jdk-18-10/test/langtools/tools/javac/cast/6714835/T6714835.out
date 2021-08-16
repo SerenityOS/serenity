@@ -1,0 +1,5 @@
+T6714835.java:14:71: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), java.lang.Iterable<compiler.misc.type.captureof: 1, ? extends java.lang.Integer>, java.util.Collection<? super java.lang.Integer>
+T6714835.java:19:73: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), java.lang.Iterable<compiler.misc.type.captureof: 1, ? super java.lang.Number>, java.util.Collection<? extends java.lang.Number>
+- compiler.err.warnings.and.werror
+1 error
+2 warnings

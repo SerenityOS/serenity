@@ -1,0 +1,2 @@
+TargetType19.java:40:10: compiler.err.invalid.inferred.types: (compiler.misc.no.conforming.assignment.exists: TargetType19.SAM<java.lang.String>, TargetType19.SAM<? extends java.lang.Integer>)
+1 error

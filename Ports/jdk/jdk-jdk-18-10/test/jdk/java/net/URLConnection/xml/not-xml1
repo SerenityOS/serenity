@@ -1,0 +1,7 @@
+<?XML VERSION="1.0" ENCODING="windows-1525"?>
+<doc/>
+
+<!--
+    Microsoft has been shipping "XML" that is noncompliant.
+    This must be rejected by any conforming XML processor.
+-->

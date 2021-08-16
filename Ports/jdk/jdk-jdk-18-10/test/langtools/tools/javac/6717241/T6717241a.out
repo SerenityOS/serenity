@@ -1,0 +1,4 @@
+T6717241a.java:13:21: compiler.err.cant.resolve.location: kindname.variable, v, , , (compiler.misc.location.1: kindname.variable, x, X)
+T6717241a.java:15:10: compiler.err.cant.resolve.location.args: kindname.method, m1, , int,java.lang.String, (compiler.misc.location.1: kindname.variable, x, X)
+T6717241a.java:17:10: compiler.err.cant.resolve.location.args.params: kindname.method, m2, java.lang.Integer,java.lang.Double, int,java.lang.String, (compiler.misc.location.1: kindname.variable, x, X)
+3 errors

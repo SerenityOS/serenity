@@ -1,0 +1,2 @@
+T4916620.java:17:33: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), T4916620.BB<compiler.misc.type.captureof: 1, ? extends java.lang.Number,compiler.misc.type.captureof: 2, ? super java.lang.Integer>, T4916620.BD<java.lang.Number>
+1 warning

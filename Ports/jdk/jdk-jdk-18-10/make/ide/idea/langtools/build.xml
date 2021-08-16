@@ -1,0 +1,15 @@
+<!-- importing.xml -->
+<project name="langtools" basedir = "../../../..">
+
+    <taskdef name="wrapLogger" classname="idea.IdeaLoggerWrapper" classpath=".idea/classes"/>
+
+    <wrapLogger/>
+
+    <import file="../../../langtools/build.xml"/>
+
+    <target name="cond-clean" unless="${intellij.ismake}">
+        <antcall target="clean"/>
+    </target>
+
+    <target name="post-make" depends="cond-clean, build-all-tools"/>
+</project>

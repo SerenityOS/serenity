@@ -1,0 +1,2 @@
+InvalidExpression3.java:14:71: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.inconvertible.types: java.lang.String, int))
+1 error

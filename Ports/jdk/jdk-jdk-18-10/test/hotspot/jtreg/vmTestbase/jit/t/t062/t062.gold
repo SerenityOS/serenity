@@ -1,0 +1,42 @@
+Voodoo 1
+Voodoo 2
+[Ljit.t.t062.t062;
+[[[Ljit.t.t062.t062;
+[Ljit.t.t062.t062;
+[[[Ljit.t.t062.t062;
+jit.t.t062.t062
+jit.t.t062.t062
+o instanceof t062: true
+Voodoo 3
+java.lang.Object
+
+Here come the instance variables of ko:
+39.0
+40
+41
+42.0
+43
+44
+45
+
+Here come the static variables of t062:
+46.0
+47
+48
+49.0
+50
+51
+52
+
+Here come the array values
+0
+0
+1
+10
+11
+
+1
+100
+101
+110
+111

@@ -1,0 +1,108 @@
+/*
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/* Small class used by multiple hotspot/runtime/modules/AccessCheck* tests.
+ * package p3;
+ *
+ * public class c3 {
+ *
+ *     public c3 () {
+ *         c4 c4_obj = new c4();
+ *         c4_obj.method4();
+ *     }
+ * }
+ */
+
+class p3/c3 {
+  0xCAFEBABE;
+  0; // minor version
+  52; // version
+  [19] { // Constant Pool
+    ; // first element is empty
+    Method #6 #13; // #1     at 0x0A
+    class #14; // #2     at 0x0F
+    Method #2 #13; // #3     at 0x12
+    Method #2 #15; // #4     at 0x17
+    class #16; // #5     at 0x1C
+    class #17; // #6     at 0x1F
+    Utf8 "<init>"; // #7     at 0x22
+    Utf8 "()V"; // #8     at 0x2B
+    Utf8 "Code"; // #9     at 0x31
+    Utf8 "LineNumberTable"; // #10     at 0x38
+    Utf8 "SourceFile"; // #11     at 0x4A
+    Utf8 "c3.java"; // #12     at 0x57
+    NameAndType #7 #8; // #13     at 0x61
+    Utf8 "c4"; // #14     at 0x66
+    NameAndType #18 #8; // #15     at 0x6E
+    Utf8 "p3/c3"; // #16     at 0x73
+    Utf8 "java/lang/Object"; // #17     at 0x7B
+    Utf8 "method4"; // #18     at 0x8E
+  } // Constant Pool
+
+  0x0021; // access
+  #5;// this_cpx
+  #6;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [1] { // methods
+    { // Member at 0xA4
+      0x0001; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [1] { // Attributes
+        Attr(#9, 53) { // Code at 0xAC
+          2; // max_stack
+          2; // max_locals
+          Bytes[17]{
+            0x2AB70001BB000259;
+            0xB700034C2BB60004;
+            0xB1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 18) { // LineNumberTable at 0xCF
+              [4] { // LineNumberTable
+                0  4; //  at 0xDB
+                4  5; //  at 0xDF
+                12  6; //  at 0xE3
+                16  7; //  at 0xE7
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [1] { // Attributes
+    Attr(#11, 2) { // SourceFile at 0xE9
+      #12;
+    } // end SourceFile
+  } // Attributes
+} // end class p3/c3

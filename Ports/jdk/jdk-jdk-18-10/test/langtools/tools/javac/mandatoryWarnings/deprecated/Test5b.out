@@ -1,0 +1,4 @@
+Q.java:7:10: compiler.warn.has.been.deprecated: bar(), Q2
+P.java:10:18: compiler.warn.has.been.deprecated: foo(), Q
+- compiler.note.deprecated.filename.additional: Q.java
+2 warnings

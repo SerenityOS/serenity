@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration version="2.0" label="Test timespan">
+
+    <event name="com.example.Tiger">
+      <setting name="enabled">false</setting>
+      <setting name="threshold" control="value">0 s</setting>
+    </event>
+
+    <event name="com.example.Lion">
+      <setting name="enabled">true</setting>
+      <setting name="period" control="value">0 s</setting>
+    </event>
+   
+   <control>
+     <text name="value" label="Value" contentType="timespan">0 s</text>
+   </control>
+
+</configuration>

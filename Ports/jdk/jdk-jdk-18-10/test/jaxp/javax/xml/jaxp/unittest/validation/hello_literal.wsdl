@@ -1,0 +1,294 @@
+<definitions
+        name="HelloTest"
+        targetNamespace="urn:test"
+        xmlns="http://schemas.xmlsoap.org/wsdl/"
+        xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:types="urn:test:types"
+        xmlns:tns="urn:test">
+
+    <types>
+        <xsd:schema
+                targetNamespace="urn:test:types"
+                attributeFormDefault="unqualified"
+                elementFormDefault="unqualified">
+
+            <xsd:element name="Hello">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="argument" type="xsd:string"/>
+                        <xsd:element name="extra" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:complexType name="HelloType">
+                <xsd:sequence>
+                    <xsd:element name="argument" type="xsd:string"/>
+                    <xsd:element name="extra" type="xsd:string"/>
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:element name="HelloResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:element name="name" type="xsd:string"/>
+                        </xsd:sequence>
+                        <xsd:element name="argument" type="xsd:string"/>
+                        <xsd:element name="extra" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+
+            <xsd:element name="VoidTest" type="types:VoidType" nillable="true"/>
+
+            <xsd:complexType name="VoidType">
+                <xsd:sequence>
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:element name="VoidTestResponse" type="types:VoidType" nillable="true"/>
+
+            <xsd:element name="echoArray" type="types:nameType"/>
+            <xsd:element name="echoArray1" type="types:nameType"/>
+            <xsd:element name="echoArray2" type="types:nameType"/>
+            <xsd:element name="echoArray3" type="types:nameType"/>
+
+            <xsd:element name="echoArray4Body" type="types:nameType1"/>
+
+
+            <xsd:element name="echoArrayResponse" type="types:nameType"/>
+            <xsd:complexType name="nameType">
+                <xsd:sequence>
+                    <xsd:element name="name" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="nameType1">
+                <xsd:sequence>
+                    <xsd:element name="name" type="types:HelloType" minOccurs="0" maxOccurs="unbounded"/>
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:element name="testKeyword">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="_this" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:element name="testKeywordResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="_super" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+        </xsd:schema>
+    </types>
+
+    <message name="HelloRequest">
+        <part name="parameters" element="types:Hello"/>
+    </message>
+
+    <message name="HelloResponse">
+        <part name="parameters" element="types:HelloResponse"/>
+    </message>
+
+    <message name="MarshallTest_voidTest">
+        <part name="parameters" element="types:VoidTest"/>
+    </message>
+
+    <message name="MarshallTest_voidTestResponse">
+        <part name="result" element="types:VoidTestResponse"/>
+    </message>
+
+    <message name="echoArrayRequest">
+        <part name="body" element="types:echoArray"/>
+    </message>
+
+    <message name="echoArrayResponse">
+        <part name="body" element="types:echoArray"/>
+    </message>
+
+    <message name="echoArrayRequest1">
+        <part name="body" element="types:echoArray1"/>
+    </message>
+
+    <message name="echoArrayResponse1">
+        <part name="body" element="types:echoArray1"/>
+    </message>
+
+    <message name="echoArrayRequest2">
+        <part name="body" element="types:echoArray2"/>
+    </message>
+
+    <message name="echoArrayResponse2">
+        <part name="body" element="types:echoArray2"/>
+    </message>
+
+    <message name="echoArrayRequest3">
+        <part name="body" element="types:echoArray3"/>
+    </message>
+
+    <message name="echoArrayResponse3">
+        <part name="body" element="types:echoArray3"/>
+    </message>
+
+    <message name="echoArrayRequest4">
+        <part name="request" element="types:echoArray4Body"/>
+    </message>
+
+    <message name="echoArrayResponse4">
+        <part name="response" element="types:echoArray4Body"/>
+    </message>
+
+    <message name="testKeywordRequest">
+        <part name="request" element="types:testKeyword"/>
+    </message>
+
+    <message name="testKeywordResponse">
+        <part name="response" element="types:testKeywordResponse"/>
+    </message>
+
+
+    <portType name="Hello">
+        <operation name="hello">
+            <input message="tns:HelloRequest"/>
+            <output message="tns:HelloResponse"/>
+        </operation>
+
+        <!-- this is a regression test for bug 4823861 -->
+        <operation name="voidTest">
+            <input message="tns:MarshallTest_voidTest"/>
+            <output message="tns:MarshallTest_voidTestResponse"/>
+        </operation>
+
+
+        <operation name="echoArray">
+            <input message="tns:echoArrayRequest"/>
+            <output message="tns:echoArrayResponse"/>
+        </operation>
+
+        <operation name="echoArray1">
+            <input message="tns:echoArrayRequest1"/>
+            <output message="tns:echoArrayResponse1"/>
+        </operation>
+
+        <operation name="echoArray2">
+            <input message="tns:echoArrayRequest2"/>
+            <output message="tns:echoArrayResponse2"/>
+        </operation>
+
+        <operation name="echoArray3">
+            <input message="tns:echoArrayRequest3"/>
+            <output message="tns:echoArrayResponse3"/>
+        </operation>
+
+        <operation name="echoArray4">
+            <input message="tns:echoArrayRequest4"/>
+            <output message="tns:echoArrayResponse4"/>
+        </operation>
+
+        <operation name="testKeyword">
+            <input message="tns:testKeywordRequest"/>
+            <output message="tns:testKeywordResponse"/>
+        </operation>
+    </portType>
+
+    <binding name="HelloBinding" type="tns:Hello">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="hello">
+            <soap:operation soapAction="urn:test:hello"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+        <operation name="voidTest">
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+            <soap:operation soapAction=""/>
+        </operation>
+
+        <operation name="echoArray">
+            <soap:operation soapAction="urn:test:hello"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body parts="" use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="echoArray1">
+            <soap:operation soapAction="urn:test:hello"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body parts="" use="literal"/>
+                <soap:header message="tns:echoArrayResponse1" part="body" use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="echoArray2">
+            <soap:operation soapAction="urn:test:hello"/>
+            <input>
+                <soap:body parts="" use="literal"/>
+                <soap:header message="tns:echoArrayRequest2" part="body" use="literal"/>
+            </input>
+            <output>
+                <soap:body parts="" use="literal"/>
+                <soap:header message="tns:echoArrayResponse2" part="body" use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="echoArray3">
+            <soap:operation soapAction="urn:test:hello"/>
+            <input>
+                <soap:body/>
+            </input>
+            <output>
+                <soap:body/>
+            </output>
+        </operation>
+
+        <operation name="echoArray4">
+            <soap:operation soapAction="urn:test:hello"/>
+            <input>
+                <soap:body/>
+            </input>
+            <output>
+                <soap:body/>
+            </output>
+        </operation>
+
+        <operation name="testKeyword">
+            <soap:operation soapAction="urn:test:hello"/>
+            <input>
+                <soap:body/>
+            </input>
+            <output>
+                <soap:body/>
+            </output>
+        </operation>
+    </binding>
+
+    <service name="Hello">
+        <port name="HelloPort" binding="tns:HelloBinding">
+            <soap:address location="http://test.org/hello"/>
+        </port>
+    </service>
+
+</definitions>

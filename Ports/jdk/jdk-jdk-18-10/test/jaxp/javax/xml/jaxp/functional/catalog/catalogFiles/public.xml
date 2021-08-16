@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" xml:base="http://local/base/dtd/">
+    <public publicId="-//REMOTE//DTD ALICE DOCALICE XML//EN" uri="http://local/dtd/docAlicePub.dtd" />
+
+    <public publicId="-//REMOTE//DTD BOB DOCBOB XML//EN" uri="docBobPub.dtd" />
+
+    <public publicId="-//REMOTE//DTD CARL DOCCARL XML//EN" uri="docCarlPub.dtd" xml:base="http://local/carlBase/dtd/" />
+
+    <public publicId="-//REMOTE//DTD DAVID DOCDAVID XML//EN" uri="docDavidPub1.dtd" />
+    <public publicId="-//REMOTE//DTD DAVID DOCDAVID XML//EN" uri="docDavidPub2.dtd" />
+</catalog>

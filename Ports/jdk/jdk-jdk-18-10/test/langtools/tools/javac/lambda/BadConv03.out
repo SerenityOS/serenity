@@ -1,0 +1,2 @@
+BadConv03.java:19:11: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: BadConv03.B, (compiler.misc.incompatible.abstracts: kindname.interface, BadConv03.B))
+1 error

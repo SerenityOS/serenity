@@ -1,0 +1,317 @@
+#
+# Copyright (c) 2014, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+ifndef _MODULES_GMK
+_MODULES_GMK := 1
+
+################################################################################
+# Setup module sets for classloaders
+
+include $(TOPDIR)/make/conf/module-loader-map.conf
+
+# Append platform-specific and upgradeable modules
+PLATFORM_MODULES += $(PLATFORM_MODULES_$(OPENJDK_TARGET_OS)) \
+    $(UPGRADEABLE_PLATFORM_MODULES)
+
+################################################################################
+# Setup module sets for docs
+
+include $(TOPDIR)/make/conf/docs-modules.conf
+
+################################################################################
+# Setup module sets needed by the build system
+
+include $(TOPDIR)/make/conf/build-module-sets.conf
+
+################################################################################
+# Hook to include the corresponding custom file, if present.
+# Allowing MODULE list extensions setup above.
+$(eval $(call IncludeCustomExtension, common/Modules.gmk))
+
+################################################################################
+# Depending on the configuration, we might need to filter out some modules that
+# normally should have been included
+
+# Some platforms don't have the serviceability agent
+ifeq ($(INCLUDE_SA), false)
+  MODULES_FILTER += jdk.hotspot.agent
+endif
+
+# Filter out jvmci specific modules if jvmci is disabled
+ifeq ($(INCLUDE_JVMCI), false)
+  MODULES_FILTER += jdk.internal.vm.ci
+  MODULES_FILTER += jdk.internal.vm.compiler
+  MODULES_FILTER += jdk.internal.vm.compiler.management
+endif
+
+# jpackage is only on windows, macosx, and linux
+ifeq ($(call isTargetOs, windows macosx linux), false)
+  MODULES_FILTER += jdk.jpackage
+endif
+
+################################################################################
+# Module list macros
+
+# Use append so that the custom extension may add to these variables
+
+GENERATED_SRC_DIRS += \
+    $(SUPPORT_OUTPUTDIR)/gensrc \
+    #
+
+TOP_SRC_DIRS += \
+    $(TOPDIR)/src \
+    #
+
+SRC_SUBDIRS += $(OPENJDK_TARGET_OS)/classes
+ifneq ($(OPENJDK_TARGET_OS), $(OPENJDK_TARGET_OS_TYPE))
+  SRC_SUBDIRS += $(OPENJDK_TARGET_OS_TYPE)/classes
+endif
+SRC_SUBDIRS += share/classes
+
+SPEC_SUBDIRS += share/specs
+
+MAN_SUBDIRS += share/man
+
+# Find all module-info.java files for the current build target platform and
+# configuration.
+# Param 1 - Module to find for, set to * for finding all
+FindAllModuleInfos = \
+    $(sort $(wildcard \
+        $(foreach sub, $(SRC_SUBDIRS), \
+          $(patsubst %,%/$(strip $1)/$(sub)/module-info.java, $(TOP_SRC_DIRS))) \
+        $(patsubst %,%/$(strip $1)/module-info.java, $(IMPORT_MODULES_SRC))))
+
+# Find module-info.java files in the specific source dir
+# Param 1 - Src dir to find module-info.java files in
+FindModuleInfosForSrcDir = \
+    $(wildcard \
+        $(foreach sub, $(SRC_SUBDIRS), \
+          $(patsubst %,%/*/$(sub)/module-info.java, $(strip $1)) \
+        ) \
+        $(patsubst %,%/*/module-info.java, $(strip $1)) \
+    )
+
+# Extract the module names from the paths of module-info.java files. The
+# position of the module directory differs depending on if this is an imported
+# src dir or not.
+GetModuleNameFromModuleInfo = \
+    $(strip $(foreach mi, $1, \
+      $(if $(filter $(addsuffix %, $(IMPORT_MODULES_SRC)), $(mi)), \
+        $(notdir $(patsubst %/,%, $(dir $(mi)))), \
+        $(notdir $(patsubst %/,%, $(dir $(patsubst %/,%, $(dir $(patsubst %/,%, $(dir $(mi)))))))))))
+
+# Find all modules by looking for module-info.java files and looking at parent
+# directories.
+FindAllModules = \
+    $(sort $(filter-out $(MODULES_FILTER), \
+    $(call GetModuleNameFromModuleInfo, $(MODULE_INFOS))))
+
+# Find all modules in a specific src dir
+# Param 1 - Src dir to find modules in
+FindModulesForSrcDir = \
+    $(sort $(filter-out $(MODULES_FILTER), \
+        $(call GetModuleNameFromModuleInfo, $(call FindModuleInfosForSrcDir, $1)) \
+    ))
+
+FindImportedModules = \
+    $(filter-out $(MODULES_FILTER), \
+    $(if $(IMPORT_MODULES_CLASSES), $(notdir $(wildcard $(IMPORT_MODULES_CLASSES)/*))))
+
+# Find all source dirs for a particular module
+# $1 - Module to find source dirs for
+FindModuleSrcDirs = \
+    $(strip $(wildcard \
+        $(addsuffix /$(strip $1), $(GENERATED_SRC_DIRS) $(IMPORT_MODULES_SRC)) \
+        $(foreach sub, $(SRC_SUBDIRS), $(addsuffix /$(strip $1)/$(sub), $(TOP_SRC_DIRS)))))
+
+# Find all specs dirs for a particular module
+# $1 - Module to find specs dirs for
+FindModuleSpecsDirs = \
+    $(strip $(wildcard \
+        $(foreach sub, $(SPEC_SUBDIRS), $(addsuffix /$(strip $1)/$(sub), $(TOP_SRC_DIRS)))))
+
+# Find all man dirs for a particular module
+# $1 - Module to find man dirs for
+FindModuleManDirs = \
+    $(strip $(wildcard \
+        $(foreach sub, $(MAN_SUBDIRS), $(addsuffix /$(strip $1)/$(sub), $(TOP_SRC_DIRS)))))
+
+# Construct the complete module source path
+GetModuleSrcPath = \
+    $(call PathList, \
+        $(addsuffix /*, $(GENERATED_SRC_DIRS) $(IMPORT_MODULES_SRC)) \
+        $(foreach sub, $(SRC_SUBDIRS), $(addsuffix /*/$(sub), $(TOP_SRC_DIRS))))
+
+################################################################################
+# Extract module dependencies from module-info.java files, both normal
+# dependencies ("requires"), and indirect exports ("requires transitive").
+
+MODULE_DEPS_MAKEFILE := $(MAKESUPPORT_OUTPUTDIR)/module-deps.gmk
+
+MODULE_INFOS := $(call FindAllModuleInfos, *)
+
+$(MODULE_DEPS_MAKEFILE): $(MODULE_INFOS) \
+    $(call DependOnVariable, MODULE_INFOS, $(MAKESUPPORT_OUTPUTDIR)/MODULE_INFOS.vardeps)
+	$(call MakeTargetDir)
+	$(RM) $@
+	$(foreach m, $(MODULE_INFOS), \
+	    ( $(PRINTF) "DEPS_$(call GetModuleNameFromModuleInfo, $m) :=" && \
+	      $(AWK) -v MODULE=$(call GetModuleNameFromModuleInfo, $m) '\
+	          BEGIN      { if (MODULE != "java.base") printf(" java.base"); } \
+	          /^ *requires/ { sub(/;/, ""); \
+	                          sub(/requires /, " "); \
+	                          sub(/ static /, " "); \
+	                          sub(/ transitive /, " "); \
+	                          sub(/\/\/.*/, ""); \
+	                          sub(/\/\*.*\*\//, ""); \
+	                          gsub(/^ +\*.*/, ""); \
+	                          gsub(/ /, ""); \
+	                          gsub(/\r/, ""); \
+	                          printf(" %s", $$0) } \
+	          END           { printf("\n") }' $m && \
+	      $(PRINTF) "TRANSITIVE_MODULES_$(call GetModuleNameFromModuleInfo, $m) :=" && \
+	      $(AWK) -v MODULE=$(call GetModuleNameFromModuleInfo, $m) '\
+	          BEGIN      { if (MODULE != "java.base") printf(" java.base"); } \
+	          /^ *requires  *transitive/ { \
+	                          sub(/;/, ""); \
+	                          sub(/requires/, ""); \
+	                          sub(/transitive/, ""); \
+	                          sub(/\/\/.*/, ""); \
+	                          sub(/\/\*.*\*\//, ""); \
+	                          gsub(/^ +\*.*/, ""); \
+	                          gsub(/ /, ""); \
+	                          gsub(/\r/, ""); \
+	                          printf(" %s", $$0) } \
+	          END           { printf("\n") }' $m \
+	    ) >> $@ $(NEWLINE))
+
+-include $(MODULE_DEPS_MAKEFILE)
+
+# Find dependencies ("requires") for a given module.
+# Param 1: Module to find dependencies for.
+FindDepsForModule = \
+  $(DEPS_$(strip $1))
+
+# Find dependencies ("requires") transitively in 3 levels for a given module.
+# Param 1: Module to find dependencies for.
+FindTransitiveDepsForModule = \
+    $(sort $(call FindDepsForModule, $1) \
+        $(foreach m, $(call FindDepsForModule, $1), \
+            $(call FindDepsForModule, $m) \
+            $(foreach n, $(call FindDepsForModule, $m), \
+                 $(call FindDepsForModule, $n))))
+
+# Find dependencies ("requires") transitively in 3 levels for a set of modules.
+# Param 1: List of modules to find dependencies for.
+FindTransitiveDepsForModules = \
+    $(sort $(foreach m, $1, $(call FindTransitiveDepsForModule, $m)))
+
+# Find indirect exported modules ("requires transitive") for a given module .
+# Param 1: Module to find indirect exported modules for.
+FindIndirectExportsForModule = \
+  $(TRANSITIVE_MODULES_$(strip $1))
+
+# Finds indirect exported modules transitively in 3 levels for a given module.
+# Param 1: Module to find indirect exported modules for.
+FindTransitiveIndirectDepsForModule = \
+    $(sort $(call FindIndirectExportsForModule, $1) \
+        $(foreach m, $(call FindIndirectExportsForModule, $1), \
+            $(call FindIndirectExportsForModule, $m) \
+            $(foreach n, $(call FindIndirectExportsForModule, $m), \
+                 $(call FindIndirectExportsForModule, $n))))
+
+# Finds indirect exported modules transitively in 3 levels for a set of modules.
+# Param 1: List of modules to find indirect exported modules for.
+FindTransitiveIndirectDepsForModules = \
+    $(sort $(foreach m, $1, $(call FindTransitiveIndirectDepsForModule, $m)))
+
+# Upgradeable modules are those that are either defined as upgradeable or that
+# require an upradeable module.
+FindAllUpgradeableModules = \
+    $(sort $(filter-out $(MODULES_FILTER), $(UPGRADEABLE_PLATFORM_MODULES)))
+
+################################################################################
+
+LEGAL_SUBDIRS += $(OPENJDK_TARGET_OS)/legal
+ifneq ($(OPENJDK_TARGET_OS), $(OPENJDK_TARGET_OS_TYPE))
+  LEGAL_SUBDIRS += $(OPENJDK_TARGET_OS_TYPE)/legal
+endif
+LEGAL_SUBDIRS += share/legal
+
+# Find all legal src dirs for a particular module
+# $1 - Module to find legal dirs for
+FindModuleLegalSrcDirs = \
+    $(strip $(wildcard \
+        $(addsuffix /$(strip $1), $(IMPORT_MODULES_LEGAL)) \
+        $(foreach sub, $(LEGAL_SUBDIRS), $(addsuffix /$(strip $1)/$(sub), $(TOP_SRC_DIRS))) \
+    ))
+
+################################################################################
+
+# Param 1 - Name of module
+define ReadSingleImportMetaData
+    ifneq ($$(wildcard $(IMPORT_MODULES_MAKE)/$$(strip $1)/build.properties), )
+      classloader :=
+      include_in_jre :=
+      include_in_jdk :=
+      include $(IMPORT_MODULES_MAKE)/$$(strip $1)/build.properties
+      ifeq ($$(include_in_jre), true)
+        JRE_MODULES += $1
+      endif
+      ifeq ($$(include_in_jdk), true)
+        JDK_MODULES += $1
+      endif
+      ifeq ($$(classloader), boot)
+        BOOT_MODULES += $1
+      else ifeq ($$(classloader), ext)
+        PLATFORM_MODULES += $1
+      endif
+      ifneq ($$(include_in_docs), false)
+        # defaults to true if unspecified
+        DOCS_MODULES += $1
+      endif
+    else
+      # Default to include in all
+      JRE_MODULES += $1
+      JDK_MODULES += $1
+    endif
+endef
+
+# Reading the imported modules metadata has a cost, so to make it available,
+# a makefile needs to eval-call this macro first. After calling this, the
+# following variables are populated with data from the imported modules:
+# * JRE_MODULES
+# * JDK_MODULES
+# * BOOT_MODULES
+# * PLATFORM_MODULES
+define ReadImportMetaData
+    IMPORTED_MODULES := $$(call FindImportedModules)
+    $$(foreach m, $$(IMPORTED_MODULES), \
+      $$(eval $$(call ReadSingleImportMetaData, $$m)))
+endef
+
+################################################################################
+
+endif # _MODULES_GMK

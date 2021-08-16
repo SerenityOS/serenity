@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!DOCTYPE note [
+<!ELEMENT note    (to|heading|body)*>
+<!ELEMENT body    (#PCDATA)>
+]>
+<note>
+<to>Tove</to>
+<body><!--hello--></body>
+</note> 

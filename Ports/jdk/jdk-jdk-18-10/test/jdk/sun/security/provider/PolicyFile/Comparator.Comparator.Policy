@@ -1,0 +1,18 @@
+
+// should be granted
+grant principal Comparator$PCompare1 "1" {
+    permission java.util.PropertyPermission "foo", "read";
+};
+
+// should be granted
+grant principal Comparator$PCompare1 "1",
+    principal Comparator$PCompare2 "2" {
+    permission java.util.PropertyPermission "bar", "read";
+};
+
+// should not be granted
+grant principal Comparator$PCompare1 "1",
+    principal Comparator$PCompare3 "3" {
+    permission java.util.PropertyPermission "foobar", "read";
+};
+

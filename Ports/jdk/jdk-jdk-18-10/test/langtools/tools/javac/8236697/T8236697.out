@@ -1,0 +1,2 @@
+T8236697.java:10:19: compiler.err.override.incompatible.ret: (compiler.misc.clashes.with: iterator(), T8236697, iterator(), java.lang.Iterable), Cyclic, java.util.Iterator
+1 error

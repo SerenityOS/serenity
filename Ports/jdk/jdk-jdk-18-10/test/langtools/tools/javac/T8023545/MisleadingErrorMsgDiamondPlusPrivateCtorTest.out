@@ -1,0 +1,2 @@
+MisleadingErrorMsgDiamondPlusPrivateCtorTest.java:10:31: compiler.err.report.access: <E>MyClass(), private, MyClass
+1 error

@@ -1,0 +1,268 @@
+#
+# Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include CopyCommon.gmk
+include Modules.gmk
+include TextFileProcessing.gmk
+
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, modules/java.base/Copy.gmk))
+
+################################################################################
+
+ifeq ($(call isTargetOs, aix), true)
+
+  TZMAPPINGS_SRC := $(TOPDIR)/src/java.base/$(OPENJDK_TARGET_OS)/conf
+
+  $(LIB_DST_DIR)/tzmappings: $(TZMAPPINGS_SRC)/tzmappings
+	$(call install-file)
+
+  TARGETS += $(LIB_DST_DIR)/tzmappings
+
+endif
+
+################################################################################
+# Copy the microsoft runtime libraries on windows, but only if we are not
+# creating a buildjdk. If we are, the provided runtime librareis are made for
+# the target platform, not the build platform (and we should not need to bundle
+# anything with the minimalistic, locally-only buildjdk.)
+ifeq ($(call isTargetOs, windows)+$(CREATING_BUILDJDK), true+false)
+
+  # Chmod to avoid permission issues if bundles are unpacked on unix platforms.
+  define copy-and-chmod
+	$(install-file)
+	$(CHMOD) a+rx $@
+  endef
+
+  # Use separate macro calls in case the source files are not in the same
+  # directory.
+  $(eval $(call SetupCopyFiles,COPY_MSVCR, \
+      DEST := $(LIB_DST_DIR), \
+      FILES := $(MSVCR_DLL), \
+      MACRO := copy-and-chmod))
+
+  $(eval $(call SetupCopyFiles,COPY_VCRUNTIME_1, \
+      DEST := $(LIB_DST_DIR), \
+      FILES := $(VCRUNTIME_1_DLL), \
+      MACRO := copy-and-chmod))
+
+  $(eval $(call SetupCopyFiles,COPY_MSVCP, \
+      DEST := $(LIB_DST_DIR), \
+      FILES := $(MSVCP_DLL), \
+      MACRO := copy-and-chmod))
+
+  TARGETS += $(COPY_MSVCR) $(COPY_VCRUNTIME_1) $(COPY_MSVCP)
+
+  ifneq ($(UCRT_DLL_DIR), )
+    $(eval $(call SetupCopyFiles, COPY_UCRT_DLLS, \
+        DEST := $(LIB_DST_DIR), \
+        SRC := $(UCRT_DLL_DIR), \
+        FILES := $(wildcard $(UCRT_DLL_DIR)/*.dll), \
+        MACRO := copy-and-chmod, \
+    ))
+
+    TARGETS += $(COPY_UCRT_DLLS)
+  endif
+endif
+
+################################################################################
+# In jvm.cfg, the first listed KNOWN variant is the default. On most build
+# configurations, that is the server variant.
+ifeq ($(call And, $(call isTargetOs, windows) $(call isTargetCpu, x86)), true)
+  DEFAULT_CFG_VARIANT ?= client
+endif
+DEFAULT_CFG_VARIANT ?= server
+
+# Any variant other than server, client or minimal is represented as server in
+# the cfg file.
+VALID_CFG_VARIANTS := server client minimal
+CFG_VARIANTS := $(filter $(VALID_CFG_VARIANTS), $(JVM_VARIANTS)) \
+    $(if $(filter-out $(VALID_CFG_VARIANTS), $(JVM_VARIANTS)), server)
+
+# Change the order to put the default variant first if present.
+ORDERED_CFG_VARIANTS := \
+    $(if $(filter $(DEFAULT_CFG_VARIANT), $(CFG_VARIANTS)), $(DEFAULT_CFG_VARIANT)) \
+    $(filter-out $(DEFAULT_CFG_VARIANT), $(CFG_VARIANTS))
+
+JVMCFG := $(LIB_DST_DIR)/jvm.cfg
+
+define print-cfg-line
+	$(call LogInfo, Adding -$1 $2 to jvm.cfg)
+	$(PRINTF) -- "-$1 $2\n" >> $@ $(NEWLINE)
+endef
+
+$(JVMCFG): $(call DependOnVariable, ORDERED_CFG_VARIANTS)
+	$(call MakeTargetDir)
+	$(RM) $@
+	$(foreach v, $(ORDERED_CFG_VARIANTS), \
+	  $(call print-cfg-line,$v,KNOWN) \
+	)
+        # If either of server or client aren't present, add IGNORE lines for
+        # them.
+	$(foreach v, server client, \
+	  $(if $(filter $v, $(ORDERED_CFG_VARIANTS)), , \
+	    $(call print-cfg-line,$v,IGNORE) \
+	  ) \
+	)
+
+TARGETS += $(JVMCFG)
+
+################################################################################
+
+POLICY_SRC := $(TOPDIR)/src/java.base/share/conf/security/java.policy
+POLICY_DST := $(CONF_DST_DIR)/security/java.policy
+
+POLICY_SRC_LIST := $(POLICY_SRC)
+
+$(POLICY_DST): $(POLICY_SRC_LIST)
+	$(call MakeTargetDir)
+	$(RM) $@ $@.tmp
+	$(foreach f,$(POLICY_SRC_LIST),$(CAT) $(f) >> $@.tmp;)
+	$(MV) $@.tmp $@
+
+TARGETS += $(POLICY_DST)
+
+################################################################################
+
+DEF_POLICY_SRC := $(TOPDIR)/src/java.base/share/lib/security/default.policy
+DEF_POLICY_DST := $(LIB_DST_DIR)/security/default.policy
+
+DEF_POLICY_SRC_LIST := $(DEF_POLICY_SRC)
+DEF_POLICY_SRC_LIST += $(CUSTOM_POLICY_SRC_LIST)
+
+ifeq ($(call isTargetOs, windows), true)
+  DEF_POLICY_SRC_LIST += $(TOPDIR)/src/java.base/$(OPENJDK_TARGET_OS)/lib/security/default.policy
+endif
+
+# Allow imported modules to modify the java.policy
+ifneq ($(IMPORT_MODULES_CONF), )
+  DEF_POLICY_SRC_LIST += $(wildcard $(IMPORT_MODULES_CONF)/java.base/security/java.policy.extra)
+endif
+
+$(DEF_POLICY_DST): $(DEF_POLICY_SRC_LIST)
+	$(call MakeTargetDir)
+	$(RM) $@ $@.tmp
+	$(foreach f,$(DEF_POLICY_SRC_LIST),$(CAT) $(f) >> $@.tmp;)
+	$(MV) $@.tmp $@
+
+TARGETS += $(DEF_POLICY_DST)
+
+################################################################################
+
+# CACERTS_FILE is optionally set in configure to override the default cacerts
+# which is otherwise generated in Gendata-java.base.gmk
+CACERTS_DST := $(LIB_DST_DIR)/security/cacerts
+
+$(CACERTS_DST): $(CACERTS_FILE)
+	$(call LogInfo, Copying $(patsubst $(OUTPUTDIR)/%, %, $@))
+	$(call install-file)
+
+ifneq ($(CACERTS_FILE), )
+  TARGETS += $(CACERTS_DST)
+endif
+
+################################################################################
+
+NET_PROPERTIES_SRCS := $(TOPDIR)/src/java.base/share/conf/net.properties \
+	$(TOPDIR)/src/java.base/$(OPENJDK_TARGET_OS_TYPE)/conf/net.properties
+
+NET_PROPERTIES_DST  := $(CONF_DST_DIR)/net.properties
+
+$(NET_PROPERTIES_DST): $(NET_PROPERTIES_SRCS)
+	$(call MakeTargetDir)
+	$(CAT) $(NET_PROPERTIES_SRCS) > $@
+
+TARGETS += $(NET_PROPERTIES_DST)
+
+ifeq ($(call isTargetOs, linux), true)
+  $(eval $(call SetupCopyFiles, COPY_SDP_CONF, \
+      FILES := $(TOPDIR)/src/java.base/$(OPENJDK_TARGET_OS_TYPE)/conf/sdp/sdp.conf.template, \
+      DEST := $(CONF_DST_DIR)/sdp, \
+  ))
+
+  TARGETS += $(COPY_SDP_CONF)
+endif
+
+################################################################################
+
+# JDK license and assembly exception files to be packaged in JMOD
+
+# The license files may not be present if the source has been obtained using a
+# different license.
+JDK_LICENSE ?= $(wildcard $(TOPDIR)/LICENSE)
+JDK_NOTICE  ?= $(wildcard $(TOPDIR)/ASSEMBLY_EXCEPTION)
+JDK_ADDITIONAL_LICENSE_INFO  ?= $(wildcard $(TOPDIR)/ADDITIONAL_LICENSE_INFO)
+
+$(eval $(call SetupCopyFiles, COPY_JDK_NOTICES, \
+    FILES := $(JDK_LICENSE) $(JDK_NOTICE) $(JDK_ADDITIONAL_LICENSE_INFO), \
+    DEST := $(COMMON_LEGAL_DST_DIR), \
+    FLATTEN := true, \
+))
+
+TARGETS += $(COPY_JDK_NOTICES)
+
+################################################################################
+#
+# Copy and filter the legal files depending on what 3rd party components are
+# bundled or linked from the OS.
+#
+ifeq ($(USE_EXTERNAL_LIBZ), true)
+  LEGAL_EXCLUDES += zlib.md
+endif
+
+$(eval $(call SetupCopyLegalFiles, COPY_LEGAL, \
+    EXCLUDES := $(LEGAL_EXCLUDES), \
+))
+
+TARGETS += $(COPY_LEGAL)
+
+################################################################################
+# Optionally copy libffi.so.? into the the image
+
+ifeq ($(ENABLE_LIBFFI_BUNDLING), true)
+  $(eval $(call SetupCopyFiles, COPY_LIBFFI, \
+      FILES := $(LIBFFI_LIB_FILE), \
+      DEST := $(call FindLibDirForModule, $(MODULE)), \
+      FLATTEN := true, \
+      MACRO := install-file-nolink, \
+  ))
+
+  TARGETS += $(COPY_LIBFFI)
+endif
+
+################################################################################
+# Generate classfile_constants.h
+
+$(eval $(call SetupTextFileProcessing, CREATE_CLASSFILE_CONSTANTS_H, \
+    SOURCE_FILES := $(TOPDIR)/src/java.base/share/native/include/classfile_constants.h.template, \
+    OUTPUT_FILE := $(SUPPORT_OUTPUTDIR)/modules_include/java.base/classfile_constants.h, \
+    REPLACEMENTS := \
+        @@VERSION_CLASSFILE_MAJOR@@ => $(VERSION_CLASSFILE_MAJOR) ; \
+        @@VERSION_CLASSFILE_MINOR@@ => $(VERSION_CLASSFILE_MINOR) ; , \
+))
+
+TARGETS += $(CREATE_CLASSFILE_CONSTANTS_H)
+
+################################################################################

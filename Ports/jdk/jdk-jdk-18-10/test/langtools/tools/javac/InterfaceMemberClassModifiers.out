@@ -1,0 +1,7 @@
+InterfaceMemberClassModifiers.java:28: illegal combination of modifiers: public and protected
+    protected class SomeClass3 implements InterfaceMemberClassModifiers {       // illegal
+              ^
+InterfaceMemberClassModifiers.java:34: illegal combination of modifiers: public and private
+    private class SomeClass4 implements InterfaceMemberClassModifiers {         // illegal
+            ^
+2 errors

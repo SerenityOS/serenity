@@ -1,0 +1,6 @@
+grant codeBase "file:${test.classes}/*" {
+    permission java.security.SecurityPermission "removeProvider.SunJCE";
+    permission java.security.SecurityPermission "insertProvider.SunJCE";
+    permission java.lang.RuntimePermission
+               "accessClassInPackage.com.sun.crypto.provider";
+};

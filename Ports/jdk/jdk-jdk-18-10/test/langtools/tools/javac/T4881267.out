@@ -1,0 +1,2 @@
+T4881267.java:10:21: compiler.err.instanceof.reifiable.not.safe: java.lang.Object, T
+1 error

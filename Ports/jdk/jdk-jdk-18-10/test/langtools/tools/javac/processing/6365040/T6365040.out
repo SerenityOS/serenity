@@ -1,0 +1,4 @@
+- compiler.err.proc.processor.not.found: NotThere
+- compiler.warn.proc.proc-only.requested.no.procs
+1 error
+1 warning

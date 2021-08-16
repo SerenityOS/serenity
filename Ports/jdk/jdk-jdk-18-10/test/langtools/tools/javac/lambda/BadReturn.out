@@ -1,0 +1,3 @@
+BadReturn.java:21:42: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.inconvertible.types: void, java.lang.Comparable<?>))
+BadReturn.java:26:49: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.inconvertible.types: void, java.lang.Comparable<?>))
+2 errors

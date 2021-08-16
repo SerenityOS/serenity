@@ -1,0 +1,4 @@
+T6400189a.java:14:35: compiler.warn.unchecked.call.mbr.of.raw.type: <T>getAnnotation(java.lang.Class<T>), java.lang.reflect.Constructor
+T6400189a.java:14:35: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.annotation.Annotation, java.lang.annotation.Documented)
+1 error
+1 warning

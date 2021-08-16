@@ -1,0 +1,45 @@
+This suite contains automated client sanity tests which can be run using JTReg.
+
+Contact alexander.kouznetsov@oracle.com in case of issues.
+
+-------------------------------------------------------------------------------
+How to run:
+
+1) Download/Install the JDK to be tested in the system.
+   (For example C:/java/jdk1.9.0 in windows or 
+    /export/jdk/jdk1.9.0 in linux/mac/solaris)
+2) Download/Install JTReg harness.    
+3) Open terminal(cmd in windows, *not* cygwin) and go to the this directory.
+4) To run
+    - see the notes below on how to prepare for the test run
+    - set JT_HOME to <path/to/jtreg>, for example
+        set JT_HOME=C:\Java\client\jtreg        (Windows)
+    - run the command
+        'sh <path/to/jtreg/bin/jtreg> -ea -k:\!screenshots -jdk:<Path/to/JDK> SwingSet'
+ 
+       For example: 'sh C:/jtreg/bin/jtreg -ea -k:\!screenshots -jdk:C:/java/jdk1.9.0 SwingSet'             (Windows)
+         'sh /export/jtreg/bin/jtreg -ea -k:\!screenshots -jdk:/export/jdk/jdk1.9.0 SwingSet'               (Linux/Solaris)
+         'sh /export/jtreg/bin/jtreg -ea -k:\!screenshots -jdk:/export/jdk/jdk1.9.0/Contents/Home SwingSet' (Mac)
+
+Try to minimize all the other windows for no interference and test stability.
+Do not touch keyboard or mouse, open any window, nor lock the screen while the tests are running.
+The tests will be executed, and the results will be displayed in the terminal. 
+
+A report will be generated under 
+            a) JTReg: "JTReport/index.html".
+The failure logs could be found under:
+            a) JTReg: "JTWork/<testname>/<testname>.jtr"
+            
+The following additional options might be useful:
+-retain:all         to keep work files for passed tests
+-k:\!screenshots    removal of this option will run tests that require full environment with Robot and screenshots
+-g                  to run JavaTest GUI
+            
+-------------------------------------------------------------------------------
+
+The tests in the suite are based on SwingSet3 demo application. They use Jemmy to
+operate on controls of the demo and verify that it is behaving as expected. Both
+Jemmy and SwingSet3 sources are available as copies in lib folder.
+
+Original Jemmy repository is https://jemmy.java.net
+Original SwingSet3 repository is https://java.net/projects/swingset3

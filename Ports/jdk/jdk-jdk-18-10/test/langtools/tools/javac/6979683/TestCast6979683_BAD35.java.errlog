@@ -1,0 +1,2 @@
+TestCast6979683_BAD35.java:12:45: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Number, int)
+1 error

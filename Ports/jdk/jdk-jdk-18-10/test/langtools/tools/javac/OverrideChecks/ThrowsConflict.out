@@ -1,0 +1,2 @@
+ThrowsConflict.java:20:1: compiler.err.override.meth.doesnt.throw: (compiler.misc.cant.implement: method(), A, method(), I), java.lang.Exception
+1 error

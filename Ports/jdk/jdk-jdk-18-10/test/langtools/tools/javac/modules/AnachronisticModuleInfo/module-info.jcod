@@ -1,0 +1,38 @@
+class foo/module-info {
+  0xCAFEBABE;
+  0; // minor version
+  52; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    class #6; // #1
+    Utf8 "SourceFile"; // #2
+    Utf8 "module-info.java"; // #3
+    Utf8 "Module"; // #4
+    Utf8 "java.base"; // #5
+    Utf8 "foo/module-info"; // #6
+  } // Constant Pool
+
+  0x8000; // access
+  #1;// this_cpx
+  #0;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+  } // methods
+
+  [] { // Attributes
+    Attr(#2) { // SourceFile
+      #3;
+    } // end SourceFile
+    ;
+    Attr(#4) { // Module
+      0x0001000580000000;
+      0x00000000;
+    } // end Module
+  } // Attributes
+} // end class foo/module-info

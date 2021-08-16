@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:testNS="testNS"
+            targetNamespace="testNS" elementFormDefault="qualified">
+    
+    <xsd:element name="test5">
+        <xsd:simpleType>
+            <xsd:restriction base="xsd:string"/>
+        </xsd:simpleType>
+    </xsd:element>
+
+    <xsd:complexType name="Test">
+        <xsd:sequence>
+            <xsd:element name="description" minOccurs="0"/>
+            <xsd:element name="code"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+</xsd:schema>

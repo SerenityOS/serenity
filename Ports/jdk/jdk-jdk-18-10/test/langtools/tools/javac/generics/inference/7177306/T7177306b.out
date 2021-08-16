@@ -1,0 +1,2 @@
+T7177306b.java:15:9: compiler.err.cant.apply.symbol: kindname.method, m, java.util.List<? super T>,S,java.lang.Class<java.lang.Object>, java.util.List<java.lang.Integer>,java.util.List<java.lang.String>,java.lang.Class, kindname.class, T7177306b, (compiler.misc.incompatible.bounds: T, (compiler.misc.eq.bounds: java.lang.String), (compiler.misc.upper.bounds: java.lang.Integer,java.lang.Object))
+1 error

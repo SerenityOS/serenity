@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://someimport.com"
+           xmlns="http://someimport.com"
+           elementFormDefault="qualified"
+           xmlns:im="http://someimport.com" >
+
+
+          <xs:complexType name="dates_data">
+           <xs:sequence>
+                 <xs:element name="mint" type="xs:dateTime" />
+                 <xs:element name="circulation" type="xs:string" />
+           </xs:sequence>
+          </xs:complexType>
+
+          <xs:complexType name="designer">
+           <xs:sequence>
+                 <xs:element name="name" type="xs:string" />
+           </xs:sequence>
+          </xs:complexType>
+</xs:schema>

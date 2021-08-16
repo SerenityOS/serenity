@@ -1,0 +1,10 @@
+Each file in this directory (except for this README) contains a CA certificate in PEM format. It can be generated with
+
+keytool -J-Duser.timezone=GMT -printcert -file ca.cert | sed -n '1,4p;8,10p'
+keytool -printcert -file ca.cert -rfc
+
+Please note the textual part before the "-----BEGIN CERTIFICATE-----" line is just a suggestion and not arbitrary.
+
+After any change in this directory, please remember to update the content of `test/jdk/sun/security/lib/cacerts/VerifyCACerts.java` as well.
+
+All changes to this directory need to be approved by the Security group.

@@ -1,0 +1,14 @@
+foo
+goo
+moo
+loo
+doo
+boo
+coo
+roo
+hoo
+doo
+soo
+woo
+xoo
+zoo

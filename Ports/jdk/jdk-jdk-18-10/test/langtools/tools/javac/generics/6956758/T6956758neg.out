@@ -1,0 +1,4 @@
+T6956758neg.java:17:29: compiler.err.report.access: clone(), protected, java.lang.Object
+- compiler.note.unchecked.filename: T6956758neg.java
+- compiler.note.unchecked.recompile
+1 error

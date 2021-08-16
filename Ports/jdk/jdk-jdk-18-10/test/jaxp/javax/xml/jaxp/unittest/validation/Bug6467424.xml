@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--A OnJava Journal Catalog-->
+
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+   xsi:noNamespaceSchemaLocation=
+ "file://./unit-test/javax/xml/validation/catalog.xsd" title="OnJava.com" publisher="O'Reilly">
+ <journal date="April 2004">
+   <article>
+    <title></title>
+    <author>Narayanan Jayaratchagan</author>
+   </article>
+ </journal>
+ <journal date="January 2004">
+   <article>
+    <title></title>
+    <author>Daniel Steinberg</author>
+   </article>
+ </journal>
+</catalog>

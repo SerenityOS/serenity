@@ -1,0 +1,2 @@
+FauxSpecialEnum1.java:14:5: compiler.err.does.not.override.abstract: compiler.misc.anonymous.class: FauxSpecialEnum1$2, test(), compiler.misc.anonymous.class: FauxSpecialEnum1$2
+1 error

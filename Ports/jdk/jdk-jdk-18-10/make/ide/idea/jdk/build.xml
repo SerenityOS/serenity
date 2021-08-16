@@ -1,0 +1,42 @@
+<!-- importing.xml -->
+<project name="jdk">
+
+    <taskdef name="wrapLogger" classname="idea.IdeaLoggerWrapper" classpath="${idea.dir}/classes"/>
+
+    <wrapLogger/>
+
+    <macrodef name="call-make">
+        <attribute name="dir"/>
+        <attribute name="args"/>
+        <sequential>
+            <exec executable="make" dir="@{dir}" failonerror="true">
+                <arg line="@{args}"/>
+                <env key="CLASSPATH" value = ""/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <target name="cond-clean" unless="${intellij.ismake}">
+        <antcall target="clean"/>
+    </target>
+
+    <target name="post-make" depends="cond-clean, build-module"/>
+
+    <!--
+        **** Global JDK Build Targets
+    -->
+
+    <target name="clean">
+        <echo message="base = ${basedir}"/>
+        <call-make dir = "${build.target.dir}" args = "reconfigure"/>
+        <call-make dir = "${build.target.dir}" args = "clean"/>
+    </target>
+
+    <target name="images">
+        <call-make dir = "${build.target.dir}" args = "images"/>
+    </target>
+
+    <target name="build-module">
+        <call-make dir = "${build.target.dir}" args = "${module.name}"/>
+    </target>
+</project>

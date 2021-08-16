@@ -1,0 +1,7 @@
+option,Test::test,ccstrlist,TestOptionList,_foo,_bar
+option,Test::test,ccstr,TestOptionStr,_foo
+option,Test::test,bool,TestOptionBool,false
+option,Test::test,intx,TestOptionInt,-1
+option,Test::test,uintx,TestOptionUint,1
+option,Test::test,TestOptionBool2
+option,Test::test,double,TestOptionDouble,1.123

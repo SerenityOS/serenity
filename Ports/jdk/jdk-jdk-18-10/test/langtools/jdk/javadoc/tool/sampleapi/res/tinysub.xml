@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+<sampleapi>
+    <module name="UNNAMED">
+        <package name="sampleapi.tiny.sub" module="sat.sampleapi">
+            <class basename="TSClass">
+                <modifier>public</modifier>
+                <modifier>none|abstract</modifier>
+                <implement>TSInterface0</implement>
+                <member>
+                    <field basename="id">
+                        <modifier>public</modifier>
+                        <type>int</type>
+                    </field>
+                    <method basename="get">
+                        <modifier>public</modifier>
+                        <type>int</type>
+                        <throw>TSException0</throw>
+                    </method>
+                    <method basename="put">
+                        <modifier>public</modifier>
+                        <param>int</param>
+                        <type>void</type>
+                        <throw>TSException0</throw>
+                    </method>
+                </member>
+            </class>
+
+            <class basename="TSException">
+                <modifier>public</modifier>
+                <extend ref="java.lang.Exception"/>
+                <member>
+                    <constructor>
+                        <modifier>public</modifier>
+                        <param>String</param>
+                    </constructor>
+                </member>
+            </class>
+
+            <interface basename="TSInterface">
+                <modifier>public</modifier>
+                <member>
+                    <method basename="put">
+                        <modifier>public</modifier>
+                        <type>void</type>
+                        <param>int</param>
+                    </method>
+                </member>
+            </interface>
+
+            <enum basename="TSEnum">
+                <modifier>public</modifier>
+                <member>
+                    <constant basename="ON" count="1"/>
+                    <constant basename="OFF" count="1"/>
+                </member>
+            </enum>
+
+            <annotation basename="TSAnno">
+                <modifier>public</modifier>
+                <member>
+                    <method basename="value">
+                        <modifier>public</modifier>
+                        <type>boolean</type>
+                    </method>
+                </member>
+            </annotation> 
+        </package>
+    </module>
+</sampleapi>

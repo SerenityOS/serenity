@@ -1,0 +1,114 @@
+#
+# Copyright (c) 2015, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include JavaCompilation.gmk
+include Modules.gmk
+
+################################################################################
+
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, modules/jdk.javadoc/Gendata.gmk))
+
+# This is needed to properly setup DOCS_MODULES.
+$(eval $(call ReadImportMetaData))
+
+JAVADOC_MODULES := $(DOCS_MODULES)
+
+# Get the complete module source path:
+JAVADOC_MODULESOURCEPATH := $(call GetModuleSrcPath)
+
+CT_DATA_DESCRIPTION += $(TOPDIR)/make/data/symbols/symbols
+
+COMPILECREATESYMBOLS_ADD_EXPORTS := \
+    --add-exports java.base/jdk.internal=java.compiler.interim,jdk.compiler.interim \
+    --add-exports jdk.compiler.interim/com.sun.tools.javac.api=ALL-UNNAMED \
+    --add-exports jdk.compiler.interim/com.sun.tools.javac.code=ALL-UNNAMED \
+    --add-exports jdk.compiler.interim/com.sun.tools.javac.util=ALL-UNNAMED \
+    --add-exports jdk.compiler.interim/com.sun.tools.javac.jvm=ALL-UNNAMED \
+    #
+
+$(eval $(call SetupJavaCompilation, COMPILE_CREATE_SYMBOLS, \
+    TARGET_RELEASE := $(TARGET_RELEASE_BOOTJDK), \
+    SRC := $(TOPDIR)/make/langtools/src/classes \
+        $(TOPDIR)/src/jdk.jdeps/share/classes, \
+    INCLUDES := build/tools/symbolgenerator com/sun/tools/classfile, \
+    BIN := $(BUILDTOOLS_OUTPUTDIR)/create_symbols_javadoc, \
+    DISABLED_WARNINGS := options, \
+    JAVAC_FLAGS := \
+        $(INTERIM_LANGTOOLS_ARGS) \
+        $(COMPILECREATESYMBOLS_ADD_EXPORTS), \
+))
+
+GENERATE_SYMBOLS_FROM_JDK_VERSION := 11
+JDK_JAVADOC_DIR := $(JDK_OUTPUTDIR)/modules/jdk.javadoc
+ELEMENT_LISTS_PKG := jdk/javadoc/internal/doclets/toolkit/resources/releases
+ELEMENT_LISTS_DIR := $(JDK_JAVADOC_DIR)/$(ELEMENT_LISTS_PKG)
+
+$(JDK_JAVADOC_DIR)/_element_lists.marker: \
+    $(COMPILE_CREATE_SYMBOLS) \
+    $(wildcard $(TOPDIR)/make/data/symbols/*) \
+    $(MODULE_INFOS)
+	$(call MakeTargetDir)
+	$(call LogInfo, Creating javadoc element lists)
+	$(RM) -r $(ELEMENT_LISTS_DIR)
+        # Generate element-list files for JDK 11 to current-1
+	$(call ExecuteWithLog, $@_historic, \
+	    $(JAVA_SMALL) $(INTERIM_LANGTOOLS_ARGS) \
+	        $(COMPILECREATESYMBOLS_ADD_EXPORTS) \
+	        -classpath $(BUILDTOOLS_OUTPUTDIR)/create_symbols_javadoc \
+	        build.tools.symbolgenerator.CreateSymbols \
+	        build-javadoc-data \
+	        $(CT_DATA_DESCRIPTION) \
+	        $(ELEMENT_LISTS_DIR) \
+	        $(GENERATE_SYMBOLS_FROM_JDK_VERSION) \
+	)
+        # Generate element-list file for the current JDK version
+	$(call ExecuteWithLog, $@_current, \
+	    $(JAVA_SMALL) $(INTERIM_LANGTOOLS_ARGS) \
+	        $(COMPILECREATESYMBOLS_ADD_EXPORTS) \
+	        -classpath $(BUILDTOOLS_OUTPUTDIR)/create_symbols_javadoc \
+	        build.tools.symbolgenerator.JavadocElementList \
+	        $(ELEMENT_LISTS_DIR)/element-list-$(JDK_SOURCE_TARGET_VERSION).txt \
+	        $(JAVADOC_MODULESOURCEPATH) \
+	        $(JAVADOC_MODULES) \
+	)
+	$(TOUCH) $@
+
+################################################################################
+# Copy element-lists to interim langtools
+
+INTERIM_JDK_JAVADOC_DIR := $(BUILDTOOLS_OUTPUTDIR)/interim_langtools_modules/jdk.javadoc.interim
+INTERIM_ELEMENT_LISTS_DIR := $(INTERIM_JDK_JAVADOC_DIR)/$(ELEMENT_LISTS_PKG)
+
+$(INTERIM_JDK_JAVADOC_DIR)/_element_lists.marker: $(JDK_JAVADOC_DIR)/_element_lists.marker
+	$(call MakeDir, $(INTERIM_ELEMENT_LISTS_DIR))
+	$(RM) -r $(INTERIM_ELEMENT_LISTS_DIR)/*
+	$(CP) -R $(ELEMENT_LISTS_DIR)/* $(INTERIM_ELEMENT_LISTS_DIR)/
+	$(TOUCH) $@
+
+################################################################################
+
+TARGETS += $(JDK_JAVADOC_DIR)/_element_lists.marker \
+    $(INTERIM_JDK_JAVADOC_DIR)/_element_lists.marker

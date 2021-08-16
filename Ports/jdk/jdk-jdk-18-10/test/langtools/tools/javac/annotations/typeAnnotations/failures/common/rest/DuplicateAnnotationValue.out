@@ -1,0 +1,2 @@
+DuplicateAnnotationValue.java:11:9: compiler.err.annotation.missing.default.value: A, field
+1 error

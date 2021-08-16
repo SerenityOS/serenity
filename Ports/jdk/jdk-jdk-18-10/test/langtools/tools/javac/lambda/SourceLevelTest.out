@@ -1,0 +1,4 @@
+SourceLevelTest.java:11:9: compiler.err.feature.not.supported.in.source.plural: (compiler.misc.feature.default.methods), 7, 8
+SourceLevelTest.java:18:17: compiler.err.feature.not.supported.in.source.plural: (compiler.misc.feature.lambda), 7, 8
+SourceLevelTest.java:19:20: compiler.err.feature.not.supported.in.source.plural: (compiler.misc.feature.method.references), 7, 8
+3 errors

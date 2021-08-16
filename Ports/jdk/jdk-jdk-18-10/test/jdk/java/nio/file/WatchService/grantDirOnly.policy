@@ -1,0 +1,4 @@
+// policy file that grants read access to source directory
+grant {
+    permission java.io.FilePermission "${test.src}", "read";
+};

@@ -1,0 +1,31 @@
+<!NOTATION cgm PUBLIC "Computer Graphics Metafile">
+ <!NOTATION ccitt PUBLIC "CCITT group 4 raster">
+
+ <!ENTITY % text "(#PCDATA | emph)*">
+ <!ENTITY infoflow SYSTEM "infoflow.ccitt" NDATA ccitt>
+ <!ENTITY tagexamp SYSTEM "tagexamp.cgm"   NDATA cgm>
+
+ <!ELEMENT report (title, chapter+)>
+ <!ELEMENT title %text;>
+ <!ELEMENT chapter (title, intro?, section*)>
+ <!ATTLIST chapter
+               shorttitle CDATA #IMPLIED>
+ <!ELEMENT intro (para | graphic)+>
+ <!ELEMENT section (title, intro?, topic*)>
+ <!ATTLIST section
+               shorttitle CDATA #IMPLIED
+               sectid ID #IMPLIED>
+ <!ELEMENT topic (title, (para | graphic)+)>
+ <!ATTLIST topic
+               shorttitle CDATA #IMPLIED
+               topicid ID #IMPLIED>
+ <!ELEMENT para (#PCDATA | emph | xref)*>
+ <!ATTLIST para
+               security (u | c | s | ts) "u">
+ <!ELEMENT emph %text;>
+ <!ELEMENT graphic EMPTY>
+ <!ATTLIST graphic
+               graphname ENTITY #REQUIRED>
+ <!ELEMENT xref EMPTY>
+ <!ATTLIST xref
+               xrefid IDREF #IMPLIED>

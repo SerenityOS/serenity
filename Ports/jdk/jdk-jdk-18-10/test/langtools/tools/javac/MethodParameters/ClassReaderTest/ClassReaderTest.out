@@ -1,0 +1,3 @@
+Note: ClassReaderTest.E.<init>(x, @ClassReaderTest.RuntimeAnnoOne(9) s)
+Note: ClassReaderTest.I.<init>(@ClassReaderTest.ClassAnno(7) d, @ClassReaderTest.RuntimeAnnoOne(8) e, o)
+Note: ClassReaderTest.f(@ClassReaderTest.ClassAnno(3) @ClassReaderTest.RuntimeAnnoOne(1) @ClassReaderTest.RuntimeAnnoTwo(2) a, @ClassReaderTest.ClassAnno(6) @ClassReaderTest.RuntimeAnnoOne(4) @ClassReaderTest.RuntimeAnnoTwo(5) b)

@@ -1,0 +1,12 @@
+help
+For more information about a specific command use 'help <command>'. With no argument this will show a list of available commands. 'help all' will show help for all commands.
+
+Impact: Low
+
+Syntax : help [options] [<command name>]
+
+Arguments:
+	command name : [optional] The name of the command for which we want help (STRING, no default value)
+
+Options: (options must be specified using the <key> or <key>=<value> syntax)
+	-all : [optional] Show help for all commands (BOOLEAN, false)

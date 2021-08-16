@@ -1,0 +1,47 @@
+ExtendsAccess.java:31:32: compiler.err.cant.resolve: kindname.class, publicClass, , 
+ExtendsAccess.java:32:32: compiler.err.cant.resolve: kindname.class, defaultClass, , 
+ExtendsAccess.java:33:32: compiler.err.cant.resolve: kindname.class, protectedClass, , 
+ExtendsAccess.java:34:32: compiler.err.cant.resolve: kindname.class, privateClass, , 
+ExtendsAccess.java:39:46: compiler.err.report.access: ExtendsAccess.privateClass, private, ExtendsAccess
+ExtendsAccess.java:42:48: compiler.err.not.def.public.cant.access: p.ExtendsAccess.defaultClass, p.ExtendsAccess
+ExtendsAccess.java:43:48: compiler.err.report.access: p.ExtendsAccess.protectedClass, protected, p.ExtendsAccess
+ExtendsAccess.java:44:48: compiler.err.report.access: p.ExtendsAccess.privateClass, private, p.ExtendsAccess
+ExtendsAccess.java:56:21: compiler.err.report.access: ExtendsAccess.privateClass, private, ExtendsAccess
+ExtendsAccess.java:63:21: compiler.err.not.def.public.cant.access: p.ExtendsAccess.defaultClass, p.ExtendsAccess
+ExtendsAccess.java:69:21: compiler.err.report.access: p.ExtendsAccess.privateClass, private, p.ExtendsAccess
+ExtendsAccess.java:85:34: compiler.err.report.access: ExtendsAccess.privateClass, private, ExtendsAccess
+ExtendsAccess.java:92:36: compiler.err.not.def.public.cant.access: p.ExtendsAccess.defaultClass, p.ExtendsAccess
+ExtendsAccess.java:101:36: compiler.err.report.access: p.ExtendsAccess.privateClass, private, p.ExtendsAccess
+ExtendsAccess.java:104:32: compiler.err.cant.resolve: kindname.class, publicStaticClass, , 
+ExtendsAccess.java:105:32: compiler.err.cant.resolve: kindname.class, defaultStaticClass, , 
+ExtendsAccess.java:106:32: compiler.err.cant.resolve: kindname.class, protectedStaticClass, , 
+ExtendsAccess.java:107:32: compiler.err.cant.resolve: kindname.class, privateStaticClass, , 
+ExtendsAccess.java:112:46: compiler.err.report.access: ExtendsAccess.privateStaticClass, private, ExtendsAccess
+ExtendsAccess.java:115:48: compiler.err.not.def.public.cant.access: p.ExtendsAccess.defaultStaticClass, p.ExtendsAccess
+ExtendsAccess.java:116:48: compiler.err.report.access: p.ExtendsAccess.protectedStaticClass, protected, p.ExtendsAccess
+ExtendsAccess.java:117:48: compiler.err.report.access: p.ExtendsAccess.privateStaticClass, private, p.ExtendsAccess
+ExtendsAccess.java:129:21: compiler.err.report.access: ExtendsAccess.privateStaticClass, private, ExtendsAccess
+ExtendsAccess.java:136:21: compiler.err.not.def.public.cant.access: p.ExtendsAccess.defaultStaticClass, p.ExtendsAccess
+ExtendsAccess.java:142:21: compiler.err.report.access: p.ExtendsAccess.privateStaticClass, private, p.ExtendsAccess
+ExtendsAccess.java:158:34: compiler.err.report.access: ExtendsAccess.privateStaticClass, private, ExtendsAccess
+ExtendsAccess.java:165:36: compiler.err.not.def.public.cant.access: p.ExtendsAccess.defaultStaticClass, p.ExtendsAccess
+ExtendsAccess.java:174:36: compiler.err.report.access: p.ExtendsAccess.privateStaticClass, private, p.ExtendsAccess
+ExtendsAccess.java:177:57: compiler.err.cant.resolve: kindname.class, publicInterface, , 
+ExtendsAccess.java:178:57: compiler.err.cant.resolve: kindname.class, defaultInterface, , 
+ExtendsAccess.java:179:57: compiler.err.cant.resolve: kindname.class, protectedInterface, , 
+ExtendsAccess.java:180:57: compiler.err.cant.resolve: kindname.class, privateInterface, , 
+ExtendsAccess.java:186:33: compiler.err.report.access: ExtendsAccess.privateInterface, private, ExtendsAccess
+ExtendsAccess.java:191:35: compiler.err.not.def.public.cant.access: p.ExtendsAccess.defaultInterface, p.ExtendsAccess
+ExtendsAccess.java:193:35: compiler.err.report.access: p.ExtendsAccess.protectedInterface, protected, p.ExtendsAccess
+ExtendsAccess.java:195:35: compiler.err.report.access: p.ExtendsAccess.privateInterface, private, p.ExtendsAccess
+ExtendsAccess.java:207:24: compiler.err.report.access: ExtendsAccess.privateInterface, private, ExtendsAccess
+ExtendsAccess.java:214:24: compiler.err.not.def.public.cant.access: p.ExtendsAccess.defaultInterface, p.ExtendsAccess
+ExtendsAccess.java:220:24: compiler.err.report.access: p.ExtendsAccess.privateInterface, private, p.ExtendsAccess
+ExtendsAccess.java:236:37: compiler.err.report.access: ExtendsAccess.privateInterface, private, ExtendsAccess
+ExtendsAccess.java:243:39: compiler.err.not.def.public.cant.access: p.ExtendsAccess.defaultInterface, p.ExtendsAccess
+ExtendsAccess.java:252:39: compiler.err.report.access: p.ExtendsAccess.privateInterface, private, p.ExtendsAccess
+ExtendsAccess.java:36:1: compiler.err.encl.class.required: ExtendsAccess.publicClass
+ExtendsAccess.java:37:1: compiler.err.encl.class.required: ExtendsAccess.defaultClass
+ExtendsAccess.java:38:1: compiler.err.encl.class.required: ExtendsAccess.protectedClass
+ExtendsAccess.java:41:1: compiler.err.encl.class.required: p.ExtendsAccess.publicClass
+46 errors

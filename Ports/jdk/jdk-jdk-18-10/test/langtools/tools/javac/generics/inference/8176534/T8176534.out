@@ -1,0 +1,8 @@
+T8176534.java:12:43: compiler.warn.unchecked.meth.invocation.applied: kindname.method, forEnumeration, java.util.Enumeration<T>, java.util.Enumeration, kindname.class, T8176534
+T8176534.java:12:44: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.util.Enumeration, java.util.Enumeration<T>
+T8176534.java:12:28: compiler.warn.unchecked.meth.invocation.applied: kindname.method, newArrayList, java.util.Iterator<? extends E>, java.util.Iterator, kindname.class, T8176534
+T8176534.java:12:43: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.util.Iterator, java.util.Iterator<? extends E>
+T8176534.java:12:28: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.util.ArrayList, java.util.List<java.lang.String>
+- compiler.err.warnings.and.werror
+1 error
+5 warnings

@@ -1,0 +1,66 @@
+/*
+ * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+The test checks that after different type of GC unreachable objects behave as expected:
+
+1. Young GC - weakly referenced non-humongous objects are collected, other objects are not collected.
+
+2. Full GC - weakly referenced non-humongous and humongous objects are collected, softly referenced non-humongous and
+             humongous objects are not collected.
+
+3. Full GC with memory pressure - weakly and softly referenced non-humongous and humongous objects are collected.
+
+4. CMC -  weakly referenced non-humongous objects are collected, other objects are not collected since weak references
+          from Young Gen is handled as strong during CMC.
+
+5. CMC_NO_SURV_ROOTS -  weakly referenced non-humongous and humongous objects are collected, softly referenced
+                        non-humongous and humongous objects are not collected since we make 2 Young GC to promote all
+                        weak references to Old Gen.
+
+6. Mixed GC - weakly referenced non-humongous and humongous objects are collected, softly referenced non-humongous and
+              humongous objects are not collected.
+
+The test gets gc type as a command line argument.
+Then the test allocates object graph in heap (currently testing scenarios are pre-generated and stored in
+TestcaseData.getPregeneratedTestcases()) with TestObjectGraphAfterGC::allocateObjectGraph.
+
+Since we are testing humongous objects we need pretty unusual nodes - arrays of Object.
+We need this since only large enough array could be Humongous object (in fact class with huge amount of fields is
+humongous too but it's for other tests).
+ObjectGraph class generates object graph with Object[] nodes. It also provides a way to collect
+information about each node using "visitor" pattern.
+
+Using visitors we build Set of ReferenceInfo instances which contains the following information:
+reference - external weak/soft reference to graph's node
+graphId and nodeId - graph's and node's ids - we need this for error handling
+softlyReachable - is node effectively referenced by external soft reference. It could be when external
+soft reference or when this node is reachable from node that exteranally referenced by soft reference
+effectiveHumongous - if node behaves effectively humongous.  It could be when node is humongous
+or when this node is reachable from humongous node.
+
+When we leave TestObjectGraphAfterGC::allocateObjectGraph we make graph reachable only with references from Set of
+ReferenceInfo instances.
+
+We run specified gc and check that each instance of ReferenceInfo set behaves as expected.
+Then we check that gc log file contains expected tokens and doesn't contain tokens that it should not contain.

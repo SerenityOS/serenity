@@ -1,0 +1,4 @@
+Test.java:19:17: compiler.err.proc.messager: compiler.misc.crules.no.defined.by
+Test.java:23:17: compiler.err.proc.messager: compiler.misc.crules.defined.by.no.api
+Test.java:27:17: compiler.err.proc.messager: compiler.misc.crules.wrong.defined.by
+3 errors

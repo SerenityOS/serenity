@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Book
+[
+        <!ELEMENT Name (#PCDATA)>
+        <!ATTLIST Name type CDATA #IMPLIED>
+]>
+
+<Book>
+  <Name>World's best book </Name>
+</Book>

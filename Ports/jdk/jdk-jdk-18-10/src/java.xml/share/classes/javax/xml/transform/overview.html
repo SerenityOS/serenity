@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2000, 2005, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.  Oracle designates this
+particular file as subject to the "Classpath" exception as provided
+by Oracle in the LICENSE file that accompanied this code.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions. 
+-->
+
+<!DOCTYPE html
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <title>Transformation API For XML</title>
+
+  <meta name="CVS"
+        content="$Id: overview.html,v 1.2 2005/06/10 03:50:39 jeffsuttor Exp $" />
+  <meta name="AUTHOR"
+        content="Jeff Suttor" />
+</head>
+<body> 
+  
+<h2>Transformation API For XML</h2> 
+  
+  
+<h3>Introduction</h3> 
+  
+<p>This overview describes the set of APIs contained in
+	 javax.xml.transform. For the sake of brevity, these interfaces are referred to
+	 as TrAX (Transformations for XML). </p> 
+  
+<p>There is a broad need for Java applications to be able to transform XML
+	 and related tree-shaped data structures. In fact, XML is not normally very
+	 useful to an application without going through some sort of transformation,
+	 unless the semantic structure is used directly as data. Almost all XML-related
+	 applications need to perform transformations. Transformations may be described
+	 by Java code, Perl code, <A href="http://www.w3.org/TR/xslt">XSLT</A>
+	 Stylesheets, other types of script, or by proprietary formats. The inputs, one
+	 or multiple, to a transformation, may be a URL, XML stream, a DOM tree, SAX
+	 Events, or a proprietary format or data structure. The output types are the
+	 pretty much the same types as the inputs, but different inputs may need to be
+	 combined with different outputs.</p> 
+  
+<p>The great challenge of a transformation API is how to deal with all the
+	 possible combinations of inputs and outputs, without becoming specialized for
+	 any of the given types.</p> 
+  
+<p>The Java community will greatly benefit from a common API that will
+	 allow them to understand and apply a single model, write to consistent
+	 interfaces, and apply the transformations polymorphically. TrAX attempts to
+	 define a model that is clean and generic, yet fills general application
+	 requirements across a wide variety of uses. </p> 
+   
+	 
+<h3>General Terminology</h3> 
+	 
+<p>This section will explain some general terminology used in this
+		document. Technical terminology will be explained in the Model section. In many
+		cases, the general terminology overlaps with the technical terminology.</p> 
+	 
+<ul>
+<li>
+<p>
+<b>Tree</b>
+<br>This term, as used within this document, describes an
+			 abstract structure that consists of nodes or events that may be produced by
+			 XML. A Tree physically may be a DOM tree, a series of well balanced parse
+			 events (such as those coming from a SAX2 ContentHander), a series of requests
+			 (the result of which can describe a tree), or a stream of marked-up
+			 characters.</p>
+</li>
+<li>
+<p>
+<b>Source Tree(s)</b>
+<br>One or more trees that are the inputs to the
+			 transformation.</p>
+</li>
+<li>
+<p>
+<b>Result Tree(s)</b>
+<br>One or more trees that are the output of the
+			 transformation.</p>
+</li>
+<li>
+<p>
+<b>Transformation</b>
+<br>The processor of consuming a stream or tree to produce
+			 another stream or tree.</p>
+</li>
+<li>
+<p>
+<b>Identity (or Copy) Transformation</b>
+<br>The process of transformation from a source to a result,
+			 making as few structural changes as possible and no informational changes. The
+			 term is somewhat loosely used, as the process is really a copy. from one
+			 "format" (such as a DOM tree, stream, or set of SAX events) to
+			 another.</p>
+</li>
+<li>
+<p>
+<b>Serialization</b>
+<br>The process of taking a tree and turning it into a stream. In
+			 some sense, a serialization is a specialized transformation.</p>
+</li>
+<li>
+<p>
+<b>Parsing</b>
+<br>The process of taking a stream and turning it into a tree. In
+			 some sense, parsing is a specialized transformation.</p>
+</li>
+<li>
+<p>
+<b>Transformer</b>
+<br>A Transformer is the object that executes the transformation.
+			 </p>
+</li>
+<li>
+<p>
+<b>Transformation instructions</b>
+<br>Describes the transformation. A form of code, script, or
+			 simply a declaration or series of declarations.</p>
+</li>
+<li>
+<p>
+<b>Stylesheet</b>
+<br>The same as "transformation instructions," except it is
+			 likely to be used in conjunction with <A href="http://www.w3.org/TR/xslt">XSLT</A>.</p>
+</li>
+<li>
+<p>
+<b>Templates</b>
+<br>Another form of "transformation instructions." In the TrAX
+			 interface, this term is used to describe processed or compiled transformation
+			 instructions. The Source flows through a Templates object to be formed into the
+			 Result.</p>
+</li>
+<li>
+<p>
+<b>Processor</b>
+<br>A general term for the thing that may both process the
+			 transformation instructions, and perform the transformation.</p>
+</li>
+<li>
+<p>
+<b>DOM</b>
+<br>Document Object Model, specifically referring to the
+			 <A href="#http://www.w3.org/TR/DOM-Level-2%20">Document Object Model
+			 (DOM) Level 2 Specification</A>.</p>
+</li>
+<li>
+	<p>
+		<b>SAX</b><br>
+		Simple API for XML, specifically referring to the <a href="http://sax.sourceforge.net/">SAX 2.0.2 release</a>.
+	</p>
+</li>
+</ul> 
+   
+  
+  
+<h3>Model</h3> 
+  
+<p>The section defines the abstract model for TrAX, apart from the details
+	 of the interfaces.</p> 
+  
+<p>A TRaX <A href="#pattern-TransformerFactory">TransformerFactory</A> is an object
+	 that processes transformation instructions, and produces
+	 <A href="#pattern-Templates">Templates</A> (in the technical
+	 terminology). A <A href="#pattern-Templates">Templates</A>
+	 object provides a <A href="#pattern-Transformer">Transformer</A>, which transforms one or
+	 more <A href="#pattern-Source">Source</A>s into one or more
+	 <A href="#pattern-Result">Result</A>s.</p> 
+  
+<p>To use the TRaX interface, you create a
+	 <A href="#pattern-TransformerFactory">TransformerFactory</A>,
+	 which may directly provide a <A href="#pattern-Transformers">Transformers</A>, or which can provide
+	 <A href="#pattern-Templates">Templates</A> from a variety of
+	 <A href="#pattern-Source">Source</A>s. The
+	 <A href="#pattern-Templates">Templates</A> object is a processed
+	 or compiled representation of the transformation instructions, and provides a
+	 <A href="#pattern-Transformer">Transformer</A>. The
+	 <A href="#pattern-Transformer">Transformer</A> processes a
+	 <A href="#pattern-Transformer">Source</A> according to the
+	 instructions found in the <A href="#pattern-Templates">Templates</A>, and produces a
+	 <A href="#pattern-Result">Result</A>.</p> 
+  
+<p>The process of transformation from a tree, either in the form of an
+	 object model, or in the form of parse events, into a stream, is known as
+	 <code>serialization</code>. We believe this is the most suitable term for
+	 this process, despite the overlap with Java object serialization.</p>
+  
+<H3>TRaX Patterns</H3>
+<ul>
+<p>
+<b><a name="pattern-Processor">Processor</a></b>
+<br>
+<br>
+<i>Intent: </i>Generic concept for the
+  set of objects that implement the TrAX interfaces.<br>
+<i>Responsibilities: </i>Create compiled transformation instructions, transform
+  sources, and manage transformation parameters and
+  properties.<br>
+<i>Thread safety: </i>Only the Templates object can be
+  used concurrently in multiple threads. The rest of the processor does not do
+  synchronized blocking, and so may not be used to perform multiple concurrent
+  operations. Different Processors can be used concurrently by different
+  threads.</p>
+<p>
+<b><a name="pattern-TransformerFactory">TransformerFactory</a></b>
+<br>
+<br>
+<i>Intent: </i>Serve as a vendor-neutral Processor interface for
+  <A href="http://www.w3.org/TR/xslt">XSLT</A> and similar
+  processors.<br>
+<i>Responsibilities: </i>Serve as a factory for a concrete
+  implementation of an TransformerFactory, serve as a direct factory for
+  Transformer objects, serve as a factory for Templates objects, and manage
+  processor specific features.<br>
+<i>Thread safety: </i>A
+  TransformerFactory may not perform mulitple concurrent
+  operations.</p>
+<p>
+<b><a name="pattern-Templates">Templates</a></b>
+<br>
+<br>
+<i>Intent: </i>The
+  runtime representation of the transformation instructions.<br>
+<i>Responsibilities: </i>A data bag for transformation instructions; act as a factory
+  for Transformers.<br>
+<i>Thread safety: </i>Threadsafe for concurrent
+  usage over multiple threads once construction is complete.</p>
+<p>
+<b><a name="pattern-Transformer">Transformer</a></b>
+<br>
+<br>
+<i>Intent: </i>Act as a per-thread
+  execution context for transformations, act as an interface for performing the
+  transformation.<br>
+<i>Responsibilities: </i>Perform the
+  transformation.<br>
+<i>Thread safety: </i>Only one instance per thread
+  is safe.<br>
+<i>Notes: </i>The Transformer is bound to the Templates
+  object that created it.</p>
+<p>
+<b><a name="pattern-Source">Source</a></b>
+<br>
+<br>
+<i>Intent: </i>Serve as a
+  single vendor-neutral object for multiple types of input.<br>
+<i>Responsibilities: </i>Act as simple data holder for System IDs, DOM nodes, streams,
+  etc.<br>
+<i>Thread safety: </i>Threadsafe concurrently over multiple
+  threads for read-only operations; must be synchronized for edit
+  operations.</p>
+<p>
+<b><a name="pattern-Result">Result</a></b>
+<br>
+<br>
+<i>Potential alternate name: </i>ResultTarget<br>
+<i>Intent: </i>Serve
+  as a single object for multiple types of output, so there can be simple process
+  method signatures.<br>
+<i>Responsibilities: </i>Act as simple data holder for
+  output stream, DOM node, ContentHandler, etc.<br>
+<i>Thread safety: </i>Threadsafe concurrently over multiple threads for read-only,
+  must be synchronized for edit.</p>
+</ul> 
+  
+
+</body>
+</html>

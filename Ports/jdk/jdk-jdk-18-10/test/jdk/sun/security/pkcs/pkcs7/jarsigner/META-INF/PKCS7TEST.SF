@@ -1,0 +1,82 @@
+Signature-Version: 1.0
+
+Name: CheckCerts.class
+Digest-Algorithms: SHA
+SHA-Digest: ya1xwvsQO+DRpQbw3Fh2nRB2JQc=
+
+Name: ContentInfoTest.class
+Digest-Algorithms: SHA
+SHA-Digest: Ca+EJakU6zw4KAhoqcnCpNqk2LI=
+
+Name: JarVerify.class
+Digest-Algorithms: SHA
+SHA-Digest: +DGaWWknfwe4ZOpsoMTFzfWRvhQ=
+
+Name: JarVerify2.class
+Digest-Algorithms: SHA
+SHA-Digest: GqDzYyY4P/WH5HKviWqXttPg5rE=
+
+Name: PKCS7Read.class
+Digest-Algorithms: SHA
+SHA-Digest: Qmf8K9hXVlwIdPY6nv2jFPfGqkA=
+
+Name: PKCS7Test.class
+Digest-Algorithms: SHA
+SHA-Digest: Gbe/gzyv2F58f6EEhSZ1BqGXtlo=
+
+Name: PKCS7Test10.class
+Digest-Algorithms: SHA
+SHA-Digest: 8wBqW//eW2sNRI91bLYEOodcgaE=
+
+Name: PKCS7Test11.class
+Digest-Algorithms: SHA
+SHA-Digest: bXhLKEslcuEXi4u/ahgT2q6tcEU=
+
+Name: PKCS7Test12.class
+Digest-Algorithms: SHA
+SHA-Digest: 9KEY1b52QLmN0qz/5z0wBFrOmz0=
+
+Name: PKCS7Test2.class
+Digest-Algorithms: SHA
+SHA-Digest: +Ua32/2Q8F2brQQmSXX+XS+M/h4=
+
+Name: PKCS7Test3.class
+Digest-Algorithms: SHA
+SHA-Digest: 0HXUZyaSfdeKee8nZzEjRSyreu4=
+
+Name: PKCS7Test4.class
+Digest-Algorithms: SHA
+SHA-Digest: J7yrS24oKuSgautvdzhqBj7dbcQ=
+
+Name: PKCS7Test5.class
+Digest-Algorithms: SHA
+SHA-Digest: JTv9WSox1LESR2Lq7s0UqSltDSQ=
+
+Name: PKCS7Test6.class
+Digest-Algorithms: SHA
+SHA-Digest: gGv+kNh+u3HQ1tzxlcAW7SpFTKk=
+
+Name: PKCS7Test7.class
+Digest-Algorithms: SHA
+SHA-Digest: fiHF1aA1aczs1OwEy8G7VC+r7LI=
+
+Name: PKCS7Test8.class
+Digest-Algorithms: SHA
+SHA-Digest: 74TW7I9VOw5VgLvhRmDfqEWvfAQ=
+
+Name: PKCS7Test9.class
+Digest-Algorithms: SHA
+SHA-Digest: 1cBInGTcO1AQZ+/0vhFkiZWwlA0=
+
+Name: SignerInfoTest.class
+Digest-Algorithms: SHA
+SHA-Digest: cFY4CtSjza1A+WjAKNSVqupjRYE=
+
+Name: SignerInfoTest2.class
+Digest-Algorithms: SHA
+SHA-Digest: aNM0FP0zEzQzxlXx6qCBxukmkHQ=
+
+Name: SimpleSigner.class
+Digest-Algorithms: SHA
+SHA-Digest: /LWCsnC7MZMR6Gow3y2cvp7I0SM=
+

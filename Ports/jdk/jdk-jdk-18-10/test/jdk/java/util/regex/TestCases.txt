@@ -1,0 +1,1275 @@
+//
+// Copyright (c) 1999, 2020, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+//
+// This file contains test cases for regular expressions.
+// A test case consists of three lines:
+// The first line is a pattern used in the test
+// The second line is the input to search for the pattern in
+// The third line is a concatenation of the match, the number of groups,
+//     and the contents of the first four subexpressions.
+// Empty lines and lines beginning with comment slashes are ignored.
+//
+// Test unsetting of backed off groups
+^(a)?a
+a
+true a 1
+
+^(a){0,1}a
+a
+true a 1
+
+^(aa(bb)?)+$
+aabbaa
+true aabbaa 2 aa bb
+
+^(aa(bb){0,1})+$
+aabbaa
+true aabbaa 2 aa bb
+
+((a|b)?b)+
+b
+true b 2 b
+
+((a|b){0,1}b)+
+b
+true b 2 b
+
+(aaa)?aaa
+aaa
+true aaa 1
+
+(aaa){0,1}aaa
+aaa
+true aaa 1
+
+^(a(b)?)+$
+aba
+true aba 2 a b
+
+^(a(b){0,1})+$
+aba
+true aba 2 a b
+
+^(a(b(c)?)?)?abc
+abc
+true abc 3
+
+^(a(b(c){0,1}){0,1}){0,1}abc
+abc
+true abc 3
+
+^(a(b(c))).*
+abc
+true abc 3 abc bc c
+
+// use of x modifier
+abc(?x)blah
+abcblah
+true abcblah 0
+
+abc(?x)  blah
+abcblah
+true abcblah 0
+
+abc(?x)  blah  blech
+abcblahblech
+true abcblahblech 0
+
+abc(?x)  blah # ignore comment
+abcblah
+true abcblah 0
+
+// Simple alternation
+a|b
+a
+true a 0
+
+a|b
+z
+false 0
+
+a|b
+b
+true b 0
+
+a|b|cd
+cd
+true cd 0
+
+a|ad
+ad
+true a 0
+
+z(a|ac)b
+zacb
+true zacb 1 ac
+
+// Simple char class
+[abc]+
+ababab
+true ababab 0
+
+[abc]+
+defg
+false 0
+
+[abc]+[def]+[ghi]+
+zzzaaddggzzz
+true aaddgg 0
+
+// Range char class
+[a-g]+
+zzzggg
+true ggg 0
+
+[a-g]+
+mmm
+false 0
+
+[a-]+
+za-9z
+true a- 0
+
+[a-\\u4444]+
+za-9z
+true za 0
+
+// Negated char class
+[^abc]+
+ababab
+false 0
+
+[^abc]+
+aaabbbcccdefg
+true defg 0
+
+// Negation with nested char class and intersection
+[^[c]]
+c
+false 0
+
+[^[a-z]]
+e
+false 0
+
+[^[a-z][A-Z]]
+E
+false 0
+
+[^a-d[0-9][m-p]]
+e
+true e 0
+
+[^a-d[0-9][m-p]]
+8
+false 0
+
+[^[a-c]&&[d-f]]
+z
+true z 0
+
+[^a-c&&d-f]
+a
+true a 0
+
+[^a-m&&m-z]
+m
+false 0
+
+[^a-m&&m-z&&a-c]
+m
+true m 0
+
+[^a-cd-f&&[d-f]]
+c
+true c 0
+
+[^[a-c][d-f]&&abc]
+a
+false 0
+
+[^[a-c][d-f]&&abc]
+d
+true d 0
+
+[^[a-c][d-f]&&abc[def]]
+a
+false 0
+
+[^[a-c][d-f]&&abc[def]]
+e
+false 0
+
+[^[a-c]&&[b-d]&&[c-e]]
+a
+true a 0
+
+[^[a-c]&&[b-d]&&[c-e]]
+c
+false 0
+
+// Making sure a ^ not in first position matches literal ^
+[abc^b]
+b
+true b 0
+
+[abc^b]
+^
+true ^ 0
+
+// Class union and intersection
+[abc[def]]
+b
+true b 0
+
+[abc[def]]
+e
+true e 0
+
+[a-d[0-9][m-p]]
+a
+true a 0
+
+[a-d[0-9][m-p]]
+o
+true o 0
+
+[a-d[0-9][m-p]]
+4
+true 4 0
+
+[a-d[0-9][m-p]]
+e
+false 0
+
+[a-d[0-9][m-p]]
+u
+false 0
+
+[[a-d][0-9][m-p]]
+b
+true b 0
+
+[[a-d][0-9][m-p]]
+z
+false 0
+
+[a-c[d-f[g-i]]]
+a
+true a 0
+
+[a-c[d-f[g-i]]]
+e
+true e 0
+
+[a-c[d-f[g-i]]]
+h
+true h 0
+
+[a-c[d-f[g-i]]]
+m
+false 0
+
+[a-c[d-f[g-i]]m]
+m
+true m 0
+
+[abc[def]ghi]
+a
+true a 0
+
+[abc[def]ghi]
+d
+true d 0
+
+[abc[def]ghi]
+h
+true h 0
+
+[abc[def]ghi]
+w
+false 0
+
+[a-c&&[d-f]]
+a
+false 0
+
+[a-c&&[d-f]]
+e
+false 0
+
+[a-c&&[d-f]]
+z
+false 0
+
+[[a-c]&&[d-f]]
+a
+false 0
+
+[[a-c]&&[d-f]]
+e
+false 0
+
+[[a-c]&&[d-f]]
+z
+false 0
+
+[a-c&&d-f]
+a
+false 0
+
+[a-m&&m-z]
+m
+true m 0
+
+[a-m&&m-z&&a-c]
+m
+false 0
+
+[a-m&&m-z&&a-z]
+m
+true m 0
+
+[[a-m]&&[m-z]]
+a
+false 0
+
+[[a-m]&&[m-z]]
+m
+true m 0
+
+[[a-m]&&[m-z]]
+z
+false 0
+
+[[a-m]&&[^a-c]]
+a
+false 0
+
+[[a-m]&&[^a-c]]
+d
+true d 0
+
+[a-m&&[^a-c]]
+a
+false 0
+
+[a-m&&[^a-c]]
+d
+true d 0
+
+[a-cd-f&&[d-f]]
+a
+false 0
+
+[a-cd-f&&[d-f]]
+e
+true e 0
+
+[[a-c]&&d-fa-c]
+a
+true a 0
+
+[[a-c]&&[d-f][a-c]]
+a
+true a 0
+
+[[a-c][d-f]&&abc]
+a
+true a 0
+
+[[a-c][d-f]&&abc[def]]
+e
+true e 0
+
+[[a-c]&&[b-d]&&[c-e]]
+a
+false 0
+
+[[a-c]&&[b-d]&&[c-e]]
+c
+true c 0
+
+[[a-c]&&[b-d][c-e]&&[u-z]]
+c
+false 0
+
+[abc[^bcd]]
+a
+true a 0
+
+[abc[^bcd]]
+d
+false 0
+
+[a-c&&a-d&&a-eghi]
+b
+true b 0
+
+[a-c&&a-d&&a-eghi]
+g
+false 0
+
+[[a[b]]&&[b[a]]]
+a
+true a 0
+
+[[a]&&[b][c][a]&&[^d]]
+a
+true a 0
+
+[[a]&&[b][c][a]&&[^d]]
+d
+false 0
+
+[[[a-d]&&[c-f]]]
+a
+false 0
+
+[[[a-d]&&[c-f]]]
+c
+true c 0
+
+[[[a-d]&&[c-f]]&&[c]]
+c
+true c 0
+
+[[[a-d]&&[c-f]]&&[c]&&c]
+c
+true c 0
+
+[[[a-d]&&[c-f]]&&[c]&&c&&c]
+c
+true c 0
+
+[[[a-d]&&[c-f]]&&[c]&&c&&[cde]]
+c
+true c 0
+
+[z[abc&&bcd]]
+c
+true c 0
+
+[z[abc&&bcd]&&[u-z]]
+z
+true z 0
+
+[x[abc&&bcd[z]]&&[u-z]]
+z
+false 0
+
+[x[[wz]abc&&bcd[z]]&&[u-z]]
+z
+true z 0
+
+[[abc]&&[def]abc]
+a
+true a 0
+
+[[abc]&&[def]xyz[abc]]
+a
+true a 0
+
+\pL
+a
+true a 0
+
+\pL
+7
+false 0
+
+\p{L}
+a
+true a 0
+
+\p{LC}
+a
+true a 0
+
+\p{LC}
+A
+true A 0
+
+\p{IsL}
+a
+true a 0
+
+\p{IsLC}
+a
+true a 0
+
+\p{IsLC}
+A
+true A 0
+
+\p{IsLC}
+9
+false 0
+
+\P{IsLC}
+9
+true 9 0
+
+// Guillemet left is initial quote punctuation
+\p{Pi}
+\u00ab
+true \u00ab 0
+
+\P{Pi}
+\u00ac
+true \u00ac 0
+
+// Guillemet right is final quote punctuation
+\p{IsPf}
+\u00bb
+true \u00bb 0
+
+\p{P}
+\u00bb
+true \u00bb 0
+
+\p{P}+
+\u00bb
+true \u00bb 0
+
+\P{IsPf}
+\u00bc
+true \u00bc 0
+
+\P{IsP}
+\u00bc
+true \u00bc 0
+
+\p{L1}
+\u00bc
+true \u00bc 0
+
+\p{L1}+
+\u00bc
+true \u00bc 0
+
+\p{L1}
+\u02bc
+false 0
+
+\p{ASCII}
+a
+true a 0
+
+\p{IsASCII}
+a
+true a 0
+
+\p{IsASCII}
+\u0370
+false 0
+
+\pLbc
+abc
+true abc 0
+
+a[r\p{InGreek}]c
+a\u0370c
+true a\u0370c 0
+
+a\p{InGreek}
+a\u0370
+true a\u0370 0
+
+a\P{InGreek}
+a\u0370
+false 0
+
+a\P{InGreek}
+ab
+true ab 0
+
+a{^InGreek}
+-
+error
+
+a\p{^InGreek}
+-
+error
+
+a\P{^InGreek}
+-
+error
+
+a\p{InGreek}
+a\u0370
+true a\u0370 0
+
+a[\p{InGreek}]c
+a\u0370c
+true a\u0370c 0
+
+a[\P{InGreek}]c
+a\u0370c
+false 0
+
+a[\P{InGreek}]c
+abc
+true abc 0
+
+a[{^InGreek}]c
+anc
+true anc 0
+
+a[{^InGreek}]c
+azc
+false 0
+
+a[\p{^InGreek}]c
+-
+error
+
+a[\P{^InGreek}]c
+-
+error
+
+a[\p{InGreek}]
+a\u0370
+true a\u0370 0
+
+a[r\p{InGreek}]c
+arc
+true arc 0
+
+a[\p{InGreek}r]c
+arc
+true arc 0
+
+a[r\p{InGreek}]c
+arc
+true arc 0
+
+a[^\p{InGreek}]c
+a\u0370c
+false 0
+
+a[^\P{InGreek}]c
+a\u0370c
+true a\u0370c 0
+
+a[\p{InGreek}&&[^\u0370]]c
+a\u0370c
+false 0
+
+// Test the dot metacharacter
+a.c.+
+a#c%&
+true a#c%& 0
+
+ab.
+ab\n
+false 0
+
+(?s)ab.
+ab\n
+true ab\n 0
+
+a[\p{L}&&[\P{InGreek}]]c
+a\u6000c
+true a\u6000c 0
+
+a[\p{L}&&[\P{InGreek}]]c
+arc
+true arc 0
+
+a[\p{L}&&[\P{InGreek}]]c
+a\u0370c
+false 0
+
+a\p{InGreek}c
+a\u0370c
+true a\u0370c 0
+
+a\p{Sc}
+a$
+true a$ 0
+
+// Test the word char escape sequence
+ab\wc
+abcc
+true abcc 0
+
+\W\w\W
+#r#
+true #r# 0
+
+\W\w\W
+rrrr#ggg
+false 0
+
+abc[\w]
+abcd
+true abcd 0
+
+abc[\sdef]*
+abc  def
+true abc  def 0
+
+abc[\sy-z]*
+abc y z
+true abc y z 0
+
+abc[a-d\sm-p]*
+abcaa mn  p
+true abcaa mn  p 0
+
+// Test the whitespace escape sequence
+ab\sc
+ab c
+true ab c 0
+
+\s\s\s
+blah  err
+false 0
+
+\S\S\s
+blah  err
+true ah  0
+
+// Test the digit escape sequence
+ab\dc
+ab9c
+true ab9c 0
+
+\d\d\d
+blah45
+false 0
+
+// Test the caret metacharacter
+^abc
+abcdef
+true abc 0
+
+^abc
+bcdabc
+false 0
+
+// Greedy ? metacharacter
+a?b
+aaaab
+true ab 0
+
+a{0,1}b
+aaaab
+true ab 0
+
+a?b
+b
+true b 0
+
+a{0,1}b
+b
+true b 0
+
+a?b
+aaaccc
+false 0
+
+a{0,1}b
+aaaccc
+false 0
+
+.?b
+aaaab
+true ab 0
+
+.{0,1}b
+aaaab
+true ab 0
+
+// Reluctant ? metacharacter
+a??b
+aaaab
+true ab 0
+
+a{0,1}?b
+aaaab
+true ab 0
+
+a??b
+b
+true b 0
+
+a{0,1}?b
+b
+true b 0
+
+a??b
+aaaccc
+false 0
+
+a{0,1}?b
+aaaccc
+false 0
+
+.??b
+aaaab
+true ab 0
+
+.{0,1}?b
+aaaab
+true ab 0
+
+// Possessive ? metacharacter
+a?+b
+aaaab
+true ab 0
+
+a{0,1}+b
+aaaab
+true ab 0
+
+a?+b
+b
+true b 0
+
+a{0,1}+b
+b
+true b 0
+
+a?+b
+aaaccc
+false 0
+
+a{0,1}+b
+aaaccc
+false 0
+
+.?+b
+aaaab
+true ab 0
+
+.{0,1}+b
+aaaab
+true ab 0
+
+// Greedy + metacharacter
+a+b
+aaaab
+true aaaab 0
+
+a+b
+b
+false 0
+
+a+b
+aaaccc
+false 0
+
+.+b
+aaaab
+true aaaab 0
+
+// Reluctant + metacharacter
+a+?b
+aaaab
+true aaaab 0
+
+a+?b
+b
+false 0
+
+a+?b
+aaaccc
+false 0
+
+.+?b
+aaaab
+true aaaab 0
+
+// Possessive + metacharacter
+a++b
+aaaab
+true aaaab 0
+
+a++b
+b
+false 0
+
+a++b
+aaaccc
+false 0
+
+.++b
+aaaab
+false 0
+
+// Greedy Repetition
+a{2,3}
+a
+false 0
+
+a{2,3}
+aa
+true aa 0
+
+a{2,3}
+aaa
+true aaa 0
+
+a{2,3}
+aaaa
+true aaa 0
+
+a{3,}
+zzzaaaazzz
+true aaaa 0
+
+a{3,}
+zzzaazzz
+false 0
+
+// Reluctant Repetition
+a{2,3}?
+a
+false 0
+
+a{2,3}?
+aa
+true aa 0
+
+a{2,3}?
+aaa
+true aa 0
+
+a{2,3}?
+aaaa
+true aa 0
+
+// Zero width Positive lookahead
+abc(?=d)
+zzzabcd
+true abc 0
+
+abc(?=d)
+zzzabced
+false 0
+
+// Zero width Negative lookahead
+abc(?!d)
+zzabcd
+false 0
+
+abc(?!d)
+zzabced
+true abc 0
+
+// Zero width Positive lookbehind
+\w(?<=a)
+###abc###
+true a 0
+
+\w(?<=a)
+###ert###
+false 0
+
+// Zero width Negative lookbehind
+(?<!a)\w
+###abc###
+true a 0
+
+(?<!a)c
+bc
+true c 0
+
+(?<!a)c
+ac
+false 0
+
+// Nondeterministic group
+(a+b)+
+ababab
+true ababab 1 ab
+
+(a|b)+
+ccccd
+false 1
+
+// Deterministic group
+(ab)+
+ababab
+true ababab 1 ab
+
+(ab)+
+accccd
+false 1
+
+(ab)*
+ababab
+true ababab 1 ab
+
+(ab)(cd*)
+zzzabczzz
+true abc 2 ab c
+
+abc(d)*abc
+abcdddddabc
+true abcdddddabc 1 d
+
+// Escaped metacharacter
+\*
+*
+true * 0
+
+\\
+\
+true \ 0
+
+\\
+\\\\
+true \ 0
+
+// Back references
+(a*)bc\1
+zzzaabcaazzz
+true aabcaa 1 aa
+
+(a*)bc\1
+zzzaabcazzz
+true abca 1 a
+
+(gt*)(dde)*(yu)\1\3(vv)
+zzzgttddeddeyugttyuvvzzz
+true gttddeddeyugttyuvv 4 gtt dde yu vv
+
+// Greedy * metacharacter
+a*b
+aaaab
+true aaaab 0
+
+a*b
+b
+true b 0
+
+a*b
+aaaccc
+false 0
+
+.*b
+aaaab
+true aaaab 0
+
+// Reluctant * metacharacter
+a*?b
+aaaab
+true aaaab 0
+
+a*?b
+b
+true b 0
+
+a*?b
+aaaccc
+false 0
+
+.*?b
+aaaab
+true aaaab 0
+
+// Possessive * metacharacter
+a*+b
+aaaab
+true aaaab 0
+
+a*+b
+b
+true b 0
+
+a*+b
+aaaccc
+false 0
+
+.*+b
+aaaab
+false 0
+
+// Case insensitivity
+(?i)foobar
+fOobAr
+true fOobAr 0
+
+f(?i)oobar
+fOobAr
+true fOobAr 0
+
+foo(?i)bar
+fOobAr
+false 0
+
+(?i)foo[bar]+
+foObAr
+true foObAr 0
+
+(?i)foo[a-r]+
+foObAr
+true foObAr 0
+
+// Disable metacharacters- test both length <=3 and >3
+// So that the BM optimization is part of test
+\Q***\Eabc
+***abc
+true ***abc 0
+
+bl\Q***\Eabc
+bl***abc
+true bl***abc 0
+
+\Q***abc
+***abc
+true ***abc 0
+
+blah\Q***\Eabc
+blah***abc
+true blah***abc 0
+
+\Q***abc
+***abc
+true ***abc 0
+
+\Q*ab
+*ab
+true *ab 0
+
+blah\Q***abc
+blah***abc
+true blah***abc 0
+
+bla\Q***abc
+bla***abc
+true bla***abc 0
+
+// Escapes in char classes
+[ab\Qdef\E]
+d
+true d 0
+
+[ab\Q[\E]
+[
+true [ 0
+
+[\Q]\E]
+]
+true ] 0
+
+[\Q\\E]
+\
+true \ 0
+
+[\Q(\E]
+(
+true ( 0
+
+[\n-#]
+!
+true ! 0
+
+[\n-#]
+-
+false 0
+
+[\w-#]
+!
+false 0
+
+[\w-#]
+a
+true a 0
+
+[\w-#]
+-
+true - 0
+
+[\w-#]
+#
+true # 0
+
+[\043]+
+blahblah#blech
+true # 0
+
+[\042-\044]+
+blahblah#blech
+true # 0
+
+[\u1234-\u1236]
+blahblah\u1235blech
+true \u1235 0
+
+[^\043]*
+blahblah#blech
+true blahblah 0
+
+(|f)?+
+foo
+true  1 
+
+(|f){0,1}+
+foo
+true  1 
+
+//----------------------------------------------------------------
+// Unary numeral primality testing
+//----------------------------------------------------------------
+
+// Input is 7 (a prime), in unary; reluctant quantifier
+^(11+?)\1+$
+1111111
+false 1
+
+^(1{2,}?)\1+$
+1111111
+false 1
+
+// Input is 8 (a power of two), in unary; reluctant quantifier
+// group is shortest possible (2)
+^(11+?)\1+$
+11111111
+true 11111111 1 11
+
+^(1{2,}?)\1+$
+11111111
+true 11111111 1 11
+
+// Input is 7 (a prime), in unary; greedy quantifier
+^(11+)\1+$
+1111111
+false 1
+
+^(1{2,})\1+$
+1111111
+false 1
+
+// Input is 8 (a power of two), in unary; greedy quantifier
+// group is longest possible (4)
+^(11+)\1+$
+11111111
+true 11111111 1 1111
+
+^(1{2,})\1+$
+11111111
+true 11111111 1 1111

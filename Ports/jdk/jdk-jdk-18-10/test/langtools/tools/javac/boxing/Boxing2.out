@@ -1,0 +1,2 @@
+Boxing2.java:12:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: int, java.lang.Long)
+1 error

@@ -1,0 +1,81 @@
+#
+# diff result of 03A234B0.TPMAP12A & 03A234B0.UXMAP120, with
+#
+# (1)added following entries from existing Cp930.java's c->b only
+#    encoding result.
+#
+# 6be1   ->   54d4  ->   5516
+# 6d00   ->   5550  ->   6d9c
+# 70ff   ->   52ec  ->   4fa0
+# 841d   ->   53e8  ->   8749
+# 841f   ->   52a1  ->   874b
+# 8f91   ->   446e  ->   2116
+# 92ca   ->   547d  ->   565b
+# 9b7e   ->   53da  ->   9a28
+# f86f   ->   446e  ->   2116
+#
+# (2)entries does not exist in "old"
+#
+# 51F1    6805
+# 53B3    8346
+#
+# (3)the 0x15	U+0085 entries for ebcdic
+#
+15	0085
+#
+54d4    6be1
+5550    6d00
+52ec    70ff
+53e8    841d
+52a1    841f
+446e    8f91
+547d    92ca
+53da    9b7e
+446e    f86f
+#
+# we should use this one instead of the 4260<-ff0d
+#4260	2212  
+4260	ff0d
+#
+426A	00A6
+43A1	301C
+444A	2014
+447C	2016
+4C7D	9E7C
+4EB3	9830
+4F5E	5861
+507F	91AC
+5190	56CA
+51F1	6805
+51FA	91B1
+5261	9EB4
+52A1	881F
+52C9	840A
+52DA	7E61
+52EC	4FE0
+5353	8EC0
+5373	7E6B
+53DA	9A52
+53E8	87EC
+53EE	7130
+53F8	8523
+5443	5C5B
+5464	9DD7
+547D	5699
+5481	525D
+54A3	6414
+54A4	7626
+54CA	7C1E
+54CD	6451
+54D4	555E
+54FA	6F51
+5550	7006
+5553	79B1
+555F	9EB5
+55C0	5C62
+55C1	985A
+5B72	6522
+5BFE	688E
+60F1	7E48
+61B0	8141
+66C8	9839

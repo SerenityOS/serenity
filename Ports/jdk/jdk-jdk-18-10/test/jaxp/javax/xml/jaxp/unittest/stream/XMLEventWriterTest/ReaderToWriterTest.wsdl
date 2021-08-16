@@ -1,0 +1,523 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<wsdl:definitions name = "Untitled" targetNamespace = "http://web.services.galileo.someCompany.com/checkAddressImpl" xmlns:ns0 = "http://someCompany.com/fss/services/Portal_checkAddress_request" xmlns:ns1 = "http://someCompany.com/fss/services/Portal_checkAddress_result" xmlns:soap = "http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns = "http://web.services.galileo.someCompany.com/checkAddressImpl" xmlns:tnsi = "http://web.services.galileo.someCompany.com/internal/checkAddress" xmlns:wsdl = "http://schemas.xmlsoap.org/wsdl/" xmlns:xs = "http://www.w3.org/2001/XMLSchema">
+	<wsdl:types>
+		<xsd:schema attributeFormDefault = "unqualified" elementFormDefault = "qualified" targetNamespace = "http://someCompany.com/fss/services/Portal_checkAddress_result" xml:lang = "de" xmlns = "http://someCompany.com/fss/services/Portal_checkAddress_result" xmlns:xsd = "http://www.w3.org/2001/XMLSchema">
+			<!-- commonMessageHeaderResult-->
+			<xsd:element name = "commonMessageHeaderResult">
+				<xsd:annotation xmlns = "">
+					<xsd:documentation>Comment describing your root element</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name = "sourceSystem" type = "xsd:string"/>
+						<xsd:element name = "eventID">
+							<xsd:simpleType>
+								<xsd:restriction base = "xsd:string">
+									<xsd:minLength value = "1"/>
+									<xsd:maxLength value = "30"/>
+								</xsd:restriction>
+							</xsd:simpleType>
+						</xsd:element>
+						<xsd:element name = "timeStamp" type = "xsd:dateTime"/>
+						<xsd:element minOccurs = "0" name = "eaiErrorID" type = "xsd:string"/>
+						<xsd:element name = "serviceName" type = "xsd:string"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:annotation>
+				<xsd:documentation>Canonical Data Model for service checkAddress (result)</xsd:documentation>
+				<xsd:documentation>Generation Date: 20.12.2005</xsd:documentation>
+				<xsd:documentation>naming convention for prefixes:
+       CDM  - object type
+       DOM  - reference data type
+				</xsd:documentation>
+			</xsd:annotation>
+			<xsd:complexType name = "CDM_Address_Check_Response_Result">
+				<xsd:annotation>
+					<xsd:documentation/>
+				</xsd:annotation>
+				<xsd:sequence>
+					<xsd:element name = "overallResult" type = "xsd:integer"/>
+					<xsd:element name = "overallRemark">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "1000"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element maxOccurs = "unbounded" minOccurs = "0" name = "Single_Checked_Address" type = "ns1:CDM_Single_Checked_Address_Result"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:complexType name = "CDM_Location_Address_Result">
+				<xsd:annotation>
+					<xsd:documentation>physical existing postal address</xsd:documentation>
+				</xsd:annotation>
+				<xsd:sequence>
+					<xsd:element minOccurs = "0" name = "zipCode">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "12"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "city">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "30"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "street">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "55"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "houseNumber">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "6"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "POBox">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "10"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "additionalInformation1">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "55"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "additionalInformation2">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "55"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "branch">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "80"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "site">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "50"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "department">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "100"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "validTo" type = "xsd:date"/>
+					<xsd:element minOccurs = "0" name = "checked" type = "xsd:boolean"/>
+					<xsd:element minOccurs = "0" name = "validFrom" type = "xsd:date"/>
+					<xsd:element minOccurs = "0" name = "active" type = "xsd:boolean"/>
+					<xsd:element minOccurs = "0" name = "Country_Code" type = "ns1:DOM_Country_Code_Result"/>
+					<xsd:element minOccurs = "0" name = "Address_Type" type = "ns1:DOM_Address_Type_Result"/>
+					<xsd:element minOccurs = "0" name = "zoneInformation" type = "ns1:CDM_Zone_Information_Result"/>
+					<xsd:element minOccurs = "0" name = "addressee_ref" type = "ns1:foreign_key"/>
+					<xsd:element minOccurs = "0" name = "contactAddressee_ref" type = "ns1:foreign_key"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:complexType name = "CDM_Single_Checked_Address_Result">
+				<xsd:annotation>
+					<xsd:documentation/>
+				</xsd:annotation>
+				<xsd:sequence>
+					<xsd:element name = "result" type = "xsd:integer"/>
+					<xsd:element name = "remark">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "1000"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element maxOccurs = "unbounded" minOccurs = "0" name = "Location_Address" type = "ns1:CDM_Location_Address_Result"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:complexType name = "CDM_Zone_Information_Result">
+				<xsd:annotation>
+					<xsd:documentation>Address with special geographical information (GIS)</xsd:documentation>
+				</xsd:annotation>
+				<xsd:sequence>
+					<xsd:element minOccurs = "0" name = "intersection1">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "200"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "intersection2">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "200"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "xCoordinate" type = "xsd:integer"/>
+					<xsd:element minOccurs = "0" name = "yCoordinate" type = "xsd:integer"/>
+					<xsd:element minOccurs = "0" name = "radius" type = "xsd:double"/>
+					<xsd:element minOccurs = "0" name = "cells" type = "xsd:integer"/>
+					<xsd:element minOccurs = "0" name = "homezoneCheckPerformed" type = "xsd:boolean"/>
+					<xsd:element minOccurs = "0" name = "highSpeed" type = "xsd:boolean"/>
+					<xsd:element minOccurs = "0" name = "localAreaCode">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "10"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "forecastDate" type = "xsd:date"/>
+					<xsd:element minOccurs = "0" name = "Zone_Type" type = "ns1:DOM_Zone_Type_Result"/>
+					<xsd:element minOccurs = "0" name = "referredLocation_ref" type = "ns1:foreign_key"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:simpleType name = "DOM_Address_Type_Result">
+				<xsd:restriction base = "xsd:string">
+					<xsd:enumeration value = "main_address"/>
+					<xsd:enumeration value = "shipping_address"/>
+					<xsd:enumeration value = "billing_address"/>
+					<xsd:enumeration value = "previous_address"/>
+					<xsd:enumeration value = "customer_reward_program"/>
+					<xsd:enumeration value = "Packstation"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name = "DOM_Country_Code_Result">
+				<xsd:restriction base = "xsd:string">
+					<xsd:enumeration value = "DEU">
+						<xsd:annotation>
+							<xsd:documentation>Deutschland</xsd:documentation>
+						</xsd:annotation>
+					</xsd:enumeration>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name = "DOM_Zone_Type_Result">
+				<xsd:restriction base = "xsd:string">
+					<xsd:enumeration value = "PWI"/>
+					<xsd:enumeration value = "GEN"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name = "NOT_AVAILABLE_YET">
+				<xsd:restriction base = "xsd:string"/>
+			</xsd:simpleType>
+			<xsd:complexType name = "Portal_message_checkAddress_result_type">
+				<xsd:sequence>
+					<xsd:element minOccurs = "0" name = "Address_Check_Response" type = "ns1:CDM_Address_Check_Response_Result"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:simpleType name = "foreign_key">
+				<xsd:restriction base = "xsd:string"/>
+			</xsd:simpleType>
+			<xsd:element name = "Portal_message_checkAddress_result" type = "ns1:Portal_message_checkAddress_result_type"/>
+			<!-- Portal_checkAddressResult-->
+			<xsd:complexType name = "Portal_checkAddress_result">
+				<xsd:sequence>
+					<xsd:element ref = "ns1:commonMessageHeaderResult">
+						<xsd:annotation xmlns = "">
+							<xsd:documentation>Comment describing your root element</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element ref = "ns1:Portal_message_checkAddress_result"/>
+				</xsd:sequence>
+			</xsd:complexType>
+		</xsd:schema>
+		<xsd:schema attributeFormDefault = "unqualified" elementFormDefault = "qualified" targetNamespace = "http://someCompany.com/fss/services/Portal_checkAddress_request" xml:lang = "de" xmlns = "http://someCompany.com/fss/services/Portal_checkAddress_request" xmlns:xsd = "http://www.w3.org/2001/XMLSchema">
+			<!-- commonMessageHeader-->
+			<xsd:element name = "commonMessageHeader">
+				<xsd:annotation xmlns = "">
+					<xsd:documentation>Comment describing your root element</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name = "sourceSystem" type = "xsd:string"/>
+						<xsd:element name = "eventID">
+							<xsd:simpleType>
+								<xsd:restriction base = "xsd:string">
+									<xsd:minLength value = "1"/>
+									<xsd:maxLength value = "30"/>
+								</xsd:restriction>
+							</xsd:simpleType>
+						</xsd:element>
+						<xsd:element name = "timeStamp" type = "xsd:dateTime"/>
+						<xsd:element minOccurs = "0" name = "eaiErrorID" type = "xsd:string"/>
+						<xsd:element name = "serviceName" type = "xsd:string"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:annotation>
+				<xsd:documentation>Canonical Data Model for service checkAddress</xsd:documentation>
+				<xsd:documentation>Generation Date: 20.12.2005</xsd:documentation>
+				<xsd:documentation>naming convention for prefixes:
+       CDM  - object type
+       DOM  - reference data type
+    
+				</xsd:documentation>
+			</xsd:annotation>
+			<xsd:complexType name = "CDM_Location_Address">
+				<xsd:annotation>
+					<xsd:documentation>physical existing postal address</xsd:documentation>
+				</xsd:annotation>
+				<xsd:sequence>
+					<xsd:element name = "zipCode">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "12"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element name = "city">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "30"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "street">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "55"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "houseNumber">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "6"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "POBox">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "10"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "additionalInformation1">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "55"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "additionalInformation2">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "55"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "branch">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "80"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "site">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "50"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "department">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "100"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "validTo" type = "xsd:date"/>
+					<xsd:element minOccurs = "0" name = "checked" type = "xsd:boolean"/>
+					<xsd:element minOccurs = "0" name = "validFrom" type = "xsd:date"/>
+					<xsd:element minOccurs = "0" name = "active" type = "xsd:boolean"/>
+					<xsd:element name = "Country_Code" type = "ns0:DOM_Country_Code"/>
+					<xsd:element minOccurs = "0" name = "Address_Type" type = "ns0:DOM_Address_Type"/>
+					<xsd:element minOccurs = "0" name = "zoneInformation" type = "ns0:CDM_Zone_Information"/>
+					<xsd:element minOccurs = "0" name = "addressee_ref" type = "ns0:foreign_key"/>
+					<xsd:element minOccurs = "0" name = "contactAddressee_ref" type = "ns0:foreign_key"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:complexType name = "CDM_Zone_Information">
+				<xsd:annotation>
+					<xsd:documentation>Address with special geographical information (GIS)</xsd:documentation>
+				</xsd:annotation>
+				<xsd:sequence>
+					<xsd:element minOccurs = "0" name = "intersection1">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "200"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "intersection2">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "200"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "xCoordinate" type = "xsd:integer"/>
+					<xsd:element minOccurs = "0" name = "yCoordinate" type = "xsd:integer"/>
+					<xsd:element minOccurs = "0" name = "radius" type = "xsd:double"/>
+					<xsd:element minOccurs = "0" name = "cells" type = "xsd:integer"/>
+					<xsd:element minOccurs = "0" name = "homezoneCheckPerformed" type = "xsd:boolean"/>
+					<xsd:element minOccurs = "0" name = "highSpeed" type = "xsd:boolean"/>
+					<xsd:element minOccurs = "0" name = "localAreaCode">
+						<xsd:simpleType>
+							<xsd:restriction base = "xsd:string">
+								<xsd:maxLength value = "10"/>
+								<xsd:minLength value = "0"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element minOccurs = "0" name = "forecastDate" type = "xsd:date"/>
+					<xsd:element minOccurs = "0" name = "Zone_Type" type = "ns0:DOM_Zone_Type"/>
+					<xsd:element minOccurs = "0" name = "referredLocation_ref" type = "ns0:foreign_key"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:simpleType name = "DOM_Address_Type">
+				<xsd:restriction base = "xsd:string">
+					<xsd:enumeration value = "main_address"/>
+					<xsd:enumeration value = "shipping_address"/>
+					<xsd:enumeration value = "billing_address"/>
+					<xsd:enumeration value = "previous_address"/>
+					<xsd:enumeration value = "customer_reward_program"/>
+					<xsd:enumeration value = "Packstation"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name = "DOM_Country_Code">
+				<xsd:restriction base = "xsd:string">
+					<xsd:enumeration value = "DEU">
+						<xsd:annotation>
+							<xsd:documentation>Deutschland</xsd:documentation>
+						</xsd:annotation>
+					</xsd:enumeration>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name = "DOM_Zone_Type">
+				<xsd:restriction base = "xsd:string">
+					<xsd:enumeration value = "PWI"/>
+					<xsd:enumeration value = "GEN"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name = "NOT_AVAILABLE_YET">
+				<xsd:restriction base = "xsd:string"/>
+			</xsd:simpleType>
+			<xsd:complexType name = "Portal_message_checkAddress_type">
+				<xsd:sequence>
+					<xsd:element minOccurs = "0" name = "Location_Address" type = "ns0:CDM_Location_Address"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:simpleType name = "foreign_key">
+				<xsd:restriction base = "xsd:string"/>
+			</xsd:simpleType>
+			<xsd:element name = "Portal_message_checkAddress" type = "ns0:Portal_message_checkAddress_type"/>
+			<!-- Portal_checkAddress-->
+			<xsd:complexType name = "Portal_checkAddress">
+				<xsd:sequence>
+					<xsd:element ref = "ns0:commonMessageHeader">
+						<xsd:annotation xmlns = "">
+							<xsd:documentation>Comment describing your root element</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element ref = "ns0:Portal_message_checkAddress"/>
+				</xsd:sequence>
+			</xsd:complexType>
+		</xsd:schema>
+		<xsd:schema attributeFormDefault = "unqualified" elementFormDefault = "qualified" targetNamespace = "http://web.services.galileo.someCompany.com/internal/checkAddress" xml:lang = "de" xmlns = "http://someCompany.com/fss/services/Portal_internal" xmlns:xsd = "http://www.w3.org/2001/XMLSchema">
+			<xsd:element name = "HeaderMsg" type = "xsd:string"/>
+			<xsd:element name = "ErrorMsg" type = "xsd:string"/>
+		</xsd:schema>
+	</wsdl:types>
+	<wsdl:message name = "checkAddress">
+		<wsdl:part name = "checkAddress" type = "ns0:Portal_checkAddress"/>
+	</wsdl:message>
+	<wsdl:message name = "checkAddressResult">
+		<wsdl:part name = "checkAddressResult" type = "ns1:Portal_checkAddress_result"/>
+	</wsdl:message>
+	<wsdl:message name = "GenericException">
+		<wsdl:part element = "tnsi:ErrorMsg" name = "error"/>
+	</wsdl:message>
+	<wsdl:message name = "Header">
+		<wsdl:part element = "tnsi:HeaderMsg" name = "HeaderPart"/>
+	</wsdl:message>
+	<wsdl:message name = "HeaderFault">
+		<wsdl:part element = "tnsi:ErrorMsg" name = "HeaderFaultPart"/>
+	</wsdl:message>
+	<wsdl:portType name = "PortType">
+		<wsdl:operation name = "checkAddress">
+			<wsdl:input message = "tns:checkAddress"/>
+			<wsdl:output message = "tns:checkAddressResult"/>
+			<wsdl:fault message = "tns:GenericException" name = "GenericException"/>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name = "Portal__Portal2BPM__checkAddressBinding" type = "tns:PortType">
+		<soap:binding style = "rpc" transport = "http://schemas.xmlsoap.org/soap/http"/>
+		<wsdl:operation name = "checkAddress">
+			<wsdl:documentation>The operation has no documentation</wsdl:documentation>
+			<soap:operation soapAction = "Portal_Portal2BPM_checkAddress" style = "rpc"/>
+			<wsdl:input>
+				<soap:body namespace = "http://InputMessageNamespace" use = "literal"/>
+				<soap:header message = "tns:Header" part = "HeaderPart" use = "literal">
+					<soap:headerfault message = "tns:HeaderFault" part = "HeaderFaultPart" use = "literal"/>
+				</soap:header>
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body namespace = "http://OutputMessageNamespace" use = "literal"/>
+			</wsdl:output>
+			<wsdl:fault name = "GenericException">
+				<soap:fault name = "GenericException" use = "literal"/>
+			</wsdl:fault>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name = "Portal__Portal2BPM__checkAddress">
+		<wsdl:port binding = "tns:Portal__Portal2BPM__checkAddressBinding" name = "Portal__Portal2BPM__checkAddressHttpPort">
+			<soap:address location = "http://tibco13413008:2020/Business__Processes/Adapter__Services/Portal/Inbound__Processes/Portal__Portal2BPM__checkAddress"/>
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>

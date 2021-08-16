@@ -1,0 +1,632 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="mni"/>
+	</identity>
+	<localeDisplayNames>
+		<localeDisplayPattern>
+			<localePattern>{0} ({1})</localePattern>
+			<localeSeparator>{0}, {1}</localeSeparator>
+			<localeKeyTypePattern>{0}: {1}</localeKeyTypePattern>
+		</localeDisplayPattern>
+		<languages>
+			<language type="de">জর্মন</language>
+			<language type="de_AT">ওষ্ট্রিয়ান জর্মন</language>
+			<language type="de_CH">স্বিজ হায় জর্মন</language>
+			<language type="en">ইংলিস</language>
+			<language type="en_AU">ওষ্ট্রেলিয়ান ইংলিস</language>
+			<language type="en_CA">কানাদিয়ান ইংলিস</language>
+			<language type="en_GB">ব্রিটিশ ইংলিস</language>
+			<language type="en_GB" alt="short">য়ু কে ইংলিস</language>
+			<language type="en_US">অমেরিকান ইংলিস</language>
+			<language type="en_US" alt="short">য়ু এস ইংলিস</language>
+			<language type="es">স্পেনিস</language>
+			<language type="es_419">লেটিন অমেরিকান স্পেনিস</language>
+			<language type="es_ES">য়ুরোপিয়ান স্পেনিস</language>
+			<language type="es_MX">মেক্সিকান স্পেনিস</language>
+			<language type="fr">ফ্রেঞ্চ</language>
+			<language type="fr_CA">কানাদিয়ান ফ্রেঞ্চ</language>
+			<language type="fr_CH">স্বিজ ফ্রেঞ্চ</language>
+			<language type="it">ইটালিয়ান</language>
+			<language type="ja">জাপানিজ</language>
+			<language type="mni">মৈতৈলোন্</language>
+			<language type="pt">পোর্টুগিজ</language>
+			<language type="pt_BR">ব্রাজিলিয়ান পোর্টুগিজ</language>
+			<language type="pt_PT">য়ুরোপিয়ান পোর্টুগিজ</language>
+			<language type="ru">রুসিয়ান</language>
+			<language type="und">মশকখংদবা লোল</language>
+			<language type="zh">চাইনিজ</language>
+			<language type="zh" alt="menu">চাইনিজ মন্দারিন</language>
+			<language type="zh_Hans">সিমপ্লিফাইদ চাইনিজ</language>
+			<language type="zh_Hans" alt="long">সিমপ্লিফাইদ মন্দারিন চাইনিজ</language>
+			<language type="zh_Hant">ত্রেদিস্নেল চাইনিজ</language>
+			<language type="zh_Hant" alt="long">ত্রেদিস্নেল মন্দারিন চাইনিজ</language>
+		</languages>
+		<scripts>
+			<script type="Arab">আরবিক</script>
+			<script type="Beng">বাংলা</script>
+			<script type="Cyrl">সিরিলিক</script>
+			<script type="Hans">লাইথোকহল্লবা</script>
+			<script type="Hans" alt="stand-alone">লাইথোকহল্লবা চাইনিজ</script>
+			<script type="Hant">ত্রেদিস্নেল</script>
+			<script type="Hant" alt="stand-alone">ত্রেদিস্নেল চাইনিজ</script>
+			<script type="Latn">লেটিন</script>
+			<script type="Mtei" draft="contributed">মেইটেই মায়েক</script>
+			<script type="Zxxx">ইদবা</script>
+			<script type="Zzzz">মশকখংদবা স্ক্রিপ্ট</script>
+		</scripts>
+		<territories>
+			<territory type="BR">ব্রাজিল</territory>
+			<territory type="CN">চিনা</territory>
+			<territory type="DE">জর্মনি</territory>
+			<territory type="FR">ফ্রান্স</territory>
+			<territory type="GB">য়ুনাইটেদ কিংদম</territory>
+			<territory type="IN">ইন্দিয়া</territory>
+			<territory type="IT">ইটালি</territory>
+			<territory type="JP">জাপান</territory>
+			<territory type="RU">রুসিয়া</territory>
+			<territory type="US">য়ুনাইটেদ ষ্টেটস</territory>
+			<territory type="ZZ">মশকখংদবা লমদম</territory>
+		</territories>
+		<types>
+			<type key="calendar" type="gregorian">গ্রিগোরিয়ান কেলেন্দর</type>
+			<type key="collation" type="standard">ষ্টেন্দর্দ সোর্ট ওর্দর</type>
+			<type key="numbers" type="beng">বাংলা দিজিট</type>
+			<type key="numbers" type="latn">ৱেস্তর্ন দিজিট</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">মেত্রিক</measurementSystemName>
+			<measurementSystemName type="UK">য়ু কে</measurementSystemName>
+			<measurementSystemName type="US">য়ু এস</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language">লোল: {0}</codePattern>
+			<codePattern type="script">স্ক্রিপ্ট: {0}</codePattern>
+			<codePattern type="territory">লমদম: {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters draft="contributed">[\u09BC \u0981 ং ঃ অ আ ই ঈ উ ঊ ঋ এ ঐ ও ঔ ক খ গ ঘ ঙ চ ছ জ ঝ ঞ ট ঠ ড {ড\u09BC} ঢ {ঢ\u09BC} ণ ত থ দ ধ ন প ফ ব ভ ম য {য\u09BC} র ল ৱ শ ষ স হ া ি ী \u09C1 \u09C2 \u09C3 ে ৈ ো ৌ \u09CD]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[\u200C\u200D]</exemplarCharacters>
+		<exemplarCharacters type="numbers" draft="contributed">[\- ‑ , . % ‰ + 0০ 1১ 2২ 3৩ 4৪ 5৫ 6৬ 7৭ 8৮ 9৯]</exemplarCharacters>
+		<exemplarCharacters type="punctuation" draft="contributed">[\- ‐ ‑ – — , ; \: ! ? . … ' ‘ ’ &quot; “ ” ( ) \[ \] § @ * / \&amp; # † ‡ ′ ″]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>MMMM d, y G, EEEE</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>MMMM d, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>MMM d, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>M/d/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} গী {0} দা</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} গী {0} দা</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<intervalFormats>
+						<intervalFormatFallback>{0} - {1}</intervalFormatFallback>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">জানুৱারি</month>
+							<month type="2">ফেব্রুৱারি</month>
+							<month type="3">মার্চ</month>
+							<month type="4">এপ্রিল</month>
+							<month type="5">মে</month>
+							<month type="6">জুন</month>
+							<month type="7">জুলাই</month>
+							<month type="8">আগস্ট</month>
+							<month type="9">সেপ্টেম্বর</month>
+							<month type="10">ওক্টোবর</month>
+							<month type="11">নভেম্বর</month>
+							<month type="12">ডিসেম্বর</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">জা</month>
+							<month type="2">ফে</month>
+							<month type="3">মার</month>
+							<month type="4">এপ</month>
+							<month type="5">মে</month>
+							<month type="6">জুন</month>
+							<month type="7">জুল</month>
+							<month type="8">আ</month>
+							<month type="9">সে</month>
+							<month type="10">ওক</month>
+							<month type="11">নব</month>
+							<month type="12">ডি</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">জানুৱারি</month>
+							<month type="2">ফেব্রুৱারি</month>
+							<month type="3">মার্চ</month>
+							<month type="4">এপ্রিল</month>
+							<month type="5">মে</month>
+							<month type="6">জুন</month>
+							<month type="7">জুলাই</month>
+							<month type="8">আগস্ট</month>
+							<month type="9">সেপ্টেম্বর</month>
+							<month type="10">ওক্টোবর</month>
+							<month type="11">নভেম্বর</month>
+							<month type="12">ডিসেম্বর</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">জানু</month>
+							<month type="2">ফেব্রু</month>
+							<month type="3">মার</month>
+							<month type="4">এপ্রি</month>
+							<month type="5">মে</month>
+							<month type="6">জুন</month>
+							<month type="7">জুলা</month>
+							<month type="8">আগ</month>
+							<month type="9">সেপ্ট</month>
+							<month type="10">ওক্টো</month>
+							<month type="11">নভে</month>
+							<month type="12">ডিসে</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">জা</month>
+							<month type="2">ফে</month>
+							<month type="3">মার</month>
+							<month type="4">এপ</month>
+							<month type="5">মে</month>
+							<month type="6">জুন</month>
+							<month type="7">জুল</month>
+							<month type="8">আ</month>
+							<month type="9">সে</month>
+							<month type="10">ও</month>
+							<month type="11">নব</month>
+							<month type="12">ডি</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">জানুৱারি</month>
+							<month type="2">ফেব্রুৱারি</month>
+							<month type="3">মার্চ</month>
+							<month type="4">এপ্রিল</month>
+							<month type="5">মে</month>
+							<month type="6">জুন</month>
+							<month type="7">জুলাই</month>
+							<month type="8">ওগষ্ট</month>
+							<month type="9">সেপ্টেম্বর</month>
+							<month type="10">ওক্টোবর</month>
+							<month type="11">নবেম্বর</month>
+							<month type="12">ডিসেম্বর</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">নোংমাইজিং</day>
+							<day type="mon">নিংথৌকাবা</day>
+							<day type="tue">লৈবাকপোকপা</day>
+							<day type="wed">য়ুমশকৈশা</day>
+							<day type="thu">শগোলশেন</day>
+							<day type="fri">ইরাই</day>
+							<day type="sat">থাংজ</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">নোং</day>
+							<day type="mon">নিং</day>
+							<day type="tue">লৈ</day>
+							<day type="wed">য়ুম</day>
+							<day type="thu">শগ</day>
+							<day type="fri">ইরা</day>
+							<day type="sat">থাং</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">নোংমাইজিং</day>
+							<day type="mon">নিংথৌকাবা</day>
+							<day type="tue">লৈবাকপোকপা</day>
+							<day type="wed">য়ুমশকৈশা</day>
+							<day type="thu">শগোলশেন</day>
+							<day type="fri">ইরাই</day>
+							<day type="sat">থাংজ</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">নোংমাইজিং</day>
+							<day type="mon">নিংথৌকাবা</day>
+							<day type="tue">লৈবাকপোকপা</day>
+							<day type="wed">য়ুমশকৈশা</day>
+							<day type="thu">শগোলশেন</day>
+							<day type="fri">ইরাই</day>
+							<day type="sat">থাংজ</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">নো</day>
+							<day type="mon">নিং</day>
+							<day type="tue">লৈ</day>
+							<day type="wed">য়ুম</day>
+							<day type="thu">শগ</day>
+							<day type="fri">ইরা</day>
+							<day type="sat">থাং</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">নোংমাইজিং</day>
+							<day type="mon">নিংথৌকাবা</day>
+							<day type="tue">লৈবাকপোকপা</day>
+							<day type="wed">য়ুমশকৈশা</day>
+							<day type="thu">শগোলশেন</day>
+							<day type="fri">ইরাই</day>
+							<day type="sat">থাংজ</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">অহানবা মসুং</quarter>
+							<quarter type="2">অনীশুবা মসুং</quarter>
+							<quarter type="3">অহুমশুবা মসুং</quarter>
+							<quarter type="4">মরীশুবা মসুং</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">অহানবা মসুং</quarter>
+							<quarter type="2">অনীশুবা মসুং</quarter>
+							<quarter type="3">অহুমশুবা মসুং</quarter>
+							<quarter type="4">মরীশুবা মসুং</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">নুমাং</dayPeriod>
+							<dayPeriod type="pm">PM</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">এ এম</dayPeriod>
+							<dayPeriod type="pm">পি এম</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraAbbr>
+						<era type="0">খৃ: মমাং</era>
+						<era type="0" alt="variant">বি সি ই</era>
+						<era type="1">খৃ: মতুং</era>
+						<era type="1" alt="variant">সি ই</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>MMMM d, y, EEEE</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>MMMM d, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>MMM d, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d/M/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>h:mm:ss a zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>h:mm:ss a z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>h:mm:ss a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>h:mm a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} গী {0} দা</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} গী {0} দা</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="GyMMM">G y MMM</dateFormatItem>
+						<dateFormatItem id="GyMMMd">G y MMM d</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">G y MMM d, E</dateFormatItem>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">d/M, E</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMMEd">MMM d, E</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMd">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">d/M/y, E</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">MMM d, y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">MMM d, y, E</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">y QQQ</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>চক</displayName>
+			</field>
+			<field type="year">
+				<displayName>চহী</displayName>
+			</field>
+			<field type="quarter">
+				<displayName>মসুং</displayName>
+			</field>
+			<field type="quarter-short">
+				<displayName>মসুং</displayName>
+			</field>
+			<field type="quarter-narrow">
+				<displayName>মসুং</displayName>
+			</field>
+			<field type="month">
+				<displayName>থা</displayName>
+			</field>
+			<field type="week">
+				<displayName>চয়োল</displayName>
+			</field>
+			<field type="day">
+				<displayName>নুমিৎ</displayName>
+				<relative type="-1">ঙরাং</relative>
+				<relative type="0">ঙসি</relative>
+				<relative type="1">হয়েং</relative>
+			</field>
+			<field type="day-short">
+				<relative type="-1">ঙরাং</relative>
+				<relative type="0">ঙসি</relative>
+				<relative type="1">হয়েং</relative>
+			</field>
+			<field type="day-narrow">
+				<displayName>নুমিৎ</displayName>
+				<relative type="-1">ঙরাং</relative>
+				<relative type="0">ঙসি</relative>
+				<relative type="1">হয়েং</relative>
+			</field>
+			<field type="weekday">
+				<displayName>চয়োলগী নুমিৎ</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>এ এম/পি এম</displayName>
+			</field>
+			<field type="hour">
+				<displayName>পুং</displayName>
+			</field>
+			<field type="minute">
+				<displayName>মিনট</displayName>
+			</field>
+			<field type="minute-short">
+				<displayName>মিনট</displayName>
+			</field>
+			<field type="minute-narrow">
+				<displayName>মিনট</displayName>
+			</field>
+			<field type="second">
+				<displayName>সেকেণ্ড</displayName>
+			</field>
+			<field type="zone">
+				<displayName>জোন</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<hourFormat>+HH:mm;-HH:mm</hourFormat>
+			<gmtFormat>জি এম টি {0}</gmtFormat>
+			<gmtZeroFormat>জি এম টি</gmtZeroFormat>
+			<regionFormat>{0} টাইম</regionFormat>
+			<regionFormat type="daylight">{0} (+1) দেলাইট টাইম</regionFormat>
+			<regionFormat type="standard">{0} (+0) ষ্টেন্দর্দ টাইম</regionFormat>
+			<fallbackFormat>{1} ({0})</fallbackFormat>
+			<zone type="Etc/UTC">
+				<long>
+					<standard>কোওর্দিনেটেদ য়ুনিভর্সেল টাইম</standard>
+				</long>
+			</zone>
+			<zone type="Etc/Unknown">
+				<exemplarCity>খংদবা সিটি</exemplarCity>
+			</zone>
+			<metazone type="America_Central">
+				<long>
+					<generic>নোর্থ অমেরিকান সেন্ত্রেল টাইম</generic>
+					<standard>নোর্থ অমেরিকান সেন্ত্রেল ষ্টেন্দর্দ টাইম</standard>
+					<daylight>নোর্থ অমেরিকান সেন্ত্রেল দেলাইট টাইম</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic>নোর্থ অমেরিকান ইষ্টর্ন টাইম</generic>
+					<standard>নোর্থ অমেরিকান ইষ্টর্ন ষ্টেন্দর্দ টাইম</standard>
+					<daylight>নোর্থ অমেরিকান ইষ্টর্ন দেলাইট টাইম</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic>নোর্থ অমেরিকান মাউন্টেন টাইম</generic>
+					<standard>নোর্থ অমেরিকান মাউন্টেন ষ্টেন্দর্দ টাইম</standard>
+					<daylight>নোর্থ অমেরিকান মাউন্টেন দেলাইট টাইম</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic>নোর্থ অমেরিকান পেসিফিক টাইম</generic>
+					<standard>নোর্থ অমেরিকান পেসিফিক ষ্টেন্দর্দ টাইম</standard>
+					<daylight>নোর্থ অমেরিকান পেসিফিক দেলাইট টাইম</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<generic>অটলান্টিক টাইম</generic>
+					<standard>অটলান্টিক ষ্টেন্দর্দ টাইম</standard>
+					<daylight>অটলান্টিক দেলাইট টাইম</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>সেন্ত্রেল য়ুরোপিয়ান টাইম</generic>
+					<standard>সেন্ত্রেল য়ুরোপিয়ান ষ্টেন্দর্দ টাইম</standard>
+					<daylight>সেন্ত্রেল য়ুরোপিয়ান সমর টাইম</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic>ইষ্টর্ন য়ুরোপিয়ান টাইম</generic>
+					<standard>ইষ্টর্ন য়ুরোপিয়ান ষ্টেন্দর্দ টাইম</standard>
+					<daylight>ইষ্টর্ন য়ুরোপিয়ান সমর টাইম</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>ৱেষ্টর্ন য়ুরোপিয়ান টাইম</generic>
+					<standard>ৱেষ্টর্ন য়ুরোপিয়ান ষ্টেন্দর্দ টাইম</standard>
+					<daylight>ৱেষ্টর্ন য়ুরোপিয়ান সমর টাইম</daylight>
+				</long>
+			</metazone>
+			<metazone type="GMT">
+				<long>
+					<standard>গ্রিনৱিচ মিন টাইম</standard>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>beng</defaultNumberingSystem>
+		<symbols numberSystem="latn">
+			<decimal>.</decimal>
+			<group>,</group>
+			<percentSign>%</percentSign>
+			<plusSign>+</plusSign>
+			<minusSign>-</minusSign>
+		</symbols>
+		<currencies>
+			<currency type="BRL">
+				<displayName>ব্রাজিলিয়ান রেয়াল</displayName>
+				<displayName count="other">ব্রাজিলিয়ান রেয়াল</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>চাইনিজ য়ুআন</displayName>
+				<displayName count="other">চাইনিজ য়ুআন</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>য়ুরো</displayName>
+				<displayName count="other">য়ুরো</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>ব্রিটিশ পাউন্দ</displayName>
+				<displayName count="other">ব্রিটিশ পাউন্দ</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName>ইন্দিয়ান রুপি</displayName>
+				<displayName count="other">ইন্দিয়ান রুপি</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>জাপানিজ য়েন</displayName>
+				<displayName count="other">জাপানিজ য়েন</displayName>
+			</currency>
+			<currency type="RUB">
+				<displayName>রুসিয়ান রুবল</displayName>
+				<displayName count="other">রুসিয়ান রুবল</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>য়ু এস দি</displayName>
+				<displayName count="other">য়ু এস দি</displayName>
+				<symbol draft="contributed">$</symbol>
+				<symbol alt="narrow" draft="contributed">$</symbol>
+			</currency>
+			<currency type="XXX">
+				<displayName>মশকখংদবা করেন্সি</displayName>
+				<displayName count="other">মশকখংদবা করেন্সি</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0} অমসুং {1}</listPatternPart>
+			<listPatternPart type="2">{0} অমসুং {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<yesstr>য়েস:y</yesstr>
+			<nostr>নো:n</nostr>
+		</messages>
+	</posix>
+</ldml>

@@ -1,0 +1,2 @@
+ExtendArray.java:11:40: compiler.err.type.found.req: java.lang.Object[], (compiler.misc.type.req.class)
+1 error

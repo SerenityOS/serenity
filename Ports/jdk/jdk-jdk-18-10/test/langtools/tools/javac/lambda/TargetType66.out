@@ -1,0 +1,9 @@
+TargetType66.java:20:9: compiler.err.ref.ambiguous: g, kindname.method, g(TargetType66.SAM1), TargetType66, kindname.method, g(TargetType66.SAM2), TargetType66
+TargetType66.java:21:9: compiler.err.ref.ambiguous: g, kindname.method, g(TargetType66.SAM1), TargetType66, kindname.method, g(TargetType66.SAM2), TargetType66
+TargetType66.java:21:28: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Integer)
+TargetType66.java:22:9: compiler.err.ref.ambiguous: g, kindname.method, g(TargetType66.SAM1), TargetType66, kindname.method, g(TargetType66.SAM2), TargetType66
+TargetType66.java:23:9: compiler.err.ref.ambiguous: g, kindname.method, g(TargetType66.SAM1), TargetType66, kindname.method, g(TargetType66.SAM2), TargetType66
+TargetType66.java:23:30: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Character)
+TargetType66.java:24:9: compiler.err.ref.ambiguous: g, kindname.method, g(TargetType66.SAM1), TargetType66, kindname.method, g(TargetType66.SAM2), TargetType66
+TargetType66.java:24:30: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Character)
+8 errors

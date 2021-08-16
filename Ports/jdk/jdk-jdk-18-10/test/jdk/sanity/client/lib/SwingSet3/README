@@ -1,0 +1,4 @@
+This content of this src folder was originally taken from SwingSet3 demo project: https://java.net/projects/swingset3/.
+Then it was modified to increase testability and remove extra content and extra dependencies.
+
+This is NOT the official location of the SwingSet3 demo.

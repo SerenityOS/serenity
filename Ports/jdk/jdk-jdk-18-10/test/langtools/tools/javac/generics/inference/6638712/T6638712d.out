@@ -1,0 +1,2 @@
+T6638712d.java:16:9: compiler.err.cant.apply.symbol: kindname.method, m, U,java.util.List<java.util.List<U>>, int,java.util.List<java.util.List<java.lang.String>>, kindname.class, T6638712d, (compiler.misc.incompatible.bounds: U, (compiler.misc.eq.bounds: java.lang.String), (compiler.misc.lower.bounds: java.lang.Integer))
+1 error

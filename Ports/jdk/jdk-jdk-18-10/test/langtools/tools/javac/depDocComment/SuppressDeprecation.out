@@ -1,0 +1,20 @@
+SuppressDeprecation.java:29:9: compiler.warn.missing.deprecated.annotation
+SuppressDeprecation.java:33:10: compiler.warn.missing.deprecated.annotation
+SuppressDeprecation.java:38:10: compiler.warn.missing.deprecated.annotation
+SuppressDeprecation.java:48:5: compiler.warn.missing.deprecated.annotation
+SuppressDeprecation.java:53:5: compiler.warn.missing.deprecated.annotation
+SuppressDeprecation.java:67:10: compiler.warn.missing.deprecated.annotation
+SuppressDeprecation.java:74:9: compiler.warn.missing.deprecated.annotation
+SuppressDeprecation.java:80:10: compiler.warn.missing.deprecated.annotation
+SuppressDeprecation.java:83:10: compiler.warn.has.been.deprecated: g(), T
+SuppressDeprecation.java:84:14: compiler.warn.has.been.deprecated: g(), T
+SuppressDeprecation.java:85:9: compiler.warn.has.been.deprecated: var, T
+SuppressDeprecation.java:88:9: compiler.warn.has.been.deprecated: T(), T
+SuppressDeprecation.java:91:9: compiler.warn.has.been.deprecated: T(int), T
+SuppressDeprecation.java:99:1: compiler.warn.has.been.deprecated: T(), T
+SuppressDeprecation.java:124:9: compiler.warn.missing.deprecated.annotation
+SuppressDeprecation.java:103:1: compiler.warn.missing.deprecated.annotation
+SuppressDeprecation.java:129:1: compiler.warn.missing.deprecated.annotation
+SuppressDeprecation.java:131:17: compiler.warn.has.been.deprecated: X, compiler.misc.unnamed.package
+SuppressDeprecation.java:135:1: compiler.warn.missing.deprecated.annotation
+19 warnings

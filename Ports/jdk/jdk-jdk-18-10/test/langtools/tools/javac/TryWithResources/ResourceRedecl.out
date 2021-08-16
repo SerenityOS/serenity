@@ -1,0 +1,7 @@
+ResourceRedecl.java:19:20: compiler.err.already.defined: kindname.variable, exParam1, kindname.method, test()
+ResourceRedecl.java:20:42: compiler.err.already.defined: kindname.variable, exParam1, kindname.method, test()
+ResourceRedecl.java:21:24: compiler.err.already.defined: kindname.variable, exParam1, kindname.method, test()
+ResourceRedecl.java:22:34: compiler.err.already.defined: kindname.variable, exParam1, kindname.method, test()
+ResourceRedecl.java:29:20: compiler.err.already.defined: kindname.variable, exParam2, kindname.method, test()
+ResourceRedecl.java:31:34: compiler.err.already.defined: kindname.variable, exParam2, kindname.method, test()
+6 errors

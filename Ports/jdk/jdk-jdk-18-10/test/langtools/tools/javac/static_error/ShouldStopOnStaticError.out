@@ -1,0 +1,3 @@
+ShouldStopOnStaticError.java:10:9: compiler.err.non-static.cant.be.ref: kindname.method, test1(double)
+ShouldStopOnStaticError.java:11:9: compiler.err.non-static.cant.be.ref: kindname.method, test2(java.lang.Number)
+2 errors

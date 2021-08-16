@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:element name="doc" type="foo"/>
+	<xsd:complexType name="foo">
+		<xsd:sequence minOccurs="0" maxOccurs="999999999">
+			<xsd:element name="e1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

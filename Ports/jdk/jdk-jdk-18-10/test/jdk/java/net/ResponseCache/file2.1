@@ -1,0 +1,184 @@
+/* @test @(#)file2.1	1.1 03/08/09
+ * @summary Unit test for java.net.ResponseCacheHandler
+ * @bug 4837267
+ * @author Yingxian Wang
+ */
+
+import java.net.*;
+import java.util.*;
+import java.io.*;
+import java.nio.*;
+import java.nio.channels.ReadableByteChannel;
+import sun.net.www.ParseUtil;
+
+/**
+ * Request should get serviced by the cache handler. Response get
+ * saved through the cache handler.
+ */
+public class ResponseCacheHandlerTest implements Runnable {
+    ServerSocket ss;
+    static URL url1;
+    static URL url2;
+    static boolean flag = false;
+    /* 
+     * Our "http" server to return a 404 */
+    public void run() {
+	try {
+	    Socket s = ss.accept();
+
+	    // check request contains "Cookie"
+	    InputStream is = s.getInputStream ();
+	    BufferedReader r = new BufferedReader(new InputStreamReader(is));
+	    boolean flag = false;
+	    String x;
+	    while ((x=r.readLine()) != null) {
+		if (x.length() ==0) {
+		    break;
+		}
+	    }
+	    PrintStream out = new PrintStream( 
+				 new BufferedOutputStream(
+				    s.getOutputStream() ));
+	    
+	    /* send file2.1 */
+	    File file2 = new File("file2.1");
+	    out.print("HTTP/1.1 200 OK\r\n");
+	    out.print("Content-Type: text/html; charset=iso-8859-1\r\n");
+	    out.print("Content-Length: "+file2.length()+"\r\n");
+	    out.print("Connection: close\r\n");
+	    out.print("\r\n");
+	    FileInputStream fis = new FileInputStream(file2);
+	    byte[] buf = new byte[(int)file2.length()];
+	    int len;
+	    while ((len = fis.read(buf)) != -1) {
+		out.print(new String(buf));
+	    }
+
+	    out.flush();
+
+	    s.close();
+	    ss.close();
+	} catch (Exception e) { 
+	    e.printStackTrace();
+	}
+    }
+
+    ResponseCacheHandlerTest() throws Exception {
+	/* start the server */
+	ss = new ServerSocket(0);
+	(new Thread(this)).start();
+
+	/* establish http connection to server */
+	url1 = new URL("http://localhost/file1.cache");
+	HttpURLConnection http = (HttpURLConnection)url1.openConnection();
+	InputStream is = null;
+	System.out.println("headers1:"+http.getHeaderFields());
+	try {
+	    is = http.getInputStream();
+	} catch (IOException ioex) {
+	    throw new RuntimeException(ioex.getMessage());
+	}
+	BufferedReader r = new BufferedReader(new InputStreamReader(is));
+	String x;
+	File fileout = new File("file1");
+	PrintStream out = new PrintStream( 
+				 new BufferedOutputStream(
+				    new FileOutputStream(fileout)));
+	while ((x=r.readLine()) != null) {
+	    out.print(x+"\n");
+	}
+	out.flush();
+	out.close();
+
+	// if !(file1.out == file1.cache)
+	// throw new RuntimeException("testing ResponseCacheHandler.get() failed");
+	http.disconnect();
+
+	// testing ResponseCacheHandler.put()
+	url2 = new URL("http://localhost:" + 
+		       Integer.toString(ss.getLocalPort())+"/file2.1");
+	http = (HttpURLConnection)url2.openConnection();
+	System.out.println("headers2:"+http.getHeaderFields());
+
+	try {
+	    is = http.getInputStream();
+	} catch (IOException ioex) {
+	    throw new RuntimeException(ioex.getMessage());
+	}
+	DataInputStream dis = new DataInputStream(is);
+	fileout = new File("file2.2");
+	byte[] buf = new byte[(int)new File("file2.1").length()];
+	DataOutputStream dos =  new DataOutputStream(new FileOutputStream(fileout));
+	int len;
+	while ((len=dis.read(buf)) != -1) {
+	    dos.write(buf, 0, len);
+	}
+	dos.flush();
+	dos.close();
+
+	// if !(file2.1 == file2.2 == file2.cache)
+	// throw new RuntimeException("testing ResponseCacheHandler.put() failed");
+    }
+    public static void main(String args[]) throws Exception {
+	ResponseCacheHandler.setDefault(new MyResponseCacheHandler());
+
+	new ResponseCacheHandlerTest();
+    }
+
+    static class MyResponseCacheHandler extends ResponseCacheHandler {
+	public Response 
+	get(URI uri, Map requestHeaders)
+	    throws IOException {
+	    if (uri.equals(ParseUtil.toURI(url1))) {
+		return new MyResponse("file1.cache");
+	    } if (uri.equals(ParseUtil.toURI(url2)) && !flag) {
+		flag = true;
+		return null;
+	    } else {
+		return new MyResponse("file2.cache");
+	    }
+	}
+	public boolean put(URI uri, Response response)  throws IOException {
+	    // save cache to file2.cache
+	    // 1. serialize headers into file2.cache
+	    // 2. write data to file2.cache
+	    File file = new File("file2.cache");
+	    FileOutputStream fos = new FileOutputStream(file);
+	    ObjectOutputStream oos = new ObjectOutputStream(fos);
+	    oos.writeObject(response.getHeaders());
+
+	    ReadableByteChannel rbc = response.getBody();
+	    int len = (int)new File("file2.1").length();
+	    ByteBuffer buf = ByteBuffer.allocate(len);
+	    byte[] b = new byte[len];
+	    while ((len = rbc.read(buf)) != -1) {
+		buf.flip();
+		buf.get(b, 0, len);
+		buf.compact();
+		oos.write(b, 0, len);
+	    }
+	    oos.close();
+	    return true;
+	}
+    }
+
+    static class MyResponse extends Response {
+	FileInputStream fis;
+	Map headers;
+	public MyResponse(String filename) {
+	    try {
+		fis = new FileInputStream(new File(filename));
+		headers = (Map)new ObjectInputStream(fis).readObject();
+	    } catch (Exception ex) {
+		throw new RuntimeException(ex.getMessage());
+	    }
+	}
+	public ReadableByteChannel getBody() throws IOException {
+	    return fis.getChannel();
+	}
+
+	public Map getHeaders() throws IOException {
+	    return headers;
+	}
+    }
+}

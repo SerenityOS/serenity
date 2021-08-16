@@ -1,0 +1,7 @@
+ExpressionSwitchInfer.java:17:95: compiler.err.cant.resolve.location.args: kindname.method, substring, , int, (compiler.misc.location: kindname.interface, java.lang.CharSequence, null)
+ExpressionSwitchInfer.java:26:38: compiler.err.cant.resolve.location.args: kindname.method, substring, , int, (compiler.misc.location: kindname.interface, java.lang.CharSequence, null)
+ExpressionSwitchInfer.java:30:23: compiler.err.prob.found.req: (compiler.misc.incompatible.type.in.switch.expression: (compiler.misc.inconvertible.types: int, java.lang.String))
+ExpressionSwitchInfer.java:66:13: compiler.err.cant.infer.local.var.type: t6, (compiler.misc.local.cant.infer.null)
+ExpressionSwitchInfer.java:69:13: compiler.err.cant.infer.local.var.type: t7, (compiler.misc.local.cant.infer.null)
+ExpressionSwitchInfer.java:73:13: compiler.err.cant.infer.local.var.type: t8, (compiler.misc.local.cant.infer.null)
+6 errors

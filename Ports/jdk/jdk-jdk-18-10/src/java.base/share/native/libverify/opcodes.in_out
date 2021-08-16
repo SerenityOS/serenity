@@ -1,0 +1,257 @@
+/* 
+ * Copyright (c) 1998, 2009, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+char * const opcode_in_out[][2] = {
+   {"", ""}, 		/* nop */
+   {"", "A"}, 		/* aconst_null */
+   {"", "I"}, 		/* iconst_m1 */
+   {"", "I"}, 		/* iconst_0 */
+   {"", "I"}, 		/* iconst_1 */
+   {"", "I"}, 		/* iconst_2 */
+   {"", "I"}, 		/* iconst_3 */
+   {"", "I"}, 		/* iconst_4 */
+   {"", "I"}, 		/* iconst_5 */
+   {"", "L"}, 		/* lconst_0 */
+   {"", "L"}, 		/* lconst_1 */
+   {"", "F"}, 		/* fconst_0 */
+   {"", "F"}, 		/* fconst_1 */
+   {"", "F"}, 		/* fconst_2 */
+   {"", "D"}, 		/* dconst_0 */
+   {"", "D"}, 		/* dconst_1 */
+   {"", "I"}, 		/* bipush */
+   {"", "I"}, 		/* sipush */
+   {"", "?"}, 		/* ldc */
+   {"", "?"}, 		/* ldc_w */
+   {"", "?"}, 		/* ldc2_w */
+   {"", "I"}, 		/* iload */
+   {"", "L"}, 		/* lload */
+   {"", "F"}, 		/* fload */
+   {"", "D"}, 		/* dload */
+   {"", "A"}, 		/* aload */
+   {"", "I"}, 		/* iload_0 */
+   {"", "I"}, 		/* iload_1 */
+   {"", "I"}, 		/* iload_2 */
+   {"", "I"}, 		/* iload_3 */
+   {"", "L"}, 		/* lload_0 */
+   {"", "L"}, 		/* lload_1 */
+   {"", "L"}, 		/* lload_2 */
+   {"", "L"}, 		/* lload_3 */
+   {"", "F"}, 		/* fload_0 */
+   {"", "F"}, 		/* fload_1 */
+   {"", "F"}, 		/* fload_2 */
+   {"", "F"}, 		/* fload_3 */
+   {"", "D"}, 		/* dload_0 */
+   {"", "D"}, 		/* dload_1 */
+   {"", "D"}, 		/* dload_2 */
+   {"", "D"}, 		/* dload_3 */
+   {"", "A"}, 		/* aload_0 */
+   {"", "A"}, 		/* aload_1 */
+   {"", "A"}, 		/* aload_2 */
+   {"", "A"}, 		/* aload_3 */
+   {"[I]I", "I"}, 		/* iaload */
+   {"[L]I", "L"}, 		/* laload */
+   {"[F]I", "F"}, 		/* faload */
+   {"[D]I", "D"}, 		/* daload */
+   {"[A]I", "A"}, 		/* aaload */
+   {"[B]I", "I"}, 		/* baload */
+   {"[C]I", "I"}, 		/* caload */
+   {"[S]I", "I"}, 		/* saload */
+   {"I", ""}, 		/* istore */
+   {"L", ""}, 		/* lstore */
+   {"F", ""}, 		/* fstore */
+   {"D", ""}, 		/* dstore */
+   {"A", ""}, 		/* astore */
+   {"I", ""}, 		/* istore_0 */
+   {"I", ""}, 		/* istore_1 */
+   {"I", ""}, 		/* istore_2 */
+   {"I", ""}, 		/* istore_3 */
+   {"L", ""}, 		/* lstore_0 */
+   {"L", ""}, 		/* lstore_1 */
+   {"L", ""}, 		/* lstore_2 */
+   {"L", ""}, 		/* lstore_3 */
+   {"F", ""}, 		/* fstore_0 */
+   {"F", ""}, 		/* fstore_1 */
+   {"F", ""}, 		/* fstore_2 */
+   {"F", ""}, 		/* fstore_3 */
+   {"D", ""}, 		/* dstore_0 */
+   {"D", ""}, 		/* dstore_1 */
+   {"D", ""}, 		/* dstore_2 */
+   {"D", ""}, 		/* dstore_3 */
+   {"A", ""}, 		/* astore_0 */
+   {"A", ""}, 		/* astore_1 */
+   {"A", ""}, 		/* astore_2 */
+   {"A", ""}, 		/* astore_3 */
+   {"[I]II", ""}, 		/* iastore */
+   {"[L]IL", ""}, 		/* lastore */
+   {"[F]IF", ""}, 		/* fastore */
+   {"[D]ID", ""}, 		/* dastore */
+   {"[A]IA", ""}, 		/* aastore */
+   {"[B]II", ""}, 		/* bastore */
+   {"[C]II", ""}, 		/* castore */
+   {"[S]II", ""}, 		/* sastore */
+   {"1", ""}, 		/* pop */
+   {"2+1", ""}, 		/* pop2 */
+   {"1", "11"}, 		/* dup */
+   {"21", "121"}, 		/* dup_x1 */
+   {"3+21", "1321"}, 		/* dup_x2 */
+   {"2+1", "2121"}, 		/* dup2 */
+   {"32+1", "21321"}, 		/* dup2_x1 */
+   {"4+32+1", "214321"}, 		/* dup2_x2 */
+   {"21", "12"}, 		/* swap */
+   {"II", "I"}, 		/* iadd */
+   {"LL", "L"}, 		/* ladd */
+   {"FF", "F"}, 		/* fadd */
+   {"DD", "D"}, 		/* dadd */
+   {"II", "I"}, 		/* isub */
+   {"LL", "L"}, 		/* lsub */
+   {"FF", "F"}, 		/* fsub */
+   {"DD", "D"}, 		/* dsub */
+   {"II", "I"}, 		/* imul */
+   {"LL", "L"}, 		/* lmul */
+   {"FF", "F"}, 		/* fmul */
+   {"DD", "D"}, 		/* dmul */
+   {"II", "I"}, 		/* idiv */
+   {"LL", "L"}, 		/* ldiv */
+   {"FF", "F"}, 		/* fdiv */
+   {"DD", "D"}, 		/* ddiv */
+   {"II", "I"}, 		/* irem */
+   {"LL", "L"}, 		/* lrem */
+   {"FF", "F"}, 		/* frem */
+   {"DD", "D"}, 		/* drem */
+   {"I", "I"}, 		/* ineg */
+   {"L", "L"}, 		/* lneg */
+   {"F", "F"}, 		/* fneg */
+   {"D", "D"}, 		/* dneg */
+   {"II", "I"}, 		/* ishl */
+   {"LI", "L"}, 		/* lshl */
+   {"II", "I"}, 		/* ishr */
+   {"LI", "L"}, 		/* lshr */
+   {"II", "I"}, 		/* iushr */
+   {"LI", "L"}, 		/* lushr */
+   {"II", "I"}, 		/* iand */
+   {"LL", "L"}, 		/* land */
+   {"II", "I"}, 		/* ior */
+   {"LL", "L"}, 		/* lor */
+   {"II", "I"}, 		/* ixor */
+   {"LL", "L"}, 		/* lxor */
+   {"", ""}, 		/* iinc */
+   {"I", "L"}, 		/* i2l */
+   {"I", "F"}, 		/* i2f */
+   {"I", "D"}, 		/* i2d */
+   {"L", "I"}, 		/* l2i */
+   {"L", "F"}, 		/* l2f */
+   {"L", "D"}, 		/* l2d */
+   {"F", "I"}, 		/* f2i */
+   {"F", "L"}, 		/* f2l */
+   {"F", "D"}, 		/* f2d */
+   {"D", "I"}, 		/* d2i */
+   {"D", "L"}, 		/* d2l */
+   {"D", "F"}, 		/* d2f */
+   {"I", "I"}, 		/* i2b */
+   {"I", "I"}, 		/* i2c */
+   {"I", "I"}, 		/* i2s */
+   {"LL", "I"}, 		/* lcmp */
+   {"FF", "I"}, 		/* fcmpl */
+   {"FF", "I"}, 		/* fcmpg */
+   {"DD", "I"}, 		/* dcmpl */
+   {"DD", "I"}, 		/* dcmpg */
+   {"I", ""}, 		/* ifeq */
+   {"I", ""}, 		/* ifne */
+   {"I", ""}, 		/* iflt */
+   {"I", ""}, 		/* ifge */
+   {"I", ""}, 		/* ifgt */
+   {"I", ""}, 		/* ifle */
+   {"II", ""}, 		/* if_icmpeq */
+   {"II", ""}, 		/* if_icmpne */
+   {"II", ""}, 		/* if_icmplt */
+   {"II", ""}, 		/* if_icmpge */
+   {"II", ""}, 		/* if_icmpgt */
+   {"II", ""}, 		/* if_icmple */
+   {"AA", ""}, 		/* if_acmpeq */
+   {"AA", ""}, 		/* if_acmpne */
+   {"", ""}, 		/* goto */
+   {"", "R"}, 		/* jsr */
+   {"", ""}, 		/* ret */
+   {"I", ""}, 		/* tableswitch */
+   {"I", ""}, 		/* lookupswitch */
+   {"I", ""}, 		/* ireturn */
+   {"L", ""}, 		/* lreturn */
+   {"F", ""}, 		/* freturn */
+   {"D", ""}, 		/* dreturn */
+   {"A", ""}, 		/* areturn */
+   {"", ""}, 		/* return */
+   {"", "?"}, 		/* getstatic */
+   {"?", ""}, 		/* putstatic */
+   {"A", "?"}, 		/* getfield */
+   {"?", ""}, 		/* putfield */
+   {"?", "?"}, 		/* invokevirtual */
+   {"?", "?"}, 		/* invokespecial */
+   {"?", "?"}, 		/* invokestatic */
+   {"?", "?"}, 		/* invokeinterface */
+   {"?", "?"}, 		/* invokedynamic */
+   {"", "A"}, 		/* new */
+   {"I", "A"}, 		/* newarray */
+   {"I", "A"}, 		/* anewarray */
+   {"[?]", "I"}, 		/* arraylength */
+   {"O", ""}, 		/* athrow */
+   {"A", "A"}, 		/* checkcast */
+   {"A", "I"}, 		/* instanceof */
+   {"A", ""}, 		/* monitorenter */
+   {"A", ""}, 		/* monitorexit */
+   {"", ""}, 		/* wide */
+   {"?", "A"}, 		/* multianewarray */
+   {"A", ""}, 		/* ifnull */
+   {"A", ""}, 		/* ifnonnull */
+   {"", ""}, 		/* goto_w */
+   {"", "R"}, 		/* jsr_w */
+   {"", ""}, 		/* breakpoint */
+   {"", "?"}, 		/* ldc_quick */
+   {"", "?"}, 		/* ldc_w_quick */
+   {"", "?"}, 		/* ldc2_w_quick */
+   {"A", "?"}, 		/* getfield_quick */
+   {"?", ""}, 		/* putfield_quick */
+   {"A", "?"}, 		/* getfield2_quick */
+   {"?", ""}, 		/* putfield2_quick */
+   {"", "?"}, 		/* getstatic_quick */
+   {"?", ""}, 		/* putstatic_quick */
+   {"", "?"}, 		/* getstatic2_quick */
+   {"?", "_"}, 		/* putstatic2_quick */
+   {"?", "?"}, 		/* invokevirtual_quick */
+   {"?", "?"}, 		/* invokenonvirtual_quick */
+   {"?", "?"}, 		/* invokesuper_quick */
+   {"?", "?"}, 		/* invokestatic_quick */
+   {"?", "?"}, 		/* invokeinterface_quick */
+   {"?", "?"}, 		/* invokevirtualobject_quick */
+   {"?", "?"}, 		/* invokeignored_quick */
+   {"", "A"}, 		/* new_quick */
+   {"I", "A"}, 		/* anewarray_quick */
+   {"?", "A"}, 		/* multianewarray_quick */
+   {"A", "A"}, 		/* checkcast_quick */
+   {"A", "I"}, 		/* instanceof_quick */
+   {"?", "?"}, 		/* invokevirtual_quick_w */
+   {"A", "?"}, 		/* getfield_quick_w */
+   {"?", ""}, 		/* putfield_quick_w */
+   {"A", ""}, 		/* nonnull_quick */
+};

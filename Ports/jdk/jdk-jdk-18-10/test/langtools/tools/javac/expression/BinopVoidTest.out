@@ -1,0 +1,5 @@
+BinopVoidTest.java:11:21: compiler.err.void.not.allowed.here
+BinopVoidTest.java:12:16: compiler.err.void.not.allowed.here
+BinopVoidTest.java:13:16: compiler.err.void.not.allowed.here
+BinopVoidTest.java:13:24: compiler.err.void.not.allowed.here
+4 errors

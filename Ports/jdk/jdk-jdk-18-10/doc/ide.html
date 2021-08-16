@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>IDE support in the JDK</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="../make/data/docs-resources/resources/jdk-default.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">IDE support in the JDK</h1>
+</header>
+<nav id="TOC">
+<ul>
+<li><a href="#introduction">Introduction</a><ul>
+<li><a href="#ide-support-for-native-code">IDE support for native code</a></li>
+<li><a href="#ide-support-for-java-code">IDE support for Java code</a></li>
+</ul></li>
+</ul>
+</nav>
+<h2 id="introduction">Introduction</h2>
+<p>When you are familiar with building and testing the JDK, you may want to configure an IDE to work with the source code. The instructions differ a bit depending on whether you are interested in working with the native (C/C++) or the Java code.</p>
+<h3 id="ide-support-for-native-code">IDE support for native code</h3>
+<p>There are a few ways to generate IDE configuration for the native sources, depending on which IDE to use.</p>
+<h4 id="visual-studio-code">Visual Studio Code</h4>
+<p>The make system can generate a <a href="https://code.visualstudio.com">Visual Studio Code</a> workspace that has C/C++ source indexing configured correctly, as well as launcher targets for tests and the Java launcher. After configuring, a workspace for the configuration can be generated using:</p>
+<pre class="shell"><code>make vscode-project</code></pre>
+<p>This creates a file called <code>jdk.code-workspace</code> in the build output folder. The full location will be printed after the workspace has been generated. To use it, choose <code>File -&gt; Open Workspace...</code> in Visual Studio Code.</p>
+<h5 id="alternative-indexers">Alternative indexers</h5>
+<p>The main <code>vscode-project</code> target configures the default C++ support in Visual Studio Code. There are also other source indexers that can be installed, that may provide additional features. It's currently possible to generate configuration for two such indexers, <a href="https://clang.llvm.org/extra/clangd/">clangd</a> and <a href="https://github.com/Andersbakken/rtags">rtags</a>. These can be configured by appending the name of the indexer to the make target, such as:</p>
+<pre class="shell"><code>make vscode-project-clangd</code></pre>
+<p>Additional instructions for configuring the given indexer will be displayed after the workspace has been generated.</p>
+<h4 id="visual-studio">Visual Studio</h4>
+<p>This section is a work in progress.</p>
+<pre class="shell"><code>make ide-project</code></pre>
+<h4 id="compilation-database">Compilation Database</h4>
+<p>The make system can generate generic native code indexing support in the form of a <a href="https://clang.llvm.org/docs/JSONCompilationDatabase.html">Compilation Database</a> that can be used by many different IDEs and source code indexers.</p>
+<pre class="shell"><code>make compile-commands</code></pre>
+<p>It's also possible to generate the Compilation Database for the HotSpot source code only, which is a bit faster as it includes less information.</p>
+<pre class="shell"><code>make compile-commands-hotspot</code></pre>
+<h3 id="ide-support-for-java-code">IDE support for Java code</h3>
+<p>This section is a work in progress.</p>
+</body>
+</html>

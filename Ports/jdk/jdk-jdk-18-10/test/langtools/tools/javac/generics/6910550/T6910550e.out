@@ -1,0 +1,2 @@
+T6910550e.java:14:16: compiler.err.name.clash.same.erasure: <X,Y>m(T6910550e.Pair<X,Y>), <X>m(T6910550e.Pair<X,X>)
+1 error

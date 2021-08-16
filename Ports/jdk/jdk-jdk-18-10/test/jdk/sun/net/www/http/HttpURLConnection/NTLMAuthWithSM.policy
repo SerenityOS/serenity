@@ -1,0 +1,7 @@
+grant {
+    permission java.net.NetPermission "setDefaultAuthenticator";
+    permission java.net.SocketPermission "localhost:*",
+            "connect,resolve,listen,accept";
+    permission java.lang.RuntimePermission
+            "accessClassInPackage.sun.net.www.protocol.http.ntlm";
+};

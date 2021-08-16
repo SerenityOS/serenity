@@ -1,0 +1,33 @@
+EXPECT_START
+DocComment[DOC_COMMENT, pos:0
+  preamble: 5
+    Comment[COMMENT, pos:0, <!--__/nodynamiccopyright/_-->]
+    StartElement[START_ELEMENT, pos:31
+      name:HTML
+      attributes: empty
+    ]
+    StartElement[START_ELEMENT, pos:38
+      name:HEAD
+      attributes: empty
+    ]
+    EndElement[END_ELEMENT, pos:45, HEAD]
+    StartElement[START_ELEMENT, pos:53
+      name:BODY
+      attributes: empty
+    ]
+  firstSentence: 1
+    Text[TEXT, pos:60, A_simple_well_fo...rmed_html_document]
+  body: 4
+    StartElement[START_ELEMENT, pos:95
+      name:pre
+      attributes: empty
+    ]
+    Text[TEXT, pos:100, package.html]
+    EndElement[END_ELEMENT, pos:112, pre]
+    Text[TEXT, pos:118, .|In_package_pkg.]
+  block tags: empty
+  postamble: 2
+    EndElement[END_ELEMENT, pos:136, BODY]
+    EndElement[END_ELEMENT, pos:144, HTML]
+]
+EXPECT_END

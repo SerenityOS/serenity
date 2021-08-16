@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="zh"/>
+		<script type="Hans"/>
+		<territory type="MO"/>
+	</identity>
+	<dates>
+		<calendars>
+			<calendar type="chinese">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern numbers="hanidec" draft="contributed">U年MMMd日EEEE</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern numbers="hanidec" draft="contributed">U年MMMd日</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern numbers="hanidec" draft="contributed">U年MMMd日</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+			</calendar>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="contributed">d/M/yyGGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Md" draft="contributed">M-d</dateFormatItem>
+						<dateFormatItem id="MEd" draft="contributed">M-dE</dateFormatItem>
+						<dateFormatItem id="MMdd" draft="contributed">MM-dd</dateFormatItem>
+						<dateFormatItem id="MMMMdd" draft="contributed">M月d日</dateFormatItem>
+						<dateFormatItem id="yyyyMd" draft="contributed">Gy年M月d日</dateFormatItem>
+						<dateFormatItem id="yyyyMEd" draft="contributed">Gy年M月d日，E</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback draft="contributed">{0}–{1}</intervalFormatFallback>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H" draft="contributed">vHH:mm–HH:mm</greatestDifference>
+							<greatestDifference id="m" draft="contributed">vHH:mm–HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H" draft="contributed">vHH–HH</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d" draft="contributed">M-d至M-d</greatestDifference>
+							<greatestDifference id="M" draft="contributed">M-d至M-d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d" draft="contributed">M-dE至M-dE</greatestDifference>
+							<greatestDifference id="M" draft="contributed">M-dE至M-dE</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d" draft="contributed">M月d日E至M月d日E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M" draft="contributed">y年M月至y年M月</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d" draft="contributed">d/M/y至d/M/y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">d/M/y至d/M/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">d/M/y至d/M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d" draft="contributed">d/M/yE至d/M/yE</greatestDifference>
+							<greatestDifference id="M" draft="contributed">d/M/yE至d/M/yE</greatestDifference>
+							<greatestDifference id="y" draft="contributed">d/M/yE至d/M/yE</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d" draft="contributed">y年M月d日E至M月d日E</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<dateFormats>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="contributed">d/M/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Md" draft="contributed">d/M</dateFormatItem>
+						<dateFormatItem id="MEd" draft="contributed">E, d/M</dateFormatItem>
+						<dateFormatItem id="MMdd" draft="contributed">dd/MM</dateFormatItem>
+						<dateFormatItem id="MMMMdd" draft="contributed">M月d日</dateFormatItem>
+						<dateFormatItem id="yMd" draft="contributed">y年M月d日</dateFormatItem>
+						<dateFormatItem id="yMEd" draft="contributed">y年M月d日，E</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback draft="contributed">{0}–{1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d" draft="contributed">d日至d日</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H" draft="contributed">vHH:mm–HH:mm</greatestDifference>
+							<greatestDifference id="m" draft="contributed">vHH:mm–HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H" draft="contributed">vHH–HH</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d" draft="contributed">M-d至M-d</greatestDifference>
+							<greatestDifference id="M" draft="contributed">M-d至M-d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d" draft="contributed">M-dE至M-dE</greatestDifference>
+							<greatestDifference id="M" draft="contributed">M-dE至M-dE</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d" draft="contributed">M月d日E至M月d日E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M" draft="contributed">y年M月至y年M月</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d" draft="contributed">d/M/y至d/M/y</greatestDifference>
+							<greatestDifference id="M" draft="contributed">d/M/y至d/M/y</greatestDifference>
+							<greatestDifference id="y" draft="contributed">d/M/y至d/M/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d" draft="contributed">d/M/yE至d/M/yE</greatestDifference>
+							<greatestDifference id="M" draft="contributed">d/M/yE至d/M/yE</greatestDifference>
+							<greatestDifference id="y" draft="contributed">d/M/yE至d/M/yE</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d" draft="contributed">y年M月d日E至M月d日E</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="islamic">
+				<dateFormats>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="contributed">Gd/M/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+			</calendar>
+			<calendar type="roc">
+				<dateFormats>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="contributed">Gd/M/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Md" draft="contributed">M-d</dateFormatItem>
+						<dateFormatItem id="MEd" draft="contributed">M-dE</dateFormatItem>
+						<dateFormatItem id="MMM" draft="contributed">M月</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="second">
+				<relativeTime type="future">
+					<relativeTimePattern count="other">{0}秒后</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="other">{0}秒前</relativeTimePattern>
+				</relativeTime>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<currencyFormats numberSystem="latn">
+			<unitPattern count="other" draft="contributed">{0} {1}</unitPattern>
+		</currencyFormats>
+		<currencies>
+			<currency type="ANG">
+				<displayName count="other" draft="contributed">荷兰安的列斯盾</displayName>
+			</currency>
+			<currency type="CNY">
+				<symbol draft="contributed">CN¥</symbol>
+			</currency>
+			<currency type="MOP">
+				<symbol>MOP$</symbol>
+			</currency>
+			<currency type="NIO">
+				<displayName count="other" draft="contributed">尼加拉瓜科多巴</displayName>
+			</currency>
+			<currency type="XAG">
+				<displayName draft="contributed">白银</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<compoundUnit type="per">
+				<compoundUnitPattern draft="contributed">{0}/{1}</compoundUnitPattern>
+			</compoundUnit>
+			<unit type="concentr-karat">
+				<displayName draft="unconfirmed">开</displayName>
+				<unitPattern count="other" draft="unconfirmed">{0}开</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<unitPattern count="other" draft="contributed">{0}秒</unitPattern>
+			</unit>
+			<unit type="temperature-kelvin">
+				<displayName draft="contributed">开氏度</displayName>
+				<unitPattern count="other" draft="contributed">{0}开氏度</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="acceleration-g-force">
+				<unitPattern count="other" draft="unconfirmed">{0}G力</unitPattern>
+			</unit>
+			<unit type="concentr-karat">
+				<displayName draft="unconfirmed">开</displayName>
+				<unitPattern count="other" draft="unconfirmed">{0}开</unitPattern>
+			</unit>
+			<unit type="temperature-kelvin">
+				<displayName draft="unconfirmed">开氏度</displayName>
+				<unitPattern count="other" draft="contributed">{0}°K</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="narrow">
+			<unit type="length-picometer">
+				<unitPattern count="other" draft="unconfirmed">{0}皮米</unitPattern>
+			</unit>
+			<unit type="length-mile">
+				<unitPattern count="other" draft="unconfirmed">{0}英里</unitPattern>
+			</unit>
+			<unit type="length-yard">
+				<unitPattern count="other" draft="unconfirmed">{0}码</unitPattern>
+			</unit>
+			<unit type="length-foot">
+				<unitPattern count="other" draft="unconfirmed">{0}英尺</unitPattern>
+			</unit>
+			<unit type="length-inch">
+				<unitPattern count="other" draft="unconfirmed">{0}英寸</unitPattern>
+			</unit>
+			<unit type="length-light-year">
+				<unitPattern count="other" draft="unconfirmed">{0}光年</unitPattern>
+			</unit>
+		</unitLength>
+	</units>
+</ldml>

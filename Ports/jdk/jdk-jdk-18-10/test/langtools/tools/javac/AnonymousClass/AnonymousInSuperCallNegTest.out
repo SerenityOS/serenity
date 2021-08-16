@@ -1,0 +1,2 @@
+AnonymousInSuperCallNegTest.java:23:49: compiler.err.cant.ref.before.ctor.called: x
+1 error

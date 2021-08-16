@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding='UTF-8'?>
+<!DOCTYPE author [ 
+<!ELEMENT author ANY>
+<!ENTITY writer "Jan Egil Refsnes.">
+<!ENTITY copyright "Copyright XML101.">
+<!ENTITY something "ABC">
+]> 
+<author>&writer;&copyright;&something;&something;</author>

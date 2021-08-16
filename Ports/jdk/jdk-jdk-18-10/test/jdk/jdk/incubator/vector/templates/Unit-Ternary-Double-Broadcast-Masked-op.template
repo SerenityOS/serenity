@@ -1,0 +1,15 @@
+    @Test(dataProvider = "$type$TernaryOpMaskProvider")
+    static void [[TEST]]$vectorteststype$DoubleBroadcastMaskedSmokeTest(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb,
+                                          IntFunction<$type$[]> fc, IntFunction<boolean[]> fm) {
+#if[double]
+        int count = INVOC_COUNT;
+        switch ("[[TEST]]") {
+        case "fma": case "lanewise_FMA":
+           // Math.fma uses BigDecimal
+           count = Math.max(5, count/20); break;
+        }
+        final int INVOC_COUNT = count;
+#end[double]
+[[KERNEL]]
+        assertDoubleBroadcastArraysEquals(r, a, b, c, mask, $vectorteststype$::[[TEST]]);
+    }

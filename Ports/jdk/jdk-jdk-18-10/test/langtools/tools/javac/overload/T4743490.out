@@ -1,0 +1,2 @@
+T4743490.java:21:18: compiler.err.ref.ambiguous: m, kindname.method, m(java.lang.String,java.lang.Object), T4743490.B, kindname.method, m(java.lang.Object,java.lang.String), T4743490.A
+1 error

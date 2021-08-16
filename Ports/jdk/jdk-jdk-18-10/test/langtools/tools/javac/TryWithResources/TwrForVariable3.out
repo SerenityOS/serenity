@@ -1,0 +1,5 @@
+TwrForVariable3.java:15:14: compiler.err.prob.found.req: (compiler.misc.try.not.applicable.to.type: (compiler.misc.inconvertible.types: java.lang.Object, java.lang.AutoCloseable))
+TwrForVariable3.java:18:14: compiler.err.prob.found.req: (compiler.misc.try.not.applicable.to.type: (compiler.misc.inconvertible.types: java.lang.Object, java.lang.AutoCloseable))
+TwrForVariable3.java:21:18: compiler.err.cant.resolve.location: kindname.class, lang, , , (compiler.misc.location: kindname.package, java, null)
+TwrForVariable3.java:24:14: compiler.err.cant.resolve.location: kindname.variable, java, , , (compiler.misc.location: kindname.class, TwrForVariable3, null)
+4 errors

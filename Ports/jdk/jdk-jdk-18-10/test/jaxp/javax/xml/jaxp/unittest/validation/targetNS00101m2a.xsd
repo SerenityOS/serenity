@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+  xmlns="IdConstrDefs/targetNS"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="IdConstrDefs/targetNS">
+
+  <xsd:element name="roota">
+      <xsd:complexType>
+          <xsd:sequence maxOccurs="unbounded">
+              <xsd:element name="person"/>
+          </xsd:sequence>
+      </xsd:complexType>
+      <xsd:key name="KEY">
+          <xsd:selector xpath="./person"/>
+          <xsd:field xpath="."/>
+      </xsd:key>
+      <xsd:keyref name="KEYREF" refer="KEY">
+          <xsd:selector xpath="./person"/>
+          <xsd:field xpath="@parent"/>
+      </xsd:keyref>
+  </xsd:element>
+
+</xsd:schema>

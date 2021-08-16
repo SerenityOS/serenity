@@ -1,0 +1,3 @@
+MissingInterfaceTest.java:12:10: compiler.err.cant.access: Closeable, (compiler.misc.class.file.not.found: Closeable)
+MissingInterfaceTest.java:13:10: compiler.err.cant.resolve.location.args: kindname.method, another, , , (compiler.misc.location.1: kindname.variable, s, MissingInterfaceTestDep)
+2 errors

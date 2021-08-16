@@ -1,0 +1,17 @@
+<?xml version='1.0'?>
+<xsd:schema xmlns:xsd='http://www.w3.org/2001/XMLSchema' >
+<!-- Schema to test unsignedByte datatype -->
+  <xsd:element name='test' type='fooType' />
+  <xsd:complexType name='fooType' > 
+    <xsd:sequence>
+      <xsd:element name='foo' >
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:unsignedByte">
+            <xsd:fractionDigits value="5"/>
+            <xsd:totalDigits value="5"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>

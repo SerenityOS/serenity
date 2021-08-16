@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:example="http://www.example.org/root"
+           xmlns="http://www.example.org/root"
+           targetNamespace="http://www.example.org/root"
+           elementFormDefault="qualified" attributeFormDefault="unqualified">
+    <xs:element name="Root">
+        <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="Object" />
+            </xs:choice>
+        </xs:complexType>
+        <xs:key name="name_key">
+            <xs:selector xpath=".//example:Object" />
+            <xs:field xpath="@name" />
+        </xs:key>
+        <xs:keyref name="Collectiontype_defined" refer="name_key">
+            <xs:selector xpath=".//example:CollectionMember" />
+            <xs:field xpath="@type" />
+        </xs:keyref>
+    </xs:element>
+    <xs:element name="Members">
+        <xs:complexType>
+            <xs:group ref="example:memberTypes" minOccurs="0"
+                      maxOccurs="unbounded" />
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="Object">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="Members" minOccurs="0" />
+            </xs:sequence>
+            <xs:attributeGroup ref="example:typedMemberAttributes" />
+            <xs:attributeGroup ref="example:namedMemberAttributes" />
+        </xs:complexType>
+        <xs:unique name="ObjectElementNameUniqueness">
+            <xs:selector xpath="example:Members/*" />
+            <xs:field xpath="@name" />
+        </xs:unique>
+    </xs:element>
+    <xs:element name="Collection">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="CollectionMembers" />
+            </xs:sequence>
+            <xs:attributeGroup ref="example:namedMemberAttributes" />
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="CollectionMembers">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="CollectionMember" minOccurs="2"
+                            maxOccurs="unbounded" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="CollectionMember">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="Members" minOccurs="0"
+                            maxOccurs="unbounded" />
+            </xs:sequence>
+            <xs:attributeGroup ref="example:typedMemberAttributes" />
+            <xs:attributeGroup ref="example:namedMemberAttributes" />
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="String">
+        <xs:complexType>
+            <xs:attributeGroup ref="example:namedMemberAttributes" />
+        </xs:complexType>
+    </xs:element>
+    <xs:group name="memberTypes">
+        <xs:choice>
+            <xs:element ref="String" />
+            <xs:element ref="Collection" />
+        </xs:choice>
+    </xs:group>
+    <xs:attributeGroup name="namedMemberAttributes">
+        <xs:attribute name="name" type="xs:Name" use="required" />
+    </xs:attributeGroup>
+    <xs:attributeGroup name="typedMemberAttributes">
+        <xs:attribute name="type" type="xs:Name" />
+    </xs:attributeGroup>
+</xs:schema> 

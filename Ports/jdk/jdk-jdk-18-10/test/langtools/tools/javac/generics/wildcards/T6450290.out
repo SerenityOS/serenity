@@ -1,0 +1,2 @@
+T6450290.java:19:24: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6450290.Box<T6450290.B,T6450290.B>, T6450290.Box<compiler.misc.type.captureof: 1, ?,compiler.misc.type.captureof: 2, ?>)
+1 error

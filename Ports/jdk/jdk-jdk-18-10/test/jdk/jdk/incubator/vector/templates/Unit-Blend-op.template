@@ -1,0 +1,11 @@
+
+    static $type$ blend($type$ a, $type$ b, boolean mask) {
+        return mask ? b : a;
+    }
+
+    @Test(dataProvider = "$type$BinaryOpMaskProvider")
+    static void [[TEST]]$vectorteststype$(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb,
+                                          IntFunction<boolean[]> fm) {
+[[KERNEL]]
+        assertArraysEquals(r, a, b, mask, $vectorteststype$::blend);
+    }

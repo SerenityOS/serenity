@@ -1,0 +1,4 @@
+OldArray.java:12:11: compiler.err.expected: ']'
+OldArray.java:12:13: compiler.err.expected: token.identifier
+OldArray.java:12:16: compiler.err.invalid.meth.decl.ret.type.req
+3 errors

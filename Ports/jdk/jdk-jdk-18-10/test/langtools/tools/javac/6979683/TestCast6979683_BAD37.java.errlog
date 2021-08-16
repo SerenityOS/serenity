@@ -1,0 +1,2 @@
+TestCast6979683_BAD37.java:14:61: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Comparable<java.lang.Short>, int)
+1 error

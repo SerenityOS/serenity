@@ -1,0 +1,775 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="vai"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ak">ꕉꕪꘋ</language>
+			<language type="am">ꕉꕆꕌꔸ</language>
+			<language type="ar">ꕞꕌꖝ</language>
+			<language type="be">ꔆꕞꖩꔻ</language>
+			<language type="bg">ꗂꔠꗸꘋ</language>
+			<language type="bn">ꗩꕭꔷ</language>
+			<language type="cs">ꗿꗡ</language>
+			<language type="de">ꕧꕮꔧ</language>
+			<language type="el">ꗥꗷꘋ</language>
+			<language type="en">ꕶꕱ</language>
+			<language type="es">ꕐꘊꔧ</language>
+			<language type="fa">ꗨꗡꔻꘂꘋ</language>
+			<language type="fr">ꗱꘋꔻ</language>
+			<language type="ha">ꕌꖙꕢ</language>
+			<language type="hi">ꔦꔺ</language>
+			<language type="hu">ꖽꔟꗸꘋ</language>
+			<language type="id">ꔤꖆꕇꔻꘂꘋ</language>
+			<language type="ig">ꔤꕼ</language>
+			<language type="it">ꔤꕚꔷꘂꘋ</language>
+			<language type="ja">ꕧꕐꕇꔧ</language>
+			<language type="jv">ꕧꕙꕇꔧ</language>
+			<language type="km">ꕃꘈꗢ</language>
+			<language type="ko">ꖏꔸꘂꘋ</language>
+			<language type="ms">ꕮꔒꔀ</language>
+			<language type="my">ꗩꕆꔻ</language>
+			<language type="ne">ꕇꕐꔷ</language>
+			<language type="nl">ꗍꔿ</language>
+			<language type="pa">ꖛꕨꔬ</language>
+			<language type="pl">ꗁꔒꔻ</language>
+			<language type="pt">ꕶꕿꕃꔤ</language>
+			<language type="ro">ꖄꕆꕇꘂꘋ</language>
+			<language type="ru">ꗐꖺꔻꘂꘋ</language>
+			<language type="rw">ꕟꖙꕡ</language>
+			<language type="so">ꖇꕮꔷ</language>
+			<language type="sv">ꖬꔨꗵꘋ</language>
+			<language type="ta">ꕚꕆꔷ</language>
+			<language type="th">ꕚꔤ</language>
+			<language type="tr">ꗋꕃ</language>
+			<language type="uk">ꖳꖴꔓꕇꘂꘋ</language>
+			<language type="ur">ꖺꖦ</language>
+			<language type="vai">ꕙꔤ</language>
+			<language type="vi">ꔲꕩꕯꕆꔧ</language>
+			<language type="yo">ꖎꖄꕑ</language>
+			<language type="zh">ꕦꕇꔧ</language>
+			<language type="zu">ꖮꖨ</language>
+		</languages>
+		<territories>
+			<territory type="AC">ꗻꗡ ꕒꕡꕌ ꗏ ꔳꘋꗣ</territory>
+			<territory type="AD">ꕉꖆꕟ</territory>
+			<territory type="AE">ꖳꕯꔤꗳ ꕉꕟꔬ ꗡꕆꔓꔻ</territory>
+			<territory type="AF">ꕉꔱꕭꔕꔻꕚꘋ</territory>
+			<territory type="AG">ꕉꘋꔳꖶꕎ ꗪ ꕑꖜꕜ</territory>
+			<territory type="AI">ꕉꕄꕞ</territory>
+			<territory type="AL">ꕉꔷꕑꕇꕩ</territory>
+			<territory type="AM">ꕉꕆꕯ</territory>
+			<territory type="AO">ꕉꖐꕞ</territory>
+			<territory type="AQ">ꕉꘋꕚꔳꕪ</territory>
+			<territory type="AR">ꕉꘀꘋꔳꕯ</territory>
+			<territory type="AS">ꕶꕱ ꕢꕹꕎ</territory>
+			<territory type="AT">ꖺꔻꖤꕎ</territory>
+			<territory type="AU">ꖺꖬꖤꔃꔷꕩ</territory>
+			<territory type="AW">ꕉꖩꕑ</territory>
+			<territory type="AX">ꕉꕞꔺ</territory>
+			<territory type="AZ">ꕉꕤꕑꔤꕧꘋ</territory>
+			<territory type="BA">ꕷꔻꕇꕰ ꗪ ꗥꕤꖑꔲꕯ</territory>
+			<territory type="BB">ꕑꔆꖁꔻ</territory>
+			<territory type="BD">ꕑꕅꕞꗵꔼ</territory>
+			<territory type="BE">ꗩꕀꗚꘋ</territory>
+			<territory type="BF">ꕷꕃꕯ ꕘꖇ</territory>
+			<territory type="BG">ꗂꔠꔸꕩ</territory>
+			<territory type="BH">ꕑꗸꘋ</territory>
+			<territory type="BI">ꖜꖩꔺ</territory>
+			<territory type="BJ">ꗩꕇꘋ</territory>
+			<territory type="BL">ꕪꘋꕓ ꗞꗢ ꕒꕚꕞꕆ</territory>
+			<territory type="BM">ꗩꖷꕜ</territory>
+			<territory type="BN">ꖜꖩꘉꔧ</territory>
+			<territory type="BO">ꕷꔷꔲꕩ</territory>
+			<territory type="BQ">ꕪꔓꔬꘂꘋ ꖨꕮ ꗨꗳꗣ</territory>
+			<territory type="BR">ꖜꕟꔘꔀ</territory>
+			<territory type="BS">ꕑꕌꕮꔻ</territory>
+			<territory type="BT">ꖜꕚꘋ</territory>
+			<territory type="BV">ꖜꔍꔳ ꔳꘋꗣ</territory>
+			<territory type="BW">ꕷꖬꕎꕯ</territory>
+			<territory type="BY">ꗩꕞꖩꔻ</territory>
+			<territory type="BZ">ꔆꔷꔘ</territory>
+			<territory type="CA">ꕪꕯꕜ</territory>
+			<territory type="CC">ꖏꖏꔻ (ꔞꔀꔷꘋ) ꔳꘋꗣ</territory>
+			<territory type="CD">ꖏꖐ ꗵꗞꖴꕟꔎ ꕸꖃꔀ</territory>
+			<territory type="CF">ꕉꔱꔸꕪ ꗳ ꗳ ꕸꖃꔀ</territory>
+			<territory type="CG">ꖏꖐ</territory>
+			<territory type="CH">ꖬꔃꕤ ꖨꕮꕊ</territory>
+			<territory type="CI">ꖏꔳ ꕾꕎ</territory>
+			<territory type="CK">ꖏꕃ ꔳꘋꗣ</territory>
+			<territory type="CL">ꔚꔷ</territory>
+			<territory type="CM">ꕪꔈꖩꘋ</territory>
+			<territory type="CN">ꕦꔤꕯ</territory>
+			<territory type="CO">ꗛꗏꔭꕩ</territory>
+			<territory type="CP">ꕃꔒꕐꗋꘋ ꔳꘋꗣ</territory>
+			<territory type="CR">ꖏꔻꕚ ꔸꕪ</territory>
+			<territory type="CU">ꕃꖳꕑ</territory>
+			<territory type="CV">ꔞꔪ ꗲꔵ ꔳꘋꗣ</territory>
+			<territory type="CW">ꖴꕟꖇꕱ</territory>
+			<territory type="CX">ꔞꔻꕮꔻ ꔳꘋꗣ</territory>
+			<territory type="CY">ꕢꗡꖛꗐꔻ</territory>
+			<territory type="CZ">ꗿꕃ ꕸꖃꔀ</territory>
+			<territory type="DE">ꕧꕮꔧ</territory>
+			<territory type="DG">ꔵꔀꖑ ꔳꘋꗣ</territory>
+			<territory type="DJ">ꕀꖜꔳ</territory>
+			<territory type="DK">ꕜꕇꕮꕃ</territory>
+			<territory type="DM">ꖁꕆꕇꕪ</territory>
+			<territory type="DO">ꖁꕆꕇꕪꘋ ꕸꕱꔀ</territory>
+			<territory type="DZ">ꕉꔷꔠꔸꕩ</territory>
+			<territory type="EA">ꗻꕚ ꗪ ꔡꔷꕞ</territory>
+			<territory type="EC">ꗡꖴꔃꗍ</territory>
+			<territory type="EE">ꗡꔻꕿꕇꕰ</territory>
+			<territory type="EG">ꕆꔖꕞ</territory>
+			<territory type="EH">ꕢꕌꕟ ꔎꔒ ꕀꔤ</territory>
+			<territory type="ER">ꔀꔸꔳꕟ</territory>
+			<territory type="ES">ꕐꘊꔧ</territory>
+			<territory type="ET">ꔤꔳꖎꔪꕩ</territory>
+			<territory type="FI">ꔱꘋ ꖨꕮꕊ</territory>
+			<territory type="FJ">ꔱꔤꕀ</territory>
+			<territory type="FK">ꕘꔷꕃ ꖨꕮ ꔳꘋꗣ</territory>
+			<territory type="FM">ꕆꖏꕇꔻꕩ</territory>
+			<territory type="FO">ꕘꖄ ꔳꘋꗣ</territory>
+			<territory type="FR">ꖢꕟꘋꔻ</territory>
+			<territory type="GA">ꕭꕷꘋ</territory>
+			<territory type="GB">ꖕꕯꔤꗳ</territory>
+			<territory type="GD">ꖶꕟꕯꕜ</territory>
+			<territory type="GE">ꗘꖺꕀꕩ</territory>
+			<territory type="GF">ꗱꘋꔻ ꖶꕎꕯ</territory>
+			<territory type="GG">ꖶꗦꘋꔻ</territory>
+			<territory type="GH">ꕭꕌꕯ</territory>
+			<territory type="GI">ꕀꖜꕟꕚ</territory>
+			<territory type="GL">ꕧꕓ ꖴꕎ ꖨꕮꕊ</territory>
+			<territory type="GM">ꕭꔭꕩ</territory>
+			<territory type="GN">ꕅꔤꕇ</territory>
+			<territory type="GP">ꖶꕎꔐꖨꔅ</territory>
+			<territory type="GQ">ꖦꕰꕊ ꗳ ꕅꔤꕇ</territory>
+			<territory type="GR">ꗥꗷꘋ</territory>
+			<territory type="GS">ꗘꖺꕀꕩ ꗛꔤ ꔒꘋꗣ ꗏ ꗪ ꗇꖢ ꔳꘋꗣ ꗛꔤ ꔒꘋꗣ ꗏ</territory>
+			<territory type="GT">ꖶꕎꔎꕮꕞ</territory>
+			<territory type="GU">ꖶꕎꕆ</territory>
+			<territory type="GW">ꕅꔤꕇ ꔫꕢꕴ</territory>
+			<territory type="GY">ꖶꕩꕯ</territory>
+			<territory type="HM">ꗥꗡꔵ ꗪ ꕮꖁꕯ</territory>
+			<territory type="HN">ꖽꖫꕟ</territory>
+			<territory type="HR">ꖏꔓꔻꕩ</territory>
+			<territory type="HT">ꕌꔤꔳ</territory>
+			<territory type="HU">ꖽꘋꕭꔓ</territory>
+			<territory type="IC">ꗛꖺꔻꕩ ꔳꘋꗣ</territory>
+			<territory type="ID">ꔤꖆꕇꔻꕩ</territory>
+			<territory type="IE">ꕉꔓ ꖨꕮꕊ</territory>
+			<territory type="IL">ꕑꕇꔻꕞꔤꕞ</territory>
+			<territory type="IM">ꕮꘋ ꔳꘋꗣ</territory>
+			<territory type="IN">ꔤꔺꕩ</territory>
+			<territory type="IO">ꔛꔟꔻ ꔤꔺꕩ ꗛꔤꘂ ꕗꕴꔀ ꕮ</territory>
+			<territory type="IQ">ꔤꕟꕃ</territory>
+			<territory type="IR">ꔤꕟꘋ</territory>
+			<territory type="IS">ꕉꔤꔻ ꖨꕮꕊ</territory>
+			<territory type="IT">ꔤꕚꔷ</territory>
+			<territory type="JE">ꘀꗡꔘ</territory>
+			<territory type="JM">ꕧꕮꔧꕪ</territory>
+			<territory type="JO">ꗘꖺꗵꘋ</territory>
+			<territory type="JP">ꔛꗨꗢ</territory>
+			<territory type="KE">ꔞꕰ</territory>
+			<territory type="KG">ꕃꕅꔻꕚꘋ</territory>
+			<territory type="KH">ꕪꕹꔵꕩ</territory>
+			<territory type="KI">ꕃꔸꕑꔳ</territory>
+			<territory type="KM">ꖏꕹꖄꔻ</territory>
+			<territory type="KN">ꔻꘋ ꕃꔳꔻ ꗪ ꔕꔲꔻ</territory>
+			<territory type="KP">ꖏꔸꕩ ꗛꔤ ꕪꘋꗒ</territory>
+			<territory type="KR">ꖏꔸꕩ ꗛꔤ ꔒꘋꗣ ꗏ</territory>
+			<territory type="KW">ꖴꔃꔳ</territory>
+			<territory type="KY">ꔞꔀꕮꘋ ꔳꘋꗣ</territory>
+			<territory type="KZ">ꕪꕤꔻꕚꘋ</territory>
+			<territory type="LA">ꕞꕴꔻ</territory>
+			<territory type="LB">ꔒꕑꗟꘋ</territory>
+			<territory type="LC">ꔻꘋ ꖨꔻꕩ</territory>
+			<territory type="LI">ꔷꗿꘋꔻꗳꘋ</territory>
+			<territory type="LK">ꖬꔸ ꕞꘋꕪ</territory>
+			<territory type="LR">ꕞꔤꔫꕩ</territory>
+			<territory type="LS">ꔷꖇꕿ</territory>
+			<territory type="LT">ꔷꖤꔃꕇꕰ</territory>
+			<territory type="LU">ꗏꔻꘋꗂꖺ</territory>
+			<territory type="LV">ꕞꔳꔲꕩ</territory>
+			<territory type="LY">ꔒꔫꕩ</territory>
+			<territory type="MA">ꗞꕟꖏ</territory>
+			<territory type="MC">ꗞꕯꖏ</territory>
+			<territory type="MD">ꖒꔷꖁꕙ</territory>
+			<territory type="ME">ꗞꔳꕇꖶꖄ</territory>
+			<territory type="MF">ꕪꘋꕓ ꗞꗢ ꕮꕊꔳꘋ</territory>
+			<territory type="MG">ꕮꕜꕭꔻꕪ</territory>
+			<territory type="MH">ꕮꕊꕣ ꔳꘋꗣ</territory>
+			<territory type="ML">ꕮꔷ</territory>
+			<territory type="MM">ꕆꕩꘋꕮ</territory>
+			<territory type="MN">ꗞꖐꔷꕩ</territory>
+			<territory type="MO" alt="short">ꕮꗛꖺ</territory>
+			<territory type="MP">ꗛꔤ ꕪꘋꗒ ꕮꔸꕩꕯ ꔳꘋꗣ</territory>
+			<territory type="MQ">ꕮꔳꕇꕃ</territory>
+			<territory type="MR">ꗞꔓꔎꕇꕰ</territory>
+			<territory type="MS">ꗞꘋꔖꕟꔳ</territory>
+			<territory type="MT">ꕮꕊꕚ</territory>
+			<territory type="MU">ꗞꔓꗔ</territory>
+			<territory type="MV">ꕮꔷꕜꔍ</territory>
+			<territory type="MW">ꕮꕞꕌꔨ</territory>
+			<territory type="MX">ꘈꔻꖏ</territory>
+			<territory type="MY">ꕮꔒꔻꕩ</territory>
+			<territory type="MZ">ꕹꕤꔭꕃ</territory>
+			<territory type="NA">ꕯꕆꔫꕩ</territory>
+			<territory type="NC">ꕪꔷꖁꕇꕰ ꕯꕮꕊ</territory>
+			<territory type="NE">ꕯꔤꕧ</territory>
+			<territory type="NF">ꗟꖺꗉ ꔳꘋꗣ</territory>
+			<territory type="NG">ꕯꔤꕀꔸꕩ</territory>
+			<territory type="NI">ꕇꕪꕟꖶꕎ</territory>
+			<territory type="NL">ꘉꕜ ꖨꕮꕊ</territory>
+			<territory type="NO">ꗟꖺꔃ</territory>
+			<territory type="NP">ꕇꕐꔷ</territory>
+			<territory type="NR">ꖆꖩ</territory>
+			<territory type="NU">ꖸꔃꔤ</territory>
+			<territory type="NZ">ꔽꔤ ꖨꕮ ꕯꕮꕊ</territory>
+			<territory type="OM">ꕱꕮꘋ</territory>
+			<territory type="PA">ꕐꕯꕮ</territory>
+			<territory type="PE">ꗨꗡꖩ</territory>
+			<territory type="PF">ꗱꘋꔻ ꕶꔷꕇꔻꕩ</territory>
+			<territory type="PG">ꕐꖛꕎ ꕅꔤꕇ ꕯꕮꕊ</territory>
+			<territory type="PH">ꔱꔒꔪꘋ</territory>
+			<territory type="PK">ꕐꕃꔻꕚꘋ</territory>
+			<territory type="PL">ꕶꗷꘋ</territory>
+			<territory type="PM">ꔻꘋ ꔪꘂ ꗪ ꕆꔞꗏꘋ</territory>
+			<territory type="PN">ꔪꔳꕪꕆ</territory>
+			<territory type="PR">ꔪꖳꕿ ꔸꖏ</territory>
+			<territory type="PS">ꕐꔒꔻꔳꕯ ꔎꔒ ꕀꔤ ꗛꔤ ꕞ ꗱ ꗪ ꕭꕌꕤ</territory>
+			<territory type="PT">ꕶꕿꕃꔤ ꕸꖃꔀ</territory>
+			<territory type="PW">ꕐꖃ</territory>
+			<territory type="PY">ꕐꕟꗝꔀ</territory>
+			<territory type="QA">ꕪꕚꕌ</territory>
+			<territory type="RE">ꔓꗠꖻ</territory>
+			<territory type="RO">ꖄꕆꕇꕰ</territory>
+			<territory type="RS">ꗻꗡꔬꕩ</territory>
+			<territory type="RU">ꗐꖺꔻꕩ</territory>
+			<territory type="RW">ꕟꖙꕡ</territory>
+			<territory type="SA">ꕞꕌꖝ ꕸꖃꔀ</territory>
+			<territory type="SB">ꖬꕞꔤꕮꕊꕯ ꔳꘋꗣ</territory>
+			<territory type="SC">ꔖꗼꔷ</territory>
+			<territory type="SD">ꖬꗵꘋ</territory>
+			<territory type="SE">ꖬꔨꗵꘋ</territory>
+			<territory type="SG">ꔻꕬꕶꕱ</territory>
+			<territory type="SH">ꔻꘋ ꗥꔷꕯ</territory>
+			<territory type="SI">ꔻꖃꔍꕇꕰ</territory>
+			<territory type="SJ">ꔻꕙꕒꔵ ꗪ ꕧꘋ ꕮꘂꘋ</territory>
+			<territory type="SK">ꔻꖃꕙꕃꕩ</territory>
+			<territory type="SL">ꔋꕩ ꕒꕌꖺ ꕸꖃꔀ</territory>
+			<territory type="SM">ꕮꔸꖆ ꕢꘋ</territory>
+			<territory type="SN">ꔻꕇꕭꕌ</territory>
+			<territory type="SO">ꖇꕮꔷꕩ</territory>
+			<territory type="SR">ꖬꔸꕯꔈ</territory>
+			<territory type="SS">ꖬꕜꘋ ꗛꔤ ꔒꘋꗣ ꗏ</territory>
+			<territory type="ST">ꕢꕴ ꕿꔈ ꗪ ꕉ ꕮꔧ ꕗꕴꔀ</territory>
+			<territory type="SV">ꗡꗷ ꕢꔍꗍꖺ</territory>
+			<territory type="SX">ꔻꘋꔳ ꕮꕊꗳꘋ</territory>
+			<territory type="SY">ꔻꕩꘋ</territory>
+			<territory type="SZ">ꖬꕎꔽ ꖨꕮꕊ</territory>
+			<territory type="TA">ꔳꔻꕚꘋ ꕜ ꖴꕯ</territory>
+			<territory type="TC">ꗋꖺꕃꔻ ꗪ ꕪꔤꖏꔻ ꔳꘋꗣ</territory>
+			<territory type="TD">ꕦꔵ</territory>
+			<territory type="TF">ꔱꗷꘋꔻ ꗛꔤ ꔒꘋꗣ ꗏ ꕸꖃꔀ ꖸ</territory>
+			<territory type="TG">ꕿꖑ</territory>
+			<territory type="TH">ꕚꔤ ꖨꕮꕊ</territory>
+			<territory type="TJ">ꕚꕀꕃꔻꕚꘋ</territory>
+			<territory type="TK">ꕿꔞꖃ</territory>
+			<territory type="TL">ꔎꔒ ꗃ ꔳꗞꖻ</territory>
+			<territory type="TM">ꗋꖺꕃꕮꕇꔻꕚꘋ</territory>
+			<territory type="TN">ꖤꕇꔻꕩ</territory>
+			<territory type="TO">ꗋꕬ</territory>
+			<territory type="TR">ꗋꖺꕃ</territory>
+			<territory type="TT">ꖤꔸꔕꕜ ꗪ ꕿꔆꖑ</territory>
+			<territory type="TV">ꕚꖣꖨ</territory>
+			<territory type="TW">ꕚꔤꕎꘋ</territory>
+			<territory type="TZ">ꕚꘋꕤꕇꕰ</territory>
+			<territory type="UA">ꖳꖴꔓꘋ</territory>
+			<territory type="UG">ꖳꕭꕡ</territory>
+			<territory type="UM">ꕶꕱ ꕪꘋ ꗅꘋ ꔳꘋꗣ ꖸ</territory>
+			<territory type="US">ꕶꕱ</territory>
+			<territory type="UY">ꖳꔓꗝꔀ</territory>
+			<territory type="UZ">ꖳꗩꕃꔻꕚꘋ</territory>
+			<territory type="VA">ꕙꔳꕪꘋ ꕢꕨꕌ</territory>
+			<territory type="VC">ꔻꘋ ꔲꘋꔻꘋ ꗪ ꖶꔓꕯꔵꘋ ꖸ</territory>
+			<territory type="VE">ꕙꔳꕪꘋ ꕸꖃꔀ</territory>
+			<territory type="VG">ꔛꔟꔻ ꗩꗡ ꗏ ꖷꖬ ꔳꘋꗣ</territory>
+			<territory type="VI">ꕶꕱ ꗩꗡ ꗏ ꖷꖬ ꔳꘋꗣ</territory>
+			<territory type="VN">ꗲꕇꖮꔃꕞ</territory>
+			<territory type="VU">ꕙꖸꕎꖤ</territory>
+			<territory type="WF">ꕎꔷꔻ ꗪ ꖢꖤꕯ</territory>
+			<territory type="WS">ꕢꕹꖙꕉ</territory>
+			<territory type="XK">ꖏꖇꕾ</territory>
+			<territory type="YE">ꔝꘈꘋ</territory>
+			<territory type="YT">ꕮꗚꔎ</territory>
+			<territory type="ZA">ꕉꔱꔸꕪ ꗛꔤ ꔒꘋꗣ ꗏ ꕸꖃꔀ</territory>
+			<territory type="ZM">ꕤꔭꕩ</territory>
+			<territory type="ZW">ꔽꕓꖜꔃ</territory>
+		</territories>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[ꔀ ꔁ ꔂ ꔃ ꔄ ꔅ ꔆ ꔇ ꔈ ꔉ ꔊ ꔋ ꔌ ꔍ ꔎ ꔏ ꔐ ꔑ ꔒ ꔓ ꔔ ꔕ ꔖ ꔗ ꔘ ꔙ ꔚ ꔛ ꔜ ꔝ ꔞ ꔟ ꔠ ꔡ ꔢ ꔣ ꔤ ꔥ ꔦ ꔧ ꔨ ꔩ ꔪ ꔫ ꔬ ꔭ ꔮ ꔯ ꔰ ꔱ ꔲ ꔳ ꔴ ꔵ ꔶ ꔷ ꔸ ꔹ ꔺ ꔻ ꔼ ꔽ ꔾ ꔿ ꕀ ꕁ ꕂ ꕃ ꕄ ꕅ ꕆ ꕇ ꕈ ꕉ ꕊ ꕋ ꕌ ꕍ ꕎ ꕏ ꕐ ꕑ ꕒ ꕓ ꕔ ꕕ ꕖ ꕗ ꕘ ꘐ ꕙ ꕚ ꕛ ꕜ ꕝ ꕞ ꕟ ꕠ ꕡ ꕢ ꕣ ꕤ ꕥ ꕦ ꕧ ꕨ ꕩ ꕪ ꘑ ꕫ ꕬ ꕭ ꕮ ꘪ ꕯ ꕰ ꕱ ꕲ ꕳ ꕴ ꕵ ꕶ ꕷ ꕸ ꕹ ꕺ ꕻ ꕼ ꕽ ꕾ ꕿ ꖀ ꖁ ꖂ ꖃ ꖄ ꖅ ꖆ ꖇ ꘒ ꖈ ꖉ ꖊ ꖋ ꖌ ꖍ ꖎ ꖏ ꖐ ꖑ ꖒ ꖓ ꖔ ꖕ ꖖ ꖗ ꖘ ꖙ ꖚ ꖛ ꖜ ꖝ ꖞ ꖟ ꖠ ꖡ ꖢ ꖣ ꖤ ꖥ ꖦ ꖧ ꖨ ꖩ ꖪ ꖫ ꖬ ꖭ ꖮ ꖯ ꖰ ꖱ ꖲ ꖳ ꖴ ꖵ ꖶ ꖷ ꖸ ꖹ ꖺ ꖻ ꖼ ꖽ ꖾ ꖿ ꗀ ꗁ ꗂ ꗃ ꗄ ꗅ ꗆ ꗇ ꗈ ꗉ ꗊ ꗋ ꗌ ꗍ ꗎ ꗏ ꗐ ꗑ ꘫ ꗒ ꗓ ꗔ ꗕ ꗖ ꗗ ꗘ ꗙ ꗚ ꗛ ꗜ ꗝ ꗞ ꗟ ꗠ ꗡ ꗢ ꗣ ꗤ ꗥ ꗦ ꗧ ꗨ ꗩ ꗪ ꗫ ꗬ ꗭ ꗮ ꗯ ꗰ ꗱ ꗲ ꗳ ꗴ ꗵ ꗶ ꗷ ꗸ ꗹ ꗺ ꗻ ꗼ ꗽ ꗾ ꗿ ꘀ ꘁ ꘂ ꘃ ꘄ ꘅ ꘆ ꘇ ꘈ ꘉ ꘊ ꘋ ꘌ]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[ꘓ ꘔ ꘕ ꘖ ꘗ ꘘ ꘙ ꘚ ꘛ ꘜ ꘝ ꘞ ꘟ]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart>“</quotationStart>
+		<quotationEnd>”</quotationEnd>
+		<alternateQuotationStart>‘</alternateQuotationStart>
+		<alternateQuotationEnd>’</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd/MM/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">M/d</dateFormatItem>
+						<dateFormatItem id="MEd">E, M/d</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="MMMMEd">E, MMMM d</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, M/d/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, MMM d, y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">ꖨꖕꔞ</month>
+							<month type="2">ꕒꕡ</month>
+							<month type="3">ꕾꖺ</month>
+							<month type="4">ꖢꖕ</month>
+							<month type="5">ꖑꕱ</month>
+							<month type="6">ꖱꘋ</month>
+							<month type="7">ꖱꕞ</month>
+							<month type="8">ꗛꔕ</month>
+							<month type="9">ꕢꕌ</month>
+							<month type="10">ꕭꖃ</month>
+							<month type="11">ꔞꘋ</month>
+							<month type="12">ꖨꖕꗏ</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">ꖨꖕ ꕪꕴ ꔞꔀꕮꕊ</month>
+							<month type="2">ꕒꕡꖝꖕ</month>
+							<month type="3">ꕾꖺ</month>
+							<month type="4">ꖢꖕ</month>
+							<month type="5">ꖑꕱ</month>
+							<month type="6">ꖱꘋ</month>
+							<month type="7">ꖱꕞꔤ</month>
+							<month type="8">ꗛꔕ</month>
+							<month type="9">ꕢꕌ</month>
+							<month type="10">ꕭꖃ</month>
+							<month type="11">ꔞꘋꕔꕿ ꕸꖃꗏ</month>
+							<month type="12">ꖨꖕ ꕪꕴ ꗏꖺꕮꕊ</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">ꖨꖕꔞ</month>
+							<month type="2">ꕒꕡ</month>
+							<month type="3">ꕾꖺ</month>
+							<month type="4">ꖢꖕ</month>
+							<month type="5">ꖑꕱ</month>
+							<month type="6">ꖱꘋ</month>
+							<month type="7">ꖱꕞ</month>
+							<month type="8">ꗛꔕ</month>
+							<month type="9">ꕢꕌ</month>
+							<month type="10">ꕭꖃ</month>
+							<month type="11">ꔞꘋ</month>
+							<month type="12">ꖨꖕꗏ</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">ꖨꖕ ꕪꕴ ꔞꔀꕮꕊ</month>
+							<month type="2">ꕒꕡꖝꖕ</month>
+							<month type="3">ꕾꖺ</month>
+							<month type="4">ꖢꖕ</month>
+							<month type="5">ꖑꕱ</month>
+							<month type="6">ꖱꘋ</month>
+							<month type="7">ꖱꕞꔤ</month>
+							<month type="8">ꗛꔕ</month>
+							<month type="9">ꕢꕌ</month>
+							<month type="10">ꕭꖃ</month>
+							<month type="11">ꔞꘋꕔꕿ ꕸꖃꗏ</month>
+							<month type="12">ꖨꖕ ꕪꕴ ꗏꖺꕮꕊ</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="wide">
+							<day type="sun">ꕞꕌꔵ</day>
+							<day type="mon">ꗳꗡꘉ</day>
+							<day type="tue">ꕚꕞꕚ</day>
+							<day type="wed">ꕉꕞꕒ</day>
+							<day type="thu">ꕉꔤꕆꕢ</day>
+							<day type="fri">ꕉꔤꕀꕮ</day>
+							<day type="sat">ꔻꔬꔳ</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd/MM/y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>h:mm:ss a zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>h:mm:ss a z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>h:mm:ss a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>h:mm a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">M/d</dateFormatItem>
+						<dateFormatItem id="MEd">E, M/d</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="MMMMEd">E, MMMM d</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, M/d/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, MMM d, y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="year">
+				<displayName>ꕢꘋ</displayName>
+			</field>
+			<field type="month">
+				<displayName>ꕪꖃ</displayName>
+			</field>
+			<field type="week">
+				<displayName>ꔨꔤꕃ</displayName>
+			</field>
+			<field type="day">
+				<displayName>ꔎꔒ</displayName>
+				<relative type="-1">ꖴꖸ</relative>
+				<relative type="0">ꗦꗷ</relative>
+				<relative type="1">ꔻꕯ</relative>
+			</field>
+			<field type="weekday">
+				<displayName>ꔨꕃꕮ ꔎꔒ</displayName>
+			</field>
+			<field type="hour">
+				<displayName>ꕌꕎ</displayName>
+			</field>
+			<field type="minute">
+				<displayName>ꕆꕇ</displayName>
+			</field>
+			<field type="second">
+				<displayName>ꕧꕃꕧꕪ</displayName>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>latn</defaultNumberingSystem>
+		<otherNumberingSystems>
+			<native>vaii</native>
+		</otherNumberingSystems>
+		<symbols numberSystem="latn">
+			<decimal>.</decimal>
+			<group>,</group>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤#,##0.00</pattern>
+				</currencyFormat>
+				<currencyFormat type="accounting">
+					<pattern>¤#,##0.00;(¤#,##0.00)</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="other" draft="provisional">¤0K</pattern>
+					<pattern type="10000" count="other" draft="provisional">¤00K</pattern>
+					<pattern type="100000" count="other" draft="provisional">¤000K</pattern>
+					<pattern type="1000000" count="other" draft="provisional">¤0M</pattern>
+					<pattern type="10000000" count="other" draft="provisional">¤00M</pattern>
+					<pattern type="100000000" count="other" draft="provisional">¤000M</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">¤0G</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">¤00G</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">¤000G</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">¤0T</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">¤00T</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">¤000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="AED">
+				<displayName>ꖳꕯꔤꗳ ꕉꕟꔬ ꗡꕆꔓꔻ ꔵꕌꕆ</displayName>
+			</currency>
+			<currency type="AOA">
+				<displayName>ꕉꖐꕞ ꖴꕎꘋꕤ</displayName>
+			</currency>
+			<currency type="AUD">
+				<displayName>ꖺꔻꖤꔃꔷꕩ ꕜꕞꕌ</displayName>
+			</currency>
+			<currency type="BHD">
+				<displayName>ꕑꗸꘋ</displayName>
+			</currency>
+			<currency type="BIF">
+				<displayName>ꖜꖩꔺ ꖢꕟꘋꕃ</displayName>
+			</currency>
+			<currency type="BWP">
+				<displayName>ꕷꖬꕎꕯ ꖛꕞ</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName>ꕪꕯꕜ ꕜꕞꕌ</displayName>
+			</currency>
+			<currency type="CDF">
+				<displayName>ꖏꖐꕱ ꖢꕟꘋꕃ</displayName>
+			</currency>
+			<currency type="CHF">
+				<displayName>ꖬꔃꕤ ꖨꕮꕊ ꖢꕟꘋꕃ</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>ꕦꕇꔧ ꖳꕎꘋ ꔓꕆꘋꔬ</displayName>
+			</currency>
+			<currency type="CVE">
+				<displayName>ꗡꔻꖴꖁ ꕪꕷꗲꗡꔵꕩꖆ</displayName>
+			</currency>
+			<currency type="DJF">
+				<displayName>ꕀꖜꔳ ꖢꕟꘋꕃ</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName>ꕉꔷꕀꔸꕩ ꔵꕯ</displayName>
+			</currency>
+			<currency type="EGP">
+				<displayName>ꕆꔻꕞ ꗁꖻꘋ</displayName>
+			</currency>
+			<currency type="ERN">
+				<displayName>ꔀꔸꔳꕟ ꗁꖻꘋ</displayName>
+			</currency>
+			<currency type="ETB">
+				<displayName>ꔤꕿꖎꔪꕩ ꔫꔤ</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>ꖳꖄ</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>ꔛꔟꔻ ꗁꖻꘋ ꔻꗳꔷꘋ</displayName>
+			</currency>
+			<currency type="GHC">
+				<displayName>ꕭꕌꕯ ꔻꔵ</displayName>
+			</currency>
+			<currency type="GMD">
+				<displayName>ꕭꔭꕩ ꕜꕞꔻ</displayName>
+			</currency>
+			<currency type="GNS">
+				<displayName>ꕅꔤꕇ ꖢꕟꘋꕃ</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName>ꔤꔺꕩ ꖩꔪ</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>ꕧꕐꕇꔧ ꘂꘋ</displayName>
+			</currency>
+			<currency type="KES">
+				<displayName>ꔞꕰ ꔻꔝꘋ</displayName>
+			</currency>
+			<currency type="KMF">
+				<displayName>ꖏꖒꖄ ꖢꕟꘋꕃ</displayName>
+			</currency>
+			<currency type="LRD">
+				<displayName>ꕞꔤꔫꕩ ꕜꕞꕌ</displayName>
+				<symbol>$</symbol>
+			</currency>
+			<currency type="LSL">
+				<displayName>ꔷꖇꕿ ꖃꔳ</displayName>
+			</currency>
+			<currency type="LYD">
+				<displayName>ꔷꔫꕩ ꔵꕯ</displayName>
+			</currency>
+			<currency type="MAD">
+				<displayName>ꗞꕟꖏ ꔵꕌꕆ</displayName>
+			</currency>
+			<currency type="MGA">
+				<displayName>ꕮꕞꕭꕌꔻ ꕉꔸꕩꔸ</displayName>
+			</currency>
+			<currency type="MRO">
+				<displayName>ꗞꔸꕚꕇꕰ ꖳꕅꕩ (1973–2017)</displayName>
+			</currency>
+			<currency type="MRU">
+				<displayName>ꗞꔸꕚꕇꕰ ꖳꕅꕩ</displayName>
+			</currency>
+			<currency type="MUR">
+				<displayName>ꗞꔓꗔ ꖩꔪ</displayName>
+			</currency>
+			<currency type="MWK">
+				<displayName>ꕮꕞꕌꔨ ꖴꕎꕦ</displayName>
+			</currency>
+			<currency type="MZM">
+				<displayName>ꗞꕤꔭꕃ ꕆꔳꕪ</displayName>
+			</currency>
+			<currency type="NAD">
+				<displayName>ꕯꕆꔫꕩ ꕜꕞꕌ</displayName>
+			</currency>
+			<currency type="NGN">
+				<displayName>ꕯꔤꕀꔸꕩ ꕯꔤꕟ</displayName>
+			</currency>
+			<currency type="RWF">
+				<displayName>ꕟꖙꕡ ꖢꕟꘋꕃ</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName>ꕢꖙꔵ ꔸꕩꔷ</displayName>
+			</currency>
+			<currency type="SCR">
+				<displayName>ꔖꗼꔷ ꖩꔪ</displayName>
+				<displayName count="other">ꔖꗼꔷ ꖩꔪ</displayName>
+			</currency>
+			<currency type="SDG">
+				<displayName>ꖬꗵꘋ ꗁꖻꘋ</displayName>
+			</currency>
+			<currency type="SHP">
+				<displayName>ꔻꘋ ꗥꔷꕯ ꗁꖻꘋ</displayName>
+			</currency>
+			<currency type="SLL">
+				<displayName>ꔷꗚꘋ</displayName>
+			</currency>
+			<currency type="SOS">
+				<displayName>ꖇꕮꔷ ꔻꔝꘋ</displayName>
+			</currency>
+			<currency type="STD">
+				<displayName>ꕢꕴ ꕿꔈ ꗪ ꕉ ꕗꕴ ꖁꖜꕟ (1977–2017)</displayName>
+			</currency>
+			<currency type="STN">
+				<displayName>ꕢꕴ ꕿꔈ ꗪ ꕉ ꕗꕴ ꖁꖜꕟ</displayName>
+			</currency>
+			<currency type="SZL">
+				<displayName>ꔷꕞꔟꕇ</displayName>
+			</currency>
+			<currency type="TND">
+				<displayName>ꖤꕇꔻꕩ ꔵꕯ</displayName>
+			</currency>
+			<currency type="TZS">
+				<displayName>ꕚꘋꕤꕇꕰ ꔻꔝꘋ</displayName>
+			</currency>
+			<currency type="UGX">
+				<displayName>ꖳꕭꕡ ꔻꔝꘋ</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>ꕶꕱ ꕜꕞ</displayName>
+			</currency>
+			<currency type="ZAR">
+				<displayName>ꕉꔱꔸꕪ ꗛꔤ ꔒꘋꗣ ꗏ ꕟꘋꔵ</displayName>
+			</currency>
+			<currency type="ZMK">
+				<displayName>ꕤꔭꕩ ꖴꕎꕦ (1968–2012)</displayName>
+			</currency>
+			<currency type="ZMW">
+				<displayName>ꕤꔭꕩ ꖴꕎꕦ</displayName>
+			</currency>
+			<currency type="ZWD">
+				<displayName>ꔽꕓꖜꔃ ꕜꕞ</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<posix>
+		<messages>
+			<yesstr>yes:y</yesstr>
+			<nostr>ꔉꔒ</nostr>
+		</messages>
+	</posix>
+</ldml>

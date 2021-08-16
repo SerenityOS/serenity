@@ -1,0 +1,6 @@
+LambdaNoFuncIntfFlow.java:12:42: compiler.err.prob.found.req: (compiler.misc.incompatible.type.in.conditional: (compiler.misc.inconvertible.types: java.util.ArrayList<java.lang.String>, int))
+LambdaNoFuncIntfFlow.java:12:66: compiler.err.prob.found.req: (compiler.misc.incompatible.type.in.conditional: (compiler.misc.not.a.functional.intf: int))
+LambdaNoFuncIntfFlow.java:14:30: compiler.err.cant.ref.non.effectively.final.var: j, (compiler.misc.lambda)
+- compiler.note.unchecked.filename: LambdaNoFuncIntfFlow.java
+- compiler.note.unchecked.recompile
+3 errors

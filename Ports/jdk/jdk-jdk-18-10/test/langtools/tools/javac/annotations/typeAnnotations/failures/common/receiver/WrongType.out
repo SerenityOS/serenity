@@ -1,0 +1,9 @@
+WrongType.java:25:16: compiler.err.incorrect.receiver.type: WrongType, java.lang.Object
+WrongType.java:27:16: compiler.err.incorrect.receiver.type: WrongType, java.lang.Object
+WrongType.java:32:15: compiler.err.cant.resolve.location: kindname.class, XYZ, , , (compiler.misc.location: kindname.class, WrongType, null)
+WrongType.java:40:23: compiler.err.incorrect.receiver.type: WrongType.Inner, WrongType
+WrongType.java:41:24: compiler.err.incorrect.receiver.type: WrongType.Inner, java.lang.Object
+WrongType.java:42:27: compiler.err.doesnt.exist: Outer
+WrongType.java:43:31: compiler.err.cant.resolve.location: kindname.class, XY, , , (compiler.misc.location: kindname.class, WrongType, null)
+WrongType.java:47:24: compiler.err.incorrect.receiver.type: WrongType.Generics<X>, WrongType.Generics<Y>
+8 errors

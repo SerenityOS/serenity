@@ -1,0 +1,3 @@
+T8071432.java:47:45: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.assignment.exists: U, (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.inconvertible.types: int, java.lang.Double)))
+T8071432.java:47:27: compiler.err.cant.apply.symbol: kindname.method, println, java.lang.Object, <any>, kindname.class, java.io.PrintStream, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.infer.no.conforming.assignment.exists: U, (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.inconvertible.types: int, java.lang.Double))))
+2 errors

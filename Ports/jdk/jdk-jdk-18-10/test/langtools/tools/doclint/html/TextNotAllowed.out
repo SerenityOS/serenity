@@ -1,0 +1,85 @@
+TextNotAllowed.java:12: error: text not allowed in <dl> element
+ * <dl> abc <dt> term </dt> def <dd> description </dd> ghi </dl>
+       ^
+TextNotAllowed.java:12: error: text not allowed in <dl> element
+ * <dl> abc <dt> term </dt> def <dd> description </dd> ghi </dl>
+                           ^
+TextNotAllowed.java:12: error: text not allowed in <dl> element
+ * <dl> abc <dt> term </dt> def <dd> description </dd> ghi </dl>
+                                                      ^
+TextNotAllowed.java:13: error: text not allowed in <ol> element
+ * <ol> abc <li> item </li> def <li> item </li> ghi </ol>
+       ^
+TextNotAllowed.java:13: error: text not allowed in <ol> element
+ * <ol> abc <li> item </li> def <li> item </li> ghi </ol>
+                           ^
+TextNotAllowed.java:13: error: text not allowed in <ol> element
+ * <ol> abc <li> item </li> def <li> item </li> ghi </ol>
+                                               ^
+TextNotAllowed.java:14: error: text not allowed in <ul> element
+ * <ul> abc <li> item </li> def <li> item </li> ghi </ul>
+       ^
+TextNotAllowed.java:14: error: text not allowed in <ul> element
+ * <ul> abc <li> item </li> def <li> item </li> ghi </ul>
+                           ^
+TextNotAllowed.java:14: error: text not allowed in <ul> element
+ * <ul> abc <li> item </li> def <li> item </li> ghi </ul>
+                                               ^
+TextNotAllowed.java:16: error: text not allowed in <table> element
+ * <table> <caption> description </caption> abc </table>
+                                           ^
+TextNotAllowed.java:17: error: text not allowed in <thead> element
+ * <table> <caption> description </caption> <thead> abc </thead> </table>
+                                                   ^
+TextNotAllowed.java:18: error: text not allowed in <tbody> element
+ * <table> <caption> description </caption> <tbody> abc </tbody> </table>
+                                                   ^
+TextNotAllowed.java:19: error: text not allowed in <tfoot> element
+ * <table> <caption> description </caption> <tfoot> abc </tfoot> </table>
+                                                   ^
+TextNotAllowed.java:20: error: text not allowed in <tr> element
+ * <table> <caption> description </caption> <tr> abc </tr> </table>
+                                                ^
+TextNotAllowed.java:22: error: text not allowed in <dl> element
+ * <dl> &amp; <dt> term </dt> &lt; <dd> description </dd> &gt; </dl>
+        ^
+TextNotAllowed.java:22: error: text not allowed in <dl> element
+ * <dl> &amp; <dt> term </dt> &lt; <dd> description </dd> &gt; </dl>
+                              ^
+TextNotAllowed.java:22: error: text not allowed in <dl> element
+ * <dl> &amp; <dt> term </dt> &lt; <dd> description </dd> &gt; </dl>
+                                                          ^
+TextNotAllowed.java:23: error: text not allowed in <ol> element
+ * <ol> &amp; <li> item </li> &lt; <li> item </li> &gt; </ol>
+        ^
+TextNotAllowed.java:23: error: text not allowed in <ol> element
+ * <ol> &amp; <li> item </li> &lt; <li> item </li> &gt; </ol>
+                              ^
+TextNotAllowed.java:23: error: text not allowed in <ol> element
+ * <ol> &amp; <li> item </li> &lt; <li> item </li> &gt; </ol>
+                                                   ^
+TextNotAllowed.java:24: error: text not allowed in <ul> element
+ * <ul> &amp; <li> item </li> &lt; <li> item </li> &gt; </ul>
+        ^
+TextNotAllowed.java:24: error: text not allowed in <ul> element
+ * <ul> &amp; <li> item </li> &lt; <li> item </li> &gt; </ul>
+                              ^
+TextNotAllowed.java:24: error: text not allowed in <ul> element
+ * <ul> &amp; <li> item </li> &lt; <li> item </li> &gt; </ul>
+                                                   ^
+TextNotAllowed.java:26: error: text not allowed in <table> element
+ * <table> <caption> description </caption> &amp; </table>
+                                            ^
+TextNotAllowed.java:27: error: text not allowed in <thead> element
+ * <table> <caption> description </caption> <thead> &amp; </thead> </table>
+                                                    ^
+TextNotAllowed.java:28: error: text not allowed in <tbody> element
+ * <table> <caption> description </caption> <tbody> &amp; </tbody> </table>
+                                                    ^
+TextNotAllowed.java:29: error: text not allowed in <tfoot> element
+ * <table> <caption> description </caption> <tfoot> &amp; </tfoot> </table>
+                                                    ^
+TextNotAllowed.java:30: error: text not allowed in <tr> element
+ * <table> <caption> description </caption> <tr> &amp; </tr> </table>
+                                                 ^
+28 errors

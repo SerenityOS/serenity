@@ -1,0 +1,302 @@
+configure: Configuration created at Mon Aug 16 15:31:29 BST 2021.
+checking for basename... /usr/bin/basename
+checking for dirname... /usr/bin/dirname
+checking for file... /usr/bin/file
+checking for ldd... /usr/bin/ldd
+checking for bash... /usr/bin/bash
+checking for cat... /usr/bin/cat
+checking for chmod... /usr/bin/chmod
+checking for cp... /usr/bin/cp
+checking for cut... /usr/bin/cut
+checking for date... /usr/bin/date
+checking for gdiff... [not found]
+checking for diff... /usr/bin/diff
+checking for echo... echo [builtin]
+checking for expr... /usr/bin/expr
+checking for find... /usr/bin/find
+checking for gunzip... /usr/bin/gunzip
+checking for pigz... [not found]
+checking for gzip... /usr/bin/gzip
+checking for head... /usr/bin/head
+checking for ln... /usr/bin/ln
+checking for ls... /usr/bin/ls
+checking for gmkdir... [not found]
+checking for mkdir... /usr/bin/mkdir
+checking for mktemp... /usr/bin/mktemp
+checking for mv... /usr/bin/mv
+checking for gawk... /usr/bin/gawk
+checking for printf... printf [builtin]
+checking for rm... /usr/bin/rm
+checking for rmdir... /usr/bin/rmdir
+checking for sh... /usr/bin/sh
+checking for sort... /usr/bin/sort
+checking for tail... /usr/bin/tail
+checking for gtar... [not found]
+checking for tar... /usr/bin/tar
+checking for tee... /usr/bin/tee
+checking for touch... /usr/bin/touch
+checking for tr... /usr/bin/tr
+checking for uname... /usr/bin/uname
+checking for wc... /usr/bin/wc
+checking for xargs... /usr/bin/xargs
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for egrep... /usr/bin/grep -E
+checking for fgrep... /usr/bin/grep -F
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for df... /usr/bin/df
+checking for nice... /usr/bin/nice
+checking for greadlink... [not found]
+checking for readlink... /usr/bin/readlink
+checking for cygpath... [not found]
+checking for wslpath... [not found]
+checking for lsb_release... [not found]
+checking for cmd.exe... [not found]
+checking for cmp... /usr/bin/cmp
+checking for uniq... /usr/bin/uniq
+checking build system type... x86_64-unknown-linux-gnu
+checking host system type... Invalid configuration `i686-pc-serenity': system `serenity' not recognized
+configure: error: /usr/bin/bash /home/adam/Documents/serenity/Ports/jdk/jdk-jdk-18-10/make/autoconf/build-aux/config.sub i686-pc-serenity failed
+configure: Configuration created at Mon Aug 16 15:43:48 BST 2021.
+checking for basename... /usr/bin/basename
+checking for dirname... /usr/bin/dirname
+checking for file... /usr/bin/file
+checking for ldd... /usr/bin/ldd
+checking for bash... /usr/bin/bash
+checking for cat... /usr/bin/cat
+checking for chmod... /usr/bin/chmod
+checking for cp... /usr/bin/cp
+checking for cut... /usr/bin/cut
+checking for date... /usr/bin/date
+checking for gdiff... [not found]
+checking for diff... /usr/bin/diff
+checking for echo... echo [builtin]
+checking for expr... /usr/bin/expr
+checking for find... /usr/bin/find
+checking for gunzip... /usr/bin/gunzip
+checking for pigz... [not found]
+checking for gzip... /usr/bin/gzip
+checking for head... /usr/bin/head
+checking for ln... /usr/bin/ln
+checking for ls... /usr/bin/ls
+checking for gmkdir... [not found]
+checking for mkdir... /usr/bin/mkdir
+checking for mktemp... /usr/bin/mktemp
+checking for mv... /usr/bin/mv
+checking for gawk... /usr/bin/gawk
+checking for printf... printf [builtin]
+checking for rm... /usr/bin/rm
+checking for rmdir... /usr/bin/rmdir
+checking for sh... /usr/bin/sh
+checking for sort... /usr/bin/sort
+checking for tail... /usr/bin/tail
+checking for gtar... [not found]
+checking for tar... /usr/bin/tar
+checking for tee... /usr/bin/tee
+checking for touch... /usr/bin/touch
+checking for tr... /usr/bin/tr
+checking for uname... /usr/bin/uname
+checking for wc... /usr/bin/wc
+checking for xargs... /usr/bin/xargs
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for egrep... /usr/bin/grep -E
+checking for fgrep... /usr/bin/grep -F
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for df... /usr/bin/df
+checking for nice... /usr/bin/nice
+checking for greadlink... [not found]
+checking for readlink... /usr/bin/readlink
+checking for cygpath... [not found]
+checking for wslpath... [not found]
+checking for lsb_release... [not found]
+checking for cmd.exe... [not found]
+checking for cmp... /usr/bin/cmp
+checking for uniq... /usr/bin/uniq
+checking build system type... x86_64-unknown-linux-gnu
+checking host system type... i686-pc-serenity
+checking target system type... i686-pc-serenity
+checking openjdk-build os-cpu... linux-x86_64
+checking openjdk-build C library... gnu
+configure: error: unsupported operating system serenity
+configure: Configuration created at Mon Aug 16 15:43:55 BST 2021.
+checking for basename... /usr/bin/basename
+checking for dirname... /usr/bin/dirname
+checking for file... /usr/bin/file
+checking for ldd... /usr/bin/ldd
+checking for bash... /usr/bin/bash
+checking for cat... /usr/bin/cat
+checking for chmod... /usr/bin/chmod
+checking for cp... /usr/bin/cp
+checking for cut... /usr/bin/cut
+checking for date... /usr/bin/date
+checking for gdiff... [not found]
+checking for diff... /usr/bin/diff
+checking for echo... echo [builtin]
+checking for expr... /usr/bin/expr
+checking for find... /usr/bin/find
+checking for gunzip... /usr/bin/gunzip
+checking for pigz... [not found]
+checking for gzip... /usr/bin/gzip
+checking for head... /usr/bin/head
+checking for ln... /usr/bin/ln
+checking for ls... /usr/bin/ls
+checking for gmkdir... [not found]
+checking for mkdir... /usr/bin/mkdir
+checking for mktemp... /usr/bin/mktemp
+checking for mv... /usr/bin/mv
+checking for gawk... /usr/bin/gawk
+checking for printf... printf [builtin]
+checking for rm... /usr/bin/rm
+checking for rmdir... /usr/bin/rmdir
+checking for sh... /usr/bin/sh
+checking for sort... /usr/bin/sort
+checking for tail... /usr/bin/tail
+checking for gtar... [not found]
+checking for tar... /usr/bin/tar
+checking for tee... /usr/bin/tee
+checking for touch... /usr/bin/touch
+checking for tr... /usr/bin/tr
+checking for uname... /usr/bin/uname
+checking for wc... /usr/bin/wc
+checking for xargs... /usr/bin/xargs
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for egrep... /usr/bin/grep -E
+checking for fgrep... /usr/bin/grep -F
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for df... /usr/bin/df
+checking for nice... /usr/bin/nice
+checking for greadlink... [not found]
+checking for readlink... /usr/bin/readlink
+checking for cygpath... [not found]
+checking for wslpath... [not found]
+checking for lsb_release... [not found]
+checking for cmd.exe... [not found]
+checking for cmp... /usr/bin/cmp
+checking for uniq... /usr/bin/uniq
+checking build system type... x86_64-unknown-linux-gnu
+checking host system type... i686-pc-serenity
+checking target system type... i686-pc-serenity
+checking openjdk-build os-cpu... linux-x86_64
+checking openjdk-build C library... gnu
+configure: error: unsupported operating system serenity
+configure: Configuration created at Mon Aug 16 15:44:55 BST 2021.
+checking for basename... /usr/bin/basename
+checking for dirname... /usr/bin/dirname
+checking for file... /usr/bin/file
+checking for ldd... /usr/bin/ldd
+checking for bash... /usr/bin/bash
+checking for cat... /usr/bin/cat
+checking for chmod... /usr/bin/chmod
+checking for cp... /usr/bin/cp
+checking for cut... /usr/bin/cut
+checking for date... /usr/bin/date
+checking for gdiff... [not found]
+checking for diff... /usr/bin/diff
+checking for echo... echo [builtin]
+checking for expr... /usr/bin/expr
+checking for find... /usr/bin/find
+checking for gunzip... /usr/bin/gunzip
+checking for pigz... [not found]
+checking for gzip... /usr/bin/gzip
+checking for head... /usr/bin/head
+checking for ln... /usr/bin/ln
+checking for ls... /usr/bin/ls
+checking for gmkdir... [not found]
+checking for mkdir... /usr/bin/mkdir
+checking for mktemp... /usr/bin/mktemp
+checking for mv... /usr/bin/mv
+checking for gawk... /usr/bin/gawk
+checking for printf... printf [builtin]
+checking for rm... /usr/bin/rm
+checking for rmdir... /usr/bin/rmdir
+checking for sh... /usr/bin/sh
+checking for sort... /usr/bin/sort
+checking for tail... /usr/bin/tail
+checking for gtar... [not found]
+checking for tar... /usr/bin/tar
+checking for tee... /usr/bin/tee
+checking for touch... /usr/bin/touch
+checking for tr... /usr/bin/tr
+checking for uname... /usr/bin/uname
+checking for wc... /usr/bin/wc
+checking for xargs... /usr/bin/xargs
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for egrep... /usr/bin/grep -E
+checking for fgrep... /usr/bin/grep -F
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for df... /usr/bin/df
+checking for nice... /usr/bin/nice
+checking for greadlink... [not found]
+checking for readlink... /usr/bin/readlink
+checking for cygpath... [not found]
+checking for wslpath... [not found]
+checking for lsb_release... [not found]
+checking for cmd.exe... [not found]
+checking for cmp... /usr/bin/cmp
+checking for uniq... /usr/bin/uniq
+checking build system type... x86_64-unknown-linux-gnu
+checking host system type... i686-pc-serenity
+checking target system type... i686-pc-serenity
+checking openjdk-build os-cpu... linux-x86_64
+checking openjdk-build C library... gnu
+configure: error: unsupported operating system serenity
+configure: Configuration created at Mon Aug 16 15:46:30 BST 2021.
+checking for basename... /usr/bin/basename
+checking for dirname... /usr/bin/dirname
+checking for file... /usr/bin/file
+checking for ldd... /usr/bin/ldd
+checking for bash... /usr/bin/bash
+checking for cat... /usr/bin/cat
+checking for chmod... /usr/bin/chmod
+checking for cp... /usr/bin/cp
+checking for cut... /usr/bin/cut
+checking for date... /usr/bin/date
+checking for gdiff... [not found]
+checking for diff... /usr/bin/diff
+checking for echo... echo [builtin]
+checking for expr... /usr/bin/expr
+checking for find... /usr/bin/find
+checking for gunzip... /usr/bin/gunzip
+checking for pigz... [not found]
+checking for gzip... /usr/bin/gzip
+checking for head... /usr/bin/head
+checking for ln... /usr/bin/ln
+checking for ls... /usr/bin/ls
+checking for gmkdir... [not found]
+checking for mkdir... /usr/bin/mkdir
+checking for mktemp... /usr/bin/mktemp
+checking for mv... /usr/bin/mv
+checking for gawk... /usr/bin/gawk
+checking for printf... printf [builtin]
+checking for rm... /usr/bin/rm
+checking for rmdir... /usr/bin/rmdir
+checking for sh... /usr/bin/sh
+checking for sort... /usr/bin/sort
+checking for tail... /usr/bin/tail
+checking for gtar... [not found]
+checking for tar... /usr/bin/tar
+checking for tee... /usr/bin/tee
+checking for touch... /usr/bin/touch
+checking for tr... /usr/bin/tr
+checking for uname... /usr/bin/uname
+checking for wc... /usr/bin/wc
+checking for xargs... /usr/bin/xargs
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for egrep... /usr/bin/grep -E
+checking for fgrep... /usr/bin/grep -F
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for df... /usr/bin/df
+checking for nice... /usr/bin/nice
+checking for greadlink... [not found]
+checking for readlink... /usr/bin/readlink
+checking for cygpath... [not found]
+checking for wslpath... [not found]
+checking for lsb_release... [not found]
+checking for cmd.exe... [not found]
+checking for cmp... /usr/bin/cmp
+checking for uniq... /usr/bin/uniq
+checking build system type... x86_64-unknown-linux-gnu
+checking host system type... i686-pc-serenity
+checking target system type... i686-pc-serenity
+checking openjdk-build os-cpu... linux-x86_64
+checking openjdk-build C library... gnu
+configure: error: unsupported operating system serenity

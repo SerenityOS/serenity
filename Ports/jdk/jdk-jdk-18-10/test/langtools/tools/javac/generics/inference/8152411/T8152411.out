@@ -1,0 +1,2 @@
+T8152411.java:16:29: compiler.err.prob.found.req: (compiler.misc.incompatible.upper.bounds: A2, java.lang.String,B,java.lang.Object,java.lang.Integer,A)
+1 error

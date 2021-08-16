@@ -1,0 +1,3 @@
+ResourceNameConflict.java:21:35: compiler.err.already.defined: kindname.variable, tr, kindname.method, test1()
+ResourceNameConflict.java:27:39: compiler.err.already.defined: kindname.variable, str, kindname.method, test2(java.lang.String...)
+2 errors

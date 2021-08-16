@@ -1,0 +1,144 @@
+/*
+ * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+/*
+ * @test
+ * @bug 8154587
+ * @summary Check that a default method named finalize() does not get masked by
+ *          java.lang.Object.finalize() during resolution.
+ * @compile DefaultFinalize.jasm
+ * @run main DefaultFinalize
+ */
+
+// The below .jasm code implements the following java code:
+//
+// public class DefaultFinalize {
+//
+//     static String res;
+//
+//     interface I1 {
+//         default void finalize() {
+//             res = "In I1's finalize()";
+//         }
+//     }
+//
+//     interface I2 extends I1 { }
+//
+//     static class C implements I2 {
+//         public void finalize() {
+//             res = "In C's finalize()";
+//         }
+//     }
+//
+//     static void test(I2 i) { i.finalize(); }
+//
+//     public static void main(String[] args) {
+//         test(new C());
+//         if (!res.equals("In C's finalize()")) {
+//             throw new RuntimeException("Wrong finalize() method called");
+//         }
+//     }
+// }
+
+
+interface  DefaultFinalize$I1 version 54:0 {
+
+    public Method finalize:"()V" stack 1 locals 1 {
+        ldc    String "In I1\'s finalize()";
+        putstatic    Field DefaultFinalize.res:"Ljava/lang/String;";
+        return;
+    }
+
+    static abstract interface InnerClass I1=class DefaultFinalize$I1 of class DefaultFinalize;
+
+} // end Class DefaultFinalize$I1
+
+
+interface  DefaultFinalize$I2 implements DefaultFinalize$I1 version 54:0 {
+
+    static abstract interface InnerClass I2=class DefaultFinalize$I2 of class DefaultFinalize;
+    static abstract interface InnerClass I1=class DefaultFinalize$I1 of class DefaultFinalize;
+
+} // end Class DefaultFinalize$I2
+
+
+super class DefaultFinalize$C implements DefaultFinalize$I2 version 54:0 {
+
+    Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial    Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    public Method finalize:"()V" stack 1 locals 1 {
+        ldc    String "In C\'s finalize()";
+        putstatic    Field DefaultFinalize.res:"Ljava/lang/String;";
+        return;
+    }
+
+    static InnerClass C=class DefaultFinalize$C of class DefaultFinalize;
+    static abstract interface InnerClass I2=class DefaultFinalize$I2 of class DefaultFinalize;
+
+} // end Class DefaultFinalize$C
+
+
+super public class DefaultFinalize version 54:0 {
+
+    static Field res:"Ljava/lang/String;";
+
+    public Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial    Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    static Method test:"(LDefaultFinalize$I2;)V" stack 1 locals 1 {
+        aload_0;
+        invokeinterface    InterfaceMethod DefaultFinalize$I2.finalize:"()V",  1;
+        return;
+    }
+
+    public static Method main:"([Ljava/lang/String;)V" stack 3 locals 1 {
+        new    class DefaultFinalize$C;
+        dup;
+        invokespecial   Method DefaultFinalize$C."<init>":"()V";
+        invokestatic    Method test:"(LDefaultFinalize$I2;)V";
+        getstatic       Field res:"Ljava/lang/String;";
+        ldc    String "In C\'s finalize()";
+        invokevirtual   Method java/lang/String.equals:"(Ljava/lang/Object;)Z";
+        ifne    L31;
+        new    class java/lang/RuntimeException;
+        dup;
+        ldc    String "Wrong finalize() method called";
+        invokespecial    Method java/lang/RuntimeException."<init>":"(Ljava/lang/String;)V";
+        athrow;
+      L31:    stack_frame_type same;
+        return;
+    }
+
+    static InnerClass C=class DefaultFinalize$C of class DefaultFinalize;
+    static abstract interface InnerClass I2=class DefaultFinalize$I2 of class DefaultFinalize;
+    static abstract interface InnerClass I1=class DefaultFinalize$I1 of class DefaultFinalize;
+
+} // end Class DefaultFinalize

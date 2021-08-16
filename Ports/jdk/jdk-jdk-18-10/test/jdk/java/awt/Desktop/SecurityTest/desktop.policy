@@ -1,0 +1,7 @@
+// default permissions granted to all domains
+
+grant { 
+	permission java.util.PropertyPermission "*", "read";
+	permission java.io.FilePermission "<<ALL FILES>>", "read,write,execute,delete";
+};
+

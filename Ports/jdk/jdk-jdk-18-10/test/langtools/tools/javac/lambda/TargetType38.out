@@ -1,0 +1,3 @@
+TargetType38.java:19:30: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.inconvertible.types: java.lang.Object, TargetType38.I))
+TargetType38.java:20:26: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.mref: (compiler.misc.inconvertible.types: java.lang.Object, TargetType38.I))
+2 errors

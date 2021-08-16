@@ -1,0 +1,846 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ar"/>
+		<territory type="SA"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ar_001" draft="contributed">العربية الرسمية الحديثة</language>
+			<language type="arn" draft="contributed">المابودونجونية</language>
+			<language type="de_AT" draft="contributed">الألمانية النمساوية</language>
+			<language type="de_CH" draft="contributed">الألمانية العليا السويسرية</language>
+			<language type="en_AU" draft="contributed">الإنجليزية الأسترالية</language>
+			<language type="en_CA" draft="contributed">الإنجليزية الكندية</language>
+			<language type="en_GB" draft="contributed">الإنجليزية البريطانية</language>
+			<language type="en_GB" alt="short" draft="contributed">الإنجليزية المملكة المتحدة</language>
+			<language type="en_US" draft="contributed">الإنجليزية الأمريكية</language>
+			<language type="en_US" alt="short" draft="contributed">الإنجليزية الولايات المتحدة</language>
+			<language type="es_419" draft="contributed">الإسبانية أمريكا اللاتينية</language>
+			<language type="es_ES" draft="contributed">الإسبانية الأوروبية</language>
+			<language type="es_MX" draft="contributed">الإسبانية المكسيكية</language>
+			<language type="fr_CA" draft="contributed">الفرنسية الكندية</language>
+			<language type="fr_CH" draft="contributed">الفرنسية السويسرية</language>
+			<language type="gn" draft="contributed">الغورانية</language>
+			<language type="hsb" draft="contributed">صوربيا العليا</language>
+			<language type="lo" draft="contributed">اللاوو</language>
+			<language type="nds_NL" draft="contributed">السكسونية السفلى</language>
+			<language type="nl_BE" draft="contributed">الفلمنكية</language>
+			<language type="pt_BR" draft="contributed">البرتغالية البرازيلية</language>
+			<language type="pt_PT" draft="contributed">البرتغالية الأوروبية</language>
+			<language type="sh" draft="contributed">الكرواتية الصربية</language>
+			<language type="sma" draft="contributed">سامي الجنوبية</language>
+			<language type="sw" draft="contributed">السواحيلية</language>
+			<language type="sw_CD" draft="contributed">السواحيلية الكونغولية</language>
+			<language type="te" draft="contributed">التيلوجو</language>
+			<language type="ti" draft="contributed">التيغرينية</language>
+			<language type="zh_Hans" draft="contributed">الصينية المبسطة</language>
+			<language type="zh_Hant" draft="contributed">الصينية التقليدية</language>
+		</languages>
+		<territories>
+			<territory type="AC" draft="contributed">جزيرة أسينشين</territory>
+			<territory type="CZ" alt="variant" draft="contributed">التشيك</territory>
+			<territory type="EA" draft="contributed">سبتة ومليلية</territory>
+			<territory type="MO" draft="contributed">ماكاو الصينية (منطقة إدارية خاصة)</territory>
+			<territory type="MO" alt="short" draft="contributed">ماكاو</territory>
+			<territory type="MS" draft="contributed">مونتيسيرات</territory>
+			<territory type="UY" draft="contributed">أوروغواي</territory>
+		</territories>
+		<measurementSystemNames>
+			<measurementSystemName type="US" draft="contributed">الولايت المتحدة</measurementSystemName>
+		</measurementSystemNames>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters type="numbers">[\u200E \- ‑ , . ٪ ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="morning1" draft="contributed">فجرًا</dayPeriod>
+							<dayPeriod type="morning2">ص</dayPeriod>
+							<dayPeriod type="afternoon1">ظهرًا</dayPeriod>
+							<dayPeriod type="afternoon2">بعد الظهر</dayPeriod>
+							<dayPeriod type="evening1">مساءً</dayPeriod>
+							<dayPeriod type="night1">في المساء</dayPeriod>
+							<dayPeriod type="night2">ل</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+			</calendar>
+		</calendars>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>arab</defaultNumberingSystem>
+		<symbols numberSystem="latn">
+			<percentSign draft="contributed">٪</percentSign>
+		</symbols>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="acceleration-meter-per-square-second">
+				<unitPattern count="zero" draft="contributed">{0} متر في الثانية المربعة</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} متر في الثانية المربعة</unitPattern>
+				<unitPattern count="two" draft="contributed">متران في الثانية المربعة</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أمتار في الثانية المربعة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} مترًا في الثانية المربعة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} متر في الثانية المربعة</unitPattern>
+			</unit>
+			<unit type="angle-arc-minute">
+				<unitPattern count="zero" draft="contributed">{0} دقيقة قوسية</unitPattern>
+				<unitPattern count="one" draft="contributed">دقيقة قوسية</unitPattern>
+				<unitPattern count="two" draft="contributed">دقيقتان قوسيتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} دقائق قوسية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} دقيقة قوسية</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} دقيقة قوسية</unitPattern>
+			</unit>
+			<unit type="area-square-kilometer">
+				<unitPattern count="zero" draft="contributed">{0} كيلومتر مربع</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} كيلومتر مربع</unitPattern>
+				<unitPattern count="two" draft="contributed">كيلومتران مربعان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} كيلومترات مربعة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} كيلومترًا مربعًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} كيلومتر مربع</unitPattern>
+			</unit>
+			<unit type="area-hectare">
+				<unitPattern count="zero" draft="contributed">{0} هكتار</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} هكتار</unitPattern>
+				<unitPattern count="two" draft="contributed">هكتاران</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} هكتارات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} هكتارًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} هكتار</unitPattern>
+			</unit>
+			<unit type="area-square-meter">
+				<unitPattern count="zero" draft="contributed">{0} متر مربع</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} متر مربع</unitPattern>
+				<unitPattern count="two" draft="contributed">متران مربعان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أمتار مربعة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} مترًا مربعًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} متر مربع</unitPattern>
+			</unit>
+			<unit type="area-square-centimeter">
+				<unitPattern count="zero" draft="contributed">{0} سنتيمتر مربع</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} سنتيمتر مربع</unitPattern>
+				<unitPattern count="two" draft="contributed">سنتيمتران مربعان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} سنتيمترات مربعة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} سنتيمترًا مربعًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} سنتيمتر مربع</unitPattern>
+			</unit>
+			<unit type="area-square-mile">
+				<unitPattern count="zero" draft="contributed">{0} ميل مربع</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ميل مربع</unitPattern>
+				<unitPattern count="two" draft="contributed">ميلان مربعان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أميال مربعة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ميلًا مربعًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ميل مربع</unitPattern>
+			</unit>
+			<unit type="area-acre">
+				<unitPattern count="zero" draft="contributed">{0} فدان</unitPattern>
+				<unitPattern count="one" draft="contributed">فدان</unitPattern>
+				<unitPattern count="two" draft="contributed">{0} فدان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أفدنة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} فدانًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} فدان</unitPattern>
+			</unit>
+			<unit type="area-square-yard">
+				<unitPattern count="zero" draft="contributed">{0} ياردة مربعة</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ياردة مربعة</unitPattern>
+				<unitPattern count="two" draft="contributed">ياردتان مربعتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} ياردات مربعة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ياردة مربعة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ياردة مربعة</unitPattern>
+			</unit>
+			<unit type="area-square-foot">
+				<unitPattern count="zero" draft="contributed">{0} قدم مربعة</unitPattern>
+				<unitPattern count="one" draft="contributed">قدم مربعة</unitPattern>
+				<unitPattern count="two" draft="contributed">قدمان مربعتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أقدام مربعة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} قدمًا مربعة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} قدم مربعة</unitPattern>
+			</unit>
+			<unit type="area-square-inch">
+				<unitPattern count="zero" draft="contributed">{0} بوصة مربعة</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} بوصة مربعة</unitPattern>
+				<unitPattern count="two" draft="contributed">بوصتان مربعتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} بوصات مربعة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} بوصة مربعة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} بوصة مربعة</unitPattern>
+			</unit>
+			<unit type="concentr-permillion">
+				<unitPattern count="zero" draft="contributed">{0} جزء في المليون</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} جزء في المليون</unitPattern>
+				<unitPattern count="two" draft="contributed">جزءان في المليون</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أجزاء في المليون</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} جزءًا في المليون</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} جزء في المليون</unitPattern>
+			</unit>
+			<unit type="consumption-mile-per-gallon">
+				<unitPattern count="zero" draft="contributed">{0} ميل لكل غالون</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ميل لكل غالون</unitPattern>
+				<unitPattern count="two" draft="contributed">{0} ميلان لكل غالون</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أميال لكل غالون</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ميلًا لكل غالون</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ميل لكل غالون</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<unitPattern count="zero" draft="contributed">{0} ثانية</unitPattern>
+				<unitPattern count="one" draft="contributed">ثانية</unitPattern>
+				<unitPattern count="two" draft="contributed">ثانيتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} ثوانٍ</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ثانية</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ثانية</unitPattern>
+			</unit>
+			<unit type="length-kilometer">
+				<unitPattern count="zero" draft="contributed">{0} كيلومتر</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} كيلومتر</unitPattern>
+				<unitPattern count="two" draft="contributed">كيلومتران</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} كيلومترات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} كيلومترًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} كيلومتر</unitPattern>
+			</unit>
+			<unit type="length-centimeter">
+				<unitPattern count="zero" draft="contributed">{0} سنتيمتر</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} سنتيمتر</unitPattern>
+				<unitPattern count="two" draft="contributed">سنتيمتران</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} سنتيمترات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} سنتيمترًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} سنتيمتر</unitPattern>
+			</unit>
+			<unit type="length-millimeter">
+				<unitPattern count="zero" draft="contributed">{0} مليمتر</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} مليمتر</unitPattern>
+				<unitPattern count="two" draft="contributed">مليمتران</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} مليمتر</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} مليمترًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} مليمتر</unitPattern>
+			</unit>
+			<unit type="length-yard">
+				<unitPattern count="zero" draft="contributed">{0} ياردة</unitPattern>
+				<unitPattern count="one" draft="contributed">ياردة</unitPattern>
+				<unitPattern count="two" draft="contributed">ياردتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} ياردات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ياردة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ياردة</unitPattern>
+			</unit>
+			<unit type="length-foot">
+				<unitPattern count="zero" draft="contributed">{0} قدم</unitPattern>
+				<unitPattern count="one" draft="contributed">قدم</unitPattern>
+				<unitPattern count="two" draft="contributed">قدمان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أقدام</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} قدمًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} قدم</unitPattern>
+			</unit>
+			<unit type="length-inch">
+				<unitPattern count="zero" draft="contributed">{0} بوصة</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} بوصة</unitPattern>
+				<unitPattern count="two" draft="contributed">بوصتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} بوصات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} بوصة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} بوصة</unitPattern>
+			</unit>
+			<unit type="length-parsec">
+				<unitPattern count="zero" draft="contributed">{0} فرسخ فلكي</unitPattern>
+				<unitPattern count="one" draft="contributed">فرسخ فلكي</unitPattern>
+				<unitPattern count="two" draft="contributed">فرسخان فلكيان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} فراسخ فلكية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} فرسخًا فلكيًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} فرسخ فلكي</unitPattern>
+			</unit>
+			<unit type="length-astronomical-unit">
+				<unitPattern count="zero" draft="contributed">{0} وحدة فلكية</unitPattern>
+				<unitPattern count="one" draft="contributed">وحدة فلكية</unitPattern>
+				<unitPattern count="two" draft="contributed">وحدتان فلكيتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} وحدات فلكية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} وحدة فلكية</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} وحدة فلكية</unitPattern>
+			</unit>
+			<unit type="length-nautical-mile">
+				<unitPattern count="zero" draft="contributed">{0} ميل بحري</unitPattern>
+				<unitPattern count="one" draft="contributed">ميل بحري</unitPattern>
+				<unitPattern count="two" draft="contributed">ميلان بحريان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أميال بحرية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ميلًا بحريًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ميل بحري</unitPattern>
+			</unit>
+			<unit type="length-mile-scandinavian">
+				<unitPattern count="zero" draft="contributed">{0} ميل اسكندنافي</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ميل اسكندنافي</unitPattern>
+				<unitPattern count="two" draft="contributed">ميلان اسكندنافيان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أميال اسكندنافية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ميلًا اسكندنافيًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ميل اسكندنافي</unitPattern>
+			</unit>
+			<unit type="light-solar-luminosity">
+				<unitPattern count="zero" draft="contributed">{0} ضياء شمسي</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ضياء شمسي</unitPattern>
+				<unitPattern count="two" draft="contributed">ضياءان شمسيان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} ضياءات شمسية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ضياءً شمسيًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ضياء شمسي</unitPattern>
+			</unit>
+			<unit type="mass-metric-ton">
+				<unitPattern count="zero" draft="contributed">{0} طن متري</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} طن متري</unitPattern>
+				<unitPattern count="two" draft="contributed">طنان متريان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أطنان مترية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} طنًا متريًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} طن متري</unitPattern>
+			</unit>
+			<unit type="mass-kilogram">
+				<unitPattern count="zero" draft="contributed">{0} كيلوغرام</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} كيلوغرام</unitPattern>
+				<unitPattern count="two" draft="contributed">كيلوغرامان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} كيلوغرامات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} كيلوغرامًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} كيلوغرام</unitPattern>
+			</unit>
+			<unit type="mass-milligram">
+				<unitPattern count="zero" draft="contributed">{0} مليغرام</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} مليغرام</unitPattern>
+				<unitPattern count="two" draft="contributed">مليغرامان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} مليغرامات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} مليغرامًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} مليغرام</unitPattern>
+			</unit>
+			<unit type="mass-microgram">
+				<unitPattern count="zero" draft="contributed">{0} ميكروغرام</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ميكروغرام</unitPattern>
+				<unitPattern count="two" draft="contributed">ميكروغرامان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} ميكروغرامات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ميكروغرامًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ميكروغرام</unitPattern>
+			</unit>
+			<unit type="mass-pound">
+				<unitPattern count="zero" draft="contributed">{0} رطل</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} رطل</unitPattern>
+				<unitPattern count="two" draft="contributed">رطلان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أرطال</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} رطلًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} رطل</unitPattern>
+			</unit>
+			<unit type="mass-earth-mass">
+				<unitPattern count="zero" draft="contributed">{0} كتلة أرضية</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} كتلة أرضية</unitPattern>
+				<unitPattern count="two" draft="contributed">كتلتان أرضيتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} كتل أرضية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} كتلة أرضية</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} كتلة أرضية</unitPattern>
+			</unit>
+			<unit type="mass-solar-mass">
+				<unitPattern count="zero" draft="contributed">{0} كتلة شمسية</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} كتلة شمسية</unitPattern>
+				<unitPattern count="two" draft="contributed">كتلتان شمسيتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} كتل شمسية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} كتلة شمسية</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} كتلة شمسية</unitPattern>
+			</unit>
+			<unit type="pressure-pound-force-per-square-inch">
+				<unitPattern count="zero" draft="contributed">{0} رطل لكل بوصة مربعة</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} رطل لكل بوصة مربعة</unitPattern>
+				<unitPattern count="two" draft="contributed">رطلان لكل بوصة مربعة</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أرطال لكل بوصة مربعة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} رطلًا لكل بوصة مربعة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} رطل لكل بوصة مربعة</unitPattern>
+			</unit>
+			<unit type="speed-kilometer-per-hour">
+				<unitPattern count="zero" draft="contributed">{0} كيلومتر في الساعة</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} كيلومتر في الساعة</unitPattern>
+				<unitPattern count="two" draft="contributed">كيلومتران في الساعة</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} كيلومترات في الساعة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} كيلومترًا في الساعة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} كيلومتر في الساعة</unitPattern>
+			</unit>
+			<unit type="speed-meter-per-second">
+				<unitPattern count="zero" draft="contributed">{0} متر في الثانية</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} متر في الثانية</unitPattern>
+				<unitPattern count="two" draft="contributed">متران في الثانية</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أمتار في الثانية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} مترًا في الثانية</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} متر في الثانية</unitPattern>
+			</unit>
+			<unit type="speed-mile-per-hour">
+				<unitPattern count="zero" draft="contributed">{0} ميل في الساعة</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ميل في الساعة</unitPattern>
+				<unitPattern count="two" draft="contributed">ميلان في الساعة</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أميال في الساعة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ميلًا في الساعة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ميل في الساعة</unitPattern>
+			</unit>
+			<unit type="speed-knot">
+				<unitPattern count="zero" draft="contributed">{0} عقدة</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} عقدة</unitPattern>
+				<unitPattern count="two" draft="contributed">عقدتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} عقد</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} عقدة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} عقدة</unitPattern>
+			</unit>
+			<unit type="volume-cubic-kilometer">
+				<unitPattern count="zero" draft="contributed">{0} كيلومتر مكعب</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} كيلومتر مكعب</unitPattern>
+				<unitPattern count="two" draft="contributed">كيلومتران مكعبان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} كيلومترات مكعبة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} كيلومترًا مكعبًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} كيلومتر مكعب</unitPattern>
+			</unit>
+			<unit type="volume-cubic-meter">
+				<unitPattern count="zero" draft="contributed">{0} متر مكعب</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} متر مكعب</unitPattern>
+				<unitPattern count="two" draft="contributed">متران مكعبان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} مترات مكعبة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} مترًا مكعبًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} متر مكعب</unitPattern>
+			</unit>
+			<unit type="volume-cubic-centimeter">
+				<unitPattern count="zero" draft="contributed">{0} سنتيمتر مكعب</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} سنتيمتر مكعب</unitPattern>
+				<unitPattern count="two" draft="contributed">سنتيمتران مكعبان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} سنتيمترات مكعبة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} سنتيمترًا مكعبًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} سنتيمتر مكعب</unitPattern>
+			</unit>
+			<unit type="volume-cubic-mile">
+				<unitPattern count="zero" draft="contributed">{0} ميل مكعب</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ميل مكعب</unitPattern>
+				<unitPattern count="two" draft="contributed">ميلان مكعبان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أميال مكعبة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ميلًا مكعبًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ميل مكعب</unitPattern>
+			</unit>
+			<unit type="volume-cubic-yard">
+				<unitPattern count="zero" draft="contributed">{0} ياردة مكعبة</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ياردة مكعبة</unitPattern>
+				<unitPattern count="two" draft="contributed">ياردتان مكعبتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} ياردات مكعبة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ياردة مكعبة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ياردة مكعبة</unitPattern>
+			</unit>
+			<unit type="volume-cubic-foot">
+				<unitPattern count="zero" draft="contributed">{0} قدم مكعبة</unitPattern>
+				<unitPattern count="one" draft="contributed">قدم مكعبة</unitPattern>
+				<unitPattern count="two" draft="contributed">قدمان مكعبتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أقدام مكعبة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} أقدام مكعبة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} قدم مكعبة</unitPattern>
+			</unit>
+			<unit type="volume-cubic-inch">
+				<unitPattern count="zero" draft="contributed">{0} بوصة مكعبة</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} بوصة مكعبة</unitPattern>
+				<unitPattern count="two" draft="contributed">بوصتان مكعبات</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} بوصات مكعبة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} بوصة مكعبة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} بوصة مكعبة</unitPattern>
+			</unit>
+			<unit type="volume-liter">
+				<unitPattern count="zero" draft="contributed">{0} لتر</unitPattern>
+				<unitPattern count="one" draft="contributed">لتر</unitPattern>
+				<unitPattern count="two" draft="contributed">لتران</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} لترات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} لترًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} لتر</unitPattern>
+			</unit>
+			<unit type="volume-pint-metric">
+				<unitPattern count="zero" draft="contributed">{0} مكيال متري</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} مكيال متري</unitPattern>
+				<unitPattern count="two" draft="contributed">مكيالان متريان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} مكاييل مترية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} مكيالًا متريًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} مكيال متري</unitPattern>
+			</unit>
+			<unit type="volume-cup-metric">
+				<unitPattern count="zero" draft="contributed">{0} كوب متري</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} كوب متري</unitPattern>
+				<unitPattern count="two" draft="contributed">كوبان متريان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أكواب مترية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} كوبًا متريًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} كوب متري</unitPattern>
+			</unit>
+			<unit type="volume-tablespoon">
+				<unitPattern count="zero" draft="contributed">{0} ملعقة كبيرة</unitPattern>
+				<unitPattern count="one" draft="contributed">ملعقة كبيرة</unitPattern>
+				<unitPattern count="two" draft="contributed">ملعقتان كبيرتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} ملاعق كبيرة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ملعقة كبيرة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ملعقة كبيرة</unitPattern>
+			</unit>
+			<unit type="volume-teaspoon">
+				<unitPattern count="zero" draft="contributed">{0} ملعقة صغيرة</unitPattern>
+				<unitPattern count="one" draft="contributed">ملعقة صغيرة</unitPattern>
+				<unitPattern count="two" draft="contributed">ملعقتان صغيرتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} ملاعق صغيرة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ملعقة صغيرة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ملعقة صغيرة</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="angle-revolution">
+				<unitPattern count="zero" draft="contributed">{0} دورة</unitPattern>
+				<unitPattern count="one" draft="contributed">دورة</unitPattern>
+				<unitPattern count="two" draft="contributed">دورتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} دورات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} دورة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} دورة</unitPattern>
+			</unit>
+			<unit type="area-hectare">
+				<unitPattern count="zero" draft="contributed">{0} هكتار</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} هكتار</unitPattern>
+				<unitPattern count="two" draft="contributed">هكتاران</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} هكتارات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} هكتارًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} هكتار</unitPattern>
+			</unit>
+			<unit type="area-acre">
+				<unitPattern count="zero" draft="contributed">{0} فدان</unitPattern>
+				<unitPattern count="one" draft="contributed">فدان</unitPattern>
+				<unitPattern count="two" draft="contributed">فدانان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أفدنة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} فدانًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} فدان</unitPattern>
+			</unit>
+			<unit type="concentr-karat">
+				<unitPattern count="zero" draft="contributed">{0} قيراط</unitPattern>
+				<unitPattern count="one" draft="contributed">قيراط</unitPattern>
+				<unitPattern count="two" draft="contributed">قيراطان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} قراريط</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} قيراطًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} قيراط</unitPattern>
+			</unit>
+			<unit type="concentr-permillion">
+				<unitPattern count="zero" draft="contributed">{0} جزء/مليون</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} جزء/مليون</unitPattern>
+				<unitPattern count="two" draft="contributed">جزءان/مليون</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أجزاء/مليون</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} جزءًا/مليون</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} جزء/مليون</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-kilometer">
+				<unitPattern count="zero" draft="contributed">{0} لتر/كم</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} لتر/كم</unitPattern>
+				<unitPattern count="two" draft="contributed">لتران/كم</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} لترات/كم</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} لترًا/كم</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} لتر/كم</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-100-kilometer">
+				<unitPattern count="zero" draft="contributed">{0} لتر/١٠٠ كم</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} لتر/١٠٠ كم</unitPattern>
+				<unitPattern count="two" draft="contributed">لتران/١٠٠ كم</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} لترات/١٠٠ كم</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} لترًا/١٠٠ كم</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} لتر/١٠٠ كم</unitPattern>
+			</unit>
+			<unit type="consumption-mile-per-gallon">
+				<unitPattern count="zero" draft="contributed">{0} ميل/غالون</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ميل/غالون</unitPattern>
+				<unitPattern count="two" draft="contributed">ميلان/غالون</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أميال/غالون</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ميلًا/غالون</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ميل/غالون</unitPattern>
+			</unit>
+			<unit type="consumption-mile-per-gallon-imperial">
+				<unitPattern count="zero" draft="contributed">{0} ميل/غ. إمبراطوري</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ميل/غ. إمبراطوري</unitPattern>
+				<unitPattern count="two" draft="contributed">ميلان/غ. إمبراطوري</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أميال/غ. إمبراطوري</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ميلًا/غ. إمبراطوري</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ميل/غ. إمبراطوري</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<displayName draft="contributed">سنوات</displayName>
+				<unitPattern count="zero" draft="contributed">{0} سنة</unitPattern>
+				<unitPattern count="one" draft="contributed">سنة</unitPattern>
+				<unitPattern count="two" draft="contributed">سنتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} سنوات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} سنة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} سنة</unitPattern>
+			</unit>
+			<unit type="energy-british-thermal-unit">
+				<unitPattern count="zero" draft="contributed">{0} وحدة حرارية بريطانية</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} وحدة حرارية بريطانية</unitPattern>
+				<unitPattern count="two" draft="contributed">{0} وحدة حرارية بريطانية</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} وحدات حرارية بريطانية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} وحدة حرارية بريطانية</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} وحدة حرارية بريطانية</unitPattern>
+			</unit>
+			<unit type="length-mile">
+				<unitPattern count="zero" draft="contributed">{0} ميل</unitPattern>
+				<unitPattern count="one" draft="contributed">ميل</unitPattern>
+				<unitPattern count="two" draft="contributed">ميلان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أميال</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ميل</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ميل</unitPattern>
+			</unit>
+			<unit type="length-yard">
+				<unitPattern count="zero" draft="contributed">{0} ياردة</unitPattern>
+				<unitPattern count="one" draft="contributed">ياردة</unitPattern>
+				<unitPattern count="two" draft="contributed">ياردتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} ياردات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ياردة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ياردة</unitPattern>
+			</unit>
+			<unit type="length-foot">
+				<unitPattern count="zero" draft="contributed">{0} قدم</unitPattern>
+				<unitPattern count="one" draft="contributed">قدم</unitPattern>
+				<unitPattern count="two" draft="contributed">قدمان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أقدام</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} قدمًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} قدم</unitPattern>
+			</unit>
+			<unit type="length-inch">
+				<unitPattern count="zero" draft="contributed">{0} بوصة</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} بوصة</unitPattern>
+				<unitPattern count="two" draft="contributed">بوصتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} بوصات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} بوصة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} بوصة</unitPattern>
+			</unit>
+			<unit type="length-parsec">
+				<unitPattern count="zero" draft="contributed">{0} فرسخ فلكي</unitPattern>
+				<unitPattern count="one" draft="contributed">فرسخ فلكي</unitPattern>
+				<unitPattern count="two" draft="contributed">فرسخان فلكيان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} فراسخ فلكية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} فرسخًا فلكيًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} فرسخ فلكي</unitPattern>
+			</unit>
+			<unit type="length-nautical-mile">
+				<unitPattern count="zero" draft="contributed">{0} ميل بحري</unitPattern>
+				<unitPattern count="one" draft="contributed">ميل بحري</unitPattern>
+				<unitPattern count="two" draft="contributed">ميلان بحريان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أميال بحرية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ميلًا بحريًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ميل بحري</unitPattern>
+			</unit>
+			<unit type="length-mile-scandinavian">
+				<unitPattern count="zero" draft="contributed">{0} ميل اسكندنافي</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ميل اسكندنافي</unitPattern>
+				<unitPattern count="two" draft="contributed">ميلان اسكندنافيان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أميال اسكندنافية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ميلًا اسكندنافيًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ميل اسكندنافي</unitPattern>
+			</unit>
+			<unit type="light-solar-luminosity">
+				<unitPattern count="zero" draft="contributed">{0} ضياء شمسي</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ضياء شمسي</unitPattern>
+				<unitPattern count="two" draft="contributed">ضياءان شمسيان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} ضياءات شمسية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ضياءً شمسيًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ضياء شمسي</unitPattern>
+			</unit>
+			<unit type="mass-gram">
+				<unitPattern count="zero" draft="contributed">{0} غرام</unitPattern>
+				<unitPattern count="one" draft="contributed">غرام</unitPattern>
+				<unitPattern count="two" draft="contributed">غرامان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} غرامات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} غرامًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} غرام</unitPattern>
+			</unit>
+			<unit type="mass-ton">
+				<unitPattern count="zero" draft="contributed">{0} طن</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} طن</unitPattern>
+				<unitPattern count="two" draft="contributed">طنان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أطنان</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} طنًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} طن</unitPattern>
+			</unit>
+			<unit type="mass-pound">
+				<unitPattern count="zero" draft="contributed">{0} رطل</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} رطل</unitPattern>
+				<unitPattern count="two" draft="contributed">رطلان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أرطال</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} رطلُا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} رطل</unitPattern>
+			</unit>
+			<unit type="mass-carat">
+				<unitPattern count="zero" draft="contributed">{0} قيراط</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} قيراط</unitPattern>
+				<unitPattern count="two" draft="contributed">قيراطان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} قراريط</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} قيراطًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} قيراط</unitPattern>
+			</unit>
+			<unit type="mass-earth-mass">
+				<unitPattern count="zero" draft="contributed">{0} كتلة أرضية</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} كتلة أرضية</unitPattern>
+				<unitPattern count="two" draft="contributed">كتلتان أرضيتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} كتل أرضية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} كتلة أرضية</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} كتلة أرضية</unitPattern>
+			</unit>
+			<unit type="mass-solar-mass">
+				<unitPattern count="zero" draft="contributed">{0} كتلة شمسية</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} كتلة شمسية</unitPattern>
+				<unitPattern count="two" draft="contributed">كتلتان شمسيتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} كتل شمسية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} كتلة شمسية</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} كتلة شمسية</unitPattern>
+			</unit>
+			<unit type="pressure-pound-force-per-square-inch">
+				<unitPattern count="zero" draft="contributed">{0} رطل/بوصة²</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} رطل/بوصة²</unitPattern>
+				<unitPattern count="two" draft="contributed">رطلان/بوصة²</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أرطال/بوصة²</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} رطلًا/بوصة²</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} رطل/بوصة²</unitPattern>
+			</unit>
+			<unit type="pressure-kilopascal">
+				<displayName draft="contributed">كيلوباسكال</displayName>
+				<unitPattern count="zero" draft="contributed">{0} كيلوباسكال</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} كيلوباسكال</unitPattern>
+				<unitPattern count="two" draft="contributed">{0} كيلوباسكال</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} كيلوباسكال</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} كيلوباسكال</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} كيلوباسكال</unitPattern>
+			</unit>
+			<unit type="pressure-megapascal">
+				<displayName draft="contributed">ميغاباسكال</displayName>
+				<unitPattern count="zero" draft="contributed">{0} ميغاباسكال</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ميغاباسكال</unitPattern>
+				<unitPattern count="two" draft="contributed">{0} ميغاباسكال</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} ميغاباسكال</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ميغاباسكال</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ميغاباسكال</unitPattern>
+			</unit>
+			<unit type="speed-mile-per-hour">
+				<unitPattern count="zero" draft="contributed">{0} ميل/س</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} ميل/س</unitPattern>
+				<unitPattern count="two" draft="contributed">ميلان/س</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أميال/س</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ميلًا/س</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ميل/س</unitPattern>
+			</unit>
+			<unit type="speed-knot">
+				<unitPattern count="zero" draft="contributed">{0} عقدة</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} عقدة</unitPattern>
+				<unitPattern count="two" draft="contributed">عقدتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} عقد</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} عقدة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} عقدة</unitPattern>
+			</unit>
+			<unit type="temperature-kelvin">
+				<displayName draft="contributed">درجة كلفن</displayName>
+				<unitPattern count="zero" draft="contributed">{0} درجة كلفن</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} درجة كلفن</unitPattern>
+				<unitPattern count="two" draft="contributed">{0} درجة كلفن</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} درجة كلفن</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} درجة كلفن</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} درجة كلفن</unitPattern>
+			</unit>
+			<unit type="volume-cubic-inch">
+				<unitPattern count="zero" draft="contributed">{0} بوصة³</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} بوصة مكعبة</unitPattern>
+				<unitPattern count="two" draft="contributed">{0} بوصة³</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} بوصة³</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} بوصة³</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} بوصة³</unitPattern>
+			</unit>
+			<unit type="volume-liter">
+				<unitPattern count="zero" draft="contributed">{0} لتر</unitPattern>
+				<unitPattern count="one" draft="contributed">لتر</unitPattern>
+				<unitPattern count="two" draft="contributed">لتران</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} لترات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} لترًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} لتر</unitPattern>
+			</unit>
+			<unit type="volume-pint-metric">
+				<unitPattern count="zero" draft="contributed">{0} مكيال متري</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} مكيال متري</unitPattern>
+				<unitPattern count="two" draft="contributed">مكيالان متريان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} مكاييل مترية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} مكيالًا متريًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} مكيال متري</unitPattern>
+			</unit>
+			<unit type="volume-cup-metric">
+				<unitPattern count="zero" draft="contributed">{0} كوب متري</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} كوب متري</unitPattern>
+				<unitPattern count="two" draft="contributed">كوبان متريان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أكواب مترية</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} كوبًا متريًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} كوب متري</unitPattern>
+			</unit>
+			<unit type="volume-cup">
+				<unitPattern count="zero" draft="contributed">{0} كوب</unitPattern>
+				<unitPattern count="one" draft="contributed">كوب</unitPattern>
+				<unitPattern count="two" draft="contributed">كوبان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أكواب</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} كوبًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} كوب</unitPattern>
+			</unit>
+			<unit type="volume-fluid-ounce">
+				<unitPattern count="zero" draft="contributed">{0} أونصة سائلة</unitPattern>
+				<unitPattern count="one" draft="contributed">أونصة س</unitPattern>
+				<unitPattern count="two" draft="contributed">أونصتان سائلتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أونصات سائلة</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} أونصة س</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} أونصة سائلة</unitPattern>
+			</unit>
+			<unit type="volume-tablespoon">
+				<unitPattern count="zero" draft="contributed">{0} ملعقة ك.</unitPattern>
+				<unitPattern count="one" draft="contributed">ملعقة ك.</unitPattern>
+				<unitPattern count="two" draft="contributed">{0} ملعقتان ك.</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} ملاعق ك.</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ملعقة ك.</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ملعقة ك.</unitPattern>
+			</unit>
+			<unit type="volume-teaspoon">
+				<unitPattern count="zero" draft="contributed">{0} ملعقة ص</unitPattern>
+				<unitPattern count="one" draft="contributed">ملعقة ص</unitPattern>
+				<unitPattern count="two" draft="contributed">{0} ملعقتان ص</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} ملاعق ص</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} ملعقة ص</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} ملعقة ص</unitPattern>
+			</unit>
+			<coordinateUnit>
+				<coordinateUnitPattern type="south" draft="contributed">{0} جنوب</coordinateUnitPattern>
+				<coordinateUnitPattern type="west" draft="contributed">{0} غرب</coordinateUnitPattern>
+			</coordinateUnit>
+		</unitLength>
+		<unitLength type="narrow">
+			<unit type="duration-year">
+				<unitPattern count="zero" draft="contributed">{0} سنة</unitPattern>
+				<unitPattern count="one" draft="contributed">سنة</unitPattern>
+				<unitPattern count="two" draft="contributed">سنتان</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} سنوات</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} سنة</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} سنة</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<unitPattern count="zero" draft="contributed">{0} شهر</unitPattern>
+				<unitPattern count="one" draft="contributed">شهر</unitPattern>
+				<unitPattern count="two" draft="contributed">شهران</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} أشهر</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} شهرًا</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} شهر</unitPattern>
+			</unit>
+			<unit type="mass-kilogram">
+				<displayName draft="contributed">كغم</displayName>
+				<unitPattern count="zero" draft="contributed">{0} كغم</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} كغم</unitPattern>
+				<unitPattern count="two" draft="contributed">{0} كغم</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} كغم</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} كغم</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} كغم</unitPattern>
+			</unit>
+			<unit type="mass-gram">
+				<displayName draft="contributed">غم</displayName>
+				<unitPattern count="zero" draft="contributed">{0} غم</unitPattern>
+				<unitPattern count="one" draft="contributed">{0} غم</unitPattern>
+				<unitPattern count="two" draft="contributed">{0} غم</unitPattern>
+				<unitPattern count="few" draft="contributed">{0} غم</unitPattern>
+				<unitPattern count="many" draft="contributed">{0} غم</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} غم</unitPattern>
+			</unit>
+			<coordinateUnit>
+				<coordinateUnitPattern type="south" draft="contributed">{0} جنوب</coordinateUnitPattern>
+				<coordinateUnitPattern type="west" draft="contributed">{0} غرب</coordinateUnitPattern>
+			</coordinateUnit>
+		</unitLength>
+	</units>
+</ldml>

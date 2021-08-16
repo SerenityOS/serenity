@@ -1,0 +1,2 @@
+MostSpecific25.java:17:9: compiler.err.ref.ambiguous: m1, kindname.method, <T>m1(MostSpecific25.F1<T>), MostSpecific25, kindname.method, m1(MostSpecific25.F2), MostSpecific25
+1 error

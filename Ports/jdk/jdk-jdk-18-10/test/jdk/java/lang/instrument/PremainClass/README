@@ -1,0 +1,22 @@
+
+This directory contains a test to exercise the Premain-Class attribute with
+a non US-ASCII class name. As the file system may not support a file with 
+this name the test is compiled off-line and the jar file checked into SCCS.
+
+In the event that Agent.jar needs to be re-built here are the steps which
+must be performed on a system that supports the the EURO in a file name
+(Windows 2000 is fine) :-
+
+1. Create the agent source file and agent.mf :-
+
+    javac CreateFiles.java
+    java CreateFiles
+
+2. Re-create the agent jar file :-
+
+    rm CreateFiles.class
+    javac -encoding utf8 *.java
+    jar cfm Agent.jar agent.mf *.class
+
+3. Check Agent.jar into SCCS.
+

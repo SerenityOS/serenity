@@ -1,0 +1,12 @@
+keystore "file:${test.src}/Alias.keystore";
+
+grant {
+    permission java.security.SecurityPermission "getPolicy";
+};
+
+grant	codebase "http://alias",
+	principal "x509test person",
+	principal "duke",
+	principal com.sun.security.auth.UnixPrincipal "unix" {
+    permission java.security.SecurityPermission "ALIAS";
+};

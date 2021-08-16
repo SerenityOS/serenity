@@ -1,0 +1,118 @@
+#
+# Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include $(SPEC)
+include MakeBase.gmk
+include TextFileProcessing.gmk
+
+default: bundles
+
+# Only macosx has bundles defined.
+ifeq ($(call isTargetOs, macosx), true)
+
+  bundles: jre-bundle jdk-bundle
+
+  # JDK_MACOSX_CONTENTS_DIR and JRE_MACOSX_CONTENTS_DIR are defined in SPEC.
+
+  MACOSX_PLIST_SRC := $(TOPDIR)/make/data/bundle
+
+  BUNDLE_NAME := $(MACOSX_BUNDLE_NAME_BASE) $(VERSION_SHORT)
+  BUNDLE_INFO := $(MACOSX_BUNDLE_NAME_BASE) $(VERSION_STRING)
+  ifeq ($(COMPANY_NAME), N/A)
+    BUNDLE_VENDOR := UNDEFINED
+  else
+    BUNDLE_VENDOR := $(COMPANY_NAME)
+  endif
+
+  $(eval $(call SetupCopyFiles, COPY_JDK_IMAGE, \
+      SRC := $(JDK_IMAGE_DIR), \
+      DEST := $(JDK_MACOSX_CONTENTS_DIR)/Home, \
+      FILES := $(call FindFiles, $(JDK_IMAGE_DIR)), \
+  ))
+
+  $(eval $(call SetupCopyFiles, COPY_JRE_IMAGE, \
+      SRC := $(JRE_IMAGE_DIR), \
+      DEST := $(JRE_MACOSX_CONTENTS_DIR)/Home, \
+      FILES := $(call FindFiles, $(JRE_IMAGE_DIR)), \
+  ))
+
+  $(eval $(call SetupCopyFiles, COPY_LIBJLI_JDK, \
+      FILES := $(JDK_IMAGE_DIR)/lib/libjli.dylib, \
+      DEST := $(JDK_MACOSX_CONTENTS_DIR)/MacOS, \
+  ))
+
+  $(eval $(call SetupCopyFiles, COPY_LIBJLI_JRE, \
+      FILES := $(JRE_IMAGE_DIR)/lib/libjli.dylib, \
+      DEST := $(JRE_MACOSX_CONTENTS_DIR)/MacOS, \
+  ))
+
+  $(eval $(call SetupTextFileProcessing, BUILD_JDK_PLIST, \
+      SOURCE_FILES := $(MACOSX_PLIST_SRC)/JDK-Info.plist, \
+      OUTPUT_FILE := $(JDK_MACOSX_CONTENTS_DIR)/Info.plist, \
+      REPLACEMENTS := \
+          @@ID@@ => $(MACOSX_BUNDLE_ID_BASE).jdk ; \
+          @@NAME@@ => $(BUNDLE_NAME) ; \
+          @@INFO@@ => $(BUNDLE_INFO) ; \
+          @@VERSION@@ => $(VERSION_NUMBER) ; \
+          @@BUILD_VERSION@@ => $(MACOSX_BUNDLE_BUILD_VERSION) ; \
+          @@VENDOR@@ => $(BUNDLE_VENDOR) ; \
+          @@MACOSX_VERSION_MIN@@ => $(MACOSX_VERSION_MIN) , \
+  ))
+
+  $(eval $(call SetupTextFileProcessing, BUILD_JRE_PLIST, \
+      SOURCE_FILES := $(MACOSX_PLIST_SRC)/JRE-Info.plist, \
+      OUTPUT_FILE := $(JRE_MACOSX_CONTENTS_DIR)/Info.plist, \
+      REPLACEMENTS := \
+          @@ID@@ => $(MACOSX_BUNDLE_ID_BASE).jre ; \
+          @@NAME@@ => $(BUNDLE_NAME) ; \
+          @@INFO@@ => $(BUNDLE_INFO) ; \
+          @@VERSION@@ => $(VERSION_NUMBER) ; \
+          @@BUILD_VERSION@@ => $(BUNDLE_BUILD_VERSION) ; \
+          @@VENDOR@@ => $(BUNDLE_VENDOR) ; \
+          @@MACOSX_VERSION_MIN@@ => $(MACOSX_VERSION_MIN) , \
+  ))
+
+  $(SUPPORT_OUTPUTDIR)/images/_jdk_bundle_attribute_set: $(COPY_JDK_IMAGE)
+	$(SETFILE) -a B $(dir $(JDK_MACOSX_CONTENTS_DIR))
+	$(TOUCH) $@
+
+  $(SUPPORT_OUTPUTDIR)/images/_jre_bundle_attribute_set: $(COPY_JRE_IMAGE)
+	$(SETFILE) -a B $(dir $(JRE_MACOSX_CONTENTS_DIR))
+	$(TOUCH) $@
+
+  jdk-bundle: $(COPY_JDK_IMAGE) $(COPY_LIBJLI_JDK) \
+      $(BUILD_JDK_PLIST) $(SUPPORT_OUTPUTDIR)/images/_jdk_bundle_attribute_set
+
+  jre-bundle: $(COPY_JRE_IMAGE) $(COPY_LIBJLI_JRE) \
+      $(BUILD_JRE_PLIST) $(SUPPORT_OUTPUTDIR)/images/_jre_bundle_attribute_set
+
+else # Not macosx
+
+  bundles:
+	$(ECHO) "No bundles defined for $(OPENJDK_TARGET_OS)"
+
+endif # macosx
+
+.PHONY: jdk-bundle jre-bundle bundles

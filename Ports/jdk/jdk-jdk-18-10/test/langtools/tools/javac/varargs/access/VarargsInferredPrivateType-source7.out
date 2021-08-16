@@ -1,0 +1,4 @@
+VarargsInferredPrivateType.java:16:10: compiler.err.cant.apply.symbol: kindname.method, m, T[], otherpackage.OtherPackage.Private, kindname.interface, VarargsInferredPrivateType.I, (compiler.misc.inaccessible.varargs.type: otherpackage.OtherPackage.Private, kindname.class, VarargsInferredPrivateType)
+- compiler.note.unchecked.filename: VarargsInferredPrivateType.java
+- compiler.note.unchecked.recompile
+1 error

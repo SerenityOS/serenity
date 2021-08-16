@@ -1,0 +1,173 @@
+/*
+ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+package $package;
+
+import javax.naming.*;
+import javax.naming.spi.InitialContextFactory;
+import java.util.Hashtable;
+
+public class $factoryName implements InitialContextFactory {
+
+    @Override
+    public Context getInitialContext(Hashtable<?, ?> env) throws NamingException {
+        return new DummyInitialContext();
+    }
+
+    private class DummyInitialContext implements Context {
+
+        @Override
+        public Object lookup(Name name) {
+            return null;
+        }
+
+        @Override
+        public Object lookup(String name) {
+            return null;
+        }
+
+        @Override
+        public void bind(Name name, Object obj) {
+        }
+
+        @Override
+        public void bind(String name, Object obj) {
+        }
+
+        @Override
+        public void rebind(Name name, Object obj) {
+        }
+
+        @Override
+        public void rebind(String name, Object obj) {
+        }
+
+        @Override
+        public void unbind(Name name) {
+        }
+
+        @Override
+        public void unbind(String name) {
+        }
+
+        @Override
+        public void rename(Name oldName, Name newName) {
+        }
+
+        @Override
+        public void rename(String oldName, String newName) {
+        }
+
+        @Override
+        public NamingEnumeration<NameClassPair> list(Name name) {
+            return null;
+        }
+
+        @Override
+        public NamingEnumeration<NameClassPair> list(String name) {
+            return null;
+        }
+
+        @Override
+        public NamingEnumeration<Binding> listBindings(Name name) {
+            return null;
+        }
+
+        @Override
+        public NamingEnumeration<Binding> listBindings(String name) {
+            return null;
+        }
+
+        @Override
+        public void destroySubcontext(Name name) {
+        }
+
+        @Override
+        public void destroySubcontext(String name) {
+        }
+
+        @Override
+        public Context createSubcontext(Name name) {
+            return null;
+        }
+
+        @Override
+        public Context createSubcontext(String name) {
+            return null;
+        }
+
+        @Override
+        public Object lookupLink(Name name) {
+            return null;
+        }
+
+        @Override
+        public Object lookupLink(String name) {
+            return null;
+        }
+
+        @Override
+        public NameParser getNameParser(Name name) {
+            return null;
+        }
+
+        @Override
+        public NameParser getNameParser(String name) {
+            return null;
+        }
+
+        @Override
+        public Name composeName(Name name, Name prefix) {
+            return null;
+        }
+
+        @Override
+        public String composeName(String name, String prefix) {
+            return null;
+        }
+
+        @Override
+        public Object addToEnvironment(String propName, Object propVal) {
+            return null;
+        }
+
+        @Override
+        public Object removeFromEnvironment(String propName) {
+            return null;
+        }
+
+        @Override
+        public Hashtable<?, ?> getEnvironment() {
+            return null;
+        }
+
+        @Override
+        public void close() {
+        }
+
+        @Override
+        public String getNameInNamespace() {
+            return null;
+        }
+    }
+}

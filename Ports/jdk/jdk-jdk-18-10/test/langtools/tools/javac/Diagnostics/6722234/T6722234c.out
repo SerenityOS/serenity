@@ -1,0 +1,2 @@
+T6722234c.java:14:9: compiler.err.cant.apply.symbol: kindname.method, m, T6722234c.String, java.lang.String, kindname.class, T6722234c, (compiler.misc.infer.no.conforming.assignment.exists: T, (compiler.misc.inconvertible.types: java.lang.String, T6722234c.String))
+1 error

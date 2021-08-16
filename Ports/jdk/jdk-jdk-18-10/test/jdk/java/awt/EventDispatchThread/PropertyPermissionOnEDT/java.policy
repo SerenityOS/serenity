@@ -1,0 +1,4 @@
+grant {
+  permission java.util.PropertyPermission "os.name", "read";
+  permission java.awt.AWTPermission "createRobot";
+};

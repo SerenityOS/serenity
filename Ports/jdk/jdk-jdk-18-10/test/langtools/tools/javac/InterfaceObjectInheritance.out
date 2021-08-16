@@ -1,0 +1,2 @@
+InterfaceObjectInheritance.java:17:18: compiler.err.cant.resolve.location.args: kindname.method, finalize, , , (compiler.misc.location.1: kindname.variable, i, InterfaceObjectInheritance)
+1 error

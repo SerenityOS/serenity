@@ -1,0 +1,89 @@
+/*
+ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ * This test contains a BootstrapMethods attribute with an empty
+ * bootstrap_methods table.  This yields a BootstrapMethods
+ * attribute length of 2 and should not cause a
+ * java.lang.ClassFormatError to be thrown. To ensure that an empty
+ * bootstrap_methods table is parsed correctly, another attribute,
+ * AnnotationDefault, follows the BootstrapMethods attribute in 
+ * the attribute table.
+ */
+
+class emptynumbootstrapmethods2 {
+  0xCAFEBABE;
+  0; // minor version
+  51; // version
+  [14] { // Constant Pool
+    ; // first element is empty
+    class #2; // #1     at 0x0A
+    Utf8 "emptynumbootstrapmethods2"; // #2     at 0x0D
+    class #4; // #3     at 0x1F
+    Utf8 "java/lang/Object"; // #4     at 0x22
+    MethodHandle 5b #9; // #5     at 0x35
+    NameAndType #7 #8; // #6     at 0x39
+    Utf8 "equals"; // #7     at 0x3E
+    Utf8 "(Ljava/lang/Object;)Z"; // #8     at 0x47
+    Method #3 #6; // #9     at 0x5F
+    Utf8 "equalsx"; // #10    at 0x3E
+    Utf8 "BootstrapMethods"; // #11     at 0x69
+    Utf8 "AnnotationDefault"; // #12
+    Utf8 "LAnnotationDefaultI;"; // #13
+  } // Constant Pool
+
+  0x0001; // access
+  #1;// this_cpx
+  #3;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [0] { // methods
+  } // methods
+
+  [2] { // Attributes
+    Attr(#11, 2) { // BootstrapMethods at 0x8A
+      [0] { // bootstrap_methods
+      }
+    } // end BootstrapMethods
+    ;
+    Attr(#12) { // AnnotationDefault
+      [] { // type annotations
+        { // type annotation
+          0x00;  // target_type
+          0x00;  // type_parameter_index
+          []b { //  type_path
+          }
+
+          #13; // type_index
+          [] { // element_value_pairs
+          } // element_value_pairs
+        } // type annotation
+      } // type annotations
+    } // end AnnotationDefault
+  } // Attributes
+} // end class atrbsm00101m10p

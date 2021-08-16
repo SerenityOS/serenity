@@ -1,0 +1,44 @@
+<xsd:schema
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    elementFormDefault="qualified">
+  <xsd:element name="root">
+   <xsd:complexType>
+    <xsd:sequence>
+     <xsd:element name="comment" type="Comment2Type" />
+    </xsd:sequence>
+   </xsd:complexType>
+  </xsd:element>
+    
+    <xsd:simpleType name="AsciiStringType">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="\p{IsBasicLatin}*" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="CommentType">
+        <xsd:simpleContent>
+            <xsd:extension base="AsciiStringType">
+                <xsd:attribute name="language" use="optional">
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:enumeration value="English" />
+                            <xsd:enumeration value="French" />
+                            <xsd:enumeration value="Spanish" />
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="Comment2Type">
+        <xsd:simpleContent>
+            <xsd:restriction base="CommentType">
+                <xsd:minLength value="0" />
+                <xsd:maxLength value="20" />
+            </xsd:restriction>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+</xsd:schema>

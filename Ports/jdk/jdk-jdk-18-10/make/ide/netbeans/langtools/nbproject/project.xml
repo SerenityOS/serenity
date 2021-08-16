@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+
+   - Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+
+   - Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+
+   - Neither the name of Oracle nor the names of its
+     contributors may be used to endorse or promote products derived
+     from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+ IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.ant.freeform</type>
+    <configuration>
+        <general-data xmlns="http://www.netbeans.org/ns/freeform-project/1">
+            <name>langtools</name>
+        </general-data>
+        <general-data xmlns="http://www.netbeans.org/ns/freeform-project/2">
+            <!-- Do not use Project Properties customizer when editing this file manually. -->
+            <name>langtools</name>
+            <properties>
+                <property name="root">../../../..</property>
+            </properties>
+            <folders>
+                <source-folder>
+                    <label>langtools</label>
+                    <location>${root}</location>
+                </source-folder>
+                <source-folder>
+                    <label>Test files</label>
+                    <type>tests</type>
+                    <location>${root}/test/langtools</location>
+                </source-folder>
+                <source-folder>
+                    <label>Build files</label>
+                    <type>build</type>
+                    <location>${root}/make/langtools</location>
+                </source-folder>
+                <source-folder>
+                    <label>Source files - java.compiler</label>
+                    <type>java</type>
+                    <location>${root}/src/java.compiler/share/classes</location>
+                </source-folder>
+                <source-folder>
+                    <label>Source files - jdk.compiler</label>
+                    <type>java</type>
+                    <location>${root}/src/jdk.compiler/share/classes</location>
+                </source-folder>
+                <source-folder>
+                    <label>Source files - jdk.jdeps</label>
+                    <type>java</type>
+                    <location>${root}/src/jdk.jdeps/share/classes</location>
+                </source-folder>
+                <source-folder>
+                    <label>Source files - jdk.javadoc</label>
+                    <type>java</type>
+                    <location>${root}/src/jdk.javadoc/share/classes</location>
+                </source-folder>
+                <source-folder>
+                    <label>Source files - jdk.jshell</label>
+                    <type>java</type>
+                    <location>${root}/src/jdk.jshell/share/classes</location>
+                </source-folder>
+                <build-file>
+                    <location>${root}/build/classes</location>
+                </build-file>
+            </folders>
+            <ide-actions>
+                <!--
+ This section defines the standard actions accepted by langtools projects.
+
+ For information on these actions, see
+   - NetBeans: Setting Up Projects
+     at http://www.netbeans.org/kb/55/using-netbeans/project_setup.html
+   - NetBeans: Advanced Freeform Project Configuration
+     at http://www.netbeans.org/kb/41/freeform-config.html
+-->
+                <action name="build">
+                    <target>build</target>
+                </action>
+                <action name="clean">
+                    <target>clean</target>
+                </action>
+                <action name="rebuild">
+                    <target>clean</target>
+                    <target>build</target>
+                </action>
+                <action name="compile.single">
+                    <target>compile-single</target>
+                    <property name="module.name">java.compiler</property>
+                    <context>
+                        <property>includes</property>
+                        <folder>${root}/src/java.compiler/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path</format>
+                        <arity>
+                            <separated-files>,</separated-files>
+                        </arity>
+                    </context>
+                </action>
+                <action name="compile.single">
+                    <target>compile-single</target>
+                    <property name="module.name">jdk.compiler</property>
+                    <context>
+                        <property>includes</property>
+                        <folder>${root}/src/jdk.compiler/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path</format>
+                        <arity>
+                            <separated-files>,</separated-files>
+                        </arity>
+                    </context>
+                </action>
+                <action name="compile.single">
+                    <target>compile-single</target>
+                    <property name="module.name">jdk.jdeps</property>
+                    <context>
+                        <property>includes</property>
+                        <folder>${root}/src/jdk.jdeps/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path</format>
+                        <arity>
+                            <separated-files>,</separated-files>
+                        </arity>
+                    </context>
+                </action>
+                <action name="compile.single">
+                    <target>compile-single</target>
+                    <property name="module.name">jdk.javadoc</property>
+                    <context>
+                        <property>includes</property>
+                        <folder>${root}/src/jdk.javadoc/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path</format>
+                        <arity>
+                            <separated-files>,</separated-files>
+                        </arity>
+                    </context>
+                </action>
+                <action name="compile.single">
+                    <target>compile-single</target>
+                    <property name="module.name">jdk.jshell</property>
+                    <context>
+                        <property>includes</property>
+                        <folder>${root}/src/jdk.jshell/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path</format>
+                        <arity>
+                            <separated-files>,</separated-files>
+                        </arity>
+                    </context>
+                </action>
+                <action name="run">
+                    <target>run</target>
+                </action>
+                <action name="run.single">
+                    <target>run-single</target>
+                    <context>
+                        <property>run.classname</property>
+                        <folder>${root}/src/jdk.base/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="run.single">
+                    <target>run-single</target>
+                    <context>
+                        <property>run.classname</property>
+                        <folder>${root}/src/java.compiler/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="run.single">
+                    <target>run-single</target>
+                    <context>
+                        <property>run.classname</property>
+                        <folder>${root}/src/jdk.compiler/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="run.single">
+                    <target>run-single</target>
+                    <context>
+                        <property>run.classname</property>
+                        <folder>${root}/src/jdk.jdeps/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="run.single">
+                    <target>run-single</target>
+                    <context>
+                        <property>run.classname</property>
+                        <folder>${root}/src/jdk.javadoc/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="run.single">
+                    <target>run-single</target>
+                    <context>
+                        <property>run.classname</property>
+                        <folder>${root}/src/jdk.jshell/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <!--
+ Note: NetBeans does not appear to support context menu items
+ on shell scripts :-(
+-->
+                <action name="run.single">
+                    <target>jtreg</target>
+                    <context>
+                        <property>jtreg.tests</property>
+                        <folder>${root}/test/langtools</folder>
+                        <pattern>\.(java|sh)$</pattern>
+                        <format>relative-path</format>
+                        <arity>
+                            <separated-files> </separated-files>
+                        </arity>
+                    </context>
+                </action>
+                <action name="test">
+                    <target>jtreg</target>
+                </action>
+                <action name="debug">
+                    <target>debug</target>
+                </action>
+                <action name="debug.single">
+                    <target>debug-single</target>
+                    <context>
+                        <property>debug.classname</property>
+                        <folder>${root}/src/java.compiler/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.single">
+                    <target>debug-single</target>
+                    <context>
+                        <property>debug.classname</property>
+                        <folder>${root}/src/jdk.compiler/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.single">
+                    <target>debug-single</target>
+                    <context>
+                        <property>debug.classname</property>
+                        <folder>${root}/src/jdk.jdeps/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.single">
+                    <target>debug-single</target>
+                    <context>
+                        <property>debug.classname</property>
+                        <folder>${root}/src/jdk.javadoc/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.single">
+                    <target>debug-single</target>
+                    <context>
+                        <property>debug.classname</property>
+                        <folder>${root}/src/jdk.jshell/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <!--
+ Note: NetBeans does not appear to support context menu items
+ on shell scripts :-(
+-->
+                <action name="debug.single">
+                    <target>debug-jtreg</target>
+                    <context>
+                        <property>jtreg.tests</property>
+                        <folder>${root}/test/langtools</folder>
+                        <pattern>\.(java|sh)$</pattern>
+                        <format>relative-path</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.fix">
+                    <target>debug-fix</target>
+                    <property name="module.name">java.compiler</property>
+                    <context>
+                        <property>class</property>
+                        <folder>${root}/src/java.compiler/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path-noext</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.fix">
+                    <target>debug-fix</target>
+                    <property name="module.name">jdk.compiler</property>
+                    <context>
+                        <property>class</property>
+                        <folder>${root}/src/jdk.compiler/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path-noext</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.fix">
+                    <target>debug-fix</target>
+                    <property name="module.name">jdk.jdeps</property>
+                    <context>
+                        <property>class</property>
+                        <folder>${root}/src/jdk.jdeps/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path-noext</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.fix">
+                    <target>debug-fix</target>
+                    <property name="module.name">jdk.javadoc</property>
+                    <context>
+                        <property>class</property>
+                        <folder>${root}/src/jdk.javadoc/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path-noext</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.fix">
+                    <target>debug-fix</target>
+                    <property name="module.name">jdk.jshell</property>
+                    <context>
+                        <property>class</property>
+                        <folder>${root}/src/jdk.jshell/share/classes</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path-noext</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="select-tool">
+                    <target>select-tool</target>
+                </action>
+                <action name="test-select-tool-1">
+                    <target>test-select-tool-1</target>
+                </action>
+                <action name="test-select-tool-2">
+                    <target>test-select-tool-2</target>
+                </action>
+            </ide-actions>
+            <export>
+                <type>folder</type>
+                <location>${root}/build/classes</location>
+                <build-target>build</build-target>
+            </export>
+            <view>
+                <items>
+                    <source-folder style="tree">
+                        <label>Source files - java.compiler</label>
+                        <location>${root}/src/java.compiler/share/classes</location>
+                    </source-folder>
+                    <source-folder style="tree">
+                        <label>Source files - jdk.compiler</label>
+                        <location>${root}/src/jdk.compiler/share/classes</location>
+                    </source-folder>
+                    <source-folder style="tree">
+                        <label>Source files - jdk.jdeps</label>
+                        <location>${root}/src/jdk.jdeps/share/classes</location>
+                    </source-folder>
+                    <source-folder style="tree">
+                        <label>Source files - jdk.javadoc</label>
+                        <location>${root}/src/jdk.javadoc/share/classes</location>
+                    </source-folder>
+                    <source-folder style="tree">
+                        <label>Source files - jdk.jshell</label>
+                        <location>${root}/src/jdk.jshell/share/classes</location>
+                    </source-folder>
+                    <source-folder style="tree">
+                        <label>Test files</label>
+                        <location>${root}/test/langtools</location>
+                    </source-folder>
+                    <source-folder style="tree">
+                        <label>Build files</label>
+                        <location>${root}/make</location>
+                    </source-folder>
+                    <source-file>
+                        <label>README</label>
+                        <location>README</location>
+                    </source-file>
+                </items>
+                <context-menu>
+                    <!--
+ This section defines the actions that will appear on the project's context
+ menu, in the Projects viewer.
+
+ For information on these actions, see
+   - NetBeans: Setting Up Projects
+     at http://www.netbeans.org/kb/55/using-netbeans/project_setup.html
+   - NetBeans: Advanced Freeform Project Configuration
+     at http://www.netbeans.org/kb/41/freeform-config.html
+-->
+                    <ide-action name="select-tool"/>
+                    <separator/>
+                    <ide-action name="build"/>
+                    <ide-action name="rebuild"/>
+                    <ide-action name="clean"/>
+                    <separator/>
+                    <ide-action name="run"/>
+                    <ide-action name="debug"/>
+                    <separator/>
+                    <ide-action name="test"/>
+                </context-menu>
+            </view>
+            <subprojects/>
+        </general-data>
+        <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/4">
+            <compilation-unit>
+                <package-root>${root}/src/java.compiler/share/classes</package-root>
+                <package-root>${root}/build/gensrc/java.compiler</package-root>
+                <built-to>${root}/build/java.compiler/classes</built-to>
+                <source-level>1.8</source-level>
+            </compilation-unit>
+            <compilation-unit>
+                <package-root>${root}/src/jdk.compiler/share/classes</package-root>
+                <package-root>${root}/build/gensrc/jdk.compiler</package-root>
+                <classpath mode="compile">${root}/build/java.compiler/classes</classpath>
+                <built-to>${root}/build/jdk.compiler/classes</built-to>
+                <source-level>1.8</source-level>
+            </compilation-unit>
+            <compilation-unit>
+                <package-root>${root}/src/jdk.jdeps/share/classes</package-root>
+                <package-root>${root}/build/gensrc/jdk.jdeps</package-root>
+                <classpath mode="compile">${root}/build/java.compiler/classes:${root}/build/jdk.compiler/classes</classpath>
+                <built-to>${root}/build/jdk.jdeps/classes</built-to>
+                <source-level>1.8</source-level>
+            </compilation-unit>
+            <compilation-unit>
+                <package-root>${root}/src/jdk.javadoc/share/classes</package-root>
+                <package-root>${root}/build/gensrc/jdk.javadoc</package-root>
+                <classpath mode="compile">${root}/build/java.compiler/classes:${root}/build/jdk.compiler/classes</classpath>
+                <built-to>${root}/build/jdk.javadoc/classes</built-to>
+                <source-level>1.8</source-level>
+            </compilation-unit>
+            <compilation-unit>
+                <package-root>${root}/src/jdk.jshell/share/classes</package-root>
+                <package-root>${root}/build/gensrc/jdk.jshell</package-root>
+                <classpath mode="compile">${root}/build/java.compiler/classes:${root}/build/jdk.compiler/classes</classpath>
+                <built-to>${root}/build/jdk.jshell/classes</built-to>
+                <source-level>1.8</source-level>
+            </compilation-unit>
+        </java-data>
+    </configuration>
+</project>

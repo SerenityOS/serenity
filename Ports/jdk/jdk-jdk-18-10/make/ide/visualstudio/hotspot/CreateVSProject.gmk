@@ -1,0 +1,154 @@
+#
+# Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# This must be the first rule
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include JavaCompilation.gmk
+include Execute.gmk
+
+ifeq ($(call isTargetOs, windows), true)
+  # The next part is a bit hacky. We include the CompileJvm.gmk to be
+  # able to extact flags, but we do not wish to execute the rules.
+
+  # Use server as base for defines and includes
+  JVM_VARIANT=server
+
+  include HotspotCommon.gmk
+  include lib/CompileJvm.gmk
+
+  # Reset targets so we don't build libjvm.
+  TARGETS :=
+
+  ifeq ($(call isBuildOsEnv, windows.cygwin windows.msys2), true)
+    FixLinuxExecutable = $(call FixPath, $1)
+  else ifeq ($(call isBuildOsEnv, windows.wsl1 windows.wsl2), true)
+    FixLinuxExecutable = "%windir%\Sysnative\wsl.exe $1"
+  endif
+
+  JVM_DEFINES_client := $(patsubst -D%,%, $(filter -D%, $(JVM_CFLAGS)))
+  EXTRACTED_DEFINES_client := $(addprefix -define , $(JVM_DEFINES_client))
+
+  JVM_INCLUDES_client := $(patsubst -I%,%, $(filter -I%, $(JVM_CFLAGS)))
+  EXTRACTED_INCLUDES_client := $(foreach path, $(JVM_INCLUDES_client), -absoluteInclude $(call FixPath, $(path)))
+
+  # Hand-code variant-specific arguments, based on the fact that we use
+  # client for general arguments. Not optimal but other solutions require
+  # major changes in ProjectCreator.
+  ADDITIONAL_VARIANT_ARGS := \
+      -define_server COMPILER2 \
+      -ignorePath_client adfiles \
+      -ignorePath_client c2_ \
+      -ignorePath_client runtime_ \
+      -ignorePath_client libadt \
+      -ignorePath_client opto \
+      #
+
+  IGNORED_PLATFORMS_ARGS := \
+    -ignorePath aarch64 \
+    -ignorePath aix \
+    -ignorePath arm \
+    -ignorePath bsd \
+    -ignorePath linux \
+    -ignorePath posix \
+    -ignorePath ppc \
+    -ignorePath x86_32 \
+    -ignorePath zero \
+      #
+
+  ################################################################################
+  # Build the ProjectCreator java tool.
+
+  TOOLS_OUTPUTDIR := $(HOTSPOT_OUTPUTDIR)/support/ide_classes
+
+  $(eval $(call SetupJavaCompilation, BUILD_PROJECT_CREATOR, \
+      TARGET_RELEASE := $(TARGET_RELEASE_BOOTJDK), \
+      DISABLED_WARNINGS := auxiliaryclass deprecation rawtypes unchecked cast options, \
+      SRC := $(TOPDIR)/make/ide/visualstudio/hotspot/src/classes, \
+      BIN := $(TOOLS_OUTPUTDIR), \
+      JAVAC_FLAGS := -XDstringConcat=inline, \
+  ))
+
+  TARGETS += $(BUILD_PROJECT_CREATOR)
+
+  # Run the ProjectCreator tool
+  PROJECT_CREATOR_TOOL := $(JAVA_SMALL) -cp $(TOOLS_OUTPUTDIR) build.tools.projectcreator.ProjectCreator
+
+  IDE_OUTPUTDIR := $(OUTPUTDIR)/ide/hotspot-visualstudio
+
+  VCPROJ_FILE := $(IDE_OUTPUTDIR)/jvm.vcxproj
+
+  PROJECT_CREATOR_CLASS := build.tools.projectcreator.WinGammaPlatformVC10
+
+  # We hard-code gensrc dir to server (since this includes adfiles)
+  PROJECT_CREATOR_ARGS := \
+      -sourceBase $(call FixPath, $(TOPDIR)/src) \
+      -startAt hotspot \
+      -relativeSrcInclude hotspot \
+      -hidePath .hg \
+      -hidePath .jcheck \
+      -hidePath jdk.hotspot.agent \
+      -hidePath jdk.internal.vm.ci \
+      -hidePath jdk.jfr \
+      -compiler VC10 \
+      -jdkTargetRoot $(call FixPath, $(JDK_OUTPUTDIR)) \
+      -platformName x64 \
+      -buildBase $(call FixPath, $(IDE_OUTPUTDIR)/vs-output) \
+      -buildSpace $(call FixPath, $(IDE_OUTPUTDIR)) \
+      -makeBinary $(call FixLinuxExecutable, $(MAKE)) \
+      -makeOutput $(call FixPath, $(JDK_OUTPUTDIR)/bin/server) \
+      -absoluteInclude $(call FixPath, $(HOTSPOT_OUTPUTDIR)/variant-server/gensrc) \
+      -absoluteSrcInclude $(call FixPath, $(HOTSPOT_OUTPUTDIR)/variant-server/gensrc) \
+      $(EXTRACTED_DEFINES_client) \
+      $(EXTRACTED_INCLUDES_client) \
+      $(ADDITIONAL_VARIANT_ARGS) \
+      $(IGNORED_PLATFORMS_ARGS) \
+      #
+
+  VCPROJ_VARDEPS := $(PROJECT_CREATOR_CLASS) $(PROJECT_CREATOR_ARGS)
+  VCPROJ_VARDEPS_FILE := $(call DependOnVariable, VCPROJ_VARDEPS, \
+    $(VCPROJ_FILE).vardeps)
+
+  $(eval $(call SetupExecute, vcproj_file, \
+      INFO := Generating Visual Studio project file, \
+      DEPS := $(BUILD_PROJECT_CREATOR) $(VCPROJ_VARDEPS_FILE), \
+      OUTPUT_FILE := $(VCPROJ_FILE), \
+      COMMAND := $(PROJECT_CREATOR_TOOL) $(PROJECT_CREATOR_CLASS) \
+          $(PROJECT_CREATOR_ARGS) -projectFileName $(call FixPath, $(VCPROJ_FILE)) \
+          $(LOG_INFO), \
+  ))
+
+  TARGETS += $(vcproj_file_TARGET)
+
+  all: $(TARGETS)
+
+else
+  all:
+	$(info Hotspot Visual Studio generation only supported on Windows)
+endif
+
+.PHONY: all

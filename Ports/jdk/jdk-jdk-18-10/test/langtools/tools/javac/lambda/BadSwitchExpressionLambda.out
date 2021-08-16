@@ -1,0 +1,4 @@
+BadSwitchExpressionLambda.java:19:26: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.switch.expression.target.cant.be.void))
+BadSwitchExpressionLambda.java:21:9: compiler.err.cant.apply.symbol: kindname.method, r, BadSwitchExpressionLambda.SAM, @11, kindname.class, BadSwitchExpressionLambda, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.switch.expression.target.cant.be.void)))
+BadSwitchExpressionLambda.java:22:16: compiler.err.prob.found.req: (compiler.misc.unexpected.ret.val)
+3 errors

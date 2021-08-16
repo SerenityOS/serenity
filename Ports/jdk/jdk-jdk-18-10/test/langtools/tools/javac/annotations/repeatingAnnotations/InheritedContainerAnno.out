@@ -1,0 +1,2 @@
+InheritedContainerAnno.java:13:1: compiler.err.invalid.repeatable.annotation.not.inherited: FooContainer, Foo
+1 error

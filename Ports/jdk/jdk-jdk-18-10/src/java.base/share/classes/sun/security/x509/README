@@ -1,0 +1,47 @@
+
+Quick summary of the main purpose here:  X.509 certs are used in public
+key infrastructure for protocols such as SSL and SET.  These certificates
+involve ISO/CCITT standard technologies such as ASN.1/DER, which control
+the format of the data being transmitted.  X.509 itself describes the
+content of the data (e.g. X.500 user name, public key for that user, more)
+and how to sign it.
+
++++	+++	+++	+++	+++	+++	+++	+++	+++
+
+The X.509 support in JDK 1.2 builds on the java.security signature and
+key management APIs.  The following packages provide the X.509 support:
+
+    sun.security.util ... holds DER utilities, for parsing and generating
+	streams of DER-encoded data values, including object identifiers.
+
+    sun.security.x509 ... basic X.509 certificate parsing and generation
+	framework, including X.509 keys, X.500 names, algorithm IDs,
+        X.509 v3 extensions, and more.
+
++++	+++	+++	+++	+++	+++	+++	+++	+++
+
+Information which may be useful when you work with X.509 certificates is
+found in:
+
+    The IETF has a public key infrastructure working group, PKIX.
+    See http://www.ietf.org for more information.
+
+    RFC 1422, which describes the key management infrastructure for
+    the Privacy Enhanced Mail (PEM) system.  It builds on X.509,
+    and is perhaps the most useful overview I've found.
+
+    RFC 1777, which describes the Lightweight Directory Access
+    Protocol (LDAP) that many organizations are expecting will help
+    address online certificate distribution over the Internet.
+
+    RFC 5280, which describes the Internet X.509 Public Key
+    Infrastructure Certificate and CRL Profile.  
+
+    RSA DSI has a bunch of "Public Key Cryptography Standards" (PKCS) which
+    have been relatively well accepted.  They build on top of the X.509
+    infrastructure.  You can FTP them from ftp://ftp.rsa.com/pub/pkcs, in
+    either PostScript or ASCII format.
+
+    RSA DSI has also provided a "Layman's Guide" to ASN.1/DER, with
+    examples from the X.509 and PKCS standards.  This is available from
+    the PKCS FTP area noted above.

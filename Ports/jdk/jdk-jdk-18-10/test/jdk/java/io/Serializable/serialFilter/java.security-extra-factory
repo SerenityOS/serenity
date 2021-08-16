@@ -1,0 +1,4 @@
+# Deserialization Input Filter Factory
+# See conf/security/java.security for pattern syntax
+#
+jdk.serialFilterFactory=SerialFilterFactoryTest$PropertyFilterFactory

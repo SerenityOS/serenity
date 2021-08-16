@@ -1,0 +1,4 @@
+MethodReference09.java:21:23: compiler.err.non-static.cant.be.ref: kindname.method, getThis()
+MethodReference09.java:21:20: compiler.err.prob.found.req: (compiler.misc.invalid.mref: kindname.method, (compiler.misc.cant.apply.symbol: kindname.method, getX, compiler.misc.no.args, MethodReference09.Foo, kindname.class, MethodReference09.Foo<X>, (compiler.misc.arg.length.mismatch)))
+MethodReference09.java:22:20: compiler.err.non-static.cant.be.ref: kindname.variable, this
+3 errors

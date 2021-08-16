@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ru"/>
+		<territory type="UA"/>
+	</identity>
+	<localeDisplayNames>
+		<territories>
+			<territory type="AC" draft="contributed">О-в Вознесения</territory>
+			<territory type="AE" draft="contributed">Объединенные Арабские Эмираты</territory>
+			<territory type="BV" draft="contributed">О-в Буве</territory>
+			<territory type="CK" draft="contributed">О-ва Кука</territory>
+			<territory type="CP" draft="contributed">О-в Клиппертон</territory>
+			<territory type="CX" draft="contributed">О-в Рождества</territory>
+			<territory type="HM" draft="contributed">О-ва Херд и Макдональд</territory>
+			<territory type="NF" draft="contributed">О-в Норфолк</territory>
+			<territory type="TL" draft="contributed">Тимор-Лесте</territory>
+			<territory type="UM" draft="contributed">Малые Тихоокеанские Отдаленные Острова США</territory>
+		</territories>
+	</localeDisplayNames>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateTimeFormats>
+					<intervalFormats>
+						<intervalFormatItem id="h">
+							<greatestDifference id="h" draft="unconfirmed">h–h 'ч'. a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="H">
+							<greatestDifference id="H" draft="unconfirmed">HH–HH 'ч'.</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="h" draft="unconfirmed">h–h 'ч'. a, v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H" draft="unconfirmed">HH–HH 'ч'., v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d" draft="unconfirmed">E, d – E, d MMM</greatestDifference>
+							<greatestDifference id="M" draft="unconfirmed">E, d MMM – E, d MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d" draft="unconfirmed">E, dd.MM.y – E, dd.MM.y</greatestDifference>
+							<greatestDifference id="M" draft="unconfirmed">E, dd.MM.y – E, dd.MM.y</greatestDifference>
+							<greatestDifference id="y" draft="unconfirmed">E, dd.MM.y – E, dd.MM.y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M" draft="unconfirmed">MMM–MMM y</greatestDifference>
+							<greatestDifference id="y" draft="unconfirmed">MMM y – MMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d" draft="unconfirmed">d–d MMM y</greatestDifference>
+							<greatestDifference id="M" draft="unconfirmed">d MMM – d MMM y</greatestDifference>
+							<greatestDifference id="y" draft="unconfirmed">d MMM y – d MMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d" draft="unconfirmed">E, d – E, d MMM y 'г'.</greatestDifference>
+							<greatestDifference id="M" draft="unconfirmed">E, d MMM – E, d MMM y 'г'.</greatestDifference>
+							<greatestDifference id="y" draft="unconfirmed">E, d MMM y – E, d MMM y 'г'.</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M" draft="unconfirmed">LLLL–LLLL y</greatestDifference>
+							<greatestDifference id="y" draft="unconfirmed">LLLL y – LLLL y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="GyMMM" draft="contributed">LLL y 'г'. G</dateFormatItem>
+						<dateFormatItem id="yMEd" draft="contributed">ccc, d.MM.y</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="y" draft="contributed">LLL y – LLL y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="y" draft="contributed">d MMM y – d MMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="y" draft="contributed">ccc, d MMM y – ccc, d MMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="y" draft="contributed">LLLL y – LLLL y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+	</dates>
+	<numbers>
+		<minimumGroupingDigits draft="contributed">2</minimumGroupingDigits>
+	</numbers>
+</ldml>

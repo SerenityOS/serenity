@@ -1,0 +1,29 @@
+EndTagsTest.java:19: error: unexpected end tag: </a>
+    /** </a> */
+        ^
+EndTagsTest.java:22: warning: empty <p> tag
+    /** <p> </a> */
+        ^
+EndTagsTest.java:22: error: unexpected end tag: </a>
+    /** <p> </a> */
+            ^
+EndTagsTest.java:25: error: unexpected end tag: </a>
+    /** <p> text </p> </a> */
+                      ^
+EndTagsTest.java:28: error: invalid end tag: </img>
+    /** <img alt="image" src="image.png"> </img> */
+                                          ^
+EndTagsTest.java:31: error: unknown tag: invalid
+    /** <invalid> </invalid> */
+        ^
+EndTagsTest.java:31: error: unknown tag: invalid
+    /** <invalid> </invalid> */
+                  ^
+EndTagsTest.java:34: error: unknown tag: invalid
+    /** <invalid> */
+        ^
+EndTagsTest.java:37: error: unknown tag: invalid
+    /** </invalid> */
+        ^
+8 errors
+1 warning

@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>README - CodePointIM</title>
+  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+</head>
+<body>
+<h1>Code Point Input Method</h1>
+<p>
+The Code Point Input Method is a simple input method that allows Unicode
+characters to be entered using their code point or code unit values.
+<p>
+The input method accepts three different notations, all using hexadecimal
+digits from the set [0-9a-fA-F]:
+<br>
+<ul>
+  <li>"\uxxxx": The standard Unicode escape notation of the Java programming
+language. This notation allows input of code points up to U+FFFE; the illegal
+code point U+FFFF is not allowed.</li>
+  <li>"\Uxxxxxx": An extended Unicode escape notation specific to this input
+method. This notation allows direct input of any Unicode code Point except the
+illegal code point U+FFFF. The uppercase "U" indicates that six hexadecimal
+digits follow. "xxxxxx" must be between 000000 and 10FFFF.</li>
+  <li>"\uxxxx\uyyyy": Two consecutive standard Unicode escapes, together
+representing a code point between U+10000 and U+10FFFF (a supplementary
+character). "xxxx" must be between D800 and DBFF (that is, a high surrogate
+value), "yyyy" between DC00 and DFFF (a low surrogate value).</li>
+</ul>
+In general, the input method passes characters through unchanged. However,
+when the user types a "\", the input method enters composition mode. In
+composition mode, the user types the desired code point using one of the
+notations above, then types a space character to convert to the corresponding
+Unicode character and commit. The input method then returns to pass-through
+mode until another "\" character is entered.
+<p>
+While in composition mode, the user can use the left arrow, right arrow,
+backspace, and delete keys to edit the sequence. The "\u" or "\U" characters
+can only be deleted if they are not followed by hexadecimal digits in the
+composition sequence. Deleting the initial "\u" or "\U" returns the input
+method to pass-through mode.
+<p>
+Since the initial "\" character starts composition mode, a user must type two
+"\" characters in order to add a single "\" to the text. When an initial "\"
+has been entered, but the next character is not "u", "U", or "\", both the "\"
+and the subsequent character are committed, and the input method returns to
+pass-through mode. Also, typing a new line, or tab character at any time
+during composition immediately commits the current composed text.
+<p>
+Input methods are extensions to the Java Runtime Environment; they cannot be
+run as applications. Before you can use an input method, you have to install
+it in the JRE, run an application that supports input methods (such as the
+JFC demos Notepad and Stylepad), and select the input method. You can learn
+more about these steps from the article
+"<a href="http://javadesktop.org/articles/InputMethod/index.html">Using Input Methods on the Java Platform</a>"
+and more about supplementary character support from the article
+"<a href="http://java.sun.com/developer/technicalArticles/Intl/Supplementary/index.html">Supplementary Characters in the Java Platform</a>".
+<p>
+This input method requires JRE 5.0 or higher.
+<br>
+</body>
+</html>

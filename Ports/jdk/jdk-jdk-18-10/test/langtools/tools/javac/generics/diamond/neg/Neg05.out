@@ -1,0 +1,49 @@
+Neg05.java:19:48: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:20:58: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:21:43: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:22:56: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:24:48: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:25:58: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:26:43: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:27:56: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:29:48: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:30:59: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:31:44: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:32:57: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:34:49: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:35:59: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:36:44: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:37:57: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:41:37: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:41:44: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V, Neg05.Foo<V>, Neg05<?>.Foo<java.lang.String>))
+Neg05.java:42:47: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:42:54: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V, Neg05.Foo<V>, Neg05<?>.Foo<? extends java.lang.String>))
+Neg05.java:43:32: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:43:39: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V, Neg05.Foo<V>, Neg05<?>.Foo<?>))
+Neg05.java:44:45: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:44:52: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V, Neg05.Foo<V>, Neg05<?>.Foo<? super java.lang.String>))
+Neg05.java:46:37: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:46:44: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V,Z, Neg05.Foo<V>, Neg05<?>.Foo<java.lang.String>))
+Neg05.java:47:47: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:47:54: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V,Z, Neg05.Foo<V>, Neg05<?>.Foo<? extends java.lang.String>))
+Neg05.java:48:32: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:48:39: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V,Z, Neg05.Foo<V>, Neg05<?>.Foo<?>))
+Neg05.java:49:45: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:49:52: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V,Z, Neg05.Foo<V>, Neg05<?>.Foo<? super java.lang.String>))
+Neg05.java:51:37: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:51:44: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V, Neg05.Foo<V>, Neg05<?>.Foo<java.lang.String>))
+Neg05.java:52:48: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:52:55: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V, Neg05.Foo<V>, Neg05<?>.Foo<? extends java.lang.String>))
+Neg05.java:53:33: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:53:40: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V, Neg05.Foo<V>, Neg05<?>.Foo<?>))
+Neg05.java:54:46: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:54:53: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V, Neg05.Foo<V>, Neg05<?>.Foo<? super java.lang.String>))
+Neg05.java:56:38: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:56:45: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V,Z, Neg05.Foo<V>, Neg05<?>.Foo<java.lang.String>))
+Neg05.java:57:48: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:57:55: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V,Z, Neg05.Foo<V>, Neg05<?>.Foo<? extends java.lang.String>))
+Neg05.java:58:33: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:58:40: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V,Z, Neg05.Foo<V>, Neg05<?>.Foo<?>))
+Neg05.java:59:46: compiler.err.improperly.formed.type.inner.raw.param
+Neg05.java:59:53: compiler.err.prob.found.req: (compiler.misc.cant.apply.diamond.1: (compiler.misc.diamond: Neg05.Foo), (compiler.misc.infer.no.conforming.instance.exists: V,Z, Neg05.Foo<V>, Neg05<?>.Foo<? super java.lang.String>))
+48 errors

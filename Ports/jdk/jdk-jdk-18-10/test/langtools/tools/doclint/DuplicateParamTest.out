@@ -1,0 +1,7 @@
+DuplicateParamTest.java:18: warning: @param "s" has already been specified
+     * @param s two
+       ^
+DuplicateParamTest.java:19: warning: @param "s" has already been specified
+     * @param s three
+       ^
+2 warnings

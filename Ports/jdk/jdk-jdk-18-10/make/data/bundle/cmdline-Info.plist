@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>CFBundleIdentifier</key>
+        <string>@@ID@@</string>
+        <key>CFBundleInfoDictionaryVersion</key>
+        <string>6.0</string>
+        <key>CFBundleShortVersionString</key>
+        <string>@@VERSION@@</string>
+        <key>CFBundleVersion</key>
+        <string>@@BUILD_VERSION@@</string>
+        <key>NSMicrophoneUsageDescription</key>
+        <string>The application is requesting access to the microphone.</string>
+        @@EXTRA@@
+</dict>
+</plist>

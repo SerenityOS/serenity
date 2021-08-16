@@ -1,0 +1,14 @@
+<x:root
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xsdtesting Bug6963468.xsd"
+	xmlns:x="http://xsdtesting">
+
+	<x:E1>1</x:E1>
+	<x:E1>true</x:E1>
+	<x:E1>false</x:E1>
+	<x:E1>x</x:E1>
+	<x:E1>y</x:E1>
+	<x:E2>1</x:E2>
+	<x:E3 x:att1="123"/>
+</x:root>
+

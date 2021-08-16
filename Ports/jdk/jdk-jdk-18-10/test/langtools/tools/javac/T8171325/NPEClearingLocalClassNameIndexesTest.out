@@ -1,0 +1,6 @@
+NPEClearingLocalClassNameIndexesTest.java:18:9: compiler.err.cant.apply.symbol: kindname.method, f, java.util.List<A>, java.lang.String, kindname.class, NPEClearingLocalClassNameIndexesTest, (compiler.misc.incompatible.bounds: C, (compiler.misc.upper.bounds: java.lang.Object,java.util.List<A>), (compiler.misc.lower.bounds: java.lang.String))
+NPEClearingLocalClassNameIndexesTest.java:18:42: compiler.err.cant.resolve.location: kindname.class, NoSuch, , , (compiler.misc.location: kindname.class, NPEClearingLocalClassNameIndexesTest, null)
+NPEClearingLocalClassNameIndexesTest.java:19:9: compiler.err.cant.apply.symbol: kindname.method, f, java.util.List<A>, java.lang.String, kindname.class, NPEClearingLocalClassNameIndexesTest, (compiler.misc.incompatible.bounds: C, (compiler.misc.upper.bounds: java.lang.Object,java.util.List<A>), (compiler.misc.lower.bounds: java.lang.String))
+NPEClearingLocalClassNameIndexesTest.java:19:42: compiler.err.cant.resolve.location: kindname.class, NoSuch, , , (compiler.misc.location: kindname.class, NPEClearingLocalClassNameIndexesTest, null)
+NPEClearingLocalClassNameIndexesTest.java:19:49: compiler.err.type.found.req: int, (compiler.misc.type.req.ref)
+5 errors

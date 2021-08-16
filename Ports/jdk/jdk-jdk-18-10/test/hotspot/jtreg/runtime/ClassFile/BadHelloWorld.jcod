@@ -1,0 +1,138 @@
+/*
+ * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ * This file fuzzes the class name #15 to have a leading 'L' and ending ';'.
+ */
+
+class BadHelloWorld {
+  0xCAFEBABE;
+  0; // minor version
+  52; // version
+  [31] { // Constant Pool
+    ; // first element is empty
+    Utf8 "BadHelloWorld"; // #1     at 0x0A
+    class #1; // #2     at 0x1A
+    Utf8 "java/lang/Object"; // #3     at 0x1D
+    class #3; // #4     at 0x30
+    Utf8 "<init>"; // #5     at 0x33
+    Utf8 "()V"; // #6     at 0x3C
+    NameAndType #5 #6; // #7     at 0x42
+    Method #4 #7; // #8     at 0x47
+    Utf8 "toString"; // #9     at 0x4C
+    Utf8 "()Ljava/lang/String;"; // #10     at 0x57
+    Utf8 "Hello, world!"; // #11     at 0x6E
+    String #11; // #12     at 0x7E
+    Utf8 "main"; // #13     at 0x81
+    Utf8 "([Ljava/lang/String;)V"; // #14     at 0x88
+    Utf8 "LBadHelloWorld;"; // #15     at 0xA1
+    class #15; // #16     at 0xB3
+    Method #16 #7; // #17     at 0xB6
+    Utf8 "java/lang/System"; // #18     at 0xBB
+    class #18; // #19     at 0xCE
+    Utf8 "out"; // #20     at 0xD1
+    Utf8 "Ljava/io/PrintStream;"; // #21     at 0xD7
+    NameAndType #20 #21; // #22     at 0xEF
+    Field #19 #22; // #23     at 0xF4
+    Utf8 "java/io/PrintStream"; // #24     at 0xF9
+    class #24; // #25     at 0x010F
+    Utf8 "println"; // #26     at 0x0112
+    Utf8 "(Ljava/lang/Object;)V"; // #27     at 0x011C
+    NameAndType #26 #27; // #28     at 0x0134
+    Method #25 #28; // #29     at 0x0139
+    Utf8 "Code"; // #30     at 0x013E
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #4;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [3] { // methods
+    { // Member at 0x0151
+      0x0001; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [1] { // Attributes
+        Attr(#30, 17) { // Code at 0x0159
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70008B1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0170
+      0x0001; // access
+      #9; // name_cpx
+      #10; // sig_cpx
+      [1] { // Attributes
+        Attr(#30, 15) { // Code at 0x0178
+          1; // max_stack
+          1; // max_locals
+          Bytes[3]{
+            0x120CB0;
+          };
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x018D
+      0x0089; // access
+      #13; // name_cpx
+      #14; // sig_cpx
+      [1] { // Attributes
+        Attr(#30, 28) { // Code at 0x0195
+          2; // max_stack
+          2; // max_locals
+          Bytes[16]{
+            0xBB001059B700114C;
+            0xB200172BB6001DB1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [0] { // Attributes
+  } // Attributes
+} // end class BadHelloWorld

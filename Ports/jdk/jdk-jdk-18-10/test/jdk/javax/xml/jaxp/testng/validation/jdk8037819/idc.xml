@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<itemList>
+   <item uniqueAttr="ONE">1</item>
+   <item uniqueAttr="ONE">2</item>
+   <item uniqueAttr="TWO">2</item>
+   <itemRef>3</itemRef>
+</itemList>

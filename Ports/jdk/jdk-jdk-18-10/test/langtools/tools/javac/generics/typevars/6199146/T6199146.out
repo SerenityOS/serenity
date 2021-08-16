@@ -1,0 +1,2 @@
+T6199146.java:9:25: compiler.err.types.incompatible: T6199146.I2, T6199146.I1, (compiler.misc.incompatible.diff.ret: getFoo, )
+1 error

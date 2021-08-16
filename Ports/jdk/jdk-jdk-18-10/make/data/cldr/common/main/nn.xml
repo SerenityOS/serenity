@@ -1,0 +1,3116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="nn"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="alt">sør-altaj</language>
+			<language type="ang">gammalengelsk</language>
+			<language type="ar_001">moderne standardarabisk</language>
+			<language type="asa">asu (Tanzania)</language>
+			<language type="bas">basa</language>
+			<language type="be">kviterussisk</language>
+			<language type="bez">bena (Tanzania)</language>
+			<language type="bss">bakossi</language>
+			<language type="car">carib</language>
+			<language type="ceb">cebuano</language>
+			<language type="chg">tsjagataisk</language>
+			<language type="chr">cherokee</language>
+			<language type="ckb">sorani</language>
+			<language type="ckb" alt="variant">kurdisk (sorani)</language>
+			<language type="crs">seselwa (fransk-kreolsk)</language>
+			<language type="cu">kyrkjeslavisk</language>
+			<language type="cv">tsjuvansk</language>
+			<language type="den">slavej</language>
+			<language type="dsb">lågsorbisk</language>
+			<language type="ebu">embu</language>
+			<language type="egy">gammalegyptisk</language>
+			<language type="elx">elamite</language>
+			<language type="fa_AF">dari</language>
+			<language type="fil">filippinsk</language>
+			<language type="fro">gammalfransk</language>
+			<language type="frs">austfrisisk</language>
+			<language type="fur">friulisk</language>
+			<language type="gil">gilbertese</language>
+			<language type="gmh">mellomhøgtysk</language>
+			<language type="goh">gammalhøgtysk</language>
+			<language type="grc">gammalgresk</language>
+			<language type="gv">manx</language>
+			<language type="hsb">høgsorbisk</language>
+			<language type="kab">kabyle</language>
+			<language type="kea">kabuverdianu</language>
+			<language type="kl">grønlandsk (kalaallisut)</language>
+			<language type="krc">karachay-balkar</language>
+			<language type="kum">kumyk</language>
+			<language type="lad">ladino</language>
+			<language type="lez">lezghian</language>
+			<language type="li">limburgisk</language>
+			<language type="lrc">nord-lurisk</language>
+			<language type="lus">lushai</language>
+			<language type="luy">olulujia</language>
+			<language type="mdf">moksha</language>
+			<language type="mfe">morisyen</language>
+			<language type="mg">madagassisk</language>
+			<language type="mul">fleire språk</language>
+			<language type="mzn">mazanderani</language>
+			<language type="nds">lågtysk</language>
+			<language type="nds_NL">lågsaksisk</language>
+			<language type="ne">nepalsk</language>
+			<language type="niu">niuisk</language>
+			<language type="nl_BE">flamsk</language>
+			<language type="nog">nogai</language>
+			<language type="non">gammalnorsk</language>
+			<language type="nqo">n’ko</language>
+			<language type="nso">nordsotho</language>
+			<language type="nwc">klassisk newarisk</language>
+			<language type="pcm">nigeriansk pidgin</language>
+			<language type="peo">gammalpersisk</language>
+			<language type="pro">gammalprovençalsk</language>
+			<language type="quc">k’iche</language>
+			<language type="ro_MD">moldavisk</language>
+			<language type="rup">arumensk</language>
+			<language type="rw">kinjarwanda</language>
+			<language type="sc">sardinsk</language>
+			<language type="sga">gammalirsk</language>
+			<language type="srn">sranan tongo</language>
+			<language type="st">sørsotho</language>
+			<language type="swb">shimaore</language>
+			<language type="syr">syrisk</language>
+			<language type="tiv">tivi</language>
+			<language type="tkl">tokelau</language>
+			<language type="tn">tswana</language>
+			<language type="tog">tonga (Nyasa)</language>
+			<language type="tvl">tuvalu</language>
+			<language type="tyv">tuvinisk</language>
+			<language type="tzm">sentral-tamazight</language>
+			<language type="udm">udmurt</language>
+			<language type="war">waray</language>
+			<language type="xal">kalmykisk</language>
+			<language type="zap">zapotec</language>
+			<language type="zbl">blissymbol</language>
+			<language type="zgh">standard marokkansk tamazight</language>
+			<language type="zh_Hans">forenkla kinesisk</language>
+			<language type="zh_Hans" alt="long">forenkla mandarinkinesisk</language>
+			<language type="zh_Hant">tradisjonell kinesisk</language>
+			<language type="zh_Hant" alt="long">tradisjonell mandarinkinesisk</language>
+			<language type="zxx">utan språkleg innhald</language>
+			<language type="zza">zaza</language>
+		</languages>
+		<scripts>
+			<script type="Armi">armisk</script>
+			<script type="Bamu" draft="unconfirmed">bamun</script>
+			<script type="Cans">felles kanadiske urspråksstavingar</script>
+			<script type="Cyrs">kyrillisk (kyrkjeslavisk variant)</script>
+			<script type="Egyp">egyptiske hieroglyfar</script>
+			<script type="Geok">khutsuri (asomtavruli og nuskhuri)</script>
+			<script type="Gran" draft="unconfirmed">gammaltamilsk</script>
+			<script type="Hanb">hanb</script>
+			<script type="Hans">forenkla</script>
+			<script type="Hans" alt="stand-alone">forenkla han</script>
+			<script type="Hmng">pahawk hmong</script>
+			<script type="Hrkt">japansk stavingsskrifter</script>
+			<script type="Hung">gammalungarsk</script>
+			<script type="Ital">gammalitalisk</script>
+			<script type="Latf">latinsk (frakturvariant)</script>
+			<script type="Latg">latinsk (gælisk variant)</script>
+			<script type="Limb">lumbu</script>
+			<script type="Lisu" draft="unconfirmed">Fraser</script>
+			<script type="Maya">maya-hieroglyfar</script>
+			<script type="Perm">gammalpermisk</script>
+			<script type="Phlp">salmepahlavi</script>
+			<script type="Sarb" draft="unconfirmed">gammalsydarabisk</script>
+			<script type="Sgnw">teiknskrift</script>
+			<script type="Syrc">syriakisk</script>
+			<script type="Syre">syriakisk (estrangelo-variant)</script>
+			<script type="Syrj">syriakisk (vestleg variant)</script>
+			<script type="Syrn">syriakisk (austleg variant)</script>
+			<script type="Thaa">thaana</script>
+			<script type="Visp">synleg tale</script>
+			<script type="Xpeo">gammalpersisk</script>
+			<script type="Xsux">sumero-akkadisk kileskrift</script>
+			<script type="Zinh">nedarva</script>
+			<script type="Zsym">symbol</script>
+			<script type="Zxxx">språk utan skrift</script>
+			<script type="Zzzz">ukjend skrift</script>
+		</scripts>
+		<territories>
+			<territory type="001">verda</territory>
+			<territory type="013">Sentral-Amerika</territory>
+			<territory type="014">Aust-Afrika</territory>
+			<territory type="018">Sørlege Afrika</territory>
+			<territory type="021">Nordlege Amerika</territory>
+			<territory type="030">Aust-Asia</territory>
+			<territory type="035">Søraust-Asia</territory>
+			<territory type="151">Aust-Europa</territory>
+			<territory type="AE">Dei sameinte arabiske emirata</territory>
+			<territory type="AT">Austerrike</territory>
+			<territory type="BL">Saint Barthélemy</territory>
+			<territory type="BY">Kviterussland</territory>
+			<territory type="CC">Kokosøyane</territory>
+			<territory type="CD">Kongo-Kinshasa</territory>
+			<territory type="CF">Den sentralafrikanske republikken</territory>
+			<territory type="CI">Elfenbeinskysten</territory>
+			<territory type="CK">Cookøyane</territory>
+			<territory type="DO">Den dominikanske republikken</territory>
+			<territory type="EU">Den europeiske unionen</territory>
+			<territory type="EZ">eurosona</territory>
+			<territory type="FK">Falklandsøyane</territory>
+			<territory type="FK" alt="variant">Falklandsøyane (Islas Malvinas)</territory>
+			<territory type="FO">Færøyane</territory>
+			<territory type="GS">Sør-Georgia og Sør-Sandwichøyane</territory>
+			<territory type="HM">Heardøya og McDonaldøyane</territory>
+			<territory type="IC">Kanariøyane</territory>
+			<territory type="KM">Komorane</territory>
+			<territory type="KY">Caymanøyane</territory>
+			<territory type="LU">Luxembourg</territory>
+			<territory type="MH">Marshalløyane</territory>
+			<territory type="MP">Nord-Marianane</territory>
+			<territory type="MV">Maldivane</territory>
+			<territory type="NO">Noreg</territory>
+			<territory type="PH">Filippinane</territory>
+			<territory type="PN">Pitcairn</territory>
+			<territory type="SB">Salomonøyane</territory>
+			<territory type="SC">Seychellane</territory>
+			<territory type="SH">Saint Helena</territory>
+			<territory type="TC">Turks- og Caicosøyane</territory>
+			<territory type="TF">Dei franske sørterritoria</territory>
+			<territory type="TL">Aust-Timor</territory>
+			<territory type="TL" alt="variant">Aust-Timor</territory>
+			<territory type="UM">USAs ytre småøyar</territory>
+			<territory type="UN">SN</territory>
+			<territory type="VC">St. Vincent og Grenadinane</territory>
+			<territory type="VG">Dei britiske Jomfruøyane</territory>
+			<territory type="VI">Dei amerikanske Jomfruøyane</territory>
+			<territory type="XA">pseudospråk – aksentar</territory>
+			<territory type="XB">pseudospråk – RTL</territory>
+		</territories>
+		<variants>
+			<variant type="1996">tysk ortografi frå 1996</variant>
+			<variant type="1606NICT">nyare mellomfransk til 1606</variant>
+			<variant type="AREVELA">austarmensk</variant>
+			<variant type="AREVMDA">vestarmensk</variant>
+			<variant type="BAKU1926">samla tyrkisk-latinsk alfabet</variant>
+			<variant type="FONIPA">det internasjonale fonetiske alfabetet (IPA)</variant>
+			<variant type="FONUPA">det uralske fonetiske alfabetet UPA</variant>
+			<variant type="LIPAW">resian, lipovazdialekt</variant>
+			<variant type="REVISED">revidert rettskriving</variant>
+			<variant type="SAAHO">saaho-dialekt</variant>
+			<variant type="SCOUSE">scouse-dialekt</variant>
+			<variant type="VALENCIA">valensisk dialekt</variant>
+			<variant type="WADEGILE" draft="unconfirmed">wade-giles</variant>
+		</variants>
+		<keys>
+			<key type="collation">sorteringsrekkjefølgje</key>
+			<key type="lb">lineskiftstil</key>
+			<key type="numbers">tal</key>
+		</keys>
+		<types>
+			<type key="calendar" type="islamic-civil">islamsk sivil kalender</type>
+			<type key="cf" type="account">valutaformat for rekneskapsføring</type>
+			<type key="collation" type="big5han">tradisjonell kinesisk sortering</type>
+			<type key="collation" type="ducet">standard Unicode-sorteringsrekkjefølgje</type>
+			<type key="collation" type="gb2312han">forenkla kinesisk sortering</type>
+			<type key="collation" type="pinyin">pinyin-sortering</type>
+			<type key="collation" type="standard">standard sorteringsrekkjefølgje</type>
+			<type key="hc" type="h11">12-timesystem (0–11)</type>
+			<type key="hc" type="h12">12-timesystem (1–12)</type>
+			<type key="hc" type="h23">24-timesystem (0–23)</type>
+			<type key="hc" type="h24">24-timesystem (1–24)</type>
+			<type key="lb" type="loose">laus lineskiftstil</type>
+			<type key="lb" type="normal">normal lineskiftstil</type>
+			<type key="lb" type="strict">streng lineskiftstil</type>
+			<type key="numbers" type="arab">arabisk-indiske siffer</type>
+			<type key="numbers" type="arabext">utvida arabisk-indiske siffer</type>
+			<type key="numbers" type="armn">armenske tal</type>
+			<type key="numbers" type="armnlow">små armenske tal</type>
+			<type key="numbers" type="beng">bengalske siffer</type>
+			<type key="numbers" type="deva">devanagari-siffer</type>
+			<type key="numbers" type="ethi">etiopiske tal</type>
+			<type key="numbers" type="fullwide">siffer med full breidd</type>
+			<type key="numbers" type="geor">georgiske tal</type>
+			<type key="numbers" type="grek">greske tal</type>
+			<type key="numbers" type="greklow">små greske tal</type>
+			<type key="numbers" type="gujr">gujarati-siffer</type>
+			<type key="numbers" type="guru">gurmukhi-siffer</type>
+			<type key="numbers" type="hanidec">kinesiske desimaltal</type>
+			<type key="numbers" type="hans">forenkla kinesiske tal</type>
+			<type key="numbers" type="hansfin">forenkla kinesiske finanstal</type>
+			<type key="numbers" type="hant">tradisjonelle kinesiske tal</type>
+			<type key="numbers" type="hantfin">tradisjonelle kinesiske finanstal</type>
+			<type key="numbers" type="hebr">hebraiske tal</type>
+			<type key="numbers" type="java" draft="unconfirmed">javanesiske siffer</type>
+			<type key="numbers" type="jpan">japanske tal</type>
+			<type key="numbers" type="jpanfin">japanske finanstal</type>
+			<type key="numbers" type="khmr">khmer-siffer</type>
+			<type key="numbers" type="knda">kannada-siffer</type>
+			<type key="numbers" type="laoo">laotiske siffer</type>
+			<type key="numbers" type="latn">vestlege siffer</type>
+			<type key="numbers" type="mlym">malayalam-siffer</type>
+			<type key="numbers" type="mymr">burmesiske siffer</type>
+			<type key="numbers" type="orya">odia-siffer</type>
+			<type key="numbers" type="roman">romartal</type>
+			<type key="numbers" type="romanlow">små romartal</type>
+			<type key="numbers" type="taml">tamilske tal</type>
+			<type key="numbers" type="tamldec">tamilske siffer</type>
+			<type key="numbers" type="telu">telugu-siffer</type>
+			<type key="numbers" type="thai">thailandske siffer</type>
+			<type key="numbers" type="tibt">tibetanske siffer</type>
+		</types>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters type="auxiliary">[á ǎ č ç đ è ê ń ñ ŋ š ŧ ü ž ä ö]</exemplarCharacters>
+		<exemplarCharacters type="punctuation" draft="contributed">[\- ‐ ‑ – — , ; \: ! ? . … ' ‘ ’ &quot; “ ” ( ) \[ \] § @ * / \&amp; # † ‡ ′ ″]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE d. MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d. MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d. MMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d.M.y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">dd.MM.–dd.MM.</greatestDifference>
+							<greatestDifference id="M">dd.MM.–dd.MM.</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">E dd.MM.–E dd.MM.</greatestDifference>
+							<greatestDifference id="M">E dd.MM.–E dd.MM.</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">E d.–E d. MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">MM.y–MM.y G</greatestDifference>
+							<greatestDifference id="y">MM.y–MM.y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">dd.MM.y–dd.MM.y G</greatestDifference>
+							<greatestDifference id="M">dd.MM.y–dd.MM.y G</greatestDifference>
+							<greatestDifference id="y">dd.MM.y–dd.MM.y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">E dd.MM.y–E dd.MM.y G</greatestDifference>
+							<greatestDifference id="M">E dd.MM.y–E dd.MM.y G</greatestDifference>
+							<greatestDifference id="y">E dd.MM.y–E dd.MM.y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">E d.–E d. MMM y G</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">jan.</month>
+							<month type="2">feb.</month>
+							<month type="3">mars</month>
+							<month type="4">apr.</month>
+							<month type="5">mai</month>
+							<month type="6">juni</month>
+							<month type="7">juli</month>
+							<month type="8">aug.</month>
+							<month type="9">sep.</month>
+							<month type="10">okt.</month>
+							<month type="11">nov.</month>
+							<month type="12">des.</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">sø.</day>
+							<day type="mon">må.</day>
+							<day type="tue">ty.</day>
+							<day type="wed">on.</day>
+							<day type="thu">to.</day>
+							<day type="fri">fr.</day>
+							<day type="sat">la.</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">S</day>
+							<day type="mon">M</day>
+							<day type="tue">T</day>
+							<day type="wed">O</day>
+							<day type="thu">T</day>
+							<day type="fri">F</day>
+							<day type="sat">L</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">sø.</day>
+							<day type="mon">må.</day>
+							<day type="tue">ty.</day>
+							<day type="wed">on.</day>
+							<day type="thu">to.</day>
+							<day type="fri">fr.</day>
+							<day type="sat">la.</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">søndag</day>
+							<day type="mon">måndag</day>
+							<day type="tue">tysdag</day>
+							<day type="wed">onsdag</day>
+							<day type="thu">torsdag</day>
+							<day type="fri">fredag</day>
+							<day type="sat">laurdag</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">søn</day>
+							<day type="mon">mån</day>
+							<day type="tue">tys</day>
+							<day type="wed">ons</day>
+							<day type="thu">tor</day>
+							<day type="fri">fre</day>
+							<day type="sat">lau</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">S</day>
+							<day type="mon">M</day>
+							<day type="tue">T</day>
+							<day type="wed">O</day>
+							<day type="thu">T</day>
+							<day type="fri">F</day>
+							<day type="sat">L</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">sø.</day>
+							<day type="mon">må.</day>
+							<day type="tue">ty.</day>
+							<day type="wed">on.</day>
+							<day type="thu">to.</day>
+							<day type="fri">fr.</day>
+							<day type="sat">la.</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">søndag</day>
+							<day type="mon">måndag</day>
+							<day type="tue">tysdag</day>
+							<day type="wed">onsdag</day>
+							<day type="thu">torsdag</day>
+							<day type="fri">fredag</day>
+							<day type="sat">laurdag</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="narrow">
+							<quarter type="1">1</quarter>
+							<quarter type="2">2</quarter>
+							<quarter type="3">3</quarter>
+							<quarter type="4">4</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="narrow">
+							<quarter type="1">1</quarter>
+							<quarter type="2">2</quarter>
+							<quarter type="3">3</quarter>
+							<quarter type="4">4</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">f.m.</dayPeriod>
+							<dayPeriod type="pm">e.m.</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">f.m.</dayPeriod>
+							<dayPeriod type="pm">e.m.</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">formiddag</dayPeriod>
+							<dayPeriod type="pm">ettermiddag</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">f.m.</dayPeriod>
+							<dayPeriod type="pm">e.m.</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">f.m.</dayPeriod>
+							<dayPeriod type="pm">e.m.</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">f.m.</dayPeriod>
+							<dayPeriod type="pm">e.m.</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">f.Kr.</era>
+						<era type="0" alt="variant">f.v.t.</era>
+						<era type="1">e.Kr.</era>
+						<era type="1" alt="variant">v.t.</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0" alt="variant">f.v.t.</era>
+						<era type="1" alt="variant">v.t.</era>
+					</eraAbbr>
+					<eraNarrow>
+						<era type="0" alt="variant" draft="unconfirmed">fvt</era>
+						<era type="1" alt="variant" draft="unconfirmed">vt</era>
+					</eraNarrow>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE d. MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d. MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d. MMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd.MM.y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>'kl'. HH:mm:ss zzzz</pattern>
+							<pattern alt="variant">'kl'. HH.mm.ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} 'kl'. {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="EHm">E HH:mm</dateFormatItem>
+						<dateFormatItem id="EHms">E HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="MEd">E d.M</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="one">'veke' W 'i' MMMM</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="other">'veke' W 'i' MMMM</dateFormatItem>
+						<dateFormatItem id="yw" count="one">'veke' w 'i' Y</dateFormatItem>
+						<dateFormatItem id="yw" count="other">'veke' w 'i' Y</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="h">
+							<greatestDifference id="a">h a – h a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="a">h:mm a – h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="a">h:mm a – h:mm a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="a">h a – h a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">dd.MM–dd.MM</greatestDifference>
+							<greatestDifference id="M">dd.MM–dd.MM</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="year">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} år sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} år sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} år sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} år sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} år</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} år</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} år sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} år sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter">
+				<relative type="-1">førre kvartal</relative>
+				<relative type="0">dette kvartalet</relative>
+				<relative type="1">neste kvartal</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} kvartal</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} kvartal</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} kvartal sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} kvartal sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} kv. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} kv. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month">
+				<displayName>månad</displayName>
+				<relative type="-1">førre månad</relative>
+				<relative type="0">denne månaden</relative>
+				<relative type="1">neste månad</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} månad</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} månadar</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} månad sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} månadar sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month-short">
+				<displayName>md.</displayName>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} md. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} md. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">–{0} md.</relativeTimePattern>
+					<relativeTimePattern count="other">–{0} md.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week">
+				<displayName>veke</displayName>
+				<relative type="-1">førre veke</relative>
+				<relative type="0">denne veka</relative>
+				<relative type="1">neste veke</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} veke</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} veker</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} veke sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} veker sidan</relativeTimePattern>
+				</relativeTime>
+				<relativePeriod>veka som inneheld {0}</relativePeriod>
+			</field>
+			<field type="week-short">
+				<displayName>veke</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} v.</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} v.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} v. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} v. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week-narrow">
+				<displayName>v.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">+{0} v.</relativeTimePattern>
+					<relativeTimePattern count="other">+{0} v.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">–{0} v.</relativeTimePattern>
+					<relativeTimePattern count="other">–{0} v.</relativeTimePattern>
+				</relativeTime>
+				<relativePeriod>v. m. {0}</relativePeriod>
+			</field>
+			<field type="weekOfMonth">
+				<displayName>veke i månaden</displayName>
+			</field>
+			<field type="weekOfMonth-short">
+				<displayName>veke i md.</displayName>
+			</field>
+			<field type="weekOfMonth-narrow">
+				<displayName>veke i md.</displayName>
+			</field>
+			<field type="day">
+				<relative type="-2">i førgår</relative>
+				<relative type="-1">i går</relative>
+				<relative type="0">i dag</relative>
+				<relative type="1">i morgon</relative>
+				<relative type="2">i overmorgon</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} døgn sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} døgn sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} d. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} d. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">–{0} d.</relativeTimePattern>
+					<relativeTimePattern count="other">–{0} d.</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="weekday">
+				<displayName>vekedag</displayName>
+			</field>
+			<field type="weekday-short">
+				<displayName>vekedag</displayName>
+			</field>
+			<field type="weekday-narrow">
+				<displayName>veked.</displayName>
+			</field>
+			<field type="weekdayOfMonth">
+				<displayName>vekedag i månaden</displayName>
+			</field>
+			<field type="weekdayOfMonth-short">
+				<displayName>veked. i md.</displayName>
+			</field>
+			<field type="weekdayOfMonth-narrow">
+				<displayName>veked. i md.</displayName>
+			</field>
+			<field type="sun">
+				<relative type="-1">førre sundag</relative>
+				<relative type="0">sundag</relative>
+				<relative type="1">neste sundag</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} sundag</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} sundagar</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} sundag sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} sundagar sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sun-short">
+				<relative type="-1">førre sun.</relative>
+				<relative type="0">sun.</relative>
+				<relative type="1">neste sun.</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} sun.</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} sun.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} sun. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} sun. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sun-narrow">
+				<relative type="-1">førre su.</relative>
+				<relative type="0">su.</relative>
+				<relative type="1">neste su.</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} su.</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} su.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} su. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} su. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon">
+				<relative type="-1">førre måndag</relative>
+				<relative type="0">måndag</relative>
+				<relative type="1">neste måndag</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} måndag</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} måndagar</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} måndag sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} måndagar sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon-short">
+				<relative type="-1">førre mån.</relative>
+				<relative type="0">mån.</relative>
+				<relative type="1">neste mån.</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} mån.</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} mån.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} mån. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} mån. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon-narrow">
+				<relative type="-1">førre mån.</relative>
+				<relative type="0">mån.</relative>
+				<relative type="1">neste mån.</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} må.</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} må.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} må. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} må. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue">
+				<relative type="-1">førre tysdag</relative>
+				<relative type="0">tysdag</relative>
+				<relative type="1">neste tysdag</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} tysdag</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} tysdagar</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} tysdag sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} tysdagar sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue-short">
+				<relative type="-1">førre tys.</relative>
+				<relative type="0">tys.</relative>
+				<relative type="1">neste tys.</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} tys.</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} tys.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} tys. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} tys. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue-narrow">
+				<relative type="-1">førre ty.</relative>
+				<relative type="0">ty.</relative>
+				<relative type="1">neste ty.</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} ty.</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} ty.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} ty. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} ty. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed">
+				<relative type="-1">førre onsdag</relative>
+				<relative type="0">onsdag</relative>
+				<relative type="1">neste onsdag</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} onsdag</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} onsdagar</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} onsdag sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} onsdagar sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed-short">
+				<relative type="-1">førre ons.</relative>
+				<relative type="0">ons.</relative>
+				<relative type="1">neste ons.</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} ons. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} ons. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed-narrow">
+				<relative type="-1">førre on.</relative>
+				<relative type="0">on.</relative>
+				<relative type="1">neste on.</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} on. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} on. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu">
+				<relative type="-1">førre torsdag</relative>
+				<relative type="0">torsdag</relative>
+				<relative type="1">neste torsdag</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} torsdag</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} torsdagar</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} torsdag sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} torsdagar sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu-short">
+				<relative type="-1">førre tor.</relative>
+				<relative type="0">tor.</relative>
+				<relative type="1">neste tor.</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} tor. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} tor. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu-narrow">
+				<relative type="-1">førre to.</relative>
+				<relative type="0">to.</relative>
+				<relative type="1">neste to.</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} to. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} to. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri">
+				<relative type="-1">førre fredag</relative>
+				<relative type="0">fredag</relative>
+				<relative type="1">neste fredag</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} fredag</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} fredagar</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} fredag sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} fredagar sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri-short">
+				<relative type="-1">førre fre.</relative>
+				<relative type="0">fre.</relative>
+				<relative type="1">neste fre.</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} fre. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} fre. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri-narrow">
+				<relative type="-1">førre fr.</relative>
+				<relative type="0">fr.</relative>
+				<relative type="1">neste fr.</relative>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} fr. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} fr. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat">
+				<relative type="-1">førre laurdag</relative>
+				<relative type="0">laurdag</relative>
+				<relative type="1">neste laurdag</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} laurdag</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} laurdagar</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} laurdag sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} laurdagar sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat-short">
+				<relative type="-1">førre lau.</relative>
+				<relative type="0">lau.</relative>
+				<relative type="1">neste lau.</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} lau.</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} lau.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} lau. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} lau. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat-narrow">
+				<relative type="-1">førre la.</relative>
+				<relative type="0">la.</relative>
+				<relative type="1">neste la.</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} la.</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} la.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} la. sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} la. sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="hour">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} time</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} timar</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} time sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} timar sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="hour-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} t sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} t sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="hour-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">–{0} t</relativeTimePattern>
+					<relativeTimePattern count="other">–{0} t</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} minutt</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} minutt</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} minutt sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} minutt sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} min sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} min sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">–{0} min</relativeTimePattern>
+					<relativeTimePattern count="other">–{0} min</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second">
+				<relative type="0">no</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} sekund</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} sekund</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} sekund sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} sekund sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second-short">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">om {0} sek</relativeTimePattern>
+					<relativeTimePattern count="other">om {0} sek</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">for {0} sek sidan</relativeTimePattern>
+					<relativeTimePattern count="other">for {0} sek sidan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">–{0} s</relativeTimePattern>
+					<relativeTimePattern count="other">–{0} s</relativeTimePattern>
+				</relativeTime>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<regionFormat type="daylight">sommartid – {0}</regionFormat>
+			<zone type="Etc/Unknown">
+				<exemplarCity>ukjend by</exemplarCity>
+			</zone>
+			<zone type="America/Cuiaba">
+				<exemplarCity>Cuiaba</exemplarCity>
+			</zone>
+			<zone type="Indian/Cocos">
+				<exemplarCity>Kokosøyane</exemplarCity>
+			</zone>
+			<zone type="Pacific/Galapagos">
+				<exemplarCity>Galápagosøyane</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Canary">
+				<exemplarCity>Kanariøyane</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Faeroe">
+				<exemplarCity>Færøyane</exemplarCity>
+			</zone>
+			<zone type="Europe/London">
+				<long>
+					<daylight>britisk sommartid</daylight>
+				</long>
+			</zone>
+			<zone type="Europe/Dublin">
+				<long>
+					<daylight>irsk sommartid</daylight>
+				</long>
+			</zone>
+			<zone type="Indian/Comoro">
+				<exemplarCity>Komorane</exemplarCity>
+			</zone>
+			<zone type="America/Cayman">
+				<exemplarCity>Caymanøyane</exemplarCity>
+			</zone>
+			<zone type="Asia/Aqtobe">
+				<exemplarCity>Aktobe</exemplarCity>
+			</zone>
+			<zone type="Asia/Rangoon">
+				<exemplarCity>Yangôn</exemplarCity>
+			</zone>
+			<zone type="Asia/Hovd">
+				<exemplarCity>Khovd</exemplarCity>
+			</zone>
+			<zone type="Asia/Choibalsan">
+				<exemplarCity>Tsjojbalsan</exemplarCity>
+			</zone>
+			<zone type="Indian/Maldives">
+				<exemplarCity>Maldivane</exemplarCity>
+			</zone>
+			<zone type="America/Merida">
+				<exemplarCity>Merida</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Azores">
+				<exemplarCity>Asorane</exemplarCity>
+			</zone>
+			<zone type="Asia/Ashgabat">
+				<exemplarCity>Asjgabat</exemplarCity>
+			</zone>
+			<metazone type="Africa_Eastern">
+				<long>
+					<standard>austafrikansk tid</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Western">
+				<long>
+					<generic>vestafrikansk tid</generic>
+					<standard>vestafrikansk standardtid</standard>
+					<daylight>vestafrikansk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Alaska">
+				<long>
+					<generic>alaskisk tid</generic>
+					<standard>alaskisk normaltid</standard>
+					<daylight>alaskisk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Amazon">
+				<long>
+					<generic>tidssone for Amazonas</generic>
+					<standard>normaltid for Amazonas</standard>
+					<daylight>sommartid for Amazonas</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Central">
+				<long>
+					<generic>tidssone for sentrale Nord-Amerika</generic>
+					<standard>normaltid for sentrale Nord-Amerika</standard>
+					<daylight>sommartid for sentrale Nord-Amerika</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic>tidssone for den nordamerikanske austkysten</generic>
+					<standard>normaltid for den nordamerikanske austkysten</standard>
+					<daylight>sommartid for den nordamerikansk austkysten</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic>tidssone for Rocky Mountains (USA)</generic>
+					<standard>normaltid for Rocky Mountains (USA)</standard>
+					<daylight>sommartid for Rocky Mountains (USA)</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic>tidssone for den nordamerikanske stillehavskysten</generic>
+					<standard>normaltid for den nordamerikanske stillehavskysten</standard>
+					<daylight>sommartid for den nordamerikanske stillehavskysten</daylight>
+				</long>
+			</metazone>
+			<metazone type="Apia">
+				<long>
+					<generic>tidssone for Apia</generic>
+					<standard>normaltid for Apia</standard>
+					<daylight>sommartid for Apia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Arabian">
+				<long>
+					<generic>arabisk tid</generic>
+					<standard>arabisk normaltid</standard>
+					<daylight>arabisk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina">
+				<long>
+					<generic>argentinsk tid</generic>
+					<standard>argentinsk normaltid</standard>
+					<daylight>argentinsk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina_Western">
+				<long>
+					<generic>vestargentinsk tid</generic>
+					<standard>vestargentinsk normaltid</standard>
+					<daylight>vestargentinsk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Armenia">
+				<long>
+					<generic>armensk tid</generic>
+					<standard>armensk normaltid</standard>
+					<daylight>armensk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<generic>tidssone for den nordamerikanske atlanterhavskysten</generic>
+					<standard>normaltid for den nordamerikanske atlanterhavskysten</standard>
+					<daylight>sommartid for den nordamerikanske atlanterhavskysten</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Central">
+				<long>
+					<generic>sentralaustralsk tid</generic>
+					<standard>sentralaustralsk standardtid</standard>
+					<daylight>sentralaustralsk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_CentralWestern">
+				<long>
+					<generic>vest-sentralaustralsk tid</generic>
+					<standard>vest-sentralaustralsk standardtid</standard>
+					<daylight>vest-sentralaustralsk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Eastern">
+				<long>
+					<generic>austaustralsk tid</generic>
+					<standard>austaustralsk standardtid</standard>
+					<daylight>austaustralsk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Western">
+				<long>
+					<generic>vestaustralsk tid</generic>
+					<standard>vestaustralsk standardtid</standard>
+					<daylight>vestaustralsk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azerbaijan">
+				<long>
+					<generic>aserbajdsjansk tid</generic>
+					<standard>aserbajdsjansk normaltid</standard>
+					<daylight>aserbajdsjansk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azores">
+				<long>
+					<generic>asorisk tid</generic>
+					<standard>asorisk normaltid</standard>
+					<daylight>asorisk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bangladesh">
+				<long>
+					<generic>bangladeshisk tid</generic>
+					<standard>bangladeshisk normaltid</standard>
+					<daylight>bangladeshisk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Brasilia">
+				<long>
+					<generic>tidssone for Brasilia</generic>
+					<standard>normaltid for Brasilia</standard>
+					<daylight>sommartid for Brasilia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cape_Verde">
+				<long>
+					<generic>kappverdisk tid</generic>
+					<standard>kappverdisk normaltid</standard>
+					<daylight>kappverdisk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chatham">
+				<long>
+					<generic>tidssone for Chatham</generic>
+					<standard>normaltid for Chatham</standard>
+					<daylight>sommartid for Chatham</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chile">
+				<long>
+					<generic>chilensk tid</generic>
+					<standard>chilensk normaltid</standard>
+					<daylight>chilensk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="China">
+				<long>
+					<generic>kinesisk tid</generic>
+					<standard>kinesisk normaltid</standard>
+					<daylight>kinesisk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Choibalsan">
+				<long>
+					<generic>tidssone for Tsjojbalsan</generic>
+					<standard>normaltid for Tsjojbalsan</standard>
+					<daylight>sommartid for Tsjojbalsan</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cocos">
+				<long>
+					<standard>tidssone for Kokosøyane</standard>
+				</long>
+			</metazone>
+			<metazone type="Colombia">
+				<long>
+					<generic>kolombiansk tid</generic>
+					<standard>kolombiansk normaltid</standard>
+					<daylight>kolombiansk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cook">
+				<long>
+					<generic>tidssone for Cookøyane</generic>
+					<standard>normaltid for Cookøyane</standard>
+					<daylight>sommartid for Cookøyane</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cuba">
+				<long>
+					<generic>kubansk tid</generic>
+					<standard>kubansk normaltid</standard>
+					<daylight>kubansk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="DumontDUrville">
+				<long>
+					<standard>tidssone for Dumont-d’Urville</standard>
+				</long>
+			</metazone>
+			<metazone type="East_Timor">
+				<long>
+					<standard>austtimoresisk tid</standard>
+				</long>
+			</metazone>
+			<metazone type="Easter">
+				<long>
+					<generic>tidssone for Påskeøya</generic>
+					<standard>normaltid for Påskeøya</standard>
+					<daylight>sommartid for Påskeøya</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>sentraleuropeisk tid</generic>
+					<standard>sentraleuropeisk standardtid</standard>
+					<daylight>sentraleuropeisk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic>austeuropeisk tid</generic>
+					<standard>austeuropeisk standardtid</standard>
+					<daylight>austeuropeisk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Further_Eastern">
+				<long>
+					<standard>fjern-austeuropeisk tid</standard>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>vesteuropeisk tid</generic>
+					<standard>vesteuropeisk standardtid</standard>
+					<daylight>vesteuropeisk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Falkland">
+				<long>
+					<generic>tidssone for Falklandsøyane</generic>
+					<standard>normaltid for Falklandsøyane</standard>
+					<daylight>sommartid for Falklandsøyane</daylight>
+				</long>
+			</metazone>
+			<metazone type="Fiji">
+				<long>
+					<generic>fijiansk tid</generic>
+					<standard>fijiansk normaltid</standard>
+					<daylight>fijiansk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="French_Southern">
+				<long>
+					<standard>tidssone for Dei franske sørterritoria</standard>
+				</long>
+			</metazone>
+			<metazone type="Galapagos">
+				<long>
+					<standard>tidssone for Galápagosøyane</standard>
+				</long>
+			</metazone>
+			<metazone type="Georgia">
+				<long>
+					<generic>georgisk tid</generic>
+					<standard>georgisk normaltid</standard>
+					<daylight>georgisk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gilbert_Islands">
+				<long>
+					<standard>tidssone for Gilbertøyane</standard>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Eastern">
+				<long>
+					<generic>austgrønlandsk tid</generic>
+					<standard>austgrønlandsk normaltid</standard>
+					<daylight>austgrønlandsk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Western">
+				<long>
+					<generic>vestgrønlandsk tid</generic>
+					<standard>vestgrønlandsk normaltid</standard>
+					<daylight>vestgrønlandsk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hawaii_Aleutian">
+				<long>
+					<generic>tidssone for Hawaii og Aleutene</generic>
+					<standard>normaltid for Hawaii og Aleutene</standard>
+					<daylight>sommartid for Hawaii og Aleutene</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hong_Kong">
+				<long>
+					<generic>hongkongkinesisk tid</generic>
+					<standard>hongkongkinesisk normaltid</standard>
+					<daylight>hongkongkinesisk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hovd">
+				<long>
+					<generic>tidssone for Khovd</generic>
+					<standard>normaltid for Khovd</standard>
+					<daylight>sommartid for Khovd</daylight>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Eastern">
+				<long>
+					<standard>austindonesisk tid</standard>
+				</long>
+			</metazone>
+			<metazone type="Iran">
+				<long>
+					<generic>iransk tid</generic>
+					<standard>iransk normaltid</standard>
+					<daylight>iransk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Irkutsk">
+				<long>
+					<generic>tidssone for Irkutsk</generic>
+					<standard>normaltid for Irkutsk</standard>
+					<daylight>sommartid for Irkutsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Israel">
+				<long>
+					<generic>israelsk tid</generic>
+					<standard>israelsk normaltid</standard>
+					<daylight>israelsk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Japan">
+				<long>
+					<generic>japansk tid</generic>
+					<standard>japansk normaltid</standard>
+					<daylight>japansk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Eastern">
+				<long>
+					<standard>austkasakhstansk tid</standard>
+				</long>
+			</metazone>
+			<metazone type="Korea">
+				<long>
+					<generic>koreansk tid</generic>
+					<standard>koreansk normaltid</standard>
+					<daylight>koreansk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Krasnoyarsk">
+				<long>
+					<generic>tidssone for Krasnojarsk</generic>
+					<standard>normaltid for Krasnojarsk</standard>
+					<daylight>sommartid for Krasnojarsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Line_Islands">
+				<long>
+					<standard>tidssone for Lineøyane</standard>
+				</long>
+			</metazone>
+			<metazone type="Lord_Howe">
+				<long>
+					<generic>tidssone for Lord Howe-øya</generic>
+					<standard>normaltid for Lord Howe-øya</standard>
+					<daylight>sommartid for Lord Howe-øya</daylight>
+				</long>
+			</metazone>
+			<metazone type="Magadan">
+				<long>
+					<generic>tidssone for Magadan</generic>
+					<standard>normaltid for Magadan</standard>
+					<daylight>sommartid for Magadan</daylight>
+				</long>
+			</metazone>
+			<metazone type="Marquesas">
+				<long>
+					<standard>tidssone for Marquesasøyane</standard>
+				</long>
+			</metazone>
+			<metazone type="Mauritius">
+				<long>
+					<generic>mauritisk tid</generic>
+					<standard>mauritisk normaltid</standard>
+					<daylight>mauritisk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Northwest">
+				<long>
+					<generic>tidssone for nordvestlege Mexico</generic>
+					<standard>normaltid for nordvestlege Mexico</standard>
+					<daylight>sommartid for nordvestlege Mexico</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Pacific">
+				<long>
+					<generic>tidssone for den meksikanske stillehavskysten</generic>
+					<standard>normaltid for den meksikanske stillehavskysten</standard>
+					<daylight>sommartid for den meksikanske stillehavskysten</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mongolia">
+				<long>
+					<generic>tidssone for Ulan Bator</generic>
+					<standard>normaltid for Ulan Bator</standard>
+					<daylight>sommartid for Ulan Bator</daylight>
+				</long>
+			</metazone>
+			<metazone type="Moscow">
+				<long>
+					<generic>tidssone for Moskva</generic>
+					<standard>normaltid for Moskva</standard>
+					<daylight>sommartid for Moskva</daylight>
+				</long>
+			</metazone>
+			<metazone type="New_Caledonia">
+				<long>
+					<generic>kaledonsk tid</generic>
+					<standard>kaledonsk normaltid</standard>
+					<daylight>kaledonsk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="New_Zealand">
+				<long>
+					<generic>nyzealandsk tid</generic>
+					<standard>nyzealandsk normaltid</standard>
+					<daylight>nyzealandsk sumartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Newfoundland">
+				<long>
+					<generic>tidssone for Newfoundland</generic>
+					<standard>normaltid for Newfoundland</standard>
+					<daylight>sommartid for Newfoundland</daylight>
+				</long>
+			</metazone>
+			<metazone type="Norfolk">
+				<long>
+					<generic>tidssone for Norfolkøya</generic>
+					<standard>normaltid for Norfolkøya</standard>
+					<daylight>sommartid for Norfolkøya</daylight>
+				</long>
+			</metazone>
+			<metazone type="Noronha">
+				<long>
+					<generic>tidssone for Fernando de Noronha</generic>
+					<standard>normaltid for Fernando de Noronha</standard>
+					<daylight>sommartid for Fernando de Noronha</daylight>
+				</long>
+			</metazone>
+			<metazone type="Novosibirsk">
+				<long>
+					<generic>tidssone for Novosibirsk</generic>
+					<standard>normaltid for Novosibirsk</standard>
+					<daylight>sommartid for Novosibirsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Omsk">
+				<long>
+					<generic>tidssone for Omsk</generic>
+					<standard>normaltid for Omsk</standard>
+					<daylight>sommartid for Omsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pakistan">
+				<long>
+					<generic>pakistansk tid</generic>
+					<standard>pakistansk normaltid</standard>
+					<daylight>pakistansk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Paraguay">
+				<long>
+					<generic>paraguayansk tid</generic>
+					<standard>paraguayansk normaltid</standard>
+					<daylight>paraguayansk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Peru">
+				<long>
+					<generic>peruansk tid</generic>
+					<standard>peruansk normaltid</standard>
+					<daylight>peruansk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Philippines">
+				<long>
+					<generic>filippinsk tid</generic>
+					<standard>filippinsk normaltid</standard>
+					<daylight>filippinsk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Phoenix_Islands">
+				<long>
+					<standard>tidssone for Phoenixøyane</standard>
+				</long>
+			</metazone>
+			<metazone type="Pierre_Miquelon">
+				<long>
+					<generic>tidssone for Saint-Pierre-et-Miquelon</generic>
+					<standard>normaltid for Saint-Pierre-et-Miquelon</standard>
+					<daylight>sommartid for Saint-Pierre-et-Miquelon</daylight>
+				</long>
+			</metazone>
+			<metazone type="Sakhalin">
+				<long>
+					<generic>tidssone for Sakhalin</generic>
+					<standard>normaltid for Sakhalin</standard>
+					<daylight>sommartid for Sakhalin</daylight>
+				</long>
+			</metazone>
+			<metazone type="Samoa">
+				<long>
+					<generic>samoansk tid</generic>
+					<standard>samoansk normaltid</standard>
+					<daylight>samoansk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Taipei">
+				<long>
+					<generic>tidssone for Taipei</generic>
+					<standard>normaltid for Taipei</standard>
+					<daylight>sommartid for Taipei</daylight>
+				</long>
+			</metazone>
+			<metazone type="Tonga">
+				<long>
+					<generic>tongansk tid</generic>
+					<standard>tongansk normaltid</standard>
+					<daylight>tongansk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Truk">
+				<long>
+					<standard>tidssone for Chuukøyane</standard>
+				</long>
+			</metazone>
+			<metazone type="Turkmenistan">
+				<long>
+					<generic>turkmensk tid</generic>
+					<standard>turkmensk normaltid</standard>
+					<daylight>turkmensk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Uruguay">
+				<long>
+					<generic>uruguayansk tid</generic>
+					<standard>uruguayansk normaltid</standard>
+					<daylight>uruguayansk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Uzbekistan">
+				<long>
+					<generic>usbekisk tid</generic>
+					<standard>usbekisk normaltid</standard>
+					<daylight>usbekisk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Vanuatu">
+				<long>
+					<generic>vanuatisk tid</generic>
+					<standard>vanuatisk normaltid</standard>
+					<daylight>vanuatisk sommartid</daylight>
+				</long>
+			</metazone>
+			<metazone type="Vladivostok">
+				<long>
+					<generic>tidssone for Vladivostok</generic>
+					<standard>normaltid for Vladivostok</standard>
+					<daylight>sommartid for Vladivostok</daylight>
+				</long>
+			</metazone>
+			<metazone type="Volgograd">
+				<long>
+					<generic>tidssone for Volgograd</generic>
+					<standard>normaltid for Volgograd</standard>
+					<daylight>sommartid for Volgograd</daylight>
+				</long>
+			</metazone>
+			<metazone type="Wallis">
+				<long>
+					<standard>tidssone for Wallis- og Futunaøyane</standard>
+				</long>
+			</metazone>
+			<metazone type="Yakutsk">
+				<long>
+					<generic>tidssone for Jakutsk</generic>
+					<standard>normaltid for Jakutsk</standard>
+					<daylight>sommartid for Jakutsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Yekaterinburg">
+				<long>
+					<generic>tidssone for Jekaterinburg</generic>
+					<standard>normaltid for Jekaterinburg</standard>
+					<daylight>sommartid for Jekaterinburg</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<approximatelySign>≈</approximatelySign>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength type="long">
+				<decimalFormat>
+					<pattern type="1000000" count="one">0 million</pattern>
+					<pattern type="1000000" count="other">0 millionar</pattern>
+					<pattern type="10000000" count="one">00 million</pattern>
+					<pattern type="10000000" count="other">00 millionar</pattern>
+					<pattern type="100000000" count="one">000 million</pattern>
+					<pattern type="100000000" count="other">000 millionar</pattern>
+					<pattern type="1000000000" count="one">0 milliard</pattern>
+					<pattern type="1000000000" count="other">0 milliardar</pattern>
+					<pattern type="10000000000" count="one">00 milliard</pattern>
+					<pattern type="10000000000" count="other">00 milliardar</pattern>
+					<pattern type="100000000000" count="one">000 milliard</pattern>
+					<pattern type="100000000000" count="other">000 milliardar</pattern>
+					<pattern type="1000000000000" count="one">0 billion</pattern>
+					<pattern type="1000000000000" count="other">0 billionar</pattern>
+					<pattern type="10000000000000" count="one">00 billion</pattern>
+					<pattern type="10000000000000" count="other">00 billionar</pattern>
+					<pattern type="100000000000000" count="one">000 billion</pattern>
+					<pattern type="100000000000000" count="other">000 billionar</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+			<decimalFormatLength type="short">
+				<decimalFormat>
+					<pattern type="1000" count="one" draft="unconfirmed">0 tn</pattern>
+					<pattern type="1000" count="other" draft="unconfirmed">0 tn</pattern>
+					<pattern type="10000" count="one" draft="unconfirmed">00 tn</pattern>
+					<pattern type="10000" count="other" draft="unconfirmed">00 tn</pattern>
+					<pattern type="100000" count="one" draft="unconfirmed">000 tn</pattern>
+					<pattern type="100000" count="other" draft="unconfirmed">000 tn</pattern>
+					<pattern type="1000000" count="one" draft="unconfirmed">0 mn</pattern>
+					<pattern type="1000000" count="other" draft="unconfirmed">0 mn</pattern>
+					<pattern type="10000000" count="one" draft="unconfirmed">00 mn</pattern>
+					<pattern type="10000000" count="other" draft="unconfirmed">00 mn</pattern>
+					<pattern type="100000000" count="one" draft="unconfirmed">000 mn</pattern>
+					<pattern type="100000000" count="other" draft="unconfirmed">000 mn</pattern>
+					<pattern type="1000000000" count="one" draft="unconfirmed">0 md</pattern>
+					<pattern type="1000000000" count="other" draft="unconfirmed">0 md</pattern>
+					<pattern type="10000000000" count="one" draft="unconfirmed">00 md</pattern>
+					<pattern type="10000000000" count="other" draft="unconfirmed">00 md</pattern>
+					<pattern type="100000000000" count="one" draft="unconfirmed">000 md</pattern>
+					<pattern type="100000000000" count="other" draft="unconfirmed">000 md</pattern>
+					<pattern type="1000000000000" count="one" draft="unconfirmed">0 bn</pattern>
+					<pattern type="1000000000000" count="other" draft="unconfirmed">0 bn</pattern>
+					<pattern type="10000000000000" count="one" draft="unconfirmed">00 bn</pattern>
+					<pattern type="10000000000000" count="other" draft="unconfirmed">00 bn</pattern>
+					<pattern type="100000000000000" count="one" draft="unconfirmed">000 bn</pattern>
+					<pattern type="100000000000000" count="other" draft="unconfirmed">000 bn</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>#,##0.00 ¤</pattern>
+				</currencyFormat>
+				<currencyFormat type="accounting">
+					<pattern>#,##0.00 ¤</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="one" draft="provisional">0 tn ¤</pattern>
+					<pattern type="1000" count="other" draft="provisional">0 tn ¤</pattern>
+					<pattern type="10000" count="one" draft="provisional">00 tn ¤</pattern>
+					<pattern type="10000" count="other" draft="provisional">00 tn ¤</pattern>
+					<pattern type="100000" count="one" draft="provisional">000 tn ¤</pattern>
+					<pattern type="100000" count="other" draft="provisional">000 tn ¤</pattern>
+					<pattern type="1000000" count="one" draft="provisional">0 mn ¤</pattern>
+					<pattern type="1000000" count="other" draft="provisional">0 mn ¤</pattern>
+					<pattern type="10000000" count="one" draft="provisional">00 mn ¤</pattern>
+					<pattern type="10000000" count="other" draft="provisional">00 mn ¤</pattern>
+					<pattern type="100000000" count="one" draft="provisional">000 mn ¤</pattern>
+					<pattern type="100000000" count="other" draft="provisional">000 mn ¤</pattern>
+					<pattern type="1000000000" count="one" draft="provisional">0 md ¤</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">0 md ¤</pattern>
+					<pattern type="10000000000" count="one" draft="provisional">00 md ¤</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">00 md ¤</pattern>
+					<pattern type="100000000000" count="one" draft="provisional">000 md ¤</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">000 md ¤</pattern>
+					<pattern type="1000000000000" count="one" draft="provisional">0 bn ¤</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">0 bn ¤</pattern>
+					<pattern type="10000000000000" count="one" draft="provisional">00 bn ¤</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">00 bn ¤</pattern>
+					<pattern type="100000000000000" count="one" draft="provisional">000 bn ¤</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">000 bn ¤</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="ADP">
+				<displayName>andorranske peseta</displayName>
+			</currency>
+			<currency type="AFA">
+				<displayName>afghani (1927–2002)</displayName>
+			</currency>
+			<currency type="AOK">
+				<displayName>angolske kwanza (1977–1990)</displayName>
+			</currency>
+			<currency type="AON">
+				<displayName>angolske nye kwanza (1990–2000)</displayName>
+			</currency>
+			<currency type="AOR">
+				<displayName>angolske kwanza reajustado (1995–1999)</displayName>
+			</currency>
+			<currency type="ARA">
+				<displayName>argentiske austral</displayName>
+			</currency>
+			<currency type="ARP">
+				<displayName>argentinske peso (1983–1985)</displayName>
+			</currency>
+			<currency type="ATS">
+				<displayName>austerrikske schilling</displayName>
+			</currency>
+			<currency type="AZM">
+				<displayName>aserbaijanske manat</displayName>
+			</currency>
+			<currency type="BAD">
+				<displayName>bosnisk-hercegovinske dinarar</displayName>
+			</currency>
+			<currency type="BEC">
+				<displayName>belgiske franc (konvertibel)</displayName>
+			</currency>
+			<currency type="BEL">
+				<displayName>belgiske franc (finansiell)</displayName>
+			</currency>
+			<currency type="BGL">
+				<displayName>bulgarsk hard lev</displayName>
+			</currency>
+			<currency type="BHD">
+				<displayName>bahrainske dinarar</displayName>
+				<displayName count="one">bahrainsk dinar</displayName>
+				<displayName count="other">bahrainske dinarar</displayName>
+			</currency>
+			<currency type="BOP">
+				<displayName>boliviske peso</displayName>
+			</currency>
+			<currency type="BOV">
+				<displayName>boliviske mvdol</displayName>
+			</currency>
+			<currency type="BRB">
+				<displayName>brasiliansk cruzeiro novo (1967–1986)</displayName>
+			</currency>
+			<currency type="BRC">
+				<displayName>brasilianske cruzado</displayName>
+			</currency>
+			<currency type="BRN">
+				<displayName>brasilianske cruzado novo</displayName>
+			</currency>
+			<currency type="BRR">
+				<displayName>brasilianske cruzeiro</displayName>
+			</currency>
+			<currency type="BUK">
+				<displayName>burmesisk kyat</displayName>
+			</currency>
+			<currency type="BYB">
+				<displayName>kviterussiske nye rublar (1994–1999)</displayName>
+				<displayName count="one">kviterussisk ny rubel (BYB)</displayName>
+				<displayName count="other">kviterussiske nye rublar (BYB)</displayName>
+			</currency>
+			<currency type="BYN">
+				<displayName>nye kviterussiske rublar</displayName>
+				<displayName count="one">ny kviterussisk rubel</displayName>
+				<displayName count="other">nye kviterussiske rublar</displayName>
+			</currency>
+			<currency type="BYR">
+				<displayName>kviterussiske rublar (2000–2016)</displayName>
+				<displayName count="one">kviterussisk rubel (2000–2016)</displayName>
+				<displayName count="other">kviterussiske rublar (2000–2016)</displayName>
+			</currency>
+			<currency type="CHE">
+				<displayName count="one">WIR euro</displayName>
+				<displayName count="other">WIR euro</displayName>
+			</currency>
+			<currency type="CHW">
+				<displayName count="one">WIR franc</displayName>
+				<displayName count="other">WIR franc</displayName>
+			</currency>
+			<currency type="COP">
+				<displayName>kolombianske pesos</displayName>
+				<displayName count="one">kolombiansk peso</displayName>
+				<displayName count="other">kolombianske pesos</displayName>
+			</currency>
+			<currency type="COU">
+				<displayName>unidad de valor real</displayName>
+				<displayName count="one">unidad de valor real</displayName>
+				<displayName count="other">unidad de valor real</displayName>
+			</currency>
+			<currency type="CRC">
+				<displayName>kostarikanske colón</displayName>
+				<displayName count="one">kostarikansk colón</displayName>
+				<displayName count="other">kostarikanske colón</displayName>
+			</currency>
+			<currency type="CSD">
+				<displayName>gamle serbiske dinarer</displayName>
+				<displayName count="one">gammal serbisk dinar</displayName>
+				<displayName count="other">gamle serbiske dinarar</displayName>
+			</currency>
+			<currency type="CVE">
+				<displayName>kappverdiske escudo</displayName>
+				<displayName count="one">kappverdisk escudo</displayName>
+				<displayName count="other">kappverdiske escudo</displayName>
+			</currency>
+			<currency type="DDM">
+				<displayName>austtyske mark</displayName>
+				<displayName count="one">austtysk mark</displayName>
+				<displayName count="other">austtyske mark</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName>algeriske dinarar</displayName>
+				<displayName count="one">algerisk dinar</displayName>
+				<displayName count="other">algeriske dinarar</displayName>
+			</currency>
+			<currency type="EEK">
+				<displayName count="one">estisk kroon</displayName>
+				<displayName count="other">estiske kroon</displayName>
+			</currency>
+			<currency type="GBP">
+				<symbol draft="contributed">GBP</symbol>
+			</currency>
+			<currency type="GHC">
+				<displayName>ghanesiske cedi (1979–2007)</displayName>
+				<displayName count="one">ghanesisk cedi (GHC)</displayName>
+				<displayName count="other">ghanesiske cedi (GHC)</displayName>
+			</currency>
+			<currency type="GQE">
+				<displayName count="one">ekvatorialguineansk ekwele</displayName>
+				<displayName count="other">ekvatorialguineanske ekwele</displayName>
+			</currency>
+			<currency type="GRD">
+				<displayName>greske drakme</displayName>
+			</currency>
+			<currency type="GWP">
+				<displayName>Guinea-Bissau-peso</displayName>
+			</currency>
+			<currency type="HRD">
+				<displayName>kroatiske dinar</displayName>
+				<displayName count="one">kroatisk dinar</displayName>
+				<displayName count="other">kroatiske dinarar</displayName>
+			</currency>
+			<currency type="HUF">
+				<displayName>ungarske forintar</displayName>
+				<displayName count="one">ungarsk forint</displayName>
+				<displayName count="other">ungarske forintar</displayName>
+			</currency>
+			<currency type="IDR">
+				<displayName>indonesiske rupiar</displayName>
+				<displayName count="one">indonesisk rupi</displayName>
+				<displayName count="other">indonesiske rupiar</displayName>
+			</currency>
+			<currency type="ILS">
+				<displayName>nye israelske sheklar</displayName>
+				<displayName count="one">ny israelsk shekel</displayName>
+				<displayName count="other">nye israelske sheklar</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName>indiske rupiar</displayName>
+				<displayName count="one">indisk rupi</displayName>
+				<displayName count="other">indiske rupiar</displayName>
+			</currency>
+			<currency type="IQD">
+				<displayName>irakiske dinarar</displayName>
+				<displayName count="one">irakisk dinar</displayName>
+				<displayName count="other">irakiske dinarar</displayName>
+			</currency>
+			<currency type="IRR">
+				<displayName>iranske rial</displayName>
+				<displayName count="one">iransk rial</displayName>
+				<displayName count="other">iranske rial</displayName>
+			</currency>
+			<currency type="JOD">
+				<displayName>jordanske dinarar</displayName>
+				<displayName count="one">jordansk dinar</displayName>
+				<displayName count="other">jordanske dinarar</displayName>
+			</currency>
+			<currency type="KWD">
+				<displayName>kuwaitiske dinarar</displayName>
+				<displayName count="one">kuwaitisk dinar</displayName>
+				<displayName count="other">kuwaitiske dinarar</displayName>
+			</currency>
+			<currency type="LKR">
+				<displayName>srilankiske rupiar</displayName>
+				<displayName count="one">srilankisk rupi</displayName>
+				<displayName count="other">srilankiske rupiar</displayName>
+			</currency>
+			<currency type="LTL">
+				<displayName>litauiske lita</displayName>
+			</currency>
+			<currency type="LTT">
+				<displayName>litauiske talona</displayName>
+				<displayName count="one">litauisk talona</displayName>
+				<displayName count="other">litauiske talona</displayName>
+			</currency>
+			<currency type="LUC">
+				<displayName>luxemburgske konvertibel franc</displayName>
+			</currency>
+			<currency type="LVL">
+				<displayName>latviske lat</displayName>
+				<displayName count="one">latvisk lat</displayName>
+				<displayName count="other">latviske lat</displayName>
+			</currency>
+			<currency type="LVR">
+				<displayName>latviske rublar</displayName>
+				<displayName count="one">latvisk rubel</displayName>
+				<displayName count="other">latviske rublar</displayName>
+			</currency>
+			<currency type="LYD">
+				<displayName>libyske dinarar</displayName>
+				<displayName count="one">libysk dinar</displayName>
+				<displayName count="other">libyske dinarar</displayName>
+			</currency>
+			<currency type="MDL">
+				<displayName>moldovske leuar</displayName>
+				<displayName count="one">moldovsk leu</displayName>
+				<displayName count="other">moldovske leuar</displayName>
+			</currency>
+			<currency type="MKD">
+				<displayName>makedonske denarar</displayName>
+				<displayName count="one">makedonsk denar</displayName>
+				<displayName count="other">makedonske denarar</displayName>
+			</currency>
+			<currency type="MRU">
+				<symbol draft="contributed">MRU</symbol>
+			</currency>
+			<currency type="MUR">
+				<displayName>mauritiske rupiar</displayName>
+				<displayName count="one">mauritisk rupi</displayName>
+				<displayName count="other">mauritiske rupiar</displayName>
+			</currency>
+			<currency type="MXP">
+				<displayName>meksikanske sølvpeso (1861–1992)</displayName>
+				<displayName count="one">meksikansk sølvpeso (MXP)</displayName>
+				<displayName count="other">meksikanske sølvpeso (MXP)</displayName>
+			</currency>
+			<currency type="MZM">
+				<displayName count="one">gammal mosambikisk metical</displayName>
+				<displayName count="other">gamle mosambikiske metical</displayName>
+			</currency>
+			<currency type="NIC">
+				<displayName>nicaraguanske cordoba</displayName>
+				<displayName count="one">nicaraguansk cordoba</displayName>
+				<displayName count="other">nicaraguanske cordoba</displayName>
+			</currency>
+			<currency type="NPR">
+				<displayName>nepalske rupiar</displayName>
+				<displayName count="one">nepalsk rupi</displayName>
+				<displayName count="other">nepalske rupiar</displayName>
+			</currency>
+			<currency type="NZD">
+				<displayName>nyzealandske dollar</displayName>
+				<displayName count="one">nyzealandsk dollar</displayName>
+				<displayName count="other">nyzealandske dollar</displayName>
+			</currency>
+			<currency type="OMR">
+				<displayName>omanske rial</displayName>
+				<displayName count="one">omansk rial</displayName>
+				<displayName count="other">omanske rial</displayName>
+			</currency>
+			<currency type="PKR">
+				<displayName>pakistanske rupiar</displayName>
+				<displayName count="one">pakistansk rupi</displayName>
+				<displayName count="other">pakistanske rupiar</displayName>
+			</currency>
+			<currency type="PLZ">
+				<displayName count="one">polsk zloty (PLZ)</displayName>
+				<displayName count="other">polske zloty (PLZ)</displayName>
+			</currency>
+			<currency type="PYG">
+				<displayName>paraguayanske guaraní</displayName>
+				<displayName count="one">paraguayansk guaraní</displayName>
+				<displayName count="other">paraguayanske guaraní</displayName>
+			</currency>
+			<currency type="QAR">
+				<displayName>qatarske rial</displayName>
+				<displayName count="one">qatarsk rial</displayName>
+				<displayName count="other">qatarske rial</displayName>
+			</currency>
+			<currency type="ROL">
+				<displayName>gamle rumenske leu</displayName>
+				<displayName count="one">gammal rumensk leu</displayName>
+				<displayName count="other">gamle rumenske lei</displayName>
+			</currency>
+			<currency type="RON">
+				<displayName>rumenske leuar</displayName>
+				<displayName count="one">rumensk leu</displayName>
+				<displayName count="other">rumenske leuar</displayName>
+				<symbol alt="narrow" draft="contributed">lei</symbol>
+			</currency>
+			<currency type="RSD">
+				<displayName>serbiske dinarar</displayName>
+				<displayName count="one">serbisk dinar</displayName>
+				<displayName count="other">serbiske dinarar</displayName>
+			</currency>
+			<currency type="RUB">
+				<displayName>russiske rublar</displayName>
+				<displayName count="one">russisk rubel</displayName>
+				<displayName count="other">russiske rublar</displayName>
+			</currency>
+			<currency type="RUR">
+				<displayName>russiske rublar (1991–1998)</displayName>
+				<displayName count="one">russisk rubel (RUR)</displayName>
+				<displayName count="other">russiske rublar (RUR)</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName>saudiarabiske rial</displayName>
+				<displayName count="one">saudiarabisk rial</displayName>
+				<displayName count="other">saudiarabiske rial</displayName>
+			</currency>
+			<currency type="SCR">
+				<displayName>seychelliske rupiar</displayName>
+				<displayName count="one">seychellisk rupi</displayName>
+				<displayName count="other">seychelliske rupiar</displayName>
+			</currency>
+			<currency type="SDD">
+				<displayName>gamle sudanske dinarer</displayName>
+				<displayName count="one">gammal sudansk dinar</displayName>
+				<displayName count="other">gamle sudanske dinarar</displayName>
+			</currency>
+			<currency type="SDP">
+				<displayName>gamle sudanske pund</displayName>
+				<displayName count="one">gammalt sudansk pund</displayName>
+				<displayName count="other">gamle sudanske pund</displayName>
+			</currency>
+			<currency type="STN">
+				<symbol alt="narrow" draft="contributed">Db</symbol>
+			</currency>
+			<currency type="SUR">
+				<displayName>sovjetiske rublar</displayName>
+				<displayName count="one">sovjetisk rubel</displayName>
+				<displayName count="other">sovjetiske rublar</displayName>
+			</currency>
+			<currency type="SZL">
+				<displayName>eswatinisk lilangeni</displayName>
+				<displayName count="one">eswatinisk lilangeni</displayName>
+				<displayName count="other">eswatiniske emalangeni</displayName>
+			</currency>
+			<currency type="TJR">
+				<displayName>tadsjikiske rublar</displayName>
+				<displayName count="one">tadsjikisk rubel</displayName>
+				<displayName count="other">tadsjikiske rublar</displayName>
+			</currency>
+			<currency type="TMM">
+				<displayName>turkmensk manat (1993–2009)</displayName>
+			</currency>
+			<currency type="TND">
+				<displayName>tunisiske dinarar</displayName>
+				<displayName count="one">tunisisk dinar</displayName>
+				<displayName count="other">tunisiske dinarar</displayName>
+			</currency>
+			<currency type="TRL">
+				<displayName>gamle tyrkiske lire</displayName>
+				<displayName count="one">gammal tyrkisk lire</displayName>
+				<displayName count="other">gamle tyrkiske lire</displayName>
+			</currency>
+			<currency type="TWD">
+				<symbol alt="narrow" draft="contributed">$</symbol>
+			</currency>
+			<currency type="UGS">
+				<displayName count="one">ugandisk shilling (UGS)</displayName>
+				<displayName count="other">ugandiske shilling (UGS)</displayName>
+			</currency>
+			<currency type="USS">
+				<displayName>amerikanske dollar (same dag)</displayName>
+				<displayName count="one">amerikansk dollar (same dag)</displayName>
+				<displayName count="other">amerikanske dollar (same dag)</displayName>
+			</currency>
+			<currency type="UYI">
+				<displayName>uruguayanske peso en unidades indexadas</displayName>
+				<displayName count="one">uruguayansk peso en unidades indexadas</displayName>
+				<displayName count="other">uruguayanske peso en unidades indexadas</displayName>
+			</currency>
+			<currency type="UYP">
+				<displayName>uruguayanske peso (1975–1993)</displayName>
+				<displayName count="one">uruguayansk peso (UYP)</displayName>
+				<displayName count="other">uruguayanske peso (UYP)</displayName>
+			</currency>
+			<currency type="UYU">
+				<displayName count="one">uruguayansk peso</displayName>
+				<displayName count="other">uruguayanske pesos</displayName>
+			</currency>
+			<currency type="UZS">
+				<displayName>usbekiske sum</displayName>
+				<displayName count="one">usbekisk sum</displayName>
+				<displayName count="other">usbekiske sum</displayName>
+			</currency>
+			<currency type="VUV">
+				<displayName>vanuatuiske vatu</displayName>
+				<displayName count="one">vanuatuisk vatu</displayName>
+				<displayName count="other">vanuatuiske vatu</displayName>
+			</currency>
+			<currency type="XAG">
+				<displayName count="one">sølv</displayName>
+				<displayName count="other">sølv</displayName>
+			</currency>
+			<currency type="XAU">
+				<displayName count="one">gull</displayName>
+				<displayName count="other">gull</displayName>
+			</currency>
+			<currency type="XBA">
+				<displayName>europeiske samansette einingar</displayName>
+				<displayName count="one">europeisk samansett eining</displayName>
+				<displayName count="other">europeiske samansette einingar</displayName>
+			</currency>
+			<currency type="XBB">
+				<displayName>europeiske monetære einingar</displayName>
+				<displayName count="one">europeisk monetær eining</displayName>
+				<displayName count="other">europeiske monetære einingar</displayName>
+			</currency>
+			<currency type="XBC">
+				<displayName>europeiske kontoeiningar (XBC)</displayName>
+				<displayName count="one">europeisk kontoeining (XBC)</displayName>
+				<displayName count="other">europeiske kontoeiningar (XBC)</displayName>
+			</currency>
+			<currency type="XBD">
+				<displayName>europeiske kontoeiningar (XBD)</displayName>
+				<displayName count="one">europeisk kontoeining (XBD)</displayName>
+				<displayName count="other">europeiske kontoeiningar (XBD)</displayName>
+			</currency>
+			<currency type="XCD">
+				<displayName>austkaribiske dollar</displayName>
+				<displayName count="one">austkaribisk dollar</displayName>
+				<displayName count="other">austkaribiske dollar</displayName>
+			</currency>
+			<currency type="XDR">
+				<displayName>spesielle trekkrettar</displayName>
+				<displayName count="one">spesiell trekkrett</displayName>
+				<displayName count="other">spesielle trekkrettar</displayName>
+			</currency>
+			<currency type="XEU">
+				<displayName>europeiske valutaeiningar</displayName>
+				<displayName count="one">europeisk valutaeining</displayName>
+				<displayName count="other">europeiske valutaeiningar</displayName>
+			</currency>
+			<currency type="XPD">
+				<displayName count="one">palladium</displayName>
+				<displayName count="other">palladium</displayName>
+			</currency>
+			<currency type="XPT">
+				<displayName count="one">platina</displayName>
+				<displayName count="other">platina</displayName>
+			</currency>
+			<currency type="XRE">
+				<displayName count="one">RINET-fond</displayName>
+				<displayName count="other">RINET-fond</displayName>
+			</currency>
+			<currency type="XTS">
+				<displayName count="one">testvalutakode</displayName>
+				<displayName count="other">testvalutakode</displayName>
+			</currency>
+			<currency type="XXX">
+				<displayName>ukjend valuta</displayName>
+				<displayName count="one">(ukjend valuta)</displayName>
+				<displayName count="other">(ukjend valuta)</displayName>
+			</currency>
+			<currency type="YDD">
+				<displayName>jemenittiske dinarar</displayName>
+				<displayName count="one">jemenittisk dinar</displayName>
+				<displayName count="other">jemenittiske dinarar</displayName>
+			</currency>
+			<currency type="YER">
+				<displayName>jemenittiske rial</displayName>
+				<displayName count="one">jemenittisk rial</displayName>
+				<displayName count="other">jemenittiske rial</displayName>
+			</currency>
+			<currency type="YUD">
+				<displayName>jugoslaviske dinarar (hard)</displayName>
+				<displayName count="one">jugoslavisk dinar (hard)</displayName>
+				<displayName count="other">jugoslaviske dinarar (hard)</displayName>
+			</currency>
+			<currency type="YUM">
+				<displayName>jugoslaviske noviy-dinarar</displayName>
+				<displayName count="one">jugoslavisk noviy-dinar</displayName>
+				<displayName count="other">jugoslaviske noviy-dinarar</displayName>
+			</currency>
+			<currency type="YUN">
+				<displayName>jugoslaviske konvertibel dinarar</displayName>
+				<displayName count="one">jugoslavisk konvertibel dinar</displayName>
+				<displayName count="other">jugoslaviske konvertible dinarar</displayName>
+			</currency>
+			<currency type="ZAL">
+				<displayName>sørafrikanske rand (finansiell)</displayName>
+			</currency>
+			<currency type="ZRN">
+				<displayName>zairisk ny zaire</displayName>
+			</currency>
+			<currency type="ZRZ">
+				<displayName>zairisk zaire</displayName>
+			</currency>
+			<currency type="ZWD">
+				<displayName>zimbabwisk dollar</displayName>
+			</currency>
+			<currency type="ZWL">
+				<displayName count="one" draft="unconfirmed">Zimbabwe-dollar (2009)</displayName>
+				<displayName count="other" draft="unconfirmed">Zimbabwe-dollar (2009)</displayName>
+			</currency>
+		</currencies>
+		<minimalPairs>
+			<pluralMinimalPairs count="one">{0} dag</pluralMinimalPairs>
+			<pluralMinimalPairs count="other">{0} dagar</pluralMinimalPairs>
+			<ordinalMinimalPairs ordinal="other">Ta {0}. sving til høgre.</ordinalMinimalPairs>
+		</minimalPairs>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<compoundUnit type="times">
+				<compoundUnitPattern>{0}{1}</compoundUnitPattern>
+			</compoundUnit>
+			<unit type="acceleration-g-force">
+				<unitPattern count="one">{0} g-kraft</unitPattern>
+				<unitPattern count="other">{0} g-krefter</unitPattern>
+			</unit>
+			<unit type="acceleration-meter-per-square-second">
+				<unitPattern count="one">{0} meter per sekund²</unitPattern>
+				<unitPattern count="other">{0} meter per sekund²</unitPattern>
+			</unit>
+			<unit type="angle-revolution">
+				<displayName>omdreiing</displayName>
+				<unitPattern count="one">{0} omdreiing</unitPattern>
+				<unitPattern count="other">{0} omdreiingar</unitPattern>
+			</unit>
+			<unit type="angle-radian">
+				<displayName>radianar</displayName>
+				<unitPattern count="one">{0} radian</unitPattern>
+				<unitPattern count="other">{0} radianar</unitPattern>
+			</unit>
+			<unit type="angle-arc-minute">
+				<displayName>bogeminutt</displayName>
+				<unitPattern count="one">{0} bogeminutt</unitPattern>
+				<unitPattern count="other">{0} bogeminutt</unitPattern>
+			</unit>
+			<unit type="angle-arc-second">
+				<displayName>bogesekund</displayName>
+				<unitPattern count="one">{0} bogesekund</unitPattern>
+				<unitPattern count="other">{0} bogesekund</unitPattern>
+			</unit>
+			<unit type="area-square-mile">
+				<perUnitPattern>{0} per engelske kvadratmil</perUnitPattern>
+			</unit>
+			<unit type="area-square-inch">
+				<displayName>kvadrattommar</displayName>
+				<unitPattern count="one">{0} kvadrattomme</unitPattern>
+				<unitPattern count="other">{0} kvadrattommar</unitPattern>
+			</unit>
+			<unit type="concentr-permillion">
+				<displayName>milliondelar</displayName>
+				<unitPattern count="one">{0} milliondel</unitPattern>
+				<unitPattern count="other">{0} milliondelar</unitPattern>
+			</unit>
+			<unit type="consumption-mile-per-gallon-imperial">
+				<unitPattern count="one">{0} engelsk mil per britiske gallon</unitPattern>
+				<unitPattern count="other">{0} engelske mil per britiske gallon</unitPattern>
+			</unit>
+			<unit type="duration-century">
+				<displayName>hundreår</displayName>
+				<unitPattern count="one">{0} hundreår</unitPattern>
+				<unitPattern count="other">{0} hundreår</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>månadar</displayName>
+				<unitPattern count="one">{0} månad</unitPattern>
+				<unitPattern count="other">{0} månadar</unitPattern>
+				<perUnitPattern>{0} per månad</perUnitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName>veker</displayName>
+				<unitPattern count="one">{0} veke</unitPattern>
+				<unitPattern count="other">{0} veker</unitPattern>
+				<perUnitPattern>{0} per veke</perUnitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName>timar</displayName>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>minutt</displayName>
+				<unitPattern count="one">{0} minutt</unitPattern>
+				<unitPattern count="other">{0} minutt</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName>sekund</displayName>
+				<unitPattern count="one">{0} sekund</unitPattern>
+				<unitPattern count="other">{0} sekund</unitPattern>
+			</unit>
+			<unit type="duration-millisecond">
+				<displayName>millisekund</displayName>
+				<unitPattern count="one">{0} millisekund</unitPattern>
+				<unitPattern count="other">{0} millisekund</unitPattern>
+			</unit>
+			<unit type="duration-microsecond">
+				<displayName>mikrosekund</displayName>
+				<unitPattern count="one">{0} mikrosekund</unitPattern>
+				<unitPattern count="other">{0} mikrosekund</unitPattern>
+			</unit>
+			<unit type="duration-nanosecond">
+				<displayName>nanosekund</displayName>
+				<unitPattern count="one">{0} nanosekund</unitPattern>
+				<unitPattern count="other">{0} nanosekund</unitPattern>
+			</unit>
+			<unit type="electric-ampere">
+				<unitPattern count="one">{0} ampere</unitPattern>
+				<unitPattern count="other">{0} ampere</unitPattern>
+			</unit>
+			<unit type="energy-kilocalorie">
+				<displayName>kilokaloriar</displayName>
+				<unitPattern count="one">{0} kilokalori</unitPattern>
+				<unitPattern count="other">{0} kilokaloriar</unitPattern>
+			</unit>
+			<unit type="energy-calorie">
+				<displayName>kaloriar</displayName>
+				<unitPattern count="one">{0} kalori</unitPattern>
+				<unitPattern count="other">{0} kaloriar</unitPattern>
+			</unit>
+			<unit type="energy-foodcalorie">
+				<displayName>kaloriar</displayName>
+				<unitPattern count="one">{0} kalori</unitPattern>
+				<unitPattern count="other">{0} kaloriar</unitPattern>
+			</unit>
+			<unit type="energy-joule">
+				<unitPattern count="one">{0} joule</unitPattern>
+				<unitPattern count="other">{0} joule</unitPattern>
+			</unit>
+			<unit type="energy-kilowatt-hour">
+				<displayName>kilowattimar</displayName>
+				<unitPattern count="one">{0} kilowattime</unitPattern>
+				<unitPattern count="other">{0} kilowattimar</unitPattern>
+			</unit>
+			<unit type="energy-british-thermal-unit">
+				<displayName>British thermal units</displayName>
+				<unitPattern count="one">{0} British thermal unit</unitPattern>
+				<unitPattern count="other">{0} British thermal units</unitPattern>
+			</unit>
+			<unit type="graphics-pixel">
+				<displayName>pikslar</displayName>
+				<unitPattern count="one">{0} piksel</unitPattern>
+				<unitPattern count="other">{0} pikslar</unitPattern>
+			</unit>
+			<unit type="graphics-megapixel">
+				<displayName>megapikslar</displayName>
+				<unitPattern count="one">{0} megapiksel</unitPattern>
+				<unitPattern count="other">{0} megapikslar</unitPattern>
+			</unit>
+			<unit type="graphics-pixel-per-centimeter">
+				<displayName>pikslar per centimeter</displayName>
+				<unitPattern count="one">{0} piksel per centimeter</unitPattern>
+				<unitPattern count="other">{0} pikslar per centimeter</unitPattern>
+			</unit>
+			<unit type="graphics-pixel-per-inch">
+				<displayName>pikslar per tomme</displayName>
+				<unitPattern count="one">{0} piksel per tomme</unitPattern>
+				<unitPattern count="other">{0} pikslar per tomme</unitPattern>
+			</unit>
+			<unit type="graphics-dot-per-centimeter">
+				<displayName>punkt per centimeter</displayName>
+				<unitPattern count="one">{0} punkt per centimeter</unitPattern>
+				<unitPattern count="other">{0} punkt per centimeter</unitPattern>
+			</unit>
+			<unit type="graphics-dot-per-inch">
+				<displayName>punkt per tomme</displayName>
+				<unitPattern count="one">{0} punkt per tomme</unitPattern>
+				<unitPattern count="other">{0} punkt per tomme</unitPattern>
+			</unit>
+			<unit type="graphics-dot">
+				<unitPattern count="one">{0} punkt</unitPattern>
+				<unitPattern count="other">{0} punkt</unitPattern>
+			</unit>
+			<unit type="length-earth-radius">
+				<unitPattern count="one">{0} jordradius</unitPattern>
+				<unitPattern count="other">{0} jordradius</unitPattern>
+			</unit>
+			<unit type="length-nanometer">
+				<unitPattern count="one">{0} nm</unitPattern>
+				<unitPattern count="other">{0} nm</unitPattern>
+			</unit>
+			<unit type="length-yard">
+				<displayName>engelske yard</displayName>
+				<unitPattern count="one">{0} engelsk yard</unitPattern>
+				<unitPattern count="other">{0} engelske yard</unitPattern>
+			</unit>
+			<unit type="length-inch">
+				<displayName>tommar</displayName>
+				<unitPattern count="one">{0} tomme</unitPattern>
+				<unitPattern count="other">{0} tommar</unitPattern>
+			</unit>
+			<unit type="length-astronomical-unit">
+				<displayName>astronomiske einingar</displayName>
+				<unitPattern count="one">{0} astronomisk eining</unitPattern>
+				<unitPattern count="other">{0} astronomiske einingar</unitPattern>
+			</unit>
+			<unit type="length-fathom">
+				<displayName>famner</displayName>
+				<unitPattern count="one">{0} famn</unitPattern>
+				<unitPattern count="other">{0} famner</unitPattern>
+			</unit>
+			<unit type="length-point">
+				<displayName>typografiske punkt</displayName>
+				<unitPattern count="one">{0} typografisk punkt</unitPattern>
+				<unitPattern count="other">{0} typografiske punkt</unitPattern>
+			</unit>
+			<unit type="length-solar-radius">
+				<displayName>solradius</displayName>
+				<unitPattern count="one">{0} solradius</unitPattern>
+				<unitPattern count="other">{0} solradius</unitPattern>
+			</unit>
+			<unit type="light-solar-luminosity">
+				<displayName>solluminositetar</displayName>
+				<unitPattern count="one">{0} solluminositet</unitPattern>
+				<unitPattern count="other">{0} solluminositetar</unitPattern>
+			</unit>
+			<unit type="mass-ton">
+				<unitPattern count="one">{0} amerikansk tonn</unitPattern>
+				<unitPattern count="other">{0} amerikanske tonn</unitPattern>
+			</unit>
+			<unit type="mass-stone">
+				<displayName>engelske stones</displayName>
+				<unitPattern count="one">{0} engelsk stone</unitPattern>
+				<unitPattern count="other">{0} engelske stones</unitPattern>
+			</unit>
+			<unit type="mass-earth-mass">
+				<displayName>jordmassar</displayName>
+				<unitPattern count="one">{0} jordmasse</unitPattern>
+				<unitPattern count="other">{0} jordmassar</unitPattern>
+			</unit>
+			<unit type="mass-solar-mass">
+				<displayName>solmassar</displayName>
+				<unitPattern count="one">{0} solmasse</unitPattern>
+				<unitPattern count="other">{0} solmassar</unitPattern>
+			</unit>
+			<unit type="pressure-inch-ofhg">
+				<displayName>tommar kvikksølv</displayName>
+				<unitPattern count="one">{0} tomme kvikksølv</unitPattern>
+				<unitPattern count="other">{0} tommar kvikksølv</unitPattern>
+			</unit>
+			<unit type="pressure-atmosphere">
+				<displayName>atmosfærar</displayName>
+				<unitPattern count="one">{0} atmosfære</unitPattern>
+				<unitPattern count="other">{0} atmosfærar</unitPattern>
+			</unit>
+			<unit type="speed-kilometer-per-hour">
+				<unitPattern count="one">{0} kilometer per time</unitPattern>
+				<unitPattern count="other">{0} kilomeer per time</unitPattern>
+			</unit>
+			<unit type="temperature-generic">
+				<displayName>°</displayName>
+				<unitPattern count="one">{0}°</unitPattern>
+				<unitPattern count="other">{0}°</unitPattern>
+			</unit>
+			<unit type="torque-pound-force-foot">
+				<displayName>pound-feet</displayName>
+				<unitPattern count="one">{0} pound-force-foot</unitPattern>
+				<unitPattern count="other">{0} pound-feet</unitPattern>
+			</unit>
+			<unit type="torque-newton-meter">
+				<unitPattern count="one">{0} newtonmeter</unitPattern>
+				<unitPattern count="other">{0} newtonmeter</unitPattern>
+			</unit>
+			<unit type="volume-cubic-mile">
+				<unitPattern count="one">{0} engelske kubikkmil</unitPattern>
+				<unitPattern count="other">{0} engelske kubikkmil</unitPattern>
+			</unit>
+			<unit type="volume-cubic-yard">
+				<unitPattern count="one">{0} kubikkyard</unitPattern>
+				<unitPattern count="other">{0} kubikkyard</unitPattern>
+			</unit>
+			<unit type="volume-cubic-inch">
+				<displayName>kubikktommar</displayName>
+				<unitPattern count="one">{0} kubikktomme</unitPattern>
+				<unitPattern count="other">{0} kubikktommar</unitPattern>
+			</unit>
+			<unit type="volume-cup-metric">
+				<displayName>metriske koppar</displayName>
+				<unitPattern count="one">{0} metrisk kopp</unitPattern>
+				<unitPattern count="other">{0} metriske koppar</unitPattern>
+			</unit>
+			<unit type="volume-bushel">
+				<displayName>bushels</displayName>
+			</unit>
+			<unit type="volume-gallon-imperial">
+				<perUnitPattern>{0} per britiske gallon</perUnitPattern>
+			</unit>
+			<unit type="volume-cup">
+				<displayName>koppar</displayName>
+				<unitPattern count="one">{0} kopp</unitPattern>
+				<unitPattern count="other">{0} koppar</unitPattern>
+			</unit>
+			<unit type="volume-tablespoon">
+				<displayName>matskeier</displayName>
+				<unitPattern count="one">{0} matskei</unitPattern>
+				<unitPattern count="other">{0} matskeier</unitPattern>
+			</unit>
+			<unit type="volume-teaspoon">
+				<displayName>teskeier</displayName>
+				<unitPattern count="one">{0} teskei</unitPattern>
+				<unitPattern count="other">{0} teskeier</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon">
+				<displayName>dessertskei</displayName>
+				<unitPattern count="one">{0} dessertskei</unitPattern>
+				<unitPattern count="other">{0} dessertskeier</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon-imperial">
+				<displayName>britisk dessertskei</displayName>
+				<unitPattern count="one">{0} britisk dessertskei</unitPattern>
+				<unitPattern count="other">{0} britisk dessertskei</unitPattern>
+			</unit>
+			<unit type="volume-drop">
+				<displayName>drope</displayName>
+				<unitPattern count="one">{0} drope</unitPattern>
+				<unitPattern count="other">{0} dropar</unitPattern>
+			</unit>
+			<coordinateUnit>
+				<coordinateUnitPattern type="east">{0} aust</coordinateUnitPattern>
+			</coordinateUnit>
+		</unitLength>
+		<unitLength type="short">
+			<compoundUnit type="times">
+				<compoundUnitPattern>{0}{1}</compoundUnitPattern>
+			</compoundUnit>
+			<unit type="acceleration-meter-per-square-second">
+				<displayName>m/s²</displayName>
+			</unit>
+			<unit type="angle-radian">
+				<displayName>radianar</displayName>
+			</unit>
+			<unit type="angle-arc-minute">
+				<displayName>bogeminutt</displayName>
+			</unit>
+			<unit type="angle-arc-second">
+				<displayName>bogesekund</displayName>
+			</unit>
+			<unit type="area-square-mile">
+				<displayName>engelske mil²</displayName>
+				<unitPattern count="one">{0} mi²</unitPattern>
+				<unitPattern count="other">{0} mi²</unitPattern>
+				<perUnitPattern>{0}/mi²</perUnitPattern>
+			</unit>
+			<unit type="area-acre">
+				<unitPattern count="one">{0} acre</unitPattern>
+				<unitPattern count="other">{0} acre</unitPattern>
+			</unit>
+			<unit type="area-square-inch">
+				<displayName>tommar²</displayName>
+				<unitPattern count="one">{0} tomme²</unitPattern>
+				<unitPattern count="other">{0} tommar²</unitPattern>
+				<perUnitPattern>{0}/tomme²</perUnitPattern>
+			</unit>
+			<unit type="concentr-millimole-per-liter">
+				<displayName>mmol/l</displayName>
+			</unit>
+			<unit type="consumption-liter-per-kilometer">
+				<displayName>l/km</displayName>
+			</unit>
+			<unit type="consumption-mile-per-gallon">
+				<displayName>eng. mil/gal</displayName>
+			</unit>
+			<unit type="consumption-mile-per-gallon-imperial">
+				<displayName>eng. mil/brit. gal</displayName>
+				<unitPattern count="one">{0} mile/brit. gal</unitPattern>
+				<unitPattern count="other">{0} mile/brit. gal</unitPattern>
+			</unit>
+			<unit type="digital-terabit">
+				<displayName>Tb</displayName>
+			</unit>
+			<unit type="digital-gigabit">
+				<displayName>Gb</displayName>
+			</unit>
+			<unit type="digital-megabit">
+				<displayName>Mb</displayName>
+			</unit>
+			<unit type="digital-kilobit">
+				<displayName>kb</displayName>
+			</unit>
+			<unit type="digital-byte">
+				<unitPattern count="one">{0} byte</unitPattern>
+				<unitPattern count="other">{0} byte</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>månadar</displayName>
+			</unit>
+			<unit type="duration-week">
+				<displayName>veker</displayName>
+				<unitPattern count="one">{0} v</unitPattern>
+				<unitPattern count="other">{0} v</unitPattern>
+				<perUnitPattern>{0}/v</perUnitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName>timar</displayName>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>minutt</displayName>
+			</unit>
+			<unit type="duration-second">
+				<displayName>sekund</displayName>
+				<unitPattern count="one">{0} s</unitPattern>
+				<unitPattern count="other">{0} s</unitPattern>
+			</unit>
+			<unit type="duration-millisecond">
+				<displayName>millisekund</displayName>
+			</unit>
+			<unit type="duration-microsecond">
+				<displayName>mikrosekund</displayName>
+			</unit>
+			<unit type="graphics-pixel">
+				<displayName>pikslar</displayName>
+			</unit>
+			<unit type="graphics-megapixel">
+				<displayName>megapikslar</displayName>
+			</unit>
+			<unit type="graphics-dot-per-centimeter">
+				<unitPattern count="one">{0} dpcm</unitPattern>
+				<unitPattern count="other">{0} ppcm</unitPattern>
+			</unit>
+			<unit type="graphics-dot-per-inch">
+				<displayName>ppt</displayName>
+				<unitPattern count="one">{0} ppt</unitPattern>
+				<unitPattern count="other">{0} ppt</unitPattern>
+			</unit>
+			<unit type="length-meter">
+				<displayName>m</displayName>
+			</unit>
+			<unit type="length-picometer">
+				<displayName>pikometer</displayName>
+			</unit>
+			<unit type="length-mile">
+				<displayName>engelske mil</displayName>
+				<unitPattern count="one">{0} mi</unitPattern>
+				<unitPattern count="other">{0} mi</unitPattern>
+			</unit>
+			<unit type="length-yard">
+				<displayName>engelske yard</displayName>
+			</unit>
+			<unit type="length-foot">
+				<perUnitPattern>{0}/ft</perUnitPattern>
+			</unit>
+			<unit type="length-inch">
+				<displayName>tommar</displayName>
+				<unitPattern count="one">{0} tomme</unitPattern>
+				<unitPattern count="other">{0} tommar</unitPattern>
+			</unit>
+			<unit type="length-light-year">
+				<unitPattern count="one">{0} lysår</unitPattern>
+				<unitPattern count="other">{0} lysår</unitPattern>
+			</unit>
+			<unit type="length-astronomical-unit">
+				<displayName>au</displayName>
+				<unitPattern count="one">{0} au</unitPattern>
+				<unitPattern count="other">{0} au</unitPattern>
+			</unit>
+			<unit type="length-fathom">
+				<displayName>famner</displayName>
+				<unitPattern count="one">{0} fmn</unitPattern>
+				<unitPattern count="other">{0} fmn</unitPattern>
+			</unit>
+			<unit type="length-point">
+				<displayName>pt</displayName>
+			</unit>
+			<unit type="light-solar-luminosity">
+				<displayName>solluminositetar</displayName>
+			</unit>
+			<unit type="mass-stone">
+				<displayName>stones</displayName>
+				<unitPattern count="one">{0} eng. st.</unitPattern>
+				<unitPattern count="other">{0} eng. st.</unitPattern>
+			</unit>
+			<unit type="mass-solar-mass">
+				<displayName>solmassar</displayName>
+			</unit>
+			<unit type="speed-mile-per-hour">
+				<displayName>engelske mil/t</displayName>
+				<unitPattern count="one">{0} mile/t</unitPattern>
+				<unitPattern count="other">{0} mile/t</unitPattern>
+			</unit>
+			<unit type="volume-cubic-kilometer">
+				<displayName>kubikkilometer</displayName>
+			</unit>
+			<unit type="volume-cubic-mile">
+				<displayName>engelske mil³</displayName>
+				<unitPattern count="one">{0} mi³</unitPattern>
+				<unitPattern count="other">{0} mi³</unitPattern>
+			</unit>
+			<unit type="volume-cubic-inch">
+				<displayName>tommar³</displayName>
+				<unitPattern count="one">{0} tomme³</unitPattern>
+				<unitPattern count="other">{0} tommar³</unitPattern>
+			</unit>
+			<unit type="volume-cup-metric">
+				<displayName>m. koppar</displayName>
+				<unitPattern count="one">{0} m. kopp</unitPattern>
+				<unitPattern count="other">{0} m. koppar</unitPattern>
+			</unit>
+			<unit type="volume-bushel">
+				<displayName>bushels</displayName>
+			</unit>
+			<unit type="volume-pint">
+				<unitPattern count="one">{0} pt</unitPattern>
+				<unitPattern count="other">{0} pt</unitPattern>
+			</unit>
+			<unit type="volume-cup">
+				<displayName>koppar</displayName>
+			</unit>
+			<unit type="volume-fluid-ounce-imperial">
+				<displayName>britisk væskeunse</displayName>
+				<unitPattern count="one">{0} britisk væskeunse</unitPattern>
+				<unitPattern count="other">{0} britiske væskeunser</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon">
+				<displayName>dsskei</displayName>
+				<unitPattern count="one">{0} dsskei</unitPattern>
+				<unitPattern count="other">{0} dsskei</unitPattern>
+			</unit>
+			<unit type="volume-dessert-spoon-imperial">
+				<displayName>brit. dsskei</displayName>
+				<unitPattern count="one">{0} brit. dsskei</unitPattern>
+				<unitPattern count="other">{0} brit. dsskei</unitPattern>
+			</unit>
+			<unit type="volume-drop">
+				<displayName>drope</displayName>
+				<unitPattern count="one">{0} drope</unitPattern>
+				<unitPattern count="other">{0} dråpe</unitPattern>
+			</unit>
+			<unit type="volume-quart-imperial">
+				<displayName>brit. quart</displayName>
+				<unitPattern count="one">{0} b. quart</unitPattern>
+				<unitPattern count="other">{0} b. quart</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="narrow">
+			<compoundUnit type="times">
+				<compoundUnitPattern>{0}{1}</compoundUnitPattern>
+			</compoundUnit>
+			<unit type="area-square-mile">
+				<unitPattern count="one">{0} mi²</unitPattern>
+				<unitPattern count="other">{0} mi²</unitPattern>
+			</unit>
+			<unit type="area-square-foot">
+				<unitPattern count="one">{0} ft²</unitPattern>
+				<unitPattern count="other">{0} ft²</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-100-kilometer">
+				<displayName>l/100 km</displayName>
+			</unit>
+			<unit type="duration-century">
+				<displayName draft="unconfirmed">hundreår</displayName>
+			</unit>
+			<unit type="duration-month">
+				<displayName>månad</displayName>
+				<unitPattern count="one">{0}m</unitPattern>
+				<unitPattern count="other">{0}m</unitPattern>
+				<perUnitPattern draft="unconfirmed">{0}/mån</perUnitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName>vk.</displayName>
+				<unitPattern count="one">{0}v</unitPattern>
+				<unitPattern count="other">{0}v</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName>timar</displayName>
+				<perUnitPattern draft="unconfirmed">{0}/h</perUnitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>minutt</displayName>
+				<perUnitPattern draft="unconfirmed">{0}/min</perUnitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName>sekund</displayName>
+			</unit>
+			<unit type="duration-millisecond">
+				<displayName>millisekund</displayName>
+			</unit>
+			<unit type="length-kilometer">
+				<perUnitPattern draft="unconfirmed">{0}/km</perUnitPattern>
+			</unit>
+			<unit type="length-meter">
+				<perUnitPattern draft="unconfirmed">{0}/m</perUnitPattern>
+			</unit>
+			<unit type="length-decimeter">
+				<displayName draft="unconfirmed">dm</displayName>
+			</unit>
+			<unit type="length-centimeter">
+				<perUnitPattern draft="unconfirmed">{0}/cm</perUnitPattern>
+			</unit>
+			<unit type="length-micrometer">
+				<displayName draft="unconfirmed">μm</displayName>
+			</unit>
+			<unit type="length-nanometer">
+				<displayName draft="unconfirmed">nm</displayName>
+			</unit>
+			<unit type="length-mile">
+				<unitPattern count="one">{0} mi</unitPattern>
+				<unitPattern count="other">{0} mi</unitPattern>
+			</unit>
+			<unit type="length-yard">
+				<unitPattern count="one">{0} yd</unitPattern>
+				<unitPattern count="other">{0} yd</unitPattern>
+			</unit>
+			<unit type="mass-pound">
+				<unitPattern count="one" draft="unconfirmed">{0} skålpund</unitPattern>
+				<unitPattern count="other" draft="unconfirmed">{0} skålpund</unitPattern>
+			</unit>
+			<unit type="pressure-inch-ofhg">
+				<unitPattern count="one">{0} inHg</unitPattern>
+				<unitPattern count="other">{0} inHg</unitPattern>
+			</unit>
+			<unit type="speed-mile-per-hour">
+				<unitPattern count="one">{0} mi/h</unitPattern>
+				<unitPattern count="other">{0} mi/h</unitPattern>
+			</unit>
+			<unit type="temperature-celsius">
+				<unitPattern count="one">{0}°</unitPattern>
+				<unitPattern count="other">{0}°</unitPattern>
+			</unit>
+			<unit type="volume-cubic-mile">
+				<unitPattern count="one">{0} mi³</unitPattern>
+				<unitPattern count="other">{0} mi³</unitPattern>
+			</unit>
+			<unit type="volume-liter">
+				<displayName>liter</displayName>
+			</unit>
+		</unitLength>
+	</units>
+	<listPatterns>
+		<listPattern type="unit">
+			<listPatternPart type="end">{0}, {1}</listPatternPart>
+			<listPatternPart type="2">{0}, {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="unit-narrow">
+			<listPatternPart type="start">{0} {1}</listPatternPart>
+			<listPatternPart type="middle">{0} {1}</listPatternPart>
+			<listPatternPart type="end">{0} {1}</listPatternPart>
+			<listPatternPart type="2">{0} {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<yesstr>ja:j</yesstr>
+			<nostr>nei:n</nostr>
+		</messages>
+	</posix>
+	<characterLabels>
+		<characterLabelPattern type="enclosed">{0} – omslutta</characterLabelPattern>
+		<characterLabelPattern type="extended">{0} – utvida</characterLabelPattern>
+		<characterLabelPattern type="other">{0} – anna</characterLabelPattern>
+		<characterLabelPattern type="scripts">skriftsystem – {0}</characterLabelPattern>
+		<characterLabelPattern type="strokes" count="one">{0} strek</characterLabelPattern>
+		<characterLabelPattern type="strokes" count="other">{0} strekar</characterLabelPattern>
+		<characterLabelPattern type="subscript">senka {0}</characterLabelPattern>
+		<characterLabelPattern type="superscript">heva {0}</characterLabelPattern>
+		<characterLabel type="activities">aktivitetar</characterLabel>
+		<characterLabel type="african_scripts">afrikanske skriftsystem</characterLabel>
+		<characterLabel type="american_scripts">amerikanske skriftsystem</characterLabel>
+		<characterLabel type="animals_nature">dyr eller natur</characterLabel>
+		<characterLabel type="box_drawing">ruteteikning</characterLabel>
+		<characterLabel type="bullets_stars">punktteikn/stjerner</characterLabel>
+		<characterLabel type="currency_symbols">valutasymbol</characterLabel>
+		<characterLabel type="dash_connector">tankestrek/bindeteikn</characterLabel>
+		<characterLabel type="digits">siffer</characterLabel>
+		<characterLabel type="divination_symbols">spådomssymbol</characterLabel>
+		<characterLabel type="downwards_arrows">piler som peiker nedover</characterLabel>
+		<characterLabel type="downwards_upwards_arrows">piler som peiker nedover og oppover</characterLabel>
+		<characterLabel type="east_asian_scripts">austasiatiske skriftsystem</characterLabel>
+		<characterLabel type="european_scripts">europeiske skriftsystem</characterLabel>
+		<characterLabel type="female">kvinneleg</characterLabel>
+		<characterLabel type="full_width_form_variant">fullbreiddvariantar</characterLabel>
+		<characterLabel type="geometric_shapes">geometriske former</characterLabel>
+		<characterLabel type="half_width_form_variant">halvbreiddvariantar</characterLabel>
+		<characterLabel type="han_characters">han-teikn</characterLabel>
+		<characterLabel type="han_radicals">han-radikalar</characterLabel>
+		<characterLabel type="hanzi_simplified">hanzi (forenkla)</characterLabel>
+		<characterLabel type="heart">hjarte</characterLabel>
+		<characterLabel type="historic_scripts">historiske skriftsystem</characterLabel>
+		<characterLabel type="ideographic_desc_characters">ideografiske beskrivande teikn</characterLabel>
+		<characterLabel type="japanese_kana">japanske kana</characterLabel>
+		<characterLabel type="keycap">tastar</characterLabel>
+		<characterLabel type="leftwards_arrows">piler som peiker til venstre</characterLabel>
+		<characterLabel type="leftwards_rightwards_arrows">piler som peiker til venstre og høgre</characterLabel>
+		<characterLabel type="letterlike_symbols">bokstavliknande symbol</characterLabel>
+		<characterLabel type="limited_use">avgrensa bruk</characterLabel>
+		<characterLabel type="male">mannleg</characterLabel>
+		<characterLabel type="math_symbols">matematikksymbol</characterLabel>
+		<characterLabel type="middle_eastern_scripts">skriftsystem frå Midtausten</characterLabel>
+		<characterLabel type="modern_scripts">moderne skriftsystem</characterLabel>
+		<characterLabel type="musical_symbols">musikksymbol</characterLabel>
+		<characterLabel type="nonspacing">utan breidd</characterLabel>
+		<characterLabel type="numbers">tal</characterLabel>
+		<characterLabel type="objects">objekt</characterLabel>
+		<characterLabel type="other">anna</characterLabel>
+		<characterLabel type="person">person</characterLabel>
+		<characterLabel type="pictographs">piktogram</characterLabel>
+		<characterLabel type="place">stad</characterLabel>
+		<characterLabel type="punctuation">skiljeteikn</characterLabel>
+		<characterLabel type="rightwards_arrows">piler som peiker til høgre</characterLabel>
+		<characterLabel type="sign_standard_symbols">teikn eller symbol</characterLabel>
+		<characterLabel type="small_form_variant">små variantar</characterLabel>
+		<characterLabel type="smileys_people">smilefjes og personar</characterLabel>
+		<characterLabel type="south_asian_scripts">sørasiatiske skriftsystem</characterLabel>
+		<characterLabel type="southeast_asian_scripts">søraustasiatiske skriftsystem</characterLabel>
+		<characterLabel type="spacing">med breidd</characterLabel>
+		<characterLabel type="symbols">symbol</characterLabel>
+		<characterLabel type="technical_symbols">tekniske symbol</characterLabel>
+		<characterLabel type="tone_marks">tonemerke</characterLabel>
+		<characterLabel type="travel_places">reise og stadar</characterLabel>
+		<characterLabel type="upwards_arrows">pil som peiker oppover</characterLabel>
+		<characterLabel type="variant_forms">variantar</characterLabel>
+		<characterLabel type="weather">vêr</characterLabel>
+		<characterLabel type="western_asian_scripts">vestasiatiske skriftsystem</characterLabel>
+	</characterLabels>
+	<typographicNames>
+		<axisName type="opsz">optisk storleik</axisName>
+		<axisName type="wdth">breidd</axisName>
+		<axisName type="wght">tjukn</axisName>
+		<styleName type="opsz" subtype="8">bilettekst</styleName>
+		<styleName type="wdth" subtype="50">ultrafortetta</styleName>
+		<styleName type="wdth" subtype="62.5">ekstra fortetta</styleName>
+		<styleName type="wdth" subtype="75">fortetta</styleName>
+		<styleName type="wdth" subtype="87.5">semifortetta</styleName>
+		<styleName type="wdth" subtype="100">vanleg</styleName>
+		<styleName type="wdth" subtype="112.5">semiutvida</styleName>
+		<styleName type="wdth" subtype="112.5" alt="extended">semiforlenga</styleName>
+		<styleName type="wdth" subtype="112.5" alt="wide">semibrei</styleName>
+		<styleName type="wdth" subtype="125">utvida</styleName>
+		<styleName type="wdth" subtype="125" alt="extended">forlenga</styleName>
+		<styleName type="wdth" subtype="125" alt="wide">brei</styleName>
+		<styleName type="wdth" subtype="150">ekstra utvida</styleName>
+		<styleName type="wdth" subtype="150" alt="extended">ekstra forlenga</styleName>
+		<styleName type="wdth" subtype="150" alt="wide">ekstra brei</styleName>
+		<styleName type="wdth" subtype="200">ultrautvida</styleName>
+		<styleName type="wdth" subtype="200" alt="extended">ultraforlenga</styleName>
+		<styleName type="wdth" subtype="200" alt="wide">ultrabrei</styleName>
+		<styleName type="wght" subtype="600">halvfeit</styleName>
+		<styleName type="wght" subtype="600" alt="demi">halvfeit</styleName>
+		<styleName type="wght" subtype="700">feit</styleName>
+		<styleName type="wght" subtype="800">ekstra feit</styleName>
+		<styleName type="wght" subtype="900" alt="heavy">tjukk</styleName>
+		<styleName type="wght" subtype="950" alt="ultraheavy">ultratjukk</styleName>
+		<featureName type="afrc">vertikale brøkar</featureName>
+		<featureName type="dlig">valfrie ligaturar</featureName>
+		<featureName type="frac">diagonale brøkar</featureName>
+		<featureName type="lnum">tal i moderne stil</featureName>
+		<featureName type="onum">tal i gamal stil</featureName>
+		<featureName type="ordn">ordenstal</featureName>
+		<featureName type="pnum">proporsjonale tal</featureName>
+		<featureName type="tnum">tabelltal</featureName>
+	</typographicNames>
+</ldml>

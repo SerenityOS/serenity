@@ -1,0 +1,7 @@
+T6304921.java:29:34: compiler.warn.raw.class.use: java.util.ArrayList, java.util.ArrayList<E>
+T6304921.java:29:30: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.util.ArrayList, java.util.List<java.lang.Integer>
+- compiler.err.warnings.and.werror
+T6304921.java:35:15: compiler.err.cant.resolve.location: kindname.variable, orr, , , (compiler.misc.location: kindname.class, java.lang.System, null)
+T6304921.java:38:20: compiler.err.operator.cant.be.applied.1: +, int, boolean
+3 errors
+2 warnings

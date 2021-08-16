@@ -1,0 +1,8 @@
+SuppressDeprecation.java:83:10: compiler.warn.has.been.deprecated: g(), T
+SuppressDeprecation.java:84:14: compiler.warn.has.been.deprecated: g(), T
+SuppressDeprecation.java:85:9: compiler.warn.has.been.deprecated: var, T
+SuppressDeprecation.java:88:9: compiler.warn.has.been.deprecated: T(), T
+SuppressDeprecation.java:91:9: compiler.warn.has.been.deprecated: T(int), T
+SuppressDeprecation.java:99:1: compiler.warn.has.been.deprecated: T(), T
+SuppressDeprecation.java:131:17: compiler.warn.has.been.deprecated: X, compiler.misc.unnamed.package
+7 warnings

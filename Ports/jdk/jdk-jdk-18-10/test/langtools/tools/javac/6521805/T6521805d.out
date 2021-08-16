@@ -1,0 +1,2 @@
+T6521805d.java:18:18: compiler.err.cannot.generate.class: T6521805.Inner, (compiler.misc.synthetic.name.conflict: this$0, T6521805.Inner)
+1 error

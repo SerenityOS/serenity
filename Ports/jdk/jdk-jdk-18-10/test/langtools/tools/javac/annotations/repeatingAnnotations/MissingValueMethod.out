@@ -1,0 +1,4 @@
+MissingValueMethod.java:18:1: compiler.err.invalid.repeatable.annotation.no.value: FooContainer
+MissingValueMethod.java:18:6: compiler.err.invalid.repeatable.annotation.no.value: FooContainer
+MissingValueMethod.java:11:1: compiler.err.invalid.repeatable.annotation.no.value: FooContainer
+3 errors

@@ -1,0 +1,208 @@
+#
+# Copyright (c) 2011, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include LibCommon.gmk
+
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, modules/java.base/Lib.gmk))
+
+# Prepare the find cache.
+$(call FillFindCache, $(wildcard $(TOPDIR)/src/java.base/*/native))
+
+################################################################################
+# Create all the core libraries
+
+include lib/CoreLibraries.gmk
+
+################################################################################
+# Create the network library
+
+$(eval $(call SetupJdkLibrary, BUILD_LIBNET, \
+    NAME := net, \
+    OPTIMIZATION := LOW, \
+    CFLAGS := $(CFLAGS_JDKLIB), \
+    DISABLED_WARNINGS_gcc := format-nonliteral unused-function, \
+    DISABLED_WARNINGS_clang := parentheses-equality constant-logical-operand \
+        format-nonliteral undef, \
+    DISABLED_WARNINGS_microsoft := 4244 4047 4133 4996, \
+    LDFLAGS := $(LDFLAGS_JDKLIB) \
+        $(call SET_SHARED_LIBRARY_ORIGIN), \
+    LDFLAGS_windows := -delayload:secur32.dll -delayload:iphlpapi.dll, \
+    LIBS_unix := -ljvm -ljava, \
+    LIBS_linux := $(LIBDL) -lpthread, \
+    LIBS_aix := $(LIBDL),\
+    LIBS_windows := ws2_32.lib jvm.lib secur32.lib iphlpapi.lib winhttp.lib \
+        delayimp.lib $(WIN_JAVA_LIB) advapi32.lib, \
+    LIBS_macosx := -framework CoreFoundation -framework CoreServices, \
+))
+
+$(BUILD_LIBNET): $(BUILD_LIBJAVA)
+
+TARGETS += $(BUILD_LIBNET)
+
+################################################################################
+# Create the nio library
+
+$(eval $(call SetupJdkLibrary, BUILD_LIBNIO, \
+    NAME := nio, \
+    OPTIMIZATION := HIGH, \
+    WARNINGS_AS_ERRORS_xlc := false, \
+    CFLAGS := $(CFLAGS_JDKLIB), \
+    DISABLED_WARNINGS_gcc := undef, \
+    DISABLED_WARNINGS_clang := undef, \
+    EXTRA_HEADER_DIRS := \
+        libnio/ch \
+        libnio/fs \
+        libnet, \
+    LDFLAGS := $(LDFLAGS_JDKLIB) \
+        $(call SET_SHARED_LIBRARY_ORIGIN), \
+    LIBS_unix := -ljava -lnet, \
+    LIBS_linux := -lpthread $(LIBDL), \
+    LIBS_aix := $(LIBDL), \
+    LIBS_macosx := \
+        -framework CoreFoundation -framework CoreServices, \
+    LIBS_windows := jvm.lib ws2_32.lib $(WIN_JAVA_LIB) \
+        $(SUPPORT_OUTPUTDIR)/native/$(MODULE)/libnet/net.lib \
+        advapi32.lib, \
+))
+
+TARGETS += $(BUILD_LIBNIO)
+
+$(BUILD_LIBNIO): $(BUILD_LIBNET)
+
+################################################################################
+# Create the macosx security library
+
+ifeq ($(call isTargetOs, macosx), true)
+
+    $(eval $(call SetupJdkLibrary, BUILD_LIBOSXSECURITY, \
+        NAME := osxsecurity, \
+        OPTIMIZATION := LOW, \
+        CFLAGS := $(CFLAGS_JDKLIB), \
+        DISABLED_WARNINGS_clang := deprecated-declarations \
+            missing-method-return-type, \
+        LDFLAGS := $(LDFLAGS_JDKLIB) \
+            -L$(SUPPORT_OUTPUTDIR)/modules_libs/java.base \
+            $(call SET_SHARED_LIBRARY_ORIGIN), \
+        LIBS := \
+            -lobjc \
+            -framework CoreServices \
+            -framework Security \
+            -framework Foundation \
+            $(JDKLIB_LIBS), \
+    ))
+
+    $(BUILD_LIBOSXSECURITY): $(BUILD_LIBJAVA)
+
+    TARGETS += $(BUILD_LIBOSXSECURITY)
+
+endif
+
+################################################################################
+# Create the jsig library
+
+ifeq ($(call isTargetOsType, unix), true)
+  ifeq ($(STATIC_BUILD), false)
+    LIBJSIG_CFLAGS += -DHOTSPOT_VM_DISTRO='"$(HOTSPOT_VM_DISTRO)"'
+    $(eval $(call SetupJdkLibrary, BUILD_LIBJSIG, \
+        NAME := jsig, \
+        OPTIMIZATION := LOW, \
+        CFLAGS := $(CFLAGS_JDKLIB) $(LIBJSIG_CFLAGS), \
+        DISABLED_WARNINGS_gcc := undef, \
+        LDFLAGS := $(LDFLAGS_JDKLIB) \
+            $(call SET_SHARED_LIBRARY_ORIGIN), \
+        LIBS_linux := $(LIBDL), \
+        LIBS_aix := $(LIBDL), \
+    ))
+
+    TARGETS += $(BUILD_LIBJSIG)
+
+    ############################################################################
+    # Create symlinks to libjsig in each JVM variant sub dir
+    ifneq ($(STATIC_LIBS), true)
+      LIB_OUTPUTDIR := $(call FindLibDirForModule, java.base)
+
+      # $1 variant subdir
+      define CreateSymlinks
+        # Always symlink from libdir/variant/libjsig.so -> ../libjsig.so.
+        $(LIB_OUTPUTDIR)/$1/$(call SHARED_LIBRARY,jsig): \
+            $(LIB_OUTPUTDIR)/$(call SHARED_LIBRARY,jsig)
+		$$(call MakeDir, $$(@D))
+		$(RM) $$@
+		$(LN) -s ../$$(@F) $$@
+
+        TARGETS += $(LIB_OUTPUTDIR)/$1/$(call SHARED_LIBRARY,jsig)
+      endef
+
+      # The subdir is the same as the variant for client and minimal, for all
+      # others it's server.
+      VARIANT_SUBDIRS := $(filter client minimal, $(JVM_VARIANTS)) \
+          $(if $(filter-out client minimal, $(JVM_VARIANTS)), server)
+      $(foreach v, $(VARIANT_SUBDIRS), $(eval $(call CreateSymlinks,$v)))
+    endif
+    ############################################################################
+
+  endif
+endif
+
+################################################################################
+# Create the symbols file for static builds.
+
+ifeq ($(STATIC_BUILD), true)
+  JAVA_BASE_EXPORT_SYMBOLS_SRC := \
+      $(SUPPORT_OUTPUTDIR)/modules_libs/java.base/$(LIBRARY_PREFIX)jli.symbols \
+      $(SUPPORT_OUTPUTDIR)/modules_libs/java.base/$(LIBRARY_PREFIX)java.symbols \
+      $(SUPPORT_OUTPUTDIR)/modules_libs/java.base/$(LIBRARY_PREFIX)net.symbols \
+      $(SUPPORT_OUTPUTDIR)/modules_libs/java.base/$(LIBRARY_PREFIX)nio.symbols \
+      $(SUPPORT_OUTPUTDIR)/modules_libs/java.base/$(LIBRARY_PREFIX)verify.symbols \
+      $(SUPPORT_OUTPUTDIR)/modules_libs/java.base/$(LIBRARY_PREFIX)zip.symbols \
+      $(SUPPORT_OUTPUTDIR)/modules_libs/java.base/$(LIBRARY_PREFIX)jimage.symbols \
+      $(SUPPORT_OUTPUTDIR)/modules_libs/java.base/server/$(LIBRARY_PREFIX)jvm.symbols \
+      #
+
+  JAVA_BASE_EXPORT_SYMBOL_FILE := $(SUPPORT_OUTPUTDIR)/modules_libs/java.base/java.base.symbols
+
+  $(JAVA_BASE_EXPORT_SYMBOL_FILE): $(JAVA_BASE_EXPORT_SYMBOLS_SRC)
+	$(call LogInfo, Generating java.base.symbols file)
+	$(CAT) $^ > $@
+
+  # The individual symbol files is generated when the respective lib is built
+  $(JAVA_BASE_EXPORT_SYMBOLS_SRC): $(BUILD_LIBJLI) $(BUILD_LIBJAVA) \
+      $(BUILD_LIBNET) $(BUILD_LIBNIO) $(BUILD_LIBVERIFY) $(BUILD_LIBZIP) \
+      $(BUILD_LIBJIMAGE)
+
+  TARGETS += $(JAVA_BASE_EXPORT_SYMBOL_FILE)
+endif
+
+################################################################################
+# Copy tzmappings file for Windows
+
+ifeq ($(call isTargetOs, windows), true)
+  $(eval $(call SetupCopyFiles, COPY_TZMAPPINGS, \
+      FILES := $(SUPPORT_OUTPUTDIR)/gensrc/java.base/windows/conf/tzmappings, \
+      DEST := $(call FindLibDirForModule, $(MODULE)), \
+  ))
+  TARGETS += $(COPY_TZMAPPINGS)
+endif

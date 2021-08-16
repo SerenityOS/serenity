@@ -1,0 +1,2 @@
+MessageForInterfaceTest.java:8:8: compiler.err.class.public.should.be.in.file: kindname.interface, MessageForInterfaceTest_
+1 error

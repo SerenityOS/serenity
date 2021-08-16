@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+  ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+  ~
+  ~ This code is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU General Public License version 2 only, as
+  ~ published by the Free Software Foundation.  Oracle designates this
+  ~ particular file as subject to the "Classpath" exception as provided
+  ~ by Oracle in the LICENSE file that accompanied this code.
+  ~
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+  ~ version 2 for more details (a copy is included in the LICENSE file that
+  ~ accompanied this code).
+  ~
+  ~ You should have received a copy of the GNU General Public License version
+  ~ 2 along with this work; if not, write to the Free Software Foundation,
+  ~ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+  ~
+  ~ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+  ~ or visit www.oracle.com if you need additional information or have any
+  ~ questions.
+  -->
+
+<!--
+This is an extension to the langtools make/build.xml file,
+that provides targets to run the examples that generate
+example diagnostics in different locales.
+
+Usage:
+    ant -f langtools/make/run-examples.xml -Dlangtools.jdk.home=<JDK>
+
+By default, the reports will be generated in langtools/build/diags-examples/report/.
+-->
+
+<project name="diags-examples" default="diags-examples" basedir="..">
+    <import file="build.xml"/>
+
+    <!-- specify working directory for the tool -->
+    <property name="diags.examples.dir" location="${build.dir}/diag-examples"/>
+
+    <!-- compiled classes for the tool -->
+    <property name="diags.examples.classes" location="${diags.examples.dir}/classes}"/>
+
+    <!-- directory for generated reports -->
+    <property name="diags.examples.report" location="${diags.examples.dir}/report"/>
+
+    <!-- default target, generates reports for all available locales -->
+    <target name="diags-examples" depends="run-en_US,run-ja,run-zh_CN"/>
+
+    <!-- generate report for US English locale -->
+    <target name="run-en_US" depends="-build-runner,-def-runner">
+        <mkdir dir="${diags.examples.report}"/>
+        <runner lang="en" country="US" outfile="${diags.examples.report}/en_US.html"/>
+    </target>
+
+    <!-- generate report for Japanese locale -->
+    <target name="run-ja" depends="-build-runner,-def-runner">
+        <mkdir dir="${diags.examples.report}"/>
+        <runner lang="ja" outfile="${diags.examples.report}/ja.html"/>
+    </target>
+
+    <!-- generate report for Mandarin Chinese locale -->
+    <target name="run-zh_CN" depends="-build-runner,-def-runner">
+        <mkdir dir="${diags.examples.report}"/>
+        <runner lang="zh" country="CN" outfile="${diags.examples.report}/zh_CN.html"/>
+    </target>
+
+    <!-- compile the tool that runs the examples -->
+    <target name="-build-runner" depends="build">
+        <mkdir dir="${diags.examples.classes}"/>
+        <javac fork="true"
+            executable="${build.bin}/javac"
+            srcdir="test/tools/javac/diags"
+            destdir="${diags.examples.classes}"
+            includes="ArgTypeCompilerFactory.java,Example.java,FileManager.java,HTMLWriter.java,RunExamples.java,DocCommentProcessor.java"
+            sourcepath=""
+            includeAntRuntime="no"
+            debug="${javac.debug}"
+            debuglevel="${javac.debuglevel}">
+            <compilerarg line="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED"/>
+            <compilerarg line="--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED"/>
+            <compilerarg line="--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED"/>
+            <compilerarg line="--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED"/>
+            <compilerarg line="--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED"/>
+            <compilerarg line="--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"/>
+        </javac>
+    </target>
+
+    <!-- define a task to run the tool that runs the examples -->
+    <target name="-def-runner">
+        <macrodef name="runner">
+            <attribute name="lang"/>
+            <attribute name="country" default=""/>
+            <attribute name="outfile"/>
+            <sequential>
+            <java fork="true"
+                  jvm="${langtools.jdk.home}/bin/java"
+                  dir="test/tools/javac/diags"
+                  classpath="${diags.examples.classes};${dist.lib.dir}/javac.jar;${dist.lib.dir}/javap.jar"
+                  classname="RunExamples">
+                <jvmarg value="-Duser.language=@{lang}"/>
+                <jvmarg value="-Duser.country=@{country}"/>
+                <jvmarg value="-Dtest.classes=${diags.examples.classes}"/>
+                <arg value="-examples"/>
+                <arg value="examples"/>
+                <arg value="-o"/>
+                <arg file="@{outfile}"/>
+                <arg value="-showFiles"/>
+                <arg value="-title"/>
+                <arg value="Examples of javac diagnostics"/>
+                <jvmarg line="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED"/>
+                <jvmarg line="--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED"/>
+                <jvmarg line="--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED"/>
+                <jvmarg line="--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED"/>
+                <jvmarg line="--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED"/>
+                <jvmarg line="--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"/>
+            </java>
+            </sequential>
+        </macrodef>
+    </target>
+</project>

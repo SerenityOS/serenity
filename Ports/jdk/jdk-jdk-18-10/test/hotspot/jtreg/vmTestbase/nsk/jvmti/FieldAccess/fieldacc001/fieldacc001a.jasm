@@ -1,0 +1,193 @@
+/*
+ * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+package nsk/jvmti/FieldAccess;
+
+super public class fieldacc001a {
+
+    static Field staticBoolean:Z;
+    static Field staticByte:B;
+    static Field staticShort:S;
+    static Field staticInt:I;
+    static Field staticLong:J;
+    static Field staticFloat:F;
+    static Field staticDouble:D;
+    static Field staticChar:C;
+    static Field staticObject:"Ljava/lang/Object;";
+    static Field staticArrInt:"[I";
+    Field instanceBoolean:Z;
+    Field instanceByte:B;
+    Field instanceShort:S;
+    Field instanceInt:I;
+    Field instanceLong:J;
+    Field instanceFloat:F;
+    Field instanceDouble:D;
+    Field instanceChar:C;
+    Field instanceObject:"Ljava/lang/Object;";
+    Field instanceArrInt:"[I";
+
+    public Method "<init>":"()V" stack 5 locals 1 {
+        aload_0;
+        invokespecial Method java/lang/Object."<init>":"()V";
+        aload_0;
+        iconst_0;
+        putfield    Field instanceBoolean:"Z";
+        aload_0;
+        bipush      10;
+        putfield    Field instanceByte:"B";
+        aload_0;
+        bipush      20;
+        putfield    Field instanceShort:"S";
+        aload_0;
+        bipush      30;
+        putfield    Field instanceInt:"I";
+        aload_0;
+        ldc2_w      long 40l;
+        putfield    Field instanceLong:"J";
+        aload_0;
+        ldc         float 0.05f;
+        putfield    Field instanceFloat:"F";
+        aload_0;
+        ldc2_w      double 0.06d;
+        putfield    Field instanceDouble:"D";
+        aload_0;
+        bipush      122;
+        putfield    Field instanceChar:"C";
+        aload_0;
+        new class java/lang/Object;
+        dup;
+        invokespecial Method java/lang/Object."<init>":"()V";
+        putfield    Field instanceObject:"Ljava/lang/Object;";
+        aload_0;
+        iconst_2;
+        newarray    int;
+        dup;
+        iconst_0;
+        bipush      70;
+        iastore;
+        dup;
+        iconst_1;
+        bipush      80;
+        iastore;
+        putfield    Field instanceArrInt:"[I";
+        return;
+    }
+
+    public Method run:"()I" stack 4 locals 2 {
+        iconst_0;
+        istore_1;
+        getstatic   Field staticBoolean:"Z";    // bci=2
+        aload_0;
+        getfield    Field instanceBoolean:"Z";  // bci=6
+        if_icmpne   L15;
+        iinc        1, 1;
+L15:    getstatic   Field staticByte:"B";       // bci=15
+        aload_0;
+        getfield    Field instanceByte:"B";     // bci=19
+        if_icmpne   L28;
+        iinc        1, 1;
+L28:    getstatic   Field staticShort:"S";      // bci=28
+        aload_0;
+        getfield    Field instanceShort:"S";    // bci=32
+        if_icmpne   L41;
+        iinc        1, 1;
+L41:    getstatic   Field staticInt:"I";        // bci=41
+        aload_0;
+        getfield    Field instanceInt:"I";      // bci=45
+        if_icmpne   L54;
+        iinc        1, 1;
+L54:    getstatic   Field staticLong:"J";       // bci=54
+        aload_0;
+        getfield    Field instanceLong:"J";     // bci=58
+        lcmp;
+        ifne        L68;
+        iinc        1, 1;
+L68:    getstatic   Field staticFloat:"F";      // bci=68
+        aload_0;
+        getfield    Field instanceFloat:"F";    // bci=72
+        fcmpl;
+        ifne        L82;
+        iinc        1, 1;
+L82:    getstatic   Field staticDouble:"D";     // bci=82
+        aload_0;
+        getfield    Field instanceDouble:"D";   // bci=86
+        dcmpl;
+        ifne    L96;
+        iinc        1, 1;
+L96:    getstatic   Field staticChar:"C";       // bci=96
+        aload_0;
+        getfield    Field instanceChar:"C";     // bci=100
+        if_icmpne   L109;
+        iinc        1, 1;
+L109:   getstatic   Field staticObject:"Ljava/lang/Object;"; // bci=109
+        aload_0;
+        getfield    Field instanceObject:"Ljava/lang/Object;"; // bci=113
+        if_acmpne   L122;
+        iinc        1, 1;
+L122:   getstatic   Field staticArrInt:"[I";    // bci=122
+        iconst_0;
+        iaload;
+        aload_0;
+        getfield    Field instanceArrInt:"[I";  // bci=128
+        iconst_1;
+        iaload;
+        if_icmpne   L139;
+        iinc        1, 1;
+L139:   iload_1;
+        ireturn;
+    }
+
+    static Method "<clinit>":"()V" stack 4 locals 0 {
+        iconst_1;
+        putstatic   Field staticBoolean:"Z";
+        iconst_1;
+        putstatic   Field staticByte:"B";
+        iconst_2;
+        putstatic   Field staticShort:"S";
+        iconst_3;
+        putstatic   Field staticInt:"I";
+        ldc2_w      long 4l;
+        putstatic   Field staticLong:"J";
+        ldc         float 0.5f;
+        putstatic   Field staticFloat:"F";
+        ldc2_w      double 0.6d;
+        putstatic   Field staticDouble:"D";
+        bipush      97;
+        putstatic   Field staticChar:"C";
+        aconst_null;
+        putstatic   Field staticObject:"Ljava/lang/Object;";
+        iconst_2;
+        newarray    int;
+        dup;
+        iconst_0;
+        bipush      7;
+        iastore;
+        dup;
+        iconst_1;
+        bipush      8;
+        iastore;
+        putstatic   Field staticArrInt:"[I";
+        return;
+    }
+
+}

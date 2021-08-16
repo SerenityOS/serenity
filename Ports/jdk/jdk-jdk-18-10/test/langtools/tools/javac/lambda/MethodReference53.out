@@ -1,0 +1,2 @@
+MethodReference53.java:22:11: compiler.err.invalid.mref: kindname.method, (compiler.misc.cant.resolve.location.args: kindname.method, unknown, , , (compiler.misc.location: kindname.class, MethodReference53, null))
+1 error

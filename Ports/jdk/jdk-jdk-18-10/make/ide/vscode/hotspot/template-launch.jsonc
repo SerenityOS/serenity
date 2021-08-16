@@ -1,0 +1,55 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "gtestLauncher",
+            "type": "{{DEBUGENGINENAME}}",
+            "request": "launch",
+            "program": "{{OUTPUTDIR}}/hotspot/variant-server/libjvm/gtest/gtestLauncher",
+            "args": ["-jdk:{{OUTPUTDIR}}/jdk"],
+            "stopAtEntry": false,
+            "cwd": "{{WORKSPACE_ROOT}}",
+            "environment": [],
+            "externalConsole": false,
+            "preLaunchTask": "Make 'exploded-image'",
+            "osx": {
+                "MIMode": "lldb",
+                "internalConsoleOptions": "openOnSessionStart",
+                "args": ["--gtest_color=no", "-jdk:{{OUTPUTDIR}}/jdk"]
+            },
+            "linux": {
+                "MIMode": "gdb",
+                "setupCommands": [
+                    {
+                        "text": "handle SIGSEGV noprint nostop",
+                        "description": "Disable stopping on signals handled by the JVM"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "java",
+            "type": "{{DEBUGENGINENAME}}",
+            "request": "launch",
+            "program": "{{OUTPUTDIR}}/jdk/bin/java",
+            "stopAtEntry": false,
+            "cwd": "{{WORKSPACE_ROOT}}",
+            "environment": [],
+            "externalConsole": false,
+            "preLaunchTask": "Make 'exploded-image'",
+            "osx": {
+                "MIMode": "lldb",
+                "internalConsoleOptions": "openOnSessionStart",
+            },
+            "linux": {
+                "MIMode": "gdb",
+                "setupCommands": [
+                    {
+                        "text": "handle SIGSEGV noprint nostop",
+                        "description": "Disable stopping on signals handled by the JVM"
+                    }
+                ]
+            }
+        }
+    ]
+}

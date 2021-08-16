@@ -1,0 +1,3 @@
+A.java:14:14: compiler.warn.unchecked.call.mbr.of.raw.type: add(E), java.util.List
+A.java:15:14: compiler.warn.unchecked.call.mbr.of.raw.type: add(E), java.util.List
+2 warnings

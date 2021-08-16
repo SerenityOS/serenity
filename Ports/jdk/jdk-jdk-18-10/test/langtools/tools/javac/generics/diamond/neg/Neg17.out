@@ -1,0 +1,2 @@
+Neg17.java:19:21: compiler.err.cant.resolve.location.args: kindname.method, n, , , (compiler.misc.location: kindname.class, Neg17<java.lang.Object>, null)
+1 error

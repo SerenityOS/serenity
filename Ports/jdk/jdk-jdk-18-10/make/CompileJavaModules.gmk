@@ -1,0 +1,153 @@
+#
+# Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# This must be the first rule
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include Modules.gmk
+include JavaCompilation.gmk
+
+################################################################################
+# If this is an imported module that has prebuilt classes, only compile
+# module-info.java.
+ifneq ($(IMPORT_MODULES_CLASSES), )
+  IMPORT_MODULE_DIR := $(IMPORT_MODULES_CLASSES)/$(MODULE)
+  ifneq ($(wildcard $(IMPORT_MODULE_DIR)), )
+    $(MODULE)_INCLUDE_FILES := module-info.java
+  endif
+else
+  IMPORT_MODULE_DIR :=
+endif
+
+################################################################################
+# Setup the compilation for the module
+#
+MODULE_SRC_DIRS := $(call FindModuleSrcDirs, $(MODULE))
+
+# The JDK_USER_DEFINED_FILTER is a poor man's incremental build: by specifying
+# JDK_FILTER at the make command line, only a subset of the JDK java files will
+# be recompiled. If multiple paths are separated by comma, convert that into a
+# space separated list.
+JDK_USER_DEFINED_FILTER := $(strip $(subst $(COMMA),$(SPACE), $(JDK_FILTER)))
+ifeq ($(JDK_FILTER), )
+  FAIL_NO_SRC := true
+else
+  # When using JDK_FILTER, most module java compilations will end up finding
+  # no source files. Don't let that fail the build.
+  FAIL_NO_SRC := false
+endif
+
+# Get the complete module source path.
+MODULESOURCEPATH := $(call GetModuleSrcPath)
+
+# Add imported modules to the modulepath
+MODULEPATH := $(call PathList, $(IMPORT_MODULES_CLASSES))
+
+################################################################################
+# Copy zh_HK properties files from zh_TW (needed by some modules)
+
+$(JDK_OUTPUTDIR)/modules/%_zh_HK.properties: $(JDK_OUTPUTDIR)/modules/%_zh_TW.properties
+	$(install-file)
+
+CreateHkTargets = \
+    $(call FilterExcludedTranslations, \
+       $(patsubst $(TOPDIR)/src/%, $(JDK_OUTPUTDIR)/modules/%, \
+         $(subst /share/classes,, \
+            $(subst _zh_TW,_zh_HK, $(filter %_zh_TW.properties, $1)) \
+         ) \
+       ), \
+       .properties \
+    )
+
+################################################################################
+# Include module specific build settings
+
+-include Java.gmk
+
+################################################################################
+# Setup the main compilation
+
+$(eval $(call SetupJavaCompilation, $(MODULE), \
+    SMALL_JAVA := false, \
+    MODULE := $(MODULE), \
+    SRC := $(wildcard $(MODULE_SRC_DIRS)), \
+    INCLUDES := $(JDK_USER_DEFINED_FILTER), \
+    FAIL_NO_SRC := $(FAIL_NO_SRC), \
+    BIN := $(if $($(MODULE)_BIN), $($(MODULE)_BIN), $(JDK_OUTPUTDIR)/modules), \
+    HEADERS := $(SUPPORT_OUTPUTDIR)/headers, \
+    CREATE_API_DIGEST := true, \
+    CLEAN := $(CLEAN), \
+    CLEAN_FILES := $(CLEAN_FILES), \
+    COPY := $(COPY), \
+    DISABLED_WARNINGS := $(DISABLED_WARNINGS_java), \
+    EXCLUDES := $(EXCLUDES), \
+    EXCLUDE_FILES := $(EXCLUDE_FILES), \
+    KEEP_ALL_TRANSLATIONS := $(KEEP_ALL_TRANSLATIONS), \
+    JAVAC_FLAGS := \
+        $(DOCLINT) \
+        $(JAVAC_FLAGS) \
+        --module-source-path $(MODULESOURCEPATH) \
+        --module-path $(MODULEPATH) \
+        --system none, \
+))
+
+TARGETS += $($(MODULE))
+
+# Declare dependencies between java compilations of different modules.
+# Since the other modules are declared in different invocations of this file,
+# use the macro to find the correct target file to depend on.
+# Only the javac compilation actually depends on other modules so limit
+# dependency declaration to that by using the *_COMPILE_TARGET variable.
+$($(MODULE)_COMPILE_TARGET): $(foreach d, $(call FindDepsForModule, $(MODULE)), \
+    $(call SetupJavaCompilationApiTarget, $d, \
+        $(if $($d_BIN), $($d_BIN), $(JDK_OUTPUTDIR)/modules/$d)))
+
+################################################################################
+# If this is an imported module, copy the pre built classes and resources into
+# the modules output dir
+
+ifneq ($(wildcard $(IMPORT_MODULE_DIR)), )
+  $(JDK_OUTPUTDIR)/modules/$(MODULE)/_imported.marker: \
+      $(call FindFiles, $(IMPORT_MODULE_DIR))
+	$(call MakeDir, $(@D))
+        # Do not delete marker and build meta data files
+	$(RM) -r $(filter-out $(@D)/_%, $(wildcard $(@D)/*))
+	$(CP) -R $(IMPORT_MODULE_DIR)/* $(@D)/
+	$(TOUCH) $@
+
+  TARGETS += $(JDK_OUTPUTDIR)/modules/$(MODULE)/_imported.marker
+
+  # Add this dependency to avoid a race between compiling module-info.java and
+  # importing the classes.
+  $($(MODULE)_COMPILE_TARGET): $(JDK_OUTPUTDIR)/modules/$(MODULE)/_imported.marker
+endif
+
+################################################################################
+
+all: $(TARGETS)
+
+.PHONY: all

@@ -1,0 +1,2 @@
+T5061359a.java:16:30: compiler.err.override.incompatible.ret: (compiler.misc.cant.implement: m1(), Base, m1(), Intf), int, void
+1 error

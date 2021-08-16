@@ -1,0 +1,4 @@
+Source.java:12:28: compiler.err.doesnt.exist: some.path.to
+Source.java:15:16: compiler.err.cant.resolve: kindname.class, SomeUnknownClass, , 
+Source.java:18:16: compiler.err.cant.resolve: kindname.variable, SomeUnknownClass, , 
+3 errors

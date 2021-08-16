@@ -1,0 +1,2 @@
+RefEqual.java:13:26: compiler.err.incomparable.types: java.lang.Class<java.lang.String>, java.lang.Class<java.lang.Integer>
+1 error

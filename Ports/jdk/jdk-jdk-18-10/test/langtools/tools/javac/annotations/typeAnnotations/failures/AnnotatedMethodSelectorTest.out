@@ -1,0 +1,2 @@
+AnnotatedMethodSelectorTest.java:12:19: compiler.err.annotation.type.not.applicable.to.type: AnnotatedMethodSelectorTest.A
+1 error

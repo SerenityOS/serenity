@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" xml:base="http://local/base/dtd/">
+    <systemSuffix systemIdSuffix="docAlice.dtd" uri="http://local/dtd/docAliceSS.dtd" />
+
+    <systemSuffix systemIdSuffix="docBob.dtd" uri="docBobSS.dtd" />
+
+    <systemSuffix systemIdSuffix="docCarl.dtd" uri="docCarlSS.dtd" xml:base="http://local/carlBase/dtd/" />
+
+    <systemSuffix systemIdSuffix="docDavid.dtd" uri="docDavidSS1.dtd" />
+    <systemSuffix systemIdSuffix="docDavid.dtd" uri="docDavidSS2.dtd" />
+
+    <systemSuffix systemIdSuffix="docElla.dtd" uri="/" />
+    <systemSuffix systemIdSuffix="ella/docElla.dtd" uri="docEllaSS.dtd" />
+</catalog>

@@ -1,0 +1,24 @@
+<html xmlns:astro="http://www.astro.com/astro">
+    <h1>Bright Star Catalog Extract</h1>
+    <body>
+        <b>Star Id: </b>3
+        <br>
+        <b>Constellation: </b>Psc
+        <br>
+        <b>Description: </b>33    Psc
+        <br>
+        <b>RA J2000: </b>00:05:20.1
+        <br>
+        <b>DEC J2000: </b>05:42:27
+        <br>
+        <b>Visual Magnitude: </b>4.61
+        <br>
+        <b>Spectral Type: </b>K0IIIbCN-0.5
+        <br>
+        <b>Galactic Longitude: </b>93.75
+        <br>
+        <b>Galactic Latitude: </b>-65.93
+        <br>
+        <hr>
+    </body>
+</html>

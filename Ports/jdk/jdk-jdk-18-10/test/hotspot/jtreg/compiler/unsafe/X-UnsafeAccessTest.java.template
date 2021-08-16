@@ -1,0 +1,378 @@
+/*
+ * Copyright (c) 2015, 2019, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ * @test
+ * @bug 8143628
+ * @summary Test unsafe access for $type$
+ *
+#if[JdkInternalMisc]
+ * @modules $module$/$package$:+open
+#else[JdkInternalMisc]
+ * @modules $module$/$package$
+#end[JdkInternalMisc]
+ * @run testng/othervm -Diters=100   -Xint                   compiler.unsafe.$Qualifier$UnsafeAccessTest$Type$
+ * @run testng/othervm -Diters=20000 -XX:TieredStopAtLevel=1 compiler.unsafe.$Qualifier$UnsafeAccessTest$Type$
+ * @run testng/othervm -Diters=20000 -XX:-TieredCompilation  compiler.unsafe.$Qualifier$UnsafeAccessTest$Type$
+ * @run testng/othervm -Diters=20000                         compiler.unsafe.$Qualifier$UnsafeAccessTest$Type$
+ */
+
+package compiler.unsafe;
+
+import org.testng.annotations.Test;
+
+import java.lang.reflect.Field;
+
+import static org.testng.Assert.*;
+
+public class $Qualifier$UnsafeAccessTest$Type$ {
+    static final int ITERS = Integer.getInteger("iters", 1);
+    static final int WEAK_ATTEMPTS = Integer.getInteger("weakAttempts", 10);
+
+    static final $package$.Unsafe UNSAFE;
+
+    static final long V_OFFSET;
+
+    static final Object STATIC_V_BASE;
+
+    static final long STATIC_V_OFFSET;
+
+    static int ARRAY_OFFSET;
+
+    static int ARRAY_SHIFT;
+
+    static {
+        try {
+            Field f = $package$.Unsafe.class.getDeclaredField("theUnsafe");
+            f.setAccessible(true);
+            UNSAFE = ($package$.Unsafe) f.get(null);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to get Unsafe instance.", e);
+        }
+
+        try {
+            Field staticVField = $Qualifier$UnsafeAccessTest$Type$.class.getDeclaredField("static_v");
+            STATIC_V_BASE = UNSAFE.staticFieldBase(staticVField);
+            STATIC_V_OFFSET = UNSAFE.staticFieldOffset(staticVField);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            Field vField = $Qualifier$UnsafeAccessTest$Type$.class.getDeclaredField("v");
+            V_OFFSET = UNSAFE.objectFieldOffset(vField);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        ARRAY_OFFSET = UNSAFE.arrayBaseOffset($type$[].class);
+        int ascale = UNSAFE.arrayIndexScale($type$[].class);
+        ARRAY_SHIFT = 31 - Integer.numberOfLeadingZeros(ascale);
+    }
+
+    static $type$ static_v;
+
+    $type$ v;
+
+    @Test
+    public void testFieldInstance() {
+        $Qualifier$UnsafeAccessTest$Type$ t = new $Qualifier$UnsafeAccessTest$Type$();
+        for (int c = 0; c < ITERS; c++) {
+            testAccess(t, V_OFFSET);
+        }
+    }
+
+    @Test
+    public void testFieldStatic() {
+        for (int c = 0; c < ITERS; c++) {
+            testAccess(STATIC_V_BASE, STATIC_V_OFFSET);
+        }
+    }
+
+    @Test
+    public void testArray() {
+        $type$[] array = new $type$[10];
+        for (int c = 0; c < ITERS; c++) {
+            for (int i = 0; i < array.length; i++) {
+                testAccess(array, (((long) i) << ARRAY_SHIFT) + ARRAY_OFFSET);
+            }
+        }
+    }
+
+#if[!Object]
+#if[!boolean]
+    @Test
+    public void testArrayOffHeap() {
+        int size = 10;
+        long address = UNSAFE.allocateMemory(size << ARRAY_SHIFT);
+        try {
+            for (int c = 0; c < ITERS; c++) {
+                for (int i = 0; i < size; i++) {
+                    testAccess(null, (((long) i) << ARRAY_SHIFT) + address);
+                }
+            }
+        } finally {
+            UNSAFE.freeMemory(address);
+        }
+    }
+
+    @Test
+    public void testArrayOffHeapDirect() {
+        int size = 10;
+        long address = UNSAFE.allocateMemory(size << ARRAY_SHIFT);
+        try {
+            for (int c = 0; c < ITERS; c++) {
+                for (int i = 0; i < size; i++) {
+                    testAccess((((long) i) << ARRAY_SHIFT) + address);
+                }
+            }
+        } finally {
+            UNSAFE.freeMemory(address);
+        }
+    }
+#end[!boolean]
+#end[!Object]
+
+    static void testAccess(Object base, long offset) {
+        // Plain
+        {
+            UNSAFE.put$MethodAffix$(base, offset, $value1$);
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+            assertEquals(x, $value1$, "set $type$ value");
+        }
+
+        // Volatile
+        {
+            UNSAFE.put$MethodAffix$Volatile(base, offset, $value2$);
+            $type$ x = UNSAFE.get$MethodAffix$Volatile(base, offset);
+            assertEquals(x, $value2$, "putVolatile $type$ value");
+        }
+
+#if[!JdkInternalMisc]
+#if[Ordered]
+        // Lazy
+        {
+            UNSAFE.putOrdered$MethodAffix$(base, offset, $value1$);
+            $type$ x = UNSAFE.get$MethodAffix$Volatile(base, offset);
+            assertEquals(x, $value1$, "putRelease $type$ value");
+        }
+#end[Ordered]
+#end[!JdkInternalMisc]
+
+#if[JdkInternalMisc]
+        // Lazy
+        {
+            UNSAFE.put$MethodAffix$Release(base, offset, $value1$);
+            $type$ x = UNSAFE.get$MethodAffix$Acquire(base, offset);
+            assertEquals(x, $value1$, "putRelease $type$ value");
+        }
+
+        // Opaque
+        {
+            UNSAFE.put$MethodAffix$Opaque(base, offset, $value2$);
+            $type$ x = UNSAFE.get$MethodAffix$Opaque(base, offset);
+            assertEquals(x, $value2$, "putOpaque $type$ value");
+        }
+#end[JdkInternalMisc]
+
+#if[JdkInternalMisc]
+#if[Unaligned]
+        // Unaligned
+        {
+            UNSAFE.put$MethodAffix$Unaligned(base, offset, $value2$);
+            $type$ x = UNSAFE.get$MethodAffix$Unaligned(base, offset);
+            assertEquals(x, $value2$, "putUnaligned $type$ value");
+        }
+
+        {
+            UNSAFE.put$MethodAffix$Unaligned(base, offset, $value1$, true);
+            $type$ x = UNSAFE.get$MethodAffix$Unaligned(base, offset, true);
+            assertEquals(x, $value1$, "putUnaligned big endian $type$ value");
+        }
+
+        {
+            UNSAFE.put$MethodAffix$Unaligned(base, offset, $value2$, false);
+            $type$ x = UNSAFE.get$MethodAffix$Unaligned(base, offset, false);
+            assertEquals(x, $value2$, "putUnaligned little endian $type$ value");
+        }
+#end[Unaligned]
+#end[JdkInternalMisc]
+
+#if[CAS]
+        UNSAFE.put$MethodAffix$(base, offset, $value1$);
+
+        // Compare
+        {
+#if[JdkInternalMisc]
+            boolean r = UNSAFE.compareAndSet$MethodAffix$(base, offset, $value1$, $value2$);
+            assertEquals(r, true, "success compareAndSet $type$");
+#else[JdkInternalMisc]
+            boolean r = UNSAFE.compareAndSwap$MethodAffix$(base, offset, $value1$, $value2$);
+            assertEquals(r, true, "success compareAndSwap $type$");
+#end[JdkInternalMisc]
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+#if[JdkInternalMisc]
+            assertEquals(x, $value2$, "success compareAndSet $type$ value");
+#else[JdkInternalMisc]
+            assertEquals(x, $value2$, "success compareAndSwap $type$ value");
+#end[JdkInternalMisc]
+        }
+
+        {
+#if[JdkInternalMisc]
+            boolean r = UNSAFE.compareAndSet$MethodAffix$(base, offset, $value1$, $value3$);
+            assertEquals(r, false, "failing compareAndSet $type$");
+#else[JdkInternalMisc]
+            boolean r = UNSAFE.compareAndSwap$MethodAffix$(base, offset, $value1$, $value3$);
+            assertEquals(r, false, "failing compareAndSwap $type$");
+#end[JdkInternalMisc]
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+#if[JdkInternalMisc]
+            assertEquals(x, $value2$, "failing compareAndSet $type$ value");
+#else[JdkInternalMisc]
+            assertEquals(x, $value2$, "failing compareAndSwap $type$ value");
+#end[JdkInternalMisc]
+        }
+
+#if[JdkInternalMisc]
+        // Advanced compare
+        {
+            $type$ r = UNSAFE.compareAndExchange$MethodAffix$(base, offset, $value2$, $value1$);
+            assertEquals(r, $value2$, "success compareAndExchange $type$");
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+            assertEquals(x, $value1$, "success compareAndExchange $type$ value");
+        }
+
+        {
+            $type$ r = UNSAFE.compareAndExchange$MethodAffix$(base, offset, $value2$, $value3$);
+            assertEquals(r, $value1$, "failing compareAndExchange $type$");
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+            assertEquals(x, $value1$, "failing compareAndExchange $type$ value");
+        }
+
+        {
+            $type$ r = UNSAFE.compareAndExchange$MethodAffix$Acquire(base, offset, $value1$, $value2$);
+            assertEquals(r, $value1$, "success compareAndExchangeAcquire $type$");
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+            assertEquals(x, $value2$, "success compareAndExchangeAcquire $type$ value");
+        }
+
+        {
+            $type$ r = UNSAFE.compareAndExchange$MethodAffix$Acquire(base, offset, $value1$, $value3$);
+            assertEquals(r, $value2$, "failing compareAndExchangeAcquire $type$");
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+            assertEquals(x, $value2$, "failing compareAndExchangeAcquire $type$ value");
+        }
+
+        {
+            $type$ r = UNSAFE.compareAndExchange$MethodAffix$Release(base, offset, $value2$, $value1$);
+            assertEquals(r, $value2$, "success compareAndExchangeRelease $type$");
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+            assertEquals(x, $value1$, "success compareAndExchangeRelease $type$ value");
+        }
+
+        {
+            $type$ r = UNSAFE.compareAndExchange$MethodAffix$Release(base, offset, $value2$, $value3$);
+            assertEquals(r, $value1$, "failing compareAndExchangeRelease $type$");
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+            assertEquals(x, $value1$, "failing compareAndExchangeRelease $type$ value");
+        }
+
+        {
+            boolean success = false;
+            for (int c = 0; c < WEAK_ATTEMPTS && !success; c++) {
+                success = UNSAFE.weakCompareAndSet$MethodAffix$Plain(base, offset, $value1$, $value2$);
+            }
+            assertEquals(success, true, "weakCompareAndSetPlain $type$");
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+            assertEquals(x, $value2$, "weakCompareAndSetPlain $type$ value");
+        }
+
+        {
+            boolean success = false;
+            for (int c = 0; c < WEAK_ATTEMPTS && !success; c++) {
+                success = UNSAFE.weakCompareAndSet$MethodAffix$Acquire(base, offset, $value2$, $value1$);
+            }
+            assertEquals(success, true, "weakCompareAndSetAcquire $type$");
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+            assertEquals(x, $value1$, "weakCompareAndSetAcquire $type$");
+        }
+
+        {
+            boolean success = false;
+            for (int c = 0; c < WEAK_ATTEMPTS && !success; c++) {
+                success = UNSAFE.weakCompareAndSet$MethodAffix$Release(base, offset, $value1$, $value2$);
+            }
+            assertEquals(success, true, "weakCompareAndSetRelease $type$");
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+            assertEquals(x, $value2$, "weakCompareAndSetRelease $type$");
+        }
+
+        {
+            boolean success = false;
+            for (int c = 0; c < WEAK_ATTEMPTS && !success; c++) {
+                success = UNSAFE.weakCompareAndSet$MethodAffix$(base, offset, $value2$, $value1$);
+            }
+            assertEquals(success, true, "weakCompareAndSet $type$");
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+            assertEquals(x, $value1$, "weakCompareAndSet $type$");
+        }
+
+#end[JdkInternalMisc]
+        UNSAFE.put$MethodAffix$(base, offset, $value2$);
+
+        // Compare set and get
+        {
+            $type$ o = UNSAFE.getAndSet$MethodAffix$(base, offset, $value1$);
+            assertEquals(o, $value2$, "getAndSet $type$");
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+            assertEquals(x, $value1$, "getAndSet $type$ value");
+        }
+#end[CAS]
+
+#if[AtomicAdd]
+        UNSAFE.put$MethodAffix$(base, offset, $value1$);
+
+        // get and add, add and get
+        {
+            $type$ o = UNSAFE.getAndAdd$MethodAffix$(base, offset, $value2$);
+            assertEquals(o, $value1$, "getAndAdd $type$");
+            $type$ x = UNSAFE.get$MethodAffix$(base, offset);
+            assertEquals(x, ($type$)($value1$ + $value2$), "getAndAdd $type$");
+        }
+#end[AtomicAdd]
+    }
+
+#if[!Object]
+#if[!boolean]
+    static void testAccess(long address) {
+        // Plain
+        {
+            UNSAFE.put$MethodAffix$(address, $value1$);
+            $type$ x = UNSAFE.get$MethodAffix$(address);
+            assertEquals(x, $value1$, "set $type$ value");
+        }
+    }
+#end[!boolean]
+#end[!Object]
+}

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario xsi:noNamespaceSchemaLocation="..\xsd\Scenario.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xi="http://www.w3.org/2001/XInclude">
+
+<!-- Configuration data for Device-->
+<Device>
+<xi:include href="test2.xml" xpointer="element(/1/1)" parse="xml"/>
+</Device>
+
+</scenario>

@@ -1,0 +1,8 @@
+T8016177a.java:38:10: compiler.err.ref.ambiguous: m1, kindname.method, <T,R>m1(java.util.List<T>,T8016177a.Function<T,R>), T8016177a, kindname.method, <T,R>m1(java.util.List<T>,T8016177a.ToIntFunction<T>), T8016177a
+T8016177a.java:39:10: compiler.err.ref.ambiguous: m2, kindname.method, <T,R>m2(java.util.List<T>,T8016177a.Function<T,R>), T8016177a, kindname.method, <T,R>m2(java.util.List<T>,T8016177a.ToIntFunction<T>), T8016177a
+T8016177a.java:40:10: compiler.err.ref.ambiguous: m3, kindname.method, <T,R>m3(java.util.List<T>,T8016177a.Function<T,R>), T8016177a, kindname.method, <T,R>m3(java.util.List<T>,T8016177a.ToIntFunction<T>), T8016177a
+T8016177a.java:41:10: compiler.err.ref.ambiguous: m4, kindname.method, <T,R>m4(java.util.List<T>,T8016177a.Function<T,R>), T8016177a, kindname.method, <T,R>m4(java.util.List<T>,T8016177a.ToIntFunction<T>), T8016177a
+T8016177a.java:42:10: compiler.err.ref.ambiguous: m5, kindname.method, <T,R>m5(java.util.List<T>,T8016177a.Function<T,R>), T8016177a, kindname.method, <T,R>m5(java.util.List<T>,T8016177a.ToIntFunction<T>), T8016177a
+T8016177a.java:43:10: compiler.err.ref.ambiguous: m6, kindname.method, <T,R>m6(java.util.List<T>,T8016177a.Function<T,R>), T8016177a, kindname.method, <T,R>m6(java.util.List<T>,T8016177a.ToIntFunction<T>), T8016177a
+T8016177a.java:43:12: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.assignment.exists: T,R, (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.inconvertible.types: int, java.lang.String)))
+7 errors

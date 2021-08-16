@@ -1,0 +1,300 @@
+#
+# Copyright (c) 2017, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+################################################################################
+# Initial bootstrapping, copied and stripped down from Makefile and Init.gmk
+################################################################################
+
+# In Cygwin, the MAKE variable gets prepended with the current directory if the
+# make executable is called using a Windows mixed path (c:/cygwin/bin/make.exe).
+ifneq ($(findstring :, $(MAKE)), )
+  export MAKE := $(patsubst $(CURDIR)%, %, $(patsubst $(CURDIR)/%, %, $(MAKE)))
+endif
+
+# Locate this Makefile
+ifeq ($(filter /%, $(lastword $(MAKEFILE_LIST))),)
+  makefile_path := $(CURDIR)/$(strip $(lastword $(MAKEFILE_LIST)))
+else
+  makefile_path := $(lastword $(MAKEFILE_LIST))
+endif
+TOPDIR := $(strip $(patsubst %/make/, %, $(dir $(makefile_path))))
+
+################################################################################
+# Functions
+################################################################################
+
+# Setup a required or optional variable, and/or check that it is properly
+# given.
+# Note: No spaces are allowed around the arguments.
+#
+# $1: The name of the variable
+# $2: The default value, if any, or OPTIONAL (do not provide a default but
+#     do not exit if it is missing)
+# $3: If NO_CHECK, disable checking for target file/directory existence
+#     If MKDIR, create the default directory
+define SetupVariable
+  ifeq ($$($1), )
+    ifeq ($2, )
+      $$(info Error: Prebuilt variable $1 is missing, needed for run-tests-prebuilt)
+      $$(error Cannot continue.)
+    else ifeq ($2, OPTIONAL)
+      ifneq ($$(findstring $$(LOG), info debug trace), )
+        $$(info Prebuilt variable $1 is not provided)
+      endif
+    else
+      ifneq ($$(findstring $$(LOG), info debug trace), )
+        $$(info Prebuilt variable $1=$2 (default value))
+      endif
+      $1:=$2
+    endif
+  else
+    ifneq ($$(findstring $$(LOG), info debug trace), )
+      $$(info Prebuilt variable $1=$$($1))
+    endif
+  endif
+  # If $1 has a value (is not optional), and $3 is not set (to NO_CHECK),
+  # and if wildcard is empty, then complain that the file is missing.
+  ifeq ($3, MKDIR)
+    ifneq ($$(findstring $$(LOG), info debug trace), )
+      $$(info Creating directory for $1)
+    endif
+    $$(shell mkdir -p $$($1))
+  else ifneq ($3, NO_CHECK)
+    ifeq ($$(strip $$(if $$($1), , OPTIONAL) $$(wildcard $$($1))), )
+      $$(info Error: Prebuilt variable $1 points to missing file/directory:)
+      $$(info '$$($1)')
+      $$(error Cannot continue.)
+    endif
+  endif
+endef
+
+# Create an ephemeral spec file
+#
+# $1: The output file name
+# $2..$N: The lines to output to the file
+define CreateNewSpec
+  $(if $(strip $(33)), \
+    $(error Internal makefile error: \
+      Too many arguments to macro, please update CreateNewSpec in RunTestsPrebuilt.gmk) \
+  ) \
+  $(shell $(RM) $1) \
+  $(foreach i, $(call sequence, 2, 32), \
+    $(if $(strip $($i)), \
+      $(call AppendFile, $(strip $($i)), $1) \
+    ) \
+  )
+endef
+
+################################################################################
+# Check input and setup basic buildsystem support
+################################################################################
+
+# Verify that user has given correct additional input.
+
+# These variables are absolutely necessary
+$(eval $(call SetupVariable,OUTPUTDIR,$(TOPDIR)/build/run-test-prebuilt,MKDIR))
+$(eval $(call SetupVariable,BOOT_JDK))
+$(eval $(call SetupVariable,JT_HOME))
+
+# These can have default values based on the ones above
+$(eval $(call SetupVariable,JDK_IMAGE_DIR,$(OUTPUTDIR)/images/jdk))
+$(eval $(call SetupVariable,TEST_IMAGE_DIR,$(OUTPUTDIR)/images/test))
+$(eval $(call SetupVariable,SYMBOLS_IMAGE_DIR,$(OUTPUTDIR)/images/symbols,NO_CHECK))
+
+# Provide default values for tools that we need
+$(eval $(call SetupVariable,MAKE,make,NO_CHECK))
+$(eval $(call SetupVariable,BASH,bash,NO_CHECK))
+
+# Check optional variables
+$(eval $(call SetupVariable,JIB_JAR,OPTIONAL))
+
+# Now that we have verified that we have the required variables available, we
+# can include the prebuilt spec file ourselves, without an ephemeral spec
+# wrapper. This is required so we can include MakeBase which is needed for
+# CreateNewSpec.
+HAS_SPEC :=
+include $(TOPDIR)/make/InitSupport.gmk
+
+$(eval $(call CheckDeprecatedEnvironment))
+$(eval $(call CheckInvalidMakeFlags))
+$(eval $(call ParseLogLevel))
+
+SPEC := $(TOPDIR)/make/RunTestsPrebuiltSpec.gmk
+include $(SPEC)
+include $(TOPDIR)/make/common/MakeBase.gmk
+
+################################################################################
+# Determine what platform we're running on
+################################################################################
+UNAME := uname
+
+# Get OS name from uname (Cygwin inexplicably adds _NT-x.x)
+UNAME_OS := $(shell $(UNAME) -s | $(CUT) -f1 -d_)
+
+ifeq ($(UNAME_OS), CYGWIN)
+  OPENJDK_TARGET_OS := windows
+  OPENJDK_TARGET_OS_TYPE := windows
+  OPENJDK_TARGET_OS_ENV := windows.cygwin
+else
+  OPENJDK_TARGET_OS_TYPE:=unix
+  ifeq ($(UNAME_OS), Linux)
+    OPENJDK_TARGET_OS := linux
+  else ifeq ($(UNAME_OS), Darwin)
+    OPENJDK_TARGET_OS := macosx
+  else
+    OPENJDK_TARGET_OS := $(UNAME_OS)
+  endif
+  OPENJDK_TARGET_OS_ENV := $(OPENJDK_TARGET_OS)
+endif
+
+# Assume little endian unless otherwise specified
+OPENJDK_TARGET_CPU_ENDIAN := little
+
+UNAME_CPU := $(shell $(UNAME) -m)
+ifeq ($(UNAME_CPU), i686)
+  OPENJDK_TARGET_CPU := x86
+  OPENJDK_TARGET_CPU_BITS := 32
+else
+  # Assume all others are 64-bit. We use the same CPU name as uname for
+  # at least x86_64 and aarch64.
+  OPENJDK_TARGET_CPU := $(UNAME_CPU)
+  OPENJDK_TARGET_CPU_BITS := 64
+endif
+
+OPENJDK_TARGET_CPU_ARCH := $(OPENJDK_TARGET_CPU)
+ifeq ($(OPENJDK_TARGET_CPU), x86_64)
+  OPENJDK_TARGET_CPU_ARCH := x86
+endif
+
+ifeq ($(OPENJDK_TARGET_OS), windows)
+  FIXPATH_BASE := $(BASH) $(TOPDIR)/make/scripts/fixpath.sh
+  FIXPATH := $(FIXPATH_BASE) exec
+else
+  FIXPATH_BASE :=
+  FIXPATH :=
+endif
+
+# Check number of cores and memory in MB
+ifeq ($(OPENJDK_TARGET_OS), linux)
+  NUM_CORES := $(shell $(CAT) /proc/cpuinfo  | $(GREP) -c processor)
+  MEMORY_SIZE := $(shell \
+      $(EXPR) `$(CAT) /proc/meminfo | $(GREP) MemTotal | $(AWK) '{print $$2}'` / 1024 \
+  )
+else ifeq ($(OPENJDK_TARGET_OS), macosx)
+  NUM_CORES := $(shell /usr/sbin/sysctl -n hw.ncpu)
+  MEMORY_SIZE := $(shell $(EXPR) `/usr/sbin/sysctl -n hw.memsize` / 1024 / 1024)
+else ifeq ($(OPENJDK_TARGET_OS), windows)
+  NUM_CORES := $(NUMBER_OF_PROCESSORS)
+  MEMORY_SIZE := $(shell \
+      $(EXPR) `wmic computersystem get totalphysicalmemory -value \
+          | $(GREP) = | $(SED) 's/\\r//g' \
+          | $(CUT) -d "=" -f 2-` / 1024 / 1024 \
+  )
+endif
+ifeq ($(NUM_CORES), )
+  $(warn Could not find number of CPUs, assuming 1)
+  NUM_CORES := 1
+endif
+ifeq ($(MEMORY_SIZE), )
+  $(warn Could not find memory size, assuming 1024 MB)
+  MEMORY_SIZE := 1024
+endif
+
+ifneq ($(wildcard $(JDK_IMAGE_DIR)/template.xml), )
+  TEST_OPTS_JCOV := true
+  JCOV_IMAGE_DIR := $(JDK_IMAGE_DIR)
+else
+  TEST_OPTS_JCOV := false
+  JCOV_IMAGE_DIR :=
+endif
+
+################################################################################
+# Generate the ephemeral spec file
+################################################################################
+
+# Now we can include additional custom support.
+# This might define CUSTOM_NEW_SPEC_LINE
+ifneq ($(CUSTOM_MAKE_DIR), )
+  include $(CUSTOM_MAKE_DIR)/RunTestsPrebuilt.gmk
+endif
+
+NEW_SPEC := $(OUTPUTDIR)/run-test-spec.gmk
+
+$(call CreateNewSpec, $(NEW_SPEC), \
+    # Generated file -- do not edit!, \
+    SPEC := $(NEW_SPEC), \
+    TOPDIR := $(TOPDIR), \
+    OUTPUTDIR := $(OUTPUTDIR), \
+    BOOT_JDK := $(BOOT_JDK), \
+    JT_HOME := $(JT_HOME), \
+    JDK_IMAGE_DIR := $(JDK_IMAGE_DIR), \
+    JCOV_IMAGE_DIR := $(JCOV_IMAGE_DIR), \
+    TEST_IMAGE_DIR := $(TEST_IMAGE_DIR), \
+    SYMBOLS_IMAGE_DIR := $(SYMBOLS_IMAGE_DIR), \
+    MAKE := $(MAKE), \
+    BASH := $(BASH), \
+    JIB_JAR := $(JIB_JAR), \
+    FIXPATH_BASE := $(FIXPATH_BASE), \
+    FIXPATH := $(FIXPATH), \
+    OPENJDK_TARGET_OS := $(OPENJDK_TARGET_OS), \
+    OPENJDK_TARGET_OS_TYPE := $(OPENJDK_TARGET_OS_TYPE), \
+    OPENJDK_TARGET_OS_ENV := $(OPENJDK_TARGET_OS_ENV), \
+    OPENJDK_TARGET_CPU := $(OPENJDK_TARGET_CPU), \
+    OPENJDK_TARGET_CPU_ARCH := $(OPENJDK_TARGET_CPU_ARCH), \
+    OPENJDK_TARGET_CPU_BITS := $(OPENJDK_TARGET_CPU_BITS), \
+    OPENJDK_TARGET_CPU_ENDIAN := $(OPENJDK_TARGET_CPU_ENDIAN), \
+    NUM_CORES := $(NUM_CORES), \
+    MEMORY_SIZE := $(MEMORY_SIZE), \
+    include $(TOPDIR)/make/RunTestsPrebuiltSpec.gmk, \
+    TEST_OPTS_JCOV := $(TEST_OPTS_JCOV), \
+    $(CUSTOM_NEW_SPEC_LINE), \
+)
+
+################################################################################
+# The run-test-prebuilt target
+################################################################################
+
+SPEC := $(NEW_SPEC)
+
+default: all
+
+test-prebuilt:
+        # Need to make sure the failure logs output dir exists since
+        # ExecuteWithLog is called in RunTests.gmk. The PrepareFailureLogs macro
+        # is unfortunately not available at this point.
+	$(call MakeDir, $(MAKESUPPORT_OUTPUTDIR)/failure-logs)
+	@$(RM) -f $(MAKESUPPORT_OUTPUTDIR)/exit-with-error
+        # The lazy initialization of the cache file in FindTests.gmk does not
+        # always work with RunTests.gmk. To guarantee that the jtreg test groups
+        # are always found and parsed, call FindTests.gmk stand alone once
+        # before calling RunTests.gmk.
+	@cd $(TOPDIR) && $(MAKE) $(MAKE_ARGS) -f make/common/FindTests.gmk \
+	    SPEC=$(SPEC) FINDTESTS_STAND_ALONE=true
+	@cd $(TOPDIR) && $(MAKE) $(MAKE_ARGS) -f make/RunTests.gmk run-test \
+	    TEST="$(TEST)"
+
+all: test-prebuilt
+
+.PHONY: default all test-prebuilt

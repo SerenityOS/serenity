@@ -1,0 +1,3 @@
+grant codebase "file:/tmp/duke" {
+    permission java.net.SocketPermission "localhost", "accept";
+};

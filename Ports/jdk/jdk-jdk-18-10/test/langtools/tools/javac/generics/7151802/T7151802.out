@@ -1,0 +1,9 @@
+T7151802.java:14:31: compiler.warn.unchecked.meth.invocation.applied: kindname.method, get1, Z, T7151802.Foo, kindname.class, T7151802
+T7151802.java:22:30: compiler.warn.unchecked.meth.invocation.applied: kindname.method, get3, T7151802.Foo<Z>, T7151802.Foo, kindname.class, T7151802
+T7151802.java:22:31: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), T7151802.Foo, T7151802.Foo<Z>
+T7151802.java:30:36: compiler.warn.unchecked.meth.invocation.applied: kindname.method, get5, compiler.misc.no.args, compiler.misc.no.args, kindname.class, T7151802
+T7151802.java:38:31: compiler.warn.unchecked.meth.invocation.applied: kindname.method, get7, T7151802.Foo<java.lang.String>, T7151802.Foo, kindname.class, T7151802
+T7151802.java:38:32: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), T7151802.Foo, T7151802.Foo<java.lang.String>
+- compiler.err.warnings.and.werror
+1 error
+6 warnings

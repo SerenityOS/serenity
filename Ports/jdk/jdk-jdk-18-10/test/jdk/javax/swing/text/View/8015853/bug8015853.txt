@@ -1,0 +1,67 @@
+</font><font size=2 color="#0000aa"><i>/*
+ * Copyright (c) 2007, 2013, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */</font></i><font size=2 color=black>
+<b>import</b> java.io.*;
+<b>import</b> java.net.URL;
+<b>import</b> java.util.Scanner;
+<b>import</b> javax.swing.*;
+<b>import</b> javax.swing.text.html.HTMLEditorKit;
+<b>public</b> <b>class</b> bug8015853 {
+    <b>private</b> <b>static</b> String text = </font><font size=2 color="#00bb00">""</font><font size=2 color=black>;
+    <b>public</b> <b>static</b> <b>void</b> main(String[] args) throws Exception {
+    
+        <b>try</b> {
+            URL path = ClassLoader.getSystemResource(</font><font size=2 color="#00bb00">"bug8015853.txt"</font><font size=2 color=black>);
+            File file = <b>new</b> File(path.toURI());
+            Scanner scanner = <b>new</b> Scanner(file);
+            <b>while</b> (scanner.hasNextLine()) {
+                text += scanner.nextLine() + </font><font size=2 color="#00bb00">"\n"</font><font size=2 color=black>;
+            }
+            scanner.close();
+        } <b>catch</b> (Exception ex) {
+            <b>throw</b> <b>new</b> RuntimeException(ex);
+        }
+        
+        System.out.println(text);
+        
+        SwingUtilities.invokeAndWait(<b>new</b> Runnable() {
+            <b>public</b> <b>void</b> run() {
+                createAndShowGUI();
+            }
+        });
+    }
+    <b>private</b> <b>static</b> <b>void</b> createAndShowGUI() {
+        <b>try</b> {
+            UIManager.setLookAndFeel(</font><font size=2 color="#00bb00">"javax.swing.plaf.metal.MetalLookAndFeel"</font><font size=2 color=black>);
+        } <b>catch</b> (Exception ex) {
+            <b>throw</b> <b>new</b> RuntimeException(ex);
+        }
+        JFrame frame = <b>new</b> JFrame();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JEditorPane editorPane = <b>new</b> JEditorPane();
+        HTMLEditorKit editorKit = <b>new</b> HTMLEditorKit();
+        editorPane.setEditorKit(editorKit);
+        editorPane.setText(text);
+        frame.add(editorPane);
+        frame.setVisible(<b>true</b>);
+    }
+}

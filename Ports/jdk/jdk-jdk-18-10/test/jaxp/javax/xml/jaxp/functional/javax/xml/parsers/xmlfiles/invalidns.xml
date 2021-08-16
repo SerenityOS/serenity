@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!DOCTYPE book [
+<!ELEMENT book (#PCDATA | ar:rating | fr:rating | zr:rating)* >
+<!ATTLIST ar:rating 
+	  xmlns:ar CDATA #FIXED "http://www.amazon.com/">
+<!ATTLIST fr:rating 
+	  xmlns:fr CDATA #FIXED "http://www.fatbrain.com/">
+<!ELEMENT ar:rating (#PCDATA)>
+<!ELEMENT fr:rating (#PCDATA)>
+<!ELEMENT zr:rating (#PCDATA)>
+]>
+<book> 
+   <ar:rating>4star</ar:rating>
+   <fr:rating>3star</fr:rating>
+   <zr:rating>2star</zr:rating>
+</book> 

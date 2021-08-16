@@ -1,0 +1,6 @@
+grant {
+    permission java.io.FilePermission "<<ALL FILES>>","read,write,delete";
+    permission java.util.PropertyPermission "test.jdk","read";
+    permission java.util.PropertyPermission "test.src","read";
+    permission java.util.PropertyPermission "user.dir","read";
+};

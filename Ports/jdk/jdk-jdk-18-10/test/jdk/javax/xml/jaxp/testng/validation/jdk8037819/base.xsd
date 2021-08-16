@@ -1,0 +1,74 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <xsd:element name="A" type="X"/>
+
+  <!-- The purpose of this element is:
+       a) To have a fixed attribute use
+       b) To have an attribute with a fixed attribute declaration
+       c) To have a complex type with simple content and a fixed value
+       d) To have an element declaration with a fixed value
+   -->
+  <xsd:element name="B" fixed="howdy">
+    <xsd:complexType>
+      <xsd:simpleContent>
+        <xsd:extension base="xsd:string">
+          <xsd:attribute ref="fixedAttr" use="required" fixed="hello"/>
+        </xsd:extension>
+      </xsd:simpleContent>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="D" type="xsd:string" fixed="hey"/>
+
+  <xsd:attribute name="attr" type="xsd:string"/>
+
+  <xsd:attribute name="unparsedEntityAttr" type="xsd:ENTITIES"/>
+
+  <xsd:attribute name="fixedAttr" type="xsd:string" fixed="hello"/>
+
+  <xsd:complexType name="X">
+    <xsd:sequence>
+      <xsd:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute ref="attr"/>
+    <xsd:attribute ref="unparsedEntityAttr"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="Y">
+    <xsd:complexContent>
+	    <xsd:restriction base="X">
+		    <xsd:sequence>
+		      <xsd:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+		    </xsd:sequence>
+		    <xsd:attribute ref="attr" fixed="typeY"/>
+		    <xsd:attribute ref="unparsedEntityAttr" use="prohibited"/>
+	    </xsd:restriction>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <!-- Z is the same as X, but is not derived from X. -->
+  <xsd:complexType name="Z">
+    <xsd:sequence>
+      <xsd:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute ref="attr"/>
+    <xsd:attribute ref="unparsedEntityAttr"/>
+  </xsd:complexType>
+  
+  <xsd:complexType name="idType">
+    <xsd:complexContent>
+	    <xsd:extension base="X">
+		    <xsd:attribute name="idAttr" type="xsd:ID"/>
+	    </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="idrefType">
+    <xsd:complexContent>
+	    <xsd:extension base="X">
+		    <xsd:attribute name="idrefAttr" type="xsd:IDREF"/>
+	    </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+</xsd:schema>

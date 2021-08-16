@@ -1,0 +1,24 @@
+test1 and test2 contain two different implementations of the same
+classes. They are compiled and placed into two different target directories
+and two jar files test1.jar and test2.jar.
+
+The same class is in both jars/directories, but returns a different result
+from the TestClass.getValue() method. The test does the following
+
+1. copy test1.jar to a working directory and call it test.jar
+
+2. load class and invoke method (checking result)
+
+3. close the loader
+
+4. delete test.jar (check delete succeeds)
+
+5. copy test2.jar to same dir and repeat the test
+
+6. The two tests are then repeated by copying the directories
+   test1 and test2.
+
+The loader also includes a http:// URL in its search path and a http
+server is used to serve the required class.
+
+serverRoot is used as the root directory for the http server.

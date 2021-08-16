@@ -1,0 +1,7 @@
+- compiler.warn.source.no.system.modules.path: 15
+InnerNamedConstant_2.java:23:20: compiler.err.icls.cant.have.static.decl: InnerNamedConstant_2.Inner2
+InnerNamedConstant_2.java:24:29: compiler.err.icls.cant.have.static.decl: InnerNamedConstant_2.Inner2
+InnerNamedConstant_2.java:26:13: compiler.err.cant.assign.val.to.final.var: z
+InnerNamedConstant_2.java:35:26: compiler.err.icls.cant.have.static.decl: InnerNamedConstant_2.Inner3
+4 errors
+1 warning

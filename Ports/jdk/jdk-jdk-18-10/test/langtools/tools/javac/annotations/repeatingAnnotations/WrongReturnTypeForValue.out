@@ -1,0 +1,4 @@
+WrongReturnTypeForValue.java:20:1: compiler.err.invalid.repeatable.annotation.value.return: FooContainer, Foo, Foo[]
+WrongReturnTypeForValue.java:20:6: compiler.err.invalid.repeatable.annotation.value.return: FooContainer, Foo, Foo[]
+WrongReturnTypeForValue.java:11:1: compiler.err.invalid.repeatable.annotation.value.return: FooContainer, Foo, Foo[]
+3 errors

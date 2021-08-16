@@ -1,0 +1,3 @@
+grant codeBase "file:${test.classes}${/}-" {
+    permission java.io.FilePermission "${java.io.tmpdir}${/}-", "write";
+};

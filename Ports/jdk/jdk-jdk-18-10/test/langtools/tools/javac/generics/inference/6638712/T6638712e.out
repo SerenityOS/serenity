@@ -1,0 +1,2 @@
+T6638712e.java:17:27: compiler.err.prob.found.req: (compiler.misc.incompatible.bounds: X, (compiler.misc.eq.bounds: java.lang.Object), (compiler.misc.upper.bounds: java.lang.Boolean,java.lang.Object))
+1 error

@@ -1,0 +1,4 @@
+Deprecation.java:10:15: compiler.warn.has.been.deprecated: java.io.StringBufferInputStream, java.io
+Deprecation.java:21:24: compiler.warn.has.been.deprecated: Deprecation, compiler.misc.unnamed.package
+Deprecation.java:58:24: compiler.warn.has.been.deprecated: Deprecation, compiler.misc.unnamed.package
+3 warnings

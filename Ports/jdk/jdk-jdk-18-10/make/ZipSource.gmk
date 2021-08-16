@@ -1,0 +1,101 @@
+#
+# Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include JavaCompilation.gmk
+include Modules.gmk
+
+SRC_ZIP_WORK_DIR := $(SUPPORT_OUTPUTDIR)/src
+
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, ZipSource.gmk))
+
+################################################################################
+# Create the directory structure for src.zip using symlinks.
+# <module>/<package>/<file>.java
+
+ALL_MODULES := $(FindAllModules)
+
+# Generate the src dirs in the first make invocation and then call this makefile
+# again to create src.zip.
+$(foreach m, $(ALL_MODULES), \
+  $(foreach d, $(call FindModuleSrcDirs, $m), \
+    $(eval $d_TARGET := $(SRC_ZIP_WORK_DIR)/$(patsubst $(TOPDIR)/%,%,$d)/$m) \
+    $(if $(SRC_GENERATED), , \
+      $(eval $$($d_TARGET): $d ; \
+          $$(if $(filter $(TOPDIR)/%, $d), $$(link-file-relative), $$(link-file-absolute)) \
+      ) \
+    ) \
+    $(eval SRC_ZIP_SRCS += $$($d_TARGET)) \
+    $(eval SRC_ZIP_SRCS_$m += $$($d_TARGET)) \
+  ) \
+)
+
+TARGETS += $(SRC_ZIP_SRCS)
+
+################################################################################
+# Only evaluate the creation of src.zip in a sub make call when the symlinked
+# src directory structure has been generated.
+ifeq ($(SRC_GENERATED), true)
+
+  # Rewrite the EXCLUDE_TRANSLATIONS locales as exclude patters for java files
+  TRANSLATIONS_PATTERN := $(addprefix %_, $(addsuffix .java, $(EXCLUDE_TRANSLATIONS)))
+
+  # Add excludes for translations for all modules except jdk.localedata
+  $(foreach s, $(SRC_ZIP_SRCS), \
+    $(if $(filter $(notdir $s), jdk.localedata), , \
+      $(eval BUILD_SRC_ZIP_EXCLUDE_PATTERNS_$(dir $s) := $$(TRANSLATIONS_PATTERN)) \
+    ) \
+  )
+
+  $(eval $(call SetupZipArchive, BUILD_SRC_ZIP, \
+      SRC := $(dir $(SRC_ZIP_SRCS)), \
+      INCLUDES := $(SRC_ZIP_INCLUDES), \
+      INCLUDE_FILES := $(SRC_ZIP_INCLUDE_FILES), \
+      EXCLUDES := $(SRC_ZIP_EXCLUDES), \
+      EXCLUDE_FILES := $(SRC_ZIP_EXCLUDE_FILES), \
+      SUFFIXES := .java, \
+      ZIP := $(SUPPORT_OUTPUTDIR)/src.zip, \
+      FOLLOW_SYMLINKS := true, \
+  ))
+
+  do-zip: $(BUILD_SRC_ZIP)
+
+  .PHONY: do-zip
+endif
+
+zip: $(SRC_ZIP_SRCS)
+	+$(MAKE) $(MAKE_ARGS) -f ZipSource.gmk do-zip SRC_GENERATED=true
+
+TARGETS += zip
+
+################################################################################
+
+all: $(TARGETS)
+
+.PHONY: default all zip

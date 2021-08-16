@@ -1,0 +1,3 @@
+MethodReference48.java:38:11: compiler.err.cant.apply.symbol: kindname.method, g1, MethodReference48.SAM1, @12, kindname.class, MethodReference48, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.ret.type.in.mref: (compiler.misc.inconvertible.types: java.lang.String, MethodReference48.Foo<java.lang.Object>)))
+MethodReference48.java:41:9: compiler.err.ref.ambiguous: g4, kindname.method, g4(MethodReference48.SAM2), MethodReference48, kindname.method, g4(MethodReference48.SAM3), MethodReference48
+2 errors

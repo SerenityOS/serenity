@@ -1,0 +1,4 @@
+MostSpecific08.java:36:26: compiler.err.ref.ambiguous: apply, kindname.method, apply(MostSpecific08.PrimitiveFunction), MostSpecific08.Tester, kindname.method, <Z>apply(MostSpecific08.ReferenceFunction<Z>), MostSpecific08.Tester
+MostSpecific08.java:38:41: compiler.err.ref.ambiguous: apply, kindname.method, apply(MostSpecific08.PrimitiveFunction), MostSpecific08.Tester, kindname.method, <Z>apply(MostSpecific08.ReferenceFunction<Z>), MostSpecific08.Tester
+MostSpecific08.java:38:47: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: MostSpecific08.IntResult, MostSpecific08.ReferenceResult<java.lang.Integer>)
+3 errors

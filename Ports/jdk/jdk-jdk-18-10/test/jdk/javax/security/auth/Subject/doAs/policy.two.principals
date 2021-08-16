@@ -1,0 +1,37 @@
+grant codeBase "file:NestedActionsTwoPrincipals.jar" {
+    permission javax.security.auth.AuthPermission "getSubject";
+    permission javax.security.auth.AuthPermission "modifyPrincipals";
+    permission javax.security.auth.AuthPermission "doAs";
+    permission java.util.PropertyPermission "path.separator", "read";
+    permission java.util.PropertyPermission "file.separator", "read";
+    permission java.util.PropertyPermission "test.classes", "read";
+    permission java.util.PropertyPermission "test.src", "read";
+    permission java.util.PropertyPermission "test.java.opts", "read";
+    permission java.util.PropertyPermission "java.home", "read";
+    permission java.util.PropertyPermission "java.class.path", "read";
+    permission java.io.FilePermission "NestedActions.tmp", "read,write,delete";
+};
+
+grant codeBase "file:WriteToFileAction.jar"
+        Principal javax.security.auth.x500.X500Principal "cn=Duke" {
+    permission javax.security.auth.AuthPermission "getSubject";
+    permission javax.security.auth.AuthPermission "doAs";
+    permission javax.security.auth.AuthPermission "modifyPrincipals";
+    permission java.util.PropertyPermission "java.class.path", "read";
+    permission java.io.FilePermission "NestedActions.tmp", "read,write";
+};
+
+grant codeBase "file:ReadFromFileAction.jar"
+        Principal javax.security.auth.x500.X500Principal "cn=Duke"{
+    permission javax.security.auth.AuthPermission "getSubject";
+    permission javax.security.auth.AuthPermission "doAs";
+    permission java.util.PropertyPermission "java.class.path", "read";
+    permission java.io.FilePermission "NestedActions.tmp", "read";
+};
+
+grant codeBase "file:ReadPropertyAction.jar"
+        Principal javax.security.auth.x500.X500Principal "cn=Java" {
+    permission javax.security.auth.AuthPermission "getSubject";
+    permission javax.security.auth.AuthPermission "doAs";
+    permission java.util.PropertyPermission "java.class.path", "read";
+};

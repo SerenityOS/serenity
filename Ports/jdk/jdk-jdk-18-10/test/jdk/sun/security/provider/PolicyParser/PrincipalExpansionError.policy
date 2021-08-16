@@ -1,0 +1,21 @@
+// granted to jtreg
+grant codebase "file:/net/koori.sfbay/-" {
+    permission java.security.AllPermission;
+};
+
+// granted to the test class
+grant codebase "file:${test.classes}/" {
+    permission javax.security.auth.AuthPermission "modifyPrincipals";
+    permission javax.security.auth.AuthPermission "doAs";
+    permission java.io.FilePermission "/testFile", "read";
+};
+
+// granted to the test action
+// -- the test moves the compiled action into the src directory
+// -- via the shell script.  this way we can ensure different
+// -- codebases for the test and the action
+grant codebase "file:${test.src}/",
+      principal com.sun.security.auth.UnixPrincipal "TestPrincipal",
+      principal com.sun.security.auth.UnixPrincipal "${bad.property}" {
+    permission java.io.FilePermission "/testFile", "read";
+};

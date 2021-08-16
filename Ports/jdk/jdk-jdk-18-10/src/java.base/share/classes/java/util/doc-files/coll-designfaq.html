@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<!--
+ Copyright (c) 1998, 2019, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+<html lang="en-US">
+<head>
+<title>Java Collections API Design FAQ</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>
+<h1>Java Collections API Design FAQ</h1>
+<!-- Body text begins here -->
+<hr>
+This document answers frequently asked questions concerning the
+design of the Java collections framework. It is derived from the
+large volume of traffic on the collections-comments alias. It
+serves as a design rationale for the collections framework.
+<h2>Core Interfaces - General Questions</h2>
+<ol>
+<li><a href="#a1"><b>Why don't you support immutability directly in
+the core collection interfaces so that you can do away with
+<em>optional operations</em> (and
+UnsupportedOperationException)?</b></a></li>
+<li><a href="#a2"><b>Won't programmers have to surround any code
+that calls optional operations with a try-catch clause in case they
+throw an UnsupportedOperationException?</b></a></li>
+<li><a href="#a3"><b>Why isn't there a core interface for "bags"
+(AKA multisets)?</b></a></li>
+<li><a href="#a28"><b>Why didn't you use "Beans-style names" for
+consistency?</b></a></li>
+</ol>
+<h2>Collection Interface</h2>
+<ol>
+<li><a href="#a5"><b>Why doesn't Collection extend Cloneable and
+Serializable?</b></a></li>
+<li><a href="#a6"><b>Why don't you provide an "apply" method in
+Collection to apply a given method ("upcall") to all the elements
+of the Collection?</b></a></li>
+<li><a href="#a7"><b>Why didn't you provide a "Predicate" interface,
+and related methods (e.g., a method to find the first element in
+the Collection satisfying the predicate)?</b></a></li>
+<li><a href="#a8"><b>Why don't you provide a form of the addAll
+method that takes an Enumeration (or an Iterator)?</b></a></li>
+<li><a href="#a9"><b>Why don't the concrete implementations in the
+JDK have Enumeration (or Iterator) constructors?</b></a></li>
+<li><a href="#a10"><b>Why don't you provide an Iterator.add
+method?</b></a></li>
+</ol>
+<h2>List Interface</h2>
+<ol>
+<li><a href="#a11"><b>Why don't you rename the List interface to
+Sequence; doesn't "list" generally suggest "linked list"? Also,
+doesn't it conflict with java.awt.List?</b></a></li>
+<li><a href="#a12"><b>Why don't you rename List's set method to
+replace, to avoid confusion with Set.</b></a></li>
+</ol>
+<h2>Map Interface</h2>
+<ol>
+<li><a href="#a14"><b>Why doesn't Map extend
+Collection?</b></a></li>
+</ol>
+<h2>Iterator Interface</h2>
+<ol>
+<li><a href="#a18"><b>Why doesn't Iterator extend
+Enumeration?</b></a></li>
+<li><a href="#a19"><b>Why don't you provide an Iterator.peek method
+that allows you to look at the next element in an iteration without
+advancing the iterator?</b></a></li>
+</ol>
+<h2>Miscellaneous</h2>
+<ol>
+<li><a href="#a23"><b>Why did you write a new collections framework
+instead of adopting JGL (a preexisting collections package from
+ObjectSpace, Inc.) into the JDK?</b></a></li>
+<li><a href="#a26"><b>Why don't you eliminate all of the methods and
+classes that return "views" (Collections backed by other
+collection-like objects). This would greatly reduce
+aliasing.</b></a></li>
+<li><a href="#a27"><b>Why don't you provide for "observable"
+collections that send out Events when they're
+modified?</b></a></li>
+</ol>
+<hr>
+<h2>Core Interfaces - General Questions</h2>
+<ol>
+<li><a id="a1"><b>Why don't you support immutability
+directly in the core collection interfaces so that you can do away
+with <em>optional operations</em> (and
+UnsupportedOperationException)?</b></a>
+<p>This is the most controversial design decision in the whole API.
+Clearly, static (compile time) type checking is highly desirable,
+and is the norm in Java. We would have supported it if we believed
+it were feasible. Unfortunately, attempts to achieve this goal
+cause an explosion in the size of the interface hierarchy, and do
+not succeed in eliminating the need for runtime exceptions (though
+they reduce it substantially).</p>
+<p>Doug Lea, who wrote a popular Java collections package that did
+reflect mutability distinctions in its interface hierarchy, no
+longer believes it is a viable approach, based on user experience
+with his collections package. In his words (from personal
+correspondence) "Much as it pains me to say it, strong static
+typing does not work for collection interfaces in Java."</p>
+<p>To illustrate the problem in gory detail, suppose you want to
+add the notion of modifiability to the Hierarchy. You need four new
+interfaces: ModifiableCollection, ModifiableSet, ModifiableList,
+and ModifiableMap. What was previously a simple hierarchy is now a
+messy heterarchy. Also, you need a new Iterator interface for use
+with unmodifiable Collections, that does not contain the remove
+operation. Now can you do away with UnsupportedOperationException?
+Unfortunately not.</p>
+<p>Consider arrays. They implement most of the List operations, but
+not remove and add. They are "fixed-size" Lists. If you want to
+capture this notion in the hierarchy, you have to add two new
+interfaces: VariableSizeList and VariableSizeMap. You don't have to
+add VariableSizeCollection and VariableSizeSet, because they'd be
+identical to ModifiableCollection and ModifiableSet, but you might
+choose to add them anyway for consistency's sake. Also, you need a
+new variety of ListIterator that doesn't support the add and remove
+operations, to go along with unmodifiable List. Now we're up to ten
+or twelve interfaces, plus two new Iterator interfaces, instead of
+our original four. Are we done? No.</p>
+<p>Consider logs (such as error logs, audit logs and journals for
+recoverable data objects). They are natural append-only sequences,
+that support all of the List operations except for remove and set
+(replace). They require a new core interface, and a new
+iterator.</p>
+<p>And what about immutable Collections, as opposed to unmodifiable
+ones? (i.e., Collections that cannot be changed by the client AND
+will never change for any other reason). Many argue that this is
+the most important distinction of all, because it allows multiple
+threads to access a collection concurrently without the need for
+synchronization. Adding this support to the type hierarchy requires
+four more interfaces.</p>
+<p>Now we're up to twenty or so interfaces and five iterators, and
+it's almost certain that there are still collections arising in
+practice that don't fit cleanly into any of the interfaces. For
+example, the <em>collection-views</em> returned by Map are natural
+delete-only collections. Also, there are collections that will
+reject certain elements on the basis of their value, so we still
+haven't done away with runtime exceptions.</p>
+<p>When all was said and done, we felt that it was a sound
+engineering compromise to sidestep the whole issue by providing a
+very small set of core interfaces that can throw a runtime
+exception.</p>
+</li>
+<li><a id="a2"><b>Won't programmers have to surround any
+code that calls optional operations with a try-catch clause in case
+they throw an UnsupportedOperationException?</b></a>
+<p>It was never our intention that programs should catch these
+exceptions: that's why they're unchecked (runtime) exceptions. They
+should only arise as a result of programming errors, in which case,
+your program will halt due to the uncaught exception.</p>
+</li>
+<li><a id="a3"><b>Why isn't there a core interface for
+"bags" (AKA multisets)?</b></a>
+<p>The Collection interface provides this functionality. We are not
+providing any public implementations of this interface, as we think
+that it wouldn't be used frequently enough to "pull its weight." We
+occasionally return such Collections, which are implemented easily
+atop AbstractCollection (for example, the Collection returned by
+Map.values).</p>
+</li>
+<li><a id="a28"><b>Why didn't you use "Beans-style
+names" for consistency?</b></a>
+<p>While the names of the new collections methods do not adhere to
+the "Beans naming conventions", we believe that they are
+reasonable, consistent and appropriate to their purpose. It should
+be remembered that the Beans naming conventions do not apply to the
+JDK as a whole; the AWT did adopt these conventions, but that
+decision was somewhat controversial. We suspect that the
+collections APIs will be used quite pervasively, often with
+multiple method calls on a single line of code, so it is important
+that the names be short. Consider, for example, the Iterator
+methods. Currently, a loop over a collection looks like this:</p>
+<pre>
+    for (Iterator i = c.iterator(); i.hasNext(); )
+        System.out.println(i.next());
+</pre>
+Everything fits neatly on one line, even if the Collection name is
+a long expression. If we named the methods "getIterator",
+"hasNextElement" and "getNextElement", this would no longer be the
+case. Thus, we adopted the "traditional" JDK style rather than the
+Beans style.</li>
+</ol>
+<hr>
+<h2>Collection Interface</h2>
+<ol>
+<li><a id="a5"><b>Why doesn't Collection extend Cloneable
+and Serializable?</b></a>
+<p>Many Collection implementations (including all of the ones
+provided by the JDK) will have a public clone method, but it would
+be mistake to require it of all Collections. For example, what does
+it mean to clone a Collection that's backed by a terabyte SQL
+database? Should the method call cause the company to requisition a
+new disk farm? Similar arguments hold for serializable.</p>
+<p>If the client doesn't know the actual type of a Collection, it's
+much more flexible and less error prone to have the client decide
+what type of Collection is desired, create an empty Collection of
+this type, and use the addAll method to copy the elements of the
+original collection into the new one.</p>
+</li>
+<li><a id="a6"><b>Why don't you provide an "apply" method
+in Collection to apply a given method ("upcall") to all the
+elements of the Collection?</b></a>
+<p>This is what is referred to as an "Internal Iterator" in the
+"Design Patterns" book (Gamma et al.). We considered providing it,
+but decided not to as it seems somewhat redundant to support
+internal and external iterators, and Java already has a precedent
+for external iterators (with Enumerations). The "throw weight" of
+this functionality is increased by the fact that it requires a
+public interface to describe upcalls.</p>
+</li>
+<li><a id="a7"><b>Why didn't you provide a "Predicate"
+interface, and related methods (e.g., a method to find the first
+element in the Collection satisfying the predicate)?</b></a>
+<p>It's easy to implement this functionality atop Iterators, and
+the resulting code may actually look cleaner as the user can inline
+the predicate. Thus, it's not clear whether this facility pulls its
+weight. It could be added to the Collections class at a later date
+(implemented atop Iterator), if it's deemed useful.</p>
+</li>
+<li><a id="a8"><b>Why don't you provide a form of the
+addAll method that takes an Enumeration (or an Iterator)?</b></a>
+<p>Because we don't believe in using Enumerations (or Iterators) as
+"poor man's collections." This was occasionally done in prior
+releases, but now that we have the Collection interface, it is the
+preferred way to pass around abstract collections of objects.</p>
+</li>
+<li><a id="a9"><b>Why don't the concrete implementations
+in the JDK have Enumeration (or Iterator) constructors?</b></a>
+<p>Again, this is an instance of an Enumeration serving as a "poor
+man's collection" and we're trying to discourage that. Note
+however, that we strongly suggest that all concrete implementations
+should have constructors that take a Collection (and create a new
+Collection with the same elements).</p>
+</li>
+<li><a id="a10"><b>Why don't you provide an Iterator.add
+method?</b></a>
+<p>The semantics are unclear, given that the contract for Iterator
+makes no guarantees about the order of iteration. Note, however,
+that ListIterator does provide an add operation, as it does
+guarantee the order of the iteration.</p>
+</li>
+</ol>
+<hr>
+<h2>List Interface</h2>
+<ol>
+<li><a id="a11"><b>Why don't you rename the List
+interface to Sequence; doesn't "list" generally suggest "linked
+list"? Also, doesn't it conflict with java.awt.List?</b></a>
+<p>People were evenly divided as to whether List suggests linked
+lists. Given the implementation naming convention,
+&lt;<em>Implementation</em>&gt;&lt;<em>Interface</em>&gt;, there
+was a strong desire to keep the core interface names short. Also,
+several existing names (AbstractSequentialList, LinkedList) would
+have been decidedly worse if we changed List to Sequence. The
+naming conflict can be dealt with by the following incantation:</p>
+<pre>
+    import java.util.*;
+    import java.awt.*;
+    import java.util.List;   // Dictates interpretation of "List"
+</pre></li>
+<li><a id="a12"><b>Why don't you rename List's set
+method to replace, to avoid confusion with Set.</b></a>
+<p>It was decided that the "set/get" naming convention was strongly
+enough enshrined in the language that we'd stick with it.</p>
+</li>
+</ol>
+<hr>
+<h2>Map Interface</h2>
+<ol>
+<li><a id="a14"><b>Why doesn't Map extend
+Collection?</b></a>
+<p>This was by design. We feel that mappings are not collections
+and collections are not mappings. Thus, it makes little sense for
+Map to extend the Collection interface (or vice versa).</p>
+<p>If a Map is a Collection, what are the elements? The only
+reasonable answer is "Key-value pairs", but this provides a very
+limited (and not particularly useful) Map abstraction. You can't
+ask what value a given key maps to, nor can you delete the entry
+for a given key without knowing what value it maps to.</p>
+<p>Collection could be made to extend Map, but this raises the
+question: what are the keys? There's no really satisfactory answer,
+and forcing one leads to an unnatural interface.</p>
+<p>Maps can be <em>viewed</em> as Collections (of keys, values, or
+pairs), and this fact is reflected in the three "Collection view
+operations" on Maps (keySet, entrySet, and values). While it is, in
+principle, possible to view a List as a Map mapping indices to
+elements, this has the nasty property that deleting an element from
+the List changes the Key associated with every element before the
+deleted element. That's why we don't have a map view operation on
+Lists.</p>
+</li>
+</ol>
+<hr>
+<h2>Iterator Interface</h2>
+<ol>
+<li><a id="a18"><b>Why doesn't Iterator extend
+Enumeration?</b></a>
+<p>We view the method names for Enumeration as unfortunate. They're
+very long, and very frequently used. Given that we were adding a
+method and creating a whole new framework, we felt that it would be
+foolish not to take advantage of the opportunity to improve the
+names. Of course we could support the new and old names in
+Iterator, but it doesn't seem worthwhile.</p>
+</li>
+<li><a id="a19"><b>Why don't you provide an
+Iterator.peek method that allows you to look at the next element in
+an iteration without advancing the iterator?</b></a>
+<p>It can be implemented atop the current Iterators (a similar
+pattern to java.io.PushbackInputStream). We believe that its use
+would be rare enough that it isn't worth including in the interface
+that everyone has to implement.</p>
+</li>
+</ol>
+<hr>
+<h2>Miscellaneous</h2>
+<ol>
+<li><a id="a23"><b>Why did you write a new collections
+framework instead of adopting JGL (a preexisting collections
+package from ObjectSpace, Inc.) into the JDK?</b></a>
+<p>If you examine the goals for our Collections framework (in the
+Overview), you'll see that we are not really "playing in the same
+space" as JGL. Quoting from the "Design Goals" Section of the Java
+Collections Overview: "Our main design goal was to produce an API
+that was reasonably small, both in size, and (more importantly) in
+'conceptual weight.'"</p>
+<p>JGL consists of approximately 130 classes and interfaces; its
+main goal was consistency with the C++ Standard Template Library
+(STL). This was <em>not</em> one of our goals. Java has
+traditionally stayed away from C++'s more complex features (e.g.,
+multiple inheritance, operator overloading). Our entire framework,
+including all infrastructure, contains approximately 25 classes and
+interfaces.</p>
+<p>While this may cause some discomfort for some C++ programmers,
+we feel that it will be good for Java in the long run. As the Java
+libraries mature, they inevitably grow, but we are trying as hard
+as we can to keep them small and manageable, so that Java continues
+to be an easy, fun language to learn and to use.</p>
+</li>
+<li><a id="a26"><b>Why don't you eliminate all of the
+methods and classes that return "views" (Collections backed by
+other collection-like objects). This would greatly reduce
+aliasing.</b></a>
+<p>Given that we provide core collection interfaces behind which
+programmers can "hide" their own implementations, there will be
+aliased collections whether the JDK provides them or not.
+Eliminating all views from the JDK would greatly increase the cost
+of common operations like making a Collection out of an array, and
+would do away with many useful facilities (like synchronizing
+wrappers). One view that we see as being particularly useful is
+<a href=
+"../List.html#subList(int,int)">List.subList</a>.
+The existence of this method means that people who write methods
+taking List on input do not have to write secondary forms taking an
+offset and a length (as they do for arrays).</p>
+</li>
+<li><a id="a27"><b>Why don't you provide for
+"observable" collections that send out Events when they're
+modified?</b></a>
+<p>Primarily, resource constraints. If we're going to commit to
+such an API, it has to be something that works for everyone, that
+we can live with for the long haul. We may provide such a facility
+some day. In the meantime, it's not difficult to implement such a
+facility on top of the public APIs.</p>
+</li>
+</ol>
+<hr>
+<p style="font-size:smaller">
+Copyright &copy; 1998, 2017, Oracle and/or its affiliates. 500 Oracle Parkway<br>
+    Redwood Shores, CA 94065 USA. All rights reserved.</p>
+<!-- Body text ends here -->
+</body>
+</html>

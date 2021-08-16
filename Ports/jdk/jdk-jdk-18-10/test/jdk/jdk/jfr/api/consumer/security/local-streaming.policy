@@ -1,0 +1,4 @@
+// Minimum policy to stream locally
+grant {
+permission jdk.jfr.FlightRecorderPermission "accessFlightRecorder";
+};

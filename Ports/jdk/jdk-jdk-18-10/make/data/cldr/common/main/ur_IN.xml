@@ -1,0 +1,597 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ur"/>
+		<territory type="IN"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ar_001">جدید معیاری عربی</language>
+			<language type="awa">اودھی</language>
+			<language type="ckb">سورانی کردی</language>
+			<language type="dje">زرمہ</language>
+			<language type="hr">کروشین</language>
+			<language type="jv">جاوانیز</language>
+			<language type="ka">جارجيائى</language>
+			<language type="kl">کلالیسٹ</language>
+			<language type="kn">کنڑ</language>
+			<language type="ku">کرد</language>
+			<language type="mag">مگہی</language>
+			<language type="zgh">معیاری مراقشی تمازیقی</language>
+			<language type="zh_Hans">آسان چینی</language>
+		</languages>
+		<territories>
+			<territory type="AC">جزیرہ اسینشن</territory>
+			<territory type="AX">جزائر آلینڈ</territory>
+			<territory type="BV">جزیرہ بوویت</territory>
+			<territory type="CC">جزائر (کیلنگ) کوکوس</territory>
+			<territory type="CK">جزائر کک</territory>
+			<territory type="CP">جزیرہ کلپرٹن</territory>
+			<territory type="DG">ڈیگو گارشیا</territory>
+			<territory type="FK">جزائر فاکلینڈ</territory>
+			<territory type="FK" alt="variant">جزائر فاکلینڈ (اسلاس مالویناس)</territory>
+			<territory type="FO">جزائر فیرو</territory>
+			<territory type="GF">فرانسیسی گیانا</territory>
+			<territory type="HM">جزائر ہرڈ و مکڈونلڈ</territory>
+			<territory type="IC">جزائر کناری</territory>
+			<territory type="IO">برطانوی بحرہند خطہ</territory>
+			<territory type="MH">جزائر مارشل</territory>
+			<territory type="MP">جزائر شمالی ماریانا</territory>
+			<territory type="NF">جزیرہ نارفوک</territory>
+			<territory type="PN">جزائر پٹکیرن</territory>
+			<territory type="SB">جزائر سلیمان</territory>
+			<territory type="TA">ترسٹان دا کونیا</territory>
+			<territory type="TC">جزائر کیکس و ترکیہ</territory>
+			<territory type="UM">امریکی بیرونی جزائر</territory>
+			<territory type="VG">برطانوی جزائر ورجن</territory>
+			<territory type="VI">امریکی جزائر ورجن</territory>
+		</territories>
+		<types>
+			<type key="numbers" type="armnlow">آرمینیائی لوئر کیس اعداد</type>
+			<type key="numbers" type="greklow">یونانی لوئر کیس اعداد</type>
+			<type key="numbers" type="tibt">تبتی ہندسے</type>
+		</types>
+	</localeDisplayNames>
+	<dates>
+		<fields>
+			<field type="era">
+				<displayName>دور</displayName>
+			</field>
+			<field type="year">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} سال میں</relativeTimePattern>
+					<relativeTimePattern count="other">{0} سالوں میں</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-short">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} سال میں</relativeTimePattern>
+					<relativeTimePattern count="other">{0} سالوں میں</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} سال پہلے</relativeTimePattern>
+					<relativeTimePattern count="other">{0} سالوں پہلے</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month">
+				<relative type="-1">گزشتہ ماہ</relative>
+				<relative type="0">اس ماہ</relative>
+				<relative type="1">اگلے ماہ</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} ماہ میں</relativeTimePattern>
+					<relativeTimePattern count="other">{0} ماہ میں</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} ماہ قبل</relativeTimePattern>
+					<relativeTimePattern count="other">{0} ماہ قبل</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month-short">
+				<displayName>مہینہ</displayName>
+			</field>
+			<field type="month-narrow">
+				<displayName>مہینہ</displayName>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} ماہ قبل</relativeTimePattern>
+					<relativeTimePattern count="other">{0} ماہ قبل</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week">
+				<relative type="-1">گزشتہ ہفتہ</relative>
+				<relative type="0">اس ہفتہ</relative>
+				<relative type="1">اگلے ہفتہ</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} ہفتہ میں</relativeTimePattern>
+					<relativeTimePattern count="other">{0} ہفتوں میں</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} ہفتہ قبل</relativeTimePattern>
+					<relativeTimePattern count="other">{0} ہفتے قبل</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} ہفتے قبل</relativeTimePattern>
+					<relativeTimePattern count="other">{0} ہفتے قبل</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} ہفتہ قبل</relativeTimePattern>
+					<relativeTimePattern count="other">{0} ہفتے قبل</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day-short">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} دنوں میں</relativeTimePattern>
+					<relativeTimePattern count="other">{0} دنوں میں</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} دن قبل</relativeTimePattern>
+					<relativeTimePattern count="other">{0} دن قبل</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon">
+				<relative type="-1">پچھلے سوموار</relative>
+				<relative type="0">اس سوموار</relative>
+				<relative type="1">اگلے سوموار</relative>
+			</field>
+			<field type="tue">
+				<relative type="-1">پچھلے منگل</relative>
+				<relative type="0">اس منگل</relative>
+				<relative type="1">اگلے منگل</relative>
+			</field>
+			<field type="wed">
+				<relative type="-1">پچھلے بدھ</relative>
+				<relative type="0">اس بدھ</relative>
+				<relative type="1">اگلے بدھ</relative>
+			</field>
+			<field type="thu">
+				<relative type="-1">پچھلے جمعرات</relative>
+				<relative type="0">اس جمعرات</relative>
+				<relative type="1">اگلے جمعرات</relative>
+			</field>
+			<field type="fri">
+				<relative type="-1">پچھلے جمعہ</relative>
+				<relative type="0">اس جمعہ</relative>
+				<relative type="1">اگلے جمعہ</relative>
+			</field>
+			<field type="hour-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} گھنٹے قبل</relativeTimePattern>
+					<relativeTimePattern count="other">{0} گھنٹے قبل</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="hour-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} گھنٹہ قبل</relativeTimePattern>
+					<relativeTimePattern count="other">{0} گھنٹے قبل</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} منٹ قبل</relativeTimePattern>
+					<relativeTimePattern count="other">{0} منٹ قبل</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} منٹ قبل</relativeTimePattern>
+					<relativeTimePattern count="other">{0} منٹ قبل</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} منٹ قبل</relativeTimePattern>
+					<relativeTimePattern count="other">{0} منٹ قبل</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} سیکنڈ قبل</relativeTimePattern>
+					<relativeTimePattern count="other">{0} سیکنڈ قبل</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second-short">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} سیکنڈ قبل</relativeTimePattern>
+					<relativeTimePattern count="other">{0} سیکنڈ قبل</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second-narrow">
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} سیکنڈ قبل</relativeTimePattern>
+					<relativeTimePattern count="other">{0} سیکنڈ قبل</relativeTimePattern>
+				</relativeTime>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<gmtFormat>GMT{0}</gmtFormat>
+			<regionFormat type="daylight">{0} دن کا وقت</regionFormat>
+			<zone type="America/Cambridge_Bay">
+				<exemplarCity>کیمبرج بے</exemplarCity>
+			</zone>
+			<zone type="America/Goose_Bay">
+				<exemplarCity>گوس بے</exemplarCity>
+			</zone>
+			<zone type="America/Glace_Bay">
+				<exemplarCity>گلیس بے</exemplarCity>
+			</zone>
+			<zone type="Africa/Accra">
+				<exemplarCity>اکرا</exemplarCity>
+			</zone>
+			<zone type="America/Thule">
+				<exemplarCity>تھولے</exemplarCity>
+			</zone>
+			<zone type="America/Scoresbysund">
+				<exemplarCity>اتتوققورتورمیت</exemplarCity>
+			</zone>
+			<zone type="Europe/Budapest">
+				<exemplarCity>بوڈاپیسٹ</exemplarCity>
+			</zone>
+			<zone type="America/Grand_Turk">
+				<exemplarCity>گرینڈ ترک</exemplarCity>
+			</zone>
+			<metazone type="Afghanistan">
+				<long>
+					<standard>افغانستان ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Amazon">
+				<long>
+					<generic>ایمیزون ٹائم</generic>
+					<standard>ایمیزون سٹینڈرڈ ٹائم</standard>
+					<daylight>ایمیزون سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Arabian">
+				<long>
+					<generic>عرب ٹائم</generic>
+					<standard>عرب سٹینڈرڈ ٹائم</standard>
+					<daylight>عرب ڈے لائٹ ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina_Western">
+				<long>
+					<generic>مغربی ارجنٹینا ٹائم</generic>
+					<standard>مغربی ارجنٹینا سٹینڈرڈ ٹائم</standard>
+					<daylight>مغربی ارجنٹینا سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Armenia">
+				<long>
+					<generic>آرمینیا ٹائم</generic>
+					<standard>آرمینیا سٹینڈرڈ ٹائم</standard>
+					<daylight>آرمینیا سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azerbaijan">
+				<long>
+					<generic>آذربائیجان ٹائم</generic>
+					<standard>آذربائیجان سٹینڈرڈ ٹائم</standard>
+					<daylight>آذربائیجان سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bangladesh">
+				<long>
+					<generic>بنگلہ دیش ٹائم</generic>
+					<standard>بنگلہ دیش سٹینڈرڈ ٹائم</standard>
+					<daylight>بنگلہ دیش سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bhutan">
+				<long>
+					<standard>بھوٹان ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Bolivia">
+				<long>
+					<standard>بولیویا ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Brasilia">
+				<long>
+					<generic>برازیلیا ٹائم</generic>
+					<standard>برازیلیا سٹینڈرڈ ٹائم</standard>
+					<daylight>برازیلیا سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chile">
+				<long>
+					<generic>چلی ٹائم</generic>
+					<standard>چلی سٹینڈرڈ ٹائم</standard>
+					<daylight>چلی سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Colombia">
+				<long>
+					<generic>کولمبیا ٹائم</generic>
+					<standard>کولمبیا سٹینڈرڈ ٹائم</standard>
+					<daylight>کولمبیا سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Easter">
+				<long>
+					<generic>ایسٹر آئلینڈ ٹائم</generic>
+					<standard>ایسٹر آئلینڈ سٹینڈرڈ ٹائم</standard>
+					<daylight>ایسٹر آئلینڈ سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Ecuador">
+				<long>
+					<standard>ایکواڈور ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>وسطی یورپ کا وقت</generic>
+					<standard>وسطی یورپ کا معیاری وقت</standard>
+					<daylight>وسطی یورپ کا موسم گرما کا وقت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Falkland">
+				<long>
+					<generic>فاک لینڈ آئلینڈز ٹائم</generic>
+					<standard>فاک لینڈ آئلینڈز سٹینڈرڈ ٹائم</standard>
+					<daylight>فاک لینڈ آئلینڈز سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="French_Guiana">
+				<long>
+					<standard>فرینچ گیانا ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Galapagos">
+				<long>
+					<standard>گالاپاگوز ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Georgia">
+				<long>
+					<generic>جارجیا ٹائم</generic>
+					<standard>جارجیا سٹینڈرڈ ٹائم</standard>
+					<daylight>جارجیا سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="GMT">
+				<long>
+					<standard>گرین وچ مین ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Gulf">
+				<long>
+					<standard>خلیج سٹینڈرڈ ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Guyana">
+				<long>
+					<standard>گیانا ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="India">
+				<long>
+					<standard>انڈیا سٹینڈرڈ ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Iran">
+				<long>
+					<generic>ایران ٹائم</generic>
+					<standard>ایران سٹینڈرڈ ٹائم</standard>
+					<daylight>ایران ڈے لائٹ ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Israel">
+				<long>
+					<generic>اسرائیل ٹائم</generic>
+					<standard>اسرائیل سٹینڈرڈ ٹائم</standard>
+					<daylight>اسرائیل ڈے لائٹ ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Eastern">
+				<long>
+					<standard>مشرقی قزاخستان ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Western">
+				<long>
+					<standard>مغربی قزاخستان ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Kyrgystan">
+				<long>
+					<standard>کرغستان ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Macquarie">
+				<long>
+					<standard>مکوآری آئلینڈ ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Maldives">
+				<long>
+					<standard>مالدیپ ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Nepal">
+				<long>
+					<standard>نیپال ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="New_Zealand">
+				<long>
+					<generic>نیوزی لینڈ ٹائم</generic>
+					<standard>نیوزی لینڈ سٹینڈرڈ ٹائم</standard>
+					<daylight>نیوزی لینڈ ڈے لائٹ ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Noronha">
+				<long>
+					<generic>فرنانڈو ڈی نورنہا ٹائم</generic>
+					<standard>فرنانڈو ڈی نورنہا سٹینڈرڈ ٹائم</standard>
+					<daylight>فرنانڈو ڈی نورونہا سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pakistan">
+				<long>
+					<generic>پاکستان ٹائم</generic>
+					<standard>پاکستان سٹینڈرڈ ٹائم</standard>
+					<daylight>پاکستان سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Paraguay">
+				<long>
+					<generic>پیراگوئے ٹائم</generic>
+					<standard>پیراگوئے سٹینڈرڈ ٹائم</standard>
+					<daylight>پیراگوئے سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Peru">
+				<long>
+					<generic>پیرو ٹائم</generic>
+					<standard>پیرو سٹینڈرڈ ٹائم</standard>
+					<daylight>پیرو سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Rothera">
+				<long>
+					<standard>روتھیرا ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Suriname">
+				<long>
+					<standard>سورینام ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Tajikistan">
+				<long>
+					<standard>تاجکستان ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Turkmenistan">
+				<long>
+					<generic>ترکمانستان ٹائم</generic>
+					<standard>ترکمانستان سٹینڈرڈ ٹائم</standard>
+					<daylight>ترکمانستان سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Uruguay">
+				<long>
+					<generic>یوروگوئے ٹائم</generic>
+					<standard>یوروگوئے سٹینڈرڈ ٹائم</standard>
+					<daylight>یوروگوئے سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Uzbekistan">
+				<long>
+					<generic>ازبکستان ٹائم</generic>
+					<standard>ازبکستان سٹینڈرڈ ٹائم</standard>
+					<daylight>ازبکستان سمر ٹائم</daylight>
+				</long>
+			</metazone>
+			<metazone type="Venezuela">
+				<long>
+					<standard>وینزوئیلا ٹائم</standard>
+				</long>
+			</metazone>
+			<metazone type="Vostok">
+				<long>
+					<standard>ووسٹاک ٹائم</standard>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>arabext</defaultNumberingSystem>
+		<currencyFormats numberSystem="arabext">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤ #,##,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="CRC">
+				<displayName>کوسٹا ریکا کولون</displayName>
+				<displayName count="one">کوسٹا ریکا کولون</displayName>
+				<displayName count="other">کوسٹا ریکا کولون</displayName>
+			</currency>
+			<currency type="CUC">
+				<displayName>قابل منتقلی کیوبائی پیسو</displayName>
+				<displayName count="one">قابل منتقلی کیوبائی پیسو</displayName>
+				<displayName count="other">قابل منتقلی کیوبائی پیسو</displayName>
+			</currency>
+			<currency type="CUP">
+				<displayName>کیوبائی پیسو</displayName>
+				<displayName count="one">کیوبائی پیسو</displayName>
+				<displayName count="other">کیوبائی پیسو</displayName>
+			</currency>
+			<currency type="CVE">
+				<displayName>کیپ ورڈی اسکیوڈو</displayName>
+				<displayName count="one">کیپ ورڈی اسکیوڈو</displayName>
+				<displayName count="other">کیپ ورڈی اسکیوڈو</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>برطانوی پاونڈ سٹرلنگ</displayName>
+				<displayName count="one">برطانوی پاونڈ سٹرلنگ</displayName>
+				<displayName count="other">برطانوی پاونڈ سٹرلنگ</displayName>
+			</currency>
+			<currency type="GHS">
+				<displayName>گھانی سیڈی</displayName>
+				<displayName count="one">گھانی سیڈی</displayName>
+				<displayName count="other">گھانی سیڈی</displayName>
+			</currency>
+			<currency type="PKR">
+				<displayName count="one">پاکستانی روپیہ</displayName>
+				<displayName count="other">پاکستانی روپے</displayName>
+				<symbol>PKR</symbol>
+			</currency>
+			<currency type="WST">
+				<displayName>ساموآئی ٹالا</displayName>
+				<displayName count="one">ساموآئی ٹالا</displayName>
+				<displayName count="other">ساموآئی ٹالا</displayName>
+			</currency>
+		</currencies>
+		<miscPatterns numberSystem="latn">
+			<pattern type="atLeast">{0}+</pattern>
+		</miscPatterns>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="length-astronomical-unit">
+				<displayName>فلکیاتی اکائیاں</displayName>
+				<unitPattern count="one">{0} فلکیاتی اکائی</unitPattern>
+				<unitPattern count="other">{0} فلکیاتی اکائیاں</unitPattern>
+			</unit>
+		</unitLength>
+	</units>
+	<listPatterns>
+		<listPattern type="unit">
+			<listPatternPart type="end">{1}، {0}</listPatternPart>
+			<listPatternPart type="2">{1}، {0}</listPatternPart>
+		</listPattern>
+		<listPattern type="unit-narrow">
+			<listPatternPart type="start">{1} {0}</listPatternPart>
+			<listPatternPart type="middle">{1} {0}</listPatternPart>
+			<listPatternPart type="end">{1} {0}</listPatternPart>
+			<listPatternPart type="2">{1} {0}</listPatternPart>
+		</listPattern>
+		<listPattern type="unit-short">
+			<listPatternPart type="end">{1}، {0}</listPatternPart>
+			<listPatternPart type="2">{1}، {0}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<nostr>نہیں:نہ</nostr>
+		</messages>
+	</posix>
+</ldml>

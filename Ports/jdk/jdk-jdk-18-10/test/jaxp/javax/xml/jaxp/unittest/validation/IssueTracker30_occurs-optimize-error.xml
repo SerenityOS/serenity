@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<persons>
+    <person>
+        <child_name>Hege</child_name>
+        <child_name>Stale</child_name>
+        <child_name>Jim</child_name>
+        <child_name>Borge</child_name>
+    </person>
+</persons>
+

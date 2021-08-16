@@ -1,0 +1,738 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="su"/>
+	</identity>
+	<localeDisplayNames>
+		<localeDisplayPattern>
+			<localePattern>{0} ({1})</localePattern>
+			<localeSeparator>{0}, {1}</localeSeparator>
+			<localeKeyTypePattern>{0}: {1}</localeKeyTypePattern>
+		</localeDisplayPattern>
+		<languages>
+			<language type="de">Jérman</language>
+			<language type="de_AT">Jérman Austria</language>
+			<language type="de_CH">Jérman Swiss Luhur</language>
+			<language type="en">Inggris</language>
+			<language type="en_AU">Inggris Australia</language>
+			<language type="en_CA">Inggris Kanada</language>
+			<language type="en_GB" alt="short">Inggris UK</language>
+			<language type="en_US">Inggris Amerika</language>
+			<language type="en_US" alt="short">Inggris AS</language>
+			<language type="es">Spanyol</language>
+			<language type="es_419">Spanyol Amérika Latin</language>
+			<language type="es_ES">Spanyol Éropa</language>
+			<language type="es_MX">Spanyol Méksiko</language>
+			<language type="fr">Prancis</language>
+			<language type="fr_CA">Prancis Kanada</language>
+			<language type="fr_CH">Prancis Swiss</language>
+			<language type="it">Italia</language>
+			<language type="ja">Jepang</language>
+			<language type="pt">Portugis</language>
+			<language type="pt_BR">Portugis Brasil</language>
+			<language type="pt_PT">Portugis Éropa</language>
+			<language type="ru">Rusia</language>
+			<language type="su">Basa Sunda</language>
+			<language type="und">Basa teu dikenal</language>
+			<language type="zh">Tiongkok</language>
+			<language type="zh" alt="menu">Tiongkok, Mandarin</language>
+			<language type="zh_Hans">Tiongkok Sederhana</language>
+			<language type="zh_Hans" alt="long">Tiongkok Mandarin Sederhana</language>
+			<language type="zh_Hant">Tiongkok Tradisional</language>
+			<language type="zh_Hant" alt="long">Tiongkok Mandarin Tradisional</language>
+		</languages>
+		<scripts>
+			<script type="Cyrl">Sirilik</script>
+			<script type="Hans">Sederhana</script>
+			<script type="Hans" alt="stand-alone">Han Sederhana</script>
+			<script type="Hant">Tradisional</script>
+			<script type="Hant" alt="stand-alone">Han Tradisional</script>
+			<script type="Latn">Latin</script>
+			<script type="Zxxx">Non-tulisan</script>
+			<script type="Zzzz">Tulisan Teu Dikenal</script>
+		</scripts>
+		<territories>
+			<territory type="BR">Brasil</territory>
+			<territory type="CN">Tiongkok</territory>
+			<territory type="DE">Jérman</territory>
+			<territory type="FR">Prancis</territory>
+			<territory type="GB">Britania Raya</territory>
+			<territory type="IN">India</territory>
+			<territory type="IT">Italia</territory>
+			<territory type="JP">Jepang</territory>
+			<territory type="RU">Rusia</territory>
+			<territory type="US">Amérika Sarikat</territory>
+			<territory type="ZZ">Wilayah Teu Dikenal</territory>
+		</territories>
+		<types>
+			<type key="calendar" type="gregorian">Kalénder Grégorian</type>
+			<type key="collation" type="standard">Aturan Runtuyan Standar</type>
+			<type key="numbers" type="latn">Digit Barat</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">Métrik</measurementSystemName>
+			<measurementSystemName type="UK">U.K.</measurementSystemName>
+			<measurementSystemName type="US">A.S.</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language">Basa: {0}</codePattern>
+			<codePattern type="script">Skrip: {0}</codePattern>
+			<codePattern type="territory">Daérah: {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters draft="contributed">[a b c d e é f g h i j k l m n o p q r s t u v w x y z]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary" draft="contributed">[á à ă â å ä ã ā æ ç è ĕ ê ë ē í ì ĭ î ï ī ñ ó ò ŏ ô ö ø ō œ ú ù ŭ û ü ū ÿ]</exemplarCharacters>
+		<exemplarCharacters type="index" draft="contributed">[A B C D E É F G H I J K L M N O P Q R S T U V W X Y Z]</exemplarCharacters>
+		<exemplarCharacters type="numbers" draft="contributed">[\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+		<exemplarCharacters type="punctuation" draft="contributed">[\- ‐ ‑ – — , ; \: ! ? . … ' ‘ ’ &quot; “ ” ( ) \[ \] § @ * / \&amp; # † ‡ ′ ″]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationEnd>”</quotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d/M/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} 'jam' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} 'jam' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">Jan</month>
+							<month type="2">Péb</month>
+							<month type="3">Mar</month>
+							<month type="4">Apr</month>
+							<month type="5">Méi</month>
+							<month type="6">Jun</month>
+							<month type="7">Jul</month>
+							<month type="8">Ags</month>
+							<month type="9">Sép</month>
+							<month type="10">Okt</month>
+							<month type="11">Nop</month>
+							<month type="12">Dés</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">J</month>
+							<month type="2">P</month>
+							<month type="3">M</month>
+							<month type="4">A</month>
+							<month type="5">M</month>
+							<month type="6">J</month>
+							<month type="7">J</month>
+							<month type="8">A</month>
+							<month type="9">S</month>
+							<month type="10">O</month>
+							<month type="11">N</month>
+							<month type="12">D</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Januari</month>
+							<month type="2">Pébruari</month>
+							<month type="3">Maret</month>
+							<month type="4">April</month>
+							<month type="5">Méi</month>
+							<month type="6">Juni</month>
+							<month type="7">Juli</month>
+							<month type="8">Agustus</month>
+							<month type="9">Séptémber</month>
+							<month type="10">Oktober</month>
+							<month type="11">Nopémber</month>
+							<month type="12">Désémber</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="narrow">
+							<month type="1">J</month>
+							<month type="2">P</month>
+							<month type="3">M</month>
+							<month type="4">A</month>
+							<month type="5">M</month>
+							<month type="6">J</month>
+							<month type="7">J</month>
+							<month type="8">A</month>
+							<month type="9">S</month>
+							<month type="10">O</month>
+							<month type="11">N</month>
+							<month type="12">D</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Januari</month>
+							<month type="2">Pébruari</month>
+							<month type="3">Maret</month>
+							<month type="4">April</month>
+							<month type="5">Méi</month>
+							<month type="6">Juni</month>
+							<month type="7">Juli</month>
+							<month type="8">Agustus</month>
+							<month type="9">Séptémber</month>
+							<month type="10">Oktober</month>
+							<month type="11">Nopémber</month>
+							<month type="12">Désémber</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Mng</day>
+							<day type="mon">Sen</day>
+							<day type="tue">Sal</day>
+							<day type="wed">Reb</day>
+							<day type="thu">Kem</day>
+							<day type="fri">Jum</day>
+							<day type="sat">Sap</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">M</day>
+							<day type="mon">S</day>
+							<day type="tue">S</day>
+							<day type="wed">R</day>
+							<day type="thu">K</day>
+							<day type="fri">J</day>
+							<day type="sat">S</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Minggu</day>
+							<day type="mon">Senén</day>
+							<day type="tue">Salasa</day>
+							<day type="wed">Rebo</day>
+							<day type="thu">Kemis</day>
+							<day type="fri">Jumaah</day>
+							<day type="sat">Saptu</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">Mng</day>
+							<day type="mon">Sen</day>
+							<day type="tue">Sal</day>
+							<day type="wed">Reb</day>
+							<day type="thu">Kem</day>
+							<day type="fri">Jum</day>
+							<day type="sat">Sap</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">M</day>
+							<day type="mon">S</day>
+							<day type="tue">S</day>
+							<day type="wed">R</day>
+							<day type="thu">K</day>
+							<day type="fri">J</day>
+							<day type="sat">S</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Minggu</day>
+							<day type="mon">Senén</day>
+							<day type="tue">Salasa</day>
+							<day type="wed">Rebo</day>
+							<day type="thu">Kemis</day>
+							<day type="fri">Jumaah</day>
+							<day type="sat">Saptu</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">K1</quarter>
+							<quarter type="2">K2</quarter>
+							<quarter type="3">K3</quarter>
+							<quarter type="4">K4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">kuartal ka-1</quarter>
+							<quarter type="2">kuartal ka-2</quarter>
+							<quarter type="3">kuartal ka-3</quarter>
+							<quarter type="4">kuartal ka-4</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">K1</quarter>
+							<quarter type="2">K2</quarter>
+							<quarter type="3">K3</quarter>
+							<quarter type="4">K4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">kuartal ka-1</quarter>
+							<quarter type="2">kuartal ka-2</quarter>
+							<quarter type="3">kuartal ka-3</quarter>
+							<quarter type="4">kuartal-ka 4</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<eras>
+					<eraAbbr>
+						<era type="0">SM</era>
+						<era type="1">M</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d/M/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>H.mm.ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>H.mm.ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>H.mm.ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>H.mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} 'jam' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} 'jam' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="Bhm">h.mm B</dateFormatItem>
+						<dateFormatItem id="Bhms">h.mm.ss B</dateFormatItem>
+						<dateFormatItem id="EBhm">E h.mm B</dateFormatItem>
+						<dateFormatItem id="EBhms">E h.mm.ss B</dateFormatItem>
+						<dateFormatItem id="Ed">E d</dateFormatItem>
+						<dateFormatItem id="Ehm">E h.mm a</dateFormatItem>
+						<dateFormatItem id="EHm">E HH.mm</dateFormatItem>
+						<dateFormatItem id="Ehms">E h.mm.ss a</dateFormatItem>
+						<dateFormatItem id="EHms">E HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="Gy">y G</dateFormatItem>
+						<dateFormatItem id="GyMMM">MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMd">d MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E, d MMM y G</dateFormatItem>
+						<dateFormatItem id="h">h a</dateFormatItem>
+						<dateFormatItem id="hm">h.mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH.mm</dateFormatItem>
+						<dateFormatItem id="hms">h.mm.ss a</dateFormatItem>
+						<dateFormatItem id="Hms">HH.mm.ss</dateFormatItem>
+						<dateFormatItem id="hmsv">h.mm.ss a v</dateFormatItem>
+						<dateFormatItem id="Hmsv">HH.mm.ss v</dateFormatItem>
+						<dateFormatItem id="hmv">h.mm a v</dateFormatItem>
+						<dateFormatItem id="Hmv">HH.mm v</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">E, d/M</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, d MMM</dateFormatItem>
+						<dateFormatItem id="MMMMd">d MMMM</dateFormatItem>
+						<dateFormatItem id="ms">mm.ss</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMd">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, d/M/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d MMM, y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>éra</displayName>
+			</field>
+			<field type="year">
+				<displayName>taun</displayName>
+				<relative type="-1">taun kamari</relative>
+				<relative type="0">taun ieu</relative>
+				<relative type="1">taun payun</relative>
+			</field>
+			<field type="year-short">
+				<displayName>tn.</displayName>
+			</field>
+			<field type="year-narrow">
+				<displayName>tn.</displayName>
+			</field>
+			<field type="quarter">
+				<displayName>triwulan</displayName>
+			</field>
+			<field type="quarter-short">
+				<displayName>tri.</displayName>
+			</field>
+			<field type="quarter-narrow">
+				<displayName>tri.</displayName>
+			</field>
+			<field type="month">
+				<displayName>sasih</displayName>
+			</field>
+			<field type="month-short">
+				<displayName>sa.</displayName>
+			</field>
+			<field type="month-narrow">
+				<displayName>sa.</displayName>
+			</field>
+			<field type="week">
+				<displayName>minggu</displayName>
+			</field>
+			<field type="week-short">
+				<displayName>mgg.</displayName>
+			</field>
+			<field type="week-narrow">
+				<displayName>mgg.</displayName>
+			</field>
+			<field type="day">
+				<displayName>dinten</displayName>
+				<relative type="-1">kamari</relative>
+				<relative type="0">dinten ieu</relative>
+				<relative type="1">énjing</relative>
+			</field>
+			<field type="day-short">
+				<displayName>dinten</displayName>
+				<relative type="-1">kamari</relative>
+				<relative type="0">dinten ieu</relative>
+				<relative type="1">énjing</relative>
+			</field>
+			<field type="day-narrow">
+				<displayName>dinten</displayName>
+				<relative type="-1">kamari</relative>
+				<relative type="0">dinten ieu</relative>
+				<relative type="1">énjing</relative>
+			</field>
+			<field type="weekday">
+				<displayName>dinten dina saminggu</displayName>
+			</field>
+			<field type="sun">
+				<relative type="-1">Minggu kamari</relative>
+				<relative type="0">Minggu ieu</relative>
+				<relative type="1">Minggu payun</relative>
+			</field>
+			<field type="dayperiod">
+				<displayName>AM/PM</displayName>
+			</field>
+			<field type="hour">
+				<displayName>jam</displayName>
+			</field>
+			<field type="hour-short">
+				<displayName>j.</displayName>
+			</field>
+			<field type="hour-narrow">
+				<displayName>j.</displayName>
+			</field>
+			<field type="minute">
+				<displayName>menit</displayName>
+			</field>
+			<field type="minute-short">
+				<displayName>mnt.</displayName>
+			</field>
+			<field type="minute-narrow">
+				<displayName>mnt.</displayName>
+			</field>
+			<field type="second">
+				<displayName>detik</displayName>
+			</field>
+			<field type="second-short">
+				<displayName>dtk.</displayName>
+			</field>
+			<field type="second-narrow">
+				<displayName>dtk.</displayName>
+			</field>
+			<field type="zone">
+				<displayName>zona waktu</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<fallbackFormat>{1} ({0})</fallbackFormat>
+			<zone type="Etc/UTC">
+				<long>
+					<standard>Waktu Universal Terkoordinasi</standard>
+				</long>
+			</zone>
+			<zone type="Etc/Unknown">
+				<exemplarCity>Kota Teu Dikenal</exemplarCity>
+			</zone>
+			<zone type="Asia/Macau">
+				<exemplarCity draft="unconfirmed">Makau</exemplarCity>
+			</zone>
+			<metazone type="America_Central">
+				<long>
+					<generic>Waktu Tengah</generic>
+					<standard>Waktu Standar Tengah</standard>
+					<daylight>Waktu Usum Panas Tengah</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic>Waktu Wétan</generic>
+					<standard>Waktu Standar Wétan</standard>
+					<daylight>Waktu Usum Panas Wétan</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic>Waktu Pagunungan</generic>
+					<standard>Waktu Standar Pagunungan</standard>
+					<daylight>Waktu Usum Panas Pagunungan</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic>Waktu Pasifik</generic>
+					<standard>Waktu Standar Pasifik</standard>
+					<daylight>Waktu Usum Panas Pasifik</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<generic>Waktu Atlantik</generic>
+					<standard>Waktu Standar Atlantik</standard>
+					<daylight>Waktu Usum Panas Atlantik</daylight>
+				</long>
+			</metazone>
+			<metazone type="Colombia">
+				<long>
+					<generic>Waktu Kolombia</generic>
+					<standard>Waktu Standar Kolombia</standard>
+					<daylight>Waktu Usum Panas Kolombia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>Waktu Éropa Tengah</generic>
+					<standard>Waktu Standar Éropa Tengah</standard>
+					<daylight>Waktu Usum Panas Éropa Tengah</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic>Waktu Éropa Timur</generic>
+					<standard>Waktu Standar Éropa Timur</standard>
+					<daylight>Waktu Usum Panas Éropa Timur</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>Waktu Éropa Barat</generic>
+					<standard>Waktu Standar Éropa Barat</standard>
+					<daylight>Waktu Usum Panas Éropa Barat</daylight>
+				</long>
+			</metazone>
+			<metazone type="Galapagos">
+				<long>
+					<standard>Waktu Galapagos</standard>
+				</long>
+			</metazone>
+			<metazone type="GMT">
+				<long>
+					<standard>Waktu Greenwich</standard>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group>.</group>
+			<plusSign>+</plusSign>
+			<timeSeparator draft="contributed">.</timeSeparator>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤#,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<unitPattern count="other">{0} {1}</unitPattern>
+		</currencyFormats>
+		<currencies>
+			<currency type="BRL">
+				<displayName>Real Brasil</displayName>
+				<displayName count="other">real Brasil</displayName>
+				<symbol draft="contributed">R$</symbol>
+				<symbol alt="narrow" draft="contributed">R$</symbol>
+			</currency>
+			<currency type="CNY">
+				<displayName>Yuan Tiongkok</displayName>
+				<displayName count="other">yuan Tiongkok</displayName>
+				<symbol draft="contributed">CN¥</symbol>
+				<symbol alt="narrow" draft="contributed">¥</symbol>
+			</currency>
+			<currency type="EUR">
+				<displayName>Euro</displayName>
+				<displayName count="other">euro</displayName>
+				<symbol draft="contributed">€</symbol>
+				<symbol alt="narrow" draft="contributed">€</symbol>
+			</currency>
+			<currency type="GBP">
+				<displayName>Pound Inggris</displayName>
+				<displayName count="other">pound Inggris</displayName>
+				<symbol draft="contributed">£</symbol>
+				<symbol alt="narrow" draft="contributed">£</symbol>
+			</currency>
+			<currency type="IDR">
+				<displayName>Rupee Indonésia</displayName>
+				<displayName count="other">rupee Indonésia</displayName>
+				<symbol>Rp</symbol>
+				<symbol alt="narrow" draft="contributed">Rp</symbol>
+			</currency>
+			<currency type="INR">
+				<displayName>Rupee India</displayName>
+				<displayName count="other">rupee India</displayName>
+				<symbol draft="contributed">₹</symbol>
+				<symbol alt="narrow" draft="contributed">₹</symbol>
+			</currency>
+			<currency type="JPY">
+				<displayName>Yén Jepang</displayName>
+				<displayName count="other">yén Jepang</displayName>
+				<symbol draft="contributed">¥</symbol>
+				<symbol alt="narrow" draft="contributed">¥</symbol>
+			</currency>
+			<currency type="RUB">
+				<displayName>Rubel Rusia</displayName>
+				<displayName count="other">rubel Rusia</displayName>
+				<symbol draft="contributed">RUB</symbol>
+				<symbol alt="narrow" draft="contributed">₽</symbol>
+			</currency>
+			<currency type="USD">
+				<displayName>Dolar A.S.</displayName>
+				<displayName count="other">dolar A.S.</displayName>
+				<symbol draft="contributed">$</symbol>
+				<symbol alt="narrow" draft="contributed">$</symbol>
+			</currency>
+			<currency type="XXX">
+				<displayName>Mata Uang Teu Dikenal</displayName>
+				<displayName count="other">(mata uang teu dikenal)</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<durationUnit type="hm">
+			<durationUnitPattern>h.mm</durationUnitPattern>
+		</durationUnit>
+		<durationUnit type="hms">
+			<durationUnitPattern>h.mm.ss</durationUnitPattern>
+		</durationUnit>
+		<durationUnit type="ms">
+			<durationUnitPattern>m.ss</durationUnitPattern>
+		</durationUnit>
+	</units>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0}, sareng {1}</listPatternPart>
+			<listPatternPart type="2">{0} sareng {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="standard-short">
+			<listPatternPart type="start" draft="unconfirmed">{0}, {1}</listPatternPart>
+			<listPatternPart type="2" draft="unconfirmed">{0} &amp; {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<yesstr>enya:e</yesstr>
+			<nostr>teu:t</nostr>
+		</messages>
+	</posix>
+</ldml>

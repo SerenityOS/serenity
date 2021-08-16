@@ -1,0 +1,8 @@
+-Xcomp -Dproperty=first
+
+    -Xint
+-XX:+UseGCOverheadLimit
+
+  	-XX:NewRatio=4	-XX:-UseGCOverheadLimit	-Dproperty=second
+
+-Dother.secret.data=qwerty -XX:NewRatio=16

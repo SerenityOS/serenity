@@ -1,0 +1,11 @@
+keystore "file:${test.src}/${keystore}";
+
+grant {
+    permission javax.security.auth.AuthPermission "doAsPrivileged";
+    permission java.util.PropertyPermission "keystore", "read";
+};
+
+grant principal "Tim" {
+    permission java.util.PropertyPermission "foo", "read";
+};
+

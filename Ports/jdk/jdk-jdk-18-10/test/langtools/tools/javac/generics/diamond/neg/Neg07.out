@@ -1,0 +1,3 @@
+Neg07.java:17:27: compiler.err.cant.apply.diamond.1: (compiler.misc.diamond: Neg07.Foo), (compiler.misc.incompatible.bounds: X, (compiler.misc.upper.bounds: java.lang.Number), (compiler.misc.lower.bounds: java.lang.String))
+Neg07.java:18:27: compiler.err.cant.apply.diamond.1: (compiler.misc.diamond: Neg07.Foo), (compiler.misc.incompatible.bounds: X, (compiler.misc.upper.bounds: java.lang.Number), (compiler.misc.lower.bounds: java.lang.String))
+2 errors

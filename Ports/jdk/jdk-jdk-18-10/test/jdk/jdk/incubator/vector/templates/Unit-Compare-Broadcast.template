@@ -1,0 +1,76 @@
+
+    @Test(dataProvider = "$type$CompareOpProvider")
+    static void [[TEST]]$vectorteststype$BroadcastSmokeTest(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] b = fb.apply(SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            VectorMask<$Wideboxtype$> mv = av.compare(VectorOperators.[[TEST]], b[i]);
+
+            // Check results as part of computation.
+            for (int j = 0; j < SPECIES.length(); j++) {
+                Assert.assertEquals(mv.laneIsSet(j), a[i + j] [[TEST_OP]] b[i]);
+            }
+        }
+    }
+
+
+    @Test(dataProvider = "$type$CompareOpMaskProvider")
+    static void [[TEST]]$vectorteststype$BroadcastMaskedSmokeTest(IntFunction<$type$[]> fa,
+                                IntFunction<$type$[]> fb, IntFunction<boolean[]> fm) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] b = fb.apply(SPECIES.length());
+        boolean[] mask = fm.apply(SPECIES.length());
+
+        VectorMask<$Wideboxtype$> vmask = VectorMask.fromArray(SPECIES, mask, 0);
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            VectorMask<$Wideboxtype$> mv = av.compare(VectorOperators.[[TEST]], b[i], vmask);
+
+            // Check results as part of computation.
+            for (int j = 0; j < SPECIES.length(); j++) {
+                Assert.assertEquals(mv.laneIsSet(j), mask[j] && (a[i + j] [[TEST_OP]] b[i]));
+            }
+        }
+    }
+
+#if[!Long]
+    @Test(dataProvider = "$type$CompareOpProvider")
+    static void [[TEST]]$vectorteststype$BroadcastLongSmokeTest(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] b = fb.apply(SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            VectorMask<$Wideboxtype$> mv = av.compare(VectorOperators.[[TEST]], (long)b[i]);
+
+            // Check results as part of computation.
+            for (int j = 0; j < SPECIES.length(); j++) {
+                Assert.assertEquals(mv.laneIsSet(j), a[i + j] [[TEST_OP]] ($type$)((long)b[i]));
+            }
+        }
+    }
+
+
+    @Test(dataProvider = "$type$CompareOpMaskProvider")
+    static void [[TEST]]$vectorteststype$BroadcastLongMaskedSmokeTest(IntFunction<$type$[]> fa,
+                                IntFunction<$type$[]> fb, IntFunction<boolean[]> fm) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] b = fb.apply(SPECIES.length());
+        boolean[] mask = fm.apply(SPECIES.length());
+
+        VectorMask<$Wideboxtype$> vmask = VectorMask.fromArray(SPECIES, mask, 0);
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            VectorMask<$Wideboxtype$> mv = av.compare(VectorOperators.[[TEST]], (long)b[i], vmask);
+
+            // Check results as part of computation.
+            for (int j = 0; j < SPECIES.length(); j++) {
+                Assert.assertEquals(mv.laneIsSet(j), mask[j] && (a[i + j] [[TEST_OP]] ($type$)((long)b[i])));
+            }
+        }
+    }
+#end[!Long]

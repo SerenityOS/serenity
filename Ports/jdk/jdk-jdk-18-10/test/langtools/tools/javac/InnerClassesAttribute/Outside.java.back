@@ -1,0 +1,11 @@
+/*
+ * This file was used to create Outside.class and Outside$1$Inside.class
+ * with a recent (post-4074529-bugfix) compiler.
+ */
+
+public class Outside {
+    void method() {
+	class Inside {
+	}
+    }
+}

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ar"/>
+		<territory type="LY"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="arn" draft="contributed">المابودونجونية</language>
+			<language type="gn" draft="contributed">الغورانية</language>
+			<language type="hsb" draft="contributed">صوربيا العليا</language>
+			<language type="lo" draft="contributed">اللاوو</language>
+			<language type="sh" draft="contributed">الكرواتية الصربية</language>
+			<language type="sma" draft="contributed">سامي الجنوبية</language>
+			<language type="sw" draft="contributed">السواحيلية</language>
+			<language type="sw_CD" draft="contributed">السواحيلية الكونغولية</language>
+			<language type="ti" draft="contributed">التيغرينية</language>
+		</languages>
+		<territories>
+			<territory type="EA" draft="contributed">سبتة ومليلية</territory>
+			<territory type="MS" draft="contributed">مونتيسيرات</territory>
+			<territory type="UY" draft="contributed">أوروغواي</territory>
+		</territories>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters type="numbers">[\u200E \- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="morning1">فجرًا</dayPeriod>
+							<dayPeriod type="morning2">ص</dayPeriod>
+							<dayPeriod type="afternoon1">ظهرًا</dayPeriod>
+							<dayPeriod type="afternoon2">بعد الظهر</dayPeriod>
+							<dayPeriod type="evening1">مساءً</dayPeriod>
+							<dayPeriod type="night1">في المساء</dayPeriod>
+							<dayPeriod type="night2">ل</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+			</calendar>
+		</calendars>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>latn</defaultNumberingSystem>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group>.</group>
+		</symbols>
+	</numbers>
+</ldml>

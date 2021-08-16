@@ -1,0 +1,2 @@
+T8015505.java:16:22: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.instance.exists: Z, java.util.List, java.util.List<?>)
+1 error

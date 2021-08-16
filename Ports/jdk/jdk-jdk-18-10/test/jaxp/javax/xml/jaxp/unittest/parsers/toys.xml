@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : toys.xml
+    Created on : August 11, 2003, 6:42 PM
+    Author     : Prasad Subramanian
+    Description:
+-->
+
+<toys>
+    <toy>
+        <name>Lego-Model01</name>
+        <price>65.99</price>
+    </toy>
+    <toy>
+        <name>Lego-Model2</name>
+        <price>69.99</price>
+    </toy>
+    <toy>
+        <name>Lego-Model3</name>
+        <price>14.99</price>
+    </toy>
+    <toy>
+        <name>Barbie-Pink</name>
+        <price>12.99</price>
+    </toy>
+    <toy>
+        <name>Barbie-Blue</name>
+        <price>13.99</price>
+    </toy>        
+    <toy>
+        <name>Barbie-White</name>
+        <price>13.99</price>
+    </toy>   
+    <toy>
+        <name>Barbie-Plain</name>
+        <price>13.99</price>
+    </toy>           
+</toys>

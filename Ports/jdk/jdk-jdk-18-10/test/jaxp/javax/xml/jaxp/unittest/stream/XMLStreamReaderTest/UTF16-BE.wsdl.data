@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<definitions
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    name="W2JDLR4002TestService"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    targetNamespace="http://w2jdlr4002testservice.org/W2JDLR4002TestService.wsdl"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:tns="http://w2jdlr4002testservice.org/W2JDLR4002TestService.wsdl"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:xsd1="http://w2jdlr4002testservice.org/xsd">
+
+    <types>
+        <schema targetNamespace="http://w2jdlr4002testservice.org/xsd"
+            xmlns="http://www.w3.org/2001/XMLSchema"
+            xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+            elementFormDefault="qualified">
+
+            <element name="echoStringParam" type="xsd:string"/>
+
+            <element name="echoStringReturn" type="xsd:string"/>
+            
+        </schema>
+    </types>
+
+    <message name="echoString">
+        <part element="xsd1:echoStringParam" name="str"/>
+    </message>
+    <message name="echoStringResponse">
+        <part element="xsd1:echoStringReturn" name="result"/>
+    </message>
+
+    <portType name="W2JDLR4002Test">
+    	<operation name="echoString">
+            <input message="tns:echoString"/>
+            <output message="tns:echoStringResponse"/>
+    	</operation>
+    </portType>
+    
+    <binding name="W2JDLR4002TestBinding" type="tns:W2JDLR4002Test">
+    	<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    	<operation name="echoString">
+    		<soap:operation/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+    	</operation>
+    </binding>
+
+    <service name="W2JDLR4002TestService">
+        <port binding="tns:W2JDLR4002TestBinding"
+            name="W2JDLR4002TestPort">
+            <soap:address
+                location="http://w2jdlr4002testservice.org/W2JDLR4002TestService.wsdl"/>
+        </port>
+    </service>
+    
+</definitions>

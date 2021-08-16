@@ -1,0 +1,7 @@
+T7188968.java:20:20: compiler.err.cant.resolve.location: kindname.variable, unknown, , , (compiler.misc.location: kindname.class, T7188968, null)
+T7188968.java:21:20: compiler.err.cant.resolve.location: kindname.variable, unknown, , , (compiler.misc.location: kindname.class, T7188968, null)
+T7188968.java:21:29: compiler.warn.unchecked.call.mbr.of.raw.type: T7188968.Foo(java.util.List<X>,java.lang.Object), T7188968.Foo
+T7188968.java:22:22: compiler.err.cant.resolve.location: kindname.variable, unknown, , , (compiler.misc.location: kindname.class, T7188968, null)
+T7188968.java:23:24: compiler.err.cant.resolve.location: kindname.variable, unknown, , , (compiler.misc.location: kindname.class, T7188968, null)
+4 errors
+1 warning

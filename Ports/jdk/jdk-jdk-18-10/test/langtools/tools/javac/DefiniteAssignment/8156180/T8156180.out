@@ -1,0 +1,5 @@
+T8156180.java:14:18: compiler.err.var.might.not.have.been.initialized: a1
+T8156180.java:15:20: compiler.err.var.might.not.have.been.initialized: b1
+T8156180.java:16:22: compiler.err.var.might.not.have.been.initialized: c1
+T8156180.java:17:24: compiler.err.var.might.not.have.been.initialized: d1
+4 errors

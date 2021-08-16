@@ -1,0 +1,11 @@
+Refreshable {
+    com.sun.security.auth.module.Krb5LoginModule required
+        useTicketCache=false
+        refreshKrb5Config=true;
+};
+
+NotRefreshable {
+    com.sun.security.auth.module.Krb5LoginModule required
+        useTicketCache=false
+        refreshKrb5Config=false;
+};

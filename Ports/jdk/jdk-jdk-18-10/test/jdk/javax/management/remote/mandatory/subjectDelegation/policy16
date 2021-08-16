@@ -1,0 +1,6 @@
+grant {
+    permission javax.management.remote.SubjectDelegationPermission "javax.management.remote.JMXPrincipal.monitorRole";
+};
+
+grant principal javax.management.remote.JMXPrincipal "monitorRole" {
+};

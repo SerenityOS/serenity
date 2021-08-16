@@ -1,0 +1,7 @@
+T6594914a.java:11:5: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6594914a.java:16:16: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6594914a.java:16:33: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6594914a.java:17:20: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6594914a.java:16:52: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+T6594914a.java:24:9: compiler.warn.has.been.deprecated: DeprecatedClass, compiler.misc.unnamed.package
+6 warnings

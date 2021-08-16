@@ -1,0 +1,3 @@
+T4757416.java:14:23: compiler.err.name.clash.same.erasure.no.override.1: class, D, id, java.lang.String, T4756416.C, id, java.lang.Integer, T4756416.I
+T4757416.java:15:24: compiler.err.name.clash.same.erasure.no.override.1: class, D, id, java.lang.Integer, T4756416.I, id, java.lang.String, T4756416.C
+2 errors

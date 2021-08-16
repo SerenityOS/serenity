@@ -1,0 +1,7 @@
+./bootstrap/bin/javac
+./bootstrap/bin/javadoc
+./bootstrap/lib/doclets.jar
+./bootstrap/lib/javac.jar
+./bootstrap/lib/javadoc.jar
+./lib/classes.jar
+./lib/src.zip

@@ -1,0 +1,2 @@
+BrokenEnumConstructor.java:16:30: compiler.err.call.to.super.not.allowed.in.enum.ctor: BrokenEnumConstructor
+1 error

@@ -1,0 +1,466 @@
+/*
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+package jdk.internal.misc;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.ref.Reference;
+import java.io.FileDescriptor;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+
+import jdk.internal.access.JavaNioAccess;
+import jdk.internal.access.SharedSecrets;
+import jdk.internal.access.foreign.MemorySegmentProxy;
+import jdk.internal.util.ArraysSupport;
+import jdk.internal.vm.annotation.ForceInline;
+import jdk.internal.vm.vector.VectorSupport;
+
+
+/**
+ * This class defines low-level methods to access on-heap and off-heap memory. The methods in this class
+ * can be thought of as thin wrappers around methods provided in the {@link Unsafe} class. All the methods in this
+ * class, accept one or more {@link Scope} parameter, which is used to validate as to whether access to memory
+ * can be performed in a safe fashion - more specifically, to ensure that the memory being accessed has not
+ * already been released (which would result in a hard VM crash).
+ * <p>
+ * Accessing and releasing memory from a single thread is not problematic - after all, a given thread cannot,
+ * at the same time, access a memory region <em>and</em> free it. But ensuring correctness of memory access
+ * when multiple threads are involved is much trickier, as there can be cases where a thread is accessing
+ * a memory region while another thread is releasing it.
+ * <p>
+ * This class provides tools to manage races when multiple threads are accessing and/or releasing the same memory
+ * region concurrently. More specifically, when a thread wants to release a memory region, it should call the
+ * {@link #closeScope(jdk.internal.misc.ScopedMemoryAccess.Scope)} method provided by this class. This method initiates
+ * thread-local handshakes with all the other VM threads, which are then stopped one by one. If any thread is found
+ * accessing memory that is associated to the very scope object being closed, that thread execution is asynchronously
+ * interrupted with a {@link Scope.ScopedAccessError}.
+ * <p>
+ * This synchronization strategy relies on the idea that accessing memory is atomic with respect to checking the
+ * validity of the scope associated with that memory region - that is, a thread that wants to perform memory access will be
+ * suspended either <em>before</em> a scope check or <em>after</em> the memory access. To ensure this atomicity,
+ * all methods in this class are marked with the special {@link Scoped} annotation, which is recognized by the VM,
+ * and used during the thread-local handshake to detect (and stop) threads performing potentially problematic memory access
+ * operations. Additionally, to make sure that the scope object(s) of the memory being accessed is always
+ * reachable during an access operation, all the methods in this class add reachability fences around the underlying
+ * unsafe access.
+ * <p>
+ * This form of synchronization allows APIs to use plain memory access without any other form of synchronization
+ * which might be deemed to expensive; in other words, this approach prioritizes the performance of memory access over
+ * that of releasing a shared memory resource.
+ */
+public class ScopedMemoryAccess {
+
+    private static final Unsafe UNSAFE = Unsafe.getUnsafe();
+
+    private static native void registerNatives();
+    static {
+        registerNatives();
+    }
+
+    public boolean closeScope(Scope scope) {
+        return closeScope0(scope, Scope.ScopedAccessError.INSTANCE);
+    }
+
+    native boolean closeScope0(Scope scope, Scope.ScopedAccessError exception);
+
+    private ScopedMemoryAccess() {}
+
+    private static final ScopedMemoryAccess theScopedMemoryAccess = new ScopedMemoryAccess();
+
+    public static ScopedMemoryAccess getScopedMemoryAccess() {
+        return theScopedMemoryAccess;
+    }
+
+    /**
+     * Scope interface used during scoped memory access operations. A scope can be thought of as an object
+     * which embodies the temporal checks associated with a given memory region.
+     */
+    public interface Scope {
+
+       interface Handle {
+            Scope scope();
+        }
+
+        void checkValidState();
+
+        Thread ownerThread();
+
+        boolean isImplicit();
+
+        Handle acquire();
+
+        void release(Handle handle);
+
+        /**
+         * Error thrown when memory access fails because the memory has already been released.
+         * Note: for performance reasons, this exception is never created by client; instead a shared instance
+         * is thrown (sometimes, this instance can be thrown asynchronously inside VM code). For this reason,
+         * it is important for clients to always catch this exception and throw a regular exception instead
+         * (which contains full stack information).
+         */
+        final class ScopedAccessError extends Error {
+            private ScopedAccessError() {
+                super("Attempt to access an already released memory resource", null, false, false);
+            }
+            static final long serialVersionUID = 1L;
+
+            public static final ScopedAccessError INSTANCE = new ScopedAccessError();
+        }
+    }
+
+    @Target({ElementType.METHOD, ElementType.CONSTRUCTOR})
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface Scoped { }
+
+    // bulk ops
+
+    @ForceInline
+    public void copyMemory(Scope srcScope, Scope dstScope,
+                                   Object srcBase, long srcOffset,
+                                   Object destBase, long destOffset,
+                                   long bytes) {
+          try {
+              copyMemoryInternal(srcScope, dstScope, srcBase, srcOffset, destBase, destOffset, bytes);
+          } catch (Scope.ScopedAccessError ex) {
+              throw new IllegalStateException("This segment is already closed");
+          }
+    }
+
+    @ForceInline @Scoped
+    private void copyMemoryInternal(Scope srcScope, Scope dstScope,
+                               Object srcBase, long srcOffset,
+                               Object destBase, long destOffset,
+                               long bytes) {
+        try {
+            if (srcScope != null) {
+                srcScope.checkValidState();
+            }
+            if (dstScope != null) {
+                dstScope.checkValidState();
+            }
+            UNSAFE.copyMemory(srcBase, srcOffset, destBase, destOffset, bytes);
+        } finally {
+            Reference.reachabilityFence(srcScope);
+            Reference.reachabilityFence(dstScope);
+        }
+    }
+
+    @ForceInline
+    public void copySwapMemory(Scope srcScope, Scope dstScope,
+                                   Object srcBase, long srcOffset,
+                                   Object destBase, long destOffset,
+                                   long bytes, long elemSize) {
+          try {
+              copySwapMemoryInternal(srcScope, dstScope, srcBase, srcOffset, destBase, destOffset, bytes, elemSize);
+          } catch (Scope.ScopedAccessError ex) {
+              throw new IllegalStateException("This segment is already closed");
+          }
+    }
+
+    @ForceInline @Scoped
+    private void copySwapMemoryInternal(Scope srcScope, Scope dstScope,
+                               Object srcBase, long srcOffset,
+                               Object destBase, long destOffset,
+                               long bytes, long elemSize) {
+        try {
+            if (srcScope != null) {
+                srcScope.checkValidState();
+            }
+            if (dstScope != null) {
+                dstScope.checkValidState();
+            }
+            UNSAFE.copySwapMemory(srcBase, srcOffset, destBase, destOffset, bytes, elemSize);
+        } finally {
+            Reference.reachabilityFence(srcScope);
+            Reference.reachabilityFence(dstScope);
+        }
+    }
+
+    @ForceInline
+    public void setMemory(Scope scope, Object o, long offset, long bytes, byte value) {
+        try {
+            setMemoryInternal(scope, o, offset, bytes, value);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private void setMemoryInternal(Scope scope, Object o, long offset, long bytes, byte value) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            UNSAFE.setMemory(o, offset, bytes, value);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public int vectorizedMismatch(Scope aScope, Scope bScope,
+                                             Object a, long aOffset,
+                                             Object b, long bOffset,
+                                             int length,
+                                             int log2ArrayIndexScale) {
+        try {
+            return vectorizedMismatchInternal(aScope, bScope, a, aOffset, b, bOffset, length, log2ArrayIndexScale);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    private int vectorizedMismatchInternal(Scope aScope, Scope bScope,
+                                             Object a, long aOffset,
+                                             Object b, long bOffset,
+                                             int length,
+                                             int log2ArrayIndexScale) {
+        try {
+            if (aScope != null) {
+                aScope.checkValidState();
+            }
+            if (bScope != null) {
+                bScope.checkValidState();
+            }
+            return ArraysSupport.vectorizedMismatch(a, aOffset, b, bOffset, length, log2ArrayIndexScale);
+        } finally {
+            Reference.reachabilityFence(aScope);
+            Reference.reachabilityFence(bScope);
+        }
+    }
+
+    @ForceInline
+    public boolean isLoaded(Scope scope, long address, boolean isSync, long size) {
+        try {
+            return isLoadedInternal(scope, address, isSync, size);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    public boolean isLoadedInternal(Scope scope, long address, boolean isSync, long size) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            return SharedSecrets.getJavaNioAccess().isLoaded(address, isSync, size);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public void load(Scope scope, long address, boolean isSync, long size) {
+        try {
+            loadInternal(scope, address, isSync, size);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    public void loadInternal(Scope scope, long address, boolean isSync, long size) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            SharedSecrets.getJavaNioAccess().load(address, isSync, size);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public void unload(Scope scope, long address, boolean isSync, long size) {
+        try {
+            unloadInternal(scope, address, isSync, size);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    public void unloadInternal(Scope scope, long address, boolean isSync, long size) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            SharedSecrets.getJavaNioAccess().unload(address, isSync, size);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public void force(Scope scope, FileDescriptor fd, long address, boolean isSync, long index, long length) {
+        try {
+            forceInternal(scope, fd, address, isSync, index, length);
+        } catch (Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @ForceInline @Scoped
+    public void forceInternal(Scope scope, FileDescriptor fd, long address, boolean isSync, long index, long length) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+            SharedSecrets.getJavaNioAccess().force(fd, address, isSync, index, length);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    // ByteBuffer vector access ops
+
+    // Buffer access constants, to be initalized when required.
+    // Avoids a null value for NIO_ACCESS, due to class initalization dependencies
+    static final class BufferAccess {
+        // Buffer.address
+        static final long BUFFER_ADDRESS
+                = UNSAFE.objectFieldOffset(Buffer.class, "address");
+
+        // ByteBuffer.hb
+        static final long BYTE_BUFFER_HB
+                = UNSAFE.objectFieldOffset(ByteBuffer.class, "hb");
+
+        @ForceInline
+        static Object bufferBase(ByteBuffer bb) {
+            return UNSAFE.getReference(bb, BYTE_BUFFER_HB);
+        }
+
+        @ForceInline
+        static long bufferAddress(ByteBuffer bb, long offset) {
+            return UNSAFE.getLong(bb, BUFFER_ADDRESS) + offset;
+        }
+
+        static final JavaNioAccess NIO_ACCESS = SharedSecrets.getJavaNioAccess();
+
+        @ForceInline
+        static ScopedMemoryAccess.Scope scope(ByteBuffer bb) {
+            MemorySegmentProxy segmentProxy = NIO_ACCESS.bufferSegment(bb);
+            return segmentProxy != null ?
+                    segmentProxy.scope() : null;
+        }
+    }
+
+    @ForceInline
+    public static
+    <V extends VectorSupport.Vector<E>, E, S extends VectorSupport.VectorSpecies<E>>
+    V loadFromByteBuffer(Class<? extends V> vmClass, Class<E> e, int length,
+                          ByteBuffer bb, int offset,
+                          S s,
+                          VectorSupport.LoadOperation<ByteBuffer, V, E, S> defaultImpl) {
+        try {
+            return loadFromByteBufferScoped(
+                    BufferAccess.scope(bb),
+                    vmClass, e, length,
+                    bb, offset,
+                    s,
+                    defaultImpl);
+        } catch (ScopedMemoryAccess.Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @Scoped
+    @ForceInline
+    private static
+    <V extends VectorSupport.Vector<E>, E, S extends VectorSupport.VectorSpecies<E>>
+    V loadFromByteBufferScoped(ScopedMemoryAccess.Scope scope,
+                          Class<? extends V> vmClass, Class<E> e, int length,
+                          ByteBuffer bb, int offset,
+                          S s,
+                          VectorSupport.LoadOperation<ByteBuffer, V, E, S> defaultImpl) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+
+            return VectorSupport.load(vmClass, e, length,
+                    BufferAccess.bufferBase(bb), BufferAccess.bufferAddress(bb, offset),
+                    bb, offset, s,
+                    defaultImpl);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+    @ForceInline
+    public static
+    <V extends VectorSupport.Vector<E>, E>
+    void storeIntoByteBuffer(Class<? extends V> vmClass, Class<E> e, int length,
+                             V v,
+                             ByteBuffer bb, int offset,
+                             VectorSupport.StoreVectorOperation<ByteBuffer, V> defaultImpl) {
+        try {
+            storeIntoByteBufferScoped(
+                    BufferAccess.scope(bb),
+                    vmClass, e, length,
+                    v,
+                    bb, offset,
+                    defaultImpl);
+        } catch (ScopedMemoryAccess.Scope.ScopedAccessError ex) {
+            throw new IllegalStateException("This segment is already closed");
+        }
+    }
+
+    @Scoped
+    @ForceInline
+    private static
+    <V extends VectorSupport.Vector<E>, E>
+    void storeIntoByteBufferScoped(ScopedMemoryAccess.Scope scope,
+                                   Class<? extends V> vmClass, Class<E> e, int length,
+                                   V v,
+                                   ByteBuffer bb, int offset,
+                                   VectorSupport.StoreVectorOperation<ByteBuffer, V> defaultImpl) {
+        try {
+            if (scope != null) {
+                scope.checkValidState();
+            }
+
+            VectorSupport.store(vmClass, e, length,
+                    BufferAccess.bufferBase(bb), BufferAccess.bufferAddress(bb, offset),
+                    v,
+                    bb, offset,
+                    defaultImpl);
+        } finally {
+            Reference.reachabilityFence(scope);
+        }
+    }
+
+
+    // typed-ops here
+
+    // Note: all the accessor methods defined below take advantage of argument type profiling
+    // (see src/hotspot/share/oops/methodData.cpp) which greatly enhances performance when the same accessor
+    // method is used repeatedly with different 'base' objects.

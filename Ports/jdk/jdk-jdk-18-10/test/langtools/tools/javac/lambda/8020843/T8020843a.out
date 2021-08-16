@@ -1,0 +1,2 @@
+T8020843a.java:14:34: compiler.err.prob.found.req: (compiler.misc.invalid.mref: kindname.method, (compiler.misc.report.access: clone(), protected, java.lang.Object))
+1 error

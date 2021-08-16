@@ -1,0 +1,2 @@
+MethodReference40.java:21:23: compiler.err.prob.found.req: (compiler.misc.invalid.mref: kindname.constructor, (compiler.misc.cant.apply.symbol: kindname.constructor, Inner, java.lang.String, MethodReference40.Sub,java.lang.String, kindname.class, MethodReference40.Sup.Inner, (compiler.misc.arg.length.mismatch)))
+1 error

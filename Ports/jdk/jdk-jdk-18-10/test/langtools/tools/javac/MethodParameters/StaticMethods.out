@@ -1,0 +1,11 @@
+public class StaticMethods -- 
+StaticMethods.<init>()
+StaticMethods.def(a, ba, final cba, final dcba)
+StaticMethods.def(a, final ba, final cba)
+StaticMethods.pub(d, final ed, final fed)
+StaticMethods.pub(a, ba, final cba, final dcba)
+StaticMethods.prot(g, final hg, final ihg)
+StaticMethods.prot(aa, baa, final cbaa, final dcbaa)
+StaticMethods.priv(j, final kj, final lkj)
+StaticMethods.priv(abc, babc, final cbabc, final dcbabc)
+StaticMethods.empty()

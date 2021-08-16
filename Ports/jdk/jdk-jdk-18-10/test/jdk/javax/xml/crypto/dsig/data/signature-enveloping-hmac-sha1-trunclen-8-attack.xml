@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+  <SignedInfo>
+    <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+    <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#hmac-sha1">
+      <HMACOutputLength>8</HMACOutputLength>
+    </SignatureMethod>
+    <Reference URI="#object">
+      <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+      <DigestValue>nz4GS0NbH2SrWlD/4fX313CoTzc=</DigestValue>
+    </Reference>
+  </SignedInfo>
+  <SignatureValue>
+    Qw==
+  </SignatureValue>
+  <Object Id="object">some other text</Object>
+</Signature>

@@ -1,0 +1,11 @@
+T7086595.java:11:12: compiler.err.already.defined: kindname.variable, s, kindname.class, T7086595
+T7086595.java:11:16: compiler.err.cant.resolve.location: kindname.variable, nonExistent, , , (compiler.misc.location: kindname.class, T7086595, null)
+T7086595.java:15:16: compiler.err.already.defined: kindname.variable, s, kindname.method, foo()
+T7086595.java:15:20: compiler.err.cant.resolve.location: kindname.variable, nonExistent, , , (compiler.misc.location: kindname.class, T7086595, null)
+T7086595.java:20:16: compiler.err.already.defined: kindname.variable, s, kindname.method, bar()
+T7086595.java:20:20: compiler.err.cant.resolve.location: kindname.variable, nonExistent, , , (compiler.misc.location: kindname.class, T7086595, null)
+T7086595.java:25:16: compiler.err.already.defined.in.clinit: kindname.variable, s, kindname.instance.init, kindname.class, T7086595
+T7086595.java:25:20: compiler.err.cant.resolve.location: kindname.variable, nonExistent, , , (compiler.misc.location: kindname.class, T7086595, null)
+T7086595.java:30:16: compiler.err.already.defined.in.clinit: kindname.variable, s, kindname.static.init, kindname.class, T7086595
+T7086595.java:30:20: compiler.err.cant.resolve.location: kindname.variable, nonExistent, , , (compiler.misc.location: kindname.class, T7086595, null)
+10 errors

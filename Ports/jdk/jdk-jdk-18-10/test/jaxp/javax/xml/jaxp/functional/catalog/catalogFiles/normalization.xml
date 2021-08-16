@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" xml:base="http://local/base/dtd/">
+    <system systemId=" http://remote/dtd/alice/docAlice.dtd " uri="docAliceSys.dtd" />
+    <system systemId="http://remote/dtd/bob/docBob&lt;&gt;\^`{|}.dtd" uri="docBobSys.dtd" />
+
+    <uri name=" http://remote/dtd/alice/docAlice.dtd " uri="docAliceSys.dtd" />
+    <uri name="http://remote/dtd/bob/docBob&lt;&gt;\^`{|}.dtd" uri="docBobSys.dtd" />
+
+    <public publicId=" -//REMOTE//DTD  ALICE DOCALICE XML//EN " uri="docAlicePub.dtd" />
+    <public publicId="-//REMOTE//DTD BOB DOCBOB XML//EN" uri="docBobPub.dtd" />
+</catalog>

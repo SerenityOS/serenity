@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE Configuration PUBLIC "-//NetBeans IDE//DTD toolbar//EN" "http://www.netbeans.org/dtds/toolbar.dtd">
+<Configuration>
+    <Row>
+        <Toolbar name="Edit" position="1" visible="false"/>
+        <Toolbar name="File" position="1" visible="false" />
+        <Toolbar name="Memory" position="1" visible="true" />
+    </Row>
+    <Row>
+        <Toolbar name="WorkspaceSwitcher" />
+        <Toolbar name="StatusLine" />
+    </Row>
+</Configuration>

@@ -1,0 +1,13 @@
+    static $type$ [[TEST]]($type$ a) {
+        return ($type$)([[TEST_OP]]);
+    }
+
+    static $type$ strict[[TEST]]($type$ a) {
+        return ($type$)(Strict[[TEST_OP]]);
+    }
+
+    @Test(dataProvider = "$type$UnaryOpProvider")
+    static void [[TEST]]$vectorteststype$(IntFunction<$type$[]> fa) {
+[[KERNEL]]
+        assertArraysEqualsWithinOneUlp(r, a, $vectorteststype$::[[TEST]], $vectorteststype$::strict[[TEST]]);
+    }

@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<element xmlns:space="foo" 
+    attribute1="value1" space:attribute2="value2" attribute3="value3"/>

@@ -1,0 +1,15 @@
+OPTIONS:shuffle
+nsk.jdi.ThreadReference.ownedMonitorsAndFrames.ownedMonitorsAndFrames001.ownedMonitorsAndFrames001
+nsk.jdi.ThreadReference.ownedMonitorsAndFrames.ownedMonitorsAndFrames002.ownedMonitorsAndFrames002
+
+nsk.share.jdi.ThreadFilterTest -allowMissedEvents MONITOR_CONTENTED_ENTERED -eventType MONITOR_CONTENTED_ENTERED -debuggeeClassName nsk.share.jdi.MonitorEventsDebuggee
+nsk.share.jdi.ThreadFilterTest -allowMissedEvents MONITOR_CONTENTED_ENTER -eventType MONITOR_CONTENTED_ENTER -debuggeeClassName nsk.share.jdi.MonitorEventsDebuggee
+nsk.share.jdi.ThreadFilterTest -eventType MONITOR_WAIT -debuggeeClassName nsk.share.jdi.MonitorEventsDebuggee
+nsk.share.jdi.ThreadFilterTest -eventType MONITOR_WAITED -debuggeeClassName nsk.share.jdi.MonitorEventsDebuggee
+
+nsk.jdi.ObjectReference.referringObjects.referringObjects003.referringObjects003
+nsk.jdi.ReferenceType.instances.instances003.instances003 -testClassNames java.lang.String:nsk.share.jdi.TestClass1:boolean[]
+
+nsk.jdi.ThreadReference.forceEarlyReturn.forceEarlyReturn001.forceEarlyReturn001
+nsk.jdi.ThreadReference.forceEarlyReturn.forceEarlyReturn003.forceEarlyReturn003
+nsk.jdi.ThreadReference.forceEarlyReturn.forceEarlyReturn004.forceEarlyReturn004

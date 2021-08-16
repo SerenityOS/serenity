@@ -1,0 +1,2232 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="se"/>
+		<territory type="FI"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ace">ačehgiella</language>
+			<language type="ar_001">standárda arábagiella</language>
+			<language type="be">vilgesruoššagiella</language>
+			<language type="bn">bengalagiella</language>
+			<language type="de_AT">nuortariikkalaš duiskkagiella</language>
+			<language type="de_CH">šveicalaš duiskkagiella</language>
+			<language type="en_AU">austrálialaš eaŋgalsgiella</language>
+			<language type="en_CA">kanádalaš eaŋgalsgiella</language>
+			<language type="en_GB">brihttalaš eaŋgalsgiella</language>
+			<language type="en_GB" alt="short">brihttalaš eaŋgalsgiella</language>
+			<language type="en_US">amerihkálaš eaŋgalsgiella</language>
+			<language type="en_US" alt="short">amerihkálaš eaŋgalsgiella</language>
+			<language type="es_419">latiinna-amerihkalaš spánskkagiella</language>
+			<language type="es_ES">espánjalaš spánskkagiella</language>
+			<language type="es_MX">meksikolaš spánskkagiella</language>
+			<language type="fj">fižigiella</language>
+			<language type="fr_CA">kanádalaš fránskkagiella</language>
+			<language type="fr_CH">šveicalaš fránskkagiella</language>
+			<language type="hy">armenagiella</language>
+			<language type="kk">kazakhgiella</language>
+			<language type="km">kambožagiella</language>
+			<language type="ne">nepalagiella</language>
+			<language type="nl_BE">belgialaš hollánddagiella</language>
+			<language type="pa">panjabagiella</language>
+			<language type="pt_BR">brasilialaš portugálagiella</language>
+			<language type="pt_PT">portugálalaš portugálagiella</language>
+			<language type="ro_MD">moldávialaš romániagiella</language>
+			<language type="swb">komoragiella</language>
+			<language type="th">thaigiella</language>
+			<language type="vi">vietnamagiella</language>
+			<language type="zh_Hans">álkes kiinnágiella</language>
+			<language type="zh_Hant">árbevirolaš kiinnágiella</language>
+		</languages>
+		<scripts>
+			<script type="Arab">arábalaš</script>
+			<script type="Hani">kiinnálaš</script>
+			<script type="Hans">álkes kiinnálaš</script>
+			<script type="Hant">árbevirolaš kiinnálaš</script>
+			<script type="Zxxx">orrut čállojuvvot</script>
+			<script type="Zzzz">dovdameahttun čállin</script>
+		</scripts>
+		<territories>
+			<territory type="001">Máilbmi</territory>
+			<territory type="002">Afrihka</territory>
+			<territory type="003">Davvi-Amerihká ja Gaska-Amerihká</territory>
+			<territory type="005">Lulli-Amerihká</territory>
+			<territory type="011">Oarje-Afrihká</territory>
+			<territory type="013">Gaska-Amerihká</territory>
+			<territory type="014">Nuorta-Afrihká</territory>
+			<territory type="015">Davvi-Afrihká</territory>
+			<territory type="017">Gaska-Afrihká</territory>
+			<territory type="018">Lulli-Afrihká</territory>
+			<territory type="019">Amerihka</territory>
+			<territory type="021">Davvi-Amerihká</territory>
+			<territory type="057">Mikronesia guovlu</territory>
+			<territory type="419">Latiinnalaš Amerihká</territory>
+			<territory type="BA">Bosnia ja Hercegovina</territory>
+			<territory type="CI" alt="variant">Côte d’Ivoire</territory>
+			<territory type="EZ">Euroavádat</territory>
+			<territory type="KH">Kamboža</territory>
+			<territory type="SD">Sudan</territory>
+			<territory type="TD">Chad</territory>
+			<territory type="UN">Ovttastuvvan Našuvnnat</territory>
+		</territories>
+		<types>
+			<type key="calendar" type="buddhist">buddhista kaleandar</type>
+			<type key="calendar" type="chinese">kiinná kaleandar</type>
+			<type key="calendar" type="coptic">koptalaš kaleandar</type>
+			<type key="calendar" type="dangi">dangi kaleandar</type>
+			<type key="calendar" type="ethiopic">etiohpalaš kaleandar</type>
+			<type key="calendar" type="ethiopic-amete-alem">etiohpalaš-amete-alem kaleandar</type>
+			<type key="calendar" type="gregorian">gregorialaš kalendar</type>
+		</types>
+		<codePatterns>
+			<codePattern type="script">čállin: {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d.M.y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Ed">E d</dateFormatItem>
+						<dateFormatItem id="Gy">y G</dateFormatItem>
+						<dateFormatItem id="GyMMM">MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMd">d MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E d MMM y G</dateFormatItem>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">E d.M</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E d MMM</dateFormatItem>
+						<dateFormatItem id="MMMMd">d MMMM</dateFormatItem>
+						<dateFormatItem id="y">y G</dateFormatItem>
+						<dateFormatItem id="yyyy">y G</dateFormatItem>
+						<dateFormatItem id="yyyyM">MM.y. GGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMd">dd.MM.y GGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMEd">E dd.MM.y GGGG</dateFormatItem>
+						<dateFormatItem id="yyyyMMM">MMM y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMd">d MMM y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMEd">E d MMM y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMM">MMMM y G</dateFormatItem>
+						<dateFormatItem id="yyyyQQQ">QQQ y G</dateFormatItem>
+						<dateFormatItem id="yyyyQQQQ">QQQQ y G</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M">M – M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">d.M –d.M</greatestDifference>
+							<greatestDifference id="M">d.M – d.M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">E d.M – E d.M</greatestDifference>
+							<greatestDifference id="M">E d.M – E d.M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M">MMM – MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">d–d MMM</greatestDifference>
+							<greatestDifference id="M">d MMM – d MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">E d MMM – E d MMM</greatestDifference>
+							<greatestDifference id="M">E d MMM – E d MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y">y–y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">M.y – M.y GGGG</greatestDifference>
+							<greatestDifference id="y">M.y – M.y GGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">d.M.y – d.M.y GGGG</greatestDifference>
+							<greatestDifference id="M">d.M.y – d.M.y GGGG</greatestDifference>
+							<greatestDifference id="y">d.M.y – d.M.y GGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">E d.M.y – E d.M.y GGGG</greatestDifference>
+							<greatestDifference id="M">E d.M.y – E.d.M.y GGGG</greatestDifference>
+							<greatestDifference id="y">E d.M.y – E d.M.y GGGG</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">d–d.MMM y G</greatestDifference>
+							<greatestDifference id="M">d.MMM – d.MMM y G</greatestDifference>
+							<greatestDifference id="y">d MMM y – d MMM y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">E d MMM y – E d MMM y G</greatestDifference>
+							<greatestDifference id="M">E d MMM y – E d MMM y G</greatestDifference>
+							<greatestDifference id="y">E d MMM y – E d MMM y G</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M">MMMM – MMMM y G</greatestDifference>
+							<greatestDifference id="y">MMMM y – MMMM y G</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="4">cuoŋ</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="4">cuoŋ</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">so</day>
+							<day type="mon">má</day>
+							<day type="tue">di</day>
+							<day type="wed">ga</day>
+							<day type="thu">du</day>
+							<day type="fri">be</day>
+							<day type="sat">lá</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="mon">M</day>
+							<day type="tue">D</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">so</day>
+							<day type="mon">má</day>
+							<day type="tue">di</day>
+							<day type="wed">ga</day>
+							<day type="thu">du</day>
+							<day type="fri">be</day>
+							<day type="sat">lá</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="mon">mánnodat</day>
+							<day type="tue">disdat</day>
+							<day type="wed">gaskavahkku</day>
+							<day type="thu">duorastat</day>
+							<day type="fri">bearjadat</day>
+							<day type="sat">lávvordat</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">so</day>
+							<day type="mon">má</day>
+							<day type="tue">di</day>
+							<day type="wed">ga</day>
+							<day type="thu">du</day>
+							<day type="fri">be</day>
+							<day type="sat">lá</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">S</day>
+							<day type="mon">M</day>
+							<day type="tue">D</day>
+							<day type="wed">G</day>
+							<day type="thu">D</day>
+							<day type="fri">B</day>
+							<day type="sat">L</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">so</day>
+							<day type="mon">má</day>
+							<day type="tue">di</day>
+							<day type="wed">ga</day>
+							<day type="thu">du</day>
+							<day type="fri">be</day>
+							<day type="sat">lá</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="mon">mánnodat</day>
+							<day type="tue">disdat</day>
+							<day type="thu">duorastat</day>
+							<day type="sat">lávvordat</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">1Q</quarter>
+							<quarter type="2">2Q</quarter>
+							<quarter type="3">3Q</quarter>
+							<quarter type="4">4Q</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">1. njealjádas</quarter>
+							<quarter type="2">2. njealjádas</quarter>
+							<quarter type="3">3. njealjádas</quarter>
+							<quarter type="4">4. njealjádas</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">Q1</quarter>
+							<quarter type="2">2Q</quarter>
+							<quarter type="3">3Q</quarter>
+							<quarter type="4">4Q</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">1. njealjádas</quarter>
+							<quarter type="2">2. njealjádas</quarter>
+							<quarter type="3">3. njealjádas</quarter>
+							<quarter type="4">4. njealjádas</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">ib</dayPeriod>
+							<dayPeriod type="pm">eb</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">i</dayPeriod>
+							<dayPeriod type="pm">e</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">ib</dayPeriod>
+							<dayPeriod type="pm">eb</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">ib</dayPeriod>
+							<dayPeriod type="pm">eb</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">ib</dayPeriod>
+							<dayPeriod type="pm">eb</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">ib</dayPeriod>
+							<dayPeriod type="pm">eb</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">ovdal Kristusa</era>
+						<era type="0" alt="variant">ovdal áigelogu</era>
+						<era type="1">maŋŋel Kristusa</era>
+						<era type="1" alt="variant">áigelohku</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">oKr.</era>
+						<era type="0" alt="variant">oáá.</era>
+						<era type="1">mKr.</era>
+						<era type="1" alt="variant">áá.</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd.MM.y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Ed">d E</dateFormatItem>
+						<dateFormatItem id="Gy">y G</dateFormatItem>
+						<dateFormatItem id="GyMMM">MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMd">d MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E d MMM y G</dateFormatItem>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">E d.M</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E d MMM</dateFormatItem>
+						<dateFormatItem id="MMMMd">d MMMM</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="one">MMMM:'a' 'vahkku' W</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="two">MMMM:'a' 'vahkku' W</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="other">MMMM:'a' 'vahkku' W</dateFormatItem>
+						<dateFormatItem id="yM">MM.y</dateFormatItem>
+						<dateFormatItem id="yMd">dd.MM.y</dateFormatItem>
+						<dateFormatItem id="yMEd">E dd.MM.y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M">M–M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">d.M.–d.M.</greatestDifference>
+							<greatestDifference id="M">d.M.–d.M.</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">E d.M.–E.d.M</greatestDifference>
+							<greatestDifference id="M">E d.M.–E d.M.</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M">MMM–MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">d–d MMM</greatestDifference>
+							<greatestDifference id="M">d MMM–d MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">E d.MMM–E d.MMM</greatestDifference>
+							<greatestDifference id="M">E d.MMM–E d.MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">M.y–M.y</greatestDifference>
+							<greatestDifference id="y">M.y – M.y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">d.M.y – d.M.y</greatestDifference>
+							<greatestDifference id="M">d.M.y – d.M.y</greatestDifference>
+							<greatestDifference id="y">d.M.y – d.M.y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">E d.M.y – E d.M.y</greatestDifference>
+							<greatestDifference id="M">E d.M.y – E d.M.y</greatestDifference>
+							<greatestDifference id="y">E d.M.y – E d.M.y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M">MMM – MMM y</greatestDifference>
+							<greatestDifference id="y">MMM y – MMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">d–d MMM y</greatestDifference>
+							<greatestDifference id="M">d MMM – d MMM y</greatestDifference>
+							<greatestDifference id="y">d MMM y – d MMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">E d MMM – E d MMM y</greatestDifference>
+							<greatestDifference id="M">E d MMM – E d MMM y</greatestDifference>
+							<greatestDifference id="y">E d MMM y – E d MMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M">MMMM – MMMM y</greatestDifference>
+							<greatestDifference id="y">MMMM y – MMMM y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>áigodat</displayName>
+			</field>
+			<field type="era-short">
+				<displayName>áig.</displayName>
+			</field>
+			<field type="era-narrow">
+				<displayName>áig.</displayName>
+			</field>
+			<field type="year">
+				<displayName>jahki</displayName>
+				<relative type="-1">diibmá</relative>
+				<relative type="0">dán jagi</relative>
+				<relative type="1">boahtte jagi</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} jagi siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} jagi siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} jagi siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">diibmá</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet jagi</relativeTimePattern>
+					<relativeTimePattern count="other">{0} jagi dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-short">
+				<displayName>j.</displayName>
+				<relative type="0">dán jagi</relative>
+				<relative type="1">boahtte jagi</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} j. siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} jagi siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} j. siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">diibmá</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet jagi</relativeTimePattern>
+					<relativeTimePattern count="other">{0} j. dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-narrow">
+				<displayName>j.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} jagi siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} jagi siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} jagi siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} j. dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="two">{0} jagi dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="other">{0} j. dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter">
+				<displayName>njealjádasjahki</displayName>
+				<relative type="-1">mannan njealjádasjagi</relative>
+				<relative type="0">dán njealjádasjagi</relative>
+				<relative type="1">boahtte njealjádasjagi</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">čuovvovaš {0} njealjádasjagi</relativeTimePattern>
+					<relativeTimePattern count="two">čuovvovaš {0} njealjádasjagi</relativeTimePattern>
+					<relativeTimePattern count="other">čuovvovaš {0} njealjádasjagi</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">-{0} njealjádasjagi dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="two">-{0} njealjádasjagi dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="other">-{0} njealjádasjagi dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter-short">
+				<displayName>njealj.j.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">boahtte {0} njealj.j.</relativeTimePattern>
+					<relativeTimePattern count="two">boahtte {0} njealjádasjagi</relativeTimePattern>
+					<relativeTimePattern count="other">boahtte {0} njealj.j.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} njealj.j. dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="two">{0} njealjádasjagi dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="other">{0} njealj.j. dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter-narrow">
+				<displayName>jahkenjealjádas</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">boahtte {0} njealj.j.</relativeTimePattern>
+					<relativeTimePattern count="two">boahtte {0} njealjádasjagi</relativeTimePattern>
+					<relativeTimePattern count="other">boahtte {0} njealj.j.</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} njealj.j. dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="two">-{0} njealjádasjagi dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="other">{0} njealj.j. dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month">
+				<relative type="-1">mannan mánu</relative>
+				<relative type="0">dán mánu</relative>
+				<relative type="1">boahtte mánu</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} mánu siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} mánu siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} mánu siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} mánnu dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="two">{0} mánu dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="other">{0} mánu dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month-short">
+				<displayName>m.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} mánu siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} mánu siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} mánu siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} mánnu dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="two">{0} mánu dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="other">{0} mánu dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month-narrow">
+				<displayName>m.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} mánu geahčen</relativeTimePattern>
+					<relativeTimePattern count="two">{0} mánu geahčen</relativeTimePattern>
+					<relativeTimePattern count="other">{0} mánu geahčen</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} mánnu dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="two">{0} mánu dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="other">{0} mánu dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week">
+				<displayName>vahkku</displayName>
+				<relative type="-1">mannan vahku</relative>
+				<relative type="0">dán vahku</relative>
+				<relative type="1">boahtte vahku</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} vahku geahčen</relativeTimePattern>
+					<relativeTimePattern count="two">{0} vahku geahčen</relativeTimePattern>
+					<relativeTimePattern count="other">{0} vahku geahčen</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} vahkku dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="two">{0} vahku dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="other">{0} vahku dás ovdal</relativeTimePattern>
+				</relativeTime>
+				<relativePeriod>{0} vahkku</relativePeriod>
+			</field>
+			<field type="week-short">
+				<displayName>v(k)</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} v(k) siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} vahku siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} v(k) siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} v(k) dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="two">{0} vahku dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="other">{0} v(k) dás ovdal</relativeTimePattern>
+				</relativeTime>
+				<relativePeriod>{0} vahkku</relativePeriod>
+			</field>
+			<field type="week-narrow">
+				<displayName>v(k)</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} v(k) geahčen</relativeTimePattern>
+					<relativeTimePattern count="two">{0} v(k) geahčen</relativeTimePattern>
+					<relativeTimePattern count="other">{0} v(k) geahčen</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} vahkku dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="two">{0} vahku dás ovdal</relativeTimePattern>
+					<relativeTimePattern count="other">{0} v(k) dás ovdal</relativeTimePattern>
+				</relativeTime>
+				<relativePeriod>{0} vahkku</relativePeriod>
+			</field>
+			<field type="weekOfMonth">
+				<displayName>mánu vahkku</displayName>
+			</field>
+			<field type="weekOfMonth-short">
+				<displayName>m. v(k)</displayName>
+			</field>
+			<field type="weekOfMonth-narrow">
+				<displayName>m. v(k)</displayName>
+			</field>
+			<field type="day">
+				<relative type="-2">ovddet beaivvi</relative>
+				<relative type="2">don beaivve</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} beaivve siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} beaivve siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} beaivve siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">ikte</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet beaivve</relativeTimePattern>
+					<relativeTimePattern count="other">{0} beaivve dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day-short">
+				<displayName>b.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} beaivve siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} beaivve siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} beaivve siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">ikte</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet beaivve</relativeTimePattern>
+					<relativeTimePattern count="other">{0} beaivve dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day-narrow">
+				<displayName>b.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} beaivve siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} beaivve siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} beaivve siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">ikte</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet beaivve</relativeTimePattern>
+					<relativeTimePattern count="other">{0} beaivve dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="dayOfYear">
+				<displayName>jagi beaivi</displayName>
+			</field>
+			<field type="dayOfYear-short">
+				<displayName>j. beaivi</displayName>
+			</field>
+			<field type="dayOfYear-narrow">
+				<displayName>j. beaivi</displayName>
+			</field>
+			<field type="weekday">
+				<displayName>vahkkobeaivi</displayName>
+			</field>
+			<field type="weekday-short">
+				<displayName>v(k) beaivi</displayName>
+			</field>
+			<field type="weekday-narrow">
+				<displayName>v(k) beaivi</displayName>
+			</field>
+			<field type="weekdayOfMonth">
+				<displayName>mánu vahkkobeaivi</displayName>
+			</field>
+			<field type="weekdayOfMonth-short">
+				<displayName>m. v(k)b.</displayName>
+			</field>
+			<field type="weekdayOfMonth-narrow">
+				<displayName>m. v(k)b.</displayName>
+			</field>
+			<field type="sun">
+				<relative type="-1">mannan sotnabeaivve</relative>
+				<relative type="0">dán sotnabeaivve</relative>
+				<relative type="1">boahtte sotnabeaivve</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">boahtte sotnabeaivve</relativeTimePattern>
+					<relativeTimePattern count="two">boahtte {0} sotnabeaivve</relativeTimePattern>
+					<relativeTimePattern count="other">boahtte {0} sotnabeaivve</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">mannan sotnabeaivve</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet sotnabeaivve</relativeTimePattern>
+					<relativeTimePattern count="other">{0} sotnabeaivve dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sun-short">
+				<relative type="-1">mannan so</relative>
+				<relative type="0">dán so</relative>
+				<relative type="1">boahtte so</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">boahtte so</relativeTimePattern>
+					<relativeTimePattern count="two">maŋit sotnabeaivve</relativeTimePattern>
+					<relativeTimePattern count="other">{0} boahtte so</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">mannan so</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet sotnabeaivve</relativeTimePattern>
+					<relativeTimePattern count="other">{0} so dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sun-narrow">
+				<relative type="-1">mannan so</relative>
+				<relative type="0">dán so</relative>
+				<relative type="1">boahtte so</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} boahtte so</relativeTimePattern>
+					<relativeTimePattern count="two">boahtte {0} sotnabeaivve</relativeTimePattern>
+					<relativeTimePattern count="other">{0} boahtte so</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} mannan so</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet sotnabeaivve</relativeTimePattern>
+					<relativeTimePattern count="other">{0} so dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon">
+				<relative type="-1">mannan mánnodaga</relative>
+				<relative type="0">dán mánnodaga</relative>
+				<relative type="1">boahtte mánnodaga</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} boahtte mánnodaga</relativeTimePattern>
+					<relativeTimePattern count="two">boahtte {0} mánnodaga</relativeTimePattern>
+					<relativeTimePattern count="other">boahtte {0} mánnodaga</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">mannan mánnodaga</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet mánnodaga</relativeTimePattern>
+					<relativeTimePattern count="other">{0} mánnodaga dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon-short">
+				<relative type="-1">mannan má</relative>
+				<relative type="0">dán má</relative>
+				<relative type="1">boahtte má</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} boahtte má</relativeTimePattern>
+					<relativeTimePattern count="two">{0} boahtte mánnodaga</relativeTimePattern>
+					<relativeTimePattern count="other">{0} boahtte má</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">mannan má</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet má</relativeTimePattern>
+					<relativeTimePattern count="other">{0} má dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="mon-narrow">
+				<relative type="-1">mannan má</relative>
+				<relative type="0">dán má</relative>
+				<relative type="1">boahtte má</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} boahtte má</relativeTimePattern>
+					<relativeTimePattern count="two">{0} boahtte mánnodaga</relativeTimePattern>
+					<relativeTimePattern count="other">{0} boahtte má</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} mannan má</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet má</relativeTimePattern>
+					<relativeTimePattern count="other">{0} má dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue">
+				<relative type="-1">mannan disdaga</relative>
+				<relative type="0">dán disdaga</relative>
+				<relative type="1">boahtte disdaga</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} boahtte disdaga</relativeTimePattern>
+					<relativeTimePattern count="two">{0} boahtte disdaga</relativeTimePattern>
+					<relativeTimePattern count="other">{0} boahtte disdaga</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">mannan disdaga</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet disdaga</relativeTimePattern>
+					<relativeTimePattern count="other">{0} disdaga dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue-short">
+				<relative type="-1">mannan di</relative>
+				<relative type="0">dán di</relative>
+				<relative type="1">boahtte di</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">boahtte di</relativeTimePattern>
+					<relativeTimePattern count="two">{0} boahtte disdaga</relativeTimePattern>
+					<relativeTimePattern count="other">{0} boahtte di</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">mannan di</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet disdaga</relativeTimePattern>
+					<relativeTimePattern count="other">{0} di dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="tue-narrow">
+				<relative type="-1">mannan di</relative>
+				<relative type="0">dán di</relative>
+				<relative type="1">boahtte di</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} boahtte di</relativeTimePattern>
+					<relativeTimePattern count="two">{0} boahtte disdaga</relativeTimePattern>
+					<relativeTimePattern count="other">{0} boahtte di</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} mannan di</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet disdaga</relativeTimePattern>
+					<relativeTimePattern count="other">{0} di dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed">
+				<relative type="-1">mannan gaskavahku</relative>
+				<relative type="0">dán gaskavahku</relative>
+				<relative type="1">boahtte gaskavahku</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">boahtte gaskavahku</relativeTimePattern>
+					<relativeTimePattern count="two">{0} boahtte gaskavahku</relativeTimePattern>
+					<relativeTimePattern count="other">{0} boahtte gaskavahku</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">mannan gaskavahku</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet gaskavahku</relativeTimePattern>
+					<relativeTimePattern count="other">{0} gaskavahku dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed-short">
+				<relative type="-1">mannan ga</relative>
+				<relative type="0">dán ga</relative>
+				<relative type="1">boahtte ga</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">boahtte ga</relativeTimePattern>
+					<relativeTimePattern count="two">{0} boahtte gaskavahku</relativeTimePattern>
+					<relativeTimePattern count="other">{0} boahtte ga</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">mannan ga</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet gaskavahku</relativeTimePattern>
+					<relativeTimePattern count="other">{0} ga dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="wed-narrow">
+				<relative type="-1">mannan ga</relative>
+				<relative type="0">dán ga</relative>
+				<relative type="1">boahtte ga</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} boahtte ga</relativeTimePattern>
+					<relativeTimePattern count="two">{0} boahtte gaskavahku</relativeTimePattern>
+					<relativeTimePattern count="other">{0} boahtte ga</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} mannan ga</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet gaskavahku</relativeTimePattern>
+					<relativeTimePattern count="other">{0} ga dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu">
+				<relative type="-1">mannan duorastaga</relative>
+				<relative type="0">dán duorastaga</relative>
+				<relative type="1">boahtte duorastaga</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">boahtte duorastaga</relativeTimePattern>
+					<relativeTimePattern count="two">+{0} boahtte duorastaga</relativeTimePattern>
+					<relativeTimePattern count="other">+{0} boahtte duorastaga</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">mannan duorastaga</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet duorastaga</relativeTimePattern>
+					<relativeTimePattern count="other">{0} duorastaga dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu-short">
+				<relative type="-1">mannan du</relative>
+				<relative type="0">dán du</relative>
+				<relative type="1">boahtte du</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">boahtte du</relativeTimePattern>
+					<relativeTimePattern count="two">+{0} boahtte duorastaga</relativeTimePattern>
+					<relativeTimePattern count="other">+{0} boahtte du</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">mannan du</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet duorastaga</relativeTimePattern>
+					<relativeTimePattern count="other">{0} du dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="thu-narrow">
+				<relative type="-1">mannan du</relative>
+				<relative type="0">dán du</relative>
+				<relative type="1">boahtte du</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} boahtte du</relativeTimePattern>
+					<relativeTimePattern count="two">+{0} boahtte duorastaga</relativeTimePattern>
+					<relativeTimePattern count="other">+{0} boahtte du</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} mannan du</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet duorastaga</relativeTimePattern>
+					<relativeTimePattern count="other">{0} du dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri">
+				<relative type="-1">mannan bearjadaga</relative>
+				<relative type="0">dán bearjadaga</relative>
+				<relative type="1">boahtte bearjadaga</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">boahtte bearjadaga</relativeTimePattern>
+					<relativeTimePattern count="two">boahtte {0} bearjadaga</relativeTimePattern>
+					<relativeTimePattern count="other">boahtte {0} bearjadaga</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">mannan bearjadaga</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet bearjadaga</relativeTimePattern>
+					<relativeTimePattern count="other">-{0} bearjadaga dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri-short">
+				<relative type="-1">mannan be</relative>
+				<relative type="0">dán be</relative>
+				<relative type="1">boahtte be</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">boahtte be</relativeTimePattern>
+					<relativeTimePattern count="two">boahtte {0} bearjadaga</relativeTimePattern>
+					<relativeTimePattern count="other">boahtte {0} be</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">mannan be</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet bearjadaga</relativeTimePattern>
+					<relativeTimePattern count="other">-{0} be dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="fri-narrow">
+				<relative type="-1">mannan be</relative>
+				<relative type="0">dán be</relative>
+				<relative type="1">boahtte be</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">boahtte {0} be</relativeTimePattern>
+					<relativeTimePattern count="two">boahtte {0} bearjadaga</relativeTimePattern>
+					<relativeTimePattern count="other">boahtte {0} be</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} mannan be</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet bearjadaga</relativeTimePattern>
+					<relativeTimePattern count="other">-{0} be dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat">
+				<relative type="-1">mannan lávvordaga</relative>
+				<relative type="0">dán lávvordaga</relative>
+				<relative type="1">boahtte lávvordaga</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} boahtte lávvordaga</relativeTimePattern>
+					<relativeTimePattern count="two">boahtte {0} lávvordaga</relativeTimePattern>
+					<relativeTimePattern count="other">boahtte {0} lávvordaga</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">mannan lávvordaga</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet lávvordaga</relativeTimePattern>
+					<relativeTimePattern count="other">-{0} lávvordaga dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat-short">
+				<relative type="-1">mannan lá</relative>
+				<relative type="0">dán lá</relative>
+				<relative type="1">boahtte lá</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">+{0} boahtte lá</relativeTimePattern>
+					<relativeTimePattern count="two">boahtte {0} lá</relativeTimePattern>
+					<relativeTimePattern count="other">boahtte {0} lá</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">mannan lá</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet lá</relativeTimePattern>
+					<relativeTimePattern count="other">-{0} lá dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="sat-narrow">
+				<relative type="-1">mannan lá</relative>
+				<relative type="0">dán lá</relative>
+				<relative type="1">boahtte lá</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">+{0} boahtte lá</relativeTimePattern>
+					<relativeTimePattern count="two">boahtte {0} lá</relativeTimePattern>
+					<relativeTimePattern count="other">boahtte {0} lá</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} mannan lá</relativeTimePattern>
+					<relativeTimePattern count="two">ovddet lá</relativeTimePattern>
+					<relativeTimePattern count="other">-{0} lá dás ovdal</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="dayperiod-short">
+				<displayName>ib/eb</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>ib/eb</displayName>
+			</field>
+			<field type="hour">
+				<relative type="0">dán diimmu</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} diimmu siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} diimmu siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} diimmu siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} diibmu áigi</relativeTimePattern>
+					<relativeTimePattern count="two">{0} diimmu áigi</relativeTimePattern>
+					<relativeTimePattern count="other">{0} diimmu áigi</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="hour-short">
+				<displayName>dmu</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} dmu siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} diimmu siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} dmu siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} dmu áigi</relativeTimePattern>
+					<relativeTimePattern count="two">{0} diimmu áigi</relativeTimePattern>
+					<relativeTimePattern count="other">{0} dmu áigi</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="hour-narrow">
+				<displayName>dmu</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} dmu siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} diimmu siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} dmu siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} dmu áigi</relativeTimePattern>
+					<relativeTimePattern count="two">{0} diimmu áigi</relativeTimePattern>
+					<relativeTimePattern count="other">{0} dmu áigi</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute">
+				<relative type="0">dán minuhta</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} minuhta siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} minuhta siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} minuhta siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} minuhtta áigi</relativeTimePattern>
+					<relativeTimePattern count="two">{0} minuhta áigi</relativeTimePattern>
+					<relativeTimePattern count="other">{0} minuhta áigi</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute-short">
+				<displayName>min.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} min. siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} minuhta siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} min. siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} min. áigi</relativeTimePattern>
+					<relativeTimePattern count="two">{0} minuhta áigi</relativeTimePattern>
+					<relativeTimePattern count="other">{0} min. áigi</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute-narrow">
+				<displayName>min.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} min. siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} minuhta siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} min. siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} min. áigi</relativeTimePattern>
+					<relativeTimePattern count="two">{0} minuhta áigi</relativeTimePattern>
+					<relativeTimePattern count="other">{0} min. áigi</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second">
+				<relative type="0">dál</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} sekundda siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} sekundda siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} sekundda siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} sekunda áigi</relativeTimePattern>
+					<relativeTimePattern count="two">{0} sekundda áigi</relativeTimePattern>
+					<relativeTimePattern count="other">{0} sekundda áigi</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second-short">
+				<displayName>sek.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} sek. siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} sekundda siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} sek. siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} sek. áigi</relativeTimePattern>
+					<relativeTimePattern count="two">{0} sekundda áigi</relativeTimePattern>
+					<relativeTimePattern count="other">{0} sek. áigi</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="second-narrow">
+				<displayName>sek.</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} sek. siste</relativeTimePattern>
+					<relativeTimePattern count="two">{0} sekundda siste</relativeTimePattern>
+					<relativeTimePattern count="other">{0} sek. siste</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} sek. áigi</relativeTimePattern>
+					<relativeTimePattern count="two">{0} sekundda áigi</relativeTimePattern>
+					<relativeTimePattern count="other">{0} sek. áigi</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="zone-short">
+				<displayName>á.av.</displayName>
+			</field>
+			<field type="zone-narrow">
+				<displayName>á.av.</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<hourFormat>+HH:mm;-HH:mm</hourFormat>
+			<gmtFormat>{0} GMT</gmtFormat>
+			<gmtZeroFormat>GMT</gmtZeroFormat>
+			<regionFormat type="daylight">{0} geasseáigi</regionFormat>
+			<regionFormat type="standard">{0} dálveáigi</regionFormat>
+			<zone type="Etc/UTC">
+				<long>
+					<standard>koordinerejuvvon oktasaš áigi</standard>
+				</long>
+			</zone>
+			<zone type="Etc/Unknown">
+				<exemplarCity>Dovdameahttun gávpot</exemplarCity>
+			</zone>
+			<zone type="Europe/Tirane">
+				<exemplarCity>Tirana</exemplarCity>
+			</zone>
+			<zone type="Asia/Yerevan">
+				<exemplarCity>Jerevan</exemplarCity>
+			</zone>
+			<zone type="Europe/Vienna">
+				<exemplarCity>Wien</exemplarCity>
+			</zone>
+			<zone type="Europe/Brussels">
+				<exemplarCity>Brüssel</exemplarCity>
+			</zone>
+			<zone type="Indian/Cocos">
+				<exemplarCity>Kokos</exemplarCity>
+			</zone>
+			<zone type="Europe/Zurich">
+				<exemplarCity>Zürich</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Cape_Verde">
+				<exemplarCity>Kap Verde</exemplarCity>
+			</zone>
+			<zone type="Indian/Christmas">
+				<exemplarCity>Juovlasuolu</exemplarCity>
+			</zone>
+			<zone type="Europe/Prague">
+				<exemplarCity>Praha</exemplarCity>
+			</zone>
+			<zone type="Europe/Copenhagen">
+				<exemplarCity>København</exemplarCity>
+			</zone>
+			<zone type="Africa/Cairo">
+				<exemplarCity>Kairo</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Canary">
+				<exemplarCity>Kanária</exemplarCity>
+			</zone>
+			<zone type="Europe/Helsinki">
+				<exemplarCity>Helsset</exemplarCity>
+			</zone>
+			<zone type="Europe/London">
+				<long>
+					<daylight>Brihtalaš geasseáigi</daylight>
+				</long>
+			</zone>
+			<zone type="America/Danmarkshavn">
+				<exemplarCity>Dánmárkkuhámman</exemplarCity>
+			</zone>
+			<zone type="Europe/Athens">
+				<exemplarCity>Athena</exemplarCity>
+			</zone>
+			<zone type="Atlantic/South_Georgia">
+				<exemplarCity>Lulli-Georgia</exemplarCity>
+			</zone>
+			<zone type="Europe/Dublin">
+				<long>
+					<daylight>Irlánddalaš dálveáigi</daylight>
+				</long>
+			</zone>
+			<zone type="Europe/Isle_of_Man">
+				<exemplarCity>Mansuolu</exemplarCity>
+			</zone>
+			<zone type="Asia/Tehran">
+				<exemplarCity>Teheran</exemplarCity>
+			</zone>
+			<zone type="Europe/Rome">
+				<exemplarCity>Roma</exemplarCity>
+			</zone>
+			<zone type="Europe/Luxembourg">
+				<exemplarCity>Luxenburg</exemplarCity>
+			</zone>
+			<zone type="Asia/Rangoon">
+				<exemplarCity>Rangoon</exemplarCity>
+			</zone>
+			<zone type="Asia/Ulaanbaatar">
+				<exemplarCity>Ulan-Bator</exemplarCity>
+			</zone>
+			<zone type="Indian/Maldives">
+				<exemplarCity>Malediivvat</exemplarCity>
+			</zone>
+			<zone type="Pacific/Marquesas">
+				<exemplarCity>Marquesasat</exemplarCity>
+			</zone>
+			<zone type="Europe/Warsaw">
+				<exemplarCity>Warsawa</exemplarCity>
+			</zone>
+			<zone type="Atlantic/Azores">
+				<exemplarCity>Azorat</exemplarCity>
+			</zone>
+			<zone type="Europe/Lisbon">
+				<exemplarCity>Lisboa</exemplarCity>
+			</zone>
+			<zone type="Europe/Bucharest">
+				<exemplarCity>Bukarest</exemplarCity>
+			</zone>
+			<zone type="Europe/Belgrade">
+				<exemplarCity>Belgrad</exemplarCity>
+			</zone>
+			<zone type="Europe/Moscow">
+				<exemplarCity>Moskva</exemplarCity>
+			</zone>
+			<zone type="Europe/Ulyanovsk">
+				<exemplarCity>Uljanovsk</exemplarCity>
+			</zone>
+			<zone type="Asia/Yekaterinburg">
+				<exemplarCity>Jekaterinburg</exemplarCity>
+			</zone>
+			<zone type="Asia/Novokuznetsk">
+				<exemplarCity>Novokusneck</exemplarCity>
+			</zone>
+			<zone type="Asia/Krasnoyarsk">
+				<exemplarCity>Krasnojarsk</exemplarCity>
+			</zone>
+			<zone type="Asia/Irkutsk">
+				<exemplarCity>Irkuck</exemplarCity>
+			</zone>
+			<zone type="Asia/Yakutsk">
+				<exemplarCity>Jakuck</exemplarCity>
+			</zone>
+			<zone type="Asia/Sakhalin">
+				<exemplarCity>Sahalin</exemplarCity>
+			</zone>
+			<zone type="Asia/Kamchatka">
+				<exemplarCity>Kamčatka</exemplarCity>
+			</zone>
+			<zone type="Asia/Damascus">
+				<exemplarCity>Damaskos</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/Beulah">
+				<exemplarCity>Beulah, Davvi-Dakota</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/New_Salem">
+				<exemplarCity>New Salem, Davvi-Dakota</exemplarCity>
+			</zone>
+			<zone type="America/North_Dakota/Center">
+				<exemplarCity>Guovddáš, Davvi-Dakota</exemplarCity>
+			</zone>
+			<metazone type="Afghanistan">
+				<long>
+					<standard>Afganisthana áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Central">
+				<long>
+					<standard>Gaska-Afrihká áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Eastern">
+				<long>
+					<standard>Nuorta-Afrihká áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Southern">
+				<long>
+					<standard>Lulli-Afrihká dálveáigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Western">
+				<long>
+					<generic>Oarje-Afrihká áigi</generic>
+					<standard>Oarje-Afrihká dálveáigi</standard>
+					<daylight>Oarje-Afrihká geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Alaska">
+				<long>
+					<generic>Alaska áigi</generic>
+					<standard>Alaska dálveáigi</standard>
+					<daylight>Alaska geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Amazon">
+				<long>
+					<generic>Amazona áigi</generic>
+					<standard>Amazona dálveáigi</standard>
+					<daylight>Amazona geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Central">
+				<long>
+					<generic>dábálašáigi</generic>
+					<standard>dábálaš dálveáigi</standard>
+					<daylight>dábálaš geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic>áigi nuortan</generic>
+					<standard>dálveáigi nuortan</standard>
+					<daylight>geasseáigi nuortan</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic>duottaráigi</generic>
+					<standard>dálveduottaráigi</standard>
+					<daylight>geasseduottaráigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic>Jaskesábi áigi</generic>
+					<standard>Jaskesábi dálveáigi</standard>
+					<daylight>Jaskesábi geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Apia">
+				<long>
+					<generic>Apia áigi</generic>
+					<standard>Apia dálveáigi</standard>
+					<daylight>Apia geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Arabian">
+				<long>
+					<generic>Arábia áigi</generic>
+					<standard>Arábia dálveáigi</standard>
+					<daylight>Arábia geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina">
+				<long>
+					<generic>Argentina áigi</generic>
+					<standard>Argentina dálveáigi</standard>
+					<daylight>Argentina geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina_Western">
+				<long>
+					<generic>Oarje-Argentina áigi</generic>
+					<standard>Oarje-Argentina dálveáigi</standard>
+					<daylight>Oarje-Argentina geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Armenia">
+				<long>
+					<generic>Armenia áigi</generic>
+					<standard>Armenia dálveáigi</standard>
+					<daylight>Armenia geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<generic>atlántalaš áigi</generic>
+					<standard>atlántalaš dálveáigi</standard>
+					<daylight>atlántalaš geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Central">
+				<long>
+					<generic>Gaska-Austrália áigi</generic>
+					<standard>Gaska-Austrália dálveáigi</standard>
+					<daylight>Gaska-Austrália geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_CentralWestern">
+				<long>
+					<generic>Gaska-Austrália oarjjabeali áigi</generic>
+					<standard>Gaska-Austrália oarjjabeali dálveáigi</standard>
+					<daylight>Gaska-Austrália oarjjabeali geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Eastern">
+				<long>
+					<generic>Nuorta-Austrália áigi</generic>
+					<standard>Nuorta-Austrália dálveáigi</standard>
+					<daylight>Nuorta-Austrália geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Western">
+				<long>
+					<generic>Oarje-Austrália áigi</generic>
+					<standard>Oarje-Austrália dálveáigi</standard>
+					<daylight>Oarje-Austrália geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azerbaijan">
+				<long>
+					<generic>Aserbaižana áigi</generic>
+					<standard>Aserbaižana dálveáigi</standard>
+					<daylight>Aserbaižana geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azores">
+				<long>
+					<generic>Azoraid áigi</generic>
+					<standard>Azoraid dálveáigi</standard>
+					<daylight>Azoraid geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bangladesh">
+				<long>
+					<generic>Bangladesha áigi</generic>
+					<standard>Bangladesha dálveáigi</standard>
+					<daylight>Bangladesha geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bhutan">
+				<long>
+					<standard>Bhutana áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Bolivia">
+				<long>
+					<standard>Bolivia áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Brasilia">
+				<long>
+					<generic>Brasilia áigi</generic>
+					<standard>Brasilia dálveáigi</standard>
+					<daylight>Brasilia geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Brunei">
+				<long>
+					<standard>Brunei Darussalama áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Cape_Verde">
+				<long>
+					<generic>Kap Verde áigi</generic>
+					<standard>Kap Verde dálveáigi</standard>
+					<daylight>Kap Verde geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chamorro">
+				<long>
+					<standard>Čamorro dálveáigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Chatham">
+				<long>
+					<generic>Chathama áigi</generic>
+					<standard>Chathama dálveáigi</standard>
+					<daylight>Chathama geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chile">
+				<long>
+					<generic>Chile áigi</generic>
+					<standard>Chile dálveáigi</standard>
+					<daylight>Chile geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="China">
+				<long>
+					<generic>Kiinná áigi</generic>
+					<standard>Kiinná dálveáigi</standard>
+					<daylight>Kiinná geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Choibalsan">
+				<long>
+					<generic>Choibolsana áigi</generic>
+					<standard>Choibolsana dálveáigi</standard>
+					<daylight>Choibolsana geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Christmas">
+				<long>
+					<standard>Juovlasullo áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Cocos">
+				<long>
+					<standard>Kokossulloid áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Colombia">
+				<long>
+					<generic>Colombia áigi</generic>
+					<standard>Colombia dálveáigi</standard>
+					<daylight>Colombia geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cook">
+				<long>
+					<generic>Cooksulloid áigi</generic>
+					<standard>Cooksulloid dálveáigi</standard>
+					<daylight>Cooksulloid geasi beallemuttu áigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cuba">
+				<long>
+					<generic>Cuba áigi</generic>
+					<standard>Cuba dálveáigi</standard>
+					<daylight>Cuba geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Davis">
+				<long>
+					<standard>Davisa áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="DumontDUrville">
+				<long>
+					<standard>Dumont-d’Urville áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="East_Timor">
+				<long>
+					<standard>Nuorta-Timora áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Easter">
+				<long>
+					<generic>Beassášsullo áigi</generic>
+					<standard>Beassášsullo dálveáigi</standard>
+					<daylight>Beassášsullo geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Ecuador">
+				<long>
+					<standard>Ecuadora áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>Gaska-Eurohpá áigi</generic>
+					<standard>Gaska-Eurohpá dálveáigi</standard>
+					<daylight>Gaska-Eurohpá geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic>Nuorta-Eurohpa áigi</generic>
+					<standard>Nuorta-Eurohpa dálveáigi</standard>
+					<daylight>Nuorta-Eurohpa geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Further_Eastern">
+				<long>
+					<standard>Gáiddus-Nuortti eurohpalaš áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>Oarje-Eurohpá áigi</generic>
+					<standard>Oarje-Eurohpá dálveáigi</standard>
+					<daylight>Oarje-Eurohpá geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Falkland">
+				<long>
+					<generic>Falklandsulluid áigi</generic>
+					<standard>Falklandsulluid dálveáigi</standard>
+					<daylight>Falklandsulluid geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Fiji">
+				<long>
+					<generic>Fiji áigi</generic>
+					<standard>Fiji dálveáigi</standard>
+					<daylight>Fiji geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="French_Guiana">
+				<long>
+					<standard>Frankriikka Guyana áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="French_Southern">
+				<long>
+					<standard>Frankriikka lulli &amp; antárktisa áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Galapagos">
+				<long>
+					<standard>Galapagosa áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Gambier">
+				<long>
+					<standard>Gambiera áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Georgia">
+				<long>
+					<generic>Georgia áigi</generic>
+					<standard>Georgia dálveáigi</standard>
+					<daylight>Georgia geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gilbert_Islands">
+				<long>
+					<standard>Gilbertsulloid áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="GMT">
+				<long>
+					<standard>Greenwicha áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Eastern">
+				<long>
+					<generic>Nuorta-Ruonáeatnama áigi</generic>
+					<standard>Nuorta-Ruonáeatnama dálveáigi</standard>
+					<daylight>Nuorta-Ruonáeatnama geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Western">
+				<long>
+					<generic>Oarje-Ruonáeatnama áigi</generic>
+					<standard>Oarje-Ruonáeatnama dálveáigi</standard>
+					<daylight>Oarje-Ruonáeatnama geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gulf">
+				<long>
+					<standard>Golfa dálveáigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Guyana">
+				<long>
+					<standard>Guyana áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Hawaii_Aleutian">
+				<long>
+					<generic>Hawaii-aleuhtalaš áigi</generic>
+					<standard>Hawaii-aleuhtalaš dálveáigi</standard>
+					<daylight>Hawaii-aleuhtalaš geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hong_Kong">
+				<long>
+					<generic>Hong Konga áigi</generic>
+					<standard>Hong Konga dálveáigi</standard>
+					<daylight>Hong Konga geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hovd">
+				<long>
+					<generic>Hovda áigi</generic>
+					<standard>Hovda dálveáigi</standard>
+					<daylight>Hovda geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="India">
+				<long>
+					<standard>India dálveáigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Indian_Ocean">
+				<long>
+					<standard>Indiaábi áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Indochina">
+				<long>
+					<standard>Indokiinná áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Central">
+				<long>
+					<standard>Gaska-Indonesia áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Eastern">
+				<long>
+					<standard>Nuorta-Indonesia áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Western">
+				<long>
+					<standard>Oarje-Indonesia áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Iran">
+				<long>
+					<generic>Irana áigi</generic>
+					<standard>Irana dálveáigi</standard>
+					<daylight>Irana geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Irkutsk">
+				<long>
+					<generic>Irkucka áigi</generic>
+					<standard>Irkucka dálveáigi</standard>
+					<daylight>Irkucka geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Israel">
+				<long>
+					<generic>Israela áigi</generic>
+					<standard>Israela dálveáigi</standard>
+					<daylight>Israela geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Japan">
+				<long>
+					<generic>Japána áigi</generic>
+					<standard>Japána dálveáigi</standard>
+					<daylight>Japána geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Eastern">
+				<long>
+					<standard>Nuorta-Kasakstana áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Western">
+				<long>
+					<standard>Oarje-Kasakstana áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Korea">
+				<long>
+					<generic>Korea áigi</generic>
+					<standard>Korea dálveáigi</standard>
+					<daylight>Korea geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kosrae">
+				<long>
+					<standard>Kosraea áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Krasnoyarsk">
+				<long>
+					<generic>Krasnojarska áigi</generic>
+					<standard>Krasnojarska dálveáigi</standard>
+					<daylight>Krasnojarska geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kyrgystan">
+				<long>
+					<standard>Kirgisia áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Line_Islands">
+				<long>
+					<standard>Linesulloid áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Lord_Howe">
+				<long>
+					<generic>Lord Howe áigi</generic>
+					<standard>Lord Howe dálveáigi</standard>
+					<daylight>Lord Howe geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Macquarie">
+				<long>
+					<standard>MacQuarie sullo áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Magadan">
+				<long>
+					<generic>Magadana áigi</generic>
+					<standard>Magadana dálveáigi</standard>
+					<daylight>Magadana geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Malaysia">
+				<long>
+					<standard>Malesia áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Maldives">
+				<long>
+					<standard>Malediivvaid áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Marquesas">
+				<long>
+					<standard>Marquesasiid áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Marshall_Islands">
+				<long>
+					<standard>Marshallsulloid áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Mauritius">
+				<long>
+					<generic>Mauritiusa áigi</generic>
+					<standard>Mauritiusa dálveáigi</standard>
+					<daylight>Mauritiusa geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mawson">
+				<long>
+					<standard>Mawsona áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Northwest">
+				<long>
+					<generic>Oarjedavvi-Meksiko áigi</generic>
+					<standard>Oarjedavvi-Meksiko dálveáigi</standard>
+					<daylight>Oarjedavvi-Meksiko geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Pacific">
+				<long>
+					<generic>Meksiko Jáskesábi áigi</generic>
+					<standard>Meksiko Jáskesábi dálveáigi</standard>
+					<daylight>Meksiko Jáskesábi geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mongolia">
+				<long>
+					<generic>Ulan-Batora áigi</generic>
+					<standard>Ulan-Batora dálveáigi</standard>
+					<daylight>Ulan-Batora geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Moscow">
+				<long>
+					<generic>Moskva áigi</generic>
+					<standard>Moskva dálveáigi</standard>
+					<daylight>Moskva geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Myanmar">
+				<long>
+					<standard>Myanmara áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Nauru">
+				<long>
+					<standard>Nauru áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Nepal">
+				<long>
+					<standard>Nepala áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="New_Caledonia">
+				<long>
+					<generic>Ođđa-Kaledonia áigi</generic>
+					<standard>Ođđa-Kaledonia dálveáigi</standard>
+					<daylight>Ođđa-Kaledonia geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="New_Zealand">
+				<long>
+					<generic>Ođđa-Selánda áigi</generic>
+					<standard>Ođđa-Selánda dálveáigi</standard>
+					<daylight>Ođđa-Selánda geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Newfoundland">
+				<long>
+					<generic>Newfoundlanda áigi</generic>
+					<standard>Newfoundlanda dálveáigi</standard>
+					<daylight>Newfoundlanda geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Niue">
+				<long>
+					<standard>Niuea áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Norfolk">
+				<long>
+					<standard>Norfolksullo áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Noronha">
+				<long>
+					<generic>Fernando de Noronha áigi</generic>
+					<standard>Fernando de Noronha dálveáigi</standard>
+					<daylight>Fernando de Noronha geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Novosibirsk">
+				<long>
+					<generic>Novosibirska áigi</generic>
+					<standard>Novosibirska dálveáigi</standard>
+					<daylight>Novosibirska geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Omsk">
+				<long>
+					<generic>Omska áigi</generic>
+					<standard>Omska dálveáigi</standard>
+					<daylight>Omska geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pakistan">
+				<long>
+					<generic>Pakistana áigi</generic>
+					<standard>Pakistana dálveáigi</standard>
+					<daylight>Pakistana geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Palau">
+				<long>
+					<standard>Palaua áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Papua_New_Guinea">
+				<long>
+					<standard>Papua Ođđa-Guinea áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Paraguay">
+				<long>
+					<generic>Paraguaya áigi</generic>
+					<standard>Paraguaya dálveáigi</standard>
+					<daylight>Paraguaya geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Peru">
+				<long>
+					<generic>Peru áigi</generic>
+					<standard>Peru dálveáigi</standard>
+					<daylight>Peru geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Philippines">
+				<long>
+					<generic>Filippiinnaid áigi</generic>
+					<standard>Filippiinnaid dálveáigi</standard>
+					<daylight>Filippiinnaid geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Phoenix_Islands">
+				<long>
+					<standard>Phoenixsulloid áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Pierre_Miquelon">
+				<long>
+					<generic>St. Pierre &amp; Miquelo áigi</generic>
+					<standard>St. Pierre &amp; Miquelo dálveáigi</standard>
+					<daylight>St. Pierre &amp; Miquelo geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pitcairn">
+				<long>
+					<standard>Pitcairnsulloid áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Ponape">
+				<long>
+					<standard>Ponape áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Pyongyang">
+				<long>
+					<standard>Pyongyanga áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Reunion">
+				<long>
+					<standard>Reuniona áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Rothera">
+				<long>
+					<standard>Rothera áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Sakhalin">
+				<long>
+					<generic>Sahalina áigi</generic>
+					<standard>Sahalina dálveáigi</standard>
+					<daylight>Sahalina geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Samoa">
+				<long>
+					<generic>Samoa áigi</generic>
+					<standard>Samoa dálveáigi</standard>
+					<daylight>Samoa geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Seychelles">
+				<long>
+					<standard>Seychellaid áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Singapore">
+				<long>
+					<standard>Singapore dálveáigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Solomon">
+				<long>
+					<standard>Salomonsulloid áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="South_Georgia">
+				<long>
+					<standard>Lulli-Georgia áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Suriname">
+				<long>
+					<standard>Suriname áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Syowa">
+				<long>
+					<standard>Syowa áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Tahiti">
+				<long>
+					<standard>Tahiti áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Taipei">
+				<long>
+					<generic>Taipeia áigi</generic>
+					<standard>Taipeia dálveáigi</standard>
+					<daylight>Taipeia geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Tajikistan">
+				<long>
+					<standard>Tažikistana áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Tokelau">
+				<long>
+					<standard>Tokelaua áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Tonga">
+				<long>
+					<generic>Tonga áigi</generic>
+					<standard>Tonga dálveáigi</standard>
+					<daylight>Tonga geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Truk">
+				<long>
+					<standard>Chuuka áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Turkmenistan">
+				<long>
+					<generic>Turkmenistana áigi</generic>
+					<standard>Turkmenistana dálveáigi</standard>
+					<daylight>Turkmenistana geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Tuvalu">
+				<long>
+					<standard>Tuvalu áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Uruguay">
+				<long>
+					<generic>Uruguaya áigi</generic>
+					<standard>Uruguaya dálveáigi</standard>
+					<daylight>Uruguaya geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Uzbekistan">
+				<long>
+					<generic>Usbekistana áigi</generic>
+					<standard>Usbekistana dálveáigi</standard>
+					<daylight>Usbekistana geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Vanuatu">
+				<long>
+					<generic>Vanuatu áigi</generic>
+					<standard>Vanuatu dálveáigi</standard>
+					<daylight>Vanuatu geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Venezuela">
+				<long>
+					<standard>Venezuela áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Vladivostok">
+				<long>
+					<generic>Vladivostoka áigi</generic>
+					<standard>Vladivostoka dálveáigi</standard>
+					<daylight>Vladivostoka geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Volgograd">
+				<long>
+					<generic>Volgograda áigi</generic>
+					<standard>Volgograda dálveáigi</standard>
+					<daylight>Volgograda geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Vostok">
+				<long>
+					<standard>Vostoka áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Wake">
+				<long>
+					<standard>Wakesullo áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Wallis">
+				<long>
+					<standard>Wallis- ja Futuna áigi</standard>
+				</long>
+			</metazone>
+			<metazone type="Yakutsk">
+				<long>
+					<generic>Jakucka áigi</generic>
+					<standard>Jakucka dálveáigi</standard>
+					<daylight>Jakucka geasseáigi</daylight>
+				</long>
+			</metazone>
+			<metazone type="Yekaterinburg">
+				<long>
+					<generic>Jekaterinburga áigi</generic>
+					<standard>Jekaterinburga dálveáigi</standard>
+					<daylight>Jekaterinburga geasseáigi</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength type="long">
+				<decimalFormat>
+					<pattern type="1000" count="two">0 dt</pattern>
+					<pattern type="1000" count="other">0 duháhat</pattern>
+					<pattern type="10000" count="one">00 duháhat</pattern>
+					<pattern type="10000" count="two">00 dt</pattern>
+					<pattern type="100000" count="one">000 duháhat</pattern>
+					<pattern type="100000" count="two">000 dt</pattern>
+					<pattern type="1000000" count="two">0 mn</pattern>
+					<pattern type="10000000" count="one">00 miljonat</pattern>
+					<pattern type="10000000" count="two">00 mn</pattern>
+					<pattern type="100000000" count="one">000 miljonat</pattern>
+					<pattern type="100000000" count="two">000 mn</pattern>
+					<pattern type="1000000000" count="one">0 miljárda</pattern>
+					<pattern type="1000000000" count="two">0 miljárdat</pattern>
+					<pattern type="1000000000" count="other">0 miljárdat</pattern>
+					<pattern type="10000000000" count="one">00 miljárdat</pattern>
+					<pattern type="10000000000" count="two">00 md</pattern>
+					<pattern type="10000000000" count="other">00 miljárdat</pattern>
+					<pattern type="100000000000" count="one">000 miljárdat</pattern>
+					<pattern type="100000000000" count="two">000 md</pattern>
+					<pattern type="100000000000" count="other">000 miljárdat</pattern>
+					<pattern type="1000000000000" count="one">0 biljovdna</pattern>
+					<pattern type="1000000000000" count="two">0 bn</pattern>
+					<pattern type="1000000000000" count="other">0 biljovdnat</pattern>
+					<pattern type="10000000000000" count="one">00 biljovdnat</pattern>
+					<pattern type="10000000000000" count="two">00 bn</pattern>
+					<pattern type="10000000000000" count="other">00 biljovdnat</pattern>
+					<pattern type="100000000000000" count="one">000 biljovdnat</pattern>
+					<pattern type="100000000000000" count="two">000 bn</pattern>
+					<pattern type="100000000000000" count="other">000 biljovdnat</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+	</numbers>
+</ldml>

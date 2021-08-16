@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+    <nextCatalog catalog="nextCatalog-rightAlice.xml" />
+
+    <nextCatalog catalog="nextCatalog-rightAlice.xml" />
+    <group xml:base="http://local/base/dtd/">
+        <system systemId="http://remote/dtd/sys/docBob.dtd" uri="docBobLeftSys.dtd" />
+        <public publicId="-//REMOTE//DTD BOB DOCBOB XML//EN" uri="docBobLeftPub.dtd" />
+        <uri name="http://remote/dtd/uri/docBob.dtd" uri="docBobLeftURI.dtd" />
+    </group>
+
+    <system systemId="http://remote/dtd/sys/docDuplicate.dtd" uri="docDuplicateRightSys.dtd" />
+    <public publicId="-//REMOTE//DTD DUPLICATE DOCDUPLICATE XML//EN" uri="docDuplicateRightPub.dtd" />
+    <uri name="http://remote/dtd/uri/docDuplicate.dtd" uri="docDuplicateRightURI.dtd" />
+</catalog>

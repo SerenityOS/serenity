@@ -1,0 +1,770 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="seh"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ak">akan</language>
+			<language type="am">amárico</language>
+			<language type="ar">árabe</language>
+			<language type="be">bielo-russo</language>
+			<language type="bg">búlgaro</language>
+			<language type="bn">bengali</language>
+			<language type="cs">tcheco</language>
+			<language type="de">alemão</language>
+			<language type="el">grego</language>
+			<language type="en">inglês</language>
+			<language type="es">espanhol</language>
+			<language type="fa">persa</language>
+			<language type="fr">francês</language>
+			<language type="ha">hausa</language>
+			<language type="hi">hindi</language>
+			<language type="hu">húngaro</language>
+			<language type="id">indonésio</language>
+			<language type="ig">ibo</language>
+			<language type="it">italiano</language>
+			<language type="ja">japonês</language>
+			<language type="jv">javanês</language>
+			<language type="km">cmer</language>
+			<language type="ko">coreano</language>
+			<language type="ms">malaio</language>
+			<language type="my">birmanês</language>
+			<language type="ne">nepalês</language>
+			<language type="nl">holandês</language>
+			<language type="pa">panjabi</language>
+			<language type="pl">polonês</language>
+			<language type="pt">português</language>
+			<language type="ro">romeno</language>
+			<language type="ru">russo</language>
+			<language type="rw">kinyarwanda</language>
+			<language type="seh">sena</language>
+			<language type="so">somali</language>
+			<language type="sv">sueco</language>
+			<language type="ta">tâmil</language>
+			<language type="th">tailandês</language>
+			<language type="tr">turco</language>
+			<language type="uk">ucraniano</language>
+			<language type="ur">urdu</language>
+			<language type="vi">vietnamita</language>
+			<language type="yo">iorubá</language>
+			<language type="zh">chinês</language>
+			<language type="zu">zulu</language>
+		</languages>
+		<territories>
+			<territory type="AD">Andorra</territory>
+			<territory type="AE">Emirados Árabes Unidos</territory>
+			<territory type="AF">Afeganistão</territory>
+			<territory type="AG">Antígua e Barbuda</territory>
+			<territory type="AI">Anguilla</territory>
+			<territory type="AL">Albânia</territory>
+			<territory type="AM">Armênia</territory>
+			<territory type="AO">Angola</territory>
+			<territory type="AR">Argentina</territory>
+			<territory type="AS">Samoa Americana</territory>
+			<territory type="AT">Áustria</territory>
+			<territory type="AU">Austrália</territory>
+			<territory type="AW">Aruba</territory>
+			<territory type="AZ">Azerbaijão</territory>
+			<territory type="BA">Bósnia-Herzegovina</territory>
+			<territory type="BB">Barbados</territory>
+			<territory type="BD">Bangladesh</territory>
+			<territory type="BE">Bélgica</territory>
+			<territory type="BF">Burquina Faso</territory>
+			<territory type="BG">Bulgária</territory>
+			<territory type="BH">Bahrain</territory>
+			<territory type="BI">Burundi</territory>
+			<territory type="BJ">Benin</territory>
+			<territory type="BM">Bermudas</territory>
+			<territory type="BN">Brunei</territory>
+			<territory type="BO">Bolívia</territory>
+			<territory type="BR">Brasil</territory>
+			<territory type="BS">Bahamas</territory>
+			<territory type="BT">Butão</territory>
+			<territory type="BW">Botsuana</territory>
+			<territory type="BY">Belarus</territory>
+			<territory type="BZ">Belize</territory>
+			<territory type="CA">Canadá</territory>
+			<territory type="CD">Congo-Kinshasa</territory>
+			<territory type="CF">República Centro-Africana</territory>
+			<territory type="CG">Congo</territory>
+			<territory type="CH">Suíça</territory>
+			<territory type="CI">Costa do Marfim</territory>
+			<territory type="CK">Ilhas Cook</territory>
+			<territory type="CL">Chile</territory>
+			<territory type="CM">República dos Camarões</territory>
+			<territory type="CN">China</territory>
+			<territory type="CO">Colômbia</territory>
+			<territory type="CR">Costa Rica</territory>
+			<territory type="CU">Cuba</territory>
+			<territory type="CV">Cabo Verde</territory>
+			<territory type="CY">Chipre</territory>
+			<territory type="CZ">República Tcheca</territory>
+			<territory type="DE">Alemanha</territory>
+			<territory type="DJ">Djibuti</territory>
+			<territory type="DK">Dinamarca</territory>
+			<territory type="DM">Dominica</territory>
+			<territory type="DO">República Dominicana</territory>
+			<territory type="DZ">Argélia</territory>
+			<territory type="EC">Equador</territory>
+			<territory type="EE">Estônia</territory>
+			<territory type="EG">Egito</territory>
+			<territory type="ER">Eritréia</territory>
+			<territory type="ES">Espanha</territory>
+			<territory type="ET">Etiópia</territory>
+			<territory type="FI">Finlândia</territory>
+			<territory type="FJ">Fiji</territory>
+			<territory type="FK">Ilhas Malvinas</territory>
+			<territory type="FM">Micronésia</territory>
+			<territory type="FR">França</territory>
+			<territory type="GA">Gabão</territory>
+			<territory type="GB">Reino Unido</territory>
+			<territory type="GD">Granada</territory>
+			<territory type="GE">Geórgia</territory>
+			<territory type="GF">Guiana Francesa</territory>
+			<territory type="GH">Gana</territory>
+			<territory type="GI">Gibraltar</territory>
+			<territory type="GL">Groênlandia</territory>
+			<territory type="GM">Gâmbia</territory>
+			<territory type="GN">Guiné</territory>
+			<territory type="GP">Guadalupe</territory>
+			<territory type="GQ">Guiné Equatorial</territory>
+			<territory type="GR">Grécia</territory>
+			<territory type="GT">Guatemala</territory>
+			<territory type="GU">Guam</territory>
+			<territory type="GW">Guiné Bissau</territory>
+			<territory type="GY">Guiana</territory>
+			<territory type="HN">Honduras</territory>
+			<territory type="HR">Croácia</territory>
+			<territory type="HT">Haiti</territory>
+			<territory type="HU">Hungria</territory>
+			<territory type="ID">Indonésia</territory>
+			<territory type="IE">Irlanda</territory>
+			<territory type="IL">Israel</territory>
+			<territory type="IN">Índia</territory>
+			<territory type="IO">Território Britânico do Oceano Índico</territory>
+			<territory type="IQ">Iraque</territory>
+			<territory type="IR">Irã</territory>
+			<territory type="IS">Islândia</territory>
+			<territory type="IT">Itália</territory>
+			<territory type="JM">Jamaica</territory>
+			<territory type="JO">Jordânia</territory>
+			<territory type="JP">Japão</territory>
+			<territory type="KE">Quênia</territory>
+			<territory type="KG">Quirguistão</territory>
+			<territory type="KH">Camboja</territory>
+			<territory type="KI">Quiribati</territory>
+			<territory type="KM">Comores</territory>
+			<territory type="KN">São Cristovão e Nevis</territory>
+			<territory type="KP">Coréia do Norte</territory>
+			<territory type="KR">Coréia do Sul</territory>
+			<territory type="KW">Kuwait</territory>
+			<territory type="KY">Ilhas Caiman</territory>
+			<territory type="KZ">Casaquistão</territory>
+			<territory type="LA">Laos</territory>
+			<territory type="LB">Líbano</territory>
+			<territory type="LC">Santa Lúcia</territory>
+			<territory type="LI">Liechtenstein</territory>
+			<territory type="LK">Sri Lanka</territory>
+			<territory type="LR">Libéria</territory>
+			<territory type="LS">Lesoto</territory>
+			<territory type="LT">Lituânia</territory>
+			<territory type="LU">Luxemburgo</territory>
+			<territory type="LV">Letônia</territory>
+			<territory type="LY">Líbia</territory>
+			<territory type="MA">Marrocos</territory>
+			<territory type="MC">Mônaco</territory>
+			<territory type="MD">Moldávia</territory>
+			<territory type="MG">Madagascar</territory>
+			<territory type="MH">Ilhas Marshall</territory>
+			<territory type="ML">Mali</territory>
+			<territory type="MM">Mianmar</territory>
+			<territory type="MN">Mongólia</territory>
+			<territory type="MP">Ilhas Marianas do Norte</territory>
+			<territory type="MQ">Martinica</territory>
+			<territory type="MR">Mauritânia</territory>
+			<territory type="MS">Montserrat</territory>
+			<territory type="MT">Malta</territory>
+			<territory type="MU">Maurício</territory>
+			<territory type="MV">Maldivas</territory>
+			<territory type="MW">Malawi</territory>
+			<territory type="MX">México</territory>
+			<territory type="MY">Malásia</territory>
+			<territory type="MZ">Moçambique</territory>
+			<territory type="NA">Namíbia</territory>
+			<territory type="NC">Nova Caledônia</territory>
+			<territory type="NE">Níger</territory>
+			<territory type="NF">Ilhas Norfolk</territory>
+			<territory type="NG">Nigéria</territory>
+			<territory type="NI">Nicarágua</territory>
+			<territory type="NL">Holanda</territory>
+			<territory type="NO">Noruega</territory>
+			<territory type="NP">Nepal</territory>
+			<territory type="NR">Nauru</territory>
+			<territory type="NU">Niue</territory>
+			<territory type="NZ">Nova Zelândia</territory>
+			<territory type="OM">Omã</territory>
+			<territory type="PA">Panamá</territory>
+			<territory type="PE">Peru</territory>
+			<territory type="PF">Polinésia Francesa</territory>
+			<territory type="PG">Papua-Nova Guiné</territory>
+			<territory type="PH">Filipinas</territory>
+			<territory type="PK">Paquistão</territory>
+			<territory type="PL">Polônia</territory>
+			<territory type="PM">Saint Pierre e Miquelon</territory>
+			<territory type="PN">Pitcairn</territory>
+			<territory type="PR">Porto Rico</territory>
+			<territory type="PS">Território da Palestina</territory>
+			<territory type="PT">Portugal</territory>
+			<territory type="PW">Palau</territory>
+			<territory type="PY">Paraguai</territory>
+			<territory type="QA">Catar</territory>
+			<territory type="RE">Reunião</territory>
+			<territory type="RO">Romênia</territory>
+			<territory type="RU">Rússia</territory>
+			<territory type="RW">Ruanda</territory>
+			<territory type="SA">Arábia Saudita</territory>
+			<territory type="SB">Ilhas Salomão</territory>
+			<territory type="SC">Seychelles</territory>
+			<territory type="SD">Sudão</territory>
+			<territory type="SE">Suécia</territory>
+			<territory type="SG">Cingapura</territory>
+			<territory type="SH">Santa Helena</territory>
+			<territory type="SI">Eslovênia</territory>
+			<territory type="SK">Eslováquia</territory>
+			<territory type="SL">Serra Leoa</territory>
+			<territory type="SM">San Marino</territory>
+			<territory type="SN">Senegal</territory>
+			<territory type="SO">Somália</territory>
+			<territory type="SR">Suriname</territory>
+			<territory type="ST">São Tomé e Príncipe</territory>
+			<territory type="SV">El Salvador</territory>
+			<territory type="SY">Síria</territory>
+			<territory type="SZ">Suazilândia</territory>
+			<territory type="TC">Ilhas Turks e Caicos</territory>
+			<territory type="TD">Chade</territory>
+			<territory type="TG">Togo</territory>
+			<territory type="TH">Tailândia</territory>
+			<territory type="TJ">Tadjiquistão</territory>
+			<territory type="TK">Tokelau</territory>
+			<territory type="TL">Timor Leste</territory>
+			<territory type="TM">Turcomenistão</territory>
+			<territory type="TN">Tunísia</territory>
+			<territory type="TO">Tonga</territory>
+			<territory type="TR">Turquia</territory>
+			<territory type="TT">Trinidad e Tobago</territory>
+			<territory type="TV">Tuvalu</territory>
+			<territory type="TW">Taiwan</territory>
+			<territory type="UA">Ucrânia</territory>
+			<territory type="UG">Uganda</territory>
+			<territory type="US">Estados Unidos</territory>
+			<territory type="UY">Uruguai</territory>
+			<territory type="UZ">Uzbequistão</territory>
+			<territory type="VA">Vaticano</territory>
+			<territory type="VC">São Vicente e Granadinas</territory>
+			<territory type="VE">Venezuela</territory>
+			<territory type="VG">Ilhas Virgens Britânicas</territory>
+			<territory type="VI">Ilhas Virgens dos EUA</territory>
+			<territory type="VN">Vietnã</territory>
+			<territory type="VU">Vanuatu</territory>
+			<territory type="WF">Wallis e Futuna</territory>
+			<territory type="WS">Samoa</territory>
+			<territory type="YE">Iêmen</territory>
+			<territory type="YT">Mayotte</territory>
+			<territory type="ZA">África do Sul</territory>
+			<territory type="ZM">Zâmbia</territory>
+			<territory type="ZW">Zimbábue</territory>
+		</territories>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a á à â ã b c ç d e é ê f g h i í j k l m n o ó ò ô õ p q r s t u ú v w x y z]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart>“</quotationStart>
+		<quotationEnd>”</quotationEnd>
+		<alternateQuotationStart>‘</alternateQuotationStart>
+		<alternateQuotationEnd>’</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d 'de' MMMM 'de' y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d 'de' MMMM 'de' y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d 'de' MMM 'de' y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d/M/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="HHmm">HH:mm</dateFormatItem>
+						<dateFormatItem id="HHmmss">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="Hm">H:mm</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">E, dd/MM</dateFormatItem>
+						<dateFormatItem id="MMdd">dd/MM</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, d MMM</dateFormatItem>
+						<dateFormatItem id="MMMMd">d MMMM</dateFormatItem>
+						<dateFormatItem id="MMMMEd">E, d MMMM</dateFormatItem>
+						<dateFormatItem id="mmss">mm:ss</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">MM/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, dd/MM/y</dateFormatItem>
+						<dateFormatItem id="yMM">MM/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM 'de' y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d 'de' MMM 'de' y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, d 'de' MMM 'de' y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM 'de' y</dateFormatItem>
+						<dateFormatItem id="yQQQ">y QQQ</dateFormatItem>
+						<dateFormatItem id="yQQQQ">y QQQQ</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">Jan</month>
+							<month type="2">Fev</month>
+							<month type="3">Mar</month>
+							<month type="4">Abr</month>
+							<month type="5">Mai</month>
+							<month type="6">Jun</month>
+							<month type="7">Jul</month>
+							<month type="8">Aug</month>
+							<month type="9">Set</month>
+							<month type="10">Otu</month>
+							<month type="11">Nov</month>
+							<month type="12">Dec</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Janeiro</month>
+							<month type="2">Fevreiro</month>
+							<month type="3">Marco</month>
+							<month type="4">Abril</month>
+							<month type="5">Maio</month>
+							<month type="6">Junho</month>
+							<month type="7">Julho</month>
+							<month type="8">Augusto</month>
+							<month type="9">Setembro</month>
+							<month type="10">Otubro</month>
+							<month type="11">Novembro</month>
+							<month type="12">Decembro</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="narrow">
+							<month type="1">J</month>
+							<month type="2">F</month>
+							<month type="3">M</month>
+							<month type="4">A</month>
+							<month type="5">M</month>
+							<month type="6">J</month>
+							<month type="7">J</month>
+							<month type="8">A</month>
+							<month type="9">S</month>
+							<month type="10">O</month>
+							<month type="11">N</month>
+							<month type="12">D</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Dim</day>
+							<day type="mon">Pos</day>
+							<day type="tue">Pir</day>
+							<day type="wed">Tat</day>
+							<day type="thu">Nai</day>
+							<day type="fri">Sha</day>
+							<day type="sat">Sab</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Dimingu</day>
+							<day type="mon">Chiposi</day>
+							<day type="tue">Chipiri</day>
+							<day type="wed">Chitatu</day>
+							<day type="thu">Chinai</day>
+							<day type="fri">Chishanu</day>
+							<day type="sat">Sabudu</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="narrow">
+							<day type="sun">D</day>
+							<day type="mon">P</day>
+							<day type="tue">C</day>
+							<day type="wed">T</day>
+							<day type="thu">N</day>
+							<day type="fri">S</day>
+							<day type="sat">S</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<eras>
+					<eraNames>
+						<era type="0">Antes de Cristo</era>
+						<era type="1">Anno Domini</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">AC</era>
+						<era type="1">AD</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d 'de' MMMM 'de' y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d 'de' MMMM 'de' y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d 'de' MMM 'de' y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d/M/y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="HHmm">HH:mm</dateFormatItem>
+						<dateFormatItem id="HHmmss">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="Hm">H:mm</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">E, dd/MM</dateFormatItem>
+						<dateFormatItem id="MMdd">dd/MM</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, d MMM</dateFormatItem>
+						<dateFormatItem id="MMMMd">d MMMM</dateFormatItem>
+						<dateFormatItem id="MMMMEd">E, d MMMM</dateFormatItem>
+						<dateFormatItem id="mmss">mm:ss</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">MM/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, dd/MM/y</dateFormatItem>
+						<dateFormatItem id="yMM">MM/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM 'de' y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d 'de' MMM 'de' y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, d 'de' MMM 'de' y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM 'de' y</dateFormatItem>
+						<dateFormatItem id="yQQQ">y QQQ</dateFormatItem>
+						<dateFormatItem id="yQQQQ">y QQQQ</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="year">
+				<displayName>Chaka</displayName>
+			</field>
+			<field type="month">
+				<displayName>Mwezi</displayName>
+			</field>
+			<field type="day">
+				<displayName>Ntsiku</displayName>
+				<relative type="-1">Zuro</relative>
+				<relative type="0">Lero</relative>
+				<relative type="1">Manguana</relative>
+			</field>
+			<field type="hour">
+				<displayName>Hora</displayName>
+			</field>
+			<field type="minute">
+				<displayName>Minuto</displayName>
+			</field>
+			<field type="second">
+				<displayName>Segundo</displayName>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group>.</group>
+		</symbols>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>#,##0.00¤</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="one" draft="provisional">0K¤</pattern>
+					<pattern type="1000" count="other" draft="provisional">0K¤</pattern>
+					<pattern type="10000" count="one" draft="provisional">00K¤</pattern>
+					<pattern type="10000" count="other" draft="provisional">00K¤</pattern>
+					<pattern type="100000" count="one" draft="provisional">000K¤</pattern>
+					<pattern type="100000" count="other" draft="provisional">000K¤</pattern>
+					<pattern type="1000000" count="one" draft="provisional">0M¤</pattern>
+					<pattern type="1000000" count="other" draft="provisional">0M¤</pattern>
+					<pattern type="10000000" count="one" draft="provisional">00M¤</pattern>
+					<pattern type="10000000" count="other" draft="provisional">00M¤</pattern>
+					<pattern type="100000000" count="one" draft="provisional">000M¤</pattern>
+					<pattern type="100000000" count="other" draft="provisional">000M¤</pattern>
+					<pattern type="1000000000" count="one" draft="provisional">0G¤</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">0G¤</pattern>
+					<pattern type="10000000000" count="one" draft="provisional">00G¤</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">00G¤</pattern>
+					<pattern type="100000000000" count="one" draft="provisional">000G¤</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">000G¤</pattern>
+					<pattern type="1000000000000" count="one" draft="provisional">0T¤</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">0T¤</pattern>
+					<pattern type="10000000000000" count="one" draft="provisional">00T¤</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">00T¤</pattern>
+					<pattern type="100000000000000" count="one" draft="provisional">000T¤</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">000T¤</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="AED">
+				<displayName>Dirém dos Emirados Árabes Unidos</displayName>
+			</currency>
+			<currency type="AOA">
+				<displayName>Cuanza angolano</displayName>
+			</currency>
+			<currency type="AUD">
+				<displayName>Dólar australiano</displayName>
+			</currency>
+			<currency type="BHD">
+				<displayName>Dinar bareinita</displayName>
+			</currency>
+			<currency type="BIF">
+				<displayName>Franco do Burundi</displayName>
+			</currency>
+			<currency type="BWP">
+				<displayName>Pula botsuanesa</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName>Dólar canadense</displayName>
+			</currency>
+			<currency type="CDF">
+				<displayName>Franco congolês</displayName>
+			</currency>
+			<currency type="CHF">
+				<displayName>Franco suíço</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>Yuan Renminbi chinês</displayName>
+			</currency>
+			<currency type="CVE">
+				<displayName>Escudo cabo-verdiano</displayName>
+			</currency>
+			<currency type="DJF">
+				<displayName>Franco do Djibuti</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName>Dinar argelino</displayName>
+			</currency>
+			<currency type="EGP">
+				<displayName>Libra egípcia</displayName>
+			</currency>
+			<currency type="ERN">
+				<displayName>Nakfa da Eritréia</displayName>
+			</currency>
+			<currency type="ETB">
+				<displayName>Birr etíope</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>Euro</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>Libra britânica</displayName>
+			</currency>
+			<currency type="GHC">
+				<displayName>Cedi de Gana (1979–2007)</displayName>
+			</currency>
+			<currency type="GMD">
+				<displayName>Dalasi de Gâmbia</displayName>
+			</currency>
+			<currency type="GNS">
+				<displayName>Syli da Guiné</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName>Rúpia indiana</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>Iene japonês</displayName>
+			</currency>
+			<currency type="KES">
+				<displayName>Xelim queniano</displayName>
+			</currency>
+			<currency type="KMF">
+				<displayName>Franco de Comores</displayName>
+			</currency>
+			<currency type="LRD">
+				<displayName>Dólar liberiano</displayName>
+			</currency>
+			<currency type="LSL">
+				<displayName>Loti do Lesoto</displayName>
+			</currency>
+			<currency type="LYD">
+				<displayName>Dinar líbio</displayName>
+			</currency>
+			<currency type="MAD">
+				<displayName>Dirém marroquino</displayName>
+			</currency>
+			<currency type="MGA">
+				<displayName>Franco de Madagascar</displayName>
+			</currency>
+			<currency type="MRO">
+				<displayName>Ouguiya da Mauritânia (1973–2017)</displayName>
+			</currency>
+			<currency type="MRU">
+				<displayName>Ouguiya da Mauritânia</displayName>
+			</currency>
+			<currency type="MUR">
+				<displayName>Rupia de Maurício</displayName>
+			</currency>
+			<currency type="MWK">
+				<displayName>Cuacha do Maláui</displayName>
+			</currency>
+			<currency type="MZM">
+				<displayName>Metical antigo de Moçambique</displayName>
+			</currency>
+			<currency type="MZN">
+				<displayName>Metical de Moçambique</displayName>
+				<symbol>MTn</symbol>
+			</currency>
+			<currency type="NAD">
+				<displayName>Dólar da Namíbia</displayName>
+			</currency>
+			<currency type="NGN">
+				<displayName>Naira nigeriana</displayName>
+			</currency>
+			<currency type="RWF">
+				<displayName>Franco ruandês</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName>Rial saudita</displayName>
+			</currency>
+			<currency type="SCR">
+				<displayName>Rupia das Seychelles</displayName>
+			</currency>
+			<currency type="SDG">
+				<displayName>Dinar sudanês</displayName>
+			</currency>
+			<currency type="SDP">
+				<displayName>Libra sudanesa antiga</displayName>
+			</currency>
+			<currency type="SHP">
+				<displayName>Libra de Santa Helena</displayName>
+			</currency>
+			<currency type="SLL">
+				<displayName>Leone de Serra Leoa</displayName>
+			</currency>
+			<currency type="SOS">
+				<displayName>Xelim somali</displayName>
+			</currency>
+			<currency type="STD">
+				<displayName>Dobra de São Tomé e Príncipe (1977–2017)</displayName>
+			</currency>
+			<currency type="STN">
+				<displayName>Dobra de São Tomé e Príncipe</displayName>
+			</currency>
+			<currency type="SZL">
+				<displayName>Lilangeni da Suazilândia</displayName>
+			</currency>
+			<currency type="TND">
+				<displayName>Dinar tunisiano</displayName>
+			</currency>
+			<currency type="TZS">
+				<displayName>Xelim da Tanzânia</displayName>
+			</currency>
+			<currency type="UGX">
+				<displayName>Xelim ugandense (1966–1987)</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>Dólar norte-americano</displayName>
+			</currency>
+			<currency type="XAF">
+				<displayName>Franco CFA BEAC</displayName>
+			</currency>
+			<currency type="XOF">
+				<displayName>Franco CFA BCEAO</displayName>
+			</currency>
+			<currency type="ZAR">
+				<displayName>Rand sul-africano</displayName>
+			</currency>
+			<currency type="ZMK">
+				<displayName>Cuacha zambiano (1968–2012)</displayName>
+			</currency>
+			<currency type="ZMW">
+				<displayName>Cuacha zambiano</displayName>
+			</currency>
+			<currency type="ZWD">
+				<displayName>Dólar do Zimbábue</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<posix>
+		<messages>
+			<yesstr>Ande:A</yesstr>
+			<nostr>Nkhabe:N</nostr>
+		</messages>
+	</posix>
+</ldml>

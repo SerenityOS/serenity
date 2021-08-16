@@ -1,0 +1,5 @@
+Neg10.java:15:12: compiler.warn.override.unchecked.thrown: (compiler.misc.cant.implement: m(), Neg10.C1, m(), Neg10.I), java.lang.Exception
+Neg10.java:18:21: compiler.warn.override.unchecked.thrown: (compiler.misc.cant.implement: m(), Neg10.C3, m(), Neg10.I), java.lang.Exception
+- compiler.err.warnings.and.werror
+1 error
+2 warnings

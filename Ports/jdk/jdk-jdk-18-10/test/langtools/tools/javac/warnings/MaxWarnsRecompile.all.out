@@ -1,0 +1,5 @@
+MaxWarnsRecompile.java:11:3: compiler.warn.raw.class.use: java.util.List, java.util.List<E>
+MaxWarnsRecompile.java:12:3: compiler.warn.raw.class.use: java.util.List, java.util.List<E>
+MaxWarnsRecompile.java:13:3: compiler.warn.raw.class.use: java.util.List, java.util.List<E>
+MaxWarnsRecompile.java:14:3: compiler.warn.raw.class.use: java.util.List, java.util.List<E>
+4 warnings

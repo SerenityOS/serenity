@@ -1,0 +1,2 @@
+T6638712c.java:16:9: compiler.err.cant.apply.symbol: kindname.method, sort, T[],java.util.Comparator<? super T>, java.lang.Enum[],java.util.Comparator<java.lang.Enum<?>>, kindname.class, T6638712c, (compiler.misc.infer.no.conforming.assignment.exists: T, (compiler.misc.inconvertible.types: java.util.Comparator<java.lang.Enum<?>>, java.util.Comparator<? super java.lang.Enum>))
+1 error

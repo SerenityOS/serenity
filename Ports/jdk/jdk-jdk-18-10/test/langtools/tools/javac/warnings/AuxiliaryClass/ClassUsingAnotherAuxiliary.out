@@ -1,0 +1,4 @@
+ClassUsingAnotherAuxiliary.java:10:5: compiler.warn.auxiliary.class.accessed.from.outside.of.its.source.file: AnAuxiliaryClass, NotAClassName.java
+- compiler.err.warnings.and.werror
+1 error
+1 warning

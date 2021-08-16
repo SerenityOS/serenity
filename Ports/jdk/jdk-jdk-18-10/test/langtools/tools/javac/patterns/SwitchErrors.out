@@ -1,0 +1,53 @@
+SwitchErrors.java:10:18: compiler.err.constant.label.not.compatible: java.lang.String, java.lang.Object
+SwitchErrors.java:16:18: compiler.err.constant.label.not.compatible: int, java.lang.Object
+SwitchErrors.java:22:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Integer)
+SwitchErrors.java:23:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Integer, java.lang.CharSequence)
+SwitchErrors.java:28:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: compiler.misc.type.null, int)
+SwitchErrors.java:29:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.String, int)
+SwitchErrors.java:30:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: int, java.lang.CharSequence)
+SwitchErrors.java:36:20: compiler.err.total.pattern.and.default
+SwitchErrors.java:42:18: compiler.err.pattern.dominated
+SwitchErrors.java:42:24: compiler.err.total.pattern.and.default
+SwitchErrors.java:48:18: compiler.err.total.pattern.and.default
+SwitchErrors.java:54:18: compiler.err.duplicate.total.pattern
+SwitchErrors.java:60:20: compiler.err.duplicate.default.label
+SwitchErrors.java:66:20: compiler.err.duplicate.default.label
+SwitchErrors.java:71:27: compiler.err.duplicate.default.label
+SwitchErrors.java:77:18: compiler.err.duplicate.case.label
+SwitchErrors.java:82:24: compiler.err.duplicate.case.label
+SwitchErrors.java:87:28: compiler.err.flows.through.to.pattern
+SwitchErrors.java:93:18: compiler.err.flows.through.to.pattern
+SwitchErrors.java:100:18: compiler.err.flows.through.to.pattern
+SwitchErrors.java:107:18: compiler.err.flows.through.to.pattern
+SwitchErrors.java:112:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Integer)
+SwitchErrors.java:118:18: compiler.err.instanceof.reifiable.not.safe: java.util.List, java.util.List<java.lang.Integer>
+SwitchErrors.java:124:18: compiler.err.cant.resolve.location: kindname.class, Undefined, , , (compiler.misc.location: kindname.class, SwitchErrors, null)
+SwitchErrors.java:131:18: compiler.err.type.found.req: int, (compiler.misc.type.req.class.array)
+SwitchErrors.java:137:28: compiler.err.flows.through.from.pattern
+SwitchErrors.java:143:18: compiler.err.flows.through.from.pattern
+SwitchErrors.java:148:27: compiler.err.flows.through.to.pattern
+SwitchErrors.java:154:18: compiler.err.flows.through.to.pattern
+SwitchErrors.java:160:18: compiler.err.pattern.dominated
+SwitchErrors.java:172:18: compiler.err.pattern.expected
+SwitchErrors.java:178:76: compiler.err.cant.resolve.location: kindname.variable, n, , , (compiler.misc.location: kindname.class, SwitchErrors, null)
+SwitchErrors.java:184:71: compiler.err.cant.resolve.location: kindname.variable, n, , , (compiler.misc.location: kindname.class, SwitchErrors, null)
+SwitchErrors.java:191:42: compiler.err.flows.through.from.pattern
+SwitchErrors.java:200:24: compiler.err.flows.through.to.pattern
+SwitchErrors.java:209:29: compiler.err.total.pattern.and.default
+SwitchErrors.java:216:42: compiler.err.flows.through.from.pattern
+SwitchErrors.java:216:45: compiler.err.flows.through.from.pattern
+SwitchErrors.java:9:9: compiler.err.not.exhaustive.statement
+SwitchErrors.java:15:9: compiler.err.not.exhaustive.statement
+SwitchErrors.java:21:9: compiler.err.not.exhaustive.statement
+SwitchErrors.java:27:9: compiler.err.not.exhaustive.statement
+SwitchErrors.java:75:9: compiler.err.not.exhaustive.statement
+SwitchErrors.java:81:9: compiler.err.not.exhaustive.statement
+SwitchErrors.java:86:9: compiler.err.not.exhaustive.statement
+SwitchErrors.java:91:9: compiler.err.not.exhaustive.statement
+SwitchErrors.java:97:9: compiler.err.not.exhaustive.statement
+SwitchErrors.java:104:9: compiler.err.not.exhaustive.statement
+SwitchErrors.java:164:9: compiler.err.not.exhaustive.statement
+SwitchErrors.java:221:9: compiler.err.not.exhaustive.statement
+- compiler.note.preview.filename: SwitchErrors.java, DEFAULT
+- compiler.note.preview.recompile
+50 errors

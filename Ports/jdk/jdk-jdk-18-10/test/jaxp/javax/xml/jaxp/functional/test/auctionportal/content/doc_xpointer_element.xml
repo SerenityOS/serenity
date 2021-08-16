@@ -1,0 +1,5 @@
+<?xml version='1.0'?>
+<document xmlns:xi="http://www.w3.org/2001/XInclude">
+	<p>The following is the source of the "tasks.xml" resource:</p>
+	<example><xi:include href="tasks.xml" xpointer="element(/1/2/1)" parse="xml"/></example>
+</document>

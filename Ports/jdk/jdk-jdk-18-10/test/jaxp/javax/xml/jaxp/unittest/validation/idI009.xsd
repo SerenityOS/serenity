@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xpns="xpns.org" xmlns:xpns1="xpns1.org" xmlns:xpns2="xpns2.org" xmlns:imp="importNS">
+	<xsd:import namespace="importNS" schemaLocation="idIimp.xsd"/>
+	<xsd:import namespace="xpns.org" schemaLocation="idIxpns.xsd"/>
+	<xsd:import namespace="xpns1.org" schemaLocation="idIxpns1.xsd"/>
+	<xsd:element name="root">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="tid" maxOccurs="unbounded"/>
+				<xsd:element ref="imp:iid" maxOccurs="unbounded"/>
+				<xsd:element ref="imp:iid1" maxOccurs="unbounded"/>
+				<xsd:element ref="xpns:xiid" maxOccurs="unbounded"/>
+				<xsd:element ref="xpns1:xiid" maxOccurs="unbounded"/>
+			</xsd:sequence>
+			<xsd:attribute name="val" type="xsd:string"/>
+		</xsd:complexType>
+		<xsd:unique id="foo123" name="uid">
+			<xsd:selector xpath="child::imp:iid"/>
+			<xsd:field xpath="@val"/>
+		</xsd:unique>
+	</xsd:element>
+	<xsd:element name="tid">
+		<xsd:complexType>
+			<xsd:attribute name="val" type="xsd:string"/>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

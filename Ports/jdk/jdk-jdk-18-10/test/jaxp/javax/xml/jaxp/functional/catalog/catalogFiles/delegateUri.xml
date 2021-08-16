@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+    <delegateURI uriStartString="http://remote/dtd/alice/" catalog="delegateUri-alice.xml" />
+
+    <delegateURI uriStartString="http://remote/dtd/" catalog="delegateUri-bobDummy.xml" />
+    <delegateURI uriStartString="http://remote/dtd/bob/" catalog="delegateUri-bob.xml" />
+
+    <delegateURI uriStartString="http://remote/dtd/carl/" catalog="delegateUri-carl.xml" />
+    <delegateURI uriStartString="http://remote/dtd/carl/" catalog="delegateUri-carlDummy.xml" />
+
+    <delegateURI uriStartString="http://remote/dtd/david/" catalog="delegateUri-davidDummy.xml" />
+</catalog>

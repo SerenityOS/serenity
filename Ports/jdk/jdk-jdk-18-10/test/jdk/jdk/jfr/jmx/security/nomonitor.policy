@@ -1,0 +1,11 @@
+// Removed security "ManagementPermission monitor". Should cause SecurityExceptions.
+
+grant {
+
+permission java.lang.management.ManagementPermission "control";
+// Removed permission: permission java.lang.management.ManagementPermission "monitor";
+
+permission javax.management.MBeanServerPermission "createMBeanServer";
+permission "javax.management.MBeanPermission" "jdk.management.jfr.FlightRecorderMXBeanImpl#Recordings[jdk.jfr:type=FlightRecorder]", "getAttribute";
+
+};

@@ -1,0 +1,5 @@
++MaxFDLimit
+-AlwaysPreTouch
+MinHeapFreeRatio=3
+MaxHeapFreeRatio=89
+NewRatio=5

@@ -1,0 +1,124 @@
+Copyright (c) 2014, 2021, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+Here are tests that were developed for "G1 support for long running applications" feature. In effect,
+ here is only one test with a lot of configurations.
+
+Feature description:
+  G1 used to unload classes only during full collections. Goal of feature is to unload unused classes
+ without resorting to full gc.
+
+What does test checks:
+  - that unreferenced classloader will be collected without full gc. This is checked with WhiteBox.is
+ClassAlive method.
+  - that referenced classloader will live. This is checked with WhiteBox.isClassAlive method as well.
+ Also it is checked that classloader will be finalized and enqueued to queue of phantom references.
+
+In what aspects/circumstances checks performed:
+  - classloaders that we expect to be collected can be comlpetely unreferenced, referenced with phant
+om reference and with weak reference. Test can check that presence of phantom/weak reference doesn't
+keep classloader alive.
+      Test has flag "-referenceMode" that has valid options:
+          "phantom" for phantom reference,
+          "weak" for weak reference and
+          "none" for not keeping reference at all.
+  - to avoid class unloading we can keep reference to classloader itself, class or object.
+      This behavior can be adjusted with flag "-keep" that has valid options:
+          "classloader",
+          "class" and
+          "object".
+  - according to test plan several ways of classloading are covered.
+      This behavior is adjusted with "classloadingMethod" flag that has valid options
+          "plain",
+          "reflection",
+          "jni",
+          "hidden_classloader".
+  - classloaders that we expect to live can be referenced in several ways.
+      This behavior can be adjusted with flag "-keepRefMode" that has valid options:
+	  "strong_reference" for starighforward keeping strong reference,
+	  "static_field" for keeping reference in static field of alive class,
+	  "stack_local" for keeping reference in local variable of running thread,
+	  "thread_field" for keeping reference in field of running thread's object,
+	  "thread_itself" if we want object to be a running thread itself,
+	  "static_field_of_root_class". In this case reference will be kept in static field of class that wa
+s loaded by null classloader.
+	  "jni_global_ref". In this case global reference will be kept in native library.
+	  "jni_local_ref", In this case local reference will be kept in JNI call in running thread.
+  - Another aspect is that class can be humongous.
+      Humongous classes can be enabled with "-humongousClass" command line option. Valid options are
+"true" and "false".
+  - Another aspect that is covered with tests is that class methods can be compiled by JIT compiler.
+      This behavior can be adjusted with "-compilationLevel" and "-compilationNumber" options. First
+one has self-explaining name, latter sets number of optimization/deoptimozation of each class.
+  - Next aspect is class redefinition.
+      You can enable classes redefinition with "-redefineClasses" flag. Valid options are "true" and
+"false".
+
+Test implementation details:
+  Test supposed to be ran with G1 gc and -XX:+ExplicitGCProvokesConcurrent option. In the end of exec
+ution test checks if full gc happened. If this is the case the test throws descriptive exception and
+fails.
+
+Test guts design:
+  Test in loop performs the following until time is over (timelimit is set up with "-stressTime" opti
+on):
+	- loads class that gonna live or gonna be unloaded. Decision depends upon Random.nextBoolean().
+	- previous action produces collection of Assertions (what assertion is is explained a little bit lat
+er). Assertions are saved into AssertionContainer.
+	- takes from AssertionContainer assertions that are already mature for check and performs checks. "M
+ature" means that required number of System.gc() calls happened since assertion was created.
+
+What "Assertion" is:
+ Assertion incapsulates check that concrete class will be alive or dead. Hazard is that we can't perf
+orm check just after we removed last reference to classloader. We have to wait some number of concurr
+ent-mark-cycles, i.e. System.gc() calls. For this reason we put each assertion in AssertionContainer
+and get back much later, when it's ready for check.
+ Classes of assertions form the following simple hierarchy:
+
+                              gc.g1.unloading.check.Assertion
+                              ||             ||            ||
+                              \/             ||            \/
+  gc.g1.unloading.check.FinalizedAssertion   ||           gc.g1.unloading.check.PhantomizedAssertion
+                                             \/
+                        gc.g1.unloading.check.ClassAssertion
+
+FinalizedAssertion checks that unreferenced classloader will be finalized.
+PhantomizedAssertion checks that phantom reference to classloader will be enqueued to ReferenceQueue.
+ClassAssertion checks that class will be dead or alive using WhiteBox.isClassAlive method.
+
+Other implemention notes:
+  There are some other auxiliary threads, but they are not crucial for understanding the logic.
+  There are a lot of configurations of the same test in testlist. All configurations use the same mai
+n method as entry point, but impose different test flags. Configurations are autogenerated with "gene
+rate.sh" script.
+
+Other test options:
+	-DFailTestIfNothingChecked=true. (vm flag) Set this if you want test to fail if nothing was checked
+and test appeared to be useless. It can happen, for example, in slow modes that force compilation.
+	-numberOfChecksLimit. (test flag) Set this number if you want test to pass after certain number of c
+hecks performed. (Not to waste time.) To some extent this turns stress test into functional test.
+	-numberOfGCsBeforeCheck. (test flag) This option sets number of System.gc() calls that have to be do
+ne before each assertion will be ready to perform checks.
+	-inMemoryCompilation. (test flag) This option defines the way of classes creation. If this is true t
+hen classes are compiled with javac API. If false - classes are produced by rewriting classname in "g
+olden" bytecode.
+
+

@@ -1,0 +1,2 @@
+T8141343.java:22:45: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Exception&T8141343.Foo<? extends java.lang.Exception&T8141343.Foo<?>>, T8141343.Foo<java.lang.Integer>)
+1 error

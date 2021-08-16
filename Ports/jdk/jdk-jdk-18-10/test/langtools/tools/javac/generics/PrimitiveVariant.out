@@ -1,0 +1,3 @@
+PrimitiveVariant.java:20:1: compiler.err.does.not.override.abstract: PrimitiveVariant.Main, m(), PrimitiveVariant.I
+PrimitiveVariant.java:21:18: compiler.err.override.incompatible.ret: (compiler.misc.cant.implement: m(), PrimitiveVariant.Main, m(), PrimitiveVariant.I), short, double
+2 errors

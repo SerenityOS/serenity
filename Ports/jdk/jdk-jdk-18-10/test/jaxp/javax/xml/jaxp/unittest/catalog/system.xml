@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE  catalogtest  PUBLIC  "-//OPENJDK//XML CATALOG DTD SYSTEM//1.0"  
+     "http://openjdk_java_net/xml/catalog/dtd/system.dtd">
+     
+<catalogtest>Test &system; entry</catalogtest>

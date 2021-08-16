@@ -1,0 +1,128 @@
+Copyright (c) 2003, 2020, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+---------------------------------------------------------------------------------
+
+This directory contains source files of NSK tests framework
+shared between all NSK tests.
+
+Files located directly in this directory provide general support
+for all tests.
+
+Files in the subdirectories provide specific support for tests of
+particular subsuites.
+
+---------------------------------------------------------------------------------
+
+Short description of files:
+
+    common exceptions:
+        Failure,java, TestBug.java, Oddity.java
+    common constants:
+        Consts.java
+    parsing command line arguments:
+        ArgumentPareser.java
+    output of errors and messages:
+        Log.java
+    process running:
+        LocalProcess.java, IORedirector.java
+    class loading/unloading:
+        DummyClassLoader.java, ZipClassLoader.java,
+        CustomClassLoader.java, ClassUnloder.java
+    objects finalization:
+        Finalizable.java, FinalizableObject.java, Finalizer.java
+    threads synchronization:
+        Wicket.java
+    text processing:
+        Grep.java, Paragrep.java
+    timeouts handling:
+        Terminator.java, TimeoutHandler.java
+    tree structures support:
+        Denotation.java, TreeNodesDenotation.java
+    RAS mode support:
+        RASagent.java, JVMTIagent.c
+    JVMDI tests support:
+        JVMDITools.h, JVMDITools.c
+
+Short description of subdirectories:
+
+    Alien       - support for accessing external tests (JCK)
+    native      - support for native part of NSK tests
+    jni         - support for JNI tests and accessing JNI API
+    jvmti       - support for JVMTI tests and accessing JVMTI API
+    jpda        - support for two-VMs JPDA tests
+    jdwp        - support for JDWP tests and accessing JDWP API
+    jdi         - support for JDI tests and accesing JDI API
+    jdb         - support for JDB tests and accessing JDB tool
+    monitoring  - support for monitoring tests and accessing Java Monitoring&Management API
+    sysdict     - support for System Dictionary tests
+    gc          - support for GC tests
+    regression  - support for regression tests for known bugs
+    split_verifier - support for Split Verifier tests
+
+For more detailed description see README files in subdirectories.
+
+---------------------------------------------------------------------------------
+
+Naming conventions
+
+Classes:
+
+    All shared classes are groupped into packages to prevent
+    name collision.
+
+    All classes exported directly from this directory are
+    of package:
+
+        nsk.share
+
+    All classes exported from subdirectories are of particular
+    subpackage, e.g.:
+
+        nsk.share.jpda
+        nsk.share.jdwp
+        nsk.share.jdi
+        nsk.share.jdb
+        nsk.share.sysdict
+
+Native functions and macroses:
+
+    Most native functions have special prefix to prevent linking collisions.
+    Most macroses also have special prefix and are wrote in upper register.
+
+    Here is typical naming scheme used for native functions and macroses:
+
+        share/native
+            functions: nsk_*
+            macroses:  NSK_*
+
+        share/jni
+            functions: nsk_jni_*
+            macroses:  NSK_JNI_*
+
+        share/jvmti
+            functions: nsk_jvmti_*
+            macroses:  NSK_JVMTI_*
+
+    However, some native functions and macroses do not follow this scheme,
+    in order to preserve compatibility with old tests.
+
+---------------------------------------------------------------------------------

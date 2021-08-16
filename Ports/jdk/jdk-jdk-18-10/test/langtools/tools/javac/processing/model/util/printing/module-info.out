@@ -1,0 +1,28 @@
+package p;
+
+public class P {
+
+  public static class P1 extends p.P {
+
+    public P1();
+  }
+
+  public static class P2 extends p.P {
+
+    public P2();
+  }
+
+  public P();
+}
+/**
+ * Printing of modules
+ */
+@java.lang.Deprecated
+module printing {
+  requires java.base;
+  requires static transitive java.compiler;
+  exports p to m.m1, m.m2;
+  opens p to m.m1, m.m2;
+  uses p.P;
+  provides p.P with p.P.P1, p.P.P2;
+}

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+  <SignedInfo>
+    <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+    <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#dsa-sha1" />
+    <Reference URI="http://www.w3.org/TR/xml-stylesheet">
+      <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+      <DigestValue>60NvZvtdTB+7UnlLp/H24p7h4bs=</DigestValue>
+    </Reference>
+  </SignedInfo>
+  <SignatureValue>
+    MUOjiqG0dbjvR6+qYYPL85nKSt2FeZGQBQkYudv48KyJhJLG1Bp+bA==
+  </SignatureValue>
+  <KeyInfo>
+    <X509Data>
+      <X509SubjectName>
+        CN=Badb,OU=X/Secure,O=Baltimore Technologies Ltd.,ST=Dublin,C=IE
+      </X509SubjectName>
+    </X509Data>
+  </KeyInfo>
+</Signature>

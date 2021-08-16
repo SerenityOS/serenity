@@ -1,0 +1,2 @@
+Sub.java:10:11: compiler.err.cannot.generate.class: p.Inner, (compiler.misc.synthetic.name.conflict: this$0, p.Inner)
+1 error

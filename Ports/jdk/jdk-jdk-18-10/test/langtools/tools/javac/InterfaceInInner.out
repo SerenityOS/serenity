@@ -1,0 +1,4 @@
+- compiler.warn.source.no.system.modules.path: 15
+InterfaceInInner.java:13:13: compiler.err.icls.cant.have.static.decl: foo
+1 error
+1 warning

@@ -1,0 +1,7 @@
+<?xml version='1.0'?>
+<xsd:schema xmlns:xsd='http://www.w3.org/2001/XMLSchema'
+       targetNamespace='IdConstrDefs/targetNS'
+       xmlns:sb='IdConstrDefs/targetNS'>
+    <xsd:include schemaLocation='targetNS00101m2.xsd'/>
+    <xsd:element name='stub' type='xsd:string'/>
+</xsd:schema>

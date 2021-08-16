@@ -1,0 +1,391 @@
+#
+# Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+ifeq (,$(_MAKEBASE_GMK))
+  $(error You must include MakeBase.gmk prior to including Utils.gmk)
+endif
+
+################################################################################
+#
+# Common utility functions
+#
+################################################################################
+
+### Debug functions
+
+# Prints the name and value of a variable
+PrintVar = \
+    $(info $(strip $1) >$($(strip $1))<)
+
+################################################################################
+# This macro translates $ into \$ to protect the $ from expansion in the shell.
+# To make this macro resilient against already escaped strings, first remove
+# any present escapes before escaping so that no double escapes are added.
+EscapeDollar = $(subst $$,\$$,$(subst \$$,$$,$(strip $1)))
+
+################################################################################
+# This macro works just like EscapeDollar above, but for #.
+EscapeHash = $(subst \#,\\\#,$(subst \\\#,\#,$(strip $1)))
+
+################################################################################
+# This macro translates $ into $$ to protect the string from make itself.
+DoubleDollar = $(subst $$,$$$$,$(strip $1))
+
+################################################################################
+# Creates a sequence of increasing numbers (inclusive).
+# Param 1 - starting number
+# Param 2 - ending number
+sequence = \
+    $(wordlist $1, $2, $(strip \
+        $(eval SEQUENCE_COUNT :=) \
+        $(call _sequence-do,$(strip $2))))
+
+_sequence-do = \
+    $(if $(word $1, $(SEQUENCE_COUNT)),, \
+      $(eval SEQUENCE_COUNT += .) \
+      $(words $(SEQUENCE_COUNT)) \
+      $(call _sequence-do,$1))
+
+################################################################################
+# Replace question marks with space in string. This macro needs to be called on
+# files from FindFiles in case any of them contains space in their file name,
+# since FindFiles replaces space with ?.
+# Param 1 - String to replace in
+DecodeSpace = \
+    $(subst ?,$(SPACE),$(strip $1))
+
+EncodeSpace = \
+    $(subst $(SPACE),?,$(strip $1))
+
+################################################################################
+# Assign a variable only if it is empty
+# Param 1 - Variable to assign
+# Param 2 - Value to assign
+SetIfEmpty = \
+    $(if $($(strip $1)),,$(eval $(strip $1) := $2))
+
+################################################################################
+# Take two paths and return the path of the last common directory.
+# Ex: /foo/bar/baz, /foo/bar/banan -> /foo/bar
+#     foo/bar/baz, /foo/bar -> <empty>
+#
+# The x prefix is used to preserve the presence of the initial slash
+# On Windows paths are treated as case-insensitive
+#
+# $1 - Path to compare
+# $2 - Other path to compare
+FindCommonPathPrefix = \
+    $(call DecodeSpace,$(patsubst x%,%,$(subst $(SPACE),/,$(strip \
+        $(call FindCommonPathPrefixHelper1, \
+            $(subst /,$(SPACE),x$(call EncodeSpace,$(strip $1))), \
+            $(subst /,$(SPACE),x$(call EncodeSpace,$(strip $2)))) \
+    ))))
+
+FindCommonPathPrefixHelper1 = \
+    $(if $(filter $(OPENJDK_TARGET_OS), windows), \
+        $(call FindCommonPathPrefixHelper2,$(call uppercase,$1),$(call uppercase,$2),$1), \
+        $(call FindCommonPathPrefixHelper2,$1,$2,$1))
+
+FindCommonPathPrefixHelper2 = \
+    $(if $(call equals, $(firstword $1), $(firstword $2)), \
+      $(if $(call equals, $(firstword $1),),, \
+        $(firstword $3) \
+        $(call FindCommonPathPrefixHelper2, \
+            $(wordlist 2, $(words $1), $1), \
+            $(wordlist 2, $(words $2), $2), \
+            $(wordlist 2, $(words $3), $3) \
+        ) \
+      ) \
+    )
+
+# Computes the relative path from a directory to a file
+# $1 - File to compute the relative path to
+# $2 - Directory to compute the relative path from
+RelativePath = \
+    $(call DecodeSpace,$(strip $(call RelativePathHelper,$(call EncodeSpace \
+        ,$(strip $1)),$(call EncodeSpace \
+        ,$(strip $2)),$(call EncodeSpace \
+        ,$(call FindCommonPathPrefix,$1,$2)))))
+
+RelativePathHelper = \
+    $(eval $3_prefix_length := $(words $(subst /,$(SPACE),$3))) \
+    $(eval $1_words := $(subst /,$(SPACE),$1)) \
+    $(eval $2_words := $(subst /,$(SPACE),$2)) \
+    $(if $(call equals,$($3_prefix_length),0),, \
+        $(eval $1_words := $(wordlist 2,$(words $($1_words)),$(wordlist \
+            $($3_prefix_length),$(words $($1_words)),$($1_words)))) \
+        $(eval $2_words := $(wordlist 2,$(words $($2_words)),$(wordlist \
+            $($3_prefix_length),$(words $($2_words)),$($2_words)))) \
+    ) \
+    $(eval $1_suffix := $(subst $(SPACE),/,$($1_words))) \
+    $(eval $2_dotdots := $(subst $(SPACE),/,$(foreach d,$($2_words),..))) \
+    $(if $($1_suffix), \
+        $(if $($2_dotdots), $($2_dotdots)/$($1_suffix), $($1_suffix)), \
+        $(if $($2_dotdots), $($2_dotdots), .))
+
+################################################################################
+# Filter out duplicate sub strings while preserving order. Keeps the first occurance.
+uniq = \
+    $(strip $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1))))
+
+# Returns all whitespace-separated words in $2 where at least one of the
+# whitespace-separated words in $1 is a substring.
+containing = \
+    $(strip \
+        $(foreach v,$(strip $2),\
+          $(call uniq,$(foreach p,$(strip $1),$(if $(findstring $p,$v),$v)))))
+
+# Returns all whitespace-separated words in $2 where none of the
+# whitespace-separated words in $1 is a substring.
+not-containing = \
+    $(strip $(filter-out $(call containing,$1,$2),$2))
+
+# Return a list of all string elements that are duplicated in $1.
+dups = \
+    $(strip $(foreach v, $(sort $1), $(if $(filter-out 1, \
+        $(words $(filter $v, $1))), $v)))
+
+# String equals
+equals = \
+    $(if $(strip $1)$(strip $2),$(strip \
+      $(and $(findstring $(strip $1),$(strip $2)),\
+        $(findstring $(strip $2),$(strip $1)))), \
+      true \
+    )
+
+# Remove a whole list of prefixes
+# $1 - List of prefixes
+# $2 - List of elements to process
+remove-prefixes = \
+    $(strip $(if $1,$(patsubst $(firstword $1)%,%,\
+      $(call remove-prefixes,$(filter-out $(firstword $1),$1),$2)),$2))
+
+# Convert the string given to upper case, without any $(shell)
+# Inspired by http://lists.gnu.org/archive/html/help-make/2013-09/msg00009.html
+uppercase_table := a,A b,B c,C d,D e,E f,F g,G h,H i,I j,J k,K l,L m,M n,N o,O \
+    p,P q,Q r,R s,S t,T u,U v,V w,W x,X y,Y z,Z
+
+uppercase_internal = \
+  $(if $(strip $1), $$(subst $(firstword $1), $(call uppercase_internal, \
+      $(wordlist 2, $(words $1), $1), $2)), $2)
+
+# Convert a string to upper case. Works only on a-z.
+# $1 - The string to convert
+uppercase = \
+  $(strip \
+    $(eval uppercase_result := $(call uppercase_internal, $(uppercase_table), $1)) \
+    $(uppercase_result) \
+  )
+
+################################################################################
+# Boolean operators.
+
+# Return the word "true" if all the boolean words given as argument is "true",
+# and returns "false" otherwise. Boolean words must be "true" or "false". It is
+# an error to supply a non-boolean word. An empty string is considered "true".
+And = \
+  $(strip $(if $(filter-out true false, $1), $(error Non-boolean values: $1)) \
+  $(if $(strip $(filter-out true, $1)), false, true))
+
+# Return the word "false" if all the boolean words given as argument is "false",
+# and returns "true" otherwise. Boolean words must be "true" or "false". It is
+# an error to supply a non-boolean word.  An empty string is considered "false".
+Or = \
+  $(strip $(if $(filter-out true false, $1), $(error Non-boolean values: $1)) \
+  $(if $(strip $(filter-out false, $1)), true, false))
+
+################################################################################
+# Parse a multiple-keyword variable, like FOO="KEYWORD1=val1;KEYWORD2=val2;..."
+# These will be converted into a series of variables like FOO_KEYWORD1=val1,
+# FOO_KEYWORD2=val2, etc. Unknown keywords will cause an error.
+#
+# Parameter 1 is the name of the rule, and is also the name of the variable.
+#
+# Remaining parameters are named arguments. These include:
+#   SINGLE_KEYWORDS   A list of valid keywords with single string values
+#   STRING_KEYWORDS   A list of valid keywords, processed as string. This means
+#       that '%20' will be replaced by ' ' to allow for multi-word strings.
+#
+ParseKeywordVariable = $(NamedParamsMacroTemplate)
+define ParseKeywordVariableBody
+  ifneq ($$($1), )
+    # To preserve spaces, substitute them with a hopefully unique pattern
+    # before splitting and then re-substitute spaces back.
+    $1_MANGLED := $$(subst $$(SPACE),||||,$$($1))
+    $$(foreach mangled_part, $$(subst ;, , $$($1_MANGLED)), \
+      $$(eval mangled_part_eval := $$(call DoubleDollar, $$(mangled_part))) \
+      $$(eval part := $$$$(subst ||||,$$$$(SPACE),$$$$(mangled_part_eval))) \
+      $$(eval $1_NO_MATCH := true) \
+      $$(if $$(filter help, $$(part)), \
+        $$(info Valid keywords for $1:) \
+        $$(info $$($1_SINGLE_KEYWORDS) $$($1_STRING_KEYWORDS).) \
+        $$(error Re-run without 'help' to continue)) \
+      $$(foreach keyword, $$($1_SINGLE_KEYWORDS), \
+        $$(eval keyword_eval := $$(call DoubleDollar, $$(keyword))) \
+        $$(if $$(filter $$(keyword)=%, $$(part)), \
+          $$(eval $(strip $1)_$$$$(keyword_eval) := $$$$(strip $$$$(patsubst $$$$(keyword_eval)=%, %, $$$$(part)))) \
+          $$(eval $1_NO_MATCH := ) \
+        ) \
+      ) \
+      $$(foreach keyword, $$($1_STRING_KEYWORDS), \
+        $$(eval keyword_eval := $$(call DoubleDollar, $$(keyword))) \
+        $$(if $$(filter $$(keyword)=%, $$(part)), \
+          $$(eval $(strip $1)_$$$$(keyword_eval) := $$$$(strip $$$$(subst %20, , $$$$(patsubst $$$$(keyword_eval)=%, %, $$$$(part))))) \
+          $$(eval $1_NO_MATCH := ) \
+        ) \
+      ) \
+      $$(if $$($1_NO_MATCH), \
+        $$(if $$(filter $$(part), $$($1_SINGLE_KEYWORDS) $$($1_STRING_KEYWORDS)), \
+          $$(info Keyword $$(part) for $1 needs to be assigned a value.) \
+        , \
+          $$(info $$(part) is not a valid keyword for $1.) \
+          $$(info Valid keywords: $$($1_SINGLE_KEYWORDS) $$($1_STRING_KEYWORDS).) \
+        ) \
+        $$(error Cannot continue) \
+      ) \
+    )
+  endif
+endef
+
+################################################################################
+# ShellQuote
+#
+# Quotes a string with single quotes and replaces single quotes with '\'' so
+# that the contents survives being given to the shell.
+ShellQuote = \
+    $(SQUOTE)$(subst $(SQUOTE),$(SQUOTE)\$(SQUOTE)$(SQUOTE),$(strip $1))$(SQUOTE)
+
+################################################################################
+# Find lib dir for module
+# Param 1 - module name
+FindLibDirForModule = \
+    $(SUPPORT_OUTPUTDIR)/modules_libs/$(strip $1)
+
+################################################################################
+# Find executable dir for module
+# Param 1 - module name
+FindExecutableDirForModule = \
+    $(SUPPORT_OUTPUTDIR)/modules_cmds/$(strip $1)
+
+################################################################################
+# Return a string suitable for use after a -classpath or --module-path option. It
+# will be correct and safe to use on all platforms. Arguments are given as space
+# separate classpath entries. Safe for multiple nested calls.
+# param 1 : A space separated list of classpath entries
+# The surrounding strip is needed to keep additional whitespace out
+PathList = \
+  "$(subst $(SPACE),:,$(strip $(subst $(DQUOTE),,$1)))"
+
+################################################################################
+# Check if a specified hotspot variant is being built, or at least one of a
+# list of variants. Will return 'true' or 'false'.
+# $1 - the variant to test for
+check-jvm-variant = \
+  $(strip \
+    $(if $(filter-out $(VALID_JVM_VARIANTS), $1), \
+      $(error Internal error: Invalid variant tested: $1)) \
+    $(if $(filter $1, $(JVM_VARIANTS)), true, false))
+
+################################################################################
+# Check if our build or target conforms to certain restrictions. This set of
+# functions all work in similar ways, testing the property that the name
+# implies, so e.g. isTargetCpu test the CPU of the target system.
+#
+# $1 - A property, or a space separated list of properties to test for.
+#
+# Returns true if the actual property matches one of the properties in the list,
+# and false otherwise.
+#
+# Examples: $(call isTargetOs, linux windows) will return true when executed
+# on either linux or windows, and false otherwise.
+# $(call isBuildCpuArch, x86) will return true iff the build CPU Arch is x86.
+
+isTargetOs = \
+  $(strip $(if $(filter $(OPENJDK_TARGET_OS), $1), true, false))
+
+isTargetOsType = \
+  $(strip $(if $(filter $(OPENJDK_TARGET_OS_TYPE), $1), true, false))
+
+isTargetCpu = \
+  $(strip $(if $(filter $(OPENJDK_TARGET_CPU), $1), true, false))
+
+isTargetCpuArch = \
+  $(strip $(if $(filter $(OPENJDK_TARGET_CPU_ARCH), $1), true, false))
+
+isTargetCpuBits = \
+  $(strip $(if $(filter $(OPENJDK_TARGET_CPU_BITS), $1), true, false))
+
+isBuildOs = \
+  $(strip $(if $(filter $(OPENJDK_BUILD_OS), $1), true, false))
+
+isBuildOsType = \
+  $(strip $(if $(filter $(OPENJDK_BUILD_OS_TYPE), $1), true, false))
+
+isBuildOsEnv = \
+  $(strip $(if $(filter $(OPENJDK_BUILD_OS_ENV), $1), true, false))
+
+isBuildCpu = \
+  $(strip $(if $(filter $(OPENJDK_BUILD_CPU), $1), true, false))
+
+isBuildCpuArch = \
+  $(strip $(if $(filter $(OPENJDK_BUILD_CPU_ARCH), $1), true, false))
+
+################################################################################
+# Converts a space separated list to a comma separated list.
+#
+# Replacing double-comma with a single comma is to workaround the issue with
+# some version of make on windows that doesn't substitute spaces with one comma
+# properly.
+CommaList = \
+  $(strip \
+      $(subst $(COMMA)$(COMMA),$(COMMA),$(subst $(SPACE),$(COMMA),$(strip $1))) \
+  )
+
+################################################################################
+# Converts a space separated list to a colon separated list.
+#
+# Replacing double-colon with a single colon is to workaround the issue with
+# some version of make on windows that doesn't substitute spaces with one colon
+# properly.
+ColonList = \
+  $(strip \
+      $(subst ::,:,$(subst $(SPACE),:,$(strip $1))) \
+  )
+
+################################################################################
+# Given a list of files, filters out locale specific files for translations
+# that should be excluded from this build.
+# $1 - The list of files to filter
+# $2 - The suffix of the files that should be considered (.java or .properties)
+FilterExcludedTranslations = \
+  $(strip $(if $(EXCLUDE_TRANSLATIONS), \
+    $(filter-out \
+        $(foreach suffix, $2, \
+          $(addprefix %_, $(addsuffix $(suffix), $(EXCLUDE_TRANSLATIONS))) \
+        ), \
+        $1 \
+    ), \
+    $1 \
+  ))

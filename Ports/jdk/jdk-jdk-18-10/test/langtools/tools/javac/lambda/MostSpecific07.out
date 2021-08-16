@@ -1,0 +1,4 @@
+MostSpecific07.java:23:9: compiler.err.ref.ambiguous: m, kindname.method, <U,V>m(MostSpecific07.Predicate<U,V>,java.util.List<U>,java.util.ArrayList<U>,V), MostSpecific07, kindname.method, <U,V>m(MostSpecific07.ExtPredicate<U,V>,java.util.ArrayList<U>,java.util.List<U>,V), MostSpecific07
+MostSpecific07.java:24:9: compiler.err.ref.ambiguous: m, kindname.method, <U,V>m(MostSpecific07.Predicate<U,V>,java.util.List<U>,java.util.ArrayList<U>,V), MostSpecific07, kindname.method, <U,V>m(MostSpecific07.ExtPredicate<U,V>,java.util.ArrayList<U>,java.util.List<U>,V), MostSpecific07
+MostSpecific07.java:25:9: compiler.err.ref.ambiguous: m, kindname.method, <U,V>m(MostSpecific07.Predicate<U,V>,java.util.List<U>,java.util.ArrayList<U>,V), MostSpecific07, kindname.method, <U,V>m(MostSpecific07.ExtPredicate<U,V>,java.util.ArrayList<U>,java.util.List<U>,V), MostSpecific07
+3 errors

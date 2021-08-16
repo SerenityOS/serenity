@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog
+  xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+
+    <!-- using uri entries -->
+    <uri name="http://openjdk_java_net/xml/catalog/dtd/system.dtd" uri="system.dtd"/>
+    <rewriteURI uriStartString="http://openjdk_java_net/" 
+                   rewritePrefix="files" />
+    
+    <rewriteURI uriStartString="http://openjdk_java_net/xml/catalog/dtd/" 
+                   rewritePrefix="files" />
+
+    <uriSuffix uriSuffix="systemsuffix.dtd" uri="systemsuffix.dtd"/>
+    
+    <delegateURI uriStartString="http://java.com/xml/catalog/dtd/" catalog="files/delegatecatalog_uri.xml"/>
+
+
+    <uri name="-//OPENJDK//XML CATALOG DTD//1.0" uri="public.dtd"/>
+
+    
+    <delegateURI uriStartString="-//JAVASE//XML CATALOG DTD//DELEGATEPULIC" catalog="files/delegatecatalog_uri.xml"/>
+    
+</catalog>
+

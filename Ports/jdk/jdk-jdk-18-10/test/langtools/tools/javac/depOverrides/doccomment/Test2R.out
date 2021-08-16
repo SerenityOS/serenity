@@ -1,0 +1,10 @@
+R.java:8:36: compiler.warn.missing.deprecated.annotation
+R.java:9:36: compiler.warn.has.been.deprecated: pDep_qDep_rUnd(), Q
+R.java:11:36: compiler.warn.missing.deprecated.annotation
+R.java:14:36: compiler.warn.missing.deprecated.annotation
+R.java:15:36: compiler.warn.has.been.deprecated: pDep_qInh_rUnd(), P
+R.java:17:36: compiler.warn.missing.deprecated.annotation
+R.java:18:36: compiler.warn.has.been.deprecated: pUnd_qDep_rUnd(), Q
+R.java:20:36: compiler.warn.missing.deprecated.annotation
+R.java:23:36: compiler.warn.missing.deprecated.annotation
+9 warnings

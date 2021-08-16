@@ -1,0 +1,9 @@
+    static $type$ [[TEST]]($type$ a, $type$ b) {
+        return ($type$)([[TEST_OP]]);
+    }
+
+    @Test(dataProvider = "$type$BinaryOpProvider")
+    static void [[TEST]]$vectorteststype$(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb) {
+[[KERNEL]]
+        assertArraysEquals(r, a, b, $vectorteststype$::[[TEST]]);
+    }

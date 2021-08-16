@@ -1,0 +1,5 @@
+T5003235b.java:28:56: compiler.err.not.def.access.class.intf.cant.access: k, Outer.Inner
+T5003235b.java:29:56: compiler.err.not.def.access.class.intf.cant.access: l, Outer.Inner
+T5003235b.java:30:56: compiler.err.not.def.access.class.intf.cant.access: m, Outer.Inner
+T5003235b.java:31:56: compiler.err.not.def.access.class.intf.cant.access: n, Outer.Inner
+4 errors

@@ -1,0 +1,195 @@
+valid:
+DOC_COMMENT:First sentence.
+     *
+     * <p>Description with {@link java.io.InputStream link}
+     *
+     * <em>text &lt; &#60; <!--some comment--> suffix</em>
+     *
+     * @param first description
+     * @param second description
+     * @return whatever
+     * @throws IllegalStateException why?
+     * @since 1.15
+     * @see java.util.List
+TEXT:First sentence.
+START_ELEMENT:<p>
+TEXT:Description with!trailing-whitespace!
+LINK:{@link java.io.InputStream link}
+REFERENCE:java.io.InputStream
+TEXT:link
+TEXT:
+     *
+     *!trailing-whitespace!
+START_ELEMENT:<em>
+TEXT:text!trailing-whitespace!
+ENTITY:&lt;
+TEXT:!trailing-whitespace!
+ENTITY:&#60;
+TEXT:!trailing-whitespace!
+COMMENT:<!--some comment-->
+TEXT: suffix
+END_ELEMENT:</em>
+PARAM:@param first description
+IDENTIFIER:first
+TEXT:description
+PARAM:@param second description
+IDENTIFIER:second
+TEXT:description
+RETURN:@return whatever
+TEXT:whatever
+THROWS:@throws IllegalStateException why?
+REFERENCE:IllegalStateException
+TEXT:why?
+SINCE:@since 1.15
+TEXT:1.15
+SEE:@see java.util.List
+REFERENCE:java.util.List
+erroneous:
+DOC_COMMENT:First sentence.
+     *
+     * <p>Description with {@link}, {@link java.util.List}, {@link
+     *
+     * @param
+     * @param second
+     * @return
+     * @throws
+     * @throws IllegalStateException
+     * @since
+     * @see
+TEXT:First sentence.
+START_ELEMENT:<p>
+TEXT:Description with!trailing-whitespace!
+LINK:{@link}
+TEXT:,!trailing-whitespace!
+LINK:{@link java.util.List}
+REFERENCE:java.util.List
+TEXT:,!trailing-whitespace!
+ERRONEOUS:{@link
+ERRONEOUS:@param
+PARAM:@param second
+IDENTIFIER:second
+RETURN:@return
+ERRONEOUS:@throws
+THROWS:@throws IllegalStateException
+REFERENCE:IllegalStateException
+SINCE:@since
+ERRONEOUS:@see
+withWhiteSpaces:
+DOC_COMMENT:First sentence. <em  >text <!--  some comment  --> suffix</em  >
+     *
+     * <p>Description with {@link    }, {@link java.util.List#add(   int   )},
+     * {@link java.util.List#add(   int   ) some   text   with   whitespaces}, {@link
+     *
+     * @param     first
+     * @param     second   some   text   with trailing whitespace
+     * @return      some   return
+     * @throws      java.lang.IllegalStateException
+     * @throws   java.lang.IllegalStateException some     text
+TEXT:First sentence.
+START_ELEMENT:<em  >
+TEXT:text!trailing-whitespace!
+COMMENT:<!--  some comment  -->
+TEXT: suffix
+END_ELEMENT:</em  >
+TEXT:
+     *
+     *!trailing-whitespace!
+START_ELEMENT:<p>
+TEXT:Description with!trailing-whitespace!
+LINK:{@link    }
+TEXT:,!trailing-whitespace!
+LINK:{@link java.util.List#add(   int   )}
+REFERENCE:java.util.List#add(   int   )
+TEXT:,
+     *!trailing-whitespace!
+LINK:{@link java.util.List#add(   int   ) some   text   with   whitespaces}
+REFERENCE:java.util.List#add(   int   )
+TEXT:some   text   with   whitespaces
+TEXT:,!trailing-whitespace!
+ERRONEOUS:{@link
+PARAM:@param     first
+IDENTIFIER:first
+PARAM:@param     second   some   text   with trailing whitespace
+IDENTIFIER:second
+TEXT:some   text   with trailing whitespace
+RETURN:@return      some   return
+TEXT:some   return
+THROWS:@throws      java.lang.IllegalStateException
+REFERENCE:java.lang.IllegalStateException
+THROWS:@throws   java.lang.IllegalStateException some     text
+REFERENCE:java.lang.IllegalStateException
+TEXT:some     text
+erroneous2:
+DOC_COMMENT:First sentence.
+     *
+     * <p>Description with {@unknownInlineTag }, {@unknownInlineTag text}
+     *
+     * @param p1 p {@unknownInlineTag text}
+     * @param p2 p <
+     * @param p3 p <em
+     * @param p4 p <!--
+     * @param p5 p <!--  --
+     * @param p6 p <!--  --
+     * @param p7 p &
+     * @param p8 p &lt
+     * @param p9 p <em> </
+     * @param pa p <em> </em
+TEXT:First sentence.
+START_ELEMENT:<p>
+TEXT:Description with!trailing-whitespace!
+UNKNOWN_INLINE_TAG:{@unknownInlineTag }
+TEXT:
+TEXT:,!trailing-whitespace!
+UNKNOWN_INLINE_TAG:{@unknownInlineTag text}
+TEXT:text
+PARAM:@param p1 p {@unknownInlineTag text}
+IDENTIFIER:p1
+TEXT:p!trailing-whitespace!
+UNKNOWN_INLINE_TAG:{@unknownInlineTag text}
+TEXT:text
+PARAM:@param p2 p <
+IDENTIFIER:p2
+TEXT:p!trailing-whitespace!
+ERRONEOUS:<
+PARAM:@param p3 p <em
+IDENTIFIER:p3
+TEXT:p!trailing-whitespace!
+ERRONEOUS:<
+TEXT:em
+PARAM:@param p4 p <!--
+IDENTIFIER:p4
+TEXT:p!trailing-whitespace!
+ERRONEOUS:<
+TEXT:!--
+PARAM:@param p5 p <!--  --
+IDENTIFIER:p5
+TEXT:p!trailing-whitespace!
+ERRONEOUS:<
+TEXT:!--  --
+PARAM:@param p6 p <!--  --
+IDENTIFIER:p6
+TEXT:p!trailing-whitespace!
+ERRONEOUS:<
+TEXT:!--  --
+PARAM:@param p7 p &
+IDENTIFIER:p7
+TEXT:p!trailing-whitespace!
+ERRONEOUS:&
+PARAM:@param p8 p &lt
+IDENTIFIER:p8
+TEXT:p!trailing-whitespace!
+ERRONEOUS:&lt
+PARAM:@param p9 p <em> </
+IDENTIFIER:p9
+TEXT:p!trailing-whitespace!
+START_ELEMENT:<em>
+TEXT:!trailing-whitespace!
+ERRONEOUS:<
+TEXT:/
+PARAM:@param pa p <em> </em
+IDENTIFIER:pa
+TEXT:p!trailing-whitespace!
+START_ELEMENT:<em>
+TEXT:!trailing-whitespace!
+ERRONEOUS:<
+TEXT:/em

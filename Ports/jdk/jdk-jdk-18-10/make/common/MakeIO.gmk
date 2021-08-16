@@ -1,0 +1,272 @@
+#
+# Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+ifeq (,$(_MAKEBASE_GMK))
+  $(error You must include MakeBase.gmk prior to including MakeIO.gmk)
+endif
+
+################################################################################
+#
+# Functions for dealing with reading and writing from makefiles. Prior to GNU
+# Make 4.0, this was tricky business.
+#
+################################################################################
+
+
+################################################################################
+# ListPathsSafely can be used to print command parameters to a file. This is
+# typically done if the command line lenght risk being too long for the
+# OS/shell. In later make versions, the file function can be used for this
+# purpose. For earlier versions, a more complex implementation is provided.
+#
+# The function ListPathsSafely can be called either directly or, more commonly
+# from a recipe line. If called from a recipe, it will be executed in the
+# evaluation phase of that recipe, which means that it will write to the file
+# before any other line in the recipe has been run.
+ifeq ($(HAS_FILE_FUNCTION), true)
+  # Param 1 - Name of variable containing paths/arguments to output
+  # Param 2 - File to print to
+  # Param 3 - Set to true to append to file instead of overwriting
+  define ListPathsSafely
+    $$(call MakeDir, $$(dir $$(strip $2)))
+    $$(file $$(if $$(filter true, $$(strip $3)),>>,>) \
+        $$(strip $2),$$(subst $$(SPACE),$$(NEWLINE),$$(strip $$($$(strip $1)))))
+  endef
+
+else # HAS_FILE_FUNCTION = false
+
+  $(eval compress_paths = \
+      $(strip $(shell $(CAT) $(TOPDIR)/make/common/support/ListPathsSafely-pre-compress.incl)))
+  compress_paths += \
+      $(subst $(TOPDIR),X97, \
+      $(subst $(OUTPUTDIR),X98, \
+      $(subst X,X00, \
+      $(subst $(SPACE),\n,$(strip $1)))))
+  $(eval compress_paths += \
+      $(strip $(shell $(CAT) $(TOPDIR)/make/common/support/ListPathsSafely-post-compress.incl)))
+
+  decompress_paths=$(SED) -f $(TOPDIR)/make/common/support/ListPathsSafely-uncompress.sed \
+      -e 's|X99|\\n|g' \
+      -e 's|X98|$(OUTPUTDIR)|g' -e 's|X97|$(TOPDIR)|g' \
+      -e 's|X00|X|g'
+
+  ListPathsSafely_IfPrintf = \
+      $(if $(word $3,$($(strip $1))), \
+          $(shell $(PRINTF) -- "$(strip $(call EscapeDollar, \
+              $(call compress_paths, $(wordlist $3,$4,$($(strip $1))))))\n" \
+              | $(decompress_paths) >> $2))
+
+  # Param 1 - Name of variable containing paths/arguments to output
+  # Param 2 - File to print to
+  # Param 3 - Set to true to append to file instead of overwriting
+  define ListPathsSafely
+    ifneq (,$$(word 30001,$$($$(strip $1))))
+      $$(error Cannot list safely more than 30000 paths. $1 has $$(words $$($$(strip $1))) paths!)
+    endif
+    $$(call MakeDir, $$(dir $2))
+    ifneq ($$(strip $3), true)
+      $$(shell $(RM) $$(strip $2))
+    endif
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,1,250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,251,500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,501,750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,751,1000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,1001,1250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,1251,1500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,1501,1750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,1751,2000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,2001,2250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,2251,2500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,2501,2750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,2751,3000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,3001,3250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,3251,3500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,3501,3750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,3751,4000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,4001,4250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,4251,4500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,4501,4750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,4751,5000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,5001,5250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,5251,5500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,5501,5750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,5751,6000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,6001,6250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,6251,6500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,6501,6750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,6751,7000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,7001,7250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,7251,7500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,7501,7750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,7751,8000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,8001,8250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,8251,8500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,8501,8750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,8751,9000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,9001,9250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,9251,9500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,9501,9750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,9751,10000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,10001,10250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,10251,10500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,10501,10750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,10751,11000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,11001,11250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,11251,11500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,11501,11750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,11751,12000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,12001,12250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,12251,12500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,12501,12750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,12751,13000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,13001,13250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,13251,13500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,13501,13750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,13751,14000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,14001,14250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,14251,14500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,14501,14750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,14751,15000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,15001,15250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,15251,15500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,15501,15750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,15751,16000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,16001,16250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,16251,16500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,16501,16750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,16751,17000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,17001,17250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,17251,17500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,17501,17750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,17751,18000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,18001,18250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,18251,18500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,18501,18750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,18751,19000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,19001,19250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,19251,19500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,19501,19750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,19751,20000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,20001,20250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,20251,20500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,20501,20750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,20751,21000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,21001,21250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,21251,21500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,21501,21750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,21751,22000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,22001,22250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,22251,22500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,22501,22750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,22751,23000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,23001,23250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,23251,23500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,23501,23750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,23751,24000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,24001,24250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,24251,24500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,24501,24750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,24751,25000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,25001,25250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,25251,25500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,25501,25750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,25751,26000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,26001,26250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,26251,26500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,26501,26750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,26751,27000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,27001,27250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,27251,27500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,27501,27750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,27751,28000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,28001,28250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,28251,28500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,28501,28750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,28751,29000)
+
+    $$(call ListPathsSafely_IfPrintf,$1,$2,29001,29250)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,29251,29500)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,29501,29750)
+    $$(call ListPathsSafely_IfPrintf,$1,$2,29751,30000)
+  endef
+endif # HAS_FILE_FUNCTION
+
+################################################################################
+# Write to and read from file
+
+# Param 1 - File to read
+ReadFile = \
+    $(shell $(CAT) $1)
+
+# Param 1 - Text to write
+# Param 2 - File to write to
+ifeq ($(HAS_FILE_FUNCTION), true)
+  WriteFile = \
+      $(file >$2,$(strip $1))
+else
+  # Use printf to get consistent behavior on all platforms.
+  WriteFile = \
+      $(shell $(PRINTF) "%s" $(call ShellQuote, $1) > $2)
+endif
+
+# Param 1 - Text to write
+# Param 2 - File to write to
+ifeq ($(HAS_FILE_FUNCTION), true)
+  AppendFile = \
+      $(file >>$2,$(strip $1))
+else
+  # Use printf to get consistent behavior on all platforms.
+  AppendFile = \
+      $(shell $(PRINTF) "%s" $(call ShellQuote, $1) >> $2)
+endif

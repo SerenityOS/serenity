@@ -1,0 +1,3 @@
+Neg08.java:15:12: compiler.err.override.weaker.access: (compiler.misc.cant.implement: m(), Neg08.C1, m(), Neg08.I), public
+Neg08.java:18:14: compiler.err.override.weaker.access: (compiler.misc.cant.implement: m(), Neg08.C3, m(), Neg08.I), public
+2 errors

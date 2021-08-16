@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration version="2.0" label="TestSettings" description="Configuration for testing JCMD" provider="Oracle">
+
+   <event name="jcmd.Test">
+     <setting name="enabled">true</setting>
+   </event>
+
+</configuration>  

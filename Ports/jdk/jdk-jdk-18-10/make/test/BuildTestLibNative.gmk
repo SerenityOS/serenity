@@ -1,0 +1,83 @@
+#
+# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+################################################################################
+# This file builds the native component of testlib.
+# It also covers the test-image part, where the built files are copied to the
+# test image.
+################################################################################
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include TestFilesCompilation.gmk
+
+################################################################################
+# Targets for building the native tests themselves.
+################################################################################
+
+BUILD_LIBTEST_NATIVE_SRC := $(TOPDIR)/test/lib
+
+BUILD_LIBTEST_OUTPUT_DIR := $(OUTPUTDIR)/support/test/lib/native
+
+BUILD_LIBTEST_IMAGE_DIR := $(TEST_IMAGE_DIR)/lib
+
+# This evaluation is expensive and should only be done if this target was
+# explicitly called.
+ifneq ($(filter build-test-lib-native, $(MAKECMDGOALS)), )
+  $(eval $(call SetupTestFilesCompilation, BUILD_LIBTEST_LIBRARIES, \
+      TYPE := LIBRARY, \
+      SOURCE_DIRS := $(BUILD_LIBTEST_NATIVE_SRC), \
+      OUTPUT_DIR := $(BUILD_LIBTEST_OUTPUT_DIR), \
+  ))
+endif
+
+build-test-lib-native: $(BUILD_LIBTEST_LIBRARIES)
+
+################################################################################
+# Targets for building test-image.
+################################################################################
+
+# Copy to testlib test image. We need it in both hotspot and jdk.
+$(eval $(call SetupCopyFiles, COPY_LIBTEST_NATIVE_TO_HOTSPOT, \
+    SRC := $(BUILD_LIBTEST_OUTPUT_DIR), \
+    DEST := $(TEST_IMAGE_DIR)/hotspot/jtreg/native, \
+    FILES := $(wildcard $(addprefix $(BUILD_LIBTEST_OUTPUT_DIR), /lib/*)), \
+    FLATTEN := true, \
+))
+
+$(eval $(call SetupCopyFiles, COPY_LIBTEST_NATIVE_TO_JDK, \
+    SRC := $(BUILD_LIBTEST_OUTPUT_DIR), \
+    DEST := $(TEST_IMAGE_DIR)/jdk/jtreg/native, \
+    FILES := $(wildcard $(addprefix $(BUILD_LIBTEST_OUTPUT_DIR), /lib/*)), \
+    FLATTEN := true, \
+))
+
+test-image-lib-native: $(COPY_LIBTEST_NATIVE_TO_HOTSPOT) $(COPY_LIBTEST_NATIVE_TO_JDK)
+
+all: build-test-lib-native
+
+.PHONY: default all build-test-lib-native test-image-lib-native

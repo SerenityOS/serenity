@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="de"/>
+		<territory type="IT"/>
+	</identity>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">Jän.</month>
+							<month type="2">Feb.</month>
+							<month type="3">März</month>
+							<month type="4">Apr.</month>
+							<month type="5">Mai</month>
+							<month type="6">Juni</month>
+							<month type="7">Juli</month>
+							<month type="8">Aug.</month>
+							<month type="9">Sep.</month>
+							<month type="10">Okt.</month>
+							<month type="11">Nov.</month>
+							<month type="12">Dez.</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Jänner</month>
+							<month type="2">Februar</month>
+							<month type="3">März</month>
+							<month type="4">April</month>
+							<month type="5">Mai</month>
+							<month type="6">Juni</month>
+							<month type="7">Juli</month>
+							<month type="8">August</month>
+							<month type="9">September</month>
+							<month type="10">Oktober</month>
+							<month type="11">November</month>
+							<month type="12">Dezember</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">Jän</month>
+							<month type="2">Feb</month>
+							<month type="3">Mär</month>
+							<month type="4">Apr</month>
+							<month type="5">Mai</month>
+							<month type="6">Jun</month>
+							<month type="7">Jul</month>
+							<month type="8">Aug</month>
+							<month type="9">Sep</month>
+							<month type="10">Okt</month>
+							<month type="11">Nov</month>
+							<month type="12">Dez</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Jänner</month>
+							<month type="2">Februar</month>
+							<month type="3">März</month>
+							<month type="4">April</month>
+							<month type="5">Mai</month>
+							<month type="6">Juni</month>
+							<month type="7">Juli</month>
+							<month type="8">August</month>
+							<month type="9">September</month>
+							<month type="10">Oktober</month>
+							<month type="11">November</month>
+							<month type="12">Dezember</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+			</calendar>
+		</calendars>
+	</dates>
+</ldml>

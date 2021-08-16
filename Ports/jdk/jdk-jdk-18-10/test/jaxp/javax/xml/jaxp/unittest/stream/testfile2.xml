@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ns1:foo xmlns:ns="http://ns1.java.com" xmlns:ns1="http://ns1.java.com"  xmlns:ns2="http://ns2.java.com" >
+ <!--description-->content text
+    <![CDATA[<greeting>Hello</greeting>]]>
+    other content
+</ns1:foo>
+

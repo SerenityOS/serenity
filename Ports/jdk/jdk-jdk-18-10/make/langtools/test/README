@@ -1,0 +1,4 @@
+This is a small quick test suite to (provide a framework to)
+verify the output of a JDK build of the langtools component. 
+
+It verifies the contents exist and are minimally functional.

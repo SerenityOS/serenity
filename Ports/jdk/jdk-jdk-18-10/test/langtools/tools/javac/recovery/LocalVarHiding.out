@@ -1,0 +1,8 @@
+LocalVarHiding.java:12:21: compiler.err.already.defined: kindname.variable, l1, kindname.method, test(LocalVarHiding.Decl)
+LocalVarHiding.java:20:21: compiler.err.already.defined: kindname.variable, l2, kindname.method, test(LocalVarHiding.Decl)
+LocalVarHiding.java:29:25: compiler.err.already.defined: kindname.variable, l3, kindname.method, test(LocalVarHiding.Decl)
+LocalVarHiding.java:40:30: compiler.err.already.defined: kindname.variable, l4, kindname.method, test(LocalVarHiding.Decl)
+LocalVarHiding.java:48:26: compiler.err.already.defined: kindname.variable, l5, kindname.method, test(LocalVarHiding.Decl)
+LocalVarHiding.java:56:16: compiler.err.already.defined: kindname.variable, l6, kindname.method, test(LocalVarHiding.Decl)
+LocalVarHiding.java:59:29: compiler.err.already.defined: kindname.variable, l6, kindname.method, test(LocalVarHiding.Decl)
+7 errors

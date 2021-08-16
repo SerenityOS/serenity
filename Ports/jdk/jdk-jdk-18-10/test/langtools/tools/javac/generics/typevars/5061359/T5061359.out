@@ -1,0 +1,2 @@
+T5061359.java:11:10: compiler.err.ref.ambiguous: Inner, kindname.class, Base.Inner, Base, kindname.class, Intf.Inner, Intf
+1 error

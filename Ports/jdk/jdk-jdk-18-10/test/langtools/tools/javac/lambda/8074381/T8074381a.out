@@ -1,0 +1,4 @@
+T8074381a.java:18:18: compiler.err.prob.found.req: (compiler.misc.no.suitable.functional.intf.inst: T8074381a.Sub)
+T8074381a.java:19:18: compiler.err.prob.found.req: (compiler.misc.no.suitable.functional.intf.inst: T8074381a.Sub)
+T8074381a.java:20:28: compiler.err.does.not.override.abstract: compiler.misc.anonymous.class: T8074381a$1, m(java.lang.Object), T8074381a.Sup
+3 errors

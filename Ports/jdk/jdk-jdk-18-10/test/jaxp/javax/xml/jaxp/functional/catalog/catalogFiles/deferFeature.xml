@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+    <system systemId="http://remote/dtd/alice/docAlice.dtd" uri="http://local/dtd/docAliceSys.dtd" />
+    <uri name="http://remote/dtd/uri/alice/docAlice.dtd" uri="http://local/dtd/docAliceURI.dtd" />
+
+    <delegateSystem systemIdStartString="http://remote/dtd/alice/" catalog="delegateSystem-alice.xml" />
+    <delegatePublic publicIdStartString="-//REMOTE//DTD ALICE DOCALICE" catalog="delegatePublic-alice.xml" />
+    <nextCatalog catalog="nextCatalog-rightAlice.xml" />
+</catalog>

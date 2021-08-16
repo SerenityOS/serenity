@@ -1,0 +1,8 @@
+T5017953.java:13:14: compiler.err.cant.resolve.location: kindname.variable, NonExistentClass, , , (compiler.misc.location: kindname.class, T5017953, null)
+T5017953.java:14:18: compiler.err.cant.resolve.location: kindname.variable, NonExistentClass, , , (compiler.misc.location: kindname.class, T5017953, null)
+T5017953.java:15:14: compiler.err.cant.resolve.location: kindname.variable, NonExistentClass, , , (compiler.misc.location: kindname.class, T5017953, null)
+T5017953.java:16:14: compiler.err.cant.resolve.location: kindname.variable, NonExistentClass, , , (compiler.misc.location: kindname.class, T5017953, null)
+T5017953.java:16:35: compiler.err.cant.resolve.location: kindname.variable, NonExistentClass, , , (compiler.misc.location: kindname.class, T5017953, null)
+T5017953.java:17:14: compiler.err.cant.resolve.location: kindname.variable, NonExistentClass, , , (compiler.misc.location: kindname.class, T5017953, null)
+T5017953.java:18:19: compiler.err.cant.resolve.location: kindname.variable, NonExistentClass, , , (compiler.misc.location: kindname.class, T5017953, null)
+7 errors

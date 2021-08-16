@@ -1,0 +1,5 @@
+Test1.java:4:4: compiler.err.proc.messager: element not allowed in documentation comments: <html>
+Test1.java:4:4: compiler.err.proc.messager: element not closed: html
+Test2.java:4:4: compiler.err.proc.messager: element not allowed in documentation comments: <html>
+Test2.java:4:4: compiler.err.proc.messager: element not closed: html
+4 errors

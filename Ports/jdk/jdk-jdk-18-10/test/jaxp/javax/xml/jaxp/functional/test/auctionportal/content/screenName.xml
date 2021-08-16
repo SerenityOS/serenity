@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+
+<us:screen-names xmlns:us="http://hibid.com/screenName">
+                xmlns="http://hibid.com/screenName">
+  <us:screen-name>
+  <us:userName xmlns:us="http://hibid.com/user"> tom  </us:userName>
+  <userNo>10 </userNo>
+  </us:screen-name>
+</us:screen-names>

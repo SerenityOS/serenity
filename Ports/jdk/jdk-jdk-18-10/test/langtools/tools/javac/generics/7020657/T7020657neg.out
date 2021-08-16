@@ -1,0 +1,2 @@
+T7020657neg.java:22:5: compiler.err.name.clash.same.erasure.no.override: get, java.util.List<java.lang.Integer>, T7020657neg.B, get, java.util.List<java.lang.String>, T7020657neg.A
+1 error

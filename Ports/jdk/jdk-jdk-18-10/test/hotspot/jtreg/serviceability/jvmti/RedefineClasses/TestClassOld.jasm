@@ -1,0 +1,44 @@
+/*
+ * Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+super public final class TestClassOld version 48:0 {
+
+    public Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial    Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    public static Method foo:"()Ljava/lang/String;" stack 1 locals 1 {
+        ldc            String "java-lang-String";
+        areturn;
+    }
+
+    public static Method main:"([Ljava/lang/String;)V" stack 2 locals 2 {
+        getstatic      Field java/lang/System.out:"Ljava/io/PrintStream;";
+        invokestatic   Method TestClassOld.foo:"()Ljava/lang/String;";
+        invokevirtual  Method java/io/PrintStream.println:"(Ljava/lang/String;)V";
+        return;
+    }
+
+}

@@ -1,0 +1,2 @@
+NonStaticFieldExpr3.java:14:30: compiler.err.non-static.cant.be.ref: kindname.variable, x
+1 error

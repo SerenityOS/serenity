@@ -1,0 +1,1201 @@
+#
+# Copyright (c) 2011, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# When you read this source. Remember that $(sort ...) has the side effect
+# of removing duplicates. It is actually this side effect that is
+# desired whenever sort is used below!
+
+ifndef _NATIVE_COMPILATION_GMK
+_NATIVE_COMPILATION_GMK := 1
+
+ifeq ($(_MAKEBASE_GMK), )
+  $(error You must include MakeBase.gmk prior to including NativeCompilation.gmk)
+endif
+
+################################################################################
+# Create exported symbols file for static libraries
+################################################################################
+
+# get the exported symbols from mapfiles and if there
+# is no mapfile, get them from the archive
+define GetSymbols
+  $(RM) $$(@D)/$$(basename $$(@F)).symbols; \
+  if [ ! -z $$($1_MAPFILE) -a -e $$($1_MAPFILE) ]; then \
+    $(ECHO) "Getting symbols from mapfile $$($1_MAPFILE)"; \
+    $(AWK) '/global:/','/local:/' $$($1_MAPFILE) | \
+        $(SED) -e 's/#.*//;s/global://;s/local://;s/\;//;s/^[ 	]*/_/;/^_$$$$/d' | \
+        $(EGREP) -v "JNI_OnLoad|JNI_OnUnload|Agent_OnLoad|Agent_OnUnload|Agent_OnAttach" > \
+        $$(@D)/$$(basename $$(@F)).symbols || true; \
+    $(NM) $$($1_TARGET) | $(GREP)  " T " | \
+        $(EGREP) "JNI_OnLoad|JNI_OnUnload|Agent_OnLoad|Agent_OnUnload|Agent_OnAttach" | \
+        $(CUT) -d ' ' -f 3 >>  $$(@D)/$$(basename $$(@F)).symbols || true;\
+  else \
+    $(ECHO) "Getting symbols from nm"; \
+    $(NM) -m $$($1_TARGET) | $(GREP)  "__TEXT" | \
+        $(EGREP) -v "non-external|private extern|__TEXT,__eh_frame" | \
+        $(SED) -e  's/.* //' > $$(@D)/$$(basename $$(@F)).symbols; \
+  fi
+endef
+
+################################################################################
+# Creates a recipe that creates a compile_commands.json fragment. Remove any
+# occurences of FIXPATH programs from the command to show the actual invocation.
+#
+# Param 1: Name of file to create
+# Param 2: Working directory
+# Param 3: Source file
+# Param 4: Compile command
+################################################################################
+define WriteCompileCommandsFragment
+  $(call LogInfo, Creating compile commands fragment for $(notdir $3))
+  $(call MakeDir, $(dir $1))
+  $(call WriteFile,{ \
+      "directory": "$(strip $(call FixPath, $2))"$(COMMA) \
+      "file": "$(strip $(call FixPath, $3))"$(COMMA) \
+      "command": "$(strip $(subst $(DQUOTE),\$(DQUOTE),$(subst \,\\,\
+        $(subst $(FIXPATH),,$(call FixPath, $4)))))" \
+    }$(COMMA), \
+    $1)
+endef
+
+################################################################################
+# Define a native toolchain configuration that can be used by
+# SetupNativeCompilation calls
+#
+# Parameter 1 is the name of the toolchain definition
+#
+# Remaining parameters are named arguments:
+#   EXTENDS - Optional parent definition to get defaults from
+#   CC - The C compiler
+#   CXX - The C++ compiler
+#   LD - The Linker
+#   AR - Static linker
+#   AS - Assembler
+#   MT - Windows MT tool
+#   RC - Windows RC tool
+#   OBJCOPY - The objcopy tool for debug symbol handling
+#   STRIP - The tool to use for stripping debug symbols
+#   SYSROOT_CFLAGS - Compiler flags for using the specific sysroot
+#   SYSROOT_LDFLAGS - Linker flags for using the specific sysroot
+DefineNativeToolchain = $(NamedParamsMacroTemplate)
+define DefineNativeToolchainBody
+  # If extending another definition, get default values from that,
+  # otherwise, nothing more needs to be done as variable assignments
+  # already happened in NamedParamsMacroTemplate.
+  ifneq ($$($1_EXTENDS), )
+    $$(call SetIfEmpty, $1_CC, $$($$($1_EXTENDS)_CC))
+    $$(call SetIfEmpty, $1_CXX, $$($$($1_EXTENDS)_CXX))
+    $$(call SetIfEmpty, $1_LD, $$($$($1_EXTENDS)_LD))
+    $$(call SetIfEmpty, $1_AR, $$($$($1_EXTENDS)_AR))
+    $$(call SetIfEmpty, $1_AS, $$($$($1_EXTENDS)_AS))
+    $$(call SetIfEmpty, $1_MT, $$($$($1_EXTENDS)_MT))
+    $$(call SetIfEmpty, $1_RC, $$($$($1_EXTENDS)_RC))
+    $$(call SetIfEmpty, $1_OBJCOPY, $$($$($1_EXTENDS)_OBJCOPY))
+    $$(call SetIfEmpty, $1_STRIP, $$($$($1_EXTENDS)_STRIP))
+    $$(call SetIfEmpty, $1_SYSROOT_CFLAGS, $$($$($1_EXTENDS)_SYSROOT_CFLAGS))
+    $$(call SetIfEmpty, $1_SYSROOT_LDFLAGS, $$($$($1_EXTENDS)_SYSROOT_LDFLAGS))
+  endif
+endef
+
+# Create a default toolchain with the main compiler and linker
+$(eval $(call DefineNativeToolchain, TOOLCHAIN_DEFAULT, \
+    CC := $(CC), \
+    CXX := $(CXX), \
+    LD := $(LD), \
+    AR := $(AR), \
+    AS := $(AS), \
+    MT := $(MT), \
+    RC := $(RC), \
+    OBJCOPY := $(OBJCOPY), \
+    STRIP := $(STRIP), \
+    SYSROOT_CFLAGS := $(SYSROOT_CFLAGS), \
+    SYSROOT_LDFLAGS := $(SYSROOT_LDFLAGS), \
+))
+
+# Create a toolchain where linking is done with the C++ linker
+$(eval $(call DefineNativeToolchain, TOOLCHAIN_LINK_CXX, \
+    EXTENDS := TOOLCHAIN_DEFAULT, \
+    LD := $(LDCXX), \
+))
+
+# Create a toolchain with the BUILD compiler, used for build tools that
+# are to be run during the build.
+$(eval $(call DefineNativeToolchain, TOOLCHAIN_BUILD, \
+    CC := $(BUILD_CC), \
+    CXX := $(BUILD_CXX), \
+    LD := $(BUILD_LD), \
+    AR := $(BUILD_AR), \
+    AS := $(BUILD_AS), \
+    OBJCOPY := $(BUILD_OBJCOPY), \
+    STRIP := $(BUILD_STRIP), \
+    SYSROOT_CFLAGS := $(BUILD_SYSROOT_CFLAGS), \
+    SYSROOT_LDFLAGS := $(BUILD_SYSROOT_LDFLAGS), \
+))
+
+# BUILD toolchain with the C++ linker
+$(eval $(call DefineNativeToolchain, TOOLCHAIN_BUILD_LINK_CXX, \
+    EXTENDS := TOOLCHAIN_BUILD, \
+    LD := $(BUILD_LDCXX), \
+))
+
+################################################################################
+
+# Extensions of files handled by this macro.
+NATIVE_SOURCE_EXTENSIONS := %.S %.c %.cpp %.cc %.m %.mm
+
+# Replaces native source extensions with the object file extension in a string.
+# Param 1: the string containing source file names with extensions
+# The surrounding strip is needed to keep additional whitespace out
+define replace_with_obj_extension
+$(strip \
+  $(foreach extension, $(NATIVE_SOURCE_EXTENSIONS), \
+      $(patsubst $(extension),%$(OBJ_SUFFIX), $(filter $(extension), $1))) \
+)
+endef
+
+# This pattern is used to transform the output of the microsoft CL compiler
+# into a make syntax dependency file (.d)
+WINDOWS_SHOWINCLUDE_SED_PATTERN := \
+    -e '/^Note: including file:/!d' \
+    -e 's|Note: including file: *||' \
+    -e 's|\r||g' \
+    -e 's|\\|/|g' \
+    -e 's|^\([a-zA-Z]\):|$(WINENV_PREFIX)/\1|g' \
+    -e '\|$(TOPDIR)|I !d' \
+    -e 's|$$$$| \\|g' \
+    #
+
+# This pattern is used to transform a dependency file (.d) to a list
+# of make targets for dependent files (.d.targets)
+DEPENDENCY_TARGET_SED_PATTERN := \
+    -e 's/\#.*//' \
+    -e 's/^[^:]*: *//' \
+    -e 's/ *\\$$$$//' \
+    -e 's/^[	 ]*//' \
+    -e '/^$$$$/ d' \
+    -e 's/$$$$/ :/' \
+    #
+
+################################################################################
+# When absolute paths are not allowed in the output, and the compiler does not
+# support any options to avoid it, we need to rewrite compile commands to use
+# relative paths. By doing this, the __FILE__ macro will resolve to relative
+# paths. The relevant input paths on the command line are the -I flags and the
+# path to the source file itself.
+#
+# The macro MakeCommandRelative is used to rewrite the command line like this:
+# 'CD $(WORKSPACE_ROOT) && <cmd>'
+# and changes all paths in cmd to be relative to the workspace root. This only
+# works properly if the build dir is inside the workspace root. If it's not,
+# relative paths are still calculated, but depending on the distance between the
+# dirs, paths in the build dir may end up as essentially absolute anyway.
+#
+# The fix-deps-file macro is used to adjust the contents of the generated make
+# dependency files to contain paths compatible with make.
+#
+ifeq ($(ALLOW_ABSOLUTE_PATHS_IN_OUTPUT)-$(FILE_MACRO_CFLAGS), false-)
+  # Need to handle -I flags as both '-Ifoo' and '-I foo'.
+  MakeCommandRelative = \
+      $(CD) $(WORKSPACE_ROOT) && \
+      $(foreach o, $1, \
+        $(if $(filter $(WORKSPACE_ROOT)/% $(OUTPUTDIR)/%, $o), \
+          $(call RelativePath, $o, $(WORKSPACE_ROOT)) \
+        , \
+          $(if $(filter -I$(WORKSPACE_ROOT)/%, $o), \
+            -I$(call RelativePath, $(patsubst -I%, %, $o), $(WORKSPACE_ROOT)) \
+          , \
+            $o \
+          ) \
+        ) \
+      )
+
+  # When compiling with relative paths, the deps file may come out with relative
+  # paths, and that path may start with './'. First remove any leading ./, then
+  # add WORKSPACE_ROOT to any line not starting with /, while allowing for
+  # leading spaces. There may also be multiple entries on the same line, so start
+  # with splitting such lines.
+  # Non GNU sed (BSD on macosx) cannot substitue in literal \n using regex.
+  # Instead use a bash escaped literal newline. To avoid having unmatched quotes
+  # ruin the ability for an editor to properly syntax highlight this file, define
+  # that newline sequence as a separate variable and add the closing quote behind
+  # a comment.
+  sed_newline := \'$$'\n''#'
+  define fix-deps-file
+	$(SED) \
+	    -e 's|\([^ ]\) \{1,\}\([^\\:]\)|\1 \\$(sed_newline) \2|g' \
+	    $1.tmp \
+	    | $(SED) \
+	        -e 's|^\([ ]*\)\./|\1|' \
+	        -e '/^[ ]*[^/ ]/s|^\([ ]*\)|\1$(WORKSPACE_ROOT)/|' \
+	        > $1
+  endef
+else
+  # By default the MakeCommandRelative macro does nothing.
+  MakeCommandRelative = $1
+
+  # No adjustment is needed.
+  define fix-deps-file
+	$(MV) $1.tmp $1
+  endef
+endif
+
+################################################################################
+# GetEntitlementsFile
+# Find entitlements file for executable when signing on macosx. If no
+# specialized file is found, returns the default file.
+# $1 Executable to find entitlements file for.
+ENTITLEMENTS_DIR := $(TOPDIR)/make/data/macosxsigning
+DEFAULT_ENTITLEMENTS_FILE := $(ENTITLEMENTS_DIR)/default.plist
+
+GetEntitlementsFile = \
+    $(foreach f, $(ENTITLEMENTS_DIR)/$(strip $(notdir $1)).plist, \
+      $(if $(wildcard $f), $f, $(DEFAULT_ENTITLEMENTS_FILE)) \
+    )
+
+################################################################################
+# Create the recipe needed to compile a single native source file.
+#
+# Parameter 1 is the name of the rule, based on the name of the library/
+# program being build and the name of the source code file, e.g.
+# BUILD_LIBFOO_fooMain.cpp.
+#
+# Remaining parameters are named arguments:
+#   FILE - The full path of the source file to compiler
+#   BASE - The name of the rule for the entire binary to build ($1)
+#
+SetupCompileNativeFile = $(NamedParamsMacroTemplate)
+define SetupCompileNativeFileBody
+  $1_FILENAME := $$(notdir $$($1_FILE))
+
+  # The target file to be generated.
+  $1_OBJ := $$($$($1_BASE)_OBJECT_DIR)/$$(call replace_with_obj_extension, \
+      $$($1_FILENAME))
+
+  # Generate the corresponding compile_commands.json fragment.
+  $1_OBJ_JSON = $$(MAKESUPPORT_OUTPUTDIR)/compile-commands/$$(subst /,_,$$(subst \
+      $$(OUTPUTDIR)/,,$$($1_OBJ))).json
+  $$($1_BASE)_ALL_OBJS_JSON += $$($1_OBJ_JSON)
+
+  # Only continue if this object file hasn't been processed already. This lets
+  # the first found source file override any other with the same name.
+  ifeq ($$($1_OBJ_PROCESSED), )
+    $1_OBJ_PROCESSED := true
+    # This is the definite source file to use for $1_FILENAME.
+    $1_SRC_FILE := $$($1_FILE)
+
+    ifeq ($$($1_OPTIMIZATION), )
+      $1_OPT_CFLAGS := $$($$($1_BASE)_OPT_CFLAGS)
+      $1_OPT_CXXFLAGS := $$($$($1_BASE)_OPT_CXXFLAGS)
+    else
+      ifeq ($$($1_OPTIMIZATION), NONE)
+        $1_OPT_CFLAGS := $(C_O_FLAG_NONE)
+        $1_OPT_CXXFLAGS := $(CXX_O_FLAG_NONE)
+      else ifeq ($$($1_OPTIMIZATION), LOW)
+        $1_OPT_CFLAGS := $(C_O_FLAG_NORM)
+        $1_OPT_CXXFLAGS := $(CXX_O_FLAG_NORM)
+      else ifeq ($$($1_OPTIMIZATION), HIGH)
+        $1_OPT_CFLAGS := $(C_O_FLAG_HI)
+        $1_OPT_CXXFLAGS := $(CXX_O_FLAG_HI)
+      else ifeq ($$($1_OPTIMIZATION), HIGHEST)
+        $1_OPT_CFLAGS := $(C_O_FLAG_HIGHEST)
+        $1_OPT_CXXFLAGS := $(CXX_O_FLAG_HIGHEST)
+      else ifeq ($$($1_OPTIMIZATION), HIGHEST_JVM)
+        $1_OPT_CFLAGS := $(C_O_FLAG_HIGHEST_JVM)
+        $1_OPT_CXXFLAGS := $(CXX_O_FLAG_HIGHEST_JVM)
+      else ifeq ($$($1_OPTIMIZATION), SIZE)
+        $1_OPT_CFLAGS := $(C_O_FLAG_SIZE)
+        $1_OPT_CXXFLAGS := $(CXX_O_FLAG_SIZE)
+      else
+        $$(error Unknown value for file OPTIMIZATION: $$($1_OPTIMIZATION))
+      endif
+    endif
+
+    ifneq ($$($$($1_BASE)_PRECOMPILED_HEADER), )
+      ifeq ($$(filter $$($1_FILENAME), $$($$($1_BASE)_PRECOMPILED_HEADER_EXCLUDE)), )
+        $1_USE_PCH_FLAGS := $$($$($1_BASE)_USE_PCH_FLAGS)
+      endif
+    endif
+
+    $1_BASE_CFLAGS :=  $$($$($1_BASE)_CFLAGS) $$($$($1_BASE)_EXTRA_CFLAGS) \
+        $$($$($1_BASE)_SYSROOT_CFLAGS)
+    $1_BASE_CXXFLAGS := $$($$($1_BASE)_CXXFLAGS) $$($$($1_BASE)_EXTRA_CXXFLAGS) \
+        $$($$($1_BASE)_SYSROOT_CFLAGS) $$($1_EXTRA_CXXFLAGS)
+    $1_BASE_ASFLAGS := $$($$($1_BASE)_ASFLAGS) $$($$($1_BASE)_EXTRA_ASFLAGS)
+
+    ifneq ($$(filter %.c, $$($1_FILENAME)), )
+      # Compile as a C file
+      $1_FLAGS := $(CFLAGS_CCACHE) $$($1_USE_PCH_FLAGS) $$($1_BASE_CFLAGS) \
+          $$($1_OPT_CFLAGS) $$($1_CFLAGS) -c
+      $1_COMPILER := $$($$($1_BASE)_CC)
+    else ifneq ($$(filter %.m, $$($1_FILENAME)), )
+      # Compile as an Objective-C file
+      $1_FLAGS := -x objective-c $(CFLAGS_CCACHE) $$($1_USE_PCH_FLAGS) \
+          $$($1_BASE_CFLAGS) $$($1_OPT_CFLAGS) $$($1_CFLAGS) -c
+      $1_COMPILER := $$($$($1_BASE)_CC)
+    else ifneq ($$(filter %.S, $$($1_FILENAME)), )
+      # Compile as preprocessed assembler file
+      $1_FLAGS := $(BASIC_ASFLAGS) $$($1_BASE_ASFLAGS)
+      $1_COMPILER := $(AS)
+    else ifneq ($$(filter %.cpp %.cc %.mm, $$($1_FILENAME)), )
+      # Compile as a C++ or Objective-C++ file
+      $1_FLAGS := $(CFLAGS_CCACHE) $$($1_USE_PCH_FLAGS) $$($1_BASE_CXXFLAGS) \
+          $$($1_OPT_CXXFLAGS) $$($1_CXXFLAGS) -c
+      $1_COMPILER := $$($$($1_BASE)_CXX)
+    else
+      $$(error Internal error in NativeCompilation.gmk: no compiler for file $$($1_FILENAME))
+    endif
+
+    # And this is the dependency file for this obj file.
+    $1_DEPS_FILE := $$(patsubst %$(OBJ_SUFFIX),%.d,$$($1_OBJ))
+    # The dependency target file lists all dependencies as empty targets to
+    # avoid make error "No rule to make target" for removed files
+    $1_DEPS_TARGETS_FILE := $$(patsubst %$(OBJ_SUFFIX),%.d.targets,$$($1_OBJ))
+
+    # Only try to load individual dependency information files if the global
+    # file hasn't been loaded (could happen if make was interrupted).
+    ifneq ($$($$($1_BASE)_DEPS_FILE_LOADED), true)
+      # Include previously generated dependency information. (if it exists)
+      -include $$($1_DEPS_FILE)
+      -include $$($1_DEPS_TARGETS_FILE)
+    endif
+
+    ifneq ($$(strip $$($1_CFLAGS) $$($1_CXXFLAGS) $$($1_OPTIMIZATION)), )
+      $1_VARDEPS := $$($1_CFLAGS) $$($1_CXXFLAGS) $$($1_OPTIMIZATION)
+      $1_VARDEPS_FILE := $$(call DependOnVariable, $1_VARDEPS, $$($1_OBJ).vardeps)
+    endif
+
+    $1_OBJ_DEPS := $$($1_SRC_FILE) $$($$($1_BASE)_COMPILE_VARDEPS_FILE) \
+        $$($$($1_BASE)_EXTRA_DEPS) $$($1_VARDEPS_FILE)
+    $1_COMPILE_OPTIONS := $$($1_FLAGS) $(CC_OUT_OPTION)$$($1_OBJ) $$($1_SRC_FILE)
+
+    $$($1_OBJ_JSON): $$($1_OBJ_DEPS)
+	$$(call WriteCompileCommandsFragment, $$@, $$(PWD), $$($1_SRC_FILE), \
+	    $$($1_COMPILER) $$($1_COMPILE_OPTIONS))
+
+    $$($1_OBJ): $$($1_OBJ_DEPS) | $$($$($1_BASE)_BUILD_INFO)
+	$$(call LogInfo, Compiling $$($1_FILENAME) (for $$($$($1_BASE)_BASENAME)))
+	$$(call MakeDir, $$(@D))
+        ifneq ($(TOOLCHAIN_TYPE), microsoft)
+	  $$(call ExecuteWithLog, $$@, $$(call MakeCommandRelative, \
+	      $$($1_COMPILER) $$(GENDEPS_FLAGS) \
+	      $$(addsuffix .tmp, $$($1_DEPS_FILE)) \
+	      $$($1_COMPILE_OPTIONS)))
+          ifneq ($$($1_DEPS_FILE), )
+	    $$(call fix-deps-file, $$($1_DEPS_FILE))
+            # Create a dependency target file from the dependency file.
+            # Solution suggested by:
+            # http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/
+	    $(SED) $(DEPENDENCY_TARGET_SED_PATTERN) $$($1_DEPS_FILE) \
+	        > $$($1_DEPS_TARGETS_FILE)
+          endif
+        else
+          # The Visual Studio compiler lacks a feature for generating make
+          # dependencies, but by setting -showIncludes, all included files are
+          # printed. These are filtered out and parsed into make dependences.
+          #
+          # Keep as much as possible on one execution line for best performance
+          # on Windows. No need to save exit code from compilation since
+          # pipefail is always active on Windows.
+          ifeq ($$(filter %.S, $$($1_FILENAME)), )
+	    $$(call ExecuteWithLog, $$@, $$(call MakeCommandRelative, \
+	        $$($1_COMPILER) -showIncludes $$($1_COMPILE_OPTIONS))) \
+	        | $(TR) -d '\r' | $(GREP) -v -e "^Note: including file:" \
+	            -e "^$$($1_FILENAME)$$$$" || test "$$$$?" = "1" ; \
+	    $(ECHO) $$@: \\ > $$($1_DEPS_FILE) ; \
+	    $(SED) $(WINDOWS_SHOWINCLUDE_SED_PATTERN) $$($1_OBJ).log \
+	        | $(SORT) -u >> $$($1_DEPS_FILE) ; \
+	    $(ECHO) >> $$($1_DEPS_FILE) ; \
+	    $(SED) $(DEPENDENCY_TARGET_SED_PATTERN) $$($1_DEPS_FILE) > $$($1_DEPS_TARGETS_FILE)
+          else
+            # For assembler calls just create empty dependency lists
+	    $$(call ExecuteWithLog, $$@, $$(call MakeCommandRelative, \
+	        $$($1_COMPILER) $$($1_FLAGS) \
+	        $(CC_OUT_OPTION)$$($1_OBJ) -Ta $$($1_SRC_FILE))) \
+	        | $(TR) -d '\r' | $(GREP) -v -e "Assembling:" || test "$$$$?" = "1" ; \
+	    $(ECHO) > $$($1_DEPS_FILE) ; \
+	    $(ECHO) > $$($1_DEPS_TARGETS_FILE)
+          endif
+        endif
+  endif
+endef
+
+# Setup make rules for creating a native binary (a shared library or an
+# executable).
+#
+# Parameter 1 is the name of the rule. This name is used as variable prefix,
+# and the targets generated are listed in a variable by that name.
+#
+# Remaining parameters are named arguments. These include:
+#   NAME The base name for the resulting binary, excluding decorations (like *.exe)
+#   TYPE Type of binary (EXECUTABLE, LIBRARY or STATIC_LIBRARY). Default is LIBRARY.
+#   SUFFIX Override the default suffix for the output file
+#   TOOLCHAIN Name of toolchain setup to use. Defaults to TOOLCHAIN_DEFAULT.
+#   SRC one or more directory roots to scan for C/C++ files.
+#   CFLAGS the compiler flags to be used, used both for C and C++.
+#   CXXFLAGS the compiler flags to be used for c++, if set overrides CFLAGS.
+#   LDFLAGS the linker flags to be used, used both for C and C++.
+#   LIBS the libraries to link to
+#   ARFLAGS the archiver flags to be used
+#   OBJECT_DIR the directory where we store the object files
+#   OUTPUT_DIR the directory where the resulting binary is put
+#   SYMBOLS_DIR the directory where the debug symbols are put, defaults to OUTPUT_DIR
+#   INCLUDES only pick source from these directories
+#   EXCLUDES do not pick source from these directories
+#   INCLUDE_FILES only compile exactly these files!
+#   EXCLUDE_FILES with these names
+#   EXCLUDE_PATTERN exclude files matching any of these substrings
+#   EXTRA_FILES List of extra files not in any of the SRC dirs
+#   EXTRA_OBJECT_FILES List of extra object files to include when linking
+#   EXTRA_DEPS List of extra dependencies to be added to each compiled file
+#   VERSIONINFO_RESOURCE Input file for RC. Setting this implies that RC will be run
+#   RCFLAGS flags for RC.
+#   EMBED_MANIFEST if true, embed manifest on Windows.
+#   MAPFILE mapfile
+#   USE_MAPFILE_FOR_SYMBOLS if true and this is a STATIC_BUILD, just copy the
+#       mapfile for the output symbols file
+#   CC the compiler to use, default is $(CC)
+#   LD the linker to use, default is $(LD)
+#   OPTIMIZATION sets optimization level to NONE, LOW, HIGH, HIGHEST, HIGHEST_JVM, SIZE
+#   DISABLED_WARNINGS_<toolchain> Disable the given warnings for the specified toolchain
+#   DISABLED_WARNINGS_C_<toolchain> Disable the given warnings for the specified toolchain
+#       when compiling C code
+#   DISABLED_WARNINGS_CXX_<toolchain> Disable the given warnings for the specified
+#       toolchain when compiling C++ code
+#   STRIP_SYMBOLS Set to false to override global strip policy and always leave
+#       symbols in the binary, if the toolchain allows for it
+#   DEBUG_SYMBOLS Set to false to disable generation of debug symbols
+#   COPY_DEBUG_SYMBOLS Set to false to override global setting of debug symbol copying
+#   ZIP_EXTERNAL_DEBUG_SYMBOLS Set to false to override global setting of debug symbol
+#       zipping
+#   STRIPFLAGS Optionally change the flags given to the strip command
+#   PRECOMPILED_HEADER Header file to use as precompiled header
+#   PRECOMPILED_HEADER_EXCLUDE List of source files that should not use PCH
+#
+# After being called, some variables are exported from this macro, all prefixed
+# with parameter 1 followed by a '_':
+#   TARGET The library or executable created by the macro
+#   TARGET_DEPS All prerequisites for the target calculated by the macro
+#   ALL_OBJS All object files
+#   IMPORT_LIBRARY The import library created for a shared library on Windows
+SetupNativeCompilation = $(NamedParamsMacroTemplate)
+define SetupNativeCompilationBody
+
+  # If type is unspecified, default to LIBRARY
+  ifeq ($$($1_TYPE), )
+    $1_TYPE := LIBRARY
+  endif
+
+  # If we're doing a static build and producing a library
+  # force it to be a static library and remove the -l libraries
+  ifeq ($(STATIC_BUILD), true)
+    ifeq ($$($1_TYPE), LIBRARY)
+      $1_TYPE := STATIC_LIBRARY
+    endif
+  endif
+
+  $$(call SetIfEmpty, $1_COMPILE_WITH_DEBUG_SYMBOLS, $$(COMPILE_WITH_DEBUG_SYMBOLS))
+
+  # STATIC_LIBS is set from Main.gmk when building static versions of certain
+  # native libraries.
+  ifeq ($(STATIC_LIBS), true)
+    $1_TYPE := STATIC_LIBRARY
+    # The static versions need to be redirected to different output dirs, both
+    # to not interfere with the main build as well as to not end up inside the
+    # jmods.
+    $1_OBJECT_DIR := $$($1_OBJECT_DIR)/static
+    $1_OUTPUT_DIR := $$($1_OBJECT_DIR)
+    # For release builds where debug symbols are configured to be moved to
+    # separate debuginfo files, disable debug symbols for static libs instead.
+    # We don't currently support this configuration and we don't want symbol
+    # information in release builds unless explicitly asked to provide it.
+    ifeq ($(DEBUG_LEVEL), release)
+      ifeq ($(COPY_DEBUG_SYMBOLS), true)
+        $1_COMPILE_WITH_DEBUG_SYMBOLS := false
+      endif
+    endif
+  endif
+
+  ifeq ($$($1_TYPE), EXECUTABLE)
+    $1_PREFIX :=
+    ifeq ($$($1_SUFFIX), )
+      $1_SUFFIX := $(EXECUTABLE_SUFFIX)
+    endif
+  else
+    $1_PREFIX := $(LIBRARY_PREFIX)
+    ifeq ($$($1_TYPE), LIBRARY)
+      ifeq ($$($1_SUFFIX), )
+        $1_SUFFIX := $(SHARED_LIBRARY_SUFFIX)
+      endif
+    else ifeq ($$($1_TYPE), STATIC_LIBRARY)
+      ifeq ($$($1_SUFFIX), )
+        $1_SUFFIX := $(STATIC_LIBRARY_SUFFIX)
+      endif
+    endif
+  endif
+
+  ifneq ($$($1_NAME), $(basename $$($1_NAME)))
+    $$(error NAME must not contain any directory path in $1)
+  endif
+  ifneq ($(findstring $$($1_SUFFIX), $$($1_NAME)), )
+    $$(error NAME should be specified without suffix: $$($1_SUFFIX) in $1)
+  endif
+  ifneq ($(findstring $$($1_PREFIX), $$($1_NAME)), )
+    $$(error NAME should be specified without prefix: $$($1_PREFIX) in $1)
+  endif
+  ifeq ($$($1_OUTPUT_DIR), )
+    $$(error OUTPUT_DIR is missing in $1)
+  endif
+  ifneq ($$($1_MANIFEST), )
+    ifeq ($$($1_MANIFEST_VERSION), )
+      $$(error If MANIFEST is provided, then MANIFEST_VERSION is required in $1)
+    endif
+  endif
+
+  $1_BASENAME := $$($1_PREFIX)$$($1_NAME)$$($1_SUFFIX)
+  $1_TARGET := $$($1_OUTPUT_DIR)/$$($1_BASENAME)
+  $1_NOSUFFIX := $$($1_PREFIX)$$($1_NAME)
+  $1_SAFE_NAME := $$(strip $$(subst /,_, $1))
+
+# Need to make sure TARGET is first on list
+  $1 := $$($1_TARGET)
+
+  # Setup the toolchain to be used
+  $$(call SetIfEmpty, $1_TOOLCHAIN, TOOLCHAIN_DEFAULT)
+  $$(call SetIfEmpty, $1_CC, $$($$($1_TOOLCHAIN)_CC))
+  $$(call SetIfEmpty, $1_CXX, $$($$($1_TOOLCHAIN)_CXX))
+  $$(call SetIfEmpty, $1_LD, $$($$($1_TOOLCHAIN)_LD))
+  $$(call SetIfEmpty, $1_AR, $$($$($1_TOOLCHAIN)_AR))
+  $$(call SetIfEmpty, $1_AS, $$($$($1_TOOLCHAIN)_AS))
+  $$(call SetIfEmpty, $1_MT, $$($$($1_TOOLCHAIN)_MT))
+  $$(call SetIfEmpty, $1_RC, $$($$($1_TOOLCHAIN)_RC))
+  $$(call SetIfEmpty, $1_OBJCOPY, $$($$($1_TOOLCHAIN)_OBJCOPY))
+  $$(call SetIfEmpty, $1_STRIP, $$($$($1_TOOLCHAIN)_STRIP))
+  $$(call SetIfEmpty, $1_SYSROOT_CFLAGS, $$($$($1_TOOLCHAIN)_SYSROOT_CFLAGS))
+  $$(call SetIfEmpty, $1_SYSROOT_LDFLAGS, $$($$($1_TOOLCHAIN)_SYSROOT_LDFLAGS))
+
+  $$(foreach d, $$($1_SRC), $$(if $$(wildcard $$d), , \
+      $$(error SRC specified to SetupNativeCompilation $1 contains missing directory $$d)))
+
+  $1_SRCS_RAW := $$(call FindFiles, $$($1_SRC))
+  # Order src files according to the order of the src dirs
+  $1_SRCS := $$(foreach d, $$($1_SRC), $$(filter $$d%, $$($1_SRCS_RAW)))
+  $1_SRCS := $$(filter $$(NATIVE_SOURCE_EXTENSIONS), $$($1_SRCS))
+  # Extract the C/C++ files.
+  ifneq ($$($1_EXCLUDE_PATTERNS), )
+    # We must not match the exclude pattern against the src root(s).
+    $1_SRCS_WITHOUT_ROOTS := $$($1_SRCS)
+    $$(foreach i, $$($1_SRC), $$(eval $1_SRCS_WITHOUT_ROOTS := $$(patsubst \
+        $$i/%,%, $$($1_SRCS_WITHOUT_ROOTS))))
+    $1_ALL_EXCLUDE_FILES :=  $$(call containing, $$($1_EXCLUDE_PATTERNS), \
+        $$($1_SRCS_WITHOUT_ROOTS))
+  endif
+  ifneq ($$($1_EXCLUDE_FILES), )
+    $1_ALL_EXCLUDE_FILES += $$($1_EXCLUDE_FILES)
+  endif
+  ifneq ($$($1_ALL_EXCLUDE_FILES), )
+    $1_EXCLUDE_FILES_PAT := $$($1_ALL_EXCLUDE_FILES) \
+        $$(foreach i, $$($1_SRC), $$(addprefix $$i/, $$($1_ALL_EXCLUDE_FILES)))
+    $1_EXCLUDE_FILES_PAT := $$(addprefix %, $$($1_EXCLUDE_FILES_PAT))
+    $1_SRCS := $$(filter-out $$($1_EXCLUDE_FILES_PAT), $$($1_SRCS))
+  endif
+  ifneq ($$($1_INCLUDE_FILES), )
+    $1_INCLUDE_FILES_PAT := $$(foreach i, $$($1_SRC), $$(addprefix $$i/, $$($1_INCLUDE_FILES)))
+    $1_SRCS := $$(filter $$($1_INCLUDE_FILES_PAT), $$($1_SRCS))
+  endif
+  # There can be only a single bin dir root, no need to foreach over the roots.
+  $1_BINS := $$(wildcard $$($1_OBJECT_DIR)/*$(OBJ_SUFFIX))
+  # Now we have a list of all c/c++ files to compile: $$($1_SRCS)
+  # and we have a list of all existing object files: $$($1_BINS)
+
+  # Prepend the source/bin path to the filter expressions. Then do the filtering.
+  ifneq ($$($1_INCLUDES), )
+    $1_SRC_INCLUDES := $$(foreach i, $$($1_SRC), $$(addprefix $$i/, $$(addsuffix /%, $$($1_INCLUDES))))
+    $1_SRCS := $$(filter $$($1_SRC_INCLUDES), $$($1_SRCS))
+  endif
+  ifneq ($$($1_EXCLUDES), )
+    $1_SRC_EXCLUDES := $$(addsuffix /%, $$($1_EXCLUDES))
+    $1_SRC_EXCLUDES += $$(foreach i, $$($1_SRC), $$(addprefix $$i/, $$(addsuffix /%, $$($1_EXCLUDES))))
+    $1_SRCS := $$(filter-out $$($1_SRC_EXCLUDES), $$($1_SRCS))
+  endif
+
+  $1_SRCS += $$($1_EXTRA_FILES)
+
+  ifeq ($$($1_SRCS), )
+    $$(error No sources found for $1 when looking inside the dirs $$($1_SRC))
+  endif
+
+  # Calculate the expected output from compiling the sources
+  $1_EXPECTED_OBJS_FILENAMES := $$(call replace_with_obj_extension, $$(notdir $$($1_SRCS)))
+  $1_EXPECTED_OBJS := $$(addprefix $$($1_OBJECT_DIR)/, $$($1_EXPECTED_OBJS_FILENAMES))
+  # Are there too many object files on disk? Perhaps because some source file was removed?
+  $1_SUPERFLOUS_OBJS := $$(sort $$(filter-out $$($1_EXPECTED_OBJS), $$($1_BINS)))
+  # Clean out the superfluous object files.
+  ifneq ($$($1_SUPERFLUOUS_OBJS), )
+    $$(shell $(RM) -f $$($1_SUPERFLUOUS_OBJS))
+  endif
+  # Sort to remove dupliates and provide a reproducable order on the input files to the linker.
+  $1_ALL_OBJS := $$(sort $$($1_EXPECTED_OBJS) $$($1_EXTRA_OBJECT_FILES))
+
+  # Pickup extra OPENJDK_TARGET_OS_TYPE, OPENJDK_TARGET_OS, and/or OPENJDK_TARGET_OS plus
+  # OPENJDK_TARGET_CPU pair dependent variables for CFLAGS.
+  $1_EXTRA_CFLAGS := $$($1_CFLAGS_$(OPENJDK_TARGET_OS_TYPE)) $$($1_CFLAGS_$(OPENJDK_TARGET_OS)) \
+      $$($1_CFLAGS_$(OPENJDK_TARGET_OS)_$(OPENJDK_TARGET_CPU))
+  ifneq ($(DEBUG_LEVEL), release)
+    # Pickup extra debug dependent variables for CFLAGS
+    $1_EXTRA_CFLAGS += $$($1_CFLAGS_debug)
+    $1_EXTRA_CFLAGS += $$($1_CFLAGS_$(OPENJDK_TARGET_OS_TYPE)_debug)
+    $1_EXTRA_CFLAGS += $$($1_CFLAGS_$(OPENJDK_TARGET_OS)_debug)
+    $1_EXTRA_CFLAGS += $$($1_CFLAGS_$(OPENJDK_TARGET_OS)_$(OPENJDK_TARGET_CPU)_debug)
+  else
+    $1_EXTRA_CFLAGS += $$($1_CFLAGS_release)
+    $1_EXTRA_CFLAGS += $$($1_CFLAGS_$(OPENJDK_TARGET_OS_TYPE)_release)
+    $1_EXTRA_CFLAGS += $$($1_CFLAGS_$(OPENJDK_TARGET_OS)_release)
+    $1_EXTRA_CFLAGS += $$($1_CFLAGS_$(OPENJDK_TARGET_OS)_$(OPENJDK_TARGET_CPU)_release)
+  endif
+  ifeq ($(STATIC_LIBS), true)
+    $1_EXTRA_CFLAGS += $$(STATIC_LIBS_CFLAGS)
+  endif
+
+  # Pickup extra OPENJDK_TARGET_OS_TYPE and/or OPENJDK_TARGET_OS dependent variables for CXXFLAGS.
+  $1_EXTRA_CXXFLAGS := $$($1_CXXFLAGS_$(OPENJDK_TARGET_OS_TYPE)) $$($1_CXXFLAGS_$(OPENJDK_TARGET_OS))
+  ifneq ($(DEBUG_LEVEL), release)
+    # Pickup extra debug dependent variables for CXXFLAGS
+    $1_EXTRA_CXXFLAGS += $$($1_CXXFLAGS_debug)
+    $1_EXTRA_CXXFLAGS += $$($1_CXXFLAGS_$(OPENJDK_TARGET_OS_TYPE)_debug)
+    $1_EXTRA_CXXFLAGS += $$($1_CXXFLAGS_$(OPENJDK_TARGET_OS)_debug)
+  else
+    $1_EXTRA_CXXFLAGS += $$($1_CXXFLAGS_release)
+    $1_EXTRA_CXXFLAGS += $$($1_CXXFLAGS_$(OPENJDK_TARGET_OS_TYPE)_release)
+    $1_EXTRA_CXXFLAGS += $$($1_CXXFLAGS_$(OPENJDK_TARGET_OS)_release)
+  endif
+  ifeq ($(STATIC_LIBS), true)
+    $1_EXTRA_CXXFLAGS += $$(STATIC_LIB_CFLAGS)
+  endif
+
+  # If no C++ flags are explicitly set, default to using the C flags.
+  # After that, we can set additional C++ flags that should not interfere
+  # with the mechanism for copying the C flags by default.
+  ifeq ($$($1_CXXFLAGS), )
+    $1_CXXFLAGS := $$($1_CFLAGS)
+  endif
+  ifeq ($$(strip $$($1_EXTRA_CXXFLAGS)), )
+    $1_EXTRA_CXXFLAGS := $$($1_EXTRA_CFLAGS)
+  endif
+
+  ifeq ($$($1_COMPILE_WITH_DEBUG_SYMBOLS), true)
+    $1_EXTRA_CFLAGS += $$(CFLAGS_DEBUG_SYMBOLS)
+    $1_EXTRA_CXXFLAGS += $$(CFLAGS_DEBUG_SYMBOLS)
+    $1_EXTRA_ASFLAGS += $$(ASFLAGS_DEBUG_SYMBOLS)
+  endif
+
+  # Pass the library name for static JNI library naming
+  ifeq ($$($1_TYPE), STATIC_LIBRARY)
+    $1_EXTRA_CFLAGS += -DLIBRARY_NAME=$$($1_NAME)
+    $1_EXTRA_CXXFLAGS += -DLIBRARY_NAME=$$($1_NAME)
+  endif
+
+  # Pick up disabled warnings, if possible on this platform.
+  ifneq ($(DISABLE_WARNING_PREFIX), )
+    $1_EXTRA_CFLAGS += $$(addprefix $(DISABLE_WARNING_PREFIX), \
+        $$(DISABLED_WARNINGS) \
+        $$(DISABLED_WARNINGS_C) \
+        $$($1_DISABLED_WARNINGS_$(TOOLCHAIN_TYPE)) \
+        $$($1_DISABLED_WARNINGS_C_$(TOOLCHAIN_TYPE)))
+    $1_EXTRA_CXXFLAGS += $$(addprefix $(DISABLE_WARNING_PREFIX), \
+        $$(DISABLED_WARNINGS) \
+        $$(DISABLED_WARNINGS_CXX) \
+        $$($1_DISABLED_WARNINGS_$(TOOLCHAIN_TYPE)) \
+        $$($1_DISABLED_WARNINGS_CXX_$(TOOLCHAIN_TYPE)))
+  endif
+
+  # Check if warnings should be considered errors.
+  # Pick first binary and toolchain specific, then binary specific, then general setting.
+  ifeq ($$($1_WARNINGS_AS_ERRORS_$(TOOLCHAIN_TYPE)), )
+    ifeq ($$($1_WARNINGS_AS_ERRORS), )
+      $1_WARNINGS_AS_ERRORS_$(TOOLCHAIN_TYPE) := $$(WARNINGS_AS_ERRORS)
+    else
+      $1_WARNINGS_AS_ERRORS_$(TOOLCHAIN_TYPE) := $$($1_WARNINGS_AS_ERRORS)
+    endif
+  endif
+
+  ifeq ($$($1_WARNINGS_AS_ERRORS_$(TOOLCHAIN_TYPE)), true)
+    $1_EXTRA_CFLAGS += $(CFLAGS_WARNINGS_ARE_ERRORS)
+    $1_EXTRA_CXXFLAGS += $(CFLAGS_WARNINGS_ARE_ERRORS)
+  endif
+
+  ifeq (NONE, $$($1_OPTIMIZATION))
+    $1_OPT_CFLAGS := $(C_O_FLAG_NONE)
+    $1_OPT_CXXFLAGS := $(CXX_O_FLAG_NONE)
+  else ifeq (LOW, $$($1_OPTIMIZATION))
+    $1_OPT_CFLAGS := $(C_O_FLAG_NORM)
+    $1_OPT_CXXFLAGS := $(CXX_O_FLAG_NORM)
+  else ifeq (HIGH, $$($1_OPTIMIZATION))
+    $1_OPT_CFLAGS := $(C_O_FLAG_HI)
+    $1_OPT_CXXFLAGS := $(CXX_O_FLAG_HI)
+  else ifeq (HIGHEST, $$($1_OPTIMIZATION))
+    $1_OPT_CFLAGS := $(C_O_FLAG_HIGHEST)
+    $1_OPT_CXXFLAGS := $(CXX_O_FLAG_HIGHEST)
+  else ifeq (HIGHEST_JVM, $$($1_OPTIMIZATION))
+    $1_OPT_CFLAGS := $(C_O_FLAG_HIGHEST_JVM)
+    $1_OPT_CXXFLAGS := $(CXX_O_FLAG_HIGHEST_JVM)
+  else ifeq (SIZE, $$($1_OPTIMIZATION))
+    $1_OPT_CFLAGS := $(C_O_FLAG_SIZE)
+    $1_OPT_CXXFLAGS := $(CXX_O_FLAG_SIZE)
+  else ifneq (, $$($1_OPTIMIZATION))
+    $$(error Unknown value for OPTIMIZATION: $$($1_OPTIMIZATION))
+  endif
+
+  $1_BUILD_INFO := $$($1_OBJECT_DIR)/_build-info.marker
+
+  # Track variable changes for all variables that affect the compilation command
+  # lines for all object files in this setup. This includes at least all the
+  # variables used in the call to add_native_source below.
+  $1_COMPILE_VARDEPS := $$($1_CFLAGS) $$($1_EXTRA_CFLAGS) $$($1_SYSROOT_CFLAGS) \
+      $$($1_CXXFLAGS) $$($1_EXTRA_CXXFLAGS) $$($1_OPT_CFLAGS) $$($1_OPT_CXXFLAGS) \
+      $$($1_CC) $$($1_CXX) $$($1_AS) $$($1_ASFLAGS)
+  $1_COMPILE_VARDEPS_FILE := $$(call DependOnVariable, $1_COMPILE_VARDEPS, \
+      $$($1_OBJECT_DIR)/$$($1_NOSUFFIX).comp.vardeps)
+
+  ifneq ($$($1_PRECOMPILED_HEADER), )
+    ifeq ($(USE_PRECOMPILED_HEADER), true)
+      ifeq ($(TOOLCHAIN_TYPE), microsoft)
+        $1_PCH_FILE := $$($1_OBJECT_DIR)/$1.pch
+        $1_GENERATED_PCH_SRC := $$($1_OBJECT_DIR)/$1_pch.cpp
+        $1_GENERATED_PCH_OBJ := $$($1_OBJECT_DIR)/$1_pch.obj
+
+        $$(eval $$(call SetupCompileNativeFile, $1_$$(notdir $$($1_GENERATED_PCH_SRC)), \
+            FILE := $$($1_GENERATED_PCH_SRC), \
+            BASE := $1, \
+            EXTRA_CXXFLAGS := -Fp$$($1_PCH_FILE) -Yc$$(notdir $$($1_PRECOMPILED_HEADER)), \
+        ))
+
+        $1_USE_PCH_FLAGS := \
+            -Fp$$($1_PCH_FILE) -Yu$$(notdir $$($1_PRECOMPILED_HEADER))
+
+        $$($1_ALL_OBJS): $$($1_GENERATED_PCH_OBJ)
+
+        # Explicitly add the pch obj file first to ease comparing to old
+        # hotspot build.
+        $1_ALL_OBJS := $$($1_GENERATED_PCH_OBJ) $$($1_ALL_OBJS)
+
+        $$($1_GENERATED_PCH_SRC):
+		$(ECHO) "#include \"$$(notdir $$($1_PRECOMPILED_HEADER))\"" > $$@
+
+      else ifneq ($(findstring $(TOOLCHAIN_TYPE), gcc clang), )
+        ifeq ($(TOOLCHAIN_TYPE), gcc)
+          $1_PCH_FILE := $$($1_OBJECT_DIR)/precompiled/$$(notdir $$($1_PRECOMPILED_HEADER)).gch
+          $1_USE_PCH_FLAGS := -I$$($1_OBJECT_DIR)/precompiled
+        else ifeq ($(TOOLCHAIN_TYPE), clang)
+          $1_PCH_FILE := $$($1_OBJECT_DIR)/precompiled/$$(notdir $$($1_PRECOMPILED_HEADER)).pch
+          $1_USE_PCH_FLAGS := -include-pch $$($1_PCH_FILE)
+        endif
+        $1_PCH_DEPS_FILE := $$($1_PCH_FILE).d
+        $1_PCH_DEPS_TARGETS_FILE := $$($1_PCH_FILE).d.targets
+
+        -include $$($1_PCH_DEPS_FILE)
+        -include $$($1_PCH_DEPS_TARGETS_FILE)
+
+        $1_PCH_COMMAND := $$($1_CC) $$($1_CFLAGS) $$($1_EXTRA_CFLAGS) $$($1_SYSROOT_CFLAGS) \
+            $$($1_OPT_CFLAGS) -x c++-header -c $(GENDEPS_FLAGS) \
+            $$(addsuffix .tmp, $$($1_PCH_DEPS_FILE))
+
+        $$($1_PCH_FILE): $$($1_PRECOMPILED_HEADER) $$($1_COMPILE_VARDEPS_FILE)
+		$$(call LogInfo, Generating precompiled header)
+		$$(call MakeDir, $$(@D))
+		$$(call ExecuteWithLog, $$@, $$(call MakeCommandRelative, \
+		    $$($1_PCH_COMMAND) $$< -o $$@))
+		$$(call fix-deps-file, $$($1_PCH_DEPS_FILE))
+		$(SED) $(DEPENDENCY_TARGET_SED_PATTERN) $$($1_PCH_DEPS_FILE) \
+		    > $$($1_PCH_DEPS_TARGETS_FILE)
+
+        $$($1_ALL_OBJS): $$($1_PCH_FILE)
+
+        # Generate the corresponding compile_commands.json fragment.
+        $1_PCH_FILE_JSON := $$(MAKESUPPORT_OUTPUTDIR)/compile-commands/$$(subst /,_,$$(subst \
+            $$(OUTPUTDIR)/,,$$($1_PCH_FILE))).json
+        $1_ALL_OBJS_JSON += $$($1_PCH_FILE_JSON)
+
+        $$($1_PCH_FILE_JSON): $$($1_PRECOMPILED_HEADER) $$($1_COMPILE_VARDEPS_FILE)
+		$$(call WriteCompileCommandsFragment, $$@, $$(PWD), $$<, \
+		    $$($1_PCH_COMMAND) $$< -o $$($1_PCH_FILE))
+      endif
+    endif
+  endif
+
+  # Now call SetupCompileNativeFile for each source file we are going to compile.
+  $$(foreach file, $$($1_SRCS), \
+      $$(eval $$(call SetupCompileNativeFile, $1_$$(notdir $$(file)),\
+          FILE := $$(file), \
+          BASE := $1, \
+      )) \
+  )
+
+  # Setup rule for printing progress info when compiling source files.
+  # This is a rough heuristic and may not always print accurate information.
+  $$($1_BUILD_INFO): $$($1_SRCS) $$($1_COMPILE_VARDEPS_FILE)
+        ifeq ($$(wildcard $$($1_TARGET)), )
+	  $$(call LogWarn, Creating $$(subst $$(OUTPUTDIR)/,,$$($1_TARGET)) from $$(words \
+	      $$(filter-out %.vardeps, $$?)) file(s))
+        else
+	  $$(call LogWarn, $$(strip Updating $$(subst $$(OUTPUTDIR)/,,$$($1_TARGET)) \
+	      $$(if $$(filter-out %.vardeps, $$?), \
+	        due to $$(words $$(filter-out %.vardeps, $$?)) file(s), \
+	      $$(if $$(filter %.vardeps, $$?), due to makefile changes))))
+        endif
+	$(TOUCH) $$@
+
+  # On windows we need to create a resource file
+  ifeq ($(call isTargetOs, windows), true)
+    ifneq ($$($1_VERSIONINFO_RESOURCE), )
+      $1_RES := $$($1_OBJECT_DIR)/$$($1_BASENAME).res
+      $1_RES_DEPS_FILE := $$($1_RES).d
+      $1_RES_DEPS_TARGETS_FILE := $$($1_RES).d.targets
+      -include $$($1_RES_DEPS_FILE)
+      -include $$($1_RES_DEPS_TARGETS_FILE)
+
+      $1_RES_VARDEPS := $$($1_RC) $$($1_RCFLAGS)
+      $1_RES_VARDEPS_FILE := $$(call DependOnVariable, $1_RES_VARDEPS, \
+          $$($1_RES).vardeps)
+
+      $$($1_RES): $$($1_VERSIONINFO_RESOURCE) $$($1_RES_VARDEPS_FILE)
+		$$(call LogInfo, Compiling resource $$(notdir $$($1_VERSIONINFO_RESOURCE)) (for $$($1_BASENAME)))
+		$$(call MakeDir, $$(@D) $$($1_OBJECT_DIR))
+		$$(call ExecuteWithLog, $$@, $$(call MakeCommandRelative, \
+		    $$($1_RC) $$($1_RCFLAGS) $$($1_SYSROOT_CFLAGS) $(CC_OUT_OPTION)$$@ \
+		    $$($1_VERSIONINFO_RESOURCE) 2>&1 ))
+                # Windows RC compiler does not support -showIncludes, so we mis-use CL
+                # for this. Filter out RC specific arguments that are unknown to CL.
+                # For some unknown reason, in this case CL actually outputs the show
+                # includes to stderr so need to redirect it to hide the output from the
+                # main log.
+		$$(call ExecuteWithLog, $$($1_RES_DEPS_FILE).obj, \
+		    $$($1_CC) $$(filter-out -l%, $$($1_RCFLAGS)) \
+		        $$($1_SYSROOT_CFLAGS) -showIncludes -nologo -TC \
+		        $(CC_OUT_OPTION)$$($1_RES_DEPS_FILE).obj -P -Fi$$($1_RES_DEPS_FILE).pp \
+		        $$($1_VERSIONINFO_RESOURCE)) 2>&1 \
+		    | $(TR) -d '\r' | $(GREP) -v -e "^Note: including file:" \
+		        -e "^$$(notdir $$($1_VERSIONINFO_RESOURCE))$$$$" || test "$$$$?" = "1" ; \
+		$(ECHO) $$($1_RES): \\ > $$($1_RES_DEPS_FILE) ; \
+		$(SED) $(WINDOWS_SHOWINCLUDE_SED_PATTERN) $$($1_RES_DEPS_FILE).obj.log \
+		    >> $$($1_RES_DEPS_FILE) ; \
+		$(ECHO) >> $$($1_RES_DEPS_FILE) ;\
+		$(SED) $(DEPENDENCY_TARGET_SED_PATTERN) $$($1_RES_DEPS_FILE) \
+		    > $$($1_RES_DEPS_TARGETS_FILE)
+    endif
+  endif
+
+  # Create a rule to collect all the individual make dependency files into a
+  # single makefile.
+  $1_DEPS_FILE := $$($1_OBJECT_DIR)/$1.d
+
+  $$($1_DEPS_FILE): $$($1_ALL_OBJS) $$($1_RES)
+	$(RM) $$@
+        # CD into dir to reduce risk of hitting command length limits, which
+        # could otherwise happen if TOPDIR is a very long path.
+	$(CD) $$($1_OBJECT_DIR) && $(CAT) *.d > $$@.tmp
+	$(CD) $$($1_OBJECT_DIR) && $(CAT) *.d.targets | $(SORT) -u >> $$@.tmp
+        # After generating the file, which happens after all objects have been
+        # compiled, copy it to .old extension. On the next make invocation, this
+        # .old file will be included by make.
+	$(CP) $$@.tmp $$@.old
+	$(MV) $$@.tmp $$@
+
+  $1 += $$($1_DEPS_FILE)
+
+  # The include must be on the .old file, which represents the state from the
+  # previous invocation of make. The file being included must not have a rule
+  # defined for it as otherwise make will think it has to run the rule before
+  # being able to include the file, which would be wrong since we specifically
+  # need the file as it was generated by a previous make invocation.
+  ifneq ($$(wildcard $$($1_DEPS_FILE).old), )
+    $1_DEPS_FILE_LOADED := true
+    -include $$($1_DEPS_FILE).old
+  endif
+
+  ifneq ($(DISABLE_MAPFILES), true)
+    $1_REAL_MAPFILE := $$($1_MAPFILE)
+  endif
+
+  # Pickup extra OPENJDK_TARGET_OS_TYPE and/or OPENJDK_TARGET_OS dependent variables
+  # for LDFLAGS and LIBS
+  $1_EXTRA_LDFLAGS += $$($1_LDFLAGS_$(OPENJDK_TARGET_OS_TYPE)) $$($1_LDFLAGS_$(OPENJDK_TARGET_OS))
+  $1_EXTRA_LIBS += $$($1_LIBS_$(OPENJDK_TARGET_OS_TYPE)) $$($1_LIBS_$(OPENJDK_TARGET_OS))
+  ifneq ($$($1_REAL_MAPFILE), )
+    $1_EXTRA_LDFLAGS += $(call SET_SHARED_LIBRARY_MAPFILE,$$($1_REAL_MAPFILE))
+  endif
+
+  ifneq ($$($1_COPY_DEBUG_SYMBOLS), false)
+    $1_COPY_DEBUG_SYMBOLS := $(COPY_DEBUG_SYMBOLS)
+  endif
+
+  ifneq ($$($1_ZIP_EXTERNAL_DEBUG_SYMBOLS), false)
+    $1_ZIP_EXTERNAL_DEBUG_SYMBOLS := $(ZIP_EXTERNAL_DEBUG_SYMBOLS)
+  endif
+
+  ifeq ($$($1_COPY_DEBUG_SYMBOLS), true)
+    ifneq ($$($1_DEBUG_SYMBOLS), false)
+      $$(call SetIfEmpty, $1_SYMBOLS_DIR, $$($1_OUTPUT_DIR))
+      # Only copy debug symbols for dynamic libraries and programs.
+      ifneq ($$($1_TYPE), STATIC_LIBRARY)
+        # Generate debuginfo files.
+        ifeq ($(call isTargetOs, windows), true)
+          $1_EXTRA_LDFLAGS += -debug "-pdb:$$($1_SYMBOLS_DIR)/$$($1_NOSUFFIX).pdb" \
+              "-map:$$($1_SYMBOLS_DIR)/$$($1_NOSUFFIX).map"
+          ifeq ($(SHIP_DEBUG_SYMBOLS), public)
+            $1_EXTRA_LDFLAGS += "-pdbstripped:$$($1_SYMBOLS_DIR)/$$($1_NOSUFFIX).stripped.pdb"
+          endif
+          $1_DEBUGINFO_FILES := $$($1_SYMBOLS_DIR)/$$($1_NOSUFFIX).pdb \
+              $$($1_SYMBOLS_DIR)/$$($1_NOSUFFIX).map
+
+        else ifeq ($(call isTargetOs, linux), true)
+          $1_DEBUGINFO_FILES := $$($1_SYMBOLS_DIR)/$$($1_NOSUFFIX).debuginfo
+          # Setup the command line creating debuginfo files, to be run after linking.
+          # It cannot be run separately since it updates the original target file
+          $1_CREATE_DEBUGINFO_CMDS := \
+              $$($1_OBJCOPY) --only-keep-debug $$($1_TARGET) $$($1_DEBUGINFO_FILES) $$(NEWLINE) \
+              $(CD) $$($1_SYMBOLS_DIR) && \
+                  $$($1_OBJCOPY) --add-gnu-debuglink=$$($1_DEBUGINFO_FILES) $$($1_TARGET)
+
+        else ifeq ($(call isTargetOs, aix), true)
+          # AIX does not provide the equivalent of OBJCOPY to extract debug symbols,
+          # so we copy the compiled object with symbols to the .debuginfo file, which
+          # happens prior to the STRIP_CMD on the original target object file.
+          $1_DEBUGINFO_FILES := $$($1_SYMBOLS_DIR)/$$($1_NOSUFFIX).debuginfo
+          $1_CREATE_DEBUGINFO_CMDS := $(CP) $$($1_TARGET) $$($1_DEBUGINFO_FILES)
+
+        else ifeq ($(call isTargetOs, macosx), true)
+          $1_DEBUGINFO_FILES := \
+              $$($1_SYMBOLS_DIR)/$$($1_BASENAME).dSYM/Contents/Info.plist \
+              $$($1_SYMBOLS_DIR)/$$($1_BASENAME).dSYM/Contents/Resources/DWARF/$$($1_BASENAME)
+          $1_CREATE_DEBUGINFO_CMDS := \
+              $(DSYMUTIL) --out $$($1_SYMBOLS_DIR)/$$($1_BASENAME).dSYM $$($1_TARGET)
+        endif
+
+        # Since the link rule creates more than one file that we want to track,
+        # we have to use some tricks to get make to cooperate. To properly
+        # trigger downstream dependants of $$($1_DEBUGINFO_FILES), we must have
+        # a recipe in the rule below. To avoid rerunning the recipe every time
+        # have it touch the target. If a debuginfo file is deleted by something
+        # external, explicitly delete the TARGET to trigger a rebuild of both.
+        ifneq ($$(wildcard $$($1_DEBUGINFO_FILES)), $$($1_DEBUGINFO_FILES))
+          $$(call LogDebug, Deleting $$($1_BASENAME) because debuginfo files are missing)
+          $$(shell $(RM) $$($1_TARGET))
+        endif
+        $$($1_DEBUGINFO_FILES): $$($1_TARGET)
+		$$(if $$(CORRECT_FUNCTION_IN_RECIPE_EVALUATION), \
+		  $$(if $$(wildcard $$@), , $$(error $$@ was not created for $$<)) \
+		)
+		$(TOUCH) $$@
+
+        $1 += $$($1_DEBUGINFO_FILES)
+
+        ifeq ($$($1_ZIP_EXTERNAL_DEBUG_SYMBOLS), true)
+          $1_DEBUGINFO_ZIP := $$($1_SYMBOLS_DIR)/$$($1_NOSUFFIX).diz
+          $1 += $$($1_DEBUGINFO_ZIP)
+
+          # The dependency on TARGET is needed for debuginfo files
+          # to be rebuilt properly.
+          $$($1_DEBUGINFO_ZIP): $$($1_DEBUGINFO_FILES) $$($1_TARGET)
+		$(CD) $$($1_SYMBOLS_DIR) && \
+		    $(ZIPEXE) -q -r $$@ $$(subst $$($1_SYMBOLS_DIR)/,, $$($1_DEBUGINFO_FILES))
+
+        endif
+       endif # !STATIC_LIBRARY
+    endif # $1_DEBUG_SYMBOLS != false
+  endif # COPY_DEBUG_SYMBOLS
+
+  # Unless specifically set, stripping should only happen if symbols are also
+  # being copied.
+  $$(call SetIfEmpty, $1_STRIP_SYMBOLS, $$($1_COPY_DEBUG_SYMBOLS))
+
+  ifneq ($$($1_STRIP_SYMBOLS), false)
+    ifneq ($$($1_STRIP), )
+      # Default to using the global STRIPFLAGS. Allow for overriding with an empty value
+      $1_STRIPFLAGS ?= $(STRIPFLAGS)
+      $1_STRIP_CMD := $$($1_STRIP) $$($1_STRIPFLAGS) $$($1_TARGET)
+    endif
+  endif
+
+  ifeq ($$($1_TYPE), STATIC_LIBRARY)
+    $1_VARDEPS := $$($1_AR) $$(ARFLAGS) $$($1_ARFLAGS) $$($1_LIBS) \
+        $$($1_EXTRA_LIBS)
+    $1_VARDEPS_FILE := $$(call DependOnVariable, $1_VARDEPS, \
+        $$($1_OBJECT_DIR)/$$($1_NOSUFFIX).vardeps)
+
+    # Generating a static library, ie object file archive.
+    ifeq ($(STATIC_BUILD), true)
+      ifeq ($$($1_USE_MAPFILE_FOR_SYMBOLS), true)
+        STATIC_MAPFILE_DEP := $$($1_MAPFILE)
+      endif
+    endif
+
+    $1_TARGET_DEPS := $$($1_ALL_OBJS) $$($1_RES) $$($1_VARDEPS_FILE) $$(STATIC_MAPFILE_DEP)
+
+    $$($1_TARGET): $$($1_TARGET_DEPS)
+	$$(call LogInfo, Building static library $$($1_BASENAME))
+	$$(call MakeDir, $$($1_OUTPUT_DIR) $$($1_SYMBOLS_DIR))
+	$$(call ExecuteWithLog, $$($1_OBJECT_DIR)/$$($1_SAFE_NAME)_link, \
+	    $$($1_AR) $$(ARFLAGS) $$($1_ARFLAGS) $(AR_OUT_OPTION)$$($1_TARGET) $$($1_ALL_OBJS) \
+	        $$($1_RES))
+        ifeq ($(STATIC_BUILD), true)
+          ifeq ($$($1_USE_MAPFILE_FOR_SYMBOLS), true)
+	    $(CP) $$($1_MAPFILE) $$(@D)/$$(basename $$(@F)).symbols
+          else
+	    $(GetSymbols)
+          endif
+        endif
+  else
+    # A shared dynamic library or an executable binary has been specified
+    ifeq ($$($1_TYPE), LIBRARY)
+      # Generating a dynamic library.
+      $1_EXTRA_LDFLAGS += $$(call SET_SHARED_LIBRARY_NAME,$$($1_BASENAME))
+
+      # Create loadmap on AIX. Helps in diagnosing some problems.
+      ifneq ($(COMPILER_BINDCMD_FILE_FLAG), )
+        $1_EXTRA_LDFLAGS += $(COMPILER_BINDCMD_FILE_FLAG)$$($1_OBJECT_DIR)/$$($1_NOSUFFIX).loadmap
+      endif
+    endif
+
+    ifeq ($(call isTargetOs, windows), true)
+      ifeq ($$($1_EMBED_MANIFEST), true)
+        $1_EXTRA_LDFLAGS += -manifest:embed
+      endif
+
+      $1_IMPORT_LIBRARY := $$($1_OBJECT_DIR)/$$($1_NAME).lib
+      $1_EXTRA_LDFLAGS += "-implib:$$($1_IMPORT_LIBRARY)"
+      ifeq ($$($1_TYPE), LIBRARY)
+        # To properly trigger downstream dependants of the import library, just as
+        # for debug files, we must have a recipe in the rule. To avoid rerunning
+        # the recipe every time have it touch the target. If an import library
+        # file is deleted by something external, explicitly delete the target to
+        # trigger a rebuild of both.
+        ifneq ($$(wildcard $$($1_IMPORT_LIBRARY)), $$($1_IMPORT_LIBRARY))
+          $$(call LogDebug, Deleting $$($1_BASENAME) because import library is missing)
+          $$(shell $(RM) $$($1_TARGET))
+        endif
+        $$($1_IMPORT_LIBRARY): $$($1_TARGET)
+		$(TOUCH) $$@
+
+        $1 += $$($1_IMPORT_LIBRARY)
+      endif
+    endif
+
+    $1_VARDEPS := $$($1_LD) $$($1_SYSROOT_LDFLAGS) $$($1_LDFLAGS) $$($1_EXTRA_LDFLAGS) \
+        $$($1_LIBS) $$($1_EXTRA_LIBS) $$($1_MT) \
+        $$($1_CREATE_DEBUGINFO_CMDS) $$($1_MANIFEST_VERSION) \
+        $$($1_STRIP_CMD)
+    $1_VARDEPS_FILE := $$(call DependOnVariable, $1_VARDEPS, \
+        $$($1_OBJECT_DIR)/$$($1_NOSUFFIX).vardeps)
+
+    $1_LD_OBJ_ARG := $$($1_ALL_OBJS)
+
+    # If there are many object files, use an @-file...
+    ifneq ($$(word 17, $$($1_ALL_OBJS)), )
+      $1_OBJ_FILE_LIST := $$($1_OBJECT_DIR)/_$1_objectfilenames.txt
+      ifneq ($(COMPILER_COMMAND_FILE_FLAG), )
+        $1_LD_OBJ_ARG := $(COMPILER_COMMAND_FILE_FLAG)$$($1_OBJ_FILE_LIST)
+      else
+        # ...except for toolchains which don't support them.
+        $1_LD_OBJ_ARG := `cat $$($1_OBJ_FILE_LIST)`
+      endif
+    endif
+
+    # Unfortunately the @-file trick does not work reliably when using clang.
+    # Clang does not propagate the @-file parameter to the ld sub process, but
+    # instead puts the full content on the command line. At least the llvm ld
+    # does not even support an @-file.
+    #
+    # When linking a large amount of object files, we risk hitting the limit
+    # of the command line length even on posix systems if the path length of
+    # the output dir is very long due to our use of absolute paths. To
+    # mitigate this, use paths relative to the output dir when linking over
+    # 500 files with clang and the output dir path is deep.
+    ifneq ($$(word 500, $$($1_ALL_OBJS)), )
+      ifeq ($$(TOOLCHAIN_TYPE), clang)
+        # There is no strlen function in make, but checking path depth is a
+        # reasonable approximation.
+        ifneq ($$(word 10, $$(subst /, ,$$(OUTPUTDIR))), )
+          $1_LINK_OBJS_RELATIVE := true
+          $1_ALL_OBJS_RELATIVE := $$(patsubst $$(OUTPUTDIR)/%, %, $$($1_ALL_OBJS))
+        endif
+      endif
+    endif
+
+    $1_TARGET_DEPS := $$($1_ALL_OBJS) $$($1_RES) $$($1_MANIFEST) \
+        $$($1_REAL_MAPFILE) $$($1_VARDEPS_FILE)
+
+    $$($1_TARGET): $$($1_TARGET_DEPS)
+                ifneq ($$($1_OBJ_FILE_LIST), )
+                  ifeq ($$($1_LINK_OBJS_RELATIVE), true)
+		    $$(eval $$(call ListPathsSafely, $1_ALL_OBJS_RELATIVE, $$($1_OBJ_FILE_LIST)))
+                  else
+		    $$(eval $$(call ListPathsSafely, $1_ALL_OBJS, $$($1_OBJ_FILE_LIST)))
+                  endif
+                endif
+                # Keep as much as possible on one execution line for best performance
+                # on Windows
+		$$(call LogInfo, Linking $$($1_BASENAME))
+		$$(call MakeDir, $$($1_OUTPUT_DIR) $$($1_SYMBOLS_DIR))
+                ifeq ($(call isTargetOs, windows), true)
+
+		  $$(call ExecuteWithLog, $$($1_OBJECT_DIR)/$$($1_SAFE_NAME)_link, \
+		      $$($1_LD) $$($1_LDFLAGS) $$($1_EXTRA_LDFLAGS) $$($1_SYSROOT_LDFLAGS) \
+		          $(LD_OUT_OPTION)$$($1_TARGET) $$($1_LD_OBJ_ARG) $$($1_RES) \
+		          $$($1_LIBS) $$($1_EXTRA_LIBS)) \
+		      | $(GREP) -v "^   Creating library .*\.lib and object .*\.exp" || \
+		          test "$$$$?" = "1" ; \
+		  $$($1_CREATE_DEBUGINFO_CMDS)
+		  $$($1_STRIP_CMD)
+                 ifeq ($(call isBuildOsEnv, windows.wsl2), true)
+		    $$(CHMOD) +x $$($1_TARGET)
+                 endif
+                else
+		  $$(call ExecuteWithLog, $$($1_OBJECT_DIR)/$$($1_SAFE_NAME)_link, \
+		      $$(if $$($1_LINK_OBJS_RELATIVE), $$(CD) $$(OUTPUTDIR) ; ) \
+		      $$($1_LD) $$($1_LDFLAGS) $$($1_EXTRA_LDFLAGS) $$($1_SYSROOT_LDFLAGS) \
+		          $(LD_OUT_OPTION)$$($1_TARGET) $$($1_LD_OBJ_ARG) $$($1_RES) \
+		          $$($1_LIBS) $$($1_EXTRA_LIBS)) ; \
+		  $$($1_CREATE_DEBUGINFO_CMDS)
+		  $$($1_STRIP_CMD)
+                endif
+                ifeq ($(call isTargetOs, windows), true)
+                  ifneq ($$($1_MANIFEST), )
+		    $$($1_MT) -nologo -manifest $$($1_MANIFEST) -identity:"$$($1_NAME).exe, version=$$($1_MANIFEST_VERSION)" -outputresource:$$@;#1
+                  endif
+                endif
+                # This only works if the openjdk_codesign identity is present on the system. Let
+                # silently fail otherwise.
+                ifneq ($(CODESIGN), )
+		  $(CODESIGN) -f -s "$(MACOSX_CODESIGN_IDENTITY)" --timestamp --options runtime \
+		      --entitlements $$(call GetEntitlementsFile, $$@) $$@
+                endif
+  endif
+
+  ifeq ($(GENERATE_COMPILE_COMMANDS_ONLY), true)
+    $1 := $$($1_ALL_OBJS_JSON)
+  endif
+endef
+
+endif # _NATIVE_COMPILATION_GMK

@@ -1,0 +1,11 @@
+#
+#
+#
+#  Conformance test data which was added by Markus Scherer of IBM.
+#    According to him, "more interesting conformance test cases, not in the
+#    unicode.org NormalizationTest.txt".
+#    Found in ConformanceTest.java in
+#        src/com/ibm/icu/dev/test/normalizer/ConformanceTest.java of ICU4J 3.2.
+@Part0 # Other (ICU4J test data)
+0061 0332 0308;00E4 0332;0061 0332 0308;00E4 0332;0061 0332 0308; # Markus 0",
+0061 0301 0F73;00E1 0F71 0F72;0061 0F71 0F72 0301;00E1 0F71 0F72;0061 0F71 0F72 0301; # Markus 1"

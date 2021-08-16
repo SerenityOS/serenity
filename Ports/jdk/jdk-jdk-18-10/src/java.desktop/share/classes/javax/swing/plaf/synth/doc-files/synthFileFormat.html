@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Synth File Format</title>
+<!--
+ Copyright (c) 1998, 2021, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+
+  <style type="text/css">
+div.dtd-fragment {
+    width: 100%;
+    border: none;
+    background-color: #eee;
+}
+pre.dtd-fragment {
+    margin-left: 0;
+}
+div.example {
+    width: 100%;
+    color: maroon;
+}
+  </style>
+  </head>
+
+  <body>
+  <main role="main">
+    <h1><a id="file">File Format</a></h1>
+    <p>
+      Synth's file format (<a href="synth.dtd">dtd</a>)
+      allows for specifying all the pieces
+      necessary to create your own look and feel. A synth file is
+      loaded by way of the <A
+        HREF="../../../../../javax/swing/plaf/synth/SynthLookAndFeel.html#load(java.io.InputStream,java.lang.Class)">
+      SynthLookAndFeel.load(InputStream, Class)</a> or
+      <a href="../../../../../javax/swing/plaf/synth/SynthLookAndFeel.html#load(java.net.URL)">
+        SynthLookAndFeel.load(URL)</a> methods.
+      The following example uses the <code>load</code> method to configure
+      a <code>SynthLookAndFeel</code> and sets it as the current look
+      and feel:
+    </p>
+    <div class="example">
+      <pre>
+  SynthLookAndFeel laf = new SynthLookAndFeel();
+  laf.load(MyClass.class.getResourceAsStream("laf.xml"), MyClass.class);
+  UIManager.setLookAndFeel(laf);
+      </pre>
+    </div>
+    <p>
+      This example loads the look and feel from an input stream, using
+      the specified class as the resource base to resolve paths.
+      It is also possible to load a look and feel from an arbitrary URL
+      as in the following example.
+    </p>
+    <div class="example">
+      <pre>
+  SynthLookAndFeel laf = new SynthLookAndFeel();
+  laf.load(new URL("file:///C:/java/synth/laf/laf.xml"));
+  UIManager.setLookAndFeel(laf);
+      </pre>
+    </div>
+    <p>
+      The method <a
+        href="../../../../../javax/swing/plaf/synth/SynthLookAndFeel.html#load(java.net.URL)">
+      SynthLookAndFeel.load(URL)</a> can be used, for instance, to load a look
+      and feel from any of the following:
+    </p>
+    <ul>
+      <li>File, e.g. <code>file:///C:/java/synth/laf/laf.xml</code></li>
+      <li>Web server, e.g. <code>http://host/laf.xml</code></li>
+      <li>JAR file, e.g.
+        <code>jar:file:///C:/synth-laf.jar!/laf.xml</code></li>
+      <li>Remote JAR file, e.g.
+        <code>jar:http://host/synth-laf.jar!/laf.xml</code></li>
+    </ul>
+    <p>
+      While the DTD for synth is specified, the parser is not validating.
+      Parsing will fail only if a necessary attribute is not
+      specified, or of the wrong type.
+
+    <h2>The synth element</h2>
+<div class="dtd-fragment">
+<pre class="dtd-fragment">
+&lt;!ELEMENT <a id="e.synth">synth</a> ((<a href="#ee.beansPersistance">%beansPersistance;</a>) | <a href="#e.style">style</a> | <a href="#e.bind">bind</a> | <a href="#e.font">font</a> | <a href="#e.color">color</a> |
+                 <a href="#e.imagePainter">imagePainter</a> | <a href="#e.imageIcon">imageIcon</a> | <a href="#e.defaultsProperty">defaultsProperty</a>)*>
+&lt;!ATTLIST synth
+          <a href="#synth.version">version</a>              CDATA          #IMPLIED
+&gt;
+</pre>
+</div>
+    <p><em>Attribute definitions</em></p>
+    <dl><dt><a id="synth.version"><samp>version</samp></a></dt>
+	<dd>File format version, should be 1</dd>
+    </dl>
+    <p>
+      The <a href="#e.synth">synth</a> element contains all the other
+      elements that make up a SynthLookAndFeel definition.
+    </p>
+
+
+    <h2>The style element</h2>
+<div class="dtd-fragment">
+<pre class="dtd-fragment">
+&lt;!ELEMENT <a id="e.style">style</a> (<a href="#e.property">property</a> | <a href="#e.defaultsProperty">defaultsProperty</a> | <a href="#e.state">state</a> | <a href="#e.font">font</a> | <a href="#e.graphicsUtils">graphicsUtils</a> |
+                 <a href="#e.insets">insets</a> | <a href="#e.painter">painter</a> | <a href="#e.imagePainter">imagePainter</a> | <a href="#e.opaque">opaque</a> | (<a href="#ee.beansPersistance">%beansPersistance;</a>) |
+                 <a href="#e.imageIcon">imageIcon</a>)*>
+&lt;!ATTLIST style
+          <a href="#style.id">id</a>              ID          #IMPLIED
+          <a href="#style.clone">clone</a>           IDREF       #IMPLIED
+&gt;
+</pre>
+</div>
+    <p><em>Attribute definitions</em></p>
+    <dl>
+      <dt><a id="style.id"><samp>id</samp></a></dt>
+      <dd>Unique identifier for the style.</dd>
+      <dt><a id="style.clone"><samp>clone</samp></a></dt>
+      <dd>Identifier of a previously defined style that is copied
+	    and used for the new style. This provides a convenient
+	    mechanism for overriding only a portion of an existing
+	    style.</dd>
+    </dl>
+    <p>
+      A style element corresponds to a
+      <code>SynthStyle</code>, with the child elements specifying
+      properties that apply to all states or state elements which
+      contain properties specific to a particular state. The following
+      example creates an opaque style with the id <code>button</code>,
+      insets of 4, 4, 4, 4 and a font of Dialog 12.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="button">
+  &lt;opaque value="true"/>
+  &lt;insets top="4" left="4" right="4" bottom="4"/>
+  &lt;font name="Dialog" size="12"/>
+&lt;/style>
+      </pre>
+    </div>
+    <p>
+      The following example creates a new style with an id of
+      <code>clonedButton</code> that is a copy of the
+      style with id <code>button</code> and has a font of Dialog,
+      14. The resulting style will be opaque, have insets of 4, 4, 4,
+      4 and a font of Dialog 14.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="clonedButton" clone="button">
+  &lt;font name="Dialog" size="14"/>
+&lt;/style>
+      </pre>
+    </div>
+
+    <h2>The state element</h2>
+<div class="dtd-fragment">
+<pre class="dtd-fragment">
+&lt;!ELEMENT <a id="e.state">state</a> (<a href="#e.color">color</a> | <a href="#e.font">font</a> | <a href="#e.painter">painter</a> | <a href="#e.imagePainter">imagePainter</a> | (<a href="#ee.beansPersistance">%beansPersistance;</a>) |
+                 <a href="#e.property">property</a> |  <a href="#e.imageIcon">imageIcon</a>)*>
+&lt;!ATTLIST state
+          <a href="#state.id">id</a>              ID             #IMPLIED
+          <a href="#state.clone">clone</a>           IDREF          #IMPLIED
+          <a href="#state.value">value</a>           CDATA          #IMPLIED
+          <a href="#state.idref">idref</a>           IDREF          #IMPLIED
+&gt;
+</pre>
+</div>
+    <p><em>Attribute definitions</em></p>
+    <dl>
+      <dt><a id="state.id"><samp>id</samp></a></dt>
+      <dd>Unique identifier for the state.</dd>
+      <dt><a id="state.clone"><samp>clone</samp></a></dt>
+      <dd>Identifier of a previously defined state that is copied
+	and used for the new state.</dd>
+      <dt><a id="state.value"><samp>value</samp></a></dt>
+      <dd>Identifies the state of the Component the properties are to apply
+	to. This is a list of: ENABLED,
+	MOUSE_OVER, PRESSED, DISABLED, FOCUSED, SELECTED or
+	DEFAULT. Multiple states should
+	be separated by 'and.' If you do not specify a value, the
+	contents apply to all states.
+      <dt><a id="state.idref"><samp>idref</samp></a></dt>
+      <dd>Indicates this state should be the same as a previously
+	    defined state. This is useful for multiple styles that
+	    wish to share the same visual properties for a particular
+	    state.
+      </dd>
+    </dl>
+    <p>
+      The <a href="#e.state">state</a> element specifies the visual
+      properties that are to be used for
+      a particular state of a component. For example, you could
+      specify the background color when the Component is enabled should look
+      different than the background color when the component is
+      disabled. Not all Components support all states. For example, a
+      <code>Panel</code> only supports the states ENABLED and DISABLED.
+    </p>
+    <p>
+      The following example creates a state with a red background that
+      will be used when the component is in an a selected and pressed state:
+    </p>
+    <div class="example">
+    <pre>
+&lt;state value="SELECTED AND PRESSED">
+  &lt;color value="RED" type="BACKGROUND"/>
+&lt;/state>
+    </pre>
+</div>
+    <p>
+      The state with the most individual matches will be
+      chosen. For example, the following defines two states:
+    </p>
+    <div class="example">
+      <pre>
+&lt;state value="SELECTED and PRESSED" id="one">
+  &lt;color value="RED" type="BACKGROUND"/>
+&lt;/state>
+&lt;state value="SELECTED" id="two">
+  &lt;color value="RED" type="BACKGROUND"/>
+&lt;/state>
+    </pre>
+</div>
+    <p>
+      State <code>one</code> is used when the Component is SELECTED
+      and PRESSED, and state <code>two</code> when the Component is
+      SELECTED. If the state of the Component
+      contains at least SELECTED and PRESSED, state <code>one</code> will be
+      chosen, otherwise if the state is SELECTED, but not does not
+      contain PRESSED, state <code>two</code> will be used.
+
+    <h2>The font element</h2>
+<div class="dtd-fragment">
+<pre class="dtd-fragment">
+&lt;!ELEMENT <a id="e.font">font</a> EMPTY>
+&lt;!ATTLIST font
+          <a href="#font.id">id</a>              ID             #IMPLIED
+          <a href="#font.idref">clone</a>           IDREF          #IMPLIED
+          <a href="#font.name">name</a>            CDATA          #IMPLIED
+          <a href="#font.style">style</a>           CDATA          #IMPLIED
+          <a href="#font.size">size</a>            CDATA          #IMPLIED
+&gt;
+</pre>
+</div>
+    <p><em>Attribute definitions</em></p>
+    <dl>
+      <dt><a id="font.id"><samp>id</samp></a></dt>
+      <dd>Unique identifier for the Font.</dd>
+      <dt><a id="font.idref"><samp>idref</samp></a></dt>
+      <dd>Identifier of a previously defined font.</dd>
+      <dt><a id="font.name"><samp>name</samp></a></dt>
+      <dd>Name of the font.
+      <dt><a id="font.style"><samp>style</samp></a></dt>
+      <dd>Style of the font. This is a list of the styles defined by
+	Font separated by spaces: PLAIN, BOLD or ITALIC. If
+	unspecified PLAIN is used.
+      </dd>
+      <dt><a id="font.size"><samp>size</samp></a></dt>
+      <dd>Size of the font, in pixels</dd>
+    </dl>
+    <p>
+      Defines the font for the current <a href="#e.state">state</a>,
+      or <a href="#e.style">style</a>. You must
+      specify either an <a href="#font.idref">idref</a> or a
+      <a href="#font.name">name</a> and <a href="#font.size">size</a>.
+    </p>
+    <p>
+      The following example creates a style with a Font of
+      Dialog 12 Bold.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;font name="DIALOG" size="12" style="BOLD"/>
+&lt;/style>
+    </pre>
+</div>
+    <p>
+      The following example creates a style with a font of
+      Dialog 12 Bold that will be used if the component is ENABLED,
+      otherwise Dialog 12 Italic will be used.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;font name="DIALOG" size="12" style="ITALIC"/>
+  &lt;state value="ENABLED">
+    &lt;font name="DIALOG" size="12" style="BOLD"/>
+  &lt;/state>
+&lt;/style>
+    </pre>
+</div>
+    <p>
+      While you can supply a different font per state, in general
+      widgets will NOT revalidate when the state changes, so that you
+      may run into sizing problems if you try to use a font with a
+      significantly different size for different states.
+    </p>
+
+
+    <h2>The color element</h2>
+<div class="dtd-fragment">
+<pre class="dtd-fragment">
+&lt;!ELEMENT <a id="e.color">color</a> EMPTY>
+&lt;!ATTLIST color
+          <a href="#color.id">id</a>              ID             #IMPLIED
+          <a href="#color.idref">idref</a>           IDREF          #IMPLIED
+          <a href="#color.type">type</a>            CDATA          #IMPLIED
+          <a href="#color.value">value</a>           CDATA          #IMPLIED
+&gt;
+</pre>
+</div>
+    <p><em>Attribute definitions</em></p>
+    <dl>
+      <dt><a id="color.id"><samp>id</samp></a></dt>
+      <dd>Unique identifier for the color.</dd>
+      <dt><a id="color.idref"><samp>idref</samp></a></dt>
+      <dd>Identifier of a previously defined color.</dd>
+      <dt><a id="color.type"><samp>type</samp></a></dt>
+      <dd>Describes where this color should be used. This is
+	    typically one of the constants defined by ColorType:
+	    FOREGROUND, BACKGROUND, TEXT_FOREGROUND, TEXT_BACKGROUND
+	    or FOCUS. Alternatively you can specify the complete path
+	    to a class and field, for example
+	    javax.swing.plaf.synth.ColorType.FOREGROUND, this
+	    is useful for subclasses of synth that define additional
+	    color types.
+      </dd>
+      <dt><a id="color.value"><samp>value</samp></a></dt>
+      <dd>
+        Value for the color. This accepts the following forms.
+        <ul>
+          <li>The name of a constant in the <code>Color</code> class,
+            for example <code> RED</code>.
+          <li>A hex value of the form <code>#RRGGBB</code> where
+            <code>RR</code> gives the red component, <code>GG</code>
+            the green component and <code>BB</code> the blue
+            component. You need not specify all color components. For
+            example, <code>#123</code> is equivalent to <code>#000123</code>.
+          <li>A hex value of the form <code>#ARRGGBB</code> or
+            <code>#AARRGGBB</code>. This is useful for alpha values
+            other than <code>0xFF</code>. The form
+            <code>#ARRGGBB</code> is equivalent to
+            <code>#0ARRGGBB</code>.
+        </ul>
+      </dd>
+    </dl>
+    <p>
+      <a href="#e.color">Color</a> defines a color and what portion of
+      the Component it should be applied to. The following example
+      will use a background color of RED when the component is
+      enabled.
+    </p>
+    <div class="example">
+      <pre>
+&lt;state value="ENABLED">
+  &lt;color value="RED" type="BACKGROUND"/>
+&lt;/state>
+    </pre>
+</div>
+    <p>
+      The following example will have a red background when the
+      Component is enabled, otherwise blue.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;state value="ENABLED">
+    &lt;color value="RED" type="BACKGROUND"/>
+  &lt;/state>
+  &lt;state>
+    &lt;color value="#00FF00" type="BACKGROUND"/>
+  &lt;/state>
+&lt;/style>
+    </pre>
+</div>
+
+    <h2>The property element</h2>
+<div class="dtd-fragment">
+<pre class="dtd-fragment">
+&lt;!ELEMENT <a id="e.property">property</a> EMPTY>
+&lt;!ATTLIST property
+          <a href="#property.key">key</a>               CDATA                                             #REQUIRED
+          <a href="#property.type">type</a>              (idref|boolean|dimension|insets|integer|string)          "idref"
+          <a href="#property.value">value</a>             CDATA                                             #REQUIRED
+&gt;
+</pre>
+</div>
+    <p><em>Attribute definitions</em></p>
+    <dl>
+      <dt><a id="property.key"><samp>key</samp></a></dt>
+      <dd>Name of the property.</dd>
+      <dt><a id="property.type"><samp>type</samp></a></dt>
+      <dd>Indicates the type of the property.</dd>
+      <dt><a id="property.value"><samp>value</samp></a></dt>
+      <dd>Value for the property. For boolean properties this will be
+	be true or false, for integer properties this will be a
+	valid integer, for dimensions this will be the width and
+	height separated by a space, for insets properties this will
+	be the top, left, bottom and right separated by a space and
+	for idref properties this will be the unique id of a
+	previously defined object.</dd>
+    </dl>
+    <p>
+      <a href="#e.property">Property</a> elements are used to add key value pairs to a
+      <code>SynthStyle</code> that can be accessed by way of the
+      <code>get</code> method. Many <code>Component</code>s use the
+      key value pairs for configuring their visual appearance. Refer to
+      <a href="componentProperties.html">property table</a> for a list of the
+      properties each <code>Component</code> supports. The following
+      creates the properties
+      <code>ScrollBar.allowsAbsolutePositioning</code>,
+      <code>OptionPane.minimumSize</code>,
+      <code>ScrollPane.viewportBorderInsets</code>,
+      <code>Tree.rowHeight</code> and <code>foreground</code> with the
+      values false, a dimensions of 262x90, an insets of 5, 5, 5, 5,
+      the integer 20 and an instance of the
+      class ArrowButtonPainter.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;property key="ScrollBar.allowsAbsolutePositioning" type="boolean" value="false"/>
+  &lt;property key="OptionPane.minimumSize" type="dimension" value="262 90"/>
+  &lt;property key="ScrollPane.viewportBorderInsets" type="insets" value="5 5 5 5"/>
+  &lt;property key="Tree.rowHeight" type="integer" value="20"/>
+  &lt;object class="ArrowButtonPainter" id="ArrowButtonPainter"/>
+  &lt;property key="foreground" type="idref" value="ArrowButtonPainter"/>
+&lt;/style>
+    </pre>
+</div>
+    <p>
+      You can also specify properties that are to apply to specific
+      states.  Whether or not the property is accessed for each state
+      depends upon how the property is used.  For example, the
+      following specifies a default icon and an icon to use while the
+      mouse is over the component.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;imageIcon id="defaultIcon" path="resources/myImage.png"/>
+  &lt;property key="RadioButton.icon" value="defaultIcon"/>
+  &lt;state value="MOUSE_OVER">
+    &lt;imageIcon id="mouseOverIcon" path="resources/myMouseOverImage.png"/>
+    &lt;property key="RadioButton.icon" value="mouseOverIcon"/>
+  &lt;/state>
+&lt;/style>
+    </pre>
+</div>
+<div class="dtd-fragment">
+<pre class="dtd-fragment">
+&lt;!ELEMENT <a id="e.defaultsProperty">defaultsProperty</a> EMPTY>
+&lt;!ATTLIST defaultsProperty
+          <a href="#defaultsProperty.key">key</a>               CDATA                                             #REQUIRED
+          <a href="#defaultsProperty.type">type</a>              (idref|boolean|dimension|insets|integer|string)   "idref"
+          <a href="#defaultsProperty.value">value</a>             CDATA                                             #REQUIRED
+&gt;
+</pre>
+</div>
+    <p><em>Attribute definitions</em></p>
+    <dl>
+      <dt><a id="defaultsProperty.key"><samp>key</samp></a></dt>
+      <dd>Name of the property.</dd>
+      <dt><a id="defaultsProperty.type"><samp>type</samp></a></dt>
+      <dd>Indicates the type of the property.</dd>
+      <dt><a id="defaultsProperty.value"><samp>value</samp></a></dt>
+      <dd>Value for the property. For boolean properties this will be
+	true or false, for integer properties this will be a
+	valid integer, for dimensions this will be the width and
+	height separated by a space, for insets properties this will
+	be the top, left, bottom and right separated by a space and
+	for idref properties this will be the unique id of a
+	previously defined object.</dd>
+    </dl>
+    <p>
+      <a href="#e.defaultsProperty">DefaultsProperty</a> elements are
+      used to define properties that will be placed in the
+      <code>UIDefaults</code> table that <code>SynthLookAndFeel</code>
+      supplies to the <code>UIManager</code>. The following assigns the
+      the Color red to the value Table.focusCellForeground.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;object class="javax.swing.plaf.ColorUIResource" id="color">
+    &lt;int>255&lt;/int>
+    &lt;int>0&lt;/int>
+    &lt;int>0&lt;/int>
+  &lt;/object>
+  &lt;defaultsProperty key="Table.focusCellForeground" type="idref" value="color"/>
+&lt;/style>
+    </pre>
+</div>
+    <p>
+      This value could then be asked by way of
+      <code>UIManager.get("Table.focusCellForeground")</code>.
+    </p>
+
+    <h2>The graphicsUtils element</h2>
+<div class="dtd-fragment">
+<pre class="dtd-fragment">
+&lt;!ELEMENT <a id="e.graphicsUtils">graphicsUtils</a> EMPTY>
+&lt;!ATTLIST graphicsUtils
+          <a href="#graphicsUtils.idref">idref</a>           IDREF             #REQUIRED
+&gt;
+</pre>
+</div>
+    <p><em>Attribute definitions</em></p>
+    <dl>
+      <dt><a id="graphicsUtils.idref"><samp>idref</samp></a></dt>
+      <dd>Identifer of a previously defined SynthGraphicsUtils object
+	that is to be used as the SynthGraphicsUtils for the current
+	<a href="#e.style">style</a>.</dd>
+    </dl>
+    <p>
+      <a href="#e.graphicsUtils">GraphicsUtils</a> elements are
+      used to define the SynthGraphicsUtils that the current
+      <a href="#e.style">style</a> will use. The following example
+      creates a style with an instance of CustomGraphicsUtils for the
+      SynthGraphicsUtils.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;object class="CustomGraphicsUtils" id="graphics"/>
+  &lt;graphicsUtils idref="graphics"/>
+&lt;/style>
+    </pre>
+</div>
+
+    <h2>The insets element</h2>
+<div class="dtd-fragment">
+<pre class="dtd-fragment">
+&lt;!ELEMENT <a id="e.insets">insets</a> EMPTY>
+&lt;!ATTLIST insets
+          <a href="#insets.id">id</a>           ID             #IMPLIED
+          <a href="#insets.idref">idref</a>        IDREF          #IMPLIED
+          <a href="#insets.top">top</a>          CDATA          #IMPLIED
+          <a href="#insets.bottom">bottom</a>       CDATA          #IMPLIED
+          <a href="#insets.left">left</a>         CDATA          #IMPLIED
+          <a href="#insets.right">right</a>        CDATA          #IMPLIED
+&gt;
+</pre>
+</div>
+    <p><em>Attribute definitions</em></p>
+    <dl>
+      <dt><a id="insets.id"><samp>id</samp></a></dt>
+      <dd>Unique identifier for the Insets.</dd>
+      <dt><a id="insets.idref"><samp>idref</samp></a></dt>
+      <dd>Identifier of a previously defined Insets.</dd>
+      <dt><a id="insets.top"><samp>top</samp></a></dt>
+      <dd>Top component of the Insets.</dd>
+      <dt><a id="insets.bottom"><samp>bottom</samp></a></dt>
+      <dd>Bottom component of the Insets.</dd>
+      <dt><a id="insets.left"><samp>left</samp></a></dt>
+      <dd>Left component of the Insets.</dd>
+      <dt><a id="insets.right"><samp>right</samp></a></dt>
+      <dd>Right component of the Insets.</dd>
+    </dl>
+    <p>
+      <a href="#e.insets">Insets</a> elements are
+      used to define the Insets for the current <a href="#e.style">style</a>.
+      The insets will be set on any Components the
+      <a href="#e.style">style</a> is associated with. The following
+      example creates a style with insets of 1, 2, 3, 0.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;insets top="1" bottom="2" left="3"/>
+&lt;/style>
+    </pre>
+</div>
+
+    <h2>The bind element</h2>
+<div class="dtd-fragment">
+<pre class="dtd-fragment">
+&lt;!ELEMENT <a id="e.bind">bind</a> EMPTY>
+&lt;!ATTLIST bind
+          <a href="#bind.style">style</a>        IDREF             #REQUIRED
+          <a href="#bind.type">type</a>         (name|region)     #REQUIRED
+          <a href="#bind.key">key</a>          CDATA             #REQUIRED
+&gt;
+</pre>
+</div>
+    <p><em>Attribute definitions</em></p>
+    <dl>
+      <dt><a id="bind.style"><samp>style</samp></a></dt>
+      <dd>Unique identifier of a previously defined style.</dd>
+      <dt><a id="bind.type"><samp>type</samp></a></dt>
+      <dd>One of name or region. For type name component.getName() is used,
+	otherwise the name of the Region is used.</dd>
+      <dt><a id="bind.key"><samp>key</samp></a></dt>
+      <dd>Regular expression applied to the name of the Component, or the
+	name of the Region, depending upon the value of
+	<a href="#bind.type">type</a>.</dd>
+    </dl>
+    <p>
+      <a href="#e.bind">Bind</a> elements specify which Regions a style
+      is to be used for. The following example applies the
+      <a href="#e.style">style</a> test to any Component whose name
+      starts with <code>test</code>.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;insets top="1" bottom="2" left="3"/>
+&lt;/style>
+&lt;bind style="test" type="name" key="test.*"/>
+    </pre>
+</div>
+    <p>
+      Numerous styles may apply to a region, in which case each of
+      the matching styles is merged into a resulting style that is used.
+      Precedence is given to styles defined later in the file. For example,
+      the following defines two styles, a and b. Style a is applied to any
+      component with a name starting with test, and style b is used for
+      button regions.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="a">
+  &lt;font name="DIALOG" size="12" style="ITALIC"/>
+  &lt;insets top="1" bottom="2" left="3"/>
+&lt;/style>
+&lt;bind style="a" type="name" key="test.*"/>
+&lt;style id="b">
+  &lt;font name="DIALOG" size="12" style="BOLD"/>
+&lt;/style>
+&lt;bind style="b" type="region" key="button"/>
+    </pre>
+</div>
+    <p>
+      For a button with the name test this is equivalent to:
+    </p>
+    <div class="example">
+      <pre>
+&lt;style>
+  &lt;font name="DIALOG" size="12" style="BOLD"/>
+  &lt;insets top="1" bottom="2" left="3"/>
+&lt;/style>
+    </pre>
+</div>
+    <p>
+      Merging happens for states of a style as well.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="a">
+  &lt;font name="DIALOG" size="12" style="ITALIC"/>
+  &lt;insets top="1" bottom="2" left="3"/>
+  &lt;state value="ENABLED">
+    &lt;object id="customPainter" class="CustomPainter"/>
+    &lt;painter idref="customPainter"/>
+  &lt;/state>
+&lt;/style>
+&lt;bind style="a" type="name" key="test.*"/>
+&lt;style id="b">
+  &lt;font name="DIALOG" size="12" style="BOLD"/>
+  &lt;state value="ENABLED">
+    &lt;font name="Lucida" size="12" style="ITALIC"/>
+  &lt;/state>
+&lt;/style>
+&lt;bind style="b" type="region" key="button"/>
+    </pre>
+</div>
+    <p>
+      For a button with the name test this is equivalent to:
+    </p>
+    <div class="example">
+      <pre>
+&lt;style>
+  &lt;font name="DIALOG" size="12" style="BOLD"/>
+  &lt;insets top="1" bottom="2" left="3"/>
+  &lt;state value="ENABLED">
+    &lt;object id="customPainter" class="CustomPainter"/>
+    &lt;painter idref="customPainter"/>
+    &lt;font name="Lucida" size="12" style="ITALIC"/>
+  &lt;/state>
+&lt;/style>
+    </pre>
+</div>
+
+    <h2>The painter element</h2>
+<div class="dtd-fragment">
+<pre class="dtd-fragment">
+&lt;!ELEMENT <a id="e.painter">painter</a> EMPTY>
+&lt;!ATTLIST painter
+          <a href="#painter.idref">idref</a>                 IDREF          #IMPLIED
+          <a href="#painter.method">method</a>                CDATA          #IMPLIED
+          <a href="#painter.direction">direction</a>             (north|south|east|west|top|left|bottom|right|horizontal|vertical|horizontal_split|vertical_split)          #IMPLIED
+&gt;
+</pre>
+</div>
+    <p><em>Attribute definitions</em></p>
+    <dl>
+      <dt><a id="painter.idref"><samp>idref</samp></a></dt>
+      <dd>Identifier of a previously defined SynthPainter.</dd>
+      <dt><a id="painter.method"><samp>method</samp></a></dt>
+      <dd>Identifies the SynthPainter method this is to be used for. The name
+	corresponds to the method name of a paint method in SynthPainter
+	with the paint prefix dropped, the remainder is case
+	insensitive (using the latin1 case folding rules).
+	For example SynthPainter.paintButtonBackground is identified by
+	'buttonBackground' or 'buttonbackground'. If this is
+	not specified the painter is used for all methods that don't have a
+	a specific painter for them.</dd>
+      <dt><a id="painter.direction"><samp>direction</samp></a></dt>
+      <dd>Identifies the direction, or orientation, this painter is to be
+	used for. This is only useful for the SynthPainter methods that take
+	a direction or orientation. If this is not specified the painter is
+	used for all directions.</dd>
+    </dl>
+    <p>
+      <a href="#e.painter">Painter</a> defines a SynthPainter for the current
+      style or the state of the current style. The following example
+      binds an instance of the class <code>MyPainter</code>
+      which must be a <code>SynthPainter</code> to the style <code>test</code>.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;object class="MyPainter" id="MyPainter"/>
+  &lt;painter idref="MyPainter"/>
+&lt;/style>
+    </pre>
+</div>
+    <p>
+      The painter that is used for a particular method and state is determined
+      as follows:
+    <ol>
+      <li>Painter specified for the current state, method and direction.
+      <li>Painter specified for the current state and method.
+      <li>Painter specified for the current state.
+      <li>Painter specified for the style, method and direction.
+      <li>Painter specified for the style and method.
+      <li>Painter specified for the style.
+    </ol>
+    <p>
+      Consider the following:
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;painter idref="fallbackPainter"/>
+  &lt;painter idref="styleButtonBackgroundPainter" method="buttonBackground"/>
+  &lt;state value="SELECTED">
+    &lt;painter idref="stateFallbackPainter"/>
+    &lt;painter idref="stateButtonBackgroundPainter" method="buttonBackground"/>
+  &lt;/state>
+&lt;/style>
+      </pre>
+    </div>
+    <p>
+      The following outlines which painter will be used for what
+      SynthPainter method:
+    </p>
+    <table class="striped">
+     <caption>Painters for SynthPainter methods</caption>
+      <thead>
+      <tr>
+        <th scope="col">Index
+        <th scope="col">State
+        <th scope="col">Method
+        <th scope="col">Painter
+      </thead>
+      <tbody>
+	    <tr>
+        <th scope="row">1
+        <td>SELECTED
+        <td>paintButtonBackground<td>stateButtonBackgroundPainter
+	    <tr>
+        <th scope="row">2
+        <td>SELECTED
+        <td>Anything but paintButtonBackground<td>stateFallbackPainter
+	    <tr>
+        <th scope="row">3
+        <td>Anything but SELECTED
+        <td>paintButtonBackground<td>styleButtonBackgroundPainter
+	    <tr>
+        <th scope="row">4
+        <td>Anything but SELECTED
+        <td>Anything but paintButtonBackground<td>fallbackPainter
+      </tbody>
+    </table>
+
+    <p>
+      When several identical painters are declared, they are aggregated into
+      a single one. Two painters are identical if their <em>direction</em> and
+      <em>method</em> attributes values are equal. Consider the following:
+    </p>
+
+	<div class="example">
+	  <pre>
+&lt;style id="panelStyle"&gt;
+  &lt;imagePainter method="panelBackground" path="red.png" /&gt;
+  &lt;imagePainter method="panelBackground" path="green.png" /&gt;
+  &lt;imagePainter method="panelBackground" path="blue.png" /&gt;
+&lt;/style&gt;
+	  </pre>
+	</div>
+
+	<p>
+	  These three painters are identical for they use the same method and the
+	  same direction (all directions by default). Synth aggregates these painters
+	  to create a single one that will paint its children painters in the order
+	  of declaration. Hence, Synth will first paint the red picture, then the green
+	  one and finally the blue one. Each child painter can be seen as a layer of
+	  the aggregate painter.
+	</p>
+	<p>
+	  Painter aggregation, or multi-layering, is very useful to reuse elements.
+	  Imagine you want to use an highlight effect on buttons and on selected
+	  menu items. With painter aggregation, you just need to create a separate
+	  highlighting painter instead of having buttons and menu items painters
+	  handle it.
+	</p>
+
+    <h2>The imagePainter element</h2>
+<div class="dtd-fragment">
+<pre class="dtd-fragment">
+&lt;!ELEMENT <a id="e.imagePainter">imagePainter</a> EMPTY>
+&lt;!ATTLIST imagePainter
+          <a href="#imagePainter.id">id</a>                    ID             #IMPLIED
+          <a href="#imagePainter.method">method</a>                CDATA          #IMPLIED
+          <a href="#imagePainter.direction">direction</a>             (north|south|east|west|top|left|bottom|right|horizontal|vertical|horizontal_split|vertical_split)          #IMPLIED
+          <a href="#imagePainter.path">path</a>                  CDATA          #REQUIRED
+          <a href="#imagePainter.sourceInsets">sourceInsets</a>          CDATA          #IMPLIED
+          <a href="#imagePainter.destinationInsets">destinationInsets</a>     CDATA          #IMPLIED
+          <a href="#imagePainter.painterCenter">paintCenter</a>           (true|false)   "true"
+          <a href="#imagePainter.stretch">stretch</a>               (true|false)   "true"
+          <a href="#imagePainter.center">center</a>                (true|false)   "false"
+&gt;
+</pre>
+</div>
+    <p><em>Attribute definitions</em></p>
+    <dl>
+      <dt><a id="imagePainter.id"><samp>id</samp></a></dt>
+      <dd>Unique identifier for the imagePainter.</dd>
+      <dt><a id="imagePainter.method"><samp>method</samp></a></dt>
+      <dd>Identifies the SynthPainter method this is to be used for. The name
+	corresponds to the method name of a paint method in SynthPainter
+	with the paint prefix dropped, the remainder is case
+	insensitive (using the latin1 case folding rules).
+	For example SynthPainter.paintButtonBackground is identified by
+	'buttonBackground' or 'buttonbackground'. If this is
+	not specified the painter is used for all methods that don't have a
+	a specific painter for them.</dd>
+      <dt><a id="imagePainter.direction"><samp>direction</samp></a></dt>
+      <dd>Identifies the direction, or orientation, this image is to be
+	used for. This is only useful for the SynthPainter methods that take
+	a direction or orientation. If this is not specified the image is
+	used for all directions.</dd>
+      <dt><a id="imagePainter.path"><samp>path</samp></a></dt>
+      <dd>Path to the image. Path to the image.  If SynthLookAndFeel.load is
+    passed a Class this will use the Class method getResource (with with the
+    Class suplied to the load method). If load is passed a URL this will use the
+    URL constructor URL(context, path) to resolve the path.</dd>
+      <dt><a id="imagePainter.sourceInsets"><samp>sourceInsets</samp></a></dt>
+      <dd>Insets on the source image. This is top, left, bottom, right with
+	each component separated by a space.</dd>
+      <dt><a id="imagePainter.destinationInsets"><samp>destinationInsets</samp></a></dt>
+      <dd>Insets of the destination image. This is top, left, bottom, right with
+	each component separated by a space. If not specified the
+	<a href="#imagePainter.sourceInsets">sourceInsets</a> are used.</dd>
+      <dt><a id="imagePainter.painterCenter"><samp>paintCenter</samp></a></dt>
+      <dd>Whether or not the center of the image should be drawn.</dd>
+      <dt><a id="imagePainter.stretch"><samp>stretch</samp></a></dt>
+      <dd>Whether or not the north, south, east and west components of the
+	resulting image should be scaled or tiled.</dd>
+      <dt><a id="imagePainter.center"><samp>center</samp></a></dt>
+      <dd>Whether or not the image is centered.</dd>
+    </dl>
+    <p>
+      The <a href="#e.imagePainter">ImagePainter</a> element defines a
+      painter for the current style or state that will render using
+      the specified image.  ImagePainter offers two distinct rendering
+      modes.  The first mode is used to center an image in the space
+      provided.  This is
+      commonly used in rendering decorations on top of a widget, for
+      example, to specify an arrow for a scroll button use the center
+      mode. The following example illustrates this:
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;imagePainter path="resources/myImage.png" center="true"/>
+&lt;/style>
+    </pre>
+</div>
+    <p>
+      The second mode is used in scaling an image to fit in the
+      provided space.  In this mode sourceInsets is used to specify a
+      border around an image where the north, south, east and west
+      edges of the border are either stretched or tiled (stretch
+      attribute), the four corners of the border drawn in place, and
+      the center is stretched.  In this mode you must specify
+      sourceInsets.  The following example illustrates an
+      ImagePainter that is using the image MyImage.png and insets of 2
+      all the way around:
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;imagePainter path="resources/myImage.png"
+                sourceInsets="2 2 2 2"/>
+&lt;/style>
+    </pre>
+</div>
+    <p>
+      Refer to the description of the <a href="#e.painter">painter</a>
+      element for details as to the precedence in choosing a painter and to
+      understand how identical painters are handled.
+
+
+    <h2>The imageIcon element</h2>
+<div class="dtd-fragment">
+<pre class="dtd-fragment">
+&lt;!ELEMENT <a id="e.imageIcon">imageIcon</a> EMPTY>
+&lt;!ATTLIST imageIcon
+          <a href="#imageIcon.id">id</a>                    ID             #REQUIRED
+          <a href="#imageIcon.path">path</a>                  CDATA          #REQUIRED
+&gt;
+</pre>
+</div>
+    <p><em>Attribute definitions</em></p>
+    <dl>
+      <dt><a id="imageIcon.id"><samp>id</samp></a></dt>
+      <dd>Unique identifier for the imageIcon.</dd>
+      <dt><a id="imageIcon.path"><samp>path</samp></a></dt>
+      <dd>Path to the image. This uses the Class method
+	getResource to resolve the path, with the Class supplied to
+	SynthLookAndFeel.load.</dd>
+    </dl>
+    <p>
+      <a href="#e.imageIcon">ImageIcon</a> is used to assign an Icon
+      implementation that is wrapping an Image to a unique identifier.
+      This is typically used for properties that take an Icon. The following
+      example binds an ImageIcon to the property RadioButton.icon.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;imageIcon id="icon" path="resources/myImage.png"/>
+  &lt;property key="RadioButton.icon" value="icon"/>
+&lt;/style>
+    </pre>
+</div>
+
+   <h2>The opaque element</h2>
+<div class="dtd-fragment">
+<pre class="dtd-fragment">
+&lt;!ELEMENT <a id="e.opaque">opaque</a> EMPTY>
+&lt;!ATTLIST opaque
+          <a href="#opaque.value">value</a>              (true|false)   "true"
+&gt;
+</pre>
+</div>
+    <p><em>Attribute definitions</em></p>
+    <dl>
+      <dt><a id="opaque.value"><samp>id</samp></a></dt>
+      <dd>Whether or not the style should be opaque, if unspecified the style
+	is opaque.</dd>
+    </dl>
+    <p>
+      The <a href="#e.opaque">opaque</a> element indicates whether or
+      not any Components the style is associated with are to be made opaque.
+      The painter will be asked to paint regardless of the opacity
+      of the associated Component. The following example creates a style
+      that is not opaque.
+    </p>
+    <div class="example">
+      <pre>
+&lt;style id="test">
+  &lt;opaque value="FALSE">
+  &lt;painter idref="painter"/>
+&lt;/style>
+    </pre>
+</div>
+
+    <h2><a id="ee.beansPersistance">The beansPersistance entity</a></h2>
+    <p>
+      Beans persistance can be used to embed any Object. This is
+      typically used for embedding your own Painters, but can be used
+      for other arbritrary objects as well. Refer to <a
+        href="http://www.oracle.com/technetwork/java/persistence3-139471.html">
+      http://www.oracle.com/technetwork/java/persistence3-139471.html</a>
+      for details on beans persistance.
+
+
+    <h2>Backing Style</h2>
+    <p>
+      In creating a Synth file it's good practice to create a backing
+      style that is used by all components.  This will make sure that
+      any components that do not match a specific style will have
+      a default font, foreground, background and opacity. The
+      following example illustrates this:
+    <div class="example">
+      <pre>
+&lt;synth>
+  &lt;style id="backingStyle">
+    &lt;opaque value="true"/>
+    &lt;font name="Dialog" size="12"/>
+    &lt;state>
+      &lt;color value="BLACK" type="BACKGROUND"/>
+      &lt;color value="WHITE" type="FOREGROUND"/>
+    &lt;/state>
+  &lt;/style>
+  &lt;bind style="backingStyle" type="region" key=".*"/>
+&lt;/synth>
+      </pre>
+    </div>
+  </main>
+  </body>
+</html>

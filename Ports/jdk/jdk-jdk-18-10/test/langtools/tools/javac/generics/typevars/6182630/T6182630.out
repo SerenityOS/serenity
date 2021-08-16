@@ -1,0 +1,7 @@
+T6182630.java:16:10: compiler.warn.unchecked.assign.to.var: x, T6182630.Foo
+T6182630.java:17:12: compiler.warn.unchecked.call.mbr.of.raw.type: m(X), T6182630.Foo
+T6182630.java:18:12: compiler.warn.unchecked.call.mbr.of.raw.type: m(X), T6182630.Foo
+T6182630.java:19:10: compiler.warn.unchecked.assign.to.var: x, T6182630.Foo
+T6182630.java:20:12: compiler.warn.unchecked.call.mbr.of.raw.type: m(X), T6182630.Foo
+T6182630.java:21:12: compiler.warn.unchecked.call.mbr.of.raw.type: m(X), T6182630.Foo
+6 warnings

@@ -1,0 +1,41 @@
+sameAs(a, a): true
+sameAs(a, b): false
+sameAs(a, c): true
+sameAs(a, x): true
+sameAs(a, y): false
+sameAs(a, z): false
+
+sameAs(b, a): left object is null
+sameAs(b, b): left object is null
+sameAs(b, c): left object is null
+sameAs(b, x): left object is null
+sameAs(b, y): left object is null
+sameAs(b, z): left object is null
+
+sameAs(c, a): true
+sameAs(c, b): false
+sameAs(c, c): true
+sameAs(c, x): true
+sameAs(c, y): false
+sameAs(c, z): false
+
+sameAs(x, a): true
+sameAs(x, b): false
+sameAs(x, c): true
+sameAs(x, x): true
+sameAs(x, y): false
+sameAs(x, z): false
+
+sameAs(y, a): false
+sameAs(y, b): false
+sameAs(y, c): false
+sameAs(y, x): false
+sameAs(y, y): true
+sameAs(y, z): false
+
+sameAs(z, a): left object is null
+sameAs(z, b): left object is null
+sameAs(z, c): left object is null
+sameAs(z, x): left object is null
+sameAs(z, y): left object is null
+sameAs(z, z): left object is null

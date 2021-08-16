@@ -1,0 +1,2 @@
+LocalClasses_2.java:15:13: compiler.err.already.defined: kindname.class, Local, kindname.method, foo()
+1 error

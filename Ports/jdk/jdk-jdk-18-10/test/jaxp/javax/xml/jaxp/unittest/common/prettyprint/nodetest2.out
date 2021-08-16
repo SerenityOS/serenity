@@ -1,0 +1,30 @@
+<root>
+     t
+t   
+    <child1> 
+</child1>
+    t
+    <child2> </child2>
+     
+    <child3> </child3>
+     
+    <child4> </child4>
+     
+    <child5>
+        t
+        <child51>
+             
+            <child511>t</child511>
+             
+        </child51>
+        t
+    </child5>
+     
+    <!-- test comment -->
+     
+
+    <!-- -->
+    
+    <?target1 test?>
+      
+</root>

@@ -1,0 +1,10 @@
+grant{
+// permissions for TestNG execution
+permission java.io.FilePermission "*","read,write";
+permission java.lang.RuntimePermission "accessDeclaredMembers";
+permission java.util.PropertyPermission "*","read";
+permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+// permissions for test itself
+permission javax.security.auth.AuthPermission "modifyPrincipals";
+permission javax.security.auth.PrivateCredentialPermission "* com.sun.security.auth.NTUserPrincipal \"NTUserPrincipal-1\" com.sun.security.auth.UnixPrincipal \"UnixPrincipals-1\"", "read";
+};

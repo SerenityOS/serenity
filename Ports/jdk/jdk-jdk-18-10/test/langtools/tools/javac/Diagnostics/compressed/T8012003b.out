@@ -1,0 +1,8 @@
+T8012003b.java:30:12: compiler.err.prob.found.req: (compiler.misc.invalid.mref: kindname.method, (compiler.misc.cant.apply.symbol: kindname.method, g, java.lang.String, compiler.misc.no.args, kindname.class, T8012003b, (compiler.misc.arg.length.mismatch)))
+T8012003b.java:31:16: compiler.err.prob.found.req: (compiler.misc.stat.expr.expected)
+T8012003b.java:32:22: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.conditional.target.cant.be.void))
+T8012003b.java:33:12: compiler.err.prob.found.req: (compiler.misc.invalid.mref: kindname.method, (compiler.misc.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Integer, java.lang.String)))
+T8012003b.java:34:12: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.mref: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Integer))
+T8012003b.java:35:12: compiler.err.invalid.mref: kindname.method, (compiler.misc.cant.resolve.location.args: kindname.method, k, , java.lang.String, (compiler.misc.location: kindname.class, T8012003b, null))
+- compiler.note.compressed.diags
+6 errors

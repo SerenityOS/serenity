@@ -1,0 +1,2 @@
+MethodReference72.java:18:9: compiler.err.cant.apply.symbol: kindname.method, g, MethodReference72.F<Z>, @11, kindname.class, MethodReference72, (compiler.misc.infer.no.conforming.assignment.exists: Z, (compiler.misc.invalid.mref: kindname.method, (compiler.misc.cant.apply.symbol: kindname.method, m1, java.lang.Integer, Z[], kindname.class, MethodReference72, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: Z[], java.lang.Integer)))))
+1 error

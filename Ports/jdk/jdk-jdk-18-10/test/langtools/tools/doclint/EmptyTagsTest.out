@@ -1,0 +1,16 @@
+EmptyTagsTest.java:14: warning: empty <p> tag
+     * Comment. <p>
+                ^
+EmptyTagsTest.java:19: warning: empty <p> tag
+     * Comment. <p>
+                ^
+EmptyTagsTest.java:27: warning: empty <p> tag
+     * Comment. <p>
+                ^
+EmptyTagsTest.java:35: warning: empty <p> tag
+     *     <li>Item. <p>
+                     ^
+EmptyTagsTest.java:42: warning: empty <p> tag
+     * @author J. Duke<p>
+                      ^
+5 warnings

@@ -1,0 +1,3 @@
+T7120463.java:9:24: compiler.err.cant.resolve.location: kindname.variable, i, , , (compiler.misc.location: kindname.class, T7120463, null)
+T7120463.java:9:28: compiler.err.cant.resolve.location: kindname.variable, len, , , (compiler.misc.location: kindname.class, T7120463, null)
+2 errors

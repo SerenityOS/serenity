@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ps"/>
+		<territory type="PK"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ar_001">نوے معياري عربي</language>
+			<language type="dsb">لوړے سربي</language>
+			<language type="fo">فاروئے</language>
+			<language type="kha">خاسے</language>
+			<language type="nb">ناروے بوکمال</language>
+			<language type="no" draft="unconfirmed">ناروېئے</language>
+		</languages>
+		<territories>
+			<territory type="019">امريکے</territory>
+			<territory type="PS">فلسطين سيمے</territory>
+			<territory type="TC">د ترکیے او کیکاسو ټاپو</territory>
+			<territory type="TF">د فرانسے جنوبي سیمے</territory>
+		</territories>
+		<types>
+			<type key="collation" type="standard">معياري د لټے ترتيب</type>
+			<type key="numbers" type="arabext">غځېدلے عربي ۔ اينډيک عدد</type>
+		</types>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[\u064E \u0650 \u064F \u064B \u064D \u064C \u0651 \u0652 \u0654 \u0670 آ ا أ ء ب پ ت ټ ث ج ځ چ څ ح خ د ډ ذ ر ړ ز ژ ږ س ش ښ ص ض ط ظ ع غ ف ق ک ګ گ ل م ن ڼ ه ة و ؤ ی ے ي ې ۍ ئ]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[\u200C \u200D \u200E\u200F]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>h:mm:ss a zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>h:mm:ss a z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>h:mm:ss a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>h:mm a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+			</calendar>
+			<calendar type="islamic">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="wide">
+							<month type="2">د صفرے د</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="wide">
+							<month type="2">د صفرے د</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="year">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">په {0} کال کے</relativeTimePattern>
+					<relativeTimePattern count="other">په {0} کالونو کے</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} کال مخکے</relativeTimePattern>
+					<relativeTimePattern count="other">{0} کاله مخکے</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-short">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">په {0} کال کے</relativeTimePattern>
+					<relativeTimePattern count="other">په {0} کالونو کے</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} کال مخکے</relativeTimePattern>
+					<relativeTimePattern count="other">{0} کاله مخکے</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-narrow">
+				<relativeTime type="future">
+					<relativeTimePattern count="one">په {0} کال کے</relativeTimePattern>
+					<relativeTimePattern count="other">په {0} کالونو کے</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} کال مخکے</relativeTimePattern>
+					<relativeTimePattern count="other">{0} کاله مخکے</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="weekOfMonth">
+				<displayName>د مياشتے اونۍ</displayName>
+			</field>
+			<field type="weekOfMonth-short">
+				<displayName>د مياشتے اونۍ</displayName>
+			</field>
+			<field type="weekOfMonth-narrow">
+				<displayName>د مياشتے اونۍ</displayName>
+			</field>
+			<field type="weekdayOfMonth">
+				<displayName>د مياشتے اونۍ ورځ</displayName>
+			</field>
+			<field type="weekdayOfMonth-short">
+				<displayName>د مياشتے اونۍ ورځ</displayName>
+			</field>
+			<field type="weekdayOfMonth-narrow">
+				<displayName>د مياشتے اونۍ ورځ</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<zone type="America/Lower_Princes">
+				<exemplarCity>د کمتر شهزاده درے میاشتنۍ</exemplarCity>
+			</zone>
+			<zone type="Africa/Harare">
+				<exemplarCity>هرارے</exemplarCity>
+			</zone>
+			<metazone type="Alaska">
+				<long>
+					<daylight>د الاسکا د ورځے روښانه کول</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Central">
+				<long>
+					<daylight>مرکزي رڼا ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<daylight>ختيځ د رڼا ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<daylight>د غره د رڼا ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<daylight>پیسفک د رڼا ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Apia">
+				<long>
+					<daylight>د اپیا د ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Arabian">
+				<long>
+					<daylight>د عربي ورځپاڼے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<daylight>اتلانتیک د رڼا ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Western">
+				<long>
+					<daylight>د اسټرالیا لویدیځ د ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="China">
+				<long>
+					<daylight>د چين د رڼا ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cuba">
+				<long>
+					<daylight>کیوبا د رڼا ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>لوېديزے اروپا وخت</generic>
+					<standard>د لودیځے اروپا معیاري وخت</standard>
+					<daylight>د لودیځے اورپا د اوړي وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="French_Southern">
+				<long>
+					<standard>د فرانسے سویل او انټارټيک وخت</standard>
+				</long>
+			</metazone>
+			<metazone type="Hawaii_Aleutian">
+				<long>
+					<daylight>هوایی الیوتین رڼا ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Iran">
+				<long>
+					<daylight>د ایران د ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Israel">
+				<long>
+					<daylight>د اسراییلو د ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Japan">
+				<long>
+					<daylight>جاپان د رڼا ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Korea">
+				<long>
+					<daylight>د کوریا د ورځے د ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Line_Islands">
+				<long>
+					<standard>د کرښے ټاټوبي وخت</standard>
+				</long>
+			</metazone>
+			<metazone type="Lord_Howe">
+				<long>
+					<daylight>رب هاو د ورځے د رڼا وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Northwest">
+				<long>
+					<daylight>د شمال لویدیځ مکسیکو رڼا ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Pacific">
+				<long>
+					<daylight>مکسیکن پیسفک رڼا ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="New_Zealand">
+				<long>
+					<daylight>د نیوزی لینڈ د ورځے د رڼا وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Newfoundland">
+				<long>
+					<daylight>د نوي فیلډلینډ رڼا ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pierre_Miquelon">
+				<long>
+					<daylight>سینټ پییرا و ميکلين رڼا ورځے وخت</daylight>
+				</long>
+			</metazone>
+			<metazone type="Samoa">
+				<long>
+					<daylight>د سموا د ورځے روښانه کول</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<currencies>
+			<currency type="PKR">
+				<displayName count="one">پاکستانۍ کلداره</displayName>
+				<displayName count="other">پاکستانۍ کلدارے</displayName>
+				<symbol draft="contributed">Rs</symbol>
+			</currency>
+			<currency type="XXX">
+				<displayName>نامعلومه مروجه پېسے</displayName>
+				<displayName count="one">(د نامعلومه مروجه پېسو واحد)</displayName>
+				<displayName count="other">(نامعلومه مروجه پېسے)</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="acceleration-g-force">
+				<displayName>د جاذبے قوه</displayName>
+				<unitPattern count="one">{0} د جاذبے قوه</unitPattern>
+				<unitPattern count="other">{0} د جاذبے قوه</unitPattern>
+			</unit>
+			<unit type="angle-degree">
+				<displayName>درجے</displayName>
+				<unitPattern count="one">{0} درجے</unitPattern>
+				<unitPattern count="other">{0} درجے</unitPattern>
+			</unit>
+			<unit type="angle-arc-second">
+				<displayName>آرک ثانيے</displayName>
+				<unitPattern count="one">{0} آرک ثانيه</unitPattern>
+				<unitPattern count="other">{0} آرک ثانيے</unitPattern>
+			</unit>
+			<unit type="area-hectare">
+				<displayName>هيکترے</displayName>
+				<unitPattern count="one">{0} هيکتر</unitPattern>
+				<unitPattern count="other">{0} هيکترے</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>مياشتے</displayName>
+				<unitPattern count="one">{0} مياشت</unitPattern>
+				<unitPattern count="other">{0} مياشتے</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<perUnitPattern>{0} په هره اونۍ کے</perUnitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName>ورځے</displayName>
+				<unitPattern count="one">{0} ورځ</unitPattern>
+				<unitPattern count="other">{0} ورځے</unitPattern>
+				<perUnitPattern>{0} په هره ورځ کے</perUnitPattern>
+			</unit>
+			<unit type="length-inch">
+				<displayName>انچے</displayName>
+				<unitPattern count="one">{0} انچ</unitPattern>
+				<unitPattern count="other">{0} انچے</unitPattern>
+			</unit>
+			<unit type="length-astronomical-unit">
+				<displayName>فلکي احدے</displayName>
+				<unitPattern count="one">{0} فلکي احد</unitPattern>
+				<unitPattern count="other">{0} فلکي احدے</unitPattern>
+			</unit>
+			<unit type="pressure-millimeter-ofhg">
+				<displayName>د پارے ملي مترز</displayName>
+				<unitPattern count="one">{0} د پارے ملي متر</unitPattern>
+				<unitPattern count="other">{0} د پارے ملي مترز</unitPattern>
+			</unit>
+			<unit type="pressure-inch-ofhg">
+				<displayName>د پارے انچے</displayName>
+				<unitPattern count="one">{0} د پارے انچ</unitPattern>
+				<unitPattern count="other">{0} د پارے انچے</unitPattern>
+			</unit>
+			<unit type="temperature-celsius">
+				<displayName>درجے سيلسيس</displayName>
+				<unitPattern count="one">{0} درجے سيلسيس</unitPattern>
+				<unitPattern count="other">{0} درجے سيلسيس</unitPattern>
+			</unit>
+			<unit type="temperature-fahrenheit">
+				<displayName>درجے فارنهايټ</displayName>
+				<unitPattern count="one">{0} درجے فارنهايټ</unitPattern>
+				<unitPattern count="other">{0} درجے فارنهايټ</unitPattern>
+			</unit>
+			<unit type="volume-cup">
+				<displayName>پيالے</displayName>
+				<unitPattern count="one">{0} پياله</unitPattern>
+				<unitPattern count="other">{0} پيالے</unitPattern>
+			</unit>
+			<unit type="volume-teaspoon">
+				<displayName>د ميز کاچوغے</displayName>
+				<unitPattern count="one">{0} د ميز کاچوغه</unitPattern>
+				<unitPattern count="other">{0} د ميز کاچوغے</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="acceleration-g-force">
+				<displayName>د جاذبے قوه</displayName>
+			</unit>
+			<unit type="angle-degree">
+				<displayName>درجے</displayName>
+			</unit>
+			<unit type="area-hectare">
+				<displayName>هيکترے</displayName>
+			</unit>
+			<unit type="duration-month">
+				<displayName>مياشتے</displayName>
+			</unit>
+			<unit type="duration-day">
+				<displayName>ورځے</displayName>
+				<unitPattern count="one">{0} ورځ</unitPattern>
+				<unitPattern count="other">{0} ورځے</unitPattern>
+			</unit>
+			<unit type="length-inch">
+				<displayName>انچے</displayName>
+			</unit>
+			<unit type="volume-cup">
+				<displayName>پيالے</displayName>
+			</unit>
+		</unitLength>
+	</units>
+	<characterLabels>
+		<characterLabel type="east_asian_scripts">د ختيځے اسيا سکرېپټ</characterLabel>
+		<characterLabel type="nonspacing">بے واټنه کول</characterLabel>
+		<characterLabel type="numbers">شمېرے</characterLabel>
+		<characterLabel type="smiley">مسکېدلے</characterLabel>
+	</characterLabels>
+	<typographicNames>
+		<featureName type="lnum">لايننګ شمېرے</featureName>
+		<featureName type="pnum">مطابقتي شمېرے</featureName>
+	</typographicNames>
+</ldml>

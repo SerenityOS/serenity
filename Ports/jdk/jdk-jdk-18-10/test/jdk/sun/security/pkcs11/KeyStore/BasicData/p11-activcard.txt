@@ -1,0 +1,23 @@
+name = activcard
+
+slot = 0
+
+#password = 112233
+
+#library = ${user.home}/Working/dallas/libDSPKCS.so
+#library = c:\\charlie\\p11_libs\\dspkcs.dll
+library = c:\\charlie\\p11_libs\\acpkcs201.dll
+
+attributes(import,CKO_PRIVATE_KEY,*) = {
+  CKA_SENSITIVE = true
+  CKA_EXTRACTABLE = false
+}
+
+attributes(*,CKO_PRIVATE_KEY,CKK_RSA) = {
+  CKA_SENSITIVE = true
+  CKA_EXTRACTABLE = false
+#  CKA_DECRYPT = true
+  CKA_SIGN = true
+#  CKA_SIGN_RECOVER = true
+#  CKA_UNWRAP = true
+}

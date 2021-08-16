@@ -1,0 +1,1182 @@
+/*
+ * Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/* Type-specific source code for unit test
+ *
+ * Regenerate the BasicX classes via genBasic.sh whenever this file changes.
+ * We check in the generated source files so that the test tree can be used
+ * independently of the rest of the source tree.
+ */
+
+#warn This file is preprocessed before being compiled
+
+#if[byte]
+import java.io.IOException;
+import java.io.UncheckedIOException;
+#end[byte]
+import java.nio.*;
+#if[byte]
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Random;
+#end[byte]
+
+
+public class Basic$Type$
+    extends Basic
+{
+
+    private static final $type$[] VALUES = {
+        $Fulltype$.MIN_VALUE,
+        ($type$) -1,
+        ($type$) 0,
+        ($type$) 1,
+        $Fulltype$.MAX_VALUE,
+#if[float]
+        $Fulltype$.NEGATIVE_INFINITY,
+        $Fulltype$.POSITIVE_INFINITY,
+        $Fulltype$.NaN,
+        ($type$) -0.0,
+#end[float]
+#if[double]
+        $Fulltype$.NEGATIVE_INFINITY,
+        $Fulltype$.POSITIVE_INFINITY,
+        $Fulltype$.NaN,
+        ($type$) -0.0,
+#end[double]
+    };
+
+    private static void relGet($Type$Buffer b) {
+        int n = b.capacity();
+        for (int i = 0; i < n; i++)
+            ck(b, (long)b.get(), (long)(($type$)ic(i)));
+        b.rewind();
+    }
+
+    private static void relGet($Type$Buffer b, int start) {
+        int n = b.remaining();
+        for (int i = start; i < n; i++)
+            ck(b, (long)b.get(), (long)(($type$)ic(i)));
+        b.rewind();
+    }
+
+    private static void absGet($Type$Buffer b) {
+        int n = b.capacity();
+        for (int i = 0; i < n; i++)
+            ck(b, (long)b.get(), (long)(($type$)ic(i)));
+        b.rewind();
+    }
+
+    private static void bulkGet($Type$Buffer b) {
+        int n = b.capacity();
+        $type$[] a = new $type$[n + 7];
+        b.get(a, 7, n);
+        for (int i = 0; i < n; i++) {
+            ck(b, (long)a[i + 7], (long)(($type$)ic(i)));
+        }
+    }
+
+    private static void absBulkGet($Type$Buffer b) {
+        int n = b.capacity();
+        int len = n - 7*2;
+        $type$[] a = new $type$[n + 7];
+        b.position(42);
+        b.get(7, a, 7, len);
+        ck(b, b.position() == 42);
+        for (int i = 0; i < len; i++) {
+            ck(b, (long)a[i + 7], (long)(($type$)ic(i)));
+        }
+    }
+
+    private static void relPut($Type$Buffer b) {
+        int n = b.capacity();
+        b.clear();
+        for (int i = 0; i < n; i++)
+            b.put(($type$)ic(i));
+        b.flip();
+    }
+
+    private static void absPut($Type$Buffer b) {
+        int n = b.capacity();
+        b.clear();
+        for (int i = 0; i < n; i++)
+            b.put(i, ($type$)ic(i));
+        b.limit(n);
+        b.position(0);
+    }
+
+    private static void bulkPutArray($Type$Buffer b) {
+        int n = b.capacity();
+        b.clear();
+        $type$[] a = new $type$[n + 7];
+        for (int i = 0; i < n; i++)
+            a[i + 7] = ($type$)ic(i);
+        b.put(a, 7, n);
+        b.flip();
+    }
+
+    private static void bulkPutBuffer($Type$Buffer b) {
+        int n = b.capacity();
+        b.clear();
+        $Type$Buffer c = $Type$Buffer.allocate(n + 7);
+        c.position(7);
+        for (int i = 0; i < n; i++)
+            c.put(($type$)ic(i));
+        c.flip();
+        c.position(7);
+        b.put(c);
+        b.flip();
+        try {
+            b.put(b);
+            fail("IllegalArgumentException expected for put into same buffer");
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage() == null) {
+                fail("Non-null IllegalArgumentException message expected from"
+                     + " put into same buffer");
+            }
+        }
+    }
+
+    private static void absBulkPutArray($Type$Buffer b) {
+        int n = b.capacity();
+        b.clear();
+        int lim = n - 7;
+        int len = lim - 7;
+        b.limit(lim);
+        $type$[] a = new $type$[len + 7];
+        for (int i = 0; i < len; i++)
+            a[i + 7] = ($type$)ic(i);
+        b.position(42);
+        b.put(7, a, 7, len);
+        ck(b, b.position() == 42);
+    }
+
+    //6231529
+    private static void callReset($Type$Buffer b) {
+        b.position(0);
+        b.mark();
+
+        b.duplicate().reset();
+        b.asReadOnlyBuffer().reset();
+    }
+
+#if[byte]
+#else[byte]
+    // 6221101-6234263
+
+    private static void putBuffer() {
+        final int cap = 10;
+
+        $Type$Buffer direct1 = ByteBuffer.allocateDirect(cap).as$Type$Buffer();
+        $Type$Buffer nondirect1 = ByteBuffer.allocate(cap).as$Type$Buffer();
+        direct1.put(nondirect1);
+
+        $Type$Buffer direct2 = ByteBuffer.allocateDirect(cap).as$Type$Buffer();
+        $Type$Buffer nondirect2 = ByteBuffer.allocate(cap).as$Type$Buffer();
+        nondirect2.put(direct2);
+
+        $Type$Buffer direct3 = ByteBuffer.allocateDirect(cap).as$Type$Buffer();
+        $Type$Buffer direct4 = ByteBuffer.allocateDirect(cap).as$Type$Buffer();
+        direct3.put(direct4);
+
+        $Type$Buffer nondirect3 = ByteBuffer.allocate(cap).as$Type$Buffer();
+        $Type$Buffer nondirect4 = ByteBuffer.allocate(cap).as$Type$Buffer();
+        nondirect3.put(nondirect4);
+    }
+#end[byte]
+
+#if[char]
+
+    private static void bulkPutString($Type$Buffer b) {
+        int n = b.capacity();
+        b.clear();
+        StringBuilder sb = new StringBuilder(n + 7);
+        sb.append("1234567");
+        for (int i = 0; i < n; i++)
+            sb.append((char)ic(i));
+        b.put(sb.toString(), 7, 7 + n);
+        b.flip();
+    }
+
+#end[char]
+
+    private static void checkSlice($Type$Buffer b, $Type$Buffer slice) {
+        ck(slice, 0, slice.position());
+        ck(slice, b.remaining(), slice.limit());
+        ck(slice, b.remaining(), slice.capacity());
+        if (b.isDirect() != slice.isDirect())
+            fail("Lost direction", slice);
+        if (b.isReadOnly() != slice.isReadOnly())
+            fail("Lost read-only", slice);
+    }
+
+#if[byte]
+
+    private static void checkBytes(ByteBuffer b, byte[] bs) {
+        int n = bs.length;
+        int p = b.position();
+        if (b.order() == ByteOrder.BIG_ENDIAN) {
+            for (int i = 0; i < n; i++) {
+                ck(b, b.get(), bs[i]);
+            }
+        } else {
+            for (int i = n - 1; i >= 0; i--) {
+                ck(b, b.get(), bs[i]);
+            }
+        }
+        b.position(p);
+    }
+
+    private static void compact(Buffer b) {
+        try {
+            Class<?> cl = b.getClass();
+            java.lang.reflect.Method m = cl.getDeclaredMethod("compact");
+            m.setAccessible(true);
+            m.invoke(b);
+        } catch (Exception e) {
+            fail(e.getMessage(), b);
+        }
+    }
+
+    private static void checkInvalidMarkException(final Buffer b) {
+        tryCatch(b, InvalidMarkException.class, () -> {
+                b.mark();
+                compact(b);
+                b.reset();
+            });
+    }
+
+    private static void testViews(int level, ByteBuffer b, boolean direct) {
+
+        ShortBuffer sb = b.asShortBuffer();
+        BasicShort.test(level, sb, direct);
+        checkBytes(b, new byte[] { 0, (byte)ic(0) });
+        checkInvalidMarkException(sb);
+
+        CharBuffer cb = b.asCharBuffer();
+        BasicChar.test(level, cb, direct);
+        checkBytes(b, new byte[] { 0, (byte)ic(0) });
+        checkInvalidMarkException(cb);
+
+        IntBuffer ib = b.asIntBuffer();
+        BasicInt.test(level, ib, direct);
+        checkBytes(b, new byte[] { 0, 0, 0, (byte)ic(0) });
+        checkInvalidMarkException(ib);
+
+        LongBuffer lb = b.asLongBuffer();
+        BasicLong.test(level, lb, direct);
+        checkBytes(b, new byte[] { 0, 0, 0, 0, 0, 0, 0, (byte)ic(0) });
+        checkInvalidMarkException(lb);
+
+        FloatBuffer fb = b.asFloatBuffer();
+        BasicFloat.test(level, fb, direct);
+        checkBytes(b, new byte[] { 0x42, (byte)0xc2, 0, 0 });
+        checkInvalidMarkException(fb);
+
+        DoubleBuffer db = b.asDoubleBuffer();
+        BasicDouble.test(level, db, direct);
+        checkBytes(b, new byte[] { 0x40, 0x58, 0x40, 0, 0, 0, 0, 0 });
+        checkInvalidMarkException(db);
+    }
+
+    private static void testHet(int level, ByteBuffer b) {
+
+        int p = b.position();
+        b.limit(b.capacity());
+        show(level, b);
+        out.print("    put:");
+
+        b.putChar((char)1);
+        b.putChar((char)Character.MAX_VALUE);
+        out.print(" char");
+
+        b.putShort((short)1);
+        b.putShort((short)Short.MAX_VALUE);
+        out.print(" short");
+
+        b.putInt(1);
+        b.putInt(Integer.MAX_VALUE);
+        out.print(" int");
+
+        b.putLong((long)1);
+        b.putLong((long)Long.MAX_VALUE);
+        out.print(" long");
+
+        b.putFloat((float)1);
+        b.putFloat((float)Float.MIN_VALUE);
+        b.putFloat((float)Float.MAX_VALUE);
+        out.print(" float");
+
+        b.putDouble((double)1);
+        b.putDouble((double)Double.MIN_VALUE);
+        b.putDouble((double)Double.MAX_VALUE);
+        out.print(" double");
+
+        out.println();
+        b.limit(b.position());
+        b.position(p);
+        show(level, b);
+        out.print("    get:");
+
+        ck(b, b.getChar(), 1);
+        ck(b, b.getChar(), Character.MAX_VALUE);
+        out.print(" char");
+
+        ck(b, b.getShort(), 1);
+        ck(b, b.getShort(), Short.MAX_VALUE);
+        out.print(" short");
+
+        ck(b, b.getInt(), 1);
+        ck(b, b.getInt(), Integer.MAX_VALUE);
+        out.print(" int");
+
+        ck(b, b.getLong(), 1);
+        ck(b, b.getLong(), Long.MAX_VALUE);
+        out.print(" long");
+
+        ck(b, (long)b.getFloat(), 1);
+        ck(b, (long)b.getFloat(), (long)Float.MIN_VALUE);
+        ck(b, (long)b.getFloat(), (long)Float.MAX_VALUE);
+        out.print(" float");
+
+        ck(b, (long)b.getDouble(), 1);
+        ck(b, (long)b.getDouble(), (long)Double.MIN_VALUE);
+        ck(b, (long)b.getDouble(), (long)Double.MAX_VALUE);
+        out.print(" double");
+
+        out.println();
+
+    }
+
+    private static void testAlign(final ByteBuffer b, boolean direct) {
+        // index out-of bounds
+        catchIllegalArgument(b, () -> b.alignmentOffset(-1, (short) 1));
+
+        // unit size values
+        catchIllegalArgument(b, () -> b.alignmentOffset(0, (short) 0));
+        for (int us = 1; us < 65; us++) {
+            int _us = us;
+            if ((us & (us - 1)) != 0) {
+                // unit size not a power of two
+                catchIllegalArgument(b, () -> b.alignmentOffset(0, _us));
+            } else {
+                if (direct || us <= 8) {
+                    b.alignmentOffset(0, us);
+                } else {
+                    // unit size > 8 with non-direct buffer
+                    tryCatch(b, UnsupportedOperationException.class,
+                            () -> b.alignmentOffset(0, _us));
+                }
+            }
+        }
+
+        // Probe for long misalignment at index zero for a newly created buffer
+        ByteBuffer empty =
+                direct ? ByteBuffer.allocateDirect(0) : ByteBuffer.allocate(0);
+        int longMisalignmentAtZero = empty.alignmentOffset(0, 8);
+
+        if (direct) {
+            // Freshly created direct byte buffers should be aligned at index 0
+            // for ref and primitive values (see Unsafe.allocateMemory)
+            if (longMisalignmentAtZero != 0) {
+                fail("Direct byte buffer misaligned at index 0"
+                        + " for ref and primitive values "
+                        + longMisalignmentAtZero);
+            }
+        } else {
+            // For heap byte buffers misalignment may occur on 32-bit systems
+            // where Unsafe.ARRAY_BYTE_BASE_OFFSET % 8 == 4 and not 0
+            // Note the GC will preserve alignment of the base address of the
+            // array
+            if (jdk.internal.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET % 8
+                    != longMisalignmentAtZero) {
+                fail("Heap byte buffer misaligned at index 0"
+                        + " for ref and primitive values "
+                        + longMisalignmentAtZero);
+            }
+        }
+
+        // Ensure test buffer is correctly aligned at index 0
+        if (b.alignmentOffset(0, 8) != longMisalignmentAtZero)
+            fail("Test input buffer not correctly aligned at index 0", b);
+
+        // Test misalignment values
+        for (int us : new int[]{1, 2, 4, 8}) {
+            for (int i = 0; i < us * 2; i++) {
+                int am = b.alignmentOffset(i, us);
+                int expectedAm = (longMisalignmentAtZero + i) % us;
+
+                if (am != expectedAm) {
+                    String f = "b.alignmentOffset(%d, %d) == %d incorrect, expected %d";
+                    fail(String.format(f, i, us, am, expectedAm));
+                }
+            }
+        }
+
+        // Created aligned slice to test against
+        int ap = 8 - longMisalignmentAtZero;
+        int al = b.limit() - b.alignmentOffset(b.limit(), 8);
+        ByteBuffer ab = b.position(ap).limit(al).
+                slice();
+        if (ab.limit() == 0) {
+            fail("Test input buffer not sufficiently sized to cover" +
+                    " an aligned region for all values", b);
+        }
+        if (ab.alignmentOffset(0, 8) != 0)
+            fail("Aligned test input buffer not correctly aligned at index 0", ab);
+
+        for (int us : new int[]{1, 2, 4, 8}) {
+            for (int p = 1; p < 16; p++) {
+                int l = ab.limit() - p;
+
+                ByteBuffer as = ab.slice().position(p).limit(l).
+                        alignedSlice(us);
+
+                ck(as, 0, as.position());
+                ck(as, as.capacity(), as.limit());
+                if (b.isDirect() != as.isDirect())
+                    fail("Lost direction", as);
+                if (b.isReadOnly() != as.isReadOnly())
+                    fail("Lost read-only", as);
+
+                if (as.alignmentOffset(0, us) != 0)
+                    fail("Buffer not correctly aligned at index 0", as);
+
+                if (as.alignmentOffset(as.limit(), us) != 0)
+                    fail("Buffer not correctly aligned at limit", as);
+
+                int p_mod = ab.alignmentOffset(p, us);
+                int l_mod = ab.alignmentOffset(l, us);
+                // Round up position
+                p = (p_mod > 0) ? p + (us - p_mod) : p;
+                // Round down limit
+                l = l - l_mod;
+
+                int ec = l - p;
+                if (as.limit() != ec) {
+                    fail("Buffer capacity incorrect, expected: " + ec, as);
+                }
+            }
+        }
+
+        // mapped buffers
+        try {
+            for (MappedByteBuffer bb : mappedBuffers()) {
+                try {
+                    int offset = bb.alignmentOffset(1, 4);
+                    ck(bb, offset >= 0);
+                } catch (UnsupportedOperationException e) {
+                    System.out.println("Not applicable, UOE thrown: ");
+                }
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        // alignment identities
+        final int maxPow2 = 12;
+        ByteBuffer bb = ByteBuffer.allocateDirect(1 << maxPow2); // cap 4096
+
+        Random rnd = new Random();
+        long seed = rnd.nextLong();
+        rnd = new Random(seed);
+
+        for (int i = 0; i < 100; i++) {
+            // 1 == 2^0 <= unitSize == 2^k <= bb.capacity()/2
+            int unitSize = 1 << rnd.nextInt(maxPow2);
+            // 0 <= index < 2*unitSize
+            int index = rnd.nextInt(unitSize << 1);
+            int value = bb.alignmentOffset(index, unitSize);
+            try {
+                if (value < 0 || value >= unitSize) {
+                    throw new RuntimeException(value + " < 0 || " +
+                        value + " >= " + unitSize);
+                }
+                if (value <= index &&
+                    bb.alignmentOffset(index - value, unitSize) != 0)
+                    throw new RuntimeException("Identity 1");
+                if (bb.alignmentOffset(index + (unitSize - value),
+                    unitSize) != 0)
+                    throw new RuntimeException("Identity 2");
+            } catch (RuntimeException re) {
+                System.err.format("seed %d, index %d, unitSize %d, value %d%n",
+                    seed, index, unitSize, value);
+                throw re;
+            }
+        }
+    }
+
+    private static MappedByteBuffer[] mappedBuffers() throws IOException {
+        return new MappedByteBuffer[]{
+                createMappedBuffer(new byte[]{0, 1, 2, 3}),
+                createMappedBuffer(new byte[]{0, 1, 2, -3,
+                    45, 6, 7, 78, 3, -7, 6, 7, -128, 127}),
+        };
+    }
+
+    private static MappedByteBuffer createMappedBuffer(byte[] contents)
+        throws IOException {
+        Path tempFile = Files.createTempFile("mbb", null);
+        tempFile.toFile().deleteOnExit();
+        Files.write(tempFile, contents);
+        try (FileChannel fc = FileChannel.open(tempFile)) {
+            MappedByteBuffer map =
+                fc.map(FileChannel.MapMode.READ_ONLY, 0, contents.length);
+            map.load();
+            return map;
+        }
+    }
+#end[byte]
+
+    private static void fail(String problem,
+                             $Type$Buffer xb, $Type$Buffer yb,
+                             $type$ x, $type$ y) {
+        fail(problem + String.format(": x=%s y=%s", x, y), xb, yb);
+    }
+
+    private static void catchNullArgument(Buffer b, Runnable thunk) {
+        tryCatch(b, NullPointerException.class, thunk);
+    }
+
+    private static void catchIllegalArgument(Buffer b, Runnable thunk) {
+        tryCatch(b, IllegalArgumentException.class, thunk);
+    }
+
+    private static void catchReadOnlyBuffer(Buffer b, Runnable thunk) {
+        tryCatch(b, ReadOnlyBufferException.class, thunk);
+    }
+
+    private static void catchIndexOutOfBounds(Buffer b, Runnable thunk) {
+        tryCatch(b, IndexOutOfBoundsException.class, thunk);
+    }
+
+    private static void catchIndexOutOfBounds($type$[] t, Runnable thunk) {
+        tryCatch(t, IndexOutOfBoundsException.class, thunk);
+    }
+
+    private static void tryCatch(Buffer b, Class<?> ex, Runnable thunk) {
+        boolean caught = false;
+        try {
+            thunk.run();
+        } catch (Throwable x) {
+            if (ex.isAssignableFrom(x.getClass())) {
+                caught = true;
+            } else {
+                String s = x.getMessage();
+                if (s == null)
+                    s = x.getClass().getName();
+                fail(s + " not expected");
+            }
+        }
+        if (!caught) {
+            fail(ex.getName() + " not thrown", b);
+        }
+    }
+
+    private static void tryCatch($type$[] t, Class<?> ex, Runnable thunk) {
+        tryCatch($Type$Buffer.wrap(t), ex, thunk);
+    }
+
+    public static void test(int level, final $Type$Buffer b, boolean direct) {
+
+        show(level, b);
+
+        if (direct != b.isDirect())
+            fail("Wrong direction", b);
+
+        // Gets and puts
+
+        relPut(b);
+        relGet(b);
+        absGet(b);
+        bulkGet(b);
+
+        absPut(b);
+        relGet(b);
+        absGet(b);
+        bulkGet(b);
+
+        bulkPutArray(b);
+        relGet(b);
+
+        bulkPutBuffer(b);
+        relGet(b);
+
+        absBulkPutArray(b);
+        absBulkGet(b);
+
+#if[char]
+
+        bulkPutString(b);
+        relGet(b);
+        b.position(1);
+        b.limit(7);
+        ck(b, b.toString().equals("bcdefg"));
+
+        // CharSequence ops
+
+        b.position(2);
+        ck(b, b.charAt(1), 'd');
+        CharBuffer c = b.subSequence(1, 4);
+        ck(c, c.capacity(), b.capacity());
+        ck(c, c.position(), b.position()+1);
+        ck(c, c.limit(), b.position()+4);
+        ck(c, b.subSequence(1, 4).toString().equals("def"));
+
+        // 4938424
+        b.position(4);
+        ck(b, b.charAt(1), 'f');
+        ck(b, b.subSequence(1, 3).toString().equals("fg"));
+
+        // String ops
+
+        // 7190219
+        b.clear();
+        int pos = b.position();
+        tryCatch(b, BufferOverflowException.class, () ->
+                b.put(String.valueOf(new char[b.capacity() + 1]), 0, b.capacity() + 1)
+            );
+        ck(b, b.position(), pos);
+        relGet(b);
+
+#end[char]
+
+        // Compact
+
+        relPut(b);
+        b.position(13);
+        b.compact();
+        b.flip();
+        relGet(b, 13);
+
+        // Exceptions
+
+        relPut(b);
+        b.limit(b.capacity() / 2);
+        b.position(b.limit());
+
+        tryCatch(b, BufferUnderflowException.class, () -> b.get());
+        tryCatch(b, BufferOverflowException.class, () -> b.put(($type$)42));
+        // The index must be non-negative and less than the buffer's limit.
+        catchIndexOutOfBounds(b, () -> b.get(b.limit()));
+        catchIndexOutOfBounds(b, () -> b.get(-1));
+        catchIndexOutOfBounds(b, () -> b.put(b.limit(), ($type$)42));
+        tryCatch(b, InvalidMarkException.class,
+                () -> b.position(0).mark().compact().reset());
+
+        try {
+            b.position(b.limit() + 1);
+            fail("IllegalArgumentException expected for position beyond limit");
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage() == null) {
+                fail("Non-null IllegalArgumentException message expected for"
+                     + " position beyond limit");
+            }
+        }
+
+        try {
+            b.position(-1);
+            fail("IllegalArgumentException expected for negative position");
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage() == null) {
+                fail("Non-null IllegalArgumentException message expected for"
+                     + " negative position");
+            }
+        }
+
+        try {
+            b.limit(b.capacity() + 1);
+            fail("IllegalArgumentException expected for limit beyond capacity");
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage() == null) {
+                fail("Non-null IllegalArgumentException message expected for"
+                     + " limit beyond capacity");
+            }
+        }
+
+        try {
+            b.limit(-1);
+            fail("IllegalArgumentException expected for negative limit");
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage() == null) {
+                fail("Non-null IllegalArgumentException message expected for"
+                     + " negative limit");
+            }
+        }
+
+        // Exceptions in absolute bulk and slice operations
+
+        catchNullArgument(b, () -> b.get(7, null, 0, 42));
+        catchNullArgument(b, () -> b.put(7, ($type$[])null, 0, 42));
+
+        $type$[] tmpa = new $type$[42];
+        catchIndexOutOfBounds(b, () -> b.get(7, tmpa, -1, 42));
+        catchIndexOutOfBounds(b, () -> b.get(7, tmpa, 42, 1));
+        catchIndexOutOfBounds(b, () -> b.get(7, tmpa, 41, -1));
+        catchIndexOutOfBounds(b, () -> b.get(-1, tmpa, 0, 1));
+        catchIndexOutOfBounds(b, () -> b.get(b.limit(), tmpa, 0, 1));
+        catchIndexOutOfBounds(b, () -> b.get(b.limit() - 41, tmpa, 0, 42));
+
+        catchIndexOutOfBounds(b, () -> b.put(7, tmpa, -1, 42));
+        catchIndexOutOfBounds(b, () -> b.put(7, tmpa, 42, 1));
+        catchIndexOutOfBounds(b, () -> b.put(7, tmpa, 41, -1));
+        catchIndexOutOfBounds(b, () -> b.put(-1, tmpa, 0, 1));
+        catchIndexOutOfBounds(b, () -> b.put(b.limit(), tmpa, 0, 1));
+        catchIndexOutOfBounds(b, () -> b.put(b.limit() - 41, tmpa, 0, 42));
+
+        catchIndexOutOfBounds(b, () -> b.slice(-1, 7));
+        catchIndexOutOfBounds(b, () -> b.slice(b.limit() + 1, 7));
+        catchIndexOutOfBounds(b, () -> b.slice(0, -1));
+        catchIndexOutOfBounds(b, () -> b.slice(7, b.limit() - 7 + 1));
+
+        // Values
+
+        b.clear();
+        b.put(($type$)0);
+        b.put(($type$)-1);
+        b.put(($type$)1);
+        b.put($Fulltype$.MAX_VALUE);
+        b.put($Fulltype$.MIN_VALUE);
+#if[float]
+        b.put(-Float.MAX_VALUE);
+        b.put(-Float.MIN_VALUE);
+        b.put(Float.NEGATIVE_INFINITY);
+        b.put(Float.POSITIVE_INFINITY);
+        b.put(Float.NaN);
+        b.put(0.91697687f);             // Changes value if incorrectly swapped
+#end[float]
+#if[double]
+        b.put(-Double.MAX_VALUE);
+        b.put(-Double.MIN_VALUE);
+        b.put(Double.NEGATIVE_INFINITY);
+        b.put(Double.POSITIVE_INFINITY);
+        b.put(Double.NaN);
+        b.put(0.5121609353879392);      // Changes value if incorrectly swapped
+#end[double]
+
+        b.flip();
+        ck(b, b.get(), 0);
+        ck(b, b.get(), ($type$)-1);
+        ck(b, b.get(), 1);
+        ck(b, b.get(), $Fulltype$.MAX_VALUE);
+        ck(b, b.get(), $Fulltype$.MIN_VALUE);
+
+#if[float]
+        $type$ v;
+        ck(b, b.get(), -Float.MAX_VALUE);
+        ck(b, b.get(), -Float.MIN_VALUE);
+        ck(b, b.get(), Float.NEGATIVE_INFINITY);
+        ck(b, b.get(), Float.POSITIVE_INFINITY);
+        if (Float.floatToRawIntBits(v = b.get()) !=
+            Float.floatToRawIntBits(Float.NaN)) {
+            fail(b, (long)Float.NaN, (long)v);
+        }
+        ck(b, b.get(), 0.91697687f);
+#end[float]
+#if[double]
+        $type$ v;
+        ck(b, b.get(), -Double.MAX_VALUE);
+        ck(b, b.get(), -Double.MIN_VALUE);
+        ck(b, b.get(), Double.NEGATIVE_INFINITY);
+        ck(b, b.get(), Double.POSITIVE_INFINITY);
+        if (Double.doubleToRawLongBits(v = b.get())
+            != Double.doubleToRawLongBits(Double.NaN)) {
+            fail(b, (long)Double.NaN, (long)v);
+        }
+        ck(b, b.get(), 0.5121609353879392);
+#end[double]
+
+
+        // Comparison
+        b.rewind();
+        $Type$Buffer b2 = $Type$Buffer.allocate(b.capacity());
+        b2.put(b);
+        b2.flip();
+        b.position(2);
+        b2.position(2);
+        if (!b.equals(b2)) {
+            for (int i = 2; i < b.limit(); i++) {
+                $type$ x = b.get(i);
+                $type$ y = b2.get(i);
+                if (x != y
+#if[double]
+                    || Double.compare(x, y) != 0
+#end[double]
+#if[float]
+                    || Float.compare(x, y) != 0
+#end[float]
+                    ) {
+                    out.println("[" + i + "] " + x + " != " + y);
+                }
+            }
+            fail("Identical buffers not equal", b, b2);
+        }
+        if (b.compareTo(b2) != 0) {
+            fail("Comparison to identical buffer != 0", b, b2);
+        }
+        b.limit(b.limit() + 1);
+        b.position(b.limit() - 1);
+        b.put(($type$)99);
+        b.rewind();
+        b2.rewind();
+        if (b.equals(b2))
+            fail("Non-identical buffers equal", b, b2);
+        if (b.compareTo(b2) <= 0)
+            fail("Comparison to shorter buffer <= 0", b, b2);
+        b.limit(b.limit() - 1);
+
+        b.put(2, ($type$)42);
+        if (b.equals(b2))
+            fail("Non-identical buffers equal", b, b2);
+        if (b.compareTo(b2) <= 0)
+            fail("Comparison to lesser buffer <= 0", b, b2);
+
+        // Check equals and compareTo with interesting values
+        for ($type$ x : VALUES) {
+            $Type$Buffer xb = $Type$Buffer.wrap(new $type$[] { x });
+            if (xb.compareTo(xb) != 0) {
+                fail("compareTo not reflexive", xb, xb, x, x);
+            }
+            if (!xb.equals(xb)) {
+                fail("equals not reflexive", xb, xb, x, x);
+            }
+            for ($type$ y : VALUES) {
+                $Type$Buffer yb = $Type$Buffer.wrap(new $type$[] { y });
+                if (xb.compareTo(yb) != - yb.compareTo(xb)) {
+                    fail("compareTo not anti-symmetric",
+                         xb, yb, x, y);
+                }
+                if ((xb.compareTo(yb) == 0) != xb.equals(yb)) {
+                    fail("compareTo inconsistent with equals",
+                         xb, yb, x, y);
+                }
+                if (xb.compareTo(yb) != $Fulltype$.compare(x, y)) {
+#if[float]
+                    if (x == 0.0 && y == 0.0) continue;
+#end[float]
+#if[double]
+                    if (x == 0.0 && y == 0.0) continue;
+#end[double]
+                    fail("Incorrect results for $Type$Buffer.compareTo",
+                         xb, yb, x, y);
+                }
+                if (xb.equals(yb) != ((x == y) || ((x != x) && (y != y)))) {
+                    fail("Incorrect results for $Type$Buffer.equals",
+                         xb, yb, x, y);
+                }
+            }
+        }
+
+        // Sub, dup
+
+        relPut(b);
+        relGet(b.duplicate());
+        b.position(13);
+        relGet(b.duplicate(), 13);
+        relGet(b.duplicate().slice(), 13);
+        relGet(b.slice(), 13);
+        relGet(b.slice().duplicate(), 13);
+
+        // Slice
+
+        b.position(5);
+        $Type$Buffer sb = b.slice();
+        checkSlice(b, sb);
+        b.position(0);
+        $Type$Buffer sb2 = sb.slice();
+        checkSlice(sb, sb2);
+
+        if (!sb.equals(sb2))
+            fail("Sliced slices do not match", sb, sb2);
+        if ((sb.hasArray()) && (sb.arrayOffset() != sb2.arrayOffset())) {
+            fail("Array offsets do not match: "
+                 + sb.arrayOffset() + " != " + sb2.arrayOffset(), sb, sb2);
+        }
+
+        int bPos = b.position();
+        int bLim = b.limit();
+
+        b.position(7);
+        b.limit(42);
+        $Type$Buffer rsb = b.slice();
+        b.position(0);
+        b.limit(b.capacity());
+        $Type$Buffer asb = b.slice(7, 35);
+        checkSlice(rsb, asb);
+
+        b.position(bPos);
+        b.limit(bLim);
+
+#if[byte]
+
+        // Views
+
+        b.clear();
+        b.order(ByteOrder.BIG_ENDIAN);
+        testViews(level + 1, b, direct);
+
+        for (int i = 1; i <= 9; i++) {
+            b.position(i);
+            show(level + 1, b);
+            testViews(level + 2, b, direct);
+        }
+
+        b.position(0);
+        b.order(ByteOrder.LITTLE_ENDIAN);
+        testViews(level + 1, b, direct);
+
+        // Heterogeneous accessors
+
+        b.order(ByteOrder.BIG_ENDIAN);
+        for (int i = 0; i <= 9; i++) {
+            b.position(i);
+            testHet(level + 1, b);
+        }
+        b.order(ByteOrder.LITTLE_ENDIAN);
+        b.position(3);
+        testHet(level + 1, b);
+
+#end[byte]
+
+        // Read-only views
+
+        b.rewind();
+        final $Type$Buffer rb = b.asReadOnlyBuffer();
+        if (!b.equals(rb))
+            fail("Buffer not equal to read-only view", b, rb);
+        show(level + 1, rb);
+
+        catchReadOnlyBuffer(b, () -> relPut(rb));
+        catchReadOnlyBuffer(b, () -> absPut(rb));
+        catchReadOnlyBuffer(b, () -> bulkPutArray(rb));
+        catchReadOnlyBuffer(b, () -> bulkPutBuffer(rb));
+        catchReadOnlyBuffer(b, () -> absBulkPutArray(rb));
+
+        // put($Type$Buffer) should not change source position
+        final $Type$Buffer src = $Type$Buffer.allocate(1);
+        catchReadOnlyBuffer(b, () -> rb.put(src));
+        ck(src, src.position(), 0);
+
+        catchReadOnlyBuffer(b, () -> rb.compact());
+
+#if[byte]
+
+        catchReadOnlyBuffer(b, () -> rb.putChar((char)1));
+        catchReadOnlyBuffer(b, () -> rb.putChar(0, (char)1));
+        catchReadOnlyBuffer(b, () -> rb.putShort((short)1));
+        catchReadOnlyBuffer(b, () -> rb.putShort(0, (short)1));
+        catchReadOnlyBuffer(b, () -> rb.putInt(1));
+        catchReadOnlyBuffer(b, () -> rb.putInt(0, 1));
+        catchReadOnlyBuffer(b, () -> rb.putLong((long)1));
+        catchReadOnlyBuffer(b, () -> rb.putLong(0, (long)1));
+        catchReadOnlyBuffer(b, () -> rb.putFloat((float)1));
+        catchReadOnlyBuffer(b, () -> rb.putFloat(0, (float)1));
+        catchReadOnlyBuffer(b, () -> rb.putDouble((double)1));
+        catchReadOnlyBuffer(b, () -> rb.putDouble(0, (double)1));
+
+#end[byte]
+
+#if[char]
+
+        // 7199551
+        catchReadOnlyBuffer(b, () -> rb.put(new String(new char[rb.remaining() + 1])));
+        catchReadOnlyBuffer(b, () -> rb.append(new String(new char[rb.remaining() + 1])));
+
+#end[char]
+
+        if (rb.getClass().getName().startsWith("java.nio.Heap")) {
+            catchReadOnlyBuffer(b, () -> rb.array());
+            catchReadOnlyBuffer(b, () -> rb.arrayOffset());
+            if (rb.hasArray()) {
+                fail("Read-only heap buffer's backing array is accessible", rb);
+            }
+        }
+
+        // Bulk puts from read-only buffers
+
+        b.clear();
+        rb.rewind();
+        b.put(rb);
+
+#if[byte]
+        // For byte buffers, test both the direct and non-direct cases
+        $Type$Buffer ob
+            = (b.isDirect()
+               ? $Type$Buffer.allocate(rb.capacity())
+               : $Type$Buffer.allocateDirect(rb.capacity()));
+        rb.rewind();
+        ob.put(rb);
+#end[byte]
+
+        relPut(b);                       // Required by testViews
+
+#if[byte]
+        // Test alignment
+
+        testAlign(b, direct);
+#end[byte]
+    }
+
+#if[char]
+
+    private static void testStr() {
+        final String s = "abcdefghijklm";
+        int start = 3;
+        int end = 9;
+        final CharBuffer b = CharBuffer.wrap(s, start, end);
+        show(0, b);
+        ck(b, b.toString().equals(s.substring(start, end)));
+        ck(b, b.toString().equals("defghi"));
+        ck(b, b.isReadOnly());
+        catchReadOnlyBuffer(b, () -> b.put('x'));
+        ck(b, start, b.position());
+        ck(b, end, b.limit());
+        ck(b, s.length(), b.capacity());
+        b.position(6);
+        ck(b, b.subSequence(0,3).toString().equals("ghi"));
+
+        // absolute bulk get
+        char[] c = new char[end + 1 - (start - 1) + 1]; // [start - 1, end + 1]
+        b.limit(end + 2);
+        b.get(start - 1, c, 0, c.length);
+        for (int i = 0; i < c.length; i++)
+            ck(b, c[i], s.charAt(start - 1 + i));
+
+        // The index, relative to the position, must be non-negative and
+        // smaller than remaining().
+        catchIndexOutOfBounds(b, () -> b.charAt(-1));
+        catchIndexOutOfBounds(b, () -> b.charAt(b.remaining()));
+        // The index must be non-negative and less than the buffer's limit.
+        catchIndexOutOfBounds(b, () -> b.get(b.limit()));
+        catchIndexOutOfBounds(b, () -> b.get(-1));
+        // The start must be non-negative and no larger than remaining().
+        catchIndexOutOfBounds(b, () -> b.subSequence(-1, b.remaining()));
+        catchIndexOutOfBounds(b, () -> b.subSequence(b.remaining() + 1, b.remaining()));
+
+        // The end must be no smaller than start and no larger than
+        // remaining().
+        catchIndexOutOfBounds(b, () -> b.subSequence(2, 1));
+        catchIndexOutOfBounds(b, () -> b.subSequence(0, b.remaining() + 1));
+
+        // The offset must be non-negative and no larger than <array.length>.
+        catchIndexOutOfBounds(b, () -> $Type$Buffer.wrap(s, -1, s.length()));
+        catchIndexOutOfBounds(b, () -> $Type$Buffer.wrap(s, s.length() + 1, s.length()));
+        catchIndexOutOfBounds(b, () -> $Type$Buffer.wrap(s, 1, 0));
+        catchIndexOutOfBounds(b, () -> $Type$Buffer.wrap(s, 0, s.length() + 1));
+    }
+
+#end[char]
+
+    public static void test(final $type$ [] ba) {
+        int offset = 47;
+        int length = 900;
+        final $Type$Buffer b = $Type$Buffer.wrap(ba, offset, length);
+        show(0, b);
+        ck(b, b.capacity(), ba.length);
+        ck(b, b.position(), offset);
+        ck(b, b.limit(), offset + length);
+
+        // The offset must be non-negative and no larger than <array.length>.
+        catchIndexOutOfBounds(ba, () -> $Type$Buffer.wrap(ba, -1, ba.length));
+        catchIndexOutOfBounds(ba, () -> $Type$Buffer.wrap(ba, ba.length + 1, ba.length));
+        catchIndexOutOfBounds(ba, () -> $Type$Buffer.wrap(ba, 0, -1));
+        catchIndexOutOfBounds(ba, () -> $Type$Buffer.wrap(ba, 0, ba.length + 1));
+
+        // A NullPointerException will be thrown if the array is null.
+        tryCatch(ba, NullPointerException.class,
+                () -> $Type$Buffer.wrap(($type$ []) null, 0, 5));
+        tryCatch(ba, NullPointerException.class,
+                () -> $Type$Buffer.wrap(($type$ []) null));
+    }
+
+    private static void testAllocate() {
+        // An IllegalArgumentException will be thrown for negative capacities.
+        catchIllegalArgument((Buffer) null, () -> $Type$Buffer.allocate(-1));
+        try {
+            $Type$Buffer.allocate(-1);
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage() == null) {
+                fail("Non-null IllegalArgumentException message expected for"
+                     + " attempt to allocate negative capacity buffer");
+            }
+        }
+#if[byte]
+        catchIllegalArgument((Buffer) null, () -> $Type$Buffer.allocateDirect(-1));
+        try {
+            $Type$Buffer.allocateDirect(-1);
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage() == null) {
+                fail("Non-null IllegalArgumentException message expected for"
+                     + " attempt to allocate negative capacity direct buffer");
+            }
+        }
+#end[byte]
+    }
+
+    public static void testToString() {
+        final int cap = 10;
+
+#if[byte]
+        $Type$Buffer direct1 = $Type$Buffer.allocateDirect(cap);
+        if (!direct1.toString().equals(Basic.toString(direct1))) {
+           fail("Direct buffer toString is incorrect: "
+                  + direct1.toString() + " vs " + Basic.toString(direct1));
+        }
+#end[byte]
+
+#if[!char]
+        $Type$Buffer nondirect1 = $Type$Buffer.allocate(cap);
+        if (!nondirect1.toString().equals(Basic.toString(nondirect1))) {
+           fail("Heap buffer toString is incorrect: "
+                  + nondirect1.toString() + " vs " + Basic.toString(nondirect1));
+        }
+#end[!char]
+    }
+
+    public static void test() {
+        testAllocate();
+        test(0, $Type$Buffer.allocate(7 * 1024), false);
+        test(0, $Type$Buffer.wrap(new $type$[7 * 1024], 0, 7 * 1024), false);
+        test(new $type$[1024]);
+#if[byte]
+        $Type$Buffer b = $Type$Buffer.allocateDirect(7 * 1024);
+        for (b.position(0); b.position() < b.limit(); )
+            ck(b, b.get(), 0);
+        test(0, b, true);
+#end[byte]
+#if[char]
+        testStr();
+#end[char]
+
+        callReset($Type$Buffer.allocate(10));
+
+#if[byte]
+#else[byte]
+        putBuffer();
+#end[byte]
+
+        testToString();
+    }
+
+}

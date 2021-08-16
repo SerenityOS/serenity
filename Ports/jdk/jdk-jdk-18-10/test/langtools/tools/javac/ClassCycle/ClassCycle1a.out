@@ -1,0 +1,2 @@
+ClassCycle1b.java:6:1: compiler.err.cyclic.inheritance: ClassCycle1b
+1 error

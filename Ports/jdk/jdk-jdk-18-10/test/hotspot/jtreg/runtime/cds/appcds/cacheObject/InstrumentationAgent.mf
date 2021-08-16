@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Premain-Class: InstrumentationRegisterClassFileTransformer
+Agent-Class: InstrumentationRegisterClassFileTransformer
+Can-Retransform-Classes: true
+Can-Redefine-Classes: true

@@ -1,0 +1,4 @@
+FauxEnum3.java:11:14: compiler.err.enum.types.not.extensible
+- compiler.note.preview.filename: FauxEnum3.java, DEFAULT
+- compiler.note.preview.recompile
+1 error

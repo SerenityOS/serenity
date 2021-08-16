@@ -1,0 +1,45 @@
+Copyright (c) 2002, 2018, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+Strength Reduction
+------------------
+
+Strength reduction replaces an expansive operation by a cheaper one, such as
+multiplication by addition or subtraction, multiplication instead of
+exponentiation; use compound assignment operators such as += wherever possible,
+changing code of the form a[i] = a[i] + x to a[i] += x, since they result in
+fewer bytecode instructions; use shifts instead of multiplication by powers of
+two, etc.
+
+For example:
+
+	x ** 2  = x * x
+	2.0 * x = x + x
+	x / 2   = x * 0.5
+
+
+Induction Variable
+------------------
+
+A variable is called an induction variables of a loop if every time the variable
+changes values it is incremented or decrmented by some constant.
+Basic induction variables i whose only assignments within the loop is of the
+form i += c, where c is a constant.

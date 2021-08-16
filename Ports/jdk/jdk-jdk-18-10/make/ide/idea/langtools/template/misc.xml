@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="EntryPointsManager">
+    <entry_points version="2.0" />
+  </component>
+  <component name="JTRegService">
+    <path>@IDEA_JTREG_HOME@</path>
+    <workDir>build</workDir>
+    <jre alt="true" value="@IDEA_TARGET_JDK@" />
+    <options>@XPATCH@</options>
+    <ant>
+      <target file="file://$PROJECT_DIR$/make/ide/idea/langtools/build.xml" name="build-all-classes" />
+    </ant>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" assert-keyword="true" jdk-15="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build" />
+  </component>
+</project>

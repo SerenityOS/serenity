@@ -1,0 +1,111 @@
+Copyright (c) 2002, 2018, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+Eliminating common sub-expressions
+----------------------------------
+
+An expression E is called a common subexpression if E is previously computed,
+and the values of variables in E have not changed since the previous computation.
+We can then avoid recomputing the expression and use the previously computed value.
+
+Consider the assignment statements below:
+
+     -------------------------------------------
+     |   Normal Code     |    Optimized Code   |
+     -------------------------------------------
+     |   T1 = B + C      |    T1 = B + C       |
+     |   T2 = T1 - D     |    T2 = T1 - D      |
+     |   A  = T2         |    A  = T2          |
+     |   T3 = B + C      |    X  = T2          |
+     |   T4 = T3 - D     |                     |
+     |   X  = T4         |                     |
+     -------------------------------------------
+
+Notice that the expression assigned to T3 has already been computed and assigned
+to T1, hence T3 is not needed, and T1 can be used instead.
+
+Associative laws may also be applied to expose common subexpressions.
+
+Example 1
+---------
+if the source code has the assignments
+
+	a = b + c;
+	e = c + d + b;
+
+the following intermediate code might be generated:
+	a = b + c;
+	t = c + d;
+	e = t + b;
+
+If t is not needed outside of this block, this sequence can be changed to
+	a = b + c;
+	e = a + d;
+
+Using both the associativity and commutativity of +.
+
+Example 2
+---------
+        X = A * LOG(Y) + (LOG(Y) ** 2)
+
+We introduce an explicit temporary variable t:
+
+        t = LOG(Y)
+        X = A * t + (t ** 2)
+
+We saved one 'heavy' function call, by an elimination of
+the common sub-expression LOG(Y), now we will save the
+exponentiation by:
+
+        X = (A + t) * t
+
+which is much better. This is an old optimization trick that compilers are able to
+perform quite well.
+
+Example 3 - computing the value of a polynomial
+-----------------------------------------------
+Eliminating Common Subexpressions may inspire good algorithms like
+the classic 'Horner's rule' for computing the value of a polynomial.
+
+        y = A + B*x + C*(x**2) + D*(x**3)       (canonical form)
+
+It is more efficient (i.e. executes faster) to perform the two
+exponentiations by converting them to multiplications. In this way we
+will get 3 additions and 5 multiplications in all.
+
+The following forms are more efficient to compute, they require less
+operations, and the operations that are saved are the 'heavy' ones
+(multiplication is an operation that takes a lot of CPU time, much more
+than addition).
+
+Stage #1:
+
+        y = A + (B + C*x + D*(x**2))*x
+
+Stage #2 and last:
+
+        y => A + (B + (C + D*x)*x)*x
+
+The last form requires 3 additions and only 3 multiplications!
+
+The algorithm hinted here, can be implemented with one loop to compute
+an arbitrary order polynomial. It may also be better numerically than
+direct computation of the canonical form.

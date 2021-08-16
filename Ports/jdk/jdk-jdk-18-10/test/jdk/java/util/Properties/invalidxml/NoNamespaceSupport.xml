@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!-- namespace is not supported -->
+
+<javautil:properties xmlns:javautil="http://java.sun.com/java/util/Properties">
+<javautil:comment>comment1</javautil:comment>
+
+<javautil:entry key="firstkey">value of the first key</javautil:entry>
+<javautil:entry key="secondkey">value of the second key</javautil:entry>
+</javautil:properties>

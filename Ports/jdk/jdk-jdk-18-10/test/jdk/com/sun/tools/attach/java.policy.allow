@@ -1,0 +1,21 @@
+/*
+ *
+ *
+ * Policy file used by unit tests for attach API
+ */
+grant {
+    permission com.sun.tools.attach.AttachPermission "attachVirtualMachine";
+    permission com.sun.tools.attach.AttachPermission "createAttachProvider";
+
+    /* implementation specific */
+    permission java.lang.RuntimePermission "manageProcess";
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal.misc";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.tools.attach";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.jvmstat.monitor";
+    permission java.lang.RuntimePermission "loadLibrary.attach";
+    permission java.util.PropertyPermission "sun.jvmstat.*", "read";
+
+    /* to read configuration file in META-INF/services, and write/delete .attach_pid<pid> */
+    permission java.io.FilePermission "<<ALL FILES>>", "read,write,delete";
+};
+

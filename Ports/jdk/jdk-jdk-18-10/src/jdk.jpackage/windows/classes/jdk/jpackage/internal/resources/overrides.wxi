@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stub by design -->
+
+<!--
+overrides.wxi is a placeholder to set/alter WiX variables referenced from default
+main.wxs file.
+
+Put custom overrides.wxi in resource directory to replace this default file.
+
+Override default overrides.wxi if configuring of msi installers through jpackage
+command line is not sufficient.
+
+WiX variables referenced from default main.wxs that can be altered in custom overrides.wxi:
+
+- JpProductLanguage
+Value of `Language` attribute of `Product` WiX element. Default value is 1033.
+
+- JpInstallerVersion
+Value of `InstallerVersion` attribute of `Package` WiX element. Default value is 200.
+
+- JpCompressedMsi
+Value of `Compressed` attribute of `Package` WiX element. Default value is `yes`.
+
+- JpAllowDowngrades
+Should be defined to enable downgrades and undefined to disable downgrades.
+Default value is `yes`.
+
+- JpAllowUpgrades
+Should be defined to enable upgrades and undefined to disable upgrades.
+Default value is `yes`.
+-->
+<Include/>

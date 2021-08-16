@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:testNS="testNS"
+            targetNamespace="testNS" elementFormDefault="qualified">
+    <xsd:element name="test5" type="xsd:string"/>
+</xsd:schema>

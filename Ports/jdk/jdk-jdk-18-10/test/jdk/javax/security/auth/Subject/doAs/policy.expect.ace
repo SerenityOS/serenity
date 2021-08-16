@@ -1,0 +1,27 @@
+// this code has limited permissions that should cause ACE
+grant codeBase "file:NestedActionsACE.jar" {
+    permission javax.security.auth.AuthPermission "getSubject";
+    permission javax.security.auth.AuthPermission "modifyPrincipals";
+    permission javax.security.auth.AuthPermission "doAs";
+    permission java.util.PropertyPermission "path.separator", "read";
+    permission java.util.PropertyPermission "file.separator", "read";
+    permission java.util.PropertyPermission "test.classes", "read";
+    permission java.util.PropertyPermission "test.src", "read";
+    permission java.util.PropertyPermission "test.java.opts", "read";
+    permission java.util.PropertyPermission "java.home", "read";
+};
+
+grant codeBase "file:WriteToFileNegativeAction.jar"
+        Principal javax.security.auth.x500.X500Principal "cn=Duke" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "file:ReadFromFileNegativeAction.jar"
+        Principal javax.security.auth.x500.X500Principal "cn=Duke" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "file:ReadPropertyNegativeAction.jar"
+        Principal javax.security.auth.x500.X500Principal "cn=Duke" {
+    permission java.security.AllPermission;
+};

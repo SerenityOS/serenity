@@ -1,0 +1,2 @@
+InterfaceOverrideFinal.java:8:10: compiler.err.override.meth: (compiler.misc.cant.override: notify(), InterfaceOverrideFinal, notify(), java.lang.Object), final
+1 error

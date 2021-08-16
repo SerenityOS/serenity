@@ -1,0 +1,2 @@
+PatternVariablesAreNonFinal.java:15:40: compiler.err.cant.ref.non.effectively.final.var: s, (compiler.misc.inner.cls)
+1 error

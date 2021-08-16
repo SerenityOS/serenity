@@ -1,0 +1,4 @@
+java.lang.ArrayIndexOutOfBoundsException: Index -1 out of bounds for length 2
+ok at 0
+ok at 1
+java.lang.ArrayIndexOutOfBoundsException: Index 2 out of bounds for length 2

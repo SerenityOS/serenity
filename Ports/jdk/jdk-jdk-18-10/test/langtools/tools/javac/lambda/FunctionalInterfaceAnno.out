@@ -1,0 +1,9 @@
+FunctionalInterfaceAnno.java:7:5: compiler.err.bad.functional.intf.anno.1: (compiler.misc.not.a.functional.intf: FunctionalInterfaceAnno.A)
+FunctionalInterfaceAnno.java:10:5: compiler.err.bad.functional.intf.anno.1: (compiler.misc.not.a.functional.intf: FunctionalInterfaceAnno.B)
+FunctionalInterfaceAnno.java:13:5: compiler.err.bad.functional.intf.anno.1: (compiler.misc.not.a.functional.intf: FunctionalInterfaceAnno.C)
+FunctionalInterfaceAnno.java:16:5: compiler.err.bad.functional.intf.anno.1: (compiler.misc.not.a.functional.intf: FunctionalInterfaceAnno.D)
+FunctionalInterfaceAnno.java:19:5: compiler.err.bad.functional.intf.anno.1: (compiler.misc.not.a.functional.intf.1: FunctionalInterfaceAnno.E, (compiler.misc.no.abstracts: kindname.interface, FunctionalInterfaceAnno.E))
+FunctionalInterfaceAnno.java:22:5: compiler.err.bad.functional.intf.anno.1: (compiler.misc.not.a.functional.intf.1: FunctionalInterfaceAnno.F, (compiler.misc.no.abstracts: kindname.interface, FunctionalInterfaceAnno.F))
+FunctionalInterfaceAnno.java:25:5: compiler.err.bad.functional.intf.anno.1: (compiler.misc.not.a.functional.intf.1: FunctionalInterfaceAnno.G, (compiler.misc.no.abstracts: kindname.interface, FunctionalInterfaceAnno.G))
+FunctionalInterfaceAnno.java:28:5: compiler.err.bad.functional.intf.anno.1: (compiler.misc.not.a.functional.intf.1: FunctionalInterfaceAnno.H, (compiler.misc.incompatible.abstracts: kindname.interface, FunctionalInterfaceAnno.H))
+8 errors

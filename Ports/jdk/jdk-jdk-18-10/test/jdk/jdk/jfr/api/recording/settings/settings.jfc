@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration version="2.0" label="TestSettings" description="SampleConfiguration" provider="Oracle">
+
+    <event name="jdk.JavaMonitorWait">
+     <setting name="enabled">true</setting>
+     <setting name="stackTrace">true</setting>
+     <setting name="threshold">1 ms</setting>
+     <setting name="custom">5</setting>
+    </event>
+
+</configuration>

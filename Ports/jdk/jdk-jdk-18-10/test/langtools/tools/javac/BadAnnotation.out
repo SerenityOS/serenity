@@ -1,0 +1,2 @@
+BadAnnotation.java:11:29: compiler.err.intf.annotation.members.cant.have.params
+1 error

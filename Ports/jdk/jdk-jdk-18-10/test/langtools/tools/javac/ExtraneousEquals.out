@@ -1,0 +1,4 @@
+ExtraneousEquals.java:10:23: compiler.err.illegal.start.of.expr
+ExtraneousEquals.java:10:24: compiler.err.illegal.start.of.expr
+ExtraneousEquals.java:10:26: compiler.err.illegal.array.creation.both.dimension.and.initialization
+3 errors

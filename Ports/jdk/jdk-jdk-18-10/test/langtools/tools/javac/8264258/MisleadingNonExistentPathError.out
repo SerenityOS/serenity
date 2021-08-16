@@ -1,0 +1,6 @@
+MisleadingNonExistentPathError.java:13:31: compiler.err.cant.resolve.location: kindname.class, NotFound, , , (compiler.misc.location: kindname.package, knownpkg, null)
+MisleadingNonExistentPathError.java:16:32: compiler.err.cant.resolve.location: kindname.class, NotFound, , , (compiler.misc.location: kindname.package, java.lang, null)
+MisleadingNonExistentPathError.java:19:33: compiler.err.doesnt.exist: unknownpkg
+MisleadingNonExistentPathError.java:22:27: compiler.err.cant.resolve.location: kindname.class, NotFound, , , (compiler.misc.location: kindname.package, java, null)
+MisleadingNonExistentPathError.java:25:29: compiler.err.cant.resolve.location: kindname.class, lang, , , (compiler.misc.location: kindname.package, java, null)
+5 errors

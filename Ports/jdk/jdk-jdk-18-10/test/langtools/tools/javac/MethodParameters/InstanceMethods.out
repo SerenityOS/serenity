@@ -1,0 +1,11 @@
+public class InstanceMethods -- 
+InstanceMethods.<init>()
+InstanceMethods.empty()
+InstanceMethods.def(a, final ba, final cba)
+InstanceMethods.pub(d, final ed, final fed)
+InstanceMethods.prot(g, final hg, final ihg)
+InstanceMethods.priv(j, final kj, final lkj)
+InstanceMethods.def(A, BA, final CBA, final DCBA)
+InstanceMethods.pub(B, CB, final DCB, final EDCB)
+InstanceMethods.prot(C, DC, final EDC, final FEDC)
+InstanceMethods.priv(D, ED, final FED, final GFED)

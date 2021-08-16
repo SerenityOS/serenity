@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="StructureViewFactory">
+    <option name="ACTIVE_ACTIONS" value=",ALPHA_COMPARATOR" />
+  </component>
+  <component name="antWorkspaceConfiguration">
+    <option name="IS_AUTOSCROLL_TO_SOURCE" value="false" />
+    <option name="FILTER_TARGETS" value="false" />
+    <buildFile url="file://$PROJECT_DIR$/make/ide/idea/langtools/build.xml">
+      <runInBackground value="false" />
+      <targetFilters>
+        <filter targetName="build-all-tools" isVisible="true" />
+        <filter targetName="build-all-classes" isVisible="true" />
+        <filter targetName="clean" isVisible="true" />
+        <filter targetName="crules" isVisible="true" />
+      </targetFilters>
+      <viewClosedWhenNoErrors value="true" />
+      <expanded value="false" />
+      <treeView value="false" />
+    </buildFile>
+  </component>
+</project>

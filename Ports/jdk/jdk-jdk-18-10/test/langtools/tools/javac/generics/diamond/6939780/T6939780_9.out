@@ -1,0 +1,9 @@
+T6939780.java:21:33: compiler.warn.diamond.redundant.args
+T6939780.java:22:28: compiler.warn.diamond.redundant.args
+T6939780.java:24:33: compiler.warn.diamond.redundant.args
+T6939780.java:25:28: compiler.warn.diamond.redundant.args
+T6939780.java:30:19: compiler.warn.diamond.redundant.args
+T6939780.java:31:19: compiler.warn.diamond.redundant.args
+T6939780.java:33:19: compiler.warn.diamond.redundant.args
+T6939780.java:34:19: compiler.warn.diamond.redundant.args
+8 warnings

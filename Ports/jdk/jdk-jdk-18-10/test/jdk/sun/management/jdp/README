@@ -1,0 +1,46 @@
+The tests in this folder are contributed by alex.schenkman@oracle.com
+
+There are three Jdp test cases in this folder:
+ 1) Jdp is turned off.
+ 2) Jdp is turned on, using default values
+ 3) Jdp is turned on, using a specific IP and port
+
+For the test cases above, the actual tests are:
+ 1) JdpOffTestCase.java
+ 2) JdpOnTestCase.java
+ 3) JdpOnTestCase.java, using different parameters.
+All these three test are implemented as subclasses of JdpTestCase.java.
+
+For all of these three tests, the VM sending the Jdp packets is also catching them.
+That is, while the VM itself is sending Jdp multicast packets, the program executed by
+that same VM is listening for those packets.
+
+These tests above work as follows:
+ 1) Start a VM with Jdp off, make sure that no Jdp packets arrive at the default IP/port.
+ 2) Start a VM with Jdp on, make sure three packets arrive at the default IP/port.
+ 3) Start a VM with Jdp on a specific IP/port, make sure three packets arrive.
+
+To make sure that we are not catching Jdp packets from some other VM, the INSTANCE_NAME
+attribute is set to a unique id. The setting of this unique id is done by a launcher.
+There are three launchers, one for each of the tests above:
+ 1) JdpOffTest.java
+ 2) JdpDefaultsTest.java
+ 3) JdpSpecificAddressTest.java
+All these three tests are implemented as subclasses of DynamicLauncher.java.
+
+So, JdpOffTest.class will execute JdpOffTestCase.class (using ProcessTools),
+and that will exercise test case nr.1; and so on for the other cases.
+
+These launchers are also the entry points for JTreg.
+This means that JTreg will only see these launchers as tests.
+You might run the tests without JTreg, as long as you specify all the VM optiones needed.
+Look at the launcher to determine what is needed. Do not forget -Dtest.jdk, that is set by JTreg.
+
+JMX must be enabled in order to enable Jdp. This requires a free port (com.sun.management.jmxremote.port).
+To avoid port-busy conflicts, DynamicLauncher.java will try to find a free port up to three times.
+
+There are some other tests used for test development, and not meant to be run automatically by JTreg.
+ 1) PortAlreadyInUse.java, used to test the retry mechanism to find a free port.
+ 2) PacketTest.java, Jdp packet sanity.
+ 3) JdpTestUtil.java, Utility functions to read a Jdp packet.
+ 4) JdpTestUtilTest.java, Unit tests for JdpTestUtil.java

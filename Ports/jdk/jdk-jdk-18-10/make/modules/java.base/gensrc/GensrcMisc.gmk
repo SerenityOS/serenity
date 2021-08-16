@@ -1,0 +1,130 @@
+#
+# Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+################################################################################
+# Install the launcher name, release version string, full version
+# string and the runtime name into the VersionProps.java file.
+
+$(eval $(call SetupTextFileProcessing, BUILD_VERSION_JAVA, \
+    SOURCE_FILES := $(TOPDIR)/src/java.base/share/classes/java/lang/VersionProps.java.template, \
+    OUTPUT_FILE := $(SUPPORT_OUTPUTDIR)/gensrc/java.base/java/lang/VersionProps.java, \
+    REPLACEMENTS := \
+        @@LAUNCHER_NAME@@ => $(LAUNCHER_NAME) ; \
+        @@RUNTIME_NAME@@ => $(RUNTIME_NAME) ; \
+        @@VERSION_SHORT@@ => $(VERSION_SHORT) ; \
+        @@VERSION_STRING@@ => $(VERSION_STRING) ; \
+        @@VERSION_NUMBER@@ => $(VERSION_NUMBER) ; \
+        @@VERSION_PRE@@ => $(VERSION_PRE) ; \
+        @@VERSION_BUILD@@ => $(VERSION_BUILD) ; \
+        @@VERSION_OPT@@ => $(VERSION_OPT) ; \
+        @@VERSION_DATE@@ => $(VERSION_DATE) ; \
+        @@VERSION_CLASSFILE_MAJOR@@ => $(VERSION_CLASSFILE_MAJOR) ; \
+        @@VERSION_CLASSFILE_MINOR@@ => $(VERSION_CLASSFILE_MINOR) ; \
+        @@VERSION_SPECIFICATION@@ => $(VERSION_SPECIFICATION) ; \
+        @@VENDOR_VERSION_STRING@@ => $(VENDOR_VERSION_STRING) ; \
+        @@VENDOR@@ => $(COMPANY_NAME) ; \
+        @@VENDOR_URL@@ => $(VENDOR_URL) ; \
+        @@VENDOR_URL_BUG@@ => $(VENDOR_URL_BUG) ; \
+        @@VENDOR_URL_VM_BUG@@ => $(VENDOR_URL_VM_BUG), \
+))
+
+TARGETS += $(BUILD_VERSION_JAVA)
+
+################################################################################
+
+ifneq ($(filter $(TOOLCHAIN_TYPE), gcc clang), )
+  # Need to specify language since the template file has a non standard
+  # extension.
+  CPP_FLAGS += -x c
+else ifeq ($(TOOLCHAIN_TYPE), microsoft)
+  CPP_FLAGS += -nologo
+
+  ifeq ($(OPENJDK_TARGET_CPU),aarch64)
+    # cl.exe does only recognize few file extensions as valid (ex: .c, .h, .cpp), so
+    # make sure *.java.template files are recognized as valid input files
+    CPP_FILEPREFIX = -Tc
+  endif
+endif
+
+# Generate a java source file from a template through the C preprocessor for the
+# target system. First extract the copyright notice at the start of the file.
+# Run the preprocessor. Filter out the default compiler stderr output on
+# Windows. Filter out all the header files output. Remove all "PREFIX_" strings
+# that were added to variable references in the template files to avoid being
+# matched by the preprocessor. Remove any #line directives left by the
+# preprocessor.
+define generate-preproc-src
+	$(call MakeDir, $(@D))
+	$(call ExecuteWithLog, $(SUPPORT_OUTPUTDIR)/gensrc/java.base/_$(@F), \
+	    ( $(AWK) '/@@END_COPYRIGHT@@/{exit}1' $< && \
+	      $(CPP) $(CPP_FLAGS) $(SYSROOT_CFLAGS) $(CFLAGS_JDKLIB) $(CPP_FILEPREFIX) $< \
+	          2> >($(GREP) -v '^$(<F)$$' >&2) \
+	          | $(AWK) '/@@START_HERE@@/,0' \
+	          |  $(SED) -e 's/@@START_HERE@@/\/\/ AUTOMATICALLY GENERATED FILE - DO NOT EDIT/' \
+	          -e 's/PREFIX_//' -e 's/^#.*//' \
+	    ) > $@ \
+	)
+endef
+
+GENSRC_SOR_FILE += $(SUPPORT_OUTPUTDIR)/gensrc/java.base/sun/nio/ch/SocketOptionRegistry.java
+
+$(GENSRC_SOR_FILE): \
+    $(TOPDIR)/src/java.base/share/classes/sun/nio/ch/SocketOptionRegistry.java.template
+	$(generate-preproc-src)
+
+TARGETS += $(GENSRC_SOR_FILE)
+
+################################################################################
+
+ifeq ($(call isTargetOs, windows), false)
+
+  GENSRC_UC_FILE := $(SUPPORT_OUTPUTDIR)/gensrc/java.base/sun/nio/fs/UnixConstants.java
+
+  $(GENSRC_UC_FILE): \
+      $(TOPDIR)/src/java.base/unix/classes/sun/nio/fs/UnixConstants.java.template
+	$(generate-preproc-src)
+
+  TARGETS += $(GENSRC_UC_FILE)
+
+endif
+
+# Create the javax/crypto/JceSecurity.class, using the build default.
+#
+ifeq ($(UNLIMITED_CRYPTO), true)
+    JCE_DEFAULT_POLICY = unlimited
+else
+    JCE_DEFAULT_POLICY = limited
+endif
+
+ifneq ($(wildcard $(TOPDIR)/src/java.base/share/classes/javax/crypto/JceSecurity.java.template), )
+  $(eval $(call SetupTextFileProcessing, BUILD_JCESECURITY_JAVA, \
+      SOURCE_FILES := $(TOPDIR)/src/java.base/share/classes/javax/crypto/JceSecurity.java.template, \
+      OUTPUT_FILE := $(SUPPORT_OUTPUTDIR)/gensrc/java.base/javax/crypto/JceSecurity.java, \
+      REPLACEMENTS := \
+        @@JCE_DEFAULT_POLICY@@ => $(JCE_DEFAULT_POLICY), \
+  ))
+
+  TARGETS += $(BUILD_JCESECURITY_JAVA)
+endif

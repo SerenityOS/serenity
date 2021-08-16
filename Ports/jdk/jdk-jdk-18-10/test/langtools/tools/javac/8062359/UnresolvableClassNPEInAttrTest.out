@@ -1,0 +1,2 @@
+UnresolvableClassNPEInAttrTest.java:11:13: compiler.err.cant.resolve.location: kindname.class, Undefined, , , (compiler.misc.location: kindname.class, UnresolvableClassNPEInAttrTest, null)
+1 error

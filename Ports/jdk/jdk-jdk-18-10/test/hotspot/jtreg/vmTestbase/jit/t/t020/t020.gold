@@ -1,0 +1,9 @@
+a[0] is a t020 and also not null.
+a[1] is a t020 and also a k and also not null.
+a[2] is a t020 and also null.
+a[3] is a t020 and also null.
+
+Assigning a[0] to u failed.
+Assigning a[1] to u worked ok.
+Assigning a[2] to u worked ok.
+Assigning a[3] to u worked ok.

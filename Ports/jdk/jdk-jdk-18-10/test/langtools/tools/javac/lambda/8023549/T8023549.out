@@ -1,0 +1,5 @@
+T8023549.java:23:37: compiler.err.invalid.mref: kindname.constructor, (compiler.misc.mref.infer.and.explicit.params)
+T8023549.java:24:12: compiler.err.invalid.mref: kindname.constructor, (compiler.misc.mref.infer.and.explicit.params)
+T8023549.java:25:9: compiler.err.ref.ambiguous: m2, kindname.method, m2(T8023549.Supplier<T8023549.Foo<java.lang.String>>), T8023549, kindname.method, m2(T8023549.ExtSupplier<T8023549.Foo<java.lang.Integer>>), T8023549
+T8023549.java:25:12: compiler.err.invalid.mref: kindname.constructor, (compiler.misc.mref.infer.and.explicit.params)
+4 errors

@@ -1,0 +1,5 @@
+T5003235a.java:21:10: compiler.err.not.def.access.class.intf.cant.access: defaultM(), Super.Inner
+T5003235a.java:22:10: compiler.err.not.def.access.class.intf.cant.access: protectedM(), Super.Inner
+T5003235a.java:23:10: compiler.err.not.def.access.class.intf.cant.access: publicM(), Super.Inner
+T5003235a.java:24:10: compiler.err.not.def.access.class.intf.cant.access: privateM(), Super.Inner
+4 errors

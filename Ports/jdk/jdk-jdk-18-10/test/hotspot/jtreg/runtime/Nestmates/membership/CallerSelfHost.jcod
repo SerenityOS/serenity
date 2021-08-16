@@ -1,0 +1,378 @@
+/*
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+// NestHost attribute refers to current class
+
+class TestNestmateMembership$CallerSelfHost {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Field #34 #35; // #1
+    String #36; // #2
+    Method #37 #38; // #3
+    Method #7 #39; // #4
+    Method #9 #39; // #5
+    Method #14 #40; // #6
+    class #41; // #7
+    Method #7 #40; // #8
+    class #44; // #9
+    Method #9 #40; // #10
+    Field #7 #46; // #11
+    Field #9 #46; // #12
+    class #47; // #13
+    class #49; // #14
+    Utf8 "f"; // #15
+    Utf8 "I"; // #16
+    Utf8 "m"; // #17
+    Utf8 "()V"; // #18
+    Utf8 "Code"; // #19
+    Utf8 "LineNumberTable"; // #20
+    Utf8 "invokeTarget"; // #21
+    Utf8 "invokeTargetSelfHost"; // #22
+    Utf8 "<init>"; // #23
+    Utf8 "newTarget"; // #24
+    Utf8 "newTargetSelfHost"; // #25
+    Utf8 "getFieldTarget"; // #26
+    Utf8 "getFieldTargetSelfHost"; // #27
+    Utf8 "putFieldTarget"; // #28
+    Utf8 "putFieldTargetSelfHost"; // #29
+    Utf8 "SourceFile"; // #30
+    Utf8 "TestNestmateMembership.java"; // #31
+    Utf8 "NestHost"; // #32
+    class #50; // #33
+    class #51; // #34
+    NameAndType #52 #53; // #35
+    Utf8 "CallerSelfHost.m() - java version"; // #36
+    class #54; // #37
+    NameAndType #55 #56; // #38
+    NameAndType #17 #18; // #39
+    NameAndType #23 #18; // #40
+    Utf8 "TestNestmateMembership$Target"; // #41
+    Utf8 "Target"; // #42
+    Utf8 "InnerClasses"; // #43
+    Utf8 "TestNestmateMembership$TargetSelfHost"; // #44
+    Utf8 "TargetSelfHost"; // #45
+    NameAndType #15 #16; // #46
+    Utf8 "TestNestmateMembership$CallerSelfHost"; // #47
+    Utf8 "CallerSelfHost"; // #48
+    Utf8 "java/lang/Object"; // #49
+    Utf8 "TestNestmateMembership"; // #50
+    Utf8 "java/lang/System"; // #51
+    Utf8 "out"; // #52
+    Utf8 "Ljava/io/PrintStream;"; // #53
+    Utf8 "java/io/PrintStream"; // #54
+    Utf8 "println"; // #55
+    Utf8 "(Ljava/lang/String;)V"; // #56
+  } // Constant Pool
+
+  0x0020; // access
+  #13;// this_cpx
+  #14;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+    { // Member
+      0x000A; // access
+      #15; // name_cpx
+      #16; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x000A; // access
+      #17; // name_cpx
+      #18; // sig_cpx
+      [] { // Attributes
+        Attr(#19) { // Code
+          2; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xB200011202B60003;
+            0xB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#20) { // LineNumberTable
+              [] { // LineNumberTable
+                0  297;
+                8  298;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #21; // name_cpx
+      #18; // sig_cpx
+      [] { // Attributes
+        Attr(#19) { // Code
+          0; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xB80004B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#20) { // LineNumberTable
+              [] { // LineNumberTable
+                0  300;
+                3  301;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #22; // name_cpx
+      #18; // sig_cpx
+      [] { // Attributes
+        Attr(#19) { // Code
+          0; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xB80005B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#20) { // LineNumberTable
+              [] { // LineNumberTable
+                0  303;
+                3  304;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0002; // access
+      #23; // name_cpx
+      #18; // sig_cpx
+      [] { // Attributes
+        Attr(#19) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70006B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#20) { // LineNumberTable
+              [] { // LineNumberTable
+                0  308;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #24; // name_cpx
+      #18; // sig_cpx
+      [] { // Attributes
+        Attr(#19) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xBB000759B700084B;
+            0xB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#20) { // LineNumberTable
+              [] { // LineNumberTable
+                0  311;
+                8  312;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #25; // name_cpx
+      #18; // sig_cpx
+      [] { // Attributes
+        Attr(#19) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xBB000959B7000A4B;
+            0xB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#20) { // LineNumberTable
+              [] { // LineNumberTable
+                0  314;
+                8  315;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #26; // name_cpx
+      #18; // sig_cpx
+      [] { // Attributes
+        Attr(#19) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xB2000B3BB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#20) { // LineNumberTable
+              [] { // LineNumberTable
+                0  322;
+                4  323;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #27; // name_cpx
+      #18; // sig_cpx
+      [] { // Attributes
+        Attr(#19) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xB2000C3BB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#20) { // LineNumberTable
+              [] { // LineNumberTable
+                0  325;
+                4  326;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #28; // name_cpx
+      #18; // sig_cpx
+      [] { // Attributes
+        Attr(#19) { // Code
+          1; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0x102AB3000BB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#20) { // LineNumberTable
+              [] { // LineNumberTable
+                0  328;
+                5  329;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #29; // name_cpx
+      #18; // sig_cpx
+      [] { // Attributes
+        Attr(#19) { // Code
+          1; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0x102AB3000CB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#20) { // LineNumberTable
+              [] { // LineNumberTable
+                0  331;
+                5  332;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#30) { // SourceFile
+      #31;
+    } // end SourceFile
+    ;
+    Attr(#32) { // NestHost
+      0x000D; // modified - #13
+    } // end NestHost
+    ;
+    Attr(#43) { // InnerClasses
+      [] { // InnerClasses
+        #7 #33 #42 8;
+        #9 #33 #45 8;
+        #13 #33 #48 8;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class TestNestmateMembership$CallerSelfHost

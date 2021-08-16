@@ -1,0 +1,2 @@
+MisleadingVarArgsErrorMsgTest.java:19:16: compiler.err.cant.apply.symbol: kindname.method, f, int[], int, kindname.class, MisleadingVarArgsErrorMsgTest.B, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: int, int[]))
+1 error

@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Specification-Title: Java Platform API Specification
+Specification-Version: @@VERSION_SPECIFICATION@@
+Specification-Vendor: Oracle Corporation
+Implementation-Title: Java Runtime Environment
+Implementation-Version: @@VERSION_SHORT@@
+Implementation-Vendor: @@COMPANY_NAME@@

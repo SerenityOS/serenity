@@ -1,0 +1,10 @@
+InvalidEntity.java:18: error: invalid entity &#01;
+ * &#01;
+   ^
+InvalidEntity.java:19: error: invalid entity &#x01;
+ * &#x01;
+   ^
+InvalidEntity.java:20: error: invalid entity &splodge;
+ * &splodge;
+   ^
+3 errors

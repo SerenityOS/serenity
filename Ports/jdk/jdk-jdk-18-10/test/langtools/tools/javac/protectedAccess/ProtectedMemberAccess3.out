@@ -1,0 +1,139 @@
+ProtectedMemberAccess3.java:40: pkg.SuperClass.pC has protected access in pkg.SuperClass
+    pkg.SuperClass.pC  obj1;                    // illegal
+                  ^
+ProtectedMemberAccess3.java:41: pkg.SuperClass.spC has protected access in pkg.SuperClass
+    pkg.SuperClass.spC obj2;                    // illegal
+                  ^
+ProtectedMemberAccess3.java:43: pkg.SuperClass.pI has protected access in pkg.SuperClass
+    pkg.SuperClass.pI  obj3;                    // illegal
+                  ^
+ProtectedMemberAccess3.java:44: pkg.SuperClass.spI has protected access in pkg.SuperClass
+    pkg.SuperClass.spI obj4;                    // illegal
+                  ^
+ProtectedMemberAccess3.java:52: pkg.SuperClass.pC has protected access in pkg.SuperClass
+    class C1 extends pkg.SuperClass.pC {}       // illegal
+                                   ^
+ProtectedMemberAccess3.java:53: pkg.SuperClass.spC has protected access in pkg.SuperClass
+    class C2 extends pkg.SuperClass.spC {}      // illegal
+                                   ^
+ProtectedMemberAccess3.java:25: pi has protected access in pkg.SuperClass
+    int i = x.pi;                               // illegal
+             ^
+ProtectedMemberAccess3.java:26: spi has protected access in pkg.SuperClass
+    int j = x.spi;                              // illegal
+             ^
+ProtectedMemberAccess3.java:28: pi has protected access in pkg.SuperClass
+    int n = sx.pi;                              // illegal
+              ^
+ProtectedMemberAccess3.java:29: spi has protected access in pkg.SuperClass
+    int m = sx.spi;                             // illegal
+              ^
+ProtectedMemberAccess3.java:34: pm() has protected access in pkg.SuperClass
+    int w = x.pm();                             // illegal
+             ^
+ProtectedMemberAccess3.java:35: spm() has protected access in pkg.SuperClass
+    int y = x.spm();                            // illegal
+             ^
+ProtectedMemberAccess3.java:37: pm() has protected access in pkg.SuperClass
+    int u = sx.pm();                            // illegal
+              ^
+ProtectedMemberAccess3.java:38: spm() has protected access in pkg.SuperClass
+    int v = sx.spm();                           // illegal
+              ^
+ProtectedMemberAccess3.java:46: pkg.SuperClass.pC has protected access in pkg.SuperClass
+    Object o1 = (pkg.SuperClass.pC) null;       // illegal
+                               ^
+ProtectedMemberAccess3.java:47: pkg.SuperClass.spC has protected access in pkg.SuperClass
+    Object o2 = (pkg.SuperClass.spC) null;      // illegal
+                               ^
+ProtectedMemberAccess3.java:49: pkg.SuperClass.pI has protected access in pkg.SuperClass
+    Object o3 = (pkg.SuperClass.pI) null;       // illegal
+                               ^
+ProtectedMemberAccess3.java:50: pkg.SuperClass.spI has protected access in pkg.SuperClass
+    Object o4 = (pkg.SuperClass.spI) null;      // illegal
+                               ^
+ProtectedMemberAccess3.java:65: pi has protected access in pkg.SuperClass
+      x.pi  = 1;                                // illegal
+       ^
+ProtectedMemberAccess3.java:66: spi has protected access in pkg.SuperClass
+      x.spi = 2;                                // illegal
+       ^
+ProtectedMemberAccess3.java:68: pi has protected access in pkg.SuperClass
+      sx.pi  = 1;                               // illegal
+        ^
+ProtectedMemberAccess3.java:69: spi has protected access in pkg.SuperClass
+      sx.spi = 2;                               // illegal
+        ^
+ProtectedMemberAccess3.java:71: pi has protected access in pkg.SuperClass
+      lx.pi  = 1;                               // illegal
+        ^
+ProtectedMemberAccess3.java:72: spi has protected access in pkg.SuperClass
+      lx.spi = 2;                               // illegal
+        ^
+ProtectedMemberAccess3.java:74: pm() has protected access in pkg.SuperClass
+      int t = x.pm();                           // illegal
+               ^
+ProtectedMemberAccess3.java:75: spm() has protected access in pkg.SuperClass
+      int y = x.spm();                          // illegal
+               ^
+ProtectedMemberAccess3.java:77: pm() has protected access in pkg.SuperClass
+      int u = sx.pm();                          // illegal
+                ^
+ProtectedMemberAccess3.java:78: spm() has protected access in pkg.SuperClass
+      int v = sx.spm();                         // illegal
+                ^
+ProtectedMemberAccess3.java:80: pm() has protected access in pkg.SuperClass
+      int w = lx.pm();                          // illegal
+                ^
+ProtectedMemberAccess3.java:81: spm() has protected access in pkg.SuperClass
+      int z = lx.spm();                         // illegal
+                ^
+ProtectedMemberAccess3.java:83: pi has protected access in pkg.SuperClass
+      int i = x.pi;                             // illegal
+               ^
+ProtectedMemberAccess3.java:84: spi has protected access in pkg.SuperClass
+      int j = x.spi;                            // illegal
+               ^
+ProtectedMemberAccess3.java:86: pi has protected access in pkg.SuperClass
+      int n = sx.pi;                            // illegal
+                ^
+ProtectedMemberAccess3.java:87: spi has protected access in pkg.SuperClass
+      int m = sx.spi;                           // illegal
+                ^
+ProtectedMemberAccess3.java:89: pi has protected access in pkg.SuperClass
+      int k = lx.pi;                            // illegal
+                ^
+ProtectedMemberAccess3.java:90: spi has protected access in pkg.SuperClass
+      int l = lx.spi;                           // illegal
+                ^
+ProtectedMemberAccess3.java:92: pkg.SuperClass.pC has protected access in pkg.SuperClass
+      pkg.SuperClass.pC  obj1;                  // illegal
+                    ^
+ProtectedMemberAccess3.java:93: pkg.SuperClass.spC has protected access in pkg.SuperClass
+      pkg.SuperClass.spC obj2;                  // illegal
+                    ^
+ProtectedMemberAccess3.java:95: pkg.SuperClass.pI has protected access in pkg.SuperClass
+      pkg.SuperClass.pI  obj3;                  // illegal
+                    ^
+ProtectedMemberAccess3.java:96: pkg.SuperClass.spI has protected access in pkg.SuperClass
+      pkg.SuperClass.spI obj4;                  // illegal
+                    ^
+ProtectedMemberAccess3.java:98: pkg.SuperClass.pC has protected access in pkg.SuperClass
+      Object o1 = (pkg.SuperClass.pC) null;     // illegal
+                                 ^
+ProtectedMemberAccess3.java:99: pkg.SuperClass.spC has protected access in pkg.SuperClass
+      Object o2 = (pkg.SuperClass.spC) null;    // illegal
+                                 ^
+ProtectedMemberAccess3.java:101: pkg.SuperClass.pI has protected access in pkg.SuperClass
+      Object o3 = (pkg.SuperClass.pI) null;     // illegal
+                                 ^
+ProtectedMemberAccess3.java:102: pkg.SuperClass.spI has protected access in pkg.SuperClass
+      Object o4 = (pkg.SuperClass.spI) null;    // illegal
+                                 ^
+ProtectedMemberAccess3.java:104: pkg.SuperClass.pC has protected access in pkg.SuperClass
+      class C1 extends pkg.SuperClass.pC {}     // illegal
+                                     ^
+ProtectedMemberAccess3.java:105: pkg.SuperClass.spC has protected access in pkg.SuperClass
+      class C2 extends pkg.SuperClass.spC {}    // illegal
+                                     ^
+46 errors

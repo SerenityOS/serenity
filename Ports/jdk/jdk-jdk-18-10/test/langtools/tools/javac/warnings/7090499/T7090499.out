@@ -1,0 +1,17 @@
+T7090499.java:18:5: compiler.warn.raw.class.use: T7090499, T7090499<E>
+T7090499.java:18:22: compiler.warn.raw.class.use: T7090499, T7090499<E>
+T7090499.java:20:10: compiler.warn.raw.class.use: T7090499.A.X, T7090499<E>.A<X>.X
+T7090499.java:21:10: compiler.warn.raw.class.use: T7090499.A.Z, T7090499<E>.A<X>.Z<Y>
+T7090499.java:24:17: compiler.warn.raw.class.use: T7090499.B, T7090499.B<X>
+T7090499.java:26:10: compiler.err.improperly.formed.type.inner.raw.param
+T7090499.java:27:10: compiler.err.improperly.formed.type.inner.raw.param
+T7090499.java:28:18: compiler.warn.raw.class.use: T7090499.B, T7090499.B<X>
+T7090499.java:28:17: compiler.err.improperly.formed.type.inner.raw.param
+T7090499.java:28:11: compiler.warn.raw.class.use: T7090499.B, T7090499.B<X>
+T7090499.java:28:10: compiler.err.improperly.formed.type.inner.raw.param
+T7090499.java:30:32: compiler.warn.raw.class.use: T7090499.B, T7090499.B<X>
+T7090499.java:33:13: compiler.warn.raw.class.use: T7090499.A, T7090499<E>.A<X>
+T7090499.java:33:24: compiler.warn.raw.class.use: T7090499.A, T7090499<E>.A<X>
+T7090499.java:34:20: compiler.warn.raw.class.use: T7090499.A.Z, T7090499<E>.A<X>.Z<Y>
+4 errors
+11 warnings

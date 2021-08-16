@@ -1,0 +1,2 @@
+StaticOverride.java:20:1: compiler.err.override.static: (compiler.misc.cant.implement: f(), C, f(), I)
+1 error

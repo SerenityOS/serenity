@@ -1,0 +1,4 @@
+- compiler.note.proc.messager: RUNNING - lastRound = false
+TestImportStar.java:16:1: compiler.err.doesnt.exist: xxx
+- compiler.note.proc.messager: RUNNING - lastRound = true
+1 error

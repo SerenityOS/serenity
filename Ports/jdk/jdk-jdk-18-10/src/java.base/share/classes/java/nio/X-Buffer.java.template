@@ -1,0 +1,2283 @@
+/*
+ * Copyright (c) 2000, 2021, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+#warn This file is preprocessed before being compiled
+
+package java.nio;
+
+#if[char]
+import java.io.IOException;
+#end[char]
+import java.lang.ref.Reference;
+#if[streamableType]
+import java.util.Spliterator;
+import java.util.stream.StreamSupport;
+import java.util.stream.$Streamtype$Stream;
+#end[streamableType]
+
+import java.util.Objects;
+import jdk.internal.access.foreign.MemorySegmentProxy;
+import jdk.internal.util.ArraysSupport;
+
+/**
+ * $A$ $type$ buffer.
+ *
+ * <p> This class defines {#if[byte]?six:four} categories of operations upon
+ * $type$ buffers:
+ *
+ * <ul>
+ *
+ *   <li><p> Absolute and relative {@link #get() <i>get</i>} and
+ *   {@link #put($type$) <i>put</i>} methods that read and write
+ *   single $type$s; </p></li>
+ *
+ *   <li><p> Absolute and relative {@link #get($type$[]) <i>bulk get</i>}
+ *   methods that transfer contiguous sequences of $type$s from this buffer
+ *   into an array; {#if[!byte]?and}</p></li>
+ *
+ *   <li><p> Absolute and relative {@link #put($type$[]) <i>bulk put</i>}
+ *   methods that transfer contiguous sequences of $type$s from $a$
+ *   $type$ array{#if[char]?,&#32;a&#32;string,} or some other $type$
+ *   buffer into this buffer;{#if[!byte]?&#32;and} </p></li>
+ *
+#if[byte]
+ *
+ *   <li><p> Absolute and relative {@link #getChar() <i>get</i>}
+ *   and {@link #putChar(char) <i>put</i>} methods that read and
+ *   write values of other primitive types, translating them to and from
+ *   sequences of bytes in a particular byte order; </p></li>
+ *
+ *   <li><p> Methods for creating <i><a href="#views">view buffers</a></i>,
+ *   which allow a byte buffer to be viewed as a buffer containing values of
+ *   some other primitive type; and </p></li>
+ *
+#end[byte]
+ *
+ *   <li><p> A method for {@link #compact compacting}
+ *   $a$ $type$ buffer.  </p></li>
+ *
+ * </ul>
+ *
+ * <p> $Type$ buffers can be created either by {@link #allocate
+ * <i>allocation</i>}, which allocates space for the buffer's
+ *
+#if[byte]
+ *
+ * content, or by {@link #wrap($type$[]) <i>wrapping</i>} an
+ * existing $type$ array {#if[char]?or&#32;string} into a buffer.
+ *
+#else[byte]
+ *
+ * content, by {@link #wrap($type$[]) <i>wrapping</i>} an existing
+ * $type$ array {#if[char]?or&#32;string} into a buffer, or by creating a
+ * <a href="ByteBuffer.html#views"><i>view</i></a> of an existing byte buffer.
+ *
+#end[byte]
+ *
+#if[byte]
+ *
+ * <a id="direct"></a>
+ * <h2> Direct <i>vs.</i> non-direct buffers </h2>
+ *
+ * <p> A byte buffer is either <i>direct</i> or <i>non-direct</i>.  Given a
+ * direct byte buffer, the Java virtual machine will make a best effort to
+ * perform native I/O operations directly upon it.  That is, it will attempt to
+ * avoid copying the buffer's content to (or from) an intermediate buffer
+ * before (or after) each invocation of one of the underlying operating
+ * system's native I/O operations.
+ *
+ * <p> A direct byte buffer may be created by invoking the {@link
+ * #allocateDirect(int) allocateDirect} factory method of this class.  The
+ * buffers returned by this method typically have somewhat higher allocation
+ * and deallocation costs than non-direct buffers.  The contents of direct
+ * buffers may reside outside of the normal garbage-collected heap, and so
+ * their impact upon the memory footprint of an application might not be
+ * obvious.  It is therefore recommended that direct buffers be allocated
+ * primarily for large, long-lived buffers that are subject to the underlying
+ * system's native I/O operations.  In general it is best to allocate direct
+ * buffers only when they yield a measurable gain in program performance.
+ *
+ * <p> A direct byte buffer may also be created by {@link
+ * java.nio.channels.FileChannel#map mapping} a region of a file
+ * directly into memory.  An implementation of the Java platform may optionally
+ * support the creation of direct byte buffers from native code via JNI.  If an
+ * instance of one of these kinds of buffers refers to an inaccessible region
+ * of memory then an attempt to access that region will not change the buffer's
+ * content and will cause an unspecified exception to be thrown either at the
+ * time of the access or at some later time.
+ *
+ * <p> Whether a byte buffer is direct or non-direct may be determined by
+ * invoking its {@link #isDirect isDirect} method.  This method is provided so
+ * that explicit buffer management can be done in performance-critical code.
+ *
+ *
+ * <a id="bin"></a>
+ * <h2> Access to binary data </h2>
+ *
+ * <p> This class defines methods for reading and writing values of all other
+ * primitive types, except {@code boolean}.  Primitive values are translated
+ * to (or from) sequences of bytes according to the buffer's current byte
+ * order, which may be retrieved and modified via the {@link #order order}
+ * methods.  Specific byte orders are represented by instances of the {@link
+ * ByteOrder} class.  The initial order of a byte buffer is always {@link
+ * ByteOrder#BIG_ENDIAN BIG_ENDIAN}.
+ *
+ * <p> For access to heterogeneous binary data, that is, sequences of values of
+ * different types, this class defines a family of absolute and relative
+ * <i>get</i> and <i>put</i> methods for each type.  For 32-bit floating-point
+ * values, for example, this class defines:
+ *
+ * <blockquote><pre>
+ * float  {@link #getFloat()}
+ * float  {@link #getFloat(int) getFloat(int index)}
+ *  void  {@link #putFloat(float) putFloat(float f)}
+ *  void  {@link #putFloat(int,float) putFloat(int index, float f)}</pre></blockquote>
+ *
+ * <p> Corresponding methods are defined for the types {@code char,
+ * short, int, long}, and {@code double}.  The index
+ * parameters of the absolute <i>get</i> and <i>put</i> methods are in terms of
+ * bytes rather than of the type being read or written.
+ *
+ * <a id="views"></a>
+ *
+ * <p> For access to homogeneous binary data, that is, sequences of values of
+ * the same type, this class defines methods that can create <i>views</i> of a
+ * given byte buffer.  A <i>view buffer</i> is simply another buffer whose
+ * content is backed by the byte buffer.  Changes to the byte buffer's content
+ * will be visible in the view buffer, and vice versa; the two buffers'
+ * position, limit, and mark values are independent.  The {@link
+ * #asFloatBuffer() asFloatBuffer} method, for example, creates an instance of
+ * the {@link FloatBuffer} class that is backed by the byte buffer upon which
+ * the method is invoked.  Corresponding view-creation methods are defined for
+ * the types {@code char, short, int, long}, and {@code double}.
+ *
+ * <p> View buffers have three important advantages over the families of
+ * type-specific <i>get</i> and <i>put</i> methods described above:
+ *
+ * <ul>
+ *
+ *   <li><p> A view buffer is indexed not in terms of bytes but rather in terms
+ *   of the type-specific size of its values;  </p></li>
+ *
+ *   <li><p> A view buffer provides relative bulk <i>get</i> and <i>put</i>
+ *   methods that can transfer contiguous sequences of values between a buffer
+ *   and an array or some other buffer of the same type; and  </p></li>
+ *
+ *   <li><p> A view buffer is potentially much more efficient because it will
+ *   be direct if, and only if, its backing byte buffer is direct.  </p></li>
+ *
+ * </ul>
+ *
+ * <p> The byte order of a view buffer is fixed to be that of its byte buffer
+ * at the time that the view is created.  </p>
+ *
+#end[byte]
+*
+#if[!byte]
+ *
+ * <p> Like a byte buffer, $a$ $type$ buffer is either <a
+ * href="ByteBuffer.html#direct"><i>direct</i> or <i>non-direct</i></a>.  A
+ * $type$ buffer created via the {@code wrap} methods of this class will
+ * be non-direct.  $A$ $type$ buffer created as a view of a byte buffer will
+ * be direct if, and only if, the byte buffer itself is direct.  Whether or not
+ * $a$ $type$ buffer is direct may be determined by invoking the {@link
+ * #isDirect isDirect} method.  </p>
+ *
+#end[!byte]
+*
+#if[char]
+ *
+ * <p> This class implements the {@link CharSequence} interface so that
+ * character buffers may be used wherever character sequences are accepted, for
+ * example in the regular-expression package {@link java.util.regex}.
+ * The methods defined by {@code CharSequence} operate relative to the current
+ * position of the buffer when they are invoked.
+ * </p>
+ *
+#end[char]
+ *
+#if[byte]
+ * <h2> Invocation chaining </h2>
+#end[byte]
+ *
+ * <p> Methods in this class that do not otherwise have a value to return are
+ * specified to return the buffer upon which they are invoked.  This allows
+ * method invocations to be chained.
+ *
+#if[byte]
+ *
+ * The sequence of statements
+ *
+ * <blockquote><pre>
+ * bb.putInt(0xCAFEBABE);
+ * bb.putShort(3);
+ * bb.putShort(45);</pre></blockquote>
+ *
+ * can, for example, be replaced by the single statement
+ *
+ * <blockquote><pre>
+ * bb.putInt(0xCAFEBABE).putShort(3).putShort(45);</pre></blockquote>
+ *
+#end[byte]
+#if[char]
+ *
+ * The sequence of statements
+ *
+ * <blockquote><pre>
+ * cb.put("text/");
+ * cb.put(subtype);
+ * cb.put("; charset=");
+ * cb.put(enc);</pre></blockquote>
+ *
+ * can, for example, be replaced by the single statement
+ *
+ * <blockquote><pre>
+ * cb.put("text/").put(subtype).put("; charset=").put(enc);</pre></blockquote>
+ *
+#end[char]
+ *
+ *
+ * @author Mark Reinhold
+ * @author JSR-51 Expert Group
+ * @since 1.4
+ */
+
+public abstract class $Type$Buffer
+    extends Buffer
+    implements Comparable<$Type$Buffer>{#if[char]?, Appendable, CharSequence, Readable}
+{
+    // Cached array base offset
+    private static final long ARRAY_BASE_OFFSET = UNSAFE.arrayBaseOffset($type$[].class);
+
+    // These fields are declared here rather than in Heap-X-Buffer in order to
+    // reduce the number of virtual method invocations needed to access these
+    // values, which is especially costly when coding small buffers.
+    //
+    final $type$[] hb;                  // Non-null only for heap buffers
+    final int offset;
+    boolean isReadOnly;
+
+    // Creates a new buffer with the given mark, position, limit, capacity,
+    // backing array, and array offset
+    //
+    $Type$Buffer(int mark, int pos, int lim, int cap,   // package-private
+                 $type$[] hb, int offset, MemorySegmentProxy segment)
+    {
+        super(mark, pos, lim, cap, segment);
+        this.hb = hb;
+        this.offset = offset;
+    }
+
+    // Creates a new buffer with the given mark, position, limit, and capacity
+    //
+    $Type$Buffer(int mark, int pos, int lim, int cap, MemorySegmentProxy segment) { // package-private
+        this(mark, pos, lim, cap, null, 0, segment);
+    }
+
+    // Creates a new buffer with given base, address and capacity
+    //
+    $Type$Buffer($type$[] hb, long addr, int cap, MemorySegmentProxy segment) { // package-private
+        super(addr, cap, segment);
+        this.hb = hb;
+        this.offset = 0;
+    }
+
+    @Override
+    Object base() {
+        return hb;
+    }
+
+#if[byte]
+
+    /**
+     * Allocates a new direct $type$ buffer.
+     *
+     * <p> The new buffer's position will be zero, its limit will be its
+     * capacity, its mark will be undefined, each of its elements will be
+     * initialized to zero, and its byte order will be
+     * {@link ByteOrder#BIG_ENDIAN BIG_ENDIAN}.  Whether or not it has a
+     * {@link #hasArray backing array} is unspecified.
+     *
+     * @param  capacity
+     *         The new buffer's capacity, in $type$s
+     *
+     * @return  The new $type$ buffer
+     *
+     * @throws  IllegalArgumentException
+     *          If the {@code capacity} is a negative integer
+     */
+    public static $Type$Buffer allocateDirect(int capacity) {
+        return new Direct$Type$Buffer(capacity);
+    }
+
+#end[byte]
+
+    /**
+     * Allocates a new $type$ buffer.
+     *
+     * <p> The new buffer's position will be zero, its limit will be its
+     * capacity, its mark will be undefined, each of its elements will be
+     * initialized to zero, and its byte order will be
+#if[byte]
+     * {@link ByteOrder#BIG_ENDIAN BIG_ENDIAN}.
+#else[byte]
+     * the {@link ByteOrder#nativeOrder native order} of the underlying
+     * hardware.
+#end[byte]
+     * It will have a {@link #array backing array}, and its
+     * {@link #arrayOffset array offset} will be zero.
+     *
+     * @param  capacity
+     *         The new buffer's capacity, in $type$s
+     *
+     * @return  The new $type$ buffer
+     *
+     * @throws  IllegalArgumentException
+     *          If the {@code capacity} is a negative integer
+     */
+    public static $Type$Buffer allocate(int capacity) {
+        if (capacity < 0)
+            throw createCapacityException(capacity);
+        return new Heap$Type$Buffer(capacity, capacity, null);
+    }
+
+    /**
+     * Wraps $a$ $type$ array into a buffer.
+     *
+     * <p> The new buffer will be backed by the given $type$ array;
+     * that is, modifications to the buffer will cause the array to be modified
+     * and vice versa.  The new buffer's capacity will be
+     * {@code array.length}, its position will be {@code offset}, its limit
+     * will be {@code offset + length}, its mark will be undefined, and its
+     * byte order will be
+#if[byte]
+     * {@link ByteOrder#BIG_ENDIAN BIG_ENDIAN}.
+#else[byte]
+     * the {@link ByteOrder#nativeOrder native order} of the underlying
+     * hardware.
+#end[byte]
+     * Its {@link #array backing array} will be the given array, and
+     * its {@link #arrayOffset array offset} will be zero.  </p>
+     *
+     * @param  array
+     *         The array that will back the new buffer
+     *
+     * @param  offset
+     *         The offset of the subarray to be used; must be non-negative and
+     *         no larger than {@code array.length}.  The new buffer's position
+     *         will be set to this value.
+     *
+     * @param  length
+     *         The length of the subarray to be used;
+     *         must be non-negative and no larger than
+     *         {@code array.length - offset}.
+     *         The new buffer's limit will be set to {@code offset + length}.
+     *
+     * @return  The new $type$ buffer
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If the preconditions on the {@code offset} and {@code length}
+     *          parameters do not hold
+     */
+    public static $Type$Buffer wrap($type$[] array,
+                                    int offset, int length)
+    {
+        try {
+            return new Heap$Type$Buffer(array, offset, length, null);
+        } catch (IllegalArgumentException x) {
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+    /**
+     * Wraps $a$ $type$ array into a buffer.
+     *
+     * <p> The new buffer will be backed by the given $type$ array;
+     * that is, modifications to the buffer will cause the array to be modified
+     * and vice versa.  The new buffer's capacity and limit will be
+     * {@code array.length}, its position will be zero, its mark will be
+     * undefined, and its byte order will be
+#if[byte]
+     * {@link ByteOrder#BIG_ENDIAN BIG_ENDIAN}.
+#else[byte]
+     * the {@link ByteOrder#nativeOrder native order} of the underlying
+     * hardware.
+#end[byte]
+     * Its {@link #array backing array} will be the given array, and its
+     * {@link #arrayOffset array offset} will be zero.  </p>
+     *
+     * @param  array
+     *         The array that will back this buffer
+     *
+     * @return  The new $type$ buffer
+     */
+    public static $Type$Buffer wrap($type$[] array) {
+        return wrap(array, 0, array.length);
+    }
+
+#if[char]
+
+    /**
+     * Attempts to read characters into the specified character buffer.
+     * The buffer is used as a repository of characters as-is: the only
+     * changes made are the results of a put operation. No flipping or
+     * rewinding of the buffer is performed.
+     *
+     * @param target the buffer to read characters into
+     * @return The number of characters added to the buffer, or
+     *         -1 if this source of characters is at its end
+     * @throws IOException if an I/O error occurs
+     * @throws ReadOnlyBufferException if target is a read only buffer
+     * @since 1.5
+     */
+    public int read(CharBuffer target) throws IOException {
+        // Determine the number of bytes n that can be transferred
+        int limit = limit();
+        int pos = position();
+        int remaining = limit - pos;
+        assert remaining >= 0;
+        if (remaining <= 0) // include equality condition when remaining == 0
+            return -1;
+
+        int targetRemaining = target.remaining();
+        assert targetRemaining >= 0;
+        if (targetRemaining <= 0) // include condition targetRemaining == 0
+            return 0;
+
+        int n = Math.min(remaining, targetRemaining);
+
+        // Set source limit to prevent target overflow
+        if (targetRemaining < remaining)
+            limit(pos + n);
+        try {
+            if (n > 0)
+                target.put(this);
+        } finally {
+            limit(limit); // restore real limit
+        }
+        return n;
+    }
+
+    /**
+     * Wraps a character sequence into a buffer.
+     *
+     * <p> The content of the new, read-only buffer will be the content of the
+     * given character sequence.  The buffer's capacity will be
+     * {@code csq.length()}, its position will be {@code start}, its limit
+     * will be {@code end}, and its mark will be undefined.  </p>
+     *
+     * @param  csq
+     *         The character sequence from which the new character buffer is to
+     *         be created
+     *
+     * @param  start
+     *         The index of the first character to be used;
+     *         must be non-negative and no larger than {@code csq.length()}.
+     *         The new buffer's position will be set to this value.
+     *
+     * @param  end
+     *         The index of the character following the last character to be
+     *         used; must be no smaller than {@code start} and no larger
+     *         than {@code csq.length()}.
+     *         The new buffer's limit will be set to this value.
+     *
+     * @return  The new character buffer
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If the preconditions on the {@code start} and {@code end}
+     *          parameters do not hold
+     */
+    public static CharBuffer wrap(CharSequence csq, int start, int end) {
+        try {
+            return new StringCharBuffer(csq, start, end);
+        } catch (IllegalArgumentException x) {
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+    /**
+     * Wraps a character sequence into a buffer.
+     *
+     * <p> The content of the new, read-only buffer will be the content of the
+     * given character sequence.  The new buffer's capacity and limit will be
+     * {@code csq.length()}, its position will be zero, and its mark will be
+     * undefined.  </p>
+     *
+     * @param  csq
+     *         The character sequence from which the new character buffer is to
+     *         be created
+     *
+     * @return  The new character buffer
+     */
+    public static CharBuffer wrap(CharSequence csq) {
+        return wrap(csq, 0, csq.length());
+    }
+
+#end[char]
+
+    /**
+     * Creates a new $type$ buffer whose content is a shared subsequence of
+     * this buffer's content.
+     *
+     * <p> The content of the new buffer will start at this buffer's current
+     * position.  Changes to this buffer's content will be visible in the new
+     * buffer, and vice versa; the two buffers' position, limit, and mark
+     * values will be independent.
+     *
+     * <p> The new buffer's position will be zero, its capacity and its limit
+     * will be the number of $type$s remaining in this buffer, its mark will be
+     * undefined, and its byte order will be
+#if[byte]
+     * {@link ByteOrder#BIG_ENDIAN BIG_ENDIAN}.
+#else[byte]
+     * identical to that of this buffer.
+#end[byte]
+     * The new buffer will be direct if, and only if, this buffer is direct, and
+     * it will be read-only if, and only if, this buffer is read-only.  </p>
+     *
+     * @return  The new $type$ buffer
+#if[byte]
+     *
+     * @see #alignedSlice(int)
+#end[byte]
+     */
+    @Override
+    public abstract $Type$Buffer slice();
+
+    /**
+     * Creates a new $type$ buffer whose content is a shared subsequence of
+     * this buffer's content.
+     *
+     * <p> The content of the new buffer will start at position {@code index}
+     * in this buffer, and will contain {@code length} elements. Changes to
+     * this buffer's content will be visible in the new buffer, and vice versa;
+     * the two buffers' position, limit, and mark values will be independent.
+     *
+     * <p> The new buffer's position will be zero, its capacity and its limit
+     * will be {@code length}, its mark will be undefined, and its byte order
+     * will be
+#if[byte]
+     * {@link ByteOrder#BIG_ENDIAN BIG_ENDIAN}.
+#else[byte]
+     * identical to that of this buffer.
+#end[byte]
+     * The new buffer will be direct if, and only if, this buffer is direct,
+     * and it will be read-only if, and only if, this buffer is read-only. </p>
+     *
+     * @param   index
+     *          The position in this buffer at which the content of the new
+     *          buffer will start; must be non-negative and no larger than
+     *          {@link #limit() limit()}
+     *
+     * @param   length
+     *          The number of elements the new buffer will contain; must be
+     *          non-negative and no larger than {@code limit() - index}
+     *
+     * @return  The new buffer
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If {@code index} is negative or greater than {@code limit()},
+     *          {@code length} is negative, or {@code length > limit() - index}
+     *
+     * @since 13
+     */
+    @Override
+    public abstract $Type$Buffer slice(int index, int length);
+
+    /**
+     * Creates a new $type$ buffer that shares this buffer's content.
+     *
+     * <p> The content of the new buffer will be that of this buffer.  Changes
+     * to this buffer's content will be visible in the new buffer, and vice
+     * versa; the two buffers' position, limit, and mark values will be
+     * independent.
+     *
+     * <p> The new buffer's capacity, limit, position,
+#if[byte]
+     * and mark values will be identical to those of this buffer, and its byte
+     * order will be {@link ByteOrder#BIG_ENDIAN BIG_ENDIAN}.
+#else[byte]
+     * mark values, and byte order will be identical to those of this buffer.
+#end[byte]
+     * The new buffer will be direct if, and only if, this buffer is direct, and
+     * it will be read-only if, and only if, this buffer is read-only.  </p>
+     *
+     * @return  The new $type$ buffer
+     */
+    @Override
+    public abstract $Type$Buffer duplicate();
+
+    /**
+     * Creates a new, read-only $type$ buffer that shares this buffer's
+     * content.
+     *
+     * <p> The content of the new buffer will be that of this buffer.  Changes
+     * to this buffer's content will be visible in the new buffer; the new
+     * buffer itself, however, will be read-only and will not allow the shared
+     * content to be modified.  The two buffers' position, limit, and mark
+     * values will be independent.
+     *
+     * <p> The new buffer's capacity, limit, position,
+#if[byte]
+     * and mark values will be identical to those of this buffer, and its byte
+     * order will be {@link ByteOrder#BIG_ENDIAN BIG_ENDIAN}.
+#else[byte]
+     * mark values, and byte order will be identical to those of this buffer.
+#end[byte]
+     *
+     * <p> If this buffer is itself read-only then this method behaves in
+     * exactly the same way as the {@link #duplicate duplicate} method.  </p>
+     *
+     * @return  The new, read-only $type$ buffer
+     */
+    public abstract $Type$Buffer asReadOnlyBuffer();
+
+
+    // -- Singleton get/put methods --
+
+    /**
+     * Relative <i>get</i> method.  Reads the $type$ at this buffer's
+     * current position, and then increments the position.
+     *
+     * @return  The $type$ at the buffer's current position
+     *
+     * @throws  BufferUnderflowException
+     *          If the buffer's current position is not smaller than its limit
+     */
+    public abstract $type$ get();
+
+    /**
+     * Relative <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> Writes the given $type$ into this buffer at the current
+     * position, and then increments the position. </p>
+     *
+     * @param  $x$
+     *         The $type$ to be written
+     *
+     * @return  This buffer
+     *
+     * @throws  BufferOverflowException
+     *          If this buffer's current position is not smaller than its limit
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is read-only
+     */
+    public abstract $Type$Buffer put($type$ $x$);
+
+    /**
+     * Absolute <i>get</i> method.  Reads the $type$ at the given
+     * index.
+     *
+     * @param  index
+     *         The index from which the $type$ will be read
+     *
+     * @return  The $type$ at the given index
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If {@code index} is negative
+     *          or not smaller than the buffer's limit
+     */
+    public abstract $type$ get(int index);
+
+#if[streamableType]
+    /**
+     * Absolute <i>get</i> method.  Reads the $type$ at the given
+     * index without any validation of the index.
+     *
+     * @param  index
+     *         The index from which the $type$ will be read
+     *
+     * @return  The $type$ at the given index
+     */
+    abstract $type$ getUnchecked(int index);   // package-private
+#end[streamableType]
+
+    /**
+     * Absolute <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> Writes the given $type$ into this buffer at the given
+     * index. </p>
+     *
+     * @param  index
+     *         The index at which the $type$ will be written
+     *
+     * @param  $x$
+     *         The $type$ value to be written
+     *
+     * @return  This buffer
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If {@code index} is negative
+     *          or not smaller than the buffer's limit
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is read-only
+     */
+    public abstract $Type$Buffer put(int index, $type$ $x$);
+
+
+    // -- Bulk get operations --
+
+    /**
+     * Relative bulk <i>get</i> method.
+     *
+     * <p> This method transfers $type$s from this buffer into the given
+     * destination array.  If there are fewer $type$s remaining in the
+     * buffer than are required to satisfy the request, that is, if
+     * {@code length}&nbsp;{@code >}&nbsp;{@code remaining()}, then no
+     * $type$s are transferred and a {@link BufferUnderflowException} is
+     * thrown.
+     *
+     * <p> Otherwise, this method copies {@code length} $type$s from this
+     * buffer into the given array, starting at the current position of this
+     * buffer and at the given offset in the array.  The position of this
+     * buffer is then incremented by {@code length}.
+     *
+     * <p> In other words, an invocation of this method of the form
+     * <code>src.get(dst,&nbsp;off,&nbsp;len)</code> has exactly the same effect as
+     * the loop
+     *
+     * <pre>{@code
+     *     for (int i = off; i < off + len; i++)
+     *         dst[i] = src.get();
+     * }</pre>
+     *
+     * except that it first checks that there are sufficient $type$s in
+     * this buffer and it is potentially much more efficient.
+     *
+     * @param  dst
+     *         The array into which $type$s are to be written
+     *
+     * @param  offset
+     *         The offset within the array of the first $type$ to be
+     *         written; must be non-negative and no larger than
+     *         {@code dst.length}
+     *
+     * @param  length
+     *         The maximum number of $type$s to be written to the given
+     *         array; must be non-negative and no larger than
+     *         {@code dst.length - offset}
+     *
+     * @return  This buffer
+     *
+     * @throws  BufferUnderflowException
+     *          If there are fewer than {@code length} $type$s
+     *          remaining in this buffer
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If the preconditions on the {@code offset} and {@code length}
+     *          parameters do not hold
+     */
+    public $Type$Buffer get($type$[] dst, int offset, int length) {
+        Objects.checkFromIndexSize(offset, length, dst.length);
+        int pos = position();
+        if (length > limit() - pos)
+            throw new BufferUnderflowException();
+
+        getArray(pos, dst, offset, length);
+
+        position(pos + length);
+        return this;
+    }
+
+    /**
+     * Relative bulk <i>get</i> method.
+     *
+     * <p> This method transfers $type$s from this buffer into the given
+     * destination array.  An invocation of this method of the form
+     * {@code src.get(a)} behaves in exactly the same way as the invocation
+     *
+     * <pre>
+     *     src.get(a, 0, a.length) </pre>
+     *
+     * @param   dst
+     *          The destination array
+     *
+     * @return  This buffer
+     *
+     * @throws  BufferUnderflowException
+     *          If there are fewer than {@code length} $type$s
+     *          remaining in this buffer
+     */
+    public $Type$Buffer get($type$[] dst) {
+        return get(dst, 0, dst.length);
+    }
+
+    /**
+     * Absolute bulk <i>get</i> method.
+     *
+     * <p> This method transfers {@code length} $type$s from this
+     * buffer into the given array, starting at the given index in this
+     * buffer and at the given offset in the array.  The position of this
+     * buffer is unchanged.
+     *
+     * <p> An invocation of this method of the form
+     * <code>src.get(index,&nbsp;dst,&nbsp;offset,&nbsp;length)</code>
+     * has exactly the same effect as the following loop except that it first
+     * checks the consistency of the supplied parameters and it is potentially
+     * much more efficient:
+     *
+     * <pre>{@code
+     *     for (int i = offset, j = index; i < offset + length; i++, j++)
+     *         dst[i] = src.get(j);
+     * }</pre>
+     *
+     * @param  index
+     *         The index in this buffer from which the first $type$ will be
+     *         read; must be non-negative and less than {@code limit()}
+     *
+     * @param  dst
+     *         The destination array
+     *
+     * @param  offset
+     *         The offset within the array of the first $type$ to be
+     *         written; must be non-negative and less than
+     *         {@code dst.length}
+     *
+     * @param  length
+     *         The number of $type$s to be written to the given array;
+     *         must be non-negative and no larger than the smaller of
+     *         {@code limit() - index} and {@code dst.length - offset}
+     *
+     * @return  This buffer
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If the preconditions on the {@code index}, {@code offset}, and
+     *          {@code length} parameters do not hold
+     *
+     * @since 13
+     */
+    public $Type$Buffer get(int index, $type$[] dst, int offset, int length) {
+        Objects.checkFromIndexSize(index, length, limit());
+        Objects.checkFromIndexSize(offset, length, dst.length);
+
+        getArray(index, dst, offset, length);
+
+        return this;
+    }
+
+    /**
+     * Absolute bulk <i>get</i> method.
+     *
+     * <p> This method transfers $type$s from this buffer into the given
+     * destination array.  The position of this buffer is unchanged.  An
+     * invocation of this method of the form
+     * <code>src.get(index,&nbsp;dst)</code> behaves in exactly the same
+     * way as the invocation:
+     *
+     * <pre>
+     *     src.get(index, dst, 0, dst.length) </pre>
+     *
+     * @param  index
+     *         The index in this buffer from which the first $type$ will be
+     *         read; must be non-negative and less than {@code limit()}
+     *
+     * @param  dst
+     *         The destination array
+     *
+     * @return  This buffer
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If {@code index} is negative, not smaller than {@code limit()},
+     *          or {@code limit() - index < dst.length}
+     *
+     * @since 13
+     */
+    public $Type$Buffer get(int index, $type$[] dst) {
+        return get(index, dst, 0, dst.length);
+    }
+
+    private $Type$Buffer getArray(int index, $type$[] dst, int offset, int length) {
+        if (
+#if[char]
+            isAddressable() &&
+#end[char]
+            ((long)length << $LG_BYTES_PER_VALUE$) > Bits.JNI_COPY_TO_ARRAY_THRESHOLD) {
+            long bufAddr = address + ((long)index << $LG_BYTES_PER_VALUE$);
+            long dstOffset =
+                ARRAY_BASE_OFFSET + ((long)offset << $LG_BYTES_PER_VALUE$);
+            long len = (long)length << $LG_BYTES_PER_VALUE$;
+
+            try {
+#if[!byte]
+                if (order() != ByteOrder.nativeOrder())
+                    SCOPED_MEMORY_ACCESS.copySwapMemory(
+                            scope(), null, base(), bufAddr,
+                            dst, dstOffset, len, $Fulltype$.BYTES);
+                else
+#end[!byte]
+                    SCOPED_MEMORY_ACCESS.copyMemory(
+                            scope(), null, base(), bufAddr,
+                            dst, dstOffset, len);
+            } finally {
+                Reference.reachabilityFence(this);
+            }
+        } else {
+            int end = offset + length;
+            for (int i = offset, j = index; i < end; i++, j++) {
+                dst[i] = get(j);
+            }
+        }
+        return this;
+    }
+
+    // -- Bulk put operations --
+
+    /**
+     * Relative bulk <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> This method transfers the $type$s remaining in the given source
+     * buffer into this buffer.  If there are more $type$s remaining in the
+     * source buffer than in this buffer, that is, if
+     * {@code src.remaining()}&nbsp;{@code >}&nbsp;{@code remaining()},
+     * then no $type$s are transferred and a {@link
+     * BufferOverflowException} is thrown.
+     *
+     * <p> Otherwise, this method copies
+     * <i>n</i>&nbsp;=&nbsp;{@code src.remaining()} $type$s from the given
+     * buffer into this buffer, starting at each buffer's current position.
+     * The positions of both buffers are then incremented by <i>n</i>.
+     *
+     * <p> In other words, an invocation of this method of the form
+     * {@code dst.put(src)} has exactly the same effect as the loop
+     *
+     * <pre>
+     *     while (src.hasRemaining())
+     *         dst.put(src.get()); </pre>
+     *
+     * except that it first checks that there is sufficient space in this
+     * buffer and it is potentially much more efficient.  If this buffer and
+     * the source buffer share the same backing array or memory, then the
+     * result will be as if the source elements were first copied to an
+     * intermediate location before being written into this buffer.
+     *
+     * @param  src
+     *         The source buffer from which $type$s are to be read;
+     *         must not be this buffer
+     *
+     * @return  This buffer
+     *
+     * @throws  BufferOverflowException
+     *          If there is insufficient space in this buffer
+     *          for the remaining $type$s in the source buffer
+     *
+     * @throws  IllegalArgumentException
+     *          If the source buffer is this buffer
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is read-only
+     */
+    public $Type$Buffer put($Type$Buffer src) {
+        if (src == this)
+            throw createSameBufferException();
+        if (isReadOnly())
+            throw new ReadOnlyBufferException();
+
+        int srcPos = src.position();
+        int srcLim = src.limit();
+        int srcRem = (srcPos <= srcLim ? srcLim - srcPos : 0);
+        int pos = position();
+        int lim = limit();
+        int rem = (pos <= lim ? lim - pos : 0);
+
+        if (srcRem > rem)
+            throw new BufferOverflowException();
+
+        putBuffer(pos, src, srcPos, srcRem);
+
+        position(pos + srcRem);
+        src.position(srcPos + srcRem);
+
+        return this;
+    }
+
+    /**
+     * Absolute bulk <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> This method transfers {@code length} $type$s into this buffer from
+     * the given source buffer, starting at the given {@code offset} in the
+     * source buffer and the given {@code index} in this buffer. The positions
+     * of both buffers are unchanged.
+     *
+     * <p> In other words, an invocation of this method of the form
+     * <code>dst.put(index,&nbsp;src,&nbsp;offset,&nbsp;length)</code>
+     * has exactly the same effect as the loop
+     *
+     * <pre>{@code
+     * for (int i = offset, j = index; i < offset + length; i++, j++)
+     *     dst.put(j, src.get(i));
+     * }</pre>
+     *
+     * except that it first checks the consistency of the supplied parameters
+     * and it is potentially much more efficient.  If this buffer and
+     * the source buffer share the same backing array or memory, then the
+     * result will be as if the source elements were first copied to an
+     * intermediate location before being written into this buffer.
+     *
+     * @param index
+     *        The index in this buffer at which the first $type$ will be
+     *        written; must be non-negative and less than {@code limit()}
+     *
+     * @param src
+     *        The buffer from which $type$s are to be read
+     *
+     * @param offset
+     *        The index within the source buffer of the first $type$ to be
+     *        read; must be non-negative and less than {@code src.limit()}
+     *
+     * @param length
+     *        The number of $type$s to be read from the given buffer;
+     *        must be non-negative and no larger than the smaller of
+     *        {@code limit() - index} and {@code src.limit() - offset}
+     *
+     * @return This buffer
+     *
+     * @throws IndexOutOfBoundsException
+     *         If the preconditions on the {@code index}, {@code offset}, and
+     *         {@code length} parameters do not hold
+     *
+     * @throws ReadOnlyBufferException
+     *         If this buffer is read-only
+     *
+     * @since 16
+     */
+    public $Type$Buffer put(int index, $Type$Buffer src, int offset, int length) {
+        Objects.checkFromIndexSize(index, length, limit());
+        Objects.checkFromIndexSize(offset, length, src.limit());
+        if (isReadOnly())
+            throw new ReadOnlyBufferException();
+
+        putBuffer(index, src, offset, length);
+
+        return this;
+    }
+
+    void putBuffer(int pos, $Type$Buffer src, int srcPos, int n) {
+#if[rw]
+        Object srcBase = src.base();
+#if[char]
+        if (src.isAddressable()) {
+#else[char]
+        assert srcBase != null || src.isDirect();
+#end[char]
+
+            Object base = base();
+            assert base != null || isDirect();
+
+            long srcAddr = src.address + ((long)srcPos << $LG_BYTES_PER_VALUE$);
+            long addr = address + ((long)pos << $LG_BYTES_PER_VALUE$);
+            long len = (long)n << $LG_BYTES_PER_VALUE$;
+
+            try {
+#if[!byte]
+                if (this.order() != src.order())
+                    SCOPED_MEMORY_ACCESS.copySwapMemory(
+                            src.scope(), scope(), srcBase, srcAddr,
+                            base, addr, len, $Fulltype$.BYTES);
+                else
+#end[!byte]
+                    SCOPED_MEMORY_ACCESS.copyMemory(
+                            src.scope(), scope(), srcBase, srcAddr,
+                            base, addr, len);
+            } finally {
+                Reference.reachabilityFence(src);
+                Reference.reachabilityFence(this);
+            }
+#if[char]
+        } else { // src.isAddressable() == false
+            assert StringCharBuffer.class.isInstance(src);
+            int posMax = pos + n;
+            for (int i = pos, j = srcPos; i < posMax; i++, j++)
+                put(i, src.get(j));
+        }
+#end[char]
+#else[rw]
+        throw new ReadOnlyBufferException();
+#end[rw]
+    }
+
+    /**
+     * Relative bulk <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> This method transfers $type$s into this buffer from the given
+     * source array.  If there are more $type$s to be copied from the array
+     * than remain in this buffer, that is, if
+     * {@code length}&nbsp;{@code >}&nbsp;{@code remaining()}, then no
+     * $type$s are transferred and a {@link BufferOverflowException} is
+     * thrown.
+     *
+     * <p> Otherwise, this method copies {@code length} $type$s from the
+     * given array into this buffer, starting at the given offset in the array
+     * and at the current position of this buffer.  The position of this buffer
+     * is then incremented by {@code length}.
+     *
+     * <p> In other words, an invocation of this method of the form
+     * <code>dst.put(src,&nbsp;off,&nbsp;len)</code> has exactly the same effect as
+     * the loop
+     *
+     * <pre>{@code
+     *     for (int i = off; i < off + len; i++)
+     *         dst.put(src[i]);
+     * }</pre>
+     *
+     * except that it first checks that there is sufficient space in this
+     * buffer and it is potentially much more efficient.
+     *
+     * @param  src
+     *         The array from which $type$s are to be read
+     *
+     * @param  offset
+     *         The offset within the array of the first $type$ to be read;
+     *         must be non-negative and no larger than {@code src.length}
+     *
+     * @param  length
+     *         The number of $type$s to be read from the given array;
+     *         must be non-negative and no larger than
+     *         {@code src.length - offset}
+     *
+     * @return  This buffer
+     *
+     * @throws  BufferOverflowException
+     *          If there is insufficient space in this buffer
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If the preconditions on the {@code offset} and {@code length}
+     *          parameters do not hold
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is read-only
+     */
+    public $Type$Buffer put($type$[] src, int offset, int length) {
+        if (isReadOnly())
+            throw new ReadOnlyBufferException();
+        Objects.checkFromIndexSize(offset, length, src.length);
+        int pos = position();
+        if (length > limit() - pos)
+            throw new BufferOverflowException();
+
+        putArray(pos, src, offset, length);
+
+        position(pos + length);
+        return this;
+    }
+
+    /**
+     * Relative bulk <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> This method transfers the entire content of the given source
+     * $type$ array into this buffer.  An invocation of this method of the
+     * form {@code dst.put(a)} behaves in exactly the same way as the
+     * invocation
+     *
+     * <pre>
+     *     dst.put(a, 0, a.length) </pre>
+     *
+     * @param   src
+     *          The source array
+     *
+     * @return  This buffer
+     *
+     * @throws  BufferOverflowException
+     *          If there is insufficient space in this buffer
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is read-only
+     */
+    public final $Type$Buffer put($type$[] src) {
+        return put(src, 0, src.length);
+    }
+
+    /**
+     * Absolute bulk <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> This method transfers {@code length} $type$s from the given
+     * array, starting at the given offset in the array and at the given index
+     * in this buffer.  The position of this buffer is unchanged.
+     *
+     * <p> An invocation of this method of the form
+     * <code>dst.put(index,&nbsp;src,&nbsp;offset,&nbsp;length)</code>
+     * has exactly the same effect as the following loop except that it first
+     * checks the consistency of the supplied parameters and it is potentially
+     * much more efficient:
+     *
+     * <pre>{@code
+     *     for (int i = offset, j = index; i < offset + length; i++, j++)
+     *         dst.put(j, src[i]);
+     * }</pre>
+     *
+     * @param  index
+     *         The index in this buffer at which the first $type$ will be
+     *         written; must be non-negative and less than {@code limit()}
+     *
+     * @param  src
+     *         The array from which $type$s are to be read
+     *
+     * @param  offset
+     *         The offset within the array of the first $type$ to be read;
+     *         must be non-negative and less than {@code src.length}
+     *
+     * @param  length
+     *         The number of $type$s to be read from the given array;
+     *         must be non-negative and no larger than the smaller of
+     *         {@code limit() - index} and {@code src.length - offset}
+     *
+     * @return  This buffer
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If the preconditions on the {@code index}, {@code offset}, and
+     *          {@code length} parameters do not hold
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is read-only
+     *
+     * @since 13
+     */
+    public $Type$Buffer put(int index, $type$[] src, int offset, int length) {
+        if (isReadOnly())
+            throw new ReadOnlyBufferException();
+        Objects.checkFromIndexSize(index, length, limit());
+        Objects.checkFromIndexSize(offset, length, src.length);
+
+        putArray(index, src, offset, length);
+
+        return this;
+    }
+
+    /**
+     * Absolute bulk <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> This method copies $type$s into this buffer from the given source
+     * array.  The position of this buffer is unchanged.  An invocation of this
+     * method of the form <code>dst.put(index,&nbsp;src)</code>
+     * behaves in exactly the same way as the invocation:
+     *
+     * <pre>
+     *     dst.put(index, src, 0, src.length); </pre>
+     *
+     * @param  index
+     *         The index in this buffer at which the first $type$ will be
+     *         written; must be non-negative and less than {@code limit()}
+     *
+     * @param  src
+     *         The array from which $type$s are to be read
+     *
+     * @return  This buffer
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If {@code index} is negative, not smaller than {@code limit()},
+     *          or {@code limit() - index < src.length}
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is read-only
+     *
+     * @since 13
+     */
+    public $Type$Buffer put(int index, $type$[] src) {
+        return put(index, src, 0, src.length);
+    }
+
+    private $Type$Buffer putArray(int index, $type$[] src, int offset, int length) {
+#if[rw]
+        if (
+#if[char]
+            isAddressable() &&
+#end[char]
+            ((long)length << $LG_BYTES_PER_VALUE$) > Bits.JNI_COPY_FROM_ARRAY_THRESHOLD) {
+            long bufAddr = address + ((long)index << $LG_BYTES_PER_VALUE$);
+            long srcOffset =
+                ARRAY_BASE_OFFSET + ((long)offset << $LG_BYTES_PER_VALUE$);
+            long len = (long)length << $LG_BYTES_PER_VALUE$;
+
+            try {
+#if[!byte]
+                if (order() != ByteOrder.nativeOrder())
+                    SCOPED_MEMORY_ACCESS.copySwapMemory(
+                            null, scope(), src, srcOffset,
+                            base(), bufAddr, len, $Fulltype$.BYTES);
+                else
+#end[!byte]
+                    SCOPED_MEMORY_ACCESS.copyMemory(
+                            null, scope(), src, srcOffset,
+                            base(), bufAddr, len);
+            } finally {
+                Reference.reachabilityFence(this);
+            }
+        } else {
+            int end = offset + length;
+            for (int i = offset, j = index; i < end; i++, j++)
+                this.put(j, src[i]);
+        }
+        return this;
+#else[rw]
+        throw new ReadOnlyBufferException();
+#end[rw]
+    }
+
+#if[char]
+
+    /**
+     * Relative bulk <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> This method transfers $type$s from the given string into this
+     * buffer.  If there are more $type$s to be copied from the string than
+     * remain in this buffer, that is, if
+     * <code>end&nbsp;-&nbsp;start</code>&nbsp;{@code >}&nbsp;{@code remaining()},
+     * then no $type$s are transferred and a {@link
+     * BufferOverflowException} is thrown.
+     *
+     * <p> Otherwise, this method copies
+     * <i>n</i>&nbsp;=&nbsp;{@code end}&nbsp;-&nbsp;{@code start} $type$s
+     * from the given string into this buffer, starting at the given
+     * {@code start} index and at the current position of this buffer.  The
+     * position of this buffer is then incremented by <i>n</i>.
+     *
+     * <p> In other words, an invocation of this method of the form
+     * <code>dst.put(src,&nbsp;start,&nbsp;end)</code> has exactly the same effect
+     * as the loop
+     *
+     * <pre>{@code
+     *     for (int i = start; i < end; i++)
+     *         dst.put(src.charAt(i));
+     * }</pre>
+     *
+     * except that it first checks that there is sufficient space in this
+     * buffer and it is potentially much more efficient.
+     *
+     * @param  src
+     *         The string from which $type$s are to be read
+     *
+     * @param  start
+     *         The offset within the string of the first $type$ to be read;
+     *         must be non-negative and no larger than
+     *         {@code string.length()}
+     *
+     * @param  end
+     *         The offset within the string of the last $type$ to be read,
+     *         plus one; must be non-negative and no larger than
+     *         {@code string.length()}
+     *
+     * @return  This buffer
+     *
+     * @throws  BufferOverflowException
+     *          If there is insufficient space in this buffer
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If the preconditions on the {@code start} and {@code end}
+     *          parameters do not hold
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is read-only
+     */
+    public $Type$Buffer put(String src, int start, int end) {
+        Objects.checkFromIndexSize(start, end - start, src.length());
+        if (isReadOnly())
+            throw new ReadOnlyBufferException();
+        if (end - start > remaining())
+            throw new BufferOverflowException();
+        for (int i = start; i < end; i++)
+            this.put(src.charAt(i));
+        return this;
+    }
+
+    /**
+     * Relative bulk <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> This method transfers the entire content of the given source string
+     * into this buffer.  An invocation of this method of the form
+     * {@code dst.put(s)} behaves in exactly the same way as the invocation
+     *
+     * <pre>
+     *     dst.put(s, 0, s.length()) </pre>
+     *
+     * @param   src
+     *          The source string
+     *
+     * @return  This buffer
+     *
+     * @throws  BufferOverflowException
+     *          If there is insufficient space in this buffer
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is read-only
+     */
+    public final $Type$Buffer put(String src) {
+        return put(src, 0, src.length());
+    }
+
+#end[char]
+
+
+    // -- Other stuff --
+
+    /**
+     * Tells whether or not this buffer is backed by an accessible $type$
+     * array.
+     *
+     * <p> If this method returns {@code true} then the {@link #array() array}
+     * and {@link #arrayOffset() arrayOffset} methods may safely be invoked.
+     * </p>
+     *
+     * @return  {@code true} if, and only if, this buffer
+     *          is backed by an array and is not read-only
+     */
+    public final boolean hasArray() {
+        return (hb != null) && !isReadOnly;
+    }
+
+    /**
+     * Returns the $type$ array that backs this
+     * buffer&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> Modifications to this buffer's content will cause the returned
+     * array's content to be modified, and vice versa.
+     *
+     * <p> Invoke the {@link #hasArray hasArray} method before invoking this
+     * method in order to ensure that this buffer has an accessible backing
+     * array.  </p>
+     *
+     * @return  The array that backs this buffer
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is backed by an array but is read-only
+     *
+     * @throws  UnsupportedOperationException
+     *          If this buffer is not backed by an accessible array
+     */
+    public final $type$[] array() {
+        if (hb == null)
+            throw new UnsupportedOperationException();
+        if (isReadOnly)
+            throw new ReadOnlyBufferException();
+        return hb;
+    }
+
+    /**
+     * Returns the offset within this buffer's backing array of the first
+     * element of the buffer&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> If this buffer is backed by an array then buffer position <i>p</i>
+     * corresponds to array index <i>p</i>&nbsp;+&nbsp;{@code arrayOffset()}.
+     *
+     * <p> Invoke the {@link #hasArray hasArray} method before invoking this
+     * method in order to ensure that this buffer has an accessible backing
+     * array.  </p>
+     *
+     * @return  The offset within this buffer's array
+     *          of the first element of the buffer
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is backed by an array but is read-only
+     *
+     * @throws  UnsupportedOperationException
+     *          If this buffer is not backed by an accessible array
+     */
+    public final int arrayOffset() {
+        if (hb == null)
+            throw new UnsupportedOperationException();
+        if (isReadOnly)
+            throw new ReadOnlyBufferException();
+        return offset;
+    }
+
+    // -- Covariant return type overrides
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public
+#if[!byte]
+    final
+#end[!byte]
+    $Type$Buffer position(int newPosition) {
+        super.position(newPosition);
+        return this;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public
+#if[!byte]
+    final
+#end[!byte]
+    $Type$Buffer limit(int newLimit) {
+        super.limit(newLimit);
+        return this;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public 
+#if[!byte]
+    final
+#end[!byte]
+    $Type$Buffer mark() {
+        super.mark();
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public 
+#if[!byte]
+    final
+#end[!byte]
+    $Type$Buffer reset() {
+        super.reset();
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public 
+#if[!byte]
+    final
+#end[!byte]
+    $Type$Buffer clear() {
+        super.clear();
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public 
+#if[!byte]
+    final
+#end[!byte]
+    $Type$Buffer flip() {
+        super.flip();
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public 
+#if[!byte]
+    final
+#end[!byte]
+    $Type$Buffer rewind() {
+        super.rewind();
+        return this;
+    }
+
+    /**
+     * Compacts this buffer&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> The $type$s between the buffer's current position and its limit,
+     * if any, are copied to the beginning of the buffer.  That is, the
+     * $type$ at index <i>p</i>&nbsp;=&nbsp;{@code position()} is copied
+     * to index zero, the $type$ at index <i>p</i>&nbsp;+&nbsp;1 is copied
+     * to index one, and so forth until the $type$ at index
+     * {@code limit()}&nbsp;-&nbsp;1 is copied to index
+     * <i>n</i>&nbsp;=&nbsp;{@code limit()}&nbsp;-&nbsp;{@code 1}&nbsp;-&nbsp;<i>p</i>.
+     * The buffer's position is then set to <i>n+1</i> and its limit is set to
+     * its capacity.  The mark, if defined, is discarded.
+     *
+     * <p> The buffer's position is set to the number of $type$s copied,
+     * rather than to zero, so that an invocation of this method can be
+     * followed immediately by an invocation of another relative <i>put</i>
+     * method. </p>
+     *
+#if[byte]
+     *
+     * <p> Invoke this method after writing data from a buffer in case the
+     * write was incomplete.  The following loop, for example, copies bytes
+     * from one channel to another via the buffer {@code buf}:
+     *
+     * <blockquote><pre>{@code
+     *   buf.clear();          // Prepare buffer for use
+     *   while (in.read(buf) >= 0 || buf.position != 0) {
+     *       buf.flip();
+     *       out.write(buf);
+     *       buf.compact();    // In case of partial write
+     *   }
+     * }</pre></blockquote>
+     *
+#end[byte]
+     *
+     * @return  This buffer
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is read-only
+     */
+    public abstract $Type$Buffer compact();
+
+    /**
+     * Tells whether or not this $type$ buffer is direct.
+     *
+     * @return  {@code true} if, and only if, this buffer is direct
+     */
+    public abstract boolean isDirect();
+
+#if[char]
+    /**
+     * Tells whether this buffer has addressable memory, e.g., a Java array or
+     * a native address.  This method returns {@code true}.  Subclasses such as
+     * {@code StringCharBuffer}, which wraps a {@code CharSequence}, should
+     * override this method to return {@code false}.
+     *
+     * @return {@code true} if, and only, this buffer has addressable memory
+     */
+    boolean isAddressable() {
+        return true;
+    }
+#end[char]
+
+#if[!char]
+
+    /**
+     * Returns a string summarizing the state of this buffer.
+     *
+     * @return  A summary string
+     */
+    public String toString() {
+        return getClass().getName()
+                 + "[pos=" + position()
+                 + " lim=" + limit()
+                 + " cap=" + capacity()
+                 + "]";
+    }
+
+#end[!char]
+
+
+    // ## Should really use unchecked accessors here for speed
+
+    /**
+     * Returns the current hash code of this buffer.
+     *
+     * <p> The hash code of a $type$ buffer depends only upon its remaining
+     * elements; that is, upon the elements from {@code position()} up to, and
+     * including, the element at {@code limit()}&nbsp;-&nbsp;{@code 1}.
+     *
+     * <p> Because buffer hash codes are content-dependent, it is inadvisable
+     * to use buffers as keys in hash maps or similar data structures unless it
+     * is known that their contents will not change.  </p>
+     *
+     * @return  The current hash code of this buffer
+     */
+    public int hashCode() {
+        int h = 1;
+        int p = position();
+        for (int i = limit() - 1; i >= p; i--)
+#if[int]
+            h = 31 * h + get(i);
+#else[int]
+            h = 31 * h + (int)get(i);
+#end[int]
+        return h;
+    }
+
+    /**
+     * Tells whether or not this buffer is equal to another object.
+     *
+     * <p> Two $type$ buffers are equal if, and only if,
+     *
+     * <ol>
+     *
+     *   <li><p> They have the same element type,  </p></li>
+     *
+     *   <li><p> They have the same number of remaining elements, and
+     *   </p></li>
+     *
+     *   <li><p> The two sequences of remaining elements, considered
+     *   independently of their starting positions, are pointwise equal.
+#if[floatingPointType]
+     *   This method considers two $type$ elements {@code a} and {@code b}
+     *   to be equal if
+     *   {@code (a == b) || ($Fulltype$.isNaN(a) && $Fulltype$.isNaN(b))}.
+     *   The values {@code -0.0} and {@code +0.0} are considered to be
+     *   equal, unlike {@link $Fulltype$#equals(Object)}.
+#end[floatingPointType]
+     *   </p></li>
+     *
+     * </ol>
+     *
+     * <p> A $type$ buffer is not equal to any other type of object.  </p>
+     *
+     * @param  ob  The object to which this buffer is to be compared
+     *
+     * @return  {@code true} if, and only if, this buffer is equal to the
+     *           given object
+     */
+    public boolean equals(Object ob) {
+        if (this == ob)
+            return true;
+        if (!(ob instanceof $Type$Buffer))
+            return false;
+        $Type$Buffer that = ($Type$Buffer)ob;
+        int thisPos = this.position();
+        int thisRem = this.limit() - thisPos;
+        int thatPos = that.position();
+        int thatRem = that.limit() - thatPos;
+        if (thisRem < 0 || thisRem != thatRem)
+            return false;
+        return BufferMismatch.mismatch(this, thisPos,
+                                       that, thatPos,
+                                       thisRem) < 0;
+    }
+
+    /**
+     * Compares this buffer to another.
+     *
+     * <p> Two $type$ buffers are compared by comparing their sequences of
+     * remaining elements lexicographically, without regard to the starting
+     * position of each sequence within its corresponding buffer.
+#if[floatingPointType]
+     * Pairs of {@code $type$} elements are compared as if by invoking
+     * {@link $Fulltype$#compare($type$,$type$)}, except that
+     * {@code -0.0} and {@code 0.0} are considered to be equal.
+     * {@code $Fulltype$.NaN} is considered by this method to be equal
+     * to itself and greater than all other {@code $type$} values
+     * (including {@code $Fulltype$.POSITIVE_INFINITY}).
+#else[floatingPointType]
+     * Pairs of {@code $type$} elements are compared as if by invoking
+     * {@link $Fulltype$#compare($type$,$type$)}.
+#end[floatingPointType]
+     *
+     * <p> A $type$ buffer is not comparable to any other type of object.
+     *
+     * @return  A negative integer, zero, or a positive integer as this buffer
+     *          is less than, equal to, or greater than the given buffer
+     */
+    public int compareTo($Type$Buffer that) {
+        int thisPos = this.position();
+        int thisRem = this.limit() - thisPos;
+        int thatPos = that.position();
+        int thatRem = that.limit() - thatPos;
+        int length = Math.min(thisRem, thatRem);
+        if (length < 0)
+            return -1;
+        int i = BufferMismatch.mismatch(this, thisPos,
+                                        that, thatPos,
+                                        length);
+        if (i >= 0) {
+            return compare(this.get(thisPos + i), that.get(thatPos + i));
+        }
+        return thisRem - thatRem;
+    }
+
+    private static int compare($type$ x, $type$ y) {
+#if[floatingPointType]
+        return ((x < y)  ? -1 :
+                (x > y)  ? +1 :
+                (x == y) ?  0 :
+                $Fulltype$.isNaN(x) ? ($Fulltype$.isNaN(y) ? 0 : +1) : -1);
+#else[floatingPointType]
+        return $Fulltype$.compare(x, y);
+#end[floatingPointType]
+    }
+
+    /**
+     * Finds and returns the relative index of the first mismatch between this
+     * buffer and a given buffer.  The index is relative to the
+     * {@link #position() position} of each buffer and will be in the range of
+     * 0 (inclusive) up to the smaller of the {@link #remaining() remaining}
+     * elements in each buffer (exclusive).
+     *
+     * <p> If the two buffers share a common prefix then the returned index is
+     * the length of the common prefix and it follows that there is a mismatch
+     * between the two buffers at that index within the respective buffers.
+     * If one buffer is a proper prefix of the other then the returned index is
+     * the smaller of the remaining elements in each buffer, and it follows that
+     * the index is only valid for the buffer with the larger number of
+     * remaining elements.
+     * Otherwise, there is no mismatch.
+     *
+     * @param  that
+     *         The byte buffer to be tested for a mismatch with this buffer
+     *
+     * @return  The relative index of the first mismatch between this and the
+     *          given buffer, otherwise -1 if no mismatch.
+     *
+     * @since 11
+     */
+    public int mismatch($Type$Buffer that) {
+        int thisPos = this.position();
+        int thisRem = this.limit() - thisPos;
+        int thatPos = that.position();
+        int thatRem = that.limit() - thatPos;
+        int length = Math.min(thisRem, thatRem);
+        if (length < 0)
+            return -1;
+        int r = BufferMismatch.mismatch(this, thisPos,
+                                        that, thatPos,
+                                        length);
+        return (r == -1 && thisRem != thatRem) ? length : r;
+    }
+
+    // -- Other char stuff --
+
+#if[char]
+
+    /**
+     * Returns a string containing the characters in this buffer.
+     *
+     * <p> The first character of the resulting string will be the character at
+     * this buffer's position, while the last character will be the character
+     * at index {@code limit()}&nbsp;-&nbsp;1.  Invoking this method does not
+     * change the buffer's position. </p>
+     *
+     * @return  The specified string
+     */
+    public String toString() {
+        return toString(position(), limit());
+    }
+
+    abstract String toString(int start, int end);       // package-private
+
+
+    // --- Methods to support CharSequence ---
+
+    /**
+     * Returns the length of this character buffer.
+     *
+     * <p> When viewed as a character sequence, the length of a character
+     * buffer is simply the number of characters between the position
+     * (inclusive) and the limit (exclusive); that is, it is equivalent to
+     * {@code remaining()}. </p>
+     *
+     * @return  The length of this character buffer
+     */
+    public final int length() {
+        return remaining();
+    }
+
+    /**
+     * Returns {@code true} if this character buffer is empty.
+     *
+     * @return {@code true} if there are {@code 0} remaining characters,
+     *         otherwise {@code false}
+     *
+     * @since 15
+     */
+    public final boolean isEmpty() {
+        return remaining() == 0;
+    }
+
+    /**
+     * Reads the character at the given index relative to the current
+     * position.
+     *
+     * @param  index
+     *         The index of the character to be read, relative to the position;
+     *         must be non-negative and smaller than {@code remaining()}
+     *
+     * @return  The character at index
+     *          <code>position()&nbsp;+&nbsp;index</code>
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If the preconditions on {@code index} do not hold
+     */
+    public final char charAt(int index) {
+        return get(position() + checkIndex(index, 1));
+    }
+
+    /**
+     * Creates a new character buffer that represents the specified subsequence
+     * of this buffer, relative to the current position.
+     *
+     * <p> The new buffer will share this buffer's content; that is, if the
+     * content of this buffer is mutable then modifications to one buffer will
+     * cause the other to be modified.  The new buffer's capacity will be that
+     * of this buffer, its position will be
+     * {@code position()}&nbsp;+&nbsp;{@code start}, its limit will be
+     * {@code position()}&nbsp;+&nbsp;{@code end}, and its byte order
+     * will be identical to that of this buffer. The new buffer will be direct
+     * if, and only if, this buffer is direct, and it will be read-only
+     * if, and only if, this buffer is read-only.  </p>
+     *
+     * @param  start
+     *         The index, relative to the current position, of the first
+     *         character in the subsequence; must be non-negative and no larger
+     *         than {@code remaining()}
+     *
+     * @param  end
+     *         The index, relative to the current position, of the character
+     *         following the last character in the subsequence; must be no
+     *         smaller than {@code start} and no larger than
+     *         {@code remaining()}
+     *
+     * @return  The new character buffer
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If the preconditions on {@code start} and {@code end}
+     *          do not hold
+     */
+    public abstract CharBuffer subSequence(int start, int end);
+
+
+    // --- Methods to support Appendable ---
+
+    /**
+     * Appends the specified character sequence  to this
+     * buffer&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> An invocation of this method of the form {@code dst.append(csq)}
+     * behaves in exactly the same way as the invocation
+     *
+     * <pre>
+     *     dst.put(csq.toString()) </pre>
+     *
+     * <p> Depending on the specification of {@code toString} for the
+     * character sequence {@code csq}, the entire sequence may not be
+     * appended.  For instance, invoking the {@link $Type$Buffer#toString()
+     * toString} method of a character buffer will return a subsequence whose
+     * content depends upon the buffer's position and limit.
+     *
+     * @param  csq
+     *         The character sequence to append.  If {@code csq} is
+     *         {@code null}, then the four characters {@code "null"} are
+     *         appended to this character buffer.
+     *
+     * @return  This buffer
+     *
+     * @throws  BufferOverflowException
+     *          If there is insufficient space in this buffer
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is read-only
+     *
+     * @since  1.5
+     */
+    public $Type$Buffer append(CharSequence csq) {
+        if (csq == null)
+            return put("null");
+        else
+            return put(csq.toString());
+    }
+
+    /**
+     * Appends a subsequence of the  specified character sequence  to this
+     * buffer&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> An invocation of this method of the form {@code dst.append(csq, start,
+     * end)} when {@code csq} is not {@code null}, behaves in exactly the
+     * same way as the invocation
+     *
+     * <pre>
+     *     dst.put(csq.subSequence(start, end).toString()) </pre>
+     *
+     * @param  csq
+     *         The character sequence from which a subsequence will be
+     *         appended.  If {@code csq} is {@code null}, then characters
+     *         will be appended as if {@code csq} contained the four
+     *         characters {@code "null"}.
+     *
+     * @return  This buffer
+     *
+     * @throws  BufferOverflowException
+     *          If there is insufficient space in this buffer
+     *
+     * @throws  IndexOutOfBoundsException
+     *          If {@code start} or {@code end} are negative, {@code start}
+     *          is greater than {@code end}, or {@code end} is greater than
+     *          {@code csq.length()}
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is read-only
+     *
+     * @since  1.5
+     */
+    public $Type$Buffer append(CharSequence csq, int start, int end) {
+        CharSequence cs = (csq == null ? "null" : csq);
+        return put(cs.subSequence(start, end).toString());
+    }
+
+    /**
+     * Appends the specified $type$  to this
+     * buffer&nbsp;&nbsp;<i>(optional operation)</i>.
+     *
+     * <p> An invocation of this method of the form {@code dst.append($x$)}
+     * behaves in exactly the same way as the invocation
+     *
+     * <pre>
+     *     dst.put($x$) </pre>
+     *
+     * @param  $x$
+     *         The 16-bit $type$ to append
+     *
+     * @return  This buffer
+     *
+     * @throws  BufferOverflowException
+     *          If there is insufficient space in this buffer
+     *
+     * @throws  ReadOnlyBufferException
+     *          If this buffer is read-only
+     *
+     * @since  1.5
+     */
+    public $Type$Buffer append($type$ $x$) {
+        return put($x$);
+    }
+
+#end[char]
+
+
+    // -- Other byte stuff: Access to binary data --
+
+#if[!byte]
+
+    /**
+     * Retrieves this buffer's byte order.
+     *
+     * <p> The byte order of $a$ $type$ buffer created by allocation or by
+     * wrapping an existing {@code $type$} array is the {@link
+     * ByteOrder#nativeOrder native order} of the underlying
+     * hardware.  The byte order of $a$ $type$ buffer created as a <a
+     * href="ByteBuffer.html#views">view</a> of a byte buffer is that of the
+     * byte buffer at the moment that the view is created.  </p>
+     *
+     * @return  This buffer's byte order
+     */
+    public abstract ByteOrder order();
+
+#end[!byte]
+
+#if[char]
+    // The order or null if the buffer does not cover a memory region,
+    // such as StringCharBuffer
+    abstract ByteOrder charRegionOrder();
+#end[char]
+
+#if[byte]
+
+    boolean bigEndian                                   // package-private
+        = true;
+    boolean nativeByteOrder                             // package-private
+        = (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN);
+
+    /**
+     * Retrieves this buffer's byte order.
+     *
+     * <p> The byte order is used when reading or writing multibyte values, and
+     * when creating buffers that are views of this byte buffer.  The order of
+     * a newly-created byte buffer is always {@link ByteOrder#BIG_ENDIAN
+     * BIG_ENDIAN}.  </p>
+     *
+     * @return  This buffer's byte order
+     */
+    public final ByteOrder order() {
+        return bigEndian ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
+    }
+
+    /**
+     * Modifies this buffer's byte order.
+     *
+     * @param  bo
+     *         The new byte order,
+     *         either {@link ByteOrder#BIG_ENDIAN BIG_ENDIAN}
+     *         or {@link ByteOrder#LITTLE_ENDIAN LITTLE_ENDIAN}
+     *
+     * @return  This buffer
+     */
+    public final $Type$Buffer order(ByteOrder bo) {
+        bigEndian = (bo == ByteOrder.BIG_ENDIAN);
+        nativeByteOrder =
+            (bigEndian == (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN));
+        return this;
+    }
+
+    /**
+     * Returns the memory address, pointing to the byte at the given index,
+     * modulo the given unit size.
+     *
+     * <p> The return value is non-negative in the range of {@code 0}
+     * (inclusive) up to {@code unitSize} (exclusive), with zero indicating
+     * that the address of the byte at the index is aligned for the unit size,
+     * and a positive value that the address is misaligned for the unit size.
+     * If the address of the byte at the index is misaligned, the return value
+     * represents how much the index should be adjusted to locate a byte at an
+     * aligned address.  Specifically, the index should either be decremented by
+     * the return value if the latter is not greater than {@code index}, or be
+     * incremented by the unit size minus the return value.  Therefore given
+     * <blockquote><pre>
+     * int value = alignmentOffset(index, unitSize)</pre></blockquote>
+     * then the identities
+     * <blockquote><pre>
+     * alignmentOffset(index - value, unitSize) == 0, value &le; index</pre></blockquote>
+     * and
+     * <blockquote><pre>
+     * alignmentOffset(index + (unitSize - value), unitSize) == 0</pre></blockquote>
+     * must hold.
+     * 
+     * @apiNote
+     * This method may be utilized to determine if unit size bytes from an
+     * index can be accessed atomically, if supported by the native platform.
+     *
+     * @implNote
+     * This implementation throws {@code UnsupportedOperationException} for
+     * non-direct buffers when the given unit size is greater then {@code 8}.
+     *
+     * @param  index
+     *         The index to query for alignment offset, must be non-negative, no
+     *         upper bounds check is performed
+     *
+     * @param  unitSize
+     *         The unit size in bytes, must be a power of {@code 2}
+     *
+     * @return  The indexed byte's memory address modulo the unit size
+     *
+     * @throws IllegalArgumentException
+     *         If the index is negative or the unit size is not a power of
+     *         {@code 2}
+     *
+     * @throws UnsupportedOperationException
+     *         If the native platform does not guarantee stable alignment offset
+     *         values for the given unit size when managing the memory regions
+     *         of buffers of the same kind as this buffer (direct or
+     *         non-direct).  For example, if garbage collection would result
+     *         in the moving of a memory region covered by a non-direct buffer
+     *         from one location to another and both locations have different
+     *         alignment characteristics.
+     *
+     * @see #alignedSlice(int)
+     * @since 9
+     */
+    public final int alignmentOffset(int index, int unitSize) {
+        if (index < 0)
+            throw new IllegalArgumentException("Index less than zero: " + index);
+        if (unitSize < 1 || (unitSize & (unitSize - 1)) != 0)
+            throw new IllegalArgumentException("Unit size not a power of two: " + unitSize);
+        if (unitSize > 8 && !isDirect())
+            throw new UnsupportedOperationException("Unit size unsupported for non-direct buffers: " + unitSize);
+
+        return (int) ((address + index) & (unitSize - 1));
+    }
+
+    /**
+     * Creates a new byte buffer whose content is a shared and aligned
+     * subsequence of this buffer's content.
+     *
+     * <p> The content of the new buffer will start at this buffer's current
+     * position rounded up to the index of the nearest aligned byte for the
+     * given unit size, and end at this buffer's limit rounded down to the index
+     * of the nearest aligned byte for the given unit size.
+     * If rounding results in out-of-bound values then the new buffer's capacity
+     * and limit will be zero.  If rounding is within bounds the following
+     * expressions will be true for a new buffer {@code nb} and unit size
+     * {@code unitSize}:
+     * <pre>{@code
+     * nb.alignmentOffset(0, unitSize) == 0
+     * nb.alignmentOffset(nb.limit(), unitSize) == 0
+     * }</pre>
+     *
+     * <p> Changes to this buffer's content will be visible in the new
+     * buffer, and vice versa; the two buffers' position, limit, and mark
+     * values will be independent.
+     *
+     * <p> The new buffer's position will be zero, its capacity and its limit
+     * will be the number of bytes remaining in this buffer or fewer subject to
+     * alignment, its mark will be undefined, and its byte order will be
+     * {@link ByteOrder#BIG_ENDIAN BIG_ENDIAN}.
+     *
+     * The new buffer will be direct if, and only if, this buffer is direct, and
+     * it will be read-only if, and only if, this buffer is read-only.  </p>
+     *
+     * @apiNote
+     * This method may be utilized to create a new buffer where unit size bytes
+     * from index, that is a multiple of the unit size, may be accessed
+     * atomically, if supported by the native platform.
+     *
+     * @implNote
+     * This implementation throws {@code UnsupportedOperationException} for
+     * non-direct buffers when the given unit size is greater then {@code 8}.
+     *
+     * @param  unitSize
+     *         The unit size in bytes, must be a power of {@code 2}
+     *
+     * @return  The new byte buffer
+     *
+     * @throws IllegalArgumentException
+     *         If the unit size not a power of {@code 2}
+     *
+     * @throws UnsupportedOperationException
+     *         If the native platform does not guarantee stable aligned slices
+     *         for the given unit size when managing the memory regions
+     *         of buffers of the same kind as this buffer (direct or
+     *         non-direct).  For example, if garbage collection would result
+     *         in the moving of a memory region covered by a non-direct buffer
+     *         from one location to another and both locations have different
+     *         alignment characteristics.
+     *
+     * @see #alignmentOffset(int, int)
+     * @see #slice()
+     * @since 9
+     */
+    public final ByteBuffer alignedSlice(int unitSize) {
+        int pos = position();
+        int lim = limit();
+
+        int pos_mod = alignmentOffset(pos, unitSize);
+        int lim_mod = alignmentOffset(lim, unitSize);
+
+        // Round up the position to align with unit size
+        int aligned_pos = (pos_mod > 0)
+            ? pos + (unitSize - pos_mod)
+            : pos;
+
+        // Round down the limit to align with unit size
+        int aligned_lim = lim - lim_mod;
+
+        if (aligned_pos > lim || aligned_lim < pos) {
+            aligned_pos = aligned_lim = pos;
+        }
+
+        return slice(aligned_pos, aligned_lim - aligned_pos);
+    }
+
+    // #BIN
+    //
+    // Binary-data access methods  for short, char, int, long, float,
+    // and double will be inserted here
+
+#end[byte]
+
+#if[streamableType]
+
+#if[char]
+    @Override
+#end[char]
+    public $Streamtype$Stream $type$s() {
+        return StreamSupport.$streamtype$Stream(() -> new $Type$BufferSpliterator(this),
+            Buffer.SPLITERATOR_CHARACTERISTICS, false);
+    }
+
+#end[streamableType]
+
+}

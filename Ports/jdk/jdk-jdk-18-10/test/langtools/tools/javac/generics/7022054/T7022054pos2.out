@@ -1,0 +1,2 @@
+T7022054pos2.java:15:32: compiler.err.name.clash.same.erasure.no.hide: <X>m(java.lang.String), T7022054pos2.B, m(java.lang.String), T7022054pos2.A
+1 error

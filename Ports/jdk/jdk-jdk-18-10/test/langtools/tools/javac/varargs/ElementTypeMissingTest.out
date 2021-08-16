@@ -1,0 +1,2 @@
+ElementTypeMissingTest.java:8:46: compiler.err.cant.resolve.location: kindname.class, Unkn, , , (compiler.misc.location: kindname.class, ElementTypeMissingTest, null)
+1 error

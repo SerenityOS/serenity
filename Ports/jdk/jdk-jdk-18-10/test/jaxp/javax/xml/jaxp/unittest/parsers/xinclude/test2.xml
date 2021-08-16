@@ -1,0 +1,12 @@
+<test2>
+<N1>
+<node1>Node1 Value</node1>
+<node2>Node2 Value</node2>
+<node3/>
+<node4>Node4 Value</node4>
+<node5>
+<node6>Node6 Value</node6>
+</node5>
+</N1>
+</test2>
+

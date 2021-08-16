@@ -1,0 +1,2 @@
+<!--all elements here are explicitly in the HTML namespace--><?xml version="1.0" encoding="utf-8"?><htmlNewPrefix:html><htmlNewPrefix:head><htmlNewPrefix:title>Frobnostication</htmlNewPrefix:title></htmlNewPrefix:head><htmlNewPrefix:body><htmlNewPrefix:p>Moved to<htmlNewPrefix:a href="http://frob.com">here</htmlNewPrefix:a></htmlNewPrefix:p></htmlNewPrefix:body></htmlNewPrefix:html>
+

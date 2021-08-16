@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:tn="foo"
+           targetNamespace="foo" elementFormDefault="qualified">
+    <xs:element name="root">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="a">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element ref="tn:b"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="ref" maxOccurs="unbounded" minOccurs="0" type="xs:string" />
+            </xs:sequence>
+        </xs:complexType>
+                                        
+        <!-- identity constraint -->
+        <xs:key name="key">
+            <xs:selector xpath=".//tn:a/tn:b|.//tn:a/tn:b/tn:c"/>
+            <xs:field xpath="@id"/>
+        </xs:key>
+        <xs:keyref name="keyref" refer="tn:key">
+            <xs:selector xpath=".//tn:ref"/>
+            <xs:field xpath="."/>
+        </xs:keyref>
+    </xs:element>
+    
+    <xs:element name="c">
+        <xs:complexType>
+            <xs:attribute name="id" type="xs:string"/>
+        </xs:complexType>
+    </xs:element>
+                
+    <xs:element name="b">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="tn:c" minOccurs="0" />
+            </xs:sequence>
+            <xs:attribute name="id" type="xs:string"/>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

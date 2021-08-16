@@ -1,0 +1,2 @@
+Capture.java:14:9: compiler.err.cant.apply.symbol: kindname.method, f4, X<X<T>>, X<X<? extends java.lang.Number>>, kindname.class, Capture, (compiler.misc.infer.no.conforming.assignment.exists: T, (compiler.misc.inconvertible.types: X<X<? extends java.lang.Number>>, X<X<T>>))
+1 error

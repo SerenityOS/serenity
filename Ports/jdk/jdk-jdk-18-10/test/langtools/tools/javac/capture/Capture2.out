@@ -1,0 +1,2 @@
+Capture2.java:17:23: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: compiler.misc.type.captureof: 1, ?, T)
+1 error

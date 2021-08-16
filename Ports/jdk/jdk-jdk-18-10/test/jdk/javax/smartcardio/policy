@@ -1,0 +1,4 @@
+grant {
+        permission java.security.SecurityPermission "insertProvider.MyProvider";
+        permission java.security.SecurityPermission "putProviderProperty.MyProvider";
+};

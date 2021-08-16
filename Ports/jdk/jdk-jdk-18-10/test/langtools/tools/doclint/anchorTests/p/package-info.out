@@ -1,0 +1,10 @@
+package-info.java:13: error: anchor already defined: "here"
+ * <a id=here>here again</a>
+      ^
+package-info.java:14: error: attribute not supported in HTML5: name
+ * <a name=name>obsolete anchor</a>
+      ^
+package-info.java:15: error: attribute not supported in HTML5: name
+ * <a name=name>obsolete anchor again</a>
+      ^
+3 errors

@@ -1,0 +1,5 @@
+TripleQuote.java:12:14: compiler.err.empty.char.lit
+TripleQuote.java:12:21: compiler.err.unclosed.char.lit
+TripleQuote.java:13:14: compiler.err.empty.char.lit
+TripleQuote.java:13:16: compiler.err.unclosed.char.lit
+4 errors

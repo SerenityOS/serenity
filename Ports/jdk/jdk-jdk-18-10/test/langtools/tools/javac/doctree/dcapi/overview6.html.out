@@ -1,0 +1,32 @@
+EXPECT_START
+DocComment[DOC_COMMENT, pos:0
+  preamble: 5
+    Comment[COMMENT, pos:0, <!--_/nodynamiccopyright/_-->]
+    StartElement[START_ELEMENT, pos:30
+      name:HTML
+      attributes: empty
+    ]
+    StartElement[START_ELEMENT, pos:37
+      name:HEAD
+      attributes: empty
+    ]
+    EndElement[END_ELEMENT, pos:44, HEAD]
+    StartElement[START_ELEMENT, pos:52
+      name:BODY
+      attributes: empty
+    ]
+  firstSentence: 1
+    Text[TEXT, pos:59, The_first_correct_body_pair.]
+  body: empty
+  block tags: empty
+  postamble: 5
+    EndElement[END_ELEMENT, pos:88, BODY]
+    StartElement[START_ELEMENT, pos:97
+      name:BODY
+      attributes: empty
+    ]
+    Text[TEXT, pos:104, Illegal_second_b...ody_pair,_the_first_body_should_not_be_ignored.|]
+    EndElement[END_ELEMENT, pos:168, BODY]
+    EndElement[END_ELEMENT, pos:176, HTML]
+]
+EXPECT_END

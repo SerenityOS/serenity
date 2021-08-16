@@ -1,0 +1,4 @@
+Private02.java:13:31: compiler.err.illegal.combination.of.modifiers: abstract, private
+Private02.java:16:22: compiler.err.already.defined: kindname.method, foo(int), kindname.interface, Private02.I
+Private02.java:12:22: compiler.err.missing.meth.body.or.decl.abstract
+3 errors

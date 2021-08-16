@@ -1,0 +1,3 @@
+TargetType04.java:16:43: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.inconvertible.types: java.lang.Double, java.lang.Integer))
+TargetType04.java:17:43: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.inconvertible.types: java.lang.Integer, java.lang.Double))
+2 errors

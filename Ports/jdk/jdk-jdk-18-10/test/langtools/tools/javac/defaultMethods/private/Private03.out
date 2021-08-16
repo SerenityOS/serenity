@@ -1,0 +1,3 @@
+Private03.java:25:22: compiler.err.override.weaker.access: (compiler.misc.clashes.with: goo(int), Private03.K, goo(int), Private03.J), public
+Private03.java:24:22: compiler.err.override.weaker.access: (compiler.misc.clashes.with: foo(int), Private03.K, foo(int), Private03.J), public
+2 errors

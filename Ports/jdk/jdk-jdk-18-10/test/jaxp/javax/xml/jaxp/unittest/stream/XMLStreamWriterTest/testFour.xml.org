@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?><elmeOne><elemTwo><emptyElem testAttr="testValue"/><elemThree><elemFour>TestCharacterData<elemFive></elemFive></elemFour></elemThree></elemTwo></elmeOne>
+

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+    <delegateSystem systemIdStartString="http://remote/dtd/alice/" catalog="delegateSystem-alice.xml" />
+
+    <!-- delegateSystem-bobDummy.xml is not existing -->
+    <delegateSystem systemIdStartString="http://remote/dtd/" catalog="delegateSystem-bobDummy.xml" />
+    <delegateSystem systemIdStartString="http://remote/dtd/bob/" catalog="delegateSystem-bob.xml" />
+
+    <!-- delegateSystem-carlDummy.xml is not existing -->
+    <delegateSystem systemIdStartString="http://remote/dtd/carl/" catalog="delegateSystem-carl.xml" />
+    <delegateSystem systemIdStartString="http://remote/dtd/carl/" catalog="delegateSystem-carlDummy.xml" />
+
+    <!-- delegateSystem-carlDummy.xml is not existing -->
+    <delegateSystem systemIdStartString="http://remote/dtd/david/" catalog="delegateSystem-davidDummy.xml" />
+</catalog>

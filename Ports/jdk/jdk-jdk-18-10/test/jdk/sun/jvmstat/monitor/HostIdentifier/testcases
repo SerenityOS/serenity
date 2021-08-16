@@ -1,0 +1,221 @@
+<HostIdentifierTests>
+
+<testcase id="0" HostIdentifierInput="">
+<description>
+null host identifier (empty string translated to null reference value)
+</description>
+<HostIdentifier> //localhost </HostIdentifier>
+</testcase>
+
+<testcase id="1" HostIdentifierInput="localhost">
+<description>
+localhost hostname
+</description>
+<HostIdentifier> //localhost </HostIdentifier>
+</testcase>
+
+<testcase id="2" HostIdentifierInput="localhost:1234">
+<description>
+localhost hostname and port number
+</description>
+<HostIdentifier> //localhost:1234 </HostIdentifier>
+</testcase>
+
+
+<testcase id="3" HostIdentifierInput="//localhost">
+<description>
+localhost hostname, preceeded with //
+</description>
+<HostIdentifier> //localhost </HostIdentifier>
+</testcase>
+
+<testcase id="4" HostIdentifierInput="//localhost:1234">
+<description>
+localhost hostname and port number, preceeded with //
+</description>
+<HostIdentifier> //localhost:1234 </HostIdentifier>
+</testcase>
+
+<testcase id="5" HostIdentifierInput="local://localhost">
+<description>
+protocol and hostname
+</description>
+<HostIdentifier> local://localhost </HostIdentifier>
+</testcase>
+
+<testcase id="6" HostIdentifierInput="local://localhost:1234">
+<description>
+protocol, hostname, and port
+</description>
+<HostIdentifier> local://localhost:1234 </HostIdentifier>
+</testcase>
+
+<testcase id="7" HostIdentifierInput="10.0.0.1">
+<description>
+dotted ip for hostname
+</description>
+<HostIdentifier> //10.0.0.1 </HostIdentifier>
+</testcase>
+
+<testcase id="8" HostIdentifierInput="//10.0.0.1">
+<description>
+dotted ip for hostname, preceeded with //
+</description>
+<HostIdentifier> //10.0.0.1 </HostIdentifier>
+</testcase>
+
+<testcase id="9" HostIdentifierInput="//10.0.0.1:1234">
+<description>
+dotted ip for hostname and port number, preceeded with //
+</description>
+<HostIdentifier> //10.0.0.1:1234 </HostIdentifier>
+</testcase>
+
+<testcase id="10" HostIdentifierInput="local://10.0.0.1">
+<description>
+protocol and dotted ip for hostname
+</description>
+<HostIdentifier> local://10.0.0.1 </HostIdentifier>
+</testcase>
+
+<testcase id="11" HostIdentifierInput="local://10.0.0.1:1234">
+<description>
+protocol, dotted ip for hostname, and port
+</description>
+<HostIdentifier> local://10.0.0.1:1234 </HostIdentifier>
+</testcase>
+
+<testcase id="12" HostIdentifierInput="//localhost/ServerName">
+<description>
+hostname and specificed server name, preceeded with //
+</description>
+<HostIdentifier> //localhost/ServerName </HostIdentifier>
+</testcase>
+
+<testcase id="13" HostIdentifierInput="localhost:1234/ServerName">
+<description>
+hostname, port, and specificed server name
+</description>
+<HostIdentifier> //localhost:1234/ServerName </HostIdentifier>
+</testcase>
+
+<testcase id="14" HostIdentifierInput="//localhost:1234/ServerName">
+<description>
+hostname, port, and specificed server name, preceeded by //
+</description>
+<HostIdentifier> //localhost:1234/ServerName </HostIdentifier>
+</testcase>
+
+<testcase id="15" HostIdentifierInput="local://localhost/ServerName">
+<description>
+protocol, hostname, and specificed server name
+</description>
+<HostIdentifier> local://localhost/ServerName </HostIdentifier>
+</testcase>
+
+<testcase id="16" HostIdentifierInput="local://localhost:1234/ServerName">
+<description>
+protocol, hostname, port, and specificed server name
+</description>
+<HostIdentifier> local://localhost:1234/ServerName </HostIdentifier>
+</testcase>
+
+<testcase id="17" HostIdentifierInput="10.0.0.1/ServerName">
+<description>
+dotted hostname and specificed server name
+</description>
+<HostIdentifier> //10.0.0.1/ServerName </HostIdentifier>
+</testcase>
+
+<testcase id="18" HostIdentifierInput="//10.0.0.1/ServerName">
+<description>
+dotted hostname and specificed server name, preceeded with //
+</description>
+<HostIdentifier> //10.0.0.1/ServerName </HostIdentifier>
+</testcase>
+
+<testcase id="19" HostIdentifierInput="//10.0.0.1:1234/ServerName">
+<description>
+dotted hostname, port, and specificed server name, preceeded by //
+</description>
+<HostIdentifier> //10.0.0.1:1234/ServerName </HostIdentifier>
+</testcase>
+
+<testcase id="20" HostIdentifierInput="local://10.0.0.1/ServerName">
+<description>
+protocol, dotted hostname, and specificed server name
+</description>
+<HostIdentifier> local://10.0.0.1/ServerName </HostIdentifier>
+</testcase>
+
+<testcase id="21" HostIdentifierInput="local://10.0.0.1:1234/ServerName">
+<description>
+protocol, dotted hostname, port, and specificed server name
+</description>
+<HostIdentifier> local://10.0.0.1:1234/ServerName </HostIdentifier>
+</testcase>
+
+<testcase id="22" HostIdentifierInput="local://localhost:1234/ServerName?interval=9876">
+<description>
+protocol, hostname, port, and specificed server name, with query
+</description>
+<HostIdentifier> local://localhost:1234/ServerName?interval=9876 </HostIdentifier>
+</testcase>
+
+<testcase id="23" HostIdentifierInput="local://10.0.0.1:1234/ServerName?interval=9876">
+<description>
+protocol, dotted hostname, port, and specificed server name, with query
+</description>
+<HostIdentifier> local://10.0.0.1:1234/ServerName?interval=9876 </HostIdentifier>
+</testcase>
+
+<testcase id="24" HostIdentifierInput="local://localhost:1234/ServerName#frag">
+<description>
+protocol, hostname, port, and specificed server name, with fragment
+</description>
+<HostIdentifier> local://localhost:1234/ServerName#frag </HostIdentifier>
+</testcase>
+
+<testcase id="25" HostIdentifierInput="local://10.0.0.1:1234/ServerName#frag">
+<description>
+protocol, dotted hostname, port, and specificed server name, with fragment
+</description>
+<HostIdentifier> local://10.0.0.1:1234/ServerName#frag </HostIdentifier>
+</testcase>
+
+<testcase id="26" HostIdentifierInput="local://localhost:1234/ServerName?interval=9876#frag">
+<description>
+protocol, hostname, port, and specificed server name, with query and fragment
+</description>
+<HostIdentifier> local://localhost:1234/ServerName?interval=9876#frag </HostIdentifier>
+</testcase>
+
+<testcase id="27" HostIdentifierInput="local://10.0.0.1:1234/ServerName?interval=9876#frag">
+<description>
+protocol, dotted hostname, port, and specificed server name, with query and fragment
+</description>
+<HostIdentifier> local://10.0.0.1:1234/ServerName?interval=9876#frag </HostIdentifier>
+</testcase>
+
+<testcase id="28" HostIdentifierInput="file://localhost">
+<description>
+file URI 
+</description>
+<HostIdentifier> file://localhost </HostIdentifier>
+</testcase>
+
+<testcase id="29" HostIdentifierInput="rmi:localhost:1234">
+<description>
+special syntax - not a valid URI, but allowed by HostIdentifier
+</description>
+<HostIdentifier> rmi://localhost:1234 </HostIdentifier>
+</testcase>
+
+<testcase id="30" HostIdentifierInput="rmi:10.0.0.1:1234">
+<description>
+special syntax - not a valid URI, but allowed by HostIdentifier
+</description>
+<HostIdentifier> rmi://10.0.0.1:1234 </HostIdentifier>
+</testcase>
+
+</HostIdentifierTests>

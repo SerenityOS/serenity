@@ -1,0 +1,9 @@
+#include "version.rc"
+
+#define IDI_ICON 2000
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+IDI_ICON           ICON    DISCARDABLE     "awt.ico"

@@ -1,0 +1,2 @@
+Ambig1.java:24:9: compiler.err.ref.ambiguous: f, kindname.method, f(int), ambig1.B, kindname.method, f(int), ambig1.A
+1 error

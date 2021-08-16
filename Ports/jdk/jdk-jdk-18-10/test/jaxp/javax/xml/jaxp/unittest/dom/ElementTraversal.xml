@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE toys [
+<!ENTITY toy3 "<name>Transformer X</name><price>519</price>">
+]>
+
+<toys>
+
+    <toy id="1">	
+        <name>The Martian</name>
+        <price>98470</price>
+    </toy>
+    <toy id="2">
+        <name>The Doll</name>
+        <price>345</price>
+    </toy>         
+    <toy id="3">
+        &toy3;
+    </toy>    
+    <toy id="4">
+        <name>The Spaceship</name>
+        <price>725</price>
+    </toy>         
+     
+</toys>

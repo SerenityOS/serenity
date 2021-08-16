@@ -1,0 +1,15 @@
+<xs:schema  xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+  
+  <xs:element name='doc'>
+    <xs:complexType>
+      <xs:attribute name='value'>
+        <xs:simpleType>
+          <xs:restriction base='xs:string'>
+            <xs:pattern value='abc)'/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

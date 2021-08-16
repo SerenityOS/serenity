@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!-- XML tags are case sensitve, the root element should have been in lower case -->
+
+<Properties>
+<comment>comment</comment>
+<entry key="firstKey">value of the first key</entry>
+</Properties>

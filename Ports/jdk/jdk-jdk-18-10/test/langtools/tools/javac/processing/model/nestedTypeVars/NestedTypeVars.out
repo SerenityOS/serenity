@@ -1,0 +1,9 @@
+Test$1L1$L2$1L3$L4$L5<T1a extends Test.T1, T2a extends Test.m.T2, T3a extends Test$1L1.T3, T4a extends Test$1L1$L2.T4, T5a extends Test$1L1$L2.m.T5, T6a extends Test$1L1$L2$1L3.T6, T7a extends Test$1L1$L2$1L3$L4.T7>
+Test$1L1$CCheck<T extends Test$1L1.C>
+Test$1L1<T3 extends java.lang.Object, C extends java.lang.Object>
+  <T extends Test$1L1.C>test
+Test$1CCheck<T extends Test.m.C>
+Test$CCheck<T extends Test.C>
+Test<T1 extends java.lang.Object, C extends java.lang.Object>
+  <T2 extends java.lang.Object, C extends java.lang.Object>m
+  <T extends Test.C>test

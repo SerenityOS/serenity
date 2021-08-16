@@ -1,0 +1,4 @@
+T6968793.java:10:14: compiler.err.not.within.bounds: java.lang.Object, X
+T6968793.java:10:22: compiler.err.not.within.bounds: java.lang.Object, Y
+T6968793.java:10:30: compiler.err.not.within.bounds: java.lang.Object, Z
+3 errors

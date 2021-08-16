@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Created-By: 1.9.0-internal (Oracle Corporation)
+Specification-Title: My Specification Title
+Specification-Version: 1.0
+Specification-Vendor: My Specification Vendor
+Implementation-Title: My Implementation Title
+Implementation-Version: 1.0
+Implementation-Vendor: My Implementation Vendor
+
+Name: pkg1/
+Implementation-Version: 2.0
+Sealed: true

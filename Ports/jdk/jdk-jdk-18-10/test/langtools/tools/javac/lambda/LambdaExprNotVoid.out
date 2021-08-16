@@ -1,0 +1,3 @@
+LambdaExprNotVoid.java:14:21: compiler.err.prob.found.req: (compiler.misc.stat.expr.expected)
+LambdaExprNotVoid.java:15:21: compiler.err.prob.found.req: (compiler.misc.stat.expr.expected)
+2 errors

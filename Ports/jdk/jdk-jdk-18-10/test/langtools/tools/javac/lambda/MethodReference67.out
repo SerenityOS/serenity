@@ -1,0 +1,7 @@
+MethodReference67.java:16:9: compiler.warn.raw.class.use: MethodReference67.Foo, MethodReference67.Foo<X>
+MethodReference67.java:16:19: compiler.warn.raw.class.use: java.util.List, java.util.List<E>
+- compiler.err.warnings.and.werror
+- compiler.note.unchecked.filename: MethodReference67.java
+- compiler.note.unchecked.recompile
+1 error
+2 warnings

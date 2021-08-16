@@ -1,0 +1,2 @@
+T7177306e.java:16:9: compiler.err.prob.found.req: (compiler.misc.inferred.do.not.conform.to.upper.bounds: java.util.List<?>, java.util.List<compiler.misc.type.captureof: 1, ?>)
+1 error

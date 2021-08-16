@@ -1,0 +1,2 @@
+InconsistentReturn.java:17:1: compiler.err.types.incompatible: I2, I1, (compiler.misc.incompatible.diff.ret: f, )
+1 error

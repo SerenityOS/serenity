@@ -1,0 +1,279 @@
+#
+# Copyright (c) 2015, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+GENSRC_VARHANDLES :=
+
+VARHANDLES_GENSRC_DIR := $(SUPPORT_OUTPUTDIR)/gensrc/java.base/java/lang/invoke
+VARHANDLES_SRC_DIR := $(TOPDIR)/src/java.base/share/classes/java/lang/invoke
+
+################################################################################
+# Setup a rule for generating a VarHandle java class
+# Param 1 - Variable declaration prefix
+# Param 2 - Type with first letter capitalized
+define GenerateVarHandle
+
+  $1_Type := $2
+
+  $1_FILENAME := $(VARHANDLES_GENSRC_DIR)/VarHandle$$($1_Type)s.java
+
+  $1_ARGS += -KCAS
+
+  ifneq ($$(findstring $$($1_Type), Byte Short Char Int Long Float Double), )
+    $1_ARGS += -KAtomicAdd
+  endif
+
+  ifneq ($$(findstring $$($1_Type), Boolean Byte Short Char Int Long), )
+    $1_ARGS += -KBitwise
+  endif
+
+  ifneq ($$(findstring $$($1_Type), Byte Short Char), )
+    $1_ARGS += -KShorterThanInt
+  endif
+
+  $$($1_FILENAME): $(VARHANDLES_SRC_DIR)/X-VarHandle.java.template $(BUILD_TOOLS_JDK)
+        ifeq ($$($1_Type), Reference)
+	  $$(eval $1_type := Object)
+        else
+	  $$(eval $1_type := $$$$(shell $(TR) '[:upper:]' '[:lower:]' <<< $$$$($1_Type)))
+        endif
+	$$(call MakeDir, $$(@D))
+	$(RM) $$@
+	$(TOOL_SPP) -nel -K$$($1_type) -Dtype=$$($1_type) -DType=$$($1_Type) \
+	    $$($1_ARGS) -i$$< -o$$@
+
+  GENSRC_VARHANDLES += $$($1_FILENAME)
+endef
+
+################################################################################
+
+################################################################################
+# Setup a rule for generating a VarHandleByteArray java class
+# Param 1 - Variable declaration prefix
+# Param 2 - Type with first letter capitalized
+define GenerateVarHandleByteArray
+
+  $1_Type := $2
+
+  $1_FILENAME := $(VARHANDLES_GENSRC_DIR)/VarHandleByteArrayAs$$($1_Type)s.java
+
+  ifeq ($$($1_Type), Short)
+    $1_type := short
+    $1_BoxType := $$($1_Type)
+
+    $1_rawType := $$($1_type)
+    $1_RawType := $$($1_Type)
+    $1_RawBoxType := $$($1_BoxType)
+  endif
+
+  ifeq ($$($1_Type), Char)
+    $1_type := char
+    $1_BoxType := Character
+
+    $1_rawType := $$($1_type)
+    $1_RawType := $$($1_Type)
+    $1_RawBoxType := $$($1_BoxType)
+  endif
+
+  ifeq ($$($1_Type), Int)
+    $1_type := int
+    $1_BoxType := Integer
+
+    $1_rawType := $$($1_type)
+    $1_RawType := $$($1_Type)
+    $1_RawBoxType := $$($1_BoxType)
+
+    $1_ARGS += -KCAS
+    $1_ARGS += -KAtomicAdd
+    $1_ARGS += -KBitwise
+  endif
+
+  ifeq ($$($1_Type), Long)
+    $1_type := long
+    $1_BoxType := $$($1_Type)
+
+    $1_rawType := $$($1_type)
+    $1_RawType := $$($1_Type)
+    $1_RawBoxType := $$($1_BoxType)
+
+    $1_ARGS += -KCAS
+    $1_ARGS += -KAtomicAdd
+    $1_ARGS += -KBitwise
+  endif
+
+  ifeq ($$($1_Type), Float)
+    $1_type := float
+    $1_BoxType := $$($1_Type)
+
+    $1_rawType := int
+    $1_RawType := Int
+    $1_RawBoxType := Integer
+
+    $1_ARGS += -KCAS
+    $1_ARGS += -KfloatingPoint
+  endif
+
+  ifeq ($$($1_Type), Double)
+    $1_type := double
+    $1_BoxType := $$($1_Type)
+
+    $1_rawType := long
+    $1_RawType := Long
+    $1_RawBoxType := Long
+
+    $1_ARGS += -KCAS
+    $1_ARGS += -KfloatingPoint
+  endif
+
+  $$($1_FILENAME): $(VARHANDLES_SRC_DIR)/X-VarHandleByteArrayView.java.template $(BUILD_TOOLS_JDK)
+	$$(call MakeDir, $$(@D))
+	$(RM) $$@
+	$(TOOL_SPP) -nel -K$$($1_type) \
+	    -Dtype=$$($1_type) -DType=$$($1_Type) -DBoxType=$$($1_BoxType) \
+	    -DrawType=$$($1_rawType) -DRawType=$$($1_RawType) -DRawBoxType=$$($1_RawBoxType) \
+	    $$($1_ARGS) -i$$< -o$$@
+
+  GENSRC_VARHANDLES += $$($1_FILENAME)
+endef
+
+################################################################################
+
+################################################################################
+# Setup a rule for generating a memory access var handle helper classes
+# Param 1 - Variable declaration prefix
+# Param 2 - Type with first letter capitalized
+define GenerateVarHandleMemoryAccess
+
+  $1_Type := $2
+
+  $1_FILENAME := $(VARHANDLES_GENSRC_DIR)/MemoryAccessVarHandle$$($1_Type)Helper.java
+
+  ifeq ($$($1_Type), Byte)
+    $1_type := byte
+    $1_BoxType := $$($1_Type)
+
+    $1_rawType := $$($1_type)
+    $1_RawType := $$($1_Type)
+    $1_RawBoxType := $$($1_BoxType)
+
+    $1_ARGS += -Kbyte
+  endif
+
+  ifeq ($$($1_Type), Short)
+    $1_type := short
+    $1_BoxType := $$($1_Type)
+
+    $1_rawType := $$($1_type)
+    $1_RawType := $$($1_Type)
+    $1_RawBoxType := $$($1_BoxType)
+  endif
+
+  ifeq ($$($1_Type), Char)
+    $1_type := char
+    $1_BoxType := Character
+
+    $1_rawType := $$($1_type)
+    $1_RawType := $$($1_Type)
+    $1_RawBoxType := $$($1_BoxType)
+  endif
+
+  ifeq ($$($1_Type), Int)
+    $1_type := int
+    $1_BoxType := Integer
+
+    $1_rawType := $$($1_type)
+    $1_RawType := $$($1_Type)
+    $1_RawBoxType := $$($1_BoxType)
+
+    $1_ARGS += -KCAS
+    $1_ARGS += -KAtomicAdd
+    $1_ARGS += -KBitwise
+  endif
+
+  ifeq ($$($1_Type), Long)
+    $1_type := long
+    $1_BoxType := $$($1_Type)
+
+    $1_rawType := $$($1_type)
+    $1_RawType := $$($1_Type)
+    $1_RawBoxType := $$($1_BoxType)
+
+    $1_ARGS += -KCAS
+    $1_ARGS += -KAtomicAdd
+    $1_ARGS += -KBitwise
+  endif
+
+  ifeq ($$($1_Type), Float)
+    $1_type := float
+    $1_BoxType := $$($1_Type)
+
+    $1_rawType := int
+    $1_RawType := Int
+    $1_RawBoxType := Integer
+
+    $1_ARGS += -KCAS
+    $1_ARGS += -KfloatingPoint
+  endif
+
+  ifeq ($$($1_Type), Double)
+    $1_type := double
+    $1_BoxType := $$($1_Type)
+
+    $1_rawType := long
+    $1_RawType := Long
+    $1_RawBoxType := Long
+
+    $1_ARGS += -KCAS
+    $1_ARGS += -KfloatingPoint
+  endif
+
+  $$($1_FILENAME): $(VARHANDLES_SRC_DIR)/X-VarHandleMemoryAccess.java.template $(BUILD_TOOLS_JDK)
+	$$(call MakeDir, $$(@D))
+	$(RM) $$@
+	$(TOOL_SPP) -nel -K$$($1_type) \
+	    -Dtype=$$($1_type) -DType=$$($1_Type) -DBoxType=$$($1_BoxType) \
+	    -DrawType=$$($1_rawType) -DRawType=$$($1_RawType) -DRawBoxType=$$($1_RawBoxType) \
+	    $$($1_ARGS) -i$$< -o$$@
+
+  GENSRC_VARHANDLES += $$($1_FILENAME)
+endef
+
+################################################################################
+
+# List the types to generate source for, with capitalized first letter
+VARHANDLES_TYPES := Boolean Byte Short Char Int Long Float Double Reference
+$(foreach t, $(VARHANDLES_TYPES), \
+  $(eval $(call GenerateVarHandle,VAR_HANDLE_$t,$t)))
+
+# List the types to generate source for, with capitalized first letter
+VARHANDLES_BYTE_ARRAY_TYPES := Short Char Int Long Float Double
+$(foreach t, $(VARHANDLES_BYTE_ARRAY_TYPES), \
+  $(eval $(call GenerateVarHandleByteArray,VAR_HANDLE_BYTE_ARRAY_$t,$t)))
+
+# List the types to generate source for, with capitalized first letter
+VARHANDLES_MEMORY_ADDRESS_TYPES := Byte Short Char Int Long Float Double
+$(foreach t, $(VARHANDLES_MEMORY_ADDRESS_TYPES), \
+  $(eval $(call GenerateVarHandleMemoryAccess,VAR_HANDLE_MEMORY_ADDRESS_$t,$t)))
+
+TARGETS += $(GENSRC_VARHANDLES)

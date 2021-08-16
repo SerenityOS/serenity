@@ -1,0 +1,244 @@
+/*
+ * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+// Test that VerifyError is thrown if dup2_x1 tries to replace the filler slot
+// of a category 2 value.
+// The stack map is long,top,null,null.  The verifier should reject dup2_x1's
+// (form1) attempt to turn the stack map into long,top,null,null,null,null
+public class dup2_x1 version 51:0 {
+    public static Method run:"()V" stack 6 locals 0 {
+        lconst_0;
+        aconst_null;
+        aconst_null;
+        dup2_x1;
+        return;
+    }
+}
+
+
+public class dup2_x2 version 51:0 {
+    public static Method run:"()V" stack 6 locals 0 {
+        iconst_0;
+        lconst_0;
+        aconst_null;
+
+        stack_frame_type full;
+        stack_map int, bogus, bogus, null;
+        locals_map;
+
+        dup2_x2;
+        return;
+    }
+}
+
+
+// Test that VerifyError is thrown if dup2_x2 tries to replace the filler slot
+// of a category 2 value.
+// The stack map is long,top,null,null,null.  The verifier should reject dup2_x2's
+// (form 1) attempt to turn the stack map into long,top,null,null,null,top,null.
+public class dup2_x2_long_refs version 51:0 {
+    public static Method run:"()V" stack 6 locals 0 {
+        lconst_0;
+        aconst_null;
+        aconst_null;
+        aconst_null;
+        dup2_x2;
+        return;
+    }
+}
+
+
+// Test that VerifyError is thrown when dup2 is used to remove the upper
+// half of a category 2 type.
+public class dup2longtop version 51:0 {
+    public static Method main:"([Ljava/lang/String;)V" stack 5 locals 1 {
+        lconst_0;
+        iconst_0;
+        dup2;
+        return;
+    }
+}
+
+
+// Test that VerifyError is thrown when dup2 is used to remove top
+// because top may be the upper half of a category 2 type.
+public class dup2toptop version 51:0 {
+    public static Method main:"([Ljava/lang/String;)V" stack 5 locals 1 {
+        // here we have {long, top, null}
+        // EXECUTION: we have {long, null}
+        lconst_0;
+        aconst_null;
+
+        stack_frame_type full;
+        stack_map bogus, bogus, null;
+        locals_map bogus;
+
+        // VERIFIER: use form1 of dup2 - {top, top, null} -> {top, top, null, top, null}
+        // EXECUTION: have {long, null} - no applicable form of dup2 for such type state by JVMS ch. 6
+        dup2;
+
+        return;
+    }
+}
+
+
+// Test that VerifyError is thrown if dup_x1 tries to replace the filler slot
+// of a category 2 value.
+public class dup_x1 version 51:0 {
+    public static Method run:"()V" stack 6 locals 0 {
+        lconst_0;
+        aconst_null;
+        dup_x1;
+        return;
+    }
+}
+
+
+// Test that VerifyError is thrown when pop2 is used to remove top
+// because top may be the upper half of a category 2 type.
+public class pop2longtop version 51:0
+{
+
+    public Method regular:"()V" stack 6 locals 6
+    {
+        lconst_0;
+        iconst_0;
+        stack_frame_type full;
+        stack_map long, bogus;
+        locals_map;
+        pop2;
+        return;
+    }
+} // end Class pop2longtop
+
+
+
+// Test that VerifyError is thrown when pop2 is used to remove top, top
+// because either top may be the upper half of a category 2 type.
+public class pop2toptop version 51:0
+{
+
+    public Method regular:"()V" stack 6 locals 6
+    {
+        iconst_0;
+        iconst_0;
+        stack_frame_type full;
+        stack_map bogus, bogus;
+        locals_map;
+        pop2;
+        return;
+    }
+} // end Class pop2toptop
+
+
+
+// Test that VerifyError is thrown when pop is used to remove top
+// because top may be the upper half of a category 2 type.
+public class poptop version 51:0
+{
+
+    public Method regular:"()V" stack 2 locals 1
+    {
+        iconst_0;
+        stack_frame_type full;
+        stack_map bogus;
+        pop;
+        return;
+    }
+} // end Class poptop
+
+
+
+// Test that VerifyError is thrown when pop is used to remove top, top
+// because either top may be the upper half of a category 2 type.
+public class poptoptop version 51:0
+{
+
+    public Method regular:"()V" stack 2 locals 1
+    {
+        iconst_0;
+        iconst_0;
+        stack_frame_type full;
+        stack_map bogus, bogus;
+        pop;
+        return;
+    }
+} // end Class poptoptop
+
+
+
+// Test that VerifyError is thrown when swap is used to swap int, top
+// because top may be the lower half of a category 2 type.
+public class swapinttop version 51:0
+{
+
+    public Method regular:"()V" stack 6 locals 6
+    {
+        iconst_0;
+        iconst_0;
+        stack_frame_type full;
+        stack_map int, bogus;
+        locals_map;
+        swap;
+        return;
+    }
+} // end Class swapinttop
+
+
+
+// Test that VerifyError is thrown when swap is used to swap top, int
+// because top may be the upper half of a category 2 type.
+public class swaptopint version 51:0
+{
+
+    public Method regular:"()V" stack 6 locals 6
+    {
+        iconst_0;
+        iconst_0;
+        stack_frame_type full;
+        stack_map bogus, int;
+        locals_map;
+        swap;
+        return;
+    }
+} // end Class swaptopint
+
+
+
+// Test that VerifyError is thrown when swap is used to swap top, top
+// because either top may be the upper half of a category 2 type.
+public class swaptoptop version 51:0
+{
+
+    public Method regular:"()V" stack 6 locals 6
+    {
+        iconst_0;
+        iconst_0;
+        stack_frame_type full;
+        stack_map bogus, bogus;
+        locals_map;
+        swap;
+        return;
+    }
+} // end Class swaptoptop

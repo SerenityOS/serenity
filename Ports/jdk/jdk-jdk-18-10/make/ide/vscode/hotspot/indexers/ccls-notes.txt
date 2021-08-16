@@ -1,0 +1,3 @@
+
+* The "ccls" indexer must be present in PATH, or configured with "ccls.launch.command" in user preferences.
+

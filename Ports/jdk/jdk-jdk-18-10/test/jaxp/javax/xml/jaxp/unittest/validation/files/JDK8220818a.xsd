@@ -1,0 +1,23 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="root">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="key" type="xs:string" minOccurs="0">
+                    <xs:key name="key">
+                        <xs:selector xpath="."/>
+                        <xs:field xpath="."/>
+                    </xs:key>
+                </xs:element>
+                <xs:element name="keyref">
+                    <xs:complexType>
+                        <xs:attribute name="att" type="xs:string"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+        <xs:keyref name="keyref" refer="key">
+            <xs:selector xpath="keyref"/>
+            <xs:field xpath="@att"/>
+        </xs:keyref>
+    </xs:element>
+</xs:schema>

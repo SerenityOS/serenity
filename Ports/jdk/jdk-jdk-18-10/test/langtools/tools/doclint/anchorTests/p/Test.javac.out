@@ -1,0 +1,7 @@
+Test.java:15:7: compiler.err.proc.messager: anchor already defined: "dupTest"
+Test.java:25:12: compiler.err.proc.messager: anchor already defined: "dupTestField"
+Test.java:28:12: compiler.err.proc.messager: anchor already defined: "dupTestMethod"
+Test.java:33:11: compiler.err.proc.messager: anchor already defined: "dupNested"
+Test.java:41:15: compiler.err.proc.messager: anchor already defined: "dupNestedField"
+Test.java:48:15: compiler.err.proc.messager: anchor already defined: "dupNestedMethod"
+6 errors

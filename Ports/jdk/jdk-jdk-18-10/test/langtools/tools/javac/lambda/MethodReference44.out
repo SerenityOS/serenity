@@ -1,0 +1,4 @@
+MethodReference44.java:40:11: compiler.err.cant.apply.symbol: kindname.method, g1, MethodReference44.SAM1, @12, kindname.class, MethodReference44, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.incompatible.bounds: X, (compiler.misc.eq.bounds: java.lang.String), (compiler.misc.upper.bounds: java.lang.Number))))
+MethodReference44.java:42:11: compiler.err.cant.apply.symbol: kindname.method, g3, MethodReference44.SAM3, @12, kindname.class, MethodReference44, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.incompatible.bounds: X, (compiler.misc.eq.bounds: java.lang.Object), (compiler.misc.upper.bounds: java.lang.Number))))
+MethodReference44.java:43:9: compiler.err.ref.ambiguous: g4, kindname.method, g4(MethodReference44.SAM2), MethodReference44, kindname.method, g4(MethodReference44.SAM3), MethodReference44
+3 errors

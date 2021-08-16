@@ -1,0 +1,10 @@
+SMAP
+TemperatureTableServlet.java
+JSP
+*S JSP
+*F
++ 1 TemperatureTable.jsp
+tst/TemperatureTable.jsp
+*L
+1#1,29:15,2
+*E

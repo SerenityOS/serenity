@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" xml:base="http://local/base/dtd/">
+    <system systemId="http://remote/dtd/sys/docAlice.dtd" uri="docAliceNextLeftSys.dtd" />
+    <public publicId="-//REMOTE//DTD ALICE DOCALICE XML//EN" uri="docAliceNextLeftPub.dtd" />
+    <uri name="http://remote/dtd/uri/docAlice.dtd" uri="docAliceNextLeftURI.dtd" />
+
+    <system systemId="http://remote/dtd/sys/docDuplicate.dtd" uri="docDuplicateLeftSys.dtd" />
+    <public publicId="-//REMOTE//DTD DUPLICATE DOCDUPLICATE XML//EN" uri="docDuplicateLeftPub.dtd" />
+    <uri name="http://remote/dtd/uri/docDuplicate.dtd" uri="docDuplicateLeftURI.dtd" />
+
+    <systemSuffix systemIdSuffix="ss/doc.dtd" uri="docSSShorter.dtd" />
+    <rewriteSystem systemIdStartString="http://remote/dtd/rs/" rewritePrefix="http://local/base/dtd/rsShorter/" />
+    <uriSuffix uriSuffix="us/doc.dtd" uri="docUSShorter.dtd" />
+    <rewriteURI uriStartString="http://remote/dtd/ru/" rewritePrefix="http://local/base/dtd/ruShorter/" />
+</catalog>

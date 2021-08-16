@@ -1,0 +1,2 @@
+TargetType26.java:16:11: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.assignment.exists: Z, (compiler.misc.not.a.functional.intf: java.lang.Object))
+1 error

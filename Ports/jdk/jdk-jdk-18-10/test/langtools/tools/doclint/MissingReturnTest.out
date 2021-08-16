@@ -1,0 +1,5 @@
+MissingReturnTest.java:23: warning: no @return
+    int missingReturn() { }
+        ^
+1 warning
+

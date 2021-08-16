@@ -1,0 +1,8 @@
+// grant jtreg and javatest AllPermission
+grant codebase "file:/usr/local/java/-" {
+    permission java.security.AllPermission;
+};
+
+grant {
+    permission javax.security.auth.AuthPermission "getLoginConfiguration";
+};

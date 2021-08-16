@@ -1,0 +1,9 @@
+T6558548.java:19:9: compiler.warn.unreachable.catch: java.io.FileNotFoundException
+T6558548.java:167:9: compiler.err.except.never.thrown.in.try: java.lang.InterruptedException
+T6558548.java:176:9: compiler.err.except.never.thrown.in.try: java.lang.InterruptedException
+T6558548.java:247:9: compiler.err.except.never.thrown.in.try: java.lang.InterruptedException
+T6558548.java:257:9: compiler.err.except.never.thrown.in.try: java.lang.InterruptedException
+T6558548.java:299:9: compiler.err.except.never.thrown.in.try: java.lang.InterruptedException
+T6558548.java:306:9: compiler.err.except.never.thrown.in.try: java.lang.InterruptedException
+6 errors
+1 warning

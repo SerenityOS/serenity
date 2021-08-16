@@ -1,0 +1,8 @@
+T6795580.java:31:57: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6795580.Outer<java.lang.Integer>.Inner<java.lang.Long>[], T6795580.Outer<? super java.lang.Number>.Inner<java.lang.Long>[])
+T6795580.java:35:60: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6795580.Outer<java.lang.Integer>.Inner<java.lang.Long>[], T6795580.Outer<java.lang.Integer>.Inner<? super java.lang.Number>[])
+T6795580.java:39:67: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6795580.Outer<java.lang.Integer>.Inner<java.lang.Long>[], T6795580.Outer<? super java.lang.Number>.Inner<? super java.lang.Number>[])
+T6795580.java:43:59: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6795580.Outer<java.lang.Integer>.Inner<java.lang.Long>[], T6795580.Outer<? extends java.lang.String>.Inner<java.lang.Long>[])
+T6795580.java:47:62: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6795580.Outer<java.lang.Integer>.Inner<java.lang.Long>[], T6795580.Outer<java.lang.Integer>.Inner<? extends java.lang.String>[])
+T6795580.java:51:57: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6795580.Outer<java.lang.Integer>.Inner<java.lang.Long>[], T6795580.Outer<? super java.lang.String>.Inner<java.lang.Long>[])
+T6795580.java:55:60: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: T6795580.Outer<java.lang.Integer>.Inner<java.lang.Long>[], T6795580.Outer<java.lang.Integer>.Inner<? super java.lang.String>[])
+7 errors

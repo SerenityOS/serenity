@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration version="2.0" label="Test and">
+
+    <event name="algebra.Group">
+      <setting name="enabled" control="group">unknown</setting>
+    </event>
+
+    <control>
+      <flag name="closure" label="Close">false</flag>
+      <flag name="identity" label="Identity">false</flag>
+      <flag name="associativity" label="Associativity">false</flag>
+      <flag name="inverse" label="Inverse">false</flag>
+      
+      <condition name="group" true="true" false="false">
+        <and>
+           <test name="closure" operator="equal" value="true"/>
+           <test name="identity" operator="equal" value="true"/>
+           <test name="associativity" operator="equal" value="true"/>
+           <test name="inverse" operator="equal" value="true"/>
+        </and>
+      </condition>
+    </control>
+
+</configuration>

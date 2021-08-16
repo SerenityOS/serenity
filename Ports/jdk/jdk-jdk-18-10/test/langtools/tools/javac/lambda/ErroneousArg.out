@@ -1,0 +1,7 @@
+ErroneousArg.java:29:11: compiler.err.cant.resolve.location.args: kindname.method, unknown, , , (compiler.misc.location: kindname.class, TestErroneousArg, null)
+ErroneousArg.java:30:11: compiler.err.cant.apply.symbol: kindname.method, f, java.lang.String, int, kindname.class, ErroneousArg, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: int, java.lang.String))
+ErroneousArg.java:31:11: compiler.err.cant.apply.symbols: kindname.method, g, int,{(compiler.misc.inapplicable.method: kindname.method, ErroneousArg, g(java.lang.String), (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: int, java.lang.String))),(compiler.misc.inapplicable.method: kindname.method, ErroneousArg, g(java.lang.Double), (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: int, java.lang.Double)))}
+ErroneousArg.java:32:11: compiler.err.ref.ambiguous: g, kindname.method, g(java.lang.String), ErroneousArg, kindname.method, g(java.lang.Double), ErroneousArg
+ErroneousArg.java:33:11: compiler.err.non-static.cant.be.ref: kindname.method, h()
+ErroneousArg.java:34:14: compiler.err.not.def.access.class.intf.cant.access: j(), ErroneousArg.Foo
+6 errors

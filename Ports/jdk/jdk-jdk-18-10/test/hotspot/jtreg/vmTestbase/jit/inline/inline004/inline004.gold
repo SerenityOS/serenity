@@ -1,0 +1,17 @@
+Pattern                            Errors   Iterations   State
+=======                            ======   ==========   =====
+Const4 class method (int)          0        5            PASS 
+Const4 class method (ref)          0        5            PASS 
+GetStatic4 class method (int)      0        5            PASS 
+GetStatic4 class method (ref)      0        5            PASS 
+Const4 instance method (int)       0        5            PASS 
+Const4 instance method (ref)       0        5            PASS 
+GetStatic4 instance method (int)   0        5            PASS 
+GetStatic4 instance method (ref)   0        5            PASS 
+GetField4 instance method (int)    0        5            PASS 
+GetField4 instance method (ref)    0        5            PASS 
+PutField4 instance method (int)    0        5            PASS 
+PutField4 instance method (ref)    0        5            PASS 
+PutField4Const4 instance method    0        5            PASS 
+Handle instance method             0        5            PASS 
+PASSED.

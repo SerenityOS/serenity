@@ -1,0 +1,426 @@
+/*
+ * Copyright (c) 1997, 2021, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ * README README README README README README README README README
+ *
+ * This file is the template for generating the JceSecurity.java source
+ * file.
+ *
+ * In the current jdk builds, this file is first preprocessed to replace
+ * @@JCE_DEFAULT_POLICY@ [sic] with "limited" or "unlimited" which is
+ * determined by the $(UNLIMTED_CRYPTO) make variable.  This variable is
+ * set by top-level configure script, using either
+ * --disable-unlimited-crypto or --enable-unlimited-crypto [default].
+ *
+ * Since this file is a generated source, incremental changes to
+ * this file require regenerating the source.  Compilation options:
+ *
+ *     (fewer dependencies/"faster" ones first)
+ *
+ * 1.  make JDK_FILTER=javax/crypto java.base-gensrc-only java.base-java-only
+ * 2.  make java.base-gensrc-only java.base-java-only
+ * 3.  make java.base-gensrc-only java.base-only
+ * 4.  make java.base-only
+ * 5.  make
+ */
+
+package javax.crypto;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.io.*;
+import java.net.URL;
+import java.nio.file.*;
+import java.security.*;
+
+import java.security.Provider.Service;
+
+import jdk.internal.util.StaticProperty;
+
+import sun.security.jca.*;
+import sun.security.jca.GetInstance.Instance;
+import sun.security.util.Debug;
+
+/**
+ * This class instantiates implementations of JCE engine classes from
+ * providers registered with the java.security.Security object.
+ *
+ * @author Jan Luehe
+ * @author Sharon Liu
+ * @since 1.4
+ */
+
+@SuppressWarnings("removal")
+final class JceSecurity {
+
+    private static final Debug debug = Debug.getInstance("jca");
+
+    // The defaultPolicy and exemptPolicy will be set up
+    // in the static initializer.
+    private static CryptoPermissions defaultPolicy = null;
+    private static CryptoPermissions exemptPolicy = null;
+
+    // Map of the providers we already have verified.
+    // If verified ok, value == PROVIDER_VERIFIED, otherwise
+    // the cause of verification failure is stored as value.
+    private static final Map<IdentityWrapper, Object>
+        verificationResults = new ConcurrentHashMap<>();
+
+    // Map<Provider,?> of the providers currently being verified
+    private static final Map<Provider, Object> verifyingProviders =
+            new IdentityHashMap<>();
+
+    private static final boolean isRestricted;
+
+    /*
+     * Don't let anyone instantiate this.
+     */
+    private JceSecurity() {
+    }
+
+    static {
+        try {
+            AccessController.doPrivileged(
+                new PrivilegedExceptionAction<> () {
+                    @Override
+                    public Void run() throws Exception {
+                        setupJurisdictionPolicies();
+                        return null;
+                    }
+                }
+            );
+
+            isRestricted = defaultPolicy.implies(
+                CryptoAllPermission.INSTANCE) ? false : true;
+        } catch (Exception e) {
+            throw new SecurityException(
+                    "Can not initialize cryptographic mechanism", e);
+        }
+    }
+
+    static Instance getInstance(String type, Class<?> clazz, String algorithm,
+            String provider) throws NoSuchAlgorithmException,
+            NoSuchProviderException {
+        Service s = GetInstance.getService(type, algorithm, provider);
+        Exception ve = getVerificationResult(s.getProvider());
+        if (ve != null) {
+            String msg = "JCE cannot authenticate the provider " + provider;
+            throw (NoSuchProviderException)
+                                new NoSuchProviderException(msg).initCause(ve);
+        }
+        return GetInstance.getInstance(s, clazz);
+    }
+
+    static Instance getInstance(String type, Class<?> clazz, String algorithm,
+            Provider provider) throws NoSuchAlgorithmException {
+        Service s = GetInstance.getService(type, algorithm, provider);
+        Exception ve = JceSecurity.getVerificationResult(provider);
+        if (ve != null) {
+            String msg = "JCE cannot authenticate the provider "
+                + provider.getName();
+            throw new SecurityException(msg, ve);
+        }
+        return GetInstance.getInstance(s, clazz);
+    }
+
+    static Instance getInstance(String type, Class<?> clazz, String algorithm)
+            throws NoSuchAlgorithmException {
+        List<Service> services = GetInstance.getServices(type, algorithm);
+        NoSuchAlgorithmException failure = null;
+        for (Service s : services) {
+            if (canUseProvider(s.getProvider()) == false) {
+                // allow only signed providers
+                continue;
+            }
+            try {
+                Instance instance = GetInstance.getInstance(s, clazz);
+                return instance;
+            } catch (NoSuchAlgorithmException e) {
+                failure = e;
+            }
+        }
+        throw new NoSuchAlgorithmException("Algorithm " + algorithm
+                + " not available", failure);
+    }
+
+    /**
+     * Verify if the JAR at URL codeBase is a signed exempt application
+     * JAR file and returns the permissions bundled with the JAR.
+     *
+     * @throws Exception on error
+     */
+    static CryptoPermissions verifyExemptJar(URL codeBase) throws Exception {
+        ProviderVerifier pv = new ProviderVerifier(codeBase, true);
+        pv.verify();
+        return pv.getPermissions();
+    }
+
+    /**
+     * Verify if the JAR at URL codeBase is a signed provider JAR file.
+     *
+     * @throws Exception on error
+     */
+    static void verifyProvider(URL codeBase, Provider p) throws Exception {
+        // Verify the provider JAR file and all
+        // supporting JAR files if there are any.
+        ProviderVerifier pv = new ProviderVerifier(codeBase, p, false);
+        pv.verify();
+    }
+
+    private static final Object PROVIDER_VERIFIED = Boolean.TRUE;
+
+    /*
+     * Verify that the provider JAR files are signed properly, which
+     * means the signer's certificate can be traced back to a
+     * JCE trusted CA.
+     * Return null if ok, failure Exception if verification failed.
+     */
+    static Exception getVerificationResult(Provider p) {
+        IdentityWrapper pKey = new IdentityWrapper(p);
+        Object o = verificationResults.get(pKey);
+        // no mapping found
+        if (o == null) {
+            synchronized (JceSecurity.class) {
+                // check cache again in case the result is now available
+                o = verificationResults.get(pKey);
+                if (o == null) {
+                    if (verifyingProviders.get(p) != null) {
+                        // recursion; return failure now
+                        return new NoSuchProviderException
+                                ("Recursion during verification");
+                    }
+                    try {
+                        verifyingProviders.put(p, Boolean.FALSE);
+                        URL providerURL = getCodeBase(p.getClass());
+                        verifyProvider(providerURL, p);
+                        o = PROVIDER_VERIFIED;
+                    } catch (Exception e) {
+                        o = e;
+                    } finally {
+                        verifyingProviders.remove(p);
+                    }
+                    verificationResults.put(pKey, o);
+                    if (debug != null) {
+                        debug.println("Provider " + p.getName() +
+                                " verification result: " + o);
+                    }
+                }
+            }
+        }
+        return (o == PROVIDER_VERIFIED? null : (Exception) o);
+    }
+
+    // return whether this provider is properly signed and can be used by JCE
+    static boolean canUseProvider(Provider p) {
+        return getVerificationResult(p) == null;
+    }
+
+    // dummy object to represent null
+    private static final URL NULL_URL;
+
+    static {
+        try {
+            NULL_URL = new URL("http://null.oracle.com/");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // reference to a Map we use as a cache for codebases
+    private static final Map<Class<?>, URL> codeBaseCacheRef =
+            new WeakHashMap<>();
+
+    /*
+     * Returns the CodeBase for the given class.
+     */
+    static URL getCodeBase(final Class<?> clazz) {
+        synchronized (codeBaseCacheRef) {
+            URL url = codeBaseCacheRef.get(clazz);
+            if (url == null) {
+                url = AccessController.doPrivileged(
+                    new PrivilegedAction<>() {
+                        @Override
+                        public URL run() {
+                            ProtectionDomain pd = clazz.getProtectionDomain();
+                            if (pd != null) {
+                                CodeSource cs = pd.getCodeSource();
+                                if (cs != null) {
+                                    return cs.getLocation();
+                                }
+                            }
+                            return NULL_URL;
+                        }
+                    });
+                codeBaseCacheRef.put(clazz, url);
+            }
+            return (url == NULL_URL) ? null : url;
+        }
+    }
+
+    // This is called from within an doPrivileged block.
+    private static void setupJurisdictionPolicies() throws Exception {
+
+        // Sanity check the crypto.policy Security property.  Single
+        // directory entry, no pseudo-directories (".", "..", leading/trailing
+        // path separators). normalize()/getParent() will help later.
+        String cryptoPolicyProperty = Security.getProperty("crypto.policy");
+
+        /*
+         * In case no property is present, rather than fail catastrophically,
+         * we at least try for a "sane" value, which is what we were
+         * built with.  We first preprocess this file to plug in that
+         * value, then compile the result gensrc.
+         *
+         * Log the warning first.
+         */
+        if (cryptoPolicyProperty == null) {
+            cryptoPolicyProperty = "@@JCE_DEFAULT_POLICY@@";
+            if (debug != null) {
+                debug.println(
+                    "Security Property 'crypto.policy' not found: "
+                    + "using '" + cryptoPolicyProperty + "' as fallback");
+            }
+        }
+
+        Path cpPath = Paths.get(cryptoPolicyProperty);
+
+        if ((cpPath.getNameCount() != 1) ||
+                (cpPath.compareTo(cpPath.getFileName()) != 0)) {
+            throw new SecurityException(
+                "Invalid policy directory name format: " +
+                cryptoPolicyProperty);
+        }
+
+        // Prepend java.home to get the full path.  normalize() in
+        // case an extra "." or ".." snuck in somehow.
+        String javaHomeProperty = StaticProperty.javaHome();
+        Path javaHomePolicyPath = Paths.get(javaHomeProperty, "conf",
+                "security", "policy").normalize();
+        Path cryptoPolicyPath = Paths.get(javaHomeProperty, "conf", "security",
+                "policy", cryptoPolicyProperty).normalize();
+
+        if (cryptoPolicyPath.getParent().compareTo(javaHomePolicyPath) != 0) {
+            throw new SecurityException(
+                "Invalid cryptographic jurisdiction policy directory path: " +
+                cryptoPolicyProperty);
+        }
+
+        if (!Files.isDirectory(cryptoPolicyPath)
+                || !Files.isReadable(cryptoPolicyPath)) {
+            throw new SecurityException(
+                "Can't read cryptographic policy directory: " +
+                cryptoPolicyProperty);
+        }
+
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(
+                cryptoPolicyPath, "{default,exempt}_*.policy")) {
+            for (Path entry : stream) {
+                try (InputStream is = new BufferedInputStream(
+                        Files.newInputStream(entry))) {
+                    String filename = entry.getFileName().toString();
+
+                    CryptoPermissions tmpPerms = new CryptoPermissions();
+                    tmpPerms.load(is);
+
+                    if (filename.startsWith("default_")) {
+                        // Did we find a default perms?
+                        defaultPolicy = ((defaultPolicy == null) ? tmpPerms :
+                                defaultPolicy.getMinimum(tmpPerms));
+                    } else if (filename.startsWith("exempt_")) {
+                        // Did we find a exempt perms?
+                        exemptPolicy = ((exemptPolicy == null) ? tmpPerms :
+                                exemptPolicy.getMinimum(tmpPerms));
+                    } else {
+                        // This should never happen.  newDirectoryStream
+                        // should only throw return "{default,exempt}_*.policy"
+                        throw new SecurityException(
+                            "Unexpected jurisdiction policy files in : " +
+                            cryptoPolicyProperty);
+                    }
+                } catch (Exception e) {
+                    throw new SecurityException(
+                        "Couldn't parse jurisdiction policy files in: " +
+                        cryptoPolicyProperty);
+                }
+            }
+        } catch (DirectoryIteratorException ex) {
+            // I/O error encountered during the iteration,
+            // the cause is an IOException
+            throw new SecurityException(
+                "Couldn't iterate through the jurisdiction policy files: " +
+                cryptoPolicyProperty);
+        }
+
+        // Must have a default policy
+        if ((defaultPolicy == null) || defaultPolicy.isEmpty()) {
+            throw new SecurityException(
+                "Missing mandatory jurisdiction policy files: " +
+                cryptoPolicyProperty);
+        }
+
+        // If there was an empty exempt policy file, ignore it.
+        if ((exemptPolicy != null) && exemptPolicy.isEmpty()) {
+            exemptPolicy = null;
+        }
+    }
+
+    static CryptoPermissions getDefaultPolicy() {
+        return defaultPolicy;
+    }
+
+    static CryptoPermissions getExemptPolicy() {
+        return exemptPolicy;
+    }
+
+    static boolean isRestricted() {
+        return isRestricted;
+    }
+
+    private static final class IdentityWrapper {
+
+        final Provider obj;
+
+        IdentityWrapper(Provider obj) {
+            this.obj = obj;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof IdentityWrapper)) {
+                return false;
+            }
+            return this.obj == ((IdentityWrapper)o).obj;
+        }
+
+        @Override
+        public int hashCode() {
+            return System.identityHashCode(obj);
+        }
+    }
+}

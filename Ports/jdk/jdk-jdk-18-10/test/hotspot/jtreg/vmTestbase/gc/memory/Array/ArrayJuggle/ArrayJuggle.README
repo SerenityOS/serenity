@@ -1,0 +1,95 @@
+Copyright (c) 2002, 2018, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+-- These tests run forever at the current time [8/14/97] --
+
+
+
+ArrayJuggle.README
+
+These are a series of tests to exercise the multi-threaded
+GC part of the JVM.
+
+MemoryObjects are objects with a byte array to control their
+size and next and previous pointers for building up links to
+other MemoryObjects. These pointers can be used to make linked
+lists or binary trees or whatever. In these test cases, they are
+used only to build singly-linked lists.
+
+In the main class for each ArrayJuggle test, there is an array of
+MemoryObjects called the mainArray. This array is acted upon
+by various threads.
+
+MainArrayWalker threads randomly pick a cell in the main array
+and allocate a new MemoryObject into it. This means that
+the previous occupant of this cell in the array and anything
+it points to are candidates for GC.
+
+The CopyingThread threads copy parts of the main array into
+a thread-local array. While it resides in the thread-local array,
+a MemoryObject and the objects it points to should not be GC'd.
+
+The LinkMaker threads add new objects at the head of a linked
+list. The head of the list is stored in the main array. These
+links can vary in size.
+
+In Juggle1, a single CopyingThread copies the values of the main array to the
+subarray, a single LinkMaker adds nodes to the main array, and a single
+MainArrayWalker turns over the main array.
+
+Juggle2 is the same as Juggle1, but the CopyingThread puts a reference
+to the main array cell in the thread-local sub-array instead of
+copying it. A small difference.
+
+Juggle3 is the same as Juggle1, but is configurable for how many
+of each type of thread exists.
+
+Juggle4 is the same as Juggle2, but also has arrays of threads which
+operate on the array.
+
+The "gc" versions of these tests all have one or more threads
+which simply sit in a loop calling System.gc() to stress the system.
+
+
+These programs are designed to have their values adjusted to stress
+different parts of the system. A simple command interface can be
+added to adjust these at runtime, or the files can be edited and
+recompiled.
+
+No attempt has been made to synchronize access to the various array
+structures. This means that the arrays at any given moment inside
+any given thread may not necessarily be consistent. This is by
+design.
+
+Because there is no synchronization across array accesses, the
+values given by the dumpStatistics will not be precise, but will
+instead reflect a rolling average.
+
+Currently, all these programs run forever. That is because the
+curernt 1.1E system eventually fails on these tests. Each of
+the threads has a mechanism for stopping. The main program can
+wait for some specified period of time or number of iterations
+and then set runForever = false on all its child threads and
+then join() on them and the program should eventually terminate.
+This will be necessary for adding these to VM Testbase.
+
+Also, it will be interesting to run these tests in multiple
+configurations (varying the number of mutator threads) to
+help check for problems.

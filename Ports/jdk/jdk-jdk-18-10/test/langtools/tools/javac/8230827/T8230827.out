@@ -1,0 +1,7 @@
+T8230827.java:27:17: compiler.warn.potentially.ambiguous.overload: ambiguousMethod1(java.lang.Object,T8230827.I1), T8230827, ambiguousMethod1(java.lang.Object,T8230827.I2), T8230827
+T8230827.java:32:17: compiler.warn.potentially.ambiguous.overload: ambiguousMethod2(T8230827.I1,java.lang.Object), T8230827, ambiguousMethod2(T8230827.I2,java.lang.Object), T8230827
+T8230827.java:37:17: compiler.warn.potentially.ambiguous.overload: ambiguousMethod3(T8230827.I1,T8230827.I1), T8230827, ambiguousMethod3(T8230827.I2,T8230827.I1), T8230827
+T8230827.java:42:17: compiler.warn.potentially.ambiguous.overload: ambiguousMethod4(java.lang.Object,T8230827.I1,java.lang.String), T8230827, ambiguousMethod4(java.lang.String,T8230827.I2,java.lang.Object), T8230827
+- compiler.err.warnings.and.werror
+1 error
+4 warnings

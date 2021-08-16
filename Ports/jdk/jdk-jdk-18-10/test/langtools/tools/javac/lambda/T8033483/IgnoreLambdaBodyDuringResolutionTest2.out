@@ -1,0 +1,6 @@
+IgnoreLambdaBodyDuringResolutionTest2.java:19:13: compiler.err.ref.ambiguous: m, kindname.method, m(java.lang.Class<D1>), IgnoreLambdaBodyDuringResolutionTest2.D, kindname.method, m(IgnoreLambdaBodyDuringResolutionTest2.SAM<D2>), IgnoreLambdaBodyDuringResolutionTest2.D
+IgnoreLambdaBodyDuringResolutionTest2.java:19:18: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.assignment.exists: I,T, (compiler.misc.not.a.functional.intf: java.lang.Object))
+IgnoreLambdaBodyDuringResolutionTest2.java:19:14: compiler.err.cant.apply.symbol: kindname.method, m, java.lang.Class<D1>, <any>, kindname.class, IgnoreLambdaBodyDuringResolutionTest2.D<D1,D2>, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.infer.no.conforming.assignment.exists: I,T, (compiler.misc.not.a.functional.intf: java.lang.Class)))
+IgnoreLambdaBodyDuringResolutionTest2.java:28:13: compiler.err.ref.ambiguous: m, kindname.method, <F1>m(java.lang.Class<F1>), IgnoreLambdaBodyDuringResolutionTest2.F, kindname.method, <F2>m(IgnoreLambdaBodyDuringResolutionTest2.SAM<F2>), IgnoreLambdaBodyDuringResolutionTest2.F
+IgnoreLambdaBodyDuringResolutionTest2.java:28:14: compiler.err.prob.found.req: (compiler.misc.infer.no.conforming.assignment.exists: I,T, (compiler.misc.not.a.functional.intf: java.lang.Class))
+5 errors

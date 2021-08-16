@@ -1,0 +1,2 @@
+MostSpecific32.java:19:9: compiler.err.ref.ambiguous: m1, kindname.method, m1(MostSpecific32.F1<? extends java.lang.Number>), MostSpecific32, kindname.method, m1(MostSpecific32.F2<? extends java.lang.Number>), MostSpecific32
+1 error

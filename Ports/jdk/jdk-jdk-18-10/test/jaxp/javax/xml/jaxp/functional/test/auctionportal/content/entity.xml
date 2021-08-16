@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : entity.xml
+    Created on : August 6, 2003, 5:39 PM
+    Author     : Prasad Subramanian
+    Description:
+        To create a base XML document to test the entiity expansion limit
+-->
+<!DOCTYPE status[
+<!ENTITY firstEntity "fe">
+<!ENTITY secondEntity "&firstEntity;&firstEntity;" >
+<!ENTITY thirdEntity "&secondEntity;&secondEntity;" >
+<!ENTITY fourthEntity "&thirdEntity;&thirdEntity;" >
+<!ENTITY fifthEntity "&fourthEntity;&fourthEntity;" >
+<!-- <!ENTITY sixthEntity "&fifthEntity;&fifthEntity;">
+<!ENTITY seventhEntity "&sixthEntity;&sixthEntity;" >
+<!ENTITY eighthEntity "&seventhEntity;&seventhEntity;" >
+<!ENTITY ninthEntity "&eighthEntity;&eighthEntity;" >
+<!ENTITY tenthEntity "&ninthEntity;&ninthEntity;" >
+<!ENTITY eleventhEntity "&tenthEntity;&tenthEntity;"> -->
+]>
+<report>
+    <tests>
+        <test>  
+            <id>Test Id</id>
+            <name>Test Name</name>
+            <description>My Desc</description>
+            <status>&fifthEntity;</status>
+        </test>
+     </tests>
+</report>

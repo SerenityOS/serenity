@@ -1,0 +1,4 @@
+package-info.java:13: warning: no comment
+package bad;
+^
+1 warning

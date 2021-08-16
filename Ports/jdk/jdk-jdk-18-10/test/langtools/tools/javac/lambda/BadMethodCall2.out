@@ -1,0 +1,4 @@
+BadMethodCall2.java:9:13: compiler.err.cant.resolve.location.args: kindname.method, nonExistent, , @26, (compiler.misc.location.1: kindname.variable, rec, java.lang.Object)
+BadMethodCall2.java:10:13: compiler.err.cant.resolve.location.args: kindname.method, nonExistent, , @26, (compiler.misc.location.1: kindname.variable, rec, java.lang.Object)
+BadMethodCall2.java:11:13: compiler.err.cant.resolve.location.args: kindname.method, nonExistent, , @31, (compiler.misc.location.1: kindname.variable, rec, java.lang.Object)
+3 errors

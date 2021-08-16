@@ -1,0 +1,25 @@
+AccessibilityTest.java:14: error: unexpected heading used: <H1>, compared to implicit preceding heading: <H1>
+     * <h1> ... </h1>
+       ^
+AccessibilityTest.java:19: error: heading used out of sequence: <H3>, compared to implicit preceding heading: <H1>
+     * <h3> ... </h3>
+       ^
+AccessibilityTest.java:25: error: heading used out of sequence: <H4>, compared to previous heading: <H2>
+     * <h4> ... </h4>
+       ^
+AccessibilityTest.java:30: error: unexpected heading used: <H2>, compared to implicit preceding heading: <H3>
+     * <h2> ... </h2>
+       ^
+AccessibilityTest.java:40: error: unexpected heading used: <H3>, compared to implicit preceding heading: <H3>
+     * <h3> ... </h3>
+       ^
+AccessibilityTest.java:41: error: heading used out of sequence: <H5>, compared to previous heading: <H3>
+     * <h5> ... </h5>
+       ^
+AccessibilityTest.java:46: error: no "alt" attribute for image
+     * <img src="x.jpg">
+       ^
+AccessibilityTest.java:56: error: no caption for table
+     * <table><tr><th>head<tr><td>data</table>
+                                      ^
+8 errors

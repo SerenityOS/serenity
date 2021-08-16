@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="sv"/>
+		<territory type="FI"/>
+	</identity>
+	<localeDisplayNames>
+		<scripts>
+			<script type="Arab" alt="variant" draft="contributed">persisk-arabiska</script>
+		</scripts>
+		<keys>
+			<key type="timezone" draft="contributed">tidszon</key>
+		</keys>
+		<types>
+			<type key="collation" type="big5han" draft="unconfirmed">kinesiska i big5-sorteringsordning</type>
+			<type key="collation" type="gb2312han" draft="unconfirmed">kinesiska i gb2312-sorteringsordning</type>
+			<type key="collation" type="pinyin" draft="unconfirmed">kinesiska i pinyin-sorteringsordning</type>
+			<type key="collation" type="stroke" draft="unconfirmed">kinesiska i strecksorteringsordning</type>
+		</types>
+	</localeDisplayNames>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1" draft="contributed">Q1</quarter>
+							<quarter type="2" draft="contributed">Q2</quarter>
+							<quarter type="3" draft="contributed">Q3</quarter>
+							<quarter type="4" draft="contributed">Q4</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1" draft="contributed">Q1</quarter>
+							<quarter type="2" draft="contributed">Q2</quarter>
+							<quarter type="3" draft="contributed">Q3</quarter>
+							<quarter type="4" draft="contributed">Q4</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Bhm" draft="contributed">h.mm B</dateFormatItem>
+						<dateFormatItem id="Bhms" draft="contributed">h.mm.ss B</dateFormatItem>
+						<dateFormatItem id="EBhm" draft="contributed">E h.mm B</dateFormatItem>
+						<dateFormatItem id="EBhms" draft="contributed">E h.mm.ss B</dateFormatItem>
+						<dateFormatItem id="Ehm" draft="contributed">E h.mm a</dateFormatItem>
+						<dateFormatItem id="EHm" draft="contributed">E HH.mm</dateFormatItem>
+						<dateFormatItem id="Ehms" draft="contributed">E h.mm.ss a</dateFormatItem>
+						<dateFormatItem id="EHms" draft="contributed">E HH.mm.ss</dateFormatItem>
+						<dateFormatItem id="hm" draft="contributed">h.mm a</dateFormatItem>
+						<dateFormatItem id="Hm" draft="contributed">HH.mm</dateFormatItem>
+						<dateFormatItem id="hms" draft="contributed">h.mm.ss a</dateFormatItem>
+						<dateFormatItem id="Hms" draft="contributed">HH.mm.ss</dateFormatItem>
+						<dateFormatItem id="hmsv" draft="contributed">h.mm.ss a v</dateFormatItem>
+						<dateFormatItem id="Hmsv" draft="contributed">HH.mm.ss v</dateFormatItem>
+						<dateFormatItem id="hmv" draft="contributed">h.mm a v</dateFormatItem>
+						<dateFormatItem id="Hmv" draft="contributed">HH.mm v</dateFormatItem>
+						<dateFormatItem id="Md" draft="contributed">d.M</dateFormatItem>
+						<dateFormatItem id="MEd" draft="contributed">E d.M</dateFormatItem>
+						<dateFormatItem id="MMd" draft="contributed">d.M</dateFormatItem>
+						<dateFormatItem id="MMdd" draft="contributed">dd.MM</dateFormatItem>
+						<dateFormatItem id="ms" draft="contributed">mm.ss</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<timeSeparator draft="contributed">.</timeSeparator>
+			<timeSeparator alt="variant" draft="contributed">:</timeSeparator>
+		</symbols>
+	</numbers>
+	<units>
+		<unitLength type="narrow">
+			<unit type="speed-kilometer-per-hour">
+				<unitPattern count="one" draft="contributed">{0} km/h</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} km/h</unitPattern>
+			</unit>
+		</unitLength>
+	</units>
+</ldml>

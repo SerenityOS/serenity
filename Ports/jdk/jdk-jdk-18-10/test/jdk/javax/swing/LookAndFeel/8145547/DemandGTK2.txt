@@ -1,0 +1,36 @@
+How to prepare an Ubuntu machine for GTK-2-less test run.
+
+The test DemandGTK2.sh should work well without GTK-2 switching to version 3
+if there's no GTK-2 library available. 
+At the moment, it's not easy to find a system with GTK-3 and without GTK-2:
+many programs still depend on version 2.
+We can, however, rename GTK-2 library for a single test run and then restore
+it back.
+
+(1) Find GTK2 library: run
+  /sbin/ldconfig -v 2>/dev/null |  grep libgtk-x11-2
+
+It will output one or two lines like 
+libgtk-x11-2.0.so.0 -> libgtk-x11-2.0.so.0.2400.23
+Search for the target of that symlink for instance with locate:
+locate libgtk-x11-2.0.so.0.2400.23
+Finally, you'll find the libraries. On my current machine they are
+/usr/lib/i386-linux-gnu/libgtk-x11-2.0.so.0.2400.23
+/usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0.2400.23
+
+I'm running 64-bit JDK and need to tamper with x86_64 copy only.
+
+(2) Find running programs depending on this library. They probably would crash
+if you rename it. Stop them for this test run.
+That said, I'm afraid it would be impossible to do on a system older than Ubuntu 16.04.
+On my Ubuntu 16.04 I have only hud-service using this library, and that's OK, it will restart
+after a crash, if any.
+To find these programs, run
+lsof /usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0.2400.23
+
+(3) Now,
+sudo mv  /usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0.2400.23  /usr/lib/x86_64-linux-gnu/bak.libgtk-x11-2.0.so.0.2400.23
+jtreg DemandGTK2.sh 
+sudo mv  /usr/lib/x86_64-linux-gnu/bak.libgtk-x11-2.0.so.0.2400.23  /usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0.2400.23
+
+Needless to say, you should substitute your own library path and however you run jtreg.

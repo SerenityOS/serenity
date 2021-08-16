@@ -1,0 +1,3 @@
+T6943278.java:7:35: compiler.err.cant.resolve: kindname.class, NonExistentInterface, , 
+T6943278.java:9:25: compiler.err.cant.resolve.location: kindname.class, NonExistentInterface, , , (compiler.misc.location: kindname.class, T6943278<X>, null)
+2 errors

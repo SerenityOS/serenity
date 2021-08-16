@@ -1,0 +1,61 @@
+grant {
+    // java.base module
+    permission java.io.SerializablePermission "enableSubstitution";
+    permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+    permission java.nio.file.LinkPermission "hard";
+    permission javax.net.ssl.SSLPermission "getSSLSessionContext";
+    permission javax.security.auth.AuthPermission "doAsPrivileged";
+    permission javax.security.auth.PrivateCredentialPermission "* * \"*\"",
+                                                               "read";
+    // java.desktop module
+    permission java.awt.AWTPermission "createRobot";
+    permission javax.sound.sampled.AudioPermission "play";
+    // java.logging module
+    permission java.util.logging.LoggingPermission "control", "";
+    // java.management module
+    permission java.lang.management.ManagementPermission "control";
+    permission javax.management.MBeanPermission "*", "getAttribute";
+    permission javax.management.MBeanServerPermission "createMBeanServer";
+    permission javax.management.MBeanTrustPermission "register";
+    permission javax.management.remote.SubjectDelegationPermission "*";
+    // java.security.jgss module
+    permission javax.security.auth.kerberos.DelegationPermission "\"*\" \"*\"";
+    permission javax.security.auth.kerberos.ServicePermission "*", "accept";
+    // java.sql module
+    permission java.sql.SQLPermission "setLog";
+    // java.smartcardio module
+    permission javax.smartcardio.CardPermission "*", "*";
+    // jdk.attach module (@jdk.Exported Permissions)
+    permission com.sun.tools.attach.AttachPermission "attachVirtualMachine";
+    // jdk.jdi module (@jdk.Exported Permissions)
+    permission com.sun.jdi.JDIPermission "virtualMachineManager";
+    // jdk.security.jgss module (@jdk.Exported Permissions)
+    permission com.sun.security.jgss.InquireSecContextPermission "*"; 
+};
+
+grant
+    // java.base module
+    principal javax.security.auth.x500.X500Principal "CN=Duke",
+    // java.management module
+    principal javax.management.remote.JMXPrincipal "Duke",
+    // java.security.jgss module
+    principal javax.security.auth.kerberos.KerberosPrincipal "duke@openjdk.org",
+    // jdk.security.auth module (@jdk.Exported Principals)
+    principal com.sun.security.auth.UserPrincipal "Duke",
+    principal com.sun.security.auth.NTDomainPrincipal "openjdk.org",
+    principal com.sun.security.auth.NTSid
+        "S-1-5-21-3623811015-3361044348-30300820-1013",
+    principal com.sun.security.auth.NTUserPrincipal "Duke",
+    principal com.sun.security.auth.UnixNumericUserPrincipal "0",
+    principal com.sun.security.auth.UnixPrincipal "duke" {
+    permission java.util.PropertyPermission "user.home", "read";
+};
+
+grant
+    // java.security.jgss module
+    principal javax.security.auth.kerberos.KerberosPrincipal "duke@openjdk.org"
+{
+    // test that ${{self}} expansion works 
+    permission javax.security.auth.kerberos.ServicePermission "${{self}}",
+                                                              "accept";
+};

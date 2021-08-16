@@ -1,0 +1,2 @@
+Neg09b.java:16:34: compiler.err.cant.apply.diamond.1: Neg09b.Nested<X>, (compiler.misc.feature.not.supported.in.source: (compiler.misc.feature.diamond.and.anon.class), 8, 9)
+1 error

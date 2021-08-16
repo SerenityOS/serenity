@@ -1,0 +1,4 @@
+grant {
+    permission java.lang.RuntimePermission "setSecurityManager";
+    permission java.io.FilePermission "${test.src}/rsakeys.ks", "read";
+};

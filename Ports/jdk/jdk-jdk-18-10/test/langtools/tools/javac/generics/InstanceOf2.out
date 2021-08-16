@@ -1,0 +1,2 @@
+InstanceOf2.java:12:29: compiler.err.instanceof.reifiable.not.safe: java.lang.Class<compiler.misc.type.captureof: 1, ? extends InstanceOf2>, java.lang.Class<InstanceOf2>
+1 error

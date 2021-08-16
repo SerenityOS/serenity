@@ -1,0 +1,125 @@
+/*
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+class p2/B {
+  0xCAFEBABE;
+  0; // minor version
+  52; // version
+  [28] { // Constant Pool
+    ; // first element is empty
+    Method #6 #14; // #1     at 0x0A
+    Field #15 #16; // #2     at 0x0F
+    String #17; // #3     at 0x14
+    Method #18 #19; // #4     at 0x17
+    class #20; // #5     at 0x1C
+    class #21; // #6     at 0x1F
+    Utf8 "<init>"; // #7     at 0x22
+    Utf8 "()V"; // #8     at 0x2B
+    Utf8 "Code"; // #9     at 0x31
+    Utf8 "LineNumberTable"; // #10     at 0x38
+    Utf8 "test"; // #11     at 0x4A
+    Utf8 "SourceFile"; // #12     at 0x52
+    Utf8 "B.java"; // #13     at 0x5F
+    NameAndType #7 #8; // #14     at 0x68
+    class #22; // #15     at 0x6D
+    NameAndType #23 #24; // #16     at 0x70
+    Utf8 "In B's test method"; // #17     at 0x75
+    class #25; // #18     at 0x8A
+    NameAndType #26 #27; // #19     at 0x8D
+    Utf8 "p2/B"; // #20     at 0x92
+    Utf8 "p1/A"; // #21     at 0x99
+    Utf8 "java/lang/System"; // #22     at 0xA0
+    Utf8 "out"; // #23     at 0xB3
+    Utf8 "Ljava/io/PrintStream;"; // #24     at 0xB9
+    Utf8 "java/io/PrintStream"; // #25     at 0xD1
+    Utf8 "println"; // #26     at 0xE7
+    Utf8 "(Ljava/lang/String;)V"; // #27     at 0xF1
+  } // Constant Pool
+
+  0x0021; // access
+  #5;// this_cpx
+  #6;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [2] { // methods
+    { // Member at 0x0115
+      0x0001; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [1] { // Attributes
+        Attr(#9, 29) { // Code at 0x011D
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 6) { // LineNumberTable at 0x0134
+              [1] { // LineNumberTable
+                0  5; //  at 0x0140
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0140
+      0x0000; // access
+      #11; // name_cpx
+      #8; // sig_cpx
+      [1] { // Attributes
+        Attr(#9, 33) { // Code at 0x0148
+          2; // max_stack
+          1; // max_locals
+          Bytes[9]{
+            0xB200021203B60004;
+            0xB1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 6) { // LineNumberTable at 0x0163
+              [1] { // LineNumberTable
+                0  6; //  at 0x016F
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [1] { // Attributes
+    Attr(#12, 2) { // SourceFile at 0x0171
+      #13;
+    } // end SourceFile
+  } // Attributes
+} // end class p2/B

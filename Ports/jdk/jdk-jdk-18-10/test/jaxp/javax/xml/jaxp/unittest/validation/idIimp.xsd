@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="importNS" xmlns:imp="importNS">
+	<xsd:element name="iid">
+		<xsd:complexType>
+			<xsd:attribute name="val" type="xsd:string"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="iid1">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="iid2" maxOccurs="unbounded" form="qualified">
+					<xsd:complexType>
+						<xsd:attribute name="val" type="xsd:string"/>
+					</xsd:complexType>
+				</xsd:element>
+			</xsd:sequence>
+			<xsd:attribute name="val" type="xsd:string"/>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

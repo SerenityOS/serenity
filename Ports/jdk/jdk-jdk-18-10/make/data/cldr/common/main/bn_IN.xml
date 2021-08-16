@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="bn"/>
+		<territory type="IN"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ksh">কোলোনিয়ান</language>
+		</languages>
+		<territories>
+			<territory type="CD" alt="variant">কঙ্গো (DRC)</territory>
+			<territory type="UM">মার্কিন যুক্তরাষ্ট্রের পার্শ্ববর্তী দ্বীপপুঞ্জ</territory>
+		</territories>
+	</localeDisplayNames>
+</ldml>

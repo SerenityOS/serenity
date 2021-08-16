@@ -1,0 +1,328 @@
+<!doctype html>
+<!--
+ Copyright (c) 2005, 2019, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+<html lang="en">
+<head>
+  <title>Java Thread Primitive Deprecation</title>
+  <link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<h1>Java Thread Primitive Deprecation</h1>
+<hr>
+<h2>Why is <code>Thread.stop</code> deprecated?</h2>
+<p>Because it is inherently unsafe. Stopping a thread causes it to
+unlock all the monitors that it has locked. (The monitors are
+unlocked as the <code>ThreadDeath</code> exception propagates up
+the stack.) If any of the objects previously protected by these
+monitors were in an inconsistent state, other threads may now view
+these objects in an inconsistent state. Such objects are said to be
+<i>damaged</i>. When threads operate on damaged objects, arbitrary
+behavior can result. This behavior may be subtle and difficult to
+detect, or it may be pronounced. Unlike other unchecked exceptions,
+<code>ThreadDeath</code> kills threads silently; thus, the user has
+no warning that his program may be corrupted. The corruption can
+manifest itself at any time after the actual damage occurs, even
+hours or days in the future.</p>
+<hr>
+<h2>Couldn't I just catch the <code>ThreadDeath</code> exception
+and fix the damaged object?</h2>
+<p>In theory, perhaps, but it would <em>vastly</em> complicate the
+task of writing correct multithreaded code. The task would be
+nearly insurmountable for two reasons:</p>
+<ol>
+<li>A thread can throw a <code>ThreadDeath</code> exception
+<i>almost anywhere</i>. All synchronized methods and blocks would
+have to be studied in great detail, with this in mind.</li>
+<li>A thread can throw a second <code>ThreadDeath</code> exception
+while cleaning up from the first (in the <code>catch</code> or
+<code>finally</code> clause). Cleanup would have to be repeated till
+it succeeded. The code to ensure this would be quite complex.</li>
+</ol>
+In sum, it just isn't practical.
+<hr>
+<h2>What should I use instead of <code>Thread.stop</code>?</h2>
+<p>Most uses of <code>stop</code> should be replaced by code that
+simply modifies some variable to indicate that the target thread
+should stop running. The target thread should check this variable
+regularly, and return from its run method in an orderly fashion if
+the variable indicates that it is to stop running. To ensure prompt
+communication of the stop-request, the variable must be
+<code>volatile</code> (or access to the variable must be
+synchronized).</p>
+<p>For example, suppose your applet contains the following
+<code>start</code>, <code>stop</code> and <code>run</code>
+methods:</p>
+<pre>
+    private Thread blinker;
+
+    public void start() {
+        blinker = new Thread(this);
+        blinker.start();
+    }
+
+    public void stop() {
+        blinker.stop();  // UNSAFE!
+    }
+
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(interval);
+            } catch (InterruptedException e){
+            }
+            repaint();
+        }
+    }
+</pre>
+You can avoid the use of <code>Thread.stop</code> by replacing the
+applet's <code>stop</code> and <code>run</code> methods with:
+<pre>
+    private volatile Thread blinker;
+
+    public void stop() {
+        blinker = null;
+    }
+
+    public void run() {
+        Thread thisThread = Thread.currentThread();
+        while (blinker == thisThread) {
+            try {
+                Thread.sleep(interval);
+            } catch (InterruptedException e){
+            }
+            repaint();
+        }
+    }
+</pre>
+<hr>
+<h2>How do I stop a thread that waits for long periods (e.g., for
+input)?</h2>
+<p>That's what the <code>Thread.interrupt</code> method is for. The
+same "state based" signaling mechanism shown above can be used, but
+the state change (<code>blinker = null</code>, in the previous
+example) can be followed by a call to
+<code>Thread.interrupt</code>, to interrupt the wait:</p>
+<pre>
+    public void stop() {
+        Thread moribund = waiter;
+        waiter = null;
+        moribund.interrupt();
+    }
+</pre>
+For this technique to work, it's critical that any method that
+catches an interrupt exception and is not prepared to deal with it
+immediately reasserts the exception. We say <em>reasserts</em>
+rather than <em>rethrows</em>, because it is not always possible to
+rethrow the exception. If the method that catches the
+<code>InterruptedException</code> is not declared to throw this
+(checked) exception, then it should "reinterrupt itself" with the
+following incantation:
+<pre>
+    Thread.currentThread().interrupt();
+</pre>
+This ensures that the Thread will reraise the
+<code>InterruptedException</code> as soon as it is able.
+<hr>
+<h2>What if a thread doesn't respond to
+<code>Thread.interrupt</code>?</h2>
+<p>In some cases, you can use application specific tricks. For
+example, if a thread is waiting on a known socket, you can close
+the socket to cause the thread to return immediately.
+Unfortunately, there really isn't any technique that works in
+general. <em>It should be noted that in all situations where a
+waiting thread doesn't respond to <code>Thread.interrupt</code>, it
+wouldn't respond to <code>Thread.stop</code> either.</em> Such
+cases include deliberate denial-of-service attacks, and I/O
+operations for which thread.stop and thread.interrupt do not work
+properly.</p>
+<hr>
+<h2>Why are <code>Thread.suspend</code> and
+<code>Thread.resume</code> deprecated?</h2>
+<p><code>Thread.suspend</code> is inherently deadlock-prone. If the
+target thread holds a lock on the monitor protecting a critical
+system resource when it is suspended, no thread can access this
+resource until the target thread is resumed. If the thread that
+would resume the target thread attempts to lock this monitor prior
+to calling <code>resume</code>, deadlock results. Such deadlocks
+typically manifest themselves as "frozen" processes.</p>
+<hr>
+<h2>What should I use instead of <code>Thread.suspend</code> and
+<code>Thread.resume</code>?</h2>
+<p>As with <code>Thread.stop</code>, the prudent approach is to
+have the "target thread" poll a variable indicating the desired
+state of the thread (active or suspended). When the desired state
+is suspended, the thread waits using <code>Object.wait</code>. When
+the thread is resumed, the target thread is notified using
+<code>Object.notify</code>.</p>
+<p>For example, suppose your applet contains the following
+mousePressed event handler, which toggles the state of a thread
+called <code>blinker</code>:</p>
+<pre>
+    private boolean threadSuspended;
+
+    Public void mousePressed(MouseEvent e) {
+        e.consume();
+
+        if (threadSuspended)
+            blinker.resume();
+        else
+            blinker.suspend();  // DEADLOCK-PRONE!
+
+        threadSuspended = !threadSuspended;
+    }
+</pre>
+You can avoid the use of <code>Thread.suspend</code> and
+<code>Thread.resume</code> by replacing the event handler above
+with:
+<pre>
+    public synchronized void mousePressed(MouseEvent e) {
+        e.consume();
+
+        threadSuspended = !threadSuspended;
+
+        if (!threadSuspended)
+            notify();
+    }
+</pre>
+and adding the following code to the "run loop":
+<pre>
+                synchronized(this) {
+                    while (threadSuspended)
+                        wait();
+                }
+</pre>
+The <code>wait</code> method throws the
+<code>InterruptedException</code>, so it must be inside a <code>try
+... catch</code> clause. It's fine to put it in the same clause as
+the <code>sleep</code>. The check should follow (rather than
+precede) the <code>sleep</code> so the window is immediately
+repainted when the thread is "resumed." The resulting
+<code>run</code> method follows:
+<pre>
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(interval);
+
+                synchronized(this) {
+                    while (threadSuspended)
+                        wait();
+                }
+            } catch (InterruptedException e){
+            }
+            repaint();
+        }
+    }
+</pre>
+Note that the <code>notify</code> in the <code>mousePressed</code>
+method and the <code>wait</code> in the <code>run</code> method are
+inside <code>synchronized</code> blocks. This is required by the
+language, and ensures that <code>wait</code> and
+<code>notify</code> are properly serialized. In practical terms,
+this eliminates race conditions that could cause the "suspended"
+thread to miss a <code>notify</code> and remain suspended
+indefinitely.
+<p>While the cost of synchronization in Java is decreasing as the
+platform matures, it will never be free. A simple trick can be used
+to remove the synchronization that we've added to each iteration of
+the "run loop." The synchronized block that was added is replaced
+by a slightly more complex piece of code that enters a synchronized
+block only if the thread has actually been suspended:</p>
+<pre>
+                if (threadSuspended) {
+                    synchronized(this) {
+                        while (threadSuspended)
+                            wait();
+                    }
+                }
+</pre>
+<p>In the absence of explicit synchronization,
+<code>threadSuspended</code> must be made <code>volatile</code> to ensure
+prompt communication of the suspend-request.</p>
+The resulting <code>run</code> method is:
+<pre>
+    private volatile boolean threadSuspended;
+
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(interval);
+
+                if (threadSuspended) {
+                    synchronized(this) {
+                        while (threadSuspended)
+                            wait();
+                    }
+                }
+            } catch (InterruptedException e){
+            }
+            repaint();
+        }
+    }
+</pre>
+<hr>
+<h2>Can I combine the two techniques to produce a thread that may
+be safely "stopped" or "suspended"?</h2>
+Yes, it's reasonably straightforward. The one subtlety is that the
+target thread may already be suspended at the time that another
+thread tries to stop it. If the <code>stop</code> method merely sets
+the state variable (<code>blinker</code>) to null, the target thread
+will remain suspended (waiting on the monitor), rather than exiting
+gracefully as it should. If the applet is restarted, multiple
+threads could end up waiting on the monitor at the same time,
+resulting in erratic behavior.
+<p>To rectify this situation, the <code>stop</code> method must ensure
+that the target thread resumes immediately if it is suspended. Once
+the target thread resumes, it must recognize immediately that it
+has been stopped, and exit gracefully. Here's how the resulting
+<code>run</code> and <code>stop</code> methods look:</p>
+<pre>
+    public void run() {
+        Thread thisThread = Thread.currentThread();
+        while (blinker == thisThread) {
+            try {
+                Thread.sleep(interval);
+
+                synchronized(this) {
+                    while (threadSuspended &amp;&amp; blinker==thisThread)
+                        wait();
+                }
+            } catch (InterruptedException e){
+            }
+            repaint();
+        }
+    }
+
+    public synchronized void stop() {
+        blinker = null;
+        notify();
+    }
+</pre>
+If the <code>stop</code> method calls <code>Thread.interrupt</code>, as
+described above, it needn't call <code>notify</code> as well, but it
+still must be synchronized. This ensures that the target thread
+won't miss an interrupt due to a race condition.
+</body>
+</html>

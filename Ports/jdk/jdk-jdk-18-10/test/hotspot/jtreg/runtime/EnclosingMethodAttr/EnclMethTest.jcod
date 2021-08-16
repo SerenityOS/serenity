@@ -1,0 +1,115 @@
+/*
+ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ * This test has a EnclosingMethod attribute with an illegal
+ * attribute_length field value of 6.  This should cause a
+ * java.lang.ClassFormatError exception to be thrown.
+ */
+
+class EnclMethTest {
+  0xCAFEBABE;
+  0; // minor version
+  52; // version
+  [22] { // Constant Pool
+    ; // first element is empty
+    Field #3 #14; // #1     at 0x0A
+    Method #4 #15; // #2     at 0x0F
+    class #16; // #3     at 0x14
+    class #19; // #4     at 0x17
+    Utf8 "this$0"; // #5     at 0x1A
+    Utf8 "La;"; // #6     at 0x23
+    Utf8 "Synthetic"; // #7     at 0x29
+    Utf8 "<init>"; // #8     at 0x35
+    Utf8 "(Ljava/lang/Object;)V"; // #9     at 0x3E
+    Utf8 "Code"; // #10     at 0x56
+    Utf8 "LineNumberTable"; // #11     at 0x5D
+    Utf8 "SourceFile"; // #12     at 0x6F
+    Utf8 "a.java"; // #13     at 0x7C
+    NameAndType #5 #6; // #14     at 0x85
+    NameAndType #8 #20; // #15     at 0x8A
+    Utf8 "EnclMethTest"; // #16     at 0x8F
+    Utf8 "Loc"; // #17     at 0x9E
+    Utf8 "InnerClasses"; // #18     at 0xA4
+    Utf8 "java/lang/Object"; // #19     at 0xB3
+    Utf8 "()V"; // #20     at 0xC6
+    Utf8 "EnclosingMethod"; // #21     at 0xCC
+  } // Constant Pool
+
+  0x0000; // access
+  #3;// this_cpx
+  #4;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [1] { // fields
+    { // Member at 0xE8
+      0x0000; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [1] { // Attributes
+        Attr(#7, 0) { // Synthetic at 0xF0
+        } // end Synthetic
+      } // Attributes
+    } // Member
+  } // fields
+
+  [1] { // methods
+    { // Member at 0xF8
+      0x0001; // access
+      #8; // name_cpx
+      #20; // sig_cpx
+      [1] { // Attributes
+        Attr(#10, 17) { // Code at 0x0100
+          2; // max_stack
+          2; // max_locals
+          Bytes[5]{
+            0x2AB70002B1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [0] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [3] { // Attributes
+    Attr(#12, 2) { // SourceFile at 0x0119
+      #13;
+    } // end SourceFile
+    ;
+    Attr(#18, 10) { // InnerClasses at 0x0121
+      [1] { // InnerClasses
+        #3 #0 #17 0; //  at 0x0131
+      }
+    } // end InnerClasses
+    ;
+    Attr(#21, 6) { // EnclosingMethod at 0x0131
+      // invalid length of EnclosingMethod attr: 6 (should be 4) !!
+      0x0004000F;
+    } // end EnclosingMethod
+  } // Attributes
+} // end class EnclMethTest

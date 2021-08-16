@@ -1,0 +1,3 @@
+Neg11.java:15:12: compiler.err.override.meth.doesnt.throw: (compiler.misc.cant.implement: m(), Neg11.C1, m(), Neg11.I), java.lang.Exception
+Neg11.java:18:21: compiler.err.override.meth.doesnt.throw: (compiler.misc.cant.implement: m(), Neg11.C3, m(), Neg11.I), java.lang.Exception
+2 errors

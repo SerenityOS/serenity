@@ -1,0 +1,98 @@
+/*
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+package  jdk/internal/reflect/constantPool;
+
+super public    #2; //class ConstantPoolTestDummy
+    version 52:0
+{
+
+// Actually, only first 13 constant pool entries are actually used by the class
+// and its methods. All the rest are added just for the testing of getTagAt method
+// and getNameAndTypeRefIndexAt method.
+
+const #1 = Method   #3.#10; //  java/lang/Object."<init>":"()V"
+const #2 = class    #11;    //  ConstantPoolTestDummy
+const #3 = class    #12;    //  java/lang/Object
+const #4 = Asciz    "<init>";
+const #5 = Asciz    "()V";
+const #6 = Asciz    "Code";
+const #7 = Asciz    "LineNumberTable";
+const #8 = Asciz    "SourceFile";
+const #9 = Asciz    "ConstantPoolTestDummy.java";
+const #10 = NameAndType #4:#5;  //  "<init>":"()V"
+const #11 = Asciz   "jdk/internal/reflect/constantPool/ConstantPoolTestDummy";
+const #12 = Asciz   "java/lang/Object";
+const #13 = long    6l;
+const #15 = int     1;
+const #16 = InterfaceMethod #17.#18;    //  java/lang/Runnable.run:"()V"
+const #17 = class   #19;    //  java/lang/Runnable
+const #18 = NameAndType #20:#5;    //  run:"()V"
+const #19 = Asciz   "java/lang/Runnable";
+const #20 = Asciz   "run";
+const #21 = double   1.45d;
+const #23 = String   #24;    //  "Hello"
+const #24 = Asciz   "Hello";
+const #25 = InvokeDynamic   0:#26;  //  REF_invokeStatic:java/lang/invoke/LambdaMetafactory.metafactory:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;":accept:"()Ljava/util/function/Consumer;" MethodType "(Ljava/lang/Object;)V", MethodHandle REF_invokeVirtual:java/lang/Object.toString:"()Ljava/lang/String;", MethodType "(Ljava/lang/Object;)V"
+const #26 = NameAndType #27:#28;    //  accept:"()Ljava/util/function/Consumer;"
+const #27 = Asciz   "accept";
+const #28 = Asciz   "()Ljava/util/function/Consumer;";
+const #29 = MethodHandle    6:#32;  //  REF_invokeStatic:java/lang/invoke/LambdaMetafactory.metafactory:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;"
+const #30 = MethodType  #33;    //  "(Ljava/lang/Object;)V"
+const #31 = MethodHandle    5:#34;  //  REF_invokeVirtual:java/lang/Object.toString:"()Ljava/lang/String;"
+const #32 = Method  #35.#36;    //  java/lang/invoke/LambdaMetafactory.metafactory:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;"
+const #33 = Asciz   "(Ljava/lang/Object;)V";
+const #34 = Method  #3.#37; //  java/lang/Object.toString:"()Ljava/lang/String;"
+const #35 = class   #38;    //  java/lang/invoke/LambdaMetafactory
+const #36 = NameAndType #39:#40;    //  metafactory:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;"
+const #37 = NameAndType #41:#42;    //  toString:"()Ljava/lang/String;"
+const #38 = Asciz   "java/lang/invoke/LambdaMetafactory";
+const #39 = Asciz   "metafactory";
+const #40 = Asciz   "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;";
+const #41 = Asciz   "toString";
+const #42 = Asciz   "()Ljava/lang/String;";
+const #43 = class   #46;    //  java/lang/invoke/MethodHandles$Lookup
+const #44 = Asciz   "Lookup";
+const #45 = class   #47;    //  java/lang/invoke/MethodHandles
+const #46 = Asciz   "java/lang/invoke/MethodHandles$Lookup";
+const #47 = Asciz   "java/lang/invoke/MethodHandles";
+const #48 = Field    #2.#49;    //  jdk/internal/reflect/constantPool/ConstantPoolTestDummy.myField:"I"
+const #49 = NameAndType #50:#51;    //  myField:"I"
+const #50 = Asciz   "myField";
+const #51 = Asciz   "I";
+const #52 = float   1.34f;
+
+public Method #4:#5  // "<init>":"()V"
+
+    stack 1 locals 1
+{
+3   0:  aload_0;
+    1:  invokespecial   #1; //  Method java/lang/Object."<init>":"()V";
+    4:  return;
+}
+
+public static final InnerClass #44= #43 of #45; //Lookup=class java/lang/invoke/MethodHandles$Lookup of class java/lang/invoke/MethodHandles
+
+BootstrapMethod #29 #30 #31 #30;
+
+} // end Class ConstantPoolTestDummy

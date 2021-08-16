@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ca"/>
+		<territory type="ES"/>
+		<variant type="VALENCIA"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="an" draft="unconfirmed">aragonés</language>
+			<language type="ang" draft="unconfirmed">anglés antic</language>
+			<language type="as" draft="unconfirmed">assamés</language>
+			<language type="az" draft="unconfirmed">azerbaidjanés</language>
+			<language type="ban" draft="unconfirmed">balinés</language>
+			<language type="ce" draft="unconfirmed">txetxé</language>
+			<language type="cy" draft="unconfirmed">gal·lés</language>
+			<language type="da" draft="unconfirmed">danés</language>
+			<language type="dum" draft="unconfirmed">neerlandés mitjà</language>
+			<language type="en" draft="unconfirmed">anglés</language>
+			<language type="en_GB" alt="short" draft="unconfirmed">anglés (GB)</language>
+			<language type="enm" draft="unconfirmed">anglés mitjà</language>
+			<language type="fi" draft="unconfirmed">finés</language>
+			<language type="fo" draft="unconfirmed">feroés</language>
+			<language type="fr" draft="unconfirmed">francés</language>
+			<language type="frm" draft="unconfirmed">francés mitjà</language>
+			<language type="fro" draft="unconfirmed">francés antic</language>
+			<language type="ga" draft="unconfirmed">irlandés</language>
+			<language type="gd" draft="unconfirmed">gaèlic escocés</language>
+			<language type="gil" draft="unconfirmed">gilbertés</language>
+			<language type="hu" draft="unconfirmed">hongarés</language>
+			<language type="is" draft="unconfirmed">islandés</language>
+			<language type="ja" draft="unconfirmed">japonés</language>
+			<language type="jv" draft="unconfirmed">javanés</language>
+			<language type="kho" draft="unconfirmed">khotanés</language>
+			<language type="kl" draft="unconfirmed">grenlandés</language>
+			<language type="lb" draft="unconfirmed">luxemburgués</language>
+			<language type="li" draft="unconfirmed">limburgués</language>
+			<language type="mad" draft="unconfirmed">madurés</language>
+			<language type="mga" draft="unconfirmed">gaèlic irlandés mitjà</language>
+			<language type="mh" draft="unconfirmed">marshallés</language>
+			<language type="mt" draft="unconfirmed">maltés</language>
+			<language type="mwl" draft="unconfirmed">mirandés</language>
+			<language type="ne" draft="unconfirmed">nepalés</language>
+			<language type="nl" draft="unconfirmed">neerlandés</language>
+			<language type="pl" draft="unconfirmed">polonés</language>
+			<language type="pt" draft="unconfirmed">portugués</language>
+			<language type="ro" draft="unconfirmed">romanés</language>
+			<language type="rup" draft="unconfirmed">aromanés</language>
+			<language type="rw" draft="unconfirmed">ruandés</language>
+			<language type="sco" draft="unconfirmed">escocés</language>
+			<language type="sga" draft="unconfirmed">irlandés antic</language>
+			<language type="si" draft="unconfirmed">singalés</language>
+			<language type="sl" draft="unconfirmed">eslové</language>
+			<language type="sq" draft="unconfirmed">albanés</language>
+			<language type="su" draft="unconfirmed">sundanés</language>
+			<language type="th" draft="unconfirmed">tailandés</language>
+			<language type="tkl" draft="unconfirmed">tokelaués</language>
+			<language type="to" draft="unconfirmed">tongalés</language>
+			<language type="uk" draft="unconfirmed">ucraïnés</language>
+			<language type="yue" draft="unconfirmed">cantonés</language>
+			<language type="zh" draft="unconfirmed">xinés</language>
+		</languages>
+		<scripts>
+			<script type="Bali" draft="unconfirmed">balinés</script>
+			<script type="Bugi" draft="unconfirmed">buginés</script>
+			<script type="Hung" draft="unconfirmed">hongarés antic</script>
+			<script type="Java" draft="unconfirmed">javanés</script>
+			<script type="Jpan" draft="unconfirmed">japonés</script>
+			<script type="Palm" draft="unconfirmed">palmiré</script>
+			<script type="Sinh" draft="unconfirmed">singalés</script>
+			<script type="Sund" draft="unconfirmed">sundanés</script>
+			<script type="Thai" draft="unconfirmed">tailandés</script>
+		</scripts>
+		<types>
+			<type key="calendar" type="chinese" draft="unconfirmed">calendari xinés</type>
+			<type key="calendar" type="japanese" draft="unconfirmed">calendari japonés</type>
+			<type key="collation" type="big5han" draft="unconfirmed">ordre del xinés tradicional - Big5</type>
+			<type key="collation" type="gb2312han" draft="unconfirmed">ordre del xinés simplificat - GB2312</type>
+		</types>
+	</localeDisplayNames>
+	<numbers>
+		<currencies>
+			<currency type="AFA">
+				<displayName draft="unconfirmed">afgani afganés (1927–2002)</displayName>
+				<displayName count="one" draft="unconfirmed">afgani afganés (1927–2002)</displayName>
+				<displayName count="other" draft="unconfirmed">afganis afganesos (1927–2002)</displayName>
+			</currency>
+			<currency type="AFN">
+				<displayName draft="unconfirmed">afgani afganés</displayName>
+				<displayName count="one" draft="unconfirmed">afgani afganés</displayName>
+				<displayName count="other" draft="unconfirmed">afganis afganesos</displayName>
+			</currency>
+			<currency type="ALK">
+				<displayName draft="unconfirmed">lek albanés (1946–1965)</displayName>
+				<displayName count="one" draft="unconfirmed">lek albanés (1946–1965)</displayName>
+				<displayName count="other" draft="unconfirmed">lekë albanesos (1946–1965)</displayName>
+			</currency>
+			<currency type="ALL">
+				<displayName draft="unconfirmed">lek albanés</displayName>
+				<displayName count="one" draft="unconfirmed">lek albanés</displayName>
+				<displayName count="other" draft="unconfirmed">lekë albanesos</displayName>
+			</currency>
+			<currency type="AZM">
+				<displayName draft="unconfirmed">manat azerbaidjanés (1993–2006)</displayName>
+				<displayName count="one" draft="unconfirmed">manat azerbaidjanés (1993–2006)</displayName>
+				<displayName count="other" draft="unconfirmed">manats azerbaidjanesos (1993–2006)</displayName>
+			</currency>
+			<currency type="AZN">
+				<displayName draft="unconfirmed">manat azerbaidjanés</displayName>
+				<displayName count="one" draft="unconfirmed">manat azerbaidjanés</displayName>
+				<displayName count="other" draft="unconfirmed">manats azerbaidjanesos</displayName>
+			</currency>
+			<currency type="CLE">
+				<displayName draft="unconfirmed">escut xilé</displayName>
+				<displayName count="one" draft="unconfirmed">escut xilé</displayName>
+				<displayName count="other" draft="unconfirmed">escudos xilens</displayName>
+			</currency>
+			<currency type="CLP">
+				<displayName draft="unconfirmed">peso xilé</displayName>
+				<displayName count="one" draft="unconfirmed">peso xilé</displayName>
+				<displayName count="other" draft="unconfirmed">pesos xilens</displayName>
+			</currency>
+			<currency type="CNX">
+				<displayName draft="unconfirmed">dòlar del Banc Popular Xinés</displayName>
+				<displayName count="one" draft="unconfirmed">dòlar del Banc Popular Xinés</displayName>
+				<displayName count="other" draft="unconfirmed">dòlars del Banc Popular Xinés</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName draft="unconfirmed">iuan xinés</displayName>
+				<displayName count="one" draft="unconfirmed">iuan xinés</displayName>
+				<displayName count="other" draft="unconfirmed">iuan xinesos</displayName>
+			</currency>
+			<currency type="FIM">
+				<displayName draft="unconfirmed">marc finlandés</displayName>
+				<displayName count="one" draft="unconfirmed">marc finlandés</displayName>
+				<displayName count="other" draft="unconfirmed">marcs finlandesos</displayName>
+			</currency>
+			<currency type="FRF">
+				<displayName draft="unconfirmed">franc francés</displayName>
+				<displayName count="one" draft="unconfirmed">franc francés</displayName>
+				<displayName count="other" draft="unconfirmed">francs francesos</displayName>
+			</currency>
+			<currency type="HUF">
+				<displayName draft="unconfirmed">fòrint hongarés</displayName>
+				<displayName count="one" draft="unconfirmed">fòrint hongarés</displayName>
+				<displayName count="other" draft="unconfirmed">fòrints hongaresos</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName draft="unconfirmed">ien japonés</displayName>
+				<displayName count="one" draft="unconfirmed">ien japonés</displayName>
+				<displayName count="other" draft="unconfirmed">iens japonesos</displayName>
+			</currency>
+			<currency type="LUC">
+				<displayName draft="unconfirmed">franc convertible luxemburgués</displayName>
+				<displayName count="one" draft="unconfirmed">franc convertible luxemburgués</displayName>
+				<displayName count="other" draft="unconfirmed">francs convertibles luxemburguesos</displayName>
+			</currency>
+			<currency type="LUF">
+				<displayName draft="unconfirmed">franc luxemburgués</displayName>
+				<displayName count="one" draft="unconfirmed">franc luxemburgués</displayName>
+				<displayName count="other" draft="unconfirmed">francs luxemburguesos</displayName>
+			</currency>
+			<currency type="LUL">
+				<displayName draft="unconfirmed">franc financer luxemburgués</displayName>
+				<displayName count="one" draft="unconfirmed">franc financer luxemburgués</displayName>
+				<displayName count="other" draft="unconfirmed">francs financers luxemburguesos</displayName>
+			</currency>
+			<currency type="MZE">
+				<displayName draft="unconfirmed">escut moçambiqués</displayName>
+				<displayName count="one" draft="unconfirmed">escut moçambiqués</displayName>
+				<displayName count="other" draft="unconfirmed">escuts moçambiquesos</displayName>
+			</currency>
+			<currency type="MZM">
+				<displayName draft="unconfirmed">antic metical moçambiqués</displayName>
+				<displayName count="one" draft="unconfirmed">antic metical moçambiqués</displayName>
+				<displayName count="other" draft="unconfirmed">antics meticals moçambiquesos</displayName>
+			</currency>
+			<currency type="MZN">
+				<displayName draft="unconfirmed">metical moçambiqués</displayName>
+				<displayName count="one" draft="unconfirmed">metical moçambiqués</displayName>
+				<displayName count="other" draft="unconfirmed">meticals moçambiquesos</displayName>
+			</currency>
+			<currency type="NLG">
+				<displayName draft="unconfirmed">florí neerlandés</displayName>
+				<displayName count="one" draft="unconfirmed">florí neerlandés</displayName>
+				<displayName count="other" draft="unconfirmed">florins neerlandesos</displayName>
+			</currency>
+			<currency type="NZD">
+				<displayName draft="unconfirmed">dòlar neozelandés</displayName>
+				<displayName count="one" draft="unconfirmed">dòlar neozelandés</displayName>
+				<displayName count="other" draft="unconfirmed">dòlars neozelandesos</displayName>
+			</currency>
+			<currency type="PLN">
+				<displayName draft="unconfirmed">zloty polonés</displayName>
+				<displayName count="one" draft="unconfirmed">zloty polonés</displayName>
+				<displayName count="other" draft="unconfirmed">zlote polonesos</displayName>
+			</currency>
+			<currency type="PLZ">
+				<displayName draft="unconfirmed">zloty polonés (1950–1995)</displayName>
+				<displayName count="one" draft="unconfirmed">zloty polonés (1950–1995)</displayName>
+				<displayName count="other" draft="unconfirmed">zlote polonesos (1950–1995)</displayName>
+			</currency>
+			<currency type="PTE">
+				<displayName draft="unconfirmed">escut portugués</displayName>
+				<displayName count="one" draft="unconfirmed">escut portugués</displayName>
+				<displayName count="other" draft="unconfirmed">escuts portuguesos</displayName>
+			</currency>
+			<currency type="ROL">
+				<displayName draft="unconfirmed">antic leu romanés</displayName>
+				<displayName count="one" draft="unconfirmed">antic leu romanés</displayName>
+				<displayName count="other" draft="unconfirmed">antics lei romanesos</displayName>
+			</currency>
+			<currency type="RON">
+				<displayName draft="unconfirmed">leu romanés</displayName>
+				<displayName count="one" draft="unconfirmed">leu romanés</displayName>
+				<displayName count="other" draft="unconfirmed">lei romanesos</displayName>
+			</currency>
+			<currency type="RWF">
+				<displayName draft="unconfirmed">franc rwandés</displayName>
+				<displayName count="one" draft="unconfirmed">franc rwandés</displayName>
+				<displayName count="other" draft="unconfirmed">francs de Ruanda</displayName>
+			</currency>
+			<currency type="SIT">
+				<displayName draft="unconfirmed">tolar eslové</displayName>
+				<displayName count="one" draft="unconfirmed">tolar eslové</displayName>
+				<displayName count="other" draft="unconfirmed">tolars eslovens</displayName>
+			</currency>
+			<currency type="THB">
+				<displayName draft="unconfirmed">baht tailandés</displayName>
+				<displayName count="one" draft="unconfirmed">baht tailandés</displayName>
+				<displayName count="other" draft="unconfirmed">bahts tailandesos</displayName>
+			</currency>
+			<currency type="UAK">
+				<displayName draft="unconfirmed">karbóvanets ucraïnés</displayName>
+				<displayName count="one" draft="unconfirmed">karbóvanets ucraïnés</displayName>
+				<displayName count="other" draft="unconfirmed">karbóvantsiv ucraïnesos</displayName>
+			</currency>
+			<currency type="UGS">
+				<displayName draft="unconfirmed">xíling ugandés (1966–1987)</displayName>
+				<displayName count="one" draft="unconfirmed">xíling ugandés (1966–1987)</displayName>
+				<displayName count="other" draft="unconfirmed">xílings ugandesos (1966–1987)</displayName>
+			</currency>
+			<currency type="UGX">
+				<displayName draft="unconfirmed">xíling ugandés</displayName>
+				<displayName count="one" draft="unconfirmed">xíling ugandés</displayName>
+				<displayName count="other" draft="unconfirmed">xílings ugandesos</displayName>
+			</currency>
+			<currency type="XFO">
+				<displayName draft="unconfirmed">franc or francés</displayName>
+				<displayName count="one" draft="unconfirmed">franc or francés</displayName>
+				<displayName count="other" draft="unconfirmed">francs or francesos</displayName>
+			</currency>
+			<currency type="XFU">
+				<displayName draft="unconfirmed">franc UIC francés</displayName>
+				<displayName count="one" draft="unconfirmed">franc UIC francés</displayName>
+				<displayName count="other" draft="unconfirmed">francs UIC francesos</displayName>
+			</currency>
+			<currency type="ZWD">
+				<displayName draft="unconfirmed">dòlar zimbabués (1980–2008)</displayName>
+				<displayName count="one" draft="unconfirmed">dòlar zimbabués (1980–2008)</displayName>
+				<displayName count="other" draft="unconfirmed">dòlars zimbabuesos (1980–2008)</displayName>
+			</currency>
+			<currency type="ZWL">
+				<displayName draft="unconfirmed">dòlar zimbabués (2009)</displayName>
+				<displayName count="one" draft="unconfirmed">dòlar zimbabués (2009)</displayName>
+				<displayName count="other" draft="unconfirmed">dòlars zimbabuesos (2009)</displayName>
+			</currency>
+			<currency type="ZWR">
+				<displayName draft="unconfirmed">dòlar zimbabués (2008)</displayName>
+				<displayName count="one" draft="unconfirmed">dòlar zimbabués (2008)</displayName>
+				<displayName count="other" draft="unconfirmed">dòlars zimbabuesos (2008)</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+</ldml>

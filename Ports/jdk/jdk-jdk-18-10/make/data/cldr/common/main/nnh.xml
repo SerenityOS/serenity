@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="nnh"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="bas">Shwóŋò pʉa mbasǎ</language>
+			<language type="bax">Shwóŋò pamom</language>
+			<language type="bbj">Shwóŋò pʉa nzsekàʼa</language>
+			<language type="bfd">Shwóŋò pafud</language>
+			<language type="bkm">Shwóŋò pʉ̀a njinikom</language>
+			<language type="bss">Shwóŋò pakɔsi</language>
+			<language type="bum">Shwóŋò mbulu</language>
+			<language type="byv">Shwóŋò ngáŋtÿɔʼ</language>
+			<language type="de">nzǎmɔ̂ɔn</language>
+			<language type="en">ngilísè</language>
+			<language type="ewo">Shwóŋò pʉa Yɔɔnmendi</language>
+			<language type="ff">Shwóŋò menkesaŋ</language>
+			<language type="fr">felaŋsée</language>
+			<language type="kkj">Shwóŋò pʉa shÿó Bɛgtùa</language>
+			<language type="nnh">Shwóŋò ngiembɔɔn</language>
+			<language type="yav">Shwóŋò pʉa shÿó Mbafìa</language>
+			<language type="ybb">Shwóŋò Tsaŋ</language>
+		</languages>
+		<territories>
+			<territory type="CM">Kàmalûm</territory>
+		</territories>
+		<keys>
+			<key type="calendar">fʉ̀ʼ njÿó</key>
+			<key type="currency">nkáb</key>
+		</keys>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">fʉ̀ʼʉ mmó</measurementSystemName>
+		</measurementSystemNames>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a á à â ǎ b c d e é è ê ě ɛ {ɛ\u0301} {ɛ\u0300} {ɛ\u0302} {ɛ\u030C} f g h i í ì j k l m ḿ n ń ŋ o ó ò ô ǒ ɔ {ɔ\u0301} {ɔ\u0300} {ɔ\u0302} {ɔ\u030C} p {pf} s {sh} t {ts} u ú ù û ǔ ʉ {ʉ\u0301} {ʉ\u0300} {ʉ\u0302} {ʉ\u030C} v w ẅ y ÿ z ʼ]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[q r x]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B C D E Ɛ F G H I J K L M N Ŋ O Ɔ P {Pf} R S {Sh} T {Ts} U Ʉ V W Ẅ Y Ÿ Z ʼ]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+		<exemplarCharacters type="punctuation">[, ; \: ! ? . ' ‘ ’ « »]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart>«</quotationStart>
+		<quotationEnd>»</quotationEnd>
+		<alternateQuotationStart>“</alternateQuotationStart>
+		<alternateQuotationEnd>”</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE , 'lyɛ'̌ʼ d 'na' MMMM, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>'lyɛ'̌ʼ d 'na' MMMM, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM, y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd/MM/yy GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1},{0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="yMd">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E , 'lyɛ'̌ʼ d 'na' M, y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">'lyɛ'̌ʼ d 'na' MMMM, y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E , 'lyɛ'̌ʼ d 'na' MMM, y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">saŋ tsetsɛ̀ɛ lùm</month>
+							<month type="2">saŋ kàg ngwóŋ</month>
+							<month type="3">saŋ lepyè shúm</month>
+							<month type="4">saŋ cÿó</month>
+							<month type="5">saŋ tsɛ̀ɛ cÿó</month>
+							<month type="6">saŋ njÿoláʼ</month>
+							<month type="7">saŋ tyɛ̀b tyɛ̀b mbʉ̀ŋ</month>
+							<month type="8">saŋ mbʉ̀ŋ</month>
+							<month type="9">saŋ ngwɔ̀ʼ mbÿɛ</month>
+							<month type="10">saŋ tàŋa tsetsáʼ</month>
+							<month type="11">saŋ mejwoŋó</month>
+							<month type="12">saŋ lùm</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">saŋ tsetsɛ̀ɛ lùm</month>
+							<month type="2">saŋ kàg ngwóŋ</month>
+							<month type="3">saŋ lepyè shúm</month>
+							<month type="4">saŋ cÿó</month>
+							<month type="5">saŋ tsɛ̀ɛ cÿó</month>
+							<month type="6">saŋ njÿoláʼ</month>
+							<month type="7">saŋ tyɛ̀b tyɛ̀b mbʉ̀ŋ</month>
+							<month type="8">saŋ mbʉ̀ŋ</month>
+							<month type="9">saŋ ngwɔ̀ʼ mbÿɛ</month>
+							<month type="10">saŋ tàŋa tsetsáʼ</month>
+							<month type="11">saŋ mejwoŋó</month>
+							<month type="12">saŋ lùm</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">saŋ tsetsɛ̀ɛ lùm</month>
+							<month type="2">saŋ kàg ngwóŋ</month>
+							<month type="3">saŋ lepyè shúm</month>
+							<month type="4">saŋ cÿó</month>
+							<month type="5">saŋ tsɛ̀ɛ cÿó</month>
+							<month type="6">saŋ njÿoláʼ</month>
+							<month type="7">saŋ tyɛ̀b tyɛ̀b mbʉ̀ŋ</month>
+							<month type="8">saŋ mbʉ̀ŋ</month>
+							<month type="9">saŋ ngwɔ̀ʼ mbÿɛ</month>
+							<month type="10">saŋ tàŋa tsetsáʼ</month>
+							<month type="11">saŋ mejwoŋó</month>
+							<month type="12">saŋ lùm</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">saŋ tsetsɛ̀ɛ lùm</month>
+							<month type="2">saŋ kàg ngwóŋ</month>
+							<month type="3">saŋ lepyè shúm</month>
+							<month type="4">saŋ cÿó</month>
+							<month type="5">saŋ tsɛ̀ɛ cÿó</month>
+							<month type="6">saŋ njÿoláʼ</month>
+							<month type="7">saŋ tyɛ̀b tyɛ̀b mbʉ̀ŋ</month>
+							<month type="8">saŋ mbʉ̀ŋ</month>
+							<month type="9">saŋ ngwɔ̀ʼ mbÿɛ</month>
+							<month type="10">saŋ tàŋa tsetsáʼ</month>
+							<month type="11">saŋ mejwoŋó</month>
+							<month type="12">saŋ lùm</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">lyɛʼɛ́ sẅíŋtè</day>
+							<day type="mon">mvfò lyɛ̌ʼ</day>
+							<day type="tue">mbɔ́ɔntè mvfò lyɛ̌ʼ</day>
+							<day type="wed">tsètsɛ̀ɛ lyɛ̌ʼ</day>
+							<day type="thu">mbɔ́ɔntè tsetsɛ̀ɛ lyɛ̌ʼ</day>
+							<day type="fri">mvfò màga lyɛ̌ʼ</day>
+							<day type="sat">màga lyɛ̌ʼ</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">lyɛʼɛ́ sẅíŋtè</day>
+							<day type="mon">mvfò lyɛ̌ʼ</day>
+							<day type="tue">mbɔ́ɔntè mvfò lyɛ̌ʼ</day>
+							<day type="wed">tsètsɛ̀ɛ lyɛ̌ʼ</day>
+							<day type="thu">mbɔ́ɔntè tsetsɛ̀ɛ lyɛ̌ʼ</day>
+							<day type="fri">mvfò màga lyɛ̌ʼ</day>
+							<day type="sat">màga lyɛ̌ʼ</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">lyɛʼɛ́ sẅíŋtè</day>
+							<day type="mon">mvfò lyɛ̌ʼ</day>
+							<day type="tue">mbɔ́ɔntè mvfò lyɛ̌ʼ</day>
+							<day type="wed">tsètsɛ̀ɛ lyɛ̌ʼ</day>
+							<day type="thu">mbɔ́ɔntè tsetsɛ̀ɛ lyɛ̌ʼ</day>
+							<day type="fri">mvfò màga lyɛ̌ʼ</day>
+							<day type="sat">màga lyɛ̌ʼ</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">lyɛʼɛ́ sẅíŋtè</day>
+							<day type="mon">mvfò lyɛ̌ʼ</day>
+							<day type="tue">mbɔ́ɔntè mvfò lyɛ̌ʼ</day>
+							<day type="wed">tsètsɛ̀ɛ lyɛ̌ʼ</day>
+							<day type="thu">mbɔ́ɔntè tsetsɛ̀ɛ lyɛ̌ʼ</day>
+							<day type="fri">mvfò màga lyɛ̌ʼ</day>
+							<day type="sat">màga lyɛ̌ʼ</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">lyɛʼɛ́ sẅíŋtè</day>
+							<day type="mon">mvfò lyɛ̌ʼ</day>
+							<day type="tue">mbɔ́ɔntè mvfò lyɛ̌ʼ</day>
+							<day type="wed">tsètsɛ̀ɛ lyɛ̌ʼ</day>
+							<day type="thu">mbɔ́ɔntè tsetsɛ̀ɛ lyɛ̌ʼ</day>
+							<day type="fri">mvfò màga lyɛ̌ʼ</day>
+							<day type="sat">màga lyɛ̌ʼ</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">lyɛʼɛ́ sẅíŋtè</day>
+							<day type="mon">mvfò lyɛ̌ʼ</day>
+							<day type="tue">mbɔ́ɔntè mvfò lyɛ̌ʼ</day>
+							<day type="wed">tsètsɛ̀ɛ lyɛ̌ʼ</day>
+							<day type="thu">mbɔ́ɔntè tsetsɛ̀ɛ lyɛ̌ʼ</day>
+							<day type="fri">mvfò màga lyɛ̌ʼ</day>
+							<day type="sat">màga lyɛ̌ʼ</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">mbaʼámbaʼ</dayPeriod>
+							<dayPeriod type="pm">ncwònzém</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">mbaʼámbaʼ</dayPeriod>
+							<dayPeriod type="pm">ncwònzém</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">mé zyé Yěsô</era>
+						<era type="1">mé gÿo ńzyé Yěsô</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">m.z.Y.</era>
+						<era type="1">m.g.n.Y.</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE , 'lyɛ'̌ʼ d 'na' MMMM, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>'lyɛ'̌ʼ d 'na' MMMM, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM, y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd/MM/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1},{0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="yMd">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E , 'lyɛ'̌ʼ d 'na' M, y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">'lyɛ'̌ʼ d 'na' MMMM, y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E , 'lyɛ'̌ʼ d 'na' MMM, y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>tsɔ́ fʉ̀ʼ</displayName>
+			</field>
+			<field type="year">
+				<displayName>ngùʼ</displayName>
+			</field>
+			<field type="day">
+				<displayName>lyɛ̌ʼ</displayName>
+				<relative type="-1">jǔɔ gẅie à ka tɔ̌g</relative>
+				<relative type="0">lyɛ̌ʼɔɔn</relative>
+				<relative type="1">jǔɔ gẅie à ne ntóo</relative>
+			</field>
+			<field type="weekday">
+				<displayName>ngàba láʼ</displayName>
+			</field>
+			<field type="hour">
+				<displayName>fʉ̀ʼ nèm</displayName>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group>.</group>
+			<list>;</list>
+			<percentSign>%</percentSign>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤ #,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="one" draft="provisional">¤ 0K</pattern>
+					<pattern type="1000" count="other" draft="provisional">¤ 0K</pattern>
+					<pattern type="10000" count="one" draft="provisional">¤ 00K</pattern>
+					<pattern type="10000" count="other" draft="provisional">¤ 00K</pattern>
+					<pattern type="100000" count="one" draft="provisional">¤ 000K</pattern>
+					<pattern type="100000" count="other" draft="provisional">¤ 000K</pattern>
+					<pattern type="1000000" count="one" draft="provisional">¤ 0M</pattern>
+					<pattern type="1000000" count="other" draft="provisional">¤ 0M</pattern>
+					<pattern type="10000000" count="one" draft="provisional">¤ 00M</pattern>
+					<pattern type="10000000" count="other" draft="provisional">¤ 00M</pattern>
+					<pattern type="100000000" count="one" draft="provisional">¤ 000M</pattern>
+					<pattern type="100000000" count="other" draft="provisional">¤ 000M</pattern>
+					<pattern type="1000000000" count="one" draft="provisional">¤ 0G</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">¤ 0G</pattern>
+					<pattern type="10000000000" count="one" draft="provisional">¤ 00G</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">¤ 00G</pattern>
+					<pattern type="100000000000" count="one" draft="provisional">¤ 000G</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">¤ 000G</pattern>
+					<pattern type="1000000000000" count="one" draft="provisional">¤ 0T</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">¤ 0T</pattern>
+					<pattern type="10000000000000" count="one" draft="provisional">¤ 00T</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">¤ 00T</pattern>
+					<pattern type="100000000000000" count="one" draft="provisional">¤ 000T</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">¤ 000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="XAF">
+				<displayName>feláŋ CFA</displayName>
+				<symbol>FCFA</symbol>
+			</currency>
+		</currencies>
+	</numbers>
+</ldml>

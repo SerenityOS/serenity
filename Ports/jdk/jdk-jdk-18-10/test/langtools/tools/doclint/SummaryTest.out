@@ -1,0 +1,7 @@
+SummaryTest.java:14: warning: invalid use of @summary
+    /** <p> {@summary illegal} **/
+            ^
+SummaryTest.java:17: warning: invalid use of @summary
+    /** {@summary legal} text {@summary illegal} **/
+                              ^
+2 warnings

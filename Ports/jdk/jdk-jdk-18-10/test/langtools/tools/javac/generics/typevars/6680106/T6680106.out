@@ -1,0 +1,13 @@
+T6680106.java:11:25: compiler.err.type.found.req: T[], (compiler.misc.type.req.class)
+T6680106.java:12:25: compiler.err.type.found.req: S[], (compiler.misc.type.req.class)
+T6680106.java:12:40: compiler.err.type.found.req: T[], (compiler.misc.type.req.class)
+T6680106.java:13:25: compiler.err.type.found.req: S[], (compiler.misc.type.req.class)
+T6680106.java:13:40: compiler.err.type.found.req: U[], (compiler.misc.type.req.class)
+T6680106.java:13:55: compiler.err.type.found.req: T[], (compiler.misc.type.req.class)
+T6680106.java:14:30: compiler.err.type.found.req: T[], (compiler.misc.type.req.class)
+T6680106.java:15:30: compiler.err.type.found.req: S[], (compiler.misc.type.req.class)
+T6680106.java:15:50: compiler.err.type.found.req: T[], (compiler.misc.type.req.class)
+T6680106.java:16:30: compiler.err.type.found.req: S[], (compiler.misc.type.req.class)
+T6680106.java:16:50: compiler.err.type.found.req: U[], (compiler.misc.type.req.class)
+T6680106.java:16:70: compiler.err.type.found.req: T[], (compiler.misc.type.req.class)
+12 errors

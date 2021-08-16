@@ -1,0 +1,4 @@
+SupplementaryJavaID2.java:12:9: compiler.err.illegal.char: \ud801
+SupplementaryJavaID2.java:12:15: compiler.err.illegal.char: \ud801
+SupplementaryJavaID2.java:12:24: compiler.err.expected: token.identifier
+3 errors

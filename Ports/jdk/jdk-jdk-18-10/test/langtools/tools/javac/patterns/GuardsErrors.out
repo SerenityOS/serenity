@@ -1,0 +1,4 @@
+GuardsErrors.java:35:36: compiler.err.cant.ref.non.effectively.final.var: check, (compiler.misc.guard)
+- compiler.note.preview.filename: GuardsErrors.java, DEFAULT
+- compiler.note.preview.recompile
+1 error

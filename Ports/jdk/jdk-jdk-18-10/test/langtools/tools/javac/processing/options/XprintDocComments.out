@@ -1,0 +1,12 @@
+
+/**
+ * CLASS XprintDocComments
+ */
+class XPrintDocComments {
+
+  XPrintDocComments();
+  /**
+   * FIELD i;
+   */
+  int i;
+}

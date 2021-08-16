@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!-- 'key' attribute is expected. 'key1' is mistyped -->
+
+<properties>
+<comment>comment1</comment>
+<entry key1="typo">value of the first key</entry>
+</properties>

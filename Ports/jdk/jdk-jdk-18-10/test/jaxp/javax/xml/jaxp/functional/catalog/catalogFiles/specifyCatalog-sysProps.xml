@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" xml:base="http://local/base/dtd/">
+    <system systemId="http://remote/dtd/sys/doc.dtd" uri="docSysPropsSys.dtd" />
+    <uri name="http://remote/dtd/uri/doc.dtd" uri="docSysPropsURI.dtd" />
+</catalog>

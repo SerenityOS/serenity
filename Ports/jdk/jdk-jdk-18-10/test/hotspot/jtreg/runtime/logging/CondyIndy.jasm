@@ -1,0 +1,101 @@
+/*
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+super public class CondyIndy
+	version 59:0
+{
+
+public static Field add1:"LCondyIndyMathOperation;";
+
+public Method "<init>":"()V"
+        stack 1 locals 1
+{
+                aload_0;
+                invokespecial   Method java/lang/Object."<init>":"()V";
+                return;
+}
+
+public static Method condy_bsm:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;Ljava/lang/Object;)Ljava/lang/Object;"
+	stack 2 locals 4
+{
+		getstatic	Field java/lang/System.out:"Ljava/io/PrintStream;";
+		ldc	String "In condy_bsm";
+		invokevirtual	Method java/io/PrintStream.println:"(Ljava/lang/String;)V";
+		ldc	String "1";
+		areturn;
+}
+
+public static Method operate:"(IILCondyIndyMathOperation;)I"
+	stack 3 locals 3
+{
+		aload_2;
+		iload_0;
+		iload_1;
+		invokeinterface	InterfaceMethod CondyIndyMathOperation.operation:"(II)I",  3;
+		ireturn;
+}
+
+public static Method main:"([Ljava/lang/String;)V"
+	stack 4 locals 2
+{
+		new	class CondyIndy;
+		dup;
+		invokespecial	Method "<init>":"()V";
+		astore_1;
+		getstatic	Field java/lang/System.out:"Ljava/io/PrintStream;";
+		bipush	10;
+		iconst_5;
+		aload_1;
+		pop;
+		getstatic	Field add1:"LCondyIndyMathOperation;";
+		invokestatic	Method operate:"(IILCondyIndyMathOperation;)I";
+		invokevirtual	Method java/io/PrintStream.println:"(I)V";
+                ldc             Dynamic REF_invokeStatic:CondyIndy.condy_bsm:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;Ljava/lang/Object;)Ljava/lang/Object;":invoke:"Ljava/lang/Object;" {
+                                  int 0
+                };
+		return;
+}
+
+private static synthetic Method lambda$static$0:"(II)I"
+        stack 2 locals 2
+{
+                iload_0;
+                iload_1;
+                iadd;
+                ireturn;
+}
+
+static Method "<clinit>":"()V"
+        stack 1 locals 0
+{
+                invokedynamic   InvokeDynamic REF_invokeStatic:java/lang/invoke/LambdaMetafactory.metafactory:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;":operation:"()LCondyIndyMathOperation;"
+                        MethodType "(II)I",
+                        MethodHandle REF_invokeStatic:CondyIndy.lambda$static$0:"(II)I",
+                        MethodType "(II)I";
+                putstatic       Field add1:"LCondyIndyMathOperation;";
+                return;
+}
+
+public static final InnerClass Lookup=class java/lang/invoke/MethodHandles$Lookup of class java/lang/invoke/MethodHandles;
+
+} // end Class CondyIndy

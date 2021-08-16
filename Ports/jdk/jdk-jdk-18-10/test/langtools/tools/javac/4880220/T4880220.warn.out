@@ -1,0 +1,7 @@
+T4880220.java:20:27: compiler.warn.static.not.qualified.by.type: kindname.method, T4880220.C
+T4880220.java:21:27: compiler.warn.static.not.qualified.by.type: kindname.variable, T4880220.C
+T4880220.java:22:27: compiler.warn.static.not.qualified.by.type: kindname.variable, T4880220.C
+T4880220.java:24:29: compiler.warn.static.not.qualified.by.type: kindname.method, T4880220.C
+T4880220.java:25:29: compiler.warn.static.not.qualified.by.type: kindname.variable, T4880220.C
+T4880220.java:26:29: compiler.warn.static.not.qualified.by.type: kindname.variable, T4880220.C
+6 warnings

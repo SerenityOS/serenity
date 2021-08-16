@@ -1,0 +1,6 @@
+com.sun.management.jmxremote.ssl.enabled.cipher.suites=TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384
+com.sun.management.jmxremote.ssl.enabled.protocols=SSLv2Hello,SSLv3,TLSv1,TLSv1.1,TLSv1.2,TLSv1.3
+com.sun.management.jmxremote.ssl.need.client.auth=true
+com.sun.management.jmxremote.ssl.config.file=@TEST-SRC@/jmxremote_ssltest11_ok.ssl
+com.sun.management.jmxremote.authenticate=false
+javax.rmi.ssl.client.enabledCipherSuites=TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384

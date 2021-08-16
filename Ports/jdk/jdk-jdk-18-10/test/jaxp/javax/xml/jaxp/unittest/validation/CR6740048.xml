@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<containers><containerInfo name="Stopped Test Container"><isJ2EEContainer>false</isJ2EEContainer><moduleName>resource</moduleName><priority>80</priority><fileExtensions><name>.stopped</name></fileExtensions><softwareTypes><name>J2EE</name></softwareTypes><supportsLazyStart>true</supportsLazyStart><supportingParallelism>true</supportingParallelism><supportsSingleFileUpdate>false</supportsSingleFileUpdate></containerInfo></containers>
+

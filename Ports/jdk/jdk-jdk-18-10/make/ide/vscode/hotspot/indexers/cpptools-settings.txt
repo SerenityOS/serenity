@@ -1,0 +1,5 @@
+		// Configure cpptools IntelliSense
+		"C_Cpp.intelliSenseCachePath": "{{OUTPUTDIR}}/.vscode",
+		"C_Cpp.default.compileCommands": "{{OUTPUTDIR}}/compile_commands.json",
+		"C_Cpp.default.cppStandard": "c++14",
+		"C_Cpp.default.compilerPath": "{{COMPILER}}",

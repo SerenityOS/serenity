@@ -1,0 +1,2 @@
+T8255968_2.java:9:25: compiler.err.cant.apply.symbol: kindname.constructor, T8255968_2_Test, java.lang.String, int, kindname.class, T8255968_2_Test, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: int, java.lang.String))
+1 error

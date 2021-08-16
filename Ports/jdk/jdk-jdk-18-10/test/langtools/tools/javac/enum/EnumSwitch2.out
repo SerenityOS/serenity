@@ -1,0 +1,3 @@
+EnumSwitch2.java:14:16: compiler.err.enum.label.must.be.unqualified.enum
+EnumSwitch2.java:15:16: compiler.err.enum.label.must.be.unqualified.enum
+2 errors

@@ -1,0 +1,74 @@
+/*
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+// This sealed class cannot be a java file because its permits clause names
+// a class in another package causing javac to issue a compilation error.
+//
+// package Pkg;
+//
+// sealed public interface SealedInterface permits Permitted, otherPkg.WrongPackage, otherPkg.WrongPackageNotPublic { }
+
+class Pkg/SealedInterface {
+  0xCAFEBABE;
+  0; // minor version
+  61; // version
+  [14] { // Constant Pool
+    ; // first element is empty
+    class #2; // #1     at 0x0A
+    Utf8 "Pkg/SealedInterface"; // #2     at 0x0D
+    class #4; // #3     at 0x23
+    Utf8 "java/lang/Object"; // #4     at 0x26
+    Utf8 "SourceFile"; // #5     at 0x39
+    Utf8 "SealedInterface.java"; // #6     at 0x46
+    Utf8 "PermittedSubclasses"; // #7     at 0x5D
+    class #9; // #8     at 0x71
+    Utf8 "Pkg/Permitted"; // #9     at 0x74
+    class #11; // #10     at 0x84
+    Utf8 "otherPkg/WrongPackage"; // #11     at 0x87
+    class #13; // #12
+    Utf8 "otherPkg/WrongPackageNotPublic"; // #13
+  } // Constant Pool
+
+  0x0601; // access [ ACC_PUBLIC ACC_INTERFACE ]
+  #1;// this_cpx
+  #3;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [0] { // methods
+  } // methods
+
+  [2] { // Attributes
+    Attr(#5, 2) { // SourceFile at 0xAD
+      #6;
+    } // end SourceFile
+    ;
+    Attr(#7, 8) { // PermittedSubtclasses at 0xB5
+      0x00030008000A000C;
+    } // end PermittedSubclasses
+  } // Attributes
+} // end class Pkg/SealedInterface

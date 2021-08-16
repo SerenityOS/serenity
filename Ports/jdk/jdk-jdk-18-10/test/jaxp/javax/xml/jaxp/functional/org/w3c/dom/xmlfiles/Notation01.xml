@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!DOCTYPE note [                           
+<!ELEMENT note    (to,from,heading,body)>
+<!ELEMENT to      (#PCDATA)>
+<!NOTATION gs SYSTEM "http://who.knows.where/">
+
+
+ <!NOTATION pubname PUBLIC "pubId">
+
+
+ <!NOTATION comname PUBLIC "pubId" "sysId">
+
+
+ <!NOTATION name SYSTEM "http://who.knows.where/">
+]>                         
+<note>
+<to>lll</to>
+
+</note> 

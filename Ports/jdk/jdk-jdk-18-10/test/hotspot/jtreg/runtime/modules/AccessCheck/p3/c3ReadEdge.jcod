@@ -1,0 +1,141 @@
+/*
+ * Copyright (c) 2015, 2017, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ * package p3;
+ * public class c3ReadEdge {
+ *    public c3ReadEdge() {
+ *       // Establish read edge from module m1x, where c3ReadEdge is defined,
+ *       // to the unnamed module, where c4 will be defined.
+ *       Module m1x = c3ReadEdge.class.getModule();
+ *       ClassLoader loader = c3ReadEdge.class.getClassLoader();
+ *       Module unnamed_module = loader.getUnnamedModule();
+ *       m1x.addReads(unnamed_module);
+ *       // Attempt access - access should succeed
+ *       c4 c4_obj = new c4();
+ *       c4_obj.method4();
+ *   }
+ * }
+ */
+
+class p3/c3ReadEdge {
+  0xCAFEBABE;
+  0; // minor version
+  52; // version
+  [40] { // Constant Pool
+    ; // first element is empty
+    Method #10 #17; // #1     at 0x0A
+    class #18; // #2     at 0x0F
+    Method #19 #20; // #3     at 0x12
+    Method #19 #21; // #4     at 0x17
+    Method #22 #23; // #5     at 0x1C
+    Method #24 #25; // #6     at 0x21
+    class #26; // #7     at 0x26
+    Method #7 #17; // #8     at 0x29
+    Method #7 #27; // #9     at 0x2E
+    class #28; // #10     at 0x33
+    Utf8 "<init>"; // #11     at 0x36
+    Utf8 "()V"; // #12     at 0x3F
+    Utf8 "Code"; // #13     at 0x45
+    Utf8 "LineNumberTable"; // #14     at 0x4C
+    Utf8 "SourceFile"; // #15     at 0x5E
+    Utf8 "c3ReadEdge.java"; // #16     at 0x6B
+    NameAndType #11 #12; // #17     at 0x7D
+    Utf8 "p3/c3ReadEdge"; // #18     at 0x82
+    class #29; // #19     at 0x92
+    NameAndType #30 #31; // #20     at 0x95
+    NameAndType #32 #33; // #21     at 0x9A
+    class #34; // #22     at 0x9F
+    NameAndType #35 #31; // #23     at 0xA2
+    class #36; // #24     at 0xA7
+    NameAndType #37 #38; // #25     at 0xAA
+    Utf8 "c4"; // #26     at 0xAF
+    NameAndType #39 #12; // #27     at 0xB7
+    Utf8 "java/lang/Object"; // #28     at 0xBC
+    Utf8 "java/lang/Class"; // #29     at 0xCF
+    Utf8 "getModule"; // #30     at 0xE1
+    Utf8 "()Ljava/lang/Module;"; // #31     at 0xED
+    Utf8 "getClassLoader"; // #32     at 0x010C
+    Utf8 "()Ljava/lang/ClassLoader;"; // #33     at 0x011D
+    Utf8 "java/lang/ClassLoader"; // #34     at 0x0139
+    Utf8 "getUnnamedModule"; // #35     at 0x0151
+    Utf8 "java/lang/Module"; // #36     at 0x0164
+    Utf8 "addReads"; // #37     at 0x017F
+    Utf8 "(Ljava/lang/Module;)Ljava/lang/Module;"; // #38     at 0x018A
+    Utf8 "method4"; // #39     at 0x01C3
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #10;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [1] { // methods
+    { // Member at 0x01D9
+      0x0001; // access
+      #11; // name_cpx
+      #12; // sig_cpx
+      [1] { // Attributes
+        Attr(#13, 94) { // Code at 0x01E1
+          2; // max_stack
+          5; // max_locals
+          Bytes[42]{
+            0x2AB700011202B600;
+            0x034C1202B600044D;
+            0x2CB600054E2B2DB6;
+            0x000657BB000759B7;
+            0x00083A041904B600;
+            0x09B1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#14, 34) { // LineNumberTable at 0x021D
+              [8] { // LineNumberTable
+                0  32; //  at 0x0229
+                4  38; //  at 0x022D
+                10  39; //  at 0x0231
+                16  40; //  at 0x0235
+                21  41; //  at 0x0239
+                27  44; //  at 0x023D
+                36  45; //  at 0x0241
+                41  46; //  at 0x0245
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [1] { // Attributes
+    Attr(#15, 2) { // SourceFile at 0x0247
+      #16;
+    } // end SourceFile
+  } // Attributes
+} // end class p3/c3ReadEdge

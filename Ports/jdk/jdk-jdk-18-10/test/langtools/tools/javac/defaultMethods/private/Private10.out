@@ -1,0 +1,3 @@
+Private10.java:11:31: compiler.err.illegal.combination.of.modifiers: abstract, private
+Private10.java:14:31: compiler.err.illegal.combination.of.modifiers: abstract, private
+2 errors

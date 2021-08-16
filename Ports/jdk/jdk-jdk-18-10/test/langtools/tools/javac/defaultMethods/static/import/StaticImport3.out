@@ -1,0 +1,2 @@
+StaticImport3.java:13:9: compiler.err.cant.resolve.location.args: kindname.method, m, , , (compiler.misc.location: kindname.class, StaticImport3, null)
+1 error

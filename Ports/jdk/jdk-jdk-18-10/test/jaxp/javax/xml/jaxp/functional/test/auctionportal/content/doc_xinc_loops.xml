@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root xmlns:xi="http://www.w3.org/2001/XInclude">
+	<p>The following is the outer XML file</p>
+	<example>
+            
+                <xi:include href="task.xml" parse="xml">
+                    <xi:fallback>
+                        <xi:include href="doc_xinc_loops.xml" parse="text" />
+                    </xi:fallback>
+                </xi:include>
+        </example>
+</root>
+

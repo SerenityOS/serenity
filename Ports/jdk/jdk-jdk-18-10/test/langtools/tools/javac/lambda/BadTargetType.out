@@ -1,0 +1,5 @@
+BadTargetType.java:16:24: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: java.lang.Object)
+BadTargetType.java:17:17: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: java.lang.Object)
+BadTargetType.java:20:9: compiler.err.cant.apply.symbol: kindname.method, m1, java.lang.Object, @12, kindname.class, BadTargetType, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.not.a.functional.intf: java.lang.Object))
+BadTargetType.java:21:9: compiler.err.cant.apply.symbol: kindname.method, m2, java.lang.Object, @12, kindname.class, BadTargetType, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.not.a.functional.intf: java.lang.Object))
+4 errors

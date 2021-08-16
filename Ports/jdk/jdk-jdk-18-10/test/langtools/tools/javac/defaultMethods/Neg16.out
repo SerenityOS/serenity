@@ -1,0 +1,2 @@
+Neg16.java:11:23: compiler.err.illegal.default.super.call: Neg16.I, (compiler.misc.redundant.supertype: Neg16.I, Neg16.J)
+1 error

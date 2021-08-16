@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding="UTF-8"?><document xmlns:xi="http://www.w3.org/2001/XInclude">
+	<p>The following is the source of the &quot;data.xml&quot; resource:</p>
+	<example><tasks xml:base="tasks.xml">
+    <task id="task1" >
+        <owner>John doe</owner>
+        <startdate>10/02/2003</startdate>
+        <enddate>11/02/2003</enddate>
+        <description>This is task 1</description>
+    </task>
+    <task id="task2" >
+        <owner>Jane Doe</owner>
+        <startdate>10/02/2003</startdate>
+        <enddate>11/02/2003</enddate>
+        <description>This is task 2</description>
+    </task>    
+</tasks></example>
+</document>
+

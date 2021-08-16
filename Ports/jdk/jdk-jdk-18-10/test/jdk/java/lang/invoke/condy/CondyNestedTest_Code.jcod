@@ -1,0 +1,287 @@
+/*
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+class CondyNestedTest_Code {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Utf8 "java/lang/Object"; // #1    
+    class #1; // #2    
+    Utf8 "<init>"; // #3    
+    Utf8 "()V"; // #4    
+    NameAndType #3 #4; // #5    
+    Method #2 #5; // #6    
+    Utf8 "Code"; // #7    
+    Utf8 "java/lang/String"; // #8    
+    class #8; // #9    
+    Utf8 "intern"; // #10    
+    Utf8 "()Ljava/lang/String;"; // #11    
+    NameAndType #10 #11; // #12    
+    Method #9 #12; // #13    
+    Utf8 "condy_bsm_condy_bsm"; // #14    
+    String #14; // #15    
+    Utf8 "CondyNestedTest_Code"; // #16    
+    class #16; // #17    
+    Utf8 "()Ljava/lang/Object;"; // #18    
+    NameAndType #14 #18; // #19    
+    Method #17 #19; // #20    
+    Utf8 "indy_bsmIndy_condy_bsm"; // #21    
+    String #21; // #22    
+    NameAndType #21 #18; // #23    
+    Method #17 #23; // #24    
+    Utf8 "indy_bsm_condy_bsm"; // #25    
+    String #25; // #26    
+    NameAndType #25 #18; // #27    
+    Method #17 #27; // #28    
+    Utf8 "StackMapTable"; // #29    
+    Utf8 "main"; // #30
+    Utf8 "([Ljava/lang/String;)V"; // #31    
+    Utf8 "java/lang/invoke/MethodType"; // #32    
+    class #32; // #33    
+    Utf8 "java/lang/invoke/ConstantCallSite"; // #34    
+    class #34; // #35    
+    Utf8 "java/lang/invoke/MethodHandles"; // #36    
+    class #36; // #37    
+    Utf8 "constant"; // #38    
+    Utf8 "(Ljava/lang/Class;Ljava/lang/Object;)Ljava/lang/invoke/MethodHandle;"; // #39    
+    NameAndType #38 #39; // #40    
+    Method #37 #40; // #41    
+    Utf8 "(Ljava/lang/invoke/MethodHandle;)V"; // #42    
+    NameAndType #3 #42; // #43    
+    Method #35 #43; // #44    
+    Utf8 "bsm"; // #45    
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"; // #46    
+    Utf8 "bsmIndy"; // #47    
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"; // #48    
+    Utf8 "DUMMY_ARG"; // #49    
+    String #49; // #50    
+    NameAndType #45 #46; // #51    
+    Method #17 #51; // #52    
+    MethodHandle 6b #52; // #53    
+    Utf8 "name"; // #54    
+    Utf8 "Ljava/lang/String;"; // #55    
+    NameAndType #54 #55; // #56    
+    Dynamic 0s #56; // #57
+    Dynamic 1s #56; // #58
+    NameAndType #47 #48; // #59    
+    Method #17 #59; // #60    
+    MethodHandle 6b #60; // #61    
+    NameAndType #54 #11; // #62    
+    InvokeDynamic 2s #62; // #63    
+    InvokeDynamic 1s #62; // #64    
+    Utf8 "BootstrapMethods"; // #65    
+  } // Constant Pool
+
+  0x0000; // access
+  #17;// this_cpx
+  #2;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #3; // name_cpx
+      #4; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70006B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #30; // name_cpx
+      #31; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          2; // max_stack
+          2; // max_locals
+          Bytes[]{
+            0x2A0332B6000D4C2B;
+            0x120FA60007B80014;
+            0xB12B1216A60007B8;
+            0x0018B12B121AA600;
+            0x07B8001CB1B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#29) { // StackMapTable
+              [] { // 
+                252b, 17, []z{O,9}; // append_frame 1
+                9b; // same_frame
+                9b; // same_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #45; // name_cpx
+      #46; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          4; // max_stack
+          4; // max_locals
+          Bytes[]{
+            0x2CC10021039F0011;
+            0xBB00235912092BB8;
+            0x0029B7002CB02BB0;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#29) { // StackMapTable
+              [] { // 
+                22b; // same_frame
+              }
+            } // end StackMapTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #47; // name_cpx
+      #48; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          4; // max_stack
+          4; // max_locals
+          Bytes[]{
+            0xBB00235912092BB8;
+            0x0029B7002CB0;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #14; // name_cpx
+      #18; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          1; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0x123AB0;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #21; // name_cpx
+      #18; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          1; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xBA003F0000B0;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #25; // name_cpx
+      #18; // sig_cpx
+      [] { // Attributes
+        Attr(#7) { // Code
+          1; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xBA00400000B0;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#65) { // BootstrapMethods
+      [] { // bootstrap_methods
+        {  //  bootstrap_method
+          #53; // bootstrap_method_ref
+          [] { // bootstrap_arguments
+            #50;
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #53; // bootstrap_method_ref
+          [] { // bootstrap_arguments
+            #58;
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+        ;
+        {  //  bootstrap_method
+          #61; // bootstrap_method_ref
+          [] { // bootstrap_arguments
+            #58;
+          }  //  bootstrap_arguments
+        }  //  bootstrap_method
+      }
+    } // end BootstrapMethods
+  } // Attributes
+} // end class CondyNestedTest_Code

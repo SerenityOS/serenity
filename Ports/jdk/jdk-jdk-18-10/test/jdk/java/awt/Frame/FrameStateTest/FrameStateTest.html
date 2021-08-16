@@ -1,0 +1,50 @@
+<!--  
+
+ Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+
+  @test
+  @bug 4157271
+  @summary Checks that when a Frame is created it honors the state it
+  	was set to. The bug was that if setState(Frame.ICONIFIED) was 
+  	called before setVisible(true) the Frame would be shown in NORMAL 
+  	state instead of ICONIFIED.
+  @author JTG East Team: area=awt.Frame
+  @run applet/manual=yesno FrameStateTest.html
+
+ -->
+
+<html>
+<head>
+<title> FrameStateTest </title>
+</head>
+<body>
+
+<h1>FrameStateTest<br>Bug ID: 4157271</h1>
+<p>This test checks that when setState(Frame.ICONIFIED) is called before
+  	setVisible(true) the Frame is shown in the proper iconified state.
+  	The problem was that it did not honor the initial iconic state, but
+ 	instead was shown in the NORMAL state.</p>
+<p>See the dialog box (usually in upper left corner) for instructions</p>
+
+<APPLET CODE="FrameStateTest.class" WIDTH=600 HEIGHT=200></APPLET>
+</body>
+</html>

@@ -1,0 +1,350 @@
+#
+# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#  
+#
+
+JavaSoft HotSpot Architecture Description Language Syntax Specification
+
+Version 0.4 - September 19, 1997
+
+A. Introduction
+
+This document specifies the syntax and associated semantics for the JavaSoft
+HotSpot Architecture Description Language.  This language is used to describe
+the architecture of a processor, and is the input to the ADL Compiler.  The
+ADL Compiler compiles an ADL file into code which is incorporated into the
+Optimizing Just In Time Compiler (OJIT) to generate efficient and correct code
+for the target architecture.  The ADL describes three basic different types
+of architectural features.  It describes the instruction set (and associated
+operands) of the target architecture.  It describes the register set of the
+target architecture along with relevant information for the register allocator.
+Finally, it describes the architecture's pipeline for scheduling purposes.
+The ADL is used to create an architecture description file for a target
+architecture.  The architecture description file along with some additional
+target specific oracles, written in C++, represent the principal effort in
+porting the OJIT to a new target architecture.
+
+
+B. Example Syntax
+
+	1. Instruction/Operand Syntax for Matching and Encoding
+
+// Create a cost attribute for all operands, and specify the default value
+op_attrib  op_cost(10);	
+
+// Create a cost attribute for all instruction, and specify a default value
+ins_attrib ins_cost(100);
+
+// example operand form
+operand x_reg(REG_NUM rnum)
+%{
+	constraint(IS_RCLASS(rnum, RC_X_REG));
+
+	match(VREG) %{ rnum = new_VR(); %} // block after rule is constructor
+
+	encode %{ return rnum; %}          // encode rules are required
+
+	// this operand has no op_cost entry because it uses the default value
+%}
+
+// example instruction form
+instruct add_accum_reg(x_reg dst, reg src)
+%{
+	match(SET dst (PLUS dst src)); // no block = use default constructor
+
+	encode			       // rule is body of a C++ function
+	%{
+	    return pentium_encode_add_accum_reg(rnum);
+	%}
+
+	ins_cost(200);	// this instruction is more costly than the default
+%}
+
+	2. Register Set Description Syntax for Allocation
+
+reg_def AX(SOE, 1); // declare register AX, mark it save on entry with index 0
+reg_def BX(SOC);    // declare register BX, and mark it save on call
+
+reg_class X_REG(AX, BX); // form a matcher register class of X_REG
+                         // these are used for constraints, etc.
+
+alloc_class class1(AX, BX); // form an allocation class of registers
+                            // used by the register allocator for separate
+                            // allocation of target register classes
+
+	3. Pipeline Syntax for Scheduling
+
+
+C. Keywords
+
+1. Matching/Encoding 
+	a. instruct    - indicates a machine instruction entry
+	b. operand     - indicates a machine operand entry
+	c. opclass     - indicates a class of machine operands
+	d. source      - indicates a block of C++ source code
+	e. op_attrib   - indicates an optional attribute for all operands
+	f. ins_attrib  - indicates an optional attribute for all instructions
+	g. match       - indicates a matching rule for an operand/instruction
+	h. encode      - indicates an encoding rule for an operand/instruction
+	i. predicate   - indicates a predicate for matching operand/instruction
+       *j. constraint  - indicates a constraint on the value of an operand
+       *k. effect      - describes the dataflow effect of an operand which 
+			 is not part of a match rule
+       *l. expand      - indicates a single instruction for matching which
+			 expands to multiple instructions for output
+       *m. rewrite     - indicates a single instruction for matching which
+			 gets rewritten to one or more instructions after
+			 allocation depending upon the registers allocated
+       *n. format      - indicates a format rule for an operand/instruction
+	o. construct   - indicates a default constructor for an operand
+
+	[NOTE: * indicates a feature which will not be in first release ]
+
+2. Register
+       *a. register    - indicates an architecture register definition section
+       *b. reg_def     - indicates a register declaration
+       *b. reg_class   - indicates a class (list) of registers for matching
+       *c. alloc_class - indicates a class (list) of registers for allocation
+
+3. Pipeline
+       *a. pipeline    - indicates an architecture pipeline definition section
+       *b. resource    - indicates a pipeline resource used by instructions
+       *c. pipe_desc   - indicates the relevant stages of the pipeline
+       *d. pipe_class  - indicates a description of the pipeline behavior
+	   		 for a group of instructions
+       *e. ins_pipe    - indicates what pipeline class an instruction is in
+
+
+D. Delimiters
+
+	1. Comments
+		a. /* ... */  (like C code)
+		b. // ... EOL (like C++ code)
+		c. Comments must be preceeded by whitespace
+
+	2. Blocks
+		a. %{ ... %} (% just distinguishes from C++ syntax)
+		b. Must be whitespace before and after block delimiters
+
+	3. Terminators
+		a. ;   (standard statement terminator)
+		b. %}  (block terminator)
+		c. EOF (file terminator)
+
+	4. Each statement must start on a separate line
+
+	5. Identifiers cannot contain: (){}%;,"/\
+
+E. Instruction Form: instruct instr1(oper1 dst, oper2 src) %{ ... %}
+
+	1.  Identifier (scope of all instruction names is global in ADL file)
+	2.  Operands
+		a. Specified in argument style: (<type> <name>, ...)
+		b. Type must be the name of an Operand Form
+		c. Name is a locally scoped name, used for substitution, etc.
+	3.  Match Rule: match(SET dst (PLUS dst src));
+		a. Parenthesized Inorder Binary Tree: [lft = left; rgh = right]
+		   (root root->lft (root->rgh (root->rgh->lft root->rgh->rgh)))
+		b. Interior nodes in tree are operators (nodes) in abstract IR
+		c. Leaves are operands from instruction operand list
+		d. Assignment operation and destination, which are implicit
+		   in the abstract IR, must be specified in the match rule.
+	4.  Encode Rule: encode %{ return CONST; %}
+		a. Block form must contain C++ code which constitutes the
+		   body of a C++ function which takes no arguments, and
+		   returns an integer.
+		b. Local names (operand names) are can be used as substitution
+		   symbols in the code.
+	5.  Attribute (ins_attrib): ins_cost(37);
+		a. Identifier (must be name defined as instruction attribute)
+		b. Argument must be a constant value or a C++ expression which
+		   evaluates to a constant at compile time.
+       *6.  Effect: effect(src, OP_KILL);
+		a. Arguments must be the name of an operand and one of the
+		   pre-defined effect type symbols:
+		   OP_DEF, OP_USE, OP_KILL, OP_USE_DEF, OP_DEF_USE, OP_USE_KILL
+       *7.  Expand: 
+		a. Parameters for the new instructions must be the name of 
+		   an expand rule temporary operand or must match the local
+		   operand name in both the instruction being expanded and 
+		   the new instruction being generated.
+
+		instruct convI2B( xRegI dst, eRegI src ) %{
+  		   match(Set dst (Conv2B src));
+
+		   expand %{
+	 	     eFlagsReg cr;
+			 loadZero(dst);
+			 testI_zero(cr,src);
+			 set_nz(dst,cr);
+		   %}
+		%}
+		// Move zero into a register without setting flags
+		instruct loadZero(eRegI dst) %{
+		  effect( DEF dst );
+		  format %{ "MOV    $dst,0" %}
+		  opcode(0xB8); // +rd
+		  ins_encode( LdI0(dst) );
+		%}
+
+       *8.  Rewrite
+	9.  Format: format(add_X $src, $dst); | format %{ ... %}
+		a. Argument form takes a text string, possibly containing
+		   some substitution symbols, which will be printed out
+		   to the assembly language file.
+		b. The block form takes valid C++ code which forms the body
+		   of a function which takes no arguments, and returns a
+		   pointer to a string to print out to the assembly file.
+
+		Mentions of a literal register r in a or b must be of
+		the form r_enc or r_num. The form r_enc refers to the
+		encoding of the register in an instruction. The form
+		r_num refers to the number of the register. While
+		r_num is unique, two different registers may have the
+		same r_enc, as, for example, an integer and a floating
+		point register.
+
+
+F. Operand Form: operand x_reg(REG_T rall) %{ ... %}
+	1.  Identifier (scope of all operand names is global in ADL file)
+	2.  Components
+		a. Specified in argument style: (<type> <name>, ...)
+		b. Type must be a predefined Component Type
+		c. Name is a locally scoped name, used for substitution, etc.
+	3.  Match: (VREG)
+		a. Parenthesized Inorder Binary Tree: [lft = left; rgh = right]
+		   (root root->lft (root->rgh (root->rgh->lft root->rgh->rgh)))
+		b. Interior nodes in tree are operators (nodes) in abstract IR
+		c. Leaves are components from operand component list
+		d. Block following tree is the body of a C++ function taking
+		   no arguments and returning no value, which assigns values
+		   to the components of the operand at match time.
+	4.  Encode: encode %{ return CONST; %}
+		a. Block form must contain C++ code which constitutes the
+		   body of a C++ function which takes no arguments, and
+		   returns an integer.
+		b. Local names (operand names) are can be used as substitution
+		   symbols in the code.
+	5.  Attribute (op_attrib): op_cost(5);
+		a. Identifier (must be name defined as operand attribute)
+		b. Argument must be a constant value or a C++ expression which
+		   evaluates to a constant at compile time.
+	6.  Predicate: predicate(0 <= src < 256);
+		a. Argument must be a valid C++ expression which evaluates
+		   to either TRUE of FALSE at run time.
+       *7.  Constraint: constraint(IS_RCLASS(dst, RC_X_CLASS));
+                a. Arguments must contain only predefined constraint
+                   functions on values defined in the AD file.
+                b. Multiple arguments can be chained together logically
+                   with "&&".
+ 	8.  Construct: construct %{ ... %}
+		a. Block must be a valid C++ function body which takes no
+		   arguments, and returns no values.
+		b. Purpose of block is to assign values to the elements
+		   of an operand which is constructed outside the matching
+		   process.
+		c. This block is logically identical to the constructor
+		   block in a match rule.
+	9.  Format: format(add_X $src, $dst); | format %{ ... %}
+		a. Argument form takes a text string, possibly containing
+		   some substitution symbols, which will be printed out
+		   to the assembly language file.
+		b. The block form takes valid C++ code which forms the body
+		   of a function which takes no arguments, and returns a
+		   pointer to a string to print out to the assembly file.
+
+		Mentions of a literal register r in a or b must be of
+		the form r_enc or r_num. The form r_enc refers to the
+		encoding of the register in an instruction. The form
+		r_num refers to the number of the register. While
+		r_num is unique, two different registers may have the
+		same r_enc, as, for example, an integer and a floating
+		point register.
+
+G. Operand Class Form: opclass memory( direct, indirect, ind_offset);
+
+H. Attribute Form (keywords ins_atrib & op_attrib): ins_attrib ins_cost(10);
+	1. Identifier (scope of all attribute names is global in ADL file)
+	2. Argument must be a valid C++ expression which evaluates to a
+	   constant at compile time, and specifies the default value of
+	   this attribute if attribute definition is not included in an
+	   operand/instruction.
+
+I. Source Form: source %{ ... %}
+	1. Source Block
+		a. All source blocks are delimited by "%{" and "%}".
+		b. All source blocks are copied verbatim into the
+		   C++ output file, and must be valid C++ code.
+
+		   Mentions of a literal register r in this code must
+		   be of the form r_enc or r_num. The form r_enc
+		   refers to the encoding of the register in an
+		   instruction. The form r_num refers to the number of
+		   the register. While r_num is unique, two different
+		   registers may have the same r_enc, as, for example,
+		   an integer and a floating point register.
+
+
+J. *Register Form: register %{ ... %}
+	1. Block contains architecture specific information for allocation
+	2. Reg_def: reg_def reg_AX(1);
+		a. Identifier is name by which register will be referenced
+		   throughout the rest of the AD, and the allocator and
+		   back-end.
+		b. Argument is the Save on Entry index (where 0 means that
+		   the register is Save on Call).  This is used by the
+		   frame management routines for generating register saves
+		   and restores.
+	3. Reg_class: reg_class x_regs(reg_AX, reg_BX, reg_CX, reg_DX);
+		a. Identifier is the name of the class used throughout the
+		   instruction selector.
+		b. Arguments are a list of register names in the class.
+	4. Alloc_class: alloc_class x_alloc(reg_AX, reg_BX, reg_CX, reg_DX);
+		a. Identifier is the name of the class used throughout the
+		   register allocator.
+		b. Arguments are a list of register names in the class.
+
+
+K. *Pipeline Form: pipeline %{ ... %}
+	1. Block contains architecture specific information for scheduling
+	2. Resource: resource(ialu1);
+		a. Argument is the name of the resource.
+	3. Pipe_desc: pipe_desc(Address, Access, Read, Execute);
+		a. Arguments are names of relevant phases of the pipeline.
+		b. If ALL instructions behave identically in a pipeline
+		   phase, it does not need to be specified. (This is typically
+		   true for pre-fetch, fetch, and decode pipeline stages.)
+		c. There must be one name per cycle consumed in the
+		   pipeline, even if there is no instruction which has
+		   significant behavior in that stage (for instance, extra
+		   stages inserted for load and store instructions which
+		   are just cycles which pass waiting for the completion
+		   of the memory operation).
+	4. Pipe_class: pipe_class pipe_normal(dagen; ; membus; ialu1, ialu2);
+		a. Identifier names the class for use in ins_pipe statements
+		b. Arguments are a list of stages, separated by ;'s which
+		   contain comma separated lists of resource names.
+		c. There must be an entry for each stage defined in the
+		   pipe_desc statement, (even if it is empty as in the example)
+		   and entries are associated with stages by the order of
+		   stage declarations in the pipe_desc statement.
+

@@ -1,0 +1,3 @@
+TwrLint.java:14:15: compiler.warn.try.explicit.close.call
+TwrLint.java:13:21: compiler.warn.try.resource.not.referenced: r3
+2 warnings

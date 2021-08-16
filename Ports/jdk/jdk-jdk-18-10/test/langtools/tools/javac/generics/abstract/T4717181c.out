@@ -1,0 +1,2 @@
+T4717181c.java:15:21: compiler.err.types.incompatible: T4717181c.A<java.lang.Integer>, T4717181c.A<java.lang.Integer>, (compiler.misc.incompatible.diff.ret: f, java.lang.Integer)
+1 error

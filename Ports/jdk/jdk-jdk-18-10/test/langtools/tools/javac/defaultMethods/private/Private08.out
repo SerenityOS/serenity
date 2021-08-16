@@ -1,0 +1,13 @@
+Private08.java:13:28: compiler.err.illegal.combination.of.modifiers: public, private
+Private08.java:14:30: compiler.err.illegal.combination.of.modifiers: abstract, private
+Private08.java:15:29: compiler.err.illegal.combination.of.modifiers: private, default
+Private08.java:16:24: compiler.err.mod.not.allowed.here: protected
+Private08.java:17:22: compiler.err.missing.meth.body.or.decl.abstract
+Private08.java:22:33: compiler.err.report.access: foo(), private, Private08.I
+Private08.java:27:21: compiler.err.override.weaker.access: (compiler.misc.clashes.with: doo(), Private08_01.J, doo(), Private08.I), public
+Private08.java:25:13: compiler.err.non-static.cant.be.ref: kindname.variable, super
+Private08.java:25:18: compiler.err.cant.resolve.args: kindname.method, foo, , 
+Private08.java:30:40: compiler.err.does.not.override.abstract: compiler.misc.anonymous.class: Private08_01$1, blah(), Private08.I
+Private08.java:34:21: compiler.err.override.weaker.access: (compiler.misc.cant.implement: doo(), compiler.misc.anonymous.class: Private08_01$1, doo(), Private08.I), public
+Private08.java:32:18: compiler.err.cant.resolve.args: kindname.method, foo, , 
+12 errors

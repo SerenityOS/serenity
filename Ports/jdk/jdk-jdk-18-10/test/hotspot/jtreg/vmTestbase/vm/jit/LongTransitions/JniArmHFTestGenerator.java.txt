@@ -1,0 +1,928 @@
+/*
+ * Copyright (c) 2012, 2020, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/* This code generate an LTTest.java and LTTest.c files with corresponding *.cfg files which containt test defenition
+ * for JNI testing.
+ *
+ */
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Random;
+
+//Java and C file generator for JNI tests
+public class JniArmHFTestGenerator {
+
+    private final String JAVA_CLASS_NAME = "LTTest";
+    private final String C_FNC_NAME_PREFIX = "Java_vm_jit_LongTransitions_" + JAVA_CLASS_NAME + "_";
+    private final String JAVA_PACKAGE_NAME = "vm.jit.LongTransitions";
+    private final String TEST_LIST_PREFIX = "vm/jit/LongTransitions";
+    private final String TEST_LIST_NAME = "vm.jit.long.testlist";
+    //Maximal line length for some SRC generation function
+    private final int LINE_LENGTH = 70;
+    //127 is maximal value for JAVA parameters list
+    private final int PARAMS_COUNTER = 127;
+    StringBuilder javaFileSrc;
+    StringBuilder cFileSrc;
+    //StringBuilder cfgFileSrc;
+    private String javaTxtFileName;
+    private String cTxtFileName;
+    private File outputDir;
+    private ArrayList<String> javaFncNames = new ArrayList<String>();
+
+    public static void main(String[] args) throws IOException {
+        new JniArmHFTestGenerator().makeSomeTest();
+    }
+
+    public void makeSomeTest() throws IOException {
+
+        makeJavaIntro(JAVA_CLASS_NAME);
+        makeCIntro();
+        int cnt = PARAMS_COUNTER;
+
+        makeOneTest(cnt, ParamType.EASY_F, TestType.RANDOM, "nativeFnc1");
+        makeOneTest(cnt, ParamType.EASY_D, TestType.RANDOM, "nativeFnc2");
+        makeOneTest(cnt, ParamType.MIXED_FI1, TestType.RANDOM, "nativeFnc3");
+        makeOneTest(cnt, ParamType.MIXED_FB1, TestType.RANDOM, "nativeFnc4");
+        makeOneTest(cnt, ParamType.MIXED_FBI1, TestType.RANDOM, "nativeFnc5");
+        makeOneTest(cnt, ParamType.MIXED_DI1, TestType.RANDOM, "nativeFnc6");
+        makeOneTest(cnt, ParamType.MIXED_DB1, TestType.RANDOM, "nativeFnc7");
+        makeOneTest(cnt, ParamType.MIXED_DBI1, TestType.RANDOM, "nativeFnc8");
+        makeOneTest(cnt, ParamType.MIXED_DFBI1, TestType.RANDOM, "nativeFnc9");
+        makeOneTest(cnt, ParamType.MIXED_DF1, TestType.RANDOM, "nativeFnc10");
+        makeOneTest(cnt, ParamType.MIXED_DFI1, TestType.RANDOM, "nativeFnc11");
+        makeOneTest(cnt, ParamType.MIXED_DFB1, TestType.RANDOM, "nativeFnc12");
+
+        makeOneTest(cnt, ParamType.MIXED_FI2, TestType.RANDOM, "nativeFnc13");
+        makeOneTest(cnt, ParamType.MIXED_FB2, TestType.RANDOM, "nativeFnc14");
+        makeOneTest(cnt, ParamType.MIXED_FBI2, TestType.RANDOM, "nativeFnc15");
+        makeOneTest(cnt, ParamType.MIXED_DI2, TestType.RANDOM, "nativeFnc16");
+        makeOneTest(cnt, ParamType.MIXED_DB2, TestType.RANDOM, "nativeFnc17");
+        makeOneTest(cnt, ParamType.MIXED_DBI2, TestType.RANDOM, "nativeFnc18");
+        makeOneTest(cnt, ParamType.MIXED_DFBI2, TestType.RANDOM, "nativeFnc19");
+        makeOneTest(cnt, ParamType.MIXED_DF2, TestType.RANDOM, "nativeFnc20");
+        makeOneTest(cnt, ParamType.MIXED_DFI2, TestType.RANDOM, "nativeFnc21");
+        makeOneTest(cnt, ParamType.MIXED_DFB2, TestType.RANDOM, "nativeFnc22");
+
+        makeOneTest(cnt, ParamType.MIXED_FI3, TestType.RANDOM, "nativeFnc23");
+        makeOneTest(cnt, ParamType.MIXED_FB3, TestType.RANDOM, "nativeFnc24");
+        makeOneTest(cnt, ParamType.MIXED_FBI3, TestType.RANDOM, "nativeFnc25");
+        makeOneTest(cnt, ParamType.MIXED_DI3, TestType.RANDOM, "nativeFnc26");
+        makeOneTest(cnt, ParamType.MIXED_DB3, TestType.RANDOM, "nativeFnc27");
+        makeOneTest(cnt, ParamType.MIXED_DBI3, TestType.RANDOM, "nativeFnc28");
+        makeOneTest(cnt, ParamType.MIXED_DFBI3, TestType.RANDOM, "nativeFnc29");
+        makeOneTest(cnt, ParamType.MIXED_DF3, TestType.RANDOM, "nativeFnc30");
+        makeOneTest(cnt, ParamType.MIXED_DFI3, TestType.RANDOM, "nativeFnc31");
+        makeOneTest(cnt, ParamType.MIXED_DFB3, TestType.RANDOM, "nativeFnc32");
+
+        makeOneTest(cnt, ParamType.MIXED_FI4, TestType.RANDOM, "nativeFnc33");
+        makeOneTest(cnt, ParamType.MIXED_FB4, TestType.RANDOM, "nativeFnc34");
+        makeOneTest(cnt, ParamType.MIXED_FBI4, TestType.RANDOM, "nativeFnc35");
+        makeOneTest(cnt, ParamType.MIXED_DI4, TestType.RANDOM, "nativeFnc36");
+        makeOneTest(cnt, ParamType.MIXED_DB4, TestType.RANDOM, "nativeFnc37");
+        makeOneTest(cnt, ParamType.MIXED_DBI4, TestType.RANDOM, "nativeFnc38");
+        makeOneTest(cnt, ParamType.MIXED_DFBI4, TestType.RANDOM, "nativeFnc39");
+        makeOneTest(cnt, ParamType.MIXED_DF4, TestType.RANDOM, "nativeFnc40");
+        makeOneTest(cnt, ParamType.MIXED_DFI4, TestType.RANDOM, "nativeFnc41");
+        makeOneTest(cnt, ParamType.MIXED_DFB4, TestType.RANDOM, "nativeFnc42");
+
+        makeOneTest(cnt, ParamType.MIXED_FI5, TestType.RANDOM, "nativeFnc43");
+        makeOneTest(cnt, ParamType.MIXED_FB5, TestType.RANDOM, "nativeFnc44");
+        makeOneTest(cnt, ParamType.MIXED_FBI5, TestType.RANDOM, "nativeFnc45");
+        makeOneTest(cnt, ParamType.MIXED_DI5, TestType.RANDOM, "nativeFnc46");
+        makeOneTest(cnt, ParamType.MIXED_DB5, TestType.RANDOM, "nativeFnc47");
+        makeOneTest(cnt, ParamType.MIXED_DBI5, TestType.RANDOM, "nativeFnc48");
+        makeOneTest(cnt, ParamType.MIXED_DFBI5, TestType.RANDOM, "nativeFnc49");
+        makeOneTest(cnt, ParamType.MIXED_DF5, TestType.RANDOM, "nativeFnc50");
+        makeOneTest(cnt, ParamType.MIXED_DFI5, TestType.RANDOM, "nativeFnc51");
+        makeOneTest(cnt, ParamType.MIXED_DFB5, TestType.RANDOM, "nativeFnc52");
+        makeJavaInvoke();
+        makeJavaOutro();
+
+        writeToJavaFile(JAVA_CLASS_NAME);
+        writeToCFile(JAVA_CLASS_NAME);
+        //writeCmpFile();
+
+        writeTestListFile();
+        writeCfgFile();
+    }
+
+    private void makeJavaInvoke() {
+        appendToJava("    public static void main(String[] args) throws Exception");
+        appendToJava("    {");
+        appendToJava("        if ( System.getProperty(\"os.name\").matches(\".*[Ww][Ii][Nn].*\") )");
+        appendToJava("        {");
+        appendToJava("            System.out.println(\"TEST PASSED! Dummy execution on Windows* OS!\");");
+        appendToJava("            return;");
+        appendToJava("        }");
+
+        appendToJava("        deleteFiles();");
+        appendToJavaN("        PrintStream ps=new PrintStream(new File(\"");
+        appendToJavaN(javaTxtFileName);
+        appendToJava("\"));");
+
+        appendToJava("    if (args.length>0)");
+        appendToJava("        switch(args[0])");
+        appendToJava("        {");
+
+        for (String s : javaFncNames) {
+            appendToJava("        case \"" + s + "\":");
+            appendToJavaN("            ");
+            appendToJavaN(s);
+            appendToJava("_invoke(ps);");
+            appendToJava("            break;");
+
+        }
+        appendToJava("        default:");
+        appendToJava("            throw new Exception(\"FAIL: invalid args!\");");
+        appendToJava("        }");
+        appendToJava("        else");
+        appendToJava("        {");
+        appendToJava("            throw new Exception(\"FAIL: invalid args!\");");
+        appendToJava("        }");
+
+
+    }
+
+    private void makeCIntro() {
+        //appendToC(" //------------------------C----------------------------");
+        //appendToC("#include \""+className+".h\"");
+        appendToC("#include <jni.h>");
+        appendToC("#include <stdio.h>");
+    }
+
+    private void makeJavaIntro(String className) {
+
+        cFileSrc = new StringBuilder();
+        javaFileSrc = new StringBuilder();
+
+
+        File outputDirL1 = new File("vm" + File.separatorChar + "jit" + File.separatorChar + "LongTransitions");
+        //outputDir=new File(outputDirL1,className);
+        outputDir = outputDirL1;
+        outputDir.mkdirs();
+
+        javaTxtFileName = className + "_java.txt";
+        cTxtFileName = className + "_c.txt";
+
+        appendToJava("package " + JAVA_PACKAGE_NAME + ";");
+        appendToJava("import java.io.*;");
+        appendToJava("import java.util.Random;");
+        appendToJava("import jdk.test.lib.Utils;");
+        appendToJava("public class " + className);
+        appendToJava("{");
+        appendToJava("    public static boolean flag = false;");
+        appendToJava("    static Random rnd;");
+        appendToJava("    static{");
+        appendToJava("        rnd=Utils.getRandomInstance();");
+        appendToJava("        System.loadLibrary(\"" + className + "\");");
+        appendToJava("    }");
+        //Different randoms
+        appendToJava("    public static int getRndInt(){return rnd.nextInt(Integer.MAX_VALUE);}");
+        appendToJava("    public static float getRndFloat(){return rnd.nextFloat()*Float.MAX_VALUE;}");
+        appendToJava("    public static double getRndDouble(){return rnd.nextDouble()*Double.MAX_VALUE;}");
+        appendToJava("    public static byte getRndByte(){return (byte)rnd.nextInt(Byte.MAX_VALUE);}");
+
+        //deleteFiles method
+        appendToJava("    private static void deleteFiles()");
+        appendToJava("    {");
+        appendToJavaN("        File f=new File(\"");
+        appendToJavaN(javaTxtFileName);
+        appendToJava("\");");
+        appendToJava("        if ( f.exists())");
+        appendToJava("        f.delete();");
+        appendToJavaN("        f=new File(\"");
+        appendToJavaN(cTxtFileName);
+        appendToJava("\");");
+        appendToJava("        if ( f.exists())");
+        appendToJava("         f.delete();");
+        appendToJava("    }");
+    }
+
+    private void makeJavaOutro() {
+        appendToJava("        flag=chkFile();");
+        appendToJava("        if(!flag)");
+        appendToJava("            throw new Exception(\"FAIL:Tests failed!\"); ");
+        appendToJava("    }");
+        appendToJava("    private static boolean chkFile()");
+        appendToJava("    {");
+        appendToJava("        File javaFile=new File(\"" + javaTxtFileName + "\");");
+        appendToJava("        if (! javaFile.exists())");
+        appendToJava("        {");
+        appendToJava("            System.out.println(\"FAIL:Failed to open file " + javaTxtFileName + " - file not exists!\");");
+        appendToJava("            return false;");
+        appendToJava("        }");
+        appendToJava("        File cFile=new File(\"" + cTxtFileName + "\");");
+        appendToJava("        if (! cFile.exists())");
+        appendToJava("        {");
+        appendToJava("                System.out.println(\"FAIL:Failed to open file " + cTxtFileName + " - file not exists!\");");
+        appendToJava("                return false;");
+        appendToJava("        }");
+        appendToJava("        if ( cFile.length()!=javaFile.length() )");
+        appendToJava("        {");
+        appendToJava("            System.out.println(\"FAIL:File length not equal!\");");
+        appendToJava("            return false;");
+        appendToJava("        }");
+        appendToJava("        long byteCount=cFile.length();");
+
+
+        appendToJava("        try{");
+        appendToJava("            FileInputStream fisC=new FileInputStream(cFile);");
+        appendToJava("            FileInputStream fisJava=new FileInputStream(javaFile);");
+        appendToJava("            byte[] cData=new byte[fisC.available()];");
+        appendToJava("            fisC.read(cData);");
+        appendToJava("            byte[] javaData=new byte[fisJava.available()];");
+        appendToJava("            fisJava.read(javaData);");
+
+        appendToJava("            for ( int cnt=0;cnt<byteCount;++cnt)");
+        appendToJava("            {");
+        appendToJava("                if ( cData[cnt]!=javaData[cnt] )");
+        appendToJava("                {");
+        appendToJava("                    System.out.println(\"FAIL:Test failed! \"+cnt+\" byte are wrong! C file - \" + cData[cnt] + \" Java file - \"+javaData[cnt] );");
+        appendToJava("                    return false;");
+        appendToJava("                }");
+        appendToJava("            }");
+        appendToJava("        }");
+        appendToJava("        catch (FileNotFoundException ex)");
+        appendToJava("        {");
+        appendToJava("            System.out.println(\"FAIL:Some of files not found!\");");
+        appendToJava("            return false;");
+        appendToJava("        }");
+        appendToJava("        catch (IOException ex)");
+        appendToJava("        {");
+        appendToJava("            System.out.println(\"FAIL:Failed to read files!\");");
+        appendToJava("            return false;");
+        appendToJava("        }");
+        appendToJava("        System.out.println(\"PASS: all data passed correctly!\");");
+        appendToJava("        return true;");
+
+
+
+        appendToJava("    }");
+
+        appendToJava("}");
+
+
+    }
+
+    private void makeOneTest(int paramCounter, ParamType paramType, TestType testType, String fncName) throws IOException {
+
+        javaFncNames.add(fncName);
+        SrcGenerator gen = new SrcGenerator(paramCounter, 1, paramType, testType, fncName, LINE_LENGTH);
+        generateJava(gen);
+        generateCpp(gen);
+
+
+    }
+
+    /*
+     * Create Java file containing code to call C native method. Method
+     * arguments list generated randomly.
+     *
+     */
+    private void generateJava(SrcGenerator srcGen) throws IOException {
+
+        //native method
+        appendToJavaN("    native public static void " + srcGen.getFncName() + "(");
+        //appendToJavaN(srcGen.getJParm().toString());
+        appendToJavaN(srcGen.getJParm().toFormatString("        ", LINE_LENGTH));
+        appendToJava("    );");
+        //main
+        //appendToJava(srcGen.getJExecVarCreation());
+        appendToJava("    private static void " + srcGen.getFncName() + "_invoke(PrintStream ps)");
+        appendToJava(srcGen.getJExec("        "));
+    }
+
+    private void writeToJavaFile(String className) throws IOException {
+
+        File javaFile = new File(outputDir, className + ".java");
+        try (FileWriter javaFileWriter = new FileWriter(javaFile)) {
+            javaFileWriter.write(javaFileSrc.toString());
+        }
+    }
+
+    private void writeToCFile(String className) throws IOException {
+
+        File cFile = new File(outputDir, className + ".c");
+        try (FileWriter cFileWriter = new FileWriter(cFile)) {
+            cFileWriter.write(cFileSrc.toString());
+        }
+    }
+
+    private void writeTestListFile() {
+
+        StringBuilder cfg = new StringBuilder();
+
+        for (String fncName : javaFncNames) {
+            cfg.append(TEST_LIST_PREFIX).append("/").append(fncName);
+            cfg.append(" ").append("execute_positive\n");
+        }
+
+        File cfgFile = new File(outputDir, TEST_LIST_NAME);
+        try (FileWriter fw = new FileWriter(cfgFile)) {
+            fw.write(cfg.toString());
+        } catch (Exception e) {
+        }
+
+    }
+
+    private void writeCfgFile() {
+
+        for (String fncName : javaFncNames) {
+
+            StringBuilder cfg = new StringBuilder();
+
+            cfg.append("LD_LIBRARY_PATH=${COMMON_LIBS_LOCATION}/lib/${ARCH}/vm/jit/LongTransitions${PS}$LD_LIBRARY_PATH\n");
+            cfg.append("export LD_LIBRARY_PATH\n");
+            cfg.append("JAVA_OPTS=${JAVA_OPTS} ${JIT_OPTS}\n");
+            cfg.append("export JAVA_OPTS\n");
+            cfg.append("EXECUTE_CLASS=" + JAVA_PACKAGE_NAME + "." + JAVA_CLASS_NAME + "\n");
+            cfg.append("TEST_ARGS=" + fncName);
+
+            File tdir = new File(outputDir, fncName);
+            tdir.mkdirs();
+            File cfgFile = new File(tdir, fncName + ".cfg");
+            try (FileWriter fw = new FileWriter(cfgFile)) {
+                fw.write(cfg.toString());
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    /*
+     * Generate C file. This file containing instructions to put passed
+     * arguments into output file for further comparsion with java output *
+     */
+    private void generateCpp(SrcGenerator srcGen) throws IOException {
+
+        appendToC("JNIEXPORT void JNICALL " + C_FNC_NAME_PREFIX + srcGen.getFncName() + "(JNIEnv *e, jclass c");
+        appendToCN(srcGen.getCParm().toFormatString("    ", LINE_LENGTH));
+        appendToCN(")");
+        appendToC("\n{");
+
+        appendToCN("    FILE *file=fopen(\"");
+        appendToCN(cTxtFileName);
+        appendToCN("\",\"a\");");
+
+        appendToC(srcGen.getCExec(LINE_LENGTH,"    "));
+        appendToC("    fclose(file);");
+        appendToC("}");
+    }
+
+    private void appendToJava(String s) {
+        javaFileSrc.append(s);
+        javaFileSrc.append("\n");
+        System.out.println(s);
+    }
+
+    private void appendToJavaN(String s) {
+        javaFileSrc.append(s);
+        System.out.print(s);
+    }
+
+    private void appendToC(String s) {
+        cFileSrc.append(s);
+        cFileSrc.append("\n");
+        System.out.println(s);
+    }
+
+    private void appendToCN(String s) {
+        cFileSrc.append(s);
+        System.out.print(s);
+
+    }
+}
+
+enum NumberType {
+
+    INT("int ", "getRndInt()", "jint ", "%d", "%d"),
+    DOUBLE("double ", "getRndDouble()", "jdouble ", "%e", "%e"),
+    FLOAT("float ", "getRndFloat()", "jfloat ", "%e", "%e"),
+    BYTE("byte ", "getRndByte()", "jbyte ", "%d", "%d");
+    private String cType;
+    private String jType;
+    private String cConv;
+    private String jConv;
+    private String rndFnc;
+
+    NumberType(String jType, String rndFnc, String cType, String jConv, String cConv) {
+        this.cType = cType;
+        this.jType = jType;
+        this.cConv = cConv;
+        this.jConv = jConv;
+        this.rndFnc = rndFnc;
+    }
+
+    public String getСType() {
+        return cType;
+    }
+
+    public String getJType() {
+        return jType;
+    }
+
+    public String getСConv() {
+        return cConv;
+    }
+
+    public String getJConv() {
+        return jConv;
+    }
+
+    public String getFnc() {
+        return rndFnc;
+    }
+}
+
+//Types for testing
+enum ParamType {
+    //DFBI
+
+    MIXED_DFBI1(NumberType.DOUBLE, NumberType.FLOAT, NumberType.BYTE, NumberType.INT),
+    MIXED_DFBI2(NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.BYTE, NumberType.INT),
+    MIXED_DFBI3(NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.BYTE, NumberType.INT),
+    MIXED_DFBI4(NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.BYTE, NumberType.INT),
+    MIXED_DFBI5(NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.BYTE, NumberType.INT),
+    //DFB
+    MIXED_DFB1(NumberType.DOUBLE, NumberType.FLOAT, NumberType.BYTE),
+    MIXED_DFB2(NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.BYTE),
+    MIXED_DFB3(NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.BYTE),
+    MIXED_DFB4(NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.BYTE),
+    MIXED_DFB5(NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.BYTE),
+    //DFI
+    MIXED_DFI1(NumberType.DOUBLE, NumberType.FLOAT, NumberType.INT),
+    MIXED_DFI2(NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.INT),
+    MIXED_DFI3(NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.INT),
+    MIXED_DFI4(NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.INT),
+    MIXED_DFI5(NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.DOUBLE, NumberType.FLOAT, NumberType.INT),
+    //
+    MIXED_DF1(NumberType.DOUBLE, NumberType.FLOAT),
+    MIXED_DF2(NumberType.DOUBLE, NumberType.FLOAT, NumberType.FLOAT),
+    MIXED_DF3(NumberType.DOUBLE, NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT),
+    MIXED_DF4(NumberType.DOUBLE, NumberType.DOUBLE, NumberType.FLOAT),
+    MIXED_DF5(NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.FLOAT),
+    //
+    EASY_D(NumberType.DOUBLE),
+    EASY_F(NumberType.FLOAT),
+    //Not needed
+    EASY_I(NumberType.INT),
+    EASY_B(NumberType.BYTE),
+    MIXED_IB(NumberType.INT, NumberType.BYTE),
+    //
+    MIXED_FBI1(NumberType.FLOAT, NumberType.BYTE, NumberType.INT),
+    MIXED_FBI2(NumberType.FLOAT, NumberType.FLOAT, NumberType.BYTE, NumberType.INT),
+    MIXED_FBI3(NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.BYTE, NumberType.INT),
+    MIXED_FBI4(NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.BYTE, NumberType.INT),
+    MIXED_FBI5(NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.BYTE, NumberType.INT),
+    //
+    MIXED_FB1(NumberType.FLOAT, NumberType.BYTE),
+    MIXED_FB2(NumberType.FLOAT, NumberType.FLOAT, NumberType.BYTE),
+    MIXED_FB3(NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.BYTE),
+    MIXED_FB4(NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.BYTE),
+    MIXED_FB5(NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.BYTE),
+    //
+    MIXED_DBI1(NumberType.DOUBLE, NumberType.BYTE, NumberType.INT),
+    MIXED_DBI2(NumberType.DOUBLE, NumberType.DOUBLE, NumberType.BYTE, NumberType.INT),
+    MIXED_DBI3(NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.BYTE, NumberType.INT),
+    MIXED_DBI4(NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.BYTE, NumberType.INT),
+    MIXED_DBI5(NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.BYTE, NumberType.INT),
+    //
+    MIXED_DB1(NumberType.DOUBLE, NumberType.BYTE),
+    MIXED_DB2(NumberType.DOUBLE, NumberType.DOUBLE, NumberType.BYTE),
+    MIXED_DB3(NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.BYTE),
+    MIXED_DB4(NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.BYTE),
+    MIXED_DB5(NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.BYTE),
+    //
+    MIXED_FI1(NumberType.FLOAT, NumberType.INT),
+    MIXED_FI2(NumberType.FLOAT, NumberType.FLOAT, NumberType.INT),
+    MIXED_FI3(NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.INT),
+    MIXED_FI4(NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.INT),
+    MIXED_FI5(NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.FLOAT, NumberType.INT),
+    //
+    MIXED_DI1(NumberType.DOUBLE, NumberType.INT),
+    MIXED_DI2(NumberType.DOUBLE, NumberType.DOUBLE, NumberType.INT),
+    MIXED_DI3(NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.INT),
+    MIXED_DI4(NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.INT),
+    MIXED_DI5(NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.DOUBLE, NumberType.INT);
+    ArrayList<NumberType> value = new ArrayList();
+
+    ParamType(NumberType... type) {
+        value.addAll(Arrays.asList(type));
+    }
+
+    public ArrayList<NumberType> getValue() {
+        return value;
+    }
+}
+
+class GeneratorLogic {
+
+    public String generateJava(String fncName, ParameterList parmOut, ParameterList parmType, int maxLength, String prefix) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("    {\n").append(prefix);
+        int lineLength = 0;
+        for (ParameterItem p : parmType.getList()) {
+            sb.append(p.value1);
+            sb.append(" ");
+            sb.append(p.value2);
+            sb.append("=");
+            sb.append(p.value3);
+            sb.append(";");
+            if (sb.length() - lineLength > maxLength) {
+                sb.append("\n").append(prefix);
+                lineLength = sb.length();
+            }
+        }
+
+        sb.append("\n");
+        sb.append(prefix);
+        for (ParameterItem p : parmOut.getList()) {
+            sb.append("ps.format(\"");
+            sb.append(p.value2);
+            sb.append("=");
+            sb.append(p.value1);
+            sb.append("\\n\",");
+
+
+            sb.append(p.value2);
+            sb.append(");");
+            if (sb.length() - lineLength > maxLength) {
+                sb.append("\n").append(prefix);
+                lineLength = sb.length();
+            }
+
+        }
+
+        sb.append("\n").append(prefix);
+
+        sb.append(fncName);
+        sb.append("(");
+        for (ParameterItem p : parmOut.getList()) {
+            sb.append(p.getDelim());
+            sb.append(p.value2);
+            if (sb.length() - lineLength > maxLength) {
+                sb.append("\n").append(prefix);
+                lineLength = sb.length();
+            }
+        }
+        sb.append(");\n}\n");
+
+        return sb.toString();
+    }
+}
+
+//Test types
+enum TestType {
+
+    RANDOM(new GeneratorLogic());
+    private GeneratorLogic genLogic;
+
+    TestType(GeneratorLogic genLogic) {
+        this.genLogic = genLogic;
+    }
+
+    public GeneratorLogic getLogic() {
+        return genLogic;
+    }
+}
+
+//One item for ParameterList (delimiter and value to build strings)
+class ParameterItem {
+
+    private String delimiter;
+    String value1;
+    String value2;
+    String value3;
+    //private String endVal="";
+
+    public ParameterItem(String delimiter, String value) {
+        this.delimiter = delimiter;
+        this.value1 = value;
+        value2 = "";
+        value3 = "";
+    }
+
+    public ParameterItem(String delimiter, String value1, String value2) {
+        this.delimiter = delimiter;
+        this.value1 = value1;
+        this.value2 = value2;
+        value3 = "";
+    }
+
+    public ParameterItem(String delimiter, String value1, String value2, String value3) {
+        this.delimiter = delimiter;
+        this.value1 = value1;
+        this.value2 = value2;
+        this.value3 = value3;
+    }
+
+    public String toString() {
+        return delimiter + value1 + value2 + value3;
+    }
+
+    public String getDelim() {
+        return delimiter;
+    }
+}
+//Delimiters and values to generate calls, etc.
+class ParameterList {
+
+    ArrayList<ParameterItem> list = new ArrayList();
+    private String initDelim;
+    private String delim;
+    boolean lineBreak;
+
+    public ParameterList(String initialDelimiter, String delimiter, boolean lineBreak) {
+        initDelim = initialDelimiter;
+        delim = delimiter;
+        this.lineBreak = lineBreak;
+    }
+
+    public ArrayList<ParameterItem> getList() {
+        return list;
+    }
+
+    public void add(String value) {
+        list.add(new ParameterItem(initDelim, value));
+        initDelim = delim;
+    }
+
+    public void add(String value1, String value2) {
+        list.add(new ParameterItem(initDelim, value1, value2));
+        initDelim = delim;
+    }
+
+    public void add(String value1, String value2, String value3) {
+        list.add(new ParameterItem(initDelim, value1, value2, value3));
+        initDelim = delim;
+    }
+
+    public ParameterItem get(int id) {
+        return list.get(id);
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (ParameterItem p : list) {
+            sb.append(p.toString());
+            if (lineBreak) {
+                sb.append("\n");
+            }
+
+        }
+        return sb.toString();
+    }
+
+    public String toFormatString(String prefix, int maxLength) {
+        StringBuilder sb = new StringBuilder();
+        int charCount = 0;
+        for (ParameterItem p : list) {
+            sb.append(p.toString());
+            if (sb.length() - charCount > maxLength) {
+                sb.append("\n").append(prefix);
+                charCount = sb.length();
+            }
+        }
+        return sb.toString();
+    }
+
+    public int size() {
+        return list.size();
+    }
+
+    public String getAllItemExclude(int excludeId) {
+        StringBuilder sb = new StringBuilder();
+        int cnt = list.size();
+
+        for (int id = 0; id < cnt; ++id) {
+            ParameterItem p = list.get(id);
+            if (id == excludeId) {
+                sb.append(p.getDelim());
+                sb.append("0");
+            } else {
+                sb.append(p.toString());
+
+            }
+        }
+
+        return sb.toString();
+
+    }
+
+    public String getAllItemExcludeNot(int excludeId) {
+        StringBuilder sb = new StringBuilder();
+        int cnt = list.size();
+
+        for (int id = 0; id < cnt; ++id) {
+            ParameterItem p = list.get(id);
+            if (id != excludeId) {
+                sb.append(p.getDelim());
+                sb.append("0");
+//                sb.append(p.getEnd());
+            } else {
+                sb.append(p.toString());
+
+            }
+        }
+
+        return sb.toString();
+    }
+}
+
+class ParameterListGenerator {
+
+    private ArrayList<NumberType> list = new ArrayList();
+    private Random random;
+    private int typeCnt;
+    ParameterList cParms = new ParameterList(",", ",", true);
+    ParameterList rParms = new ParameterList("", ",", true);
+    ParameterList jParms = new ParameterList("", ",", true);
+    ParameterList cExec = new ParameterList("", "", true);
+    ParameterList jExecParm = new ParameterList("", ",", true);
+    ParameterList jExecOut = new ParameterList("", ",", true);
+
+    public ParameterListGenerator(int length, ParamType paramType) {
+        generateRndTest(paramType, length);
+    }
+
+    private void add(ParameterList list, String s1) {
+        list.add(s1);
+    }
+
+    private void add(ParameterList list, String s1, String s2) {
+        list.add(s1, s2);
+    }
+
+    private void add(ParameterList list, String s1, String s2, String s3) {
+        list.add(s1, s2, s3);
+    }
+
+    private void generateRndTest(ParamType paramType, int length) {
+        generateTypeList(paramType);
+
+        typeCnt = list.size();
+        random = new Random();
+        random.setSeed(System.currentTimeMillis());
+
+        for (int cnt = 0; cnt < length; ++cnt) {
+            int type = random.nextInt(typeCnt);
+
+            String randomVal = list.get(type).getFnc();
+
+            String ctype = list.get(type).getСType();
+            String jtype = list.get(type).getJType();
+            String cconv = list.get(type).getСConv();
+            String jconv = list.get(type).getJConv();
+
+            String varName = "p" + cnt;
+            add(jParms, jtype, varName);
+            //jParmGen.add(jtype + varName);
+
+            //cParms.add(ctype + varName);
+            add(cParms, ctype, varName);
+
+
+            //rParms.add(varName);
+            add(rParms, varName);
+
+            add(cExec, varName, cconv);
+
+            add(jExecParm, jtype, varName, randomVal);
+            //jExecOut.add(new PairString(jconv,varName,jtype));
+            add(jExecOut, jconv, varName, jtype);
+        }
+
+    }
+
+    public ParameterList getCExec() {
+        return cExec;
+    }
+
+    public ParameterList getCParm() {
+        return cParms;
+    }
+
+    //Return generated java text
+    public ParameterList getJExecParameters() {
+        return jExecParm;
+    }
+
+    public ParameterList getJExecOut() {
+        return jExecOut;
+    }
+
+    /*
+     * Return string containing parameters for Java
+     */
+    public ParameterList getJParm() {
+        return jParms;
+    }
+
+    public ParameterList getRParm() {
+        return rParms;
+    }
+
+    private void generateTypeList(ParamType paramType) {
+        list.addAll(paramType.getValue());
+    }
+}
+
+class SrcGenerator {
+
+    ParameterListGenerator parmListGen;
+    GeneratorLogic genLogic;
+    int iterationCounter;
+    int parametersCounter;
+    ParamType paramType;
+    TestType testType;
+    String fncName;
+    //SrcGenerator g1=new SrcGenerator(3,1,ParamType.MIXED_DFIB,TestType.RANDOM,"callRandom");
+    int maxLength;
+
+    public SrcGenerator(int parmCounter, int iterCounter, ParamType parType, TestType testType, String fncName, int maxLength) {
+        this.maxLength = maxLength;
+        parametersCounter = parmCounter;
+        iterationCounter = iterCounter;
+        paramType = parType;
+        this.testType = testType;
+        this.fncName = fncName;
+        parmListGen = new ParameterListGenerator(parametersCounter, paramType);
+        genLogic = testType.getLogic();
+
+    }
+
+    public String getFncName() {
+        return fncName;
+    }
+
+    public ParameterList getJParm() {
+        return parmListGen.getJParm();
+    }
+
+    public ParameterList getCParm() {
+        return parmListGen.getCParm();
+    }
+
+    public String getCExec() {
+
+        StringBuilder sb = new StringBuilder();
+        for (ParameterItem p : parmListGen.getCExec().getList()) {
+            sb.append("fprintf(file,\"");
+            sb.append(p.value1);
+            sb.append("=");
+            sb.append(p.value2);
+            sb.append("\\n\",");
+            sb.append(p.value1);
+            sb.append(");\n");
+        }
+        return sb.toString();
+    }
+
+    public String getCExec(int maxLength,String prefix) {
+
+        int lineLength = 0;
+        StringBuilder sb = new StringBuilder();
+        for (ParameterItem p : parmListGen.getCExec().getList()) {
+            sb.append("fprintf(file,\"");
+            sb.append(p.value1);
+            sb.append("=");
+            sb.append(p.value2);
+            sb.append("\\n\",");
+            sb.append(p.value1);
+            sb.append(");");
+            if (sb.length() - lineLength > maxLength) {
+                lineLength = sb.length();
+                sb.append("\n").append(prefix);
+            }
+        }
+        return sb.toString();
+    }
+
+    public String getJExec(String prefix) {
+        return genLogic.generateJava(fncName, parmListGen.getJExecOut(), parmListGen.getJExecParameters(), maxLength, prefix);
+
+    }
+}

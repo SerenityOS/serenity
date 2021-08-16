@@ -1,0 +1,2 @@
+T5088429Neg02.java:19:9: compiler.err.ref.ambiguous: m, kindname.method, m(T5088429Neg02.A...), T5088429Neg02, kindname.method, m(T5088429Neg02.A,T5088429Neg02.A...), T5088429Neg02
+1 error

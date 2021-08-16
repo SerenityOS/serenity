@@ -1,0 +1,5 @@
+Neg09.java:17:12: compiler.warn.override.unchecked.ret: (compiler.misc.unchecked.implement: m(), Neg09.C1, m(), Neg09.I), java.util.List, java.util.List<java.lang.String>
+Neg09.java:20:21: compiler.warn.override.unchecked.ret: (compiler.misc.unchecked.implement: m(), Neg09.C3, m(), Neg09.I), java.util.List, java.util.List<java.lang.String>
+- compiler.err.warnings.and.werror
+1 error
+2 warnings

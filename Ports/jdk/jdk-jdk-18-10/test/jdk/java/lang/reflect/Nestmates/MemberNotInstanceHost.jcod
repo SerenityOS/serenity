@@ -1,0 +1,113 @@
+/*
+ * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+// NestHost attribute refers to non-instance class
+
+class TestReflectionAPI$MemberNotInstanceHost {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #14; // #1
+    class #15; // #2
+    class #18; // #3
+    Utf8 "oa"; // #4
+    Utf8 "[LInvalidNestHost;"; // #5
+    Utf8 "<init>"; // #6
+    Utf8 "()V"; // #7
+    Utf8 "Code"; // #8
+    Utf8 "LineNumberTable"; // #9
+    Utf8 "SourceFile"; // #10
+    Utf8 "TestReflectionAPI.java"; // #11
+    Utf8 "NestHost"; // #12
+    class #19; // #13
+    NameAndType #6 #7; // #14
+    Utf8 "TestReflectionAPI$MemberNotInstanceHost"; // #15
+    Utf8 "MemberNotInstanceHost"; // #16
+    Utf8 "InnerClasses"; // #17
+    Utf8 "java/lang/Object"; // #18
+    Utf8 "TestReflectionAPI"; // #19
+    class #5; // #20 - added
+  } // Constant Pool
+
+  0x0020; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+    { // Member
+      0x0000; // access
+      #4; // name_cpx
+      #5; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #6; // name_cpx
+      #7; // sig_cpx
+      [] { // Attributes
+        Attr(#8) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#9) { // LineNumberTable
+              [] { // LineNumberTable
+                0  63;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#10) { // SourceFile
+      #11;
+    } // end SourceFile
+    ;
+    Attr(#12) { // NestHost
+      0x0014; // Modified #20
+    } // end NestHost
+    ;
+    Attr(#17) { // InnerClasses
+      [] { // InnerClasses
+        #2 #13 #16 8;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class TestReflectionAPI$MemberNotInstanceHost
+

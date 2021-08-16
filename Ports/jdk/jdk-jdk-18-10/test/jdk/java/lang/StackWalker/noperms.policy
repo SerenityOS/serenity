@@ -1,0 +1,5 @@
+/*
+ * grant nothing
+ */
+grant {};
+

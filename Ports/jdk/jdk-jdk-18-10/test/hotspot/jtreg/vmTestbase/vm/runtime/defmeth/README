@@ -1,0 +1,249 @@
+Copyright (c) 2014, 2021, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+
+ABOUT
+
+    Once published, it is impossible to add methods to an interface without
+    breaking existing implementations (specifically, adding a method to an
+    interface is not a source-compatible change). The longer the time since a
+    library has been published, the more likely it is that this restriction will
+    cause grief for its maintainers.
+
+    The addition of closures to the Java language in JDK 8 place additional stress
+    on the aging Collection interfaces; one of the most significant benefits of
+    closures is that it enables the development of more powerful libraries. It
+    would be disappointing to add a language feature that enables better libraries
+    while at the same time not extending the core libraries to take advantage of
+    that feature.
+
+    A mechanism for adding new methods to existing interfaces is proposed, which is
+    called virtual extension (or default) methods. Existing interfaces can be
+    augmented without compromising backward compatibility by adding extension
+    methods to the interface, whose declaration would contain instructions for
+    finding the default implementation in the event that implementers do not
+    provide a method body. A key characteristic of extension methods is that they
+    are virtual methods just like other interface methods, but provide a default
+    implementation in the event that the implementing class does not provide a
+    method body.
+
+    VM support is necessary to implement virtual extension methods.
+
+
+OVERVIEW
+
+    The test suite is organized in the following manner.
+
+    The tests rely on a framework to generate class hierarchies and tests
+    directly in bytecode from a pseudo-code in Java. Pseudo-code is written
+    using builder pattern and fluent coding style.
+
+    The framework is located in src/vm/runtime/defmeth/shared and divided into
+    /data and /builder sections.
+
+    As an example, the following code:
+
+            TestBuilder b = factory.getBuilder();
+
+            Interface I = b.intf("I")
+                    .defaultMethod("m", "()I").returns(1).build()
+                .build();
+
+            ConcreteClass C = b.clazz("C").implement(I)
+                    .concreteMethod("m", "()I").returns(2).build()
+                .build();
+
+            b.test().callSite(I, C, "m", "()I").returns(2).done()
+             .test().callSite(C, C, "m", "()I").returns(2).done()
+
+            .run();
+
+        translates into bytecode equivalent of:
+
+            2-class hierarchy:
+
+                interface I {
+                    int m() default { return 1; }
+                }
+
+                class C implements I {
+                    public int m() { return 2; }
+                }
+
+            and 2 tests:
+
+                Test1_I_C_m {
+                    static void test() {
+                        I i = new C();
+                        if (i.m() != 2) throw new TestFailure();
+                    }
+                }
+
+                Test2_C_C_m {
+                    static void test() {
+                        C c = new C();
+                        if (c.m() != 2) throw new TestFailure();
+                    }
+                }
+
+    TestBuilder.run() calls Test1_I_C_m.test() and Test2_C_C_m.test() and
+    performs failure reporting, if necessary.
+
+    All tests are located in src/vm/runtime/defmeth and are grouped according
+    to the area they excercise. The test groups are:
+        - AccessibilityFlagsTest
+        - BasicTest
+        - ConflictingDefaultsTest
+        - DefaultVsAbstractTest
+        - MethodResolutionTest
+        - ObjectMethodOverridesTest
+        - PrivateMethodsTest
+        - RedefineTest
+        - StaticMethodsTest
+        - StressTest
+        - SuperCallTest
+
+    Additionally, each test enumerates test configurations and run every test case with them.
+    Test configuration consists of 4 parameters:
+
+        majorVer - major version of class files for generated concrete classes
+            values: MIN_MAJOR_VER (49) ... MAX_MAJOR_VER (61)
+
+        methodFlags - additional access flags for methods in generated classes
+            values: no additional flags, ACC_SYNCHRONIZED
+
+        invocationType - how methods in test hiearchies are invoked during testing
+            DIRECT           - invoke* bytecodes
+            REFLECTION       - Reflection API
+            INDY             - invokedynamic bytecode
+            INVOKE_EXACT     - MethodHandle.invokeExact()
+            INVOKE_GENERIC   - MethodHandle.invoke()
+            INVOKE_WITH_ARGS - MethodHandle.invokeWithArguments()
+
+        redefine - whether to preload and redefine classes before running individual tests
+            values: false, true
+
+STRESS TESTING
+
+    Stress test differs from other scenarios - it has only 2 modes: redefine and noredefine.
+
+    Stress scenario is the following:
+        - in multiple threads (5 by default)...
+        - ... continuously run random vm.runtime.defmeth.* tests ...
+        - ... in random configurations ...
+        - ... until predefined period of time is over...
+        - ... or any failures occured.
+
+
+HOW TO RUN
+
+    Directly from command-line:
+
+    $ java -cp ${VMTESTBASE}/bin/classes vm.runtime.defmeth.shared.DefMethTest
+
+    Specify testing mode:
+        -flags <int>
+              additional access flags on default methods (default: 0)
+
+        -ver <int>
+              class file major version (default: 52)
+
+        -redefine <boolean>
+              redefine classes during execution (default: false)
+
+        -mode [direct|reflect|invoke]
+              specify method invocation mechanism (default: direct):
+                  - direct - invoke* instructions in bytecode
+                  - reflect - Reflection API
+                  - invoke - invokedynamic & MethodHandle.invoke*
+
+        -execMode [DIRECT|REFLECTION|INVOKE_EXACT|INVOKE_GENERIC|INVOKE_WITH_ARGS|INDY]
+              specify concrete execution mode
+
+    Execution-specific flags:
+        -list <boolean>
+            list available tests
+
+        -filter <regex>
+            filter tests by name
+            (default: .* )
+
+    If you run tests directly from command line, in order to make "-redefine true",
+    StressTest or RedefineTest work, additional steps are necessary:
+        add -agentlib:redefineClasses to JVM options
+        set correct LD_LIBRARY_PATH:
+            LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${VM_TESTBASE}/bin/lib/${PLATFORM}/vm/runtime/defmeth/shared/
+
+    Also, it is possible to run any test group directly:
+
+    $ java -cp ${VMTESTBASE}/bin/classes vm.runtime.defmeth.BasicTest
+
+    StressTest has some specific options:
+        -stressTime <long>
+            Stress execution time in seconds (default: 30)
+
+        -stressThreadsFactor <int>
+              Stress threads factor (default: 1)
+
+        -seed <int>
+              force deterministic behavior (default: 0)
+
+        -redefine <boolean>
+              use scenarios w/ class redefinition (default: false)
+
+        -ver <int>
+              minimum class file version to be used in the tests (default: 49)
+
+        -ignoreTestFailures
+              ignore failures of individual tests
+
+    To simplify failure analysis, the framework has some additional flags to produce
+    diagnostics output:
+
+        -Dvm.runtime.defmeth.printTests
+            print pseudo-code for each test;
+
+        -Dvm.runtime.defmeth.printAssembly
+            print bytecode assembly for all generated class files;
+
+        -Dvm.runtime.defmeth.printASMify
+            print "asmified" version of generated class files;
+            very useful when preparing reduced test cases.
+
+        -Dvm.runtime.defmeth.dumpClasses
+            dump class files under DUMP_CLASS_FILES in <test_name> folder
+
+        -Dvm.runtime.defmeth.printStackTrace
+            print full stack traces for all errors and test failures
+
+        -Dvm.runtime.defmeth.traceClassRedefinition
+            trace class redefinition during testing
+
+LINKS
+
+    [1] "Design and Implementation of Default Methods in Hotspot JVM", by Keith McGuigan, 09/18/2012
+        http://cr.openjdk.java.net/~kamg/default_methods_in_hotspot.txt
+
+    [2] "Featherweight Defenders: A formal model for virtual extension methods in Java", by Brian Goetz, Robert Field, 03/27/2012
+        http://cr.openjdk.java.net/~briangoetz/lambda/featherweight-defenders.pdf
+
+    [3] "Interface evolution via virtual extension methods", by Brian Goetz, 4th draft, 06/2011
+        http://cr.openjdk.java.net/~briangoetz/lambda/Defender%20Methods%20v4.pdf

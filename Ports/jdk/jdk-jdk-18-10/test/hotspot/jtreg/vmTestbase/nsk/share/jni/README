@@ -1,0 +1,62 @@
+Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+---------------------------------------------------------------------------------
+
+This directory contains source files of testbase_nsk JNI framework,
+which provides support for JNI tests and accessing JNI environment.
+
+    Source files:
+        jni_tools.h
+        jni_tools.c
+
+    Naming conventions:
+        macroses:  NSK_JNI_*
+        functions: nsk_JNI_*
+
+---------------------------------------------------------------------------------
+
+jni_tools.h
+
+Provides functions and macroses for invocation of JNI functions
+and checking JNI errors and pending exceptions:
+
+    NSK_JNI_VERIFY(jni, action)
+    NSK_JNI_VERIFY_NEGATIVE(jni, action)
+
+Typical example of usage of the NSK_JNI_VERIFY macro
+for invokation of JNI functions:
+
+    // jni->FindClass(jni, class_name)
+    if (!NSK_JNI_VERIFY(jni,
+            jni->FindClass(class_name) != NULL)) {
+        return JNI_ERR;
+    }
+
+or with saving obtained data:
+
+    // cls = jni->FindClass(jni, class_name)
+    if (!NSK_JNI_VERIFY(jni, (cls =
+            jni->FindClass(class_name)) != NULL)) {
+        return JNI_ERR;
+    }
+
+---------------------------------------------------------------------------------

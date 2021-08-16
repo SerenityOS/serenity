@@ -1,0 +1,125 @@
+/*
+ * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+class nsk/jdi/ReferenceType/sourceDebugExtension/srcdebugx002x {
+  0xCAFEBABE;
+  3; // minor version
+  45; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #15; // #1
+    class #16; // #2
+    class #17; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "LineNumberTable"; // #7
+    Utf8 "LocalVariableTable"; // #8
+    Utf8 "this"; // #9
+    Utf8 "Lnsk/jdi/ReferenceType/sourceDebugExtension/srcdebugx002x;"; // #10
+    Utf8 "readiness"; // #11
+    Utf8 "()I"; // #12
+    Utf8 "SourceFile"; // #13
+    Utf8 "srcdebugx002x.java"; // #14
+    NameAndType #4 #5; // #15
+    Utf8 "nsk/jdi/ReferenceType/sourceDebugExtension/srcdebugx002x"; // #16
+    Utf8 "java/lang/Object"; // #17
+    Utf8 "SourceDebugExtension"; // #18
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #4; // name_cpx
+      #5; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[] {
+            0x2AB70001B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#7) { // LineNumberTable
+              [] { // LineNumberTable
+                0  11;
+              }
+            } // end LineNumberTable
+            ;
+            Attr(#8) { // LocalVariableTable
+              [] { // LocalVariableTable
+                0 5 9 10 0;
+              }
+            } // end LocalVariableTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0008; // access
+      #11; // name_cpx
+      #12; // sig_cpx
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          0; // max_locals
+          Bytes[] {
+            0x1107D1AC;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#7) { // LineNumberTable
+              [] { // LineNumberTable
+                0  13;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#13) { // SourceFile
+      #14;
+    } // end SourceFile
+    ;
+    Attr(#18) { // SourceDebugExtension
+      'Hello world!'; // an UTF string without prepended length
+    } // end SourceDebugExtension
+  } // Attributes
+} // end class nsk/jdi/ReferenceType/sourceDebugExtension/srcdebugx002x

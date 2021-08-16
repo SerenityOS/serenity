@@ -1,0 +1,2 @@
+Neg04.java:9:48: compiler.err.override.incompatible.ret: (compiler.misc.clashes.with: m(), Neg04.IA2, m(), Neg04.IA1), java.lang.Number, java.lang.Integer
+1 error

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="hr"/>
+		<territory type="BA"/>
+	</identity>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<days>
+					<dayContext type="stand-alone">
+						<dayWidth type="narrow">
+							<day type="sun" draft="contributed">N</day>
+							<day type="mon" draft="contributed">P</day>
+							<day type="tue" draft="contributed">U</day>
+							<day type="wed" draft="contributed">S</day>
+							<day type="thu" draft="contributed">Č</day>
+							<day type="fri" draft="contributed">P</day>
+							<day type="sat" draft="contributed">S</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1" draft="contributed">1. kv.</quarter>
+							<quarter type="2" draft="contributed">2. kv.</quarter>
+							<quarter type="3" draft="contributed">3. kv.</quarter>
+							<quarter type="4" draft="contributed">4. kv.</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dateFormats>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="contributed">d. M. yy.</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+			</calendar>
+		</calendars>
+	</dates>
+	<numbers>
+		<currencies>
+			<currency type="BAM">
+				<symbol>KM</symbol>
+			</currency>
+		</currencies>
+	</numbers>
+</ldml>

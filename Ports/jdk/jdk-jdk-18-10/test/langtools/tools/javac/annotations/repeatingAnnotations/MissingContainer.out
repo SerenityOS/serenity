@@ -1,0 +1,4 @@
+MissingContainer.java:18:1: compiler.err.invalid.repeatable.annotation: Foo
+MissingContainer.java:18:6: compiler.err.invalid.repeatable.annotation: Foo
+MissingContainer.java:11:1: compiler.err.annotation.missing.default.value: java.lang.annotation.Repeatable, value
+3 errors

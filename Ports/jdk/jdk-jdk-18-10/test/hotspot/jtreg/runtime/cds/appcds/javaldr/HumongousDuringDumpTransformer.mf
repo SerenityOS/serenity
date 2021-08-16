@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Premain-Class: HumongousDuringDumpTransformer
+Agent-Class: HumongousDuringDumpTransformer
+Can-Retransform-Classes: true
+Can-Redefine-Classes: true

@@ -1,0 +1,8 @@
+[attribute Y]
+[flow Y]
+[attribute W]
+[flow W]
+[attribute Z]
+[flow Z]
+T6734819c.java:15:11: compiler.err.unreachable.stmt
+1 error

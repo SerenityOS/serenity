@@ -1,0 +1,120 @@
+#
+# Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+$(eval $(call IncludeCustomExtension, hotspot/gensrc/GensrcJvmti.gmk))
+
+################################################################################
+# Build tools needed for the JVMTI source code generation
+
+# FIXME: jvmtiGen.java should move to make/src, jvmtiEnvFill.java should be removed.
+JVMTI_TOOLS_SRCDIR := $(TOPDIR)/src/hotspot/share/prims
+JVMTI_TOOLS_OUTPUTDIR := $(JVM_VARIANT_OUTPUTDIR)/tools/jvmti
+
+$(eval $(call SetupJavaCompilation, BUILD_JVMTI_TOOLS, \
+    COMPILER := bootjdk, \
+    SMALL_JAVA := false, \
+    SRC := $(JVMTI_TOOLS_SRCDIR), \
+    DISABLED_WARNINGS := rawtypes cast, \
+    INCLUDE_FILES := jvmtiGen.java jvmtiEnvFill.java, \
+    BIN := $(JVMTI_TOOLS_OUTPUTDIR), \
+))
+
+TOOL_JVMTI_GEN := $(JAVA_SMALL) -cp $(JVMTI_TOOLS_OUTPUTDIR) jvmtiGen
+TOOL_JVMTI_ENV_FILL := $(JAVA_SMALL) -cp $(JVMTI_TOOLS_OUTPUTDIR) jvmtiEnvFill
+
+################################################################################
+# Setup make rules for an xml transform for jvmti file generation.
+#
+# Parameter 1 is the name of the rule. This name is used as variable prefix,
+# and the targets generated are listed in a variable by that name. This name is
+# also used as the name of the output file.
+#
+# Remaining parameters are named arguments. These include:
+#   XML_FILE -- The input source file to use
+#   XSL_FILE -- The xsl file to use
+#   OUTPUT_DIR -- The directory to put the generated file in
+#   ARGS -- Additional arguments to the jvmtiGen tool
+#   DEPS -- Additional dependencies
+SetupXslTransform = $(NamedParamsMacroTemplate)
+define SetupXslTransformBody
+  $1_OUTPUT_FILE := $$($1_OUTPUT_DIR)/$1
+
+  $$(eval $$(call SetupExecute, jvmti_gen_$1, \
+      INFO := Generating jvmti file $1, \
+      DEPS := $$($1_XML_FILE) $$($1_XSL_FILE) $$($1_DEPS) $$(BUILD_JVMTI_TOOLS), \
+      OUTPUT_FILE := $$($1_OUTPUT_FILE), \
+      COMMAND := $$(TOOL_JVMTI_GEN) -IN $$($1_XML_FILE) \
+          -XSL $$($1_XSL_FILE) -OUT $$($1_OUTPUT_FILE) $$($1_ARGS), \
+  ))
+
+  TARGETS += $$(jvmti_gen_$1_TARGET)
+endef
+
+################################################################################
+# Create JVMTI files in gensrc/jvmtifiles
+
+JVMTI_SRCDIR := $(TOPDIR)/src/hotspot/share/prims
+JVMTI_OUTPUTDIR := $(JVM_VARIANT_OUTPUTDIR)/gensrc/jvmtifiles
+
+# Setup rule for generating a jvmti file
+#
+# $1 is generated source file name in $(JVMTI_OUTPUTDIR)
+# $2 is XSL file to use in $(JVMTI_SRCDIR)
+# $3 is optional extra arguments to jvmtiGen
+define SetupJvmtiGeneration
+  $$(eval $$(call SetupXslTransform, $1, \
+      XML_FILE := $$(JVMTI_SRCDIR)/jvmti.xml, \
+      XSL_FILE := $$(JVMTI_SRCDIR)/$(strip $2), \
+      OUTPUT_DIR := $$(JVMTI_OUTPUTDIR), \
+      ARGS := $3, \
+      DEPS := $$(JVMTI_SRCDIR)/jvmtiLib.xsl, \
+  ))
+endef
+
+$(eval $(call SetupJvmtiGeneration, jvmtiEnter.cpp, jvmtiEnter.xsl, \
+    -PARAM majorversion $(VERSION_FEATURE) \
+    -PARAM interface jvmti))
+$(eval $(call SetupJvmtiGeneration, jvmtiEnterTrace.cpp, jvmtiEnter.xsl, \
+    -PARAM majorversion $(VERSION_FEATURE) \
+    -PARAM interface jvmti -PARAM trace Trace))
+$(eval $(call SetupJvmtiGeneration, jvmtiEnv.hpp, jvmtiHpp.xsl, \
+    -PARAM majorversion $(VERSION_FEATURE)))
+$(eval $(call SetupJvmtiGeneration, jvmti.h, jvmtiH.xsl, \
+    -PARAM majorversion $(VERSION_FEATURE)))
+$(eval $(call SetupJvmtiGeneration, jvmti.html, jvmti.xsl, \
+    -PARAM majorversion $(VERSION_FEATURE)))
+
+################################################################################
+# Copy jvmti.h to include dir
+
+# The file is the same regardless of jvm variant. Only let one do the copy.
+ifeq ($(JVM_VARIANT), $(firstword $(JVM_VARIANTS)))
+  $(eval $(call SetupCopyFiles, COPY_JVMTI_H, \
+      DEST := $(SUPPORT_OUTPUTDIR)/modules_include/java.base, \
+      FILES := $(JVMTI_OUTPUTDIR)/jvmti.h, \
+  ))
+
+  TARGETS += $(COPY_JVMTI_H)
+endif

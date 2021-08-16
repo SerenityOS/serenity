@@ -1,0 +1,8 @@
+<?xml version="1.0" standalone="yes"?>
+<widgets>
+	<widget name="a" style="red" quantity="6"/>
+	<widget name="b" style="blue"/>
+	<widget name="c">
+		<style>green</style>
+	</widget>
+</widgets>

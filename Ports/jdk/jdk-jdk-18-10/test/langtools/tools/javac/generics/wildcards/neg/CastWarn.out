@@ -1,0 +1,14 @@
+CastWarn.java:24:38: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), CastWarn.DA<compiler.misc.type.captureof: 1, ? extends java.lang.Number>, CastWarn.DA<? extends java.lang.Runnable>
+CastWarn.java:25:35: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), CastWarn.DA<compiler.misc.type.captureof: 1, ? extends java.lang.Number>, CastWarn.DA<? super java.lang.Integer>
+CastWarn.java:26:34: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), CastWarn.DA<compiler.misc.type.captureof: 1, ? super java.lang.Number>, CastWarn.DA<? super java.lang.String>
+CastWarn.java:29:37: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), CastWarn.DA<N>, CastWarn.DA<? extends java.lang.Integer>
+CastWarn.java:30:21: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), CastWarn.DA<compiler.misc.type.captureof: 1, ? extends java.lang.Number>, CastWarn.DA<I>
+CastWarn.java:31:21: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), CastWarn.DA<compiler.misc.type.captureof: 1, ? extends java.lang.Integer>, CastWarn.DA<N>
+CastWarn.java:32:21: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), CastWarn.DA<compiler.misc.type.captureof: 1, ? extends java.lang.Runnable>, CastWarn.DA<N>
+CastWarn.java:34:21: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), CastWarn.DA<I>, CastWarn.DA<N>
+CastWarn.java:35:21: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), CastWarn.DA<R>, CastWarn.DA<N>
+CastWarn.java:38:26: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), CastWarn.DB, CastWarn.DA<java.lang.Number>
+CastWarn.java:39:36: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), CastWarn.DB, CastWarn.DA<? extends java.lang.Number>
+CastWarn.java:40:26: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), CastWarn.DA, CastWarn.DB<java.lang.Number>
+CastWarn.java:41:36: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), CastWarn.DA, CastWarn.DB<? extends java.lang.Number>
+13 warnings

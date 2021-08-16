@@ -1,0 +1,14 @@
+
+/**
+ * This class is used to test the results of the langtools build.
+ */
+public class HelloWorld {
+
+  public HelloWorld();
+
+  /**
+   * The old standby!
+   * @param args The parameters are ignored.
+   */
+  public static void main(java.lang.String... args);
+}

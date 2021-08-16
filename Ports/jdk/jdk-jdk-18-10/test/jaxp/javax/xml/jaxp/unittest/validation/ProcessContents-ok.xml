@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<my_strict>
+   <my_int>255</my_int>
+   <my_skip>
+      <my_int>2.55</my_int>
+      <un_define/>
+      <my_lax>
+         <my_int>25.5</my_int>
+      </my_lax>
+      <my_strict>
+         <un_define>TTT</un_define>
+      </my_strict>
+   </my_skip>   
+   <my_lax>
+         <my_int>2555</my_int>
+         <un_define>TTT</un_define>
+         <my_strict>
+            <my_int>20</my_int>
+         </my_strict>
+   </my_lax>
+</my_strict>

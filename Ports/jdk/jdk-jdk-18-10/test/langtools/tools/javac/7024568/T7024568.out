@@ -1,0 +1,2 @@
+T7024568.java:9:40: compiler.err.cant.resolve.location: kindname.variable, undefined, , , (compiler.misc.location: kindname.class, Main, null)
+1 error

@@ -1,0 +1,3 @@
+ClassBoundCheckingOverflow.java:10:70: compiler.err.type.found.req: (compiler.misc.type.parameter: E), (compiler.misc.type.req.class)
+ClassBoundCheckingOverflow.java:11:73: compiler.err.type.found.req: (compiler.misc.type.parameter: E), (compiler.misc.type.req.class)
+2 errors

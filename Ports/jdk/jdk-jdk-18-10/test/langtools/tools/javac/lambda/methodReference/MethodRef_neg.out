@@ -1,0 +1,5 @@
+MethodRef_neg.java:30:15: compiler.err.prob.found.req: (compiler.misc.invalid.mref: kindname.method, (compiler.misc.cant.apply.symbol: kindname.method, bar, int, java.lang.String, kindname.class, MethodRef_neg, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.inconvertible.types: java.lang.String, int))))
+MethodRef_neg.java:32:15: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.mref: (compiler.misc.inconvertible.types: int, java.lang.String))
+MethodRef_neg.java:33:13: compiler.err.prob.found.req: (compiler.misc.invalid.mref: kindname.method, (compiler.misc.cant.apply.symbol: kindname.method, make, compiler.misc.no.args, java.lang.Integer, kindname.class, MethodRef_neg, (compiler.misc.arg.length.mismatch)))
+MethodRef_neg.java:34:13: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.mref: (compiler.misc.inconvertible.types: void, java.lang.Integer))
+4 errors

@@ -1,0 +1,2 @@
+MethodReference50.java:23:14: compiler.err.cant.resolve.location: kindname.variable, NonExistentType, , , (compiler.misc.location: kindname.class, MethodReference50, null)
+1 error

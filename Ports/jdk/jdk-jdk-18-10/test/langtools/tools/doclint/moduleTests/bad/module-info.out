@@ -1,0 +1,4 @@
+module-info.java:13: warning: no comment
+module bad {
+^
+1 warning

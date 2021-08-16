@@ -1,0 +1,8 @@
+/*
+ * security policy used by the test process
+ */
+
+grant {
+  // test needs to communicate with objects on arbitrary ports
+  permission java.net.SocketPermission "*:1024-", "connect,accept,listen";
+};

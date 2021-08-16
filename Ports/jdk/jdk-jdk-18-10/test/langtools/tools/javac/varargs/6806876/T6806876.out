@@ -1,0 +1,5 @@
+T6806876.java:11:32: compiler.warn.unchecked.generic.array.creation: java.lang.Number&java.lang.Comparable<? extends java.lang.Number&java.lang.Comparable<?>&java.lang.constant.Constable&java.lang.constant.ConstantDesc>&java.lang.constant.Constable&java.lang.constant.ConstantDesc[]
+T6806876.java:14:19: compiler.warn.unchecked.varargs.non.reifiable.type: T
+- compiler.err.warnings.and.werror
+1 error
+2 warnings

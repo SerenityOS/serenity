@@ -1,0 +1,5 @@
+EmptySerialFieldTest.java:18: warning: no description for @serialField
+     * @serialField empty    String
+       ^
+1 warning
+

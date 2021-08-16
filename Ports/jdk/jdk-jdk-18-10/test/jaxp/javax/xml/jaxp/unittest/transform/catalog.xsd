@@ -1,0 +1,122 @@
+<xs:schema 
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://www.astro.com/astro" 
+    xmlns:astro="http://www.astro.com/astro"
+    elementFormDefault="qualified"
+    attributeFormDefault="qualified"
+>
+    <!-- Star Identification String Type  -->
+    <xs:simpleType name="staridType">
+	<xs:restriction base="xs:string">
+	    <xs:maxLength value="4"/>
+	</xs:restriction>
+    </xs:simpleType>
+
+    <!-- Hour Type -->
+    <xs:simpleType name="hourType">
+	<xs:restriction base="xs:decimal">
+	    <xs:minInclusive value="0.0"/>
+	    <xs:maxInclusive value="24.0"/>
+	</xs:restriction>
+    </xs:simpleType>
+
+    <!-- Minute Type -->
+    <xs:simpleType name="minuteType">
+	<xs:restriction base="xs:decimal">
+	    <xs:minInclusive value="0.0"/>
+	    <xs:maxInclusive value="60.0"/>
+	</xs:restriction>
+    </xs:simpleType>
+
+    <!-- Second Type -->
+    <xs:simpleType name="secondType">
+	<xs:restriction base="xs:decimal">
+	    <xs:minInclusive value="0.0"/>
+	    <xs:maxInclusive value="60.0"/>
+	</xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="decimalValueType">
+	<xs:restriction base="xs:decimal">
+	</xs:restriction>
+    </xs:simpleType> 
+
+    <xs:simpleType name="degType">
+	<xs:restriction base="xs:decimal">
+	    <xs:minInclusive value="-90.0"/>
+	    <xs:maxInclusive value="90.0"/>
+	</xs:restriction>
+    </xs:simpleType> 
+
+    <xs:simpleType name="vmagType">
+	<xs:restriction base="xs:decimal">
+	    <xs:minInclusive value="-3.0"/>
+	    <xs:maxInclusive value="12.0"/>
+	</xs:restriction>
+    </xs:simpleType> 
+
+
+    <xs:simpleType name="signType">
+	<xs:restriction base="xs:string">
+	    <xs:enumeration value="+"/>
+	    <xs:enumeration value="-"/>
+	    <xs:enumeration value=""/>
+	</xs:restriction>
+    </xs:simpleType> 
+
+    <xs:complexType name="raType">
+	<xs:sequence>
+	    <xs:element name="h"  type="astro:hourType"/>
+	    <xs:element name="m"  type="astro:minuteType"/>
+	    <xs:element name="s"  type="astro:secondType"/>
+	    <xs:element name="dv" type="astro:decimalValueType"/>
+	</xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="decType">
+	<xs:sequence>
+	    <xs:element name="sgn" type="astro:signType"/>
+	    <xs:element name="d"   type="astro:degType"/>
+	    <xs:element name="m"   type="astro:minuteType"/>
+	    <xs:element name="s"   type="astro:secondType"/>
+	    <xs:element name="dv"  type="astro:decimalValueType"/>
+	</xs:sequence>
+    </xs:complexType>
+
+
+    <xs:complexType name="starType">
+	<xs:sequence>
+	    <xs:element name="hr"            type="astro:staridType"/>
+	    <xs:element name="constellation" type="xs:string"/>
+	    <xs:element name="fullname"      type="xs:string"/>
+	    <xs:element name="ra"            type="astro:raType"/>
+	    <xs:element name="dec"           type="astro:decType"/>
+	    <xs:element name="glng"          type="xs:decimal"/>
+	    <xs:element name="glat"          type="xs:decimal"/>
+	    <xs:element name="vmag"          type="astro:vmagType"/>
+	    <xs:element name="spec"          type="xs:string"/>
+	</xs:sequence>
+    </xs:complexType>
+
+
+    <!-- The real part of the catalog starts here -->
+    <xs:element name="stardb">
+       <xs:complexType>
+          <xs:sequence>
+
+	     <!-- for testing purposes -->
+	     <xs:element name="_test01" type="xs:string"
+		minOccurs="0" maxOccurs="1"/>
+	     <xs:element name="test-02" type="xs:string"/>
+	     <xs:element name="test.03" type="xs:string"/>
+	     <xs:element name="_test-04" type="xs:string"/>
+
+	     <!-- astro data elements -->
+             <xs:element name="star" type="astro:starType"
+	        minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+       </xs:complexType>
+    </xs:element>
+    <!-- The real part of the catalog ends here -->
+
+</xs:schema>

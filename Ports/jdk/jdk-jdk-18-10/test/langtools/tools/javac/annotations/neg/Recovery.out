@@ -1,0 +1,2 @@
+Recovery.java:12:2: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.annotation.RetentionPolicy, java.lang.annotation.Annotation)
+1 error

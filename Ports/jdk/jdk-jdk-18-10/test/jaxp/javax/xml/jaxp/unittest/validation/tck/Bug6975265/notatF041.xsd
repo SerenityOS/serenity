@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:simpleType name="foo">
+		<xsd:restriction base="xsd:string">
+			<xsd:length value="8">
+				<xsd:notation name="jpeg" public="image/jpeg" system="viewer.exe"/>
+			</xsd:length>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

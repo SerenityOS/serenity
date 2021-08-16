@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+
+   - Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+
+   - Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+
+   - Neither the name of Oracle nor the names of its
+     contributors may be used to endorse or promote products derived
+     from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+ IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<project name="jdk" basedir=".">
+
+    <target name="-jdk-preinit">
+        <condition property=".exe" value=".exe">
+            <os family="windows"/>
+        </condition>
+        <property name=".exe" value=""/>
+        <property name="nbjdk.javac" value="${nbjdk.home}/bin/javac${.exe}"/>
+        <property name="nbjdk.java" value="${nbjdk.home}/bin/java${.exe}"/>
+        <property name="nbjdk.javadoc" value="${nbjdk.home}/bin/javadoc${.exe}"/>
+        <property name="nbjdk.appletviewer" value="${nbjdk.home}/bin/appletviewer${.exe}"/>
+        <property name="nbjdk.jconsole" value="${nbjdk.home}/bin/jconsole${.exe}"/>
+        <property name="nbjdk.bootclasspath" value="${nbjdk.home}/jre/lib/rt.jar"/>
+    </target>
+
+    <target name="-jdk-presetdef-basic" depends="-jdk-preinit" unless="nbjdk.presetdef.basic.done">
+        <macrodef name="javac-presetdef">
+            <attribute name="javacval"/>
+            <sequential>
+                <presetdef name="javac">
+                    <javac fork="yes" executable="@{javacval}"/>
+                </presetdef>
+            </sequential>
+        </macrodef>
+        <javac-presetdef javacval="${nbjdk.javac}"/>
+        <macrodef name="java-presetdef">
+            <attribute name="javaval"/>
+            <sequential>
+                <presetdef name="java">
+                    <java fork="yes" jvm="@{javaval}"/>
+                </presetdef>
+            </sequential>
+        </macrodef>
+        <java-presetdef javaval="${nbjdk.java}"/>
+        <macrodef name="javadoc-presetdef">
+            <attribute name="javadocval"/>
+            <sequential>
+                <presetdef name="javadoc">
+                    <javadoc executable="@{javadocval}"/>
+                </presetdef>
+            </sequential>
+        </macrodef>
+        <javadoc-presetdef javadocval="${nbjdk.javadoc}"/>
+        <property name="nbjdk.presetdef.basic.done" value="true"/>
+    </target>
+
+    <target name="-jdk-presetdef-nbjpdastart" depends="-jdk-preinit" unless="nbjdk.presetdef.nbjpdastart.done">
+        <macrodef name="nbjpdastart-presetdef">
+            <attribute name="bootcpval"/>
+            <sequential>
+                <presetdef name="nbjpdastart">
+                    <nbjpdastart>
+                        <bootclasspath>
+                            <path path="@{bootcpval}"/>
+                        </bootclasspath>
+                    </nbjpdastart>
+                </presetdef>
+            </sequential>
+        </macrodef>
+        <nbjpdastart-presetdef bootcpval="${nbjdk.bootclasspath}"/>
+        <property name="nbjdk.presetdef.nbjpdastart.done" value="true"/>
+    </target>
+
+    <target name="-jdk-init" depends="-jdk-preinit,-jdk-presetdef-basic"/>
+
+</project>

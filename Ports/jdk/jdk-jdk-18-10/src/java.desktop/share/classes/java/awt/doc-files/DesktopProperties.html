@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>AWT Desktop Properties</title>
+</head>
+<!--
+ Copyright (c) 2005, 2021, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+
+<body>
+<main role="main">
+<h1>AWT Desktop Properties</h1>
+
+The following refers to standard AWT desktop properties that
+may be obtained via the
+{@link java.awt.Toolkit#getDesktopProperty(java.lang.String)
+Toolkit.getDesktopProperty} method.
+<p>
+Each desktop property is named by a unique string, which
+is the "name" of that property.
+<p>
+Desktop properties supported by the AWT but not documented
+elsewhere - typically because there is no suitable
+method or class - are documented here.
+<p>
+Desktop properties documented elsewhere are those which are
+tightly coupled with a method or class which documents them.
+<p>
+Since desktop properties abstract an underlying platform
+setting, they may not be available in environments that do
+not support them. In the event that a desktop property is
+unavailable for any reason, the implementation will return
+<code>null</code>.
+<table class="striped">
+<caption>The following table summarizes the desktop properties documented
+here, and their value types.</caption>
+<thead>
+<tr>
+<th scope="col">Property Name</th>
+<th scope="col">Value Type</th>
+<th scope="col">Summary Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row"><A href="#awt.font.desktophints">awt.font.desktophints</A></th>
+<td>{@link java.util.Map java.util.Map}</td>
+<td>Font smoothing (text antialiasing) settings.</td>
+</tr>
+<tr>
+<th scope="row"><A href="#sun.awt.enableExtraMouseButtons">sun.awt.enableExtraMouseButtons</A></th>
+<td>{@link java.lang.Boolean java.lang.Boolean}</td>
+<td>Controls if mouse events from extra buttons are to be generated or not</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Desktop Font Rendering Hints</h2>
+<b>Desktop Property: <a id="awt.font.desktophints">"awt.font.desktophints"</A></b>
+<p>
+Modern desktops support various forms of text antialiasing (font smoothing).
+<p>
+These are applied by platform-specific heavyweight components.
+However an application may want to render text using the same text
+antialiasing on a drawing surface or lightweight (non-platform) component using
+{@link java.awt.Graphics2D Graphics2D} methods.
+This is particularly important when creating
+{@link javax.swing.JComponent Swing components} which
+are required to appear consistent with native desktop components or other
+Swing components.
+
+<h3>Basic Usage</h3>
+The standard desktop property named
+<b>"awt.font.desktophints"</b>
+can be used to obtain the rendering hints that best match the desktop settings.
+
+The return value is a {@link java.util.Map Map} of
+{@link java.awt.RenderingHints RenderingHints} which
+can be directly applied to a <code>Graphics2D</code>.
+<p>
+It is a <code>Map</code> as more than one hint may be needed.
+If non-null this can be directly applied to the <code>Graphics2D</code>.
+<pre><code>
+Toolkit tk = Toolkit.getDefaultToolkit();
+Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
+if (map != null) {
+    graphics2D.addRenderingHints(map);
+}
+</code></pre>
+<h3>Advanced Usage Tips</h3>
+
+<h4>Listening for changes</h4>
+<p>
+An application can listen for changes in the property
+using a {@link java.beans.PropertyChangeListener PropertyChangeListener}:
+<pre><code>
+tk.addPropertyChangeListener("awt.font.desktophints", pcl);
+</code></pre>
+Listening for changes is recommended as users can, on rare occasions,
+reconfigure a desktop environment whilst applications are running
+in a way that may affect the selection of these hints, and furthermore
+many desktop environments support dynamic reconfiguration of these
+running applications to conform to the new settings.
+<p>
+There is no direct way to discover if dynamic reconfiguration
+is expected of running applications but the default assumption
+should be that it is expected, since most modern desktop environments
+do provide this capability.
+<h4>Text Measurement</h4>
+<p>
+Text always needs to be measured using the same
+{@link java.awt.font.FontRenderContext FontRenderContext}
+as used for rendering. The text anti-aliasing hint is a component of
+the <code>FontRenderContext</code>.
+A {@link java.awt.FontMetrics FontMetrics}
+obtained from the <code>Graphics</code> object on which the hint
+has been set will measure text appropriately.
+This is not a unique requirement for clients that specify this hint
+directly, since the value of the <code>FontRenderContext</code> should
+never be assumed, so is discussed here principally as a reminder.
+<h4>Saving and restoring Graphics State</h4>
+<p>
+Sometimes an application may need to apply these hints on a shared
+Graphics only temporarily, restoring the previous values after they
+have been applied to text rendering operations.
+The following sample code shows one way to do this.
+<pre><code>
+/**
+  * Get rendering hints from a Graphics instance.
+  * "hintsToSave" is a Map of RenderingHint key-values.
+  * For each hint key present in that map, the value of that
+  * hint is obtained from the Graphics and stored as the value
+  * for the key in savedHints.
+  */
+RenderingHints getRenderingHints(Graphics2D g2d,
+                                  RenderingHints hintsToSave,
+                                  RenderingHints savedHints) {
+     if (savedHints == null) {
+         savedHints = new RenderingHints(null);
+     } else {
+         savedHints.clear();
+     }
+     if (hintsToSave.size() == 0) {
+         return savedHints;
+     }
+     /* RenderingHints.keySet() returns Set&lt;Object&gt; */
+     for (Object o : hintsToSave.keySet()) {
+         RenderingHints.Key key = (RenderingHints.Key)o;
+         Object value = g2d.getRenderingHint(key);
+         savedHints.put(key, value);
+     }
+     return savedHints;
+}
+
+
+Toolkit tk = Toolkit.getDefaultToolkit();
+Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
+Map oldHints;
+if (map != null) {
+     oldHints = getRenderingHints(graphic2D, map, null);
+     graphics2D.addRenderingHints(map);
+     ..
+     graphics2D.addRenderingHints(oldHints);
+}
+</code></pre>
+
+<h3>Details</h3>
+<ul>
+<li>The return value will always be null or a <code>Map</code>
+<br><br>
+<li>If the return value is null, then no desktop properties are available,
+and dynamic updates will not be available. This is a typical behaviour if
+the JDK does not recognise the desktop environment, or it is one which
+has no such settings. The <b>Headless</b> toolkit is one such example.
+Therefore it is important to test against null before using the map.
+<br><br>
+<li>If non-null the value will be a <code>Map</code> of
+<code>RenderingHints</code> such that every key is an instance of
+<code>RenderingHints.Key</code> and the value is a legal value for that key.
+<br><br>
+<li>The map may contain the default value for a hint. This is
+needed in the event there is a previously a non-default value for the hint
+set on the <code>Graphics2D</code>. If the map did not contain
+the default value, then <code>addRenderingHints(Map)</code> would leave
+the previous hint which may not correspond to the desktop setting.
+<p>
+An application can use <code>setRenderingHints(Map)</code> to reinitialise
+all hints, but this would affect unrelated hints too.
+<br><br>
+<li>A multi-screen desktop may support per-screen device settings in which
+case the returned value is for the default screen of the desktop.
+An application may want to use the settings for the screen on
+which they will be applied.
+The per-screen device hints may be obtained by per-device property names
+which are constructed as the String concatenation
+<pre><code>
+"awt.font.desktophints" + "." + GraphicsDevice.getIDstring();
+</code></pre>
+<p>
+An application can also listen for changes on these properties.
+<p>
+However this is an extremely unlikely configuration, so to help
+ease of development, if only a single, desktop-wide setting is supported,
+then querying each of these per-device settings will return null.
+So to determine if there are per-device settings it is sufficient to
+determine that there is a non-null return for any screen device using
+the per-device property name.
+</ul>
+<h2>Mouse Functionality</h2>
+<b>Desktop Property: <a id="sun.awt.enableExtraMouseButtons">"sun.awt.enableExtraMouseButtons"</A></b>
+<p>
+This property determines if events from extra mouse buttons (if they are exist and are
+enabled by the underlying operating system) are allowed to be processed and posted into
+{@code EventQueue}.
+<br>
+The value could be changed by passing "sun.awt.enableExtraMouseButtons"
+property value into java before application starts. This could be done with the following command:
+<pre>
+java -Dsun.awt.enableExtraMouseButtons=false Application
+</pre>
+Once set on application startup, it is impossible to change this value after.
+<br>
+Current value could also be queried using getDesktopProperty("sun.awt.enableExtraMouseButtons")
+method.
+<br>
+If the property is set to {@code true} then
+<ul>
+<li> it is still legal to create {@code MouseEvent} objects with
+standard buttons and, if the mouse has more
+then three buttons, it is also legal to use buttons from the range started
+from 0 up to {@link java.awt.MouseInfo#getNumberOfButtons() getNumberOfButtons()}.
+
+<li> it is legal to use standard button masks when using {@code Robot.mousePress()}
+and {@code Robot.mouseRelease()} methods and, if the mouse has more then three buttons,
+it is also legal to use masks for existing extended mouse buttons.
+That way, if there are more then three buttons on the mouse then it is allowed to
+use button masks corresponding to the buttons
+in the range from 1 up to {@link java.awt.MouseInfo#getNumberOfButtons() getNumberOfButtons()}
+</ul>
+<br>
+If the property is set to {@code false} then
+<ul>
+<li> it is legal to create {@code MouseEvent} objects with standard buttons
+only: {@code NOBUTTON}, {@code BUTTON1}, {@code BUTTON2} and
+{@code BUTTON3}
+<li> it is legal to use standard button masks only:
+{@code InputEvent.BUTTON1_DOWN_MASK}, {@code InputEvent.BUTTON2_DOWN_MASK},
+{@code InputEvent.BUTTON3_DOWN_MASK}
+</ul>
+
+This property should be used when there is no need in listening mouse events fired as a result of
+activity with extra mouse button.
+By default this property is set to {@code true}.
+</main>
+</body>
+</html>

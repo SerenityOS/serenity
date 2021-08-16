@@ -1,0 +1,2 @@
+InheritanceConflict.java:20:1: compiler.err.concrete.inheritance.conflict: f(T), inheritance.conflict.B<java.lang.String>, f(java.lang.String), inheritance.conflict.A<java.lang.String>, inheritance.conflict.B<java.lang.String>
+1 error

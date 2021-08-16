@@ -1,0 +1,7 @@
+DefiniteAssignment2.java:20:28: compiler.err.var.might.not.have.been.initialized: x
+DefiniteAssignment2.java:31:28: compiler.err.var.might.not.have.been.initialized: x
+DefiniteAssignment2.java:42:28: compiler.err.var.might.not.have.been.initialized: x
+DefiniteAssignment2.java:52:28: compiler.err.var.might.not.have.been.initialized: x
+DefiniteAssignment2.java:62:28: compiler.err.var.might.not.have.been.initialized: x
+DefiniteAssignment2.java:73:28: compiler.err.var.might.not.have.been.initialized: x
+6 errors

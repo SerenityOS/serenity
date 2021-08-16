@@ -1,0 +1,2 @@
+T7034495.java:17:17: compiler.err.types.incompatible: T7034495.B<compiler.misc.type.captureof: 1, ?>, T7034495.A<compiler.misc.type.captureof: 2, ?>, (compiler.misc.incompatible.diff.ret: foo, )
+1 error

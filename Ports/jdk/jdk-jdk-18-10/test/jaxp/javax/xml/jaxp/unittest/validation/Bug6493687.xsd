@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="INFO">
+		<xs:complexType>
+			<xs:attribute name="Description" type="xs:NMTOKEN" use="required"/>
+			<xs:attribute name="Theme" type="xs:NMTOKEN" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="LINK">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="TARGET"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="LINKS">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="LINK" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ROOT">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="LINKS"/>
+			</xs:sequence>
+			<xs:attribute name="Typ" type="xs:NMTOKEN" use="required"/>
+			<xs:attribute name="Version" type="xs:decimal" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="TARGET">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="INFO"/>
+			</xs:sequence>
+			<xs:attribute name="Version" type="xs:integer" use="required"/>
+			<xs:attribute name="template" type="xs:NMTOKEN" use="required"/>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

@@ -1,0 +1,3 @@
+ParserRecovery.java:10:39: compiler.err.expected2: :, ->
+ParserRecovery.java:13:31: compiler.err.expected2: :, ->
+2 errors

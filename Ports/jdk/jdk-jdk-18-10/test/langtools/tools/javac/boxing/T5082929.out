@@ -1,0 +1,2 @@
+T5082929.java:11:23: compiler.err.incomparable.types: java.lang.Float, java.lang.Integer
+1 error

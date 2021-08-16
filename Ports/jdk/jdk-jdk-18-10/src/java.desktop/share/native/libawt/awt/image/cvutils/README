@@ -1,0 +1,277 @@
+/* 
+ * Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ * 
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ * 
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ * 
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ * 
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+This directory contains source code to perform a wide variety of image
+conversions for the Java AWT.
+
+The image conversion process is controlled by a function skeleton
+defined in the include file <img_scaleloop.h> which invokes a number
+of macros in different categories to perform the work of reading and
+decoding the input pixels and then scaling, dithering, and storing the
+pixels in the destination image structure.  Each part of that process
+can be implemented in one of several different ways depending on the
+type of input data and output representation needed and depending on
+the speed and quality desired.
+
+The conversion process as defined by <img_scaleloop.h> can be broken
+down into the following categories:
+
+	Fetching	retrieving pixels from the source pixel data
+	Decoding	decoding source pixels into color/alpha information
+	Scaling		resampling source data for a different resolution
+	Encoding	converting source colors into a destination pixel
+	Alpha		converting alpha values into masks or alpha channels
+	Storing		storing the final pixels in the destination image
+
+Each category defines a number of different macros that are used by the
+code skeleton in <img_scaleloop.h> to perform the work of converting
+the images.  The macros for each category are all implemented by a
+number of other header files with multiple implementations provided
+for each category depending on the particular type of input or output
+data desired.  The files which implement the various categories are as
+follows:
+
+    Fetching
+	<img_input8.h>		Fetch 8 bit pixels from a byte array
+	<img_input32.h>		Fetch 32 bit pixels from a int array
+	<img_input8_32.h>	Fetch 8 or 32 bit pixels
+
+    Decoding
+    	<img_icm.h>		Decode IndexColorModel pixels
+    	<img_dcm.h>		Decode DirectColorModel pixels
+    	<img_dcm8.h>		Decode DirectColorModel pixels with at
+				    least 8 bits per component
+    	<img_anycm.h>		Decode any type of ColorModel's pixels (with
+				    native handling of Index and Direct)
+
+    Scaling
+    	<img_noscale.h>		Don't scale input data at all
+	<img_replscale.h>	Nearest Neighbor scaling - replicate or
+				    omit pixels as necessary
+
+    Encoding
+	<img_nodither.h>	No encoding at all (only for 24-bit images)
+	<img_dir8dither.h>	Compose DirectColor pixels, 8-bits/component 
+	<img_dirdither.h>	Compose DirectColor pixels up to 8-bits/comp
+	<img_fsgray.h>		Floyd-Steinberg error diffusion, gray ramp
+				    (requires TopDownLeftRight source data)
+	<img_fscolor.h>		Floyd-Steinberg error diffusion, RGB color map
+				    (requires TopDownLeftRight source data)
+	<img_fsdither.h>	Floyd-Steinberg error diffusion, RGB or gray
+				    (requires TopDownLeftRight source data)
+	<img_ordgray.h>		unsigned ordered dither error, gray ramp
+	<img_ordclruns.h>	unsigned ordered dither error, RGB color map
+	<img_ordclrsgn.h>	signed ordered dither error, RGB color map
+	<img_orddither.h>	unsigned ordered dither error, RGB or gray
+				    (must also include ordclrsgn or ordclruns)
+
+    Alpha
+    	<img_opaque.h>		No alpha processing (must be opaque input)
+    	<img_alpha.h>		Produce 1-bit transparency masks from alpha
+				    data using an ordered dithering technique
+
+    Storing
+    	<img_output8.h>		Store 8-bit pixels in a byte array
+    	<img_output16.h>	Store 16-bit pixels in a short array
+    	<img_output24.h>	Store 24-bit pixels in a byte triplet array
+    	<img_output32.h>	Store 32-bit pixels in an int array
+    	<img_output8_16_24.h>	Store 8, 16 or 24 bit pixels
+    	<img_output8_16_32.h>	Store 8, 16 or 32 bit pixels
+    	<img_output8_32.h>	Store 8 or 32 bit pixels
+
+Some of these header files also require a number of definitions to be
+provided by the platform implementor.  These definitions are usually
+placed in a file called "img_util_md.h" and included when defining an
+actual image scaling function (see below).  Most of the definitions
+can be implemented using either macros or functions unless indicated
+below.  Here is a list of the various required definitions and the
+files or categories which rely on them:
+
+used by <img_alpha.h>
+
+    typedef [integer base type] MaskBits;
+	Specifies the base type for transparency mask manipulation.
+	Some platforms may manipulate masks 8-bits at a time and others
+	may manipulate them 32-bits at a time.
+
+    MaskBits *ImgInitMask(cvdata);
+	Create a transparency mask buffer and return a handle to it.
+	The buffer will be created on the fly whenever the first
+	transparent pixel is encountered.  If no transparent pixels
+	are ever encountered, there will be no reason to create a
+	mask.  The buffer should be initialized to opacity values
+	where any existing opaque converted data resides and to
+	transparency values where there is no data yet.
+
+    int MaskScan(cvdata);
+    	Return the size of a single scan line in the output mask buffer
+	in MaskBits sized units.  If the mask data is being buffered a
+	scan line at a time, then return 0 to indicate that successive
+	scan lines should overwrite each other in the single row-sized
+	buffer.
+
+    int MaskOffset(x);
+    	Return the index into an array of MaskBits elements where the
+	data for the indicated x coordinate resides.  This is typically
+	(x >> (sizeof(MaskBits) * 8)).
+
+    int MaskInit(x);
+    	Return a number with the appropriate single bit set for modifying
+	the mask location for the indicated x coordinate.  This is
+	typically (1 << (x & ((sizeof(MaskBits) * 8) - 1))).
+
+    void SetOpaqueBit(mask, bit);
+    	Perform the necessary logical operation on the accumulator "mask"
+	with the indicated "bit" to indicate an opaque pixel.  If bits set
+	to 1 represent opacity, then this operation is typically defined
+	as (mask |= bit).  Note that SetOpaqueBit must be implemented as
+	a macro since the first argument, the mask accumulator, must be
+	modified.
+
+    void SetTransparentBit(mask, bit);
+    	Perform the necessary logical operation on the accumulator "mask"
+	with the indicated "bit" to indicate a transparent pixel.  If bits
+	set to 0 represent transparency, then this operation is typically
+	defined as (mask &= (~bit)).  Note that SetTransparentBit must
+	be implemented as a macro since the first argument, the mask
+	accumulator, must be modified.
+
+used directly by <img_scaleloop.h>
+
+    void BufComplete(cvdata, dstX1, dstY1, dstX2, dstY2);
+	Called at the end of the image conversion function to perform any
+	final processing on the buffer, the x1,y1,x2,y2 coordinates specify
+	the rectangular region of the output buffer that was modified.
+
+used by all <img_output*.h> variants
+
+    void SendRow(ird, dstY, dstX1, dstX2);
+    	Called at the end of the processing for a given row to allow
+	the platform to buffer converted data by row and then move the
+	data into place a row at a time (for instance under X11, you
+	might want to convert a row of pixels in a row-sized local
+	buffer and then execute XPutImage to send that one row to the
+	server to save on the client side memory requirements)
+
+    int ScanBytes(cvdata);
+    	Return the size in bytes of a single scan line in the output
+	buffer.  If the data is being buffered a scan line at a time,
+	then return 0 to indicate that successive scan lines should
+	overwrite each other in the single row-sized buffer.
+
+used by <img_fscolor.h> and <img_sgnordcolor.h>
+
+    int ColorCubeFSMap(red, green, blue);
+	Return the pixel value of the closest color to the requested
+	red, green, and blue components.  The components are already
+	bound to the range 0 <= component <= 255.
+
+used by all <img_fs*.h> variants
+
+    void GetPixelRGB(pixel, red, green, blue);
+    	Store the appropriate color components for the indicated output
+	"pixel" into the red, green, and blue arguments.  Note that
+	GetPixelRGB must be implemented as a macro since the last three
+	arguments must be modified, but the macro could be implemented
+	to call a function.  You can expect that the red, green, and
+	blue arguments are simple variables if you need to reference
+	them.
+
+used by <img_ordclruns.h> (used to be known as img_ordcolor.h)
+
+    extern uns_ordered_dither_array img_oda_red;
+    extern uns_ordered_dither_array img_oda_green;
+    extern uns_ordered_dither_array img_oda_blue;
+    	These names can be #defined to refer to some other global
+	variables.
+
+    int ColorCubeOrdMapUns(red, green, blue);
+	Return the pixel value of the next color darker than the
+	requested red, green, and blue components.  The components
+	are already bound to the range 0 <= component <= 256, where
+	256 represents maximum intensity, but 255 represents the
+	next to highest intensity.
+
+used by <img_ordclrsgn.h>
+
+    extern sgn_ordered_dither_array img_oda_red;
+    extern sgn_ordered_dither_array img_oda_green;
+    extern sgn_ordered_dither_array img_oda_blue;
+    	These names can be #defined to refer to some other global
+	variables.
+
+    int ColorCubeOrdMapSgn(red, green, blue);
+	Return the pixel value of the closest color to the requested
+	red, green, and blue components.  The components are already
+	bound to the range 0 <= component <= 255.
+	(Typically equivalent to ColorCubeFSMap(r, g, b))
+
+used by all <img_*gray.h> variants
+
+    extern unsigned char img_grays[256];
+    extern unsigned char img_bwgamma[256];
+	The img_bwgamma table allows a gamma curve to be placed on the
+	grayscale dithering to improve the output match when the gray
+	ramp has very few gray values in it.  The img_grays table is
+	a simple best match lookup for an 8-bit gray value to the best
+	pixel value in the available gray ramp.
+    	These names can be #defined to refer to some other global
+	variables.
+
+used by <img_ordgray.h>
+
+    extern sgn_ordered_dither_array img_oda_gray;
+    	This name can be #defined to refer to some other global
+	variable.
+
+To implement a given conversion function, simply create a file which
+includes the necessary header files from the above list which match
+the properties that you are trying to handle.  In some cases, you can
+choose a very general header file to handle more cases as a default
+implementation, or a very specific header file to handle common cases
+more efficiently.  Then simply define the macro "NAME" to represent
+the name of the function you wish to create and then include the skeleton
+file <img_scaleloop.h> to do the actual work.  When you compile this file
+it will generate an object file which defines a function with the given
+name that performs the indicated image conversion.  An example of a file
+which defines a very generalized function to convert any input data into
+an 8-bit output image with an associated transparency mask (if needed)
+would be:
+
+--------genimgcv8.c----------
+#include "img_util.h"		/* always needed */
+#include "img_util_md.h"	/* supplies platform definitions */
+
+#include "img_input8_32.h"	/* any type of input pixels */
+#include "img_anycm.h"		/* any type of input ColorModel */
+#include "img_replscale.h"	/* scale if necessary */
+#include "img_orddither.h"	/* color or grayscale dithering */
+#include "img_alpha.h"		/* generate 1-bit mask if necessary */
+#include "img_output8.h"	/* store byte pixels */
+
+#define NAME ImgConvert8	/* Name our function */
+
+#include "img_scaleloop.h"	/* include the skeleton */
+-----end of genimgcv8.c------

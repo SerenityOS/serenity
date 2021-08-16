@@ -1,0 +1,6 @@
+T7177306a.java:13:33: compiler.warn.unchecked.meth.invocation.applied: kindname.method, m, java.util.List<E>, java.util.List, kindname.class, T7177306a
+T7177306a.java:13:34: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.util.List, java.util.List<E>
+T7177306a.java:13:33: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), T7177306a, T7177306a<java.lang.Object>
+- compiler.err.warnings.and.werror
+1 error
+3 warnings

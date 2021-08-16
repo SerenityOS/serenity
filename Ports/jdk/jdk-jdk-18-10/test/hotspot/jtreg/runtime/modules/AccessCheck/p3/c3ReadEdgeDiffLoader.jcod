@@ -1,0 +1,174 @@
+/*
+ * Copyright (c) 2015, 2017, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/* 
+ * package p3;
+ * import myloaders.MyDiffClassLoader;
+ *
+ * public class c3ReadEdgeDiffLoader {
+ *    public c3ReadEdgeDiffLoader() {
+ *       // The goal is to establish a read edge between module m1x
+ *       // which is the module where p3.c3ReadEdgeDiffLoader is defined,
+ *       // and the unnamed module that defines c4.  This must be
+ *       // done in 2 steps:
+ *       //
+ *       // Step #1: Establish a read edge between m1x, where c3ReadEdgeDiffLoader
+ *       //          is defined, and the System ClassLoader's unnamed module,
+ *       //          where MyDiffClassLoader is defined. This read edge
+ *       //          is needed before we can obtain MyDiffClassLoader.loader2's unnamed module.
+ *       //
+ *       // Step #2: Establish a read edge between m1x, where c3ReadEdgeDiffLoader
+ *       //          is defined, and the MyDiffClassLoader.loader2's unnamed module,
+ *       //          where c4 will be defined.
+ *
+ *       // Step #1: read edge m1x -> System ClassLoader's unnamed module
+ *       Module m1x = c3ReadEdgeDiffLoader.class.getModule();
+ *       ClassLoader system_loader = ClassLoader.getSystemClassLoader();
+ *       Module unnamed_module_one = system_loader.getUnnamedModule();
+ *       m1x.addReads(unnamed_module_one);
+ *
+ *       // Step #2: read edge m1x -> MyDiffClassLoader.loader2's unnamed module
+ *       ClassLoader loader2 = MyDiffClassLoader.loader2;
+ *       Module unnamed_module_two = loader2.getUnnamedModule();
+ *       m1x.addReads(unnamed_module_two);
+ *
+ *       // Attempt access - should succeed since m1x can read
+ *       //                  MyDiffClassLoader.loader2's unnamed module
+ *       c4 c4_obj = new c4();
+ *       c4_obj.method4();
+ *   }
+ * }
+ */
+
+class p3/c3ReadEdgeDiffLoader {
+  0xCAFEBABE;
+  0; // minor version
+  52; // version
+  [46] { // Constant Pool
+    ; // first element is empty
+    Method #11 #18; // #1     at 0x0A
+    class #19; // #2     at 0x0F
+    Method #20 #21; // #3     at 0x12
+    Method #22 #23; // #4     at 0x17
+    Method #22 #24; // #5     at 0x1C
+    Method #25 #26; // #6     at 0x21
+    Field #27 #28; // #7     at 0x26
+    class #29; // #8     at 0x2B
+    Method #8 #18; // #9     at 0x2E
+    Method #8 #30; // #10     at 0x33
+    class #31; // #11     at 0x38
+    Utf8 "<init>"; // #12     at 0x3B
+    Utf8 "()V"; // #13     at 0x44
+    Utf8 "Code"; // #14     at 0x4A
+    Utf8 "LineNumberTable"; // #15     at 0x51
+    Utf8 "SourceFile"; // #16     at 0x63
+    Utf8 "c3ReadEdgeDiffLoader.java"; // #17     at 0x70
+    NameAndType #12 #13; // #18     at 0x8C
+    Utf8 "p3/c3ReadEdgeDiffLoader"; // #19     at 0x91
+    class #32; // #20     at 0xAB
+    NameAndType #33 #34; // #21     at 0xAE
+    class #35; // #22     at 0xB3
+    NameAndType #36 #37; // #23     at 0xB6
+    NameAndType #38 #34; // #24     at 0xBB
+    class #39; // #25     at 0xC0
+    NameAndType #40 #41; // #26     at 0xC3
+    class #42; // #27     at 0xC8
+    NameAndType #43 #44; // #28     at 0xCB
+    Utf8 "c4"; // #29     at 0xD0
+    NameAndType #45 #13; // #30     at 0xD8
+    Utf8 "java/lang/Object"; // #31     at 0xDD
+    Utf8 "java/lang/Class"; // #32     at 0xF0
+    Utf8 "getModule"; // #33     at 0x0102
+    Utf8 "()Ljava/lang/Module;"; // #34     at 0x010E
+    Utf8 "java/lang/ClassLoader"; // #35     at 0x012D
+    Utf8 "getSystemClassLoader"; // #36     at 0x0145
+    Utf8 "()Ljava/lang/ClassLoader;"; // #37     at 0x015C
+    Utf8 "getUnnamedModule"; // #38     at 0x0178
+    Utf8 "java/lang/Module"; // #39     at 0x018B
+    Utf8 "addReads"; // #40     at 0x01A6
+    Utf8 "(Ljava/lang/Module;)Ljava/lang/Module;"; // #41     at 0x01B1
+    Utf8 "myloaders/MyDiffClassLoader"; // #42     at 0x01EA
+    Utf8 "loader2"; // #43     at 0x0208
+    Utf8 "Lmyloaders/MyDiffClassLoader;"; // #44     at 0x0212
+    Utf8 "method4"; // #45     at 0x0232
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #11;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [1] { // methods
+    { // Member at 0x0248
+      0x0001; // access
+      #12; // name_cpx
+      #13; // sig_cpx
+      [1] { // Attributes
+        Attr(#14, 123) { // Code at 0x0250
+          2; // max_stack
+          7; // max_locals
+          Bytes[59]{
+            0x2AB700011202B600;
+            0x034CB800044D2CB6;
+            0x00054E2B2DB60006;
+            0x57B200073A041904;
+            0xB600053A052B1905;
+            0xB6000657BB000859;
+            0xB700093A061906B6;
+            0x000AB1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#15, 46) { // LineNumberTable at 0x029D
+              [11] { // LineNumberTable
+                0  33; //  at 0x02A9
+                4  34; //  at 0x02AD
+                10  36; //  at 0x02B1
+                14  37; //  at 0x02B5
+                19  39; //  at 0x02B9
+                25  41; //  at 0x02BD
+                30  42; //  at 0x02C1
+                37  46; //  at 0x02C5
+                44  49; //  at 0x02C9
+                53  50; //  at 0x02CD
+                58  51; //  at 0x02D1
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [1] { // Attributes
+    Attr(#16, 2) { // SourceFile at 0x02D3
+      #17;
+    } // end SourceFile
+  } // Attributes
+} // end class p3/c3ReadEdgeDiffLoader

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://xsdtesting" xmlns:x="http://xsdtesting" xmlns:imp="http://importedXSD">
+    <xsd:complexType name="B">
+        <xsd:sequence>
+            <xsd:element name="foo" minOccurs="1" maxOccurs="1"/>
+            <xsd:any namespace="##any" minOccurs="4" maxOccurs="8"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <xsd:complexType name="R">
+        <xsd:complexContent>
+            <xsd:restriction base="x:B">
+                <xsd:sequence>
+                    <xsd:element name="foo" minOccurs="1" maxOccurs="1"/>
+                    <xsd:sequence minOccurs="1" maxOccurs="2">
+                        <xsd:element name="e1" minOccurs="2" maxOccurs="2"/>
+                        <xsd:element name="e2" minOccurs="2" maxOccurs="2"/>
+                    </xsd:sequence>
+                </xsd:sequence>
+            </xsd:restriction>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:element name="doc">
+        <xsd:complexType>
+            <xsd:choice>
+                <xsd:element name="elem" type="x:R"/>
+            </xsd:choice>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

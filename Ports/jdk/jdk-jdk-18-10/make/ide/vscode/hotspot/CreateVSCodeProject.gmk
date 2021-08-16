@@ -1,0 +1,113 @@
+#
+# Copyright (c) 2019, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# This must be the first rule
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+
+################################################################################
+# Return the full path to an indexer-specific file fragment.
+#
+# Param 1: Fragment name
+################################################################################
+GetIndexerFragment = \
+    $(TOPDIR)/make/ide/vscode/hotspot/indexers/$(VSCODE_INDEXER)-$(1).txt
+
+################################################################################
+# Show indexer-specific notes if they exist, otherwise do nothing
+################################################################################
+ifneq (,$(wildcard $(call GetIndexerFragment,notes)))
+  ShowIndexerNotes = $(CAT) $(call GetIndexerFragment,notes)
+else
+  ShowIndexerNotes =
+endif
+
+################################################################################
+# Return the platform-dependent preferred debug engine name.
+################################################################################
+ifeq ($(call isTargetOs, windows), true)
+  DebugEngineName = cppvsdbg
+else
+  DebugEngineName = cppdbg
+endif
+
+################################################################################
+# Return an additional configuration fragment if the WORKSPACE_ROOT is different
+# from TOPDIR.
+################################################################################
+ifneq ($(WORKSPACE_ROOT),$(TOPDIR))
+  GetExtraWorkspaceRoot = $(TOPDIR)/make/ide/vscode/hotspot/template-workspace-folder.txt
+else
+  GetExtraWorkspaceRoot = /dev/null
+endif
+
+################################################################################
+# Create a project configuration from a given template, replacing a known set
+# of variables.
+#
+# Param 1: Template
+# Param 2: Output
+################################################################################
+define CreateFromTemplate
+	$(call LogInfo, Generating $2)
+	$(call MakeDir, $(dir $2))
+	$(SED) -e '/{{INDEXER_EXTENSIONS}}/r $(call GetIndexerFragment,extensions)' \
+	    -e '/{{INDEXER_SETTINGS}}/r $(call GetIndexerFragment,settings)' \
+	    -e '/{{EXTRA_WORKSPACE_ROOT}}/r $(call GetExtraWorkspaceRoot)' $1 | \
+	$(SED) -e 's!{{TOPDIR}}!$(call FixPath,$(TOPDIR))!g' \
+	    -e 's!{{TOPDIR_RELATIVE}}!$(call FixPath,$(strip \
+	        $(call RelativePath,$(OUTPUTDIR),$(TOPDIR))))!g' \
+	    -e 's!{{WORKSPACE_ROOT}}!$(call FixPath,$(WORKSPACE_ROOT))!g' \
+	    -e 's!{{OUTPUTDIR}}!$(call FixPath,$(OUTPUTDIR))!g' \
+	    -e 's!{{CONF_NAME}}!$(CONF_NAME)!g' \
+	    -e 's!{{COMPILER}}!$(call FixPath,$(CXX)) $(SYSROOT_CFLAGS)!g' \
+	    -e 's!{{MAKE}}!$(call FixPath,$(MAKE))!g' \
+	    -e 's!{{PATH}}!$(call FixPath,$(PATH))!g' \
+	    -e 's!{{DEBUGENGINENAME}}!$(call DebugEngineName)!g' \
+	    -e '/{{INDEXER_EXTENSIONS}}/d' \
+	    -e '/{{INDEXER_SETTINGS}}/d' \
+	    -e '/{{EXTRA_WORKSPACE_ROOT}}/d' \
+	    > $2
+endef
+
+$(OUTPUTDIR)/jdk.code-workspace:
+	$(call LogWarn, Creating workspace $@)
+	$(call CreateFromTemplate, $(TOPDIR)/make/ide/vscode/hotspot/template-workspace.jsonc, $@)
+	$(call ShowIndexerNotes)
+
+$(OUTPUTDIR)/.vscode/tasks.json:
+	$(call CreateFromTemplate, $(TOPDIR)/make/ide/vscode/hotspot/template-tasks.jsonc, $@)
+
+$(OUTPUTDIR)/.vscode/launch.json:
+	$(call CreateFromTemplate, $(TOPDIR)/make/ide/vscode/hotspot/template-launch.jsonc, $@)
+
+TARGETS := $(OUTPUTDIR)/jdk.code-workspace $(OUTPUTDIR)/.vscode/tasks.json \
+    $(OUTPUTDIR)/.vscode/launch.json
+
+all: $(TARGETS)
+
+.PHONY: all $(TARGETS)

@@ -1,0 +1,628 @@
+################################################################################
+# Note: do not add blank lines, the data parser in TreeDemo.java cannot        #
+# handle them.                                                                 #
+#                                                                              #
+# Key:                                                                         #
+#     Popular   / Classical                                                    #
+# ----------------------------                                                 #
+# A = Artist    / Composer                                                     #
+# R = Record    / Style                                                        #
+# S = Song Name / Composition                                                  #
+# C = Category                                                                 #
+#                                                                              #
+################################################################################
+C Classical
+A Beethoven
+R concertos
+S No. 1 - C
+S No. 2 - B-Flat Major
+S No. 3 - C Minor
+S No. 4 - G Major
+S No. 5 - E-Flat Major
+R Quartets
+S Six String Quartets
+S Three String Quartets
+S Grosse Fugue for String Quartets
+R Sonatas
+S Sonata in A Minor
+S Sonata in F Major
+R Symphonies
+S No. 1 - C Major
+S No. 2 - D Major
+S No. 3 - E-Flat Major
+S No. 4 - B-Flat Major
+S No. 5 - C Minor
+S No. 6 - F Major
+S No. 7 - A Major
+S No. 8 - F Major
+S No. 9 - D Minor
+A Brahms
+R Concertos
+S Violin Concerto
+S Double Concerto - A Minor
+S Piano Concerto No. 1 - D Minor
+S Piano Concerto No. 2 - B-Flat Major
+R Quartets
+S Piano Quartet No. 1 - G Minor
+S Piano Quartet No. 2 - A Major
+S Piano Quartet No. 3 - C Minor
+S String Quartet No. 3 - B-Flat Minor
+R Sonatas
+S Two Sonatas for Clarinet - F Minor
+S Two Sonatas for Clarinet - E-Flat Major
+R Symphonies
+S No. 1 - C Minor
+S No. 2 - D Minor
+S No. 3 - F Major
+S No. 4 - E Minor
+A Mozart
+R Concertos
+S Piano Concerto No. 12
+S Piano Concerto No. 17
+S Clarinet Concerto
+S Violin Concerto No. 5
+S Violin Concerto No. 4
+C Jazz
+A Albert Ayler
+R My Name is Albert Ayler
+S Bye Bye Blackbird
+S Billie's Bounce
+S Summertime
+S On Green Dolphin Street
+S C.T.
+R Swing Low Sweet Spiritual
+S Goin' Home
+S Old Man River
+S When The Saints Go Marching In
+S Deep River
+S Down By The Riverside
+S Spirits
+S Witches and Devils
+S Holy, Holy
+S Saints
+R Prophesy
+S Spirits
+S Wizard
+S Ghosts
+S Prophecy
+R New Grass
+S Free At Last
+S Everybody's Movin'
+S New Generation
+S Heart Love
+S Sun Watcher
+A Chet Baker
+R Sings and Plays
+S Let's Get Lost
+S This Is Always
+S Long Ago and Far Away
+S I Wish I Knew
+S Daybreak
+S Grey December
+S I Remember You
+R My Funny Valentine
+S My Funny Valentine
+S Someone To Watch Over Me
+S Moonlight Becomes You
+S I'm Glad There is You
+S This is Always
+S Time After Time
+S Sweet Lorraine
+S It's Always You
+S Moon Love
+S Like Someone In Love
+S I've Never Been In Love Before
+S Isn't it Romantic
+S I Fall In Love Too Easily
+R Grey December
+S Grey December
+S I Wish I Knew
+S Someone To Watch Over Me
+S Headline
+S Bockhanal
+S A Dandy Line
+S Pro Defunctus
+S Little Old Lady
+S Goodbye
+R The Route
+S Tynan Time
+S The Route
+S Minor Yours
+S Little Girl
+S Ol' Croix
+S The Great Lie
+S Sweet Lorrain
+S If I Should Lose You
+A John Coltrane
+R Blue Train
+S Blue Train
+S Moment's Notice
+S Locomotion
+S I'm Old Fashioned
+S Lazy Bird
+R Giant Steps
+S Giant Steps
+S Cousin Mary Steps
+S Countdown
+S Spiral
+S Syeeda's Song Flute
+S Naima
+S Mr. P.C.
+R My Favorite Things
+S My Favorite Things
+S Everytime We Say Goodbye
+S Summertime
+S But Not For Me
+R Crescent
+S Crescent
+S Wise One
+S Bessie's Blues
+S Lonnie's Lament
+S The Drum Thing
+R Interstellar Space
+S Mars
+S Leo
+S Venus
+S Jupiter Variation
+S Jupiter
+S Saturn
+A Miles Davis
+R Transition
+S Autumn Leaves
+S Two Bass Hit
+S Love, I've Found You
+S I Thought About You
+S All Blues
+S Seven Steps To Heaven
+R Quiet Nights
+S Once Upon a Summertime
+S Aos Pes Da Cruz
+S Wait Till You See Her
+S Corcovado
+S Summer Nights
+R My Funny Valentine
+S All of You
+S Stella By Starlight
+S All Blues
+S I Thought About You
+R Voodoo Down
+S Automn Leaves
+S Footprints
+S Directions
+S Bitches Brew
+S Hush
+C Rock
+A The Beatles
+R A Hard Day's Night
+S A Hard Day's Night
+S I Should Have Known Better
+S If I Fell
+S I'm Happy Just To Dance With You
+S And I Love Her
+S Tell Me Why
+S Can't Buy Me Love
+S Any Time At All
+S I'll Cry Instead
+S Things We Said Today
+S When I Get Home
+S You Can't Do That
+R Beatles For Sale
+S No Reply
+S I'm a Loser
+S Baby's In Black
+S Rock And Roll Music
+S I'll Follow the Sun
+S Mr. Moonlight
+S Kansas City/Hey Hey Hey Hey
+S Eight Days a Week
+S Words Of Love
+S Honey Don't
+S Every Little Thing
+S I Don't Want To Spoil the Party
+S What You're Doing
+S Everybody's Trying To Be My Baby
+R Help!
+S Help!
+S The Night Before
+S You've Got To Hide Your Love Away
+S I Need You
+S Another Girl
+S You're Going To Lose That Girl
+S Ticket To Ride
+S Act Naturally
+S It's Only Love
+S You Like Me Too Much
+S Tell Me What You See
+S I've Just Seen a Face
+S Yesterday
+S Dizzy Miss Lizzie
+R Rubber Soul
+S Drive My Car
+S Norwegian Wood
+S You Won't See Me
+S Nowhere Man
+S Think For Yourself
+S The Word
+S Michelle
+S What Goes On?
+S Girl
+S I'm Looking Through You
+S In My Life
+S Wait
+S If I Needed Someone
+S Run For Your Life
+R Revolver
+S Taxman
+S Rigby
+S I'm Only Sleeping
+S For You To
+S Here There And Everywhere
+S Yellow Submarine
+S She Said She Said
+S Good Day Sunshine
+S And Your Bird Can Sing
+S For No One
+S Doctor Robert
+S I Want To Tell You
+S Got To Get You Into My Life
+S Tomorrow Never Knows
+R Sgt. Pepper's Lonely Hearts Club Band
+S Sgt. Pepper's Lonely Hearts Club Band
+S With a Little Help From My Friends
+S Lucy in the Sky With Diamonds
+S Getting Better
+S Fixing a Hole
+S She's Leaving Home
+S Being For the Benefit of Mr. Kite
+S Within You Without You
+S When I'm Sixty Four
+S Lovely Rita
+S Good Morning
+S Sgt. Pepper's Reprise
+S A Day In The Life
+R Magical Mystery Tour
+S Magical Mystery Tour
+S Fool on the Hill
+S Flying
+S Blue Jay Way
+S Your Mother Should Know
+S I Am The Walrus
+S Hello Goodbye
+S Strawberry Fields Forever
+S Penny Lane
+S Baby You're a Rich Man
+S All You Need Is Love
+R The White Album
+S Back in the USSR
+S Dear Prudence
+S Glass Onion
+S Wild Honey Pie
+S Bungalow Bill
+S While My Guitar Gently Weeps
+S Martha My Dear
+S I'm So Tired
+S Blackbird
+S Piggies
+S Rocky Raccoon
+S Don't Pass Me By
+S Why Don't We Do It In The Road
+S I Will
+S Julia
+S Birthday
+S Yer Blues
+S Mother Nature's Son
+S Sexy Sadie
+S Helter Skelter
+S Long Long Long
+S Revolution 1
+S Honey Pie
+S Savoy Truffle
+S Cry Baby Cry
+S Revolution 9
+S Good Night
+R Abbey Road
+S Come Together
+S Something
+S Maxwell's Silver Hammer
+S Octopus's Garden
+S She's So Heavy
+S Here Comes The Sun
+S Because
+S You Never Give Me Your Money
+S Sun King
+S Mean Mr. Mustard
+S Polythene Pam
+S She Came In Through The Bathroom Window
+S Golden Slumbers
+S Carry That Weight
+S The End
+S Her Majesty
+R Let It Be
+S Two of Us
+S Dig A Pony
+S Across the Universe
+S I Me Mine
+S Dig It
+S Let It Be
+S Maggie Mae
+S I've Got A Feeling
+S One After 909
+S The Long and Winding Road
+S For You Blue
+S Get Back
+A Crowded House
+R Crowded House
+S Mean To Me
+S World Where You Live
+S Now We're Getting Somewhere
+S Don't Dream It's Over
+S Love You Til The Day I Die
+S Something So Strong
+S Hole In The River
+S Can't Carry On
+S I Walk Away
+S Tombstone
+S That's What I Call Live
+R Temple of Low Men
+S I Feel Possessed
+S Kill Eye
+S Into Temptation
+S Mansion In The Slums
+S When You Come
+S Never Be The Same
+S Love This Life
+S Sister Madly
+S In The Lowlands
+S Better Be Home Soon
+R Woodface
+S Chocolate Cake
+S It's Only Natural
+S Fall At Your Feet
+S Tall Trees
+S Weather With You
+S Whispers and Moans
+S Four Seasons in One Day
+S There Goes God
+S Fame Is
+S All I Ask
+S As Sure As I Am
+S Italian Plastic
+S She Goes On
+S How Will You Go
+R Together Alone
+S Kare Kare
+S In My Command
+S Nails In My Feet
+S Black & White Boy
+S Fingers of Love
+S Pineapple Head
+S Locked Out
+S Private Universe
+S Walking on the Spot
+S Distant Sun
+S Catherine Wheels
+S Skin Feeling
+S Together Alone
+A The Fixx
+R Shuttered Room
+S Some People
+S Stand or Fall
+S Cameras In Paris
+S Shuttered Room
+S The Fool
+S Lost Planes
+S I Live
+S Sinking Island
+S Time in a Glass
+S Red Skies
+R Reach The Beach
+S One Thing Leads To Another
+S The Sign of Fire
+S Running
+S Saved By Zero
+S Opinions
+S Reach The Beach
+S Changing
+S Liner
+S Privilege
+S Outside
+R Phantoms
+S Lose Face
+S Less Cities, More Moving People
+S Sunshine in the Shade
+S Woman on a Train
+S Wish
+S Lost in Battle Overseas
+S Question
+S In Suspense
+S Facing the Wind
+S Are We Ourselves
+S I Will
+S Phantom Living
+R Walkabout
+S Secret Separation
+S Built for the Future
+S Treasure It
+S Can't Finish
+S Walkabout
+S One Look Up
+S Read Between The Lines
+S Sense The Adventure
+S Camphor
+S Peace On Earth/Do What You Can
+R Calm Animals
+S I'm Life
+S Driven Out
+S Subterranean
+S Precious Stone
+S Gypsy Feet
+S Calm Animals
+S Shred of Evidence
+S The Flow
+S World Weary
+S Caused To Be Alarmed
+R Ink
+S All is Fair
+S How much Is Enough
+S No One Has To Cry
+S Crucified
+S Falling In Love
+S Shut It Out
+S Still Around
+S All The Best Things
+S Yesterday, Today
+S One Jungle
+S Climb The Hill
+S Make No Plans
+R Elemental
+S Two Different Views
+S Going Without
+S Is That It?
+S Happy Landings
+S Silent House
+S Fatal Shore
+S Ocean Blue
+S You Know Me
+S We Once Held Hands
+S Life's What's Killing Me
+A Harvin Garvel
+R Harvin Garvel I
+S Body
+S What You Said
+S All Rights Reserved
+S High Purity
+S Lies
+S Get Real
+S Gradma Cries
+S First Feel
+S Somethings wrong
+S Shoes
+S Spice Rack
+S Dark Feel
+S Tug of War
+S Ant Song
+R Harvin Garvel II
+S We Ain't Through
+S Trash and Spend
+S Kick
+S The Garden
+S One & Only
+S Squid Frenzy
+S Soul In Soul
+S The Desert
+S He Grew Up
+S Talk
+S Image
+S Tomorrow
+S R70
+R Full Grown Dog
+S I Am
+S Say
+S Is This Real
+S What She Said
+S Mirror Lies
+S Girls
+S Your Will
+S Slow Motion Sunday
+S Simple Life
+S The Road Song
+S The Same Way
+S Stop Tryin
+R Persia
+S Exonic
+S Drift
+S Cruise
+S MugWump
+S Smear
+S Everything
+S Keep
+S Circle
+R Sensative Beak
+S Whatcha Gotta Do
+S Somewhere In This World
+S Awaken
+S Just A Dog
+S I Can Dance
+S Tomorrow
+S Love Who?
+S Is There Something
+S I Like It
+S Easy Chair
+S As We Are One
+S Far Away
+S Leaving Science
+S What A Life
+A Komeda
+R Plan 714 Till
+S Fuego De La Vida
+S Herbamore
+S Som I Fjol
+S En Spricka I Taket
+R Genius Of
+S More Is More
+S Fire
+S Rocket Plane (Music On The Moon)
+S Boogie Woogie/Rock 'N' Roll
+S Disko
+S Top Star
+S Light O' My Life
+S If
+S Frolic
+S In Orbit
+S Arbogast
+S New New No
+R What Makes It Go
+S Binario
+S It's Alright, Baby
+S Curious
+S Cul de Sac
+S Living Things
+S Flabbergast
+S Campfire
+S Happyment
+S Our Hospitality
+S Focus
+S A Simple Formality
+A Steve Miller Band
+R Circle Of Love
+S Heart Like A Wheel
+S Get On Home
+S Baby Wanna Dance
+S Circle Of Love
+S Macho City
+R Fly Like An Eagle
+S Space Intro
+S Fly Like An Eagle
+S Wild Mountain Honey
+S Serenade
+S Dance, Dance, Dance
+S Mercury Blues
+S Take the Money and Run
+S Rockin' Me
+S You Send Me
+S Blue Odyssey
+S Sweet Maree
+S The Window
+R Book Of Dreams
+S Threshold
+S Jet Airliner
+S Winter Time
+S Swingtown
+S True Fine Love
+S Wish Upon A Star
+S Jungle Love
+S Electrolux Imbroglio
+S Sacrifice
+S The Stake
+S My Own Space
+S Babes In The Wood
+R Joker
+S Sugar, Babe
+S Mary Lou
+S Shu Ba Da Du Ma
+S Your Cash Ain't Nothin' But Trash
+S The Joker
+S The Lovin' Cup
+S Come On In My Kitchen
+S Evil
+S Something To Believe In

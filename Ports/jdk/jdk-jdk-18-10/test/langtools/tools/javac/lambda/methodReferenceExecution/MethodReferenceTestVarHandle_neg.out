@@ -1,0 +1,2 @@
+MethodReferenceTestVarHandle_neg.java:20:18: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.mref: (compiler.misc.inconvertible.types: void, int))
+1 error

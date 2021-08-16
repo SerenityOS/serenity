@@ -1,0 +1,2 @@
+AmbiguousCast.java:25:41: compiler.warn.prob.found.req: (compiler.misc.unchecked.cast.to.type), java.lang.Object, Test.GenericWrapper<java.lang.String>
+1 warning

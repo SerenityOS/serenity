@@ -1,0 +1,4 @@
+<!-- This XML signature contains a Transform with wrong algorithm -->
+<test xmlns="http://example.org/envelope">test<Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo xmlns="http://www.w3.org/2000/09/xmldsig#"><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></CanonicalizationMethod><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"></SignatureMethod><Reference URI=""><Transforms><Transform Algorithm="bogus://bogus"></Transform></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></DigestMethod><DigestValue>1Bq8FsjajUBYPD7stQeJSc66GlM=</DigestValue></Reference></SignedInfo><SignatureValue>Wzyx3jgEKGwY+pBXBmqWLWhASHQYCCGZVii5sKKKeZUBKxNBthjiSVfzKANuLgX6zAt16XRycrSL
+zFKTPuvGeWVPDvd+KTNKCJxN9ccrG7v23EM7RY2eMJGu2r5DLfKwV7H6YuJPsOuWifVkKAhvq7gd
+6akJshxyAj9Ud+mjo48=</SignatureValue></Signature></test>

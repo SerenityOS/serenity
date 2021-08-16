@@ -1,0 +1,2 @@
+Estatico4.java:16:24: compiler.err.ref.ambiguous: CENTER, kindname.variable, CENTER, java.awt.FlowLayout, kindname.variable, CENTER, javax.swing.SwingConstants
+1 error

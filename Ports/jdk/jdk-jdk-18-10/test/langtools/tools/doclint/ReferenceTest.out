@@ -1,0 +1,42 @@
+ReferenceTest.java:14: error: invalid use of @param
+     * @param x description
+       ^
+ReferenceTest.java:19: error: invalid use of @param
+     * @param x description
+       ^
+ReferenceTest.java:24: error: @param name not found
+     * @param x description
+              ^
+ReferenceTest.java:26: warning: no @param for a
+    public void param_name_not_found(int a) { }
+                ^
+ReferenceTest.java:29: error: @param name not found
+     * @param <X> description
+               ^
+ReferenceTest.java:34: error: reference not found
+     * @see Object#tooStrong()
+            ^
+ReferenceTest.java:39: error: invalid use of @return
+     * @return x description
+       ^
+ReferenceTest.java:44: error: invalid use of @return
+     * @return x description
+       ^
+ReferenceTest.java:49: error: exception not thrown: java.lang.Exception
+     * @throws Exception description
+               ^
+ReferenceTest.java:62: error: reference not found
+     * {@link not.Found<String>}
+              ^
+ReferenceTest.java:65: error: reference not found
+     * @see not.Found<String>
+            ^
+ReferenceTest.java:72: error: reference not found
+     * {@link not.Found[]}
+              ^
+ReferenceTest.java:75: error: reference not found
+     * @see not.Found[]
+            ^
+12 errors
+1 warning
+

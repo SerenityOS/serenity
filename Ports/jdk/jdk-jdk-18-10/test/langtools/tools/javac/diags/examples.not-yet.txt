@@ -1,0 +1,208 @@
+compiler.err.already.annotated                          # internal compiler error?
+compiler.err.already.defined.this.unit                  # seems to be masked by compiler.err.duplicate.class
+compiler.err.bad.functional.intf.anno                   # seems to be masked by compiler.err.annotation.type.not.applicable
+compiler.err.annotation.value.not.allowable.type        # should be detected in advance by the annotation value visitor
+compiler.err.cant.read.file                             # (apt.JavaCompiler?)
+compiler.err.cant.select.static.class.from.param.type
+compiler.err.dc.unterminated.string                     # cannot happen
+compiler.err.file.patched.and.msp                       # needs the same dir on --module-source-path and --patch-module
+compiler.err.illegal.char.for.encoding
+compiler.err.invalid.repeatable.annotation              # should not happen
+compiler.err.invalid.repeatable.annotation.invalid.value # "can't" happen
+compiler.err.invalid.repeatable.annotation.multiple.values # can't happen
+compiler.err.io.exception                               # (javah.JavahTask?)
+compiler.err.is.preview                                 # difficult to produce reliably despite future changes to java.base
+compiler.err.limit.code                                 # Code
+compiler.err.limit.code.too.large.for.try.stmt          # Gen
+compiler.err.limit.dimensions                           # Gen
+compiler.err.limit.locals                               # Code
+compiler.err.limit.parameters                           # Gen
+compiler.err.limit.pool                                 # Gen,JavaCompiler
+compiler.err.limit.pool.in.class                        # UNUSED?
+compiler.err.limit.stack                                # Code
+compiler.err.limit.string                               # Gen
+compiler.err.limit.string.overflow                      # JavaCompiler
+compiler.err.module.non.zero.opens                      # bad class file
+compiler.err.name.reserved.for.internal.use             # UNUSED
+compiler.err.no.annotation.member
+compiler.err.no.encl.instance.of.type.in.scope          # cannot occur; always followed by assert false;
+compiler.err.no.match.entry                             # UNUSED?
+compiler.err.not.annotation.type                        # cannot occur given preceding checkType
+compiler.err.not.def.access.package.cant.access
+compiler.err.proc.bad.config.file                       # JavacProcessingEnvironment
+compiler.err.proc.cant.access                           # completion failure
+compiler.err.proc.cant.access.1                         # completion failure, no stack trace
+compiler.err.proc.cant.create.loader                    # security exception from service loader
+compiler.err.proc.no.service                            # JavacProcessingEnvironment: no service loader available
+compiler.err.proc.processor.bad.option.name             # cannot happen? masked by javac.err.invalid.A.key
+compiler.err.proc.service.problem                       # JavacProcessingEnvironment: catch Throwable from service loader
+compiler.err.proc.cant.load.class                       # JavacProcessingEnvironment: cant load the class/jar file
+compiler.err.signature.doesnt.match.intf                # UNUSED
+compiler.err.signature.doesnt.match.supertype           # UNUSED
+compiler.err.source.cant.overwrite.input.file
+compiler.err.stack.sim.error
+compiler.err.type.var.more.than.once                    # UNUSED
+compiler.err.type.var.more.than.once.in.result          # UNUSED
+compiler.err.unexpected.type
+compiler.misc.bad.class.signature                       # bad class file
+compiler.misc.bad.const.pool.tag                        # bad class file
+compiler.misc.bad.const.pool.tag.at                     # bad class file
+compiler.misc.unexpected.const.pool.tag.at              # bad class file
+compiler.misc.bad.const.pool.index                      # bad class file
+compiler.misc.bad.constant.range                        # bad class file
+compiler.misc.bad.constant.value                        # bad class file
+compiler.misc.bad.enclosing.class                       # bad class file
+compiler.misc.bad.enclosing.method                      # bad class file
+compiler.misc.bad.runtime.invisible.param.annotations   # bad class file
+compiler.misc.bad.signature                             # bad class file
+compiler.misc.bad.requires.flag                         # bad class file
+compiler.misc.bad.type.annotation.value
+compiler.misc.base.membership                           # UNUSED
+compiler.misc.class.file.not.found                      # ClassReader
+compiler.misc.class.file.wrong.class
+compiler.misc.exception.message                         # uncommon completion failure based on a string
+compiler.misc.fatal.err.cant.locate.ctor                # Resolve, from Lower
+compiler.misc.fatal.err.cant.locate.field               # Resolve, from Lower
+compiler.misc.fatal.err.cant.locate.meth                # Resolve, from Lower
+compiler.misc.fatal.err.cant.close                      # JavaCompiler
+compiler.misc.feature.not.supported.in.source.plural    # cannot happen (for now)
+compiler.misc.file.does.not.contain.package
+compiler.misc.illegal.start.of.class.file
+compiler.misc.inferred.do.not.conform.to.lower.bounds   # cannot happen?
+compiler.misc.kindname.annotation
+compiler.misc.kindname.enum
+compiler.misc.kindname.package
+compiler.misc.kindname.static
+compiler.misc.kindname.type.variable
+compiler.misc.kindname.type.variable.bound
+compiler.misc.kindname.value
+compiler.misc.method.descriptor.invalid                 # bad class file
+compiler.misc.module.info.definition.expected           # bad class file
+compiler.misc.module.name.mismatch
+compiler.misc.module.non.zero.opens                     # bad class file
+compiler.misc.no.unique.minimal.instance.exists
+compiler.misc.no.unique.maximal.instance.exists         # cannot happen?
+compiler.misc.not.def.access.package.cant.access
+compiler.misc.package.not.visible
+compiler.misc.resume.abort                              # prompt for a response
+compiler.misc.source.unavailable                        # DiagnosticSource
+compiler.misc.token.bad-symbol
+compiler.misc.token.character
+compiler.misc.token.double
+compiler.misc.token.end-of-input
+compiler.misc.token.float
+compiler.misc.token.integer
+compiler.misc.token.long-integer
+compiler.misc.token.string
+compiler.misc.type.captureof
+compiler.misc.type.captureof.1
+compiler.misc.type.none
+compiler.misc.type.req.exact
+compiler.misc.unable.to.access.file                     # ClassFile
+compiler.misc.undecl.type.var                           # ClassReader
+compiler.misc.unicode.str.not.supported                 # ClassReader
+compiler.misc.user.selected.completion.failure          # manual completion failure
+compiler.misc.malformed.vararg.method                   # ClassReader
+compiler.misc.version.not.available                     # JavaCompiler; implies build error
+compiler.misc.where.description.captured
+compiler.misc.where.typevar.1
+compiler.misc.wrong.version                             # ClassReader
+compiler.warn.annotation.method.not.found               # ClassReader
+compiler.warn.annotation.method.not.found.reason        # ClassReader
+compiler.warn.big.major.version                         # ClassReader
+compiler.warn.doclint.not.available                     # requires restricted image
+compiler.warn.future.attr                               # ClassReader
+compiler.warn.illegal.char.for.encoding
+compiler.warn.incubating.modules                        # requires adjusted classfile
+compiler.warn.invalid.archive.file
+compiler.warn.is.preview                                # difficult to produce reliably despite future changes to java.base
+compiler.warn.is.preview.reflective                     # difficult to produce reliably despite future changes to java.base
+compiler.warn.override.bridge
+compiler.warn.position.overflow                         # CRTable: caused by files with long lines >= 1024 chars
+compiler.warn.proc.type.already.exists                  # JavacFiler: just mentioned in TODO
+compiler.warn.restricted.type.not.allowed.preview       # not produced by the compiler right now
+compiler.warn.unchecked.assign                          # DEAD, replaced by compiler.misc.unchecked.assign
+compiler.warn.unchecked.cast.to.type                    # DEAD, replaced by compiler.misc.unchecked.cast.to.type
+compiler.warn.unexpected.archive.file                   # Paths: zip file with unknown extn
+compiler.err.no.zipfs.for.archive                       # would need zip/jar file
+compiler.warn.unknown.enum.constant                     # in bad class file
+compiler.warn.unknown.enum.constant.reason              # in bad class file
+compiler.warn.override.equals.but.not.hashcode          # when a class overrides equals but not hashCode method from Object
+compiler.warn.file.from.future                          # warning for future modification times on files
+compiler.err.cant.inherit.from.anon                     # error for subclass of anonymous class
+compiler.misc.bad.class.file                            # class file is malformed
+compiler.misc.bad.const.pool.entry                      # constant pool entry has wrong type
+compiler.warn.access.to.member.from.serializable.lambda # in order to generate it we need to modify a restricted package
+compiler.warn.invalid.path                              # this warning is generated only in Windows systems
+compiler.err.invalid.path                               # this error is generated only in Windows systems
+compiler.note.multiple.elements                         # needs user code
+compiler.err.preview.feature.disabled.classfile         # preview feature support: needs compilation against classfile
+compiler.warn.preview.feature.use.classfile             # preview feature support: needs compilation against classfile
+compiler.note.preview.plural.additional                 # preview feature support: diag test causes intermittent failures (see JDK-8201498)
+compiler.misc.bad.intersection.target.for.functional.expr  # currently not generated, should be removed?
+compiler.misc.not.an.intf.component
+compiler.warn.declared.using.preview                    # after making sealed classes a final feature there is no other
+                                                        # preview feature but we should keep this key for future use just
+                                                        # in case
+
+# The following module-related messages will have to stay on the not-yet list for various reasons:
+compiler.warn.locn.unknown.file.on.module.path                # Never issued ATM (short circuited with an if (false))
+compiler.err.no.output.dir                                    # -d is always specified by test infrastructure
+compiler.err.output.dir.must.be.specified.with.dash.m.option  # -d is always specified by test infrastructure
+compiler.warn.outdir.is.in.exploded.module                    # No control over -d specified by test infrastructure
+compiler.err.invalid.module.specifier                         # Not possible (?)
+compiler.err.locn.cant.get.module.name.for.jar                # bad binary ? Infer module name failure
+compiler.misc.anachronistic.module.info                       # requires binaries compiled with EA compilers.
+compiler.misc.bad.module-info.name                            # bad class file
+compiler.err.locn.bad.module-info                             # bad class file
+compiler.err.locn.cant.read.file                              # bad class file
+compiler.misc.module.info.invalid.super.class                 # bad class file
+compiler.err.locn.cant.read.directory                         # file system issue
+compiler.err.locn.invalid.arg.for.xpatch                      # command line option error
+compiler.misc.unnamed.module                                  # fragment uninteresting in and of itself
+compiler.misc.kindname.module                                 # fragment uninteresting in and of itself
+compiler.misc.locn.module_path                                # fragment uninteresting in and of itself
+compiler.misc.locn.module_source_path                         # fragment uninteresting in and of itself
+compiler.misc.locn.system_modules                             # fragment uninteresting in and of itself
+compiler.misc.locn.upgrade_module_path                        # fragment uninteresting in and of itself
+compiler.misc.inferred.do.not.conform.to.eq.bounds            # hard to generate, could probably be removed
+
+# The following are new module-related messages, that need new  examples to be created
+compiler.err.duplicate.module.on.path
+compiler.err.locn.module-info.not.allowed.on.patch.path
+compiler.misc.cant.resolve.modules
+compiler.misc.file.does.not.contain.module
+
+# these keys were in javac.properties and examples are hard to be produced for them
+# basically because in most cases the compilation ends with an exception
+compiler.err.bad.value.for.option
+compiler.err.empty.A.argument
+compiler.err.error.writing.file
+compiler.err.file.not.directory
+compiler.err.file.not.file
+compiler.err.file.not.found
+compiler.err.invalid.A.key
+compiler.err.invalid.flag
+compiler.err.invalid.profile
+compiler.err.invalid.source
+compiler.err.invalid.target
+compiler.err.multiple.values.for.module.source.path
+compiler.err.no.source.files.classes
+compiler.err.no.value.for.option
+compiler.err.option.not.allowed.with.target
+compiler.err.option.too.many
+compiler.err.profile.bootclasspath.conflict
+compiler.err.release.bootclasspath.conflict
+compiler.err.repeated.value.for.module.source.path
+compiler.err.repeated.value.for.patch.module
+compiler.err.req.arg
+compiler.err.sourcepath.modulesourcepath.conflict
+compiler.err.two.class.loaders.1
+compiler.err.two.class.loaders.2
+compiler.err.unmatched.quote
+compiler.err.unsupported.release.version
+compiler.warn.profile.target.conflict
+compiler.warn.source.target.conflict
+compiler.warn.target.default.source.conflict
+compiler.err.preview.not.latest
+compiler.err.preview.without.source.or.release

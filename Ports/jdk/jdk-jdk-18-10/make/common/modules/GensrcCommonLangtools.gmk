@@ -1,0 +1,129 @@
+#
+# Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+include JavaCompilation.gmk
+
+################################################################################
+# The compileprops tools compiles a properties file into a resource bundle.
+TOOL_COMPILEPROPS_CMD := $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/langtools_tools_classes \
+    compileproperties.CompileProperties -quiet
+
+################################################################################
+# The compileprops tools compiles a properties file into an enum-like class.
+TOOL_PARSEPROPS_CMD := $(JAVA_SMALL) -cp $(BUILDTOOLS_OUTPUTDIR)/langtools_tools_classes \
+    propertiesparser.PropertiesParser
+
+
+################################################################################
+# Sets up a rule that creates a version.properties file in the gensrc output
+# directory.
+# Param 1 - Variable to add generated file name to
+# Param 2 - Name of version.properties file including packages from the src
+#           root.
+define SetupVersionProperties
+  $(SUPPORT_OUTPUTDIR)/gensrc/$(MODULE)/$$(strip $2):
+	$$(call MakeTargetDir)
+	$(PRINTF) "jdk=$(VERSION_NUMBER)\nfull=$(VERSION_STRING)\nrelease=$(VERSION_SHORT)\n" \
+	    > $$@
+
+  $$(strip $1) += $(SUPPORT_OUTPUTDIR)/gensrc/$(MODULE)/$$(strip $2)
+endef
+
+################################################################################
+# Finds all properties files in the module source and creates a rule that runs
+# CompileProperties on them into the gensrc dir.
+# Param 1 - Variable to add targets to
+# Param 2 - Extra properties files to process
+define SetupCompileProperties
+  # Lookup the properties that need to be compiled into resource bundles.
+  PROPSOURCES := $2 \
+      $$(call FindFiles, $(TOPDIR)/src/$(MODULE)/share/classes, *.properties)
+
+  # Filter out any excluded translations
+  PROPSOURCES := $$(call FilterExcludedTranslations, $$(PROPSOURCES), .properties)
+
+  # Convert .../src/<module>/share/classes/com/sun/tools/javac/resources/javac_zh_CN.properties
+  # to .../langtools/gensrc/<module>/com/sun/tools/javac/resources/javac_zh_CN.java
+  # Strip away prefix and suffix, leaving for example only:
+  # "<module>/share/classes/com/sun/tools/javac/resources/javac_zh_CN"
+  PROPJAVAS := $$(patsubst $(TOPDIR)/src/%, \
+      $(SUPPORT_OUTPUTDIR)/gensrc/%, \
+      $$(patsubst %.properties, %.java, \
+      $$(subst /share/classes,, $$(PROPSOURCES))))
+
+  # Generate the package dirs for the to be generated java files. Sort to remove
+  # duplicates.
+  PROPDIRS := $$(sort $$(dir $$(PROPJAVAS)))
+
+  # Now generate a sequence of:
+  # "-compile ...javac_zh_CN.properties ...javac_zh_CN.java java.util.ListResourceBundle"
+  # suitable to be fed into the CompileProperties command.
+  PROPCMDLINE := $$(subst _SPACE_, $(SPACE), \
+      $$(join $$(addprefix -compile_SPACE_, $$(PROPSOURCES)), \
+      $$(addsuffix _SPACE_java.util.ListResourceBundle, \
+      $$(addprefix _SPACE_, $$(PROPJAVAS)))))
+
+  # Now setup the rule for the generation of the resource bundles.
+  PROPS_BASE := $(SUPPORT_OUTPUTDIR)/gensrc/$(MODULE)/_the_props
+  $$(PROPS_BASE): $$(PROPSOURCES)
+	$$(call MakeDir, $$(@D) $$(PROPDIRS))
+	$(FIND) $$(@D) -name "*.java" -a ! -name "*Properties.java" $(FIND_DELETE)
+	$(ECHO) Compiling $$(words $$(PROPSOURCES)) properties into resource bundles for $(MODULE)
+	$$(call ExecuteWithLog, $$(PROPS_BASE)_exec, \
+	    $(TOOL_COMPILEPROPS_CMD) $$(PROPCMDLINE))
+	$(TOUCH) $$@
+
+  $$(strip $1) += $$(PROPS_BASE)
+endef
+
+################################################################################
+# Parse property files in given location and generate a Java-like enum in the gensrc folder.
+# Param 1 - Variable to add targets to
+# Param 2 - Extra properties files to process
+define SetupParseProperties
+  # property files to process
+  PARSEPROPSOURCES := $$(addprefix $(TOPDIR)/src/$(MODULE)/share/classes/, $2)
+  PARSEPROPSOURCES := $$(call FilterExcludedTranslations, $$(PARSEPROPSOURCES), .properties)
+
+  PARSEPROPALLDIRS := $$(patsubst $(TOPDIR)/src/$(MODULE)/share/classes/%, \
+      $(SUPPORT_OUTPUTDIR)/gensrc/$(MODULE)/%, \
+      $$(dir $$(PARSEPROPSOURCES)))
+
+  PARSEPROPDIRS := $$(sort $$(PARSEPROPALLDIRS))
+
+  PARSEPROPCMDLINE := $$(subst _SPACE_, $$(SPACE), \
+    $$(join $$(foreach var,$$(PARSEPROPSOURCES),$$(addprefix -compile_SPACE_,$$(var))), \
+    $$(addprefix _SPACE_, $$(PARSEPROPALLDIRS))))
+
+  # Now setup the rule for the generation of the resource bundles.
+  $(SUPPORT_OUTPUTDIR)/gensrc/$(MODULE)/_the_parsed_props: $$(PARSEPROPSOURCES)
+	$$(call MakeDir, $$(@D) $$(PARSEPROPDIRS))
+	$(FIND) $$(@D) -name "*Properties.java" $(FIND_DELETE)
+	$(ECHO) Parsing $$(words $$(PARSEPROPSOURCES)) properties into enum-like class for $(MODULE)
+	$(TOOL_PARSEPROPS_CMD) $$(PARSEPROPCMDLINE)
+	$(TOUCH) $$@
+
+  $$(strip $1) += $(SUPPORT_OUTPUTDIR)/gensrc/$(MODULE)/_the_parsed_props
+endef
+

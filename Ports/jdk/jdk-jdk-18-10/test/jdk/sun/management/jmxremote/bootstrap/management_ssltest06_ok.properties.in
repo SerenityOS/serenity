@@ -1,0 +1,2 @@
+com.sun.management.jmxremote.password.file=@TEST-SRC@/jmxremote_ssltest06_ok.password
+com.sun.management.jmxremote.access.file=@TEST-SRC@/jmxremote_ssltest06_ok.access

@@ -1,0 +1,13 @@
+BadBreakContinue.java:16:21: compiler.err.break.outside.switch.loop
+BadBreakContinue.java:17:21: compiler.err.cont.outside.loop
+BadBreakContinue.java:19:27: compiler.err.break.outside.switch.loop
+BadBreakContinue.java:20:27: compiler.err.cont.outside.loop
+BadBreakContinue.java:25:29: compiler.err.undef.label: loop
+BadBreakContinue.java:26:29: compiler.err.undef.label: loop
+BadBreakContinue.java:28:35: compiler.err.undef.label: loop
+BadBreakContinue.java:29:35: compiler.err.undef.label: loop
+BadBreakContinue.java:36:29: compiler.err.break.outside.switch.loop
+BadBreakContinue.java:37:29: compiler.err.cont.outside.loop
+BadBreakContinue.java:39:35: compiler.err.break.outside.switch.loop
+BadBreakContinue.java:40:35: compiler.err.cont.outside.loop
+12 errors

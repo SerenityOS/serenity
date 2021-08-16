@@ -1,0 +1,688 @@
+/*
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+// This class has an entry in its PermittedSubclasses attribute that does not exist.
+// Test that JVM_GetPermittedSubclasses() only returns the existing class.
+//
+// sealed class NoLoadSubclasses permits ExistingClassFile, I/Dont/Exist/Either { }
+//
+class NoLoadSubclasses {
+  0xCAFEBABE;
+  0; // minor version
+  61; // version
+  [18] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1     at 0x0A
+    class #4; // #2     at 0x0F
+    NameAndType #5 #6; // #3     at 0x12
+    Utf8 "java/lang/Object"; // #4     at 0x17
+    Utf8 "<init>"; // #5     at 0x2A
+    Utf8 "()V"; // #6     at 0x33
+    class #8; // #7     at 0x39
+    Utf8 "NoLoadSubclasses"; // #8     at 0x3C
+    Utf8 "Code"; // #9     at 0x4D
+    Utf8 "LineNumberTable"; // #10     at 0x54
+    Utf8 "SourceFile"; // #11     at 0x66
+    Utf8 "NoLoadSubclasses.java"; // #12     at 0x73
+    Utf8 "PermittedSubclasses"; // #13     at 0x89
+    class #15; // #14     at 0x9D
+    Utf8 "ExistingClassFile"; // #15     at 0xA0
+    class #17; // #16     at 0xAA
+    Utf8 "I/Dont/Exist/Either"; // #17     at 0xAD
+  } // Constant Pool
+
+  0x0020; // access [ ACC_SUPER ]
+  #7;// this_cpx
+  #2;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [1] { // methods
+    { // Member at 0xC1
+      0x0000; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [1] { // Attributes
+        Attr(#9, 29) { // Code at 0xC9
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 6) { // LineNumberTable at 0xE0
+              [1] { // LineNumberTable
+                0  1; //  at 0xEC
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [2] { // Attributes
+    Attr(#13, 6) { // PermittedSubclasses at 0xF6
+      0x0002000E0010;
+    } // end PermittedSubclasses
+    ;
+    Attr(#11, 2) { // SourceFile at 0xEE
+      #12;
+    } // end SourceFile
+  } // Attributes
+} // end class NoLoadSubclasses
+
+// class ExistingClassFile extends NoLoadSubclasses { }
+//
+class ExistingClassFile {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #10; // #1
+    class #11; // #2
+    class #12; // #3
+    Utf8 "<init>"; // #4
+    Utf8 "()V"; // #5
+    Utf8 "Code"; // #6
+    Utf8 "LineNumberTable"; // #7
+    Utf8 "SourceFile"; // #8
+    Utf8 "ExistingClassFile.java"; // #9
+    NameAndType #4 #5; // #10
+    Utf8 "ExistingClassFile"; // #11
+    Utf8 "NoLoadSubclasses"; // #12
+  } // Constant Pool
+
+  0x0021; // access
+  #2;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // Fields
+  } // Fields
+
+  [] { // Methods
+    {  // method
+      0x0001; // access
+      #4; // name_index
+      #5; // descriptor_index
+      [] { // Attributes
+        Attr(#6) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          }
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#7) { // LineNumberTable
+              [] { // line_number_table
+                0  1;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    }
+  } // Methods
+
+  [] { // Attributes
+    Attr(#8) { // SourceFile
+      #9;
+    } // end SourceFile
+  } // Attributes
+} // end class ExistingClassFile
+
+// This class contains an empty PermittedSubclasses attribute.  Test that
+// this does not cause an exception to get thrown.
+class NoSubclasses {
+  0xCAFEBABE;
+  0; // minor version
+  61; // version
+  [14] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1     at 0x0A
+    class #4; // #2     at 0x0F
+    NameAndType #5 #6; // #3     at 0x12
+    Utf8 "java/lang/Object"; // #4     at 0x17
+    Utf8 "<init>"; // #5     at 0x2A
+    Utf8 "()V"; // #6     at 0x33
+    class #8; // #7     at 0x39
+    Utf8 "NoSubclasses"; // #8     at 0x3C
+    Utf8 "Code"; // #9     at 0x49
+    Utf8 "LineNumberTable"; // #10     at 0x50
+    Utf8 "SourceFile"; // #11     at 0x62
+    Utf8 "NoSubclasses.java"; // #12     at 0x6F
+    Utf8 "PermittedSubclasses"; // #13     at 0x81
+  } // Constant Pool
+
+  0x0020; // access [ ACC_SUPER ]
+  #7;// this_cpx
+  #2;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [1] { // methods
+    { // Member at 0xAB
+      0x0000; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [1] { // Attributes
+        Attr(#9, 29) { // Code at 0xB3
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 6) { // LineNumberTable at 0xCA
+              [1] { // LineNumberTable
+                0  1; //  at 0xD6
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [2] { // Attributes
+    Attr(#13, 2) { // PermittedSubclasses at 0xE0
+      0x0000;
+    } // end PermittedSubclasses
+    ;
+    Attr(#11, 2) { // SourceFile at 0xD8
+      #12;
+    } // end SourceFile
+  } // Attributes
+} // end class NoSubclasses
+
+
+// This class extends NoSubClasses to show that a class with an empty
+// PermittedSubtypes attribute cannot be subclass-ed.
+class SubClass {
+  0xCAFEBABE;
+  0; // minor version
+  61; // version
+  [13] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1     at 0x0A
+    class #4; // #2     at 0x0F
+    NameAndType #5 #6; // #3     at 0x12
+    Utf8 "NoSubclasses"; // #4     at 0x17
+    Utf8 "<init>"; // #5     at 0x26
+    Utf8 "()V"; // #6     at 0x2F
+    class #8; // #7     at 0x35
+    Utf8 "SubClass"; // #8     at 0x38
+    Utf8 "Code"; // #9     at 0x43
+    Utf8 "LineNumberTable"; // #10     at 0x4A
+    Utf8 "SourceFile"; // #11     at 0x5C
+    Utf8 "SubClass.java"; // #12     at 0x69
+  } // Constant Pool
+
+  0x0021; // access [ ACC_PUBLIC ACC_SUPER ]
+  #7;// this_cpx
+  #2;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // Fields
+  } // Fields
+
+  [1] { // Methods
+    {  // method at 0x85
+      0x0001; // access
+      #5; // name_index       : <init>
+      #6; // descriptor_index : ()V
+      [1] { // Attributes
+        Attr(#9, 29) { // Code at 0x8D
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 6) { // LineNumberTable at 0xA4
+              [1] { // line_number_table
+                0  1; //  at 0xB0
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    }
+  } // Methods
+
+  [1] { // Attributes
+    Attr(#11, 2) { // SourceFile at 0xB2
+      #12;
+    } // end SourceFile
+  } // Attributes
+} // end class SubClass
+
+
+
+// This class has a PermittedSubclasses attribute but an old class file version.
+// The PermittedSubclasses attribute should be ignored.
+//
+// sealed class OldClassFile permits iDontExist, I/Dont/Exist/Either { }
+//
+class OldClassFile {
+  0xCAFEBABE;
+  0; // minor version
+  57; // version
+  [18] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1     at 0x0A
+    class #4; // #2     at 0x0F
+    NameAndType #5 #6; // #3     at 0x12
+    Utf8 "java/lang/Object"; // #4     at 0x17
+    Utf8 "<init>"; // #5     at 0x2A
+    Utf8 "()V"; // #6     at 0x33
+    class #8; // #7     at 0x39
+    Utf8 "OldClassFile"; // #8     at 0x3C
+    Utf8 "Code"; // #9     at 0x4D
+    Utf8 "LineNumberTable"; // #10     at 0x54
+    Utf8 "SourceFile"; // #11     at 0x66
+    Utf8 "OldClassFile.java"; // #12     at 0x73
+    Utf8 "PermittedSubclasses"; // #13     at 0x89
+    class #15; // #14     at 0x9D
+    Utf8 "iDontExist"; // #15     at 0xA0
+    class #17; // #16     at 0xAA
+    Utf8 "I/Dont/Exist/Either"; // #17     at 0xAD
+  } // Constant Pool
+
+  0x0030; // access [ ACC_SUPER ACC_FINAL ]
+  #7;// this_cpx
+  #2;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [1] { // methods
+    { // Member at 0xC1
+      0x0000; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [1] { // Attributes
+        Attr(#9, 29) { // Code at 0xC9
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 6) { // LineNumberTable at 0xE0
+              [1] { // LineNumberTable
+                0  1; //  at 0xEC
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [2] { // Attributes
+    Attr(#11, 2) { // SourceFile at 0xEE
+      #12;
+    } // end SourceFile
+    ;
+    Attr(#13, 6) { // PermittedSubclasses at 0xF6
+      0x0002000E0010;
+    } // end PermittedSubclasses
+  } // Attributes
+} // end class OldClassFile
+
+
+
+// This class has a corrupted PermittedSubclasses attribute.  Attempts to load it
+// should throw ClassFormatError.
+class BadPermittedAttr {
+  0xCAFEBABE;
+  0; // minor version
+  61; // version
+  [18] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1     at 0x0A
+    class #4; // #2     at 0x0F
+    NameAndType #5 #6; // #3     at 0x12
+    Utf8 "java/lang/Object"; // #4     at 0x17
+    Utf8 "<init>"; // #5     at 0x2A
+    Utf8 "()V"; // #6     at 0x33
+    class #8; // #7     at 0x39
+    Utf8 "BadPermittedAttr"; // #8     at 0x3C
+    Utf8 "Code"; // #9     at 0x4D
+    Utf8 "LineNumberTable"; // #10     at 0x54
+    Utf8 "SourceFile"; // #11     at 0x66
+    Utf8 "BadPermittedAttr.java"; // #12     at 0x73
+    Utf8 "PermittedSubclasses"; // #13     at 0x89
+    class #15; // #14     at 0x9D
+    Utf8 "iDontExist"; // #15     at 0xA0
+    class #17; // #16     at 0xAA
+    Utf8 "I/Dont/Exist/Either"; // #17     at 0xAD
+  } // Constant Pool
+
+  0x0020; // access [ ACC_SUPER ]
+  #7;// this_cpx
+  #2;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [1] { // methods
+    { // Member at 0xC1
+      0x0000; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [1] { // Attributes
+        Attr(#9, 29) { // Code at 0xC9
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 6) { // LineNumberTable at 0xE0
+              [1] { // LineNumberTable
+                0  1; //  at 0xEC
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [2] { // Attributes
+    Attr(#11, 2) { // SourceFile at 0xEE
+      #12;
+    } // end SourceFile
+    ;
+    Attr(#13, 6) { // PermittedSubclasses at 0xF6
+      0x0002000F0010;
+    } // end PermittedSubclasses
+  } // Attributes
+} // end class BadPermittedAttr
+
+
+// This class has a PermittedSubclasses attribute and is marked Final.
+// Loading this class should throw a ClassFormatError exception.
+//
+// sealed class SealedButFinal permits iDontExist, I/Dont/Exist/Either { }
+//
+class SealedButFinal {
+  0xCAFEBABE;
+  0; // minor version
+  61; // version
+  [18] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1     at 0x0A
+    class #4; // #2     at 0x0F
+    NameAndType #5 #6; // #3     at 0x12
+    Utf8 "java/lang/Object"; // #4     at 0x17
+    Utf8 "<init>"; // #5     at 0x2A
+    Utf8 "()V"; // #6     at 0x33
+    class #8; // #7     at 0x39
+    Utf8 "SealedButFinal"; // #8     at 0x3C
+    Utf8 "Code"; // #9     at 0x4D
+    Utf8 "LineNumberTable"; // #10     at 0x54
+    Utf8 "SourceFile"; // #11     at 0x66
+    Utf8 "SealedButFinal.java"; // #12     at 0x73
+    Utf8 "PermittedSubclasses"; // #13     at 0x89
+    class #15; // #14     at 0x9D
+    Utf8 "iDontExist"; // #15     at 0xA0
+    class #17; // #16     at 0xAA
+    Utf8 "I/Dont/Exist/Either"; // #17     at 0xAD
+  } // Constant Pool
+
+  0x0030; // access [ ACC_SUPER ACC_FINAL ]
+  #7;// this_cpx
+  #2;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [1] { // methods
+    { // Member at 0xC1
+      0x0000; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [1] { // Attributes
+        Attr(#9, 29) { // Code at 0xC9
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 6) { // LineNumberTable at 0xE0
+              [1] { // LineNumberTable
+                0  1; //  at 0xEC
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [2] { // Attributes
+    Attr(#11, 2) { // SourceFile at 0xEE
+      #12;
+    } // end SourceFile
+    ;
+    Attr(#13, 6) { // PermittedSubclasses at 0xF6
+      0x0002000E0010;
+    } // end PermittedSubclasses
+  } // Attributes
+} // end class SealedButFinal
+
+
+// This class contains a PermittedSubclasses attribute with an invalid class
+// name.  Test that this causes a ClassFormatError exception to get thrown.
+//
+// sealed class BadPermittedSubclassEntry permits iDont;;Exist, I/Dont/Exist/Either { }
+//
+class BadPermittedSubclassEntry {
+  0xCAFEBABE;
+  0; // minor version
+  61; // version
+  [18] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1     at 0x0A
+    class #4; // #2     at 0x0F
+    NameAndType #5 #6; // #3     at 0x12
+    Utf8 "java/lang/Object"; // #4     at 0x17
+    Utf8 "<init>"; // #5     at 0x2A
+    Utf8 "()V"; // #6     at 0x33
+    class #8; // #7     at 0x39
+    Utf8 "BadPermittedSubclassEntry"; // #8     at 0x3C
+    Utf8 "Code"; // #9     at 0x4D
+    Utf8 "LineNumberTable"; // #10     at 0x54
+    Utf8 "SourceFile"; // #11     at 0x66
+    Utf8 "BadPermittedSubclassEntry.java"; // #12     at 0x73
+    Utf8 "PermittedSubclasses"; // #13     at 0x89
+    class #15; // #14     at 0x9D
+    Utf8 "iDont;;Exist"; // #15     at 0xA0
+    class #17; // #16     at 0xAA
+    Utf8 "I/Dont/Exist/Either"; // #17     at 0xAD
+  } // Constant Pool
+
+  0x0020; // access [ ACC_SUPER ]
+  #7;// this_cpx
+  #2;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [1] { // methods
+    { // Member at 0xC1
+      0x0000; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [1] { // Attributes
+        Attr(#9, 29) { // Code at 0xC9
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 6) { // LineNumberTable at 0xE0
+              [1] { // LineNumberTable
+                0  1; //  at 0xEC
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [2] { // Attributes
+    Attr(#13, 6) { // PermittedSubclasses at 0xF6
+      0x0002000E0010;
+    } // end PermittedSubclasses
+    ;
+    Attr(#11, 2) { // SourceFile at 0xEE
+      #12;
+    } // end SourceFile
+  } // Attributes
+}
+
+// This class contains a PermittedSubclasses attribute with an empty class
+// name.  Test that this causes a ClassFormatError exception to get thrown.
+//
+// sealed class EmptyPermittedSubclassEntry permits "", I/Dont/Exist/Either { }
+//
+class EmptyPermittedSubclassEntry {
+  0xCAFEBABE;
+  0; // minor version
+  61; // version
+  [18] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1     at 0x0A
+    class #4; // #2     at 0x0F
+    NameAndType #5 #6; // #3     at 0x12
+    Utf8 "java/lang/Object"; // #4     at 0x17
+    Utf8 "<init>"; // #5     at 0x2A
+    Utf8 "()V"; // #6     at 0x33
+    class #8; // #7     at 0x39
+    Utf8 "EmptyPermittedSubclassEntry"; // #8     at 0x3C
+    Utf8 "Code"; // #9     at 0x4D
+    Utf8 "LineNumberTable"; // #10     at 0x54
+    Utf8 "SourceFile"; // #11     at 0x66
+    Utf8 "EmptyPermittedSubclassEntry.java"; // #12     at 0x73
+    Utf8 "PermittedSubclasses"; // #13     at 0x89
+    class #15; // #14     at 0x9D
+    Utf8 ""; // #15     at 0xA0
+    class #17; // #16     at 0xAA
+    Utf8 "I/Dont/Exist/Either"; // #17     at 0xAD
+  } // Constant Pool
+
+  0x0020; // access [ ACC_SUPER ]
+  #7;// this_cpx
+  #2;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [1] { // methods
+    { // Member at 0xC1
+      0x0000; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [1] { // Attributes
+        Attr(#9, 29) { // Code at 0xC9
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 6) { // LineNumberTable at 0xE0
+              [1] { // LineNumberTable
+                0  1; //  at 0xEC
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [2] { // Attributes
+    Attr(#13, 6) { // PermittedSubclasses at 0xF6
+      0x0002000E0010;
+    } // end PermittedSubclasses
+    ;
+    Attr(#11, 2) { // SourceFile at 0xEE
+      #12;
+    } // end SourceFile
+  } // Attributes
+}

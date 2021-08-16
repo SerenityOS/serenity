@@ -1,0 +1,4 @@
+Recovery1.java:14:5: compiler.err.cant.resolve.location: kindname.class, Marker, , , (compiler.misc.location: kindname.annotation, recovery1.MyAnnotation, null)
+Recovery1.java:14:30: compiler.err.cant.resolve.location: kindname.class, Marker, , , (compiler.misc.location: kindname.annotation, recovery1.MyAnnotation, null)
+Recovery1.java:18:33: compiler.err.cant.resolve.location.args: kindname.method, markerToo, , , (compiler.misc.location: kindname.annotation, recovery1.MyAnnotation, null)
+3 errors

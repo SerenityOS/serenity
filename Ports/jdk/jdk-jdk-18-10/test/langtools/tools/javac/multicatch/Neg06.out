@@ -1,0 +1,3 @@
+Neg06.java:14:16: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Throwable)
+Neg06.java:14:25: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Integer, java.lang.Throwable)
+2 errors

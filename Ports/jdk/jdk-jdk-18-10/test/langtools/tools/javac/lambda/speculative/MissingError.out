@@ -1,0 +1,3 @@
+MissingError.java:16:16: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: int, java.lang.String)
+MissingError.java:9:37: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.String, java.lang.Integer)
+2 errors

@@ -1,0 +1,133 @@
+[sl@eng 97/07/24]
+
+All the free-standing functions (those that are not JNI native
+methods) must not leak local references.  Local references are
+automatically freed when the native method returns to Java. However,
+the free-standing functions are called from the event loop that never
+returns to Java. If these functions do not clean up the local
+references they create, the Java objects corresponding to the local
+references will never be garbage collected.
+
+This is caused by the fact that JNI does not clean up local refs 
+until control returns to Java. However, this problem is somewhat
+unique to AWT code because AWT code has long-running native methods
+that never return.
+
+Local refs may be cleaned up manually *before* control returns to 
+Java in one of the following two ways:
+
+1. Use EnsureLocalCapacity at the beginning of the function to make
+sure the VM has enough memory to create the number of JNI local refs
+needed in the function. Use DeleteLocalRef to clean up any local ref
+created inside the function that are not returned as the result. For
+example:
+
+  void AwtComponent::MeasureListItem(JNIEnv *env, 
+				     MEASUREITEMSTRUCT far& measureInfo)
+  {
+      if (env->EnsureLocalCapacity(1) < 0) {
+	  return;
+      }
+      jobject dimension = PreferredItemSize(env);
+
+      ... /* Use dimension */
+
+      env->DeleteLocalRef(dimension);
+  }
+
+2. Use PushLocalFrame and PopLocalFrame to start a new local reference
+frame. All the local refs created in the new frame will be automatically
+freed when PopLocalFrame is called. For example, the above function can be
+rewritten as follows:
+
+  void AwtComponent::MeasureListItem(JNIEnv *env, 
+				     MEASUREITEMSTRUCT far& measureInfo)
+  {
+      if (env->PushLocalFrame(1) < 0) {
+	  return;
+      }
+      jobject dimension = PreferredItemSize(env);
+
+      ... /* Use dimension */
+
+      env->PopLocalFrame(NULL);
+  }
+
+The second approach is easier to use when there are multiple local refs 
+to manage. The first approach is more efficient when the function only 
+needs to create a small number (3 or less) of local refs.
+
+Pay special attention to local refs created inside a loop. They must be
+deleted after every iteration, otherwise they accumulate very quickly:
+
+int AwtFont::getFontDescriptorNumber(JNIEnv *env, jobject font,
+				     jobject fontDescriptor)
+{
+    ... /* other stuff */
+
+    jarray array = ...
+
+    for (i = 0; i < num; i++){
+	refFontDescriptor = env->GetObjectArrayElement(array, i);
+	if (env->IsSameObject(refFontDescriptor, fontDescriptor)) {
+	    env->DeleteLocalRef(refFontDescriptor);
+	    env->DeleteLocalRef(array);
+	    return i;
+	}
+	env->DeleteLocalRef(refFontDescriptor);
+    }
+    env->DeleteLocalRef(array);
+    return 0;	// Not found.  Use default.
+}
+
+Note that we must make sure the local refs are cleaned up at every possible
+return branch. To reduce code duplication, many AWT functions use "goto"
+to jump to a common set of cleanup statements.
+
+Even if we use PushLocalFrame, we must still delete the local refs created
+in the loop:
+
+    if (env->PushLocalFrame(2) < 0)
+	return 0;
+    jarray array = ...
+    for (i = 0; i < num; i++){
+	refFontDescriptor = env->GetObjectArrayElement(array, i);
+	if (env->IsSameObject(refFontDescriptor, fontDescriptor)) {
+	    env->PopLocalFrame(NULL);
+	    return i;
+	}
+	env->DeleteLocalRef(refFontDescriptor);
+    }
+    env->PopLocalFrame(NULL);
+    return 0;	// Not found.  Use default.
+
+unless we ensure that we have space for all possible local refs we are 
+going to create inside the loop (note the different argument passed 
+to PushLocalFrame):
+
+// Maximum number of local refs we can create in this code segment is
+// num + 1.
+    if (env->PushLocalFrame(num + 1) < 0)
+	return 0;
+    jarray array = ...
+    for (i = 0; i < num; i++){
+	refFontDescriptor = env->GetObjectArrayElement(array, i);
+	if (env->IsSameObject(refFontDescriptor, fontDescriptor)) {
+	    env->PopLocalFrame(NULL);
+	    return i;
+	}
+// no longer necessary. env->DeleteLocalRef(refFontDescriptor);
+    }
+    env->PopLocalFrame(NULL);
+    return 0;	// Not found.  Use default.
+
+THINGS TO DO:
+
+    1. Investigate another possibility of dealing with local refs. Instead
+    of making sure every free-standing function does not leak local refs,
+    we could alternatively create a new local ref frame for each invocation
+    of callback functions. All local refs created during the execution of 
+    the callback will then be automatically freed.
+
+    2. Handle exceptions properly. The current code lacks error checking
+    and recovery. This leads to random runtime crashes.

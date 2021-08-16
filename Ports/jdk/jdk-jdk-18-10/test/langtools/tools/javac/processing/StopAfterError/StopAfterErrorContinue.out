@@ -1,0 +1,4 @@
+- compiler.err.proc.messager: Stop!
+StopAfterErrorAux.java:4:9: compiler.err.cant.resolve.location: kindname.class, should, , , (compiler.misc.location: kindname.class, StopAfterErrorAux, null)
+StopAfterErrorAux.java:4:21: compiler.err.cant.resolve.location: kindname.class, get, , , (compiler.misc.location: kindname.class, StopAfterErrorAux, null)
+3 errors

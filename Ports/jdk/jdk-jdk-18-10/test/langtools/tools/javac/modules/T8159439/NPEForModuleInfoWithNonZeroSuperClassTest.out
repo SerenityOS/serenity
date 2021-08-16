@@ -1,0 +1,2 @@
+- compiler.err.cant.access: <error>.module-info, (compiler.misc.bad.class.file.header: module-info.class, (compiler.misc.bad.const.pool.index: module-info.class, 15, 10))
+1 error

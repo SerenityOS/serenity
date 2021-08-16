@@ -1,0 +1,9 @@
+Domination.java:35:18: compiler.err.pattern.dominated
+Domination.java:43:18: compiler.err.pattern.dominated
+Domination.java:51:18: compiler.err.pattern.dominated
+Domination.java:67:18: compiler.err.pattern.dominated
+Domination.java:74:18: compiler.err.pattern.dominated
+Domination.java:85:18: compiler.err.pattern.dominated
+- compiler.note.preview.filename: Domination.java, DEFAULT
+- compiler.note.preview.recompile
+6 errors

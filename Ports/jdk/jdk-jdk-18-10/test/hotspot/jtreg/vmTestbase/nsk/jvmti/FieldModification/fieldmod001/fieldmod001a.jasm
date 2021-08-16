@@ -1,0 +1,108 @@
+/*
+ * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+package nsk/jvmti/FieldModification;
+
+super public class fieldmod001a {
+
+    static Field staticBoolean:Z;
+    static Field staticByte:B;
+    static Field staticShort:S;
+    static Field staticInt:I;
+    static Field staticLong:J;
+    static Field staticFloat:F;
+    static Field staticDouble:D;
+    static Field staticChar:C;
+    static Field staticObject:"Ljava/lang/Object;";
+    static Field staticArrInt:"[I";
+    Field instanceBoolean:Z;
+    Field instanceByte:B;
+    Field instanceShort:S;
+    Field instanceInt:I;
+    Field instanceLong:J;
+    Field instanceFloat:F;
+    Field instanceDouble:D;
+    Field instanceChar:C;
+    Field instanceObject:"Ljava/lang/Object;";
+    Field instanceArrInt:"[I";
+
+    public Method "<init>":"()V" stack 1 locals 1 {
+        aload_0;
+        invokespecial Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    public Method run:"()V" stack 5 locals 1 {
+        iconst_1;
+        putstatic   Field staticBoolean:"Z";    // bci=1
+        iconst_1;
+        putstatic   Field staticByte:"B";       // bci=5
+        iconst_2;
+        putstatic   Field staticShort:"S";      // bci=9
+        iconst_3;
+        putstatic   Field staticInt:"I";        // bci=13
+        ldc2_w      long 4l;
+        putstatic   Field staticLong:"J";       // bci=19
+        ldc         float 0.5f;
+        putstatic   Field staticFloat:"F";      // bci=24
+        ldc2_w      double 0.6d;
+        putstatic   Field staticDouble:"D";     // bci=30
+        bipush      97;
+        putstatic   Field staticChar:"C";       // bci=35
+        getstatic   Field fieldmod001.obj1:"Ljava/lang/Object;";
+        putstatic   Field staticObject:"Ljava/lang/Object;"; // bci=41
+        getstatic   Field fieldmod001.arr1:"[I";
+        putstatic   Field staticArrInt:"[I";    // bci=47
+        aload_0;
+        iconst_0;
+        putfield    Field instanceBoolean:"Z";  // bci=52
+        aload_0;
+        bipush      10;
+        putfield    Field instanceByte:"B";     // bci=58
+        aload_0;
+        bipush      20;
+        putfield    Field instanceShort:"S";    // bci=64
+        aload_0;
+        bipush      30;
+        putfield    Field instanceInt:"I";      // bci=70
+        aload_0;
+        ldc2_w      long 40l;
+        putfield    Field instanceLong:"J";     // bci=77
+        aload_0;
+        ldc         float 0.05f;
+        putfield    Field instanceFloat:"F";    // bci=83
+        aload_0;
+        ldc2_w      double 0.06d;
+        putfield    Field instanceDouble:"D";   // bci=90
+        aload_0;
+        bipush      122;
+        putfield    Field instanceChar:"C";     // bci=96
+        aload_0;
+        getstatic   Field fieldmod001.obj2:"Ljava/lang/Object;";
+        putfield    Field instanceObject:"Ljava/lang/Object;"; // bci=103
+        aload_0;
+        getstatic   Field fieldmod001.arr2:"[I";
+        putfield    Field instanceArrInt:"[I";  // bci=110
+        return;
+    }
+}

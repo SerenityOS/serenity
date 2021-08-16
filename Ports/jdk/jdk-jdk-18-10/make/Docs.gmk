@@ -1,0 +1,750 @@
+# Copyright (c) 1997, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include Execute.gmk
+include Modules.gmk
+include ModuleTools.gmk
+include ProcessMarkdown.gmk
+include ToolsJdk.gmk
+include ZipArchive.gmk
+include TextFileProcessing.gmk
+
+# This is needed to properly setup DOCS_MODULES.
+$(eval $(call ReadImportMetaData))
+
+################################################################################
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, Docs.gmk))
+
+################################################################################
+# This file generates all documentation for OpenJDK.
+#
+# We will generate API documentation for two different selections of the source
+# code: "Java SE", which contains just the modules covered by the top-level
+# module java.se and "JDK", which covers all of Java SE and also all
+# other available modules that should be documented, including imported modules,
+# if any.
+#
+# We will also generate separate, free-standing specifications from either
+# markdown or existing html files.
+#
+
+################################################################################
+# Javadoc settings
+
+# Include configuration for URLs in generated javadoc
+include $(TOPDIR)/make/conf/javadoc.conf
+
+MODULES_SOURCE_PATH := $(call PathList, $(call GetModuleSrcPath) )
+
+
+# In order to get a specific ordering it's necessary to specify the total
+# ordering of tags as the tags are otherwise ordered in order of definition.
+JAVADOC_TAGS := \
+    -tag beaninfo:X \
+    -tag revised:X \
+    -tag since.unbundled:X \
+    -tag spec:X \
+    -tag specdefault:X \
+    -tag Note:X \
+    -tag ToDo:X \
+    -tag 'apiNote:a:API Note:' \
+    -tag 'implSpec:a:Implementation Requirements:' \
+    -tag 'implNote:a:Implementation Note:' \
+    -tag param \
+    -tag return \
+    -tag throws \
+    -taglet build.tools.taglet.JSpec\$$JLS \
+    -taglet build.tools.taglet.JSpec\$$JVMS \
+    -taglet build.tools.taglet.ModuleGraph \
+    -taglet build.tools.taglet.ToolGuide \
+    -tag since \
+    -tag serialData \
+    -tag factory \
+    -tag see \
+    -taglet build.tools.taglet.ExtLink \
+    -taglet build.tools.taglet.Incubating \
+    -tagletpath $(BUILDTOOLS_OUTPUTDIR)/jdk_tools_classes \
+    $(CUSTOM_JAVADOC_TAGS) \
+    #
+
+# The reference tags must stay stable to allow for comparisons across the
+# development cycle. If JAVADOC_TAGS needs to change, make sure that
+# REFERENCE_TAGS remains unchanged, by copying and hardcoding, if necessary.
+REFERENCE_TAGS := $(JAVADOC_TAGS)
+
+# Which doclint checks to ignore
+JAVADOC_DISABLED_DOCLINT_WARNINGS := missing
+JAVADOC_DISABLED_DOCLINT_PACKAGES := org.w3c.* javax.smartcardio
+
+# The initial set of options for javadoc
+JAVADOC_OPTIONS := -use -keywords -notimestamp \
+    -serialwarn -encoding ISO-8859-1 -docencoding UTF-8 -breakiterator \
+    -splitIndex --system none -javafx --expand-requires transitive \
+    --override-methods=summary
+
+# The reference options must stay stable to allow for comparisons across the
+# development cycle.
+REFERENCE_OPTIONS := -XDignore.symbol.file=true -use -keywords -notimestamp \
+    -serialwarn -encoding ISO-8859-1 -breakiterator -splitIndex --system none \
+    -html5 -javafx --expand-requires transitive
+
+# Should we add DRAFT stamps to the generated javadoc?
+ifeq ($(VERSION_IS_GA), true)
+  IS_DRAFT := false
+else
+  IS_DRAFT := true
+endif
+
+################################################################################
+# General text snippets
+
+FULL_COMPANY_NAME := Oracle and/or its affiliates
+COMPANY_ADDRESS := 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+
+JAVA_PLATFORM := Java Platform
+
+ifeq ($(IS_DRAFT), true)
+  DRAFT_MARKER_STR := <br><strong>DRAFT $(VERSION_STRING)</strong>
+  ifeq ($(VERSION_BUILD), 0)
+    DRAFT_MARKER_TITLE := $(SPACE)[ad-hoc build]
+  else
+    DRAFT_MARKER_TITLE := $(SPACE)[build $(VERSION_BUILD)]
+  endif
+  DRAFT_TEXT := This specification is not final and is subject to change. \
+      Use is subject to <a href="$(LICENSE_URL)">license terms</a>.
+
+  # Workaround stylesheet bug
+  HEADER_STYLE := style="margin-top: 9px;"
+else
+  HEADER_STYLE := style="margin-top: 14px;"
+endif
+
+# $1 - Relative prefix to COPYRIGHT_URL
+COPYRIGHT_BOTTOM = \
+    <a href="$(strip $1)$(COPYRIGHT_URL)">Copyright</a> \
+    &copy; 1993, $(COPYRIGHT_YEAR), $(FULL_COMPANY_NAME), \
+    $(COMPANY_ADDRESS).<br>All rights reserved. \
+    Use is subject to <a href="$(LICENSE_URL)">license terms</a> and the \
+    <a href="$(REDISTRIBUTION_URL)">documentation redistribution policy</a>. \
+    $(DRAFT_MARKER_STR) <!-- Version $(VERSION_STRING) -->
+
+# $1 - Optional "Other Versions" link
+JAVADOC_BOTTOM = \
+    <a href="$(BUG_SUBMIT_URL)">Report a bug or suggest an enhancement</a><br> \
+    For further API reference and developer documentation see the \
+    <a href="$(JAVADOC_BASE_URL)" target="_blank">Java SE \
+    Documentation</a>, which contains more detailed, \
+    developer-targeted descriptions with conceptual overviews, definitions \
+    of terms, workarounds, and working code examples. $1<br> \
+    Java is a trademark or registered trademark of $(FULL_COMPANY_NAME) in \
+    the US and other countries.<br> \
+    $(call COPYRIGHT_BOTTOM, {@docroot}/../)
+
+JAVADOC_TOP := \
+    <div style="padding: 6px; text-align: center; font-size: 80%; \
+    font-family: DejaVu Sans, Arial, Helvetica, sans-serif; \
+    font-weight: normal;">$(DRAFT_TEXT)</div>
+
+################################################################################
+# JDK javadoc titles/text snippets
+
+JDK_SHORT_NAME := Java SE $(VERSION_SPECIFICATION) &amp; JDK $(VERSION_SPECIFICATION)
+JDK_LONG_NAME := Java<sup>&reg;</sup> Platform, Standard Edition \
+    &amp;&nbsp;Java&nbsp;Development&nbsp;Kit
+
+################################################################################
+# Java SE javadoc titles/text snippets
+
+JAVASE_SHORT_NAME := Java SE $(VERSION_SPECIFICATION)
+JAVASE_LONG_NAME := Java<sup>&reg;</sup> Platform, Standard Edition
+
+################################################################################
+# Functions
+
+# Helper function for creating a svg file from a dot file generated by the
+# GenGraphs tool.
+# param 1: SetupJavadocGeneration namespace ($1)
+# param 2: module name
+#
+define setup_gengraph_dot_to_svg
+  $1_$2_DOT_SRC :=  $$($1_GENGRAPHS_DIR)/$2.dot
+  $1_$2_SVG_TARGET := $$($1_TARGET_DIR)/$2/module-graph.svg
+
+    # For each module needing a graph, create a svg file from the dot file
+    # generated by the GenGraphs tool and store it in the target dir.
+    $$(eval $$(call SetupExecute, gengraphs_svg_$1_$2, \
+        INFO := Running dot for module graphs for $2, \
+        DEPS := $$(gengraphs_$1_TARGET), \
+        OUTPUT_FILE := $$($1_$2_SVG_TARGET), \
+        SUPPORT_DIR := $$($1_GENGRAPHS_DIR), \
+        COMMAND := $$(DOT) -Tsvg -o $$($1_$2_SVG_TARGET) $$($1_$2_DOT_SRC), \
+    ))
+
+  $1_MODULEGRAPH_TARGETS += $$($1_$2_SVG_TARGET)
+endef
+
+# Helper function to create the overview.html file to use with the -overview
+# javadoc option.
+# Returns the filename as $1_OVERVIEW.
+#
+# param 1: SetupJavadocGeneration namespace ($1)
+define create_overview_file
+  $1_OVERVIEW_TEXT := \
+      <!DOCTYPE html> \
+      <html><head></head><body> \
+      #
+  ifneq ($$($1_GROUPS),)
+    $1_OVERVIEW_TEXT += \
+      <p>This document is divided into \
+      $$(subst 2,two,$$(subst 3,three,$$(words $$($1_GROUPS)))) sections:</p> \
+      <blockquote><dl> \
+      #
+    $1_OVERVIEW_TEXT += $$(foreach g, $$($1_GROUPS), \
+        <dt style="margin-top: 8px;">$$($$g_GROUP_NAME)</dt> \
+        <dd style="margin-top: 8px;">$$($$g_GROUP_DESCRIPTION)</dd> \
+    )
+    $1_OVERVIEW_TEXT += \
+        </dl></blockquote> \
+        #
+  endif
+  $1_OVERVIEW_TEXT += \
+      </body></html> \
+      #
+
+  $1_OVERVIEW := $$(SUPPORT_OUTPUTDIR)/docs/$1-overview.html
+
+  $1_OVERVIEW_VARDEPS_FILE := $$(call DependOnVariable, $1_OVERVIEW_TEXT, \
+      $$($1_OVERVIEW).vardeps)
+
+  $$($1_OVERVIEW): $$($1_OVERVIEW_VARDEPS_FILE)
+	$$(call LogInfo, Creating overview.html for $1)
+	$$(call MakeDir, $$(@D))
+	$$(PRINTF) > $$@ '$$($1_OVERVIEW_TEXT)'
+endef
+
+################################################################################
+# Setup make rules to create an API documentation collection, using javadoc and
+# other tools if needed.
+#
+# Parameter 1 is the name of the rule. This name is used as variable prefix.
+# Targets generated are returned as $1_JAVADOC_TARGETS and
+# $1_MODULEGRAPH_TARGETS. Note that the index.html file will work as a "touch
+# file" for all the magnitude of files that are generated by javadoc.
+#
+# Remaining parameters are named arguments. These include:
+#   MODULES - Modules to generate javadoc for
+#   GROUPS - Name of the groups to divide the modules into, if any
+#   SHORT_NAME - The short name of this documentation collection
+#   LONG_NAME - The long name of this documentation collection
+#   TARGET_DIR - Where to store the output
+#   OTHER_VERSIONS - URL for other page listing versions
+#
+SetupApiDocsGeneration = $(NamedParamsMacroTemplate)
+define SetupApiDocsGenerationBody
+
+  # Figure out all modules, both specified and transitive indirect exports, that
+  # will be processed by javadoc.
+  $1_INDIRECT_EXPORTS := $$(call FindTransitiveIndirectDepsForModules, $$($1_MODULES))
+  $1_ALL_MODULES := $$(sort $$($1_MODULES) $$($1_INDIRECT_EXPORTS))
+
+  $1_JAVA_ARGS := -Dextlink.spec.version=$$(VERSION_SPECIFICATION) \
+	-Djspec.version=$$(VERSION_SPECIFICATION)
+
+  ifeq ($$(ENABLE_FULL_DOCS), true)
+    # Tell the ModuleGraph taglet to generate html links to soon-to-be-created
+    # svg files with module graphs.
+    $1_JAVA_ARGS += -DenableModuleGraph=true
+  endif
+
+  # Start with basic options and tags
+  ifeq ($$($1_OPTIONS), )
+    $1_OPTIONS := $$(JAVADOC_OPTIONS)
+  endif
+  ifeq ($$($1_TAGS), )
+    $1_TAGS := $$(JAVADOC_TAGS)
+  endif
+  $1_OPTIONS += $$($1_TAGS)
+
+  $1_OPTIONS += --module-source-path $$(MODULES_SOURCE_PATH)
+  $1_OPTIONS += --module $$(call CommaList, $$($1_MODULES))
+
+  # Create a string like "-Xdoclint:all,-syntax,-html,..."
+  $1_OPTIONS += -Xdoclint:all,$$(call CommaList, $$(addprefix -, \
+      $$(JAVADOC_DISABLED_DOCLINT_WARNINGS)))
+  # Ignore the doclint warnings in certain packages
+  $1_OPTIONS += -Xdoclint/package:$$(call CommaList, $$(addprefix -, \
+      $$(JAVADOC_DISABLED_DOCLINT_PACKAGES)))
+
+  $1_DOC_TITLE := $$($1_LONG_NAME)<br>Version $$(VERSION_SPECIFICATION) API \
+      Specification
+  $1_WINDOW_TITLE := $$(subst &amp;,&,$$($1_SHORT_NAME))$$(DRAFT_MARKER_TITLE)
+  $1_HEADER_TITLE := <div $$(HEADER_STYLE)><strong>$$($1_SHORT_NAME)</strong> \
+      $$(DRAFT_MARKER_STR)</div>
+  ifneq ($$($1_OTHER_VERSIONS), )
+      $1_JAVADOC_BOTTOM := $$(call JAVADOC_BOTTOM, <a href="$$($1_OTHER_VERSIONS)">Other versions.</a>)
+  else
+      $1_JAVADOC_BOTTOM := $$(call JAVADOC_BOTTOM, )
+  endif
+
+  $1_OPTIONS += -doctitle '$$($1_DOC_TITLE)'
+  $1_OPTIONS += -windowtitle '$$($1_WINDOW_TITLE)'
+  $1_OPTIONS += -header '$$($1_HEADER_TITLE)'
+  $1_OPTIONS += -bottom '$$($1_JAVADOC_BOTTOM)'
+  ifeq ($$(IS_DRAFT), true)
+    $1_OPTIONS += -top '$$(JAVADOC_TOP)'
+  endif
+
+  # Do not store debug level options in VARDEPS.
+  ifneq ($$(LOG_LEVEL), trace)
+    $1_LOG_OPTION += -quiet
+  else
+    $1_LOG_OPTION += -verbose
+  endif
+
+  # Generate the overview.html file. This will return the filename in
+  # $1_OVERVIEW.
+  $$(eval $$(call create_overview_file,$1))
+  $1_OPTIONS += -overview $$($1_OVERVIEW)
+
+  # Add summary pages for new/deprecated APIs in recent releases
+  $1_OPTIONS += --since $(call CommaList, \
+      $(filter-out $(VERSION_DOCS_API_SINCE), \
+          $(call sequence, $(VERSION_DOCS_API_SINCE), $(VERSION_FEATURE))))
+  $1_OPTIONS += --since-label "New API since JDK $(VERSION_DOCS_API_SINCE)"
+
+  $$(foreach g, $$($1_GROUPS), \
+    $$(eval $1_OPTIONS += -group "$$($$g_GROUP_NAME)" "$$($$g_GROUP_MODULES)") \
+  )
+
+  ifeq ($$($1_JAVADOC_CMD), )
+    $1_JAVADOC_CMD := $$(JAVA) -Djava.awt.headless=true $$($1_JAVA_ARGS) \
+        $$(NEW_JAVADOC)
+  else
+    $1_OPTIONS += $$(addprefix -J, $$($1_JAVA_ARGS))
+  endif
+
+  $1_VARDEPS := $$($1_JAVA_ARGS) $$($1_OPTIONS) $$(MODULES_SOURCE_PATH) \
+      $$($1_ALL_MODULES) $$($1_JAVADOC_CMD)
+  $1_VARDEPS_FILE := $$(call DependOnVariable, $1_VARDEPS, \
+      $$(SUPPORT_OUTPUTDIR)/docs/$1.vardeps)
+
+  # Get a list of all files in all the source dirs for all included modules
+  $1_SOURCE_DEPS := $$(call FindFiles, $$(wildcard $$(foreach module, \
+      $$($1_ALL_MODULES), $$(call FindModuleSrcDirs, $$(module)))))
+
+  $$(eval $$(call SetupExecute, javadoc_$1, \
+      WARN := Generating $1 javadoc for $$(words $$($1_ALL_MODULES)) modules, \
+      INFO := Javadoc modules: $$($1_ALL_MODULES), \
+      DEPS := $$(BUILD_TOOLS_JDK) $$($1_VARDEPS_FILE) $$($1_SOURCE_DEPS) \
+          $$($1_OVERVIEW), \
+      OUTPUT_DIR := $$($1_TARGET_DIR), \
+      SUPPORT_DIR := $$(SUPPORT_OUTPUTDIR)/docs, \
+      COMMAND := $$($1_JAVADOC_CMD) -d $$($1_TARGET_DIR) $$($1_OPTIONS) \
+          $$($1_LOG_OPTION), \
+  ))
+
+  $1_JAVADOC_TARGETS := $$(javadoc_$1_TARGET)
+
+  ifeq ($$(ENABLE_FULL_DOCS), true)
+    # We have asked ModuleGraph to generate links to svg files. Now we must
+    # produce the svg files.
+
+    # Locate which modules has the @moduleGraph tag in their module-info.java
+    $1_MODULES_NEEDING_GRAPH := $$(strip $$(foreach m, $$($1_ALL_MODULES), \
+      $$(if $$(shell $$(GREP) -e @moduleGraph \
+          $$(wildcard $$(addsuffix /module-info.java, \
+          $$(call FindModuleSrcDirs, $$m)))), \
+        $$m) \
+    ))
+
+    # First we run the GenGraph tool. It will query the module structure of the
+    # running JVM and output .dot files for all existing modules.
+    GENGRAPHS_PROPS := \
+        $$(TOPDIR)/make/jdk/src/classes/build/tools/jigsaw/javadoc-graphs.properties
+
+    $1_GENGRAPHS_DIR := $$(SUPPORT_OUTPUTDIR)/docs/$1-gengraphs
+
+    $$(eval $$(call SetupExecute, gengraphs_$1, \
+        INFO := Running gengraphs for $1 documentation, \
+        DEPS := $$(BUILD_JIGSAW_TOOLS) $$(GENGRAPHS_PROPS), \
+        OUTPUT_DIR := $$($1_GENGRAPHS_DIR), \
+        COMMAND := $$(TOOL_GENGRAPHS) --spec --output $$($1_GENGRAPHS_DIR) \
+            --dot-attributes $$(GENGRAPHS_PROPS), \
+    ))
+
+    # For each module needing a graph, create a svg file from the dot file
+    # generated by the GenGraphs tool and store it in the target dir.
+    # They will depend on gengraphs_$1_TARGET, and will be added to $1.
+    $$(foreach m, $$($1_MODULES_NEEDING_GRAPH), \
+      $$(eval $$(call setup_gengraph_dot_to_svg,$1,$$m)) \
+    )
+  endif
+endef
+
+################################################################################
+# Setup generation of the JDK API documentation (javadoc + modulegraph)
+
+# Define the groups of the JDK API documentation
+JavaSE_GROUP_NAME := Java SE
+JavaSE_GROUP_MODULES := $(call ColonList, $(sort java.se \
+    $(call FindTransitiveIndirectDepsForModules, java.se)))
+JavaSE_GROUP_DESCRIPTION := \
+    The Java Platform, Standard Edition (Java SE) APIs define the core Java \
+    platform for general-purpose computing. These APIs are in modules whose \
+    names start with {@code java}. \
+    #
+JDK_GROUPS += JavaSE
+
+JDK_GROUP_NAME := JDK
+JDK_GROUP_MODULES := jdk.*
+JDK_GROUP_DESCRIPTION := \
+    The Java Development Kit (JDK) APIs are specific to the JDK and will not \
+    necessarily be available in all implementations of the Java SE Platform. \
+    These APIs are in modules whose names start with {@code jdk}. \
+    #
+JDK_GROUPS += JDK
+
+# If we are importing JavaFX, we need a JavaFX group. In an ideal world, this
+# would have been abstracted away to a more proper generic handling of imported
+# modules.
+ifneq ($(findstring javafx., $(IMPORTED_MODULES)), )
+  JavaFX_GROUP_NAME := JavaFX
+  JavaFX_GROUP_MODULES := javafx.*
+  JavaFX_GROUP_DESCRIPTION := \
+      The JavaFX APIs define a set of user-interface controls, graphics, \
+      media, and web packages for developing rich client applications. These \
+      APIs are in modules whose names start with {@code javafx}. \
+      #
+  JDK_GROUPS += JavaFX
+endif
+
+# All modules to have docs generated by docs-jdk-api target
+JDK_MODULES := $(sort $(filter-out $(MODULES_FILTER), $(DOCS_MODULES)))
+
+$(eval $(call SetupApiDocsGeneration, JDK_API, \
+    MODULES := $(JDK_MODULES), \
+    GROUPS := $(JDK_GROUPS), \
+    SHORT_NAME := $(JDK_SHORT_NAME), \
+    LONG_NAME := $(JDK_LONG_NAME), \
+    TARGET_DIR := $(DOCS_OUTPUTDIR)/api, \
+    OTHER_VERSIONS := $(OTHER_JDK_VERSIONS_URL), \
+))
+
+# Targets generated are returned in JDK_API_JAVADOC_TARGETS and
+# JDK_API_MODULEGRAPH_TARGETS.
+
+################################################################################
+# Setup generation of the Java SE API documentation (javadoc + modulegraph)
+
+# The Java SE module scope is just java.se and its transitive indirect
+# exports.
+JAVASE_MODULES := java.se
+
+$(eval $(call SetupApiDocsGeneration, JAVASE_API, \
+    MODULES := $(JAVASE_MODULES), \
+    SHORT_NAME := $(JAVASE_SHORT_NAME), \
+    LONG_NAME := $(JAVASE_LONG_NAME), \
+    TARGET_DIR := $(DOCS_JAVASE_IMAGE_DIR)/api, \
+))
+
+# Targets generated are returned in JAVASE_API_JAVADOC_TARGETS and
+# JAVASE_API_MODULEGRAPH_TARGETS.
+
+################################################################################
+# Setup generation of the reference Java SE API documentation (javadoc + modulegraph)
+
+# The reference javadoc is just the same as javase, but using the BootJDK javadoc
+# and a stable set of javadoc options.  Typically it is used for generating
+# diffs between the reference javadoc and a javadoc bundle of a specific build
+# generated in the same way.
+
+$(eval $(call SetupApiDocsGeneration, REFERENCE_API, \
+    MODULES := $(JAVASE_MODULES), \
+    SHORT_NAME := $(JAVASE_SHORT_NAME), \
+    LONG_NAME := $(JAVASE_LONG_NAME), \
+    TARGET_DIR := $(DOCS_REFERENCE_IMAGE_DIR)/api, \
+    JAVADOC_CMD := $(DOCS_REFERENCE_JAVADOC), \
+    OPTIONS := $(REFERENCE_OPTIONS), \
+    TAGS := $(REFERENCE_TAGS), \
+))
+
+# Targets generated are returned in REFERENCE_API_JAVADOC_TARGETS and
+# REFERENCE_API_MODULEGRAPH_TARGETS.
+
+################################################################################
+
+# Use this variable to control which spec files are included in the output.
+# Format: space-delimited list of names, including at most one '%' as a
+# wildcard. Spec source files match if their filename or any enclosing folder
+# name matches one of the items in SPEC_FILTER.
+SPEC_FILTER := %
+
+ApplySpecFilter = \
+    $(strip $(foreach file, $(1), \
+        $(eval searchkeys := $(subst /, ,$(subst $(WORKSPACE_ROOT),,$(file)))) \
+        $(if $(filter $(SPEC_FILTER), $(searchkeys)), \
+            $(file) \
+        ) \
+    ))
+
+# Copy the global resources, including the top-level redirect index.html
+GLOBAL_SPECS_RESOURCES_DIR := $(TOPDIR)/make/data/docs-resources
+$(eval $(call SetupCopyFiles, COPY_GLOBAL_RESOURCES, \
+    SRC := $(GLOBAL_SPECS_RESOURCES_DIR), \
+    FILES := $(call ApplySpecFilter, $(call FindFiles, $(GLOBAL_SPECS_RESOURCES_DIR))), \
+    DEST := $(DOCS_OUTPUTDIR), \
+))
+JDK_INDEX_TARGETS += $(COPY_GLOBAL_RESOURCES)
+
+# Copy the legal notices distributed with the docs bundle
+$(eval $(call SetupCopyFiles, COPY_DOCS_LEGAL_NOTICES, \
+    SRC := $(TOPDIR)/src/jdk.javadoc/share/legal, \
+    FILES := $(call ApplySpecFilter, $(wildcard $(TOPDIR)/src/jdk.javadoc/share/legal/*)), \
+    DEST := $(DOCS_OUTPUTDIR)/legal, \
+))
+JDK_INDEX_TARGETS += $(COPY_DOCS_LEGAL_NOTICES)
+
+################################################################################
+# Copy JDK specs files
+
+# For all non html/md files in $module/share/specs directories, copy them
+# unmodified
+
+ALL_MODULES := $(call FindAllModules)
+COPY_SPEC_FILTER := %.gif %.jpg %.mib %.css
+
+$(foreach m, $(ALL_MODULES), \
+  $(eval SPECS_$m := $(call FindModuleSpecsDirs, $m)) \
+  $(foreach d, $(SPECS_$m), \
+    $(if $(call ApplySpecFilter, $(filter $(COPY_SPEC_FILTER), $(call FindFiles, $d))), \
+      $(eval $(call SetupCopyFiles, COPY_$m, \
+          SRC := $d, \
+          FILES := $(call ApplySpecFilter, $(filter $(COPY_SPEC_FILTER), $(call FindFiles, $d))), \
+          DEST := $(DOCS_OUTPUTDIR)/specs/, \
+      )) \
+      $(eval JDK_SPECS_TARGETS += $(COPY_$m)) \
+    ) \
+  ) \
+)
+
+# Create copyright footer variables. We need different variables for different
+# relative paths to the copyright.html file. The number 0-2 below represent how
+# many extra directory levels down below the specs dir the specs html file is
+# located.
+SPECS_BOTTOM = <footer class="legal-footer"><hr/>$(COPYRIGHT_BOTTOM)</footer>
+# The legal dir is one ../ below the specs dir, so start with one ../.
+specs_bottom_rel_path := ../
+$(foreach n, 0 1 2, \
+  $(eval SPECS_BOTTOM_$n := $(call SPECS_BOTTOM,$(specs_bottom_rel_path))) \
+  $(eval specs_bottom_rel_path := $(specs_bottom_rel_path)../) \
+)
+
+SPECS_TOP := $(if $(filter true, $(IS_DRAFT)), <header class="draft-header">$(DRAFT_TEXT)</header>)
+
+# For all html files in $module/share/specs directories, copy and add the
+# copyright footer.
+
+$(foreach m, $(ALL_MODULES), \
+  $(eval SPECS_$m := $(call FindModuleSpecsDirs, $m)) \
+  $(foreach d, $(SPECS_$m), \
+    $(foreach f, $(call ApplySpecFilter, $(filter %.html, $(call FindFiles, $d))), \
+      $(eval $m_$f_NOF_SUBDIRS := $(words $(subst /, $(SPACE), $(subst $d, , $(dir $f))))) \
+      $(eval $m_$f_NAME := PROCESS_HTML_$m_$(strip $(call RelativePath, $f, $(TOPDIR)))) \
+      $(eval $(call SetupTextFileProcessing, $($m_$f_NAME), \
+          SOURCE_FILES := $f, \
+          SOURCE_BASE_DIR := $d, \
+          OUTPUT_DIR := $(DOCS_OUTPUTDIR)/specs/, \
+          REPLACEMENTS := \
+              <body> => <body>$(SPECS_TOP) ; \
+              </body> => $(SPECS_BOTTOM_$($m_$f_NOF_SUBDIRS))</body>, \
+      )) \
+      $(eval JDK_SPECS_TARGETS += $($($m_$f_NAME))) \
+    ) \
+  ) \
+)
+
+ifeq ($(ENABLE_PANDOC), true)
+  # For all markdown files in $module/share/specs directories, convert them to
+  # html, if we have pandoc (otherwise we'll just skip this).
+
+  GLOBAL_SPECS_DEFAULT_CSS_FILE := $(DOCS_OUTPUTDIR)/resources/jdk-default.css
+
+  $(foreach m, $(ALL_MODULES), \
+    $(eval SPECS_$m := $(call FindModuleSpecsDirs, $m)) \
+    $(foreach d, $(SPECS_$m), \
+      $(foreach f, $(call ApplySpecFilter, $(filter %.md, $(call FindFiles, $d))), \
+        $(eval $m_$f_NOF_SUBDIRS := $(words $(subst /, $(SPACE), $(subst $d, , $(dir $f))))) \
+        $(eval $m_$f_NAME := SPECS_TO_HTML_$m_$(strip $(call RelativePath, $f, $(TOPDIR)))) \
+        $(eval $(call SetupProcessMarkdown, $($m_$f_NAME), \
+            SRC := $d, \
+            FILES := $f, \
+            DEST := $(DOCS_OUTPUTDIR)/specs/, \
+            CSS := $(GLOBAL_SPECS_DEFAULT_CSS_FILE), \
+            OPTIONS := -V include-before='$(SPECS_TOP)' -V include-after='$(SPECS_BOTTOM_$($m_$f_NOF_SUBDIRS))', \
+            REPLACEMENTS := \
+		@@VERSION_SPECIFICATION@@ => $(VERSION_SPECIFICATION) ; \
+		@@VERSION_STRING@@ => $(VERSION_STRING), \
+            POST_PROCESS := $(TOOL_FIXUPPANDOC), \
+        )) \
+        $(eval JDK_SPECS_TARGETS += $($($m_$f_NAME))) \
+      ) \
+    ) \
+  )
+
+  # For all markdown files in $module/share/man directories, convert them to
+  # html.
+
+  # Create dynamic man pages from markdown using pandoc. We need
+  # PANDOC_HTML_MANPAGE_FILTER, a wrapper around
+  # PANDOC_HTML_MANPAGE_FILTER_JAVASCRIPT. This is created by buildtools-jdk.
+
+  # We should also depend on the source code for the filter
+  PANDOC_HTML_MANPAGE_FILTER_SOURCE := $(call FindFiles, \
+      $(TOPDIR)/make/jdk/src/classes/build/tools/pandocfilter)
+
+  $(foreach m, $(ALL_MODULES), \
+    $(eval MAN_$m := $(call FindModuleManDirs, $m)) \
+    $(foreach d, $(MAN_$m), \
+      $(foreach f, $(call ApplySpecFilter, $(filter %.md, $(call FindFiles, $d))), \
+        $(eval $m_$f_NAME := MAN_TO_HTML_$m_$(strip $(call RelativePath, $f, $(TOPDIR)))) \
+        $(eval $(call SetupProcessMarkdown, $($m_$f_NAME), \
+            SRC := $d, \
+            FILES := $f, \
+            DEST := $(DOCS_OUTPUTDIR)/specs/man, \
+            FILTER := $(PANDOC_HTML_MANPAGE_FILTER), \
+            CSS := $(GLOBAL_SPECS_DEFAULT_CSS_FILE), \
+            REPLACEMENTS := \
+		@@COPYRIGHT_YEAR@@ => $(COPYRIGHT_YEAR) ; \
+		@@VERSION_SHORT@@ => $(VERSION_SHORT) ; \
+		@@VERSION_SPECIFICATION@@ => $(VERSION_SPECIFICATION), \
+            OPTIONS := --toc -V include-before='$(SPECS_TOP)' -V include-after='$(SPECS_BOTTOM_1)', \
+            POST_PROCESS := $(TOOL_FIXUPPANDOC), \
+            EXTRA_DEPS := $(PANDOC_HTML_MANPAGE_FILTER) \
+                $(PANDOC_HTML_MANPAGE_FILTER_SOURCE), \
+        )) \
+        $(eval JDK_SPECS_TARGETS += $($($m_$f_NAME))) \
+      ) \
+    ) \
+  )
+
+  # The html generated from markdown also needs the css file
+  JDK_SPECS_TARGETS += $(COPY_GLOBAL_RESOURCES)
+endif
+
+# Special treatment for generated documentation
+
+JDWP_PROTOCOL := $(SUPPORT_OUTPUTDIR)/gensrc/jdk.jdi/jdwp-protocol.html
+ifneq ($(call ApplySpecFilter, $(JDWP_PROTOCOL)), )
+  $(eval $(call SetupTextFileProcessing, PROCESS_JDWP_PROTOCOL, \
+      SOURCE_FILES := $(JDWP_PROTOCOL), \
+      OUTPUT_DIR := $(DOCS_OUTPUTDIR)/specs/jdwp, \
+      REPLACEMENTS := \
+          <body> => <body>$(SPECS_TOP) ; \
+          </body> => $(SPECS_BOTTOM_1)</body>, \
+  ))
+  JDK_SPECS_TARGETS += $(PROCESS_JDWP_PROTOCOL)
+endif
+
+# Get jvmti.html from the main jvm variant (all variants' jvmti.html are identical).
+JVMTI_HTML ?= $(HOTSPOT_OUTPUTDIR)/variant-$(JVM_VARIANT_MAIN)/gensrc/jvmtifiles/jvmti.html
+ifneq ($(call ApplySpecFilter, $(JVMTI_HTML)), )
+  $(eval $(call SetupTextFileProcessing, PROCESS_JVMTI_HTML, \
+      SOURCE_FILES := $(JVMTI_HTML), \
+      OUTPUT_DIR := $(DOCS_OUTPUTDIR)/specs/, \
+      REPLACEMENTS := \
+          <body> => <body>$(SPECS_TOP) ; \
+          </body> => $(SPECS_BOTTOM_0)</body>, \
+  ))
+  JDK_SPECS_TARGETS += $(PROCESS_JVMTI_HTML)
+endif
+
+################################################################################
+# Optional target which bundles all generated javadocs into a zip archive.
+
+JAVADOC_ZIP_NAME := jdk-$(VERSION_STRING)-docs.zip
+JAVADOC_ZIP_FILE := $(OUTPUTDIR)/bundles/$(JAVADOC_ZIP_NAME)
+
+$(eval $(call SetupZipArchive, BUILD_JAVADOC_ZIP, \
+    SRC := $(DOCS_OUTPUTDIR), \
+    ZIP := $(JAVADOC_ZIP_FILE), \
+    EXTRA_DEPS := $(JDK_API_JAVADOC_TARGETS) $(JDK_API_MODULEGRAPH_TARGETS) \
+        $(JDK_SPECS_TARGETS), \
+))
+
+ZIP_TARGETS += $(BUILD_JAVADOC_ZIP)
+
+################################################################################
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, Docs-post.gmk))
+
+################################################################################
+# Bundles all generated specs into a zip archive, skipping javadocs.
+
+SPECS_ZIP_NAME := jdk-$(VERSION_STRING)-specs.zip
+SPECS_ZIP_FILE := $(OUTPUTDIR)/bundles/$(SPECS_ZIP_NAME)
+
+$(eval $(call SetupZipArchive, BUILD_SPECS_ZIP, \
+    SRC := $(DOCS_OUTPUTDIR), \
+    ZIP := $(SPECS_ZIP_FILE), \
+    EXTRA_DEPS := $(JDK_SPECS_TARGETS), \
+))
+
+SPECS_ZIP_TARGETS += $(BUILD_SPECS_ZIP)
+
+################################################################################
+
+docs-jdk-api-javadoc: $(JDK_API_JAVADOC_TARGETS) $(JDK_API_CUSTOM_TARGETS)
+
+docs-jdk-api-modulegraph: $(JDK_API_MODULEGRAPH_TARGETS)
+
+docs-javase-api-javadoc: $(JAVASE_API_JAVADOC_TARGETS) $(JAVASE_API_CUSTOM_TARGETS)
+
+docs-javase-api-modulegraph: $(JAVASE_API_MODULEGRAPH_TARGETS)
+
+docs-reference-api-javadoc: $(REFERENCE_API_JAVADOC_TARGETS) $(REFERENCE_API_CUSTOM_TARGETS)
+
+docs-reference-api-modulegraph: $(REFERENCE_API_MODULEGRAPH_TARGETS)
+
+docs-jdk-specs: $(JDK_SPECS_TARGETS)
+
+docs-jdk-index: $(JDK_INDEX_TARGETS)
+
+docs-zip: $(ZIP_TARGETS)
+
+docs-specs-zip: $(SPECS_ZIP_TARGETS)
+
+all: docs-jdk-api-javadoc docs-jdk-api-modulegraph docs-javase-api-javadoc \
+    docs-javase-api-modulegraph docs-reference-api-javadoc \
+    docs-reference-api-modulegraph docs-jdk-specs docs-jdk-index docs-zip \
+    docs-specs-zip
+
+.PHONY: default all docs-jdk-api-javadoc docs-jdk-api-modulegraph \
+    docs-javase-api-javadoc docs-javase-api-modulegraph \
+    docs-reference-api-javadoc docs-reference-api-modulegraph docs-jdk-specs \
+    docs-jdk-index docs-zip docs-specs-zip

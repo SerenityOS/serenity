@@ -1,0 +1,9 @@
+<xsd:schema xmlns:xsd='http://www.w3.org/2001/XMLSchema'>
+  <xsd:element name='Person' type='PersonType'/>
+  <xsd:complexType name='PersonType'>
+                <xsd:sequence>
+                        <xsd:element name='FirstName' type='xsd:string'/>
+                        <xsd:element name='LastName' type='xsd:string'/>
+                </xsd:sequence>
+        </xsd:complexType>
+</xsd:schema>

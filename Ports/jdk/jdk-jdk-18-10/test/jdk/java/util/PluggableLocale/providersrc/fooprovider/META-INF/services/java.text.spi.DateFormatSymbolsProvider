@@ -1,0 +1,7 @@
+#
+#
+#
+# fully-qualified name of the java.text.spi.DateFormatProvider
+# implementation class
+#
+com.foo.DateFormatSymbolsProviderImpl

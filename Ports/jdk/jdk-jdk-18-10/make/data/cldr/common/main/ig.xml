@@ -1,0 +1,3132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ig"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="af">Afrikaans</language>
+			<language type="agq">Aghem</language>
+			<language type="ak">Akan</language>
+			<language type="am">Amariikị</language>
+			<language type="ar">Arabiikị</language>
+			<language type="ar_001">Ụdị Arabiikị nke oge a</language>
+			<language type="asa">Asụ</language>
+			<language type="az">Azerbajanị</language>
+			<language type="az" alt="short">Azeri</language>
+			<language type="be">Belarusianụ</language>
+			<language type="bez">Bena</language>
+			<language type="bg">Bọlụgarịa</language>
+			<language type="bm">Bambara</language>
+			<language type="bn">Bengali</language>
+			<language type="bo">Tibetan</language>
+			<language type="br">Breton</language>
+			<language type="brx">Bọdọ</language>
+			<language type="bs">Bosnia</language>
+			<language type="ca">Catalan</language>
+			<language type="ccp">Chakma</language>
+			<language type="ce">Chechen</language>
+			<language type="ceb">Cebụanọ</language>
+			<language type="chr">Cheroke</language>
+			<language type="ckb" alt="menu">Kurdish ọsote</language>
+			<language type="ckb" alt="variant">Kurdish ọzọ</language>
+			<language type="co">Kọsịan</language>
+			<language type="cs">Cheekị</language>
+			<language type="cu">Church slavic</language>
+			<language type="cy">Wesh</language>
+			<language type="da">Danịsh</language>
+			<language type="dav">Taịta</language>
+			<language type="de">Jamanị</language>
+			<language type="de_AT">Jaman ndị Austria</language>
+			<language type="de_CH">Jaman Izugbe ndị Switzerland</language>
+			<language type="dje">Zarma</language>
+			<language type="dsb">Lowa Sorbịan</language>
+			<language type="dua">Dụala</language>
+			<language type="dyo">Jọla-Fọnyị</language>
+			<language type="dz">Dọzngọka</language>
+			<language type="ebu">Ebụm</language>
+			<language type="ee">Ewe</language>
+			<language type="el">Giriikị</language>
+			<language type="en">Bekee</language>
+			<language type="en_AU">Bekee ndị Australia</language>
+			<language type="en_CA">Bekee ndị Canada</language>
+			<language type="en_GB">Bekee ndị United Kingdom</language>
+			<language type="en_GB" alt="short">Bekee ndị UK</language>
+			<language type="en_US">Bekee ndị America</language>
+			<language type="en_US" alt="short">Bekee ndị US</language>
+			<language type="eo">Ndị Esperantọ</language>
+			<language type="es">Spanishi</language>
+			<language type="es_419">Spanishi ndị Latin America</language>
+			<language type="es_ES">Spanishi ndị Europe</language>
+			<language type="es_MX">Spanishi ndị Mexico</language>
+			<language type="et">Ndị Estọnịa</language>
+			<language type="eu">Baskwe</language>
+			<language type="ewo">Ewọndọ</language>
+			<language type="fa">Peshianụ</language>
+			<language type="ff">Fula</language>
+			<language type="fi">Fịnịsh</language>
+			<language type="fil">Fịlịpịnọ</language>
+			<language type="fo">Farọse</language>
+			<language type="fr">Fụrenchị</language>
+			<language type="fr_CA">Fụrench ndị Canada</language>
+			<language type="fr_CH">Fụrench ndị Switzerland</language>
+			<language type="fur">Frụlịan</language>
+			<language type="fy">Westan Frịsịan</language>
+			<language type="ga">Ịrịsh</language>
+			<language type="gd">Sụkọtịs Gelị</language>
+			<language type="gl">Galịcịan</language>
+			<language type="gsw">German Swiss</language>
+			<language type="gu">Gụaratị</language>
+			<language type="guz">Gụshị</language>
+			<language type="gv">Mansị</language>
+			<language type="ha">Hausa</language>
+			<language type="haw">Hawaịlịan</language>
+			<language type="he">Hebrew</language>
+			<language type="hi">Hindị</language>
+			<language type="hmn">Hmong</language>
+			<language type="hr">Kọrọtịan</language>
+			<language type="hsb">Ụpa Sọrbịa</language>
+			<language type="ht">Haịtịan ndị Cerọle</language>
+			<language type="hu">Hụngarian</language>
+			<language type="ia">Intalịgụa</language>
+			<language type="id">Indonisia</language>
+			<language type="ig">Igbo</language>
+			<language type="ii">Sịchụayị</language>
+			<language type="is">Icịlandịk</language>
+			<language type="it">Italịanu</language>
+			<language type="ja">Japaniisi</language>
+			<language type="jgo">Ngọmba</language>
+			<language type="jmc">Machame</language>
+			<language type="jv">Java</language>
+			<language type="ka">Geọjịan</language>
+			<language type="kab">Kabyle</language>
+			<language type="kam">Kamba</language>
+			<language type="kde">Makọnde</language>
+			<language type="kea">Kabụverdịanụ</language>
+			<language type="khq">Kọyra Chịnị</language>
+			<language type="ki">Kịkụyụ</language>
+			<language type="kk">Kazak</language>
+			<language type="kkj">Kakọ</language>
+			<language type="kl">Kalaalịsụt</language>
+			<language type="kln">Kalenjịn</language>
+			<language type="km">Keme</language>
+			<language type="kn">Kanhada</language>
+			<language type="ko">Korịa</language>
+			<language type="kok">Kọnkanị</language>
+			<language type="ks">Kashmịrị</language>
+			<language type="ksb">Shabala</language>
+			<language type="ksf">Bafịa</language>
+			<language type="ksh">Colognịan</language>
+			<language type="ku">Ndị Kụrdịsh</language>
+			<language type="kw">Kọnịsh</language>
+			<language type="ky">Kyrayz</language>
+			<language type="la">Latịn</language>
+			<language type="lag">Langị</language>
+			<language type="lb">Lụxenbọụgịsh</language>
+			<language type="lg">Ganda</language>
+			<language type="ln">Lịngala</language>
+			<language type="lo">Laọ</language>
+			<language type="lrc">Nọrtụ Lụrị</language>
+			<language type="lt">Lituanian</language>
+			<language type="lu">Lịba-Katanga</language>
+			<language type="luy">Lụyịa</language>
+			<language type="lv">Latviani</language>
+			<language type="mai">Maịtịlị</language>
+			<language type="mas">Masaị</language>
+			<language type="mer">Merụ</language>
+			<language type="mfe">Mọrịsye</language>
+			<language type="mg">Malagasị</language>
+			<language type="mgh">Makụwa Metọ</language>
+			<language type="mgo">Meta</language>
+			<language type="mi">Maọrị</language>
+			<language type="mk">Masedọnịa</language>
+			<language type="ml">Malayalam</language>
+			<language type="mn">Mọngolịan</language>
+			<language type="mni">Manịpụrị</language>
+			<language type="mr">Maratị</language>
+			<language type="ms">Maleyi</language>
+			<language type="mt">Matịse</language>
+			<language type="mua">Mụdang</language>
+			<language type="mul">Ọtụtụ asụsụ</language>
+			<language type="my">Bụrmese</language>
+			<language type="mzn">Mazandaranị</language>
+			<language type="naq">Nama</language>
+			<language type="nb">Nọrweyịan Bọkmal</language>
+			<language type="nd">Nọrtụ Ndabede</language>
+			<language type="nds">Lowa German</language>
+			<language type="ne">Nepali</language>
+			<language type="nl">Dọchị</language>
+			<language type="nmg">Kwasịọ</language>
+			<language type="nn">Nọrweyịan Nynersk</language>
+			<language type="nnh">Nglembọn</language>
+			<language type="nus">Nụer</language>
+			<language type="ny">Nyanja</language>
+			<language type="nyn">Nyakọle</language>
+			<language type="om">Ọromo</language>
+			<language type="or">Ọdịa</language>
+			<language type="os">Osetik</language>
+			<language type="pa">Punjabi</language>
+			<language type="pcm">Pidgịn</language>
+			<language type="pl">Poliishi</language>
+			<language type="prg">Prụssịan</language>
+			<language type="ps">Pashọ</language>
+			<language type="pt">Pọrtụgụese</language>
+			<language type="pt_BR">Pọrtụgụese ndị Brazil</language>
+			<language type="pt_PT">Asụsụ Portuguese ndị Europe</language>
+			<language type="qu">Qụechụa</language>
+			<language type="rm">Rọmansị</language>
+			<language type="rn">Rụndị</language>
+			<language type="ro">Romania</language>
+			<language type="rof">Rọmbọ</language>
+			<language type="ru">Rọshian</language>
+			<language type="rw">Kinyarwanda</language>
+			<language type="rwk">Rwa</language>
+			<language type="sa">Sansịkịt</language>
+			<language type="sah">Saka</language>
+			<language type="saq">Sambụrụ</language>
+			<language type="sat">Santalị</language>
+			<language type="sbp">Sangụ</language>
+			<language type="sd">Sịndh</language>
+			<language type="se">Nọrtan Samị</language>
+			<language type="seh">Sena</language>
+			<language type="ses">Kọyraboro Senị</language>
+			<language type="sg">Sangọ</language>
+			<language type="shi">Tachịkịt</language>
+			<language type="si">Sinhala</language>
+			<language type="sk">Slova</language>
+			<language type="sl">Slovịan</language>
+			<language type="sm">Samọa</language>
+			<language type="smn">Inarị Samị</language>
+			<language type="sn">Shọna</language>
+			<language type="so">Somali</language>
+			<language type="sr">Sebịan</language>
+			<language type="st">Sọụth Soto</language>
+			<language type="sv">Sụwidiishi</language>
+			<language type="ta">Tamil</language>
+			<language type="te">Telụgụ</language>
+			<language type="teo">Tesọ</language>
+			<language type="tg">Tajịk</language>
+			<language type="th">Taị</language>
+			<language type="ti">Tịgrịnya</language>
+			<language type="tk">Turkịs</language>
+			<language type="to">Tọngan</language>
+			<language type="tr">Tọkiishi</language>
+			<language type="tt">Tata</language>
+			<language type="twq">Tasawa</language>
+			<language type="ug">Ụyghụr</language>
+			<language type="uk">Ukureenị</language>
+			<language type="und">Asụsụ amaghị</language>
+			<language type="ur">Urdụ</language>
+			<language type="uz">Ụzbek</language>
+			<language type="vai">Val</language>
+			<language type="vi">Vietnamisi</language>
+			<language type="vo">Volapụ</language>
+			<language type="vun">Vụnjọ</language>
+			<language type="wae">Wasa</language>
+			<language type="wo">Wolọf</language>
+			<language type="xh">Xhọsa</language>
+			<language type="xog">Sọga</language>
+			<language type="yav">Yangben</language>
+			<language type="yi">Yịdịsh</language>
+			<language type="yo">Yoruba</language>
+			<language type="yue">Katọnịse</language>
+			<language type="yue" alt="menu">Chinese,Cantonese</language>
+			<language type="zh">Chainisi</language>
+			<language type="zh_Hans">Asụsụ Chinese dị mfe</language>
+			<language type="zh_Hant">Asụsụ Chinese Izugbe</language>
+			<language type="zu">Zulu</language>
+			<language type="zxx">Ndị ọzọ abụghị asụsụ</language>
+		</languages>
+		<scripts>
+			<script type="Arab">Mkpụrụ Okwu Arabic</script>
+			<script type="Armn">Mkpụrụ ọkwụ Armenịan</script>
+			<script type="Beng">Mkpụrụ ọkwụ Bangla</script>
+			<script type="Bopo">Mkpụrụ ọkwụ Bopomofo</script>
+			<script type="Brai">Braịlle</script>
+			<script type="Cyrl">Mkpụrụ Okwu Cyrillic</script>
+			<script type="Deva">Mkpụrụ ọkwụ Devangarị</script>
+			<script type="Ethi">Mkpụrụ ọkwụ Etọpịa</script>
+			<script type="Geor">Mkpụrụ ọkwụ Geọjịan</script>
+			<script type="Grek">Mkpụrụ ọkwụ grịk</script>
+			<script type="Gujr">Mkpụrụ ọkwụ Gụjaratị</script>
+			<script type="Guru">Mkpụrụ ọkwụ Gụrmụkị</script>
+			<script type="Hanb">Han na Bopomofo</script>
+			<script type="Hang">Mkpụrụ ọkwụ Hangụl</script>
+			<script type="Hani">Mkpụrụ ọkwụ Han</script>
+			<script type="Hans">Nke dị mfe</script>
+			<script type="Hans" alt="stand-alone">Han di mfe</script>
+			<script type="Hant">Izugbe</script>
+			<script type="Hant" alt="stand-alone">Han Izugbe</script>
+			<script type="Hebr">Mkpụrụ ọkwụ Hebrew</script>
+			<script type="Hira">Mkpụrụ okwụ Hịragana</script>
+			<script type="Hrkt">mkpụrụ ọkwụ Japanịsị</script>
+			<script type="Jamo">Jamọ</script>
+			<script type="Jpan">Japanese</script>
+			<script type="Kana">Katakana</script>
+			<script type="Khmr">Khmer</script>
+			<script type="Knda">Kannaada</script>
+			<script type="Kore">Korea</script>
+			<script type="Laoo">Laọ</script>
+			<script type="Latn">Latin</script>
+			<script type="Mlym">Malayala</script>
+			<script type="Mong">Mọngọlịan</script>
+			<script type="Mymr">Myanmar</script>
+			<script type="Orya">Ọdịa</script>
+			<script type="Sinh">Sinhala</script>
+			<script type="Taml">Tamịl</script>
+			<script type="Telu">Telụgụ</script>
+			<script type="Thaa">Taa</script>
+			<script type="Tibt">Tịbeta</script>
+			<script type="Zmth">Mkpụrụ ọkwụ Mgbakọ</script>
+			<script type="Zsye">Emojị</script>
+			<script type="Zsym">Akara</script>
+			<script type="Zxxx">Edeghị ede</script>
+			<script type="Zyyy">kọmọn</script>
+			<script type="Zzzz">Mkpụrụ okwu amaghị</script>
+		</scripts>
+		<territories>
+			<territory type="001">Uwa</territory>
+			<territory type="002">Afrika</territory>
+			<territory type="003">Mpaghara Ugwu Amerịka</territory>
+			<territory type="005">Mpaghara Mgbada Ugwu America</territory>
+			<territory type="009">Oceania</territory>
+			<territory type="011">Mpaghara Ọdịda Anyanwụ Afrịka</territory>
+			<territory type="013">Etiti America</territory>
+			<territory type="014">Mpaghara Ọwụwa Anyanwụ Afrịka</territory>
+			<territory type="015">Mpaghara Ugwu Afrịka</territory>
+			<territory type="017">Etiti Afrịka</territory>
+			<territory type="018">Mpaghara Mgbada Ugwu Afrịka</territory>
+			<territory type="019">Amerịka</territory>
+			<territory type="021">Mpaghara Ugwu America</territory>
+			<territory type="029">Onye Carrabean</territory>
+			<territory type="030">Mpaghara Ọwụwa Anyanwụ Asia</territory>
+			<territory type="034">Mpaghara Mgbada Ugwu Asia</territory>
+			<territory type="035">Mpaghara Mgbada Ugwu Asia dị na Ọwụwa Anyanwụ</territory>
+			<territory type="039">Mpaghara Mgbada Ugwu Europe</territory>
+			<territory type="053">Australasia</territory>
+			<territory type="054">Melanesia</territory>
+			<territory type="057">Mpaghara Micronesian</territory>
+			<territory type="061">Polynesia</territory>
+			<territory type="142">Asia</territory>
+			<territory type="143">Etiti Asia</territory>
+			<territory type="145">Mpaghara Ọdịda Anyanwụ Asia</territory>
+			<territory type="150">Europe</territory>
+			<territory type="151">Mpaghara Ọwụwa Anyanwụ Europe</territory>
+			<territory type="154">Mpaghara Ugwu Europe</territory>
+			<territory type="155">Mpaghara Ọdịda Anyanwụ Europe</territory>
+			<territory type="202">Sub-Saharan Afrịka</territory>
+			<territory type="419">Latin America</territory>
+			<territory type="AC">Ascension Island</territory>
+			<territory type="AD">Andorra</territory>
+			<territory type="AE">United Arab Emirates</territory>
+			<territory type="AF">Afghanistan</territory>
+			<territory type="AG">Antigua na Barbuda</territory>
+			<territory type="AI">Anguilla</territory>
+			<territory type="AL">Albania</territory>
+			<territory type="AM">Armenia</territory>
+			<territory type="AO">Angola</territory>
+			<territory type="AQ">Antarctica</territory>
+			<territory type="AR">Argentina</territory>
+			<territory type="AS">American Samoa</territory>
+			<territory type="AT">Austria</territory>
+			<territory type="AU">Australia</territory>
+			<territory type="AW">Aruba</territory>
+			<territory type="AX">Agwaetiti Aland</territory>
+			<territory type="AZ">Azerbaijan</territory>
+			<territory type="BA">Bosnia &amp; Herzegovina</territory>
+			<territory type="BB">Barbados</territory>
+			<territory type="BD">Bangladesh</territory>
+			<territory type="BE">Belgium</territory>
+			<territory type="BF">Burkina Faso</territory>
+			<territory type="BG">Bulgaria</territory>
+			<territory type="BH">Bahrain</territory>
+			<territory type="BI">Burundi</territory>
+			<territory type="BJ">Binin</territory>
+			<territory type="BL">Barthélemy Dị nsọ</territory>
+			<territory type="BM">Bemuda</territory>
+			<territory type="BN">Brunei</territory>
+			<territory type="BO">Bolivia</territory>
+			<territory type="BQ">Caribbean Netherlands</territory>
+			<territory type="BR">Brazil</territory>
+			<territory type="BS">Bahamas</territory>
+			<territory type="BT">Bhutan</territory>
+			<territory type="BV">Agwaetiti Bouvet</territory>
+			<territory type="BW">Botswana</territory>
+			<territory type="BY">Belarus</territory>
+			<territory type="BZ">Belize</territory>
+			<territory type="CA">Kanada</territory>
+			<territory type="CC">Agwaetiti Cocos (Keeling)</territory>
+			<territory type="CD">Congo - Kinshasa</territory>
+			<territory type="CD" alt="variant">Congo (DRC)</territory>
+			<territory type="CF">Central African Republik</territory>
+			<territory type="CG">Congo</territory>
+			<territory type="CG" alt="variant">Congo (Republik)</territory>
+			<territory type="CH">Switzerland</territory>
+			<territory type="CI">Côte d’Ivoire</territory>
+			<territory type="CI" alt="variant">Ivory Coast</territory>
+			<territory type="CK">Agwaetiti Cook</territory>
+			<territory type="CL">Chile</territory>
+			<territory type="CM">Cameroon</territory>
+			<territory type="CN">China</territory>
+			<territory type="CO">Colombia</territory>
+			<territory type="CP">Agwaetiti Clipperton</territory>
+			<territory type="CR">Kosta Rika</territory>
+			<territory type="CU">Cuba</territory>
+			<territory type="CV">Cape Verde</territory>
+			<territory type="CW">Kurakao</territory>
+			<territory type="CX">Agwaetiti Christmas</territory>
+			<territory type="CY">Cyprus</territory>
+			<territory type="CZ">Czechia</territory>
+			<territory type="CZ" alt="variant">Czech Republik</territory>
+			<territory type="DE">Jamanị</territory>
+			<territory type="DG">Diego Garcia</territory>
+			<territory type="DJ">Djibouti</territory>
+			<territory type="DK">Denmark</territory>
+			<territory type="DM">Dominika</territory>
+			<territory type="DO">Dominican Republik</territory>
+			<territory type="DZ">Algeria</territory>
+			<territory type="EA">Ceuta &amp; Melilla</territory>
+			<territory type="EC">Ecuador</territory>
+			<territory type="EE">Estonia</territory>
+			<territory type="EG">Egypt</territory>
+			<territory type="EH">Ọdịda Anyanwụ Sahara</territory>
+			<territory type="ER">Eritrea</territory>
+			<territory type="ES">Spain</territory>
+			<territory type="ET">Ethiopia</territory>
+			<territory type="EU">Otu nzukọ mba Europe</territory>
+			<territory type="EZ">Gburugburu Euro</territory>
+			<territory type="FI">Finland</territory>
+			<territory type="FJ">Fiji</territory>
+			<territory type="FK">Agwaetiti Falkland</territory>
+			<territory type="FM">Micronesia</territory>
+			<territory type="FO">Agwaetiti Faroe</territory>
+			<territory type="FR">France</territory>
+			<territory type="GA">Gabon</territory>
+			<territory type="GB">United Kingdom</territory>
+			<territory type="GB" alt="short">UK</territory>
+			<territory type="GD">Grenada</territory>
+			<territory type="GE">Georgia</territory>
+			<territory type="GF">Frenchi Guiana</territory>
+			<territory type="GG">Guernsey</territory>
+			<territory type="GH">Ghana</territory>
+			<territory type="GI">Gibraltar</territory>
+			<territory type="GL">Greenland</territory>
+			<territory type="GM">Gambia</territory>
+			<territory type="GN">Guinea</territory>
+			<territory type="GP">Guadeloupe</territory>
+			<territory type="GQ">Equatorial Guinea</territory>
+			<territory type="GR">Greece</territory>
+			<territory type="GS">South Georgia na Agwaetiti South Sandwich</territory>
+			<territory type="GT">Guatemala</territory>
+			<territory type="GU">Guam</territory>
+			<territory type="GW">Guinea-Bissau</territory>
+			<territory type="GY">Guyana</territory>
+			<territory type="HK">Hong Kong SAR China</territory>
+			<territory type="HM">Agwaetiti Heard na Agwaetiti McDonald</territory>
+			<territory type="HN">Honduras</territory>
+			<territory type="HR">Croatia</territory>
+			<territory type="HT">Hati</territory>
+			<territory type="HU">Hungary</territory>
+			<territory type="IC">Agwaetiti Kanarị</territory>
+			<territory type="ID">Indonesia</territory>
+			<territory type="IE">Ireland</territory>
+			<territory type="IL">Israel</territory>
+			<territory type="IM">Isle of Man</territory>
+			<territory type="IN">India</territory>
+			<territory type="IO">British Indian Ocean Territory</territory>
+			<territory type="IQ">Iraq</territory>
+			<territory type="IR">Iran</territory>
+			<territory type="IS">Iceland</territory>
+			<territory type="IT">Italy</territory>
+			<territory type="JE">Jersey</territory>
+			<territory type="JM">Jamaika</territory>
+			<territory type="JO">Jordan</territory>
+			<territory type="JP">Japan</territory>
+			<territory type="KE">Kenya</territory>
+			<territory type="KG">Kyrgyzstan</territory>
+			<territory type="KH">Cambodia</territory>
+			<territory type="KI">Kiribati</territory>
+			<territory type="KM">Comorosu</territory>
+			<territory type="KN">Kitts na Nevis Dị nsọ</territory>
+			<territory type="KP">Ugwu Korea</territory>
+			<territory type="KR">South Korea</territory>
+			<territory type="KW">Kuwait</territory>
+			<territory type="KY">Agwaetiti Cayman</territory>
+			<territory type="KZ">Kazakhstan</territory>
+			<territory type="LA">Laos</territory>
+			<territory type="LB">Lebanon</territory>
+			<territory type="LC">Lucia Dị nsọ</territory>
+			<territory type="LI">Liechtenstein</territory>
+			<territory type="LK">Sri Lanka</territory>
+			<territory type="LR">Liberia</territory>
+			<territory type="LS">Lesotho</territory>
+			<territory type="LT">Lithuania</territory>
+			<territory type="LU">Luxembourg</territory>
+			<territory type="LV">Latvia</territory>
+			<territory type="LY">Libia</territory>
+			<territory type="MA">Morocco</territory>
+			<territory type="MC">Monaco</territory>
+			<territory type="MD">Moldova</territory>
+			<territory type="ME">Montenegro</territory>
+			<territory type="MF">Martin Dị nsọ</territory>
+			<territory type="MG">Madagaskar</territory>
+			<territory type="MH">Agwaetiti Marshall</territory>
+			<territory type="MK">North Macedonia</territory>
+			<territory type="ML">Mali</territory>
+			<territory type="MM">Myanmar (Burma)</territory>
+			<territory type="MN">Mongolia</territory>
+			<territory type="MO">Macao SAR China</territory>
+			<territory type="MO" alt="short">Macao</territory>
+			<territory type="MP">Agwaetiti Northern Mariana</territory>
+			<territory type="MQ">Martinique</territory>
+			<territory type="MR">Mauritania</territory>
+			<territory type="MS">Montserrat</territory>
+			<territory type="MT">Malta</territory>
+			<territory type="MU">Mauritius</territory>
+			<territory type="MV">Maldivesa</territory>
+			<territory type="MW">Malawi</territory>
+			<territory type="MX">Mexico</territory>
+			<territory type="MY">Malaysia</territory>
+			<territory type="MZ">Mozambik</territory>
+			<territory type="NA">Namibia</territory>
+			<territory type="NC">New Caledonia</territory>
+			<territory type="NE">Niger</territory>
+			<territory type="NF">Agwaetiti Norfolk</territory>
+			<territory type="NG">Naịjịrịa</territory>
+			<territory type="NI">Nicaragua</territory>
+			<territory type="NL">Netherlands</territory>
+			<territory type="NO">Norway</territory>
+			<territory type="NP">Nepal</territory>
+			<territory type="NR">Nauru</territory>
+			<territory type="NU">Niue</territory>
+			<territory type="NZ">New Zealand</territory>
+			<territory type="OM">Oman</territory>
+			<territory type="PA">Panama</territory>
+			<territory type="PE">Peru</territory>
+			<territory type="PF">Frenchi Polynesia</territory>
+			<territory type="PG">Papua New Guinea</territory>
+			<territory type="PH">Philippines</territory>
+			<territory type="PK">Pakistan</territory>
+			<territory type="PL">Poland</territory>
+			<territory type="PM">Pierre na Miquelon Dị nsọ</territory>
+			<territory type="PN">Agwaetiti Pitcairn</territory>
+			<territory type="PR">Puerto Rico</territory>
+			<territory type="PS">Palestinian Territories</territory>
+			<territory type="PT">Portugal</territory>
+			<territory type="PW">Palau</territory>
+			<territory type="PY">Paraguay</territory>
+			<territory type="QA">Qatar</territory>
+			<territory type="QO">Outlying Oceania</territory>
+			<territory type="RE">Réunion</territory>
+			<territory type="RO">Romania</territory>
+			<territory type="RS">Serbia</territory>
+			<territory type="RU">Rụssịa</territory>
+			<territory type="RW">Rwanda</territory>
+			<territory type="SA">Saudi Arabia</territory>
+			<territory type="SB">Agwaetiti Solomon</territory>
+			<territory type="SC">Seychelles</territory>
+			<territory type="SD">Sudan</territory>
+			<territory type="SE">Sweden</territory>
+			<territory type="SG">Singapore</territory>
+			<territory type="SH">St. Helena</territory>
+			<territory type="SI">Slovenia</territory>
+			<territory type="SJ">Svalbard &amp; Jan Mayen</territory>
+			<territory type="SK">Slovakia</territory>
+			<territory type="SL">Sierra Leone</territory>
+			<territory type="SM">San Marino</territory>
+			<territory type="SN">Senegal</territory>
+			<territory type="SO">Somalia</territory>
+			<territory type="SR">Suriname</territory>
+			<territory type="SS">South Sudan</territory>
+			<territory type="ST">São Tomé &amp; Príncipe</territory>
+			<territory type="SV">El Salvador</territory>
+			<territory type="SX">Sint Maarten</territory>
+			<territory type="SY">Syria</territory>
+			<territory type="SZ">Eswatini</territory>
+			<territory type="SZ" alt="variant">Swaziland</territory>
+			<territory type="TA">Tristan da Cunha</territory>
+			<territory type="TC">Agwaetiti Turks na Caicos</territory>
+			<territory type="TD">Chad</territory>
+			<territory type="TF">Ụmụ ngalaba Frenchi Southern</territory>
+			<territory type="TG">Togo</territory>
+			<territory type="TH">Thailand</territory>
+			<territory type="TJ">Tajikistan</territory>
+			<territory type="TK">Tokelau</territory>
+			<territory type="TL">Timor-Leste</territory>
+			<territory type="TL" alt="variant">East Timor</territory>
+			<territory type="TM">Turkmenistan</territory>
+			<territory type="TN">Tunisia</territory>
+			<territory type="TO">Tonga</territory>
+			<territory type="TR">Turkey</territory>
+			<territory type="TT">Trinidad na Tobago</territory>
+			<territory type="TV">Tuvalu</territory>
+			<territory type="TW">Taiwan</territory>
+			<territory type="TZ">Tanzania</territory>
+			<territory type="UA">Ukraine</territory>
+			<territory type="UG">Uganda</territory>
+			<territory type="UM">Obere Agwaetiti Dị Na Mpụga U.S</territory>
+			<territory type="UN">Mba Ụwa Jikọrọ Ọnụ</territory>
+			<territory type="US">United States</territory>
+			<territory type="UY">Uruguay</territory>
+			<territory type="UZ">Uzbekistan</territory>
+			<territory type="VA">Vatican City</territory>
+			<territory type="VC">Vincent na Grenadines Dị nsọ</territory>
+			<territory type="VE">Venezuela</territory>
+			<territory type="VG">Agwaetiti British Virgin</territory>
+			<territory type="VI">Agwaetiti Virgin nke US</territory>
+			<territory type="VN">Vietnam</territory>
+			<territory type="VU">Vanuatu</territory>
+			<territory type="WF">Wallis &amp; Futuna</territory>
+			<territory type="WS">Samoa</territory>
+			<territory type="XA">Pseudo-Accents</territory>
+			<territory type="XB">Pseudo-Bidi</territory>
+			<territory type="XK">Kosovo</territory>
+			<territory type="YE">Yemen</territory>
+			<territory type="YT">Mayotte</territory>
+			<territory type="ZA">South Africa</territory>
+			<territory type="ZM">Zambia</territory>
+			<territory type="ZW">Zimbabwe</territory>
+			<territory type="ZZ">Mpaghara Amaghị</territory>
+		</territories>
+		<keys>
+			<key type="calendar">Kalịnda</key>
+			<key type="cf">Ụsọrọ egọ</key>
+			<key type="collation">Ụsọrọ Nhazị</key>
+			<key type="currency">Egọ</key>
+			<key type="hc">Ọge ọkịrịkịrị</key>
+			<key type="lb">Akara akanka nkwụsị</key>
+			<key type="ms">Ụsọrọ Mmeshọ</key>
+			<key type="numbers">Nọmba</key>
+		</keys>
+		<types>
+			<type key="calendar" type="buddhist">Kalịnda Bụddịst</type>
+			<type key="calendar" type="chinese">Kalịnda Chinese</type>
+			<type key="calendar" type="dangi">Kalịnda Dang</type>
+			<type key="calendar" type="ethiopic">Kalịnda Etopịa</type>
+			<type key="calendar" type="gregorian">Kalenda Gregory</type>
+			<type key="calendar" type="hebrew">Kalịnda Hebrew</type>
+			<type key="calendar" type="islamic">Kalịnda Islam</type>
+			<type key="calendar" type="iso8601">Kalenda ISO-8601</type>
+			<type key="calendar" type="japanese">Kalịnda Japanese</type>
+			<type key="calendar" type="persian">Kalịnda Persian</type>
+			<type key="calendar" type="roc">Kalịnda repụblic nke China</type>
+			<type key="cf" type="account">Ụsọrọ akantụ egọ</type>
+			<type key="cf" type="standard">Ụsọrọ egọ nzụgbe</type>
+			<type key="collation" type="search">Ọchụchụ nịle</type>
+			<type key="collation" type="standard">Usoro Nhazi</type>
+			<type key="hc" type="h11">Ụsọrọ Ọge ọkịrịkịri 12</type>
+			<type key="hc" type="h12">Ụsọrọ Oge okịrịkịri 12</type>
+			<type key="hc" type="h23">Ụsọrọ Oge okịrịkịrị 24</type>
+			<type key="hc" type="h24">Ụsọrọ Ọge okịrịkịrị 24</type>
+			<type key="lb" type="loose">Akara akanka nkwụsị esịghị ịke</type>
+			<type key="lb" type="normal">Akara akanka nkwụsị kwesịrị</type>
+			<type key="lb" type="strict">Akara akanka nkwụsị sịrị ịke</type>
+			<type key="ms" type="metric">Ụsọrọ Metịrịk</type>
+			<type key="ms" type="uksystem">Ụsọrọ Mmeshọ ịmperịa</type>
+			<type key="ms" type="ussystem">Ụsọrọ Mmeshọ US</type>
+			<type key="numbers" type="arab">Ọnụ ọgụgụ Arab na Indị</type>
+			<type key="numbers" type="arabext">Ọnụ ọgụgụ Arab na Indị agbatịrị</type>
+			<type key="numbers" type="armn">Ọnụ ọgụgụ Armenịan</type>
+			<type key="numbers" type="armnlow">ọbere ọnụ ọgụgụ Armenịan</type>
+			<type key="numbers" type="beng">Ọnụ ọgụgụ Bang</type>
+			<type key="numbers" type="deva">Ọnụ ọgụgụ Devanagarị</type>
+			<type key="numbers" type="ethi">Ọnụ ọgụgụ Etọpịa</type>
+			<type key="numbers" type="fullwide">Ọnụ ọgụgụ ọbọsara</type>
+			<type key="numbers" type="geor">Ọnụ ọgụgụ Geọjịan</type>
+			<type key="numbers" type="grek">Ọnụ ọgụgụ Greek</type>
+			<type key="numbers" type="greklow">Ọbere ọnụ ọgụgụ Greek</type>
+			<type key="numbers" type="gujr">Ọnụ ọgụgụ Gụjaratị</type>
+			<type key="numbers" type="guru">Onụ ọgụgụ Gụmụkh</type>
+			<type key="numbers" type="hanidec">Ọnụ ọgụgụ ntụpọ Chịnese</type>
+			<type key="numbers" type="hans">Ọnụ ọgụgụ mfe Chịnese</type>
+			<type key="numbers" type="hansfin">Ọnụ ọgụgụ akantụ mfe nke Chinese</type>
+			<type key="numbers" type="hant">Ọnụ ọgụgụ ọdinala chinese</type>
+			<type key="numbers" type="hantfin">Ọnụ ọgụgụ akantụ ọdịnala Chinese</type>
+			<type key="numbers" type="hebr">Ọnụ ọgụgụ Hebrew</type>
+			<type key="numbers" type="jpan">Ọnụ ọgụgụ Japanese</type>
+			<type key="numbers" type="jpanfin">Ọnụ ọgụgụ akantụ Japanese</type>
+			<type key="numbers" type="khmr">Ọnụ ọgụgụ Khmer</type>
+			<type key="numbers" type="knda">Ọnụ ọgụgụ Kanada</type>
+			<type key="numbers" type="laoo">Ọnụ ọgụgụ Laọ</type>
+			<type key="numbers" type="latn">Ọnụ Ọgụgụ Mpaghara Ọdịda Anyanwụ</type>
+			<type key="numbers" type="mlym">Ọnụ ọgụgụ Malayala</type>
+			<type key="numbers" type="mymr">Ọnụ ọgụgụ Myamar</type>
+			<type key="numbers" type="orya">Ọnụ ọgụgụ Ọdịa</type>
+			<type key="numbers" type="roman">Ọnụ ọgụgụ Roman</type>
+			<type key="numbers" type="romanlow">Ọbere Ọnụ ọgụgụ Roman</type>
+			<type key="numbers" type="taml">Ọnụ ọgụgụ ọdịnala Tamịl</type>
+			<type key="numbers" type="tamldec">Ọnụ ọgụgụ Tamị</type>
+			<type key="numbers" type="telu">Ọnụ ọgụgụ Telụgụ</type>
+			<type key="numbers" type="thai">Ọnụ ọgụgụ Taị</type>
+			<type key="numbers" type="tibt">Ọnụ ọgụgụ Tịbeta</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">Metriik</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language">Asụsụ: {0}</codePattern>
+			<codePattern type="script">Mkpụrụ Okwu: {0}</codePattern>
+			<codePattern type="territory">Mpaghara: {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a b {ch} d e ẹ f g {gb} {gh} {gw} h i ị j k {kp} {kw} l m n ṅ {nw} {ny} o ọ p r s {sh} t u ụ v w y z]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[á à ā c é è ē í ì ī {ị\u0301} {ị\u0300} ḿ {m\u0300} ń ǹ ó ò ō {ọ\u0301} {ọ\u0300} q ú ù ū {ụ\u0301} {ụ\u0300} x]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]</exemplarCharacters>
+		<exemplarCharacters type="punctuation" draft="contributed">[\- ‑ , ; \: ! ? . ‘ ’ “ ” ( ) \[ \] \{ \}]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd/MM/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} 'na' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} 'na' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">M/d</dateFormatItem>
+						<dateFormatItem id="MEd">E, M/d</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
+						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
+						<dateFormatItem id="MMMMEd">E, MMMM d</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, M/d/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, MMM d, y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">Jen</month>
+							<month type="2">Feb</month>
+							<month type="3">Maa</month>
+							<month type="4">Epr</month>
+							<month type="5">Mee</month>
+							<month type="6">Juu</month>
+							<month type="7">Jul</month>
+							<month type="8">Ọgọ</month>
+							<month type="9">Sep</month>
+							<month type="10">Ọkt</month>
+							<month type="11">Nov</month>
+							<month type="12">Dis</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">J</month>
+							<month type="2">F</month>
+							<month type="3">M</month>
+							<month type="4">E</month>
+							<month type="5">M</month>
+							<month type="6">J</month>
+							<month type="7">J</month>
+							<month type="8">Ọ</month>
+							<month type="9">S</month>
+							<month type="10">Ọ</month>
+							<month type="11">N</month>
+							<month type="12">D</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Jenụwarị</month>
+							<month type="2">Febrụwarị</month>
+							<month type="3">Maachị</month>
+							<month type="4">Epreel</month>
+							<month type="5">Mee</month>
+							<month type="6">Juun</month>
+							<month type="7">Julaị</month>
+							<month type="8">Ọgọọst</month>
+							<month type="9">Septemba</month>
+							<month type="10">Ọktoba</month>
+							<month type="11">Novemba</month>
+							<month type="12">Disemba</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">Jen</month>
+							<month type="2">Feb</month>
+							<month type="3">Maa</month>
+							<month type="4">Epr</month>
+							<month type="5">Mee</month>
+							<month type="6">Juu</month>
+							<month type="7">Jul</month>
+							<month type="8">Ọgọ</month>
+							<month type="9">Sep</month>
+							<month type="10">Ọkt</month>
+							<month type="11">Nov</month>
+							<month type="12">Dis</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">J</month>
+							<month type="2">F</month>
+							<month type="3">M</month>
+							<month type="4">E</month>
+							<month type="5">M</month>
+							<month type="6">J</month>
+							<month type="7">J</month>
+							<month type="8">Ọ</month>
+							<month type="9">S</month>
+							<month type="10">Ọ</month>
+							<month type="11">N</month>
+							<month type="12">D</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Jenụwarị</month>
+							<month type="2">Febrụwarị</month>
+							<month type="3">Maachị</month>
+							<month type="4">Epreel</month>
+							<month type="5">Mee</month>
+							<month type="6">Juun</month>
+							<month type="7">Julaị</month>
+							<month type="8">Ọgọọst</month>
+							<month type="9">Septemba</month>
+							<month type="10">Ọktoba</month>
+							<month type="11">Novemba</month>
+							<month type="12">Disemba</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Sọn</day>
+							<day type="mon">Mọn</day>
+							<day type="tue">Tiu</day>
+							<day type="wed">Wen</day>
+							<day type="thu">Tọọ</day>
+							<day type="fri">Fraị</day>
+							<day type="sat">Sat</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">Sọn</day>
+							<day type="mon">Mọn</day>
+							<day type="tue">Tiu</day>
+							<day type="wed">Wen</day>
+							<day type="thu">Tọọ</day>
+							<day type="fri">Fraị</day>
+							<day type="sat">Sat</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Sọndee</day>
+							<day type="mon">Mọnde</day>
+							<day type="tue">Tiuzdee</day>
+							<day type="wed">Wenezdee</day>
+							<day type="thu">Tọọzdee</day>
+							<day type="fri">Fraịdee</day>
+							<day type="sat">Satọdee</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">Sọn</day>
+							<day type="mon">Mọn</day>
+							<day type="tue">Tiu</day>
+							<day type="wed">Wen</day>
+							<day type="thu">Tọọ</day>
+							<day type="fri">Fraị</day>
+							<day type="sat">Sat</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">Sọn</day>
+							<day type="mon">Mọn</day>
+							<day type="tue">Tiu</day>
+							<day type="wed">Wen</day>
+							<day type="thu">Tọọ</day>
+							<day type="fri">Fraị</day>
+							<day type="sat">Sat</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Sọndee</day>
+							<day type="mon">Mọnde</day>
+							<day type="tue">Tiuzdee</day>
+							<day type="wed">Wenezdee</day>
+							<day type="thu">Tọọzdee</day>
+							<day type="fri">Fraịdee</day>
+							<day type="sat">Satọdee</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">Ọ1</quarter>
+							<quarter type="2">Ọ2</quarter>
+							<quarter type="3">Ọ3</quarter>
+							<quarter type="4">Ọ4</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">1</quarter>
+							<quarter type="2">2</quarter>
+							<quarter type="3">3</quarter>
+							<quarter type="4">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">Ọkara 1</quarter>
+							<quarter type="2">Ọkara 2</quarter>
+							<quarter type="3">Ọkara 3</quarter>
+							<quarter type="4">Ọkara 4</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">Ọ1</quarter>
+							<quarter type="2">Ọ2</quarter>
+							<quarter type="3">Ọ3</quarter>
+							<quarter type="4">Ọ4</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">1</quarter>
+							<quarter type="2">2</quarter>
+							<quarter type="3">3</quarter>
+							<quarter type="4">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">Ọkara 1</quarter>
+							<quarter type="2">Ọkara 2</quarter>
+							<quarter type="3">Ọkara 3</quarter>
+							<quarter type="4">Ọkara 4</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">A.M.</dayPeriod>
+							<dayPeriod type="pm">P.M.</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">A.M.</dayPeriod>
+							<dayPeriod type="pm">P.M.</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">N’ụtụtụ</dayPeriod>
+							<dayPeriod type="pm">N’abali</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">A.M.</dayPeriod>
+							<dayPeriod type="pm">P.M.</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="am">A.M.</dayPeriod>
+							<dayPeriod type="pm">P.M.</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">A.M.</dayPeriod>
+							<dayPeriod type="pm">P.M.</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">Tupu Kraist</era>
+						<era type="0" alt="variant">Tupu Oge Afọ</era>
+						<era type="1">Afọ Kraịst</era>
+						<era type="1" alt="variant">Oge Afọ</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">T.K.</era>
+						<era type="0" alt="variant">TOA</era>
+						<era type="1">A.K.</era>
+						<era type="1" alt="variant">OA</era>
+					</eraAbbr>
+					<eraNarrow>
+						<era type="0">T.K.</era>
+						<era type="0" alt="variant">BCE</era>
+						<era type="1">A.K.</era>
+						<era type="1" alt="variant">CE</era>
+					</eraNarrow>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d/M/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} 'na' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} 'na' {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="GyMMM">MMM G y</dateFormatItem>
+						<dateFormatItem id="GyMMMd">d MMM, G y</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E, d MMM, G y</dateFormatItem>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">E, d/M</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, d MMM</dateFormatItem>
+						<dateFormatItem id="MMMMd">d MMMM</dateFormatItem>
+						<dateFormatItem id="MMMMEd">E, d MMMM</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="other">'Izu' W 'n'‘'ime' MMMM</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMd">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, d/M/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+						<dateFormatItem id="yw" count="other">'Izu' w 'n' 'ime' Y</dateFormatItem>
+					</availableFormats>
+					<appendItems>
+						<appendItem request="Timezone">{0} {1}</appendItem>
+					</appendItems>
+					<intervalFormats>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d">d–d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="h">
+							<greatestDifference id="a">h a – h a</greatestDifference>
+							<greatestDifference id="h">h–h a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="H">
+							<greatestDifference id="H">HH–HH</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="a">h:mm a – h:mm a</greatestDifference>
+							<greatestDifference id="h">h:mm–h:mm a</greatestDifference>
+							<greatestDifference id="m">h:mm–h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hm">
+							<greatestDifference id="H">HH:mm–HH:mm</greatestDifference>
+							<greatestDifference id="m">HH:mm–HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="a">h:mm a – h:mm a v</greatestDifference>
+							<greatestDifference id="h">h:mm–h:mm a v</greatestDifference>
+							<greatestDifference id="m">h:mm–h:mm a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H">HH:mm–HH:mm v</greatestDifference>
+							<greatestDifference id="m">HH:mm–HH:mm v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="a">h a – h a v</greatestDifference>
+							<greatestDifference id="h">h–h a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H">HH–HH v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M">MM–MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">MM/dd – MM/dd</greatestDifference>
+							<greatestDifference id="M">MM/dd – MM/dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">E, MM/dd – E, MM/dd</greatestDifference>
+							<greatestDifference id="M">MM-dd, E – MM-dd, E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M">LLL–LLL</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">MMM d–d</greatestDifference>
+							<greatestDifference id="M">MMM d – MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">MMM d, E – MMM d, E</greatestDifference>
+							<greatestDifference id="M">MMM d, E – MMM d, E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y">y–y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">MM/y – MM/y</greatestDifference>
+							<greatestDifference id="y">y-MM – y-MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="M">y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="y">y-MM-dd – y-MM-dd</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">y-MM-dd, E – y-MM-dd, E</greatestDifference>
+							<greatestDifference id="M">y-MM-dd, E – y-MM-dd, E</greatestDifference>
+							<greatestDifference id="y">y-MM-dd, E – y-MM-dd, E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M">y MMM–MMM</greatestDifference>
+							<greatestDifference id="y">y MMM – y MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">y MMM d–d</greatestDifference>
+							<greatestDifference id="M">y MMM d – MMM d</greatestDifference>
+							<greatestDifference id="y">y MMM d – y MMM d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">y MMM d, E – MMM d, E</greatestDifference>
+							<greatestDifference id="M">y MMM d, E – MMM d, E</greatestDifference>
+							<greatestDifference id="y">y MMM d, E – y MMM d, E</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M">y MMMM–MMMM</greatestDifference>
+							<greatestDifference id="y">y MMMM – y MMMM</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>Agba</displayName>
+			</field>
+			<field type="year">
+				<displayName>Afọ</displayName>
+				<relative type="-1">Afọ gara aga</relative>
+				<relative type="0">Afọ a</relative>
+				<relative type="1">Afọ ọzọ</relative>
+			</field>
+			<field type="year-short">
+				<relative type="-1">Afọ gara aga</relative>
+				<relative type="0">Afọ a</relative>
+				<relative type="1">Afọ ọzọ</relative>
+			</field>
+			<field type="year-narrow">
+				<relative type="-1">Afọ gara aga</relative>
+				<relative type="0">Afọ a</relative>
+				<relative type="1">Afọ ọzọ</relative>
+			</field>
+			<field type="quarter">
+				<displayName>Ọnwa atọ n’afọ</displayName>
+				<relative type="-1">Nkejị keanọ gara aga</relative>
+				<relative type="0">nkejị keanọ a</relative>
+				<relative type="1">nkejị keanọ na abịa</relative>
+			</field>
+			<field type="quarter-short">
+				<displayName>Ọnwa atọ n’afọ</displayName>
+			</field>
+			<field type="quarter-narrow">
+				<displayName>Ọnwa atọ n’afọ</displayName>
+			</field>
+			<field type="month">
+				<displayName>Ọnwa</displayName>
+				<relative type="-1">Ọnwa gara aga</relative>
+				<relative type="0">Ọnwa a</relative>
+				<relative type="1">Ọnwa ọzọ</relative>
+			</field>
+			<field type="month-short">
+				<relative type="-1">Ọnwa gara aga</relative>
+				<relative type="0">Ọnwa a</relative>
+				<relative type="1">Ọnwa ọzọ</relative>
+			</field>
+			<field type="month-narrow">
+				<relative type="-1">Ọnwa gara aga</relative>
+				<relative type="0">Ọnwa a</relative>
+				<relative type="1">Ọnwa ọzọ</relative>
+			</field>
+			<field type="week">
+				<displayName>Izu</displayName>
+				<relative type="-1">Izu gara aga</relative>
+				<relative type="0">Izu a</relative>
+				<relative type="1">Izu na-esote</relative>
+				<relativePeriod>Izu nke{0}</relativePeriod>
+			</field>
+			<field type="week-short">
+				<relative type="-1">Izu gara aga</relative>
+				<relative type="0">Izu a</relative>
+				<relative type="1">Izu na-esote</relative>
+				<relativePeriod>Izu nke{0}</relativePeriod>
+			</field>
+			<field type="week-narrow">
+				<relative type="-1">Izu gara aga</relative>
+				<relative type="0">Izu a</relative>
+				<relative type="1">Izu na-esote</relative>
+				<relativePeriod>Izu nke{0}</relativePeriod>
+			</field>
+			<field type="weekOfMonth">
+				<displayName>ịzụ ọnwa</displayName>
+			</field>
+			<field type="weekOfMonth-short">
+				<displayName>ịzụ ọnwa</displayName>
+			</field>
+			<field type="weekOfMonth-narrow">
+				<displayName>ịzụ ọnwa</displayName>
+			</field>
+			<field type="day">
+				<displayName>Ụbọchị</displayName>
+				<relative type="-1">Ụnyaahụ</relative>
+				<relative type="0">Taa</relative>
+				<relative type="1">Echi</relative>
+			</field>
+			<field type="day-short">
+				<relative type="-1">Ụnyaahụ</relative>
+				<relative type="0">Taata</relative>
+				<relative type="1">Echi</relative>
+			</field>
+			<field type="day-narrow">
+				<relative type="-1">Ụnyaahụ</relative>
+				<relative type="0">Taata</relative>
+				<relative type="1">Echi</relative>
+			</field>
+			<field type="dayOfYear">
+				<displayName>ụbọchị na afọ</displayName>
+			</field>
+			<field type="dayOfYear-short">
+				<displayName>Ụbọchị na afọ</displayName>
+			</field>
+			<field type="weekday">
+				<displayName>Ụbọchị izu</displayName>
+			</field>
+			<field type="weekday-short">
+				<displayName>Ụbọchị ịzụ</displayName>
+			</field>
+			<field type="weekday-narrow">
+				<displayName>Ụbọchị ịzụ</displayName>
+			</field>
+			<field type="weekdayOfMonth">
+				<displayName>Ụbọchị ịzụ na ọnwa</displayName>
+			</field>
+			<field type="weekdayOfMonth-short">
+				<displayName>Ụbọchị ịzụ na ọnwa</displayName>
+			</field>
+			<field type="weekdayOfMonth-narrow">
+				<displayName>Ụbọchị ịzụ na ọnwa</displayName>
+			</field>
+			<field type="sun">
+				<relative type="-1">Ụbọchị ụka gara aga</relative>
+				<relative type="0">ụbọchị ụka a</relative>
+				<relative type="1">ụbọchị ụka na abịa</relative>
+			</field>
+			<field type="sun-short">
+				<relative type="-1">ụbọchị ụka gara aga</relative>
+				<relative type="0">ubochị ụka a</relative>
+				<relative type="1">ụbọchị ụka na abịa</relative>
+			</field>
+			<field type="sun-narrow">
+				<relative type="-1">ụbọchị ụka gara aga</relative>
+				<relative type="0">ụbọchị ụka a</relative>
+				<relative type="1">ụbọchị ụka na abịa</relative>
+			</field>
+			<field type="mon">
+				<relative type="-1">ụbọchị Mọnde gara aga</relative>
+				<relative type="0">ụbọchị Mọnde a</relative>
+				<relative type="1">ụbọchị Monde a</relative>
+			</field>
+			<field type="mon-short">
+				<relative type="-1">Mon gara aga</relative>
+				<relative type="0">ụbọchị Mọnde a</relative>
+				<relative type="1">ụbọchị Mọnde na abịa</relative>
+			</field>
+			<field type="mon-narrow">
+				<relative type="-1">ụbọchị Monde gara aga</relative>
+				<relative type="0">ụbọchị Monde a</relative>
+				<relative type="1">ụbọchị Monde na abịa</relative>
+			</field>
+			<field type="tue">
+				<relative type="-1">ụbọchị Tuesde gara aga</relative>
+				<relative type="0">ụbọchị Tuesde a</relative>
+				<relative type="1">ụbọchị Tuesde na abịa</relative>
+			</field>
+			<field type="tue-short">
+				<relative type="-1">ụbọchị Tụesde gara aga</relative>
+				<relative type="0">ụbọchị Tuesde a</relative>
+				<relative type="1">ụbọchị Tuesde na abịa</relative>
+			</field>
+			<field type="tue-narrow">
+				<relative type="-1">ụbọchị Tuesde gara aga</relative>
+				<relative type="0">ụbọchị Tuesde a</relative>
+				<relative type="1">ụbọchị Tuesde na abịa</relative>
+			</field>
+			<field type="wed">
+				<relative type="-1">ụbọchị wednesde gara aga</relative>
+				<relative type="0">ụbọchị Wednesde a</relative>
+				<relative type="1">ụbọchị Wednesde na abịa</relative>
+			</field>
+			<field type="wed-short">
+				<relative type="-1">ụbọchị Wednesde gara ag</relative>
+				<relative type="0">ụbọchị Wednesde a</relative>
+				<relative type="1">ụbọchị Wednesde na abịa</relative>
+			</field>
+			<field type="wed-narrow">
+				<relative type="-1">ụbọchị Wednesde gara ag</relative>
+				<relative type="0">ụbọchị Wednesde a</relative>
+				<relative type="1">ụbọchị Wednesde a</relative>
+			</field>
+			<field type="thu">
+				<relative type="-1">ụbọchị Tọsdee gara aga</relative>
+				<relative type="0">ụbọchị Tọsdee a</relative>
+				<relative type="1">ụbọchị Tọsdee na abịa</relative>
+			</field>
+			<field type="thu-short">
+				<relative type="-1">Ụbọchị Tọsdee gara aga</relative>
+				<relative type="0">ụbọchị Tọsdee a</relative>
+				<relative type="1">ụbọchị Tọsdee na abịa</relative>
+			</field>
+			<field type="thu-narrow">
+				<relative type="-1">ụbọchị Tọsdee gara aga</relative>
+				<relative type="0">ụbọchị Tọsdee a</relative>
+				<relative type="1">ụbọchị Tọsdee na abịa</relative>
+			</field>
+			<field type="fri">
+				<relative type="-1">Ụbọchị faraịde gara aga</relative>
+				<relative type="0">ụbọchị Faraịde a</relative>
+				<relative type="1">ụbọchị Faraịde na abịa</relative>
+			</field>
+			<field type="fri-short">
+				<relative type="-1">ụbọchị Faraịde gara aga</relative>
+				<relative type="0">ụbọchị Faraịde a</relative>
+				<relative type="1">ụbọchị na abịa</relative>
+			</field>
+			<field type="fri-narrow">
+				<relative type="-1">ụbọchị Faraịde gara aga</relative>
+				<relative type="0">ụbọchị Faraịde a</relative>
+				<relative type="1">ụọchị Faraịde na abịa</relative>
+			</field>
+			<field type="sat">
+				<relative type="-1">ụbọchị Satụde gara aga</relative>
+				<relative type="0">ụbọchị Satụde a</relative>
+				<relative type="1">ụbọchị Satụde na abịa</relative>
+			</field>
+			<field type="sat-short">
+				<relative type="-1">Ụbọchị Satụde gara aga</relative>
+				<relative type="0">ụbọchị Satụde a</relative>
+				<relative type="1">ụbọchị Satụde na abịa</relative>
+			</field>
+			<field type="sat-narrow">
+				<relative type="-1">ụbọchị Satụde gara aga</relative>
+				<relative type="0">ụbọchị Satụde a</relative>
+				<relative type="1">ụbọchị Satụde na abịa</relative>
+			</field>
+			<field type="dayperiod-short">
+				<displayName>N’ụtụtụ/N’abalị</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>N’ụtụtụ/N’abalị</displayName>
+			</field>
+			<field type="dayperiod-narrow">
+				<displayName>N’ụtụtụ/N’abalị</displayName>
+			</field>
+			<field type="hour">
+				<displayName>Elekere</displayName>
+				<relative type="0">elekere a</relative>
+			</field>
+			<field type="minute">
+				<displayName>Nkeji</displayName>
+				<relative type="0">nkejị a</relative>
+			</field>
+			<field type="second">
+				<displayName>Tịm kọm</displayName>
+				<relative type="0">ụgbụa</relative>
+			</field>
+			<field type="second-short">
+				<displayName>Tịm kọm</displayName>
+			</field>
+			<field type="second-narrow">
+				<displayName>Tịm kọm</displayName>
+			</field>
+			<field type="zone">
+				<displayName>Mpaghara oge</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<hourFormat>+HH:mm;-HH:mm</hourFormat>
+			<gmtFormat>GMT{0}</gmtFormat>
+			<gmtZeroFormat>GMT</gmtZeroFormat>
+			<regionFormat>Oge {0}</regionFormat>
+			<regionFormat type="daylight">Oge Ihe {0}</regionFormat>
+			<regionFormat type="standard">Oge Izugbe {0}</regionFormat>
+			<fallbackFormat>{1} ({0})</fallbackFormat>
+			<zone type="Etc/UTC">
+				<long>
+					<standard>Nhazi Oge Ụwa Niile</standard>
+				</long>
+			</zone>
+			<zone type="Etc/Unknown">
+				<exemplarCity>Obodo Amaghị</exemplarCity>
+			</zone>
+			<zone type="America/Araguaina">
+				<exemplarCity>Araguaina</exemplarCity>
+			</zone>
+			<zone type="Europe/London">
+				<long>
+					<daylight>Oge Okpomọkụ Britain</daylight>
+				</long>
+			</zone>
+			<zone type="Europe/Dublin">
+				<long>
+					<daylight>Oge Okpomọkụ Ireland</daylight>
+				</long>
+			</zone>
+			<metazone type="Afghanistan">
+				<long>
+					<standard>Oge Afghanistan</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Central">
+				<long>
+					<standard>Oge Etiti Afrịka</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Eastern">
+				<long>
+					<standard>Oge Mpaghara Ọwụwa Anyanwụ Afrịka</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Southern">
+				<long>
+					<standard>Oge Izugbe Mpaghara Mgbada Ugwu Afrịka</standard>
+				</long>
+			</metazone>
+			<metazone type="Africa_Western">
+				<long>
+					<generic>Oge Mpaghara Ọdịda Anyanwụ Afrịka</generic>
+					<standard>Oge Izugbe Mpaghara Ọdịda Anyanwụ Afrịka</standard>
+					<daylight>Oge Okpomọkụ Mpaghara Ọdịda Anyanwụ Afrịka</daylight>
+				</long>
+			</metazone>
+			<metazone type="Alaska">
+				<long>
+					<generic>Oge Alaska</generic>
+					<standard>Oge Izugbe Alaska</standard>
+					<daylight>Oge Ihe Alaska</daylight>
+				</long>
+			</metazone>
+			<metazone type="Amazon">
+				<long>
+					<generic>Oge Amazon</generic>
+					<standard>Oge Izugbe Amazon</standard>
+					<daylight>Oge Okpomọkụ Amazon</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Central">
+				<long>
+					<generic>Oge Mpaghara Etiti</generic>
+					<standard>Oge Izugbe Mpaghara Etiti</standard>
+					<daylight>Oge Ihe Mpaghara Etiti</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Eastern">
+				<long>
+					<generic>Oge Mpaghara Ọwụwa Anyanwụ</generic>
+					<standard>Oge Izugbe Mpaghara Ọwụwa Anyanwụ</standard>
+					<daylight>Oge Ihe Mpaghara Ọwụwa Anyanwụ</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Mountain">
+				<long>
+					<generic>Oge Mpaghara Ugwu</generic>
+					<standard>Oge Izugbe Mpaghara Ugwu</standard>
+					<daylight>Oge Ihe Mpaghara Ugwu</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Pacific">
+				<long>
+					<generic>Oge Mpaghara Pacific</generic>
+					<standard>Oge Izugbe Mpaghara Pacific</standard>
+					<daylight>Oge Ihe Mpaghara Pacific</daylight>
+				</long>
+			</metazone>
+			<metazone type="Apia">
+				<long>
+					<generic>Oge Apia</generic>
+					<standard>Oge Izugbe Apia</standard>
+					<daylight>Oge Ihe Apia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Arabian">
+				<long>
+					<generic>Oge Arab</generic>
+					<standard>Oge Izugbe Arab</standard>
+					<daylight>Oge Ihe Arab</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina">
+				<long>
+					<generic>Oge Argentina</generic>
+					<standard>Oge Izugbe Argentina</standard>
+					<daylight>Oge Okpomọkụ Argentina</daylight>
+				</long>
+			</metazone>
+			<metazone type="Argentina_Western">
+				<long>
+					<generic>Oge Mpaghara Ọdịda Anyanwụ Argentina</generic>
+					<standard>Oge Izugbe Mpaghara Ọdịda Anyanwụ Argentina</standard>
+					<daylight>Oge Okpomọkụ Mpaghara Ọdịda Anyanwụ Argentina</daylight>
+				</long>
+			</metazone>
+			<metazone type="Armenia">
+				<long>
+					<generic>Oge Armenia</generic>
+					<standard>Oge Izugbe Armenia</standard>
+					<daylight>Oge Okpomọkụ Armenia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Atlantic">
+				<long>
+					<generic>Oge Mpaghara Atlantic</generic>
+					<standard>Oge Izugbe Mpaghara Atlantic</standard>
+					<daylight>Oge Ihe Mpaghara Atlantic</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Central">
+				<long>
+					<generic>Oge Etiti Australia</generic>
+					<standard>Oge Izugbe Etiti Australia</standard>
+					<daylight>Oge Ihe Etiti Australia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_CentralWestern">
+				<long>
+					<generic>Oge Mpaghara Ọdịda Anyanwụ Etiti Australia</generic>
+					<standard>Oge Izugbe Mpaghara Ọdịda Anyanwụ Etiti Australia</standard>
+					<daylight>Oge Ihe Mpaghara Ọdịda Anyanwụ Etiti Australia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Eastern">
+				<long>
+					<generic>Oge Mpaghara Ọwụwa Anyanwụ Australia</generic>
+					<standard>Oge Izugbe Mpaghara Ọwụwa Anyanwụ Australia</standard>
+					<daylight>Oge Ihe Mpaghara Ọwụwa Anyanwụ Australia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Australia_Western">
+				<long>
+					<generic>Oge Mpaghara Ọdịda Anyanwụ Australia</generic>
+					<standard>Oge Izugbe Mpaghara Ọdịda Anyanwụ Australia</standard>
+					<daylight>Oge Ihe Mpaghara Ọdịda Anyanwụ Australia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azerbaijan">
+				<long>
+					<generic>Oge Azerbaijan</generic>
+					<standard>Oge Izugbe Azerbaijan</standard>
+					<daylight>Oge Okpomọkụ Azerbaijan</daylight>
+				</long>
+			</metazone>
+			<metazone type="Azores">
+				<long>
+					<generic>Oge Azores</generic>
+					<standard>Oge Izugbe Azores</standard>
+					<daylight>Oge Okpomọkụ Azores</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bangladesh">
+				<long>
+					<generic>Oge Bangladesh</generic>
+					<standard>Oge Izugbe Bangladesh</standard>
+					<daylight>Oge Okpomọkụ Bangladesh</daylight>
+				</long>
+			</metazone>
+			<metazone type="Bhutan">
+				<long>
+					<standard>Oge Bhutan</standard>
+				</long>
+			</metazone>
+			<metazone type="Bolivia">
+				<long>
+					<standard>Oge Bolivia</standard>
+				</long>
+			</metazone>
+			<metazone type="Brasilia">
+				<long>
+					<generic>Oge Brasilia</generic>
+					<standard>Oge Izugbe Brasilia</standard>
+					<daylight>Oge Okpomọkụ Brasilia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Brunei">
+				<long>
+					<standard>Oge Brunei Darussalam</standard>
+				</long>
+			</metazone>
+			<metazone type="Cape_Verde">
+				<long>
+					<generic>Oge Cape Verde</generic>
+					<standard>Oge Izugbe Cape Verde</standard>
+					<daylight>Oge Okpomọkụ Cape Verde</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chamorro">
+				<long>
+					<standard>Oge Izugbe Chamorro</standard>
+				</long>
+			</metazone>
+			<metazone type="Chatham">
+				<long>
+					<generic>Oge Chatham</generic>
+					<standard>Oge Izugbe Chatham</standard>
+					<daylight>Oge Ihe Chatham</daylight>
+				</long>
+			</metazone>
+			<metazone type="Chile">
+				<long>
+					<generic>Oge Chile</generic>
+					<standard>Oge Izugbe Chile</standard>
+					<daylight>Oge Okpomọkụ Chile</daylight>
+				</long>
+			</metazone>
+			<metazone type="China">
+				<long>
+					<generic>Oge China</generic>
+					<standard>Oge Izugbe China</standard>
+					<daylight>Oge Ihe China</daylight>
+				</long>
+			</metazone>
+			<metazone type="Choibalsan">
+				<long>
+					<generic>Oge Choibals</generic>
+					<standard>Oge Izugbe Choibals</standard>
+					<daylight>Oge Okpomọkụ Choibals</daylight>
+				</long>
+			</metazone>
+			<metazone type="Christmas">
+				<long>
+					<standard>Oge Ekeresimesi Island</standard>
+				</long>
+			</metazone>
+			<metazone type="Cocos">
+				<long>
+					<standard>Oge Cocos Islands</standard>
+				</long>
+			</metazone>
+			<metazone type="Colombia">
+				<long>
+					<generic>Oge Columbia</generic>
+					<standard>Oge Izugbe Columbia</standard>
+					<daylight>Oge Okpomọkụ Columbia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cook">
+				<long>
+					<generic>Oge Cook Islands</generic>
+					<standard>Oge Izugbe Cook Islands</standard>
+					<daylight>Oge Ọkara Okpomọkụ Cook Islands</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cuba">
+				<long>
+					<generic>Oge Cuba</generic>
+					<standard>Oge Izugbe Cuba</standard>
+					<daylight>Oge Ihe Mpaghara Cuba</daylight>
+				</long>
+			</metazone>
+			<metazone type="Davis">
+				<long>
+					<standard>Oge Davis</standard>
+				</long>
+			</metazone>
+			<metazone type="DumontDUrville">
+				<long>
+					<standard>Oge Dumont-d’Urville</standard>
+				</long>
+			</metazone>
+			<metazone type="East_Timor">
+				<long>
+					<standard>Oge Mpaghara Ọwụwa Anyanwụ Timor</standard>
+				</long>
+			</metazone>
+			<metazone type="Easter">
+				<long>
+					<generic>Oge Mpaghara Ọwụwa Anyanwụ Island</generic>
+					<standard>Oge Izugbe Mpaghara Ọwụwa Anyanwụ Island</standard>
+					<daylight>Oge Okpomọkụ Mpaghara Ọwụwa Anyanwụ Island</daylight>
+				</long>
+			</metazone>
+			<metazone type="Ecuador">
+				<long>
+					<standard>Oge Ecuador</standard>
+				</long>
+			</metazone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic>Oge Mpaghara Etiti Europe</generic>
+					<standard>Oge Izugbe Mpaghara Etiti Europe</standard>
+					<daylight>Oge Okpomọkụ Mpaghara Etiti Europe</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic>Oge Mpaghara Ọwụwa Anyanwụ Europe</generic>
+					<standard>Oge Izugbe Mpaghara Ọwụwa Anyanwụ Europe</standard>
+					<daylight>Oge Okpomọkụ Mpaghara Ọwụwa Anyanwụ Europe</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Further_Eastern">
+				<long>
+					<standard>Further-eastern European Time</standard>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic>Oge Mpaghara Ọdịda Anyanwụ Europe</generic>
+					<standard>Oge Izugbe Mpaghara Ọdịda Anyanwụ Europe</standard>
+					<daylight>Oge Okpomọkụ Mpaghara Ọdịda Anyanwụ Europe</daylight>
+				</long>
+			</metazone>
+			<metazone type="Falkland">
+				<long>
+					<generic>Oge Falkland Islands</generic>
+					<standard>Oge Izugbe Falkland Islands</standard>
+					<daylight>Oge Okpomọkụ Falkland Islands</daylight>
+				</long>
+			</metazone>
+			<metazone type="Fiji">
+				<long>
+					<generic>Oge Fiji</generic>
+					<standard>Oge Izugbe Fiji</standard>
+					<daylight>Oge Okpomọkụ Fiji</daylight>
+				</long>
+			</metazone>
+			<metazone type="French_Guiana">
+				<long>
+					<standard>Oge French Guiana</standard>
+				</long>
+			</metazone>
+			<metazone type="French_Southern">
+				<long>
+					<standard>Oge French Southern &amp; Antarctic</standard>
+				</long>
+			</metazone>
+			<metazone type="Galapagos">
+				<long>
+					<standard>Oge Galapagos</standard>
+				</long>
+			</metazone>
+			<metazone type="Gambier">
+				<long>
+					<standard>Oge Gambier</standard>
+				</long>
+			</metazone>
+			<metazone type="Georgia">
+				<long>
+					<generic>Oge Georgia</generic>
+					<standard>Oge Izugbe Georgia</standard>
+					<daylight>Oge Okpomọkụ Georgia</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gilbert_Islands">
+				<long>
+					<standard>Oge Gilbert Islands</standard>
+				</long>
+			</metazone>
+			<metazone type="GMT">
+				<long>
+					<standard>Oge Mpaghara Greemwich Mean</standard>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Eastern">
+				<long>
+					<generic>Oge Mpaghara Ọwụwa Anyanwụ Greenland</generic>
+					<standard>Oge Izugbe Mpaghara Ọwụwa Anyanwụ Greenland</standard>
+					<daylight>Oge Okpomọkụ Mpaghara Ọwụwa Anyanwụ Greenland</daylight>
+				</long>
+			</metazone>
+			<metazone type="Greenland_Western">
+				<long>
+					<generic>Oge Mpaghara Ọdịda Anyanwụ Greenland</generic>
+					<standard>Oge Izugbe Mpaghara Ọdịda Anyanwụ Greenland</standard>
+					<daylight>Oge Okpomọkụ Mpaghara Ọdịda Anyanwụ Greenland</daylight>
+				</long>
+			</metazone>
+			<metazone type="Gulf">
+				<long>
+					<standard>Oge Izugbe Gulf</standard>
+				</long>
+			</metazone>
+			<metazone type="Guyana">
+				<long>
+					<standard>Oge Guyana</standard>
+				</long>
+			</metazone>
+			<metazone type="Hawaii_Aleutian">
+				<long>
+					<generic>Oge Hawaii-Aleutian</generic>
+					<standard>Oge Izugbe Hawaii-Aleutian</standard>
+					<daylight>Oge Ihe Hawaii-Aleutian</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hong_Kong">
+				<long>
+					<generic>Oge Hong Kong</generic>
+					<standard>Oge Izugbe Hong Kong</standard>
+					<daylight>Oge Okpomọkụ Hong Kong</daylight>
+				</long>
+			</metazone>
+			<metazone type="Hovd">
+				<long>
+					<generic>Oge Hovd</generic>
+					<standard>Oge Izugbe Hovd</standard>
+					<daylight>Oge Okpomọkụ Hovd</daylight>
+				</long>
+			</metazone>
+			<metazone type="India">
+				<long>
+					<standard>Oge Izugbe India</standard>
+				</long>
+			</metazone>
+			<metazone type="Indian_Ocean">
+				<long>
+					<standard>Oge Osimiri India</standard>
+				</long>
+			</metazone>
+			<metazone type="Indochina">
+				<long>
+					<standard>Oge Indochina</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Central">
+				<long>
+					<standard>Oge Etiti Indonesia</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Eastern">
+				<long>
+					<standard>Oge Mpaghara Ọwụwa Anyanwụ Indonesia</standard>
+				</long>
+			</metazone>
+			<metazone type="Indonesia_Western">
+				<long>
+					<standard>Oge Mpaghara Ọdịda Anyanwụ Indonesia</standard>
+				</long>
+			</metazone>
+			<metazone type="Iran">
+				<long>
+					<generic>Oge Iran</generic>
+					<standard>Oge Izugbe Iran</standard>
+					<daylight>Oge Ihe Iran</daylight>
+				</long>
+			</metazone>
+			<metazone type="Irkutsk">
+				<long>
+					<generic>Oge Irkutsk</generic>
+					<standard>Oge Izugbe Irkutsk</standard>
+					<daylight>Oge Okpomọkụ Irkutsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Israel">
+				<long>
+					<generic>Oge Israel</generic>
+					<standard>Oge Izugbe Israel</standard>
+					<daylight>Oge Ihe Israel</daylight>
+				</long>
+			</metazone>
+			<metazone type="Japan">
+				<long>
+					<generic>Oge Japan</generic>
+					<standard>Oge Izugbe Japan</standard>
+					<daylight>Oge Ihe Japan</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Eastern">
+				<long>
+					<standard>Oge Mpaghara Ọwụwa Anyanwụ Kazakhstan</standard>
+				</long>
+			</metazone>
+			<metazone type="Kazakhstan_Western">
+				<long>
+					<standard>Oge Mpaghara Ọdịda Anyanwụ Kazakhstan</standard>
+				</long>
+			</metazone>
+			<metazone type="Korea">
+				<long>
+					<generic>Oge Korea</generic>
+					<standard>Oge Izugbe Korea</standard>
+					<daylight>Oge Ihe Korea</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kosrae">
+				<long>
+					<standard>Oge Kosrae</standard>
+				</long>
+			</metazone>
+			<metazone type="Krasnoyarsk">
+				<long>
+					<generic>Oge Krasnoyarsk</generic>
+					<standard>Oge Izugbe Krasnoyarsk</standard>
+					<daylight>Oge Okpomọkụ Krasnoyarsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Kyrgystan">
+				<long>
+					<standard>Oge Kyrgyzstan</standard>
+				</long>
+			</metazone>
+			<metazone type="Line_Islands">
+				<long>
+					<standard>Oge Line Islands</standard>
+				</long>
+			</metazone>
+			<metazone type="Lord_Howe">
+				<long>
+					<generic>Oge Lord Howe</generic>
+					<standard>Oge Izugbe Lord Howe</standard>
+					<daylight>Oge Ihe Lord Howe</daylight>
+				</long>
+			</metazone>
+			<metazone type="Macquarie">
+				<long>
+					<standard>Oge Macquarie Island</standard>
+				</long>
+			</metazone>
+			<metazone type="Magadan">
+				<long>
+					<generic>Oge Magadan</generic>
+					<standard>Oge Izugbe Magadan</standard>
+					<daylight>Oge Okpomọkụ Magadan</daylight>
+				</long>
+			</metazone>
+			<metazone type="Malaysia">
+				<long>
+					<standard>Oge Malaysia</standard>
+				</long>
+			</metazone>
+			<metazone type="Maldives">
+				<long>
+					<standard>Oge Maldives</standard>
+				</long>
+			</metazone>
+			<metazone type="Marquesas">
+				<long>
+					<standard>Oge Marquesas</standard>
+				</long>
+			</metazone>
+			<metazone type="Marshall_Islands">
+				<long>
+					<standard>Oge Marshall Islands</standard>
+				</long>
+			</metazone>
+			<metazone type="Mauritius">
+				<long>
+					<generic>Oge Mauritius</generic>
+					<standard>Oge Izugbe Mauritius</standard>
+					<daylight>Oge Okpomọkụ Mauritius</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mawson">
+				<long>
+					<standard>Oge Mawson</standard>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Northwest">
+				<long>
+					<generic>Oge Northwest Mexico</generic>
+					<standard>Oge Izugbe Northwest Mexico</standard>
+					<daylight>Oge Ihe Northwest Mexico</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mexico_Pacific">
+				<long>
+					<generic>Oge Mexican Pacific</generic>
+					<standard>Oge Izugbe Mexican Pacific</standard>
+					<daylight>Oge Ihe Mexican Pacific</daylight>
+				</long>
+			</metazone>
+			<metazone type="Mongolia">
+				<long>
+					<generic>Oge Ulaanbaatar</generic>
+					<standard>Oge Izugbe Ulaanbaatar</standard>
+					<daylight>Oge Okpomọkụ Ulaanbaatar</daylight>
+				</long>
+			</metazone>
+			<metazone type="Moscow">
+				<long>
+					<generic>Oge Moscow</generic>
+					<standard>Oge Izugbe Moscow</standard>
+					<daylight>Oge Okpomọkụ Moscow</daylight>
+				</long>
+			</metazone>
+			<metazone type="Myanmar">
+				<long>
+					<standard>Oge Myanmar</standard>
+				</long>
+			</metazone>
+			<metazone type="Nauru">
+				<long>
+					<standard>Oge Nauru</standard>
+				</long>
+			</metazone>
+			<metazone type="Nepal">
+				<long>
+					<standard>Oge Nepal</standard>
+				</long>
+			</metazone>
+			<metazone type="New_Caledonia">
+				<long>
+					<generic>Oge New Caledonia</generic>
+					<standard>Oge Izugbe New Caledonia</standard>
+					<daylight>Oge Okpomọkụ New Caledonia</daylight>
+				</long>
+			</metazone>
+			<metazone type="New_Zealand">
+				<long>
+					<generic>Oge New Zealand</generic>
+					<standard>Oge Izugbe New Zealand</standard>
+					<daylight>Oge Ihe New Zealand</daylight>
+				</long>
+			</metazone>
+			<metazone type="Newfoundland">
+				<long>
+					<generic>Oge Newfoundland</generic>
+					<standard>Oge Izugbe Newfoundland</standard>
+					<daylight>Oge Ihe Newfoundland</daylight>
+				</long>
+			</metazone>
+			<metazone type="Niue">
+				<long>
+					<standard>Oge Niue</standard>
+				</long>
+			</metazone>
+			<metazone type="Norfolk">
+				<long>
+					<generic>Oge Norfolk Island</generic>
+					<standard>Oge Izugbe Norfolk Island</standard>
+					<daylight>Oge Okpomọkụ Norfolk Island</daylight>
+				</long>
+			</metazone>
+			<metazone type="Noronha">
+				<long>
+					<generic>Oge Fernando de Noronha</generic>
+					<standard>Oge Izugbe Fernando de Noronha</standard>
+					<daylight>Oge Okpomọkụ Fernando de Noronha</daylight>
+				</long>
+			</metazone>
+			<metazone type="Novosibirsk">
+				<long>
+					<generic>Oge Novosibirsk</generic>
+					<standard>Oge Izugbe Novosibirsk</standard>
+					<daylight>Oge Okpomọkụ Novosibirsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Omsk">
+				<long>
+					<generic>Oge Omsk</generic>
+					<standard>Oge Izugbe Omsk</standard>
+					<daylight>Oge Okpomọkụ Omsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pakistan">
+				<long>
+					<generic>Oge Pakistan</generic>
+					<standard>Oge Izugbe Pakistan</standard>
+					<daylight>Oge Okpomọkụ Pakistan</daylight>
+				</long>
+			</metazone>
+			<metazone type="Palau">
+				<long>
+					<standard>Oge Palau</standard>
+				</long>
+			</metazone>
+			<metazone type="Papua_New_Guinea">
+				<long>
+					<standard>Oge Papua New Guinea</standard>
+				</long>
+			</metazone>
+			<metazone type="Paraguay">
+				<long>
+					<generic>Oge Paraguay</generic>
+					<standard>Oge Izugbe Paraguay</standard>
+					<daylight>Oge Okpomọkụ Paraguay</daylight>
+				</long>
+			</metazone>
+			<metazone type="Peru">
+				<long>
+					<generic>Oge Peru</generic>
+					<standard>Oge Izugbe Peru</standard>
+					<daylight>Oge Okpomọkụ Peru</daylight>
+				</long>
+			</metazone>
+			<metazone type="Philippines">
+				<long>
+					<generic>Oge Philippine</generic>
+					<standard>Oge Izugbe Philippine</standard>
+					<daylight>Oge Okpomọkụ Philippine</daylight>
+				</long>
+			</metazone>
+			<metazone type="Phoenix_Islands">
+				<long>
+					<standard>Oge Phoenix Islands</standard>
+				</long>
+			</metazone>
+			<metazone type="Pierre_Miquelon">
+				<long>
+					<generic>Oge St. Pierre &amp; Miquelon</generic>
+					<standard>Oge Izugbe St. Pierre &amp; Miquelon</standard>
+					<daylight>Oge Ihe St. Pierre &amp; Miquelon</daylight>
+				</long>
+			</metazone>
+			<metazone type="Pitcairn">
+				<long>
+					<standard>Oge Pitcairn</standard>
+				</long>
+			</metazone>
+			<metazone type="Ponape">
+				<long>
+					<standard>Oge Ponape</standard>
+				</long>
+			</metazone>
+			<metazone type="Pyongyang">
+				<long>
+					<standard>Oge Pyongyang</standard>
+				</long>
+			</metazone>
+			<metazone type="Reunion">
+				<long>
+					<standard>Oge Réunion</standard>
+				</long>
+			</metazone>
+			<metazone type="Rothera">
+				<long>
+					<standard>Oge Rothera</standard>
+				</long>
+			</metazone>
+			<metazone type="Sakhalin">
+				<long>
+					<generic>Oge Sakhalin</generic>
+					<standard>Oge Izugbe Sakhalin</standard>
+					<daylight>Oge Okpomọkụ Sakhalin</daylight>
+				</long>
+			</metazone>
+			<metazone type="Samoa">
+				<long>
+					<generic>Oge Samoa</generic>
+					<standard>Oge Izugbe Samoa</standard>
+					<daylight>Oge Ihe Samoa</daylight>
+				</long>
+			</metazone>
+			<metazone type="Seychelles">
+				<long>
+					<standard>Oge Seychelles</standard>
+				</long>
+			</metazone>
+			<metazone type="Singapore">
+				<long>
+					<standard>Oge Izugbe Singapore</standard>
+				</long>
+			</metazone>
+			<metazone type="Solomon">
+				<long>
+					<standard>Oge Solomon Islands</standard>
+				</long>
+			</metazone>
+			<metazone type="South_Georgia">
+				<long>
+					<standard>Oge South Georgia</standard>
+				</long>
+			</metazone>
+			<metazone type="Suriname">
+				<long>
+					<standard>Oge Suriname</standard>
+				</long>
+			</metazone>
+			<metazone type="Syowa">
+				<long>
+					<standard>Oge Syowa</standard>
+				</long>
+			</metazone>
+			<metazone type="Tahiti">
+				<long>
+					<standard>Oge Tahiti</standard>
+				</long>
+			</metazone>
+			<metazone type="Taipei">
+				<long>
+					<generic>Oge Taipei</generic>
+					<standard>Oge Izugbe Taipei</standard>
+					<daylight>Oge Ihe Taipei</daylight>
+				</long>
+			</metazone>
+			<metazone type="Tajikistan">
+				<long>
+					<standard>Oge Tajikistan</standard>
+				</long>
+			</metazone>
+			<metazone type="Tokelau">
+				<long>
+					<standard>Oge Tokelau</standard>
+				</long>
+			</metazone>
+			<metazone type="Tonga">
+				<long>
+					<generic>Oge Tonga</generic>
+					<standard>Oge Izugbe Tonga</standard>
+					<daylight>Oge Okpomọkụ Tonga</daylight>
+				</long>
+			</metazone>
+			<metazone type="Truk">
+				<long>
+					<standard>Oge Chuuk</standard>
+				</long>
+			</metazone>
+			<metazone type="Turkmenistan">
+				<long>
+					<generic>Oge Turkmenist</generic>
+					<standard>Oge Izugbe Turkmenist</standard>
+					<daylight>Oge Okpomọkụ Turkmenist</daylight>
+				</long>
+			</metazone>
+			<metazone type="Tuvalu">
+				<long>
+					<standard>Oge Tuvalu</standard>
+				</long>
+			</metazone>
+			<metazone type="Uruguay">
+				<long>
+					<generic>Oge Uruguay</generic>
+					<standard>Oge Izugbe Uruguay</standard>
+					<daylight>Oge Okpomọkụ Uruguay</daylight>
+				</long>
+			</metazone>
+			<metazone type="Uzbekistan">
+				<long>
+					<generic>Oge Uzbekist</generic>
+					<standard>Oge Izugbe Uzbekist</standard>
+					<daylight>Oge Okpomọkụ Uzbekist</daylight>
+				</long>
+			</metazone>
+			<metazone type="Vanuatu">
+				<long>
+					<generic>Oge Vanuatu</generic>
+					<standard>Oge Izugbe Vanuatu</standard>
+					<daylight>Oge Okpomọkụ Vanuatu</daylight>
+				</long>
+			</metazone>
+			<metazone type="Venezuela">
+				<long>
+					<standard>Oge Venezuela</standard>
+				</long>
+			</metazone>
+			<metazone type="Vladivostok">
+				<long>
+					<generic>Oge Vladivostok</generic>
+					<standard>Oge Izugbe Vladivostok</standard>
+					<daylight>Oge Okpomọkụ Vladivostok</daylight>
+				</long>
+			</metazone>
+			<metazone type="Volgograd">
+				<long>
+					<generic>Oge Volgograd</generic>
+					<standard>Oge Izugbe Volgograd</standard>
+					<daylight>Oge Okpomọkụ Volgograd</daylight>
+				</long>
+			</metazone>
+			<metazone type="Vostok">
+				<long>
+					<standard>Oge Vostok</standard>
+				</long>
+			</metazone>
+			<metazone type="Wake">
+				<long>
+					<standard>Oge Wake Island</standard>
+				</long>
+			</metazone>
+			<metazone type="Wallis">
+				<long>
+					<standard>Oge Wallis &amp; Futuna</standard>
+				</long>
+			</metazone>
+			<metazone type="Yakutsk">
+				<long>
+					<generic>Oge Yakutsk</generic>
+					<standard>Oge Izugbe Yakutsk</standard>
+					<daylight>Oge Okpomọkụ Yakutsk</daylight>
+				</long>
+			</metazone>
+			<metazone type="Yekaterinburg">
+				<long>
+					<generic>Oge Yekaterinburg</generic>
+					<standard>Oge Izugbe Yekaterinburg</standard>
+					<daylight>Oge Okpomọkụ Yekaterinburg</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<minimumGroupingDigits draft="contributed">1</minimumGroupingDigits>
+		<symbols numberSystem="arab">
+			<decimal>٫</decimal>
+			<group>٬</group>
+			<list>؛</list>
+			<percentSign>٪‏</percentSign>
+			<plusSign>‏+</plusSign>
+			<minusSign>‏-</minusSign>
+			<superscriptingExponent>×</superscriptingExponent>
+			<perMille>؉</perMille>
+			<infinity>∞</infinity>
+			<nan>NaN</nan>
+			<timeSeparator draft="contributed">:</timeSeparator>
+		</symbols>
+		<symbols numberSystem="arabext">
+			<decimal>٫</decimal>
+			<group>٬</group>
+			<list>؛</list>
+			<percentSign>٪</percentSign>
+			<plusSign>‎+‎</plusSign>
+			<minusSign>‎-‎</minusSign>
+			<superscriptingExponent>×</superscriptingExponent>
+			<perMille>؉</perMille>
+			<infinity>∞</infinity>
+			<nan>NaN</nan>
+			<timeSeparator draft="contributed">٫</timeSeparator>
+		</symbols>
+		<symbols numberSystem="bali">
+			<timeSeparator draft="contributed">:</timeSeparator>
+		</symbols>
+		<symbols numberSystem="beng">
+			<timeSeparator draft="contributed">:</timeSeparator>
+		</symbols>
+		<symbols numberSystem="brah">
+			<timeSeparator draft="contributed">:</timeSeparator>
+		</symbols>
+		<symbols numberSystem="cakm">
+			<timeSeparator draft="contributed">:</timeSeparator>
+		</symbols>
+		<symbols numberSystem="latn">
+			<decimal>.</decimal>
+			<group>,</group>
+			<list>;</list>
+			<percentSign>%</percentSign>
+			<plusSign>+</plusSign>
+			<minusSign>-</minusSign>
+			<exponential>E</exponential>
+			<superscriptingExponent>×</superscriptingExponent>
+			<perMille>‰</perMille>
+			<infinity>∞</infinity>
+			<nan>NaN</nan>
+			<timeSeparator draft="contributed">:</timeSeparator>
+		</symbols>
+		<percentFormats numberSystem="arab">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern>#,##0 %</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<currencyFormats numberSystem="arab">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤#,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencyFormats numberSystem="bali">
+			<unitPattern count="other">{0} {1}</unitPattern>
+		</currencyFormats>
+		<currencyFormats numberSystem="beng">
+			<unitPattern count="other">{0} {1}</unitPattern>
+		</currencyFormats>
+		<currencyFormats numberSystem="brah">
+			<unitPattern count="other">{0} {1}</unitPattern>
+		</currencyFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤#,##0.00</pattern>
+				</currencyFormat>
+				<currencyFormat type="accounting">
+					<pattern>¤#,##0.00;(¤#,##0.00)</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="other">¤0K</pattern>
+					<pattern type="10000" count="other">¤00K</pattern>
+					<pattern type="100000" count="other">¤000K</pattern>
+					<pattern type="1000000" count="other">¤0M</pattern>
+					<pattern type="10000000" count="other">¤00M</pattern>
+					<pattern type="100000000" count="other">¤000M</pattern>
+					<pattern type="1000000000" count="other">¤0G</pattern>
+					<pattern type="10000000000" count="other">¤00G</pattern>
+					<pattern type="100000000000" count="other">¤000G</pattern>
+					<pattern type="1000000000000" count="other">¤0T</pattern>
+					<pattern type="10000000000000" count="other">¤00T</pattern>
+					<pattern type="100000000000000" count="other">¤000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="AED">
+				<displayName>Ego Dirham obodo United Arab Emirates</displayName>
+				<displayName count="other">Ego dirhams obodo UAE</displayName>
+			</currency>
+			<currency type="AFN">
+				<displayName>Ego Afghani Obodo Afghanistan</displayName>
+			</currency>
+			<currency type="ALL">
+				<displayName>Ego Lek Obodo Albania</displayName>
+			</currency>
+			<currency type="AMD">
+				<displayName>Ego Dram obodo Armenia</displayName>
+			</currency>
+			<currency type="ANG">
+				<displayName>Ego Antillean Guilder obodo Netherlands</displayName>
+			</currency>
+			<currency type="AOA">
+				<displayName>Ego Kwanza obodo Angola</displayName>
+				<displayName count="other">Ego kwanzas obodo Angola</displayName>
+			</currency>
+			<currency type="ARS">
+				<displayName>Ego Peso obodo Argentina</displayName>
+			</currency>
+			<currency type="AUD">
+				<displayName>Ego Dollar obodo Australia</displayName>
+				<displayName count="other">Ego dollars obodo Australia</displayName>
+			</currency>
+			<currency type="AWG">
+				<displayName>Ego Florin obodo Aruba</displayName>
+			</currency>
+			<currency type="AZN">
+				<displayName>Ego Manat obodo Azerbaijan</displayName>
+				<displayName count="other">Ego manats obodo Azerbaijan</displayName>
+			</currency>
+			<currency type="BAM">
+				<displayName>Akara mgbanwe ego obodo Bosnia-Herzegovina</displayName>
+			</currency>
+			<currency type="BBD">
+				<displayName>Ego Dollar obodo Barbados</displayName>
+			</currency>
+			<currency type="BDT">
+				<displayName>Ego Taka obodo Bangladesh</displayName>
+			</currency>
+			<currency type="BGN">
+				<displayName>Ego Lev mba Bulgaria</displayName>
+			</currency>
+			<currency type="BHD">
+				<displayName>Ego Dinar Obodo Bahrain</displayName>
+			</currency>
+			<currency type="BIF">
+				<displayName>Ego Franc obodo Burundi</displayName>
+			</currency>
+			<currency type="BMD">
+				<displayName>Dollar Bermuda</displayName>
+				<displayName count="other">Dollars Bermuda</displayName>
+			</currency>
+			<currency type="BND">
+				<displayName>Ego Dollar obodo Brunei</displayName>
+				<displayName count="other">Ego dollars obodo Brunei</displayName>
+			</currency>
+			<currency type="BOB">
+				<displayName>Ego Boliviano obodo Bolivia</displayName>
+			</currency>
+			<currency type="BRL">
+				<displayName>Real Brazil</displayName>
+				<displayName count="other">Real Brazil</displayName>
+			</currency>
+			<currency type="BSD">
+				<displayName>Ego Dollar Obodo Bahamas</displayName>
+			</currency>
+			<currency type="BTN">
+				<displayName>Ego Ngultrum obodo Bhutan</displayName>
+			</currency>
+			<currency type="BWP">
+				<displayName>Ego Pula obodo Bostwana</displayName>
+				<displayName count="other">Ego pulas obodo Bostwana</displayName>
+			</currency>
+			<currency type="BYN">
+				<displayName>Ego Ruble mba Belarus</displayName>
+			</currency>
+			<currency type="BZD">
+				<displayName>Dollar Belize</displayName>
+				<displayName count="other">Dollars Belize</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName>Dollar Canada</displayName>
+				<displayName count="other">Dollars Canada</displayName>
+			</currency>
+			<currency type="CDF">
+				<displayName>Ego Franc obodo Congo</displayName>
+				<displayName count="other">Ego francs mba Congo</displayName>
+			</currency>
+			<currency type="CHF">
+				<displayName>Ego Franc mba Switzerland</displayName>
+			</currency>
+			<currency type="CLP">
+				<displayName>Ego Peso obodo Chile</displayName>
+			</currency>
+			<currency type="CNH">
+				<displayName>Ego Yuan Obodo China (ndị bi na mmiri)</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>Yuan China</displayName>
+				<displayName count="other">Yuan China</displayName>
+			</currency>
+			<currency type="COP">
+				<displayName>Ego Peso obodo Columbia</displayName>
+			</currency>
+			<currency type="CRC">
+				<displayName>Ego Colón obodo Costa Rica</displayName>
+				<displayName count="other">Ego colóns obodo Costa Rica</displayName>
+			</currency>
+			<currency type="CUC">
+				<displayName>Ego Peso e nwere ike ịgbanwe nke obodo Cuba</displayName>
+			</currency>
+			<currency type="CUP">
+				<displayName>Ego Peso obodo Cuba</displayName>
+				<displayName count="other">Ego pesos obodo Cuba</displayName>
+			</currency>
+			<currency type="CVE">
+				<displayName>Escudo Caboverdiano</displayName>
+			</currency>
+			<currency type="CZK">
+				<displayName>Ego Koruna obodo Czech</displayName>
+			</currency>
+			<currency type="DJF">
+				<displayName>Ego Franc obodo Djibouti</displayName>
+				<displayName count="other">ego francs obodo Djibouti</displayName>
+			</currency>
+			<currency type="DKK">
+				<displayName>Ego Krone Obodo Denmark</displayName>
+			</currency>
+			<currency type="DOP">
+				<displayName>Ego Peso Obodo Dominica</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName>Ego Dinar Obodo Algeria</displayName>
+			</currency>
+			<currency type="EGP">
+				<displayName>Ego Pound obodo Egypt</displayName>
+			</currency>
+			<currency type="ERN">
+				<displayName>Ego Nakfa obodo Eritrea</displayName>
+				<displayName count="other">Ego nakfas obodo Eritrea</displayName>
+			</currency>
+			<currency type="ETB">
+				<displayName>Ego Birr obodo Ethiopia</displayName>
+				<displayName count="other">Ego birrs obodo Ethiopia</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>Euro</displayName>
+				<displayName count="other">euro</displayName>
+			</currency>
+			<currency type="FJD">
+				<displayName>Ego Dollar obodo Fiji</displayName>
+				<displayName count="other">Ego dollars obodo Fijian</displayName>
+			</currency>
+			<currency type="FKP">
+				<displayName>Ego Pound obodo Falkland Islands</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>Pound British</displayName>
+				<displayName count="other">Pound British</displayName>
+			</currency>
+			<currency type="GEL">
+				<displayName>Ego Lari Obodo Georgia</displayName>
+			</currency>
+			<currency type="GHS">
+				<displayName>Ego Cedi obodo Ghana</displayName>
+			</currency>
+			<currency type="GIP">
+				<displayName>Ego Pound obodo Gibraltar</displayName>
+			</currency>
+			<currency type="GMD">
+				<displayName>Ego Dalasi obodo Gambia</displayName>
+			</currency>
+			<currency type="GNF">
+				<displayName>Ego Franc obodo Guinea</displayName>
+			</currency>
+			<currency type="GTQ">
+				<displayName>Ego Quetzal obodo Guatemala</displayName>
+			</currency>
+			<currency type="GYD">
+				<displayName>Ego Dollar obodo Guyana</displayName>
+			</currency>
+			<currency type="HKD">
+				<displayName>Ego Dollar Obodo Honk Kong</displayName>
+			</currency>
+			<currency type="HNL">
+				<displayName>Ego Lempira obodo Honduras</displayName>
+			</currency>
+			<currency type="HRK">
+				<displayName>Ego Kuna obodo Croatia</displayName>
+				<displayName count="other">Ego kunas obodo Croatia</displayName>
+			</currency>
+			<currency type="HTG">
+				<displayName>Ego Gourde obodo Haiti</displayName>
+			</currency>
+			<currency type="HUF">
+				<displayName>Ego Forint obodo Hungary</displayName>
+			</currency>
+			<currency type="IDR">
+				<displayName>Ego Rupiah Obodo Indonesia</displayName>
+			</currency>
+			<currency type="ILS">
+				<displayName>Ego Shekel ọhụrụ obodo Israel</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName>Rupee India</displayName>
+				<displayName count="other">Rupee India</displayName>
+			</currency>
+			<currency type="IQD">
+				<displayName>Ego Dinar obodo Iraq</displayName>
+				<displayName count="other">Ego dinars obodo Iraq</displayName>
+			</currency>
+			<currency type="IRR">
+				<displayName>Ego Rial obodo Iran</displayName>
+			</currency>
+			<currency type="ISK">
+				<displayName>Ego Króna obodo Iceland</displayName>
+			</currency>
+			<currency type="JMD">
+				<displayName>Ego Dollar obodo Jamaica</displayName>
+			</currency>
+			<currency type="JOD">
+				<displayName>Ego Dinar Obodo Jordan</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>Yen Japan</displayName>
+				<displayName count="other">Yen Japan</displayName>
+				<symbol draft="contributed">¥</symbol>
+			</currency>
+			<currency type="KES">
+				<displayName>Ego Shilling obodo Kenya</displayName>
+			</currency>
+			<currency type="KGS">
+				<displayName>Ego Som Obodo Kyrgyzstan</displayName>
+			</currency>
+			<currency type="KHR">
+				<displayName>Ego Riel obodo Cambodia</displayName>
+			</currency>
+			<currency type="KMF">
+				<displayName>Ego Franc obodo Comoros</displayName>
+			</currency>
+			<currency type="KPW">
+				<displayName>Ego Won Obodo North Korea</displayName>
+			</currency>
+			<currency type="KRW">
+				<displayName>Ego Won Obodo South Korea</displayName>
+			</currency>
+			<currency type="KWD">
+				<displayName>Ego Dinar Obodo Kuwait</displayName>
+			</currency>
+			<currency type="KYD">
+				<displayName>Ego Dollar obodo Cayman Islands</displayName>
+				<displayName count="other">Ego dollars obodo Cayman Islands</displayName>
+			</currency>
+			<currency type="KZT">
+				<displayName>Ego Tenge obodo Kazakhstani</displayName>
+			</currency>
+			<currency type="LAK">
+				<displayName>Ego Kip Obodo Laos</displayName>
+			</currency>
+			<currency type="LBP">
+				<displayName>Ego Pound obodo Lebanon</displayName>
+				<displayName count="other">Ego Pound Obodo Lebanon</displayName>
+			</currency>
+			<currency type="LKR">
+				<displayName>Ego Rupee obodo Sri Lanka</displayName>
+			</currency>
+			<currency type="LRD">
+				<displayName>Ego Dollar obodo Liberia</displayName>
+			</currency>
+			<currency type="LYD">
+				<displayName>Ego Dinar obodo Libya</displayName>
+			</currency>
+			<currency type="MAD">
+				<displayName>Ego Dirham obodo Morocco</displayName>
+			</currency>
+			<currency type="MDL">
+				<displayName>Ego Leu obodo Moldova</displayName>
+				<displayName count="other">Ego leu mba Moldova</displayName>
+			</currency>
+			<currency type="MGA">
+				<displayName>Ego Ariary obodo Madagascar</displayName>
+				<displayName count="other">Ego ariaries obodo Madagascar</displayName>
+			</currency>
+			<currency type="MKD">
+				<displayName>Ego Denar Obodo Macedonia</displayName>
+				<displayName count="other">Ego denari mba Macedonia</displayName>
+			</currency>
+			<currency type="MMK">
+				<displayName>Ego Kyat obodo Myanmar</displayName>
+			</currency>
+			<currency type="MNT">
+				<displayName>Ego Turgik Obodo Mongolia</displayName>
+			</currency>
+			<currency type="MOP">
+				<displayName>Ego Pataca ndị Obodo Macanese</displayName>
+			</currency>
+			<currency type="MRU">
+				<displayName>Ego Ouguiya Obodo Mauritania</displayName>
+			</currency>
+			<currency type="MUR">
+				<displayName>Ego Rupee obodo Mauritania</displayName>
+			</currency>
+			<currency type="MVR">
+				<displayName>Ego Rufiyaa obodo Moldova</displayName>
+			</currency>
+			<currency type="MWK">
+				<displayName>Ego Kwacha obodo Malawi</displayName>
+				<displayName count="other">Ego kwachas obodo Malawi</displayName>
+			</currency>
+			<currency type="MXN">
+				<displayName>Ego Peso obodo Mexico</displayName>
+			</currency>
+			<currency type="MYR">
+				<displayName>Ego Ringgit obodo Malaysia</displayName>
+			</currency>
+			<currency type="MZN">
+				<displayName>Ego Metical obodo Mozambique</displayName>
+				<displayName count="other">Ego meticals obodo Mozambique</displayName>
+			</currency>
+			<currency type="NAD">
+				<displayName>Ego Dollar obodo Namibia</displayName>
+			</currency>
+			<currency type="NGN">
+				<displayName>Naịra</displayName>
+				<symbol>₦</symbol>
+			</currency>
+			<currency type="NIO">
+				<displayName>Ego Córodoba obodo Nicaragua</displayName>
+			</currency>
+			<currency type="NOK">
+				<displayName>Ego Krone Obodo Norway</displayName>
+			</currency>
+			<currency type="NPR">
+				<displayName>Ego Rupee obodo Nepal</displayName>
+			</currency>
+			<currency type="NZD">
+				<displayName>Ego Dollar obodo New Zealand</displayName>
+				<displayName count="other">Ego dollars obodo New Zealand</displayName>
+			</currency>
+			<currency type="OMR">
+				<displayName>Ego Rial obodo Oman</displayName>
+				<displayName count="other">Ego rials Obodo Oman</displayName>
+			</currency>
+			<currency type="PAB">
+				<displayName>Ego Balboa obodo Panama</displayName>
+			</currency>
+			<currency type="PEN">
+				<displayName>Ego Sol obodo Peru</displayName>
+			</currency>
+			<currency type="PGK">
+				<displayName>Ego Kina obodo Papua New Guinea</displayName>
+			</currency>
+			<currency type="PHP">
+				<displayName>Ego piso obodo Philippine</displayName>
+			</currency>
+			<currency type="PKR">
+				<displayName>Ego Rupee obodo Pakistan</displayName>
+			</currency>
+			<currency type="PLN">
+				<displayName>Ego Zloty mba Poland</displayName>
+			</currency>
+			<currency type="PYG">
+				<displayName>Ego Guarani obodo Paraguay</displayName>
+			</currency>
+			<currency type="QAR">
+				<displayName>Ego Rial obodo Qatar</displayName>
+				<displayName count="other">Ego rials obodo Qatar</displayName>
+			</currency>
+			<currency type="RON">
+				<displayName>Ego Leu obodo Romania</displayName>
+				<displayName count="other">Ego leu Obodo Romania</displayName>
+			</currency>
+			<currency type="RSD">
+				<displayName>Ego Dinar obodo Serbia</displayName>
+			</currency>
+			<currency type="RUB">
+				<displayName>Ruble Russia</displayName>
+				<displayName count="other">Ruble Russia</displayName>
+			</currency>
+			<currency type="RWF">
+				<displayName>Ego Franc obodo Rwanda</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName>Ego Riyal obodo Saudi</displayName>
+			</currency>
+			<currency type="SBD">
+				<displayName>Ego Dollar obodo Solomon Islands</displayName>
+				<displayName count="other">Ego dollars obodo Solomon Islands</displayName>
+			</currency>
+			<currency type="SCR">
+				<displayName>Ego Rupee obodo Seychelles</displayName>
+				<displayName count="other">Ego rupees obodo Seychelles</displayName>
+			</currency>
+			<currency type="SDG">
+				<displayName>Ego Pound obodo Sudan</displayName>
+			</currency>
+			<currency type="SEK">
+				<displayName>Ego Krona Obodo Sweden</displayName>
+			</currency>
+			<currency type="SGD">
+				<displayName>Ego Dollar obodo Singapore</displayName>
+			</currency>
+			<currency type="SHP">
+				<displayName>Ego Pound obodo St Helena</displayName>
+			</currency>
+			<currency type="SLL">
+				<displayName>Ego Leone obodo Sierra Leone</displayName>
+			</currency>
+			<currency type="SOS">
+				<displayName>Ego shilling obodo Somali</displayName>
+			</currency>
+			<currency type="SRD">
+				<displayName>Dollar Surinamese</displayName>
+				<displayName count="other">Dollar Surinamese</displayName>
+			</currency>
+			<currency type="SSP">
+				<displayName>Ego Pound obodo South Sudan</displayName>
+				<displayName count="other">Ego pounds mba ọdịda anyanwụ Sudan</displayName>
+			</currency>
+			<currency type="STN">
+				<displayName>Ego Dobra nke obodo Sāo Tomé na Principe</displayName>
+			</currency>
+			<currency type="SYP">
+				<displayName>Ego Pound obodo Syria</displayName>
+			</currency>
+			<currency type="SZL">
+				<displayName>Ego Lilangeni obodo Swaziland</displayName>
+				<displayName count="other">Ego emalangeni obodo Swaziland</displayName>
+			</currency>
+			<currency type="THB">
+				<displayName>Ego Baht obodo Thai</displayName>
+			</currency>
+			<currency type="TJS">
+				<displayName>Who Somoni obodo Tajikistan</displayName>
+			</currency>
+			<currency type="TMT">
+				<displayName>Ego Manat Obodo Turkmenistan</displayName>
+			</currency>
+			<currency type="TND">
+				<displayName>Ego Dinar Obodo Tunisia</displayName>
+			</currency>
+			<currency type="TOP">
+				<displayName>Ego paʻanga obodo Tonga</displayName>
+			</currency>
+			<currency type="TRY">
+				<displayName>Ego Lira obodo Turkey</displayName>
+			</currency>
+			<currency type="TTD">
+				<displayName>Dollar Trinidad &amp; Tobago</displayName>
+				<displayName count="other">Dollars Trinidad &amp; Tobago</displayName>
+			</currency>
+			<currency type="TWD">
+				<displayName>Dollar obodo New Taiwan</displayName>
+			</currency>
+			<currency type="TZS">
+				<displayName>Ego Shilling Obodo Tanzania</displayName>
+				<displayName count="other">Ego Shillings Obodo Tanzania</displayName>
+			</currency>
+			<currency type="UAH">
+				<displayName>Ego Hryvnia obodo Ukraine</displayName>
+			</currency>
+			<currency type="UGX">
+				<displayName>Ego Shilling obodo Uganda</displayName>
+				<displayName count="other">Ego shillings obodo Uganda</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>Dollar US</displayName>
+				<displayName count="other">Dollars US</displayName>
+				<symbol draft="contributed">$</symbol>
+			</currency>
+			<currency type="UYU">
+				<displayName>Ego Peso obodo Uruguay</displayName>
+			</currency>
+			<currency type="UZS">
+				<displayName>Ego Som obodo Uzbekistan</displayName>
+				<displayName count="other">Ego som obodo Uzbekistan</displayName>
+			</currency>
+			<currency type="VES">
+				<displayName>Ego Bolivar obodo Venezuela</displayName>
+			</currency>
+			<currency type="VND">
+				<displayName>Ego Dong obodo Vietnam</displayName>
+			</currency>
+			<currency type="VUV">
+				<displayName>Ego Vatu obodo Vanuatu</displayName>
+				<displayName count="other">Ego Vanuatu vatus obodo Vanuatu</displayName>
+			</currency>
+			<currency type="WST">
+				<displayName>Ego Tala obodo Samoa</displayName>
+			</currency>
+			<currency type="XAF">
+				<displayName>Ego Franc mba etiti Africa</displayName>
+				<displayName count="other">Ego francs mba etiti Africa</displayName>
+			</currency>
+			<currency type="XCD">
+				<displayName>Ego Dollar obodo East Carribbean</displayName>
+			</currency>
+			<currency type="XOF">
+				<displayName>Ego CFA Franc obodo West Africa</displayName>
+				<displayName count="other">Ego CFA francs mba ọdịda anyanwụ Afrịka</displayName>
+			</currency>
+			<currency type="XPF">
+				<displayName>Ego Franc obodo CFP</displayName>
+				<displayName count="other">Ego francs obodo CFP</displayName>
+			</currency>
+			<currency type="XXX">
+				<displayName>Ego Amaghị</displayName>
+				<displayName count="other">(ego amaghị)</displayName>
+			</currency>
+			<currency type="YER">
+				<displayName>Ego Rial obodo Yemeni</displayName>
+			</currency>
+			<currency type="ZAR">
+				<displayName>Ego Rand obodo South Africa</displayName>
+				<displayName count="other">Ego rand obodo South Africa</displayName>
+			</currency>
+			<currency type="ZMW">
+				<displayName>Ego Kwacha Obodo Zambia</displayName>
+				<displayName count="other">Ego kwachas obodo Zambia</displayName>
+			</currency>
+		</currencies>
+		<miscPatterns numberSystem="latn">
+			<pattern type="atLeast">{0}+</pattern>
+			<pattern type="atMost">≤{0}</pattern>
+			<pattern type="range">{0}–{1}</pattern>
+		</miscPatterns>
+		<minimalPairs>
+			<pluralMinimalPairs count="other" draft="contributed">ubochi {0}</pluralMinimalPairs>
+			<ordinalMinimalPairs ordinal="other">Si uzo aka nri {0}</ordinalMinimalPairs>
+		</minimalPairs>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="duration-century">
+				<displayName>Ọtụtụ nari afọ</displayName>
+			</unit>
+			<unit type="duration-decade">
+				<displayName>Ọtụtụ afọ iri</displayName>
+			</unit>
+			<unit type="duration-year">
+				<displayName>Ọtụtụ Afọ</displayName>
+			</unit>
+			<unit type="duration-month">
+				<displayName>Ọtụtụ Ọnwa</displayName>
+			</unit>
+			<unit type="duration-week">
+				<displayName>Ọtụtụ Izu</displayName>
+			</unit>
+			<unit type="duration-day">
+				<displayName>Ọtụtụ Ubochi</displayName>
+			</unit>
+			<unit type="length-earth-radius">
+				<displayName>radius uwa</displayName>
+			</unit>
+			<unit type="volume-dessert-spoon">
+				<displayName>ngaji mégharia onu</displayName>
+			</unit>
+			<unit type="volume-dram">
+				<displayName>mmiri dram</displayName>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="volume-drop">
+				<displayName>dobé</displayName>
+			</unit>
+		</unitLength>
+	</units>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0}, na {1}</listPatternPart>
+			<listPatternPart type="2">{0} na {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="standard-narrow">
+			<listPatternPart type="2">{0}, {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<yesstr>Eye:E</yesstr>
+			<nostr>Mba:M</nostr>
+		</messages>
+	</posix>
+	<characterLabels>
+		<characterLabel type="animal">anụmanụ</characterLabel>
+		<characterLabel type="animals_nature">anụmanụ ma ọbụ ụwa</characterLabel>
+		<characterLabel type="arrows">arọ</characterLabel>
+		<characterLabel type="body">ahụ</characterLabel>
+		<characterLabel type="box_drawing">ịgbe osese</characterLabel>
+		<characterLabel type="building">ulọ</characterLabel>
+		<characterLabel type="currency_symbols">akara ego</characterLabel>
+		<characterLabel type="divination_symbols">akara ịgba afa</characterLabel>
+		<characterLabel type="downwards_arrows">arọ ala</characterLabel>
+		<characterLabel type="downwards_upwards_arrows">arọ elụ ala</characterLabel>
+		<characterLabel type="female">nwanyị</characterLabel>
+		<characterLabel type="food_drink">nrị &amp; ịhe ọnụnụ</characterLabel>
+		<characterLabel type="heart">obi</characterLabel>
+		<characterLabel type="leftwards_arrows">arọ aka ekpe</characterLabel>
+		<characterLabel type="leftwards_rightwards_arrows">arọ aka nrị aka ekpe</characterLabel>
+		<characterLabel type="male">nwoke</characterLabel>
+		<characterLabel type="math_symbols">akara matị</characterLabel>
+		<characterLabel type="musical_symbols">akara ụrị</characterLabel>
+		<characterLabel type="nature">ụwa</characterLabel>
+		<characterLabel type="nonspacing">enweghịọhere</characterLabel>
+		<characterLabel type="numbers">ọnụọgụgụ</characterLabel>
+		<characterLabel type="objects">ịhe</characterLabel>
+		<characterLabel type="other">ọzọ</characterLabel>
+		<characterLabel type="person">mmadụ</characterLabel>
+		<characterLabel type="place">ebe</characterLabel>
+		<characterLabel type="plant">ahịha</characterLabel>
+		<characterLabel type="punctuation">akara edemede</characterLabel>
+		<characterLabel type="rightwards_arrows">arọ aka nrị</characterLabel>
+		<characterLabel type="sign_standard_symbols">ịrịba ama maọbụ akara</characterLabel>
+		<characterLabel type="spacing">ọhere</characterLabel>
+		<characterLabel type="sport">egwụregwụ</characterLabel>
+		<characterLabel type="symbols">akara</characterLabel>
+		<characterLabel type="technical_symbols">akara teknịkal</characterLabel>
+		<characterLabel type="tone_marks">ụda akara</characterLabel>
+		<characterLabel type="travel">njem</characterLabel>
+		<characterLabel type="travel_places">njem maọbụ ebe</characterLabel>
+		<characterLabel type="upwards_arrows">arọ elụ</characterLabel>
+		<characterLabel type="weather">ụdịdịụbọchị</characterLabel>
+	</characterLabels>
+	<typographicNames>
+		<axisName type="wdth">obodobo</axisName>
+		<axisName type="wght">arọ</axisName>
+		<styleName type="opsz" subtype="12">ederede</styleName>
+		<styleName type="opsz" subtype="72">ngọsị</styleName>
+		<styleName type="slnt" subtype="-12">gbawara na azụ</styleName>
+		<styleName type="slnt" subtype="0">zịrị ezị</styleName>
+		<styleName type="slnt" subtype="12">gbawara</styleName>
+		<styleName type="slnt" subtype="24">gbawara kwụ</styleName>
+		<styleName type="wdth" subtype="50">altra ịde ede</styleName>
+		<styleName type="wdth" subtype="50" alt="compressed">altra abịakọrọ</styleName>
+		<styleName type="wdth" subtype="50" alt="narrow">altra wụwarara</styleName>
+		<styleName type="wdth" subtype="62.5">ịde ede-kwụ</styleName>
+		<styleName type="wdth" subtype="62.5" alt="compressed">abịakọrọ-kwụ</styleName>
+		<styleName type="wdth" subtype="62.5" alt="narrow">wuwarara-kwụ</styleName>
+		<styleName type="wdth" subtype="75">ịde ede</styleName>
+		<styleName type="wdth" subtype="75" alt="compressed">abịakọrọ</styleName>
+		<styleName type="wdth" subtype="75" alt="narrow">abịakọrọ</styleName>
+		<styleName type="wdth" subtype="87.5">ọkara ịde ede</styleName>
+		<styleName type="wdth" subtype="87.5" alt="compressed">ọkara abịakọrọ</styleName>
+		<styleName type="wdth" subtype="87.5" alt="narrow">ọkara wụwarara</styleName>
+		<styleName type="wdth" subtype="100">nke kwesịrị</styleName>
+		<styleName type="wdth" subtype="112.5">ọkara ịmeba</styleName>
+		<styleName type="wdth" subtype="112.5" alt="extended">ọkara ịgbatị</styleName>
+		<styleName type="wdth" subtype="112.5" alt="wide">ọkara ọbodobo</styleName>
+		<styleName type="wdth" subtype="125">ịmeba</styleName>
+		<styleName type="wdth" subtype="125" alt="extended">ịgbatị</styleName>
+		<styleName type="wdth" subtype="125" alt="wide">ọbọdọbo</styleName>
+		<styleName type="wdth" subtype="150">ịmeba kwụ</styleName>
+		<styleName type="wdth" subtype="150" alt="extended">ịgbatị kwụ</styleName>
+		<styleName type="wdth" subtype="150" alt="wide">ọbọdọbo kwụ</styleName>
+		<styleName type="wdth" subtype="200">altra ịmeba</styleName>
+		<styleName type="wdth" subtype="200" alt="extended">altra ịgbatị</styleName>
+		<styleName type="wdth" subtype="200" alt="wide">altra ọbodọbo</styleName>
+		<styleName type="wght" subtype="100">gịrịgịrị</styleName>
+		<styleName type="wght" subtype="200">dịkwụ ọcha</styleName>
+		<styleName type="wght" subtype="200" alt="ultra">ịhe altra</styleName>
+		<styleName type="wght" subtype="300">ịhe</styleName>
+		<styleName type="wght" subtype="350">ọkara ịhe</styleName>
+		<styleName type="wght" subtype="380">akwụkwọ</styleName>
+		<styleName type="wght" subtype="400">mgbedum</styleName>
+		<styleName type="wght" subtype="500">nke etịtị</styleName>
+		<styleName type="wght" subtype="700">obị ịke</styleName>
+		<styleName type="wght" subtype="800">obị ịke kwụ</styleName>
+		<styleName type="wght" subtype="900">ọjị</styleName>
+		<styleName type="wght" subtype="900" alt="heavy">arụ</styleName>
+		<styleName type="wght" subtype="950">dịkwụ ọjị</styleName>
+		<styleName type="wght" subtype="950" alt="ultrablack">altra ojị</styleName>
+		<styleName type="wght" subtype="950" alt="ultraheavy">altra arụ</styleName>
+		<featureName type="onum">ọdịdị akanka ochịe</featureName>
+	</typographicNames>
+</ldml>

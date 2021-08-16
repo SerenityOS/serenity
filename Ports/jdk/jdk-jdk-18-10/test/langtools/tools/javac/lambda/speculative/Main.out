@@ -1,0 +1,2 @@
+A.java:4:14: compiler.err.cant.resolve.location: kindname.class, NonExistentClass, , , (compiler.misc.location: kindname.class, A, null)
+1 error

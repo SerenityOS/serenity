@@ -1,0 +1,1487 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="yi"/>
+	</identity>
+	<localeDisplayNames>
+		<localeDisplayPattern>
+			<localePattern draft="provisional">{0} ({1})</localePattern>
+			<localeSeparator draft="provisional">{0}, {1}</localeSeparator>
+			<localeKeyTypePattern draft="provisional">{0}:‏ {1}</localeKeyTypePattern>
+		</localeDisplayPattern>
+		<languages>
+			<language type="aa">אַפֿאַר</language>
+			<language type="af">אַפֿריקאַנס</language>
+			<language type="akk">אַקאַדיש</language>
+			<language type="am">אַמהאַריש</language>
+			<language type="an">אַראַגאניש</language>
+			<language type="ang">אַלט ענגליש</language>
+			<language type="ar">אַראַביש</language>
+			<language type="arc">אַראַמיש</language>
+			<language type="as">אַסאַמיש</language>
+			<language type="az">אַזערביידזשאַניש</language>
+			<language type="ban">באַלינעזיש</language>
+			<language type="bar">בײַעריש</language>
+			<language type="be">בעלאַרוסיש</language>
+			<language type="bg">בולגאַריש</language>
+			<language type="bn">בענגאַליש</language>
+			<language type="bo">טיבעטיש</language>
+			<language type="br">ברעטאניש</language>
+			<language type="bs">באסניש</language>
+			<language type="ca">קאַטאַלאניש</language>
+			<language type="ceb">סעבואַניש</language>
+			<language type="crh">קרים־טערקיש</language>
+			<language type="cs">טשעכיש</language>
+			<language type="csb">קאַשוביש</language>
+			<language type="cu">קלויסטער־סלאַוויש</language>
+			<language type="cy">וועלשיש</language>
+			<language type="da">דעניש</language>
+			<language type="de">דײַטש</language>
+			<language type="dsb">אונטער־סארביש</language>
+			<language type="dyo">זשאלא־פֿאני</language>
+			<language type="el">גריכיש</language>
+			<language type="en">ענגליש</language>
+			<language type="en_GB" alt="short">ענגליש (GB)</language>
+			<language type="en_US" alt="short">ענגליש (US)</language>
+			<language type="enm">מיטל ענגליש</language>
+			<language type="eo">עספּעראַנטא</language>
+			<language type="es">שפּאַניש</language>
+			<language type="et">עסטיש</language>
+			<language type="eu">באַסקיש</language>
+			<language type="fa">פּערסיש</language>
+			<language type="fi">פֿיניש</language>
+			<language type="fil">פֿיליפּינא</language>
+			<language type="fj">פֿידזשי</language>
+			<language type="fo">פֿאַראיש</language>
+			<language type="fr">פֿראַנצויזיש</language>
+			<language type="fro">אַלט־פֿראַנצויזיש</language>
+			<language type="frr">דרום־פֿריזיש</language>
+			<language type="frs">מזרח־פֿריזיש</language>
+			<language type="fy">מערב־פֿריזיש</language>
+			<language type="ga">איריש</language>
+			<language type="gd">סקאטיש געליש</language>
+			<language type="gl">גאַלישיש</language>
+			<language type="gmh">מיטל הויכדויטש</language>
+			<language type="goh">אַלט־ הויכדויטש</language>
+			<language type="got">גאטיש</language>
+			<language type="grc">אוראַלט־גריכיש</language>
+			<language type="gv">מאַנקס</language>
+			<language type="ha">האַוסאַ</language>
+			<language type="he">העברעאיש</language>
+			<language type="hi">הינדי</language>
+			<language type="hif">פידזשי הינדי</language>
+			<language type="hr">קראאַטיש</language>
+			<language type="hsb">אייבער־סארביש</language>
+			<language type="hu">אונגעריש</language>
+			<language type="hy">אַרמעניש</language>
+			<language type="id">אינדאנעזיש</language>
+			<language type="io">אידא</language>
+			<language type="is">איסלאַנדיש</language>
+			<language type="it">איטאַליעניש</language>
+			<language type="ja">יאַפּאַניש</language>
+			<language type="jbo">לאזשבאָן</language>
+			<language type="jpr">יידיש־פערסיש</language>
+			<language type="jv">יאַוואַנעזיש</language>
+			<language type="ka">גרוזיניש</language>
+			<language type="kk">קאַזאַכיש</language>
+			<language type="km">כמער</language>
+			<language type="kn">קאַנאַדאַ</language>
+			<language type="ko">קארעאיש</language>
+			<language type="ku">קורדיש</language>
+			<language type="kw">קארניש</language>
+			<language type="ky">קירגיזיש</language>
+			<language type="la">לאטייניש</language>
+			<language type="lad">לאַדינא</language>
+			<language type="lb">לוקסעמבורגיש</language>
+			<language type="liv">ליוויש</language>
+			<language type="lo">לאַא</language>
+			<language type="lt">ליטוויש</language>
+			<language type="lus">מיזא</language>
+			<language type="lv">לעטיש</language>
+			<language type="mi">מאַאריש</language>
+			<language type="mk">מאַקעדאניש</language>
+			<language type="ml">מאַלאַיאַלאַם</language>
+			<language type="mn">מאנגאליש</language>
+			<language type="mt">מאַלטעזיש</language>
+			<language type="my">בירמאַניש</language>
+			<language type="nap">נאַפּאליטַניש</language>
+			<language type="nds">נידערדײַטש</language>
+			<language type="ne">נעפּאַליש</language>
+			<language type="nl">האלענדיש</language>
+			<language type="nl_BE">פֿלעמיש</language>
+			<language type="nn">נײַ־נארוועגיש</language>
+			<language type="no">נארוועגיש</language>
+			<language type="oc">אקסיטאַניש</language>
+			<language type="os">אסעטיש</language>
+			<language type="peo">אַלט פּערסיש</language>
+			<language type="pl">פּויליש</language>
+			<language type="prg">פּרייסיש</language>
+			<language type="ps">פּאַשטאָ</language>
+			<language type="pt">פּארטוגעזיש</language>
+			<language type="ro">רומעניש</language>
+			<language type="ru">רוסיש</language>
+			<language type="rue">רוסיניש</language>
+			<language type="sa">סאַנסקריט</language>
+			<language type="sc">סאַרדיש</language>
+			<language type="scn">סיציליאַניש</language>
+			<language type="sco">סקאטס</language>
+			<language type="sd">סינדהי</language>
+			<language type="se">נארדסאַמיש</language>
+			<language type="sga">אַלט־איריש</language>
+			<language type="sh">סערבא־קראאַטיש</language>
+			<language type="si">סינהאַליש</language>
+			<language type="sk">סלאוואַקיש</language>
+			<language type="sl">סלאוועניש</language>
+			<language type="sli">אונטער שלעזיש</language>
+			<language type="sm">סאַמאאַניש</language>
+			<language type="sn">שאנאַ</language>
+			<language type="so">סאמאַליש</language>
+			<language type="sq">אַלבאַניש</language>
+			<language type="sr">סערביש</language>
+			<language type="sux">סומעריש</language>
+			<language type="sv">שוועדיש</language>
+			<language type="sw">סוואַהיליש</language>
+			<language type="sw_CD">קאנגא־סוואַהיליש</language>
+			<language type="swb">קאמאריש</language>
+			<language type="szl">שלעזיש</language>
+			<language type="ta">טאַמיל</language>
+			<language type="tig">טיגרע</language>
+			<language type="tk">טורקמעניש</language>
+			<language type="tl">טאַגאַלאג</language>
+			<language type="tt">טאָטעריש</language>
+			<language type="uk">אוקראַאיניש</language>
+			<language type="und">אומבאַוואוסטע שפּראַך</language>
+			<language type="ur">אורדו</language>
+			<language type="uz">אוזבעקיש</language>
+			<language type="vi">וויעטנאַמעזיש</language>
+			<language type="vls">מערב פֿלעמיש</language>
+			<language type="vo">וואלאַפּוק</language>
+			<language type="yi">ייִדיש</language>
+			<language type="zh">כינעזיש</language>
+			<language type="zu">זולו</language>
+		</languages>
+		<scripts>
+			<script type="Arab">אַראַביש</script>
+			<script type="Cyrl">ציריליש</script>
+			<script type="Deva">דעוואַנאַגאַרי</script>
+			<script type="Grek">גריכיש</script>
+			<script type="Hebr">העברעיש</script>
+			<script type="Latn">גַלחיש</script>
+		</scripts>
+		<territories>
+			<territory type="001">וועלט</territory>
+			<territory type="002">אַפֿריקע</territory>
+			<territory type="003">צפון־אַמעריקע</territory>
+			<territory type="005">דרום־אַמעריקע</territory>
+			<territory type="009">אקעאַניע</territory>
+			<territory type="013">צענטראַל־אַמעריקע</territory>
+			<territory type="019">אַמעריקע</territory>
+			<territory type="021">צפונדיקע אַמעריקע</territory>
+			<territory type="029">קאַראַאיבע</territory>
+			<territory type="030">מזרח אַזיע</territory>
+			<territory type="034">דרום־אַזיע</territory>
+			<territory type="035">דרום־מזרח אַזיע</territory>
+			<territory type="039">דרום־אייראפּע</territory>
+			<territory type="061">פּאלינעזיע</territory>
+			<territory type="142">אַזיע</territory>
+			<territory type="143">צענטראַל־אַזיע</territory>
+			<territory type="145">מערב־אַזיע</territory>
+			<territory type="150">אייראפּע</territory>
+			<territory type="151">מזרח־אייראפּע</territory>
+			<territory type="154">צפֿון־אייראפּע</territory>
+			<territory type="155">מערב־אייראפּע</territory>
+			<territory type="419">לאַטיין־אַמעריקע</territory>
+			<territory type="AD">אַנדארע</territory>
+			<territory type="AF">אַפֿגהאַניסטאַן</territory>
+			<territory type="AG">אַנטיגוע און באַרבודע</territory>
+			<territory type="AL">אַלבאַניע</territory>
+			<territory type="AM">אַרמעניע</territory>
+			<territory type="AO">אַנגאלע</territory>
+			<territory type="AQ">אַנטאַרקטיקע</territory>
+			<territory type="AR">אַרגענטינע</territory>
+			<territory type="AT">עסטרייך</territory>
+			<territory type="AU">אויסטראַליע</territory>
+			<territory type="AW">אַרובאַ</territory>
+			<territory type="BA">באסניע הערצעגאווינע</territory>
+			<territory type="BB">באַרבאַדאס</territory>
+			<territory type="BD">באַנגלאַדעש</territory>
+			<territory type="BE">בעלגיע</territory>
+			<territory type="BF">בורקינע פֿאַסא</territory>
+			<territory type="BG">בולגאַריע</territory>
+			<territory type="BI">בורונדי</territory>
+			<territory type="BJ">בענין</territory>
+			<territory type="BM">בערמודע</territory>
+			<territory type="BN">ברוניי</territory>
+			<territory type="BO">באליוויע</territory>
+			<territory type="BR">בראַזיל</territory>
+			<territory type="BS">באַהאַמאַס</territory>
+			<territory type="BT">בהוטאַן</territory>
+			<territory type="BW">באצוואַנע</territory>
+			<territory type="BY">בעלאַרוס</territory>
+			<territory type="BZ">בעליז</territory>
+			<territory type="CA">קאַנאַדע</territory>
+			<territory type="CD">קאנגא־קינשאַזע</territory>
+			<territory type="CF">צענטראַל־אַפֿריקאַנישע רעפּובליק</territory>
+			<territory type="CH">שווייץ</territory>
+			<territory type="CI">העלפֿאַ נדביין בארטן</territory>
+			<territory type="CK">קוק אינזלען</territory>
+			<territory type="CL">טשילע</territory>
+			<territory type="CM">קאַמערון</territory>
+			<territory type="CN">כינע</territory>
+			<territory type="CO">קאלאמביע</territory>
+			<territory type="CR">קאסטאַ ריקאַ</territory>
+			<territory type="CU">קובאַ</territory>
+			<territory type="CV">קאַפּווערדישע אינזלען</territory>
+			<territory type="CW">קוראַסאַא</territory>
+			<territory type="CZ">טשעכיי</territory>
+			<territory type="DE">דייטשלאַנד</territory>
+			<territory type="DJ">דזשיבוטי</territory>
+			<territory type="DK">דענמאַרק</territory>
+			<territory type="DM">דאמיניקע</territory>
+			<territory type="DO">דאמיניקאַנישע רעפּובליק</territory>
+			<territory type="EC">עקוואַדאר</territory>
+			<territory type="EE">עסטלאַנד</territory>
+			<territory type="EG">עגיפּטן</territory>
+			<territory type="ER">עריטרעע</territory>
+			<territory type="ES">שפּאַניע</territory>
+			<territory type="ET">עטיאפּיע</territory>
+			<territory type="EU">אייראפּעישער פֿאַרבאַנד</territory>
+			<territory type="FI">פֿינלאַנד</territory>
+			<territory type="FJ">פֿידזשי</territory>
+			<territory type="FK">פֿאַלקלאַנד אינזלען</territory>
+			<territory type="FM">מיקראנעזיע</territory>
+			<territory type="FO">פֿאַרא אינזלען</territory>
+			<territory type="FR">פֿראַנקרייך</territory>
+			<territory type="GA">גאַבאן</territory>
+			<territory type="GB">פֿאַראייניגטע קעניגרייך</territory>
+			<territory type="GD">גרענאַדאַ</territory>
+			<territory type="GE">גרוזיע</territory>
+			<territory type="GF">פֿראַנצויזישע גויאַנע</territory>
+			<territory type="GG">גערנזי</territory>
+			<territory type="GH">גהאַנע</territory>
+			<territory type="GI">גיבראַלטאַר</territory>
+			<territory type="GL">גרינלאַנד</territory>
+			<territory type="GM">גאַמביע</territory>
+			<territory type="GN">גינע</territory>
+			<territory type="GP">גוואַדעלופ</territory>
+			<territory type="GQ">עקוואַטארישע גינע</territory>
+			<territory type="GR">גריכנלאַנד</territory>
+			<territory type="GT">גוואַטעמאַלע</territory>
+			<territory type="GU">גוואַם</territory>
+			<territory type="GW">גינע־ביסאַו</territory>
+			<territory type="GY">גויאַנע</territory>
+			<territory type="HN">האנדוראַס</territory>
+			<territory type="HR">קראאַטיע</territory>
+			<territory type="HT">האַיטי</territory>
+			<territory type="HU">אונגערן</territory>
+			<territory type="IC">קאַנאַרישע אינזלען</territory>
+			<territory type="ID">אינדאנעזיע</territory>
+			<territory type="IE">אירלאַנד</territory>
+			<territory type="IL">ישראל</territory>
+			<territory type="IN">אינדיע</territory>
+			<territory type="IR">איראַן</territory>
+			<territory type="IS">איסלאַנד</territory>
+			<territory type="IT">איטאַליע</territory>
+			<territory type="JE">דזשערזי</territory>
+			<territory type="JM">דזשאַמייקע</territory>
+			<territory type="JP">יאַפּאַן</territory>
+			<territory type="KE">קעניע</territory>
+			<territory type="KH">קאַמבאדיע</territory>
+			<territory type="KI">קיריבאַטי</territory>
+			<territory type="KM">קאמאראס</territory>
+			<territory type="KY">קיימאַן אינזלען</territory>
+			<territory type="LA">לאַאס</territory>
+			<territory type="LB">לבנון</territory>
+			<territory type="LI">ליכטנשטיין</territory>
+			<territory type="LK">סרי־לאַנקאַ</territory>
+			<territory type="LR">ליבעריע</territory>
+			<territory type="LS">לעסאטא</territory>
+			<territory type="LT">ליטע</territory>
+			<territory type="LU">לוקסעמבורג</territory>
+			<territory type="LV">לעטלאַנד</territory>
+			<territory type="LY">ליביע</territory>
+			<territory type="MA">מאַראקא</territory>
+			<territory type="MC">מאנאַקא</territory>
+			<territory type="MD">מאלדאווע</territory>
+			<territory type="ME">מאנטענעגרא</territory>
+			<territory type="MG">מאַדאַגאַסקאַר</territory>
+			<territory type="MH">מאַרשאַל אינזלען</territory>
+			<territory type="ML">מאַלי</territory>
+			<territory type="MM">מיאַנמאַר</territory>
+			<territory type="MN">מאנגאליי</territory>
+			<territory type="MQ">מאַרטיניק</territory>
+			<territory type="MR">מאַריטאַניע</territory>
+			<territory type="MS">מאנטסעראַט</territory>
+			<territory type="MT">מאַלטאַ</territory>
+			<territory type="MU">מאריציוס</territory>
+			<territory type="MV">מאַלדיוון</territory>
+			<territory type="MW">מאַלאַווי</territory>
+			<territory type="MX">מעקסיקע</territory>
+			<territory type="MY">מאַלייזיע</territory>
+			<territory type="MZ">מאזאַמביק</territory>
+			<territory type="NA">נאַמיביע</territory>
+			<territory type="NC">נײַ קאַלעדאניע</territory>
+			<territory type="NE">ניזשער</territory>
+			<territory type="NF">נארפֿאלק אינזל</territory>
+			<territory type="NG">ניגעריע</territory>
+			<territory type="NI">ניקאַראַגוע</territory>
+			<territory type="NL">האלאַנד</territory>
+			<territory type="NO">נארוועגיע</territory>
+			<territory type="NP">נעפּאַל</territory>
+			<territory type="NZ">ניו זילאַנד</territory>
+			<territory type="PA">פּאַנאַמאַ</territory>
+			<territory type="PE">פּערו</territory>
+			<territory type="PF">פֿראַנצויזישע פּאלינעזיע</territory>
+			<territory type="PG">פּאַפּואַ נײַ גינע</territory>
+			<territory type="PH">פֿיליפּינען</territory>
+			<territory type="PK">פּאַקיסטאַן</territory>
+			<territory type="PL">פּוילן</territory>
+			<territory type="PN">פּיטקערן אינזלען</territory>
+			<territory type="PR">פּארטא־ריקא</territory>
+			<territory type="PT">פּארטוגאַל</territory>
+			<territory type="PY">פּאַראַגווײַ</territory>
+			<territory type="QA">קאַטאַר</territory>
+			<territory type="RE">רעאוניאן</territory>
+			<territory type="RO">רומעניע</territory>
+			<territory type="RS">סערביע</territory>
+			<territory type="RU">רוסלאַנד</territory>
+			<territory type="RW">רוואַנדע</territory>
+			<territory type="SB">סאלאמאן אינזלען</territory>
+			<territory type="SC">סיישעל</territory>
+			<territory type="SD">סודאַן</territory>
+			<territory type="SE">שוועדן</territory>
+			<territory type="SG">סינגאַפּור</territory>
+			<territory type="SH">סט העלענע</territory>
+			<territory type="SI">סלאוועניע</territory>
+			<territory type="SK">סלאוואַקיי</territory>
+			<territory type="SL">סיערע לעאנע</territory>
+			<territory type="SM">סאַן מאַרינא</territory>
+			<territory type="SN">סענעגאַל</territory>
+			<territory type="SO">סאמאַליע</territory>
+			<territory type="SR">סורינאַם</territory>
+			<territory type="SS">דרום־סודאַן</territory>
+			<territory type="ST">סאַא טאמע און פּרינסיפּע</territory>
+			<territory type="SV">על סאַלוואַדאר</territory>
+			<territory type="SY">סיריע</territory>
+			<territory type="SZ">סוואַזילאַנד</territory>
+			<territory type="TD">טשאַד</territory>
+			<territory type="TG">טאגא</territory>
+			<territory type="TH">טיילאַנד</territory>
+			<territory type="TL" alt="variant">מזרח טימאר</territory>
+			<territory type="TM">טורקמעניסטאַן</territory>
+			<territory type="TN">טוניסיע</territory>
+			<territory type="TO">טאנגאַ</territory>
+			<territory type="TR">טערקיי</territory>
+			<territory type="TT">טרינידאַד און טאבאַגא</territory>
+			<territory type="TV">טואוואַלו</territory>
+			<territory type="TZ">טאַנזאַניע</territory>
+			<territory type="UA">אוקראַינע</territory>
+			<territory type="UG">אוגאַנדע</territory>
+			<territory type="US">פֿאַראייניגטע שטאַטן</territory>
+			<territory type="US" alt="short">פֿ&quot;ש</territory>
+			<territory type="UY">אורוגוויי</territory>
+			<territory type="VA">וואַטיקאַן שטאָט</territory>
+			<territory type="VE">ווענעזועלע</territory>
+			<territory type="VN">וויעטנאַם</territory>
+			<territory type="VU">וואַנואַטו</territory>
+			<territory type="WS">סאַמאאַ</territory>
+			<territory type="XK">קאסאווא</territory>
+			<territory type="YE">תימן</territory>
+			<territory type="YT">מאַיאט</territory>
+			<territory type="ZA">דרום־אַפֿריקע</territory>
+			<territory type="ZM">זאַמביע</territory>
+			<territory type="ZW">זימבאַבווע</territory>
+			<territory type="ZZ">אומבאַוואוסטער ראַיאן</territory>
+		</territories>
+		<keys>
+			<key type="numbers">נומערן</key>
+		</keys>
+		<types>
+			<type key="calendar" type="gregorian">גרעגארישער קאַלענדאַר</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric">מעטריש</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language">שפראַך: {0}</codePattern>
+			<codePattern type="script">שריפֿט: {0}</codePattern>
+			<codePattern type="territory">ראַיאן: {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<layout>
+		<orientation>
+			<characterOrder>right-to-left</characterOrder>
+		</orientation>
+	</layout>
+	<characters>
+		<exemplarCharacters>[א {א\u05B7} {א\u05B8} ב {ב\u05BF} ג ד {דזש} ה ו {ו\u05BC} {וו} {וי} ז {זש} ח ט {טש} י {י\u05B4} {יי} {ײ\u05B7} {כ\u05BC} כ ך ל מ ם נ ן ס ע {פ\u05BC} {פ\u05BF} ף צ ץ ק ר ש {ש\u05C2} {ת\u05BC} ת]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary" draft="contributed">[\u200E\u200F]</exemplarCharacters>
+		<exemplarCharacters type="index">[\u05C2 \u05BC \u05BF א ב ג ד ה ו ז ח ט י כ ל מ נ ס ע פ צ ק ר ש ת]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+		<exemplarCharacters type="punctuation" draft="contributed">[\- ‐ ‑ – — , ; \: ! ? . ׳ ' &quot; ( ) \[ \] / ״ ־]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart draft="contributed">”</quotationStart>
+		<quotationEnd draft="contributed">”</quotationEnd>
+		<alternateQuotationStart draft="contributed">’</alternateQuotationStart>
+		<alternateQuotationEnd draft="contributed">’</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern draft="provisional">EEEE, d בMMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern draft="provisional">d בMMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern draft="provisional">d בMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="provisional">dd/MM/yy GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern draft="provisional">{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern draft="provisional">{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern draft="provisional">{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d" draft="provisional">d</dateFormatItem>
+						<dateFormatItem id="Ed" draft="provisional">E ה-d</dateFormatItem>
+						<dateFormatItem id="Gy" draft="provisional">y G</dateFormatItem>
+						<dateFormatItem id="GyMMM" draft="provisional">MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMd" draft="provisional">d בMMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd" draft="provisional">E, d בMMM y G</dateFormatItem>
+						<dateFormatItem id="h" draft="provisional">‏h a</dateFormatItem>
+						<dateFormatItem id="H" draft="provisional">HH</dateFormatItem>
+						<dateFormatItem id="hm" draft="provisional">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm" draft="provisional">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms" draft="provisional">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms" draft="provisional">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M" draft="provisional">L</dateFormatItem>
+						<dateFormatItem id="Md" draft="provisional">d/M</dateFormatItem>
+						<dateFormatItem id="MEd" draft="provisional">E, d/M</dateFormatItem>
+						<dateFormatItem id="MMM" draft="provisional">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd" draft="provisional">d בMMM</dateFormatItem>
+						<dateFormatItem id="MMMEd" draft="provisional">E, d בMMM</dateFormatItem>
+						<dateFormatItem id="ms" draft="provisional">mm:ss</dateFormatItem>
+						<dateFormatItem id="y" draft="provisional">y G</dateFormatItem>
+						<dateFormatItem id="yyyy" draft="provisional">y G</dateFormatItem>
+						<dateFormatItem id="yyyyM" draft="provisional">M.y G</dateFormatItem>
+						<dateFormatItem id="yyyyMd" draft="provisional">d.M.y G</dateFormatItem>
+						<dateFormatItem id="yyyyMEd" draft="provisional">E, d/M/y G</dateFormatItem>
+						<dateFormatItem id="yyyyMM" draft="provisional">MM/y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMM" draft="provisional">MMM y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMd" draft="provisional">d בMMM y G</dateFormatItem>
+						<dateFormatItem id="yyyyMMMEd" draft="provisional">E, d בMMM y G</dateFormatItem>
+						<dateFormatItem id="yyyyQQQ" draft="provisional">G y QQQ</dateFormatItem>
+						<dateFormatItem id="yyyyQQQQ" draft="provisional">G y QQQQ</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback draft="contributed">{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d" draft="provisional">d–d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="h">
+							<greatestDifference id="a" draft="provisional">h a – h a</greatestDifference>
+							<greatestDifference id="h" draft="provisional">h–h a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="H">
+							<greatestDifference id="H" draft="provisional">HH–HH</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="a" draft="provisional">h:mm a – h:mm a</greatestDifference>
+							<greatestDifference id="h" draft="provisional">h:mm–h:mm a</greatestDifference>
+							<greatestDifference id="m" draft="provisional">h:mm–h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hm">
+							<greatestDifference id="H" draft="provisional">HH:mm–HH:mm</greatestDifference>
+							<greatestDifference id="m" draft="provisional">HH:mm–HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="a" draft="provisional">h:mm a – h:mm a v</greatestDifference>
+							<greatestDifference id="h" draft="provisional">h:mm–h:mm a v</greatestDifference>
+							<greatestDifference id="m" draft="provisional">h:mm–h:mm a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H" draft="provisional">HH:mm–HH:mm v</greatestDifference>
+							<greatestDifference id="m" draft="provisional">HH:mm–HH:mm v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="a" draft="provisional">h a – h a v</greatestDifference>
+							<greatestDifference id="h" draft="provisional">h–h a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H" draft="provisional">HH–HH v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M" draft="provisional">M–M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d" draft="provisional">dd/MM – dd/MM</greatestDifference>
+							<greatestDifference id="M" draft="provisional">dd/MM – dd/MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d" draft="provisional">EEEE dd/MM – EEEE dd/MM</greatestDifference>
+							<greatestDifference id="M" draft="provisional">EEEE dd/MM – EEEE dd/MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M" draft="provisional">MMM–MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d" draft="provisional">d–d MMM</greatestDifference>
+							<greatestDifference id="M" draft="provisional">d MMM – d MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d" draft="provisional">EEEE d MMM – EEEE d MMM</greatestDifference>
+							<greatestDifference id="M" draft="provisional">EEEE d MMM – EEEE d MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMM">
+							<greatestDifference id="M" draft="provisional">LLLL–LLLL</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y" draft="provisional">y–y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M" draft="provisional">MM/y – MM/y</greatestDifference>
+							<greatestDifference id="y" draft="provisional">MM/y – MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d" draft="provisional">dd/MM/y – dd/MM/y</greatestDifference>
+							<greatestDifference id="M" draft="provisional">dd/MM/y – dd/MM/y</greatestDifference>
+							<greatestDifference id="y" draft="provisional">dd/MM/y – dd/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d" draft="provisional">EEEE dd/MM/y – EEEE dd/MM/y</greatestDifference>
+							<greatestDifference id="M" draft="provisional">EEEE dd/MM/y – EEEE dd/MM/y</greatestDifference>
+							<greatestDifference id="y" draft="provisional">EEEE dd/MM/y – EEEE dd/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M" draft="provisional">MMM–MMM y</greatestDifference>
+							<greatestDifference id="y" draft="provisional">MMM y – MMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d" draft="provisional">d–d MMM y</greatestDifference>
+							<greatestDifference id="M" draft="provisional">d MMM – d MMM y</greatestDifference>
+							<greatestDifference id="y" draft="provisional">d MMM y – d MMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d" draft="provisional">EEEE d MMM – EEEE d MMM y</greatestDifference>
+							<greatestDifference id="M" draft="provisional">EEEE d MMM – EEEE d MMM y</greatestDifference>
+							<greatestDifference id="y" draft="provisional">EEEE d MMM y – EEEE d MMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M" draft="provisional">MMMM–MMMM y</greatestDifference>
+							<greatestDifference id="y" draft="provisional">MMMM y–MMMM y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">יאַנואַר</month>
+							<month type="2">פֿעברואַר</month>
+							<month type="3">מערץ</month>
+							<month type="4">אַפּריל</month>
+							<month type="5">מיי</month>
+							<month type="6">יוני</month>
+							<month type="7">יולי</month>
+							<month type="8">אויגוסט</month>
+							<month type="9">סעפּטעמבער</month>
+							<month type="10">אקטאבער</month>
+							<month type="11">נאוועמבער</month>
+							<month type="12">דעצעמבער</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">יאַנואַר</month>
+							<month type="2">פֿעברואַר</month>
+							<month type="3">מערץ</month>
+							<month type="4">אַפּריל</month>
+							<month type="5">מיי</month>
+							<month type="6">יוני</month>
+							<month type="7">יולי</month>
+							<month type="8">אויגוסט</month>
+							<month type="9">סעפּטעמבער</month>
+							<month type="10">אקטאבער</month>
+							<month type="11">נאוועמבער</month>
+							<month type="12">דעצעמבער</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">יאַנ</month>
+							<month type="2">פֿעב</month>
+							<month type="3">מערץ</month>
+							<month type="4">אַפּר</month>
+							<month type="5">מיי</month>
+							<month type="6">יוני</month>
+							<month type="7">יולי</month>
+							<month type="8">אויג</month>
+							<month type="9">סעפּ</month>
+							<month type="10">אקט</month>
+							<month type="11">נאוו</month>
+							<month type="12">דעצ</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">יאַנואַר</month>
+							<month type="2">פֿעברואַר</month>
+							<month type="3">מערץ</month>
+							<month type="4">אַפּריל</month>
+							<month type="5">מיי</month>
+							<month type="6">יוני</month>
+							<month type="7">יולי</month>
+							<month type="8">אויגוסט</month>
+							<month type="9">סעפּטעמבער</month>
+							<month type="10">אקטאבער</month>
+							<month type="11">נאוועמבער</month>
+							<month type="12">דעצעמבער</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">זונטיק</day>
+							<day type="mon">מאָנטיק</day>
+							<day type="tue">דינסטיק</day>
+							<day type="wed">מיטוואך</day>
+							<day type="thu">דאנערשטיק</day>
+							<day type="fri">פֿרײַטיק</day>
+							<day type="sat">שבת</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">זונטיק</day>
+							<day type="mon">מאָנטיק</day>
+							<day type="tue">דינסטיק</day>
+							<day type="wed">מיטוואך</day>
+							<day type="thu">דאנערשטיק</day>
+							<day type="fri">פֿרײַטיק</day>
+							<day type="sat">שבת</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">זונטיק</day>
+							<day type="mon">מאָנטיק</day>
+							<day type="tue">דינסטיק</day>
+							<day type="wed">מיטוואך</day>
+							<day type="thu">דאנערשטיק</day>
+							<day type="fri">פֿרײַטיק</day>
+							<day type="sat">שבת</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">זונטיק</day>
+							<day type="mon">מאָנטיק</day>
+							<day type="tue">דינסטיק</day>
+							<day type="wed">מיטוואך</day>
+							<day type="thu">דאנערשטיק</day>
+							<day type="fri">פֿרײַטיק</day>
+							<day type="sat">שבת</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">זונטיק</day>
+							<day type="mon">מאָנטיק</day>
+							<day type="tue">דינסטיק</day>
+							<day type="wed">מיטוואך</day>
+							<day type="thu">דאנערשטיק</day>
+							<day type="fri">פֿרײַטיק</day>
+							<day type="sat">שבת</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">זונטיק</day>
+							<day type="mon">מאָנטיק</day>
+							<day type="tue">דינסטיק</day>
+							<day type="wed">מיטוואך</day>
+							<day type="thu">דאנערשטיק</day>
+							<day type="fri">פֿרײַטיק</day>
+							<day type="sat">שבת</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">פֿאַרמיטאָג</dayPeriod>
+							<dayPeriod type="pm">נאָכמיטאָג</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">פֿאַרמיטאָג</dayPeriod>
+							<dayPeriod type="pm">נאָכמיטאָג</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE, dטן MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>dטן MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>dטן MMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>dd/MM/yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern draft="provisional">HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern draft="provisional">HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern draft="provisional">HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern draft="provisional">HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d" draft="provisional">d</dateFormatItem>
+						<dateFormatItem id="E">ccc</dateFormatItem>
+						<dateFormatItem id="Ed">E דעם dטן</dateFormatItem>
+						<dateFormatItem id="Ehm">E h:mm a</dateFormatItem>
+						<dateFormatItem id="EHm">E HH:mm</dateFormatItem>
+						<dateFormatItem id="Ehms">E h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="EHms">E HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="Gy" draft="provisional">y G</dateFormatItem>
+						<dateFormatItem id="GyMMM" draft="provisional">MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMd">dטן MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E דעם dטן MMM yG</dateFormatItem>
+						<dateFormatItem id="h" draft="provisional">‏h a</dateFormatItem>
+						<dateFormatItem id="H" draft="provisional">HH</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm" draft="provisional">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M" draft="provisional">L</dateFormatItem>
+						<dateFormatItem id="Md" draft="provisional">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">E, d/M</dateFormatItem>
+						<dateFormatItem id="MMM" draft="provisional">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMMEd">MMM d, E</dateFormatItem>
+						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="y" draft="provisional">y</dateFormatItem>
+						<dateFormatItem id="yM" draft="provisional">M.y</dateFormatItem>
+						<dateFormatItem id="yMd">d-M-y</dateFormatItem>
+						<dateFormatItem id="yMEd">E, d/M/y</dateFormatItem>
+						<dateFormatItem id="yMM">MM/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">dטן MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E, dטן MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMM" draft="provisional">MMMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ" draft="provisional">y QQQ</dateFormatItem>
+						<dateFormatItem id="yQQQQ" draft="provisional">y QQQQ</dateFormatItem>
+					</availableFormats>
+					<appendItems>
+						<appendItem request="Timezone">{1} {0}</appendItem>
+					</appendItems>
+					<intervalFormats>
+						<intervalFormatFallback draft="contributed">{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d" draft="provisional">d–d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="h">
+							<greatestDifference id="a" draft="provisional">h a – h a</greatestDifference>
+							<greatestDifference id="h" draft="provisional">h–h a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="H">
+							<greatestDifference id="H" draft="provisional">HH–HH</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="a">h:mm a – h:mm a</greatestDifference>
+							<greatestDifference id="h" draft="provisional">h:mm–h:mm a</greatestDifference>
+							<greatestDifference id="m" draft="provisional">h:mm–h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hm">
+							<greatestDifference id="H" draft="provisional">HH:mm–HH:mm</greatestDifference>
+							<greatestDifference id="m" draft="provisional">HH:mm–HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="a" draft="provisional">h:mm a – h:mm a v</greatestDifference>
+							<greatestDifference id="h" draft="provisional">h:mm–h:mm a v</greatestDifference>
+							<greatestDifference id="m" draft="provisional">h:mm–h:mm a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H" draft="provisional">HH:mm–HH:mm v</greatestDifference>
+							<greatestDifference id="m" draft="provisional">HH:mm–HH:mm v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="a" draft="provisional">h a – h a v</greatestDifference>
+							<greatestDifference id="h" draft="provisional">h–h a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H" draft="provisional">HH–HH v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M" draft="provisional">M–M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d">dd/MM – dd/MM</greatestDifference>
+							<greatestDifference id="M">dd/MM – dd/MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d">EEEE dd/MM – EEEE dd/MM</greatestDifference>
+							<greatestDifference id="M">EEEE dd/MM – EEEE dd/MM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M">LLL–LLL</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d">d–d MMM</greatestDifference>
+							<greatestDifference id="M">d MMM – d MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d">EEEE d MMM – EEEE d MMM</greatestDifference>
+							<greatestDifference id="M">EEEE d MMM – EEEE d MMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMM">
+							<greatestDifference id="M">LLLL–LLLL</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="y">
+							<greatestDifference id="y">y–y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M">MM/y – MM/y</greatestDifference>
+							<greatestDifference id="y">MM/y – MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d">y-MM-dd – y-MM-dd</greatestDifference>
+							<greatestDifference id="M">dd/MM/y – dd/MM/y</greatestDifference>
+							<greatestDifference id="y">dd/MM/y – dd/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d">EEEE dd/MM/y – EEEE dd/MM/y</greatestDifference>
+							<greatestDifference id="M">EEEE dd/MM/y – EEEE dd/MM/y</greatestDifference>
+							<greatestDifference id="y">EEEE dd/MM/y – EEEE dd/MM/y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M">MMM–MMM y</greatestDifference>
+							<greatestDifference id="y">MMM y – MMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d">d–d MMM y</greatestDifference>
+							<greatestDifference id="M">d MMM – d MMM y</greatestDifference>
+							<greatestDifference id="y">d MMM y – d MMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d">EEEE d MMM – EEEE d MMM y</greatestDifference>
+							<greatestDifference id="M">EEEE d MMM – EEEE d MMM y</greatestDifference>
+							<greatestDifference id="y">EEEE d MMM y – EEEE d MMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M">MMMM–MMMM y</greatestDifference>
+							<greatestDifference id="y">MMMM y–MMMM y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="hebrew">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">תשרי</month>
+							<month type="2">חשוון</month>
+							<month type="3">כסלו</month>
+							<month type="4">טבת</month>
+							<month type="5">שבט</month>
+							<month type="6">אדר א׳</month>
+							<month type="7">אדר</month>
+							<month type="7" yeartype="leap">אדר ב׳</month>
+							<month type="8">ניסן</month>
+							<month type="9">אייר</month>
+							<month type="10">סיון</month>
+							<month type="11">תמוז</month>
+							<month type="12">אב</month>
+							<month type="13">אלול</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1" draft="contributed">תש</month>
+							<month type="2" draft="contributed">חש</month>
+							<month type="3" draft="contributed">כס</month>
+							<month type="4" draft="contributed">טב</month>
+							<month type="5" draft="contributed">שב</month>
+							<month type="6" draft="contributed">אא</month>
+							<month type="7" draft="contributed">אד</month>
+							<month type="7" yeartype="leap" draft="contributed">א2</month>
+							<month type="8" draft="contributed">ני</month>
+							<month type="9" draft="contributed">אי</month>
+							<month type="10" draft="contributed">סי</month>
+							<month type="11" draft="contributed">תמ</month>
+							<month type="12" draft="contributed">אב</month>
+							<month type="13" draft="contributed">אל</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">תשרי</month>
+							<month type="2">חשוון</month>
+							<month type="3">כסלו</month>
+							<month type="4">טבת</month>
+							<month type="5">שבט</month>
+							<month type="6">אדר א׳</month>
+							<month type="7">אדר</month>
+							<month type="7" yeartype="leap">אדר ב׳</month>
+							<month type="8">ניסן</month>
+							<month type="9">אייר</month>
+							<month type="10">סיון</month>
+							<month type="11">תמוז</month>
+							<month type="12">אב</month>
+							<month type="13">אלול</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">תשרי</month>
+							<month type="2">חשון</month>
+							<month type="3">כסלו</month>
+							<month type="4">טבת</month>
+							<month type="5">שבט</month>
+							<month type="6">אדר א׳</month>
+							<month type="7">אדר</month>
+							<month type="7" yeartype="leap">אדר ב׳</month>
+							<month type="8">ניסן</month>
+							<month type="9">אייר</month>
+							<month type="10">סיון</month>
+							<month type="11">תמוז</month>
+							<month type="12">אב</month>
+							<month type="13">אלול</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1" draft="contributed">תש</month>
+							<month type="2" draft="contributed">חש</month>
+							<month type="3" draft="contributed">כס</month>
+							<month type="4" draft="contributed">טב</month>
+							<month type="5" draft="contributed">שב</month>
+							<month type="6" draft="contributed">אא</month>
+							<month type="7" draft="contributed">אד</month>
+							<month type="7" yeartype="leap" draft="contributed">א2</month>
+							<month type="8" draft="contributed">ני</month>
+							<month type="9" draft="contributed">אי</month>
+							<month type="10" draft="contributed">סי</month>
+							<month type="11" draft="contributed">תמ</month>
+							<month type="12" draft="contributed">אב</month>
+							<month type="13" draft="contributed">אל</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">תשרי</month>
+							<month type="2">חשון</month>
+							<month type="3">כסלו</month>
+							<month type="4">טבת</month>
+							<month type="5">שבט</month>
+							<month type="6">אדר א׳</month>
+							<month type="7">אדר</month>
+							<month type="7" yeartype="leap">אדר ב׳</month>
+							<month type="8">ניסן</month>
+							<month type="9">אייר</month>
+							<month type="10">סיון</month>
+							<month type="11">תמוז</month>
+							<month type="12">אב</month>
+							<month type="13">אלול</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<eras>
+					<eraAbbr>
+						<era type="0">לבה״ע</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern numbers="hebr">EEEE, d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern numbers="hebr">d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern numbers="hebr">d בMMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern numbers="hebr">d בMMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="Ed" draft="provisional">E ה-d</dateFormatItem>
+						<dateFormatItem id="Gy">y G</dateFormatItem>
+						<dateFormatItem id="GyMMM">MMMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMd">d MMMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMMEd">E, d MMMM y G</dateFormatItem>
+						<dateFormatItem id="M" draft="contributed">MMMM</dateFormatItem>
+						<dateFormatItem id="Md" draft="contributed">d בMMMM</dateFormatItem>
+						<dateFormatItem id="MEd" draft="contributed">E, d בMMMM</dateFormatItem>
+						<dateFormatItem id="MMM" draft="contributed">MMMM</dateFormatItem>
+						<dateFormatItem id="MMMd" draft="contributed">d בMMMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E, d בMMMM</dateFormatItem>
+						<dateFormatItem id="MMMMd" draft="contributed">d בMMMM</dateFormatItem>
+						<dateFormatItem id="MMMMEd">E, d בMMMM</dateFormatItem>
+						<dateFormatItem id="mmss" draft="provisional">mm:ss</dateFormatItem>
+						<dateFormatItem id="y" draft="provisional">y</dateFormatItem>
+						<dateFormatItem id="yyyy" draft="provisional">y</dateFormatItem>
+						<dateFormatItem id="yyyyM" draft="contributed">MMMM y</dateFormatItem>
+						<dateFormatItem id="yyyyMd" draft="contributed">d בMMMM y</dateFormatItem>
+						<dateFormatItem id="yyyyMEd" draft="contributed">E, d בMMMM y</dateFormatItem>
+						<dateFormatItem id="yyyyMMM" draft="contributed">MMMM y</dateFormatItem>
+						<dateFormatItem id="yyyyMMMd" draft="contributed">d בMMMM y</dateFormatItem>
+						<dateFormatItem id="yyyyMMMEd" draft="contributed">E, d בMMMM y</dateFormatItem>
+						<dateFormatItem id="yyyyMMMM" draft="contributed">MMMM y</dateFormatItem>
+						<dateFormatItem id="yyyyQQQ" draft="provisional">QQQ y</dateFormatItem>
+						<dateFormatItem id="yyyyQQQQ" draft="provisional">QQQQ y</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback draft="provisional">{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="h">
+							<greatestDifference id="a" draft="provisional">h a – h a</greatestDifference>
+							<greatestDifference id="h" draft="provisional">h–h a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="a" draft="provisional">h:mm a – h:mm a</greatestDifference>
+							<greatestDifference id="h" draft="provisional">h:mm–h:mm a</greatestDifference>
+							<greatestDifference id="m" draft="provisional">h:mm–h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="a" draft="provisional">h:mm a – h:mm a v</greatestDifference>
+							<greatestDifference id="h" draft="provisional">h:mm–h:mm a v</greatestDifference>
+							<greatestDifference id="m" draft="provisional">h:mm–h:mm a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="a" draft="provisional">h a – h a v</greatestDifference>
+							<greatestDifference id="h" draft="provisional">h–h a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d" draft="provisional">d בMMMM – d בMMMM</greatestDifference>
+							<greatestDifference id="M" draft="provisional">d בMMMM – d בMMMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MEd">
+							<greatestDifference id="d" draft="provisional">E d בMMMM – E d בMMMM</greatestDifference>
+							<greatestDifference id="M" draft="provisional">E d בMMMM – E d בMMMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMM">
+							<greatestDifference id="M" draft="provisional">MMMM–MMMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMd">
+							<greatestDifference id="d" draft="provisional">d–d בMMMM</greatestDifference>
+							<greatestDifference id="M" draft="provisional">d בMMMM – d בMMMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="MMMEd">
+							<greatestDifference id="d" draft="provisional">E d בMMMM – E d בMMMM</greatestDifference>
+							<greatestDifference id="M" draft="provisional">E d בMMMM – E d בMMMM</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yM">
+							<greatestDifference id="M" draft="provisional">MMMM y – MMMM y</greatestDifference>
+							<greatestDifference id="y" draft="provisional">MMMM y – MMMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMd">
+							<greatestDifference id="d" draft="provisional">d בMMMM y – d בMMMM y</greatestDifference>
+							<greatestDifference id="M" draft="provisional">d בMMMM y – d בMMMM y</greatestDifference>
+							<greatestDifference id="y" draft="provisional">d בMMMM y – d בMMMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMEd">
+							<greatestDifference id="d" draft="provisional">E d בMMMM y – E d בMMMM y</greatestDifference>
+							<greatestDifference id="M" draft="provisional">E d בMMMM y – E d בMMMM y</greatestDifference>
+							<greatestDifference id="y" draft="provisional">E d בMMMM y – E d בMMMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMM">
+							<greatestDifference id="M" draft="provisional">MMMM–MMMM y</greatestDifference>
+							<greatestDifference id="y" draft="provisional">MMMM y – MMMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMd">
+							<greatestDifference id="d" draft="provisional">d–d בMMMM y</greatestDifference>
+							<greatestDifference id="M" draft="provisional">d בMMMM – d בMMMM y</greatestDifference>
+							<greatestDifference id="y" draft="provisional">d בMMMM y – d בMMMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMEd">
+							<greatestDifference id="d" draft="provisional">E d בMMMM – E d בMMMM y</greatestDifference>
+							<greatestDifference id="M" draft="provisional">E d בMMMM – E d בMMMM y</greatestDifference>
+							<greatestDifference id="y" draft="provisional">E d בMMMM y – E d בMMMM y</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M" draft="provisional">MMMM–MMMM y</greatestDifference>
+							<greatestDifference id="y" draft="provisional">MMMM y – MMMM y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>תקופֿה</displayName>
+			</field>
+			<field type="year">
+				<displayName>יאָר</displayName>
+				<relative type="-1">פֿאַראַיאָר</relative>
+				<relative type="0">הײַ יאָר</relative>
+				<relative type="1">איבער א יאָר</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">איבער {0} יאָר</relativeTimePattern>
+					<relativeTimePattern count="other">איבער {0} יאָר</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">פֿאַר {0} יאָר</relativeTimePattern>
+					<relativeTimePattern count="other">פֿאַר {0} יאָר</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-short">
+				<displayName>יאָר</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">איבער א יאָר</relativeTimePattern>
+					<relativeTimePattern count="other">איבער {0} יאָר</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">פֿאַר {0} יאָר</relativeTimePattern>
+					<relativeTimePattern count="other">פֿאַר {0} יאָר</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-narrow">
+				<displayName>יאָר</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">איבער {0} יאָר</relativeTimePattern>
+					<relativeTimePattern count="other">איבער {0} יאָר</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">פֿאַר {0} יאָר</relativeTimePattern>
+					<relativeTimePattern count="other">פֿאַר {0} יאָר</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month">
+				<displayName>מאנאַט</displayName>
+				<relative type="-1">פֿאַרגאנגענעם חודש</relative>
+				<relative type="0">דעם חודש</relative>
+				<relative type="1">קומענדיקן חודש</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">איבער {0} חודש</relativeTimePattern>
+					<relativeTimePattern count="other">איבער {0} חדשים</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">פֿאַר {0} חודש</relativeTimePattern>
+					<relativeTimePattern count="other">פֿאַר {0} חדשים</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month-short">
+				<displayName>מאנאַט</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">איבער {0} חודש</relativeTimePattern>
+					<relativeTimePattern count="other">איבער {0} חדשים</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">פֿאַר {0} חודש</relativeTimePattern>
+					<relativeTimePattern count="other">פֿאַר {0} חדשים</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="month-narrow">
+				<displayName>מאנאַט</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">איבער {0} חודש</relativeTimePattern>
+					<relativeTimePattern count="other">איבער {0} חדשים</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">פֿאַר {0} חודש</relativeTimePattern>
+					<relativeTimePattern count="other">פֿאַר {0} חדשים</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="week">
+				<displayName>וואך</displayName>
+				<relative type="-1">last week</relative>
+				<relative type="0">this week</relative>
+				<relative type="1">איבער אַכט טאָג</relative>
+			</field>
+			<field type="week-short">
+				<displayName>וואך</displayName>
+			</field>
+			<field type="week-narrow">
+				<displayName>וואך</displayName>
+			</field>
+			<field type="day">
+				<displayName>טאָג</displayName>
+				<relative type="-1">נעכטן</relative>
+				<relative type="0">היינט</relative>
+				<relative type="1">מארגן</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">אין {0} טאָג אַרום</relativeTimePattern>
+					<relativeTimePattern count="other">אין {0} טעג אַרום</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="day-short">
+				<displayName>טאָג</displayName>
+			</field>
+			<field type="day-narrow">
+				<displayName>טאָג</displayName>
+			</field>
+			<field type="weekday">
+				<displayName>טאָג אין דער וואך</displayName>
+			</field>
+			<field type="hour">
+				<displayName>שעה</displayName>
+			</field>
+			<field type="hour-short">
+				<displayName>שעה</displayName>
+			</field>
+			<field type="hour-narrow">
+				<displayName>שעה</displayName>
+			</field>
+			<field type="minute">
+				<displayName>מינוט</displayName>
+			</field>
+			<field type="minute-short">
+				<displayName>מינוט</displayName>
+			</field>
+			<field type="minute-narrow">
+				<displayName>מינוט</displayName>
+			</field>
+			<field type="second">
+				<displayName>סעקונדע</displayName>
+			</field>
+			<field type="second-short">
+				<displayName>סעקונדע</displayName>
+			</field>
+			<field type="second-narrow">
+				<displayName>סעקונדע</displayName>
+			</field>
+			<field type="zone">
+				<displayName>צײַטזאנע</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<zone type="Etc/Unknown">
+				<exemplarCity>אומבאַוואוסטע שטאָט</exemplarCity>
+			</zone>
+			<zone type="Africa/Abidjan">
+				<exemplarCity>אַבידזשאַן</exemplarCity>
+			</zone>
+			<zone type="Africa/Asmera">
+				<exemplarCity>אַסמאַראַ</exemplarCity>
+			</zone>
+			<zone type="Africa/Windhoek">
+				<exemplarCity>ווינטהוק</exemplarCity>
+			</zone>
+			<zone type="Africa/Tunis">
+				<exemplarCity>טוניס</exemplarCity>
+			</zone>
+			<zone type="Asia/Saigon">
+				<exemplarCity>הא טשי מין שטאָט</exemplarCity>
+			</zone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>latn</defaultNumberingSystem>
+		<otherNumberingSystems>
+			<native>latn</native>
+			<traditional>hebr</traditional>
+		</otherNumberingSystems>
+		<symbols numberSystem="latn">
+			<decimal draft="contributed">.</decimal>
+			<group draft="contributed">,</group>
+			<list draft="contributed">;</list>
+			<percentSign draft="contributed">%</percentSign>
+			<plusSign draft="contributed">+</plusSign>
+			<minusSign draft="contributed">-</minusSign>
+			<exponential draft="contributed">E</exponential>
+			<perMille draft="contributed">‰</perMille>
+			<infinity draft="contributed">∞</infinity>
+			<nan draft="contributed">NaN</nan>
+		</symbols>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="one" draft="provisional">¤ 0K</pattern>
+					<pattern type="1000" count="other" draft="provisional">¤ 0K</pattern>
+					<pattern type="10000" count="one" draft="provisional">¤ 00K</pattern>
+					<pattern type="10000" count="other" draft="provisional">¤ 00K</pattern>
+					<pattern type="100000" count="one" draft="provisional">¤ 000K</pattern>
+					<pattern type="100000" count="other" draft="provisional">¤ 000K</pattern>
+					<pattern type="1000000" count="one" draft="provisional">¤ 0M</pattern>
+					<pattern type="1000000" count="other" draft="provisional">¤ 0M</pattern>
+					<pattern type="10000000" count="one" draft="provisional">¤ 00M</pattern>
+					<pattern type="10000000" count="other" draft="provisional">¤ 00M</pattern>
+					<pattern type="100000000" count="one" draft="provisional">¤ 000M</pattern>
+					<pattern type="100000000" count="other" draft="provisional">¤ 000M</pattern>
+					<pattern type="1000000000" count="one" draft="provisional">¤ 0G</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">¤ 0G</pattern>
+					<pattern type="10000000000" count="one" draft="provisional">¤ 00G</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">¤ 00G</pattern>
+					<pattern type="100000000000" count="one" draft="provisional">¤ 000G</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">¤ 000G</pattern>
+					<pattern type="1000000000000" count="one" draft="provisional">¤ 0T</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">¤ 0T</pattern>
+					<pattern type="10000000000000" count="one" draft="provisional">¤ 00T</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">¤ 00T</pattern>
+					<pattern type="100000000000000" count="one" draft="provisional">¤ 000T</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">¤ 000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="BRL">
+				<displayName>בראזיל רעאל</displayName>
+				<displayName count="one">בראזיל רעאל</displayName>
+				<displayName count="other">בראזיל רעאלן</displayName>
+			</currency>
+			<currency type="BZD">
+				<displayName>בעליז דאלאַר</displayName>
+			</currency>
+			<currency type="CHF">
+				<displayName>שווייצער פֿראַנק</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>כינעזישער יואן</displayName>
+				<displayName count="one">כינעזישער יואן</displayName>
+				<displayName count="other">כינעזישע יואן</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>איירא</displayName>
+				<displayName count="one">איירא</displayName>
+				<displayName count="other">איירא</displayName>
+				<symbol draft="contributed">€</symbol>
+				<symbol alt="narrow" draft="contributed">€</symbol>
+			</currency>
+			<currency type="GBP">
+				<displayName>פֿונט שטערלינג</displayName>
+				<displayName count="one">פֿונט שטערלינג</displayName>
+				<displayName count="other">פֿונט שטערלינג</displayName>
+				<symbol draft="contributed">£</symbol>
+				<symbol alt="narrow" draft="contributed">£</symbol>
+			</currency>
+			<currency type="INR">
+				<displayName>אינדישער רופי</displayName>
+				<displayName count="one">אינדישער רופי</displayName>
+				<displayName count="other">אינדישע רופי</displayName>
+				<symbol draft="contributed">₹</symbol>
+				<symbol alt="narrow" draft="contributed">₹</symbol>
+			</currency>
+			<currency type="JPY">
+				<displayName>יאפאנעזישער יען</displayName>
+				<displayName count="one">יאפאנעזישער יען</displayName>
+				<displayName count="other">יאפאנעזישע יען</displayName>
+				<symbol draft="contributed">JP¥</symbol>
+				<symbol alt="narrow" draft="contributed">¥</symbol>
+			</currency>
+			<currency type="RUB">
+				<displayName>רוסישער רובל</displayName>
+				<displayName count="one">רוסישער רובל</displayName>
+				<displayName count="other">רוסישע רובל</displayName>
+				<symbol draft="contributed">RUB</symbol>
+				<symbol alt="narrow" draft="contributed">₽</symbol>
+			</currency>
+			<currency type="SEK">
+				<displayName>שוועדישע קראנע</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>אמעריקאנער דאלאר</displayName>
+				<displayName count="one">אמעריקאנער דאלאר</displayName>
+				<displayName count="other">אמעריקאנער דאלארן</displayName>
+				<symbol alt="narrow" draft="contributed">$</symbol>
+			</currency>
+			<currency type="XAG">
+				<displayName>זילבער</displayName>
+			</currency>
+			<currency type="XAU">
+				<displayName>גאלד</displayName>
+			</currency>
+			<currency type="XXX">
+				<displayName>אומבאַוואוסטע וואַלוטע</displayName>
+				<displayName count="one">אומבאַוואוסטע וואַלוטע</displayName>
+				<displayName count="other">אומבאַוואוסטע וואַלוטע</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<durationUnit type="hm">
+			<durationUnitPattern>h:mm</durationUnitPattern>
+		</durationUnit>
+		<durationUnit type="hms">
+			<durationUnitPattern>h:mm:ss</durationUnitPattern>
+		</durationUnit>
+		<durationUnit type="ms">
+			<durationUnitPattern>m:ss</durationUnitPattern>
+		</durationUnit>
+	</units>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0} און {1}</listPatternPart>
+			<listPatternPart type="2">{0} און {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+</ldml>

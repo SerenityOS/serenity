@@ -1,0 +1,12 @@
+name = NSS
+
+slot = 2
+
+library = ${pkcs11test.nss.lib}
+
+nssArgs = "configdir='${pkcs11test.nss.db}' certPrefix='' keyPrefix='' secmod='secmod.db' flags=readOnly"
+
+destroyTokenAfterLogout = true
+cleaner.longInterval = 10000
+cleaner.shortInterval = 1000
+

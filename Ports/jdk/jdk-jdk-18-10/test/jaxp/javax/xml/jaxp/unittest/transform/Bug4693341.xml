@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE SupplierOrder SYSTEM "Bug4693341.dtd" >
+<SupplierOrder>
+<OrderId>10016</OrderId>
+<OrderDate>Wed May 29 12:45:00 PDT 2002</OrderDate>
+<ShippingAddress>
+<FirstName>ABC</FirstName>
+<LastName>XYZ</LastName>
+<Street>1234 Anywhere Street</Street>
+<City>Palo Alto</City>
+<State>California</State>
+<Country>USA</Country>
+<ZipCode>94303</ZipCode>
+<Email>NULL</Email>
+<Phone>NULL</Phone>
+</ShippingAddress>
+<LineItems>
+<LineItem categoryId="BIRDS" itemId="EST-18" lineNo="0" productId="AV-CB-01" quantity="1" unitPrice="193.5"/>
+</LineItems>
+</SupplierOrder>

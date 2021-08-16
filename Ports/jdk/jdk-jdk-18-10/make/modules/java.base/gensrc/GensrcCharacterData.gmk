@@ -1,0 +1,67 @@
+#
+# Copyright (c) 2011, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+#
+# Rules to create $(SUPPORT_OUTPUTDIR)/gensrc/java.base/sun/lang/CharacterData*.java
+#
+
+GENSRC_CHARACTERDATA :=
+
+CHARACTERDATA = $(TOPDIR)/make/data/characterdata
+UNICODEDATA = $(TOPDIR)/make/data/unicodedata
+
+ifneq ($(DEBUG_LEVEL), release)
+  ifeq ($(ALLOW_ABSOLUTE_PATHS_IN_OUTPUT), true)
+    DEBUG_OPTION := -d
+  endif
+endif
+
+define SetupCharacterData
+  $(SUPPORT_OUTPUTDIR)/gensrc/java.base/java/lang/$1.java: \
+      $(CHARACTERDATA)/$1.java.template
+	$$(call LogInfo, Generating $1.java)
+	$$(call MakeDir, $$(@D))
+	$(TOOL_GENERATECHARACTER) $2 $(DEBUG_OPTION) \
+	    -template $(CHARACTERDATA)/$1.java.template \
+	    -spec $(UNICODEDATA)/UnicodeData.txt \
+	    -specialcasing $(UNICODEDATA)/SpecialCasing.txt \
+	    -proplist $(UNICODEDATA)/PropList.txt \
+	    -derivedprops $(UNICODEDATA)/DerivedCoreProperties.txt \
+	    -o $(SUPPORT_OUTPUTDIR)/gensrc/java.base/java/lang/$1.java \
+	    -usecharforbyte $3
+
+  GENSRC_CHARACTERDATA += $(SUPPORT_OUTPUTDIR)/gensrc/java.base/java/lang/$1.java
+endef
+
+$(eval $(call SetupCharacterData,CharacterDataLatin1, , -latin1 8))
+$(eval $(call SetupCharacterData,CharacterData00, -string -plane 0, 11 4 1))
+$(eval $(call SetupCharacterData,CharacterData01, -string -plane 1, 11 4 1))
+$(eval $(call SetupCharacterData,CharacterData02, -string -plane 2, 11 4 1))
+$(eval $(call SetupCharacterData,CharacterData03, -string -plane 3, 11 4 1))
+$(eval $(call SetupCharacterData,CharacterData0E, -string -plane 14, 11 4 1))
+
+$(GENSRC_CHARACTERDATA): $(BUILD_TOOLS_JDK)
+
+TARGETS += $(GENSRC_CHARACTERDATA)

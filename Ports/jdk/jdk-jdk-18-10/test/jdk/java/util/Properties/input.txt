@@ -1,0 +1,10 @@
+# this input file is used for the LoadParsing.java test
+# comment ending with slash \
+key1 = value1
+key2 = abc\\\
+def\
+g\\
+   key3 =   value3
+key4 = :value4
+ # comment with leading space
+#key = comment without line terminator

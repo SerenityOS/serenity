@@ -1,0 +1,10 @@
+
+    @Test(dataProvider = "$type$UnaryOpProvider")
+    static void Zero$vectorteststype$(IntFunction<$type$[]> fa) {
+[[KERNEL]]
+        Assert.assertEquals(a, r);
+    }
+
+
+
+

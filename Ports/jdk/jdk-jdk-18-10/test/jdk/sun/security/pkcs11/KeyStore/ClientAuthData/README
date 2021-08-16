@@ -1,0 +1,29 @@
+The files in this directory are used by the ClientAuth test.
+
+The cert8.db password is:  "test12"
+cert8.db includes entries for:
+
+  1. user1 (private key and cert signed by ca)
+  2. user2 (private key and self-signed cert)
+  3. ca (ca cert)
+
+and was set up using the following commands:
+
+  1. certutil -N -d .
+  2. certutil -G -k rsa -g 512 -d .
+  3. certutil -R -s "cn=user1" -k rsa -g 512 -d . -o user1.certreq
+
+  4. wrote own code to parse user1.certreq and create user1.cert signed
+     by the CA contained in basic.keystore (in the BasicData directory)
+
+  5. certutil -A -n user1 -t u -d . -i user1.cert
+  6. certutil -A -n ca -t c -d . -i ca.cert
+  7. certutil -S -n user2 -s cn=user2 -t u -k rsa -g 512 -x -d . -v 240
+
+server.keystore contains the server's private key entry.
+the server certificate is self-signed.
+server.keystore's password is:  "passphrase"
+
+truststore is shared by both the client and the server,
+and contains certificates for user1, user2, server, and ca.
+The truststore password is:  "passphrase"

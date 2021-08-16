@@ -1,0 +1,201 @@
+//
+// weijun.wang@sun.com
+
+HTTP SPNEGO
+===========
+
+JPlan 116: SPNEGO HTTP authentication
+    http://jplan.sfbay/feature/116)
+RFE 6260531: SPNEGO HTTP authentication
+    http://monaco.sfbay/detail.jsf?cr=6260531)
+CCC 6244039: more HTTP authentication schemes to support in Java
+    http://ccc.sfbay/6244039
+
+
+What's HTTP SPNEGO
+==================
+
+HTTP SPNEGO supports the Negotiate authentication scheme in an HTTP 
+communication. There are 2 types of authentication here:
+
+1. Web Authentication. The Web Server responses with
+       HTTP/1.1 401 Unauthorized
+       WWW-Authenticate: Negotiate
+   the client will need to send a header like
+       Authorization: Negotiate YY.....
+   to authenticate itself to the server
+2. Proxy Authentication. The Web Server responses with
+       HTTP/1.1 407 Proxy Authentication Required 
+       Proxy-Authenticate: Negotiate
+   the client will need to send a header like
+       Proxy-Authorization: Negotiate YY.....
+   to authenticate itself to the proxy server
+
+The new codes support both types of authentication.
+
+
+How to use the new feature
+==========================
+
+There is no new public API function involved in the new feature, but
+several configurations are needed to perform a success communication:
+
+1. Since the SPNEGO mechanism will call the Kerberos V5 login module to
+   do real works. Kerberos configurations are needed. which includes:
+
+   a) Some way to provide Kerberos realm and KDC address. This can be
+      achieved with the Java system property java.security.krb5.realm
+      and java.security.krb5.kdc. For example:
+            java -Djava.security.krb5.realm=REALM_NAME \
+                 -Djava.security.krb5.kdc=kdc.realm.name \
+                 ClassName
+
+   b) A JAAS config file denoting what login module to use. HTTP SPNEGO
+      codes will look for the standard GSS_INITIATE_ENTRY entry named
+      "com.sun.security.jgss.initiate".
+
+      For example, you can provide a file spnegoLogin.conf:
+          com.sun.security.jgss.initiate {
+              com.sun.security.auth.module.Krb5LoginModule 
+                  required useTicketCache=true;
+          };
+      and run java with:
+            java -Djava.security.krb5.realm=REALM_NAME \
+                 -Djava.security.krb5.kdc=kdc.realm.name \
+                 -Djava.security.auth.login.config=spnegoLogin.conf \
+                 ClassName
+
+
+      Another JAAS login entry "http.auth.negotiate.server" is defined
+      to be used by the server side.
+
+2. Just like other HTTP authentication scheme, the client can provide
+   a customized java.net.Authenticator to feed username and password to
+   the HTTP SPNEGO module when they are needed (e.g. there is no keytab
+   cache available). The only authentication information needed to be
+   checked in your Authenticator is the scheme which can be retrieved
+   with getRequestingScheme(). The value should be "Negotiate". 
+
+   This means your Authenticator implementation will look like:
+
+    class MyAuthenticator extends Authenticator {
+
+	public PasswordAuthentication getPasswordAuthentication () {
+            if (getRequestingScheme().equalsIgnoreCase("negotiate")) {
+                String krb5user;
+                char[] krb5pass;
+                // get krb5user and krb5pass in your own way
+                ....
+                return (new PasswordAuthentication (krb6user, 
+                            krb5pass.toCharArray()));
+            } else {
+                ....
+            }
+	}
+    }
+
+3. The client can still provide system property http.auth.preference to
+   denote that a certain scheme should always be used as long as the
+   server request for it. You can use "SPNEGO" or "Kerberos" for this
+   system property. "SPNEGO" means you prefer to challenge the Negotiate
+   scheme using the GSS/SPNEGO mechanism; "Kerberos" means you prefer
+   to challenge the Negotiate scheme using the GSS/Kerberos mechanism.
+   Normally, when authenticating against a Microsoft product, you can
+   use "SPNEGO". The value "Kerberos" also works for Microsoft servers.
+   It's only needed when you encounter a server which knows Negotiate
+   but doesn't know about SPNEGO.
+
+   If http.auth.preference is not set, the internal order chosen is:
+      GSS/SPNEGO -> Digest -> BTLM -> Basic
+
+   Noticed that Kerberos does not appear in this list, since whenever
+   Negotiate is supported, GSS/SPNEGO is always chosen.
+
+4. If the server has provided more than one authentication schemes
+   (including Negotiate), according to the processing order mentioned
+   in the last section, Java will try to challenge the Negotiate scheme.
+   However, if the protocol cannot be established successfully (e.g.
+   The kerberos configuration is not correct, or the server's hostname
+   is not recorded in the KDC principal DB, or the username and password
+   provided by Authenticator is wrong),  then the 2nd strongest scheme
+   will be automatically used. You can notice this behaviour in the test
+   case: TEST_NAME="Authenticate fallback".
+
+   Attention: If http.auth.preference is set to SPNEGO or Kerberos, then
+   we assume you only want to try the Negotiate scheme even if it fails.
+   we won't fallback to any other scheme and your program will result in
+   throwing an IOException saying it receives a 401 or 407 error from
+   the HTTP response. This behaviour can be observed in the test case:
+   TEST_NAME="Authenticate no fallback"
+
+
+Test
+====
+
+The test is a bash script spnegoTest, which makes use of the Java class 
+WebGet. WebGet.java is included. To run the test, you need these files:
+
+    spnegoTest
+    spnegoLogin.conf       JAAS login config file
+    spnegoLog.properties   logging config file
+
+The test environment includes 1 or 2 KDC server, 1 or 2 Web server, and 
+1 proxy server. The web server and the proxy server need to support 
+multiple authentication schemes setting to test the fallback feature.
+
+The environment variables set inside spnegoTest are:
+
+    WWW_REALM       The Kerberos realm the Web server belongs to
+    WWW_KDC         The Kerberos KDC for the WWW_REALM
+    WWW_URL         The URL to test against. It should be protected with
+                    Negotiate and Basic authentication
+
+    PROXY_REALM     The Kerberos realm the proxy server belongs to
+    PROXY_KDC       The Kerberos KDC for the PROXY_REALM
+    PROXY_URL       The URL to test against, Should be available to
+                    anonymous request
+    PROXY_PARA      The proxy server setting. The proxy server should
+                    prompt for Negotiate and Basic authentication
+
+    GOOD_PASS       Correct user/pass for Basic authentication
+    GOOD_KPASS      Correct user/pass for Kerberos
+    BAD_PASS        Wrong user/pass for Basic authentication
+    BAD_KPASS       Wrong user/pass for Kerberos
+
+    WWW_TAB         The keytab file for WWW_REALM
+    PROXY_TAB       The keytab file for PROXY_REALM
+    TAB_PATH        The standard keytab cache file path
+
+    FILE_CONTENT    The content of URL expected
+
+The values set in spnegoTest reflect a temporary testing environment,
+where we use MS-Windows 2000 Advanced Server as the KDC server and Web 
+server, and MS ISA 2000 Server as the proxy server.
+
+In order to test the using of keytab cache, you need to get the keytab
+files before starting the test. The pathname of the 2 keytab files (one
+for the WWW_REALM, the other for the PROXY_REALM) should be set inside
+the test script spnegoTest as WWW_TAB and PROXY_TAB respectively. During
+the test process, they will be copied to the system recognized place
+(TAB_PATH) in turn.
+
+This is a manual step since on most systems the kerberos realm is setup
+in krb5.conf, and you need a root privilege to edit the it to get the 2
+ticket cache files. Normally, the process will look like:
+
+    # edit the krb5.conf using $WWW_REALM
+    kinit www_user_name
+    cp $TAB_PATH $WWW_TAB
+    # edit the krb5.conf using $PROXY_REALM
+    kinit proxy_user_name
+    cp $TAB_PATH $PROXY_TAB
+
+Fortunately, you normally will only need to do this once in a day.
+
+However, on MS-Windows platform, the kinit tool provided with the JRE 
+has command options including realm, KDC, principal name, and password,
+thus make it possible to generate the keytab files from a batch script.
+
+Finally, you can run the test with
+
+    $ bash spnegoTest || echo $?

@@ -1,0 +1,2 @@
+OrderedIntersections.java:17:40: compiler.err.already.defined: kindname.method, <t1>smf(t1), kindname.class, OrderedIntersections
+1 error

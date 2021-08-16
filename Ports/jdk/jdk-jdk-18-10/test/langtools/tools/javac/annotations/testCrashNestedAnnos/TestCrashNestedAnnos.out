@@ -1,0 +1,4 @@
+TestCrashNestedAnnos.java:9:6: compiler.err.cant.resolve.location: kindname.class, A, , , (compiler.misc.location: kindname.class, TestCrashNestedAnnos, null)
+TestCrashNestedAnnos.java:9:9: compiler.err.cant.resolve.location: kindname.class, A1, , , (compiler.misc.location: kindname.class, TestCrashNestedAnnos, null)
+TestCrashNestedAnnos.java:10:6: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: B, java.lang.annotation.Annotation)
+3 errors

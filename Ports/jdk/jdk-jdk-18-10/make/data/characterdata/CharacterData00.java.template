@@ -1,0 +1,1089 @@
+/*
+ * Copyright (c) 2003, 2021, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+package java.lang;
+
+/**
+ * The CharacterData00 class encapsulates the large tables once found in
+ * java.lang.Character
+*/
+
+class CharacterData00 extends CharacterData {
+    /* The character properties are currently encoded into 32 bits in the following manner:
+        1 bit   mirrored property
+        4 bits  directionality property
+        9 bits  signed offset used for converting case
+        1 bit   if 1, adding the signed offset converts the character to lowercase
+        1 bit   if 1, subtracting the signed offset converts the character to uppercase
+        1 bit   if 1, this character has a titlecase equivalent (possibly itself)
+        3 bits  0  may not be part of an identifier
+                1  ignorable control; may continue a Unicode identifier or Java identifier
+                2  may continue a Java identifier but not a Unicode identifier (unused)
+                3  may continue a Unicode identifier or Java identifier
+                4  is a Java whitespace character
+                5  may start or continue a Java identifier;
+                   may continue but not start a Unicode identifier (underscores)
+                6  may start or continue a Java identifier but not a Unicode identifier ($)
+                7  may start or continue a Unicode identifier or Java identifier
+                Thus:
+                   5, 6, 7 may start a Java identifier
+                   1, 2, 3, 5, 6, 7 may continue a Java identifier
+                   7 may start a Unicode identifier
+                   1, 3, 5, 7 may continue a Unicode identifier
+                   1 is ignorable within an identifier
+                   4 is Java whitespace
+        2 bits  0  this character has no numeric property
+                1  adding the digit offset to the character code and then
+                   masking with 0x1F will produce the desired numeric value
+                2  this character has a "strange" numeric value
+                3  a Java supradecimal digit: adding the digit offset to the
+                   character code, then masking with 0x1F, then adding 10
+                   will produce the desired numeric value
+        5 bits  digit offset
+        5 bits  character type
+
+        The encoding of character properties is subject to change at any time.
+     */
+
+    int getProperties(int ch) {
+        char offset = (char)ch;
+        int props = $$Lookup(offset);
+        return props;
+    }
+
+    int getPropertiesEx(int ch) {
+        char offset = (char)ch;
+        int props = $$LookupEx(offset);
+        return props;
+    }
+
+    int getType(int ch) {
+        int props = getProperties(ch);
+        return (props & $$maskType);
+    }
+
+    boolean isOtherAlphabetic(int ch) {
+        int props = getPropertiesEx(ch);
+        return (props & $$maskOtherAlphabetic) != 0;
+    }
+
+    boolean isIdeographic(int ch) {
+        int props = getPropertiesEx(ch);
+        return (props & $$maskIdeographic) != 0;
+    }
+
+    boolean isJavaIdentifierStart(int ch) {
+        int props = getProperties(ch);
+        return ((props & $$maskIdentifierInfo) >= $$lowJavaStart);
+    }
+
+    boolean isJavaIdentifierPart(int ch) {
+        int props = getProperties(ch);
+        return ((props & $$nonzeroJavaPart) != 0);
+    }
+
+    boolean isUnicodeIdentifierStart(int ch) {
+        return (getPropertiesEx(ch) & $$maskIDStart) != 0 ||
+               ch == 0x2E2F;
+    }
+
+    boolean isUnicodeIdentifierPart(int ch) {
+        return (getPropertiesEx(ch) & $$maskIDContinue) != 0 ||
+               isIdentifierIgnorable(ch) ||
+               ch == 0x2E2F;
+    }
+
+    boolean isIdentifierIgnorable(int ch) {
+        int props = getProperties(ch);
+        return ((props & $$maskIdentifierInfo) == $$valueIgnorable);
+    }
+
+    int toLowerCase(int ch) {
+        int mapChar = ch;
+        int val = getProperties(ch);
+
+        if ((val & $$maskLowerCase) != 0) {
+          if ((val & $$maskCaseOffset) == $$maskCaseOffset) {
+            switch(ch) {
+            case 0x0130: mapChar = 0x0069; break;
+            case 0x023A: mapChar = 0x2C65; break;
+            case 0x023E: mapChar = 0x2C66; break;
+            case 0x0412: mapChar = 0x1C80; break;
+            case 0x0414: mapChar = 0x1C81; break;
+            case 0x041E: mapChar = 0x1C82; break;
+            case 0x0421: mapChar = 0x1C83; break;
+            case 0x042A: mapChar = 0x1C86; break;
+            case 0x0462: mapChar = 0x1C87; break;
+            case 0x10A0: mapChar = 0x2D00; break;
+            case 0x10A1: mapChar = 0x2D01; break;
+            case 0x10A2: mapChar = 0x2D02; break;
+            case 0x10A3: mapChar = 0x2D03; break;
+            case 0x10A4: mapChar = 0x2D04; break;
+            case 0x10A5: mapChar = 0x2D05; break;
+            case 0x10A6: mapChar = 0x2D06; break;
+            case 0x10A7: mapChar = 0x2D07; break;
+            case 0x10A8: mapChar = 0x2D08; break;
+            case 0x10A9: mapChar = 0x2D09; break;
+            case 0x10AA: mapChar = 0x2D0A; break;
+            case 0x10AB: mapChar = 0x2D0B; break;
+            case 0x10AC: mapChar = 0x2D0C; break;
+            case 0x10AD: mapChar = 0x2D0D; break;
+            case 0x10AE: mapChar = 0x2D0E; break;
+            case 0x10AF: mapChar = 0x2D0F; break;
+            case 0x10B0: mapChar = 0x2D10; break;
+            case 0x10B1: mapChar = 0x2D11; break;
+            case 0x10B2: mapChar = 0x2D12; break;
+            case 0x10B3: mapChar = 0x2D13; break;
+            case 0x10B4: mapChar = 0x2D14; break;
+            case 0x10B5: mapChar = 0x2D15; break;
+            case 0x10B6: mapChar = 0x2D16; break;
+            case 0x10B7: mapChar = 0x2D17; break;
+            case 0x10B8: mapChar = 0x2D18; break;
+            case 0x10B9: mapChar = 0x2D19; break;
+            case 0x10BA: mapChar = 0x2D1A; break;
+            case 0x10BB: mapChar = 0x2D1B; break;
+            case 0x10BC: mapChar = 0x2D1C; break;
+            case 0x10BD: mapChar = 0x2D1D; break;
+            case 0x10BE: mapChar = 0x2D1E; break;
+            case 0x10BF: mapChar = 0x2D1F; break;
+            case 0x10C0: mapChar = 0x2D20; break;
+            case 0x10C1: mapChar = 0x2D21; break;
+            case 0x10C2: mapChar = 0x2D22; break;
+            case 0x10C3: mapChar = 0x2D23; break;
+            case 0x10C4: mapChar = 0x2D24; break;
+            case 0x10C5: mapChar = 0x2D25; break;
+            case 0x10C7: mapChar = 0x2D27; break;
+            case 0x10CD: mapChar = 0x2D2D; break;
+            case 0x13A0: mapChar = 0xAB70; break;
+            case 0x13A1: mapChar = 0xAB71; break;
+            case 0x13A2: mapChar = 0xAB72; break;
+            case 0x13A3: mapChar = 0xAB73; break;
+            case 0x13A4: mapChar = 0xAB74; break;
+            case 0x13A5: mapChar = 0xAB75; break;
+            case 0x13A6: mapChar = 0xAB76; break;
+            case 0x13A7: mapChar = 0xAB77; break;
+            case 0x13A8: mapChar = 0xAB78; break;
+            case 0x13A9: mapChar = 0xAB79; break;
+            case 0x13AA: mapChar = 0xAB7A; break;
+            case 0x13AB: mapChar = 0xAB7B; break;
+            case 0x13AC: mapChar = 0xAB7C; break;
+            case 0x13AD: mapChar = 0xAB7D; break;
+            case 0x13AE: mapChar = 0xAB7E; break;
+            case 0x13AF: mapChar = 0xAB7F; break;
+            case 0x13B0: mapChar = 0xAB80; break;
+            case 0x13B1: mapChar = 0xAB81; break;
+            case 0x13B2: mapChar = 0xAB82; break;
+            case 0x13B3: mapChar = 0xAB83; break;
+            case 0x13B4: mapChar = 0xAB84; break;
+            case 0x13B5: mapChar = 0xAB85; break;
+            case 0x13B6: mapChar = 0xAB86; break;
+            case 0x13B7: mapChar = 0xAB87; break;
+            case 0x13B8: mapChar = 0xAB88; break;
+            case 0x13B9: mapChar = 0xAB89; break;
+            case 0x13BA: mapChar = 0xAB8A; break;
+            case 0x13BB: mapChar = 0xAB8B; break;
+            case 0x13BC: mapChar = 0xAB8C; break;
+            case 0x13BD: mapChar = 0xAB8D; break;
+            case 0x13BE: mapChar = 0xAB8E; break;
+            case 0x13BF: mapChar = 0xAB8F; break;
+            case 0x13C0: mapChar = 0xAB90; break;
+            case 0x13C1: mapChar = 0xAB91; break;
+            case 0x13C2: mapChar = 0xAB92; break;
+            case 0x13C3: mapChar = 0xAB93; break;
+            case 0x13C4: mapChar = 0xAB94; break;
+            case 0x13C5: mapChar = 0xAB95; break;
+            case 0x13C6: mapChar = 0xAB96; break;
+            case 0x13C7: mapChar = 0xAB97; break;
+            case 0x13C8: mapChar = 0xAB98; break;
+            case 0x13C9: mapChar = 0xAB99; break;
+            case 0x13CA: mapChar = 0xAB9A; break;
+            case 0x13CB: mapChar = 0xAB9B; break;
+            case 0x13CC: mapChar = 0xAB9C; break;
+            case 0x13CD: mapChar = 0xAB9D; break;
+            case 0x13CE: mapChar = 0xAB9E; break;
+            case 0x13CF: mapChar = 0xAB9F; break;
+            case 0x13D0: mapChar = 0xABA0; break;
+            case 0x13D1: mapChar = 0xABA1; break;
+            case 0x13D2: mapChar = 0xABA2; break;
+            case 0x13D3: mapChar = 0xABA3; break;
+            case 0x13D4: mapChar = 0xABA4; break;
+            case 0x13D5: mapChar = 0xABA5; break;
+            case 0x13D6: mapChar = 0xABA6; break;
+            case 0x13D7: mapChar = 0xABA7; break;
+            case 0x13D8: mapChar = 0xABA8; break;
+            case 0x13D9: mapChar = 0xABA9; break;
+            case 0x13DA: mapChar = 0xABAA; break;
+            case 0x13DB: mapChar = 0xABAB; break;
+            case 0x13DC: mapChar = 0xABAC; break;
+            case 0x13DD: mapChar = 0xABAD; break;
+            case 0x13DE: mapChar = 0xABAE; break;
+            case 0x13DF: mapChar = 0xABAF; break;
+            case 0x13E0: mapChar = 0xABB0; break;
+            case 0x13E1: mapChar = 0xABB1; break;
+            case 0x13E2: mapChar = 0xABB2; break;
+            case 0x13E3: mapChar = 0xABB3; break;
+            case 0x13E4: mapChar = 0xABB4; break;
+            case 0x13E5: mapChar = 0xABB5; break;
+            case 0x13E6: mapChar = 0xABB6; break;
+            case 0x13E7: mapChar = 0xABB7; break;
+            case 0x13E8: mapChar = 0xABB8; break;
+            case 0x13E9: mapChar = 0xABB9; break;
+            case 0x13EA: mapChar = 0xABBA; break;
+            case 0x13EB: mapChar = 0xABBB; break;
+            case 0x13EC: mapChar = 0xABBC; break;
+            case 0x13ED: mapChar = 0xABBD; break;
+            case 0x13EE: mapChar = 0xABBE; break;
+            case 0x13EF: mapChar = 0xABBF; break;
+            case 0x1C90: mapChar = 0x10D0; break;
+            case 0x1C91: mapChar = 0x10D1; break;
+            case 0x1C92: mapChar = 0x10D2; break;
+            case 0x1C93: mapChar = 0x10D3; break;
+            case 0x1C94: mapChar = 0x10D4; break;
+            case 0x1C95: mapChar = 0x10D5; break;
+            case 0x1C96: mapChar = 0x10D6; break;
+            case 0x1C97: mapChar = 0x10D7; break;
+            case 0x1C98: mapChar = 0x10D8; break;
+            case 0x1C99: mapChar = 0x10D9; break;
+            case 0x1C9A: mapChar = 0x10DA; break;
+            case 0x1C9B: mapChar = 0x10DB; break;
+            case 0x1C9C: mapChar = 0x10DC; break;
+            case 0x1C9D: mapChar = 0x10DD; break;
+            case 0x1C9E: mapChar = 0x10DE; break;
+            case 0x1C9F: mapChar = 0x10DF; break;
+            case 0x1CA0: mapChar = 0x10E0; break;
+            case 0x1CA1: mapChar = 0x10E1; break;
+            case 0x1CA2: mapChar = 0x10E2; break;
+            case 0x1CA3: mapChar = 0x10E3; break;
+            case 0x1CA4: mapChar = 0x10E4; break;
+            case 0x1CA5: mapChar = 0x10E5; break;
+            case 0x1CA6: mapChar = 0x10E6; break;
+            case 0x1CA7: mapChar = 0x10E7; break;
+            case 0x1CA8: mapChar = 0x10E8; break;
+            case 0x1CA9: mapChar = 0x10E9; break;
+            case 0x1CAA: mapChar = 0x10EA; break;
+            case 0x1CAB: mapChar = 0x10EB; break;
+            case 0x1CAC: mapChar = 0x10EC; break;
+            case 0x1CAD: mapChar = 0x10ED; break;
+            case 0x1CAE: mapChar = 0x10EE; break;
+            case 0x1CAF: mapChar = 0x10EF; break;
+            case 0x1CB0: mapChar = 0x10F0; break;
+            case 0x1CB1: mapChar = 0x10F1; break;
+            case 0x1CB2: mapChar = 0x10F2; break;
+            case 0x1CB3: mapChar = 0x10F3; break;
+            case 0x1CB4: mapChar = 0x10F4; break;
+            case 0x1CB5: mapChar = 0x10F5; break;
+            case 0x1CB6: mapChar = 0x10F6; break;
+            case 0x1CB7: mapChar = 0x10F7; break;
+            case 0x1CB8: mapChar = 0x10F8; break;
+            case 0x1CB9: mapChar = 0x10F9; break;
+            case 0x1CBA: mapChar = 0x10FA; break;
+            case 0x1CBB: mapChar = 0x10FB; break;
+            case 0x1CBC: mapChar = 0x10FC; break;
+            case 0x1CBD: mapChar = 0x10FD; break;
+            case 0x1CBE: mapChar = 0x10FE; break;
+            case 0x1CBF: mapChar = 0x10FF; break;
+            case 0x1E9E: mapChar = 0x00DF; break;
+            case 0x1F88: mapChar = 0x1F80; break;
+            case 0x1F89: mapChar = 0x1F81; break;
+            case 0x1F8A: mapChar = 0x1F82; break;
+            case 0x1F8B: mapChar = 0x1F83; break;
+            case 0x1F8C: mapChar = 0x1F84; break;
+            case 0x1F8D: mapChar = 0x1F85; break;
+            case 0x1F8E: mapChar = 0x1F86; break;
+            case 0x1F8F: mapChar = 0x1F87; break;
+            case 0x1F98: mapChar = 0x1F90; break;
+            case 0x1F99: mapChar = 0x1F91; break;
+            case 0x1F9A: mapChar = 0x1F92; break;
+            case 0x1F9B: mapChar = 0x1F93; break;
+            case 0x1F9C: mapChar = 0x1F94; break;
+            case 0x1F9D: mapChar = 0x1F95; break;
+            case 0x1F9E: mapChar = 0x1F96; break;
+            case 0x1F9F: mapChar = 0x1F97; break;
+            case 0x1FA8: mapChar = 0x1FA0; break;
+            case 0x1FA9: mapChar = 0x1FA1; break;
+            case 0x1FAA: mapChar = 0x1FA2; break;
+            case 0x1FAB: mapChar = 0x1FA3; break;
+            case 0x1FAC: mapChar = 0x1FA4; break;
+            case 0x1FAD: mapChar = 0x1FA5; break;
+            case 0x1FAE: mapChar = 0x1FA6; break;
+            case 0x1FAF: mapChar = 0x1FA7; break;
+            case 0x1FBC: mapChar = 0x1FB3; break;
+            case 0x1FCC: mapChar = 0x1FC3; break;
+            case 0x1FFC: mapChar = 0x1FF3; break;
+            case 0x2126: mapChar = 0x03C9; break;
+            case 0x212A: mapChar = 0x006B; break;
+            case 0x212B: mapChar = 0x00E5; break;
+            case 0x2C62: mapChar = 0x026B; break;
+            case 0x2C63: mapChar = 0x1D7D; break;
+            case 0x2C64: mapChar = 0x027D; break;
+            case 0x2C6D: mapChar = 0x0251; break;
+            case 0x2C6E: mapChar = 0x0271; break;
+            case 0x2C6F: mapChar = 0x0250; break;
+            case 0x2C70: mapChar = 0x0252; break;
+            case 0x2C7E: mapChar = 0x023F; break;
+            case 0x2C7F: mapChar = 0x0240; break;
+            case 0xA64A: mapChar = 0x1C88; break;
+            case 0xA77D: mapChar = 0x1D79; break;
+            case 0xA78D: mapChar = 0x0265; break;
+            case 0xA7AA: mapChar = 0x0266; break;
+            case 0xA7AB: mapChar = 0x025C; break;
+            case 0xA7AC: mapChar = 0x0261; break;
+            case 0xA7AD: mapChar = 0x026C; break;
+            case 0xA7AE: mapChar = 0x026A; break;
+            case 0xA7B0: mapChar = 0x029E; break;
+            case 0xA7B1: mapChar = 0x0287; break;
+            case 0xA7B2: mapChar = 0x029D; break;
+            case 0xA7B3: mapChar = 0xAB53; break;
+            case 0xA7C5: mapChar = 0x0282; break;
+            case 0xA7C6: mapChar = 0x1D8E; break;
+              // default mapChar is already set, so no
+              // need to redo it here.
+              // default       : mapChar = ch;
+            }
+          }
+          else {
+            int offset = val << $$shiftCaseOffsetSign >> ($$shiftCaseOffsetSign+$$shiftCaseOffset);
+            mapChar = ch + offset;
+          }
+        }
+        return mapChar;
+    }
+
+    int toUpperCase(int ch) {
+        int mapChar = ch;
+        int val = getProperties(ch);
+
+        if ((val & $$maskUpperCase) != 0) {
+          if ((val & $$maskCaseOffset) == $$maskCaseOffset) {
+            switch(ch) {
+            case 0x017F: mapChar = 0x0053; break;
+            case 0x023F: mapChar = 0x2C7E; break;
+            case 0x0240: mapChar = 0x2C7F; break;
+            case 0x0250: mapChar = 0x2C6F; break;
+            case 0x0251: mapChar = 0x2C6D; break;
+            case 0x0252: mapChar = 0x2C70; break;
+            case 0x025C: mapChar = 0xA7AB; break;
+            case 0x0261: mapChar = 0xA7AC; break;
+            case 0x0265: mapChar = 0xA78D; break;
+            case 0x0266: mapChar = 0xA7AA; break;
+            case 0x026A: mapChar = 0xA7AE; break;
+            case 0x026B: mapChar = 0x2C62; break;
+            case 0x026C: mapChar = 0xA7AD; break;
+            case 0x0271: mapChar = 0x2C6E; break;
+            case 0x027D: mapChar = 0x2C64; break;
+            case 0x0282: mapChar = 0xA7C5; break;
+            case 0x0287: mapChar = 0xA7B1; break;
+            case 0x029D: mapChar = 0xA7B2; break;
+            case 0x029E: mapChar = 0xA7B0; break;
+            case 0x10D0: mapChar = 0x1C90; break;
+            case 0x10D1: mapChar = 0x1C91; break;
+            case 0x10D2: mapChar = 0x1C92; break;
+            case 0x10D3: mapChar = 0x1C93; break;
+            case 0x10D4: mapChar = 0x1C94; break;
+            case 0x10D5: mapChar = 0x1C95; break;
+            case 0x10D6: mapChar = 0x1C96; break;
+            case 0x10D7: mapChar = 0x1C97; break;
+            case 0x10D8: mapChar = 0x1C98; break;
+            case 0x10D9: mapChar = 0x1C99; break;
+            case 0x10DA: mapChar = 0x1C9A; break;
+            case 0x10DB: mapChar = 0x1C9B; break;
+            case 0x10DC: mapChar = 0x1C9C; break;
+            case 0x10DD: mapChar = 0x1C9D; break;
+            case 0x10DE: mapChar = 0x1C9E; break;
+            case 0x10DF: mapChar = 0x1C9F; break;
+            case 0x10E0: mapChar = 0x1CA0; break;
+            case 0x10E1: mapChar = 0x1CA1; break;
+            case 0x10E2: mapChar = 0x1CA2; break;
+            case 0x10E3: mapChar = 0x1CA3; break;
+            case 0x10E4: mapChar = 0x1CA4; break;
+            case 0x10E5: mapChar = 0x1CA5; break;
+            case 0x10E6: mapChar = 0x1CA6; break;
+            case 0x10E7: mapChar = 0x1CA7; break;
+            case 0x10E8: mapChar = 0x1CA8; break;
+            case 0x10E9: mapChar = 0x1CA9; break;
+            case 0x10EA: mapChar = 0x1CAA; break;
+            case 0x10EB: mapChar = 0x1CAB; break;
+            case 0x10EC: mapChar = 0x1CAC; break;
+            case 0x10ED: mapChar = 0x1CAD; break;
+            case 0x10EE: mapChar = 0x1CAE; break;
+            case 0x10EF: mapChar = 0x1CAF; break;
+            case 0x10F0: mapChar = 0x1CB0; break;
+            case 0x10F1: mapChar = 0x1CB1; break;
+            case 0x10F2: mapChar = 0x1CB2; break;
+            case 0x10F3: mapChar = 0x1CB3; break;
+            case 0x10F4: mapChar = 0x1CB4; break;
+            case 0x10F5: mapChar = 0x1CB5; break;
+            case 0x10F6: mapChar = 0x1CB6; break;
+            case 0x10F7: mapChar = 0x1CB7; break;
+            case 0x10F8: mapChar = 0x1CB8; break;
+            case 0x10F9: mapChar = 0x1CB9; break;
+            case 0x10FA: mapChar = 0x1CBA; break;
+            case 0x10FD: mapChar = 0x1CBD; break;
+            case 0x10FE: mapChar = 0x1CBE; break;
+            case 0x10FF: mapChar = 0x1CBF; break;
+            case 0x1C80: mapChar = 0x0412; break;
+            case 0x1C81: mapChar = 0x0414; break;
+            case 0x1C82: mapChar = 0x041E; break;
+            case 0x1C83: mapChar = 0x0421; break;
+            case 0x1C84: mapChar = 0x0422; break;
+            case 0x1C85: mapChar = 0x0422; break;
+            case 0x1C86: mapChar = 0x042A; break;
+            case 0x1C87: mapChar = 0x0462; break;
+            case 0x1C88: mapChar = 0xA64A; break;
+            case 0x1D79: mapChar = 0xA77D; break;
+            case 0x1D7D: mapChar = 0x2C63; break;
+            case 0x1D8E: mapChar = 0xA7C6; break;
+            case 0x1F80: mapChar = 0x1F88; break;
+            case 0x1F81: mapChar = 0x1F89; break;
+            case 0x1F82: mapChar = 0x1F8A; break;
+            case 0x1F83: mapChar = 0x1F8B; break;
+            case 0x1F84: mapChar = 0x1F8C; break;
+            case 0x1F85: mapChar = 0x1F8D; break;
+            case 0x1F86: mapChar = 0x1F8E; break;
+            case 0x1F87: mapChar = 0x1F8F; break;
+            case 0x1F90: mapChar = 0x1F98; break;
+            case 0x1F91: mapChar = 0x1F99; break;
+            case 0x1F92: mapChar = 0x1F9A; break;
+            case 0x1F93: mapChar = 0x1F9B; break;
+            case 0x1F94: mapChar = 0x1F9C; break;
+            case 0x1F95: mapChar = 0x1F9D; break;
+            case 0x1F96: mapChar = 0x1F9E; break;
+            case 0x1F97: mapChar = 0x1F9F; break;
+            case 0x1FA0: mapChar = 0x1FA8; break;
+            case 0x1FA1: mapChar = 0x1FA9; break;
+            case 0x1FA2: mapChar = 0x1FAA; break;
+            case 0x1FA3: mapChar = 0x1FAB; break;
+            case 0x1FA4: mapChar = 0x1FAC; break;
+            case 0x1FA5: mapChar = 0x1FAD; break;
+            case 0x1FA6: mapChar = 0x1FAE; break;
+            case 0x1FA7: mapChar = 0x1FAF; break;
+            case 0x1FB3: mapChar = 0x1FBC; break;
+            case 0x1FBE: mapChar = 0x0399; break;
+            case 0x1FC3: mapChar = 0x1FCC; break;
+            case 0x1FF3: mapChar = 0x1FFC; break;
+            case 0x2C65: mapChar = 0x023A; break;
+            case 0x2C66: mapChar = 0x023E; break;
+            case 0x2D00: mapChar = 0x10A0; break;
+            case 0x2D01: mapChar = 0x10A1; break;
+            case 0x2D02: mapChar = 0x10A2; break;
+            case 0x2D03: mapChar = 0x10A3; break;
+            case 0x2D04: mapChar = 0x10A4; break;
+            case 0x2D05: mapChar = 0x10A5; break;
+            case 0x2D06: mapChar = 0x10A6; break;
+            case 0x2D07: mapChar = 0x10A7; break;
+            case 0x2D08: mapChar = 0x10A8; break;
+            case 0x2D09: mapChar = 0x10A9; break;
+            case 0x2D0A: mapChar = 0x10AA; break;
+            case 0x2D0B: mapChar = 0x10AB; break;
+            case 0x2D0C: mapChar = 0x10AC; break;
+            case 0x2D0D: mapChar = 0x10AD; break;
+            case 0x2D0E: mapChar = 0x10AE; break;
+            case 0x2D0F: mapChar = 0x10AF; break;
+            case 0x2D10: mapChar = 0x10B0; break;
+            case 0x2D11: mapChar = 0x10B1; break;
+            case 0x2D12: mapChar = 0x10B2; break;
+            case 0x2D13: mapChar = 0x10B3; break;
+            case 0x2D14: mapChar = 0x10B4; break;
+            case 0x2D15: mapChar = 0x10B5; break;
+            case 0x2D16: mapChar = 0x10B6; break;
+            case 0x2D17: mapChar = 0x10B7; break;
+            case 0x2D18: mapChar = 0x10B8; break;
+            case 0x2D19: mapChar = 0x10B9; break;
+            case 0x2D1A: mapChar = 0x10BA; break;
+            case 0x2D1B: mapChar = 0x10BB; break;
+            case 0x2D1C: mapChar = 0x10BC; break;
+            case 0x2D1D: mapChar = 0x10BD; break;
+            case 0x2D1E: mapChar = 0x10BE; break;
+            case 0x2D1F: mapChar = 0x10BF; break;
+            case 0x2D20: mapChar = 0x10C0; break;
+            case 0x2D21: mapChar = 0x10C1; break;
+            case 0x2D22: mapChar = 0x10C2; break;
+            case 0x2D23: mapChar = 0x10C3; break;
+            case 0x2D24: mapChar = 0x10C4; break;
+            case 0x2D25: mapChar = 0x10C5; break;
+            case 0x2D27: mapChar = 0x10C7; break;
+            case 0x2D2D: mapChar = 0x10CD; break;
+            case 0xAB53: mapChar = 0xA7B3; break;
+            case 0xAB70: mapChar = 0x13A0; break;
+            case 0xAB71: mapChar = 0x13A1; break;
+            case 0xAB72: mapChar = 0x13A2; break;
+            case 0xAB73: mapChar = 0x13A3; break;
+            case 0xAB74: mapChar = 0x13A4; break;
+            case 0xAB75: mapChar = 0x13A5; break;
+            case 0xAB76: mapChar = 0x13A6; break;
+            case 0xAB77: mapChar = 0x13A7; break;
+            case 0xAB78: mapChar = 0x13A8; break;
+            case 0xAB79: mapChar = 0x13A9; break;
+            case 0xAB7A: mapChar = 0x13AA; break;
+            case 0xAB7B: mapChar = 0x13AB; break;
+            case 0xAB7C: mapChar = 0x13AC; break;
+            case 0xAB7D: mapChar = 0x13AD; break;
+            case 0xAB7E: mapChar = 0x13AE; break;
+            case 0xAB7F: mapChar = 0x13AF; break;
+            case 0xAB80: mapChar = 0x13B0; break;
+            case 0xAB81: mapChar = 0x13B1; break;
+            case 0xAB82: mapChar = 0x13B2; break;
+            case 0xAB83: mapChar = 0x13B3; break;
+            case 0xAB84: mapChar = 0x13B4; break;
+            case 0xAB85: mapChar = 0x13B5; break;
+            case 0xAB86: mapChar = 0x13B6; break;
+            case 0xAB87: mapChar = 0x13B7; break;
+            case 0xAB88: mapChar = 0x13B8; break;
+            case 0xAB89: mapChar = 0x13B9; break;
+            case 0xAB8A: mapChar = 0x13BA; break;
+            case 0xAB8B: mapChar = 0x13BB; break;
+            case 0xAB8C: mapChar = 0x13BC; break;
+            case 0xAB8D: mapChar = 0x13BD; break;
+            case 0xAB8E: mapChar = 0x13BE; break;
+            case 0xAB8F: mapChar = 0x13BF; break;
+            case 0xAB90: mapChar = 0x13C0; break;
+            case 0xAB91: mapChar = 0x13C1; break;
+            case 0xAB92: mapChar = 0x13C2; break;
+            case 0xAB93: mapChar = 0x13C3; break;
+            case 0xAB94: mapChar = 0x13C4; break;
+            case 0xAB95: mapChar = 0x13C5; break;
+            case 0xAB96: mapChar = 0x13C6; break;
+            case 0xAB97: mapChar = 0x13C7; break;
+            case 0xAB98: mapChar = 0x13C8; break;
+            case 0xAB99: mapChar = 0x13C9; break;
+            case 0xAB9A: mapChar = 0x13CA; break;
+            case 0xAB9B: mapChar = 0x13CB; break;
+            case 0xAB9C: mapChar = 0x13CC; break;
+            case 0xAB9D: mapChar = 0x13CD; break;
+            case 0xAB9E: mapChar = 0x13CE; break;
+            case 0xAB9F: mapChar = 0x13CF; break;
+            case 0xABA0: mapChar = 0x13D0; break;
+            case 0xABA1: mapChar = 0x13D1; break;
+            case 0xABA2: mapChar = 0x13D2; break;
+            case 0xABA3: mapChar = 0x13D3; break;
+            case 0xABA4: mapChar = 0x13D4; break;
+            case 0xABA5: mapChar = 0x13D5; break;
+            case 0xABA6: mapChar = 0x13D6; break;
+            case 0xABA7: mapChar = 0x13D7; break;
+            case 0xABA8: mapChar = 0x13D8; break;
+            case 0xABA9: mapChar = 0x13D9; break;
+            case 0xABAA: mapChar = 0x13DA; break;
+            case 0xABAB: mapChar = 0x13DB; break;
+            case 0xABAC: mapChar = 0x13DC; break;
+            case 0xABAD: mapChar = 0x13DD; break;
+            case 0xABAE: mapChar = 0x13DE; break;
+            case 0xABAF: mapChar = 0x13DF; break;
+            case 0xABB0: mapChar = 0x13E0; break;
+            case 0xABB1: mapChar = 0x13E1; break;
+            case 0xABB2: mapChar = 0x13E2; break;
+            case 0xABB3: mapChar = 0x13E3; break;
+            case 0xABB4: mapChar = 0x13E4; break;
+            case 0xABB5: mapChar = 0x13E5; break;
+            case 0xABB6: mapChar = 0x13E6; break;
+            case 0xABB7: mapChar = 0x13E7; break;
+            case 0xABB8: mapChar = 0x13E8; break;
+            case 0xABB9: mapChar = 0x13E9; break;
+            case 0xABBA: mapChar = 0x13EA; break;
+            case 0xABBB: mapChar = 0x13EB; break;
+            case 0xABBC: mapChar = 0x13EC; break;
+            case 0xABBD: mapChar = 0x13ED; break;
+            case 0xABBE: mapChar = 0x13EE; break;
+            case 0xABBF: mapChar = 0x13EF; break;
+              // ch must have a 1:M case mapping, but we
+              // can't handle it here. Return ch.
+              // since mapChar is already set, no need
+              // to redo it here.
+              //default       : mapChar = ch;
+            }
+          }
+          else {
+            int offset = val  << $$shiftCaseOffsetSign >> ($$shiftCaseOffsetSign+$$shiftCaseOffset);
+            mapChar =  ch - offset;
+          }
+        }
+        return mapChar;
+    }
+
+    int toTitleCase(int ch) {
+        int mapChar = ch;
+        int val = getProperties(ch);
+
+        if ((val & $$maskTitleCase) != 0) {
+            // There is a titlecase equivalent.  Perform further checks:
+            if ((val & $$maskUpperCase) == 0) {
+                // The character does not have an uppercase equivalent, so it must
+                // already be uppercase; so add 1 to get the titlecase form.
+                mapChar = ch + 1;
+            }
+            else if ((val & $$maskLowerCase) == 0) {
+                // For some Georgian letters, titlecase form is 
+                // same as this character.
+                if(ch >= 0x10D0 && ch <= 0x10FF) {
+                    mapChar = ch;
+                }
+                else {
+                    // The character does not have a lowercase equivalent, so it must
+                    // already be lowercase; so subtract 1 to get the titlecase form.
+                    mapChar = ch - 1;
+                }                
+            }
+            // else {
+            // The character has both an uppercase equivalent and a lowercase
+            // equivalent, so it must itself be a titlecase form; return it.
+            // return ch;
+            //}
+        }
+        else if ((val & $$maskUpperCase) != 0) {
+            // This character has no titlecase equivalent but it does have an
+            // uppercase equivalent, so use that (subtract the signed case offset).
+            mapChar = toUpperCase(ch);
+        }
+        return mapChar;
+    }
+
+    int digit(int ch, int radix) {
+        int value = -1;
+        if (radix >= Character.MIN_RADIX && radix <= Character.MAX_RADIX) {
+            int val = getProperties(ch);
+            int kind = val & $$maskType;
+            if (kind == Character.DECIMAL_DIGIT_NUMBER) {
+                value = ch + ((val & $$maskDigitOffset) >> $$shiftDigitOffset) & $$maskDigit;
+            }
+            else if ((val & $$maskNumericType) == $$valueJavaSupradecimal) {
+                // Java supradecimal digit
+                value = (ch + ((val & $$maskDigitOffset) >> $$shiftDigitOffset) & $$maskDigit) + 10;
+            }
+        }
+        return (value < radix) ? value : -1;
+    }
+
+    int getNumericValue(int ch) {
+        int val = getProperties(ch);
+        int retval = -1;
+
+        switch (val & $$maskNumericType) {
+        default: // cannot occur
+        case ($$valueNotNumeric):         // not numeric
+            retval = -1;
+            break;
+        case ($$valueDigit):              // simple numeric
+            retval = ch + ((val & $$maskDigitOffset) >> $$shiftDigitOffset) & $$maskDigit;
+            break;
+        case ($$valueStrangeNumeric)      :       // "strange" numeric
+            switch (ch) {
+                case 0x0BF1: retval = 100; break;         // TAMIL NUMBER ONE HUNDRED
+                case 0x0BF2: retval = 1000; break;        // TAMIL NUMBER ONE THOUSAND
+                case 0x0D71: retval = 100; break;         // MALAYALAM NUMBER ONE HUNDRED
+                case 0x0D72: retval = 1000; break;        // MALAYALAM NUMBER ONE THOUSAND
+                case 0x1375: retval = 40; break;          // ETHIOPIC NUMBER FORTY
+                case 0x1376: retval = 50; break;          // ETHIOPIC NUMBER FIFTY
+                case 0x1377: retval = 60; break;          // ETHIOPIC NUMBER SIXTY
+                case 0x1378: retval = 70; break;          // ETHIOPIC NUMBER SEVENTY
+                case 0x1379: retval = 80; break;          // ETHIOPIC NUMBER EIGHTY
+                case 0x137A: retval = 90; break;          // ETHIOPIC NUMBER NINETY
+                case 0x137B: retval = 100; break;         // ETHIOPIC NUMBER HUNDRED
+                case 0x137C: retval = 10000; break;       // ETHIOPIC NUMBER TEN THOUSAND
+                case 0x215F: retval = 1; break;           // FRACTION NUMERATOR ONE
+                case 0x216C: retval = 50; break;          // ROMAN NUMERAL FIFTY
+                case 0x216D: retval = 100; break;         // ROMAN NUMERAL ONE HUNDRED
+                case 0x216E: retval = 500; break;         // ROMAN NUMERAL FIVE HUNDRED
+                case 0x216F: retval = 1000; break;        // ROMAN NUMERAL ONE THOUSAND
+                case 0x217C: retval = 50; break;          // SMALL ROMAN NUMERAL FIFTY
+                case 0x217D: retval = 100; break;         // SMALL ROMAN NUMERAL ONE HUNDRED
+                case 0x217E: retval = 500; break;         // SMALL ROMAN NUMERAL FIVE HUNDRED
+                case 0x217F: retval = 1000; break;        // SMALL ROMAN NUMERAL ONE THOUSAND
+                case 0x2180: retval = 1000; break;        // ROMAN NUMERAL ONE THOUSAND C D
+                case 0x2181: retval = 5000; break;        // ROMAN NUMERAL FIVE THOUSAND
+                case 0x2182: retval = 10000; break;       // ROMAN NUMERAL TEN THOUSAND
+                case 0x2186: retval = 50; break;          // ROMAN NUMERAL FIFTY EARLY FORM
+                case 0x2187: retval = 50000; break;       // ROMAN NUMERAL FIFTY THOUSAND
+                case 0x2188: retval = 100000; break;      // ROMAN NUMERAL ONE HUNDRED THOUSAND
+                case 0x324B: retval = 40; break;          // CIRCLED NUMBER FORTY ON BLACK SQUARE
+                case 0x324C: retval = 50; break;          // CIRCLED NUMBER FIFTY ON BLACK SQUARE
+                case 0x324D: retval = 60; break;          // CIRCLED NUMBER SIXTY ON BLACK SQUARE
+                case 0x324E: retval = 70; break;          // CIRCLED NUMBER SEVENTY ON BLACK SQUARE
+                case 0x324F: retval = 80; break;          // CIRCLED NUMBER EIGHTY ON BLACK SQUARE
+                case 0x325C: retval = 32; break;          // CIRCLED NUMBER THIRTY TWO
+                case 0x325D: retval = 33; break;          // CIRCLED NUMBER THIRTY THREE
+                case 0x325E: retval = 34; break;          // CIRCLED NUMBER THIRTY FOUR
+                case 0x325F: retval = 35; break;          // CIRCLED NUMBER THIRTY FIVE
+                case 0x32B1: retval = 36; break;          // CIRCLED NUMBER THIRTY SIX
+                case 0x32B2: retval = 37; break;          // CIRCLED NUMBER THIRTY SEVEN
+                case 0x32B3: retval = 38; break;          // CIRCLED NUMBER THIRTY EIGHT
+                case 0x32B4: retval = 39; break;          // CIRCLED NUMBER THIRTY NINE
+                case 0x32B5: retval = 40; break;          // CIRCLED NUMBER FORTY
+                case 0x32B6: retval = 41; break;          // CIRCLED NUMBER FORTY ONE
+                case 0x32B7: retval = 42; break;          // CIRCLED NUMBER FORTY TWO
+                case 0x32B8: retval = 43; break;          // CIRCLED NUMBER FORTY THREE
+                case 0x32B9: retval = 44; break;          // CIRCLED NUMBER FORTY FOUR
+                case 0x32BA: retval = 45; break;          // CIRCLED NUMBER FORTY FIVE
+                case 0x32BB: retval = 46; break;          // CIRCLED NUMBER FORTY SIX
+                case 0x32BC: retval = 47; break;          // CIRCLED NUMBER FORTY SEVEN
+                case 0x32BD: retval = 48; break;          // CIRCLED NUMBER FORTY EIGHT
+                case 0x32BE: retval = 49; break;          // CIRCLED NUMBER FORTY NINE
+                case 0x32BF: retval = 50; break;          // CIRCLED NUMBER FIFTY
+                default:       retval = -2; break;
+            }
+            break;
+        case ($$valueJavaSupradecimal):           // Java supradecimal
+            retval = (ch + ((val & $$maskDigitOffset) >> $$shiftDigitOffset) & $$maskDigit) + 10;
+            break;
+        }
+        return retval;
+    }
+
+    boolean isDigit(int ch) {
+        int props = getProperties(ch);
+        return (props & $$maskType) == Character.DECIMAL_DIGIT_NUMBER;
+    }
+
+    boolean isLowerCase(int ch) {
+        return (getPropertiesEx(ch) & $$maskOtherLowercase) != 0;
+    }
+
+    boolean isUpperCase(int ch) {
+        return (getPropertiesEx(ch) & $$maskOtherUppercase) != 0;
+    }
+
+    boolean isWhitespace(int ch) {
+        int props = getProperties(ch);
+        return ((props & $$maskIdentifierInfo) == $$valueJavaWhitespace);
+    }
+
+    byte getDirectionality(int ch) {
+        int val = getProperties(ch);
+        byte directionality = (byte)((val & $$maskBidi) >> $$shiftBidi);
+        if (directionality == 0xF ) {
+            switch(ch) {
+                case 0x202A :
+                    // This is the only char with LRE
+                    directionality = Character.DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING;
+                    break;
+                case 0x202B :
+                    // This is the only char with RLE
+                    directionality = Character.DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING;
+                    break;
+                case 0x202C :
+                    // This is the only char with PDF
+                    directionality = Character.DIRECTIONALITY_POP_DIRECTIONAL_FORMAT;
+                    break;
+                case 0x202D :
+                    // This is the only char with LRO
+                    directionality = Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE;
+                    break;
+                case 0x202E :
+                    // This is the only char with RLO
+                    directionality = Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE;
+                    break;
+                case 0x2066 :
+                    // This is the only char with LRI
+                    directionality = Character.DIRECTIONALITY_LEFT_TO_RIGHT_ISOLATE;
+                    break;
+                case 0x2067 :
+                    // This is the only char with RLI
+                    directionality = Character.DIRECTIONALITY_RIGHT_TO_LEFT_ISOLATE;
+                    break;
+                case 0x2068 :
+                    // This is the only char with FSI
+                    directionality = Character.DIRECTIONALITY_FIRST_STRONG_ISOLATE;
+                    break;
+                case 0x2069 :
+                    // This is the only char with PDI
+                    directionality = Character.DIRECTIONALITY_POP_DIRECTIONAL_ISOLATE;
+                    break;
+                default :
+                    directionality = Character.DIRECTIONALITY_UNDEFINED;
+                    break;
+            }
+        }
+        return directionality;
+    }
+
+    boolean isMirrored(int ch) {
+        int props = getProperties(ch);
+        return ((props & $$maskMirrored) != 0);
+    }
+
+    int toUpperCaseEx(int ch) {
+        int mapChar = ch;
+        int val = getProperties(ch);
+
+        if ((val & $$maskUpperCase) != 0) {
+            if ((val & $$maskCaseOffset) != $$maskCaseOffset) {
+                int offset = val  << $$shiftCaseOffsetSign >> ($$shiftCaseOffsetSign+$$shiftCaseOffset);
+                mapChar =  ch - offset;
+            }
+            else {
+                switch(ch) {
+                    case 0x017F: mapChar = 0x0053; break;
+                    case 0x023F: mapChar = 0x2C7E; break;
+                    case 0x0240: mapChar = 0x2C7F; break;
+                    case 0x0250: mapChar = 0x2C6F; break;
+                    case 0x0251: mapChar = 0x2C6D; break;
+                    case 0x0252: mapChar = 0x2C70; break;
+                    case 0x025C: mapChar = 0xA7AB; break;
+                    case 0x0261: mapChar = 0xA7AC; break;
+                    case 0x0265: mapChar = 0xA78D; break;
+                    case 0x0266: mapChar = 0xA7AA; break;
+                    case 0x026A: mapChar = 0xA7AE; break;
+                    case 0x026B: mapChar = 0x2C62; break;
+                    case 0x026C: mapChar = 0xA7AD; break;
+                    case 0x0271: mapChar = 0x2C6E; break;
+                    case 0x027D: mapChar = 0x2C64; break;
+                    case 0x0282: mapChar = 0xA7C5; break;
+                    case 0x0287: mapChar = 0xA7B1; break;
+                    case 0x029D: mapChar = 0xA7B2; break;
+                    case 0x029E: mapChar = 0xA7B0; break;
+                    case 0x10D0: mapChar = 0x1C90; break;
+                    case 0x10D1: mapChar = 0x1C91; break;
+                    case 0x10D2: mapChar = 0x1C92; break;
+                    case 0x10D3: mapChar = 0x1C93; break;
+                    case 0x10D4: mapChar = 0x1C94; break;
+                    case 0x10D5: mapChar = 0x1C95; break;
+                    case 0x10D6: mapChar = 0x1C96; break;
+                    case 0x10D7: mapChar = 0x1C97; break;
+                    case 0x10D8: mapChar = 0x1C98; break;
+                    case 0x10D9: mapChar = 0x1C99; break;
+                    case 0x10DA: mapChar = 0x1C9A; break;
+                    case 0x10DB: mapChar = 0x1C9B; break;
+                    case 0x10DC: mapChar = 0x1C9C; break;
+                    case 0x10DD: mapChar = 0x1C9D; break;
+                    case 0x10DE: mapChar = 0x1C9E; break;
+                    case 0x10DF: mapChar = 0x1C9F; break;
+                    case 0x10E0: mapChar = 0x1CA0; break;
+                    case 0x10E1: mapChar = 0x1CA1; break;
+                    case 0x10E2: mapChar = 0x1CA2; break;
+                    case 0x10E3: mapChar = 0x1CA3; break;
+                    case 0x10E4: mapChar = 0x1CA4; break;
+                    case 0x10E5: mapChar = 0x1CA5; break;
+                    case 0x10E6: mapChar = 0x1CA6; break;
+                    case 0x10E7: mapChar = 0x1CA7; break;
+                    case 0x10E8: mapChar = 0x1CA8; break;
+                    case 0x10E9: mapChar = 0x1CA9; break;
+                    case 0x10EA: mapChar = 0x1CAA; break;
+                    case 0x10EB: mapChar = 0x1CAB; break;
+                    case 0x10EC: mapChar = 0x1CAC; break;
+                    case 0x10ED: mapChar = 0x1CAD; break;
+                    case 0x10EE: mapChar = 0x1CAE; break;
+                    case 0x10EF: mapChar = 0x1CAF; break;
+                    case 0x10F0: mapChar = 0x1CB0; break;
+                    case 0x10F1: mapChar = 0x1CB1; break;
+                    case 0x10F2: mapChar = 0x1CB2; break;
+                    case 0x10F3: mapChar = 0x1CB3; break;
+                    case 0x10F4: mapChar = 0x1CB4; break;
+                    case 0x10F5: mapChar = 0x1CB5; break;
+                    case 0x10F6: mapChar = 0x1CB6; break;
+                    case 0x10F7: mapChar = 0x1CB7; break;
+                    case 0x10F8: mapChar = 0x1CB8; break;
+                    case 0x10F9: mapChar = 0x1CB9; break;
+                    case 0x10FA: mapChar = 0x1CBA; break;
+                    case 0x10FD: mapChar = 0x1CBD; break;
+                    case 0x10FE: mapChar = 0x1CBE; break;
+                    case 0x10FF: mapChar = 0x1CBF; break;
+                    case 0x1C80: mapChar = 0x0412; break;
+                    case 0x1C81: mapChar = 0x0414; break;
+                    case 0x1C82: mapChar = 0x041E; break;
+                    case 0x1C83: mapChar = 0x0421; break;
+                    case 0x1C84: mapChar = 0x0422; break;
+                    case 0x1C85: mapChar = 0x0422; break;
+                    case 0x1C86: mapChar = 0x042A; break;
+                    case 0x1C87: mapChar = 0x0462; break;
+                    case 0x1C88: mapChar = 0xA64A; break;
+                    case 0x1D79: mapChar = 0xA77D; break;
+                    case 0x1D7D: mapChar = 0x2C63; break;
+                    case 0x1D8E: mapChar = 0xA7C6; break;
+                    case 0x1FBE: mapChar = 0x0399; break;
+                    case 0x2C65: mapChar = 0x023A; break;
+                    case 0x2C66: mapChar = 0x023E; break;
+                    case 0x2D00: mapChar = 0x10A0; break;
+                    case 0x2D01: mapChar = 0x10A1; break;
+                    case 0x2D02: mapChar = 0x10A2; break;
+                    case 0x2D03: mapChar = 0x10A3; break;
+                    case 0x2D04: mapChar = 0x10A4; break;
+                    case 0x2D05: mapChar = 0x10A5; break;
+                    case 0x2D06: mapChar = 0x10A6; break;
+                    case 0x2D07: mapChar = 0x10A7; break;
+                    case 0x2D08: mapChar = 0x10A8; break;
+                    case 0x2D09: mapChar = 0x10A9; break;
+                    case 0x2D0A: mapChar = 0x10AA; break;
+                    case 0x2D0B: mapChar = 0x10AB; break;
+                    case 0x2D0C: mapChar = 0x10AC; break;
+                    case 0x2D0D: mapChar = 0x10AD; break;
+                    case 0x2D0E: mapChar = 0x10AE; break;
+                    case 0x2D0F: mapChar = 0x10AF; break;
+                    case 0x2D10: mapChar = 0x10B0; break;
+                    case 0x2D11: mapChar = 0x10B1; break;
+                    case 0x2D12: mapChar = 0x10B2; break;
+                    case 0x2D13: mapChar = 0x10B3; break;
+                    case 0x2D14: mapChar = 0x10B4; break;
+                    case 0x2D15: mapChar = 0x10B5; break;
+                    case 0x2D16: mapChar = 0x10B6; break;
+                    case 0x2D17: mapChar = 0x10B7; break;
+                    case 0x2D18: mapChar = 0x10B8; break;
+                    case 0x2D19: mapChar = 0x10B9; break;
+                    case 0x2D1A: mapChar = 0x10BA; break;
+                    case 0x2D1B: mapChar = 0x10BB; break;
+                    case 0x2D1C: mapChar = 0x10BC; break;
+                    case 0x2D1D: mapChar = 0x10BD; break;
+                    case 0x2D1E: mapChar = 0x10BE; break;
+                    case 0x2D1F: mapChar = 0x10BF; break;
+                    case 0x2D20: mapChar = 0x10C0; break;
+                    case 0x2D21: mapChar = 0x10C1; break;
+                    case 0x2D22: mapChar = 0x10C2; break;
+                    case 0x2D23: mapChar = 0x10C3; break;
+                    case 0x2D24: mapChar = 0x10C4; break;
+                    case 0x2D25: mapChar = 0x10C5; break;
+                    case 0x2D27: mapChar = 0x10C7; break;
+                    case 0x2D2D: mapChar = 0x10CD; break;
+                    case 0xAB53: mapChar = 0xA7B3; break;
+                    case 0xAB70: mapChar = 0x13A0; break;
+                    case 0xAB71: mapChar = 0x13A1; break;
+                    case 0xAB72: mapChar = 0x13A2; break;
+                    case 0xAB73: mapChar = 0x13A3; break;
+                    case 0xAB74: mapChar = 0x13A4; break;
+                    case 0xAB75: mapChar = 0x13A5; break;
+                    case 0xAB76: mapChar = 0x13A6; break;
+                    case 0xAB77: mapChar = 0x13A7; break;
+                    case 0xAB78: mapChar = 0x13A8; break;
+                    case 0xAB79: mapChar = 0x13A9; break;
+                    case 0xAB7A: mapChar = 0x13AA; break;
+                    case 0xAB7B: mapChar = 0x13AB; break;
+                    case 0xAB7C: mapChar = 0x13AC; break;
+                    case 0xAB7D: mapChar = 0x13AD; break;
+                    case 0xAB7E: mapChar = 0x13AE; break;
+                    case 0xAB7F: mapChar = 0x13AF; break;
+                    case 0xAB80: mapChar = 0x13B0; break;
+                    case 0xAB81: mapChar = 0x13B1; break;
+                    case 0xAB82: mapChar = 0x13B2; break;
+                    case 0xAB83: mapChar = 0x13B3; break;
+                    case 0xAB84: mapChar = 0x13B4; break;
+                    case 0xAB85: mapChar = 0x13B5; break;
+                    case 0xAB86: mapChar = 0x13B6; break;
+                    case 0xAB87: mapChar = 0x13B7; break;
+                    case 0xAB88: mapChar = 0x13B8; break;
+                    case 0xAB89: mapChar = 0x13B9; break;
+                    case 0xAB8A: mapChar = 0x13BA; break;
+                    case 0xAB8B: mapChar = 0x13BB; break;
+                    case 0xAB8C: mapChar = 0x13BC; break;
+                    case 0xAB8D: mapChar = 0x13BD; break;
+                    case 0xAB8E: mapChar = 0x13BE; break;
+                    case 0xAB8F: mapChar = 0x13BF; break;
+                    case 0xAB90: mapChar = 0x13C0; break;
+                    case 0xAB91: mapChar = 0x13C1; break;
+                    case 0xAB92: mapChar = 0x13C2; break;
+                    case 0xAB93: mapChar = 0x13C3; break;
+                    case 0xAB94: mapChar = 0x13C4; break;
+                    case 0xAB95: mapChar = 0x13C5; break;
+                    case 0xAB96: mapChar = 0x13C6; break;
+                    case 0xAB97: mapChar = 0x13C7; break;
+                    case 0xAB98: mapChar = 0x13C8; break;
+                    case 0xAB99: mapChar = 0x13C9; break;
+                    case 0xAB9A: mapChar = 0x13CA; break;
+                    case 0xAB9B: mapChar = 0x13CB; break;
+                    case 0xAB9C: mapChar = 0x13CC; break;
+                    case 0xAB9D: mapChar = 0x13CD; break;
+                    case 0xAB9E: mapChar = 0x13CE; break;
+                    case 0xAB9F: mapChar = 0x13CF; break;
+                    case 0xABA0: mapChar = 0x13D0; break;
+                    case 0xABA1: mapChar = 0x13D1; break;
+                    case 0xABA2: mapChar = 0x13D2; break;
+                    case 0xABA3: mapChar = 0x13D3; break;
+                    case 0xABA4: mapChar = 0x13D4; break;
+                    case 0xABA5: mapChar = 0x13D5; break;
+                    case 0xABA6: mapChar = 0x13D6; break;
+                    case 0xABA7: mapChar = 0x13D7; break;
+                    case 0xABA8: mapChar = 0x13D8; break;
+                    case 0xABA9: mapChar = 0x13D9; break;
+                    case 0xABAA: mapChar = 0x13DA; break;
+                    case 0xABAB: mapChar = 0x13DB; break;
+                    case 0xABAC: mapChar = 0x13DC; break;
+                    case 0xABAD: mapChar = 0x13DD; break;
+                    case 0xABAE: mapChar = 0x13DE; break;
+                    case 0xABAF: mapChar = 0x13DF; break;
+                    case 0xABB0: mapChar = 0x13E0; break;
+                    case 0xABB1: mapChar = 0x13E1; break;
+                    case 0xABB2: mapChar = 0x13E2; break;
+                    case 0xABB3: mapChar = 0x13E3; break;
+                    case 0xABB4: mapChar = 0x13E4; break;
+                    case 0xABB5: mapChar = 0x13E5; break;
+                    case 0xABB6: mapChar = 0x13E6; break;
+                    case 0xABB7: mapChar = 0x13E7; break;
+                    case 0xABB8: mapChar = 0x13E8; break;
+                    case 0xABB9: mapChar = 0x13E9; break;
+                    case 0xABBA: mapChar = 0x13EA; break;
+                    case 0xABBB: mapChar = 0x13EB; break;
+                    case 0xABBC: mapChar = 0x13EC; break;
+                    case 0xABBD: mapChar = 0x13ED; break;
+                    case 0xABBE: mapChar = 0x13EE; break;
+                    case 0xABBF: mapChar = 0x13EF; break;
+                    default       : mapChar = Character.ERROR; break;
+                }
+            }
+        }
+        return mapChar;
+    }
+
+    char[] toUpperCaseCharArray(int ch) {
+        char[] upperMap = {(char)ch};
+        int location = findInCharMap(ch);
+        if (location != -1) {
+            upperMap = charMap[location][1];
+        }
+        return upperMap;
+    }
+
+
+    /**
+     * Finds the character in the uppercase mapping table.
+     *
+     * @param ch the <code>char</code> to search
+     * @return the index location ch in the table or -1 if not found
+     * @since 1.4
+     */
+     int findInCharMap(int ch) {
+        if (charMap == null || charMap.length == 0) {
+            return -1;
+        }
+        int top, bottom, current;
+        bottom = 0;
+        top = charMap.length;
+        current = top/2;
+        // invariant: top > current >= bottom && ch >= CharacterData.charMap[bottom][0]
+        while (top - bottom > 1) {
+            if (ch >= charMap[current][0][0]) {
+                bottom = current;
+            } else {
+                top = current;
+            }
+            current = (top + bottom) / 2;
+        }
+        if (ch == charMap[current][0][0]) return current;
+        else return -1;
+    }
+
+    static final CharacterData00 instance = new CharacterData00();
+    private CharacterData00() {};
+
+    $$Tables
+
+    static {
+        $$Initializers
+    }
+}

@@ -1,0 +1,5 @@
+TestMultipleErrors.java:18:8: compiler.err.proc.messager: error1
+TestMultipleErrors.java:18:8: compiler.err.proc.messager: error2
+TestMultipleErrors.java:18:8: compiler.err.proc.messager: error3
+TestMultipleErrors.java:18:8: compiler.err.proc.messager: error4
+4 errors

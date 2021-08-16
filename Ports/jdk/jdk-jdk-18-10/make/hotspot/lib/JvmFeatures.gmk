@@ -1,0 +1,273 @@
+#
+# Copyright (c) 2013, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+$(eval $(call IncludeCustomExtension, hotspot/lib/JvmFeatures.gmk))
+
+################################################################################
+# Setup CFLAGS and EXCLUDES for the libjvm compilation, depending on which
+# jvm features are selected for this jvm variant.
+
+ifeq ($(call check-jvm-feature, compiler1), true)
+  JVM_CFLAGS_FEATURES += -DCOMPILER1
+else
+  JVM_EXCLUDE_PATTERNS += c1_ c1/
+endif
+
+ifeq ($(call check-jvm-feature, compiler2), true)
+  JVM_CFLAGS_FEATURES += -DCOMPILER2
+  JVM_SRC_DIRS += $(JVM_VARIANT_OUTPUTDIR)/gensrc/adfiles
+else
+  JVM_EXCLUDES += opto libadt
+  JVM_EXCLUDE_FILES += bcEscapeAnalyzer.cpp ciTypeFlow.cpp
+  JVM_EXCLUDE_PATTERNS += c2_ runtime_ /c2/
+endif
+
+ifeq ($(call check-jvm-feature, zero), true)
+  JVM_EXCLUDES += opto libadt
+  JVM_EXCLUDE_PATTERNS += c1_ c1/ c2_ runtime_ /c2/
+  JVM_EXCLUDE_FILES += templateInterpreter.cpp templateInterpreterGenerator.cpp \
+                       bcEscapeAnalyzer.cpp ciTypeFlow.cpp
+  JVM_CFLAGS_FEATURES += -DZERO -DZERO_LIBARCH='"$(OPENJDK_TARGET_CPU_LEGACY_LIB)"' $(LIBFFI_CFLAGS)
+  JVM_LIBS_FEATURES += $(LIBFFI_LIBS)
+  ifeq ($(ENABLE_LIBFFI_BUNDLING), true)
+    JVM_LDFLAGS_FEATURES += $(call SET_EXECUTABLE_ORIGIN,/..)
+  endif
+else
+  JVM_EXCLUDE_PATTERNS += /zero/
+endif
+
+ifeq ($(JVM_VARIANT), custom)
+  JVM_CFLAGS_FEATURES += -DVMTYPE=\"Custom\"
+endif
+
+ifeq ($(call check-jvm-feature, minimal), true)
+  JVM_CFLAGS_FEATURES += -DMINIMAL_JVM -DVMTYPE=\"Minimal\"
+  ifeq ($(call isTargetOs, linux), true)
+    # Override the default -g with a more liberal strip policy for the minimal JVM
+    JVM_STRIPFLAGS := --strip-unneeded
+  endif
+endif
+
+ifeq ($(call check-jvm-feature, dtrace), true)
+  JVM_CFLAGS_FEATURES += -DDTRACE_ENABLED
+endif
+
+ifeq ($(call check-jvm-feature, static-build), true)
+  JVM_CFLAGS_FEATURES += -DSTATIC_BUILD=1
+endif
+
+ifneq ($(call check-jvm-feature, jvmti), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_JVMTI=0
+  JVM_EXCLUDE_FILES += jvmtiGetLoadedClasses.cpp jvmtiThreadState.cpp jvmtiExtensions.cpp \
+      jvmtiImpl.cpp jvmtiManageCapabilities.cpp jvmtiRawMonitor.cpp jvmtiUtil.cpp jvmtiTrace.cpp \
+      jvmtiCodeBlobEvents.cpp jvmtiEnv.cpp jvmtiRedefineClasses.cpp jvmtiEnvBase.cpp jvmtiEnvThreadState.cpp \
+      jvmtiTagMap.cpp jvmtiEventController.cpp evmCompat.cpp jvmtiEnter.xsl jvmtiExport.cpp \
+      jvmtiClassFileReconstituter.cpp jvmtiTagMapTable.cpp
+endif
+
+ifneq ($(call check-jvm-feature, jvmci), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_JVMCI=0
+  JVM_EXCLUDES += jvmci
+  JVM_EXCLUDE_FILES += jvmciCodeInstaller_$(HOTSPOT_TARGET_CPU_ARCH).cpp
+endif
+
+ifneq ($(call check-jvm-feature, vm-structs), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_VM_STRUCTS=0
+  JVM_EXCLUDE_FILES += vmStructs.cpp
+endif
+
+ifneq ($(call check-jvm-feature, jni-check), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_JNI_CHECK=0
+  JVM_EXCLUDE_FILES += jniCheck.cpp
+endif
+
+ifneq ($(call check-jvm-feature, services), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_SERVICES=0
+  JVM_EXCLUDE_FILES += heapDumper.cpp heapInspection.cpp \
+      attachListener_$(HOTSPOT_TARGET_OS).cpp attachListener.cpp
+endif
+
+ifneq ($(call check-jvm-feature, management), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_MANAGEMENT=0
+endif
+
+ifneq ($(call check-jvm-feature, cds), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_CDS=0
+  JVM_EXCLUDE_FILES += \
+      cdsProtectionDomain.cpp \
+      classLoaderDataShared.cpp \
+      classLoaderExt.cpp \
+      dumpTimeSharedClassInfo.cpp \
+      lambdaProxyClassDictionary.cpp \
+      runTimeSharedClassInfo.cpp \
+      systemDictionaryShared.cpp
+  JVM_EXCLUDE_PATTERNS += cds/
+endif
+
+ifneq ($(call check-jvm-feature, nmt), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_NMT=0
+  JVM_EXCLUDE_FILES += \
+      memBaseline.cpp memReporter.cpp mallocTracker.cpp virtualMemoryTracker.cpp nmtCommon.cpp \
+      memTracker.cpp nmtDCmd.cpp mallocSiteTable.cpp threadStackTracker.cpp
+endif
+
+ifneq ($(call check-jvm-feature, g1gc), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_G1GC=0
+  JVM_EXCLUDE_PATTERNS += gc/g1
+endif
+
+ifneq ($(call check-jvm-feature, parallelgc), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_PARALLELGC=0
+  JVM_EXCLUDE_PATTERNS += gc/parallel
+endif
+
+ifneq ($(call check-jvm-feature, serialgc), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_SERIALGC=0
+  JVM_EXCLUDE_PATTERNS += gc/serial
+endif
+
+ifneq ($(call check-jvm-feature, epsilongc), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_EPSILONGC=0
+  JVM_EXCLUDE_PATTERNS += gc/epsilon
+endif
+
+ifneq ($(call check-jvm-feature, zgc), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_ZGC=0
+  JVM_EXCLUDE_PATTERNS += gc/z
+endif
+
+ifneq ($(call check-jvm-feature, shenandoahgc), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_SHENANDOAHGC=0
+  JVM_EXCLUDE_PATTERNS += gc/shenandoah
+endif
+
+ifneq ($(call check-jvm-feature, jfr), true)
+  JVM_CFLAGS_FEATURES += -DINCLUDE_JFR=0
+  JVM_EXCLUDE_PATTERNS += jfr
+  JVM_EXCLUDE_FILES += compilerEvent.cpp
+endif
+
+################################################################################
+
+ifeq ($(call check-jvm-feature, link-time-opt), true)
+  # NOTE: Disable automatic opimization level and let the explicit cflag control
+  # optimization level instead. This activates O3 on slowdebug builds, just
+  # like the old build, but it's probably not right.
+  JVM_OPTIMIZATION :=
+  JVM_CFLAGS_FEATURES += -O3 -flto
+  JVM_LDFLAGS_FEATURES += -O3 -flto -fuse-linker-plugin -fno-strict-aliasing
+endif
+
+ifeq ($(call check-jvm-feature, opt-size), true)
+  JVM_OPTIMIZATION := SIZE
+  OPT_SPEED_SRC := \
+      allocation.cpp \
+      assembler.cpp \
+      barrierSet.cpp \
+      basicLock.cpp \
+      bytecode.cpp \
+      bytecodeInterpreter.cpp \
+      c1_Compilation.cpp \
+      c1_Compiler.cpp \
+      c1_GraphBuilder.cpp \
+      c1_LinearScan.cpp \
+      c1_LIR.cpp \
+      ciEnv.cpp \
+      ciObjectFactory.cpp \
+      codeBlob.cpp \
+      constantPool.cpp \
+      constMethod.cpp \
+      classLoader.cpp \
+      classLoaderData.cpp \
+      classFileParser.cpp \
+      classFileStream.cpp \
+      cpCache.cpp \
+      defNewGeneration.cpp \
+      frame_arm.cpp \
+      frame_aarch64.cpp \
+      frame_ppc.cpp \
+      frame_s390.cpp \
+      frame_x86.cpp \
+      genCollectedHeap.cpp \
+      generation.cpp \
+      genMarkSweep.cpp \
+      growableArray.cpp \
+      handles.cpp \
+      hashtable.cpp \
+      heap.cpp \
+      icache.cpp \
+      icache_arm.cpp \
+      icache_aarch64.cpp \
+      icache_ppc.cpp \
+      icache_s390.cpp \
+      icache_x86.cpp \
+      instanceKlass.cpp \
+      invocationCounter.cpp \
+      iterator.cpp \
+      javaCalls.cpp \
+      javaClasses.cpp \
+      jniFastGetField_arm.cpp \
+      jvm.cpp \
+      linkResolver.cpp \
+      klass.cpp \
+      klassVtable.cpp \
+      markSweep.cpp \
+      memRegion.cpp \
+      memoryPool.cpp \
+      method.cpp \
+      methodHandles.cpp \
+      methodHandles_arm.cpp \
+      methodLiveness.cpp \
+      metaspace.cpp \
+      mutex.cpp \
+      mutexLocker.cpp \
+      nativeLookup.cpp \
+      objArrayKlass.cpp \
+      os_linux.cpp \
+      os_linux_arm.cpp \
+      resourceArea.cpp \
+      rewriter.cpp \
+      sharedRuntime.cpp \
+      signature.cpp \
+      space.cpp \
+      stackMapTable.cpp \
+      symbolTable.cpp \
+      systemDictionary.cpp \
+      symbol.cpp \
+      synchronizer.cpp \
+      timer.cpp \
+      typeArrayKlass.cpp \
+      unsafe.cpp \
+      utf8.cpp \
+      vmSymbols.cpp \
+      #
+
+  $(foreach s, $(OPT_SPEED_SRC), \
+      $(eval BUILD_LIBJVM_$s_OPTIMIZATION := HIGHEST_JVM))
+
+  ifneq ($(filter $(TOOLCHAIN_TYPE), gcc clang), )
+    BUILD_LIBJVM_systemDictionary.cpp_CXXFLAGS := -fno-optimize-sibling-calls
+  endif
+endif

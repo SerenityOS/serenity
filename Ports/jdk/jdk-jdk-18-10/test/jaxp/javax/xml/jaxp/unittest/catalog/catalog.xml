@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog
+  xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+
+    <public publicId="-//W3C//DTD XHTML 1.0 Strict//EN" 
+            uri="catalog/xhtml1-strict.dtd"/>
+
+    <systemSuffix systemIdSuffix="html1-strict.dtd"
+                  uri="file:///share/mirrors/w3c/xhtml1/xhtml1-strict.dtd"/>
+
+    <public publicId="-//OPENJDK//XML CATALOG DTD//1.0" uri="public.dtd"/>
+    <system systemId="http://openjdk_java_net/xml/catalog/dtd/system.dtd" uri="system.dtd"/>
+    
+    <rewriteSystem systemIdStartString="http://openjdk_java_net/" 
+                   rewritePrefix="files" />
+    
+    <rewriteSystem systemIdStartString="http://openjdk_java_net/xml/catalog/dtd/" 
+                   rewritePrefix="files" />
+    
+    <systemSuffix systemIdSuffix="systemsuffix.dtd" uri="systemsuffix.dtd"/>
+    
+    <delegatePublic publicIdStartString="-//JAVASE//XML CATALOG DTD//DELEGATEPULIC" catalog="files/delegatecatalog.xml"/>
+    <delegateSystem systemIdStartString="http://java.com/xml/catalog/dtd/" catalog="files/delegatecatalog.xml"/>
+    
+    <group resolve="continue">
+        <system systemId="http://remote/dtd/alice/docAlice.dtd" uri="http://local/dtd/docAliceSys.dtd" />
+    </group> 
+
+</catalog>

@@ -1,0 +1,58 @@
+#
+# Copyright (c) 2016, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include Makefile
+include make/MainSupport.gmk
+
+.PHONY: idea
+
+ifeq ($(SPEC),)
+  ifneq ($(words $(SPECS)),1)
+	@echo "Error: Multiple build specification files found. Please select one explicitly."
+	@exit 2
+  endif
+  idea:
+	@cd $(topdir)
+	@$(MAKE) $(MFLAGS) $(MAKE_LOG_FLAGS) -r -R -j 1 -f $(topdir)/make/ide/idea/jdk/idea.gmk SPEC=$(SPECS) HAS_SPEC=true ACTUAL_TOPDIR=$(topdir) MODULES="$(MODULES)" idea
+else #with SPEC
+  include make/common/Modules.gmk
+
+  ifeq ($(MODULES),)
+    SEL_MODULES := $(call FindAllModules)
+  else
+    SEL_MODULES := $(MODULES)
+  endif
+
+  idea:
+	$(ECHO) "SUPPORT=$(SUPPORT_OUTPUTDIR)" >> $(OUT)
+	$(ECHO) "MODULE_ROOTS=\"$(foreach mod, $(SEL_MODULES), $(call FindModuleSrcDirs,$(mod)))\"" >> $(OUT)
+	$(ECHO) "MODULE_NAMES=\"$(strip $(foreach mod, $(SEL_MODULES), $(mod)))\"" >> $(OUT)
+	$(ECHO) "SEL_MODULES=\"$(SEL_MODULES)\"" >> $(OUT)
+	$(ECHO) "BOOT_JDK=\"$(BOOT_JDK)\"" >> $(OUT)
+	$(ECHO) "CYGPATH=\"$(PATHTOOL)\"" >> $(OUT)
+	$(ECHO) "SPEC=\"$(SPEC)\"" >> $(OUT)
+	$(ECHO) "JT_HOME=\"$(JT_HOME)\"" >> $(OUT)
+
+endif

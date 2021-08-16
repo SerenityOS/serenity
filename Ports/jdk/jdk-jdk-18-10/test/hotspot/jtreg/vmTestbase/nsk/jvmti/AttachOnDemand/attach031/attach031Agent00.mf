@@ -1,0 +1,2 @@
+Manifest-Version: 1.0
+Agent-Class: nsk.jvmti.AttachOnDemand.attach031.attach031Agent00

@@ -1,0 +1,21 @@
+AnnotationTypeElementModifiers.java:18:17: compiler.err.mod.not.allowed.here: private
+AnnotationTypeElementModifiers.java:19:17: compiler.err.mod.not.allowed.here: private
+AnnotationTypeElementModifiers.java:21:19: compiler.err.mod.not.allowed.here: protected
+AnnotationTypeElementModifiers.java:22:19: compiler.err.mod.not.allowed.here: protected
+AnnotationTypeElementModifiers.java:24:16: compiler.err.mod.not.allowed.here: static
+AnnotationTypeElementModifiers.java:25:16: compiler.err.mod.not.allowed.here: static
+AnnotationTypeElementModifiers.java:27:15: compiler.err.mod.not.allowed.here: final
+AnnotationTypeElementModifiers.java:28:15: compiler.err.mod.not.allowed.here: final
+AnnotationTypeElementModifiers.java:30:22: compiler.err.mod.not.allowed.here: synchronized
+AnnotationTypeElementModifiers.java:31:22: compiler.err.mod.not.allowed.here: synchronized
+AnnotationTypeElementModifiers.java:33:18: compiler.err.mod.not.allowed.here: volatile
+AnnotationTypeElementModifiers.java:34:18: compiler.err.mod.not.allowed.here: volatile
+AnnotationTypeElementModifiers.java:36:19: compiler.err.mod.not.allowed.here: transient
+AnnotationTypeElementModifiers.java:37:19: compiler.err.mod.not.allowed.here: transient
+AnnotationTypeElementModifiers.java:39:16: compiler.err.mod.not.allowed.here: native
+AnnotationTypeElementModifiers.java:40:16: compiler.err.mod.not.allowed.here: native
+AnnotationTypeElementModifiers.java:42:20: compiler.err.mod.not.allowed.here: strictfp
+AnnotationTypeElementModifiers.java:43:20: compiler.err.mod.not.allowed.here: strictfp
+AnnotationTypeElementModifiers.java:45:17: compiler.err.mod.not.allowed.here: default
+AnnotationTypeElementModifiers.java:46:17: compiler.err.mod.not.allowed.here: default
+20 errors

@@ -1,0 +1,3 @@
+T6863465d.java:13:47: compiler.err.cant.resolve.location: kindname.class, w, , , (compiler.misc.location: kindname.class, T6863465d.c, null)
+T6863465d.java:11:12: compiler.err.cyclic.inheritance: T6863465d.c
+2 errors

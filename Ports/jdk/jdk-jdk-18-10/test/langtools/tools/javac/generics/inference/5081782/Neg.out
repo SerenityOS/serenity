@@ -1,0 +1,8 @@
+Neg.java:12:14: compiler.err.cant.resolve.location: kindname.class, Can, , , (compiler.misc.location: kindname.class, Neg, null)
+Neg.java:12:18: compiler.err.cant.resolve.location: kindname.class, I, , , (compiler.misc.location: kindname.class, Neg, null)
+Neg.java:12:20: compiler.err.cant.resolve.location: kindname.class, write, , , (compiler.misc.location: kindname.class, Neg, null)
+Neg.java:12:26: compiler.err.cant.resolve.location: kindname.class, a, , , (compiler.misc.location: kindname.class, Neg, null)
+Neg.java:12:28: compiler.err.cant.resolve.location: kindname.class, little, , , (compiler.misc.location: kindname.class, Neg, null)
+Neg.java:12:35: compiler.err.cant.resolve.location: kindname.class, story, , , (compiler.misc.location: kindname.class, Neg, null)
+Neg.java:12:41: compiler.err.cant.resolve.location: kindname.class, here, , , (compiler.misc.location: kindname.class, Neg, null)
+7 errors

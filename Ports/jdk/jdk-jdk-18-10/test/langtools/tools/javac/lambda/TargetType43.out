@@ -1,0 +1,5 @@
+TargetType43.java:13:20: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: java.lang.Object)
+TargetType43.java:13:30: compiler.err.cant.resolve.location: kindname.class, NonExistentClass, , , (compiler.misc.location: kindname.class, TargetType43, null)
+TargetType43.java:14:9: compiler.err.cant.apply.symbol: kindname.method, m, java.lang.Object, @11, kindname.class, TargetType43, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.not.a.functional.intf: java.lang.Object))
+TargetType43.java:14:21: compiler.err.cant.resolve.location: kindname.class, NonExistentClass, , , (compiler.misc.location: kindname.class, TargetType43, null)
+4 errors

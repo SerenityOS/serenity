@@ -1,0 +1,23 @@
+EXPECT_START
+DocComment[DOC_COMMENT, pos:0
+  preamble: 2
+    Comment[COMMENT, pos:0, <!--_/nodynamiccopyright/_-->]
+    StartElement[START_ELEMENT, pos:31
+      name:BODY
+      attributes: empty
+    ]
+  firstSentence: 1
+    Text[TEXT, pos:38, Html_document]
+  body: 4
+    StartElement[START_ELEMENT, pos:52
+      name:pre
+      attributes: empty
+    ]
+    Text[TEXT, pos:57, overview4.html]
+    EndElement[END_ELEMENT, pos:71, pre]
+    Text[TEXT, pos:77, .|Only_BODY]
+  block tags: empty
+  postamble: 1
+    EndElement[END_ELEMENT, pos:89, BODY]
+]
+EXPECT_END

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<persons>
+    <person>
+        <full_name>Hege Refsnes</full_name>
+        <!-- Error: middle_name expected here -->
+        <!-- Error: child_name expected here -->
+    </person>
+    <person>
+        <full_name>Hege Refsnes</full_name>
+        <!-- Error: At least 2 middle_name expected -->
+        <middle_name>John</middle_name>
+        <!-- Error: child_name expected here -->
+    </person>
+    <person>
+        <full_name>Hege Refsnes</full_name>
+        <!-- Error: At least 3 child_name expected -->
+        <child_name>John</child_name>
+        <child_name>Doe</child_name>
+    </person>
+</persons>

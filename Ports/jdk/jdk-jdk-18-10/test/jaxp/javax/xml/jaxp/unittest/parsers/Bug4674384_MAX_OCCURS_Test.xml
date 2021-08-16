@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<test:a
+    xmlns:test="test"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="test Bug4674384_MAX_OCCURS_Test.xsd">
+<b>1</b>
+<b>2</b>
+</test:a>

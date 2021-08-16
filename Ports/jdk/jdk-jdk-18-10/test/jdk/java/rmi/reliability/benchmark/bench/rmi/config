@@ -1,0 +1,111 @@
+#
+# Configuration file for rmi benchmarks
+#
+
+# Warmup (null calls)
+# Arguments: <# calls>
+0.0 "Warmup" bench.rmi.NullCalls 50000
+
+# Time null calls
+# Arguments: <# calls>
+1.0 "Null calls" bench.rmi.NullCalls 10000
+
+# Time boolean calls
+# Arguments: <# calls>
+1.0 "Boolean calls" bench.rmi.BooleanCalls 10000
+
+# Time byte calls
+# Arguments: <# calls>
+1.0 "Byte calls" bench.rmi.ByteCalls 10000
+
+# Time char calls
+# Arguments: <# calls>
+1.0 "Char calls" bench.rmi.CharCalls 10000
+
+# Time short calls
+# Arguments: <# calls>
+1.0 "Short calls" bench.rmi.ShortCalls 10000
+
+# Time int calls
+# Arguments: <# calls>
+1.0 "Int calls" bench.rmi.IntCalls 10000
+
+# Time long calls
+# Arguments: <# calls>
+1.0 "Long calls" bench.rmi.LongCalls 10000
+
+# Time float calls
+# Arguments: <# calls>
+1.0 "Float calls" bench.rmi.FloatCalls 10000
+
+# Time double calls
+# Arguments: <# calls>
+1.0 "Double calls" bench.rmi.DoubleCalls 10000
+
+# Time boolean array calls
+# Arguments: <array size> <# calls>
+1.0 "Boolean array calls" bench.rmi.BooleanArrayCalls 100 10000
+
+# Time byte array calls
+# Arguments: <array size> <# calls>
+1.0 "Byte array calls" bench.rmi.ByteArrayCalls 100 10000
+
+# Time char array calls
+# Arguments: <array size> <# calls>
+1.0 "Char array calls" bench.rmi.CharArrayCalls 100 10000
+
+# Time short array calls
+# Arguments: <array size> <# calls>
+1.0 "Short array calls" bench.rmi.ShortArrayCalls 100 10000
+
+# Time int array calls
+# Arguments: <array size> <# calls>
+1.0 "Int array calls" bench.rmi.IntArrayCalls 100 10000
+
+# Time long array calls
+# Arguments: <array size> <# calls>
+1.0 "Long array calls" bench.rmi.LongArrayCalls 100 10000
+
+# Time float array calls
+# Arguments: <array size> <# calls>
+1.0 "Float array calls" bench.rmi.FloatArrayCalls 100 10000
+
+# Time double array calls
+# Arguments: <array size> <# calls>
+1.0 "Double array calls" bench.rmi.DoubleArrayCalls 100 10000
+
+# Time small-object tree calls
+# Arguments: <tree depth> <# calls>
+1.0 "Small object tree calls" bench.rmi.SmallObjTreeCalls 4 10000
+
+# Time object tree calls
+# Arguments: <tree depth> <# calls>
+1.0 "Object tree calls" bench.rmi.ObjTreeCalls 4 10000
+
+# Time object array calls
+# Arguments: <array size> <# calls>
+1.0 "Object array calls" bench.rmi.ObjArrayCalls 100 10000
+
+# Time remote object array calls
+# Arguments: <array size> <# calls>
+1.0 "Remote object array calls" bench.rmi.RemoteObjArrayCalls 100 10000
+
+# Time proxy object array calls
+# Arguments: <array size> <# calls>
+#
+# NOTE: this benchmark should be commented out unless you are running Java 2
+# version 1.3 or higher
+# 1.0 "Proxy array calls" bench.rmi.ProxyArrayCalls 100 10000
+
+# Time exception calls
+# Arguments: <# calls>
+1.0 "Exception calls" bench.rmi.ExceptionCalls 10000
+
+# Time exporting objects
+# Arguments: <# objects>
+1.0 "Exporting objects" bench.rmi.ExportObjs 10000
+
+# Time class loading
+# Arguments: <# reps>
+1.0 "Class loading" bench.rmi.ClassLoading 10000
+

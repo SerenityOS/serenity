@@ -1,0 +1,7 @@
+grant {
+    permission java.lang.RuntimePermission "setSecurityManager";
+    permission java.lang.RuntimePermission "getBootLayer";
+    permission java.lang.RuntimePermission "getClassLoader";
+    permission java.io.FilePermission "mods/-", "read";
+    permission java.util.PropertyPermission "user.dir", "read";
+};

@@ -1,0 +1,12 @@
+The files in this directory are used by the Basic test.
+
+The keys and certificates came from basic.keystore.
+basic.keystore itself is not used in the Basic test,
+but is needed to set up the files for the ClientAuth test.
+
+basic.keystore is also saved here in case it is needed
+(for example, to generate new certificates with extended validity dates).
+
+The basic.keystore password is:  'password'
+
+The solaris pkcs11_softtoken password is:  'pin'

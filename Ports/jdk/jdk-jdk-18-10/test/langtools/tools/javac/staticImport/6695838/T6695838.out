@@ -1,0 +1,2 @@
+Foo.java:5:1: compiler.err.cyclic.inheritance: a.Foo
+1 error

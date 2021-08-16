@@ -1,0 +1,235 @@
+<html>
+<head>
+<title>
+Using HotSpot Serviceability Agent (SA)
+</title>
+</head>
+<body>
+<h1>Using HotSpot Serviceability Agent (SA)</h1>
+
+<h3>HSDB GUI</h3>
+<p>
+The top-level GUI program using the HotSpot Serviceability Agent APIs is
+called <b>HSDB</b>, the "HotSpot Debugger". To run it, type "hsdbproc.sh" 
+or "hsdbwindbg.bat" or 64-bit variants (on Unix, Windows platforms 
+respectively). More info. on HSDB GUI are in <a href="hsdb.html">hsdb.html</a>.
+</p>
+
+<h3>SA Modes</h3>
+<p>
+There are three modes for the SA debugger: 
+<ul>
+<li>attaching to a local process,
+<li>opening a core file, and 
+<li>attaching to a remote "debug server". 
+</ul>
+<p>
+The remote case requires two programs to be running on the remote machine:
+the rmiregistry (see the script "start-rmiregistry.sh" in this directory;
+run this in the background) and the debug server (see the script
+"start-debug-server-proc.sh"), in that order. start-rmiregistry.sh takes no
+arguments; start-debug-server-proc.sh (or -windbg.bat) takes as argument 
+the process ID or the executable and core file names to allow remote debugging
+of. 
+</p>
+
+<h3>Command line HSDB</h3>
+<p>
+There are also command line HSDB variants ("clhsdbproc.sh" or "clhsdbwindbg.bat"
+or 64-bit variants). There is also a JavaScript based command line interface
+called "jsdbproc.sh" [or "jsdbwindbg.bat" or 64-bit variants]. More details on 
+command line interfaces can be found in 
+<ul>
+<li><a href="clhsdb.html">clhsdb.html</a>
+<li><a href="jsdb.html">jsdb.html</a>
+</ul> 
+</p>
+
+<h3>Other command line tools</h3>
+<p>
+The following table lists all SA command line tools. &lt;xxx&gt;windbg.bat 
+files are for Windows. .sh files are for Solaris. &lt;xxx&gt;64.sh are for 
+64 bit debugees.
+</p>
+
+<table border="1">
+<tr>
+<th>
+Tool
+</th>
+<th>
+Description
+</th>
+</tr>
+
+<tr>
+<td>
+dumpflagsproc.sh,
+dumpflagsproc64.sh,
+dumpflagswindbg.bat
+dumpflagswindbg64.bat
+</td>
+<td>
+dumps name and value of all -XX JVM command line arguments passed
+to debuggee. 
+</td>
+</tr>
+
+<tr>
+<td>
+<a name="dumpsysprops"></a>
+dumpsyspropsproc.sh,
+dumpsyspropsproc64.sh,
+dumpsyspropswindbg.bat
+dumpsyspropswindbg64.bat
+</td>
+<td>
+This prints name and value of Java level System properties.
+</td>
+</tr>
+
+<tr>
+<td>
+<a name="heapdump"></a>
+heapdumpproc.sh,
+heapdumpproc64.sh,
+heapdumpwindbg.bat
+heapdumpwindbg64.bat
+</td>
+<td>
+Dumps heap in a file in hprof binary format.
+</td>
+</tr>
+
+<tr>
+<td>
+<a name="heapsum"></a>
+heapsumproc.sh,
+heapsumproc64.sh,
+heapsumwindbg.bat
+heapsumwindbg64.bat
+</td>
+<td>
+Prints summary information on Java heap.
+</td>
+</tr>
+
+
+<tr>
+<td>
+jcoreproc.sh,
+jcoreproc64.sh,
+jcorewindbg.bat
+jcorewindbg64.bat
+</td>
+<td>
+This can retrieve .class files from the debuggee.
+set the environment variable <b>JCORE_PACKAGES</b> to comman separated list of
+packages whose classes have to be retrieved from the core file.
+</td>
+</tr>
+
+<tr>
+<tr>
+<td>
+jstackproc.sh,
+jstackproc64.sh,
+jstackwindbg.bat
+jstackwindbg64.bat
+</td>
+<td>
+used to get java stack trace for all java threads.
+</td>
+</tr>
+
+<tr>
+<td>
+jhistoproc.sh,
+jhistoproc64.sh,
+jhistowindbg.bat
+jhistowindbg64.bat
+</td>
+<td>
+used to get object histogram of java heap.
+</td>
+</tr>
+
+<tr>
+<td>
+permstatproc.sh,
+permstatproc64.sh,
+permstatwindbg.bat
+permstatwindbg64.bat
+</td>
+<td>
+To gather statistics on perm. generation.
+</td>
+</tr>
+
+<a name="mixed_pstack"></a>
+<tr>
+<tr>
+<td>
+pstackproc.sh,
+pstackproc64.sh,
+pstackwindbg.bat
+pstackwindbg64.bat
+</td>
+<td>
+This is cross platform mixed mode pstack utility. This works on any (non-java as well) process, core dump. For java process and core dumps, this prints both java and C/C++ frames. 
+</td>
+</tr>
+
+<tr>
+<td>
+pmapproc.sh,
+pmapproc64.sh,
+pmapwindbg.bat
+pmapwindbg64.bat
+</td>
+<td>
+This is cross platform Solaris pmap-like utility. 
+</td>
+</tr>
+
+<td>
+start-debug-server-proc.sh,
+start-debug-server-proc64.sh,
+start-debug-server-windbg.bat,
+start-debug-server-windbg64.bat,
+start-rmiregistry.bat,
+start-rmiregistry64.bat,
+start-rmiregistry.sh
+start-rmiregistry64.sh
+</td>
+<td>
+These scripts are used to run SA remotely. 
+</td>
+</tr>
+</table>
+
+<h3>C2 Compilation Replay</h3>
+<p>
+When a java process crashes in compiled method, usually a core file is saved.
+The C2 replay function can reproduce the compiling process in the core.
+<a href="c2replay.html">c2replay.html</a>
+
+<h3>Debugging transported core dumps</h3>
+<p>
+When a core dump is moved from the machine where it was produced to a
+difference machine, it may not always be possible for SA to debug the same.
+More info. on debugging on transported core dumps is in
+<a href="transported_core.html">transported_core.html</a>.
+</p>
+
+<h3>SA Bugs</h3>
+<p>
+Not all of the possible states of target VMs have been tested (or
+supportable) with SA. For example, the SA will probably not work at all 
+if it freezes the target VM during certain phases of GC. When filing bugs
+a pointer to a core file (see gcore(1)) which the SA can not handle well 
+is best.
+</p>
+
+</body>
+</html>

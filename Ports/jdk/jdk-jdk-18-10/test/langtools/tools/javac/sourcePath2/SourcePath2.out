@@ -1,0 +1,2 @@
+SourcePath2A.java:9:5: compiler.err.cant.resolve.location: kindname.class, this_should_not, , , (compiler.misc.location: kindname.class, p.Trash, null)
+1 error

@@ -1,0 +1,6 @@
+T8081769.java:9:25: compiler.err.expected: token.identifier
+T8081769.java:10:23: compiler.err.expected: token.identifier
+T8081769.java:11:23: compiler.err.expected: token.identifier
+T8081769.java:12:25: compiler.err.expected: token.identifier
+T8081769.java:14:33: compiler.err.expected: token.identifier
+5 errors

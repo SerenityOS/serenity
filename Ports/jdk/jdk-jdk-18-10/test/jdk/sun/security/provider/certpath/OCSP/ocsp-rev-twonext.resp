@@ -1,0 +1,58 @@
+# This is an invalid OCSP response and cannot be displayed using openssl's
+# ocsp utility.  Below is an asn1parse of the BasicOCSPResponse.  Additional
+# bytes have been inserted into the SingleResponse which add a second
+# nextUpdate field (beginning at offset 189)
+#
+#    0:d=0  hl=4 l= 517 cons: SEQUENCE          
+#    4:d=1  hl=3 l= 238 cons: SEQUENCE          
+#    7:d=2  hl=2 l=  36 cons: cont [ 1 ]        
+#    9:d=3  hl=2 l=  34 cons: SEQUENCE          
+#   11:d=4  hl=2 l=  13 cons: SET               
+#   13:d=5  hl=2 l=  11 cons: SEQUENCE          
+#   15:d=6  hl=2 l=   3 prim: OBJECT            :organizationName
+#   20:d=6  hl=2 l=   4 prim: UTF8STRING        :Test
+#   26:d=4  hl=2 l=  17 cons: SET               
+#   28:d=5  hl=2 l=  15 cons: SEQUENCE          
+#   30:d=6  hl=2 l=   3 prim: OBJECT            :commonName
+#   35:d=6  hl=2 l=   8 prim: UTF8STRING        :TestOCSP
+#   45:d=2  hl=2 l=  15 prim: GENERALIZEDTIME   :20150303165544Z
+#   62:d=2  hl=3 l= 143 cons: SEQUENCE          
+#   65:d=3  hl=3 l= 140 cons: SEQUENCE          
+#   68:d=4  hl=2 l=  59 cons: SEQUENCE          
+#   70:d=5  hl=2 l=   9 cons: SEQUENCE          
+#   72:d=6  hl=2 l=   5 prim: OBJECT            :sha1
+#   79:d=6  hl=2 l=   0 prim: NULL              
+#   81:d=5  hl=2 l=  20 prim: OCTET STRING      [HEX DUMP]:1056578B741813261FD9712ADA60077FF7C61E8F
+#  103:d=5  hl=2 l=  20 prim: OCTET STRING      [HEX DUMP]:9BF984066AFCD2EB0893FBE4EE2FD8C1C2897AA7
+#  125:d=5  hl=2 l=   2 prim: INTEGER           :1500
+#  129:d=4  hl=2 l=  22 cons: cont [ 1 ]        
+#  131:d=5  hl=2 l=  15 prim: GENERALIZEDTIME   :20150219155030Z
+#  148:d=5  hl=2 l=   3 cons: cont [ 0 ]        
+#  150:d=6  hl=2 l=   1 prim: ENUMERATED        :01
+#  153:d=4  hl=2 l=  15 prim: GENERALIZEDTIME   :20150303165544Z
+#  170:d=4  hl=2 l=  17 cons: cont [ 0 ]        
+#  172:d=5  hl=2 l=  15 prim: GENERALIZEDTIME   :20150304165544Z
+#  189:d=4  hl=2 l=  17 cons: cont [ 0 ]        
+#  191:d=5  hl=2 l=  15 prim: GENERALIZEDTIME   :20150304165544Z
+#  208:d=2  hl=2 l=  35 cons: cont [ 1 ]        
+#  210:d=3  hl=2 l=  33 cons: SEQUENCE          
+#  212:d=4  hl=2 l=  31 cons: SEQUENCE          
+#  214:d=5  hl=2 l=   9 prim: OBJECT            :OCSP Nonce
+#  225:d=5  hl=2 l=  18 prim: OCTET STRING      [HEX DUMP]:0410381EF873C4A3B4C64B22873751071B53
+#  245:d=1  hl=2 l=  13 cons: SEQUENCE          
+#  247:d=2  hl=2 l=   9 prim: OBJECT            :sha1WithRSAEncryption
+#  258:d=2  hl=2 l=   0 prim: NULL              
+#  260:d=1  hl=4 l= 257 prim: BIT STRING        
+
+MIICIwoBAKCCAhwwggIYBgkrBgEFBQcwAQEEggIJMIICBTCB7qEkMCIxDTALBgNV
+BAoMBFRlc3QxETAPBgNVBAMMCFRlc3RPQ1NQGA8yMDE1MDMwMzE2NTU0NFowgY8w
+gYwwOzAJBgUrDgMCGgUABBQQVleLdBgTJh/ZcSraYAd/98YejwQUm/mEBmr80usI
+k/vk7i/YwcKJeqcCAhUAoRYYDzIwMTUwMjE5MTU1MDMwWqADCgEBGA8yMDE1MDMw
+MzE2NTU0NFqgERgPMjAxNTAzMDQxNjU1NDRaoBEYDzIwMTUwMzA0MTY1NTQ0WqEj
+MCEwHwYJKwYBBQUHMAECBBIEEDge+HPEo7TGSyKHN1EHG1MwDQYJKoZIhvcNAQEF
+BQADggEBAG3GNvCvfqF7Q3zW9ssZc2rjGnhKA+O+6LguwyMAm04KZHIxgk45r8IO
+AN7BveWdNsdcbluPFytmJBcrbAZnXH2bxJ6Cv1qhvqnfQIsrXzaHnLDIxfDMmrR3
+CXUPo6ufYz1gKjBlgj5j1Wek8RxeQINgwFOWi+bAI2Ns78WJ5VHPhUoZeCujZPpk
+kn7uo4vIZFBD8ea1NR9IwaJjJuBjMjZMVY9zZDikgsTVov9TnrrVJPBIq/Cq6n3e
+8jp9H5X66B2diNM3/eVXbsb1QrDe6YAH/ENQQJG7qv/CUTaw62tJB0qTu0AL+ohO
+2E/0rBzeTA47USe/NFRIIFd7Xeekd+4=

@@ -1,0 +1,1280 @@
+#
+# Copyright (c) 2000, 2016, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# Test data for FormatIteratorTest
+
+{
+  tests =
+  (
+    {
+      class = java.text.DecimalFormat
+      args = ("#,###")
+      valueClass = java.lang.Integer
+      valueArgs = ("1234567")
+    }
+    {
+      length = 9
+      text = "1,234,567"
+      0 = (NumberFormat$Field.INTEGER)
+      1 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      2 = (NumberFormat$Field.INTEGER)
+      3 = (NumberFormat$Field.INTEGER)
+      4 = (NumberFormat$Field.INTEGER)
+      5 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      6 = (NumberFormat$Field.INTEGER)
+      7 = (NumberFormat$Field.INTEGER)
+      8 = (NumberFormat$Field.INTEGER)
+      limits = ( { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 0 end = 1 end2 = 9}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 1 end = 2}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 1 end = 2}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 5 end = 6}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 5 end = 6}
+               )
+      fieldPositions =
+      (
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 0 end = 9
+        }
+        {
+          fieldID = NumberFormat$Field.GROUPING_SEPARATOR
+          begin = 1 end = 2
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("#,###.##")
+      valueClass = java.lang.Float
+      valueArgs = ("567.78")
+    }
+    {
+      length = 6
+      text = "567.78"
+      0 = (NumberFormat$Field.INTEGER)
+      1 = (NumberFormat$Field.INTEGER)
+      2 = (NumberFormat$Field.INTEGER)
+      3 = (NumberFormat$Field.DECIMAL_SEPARATOR)
+      4 = (NumberFormat$Field.FRACTION)
+      5 = (NumberFormat$Field.FRACTION)
+      limits = ( { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 0 end = 3 }
+                 { attributes = (NumberFormat$Field.DECIMAL_SEPARATOR)
+                   begin = 3 end = 4}
+                 { attributes = (NumberFormat$Field.FRACTION)
+                   begin = 4 end = 6}
+               )
+      fieldPositions =
+      (
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 0 end = 3
+        }
+        {
+          fieldID = NumberFormat$Field.DECIMAL_SEPARATOR
+          begin = 3 end = 4
+        }
+        {
+          field = NumberFormat.FRACTION_FIELD
+          fieldID = NumberFormat$Field.FRACTION
+          begin = 4 end = 6
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("0.#E00")
+      valueClass = java.lang.Float
+      valueArgs = ("1200")
+    }
+    {
+      length = 6
+      text = "1.2E03"
+      0 = (NumberFormat$Field.INTEGER)
+      1 = (NumberFormat$Field.DECIMAL_SEPARATOR)
+      2 = (NumberFormat$Field.FRACTION)
+      3 = (NumberFormat$Field.EXPONENT_SYMBOL)
+      4 = (NumberFormat$Field.EXPONENT)
+      5 = (NumberFormat$Field.EXPONENT)
+      limits = ( { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 0 end = 1 }
+                 { attributes = (NumberFormat$Field.DECIMAL_SEPARATOR)
+                   begin = 1 end = 2}
+                 { attributes = (NumberFormat$Field.FRACTION)
+                   begin = 2 end = 3}
+                 { attributes = (NumberFormat$Field.EXPONENT_SYMBOL)
+                   begin = 3 end = 4}
+                 { attributes = (NumberFormat$Field.EXPONENT)
+                   begin = 4 end = 6}
+               )
+      fieldPositions =
+      (
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 0 end = 1
+        }
+        {
+          fieldID = NumberFormat$Field.DECIMAL_SEPARATOR
+          begin = 1 end = 2
+        }
+        {
+          field = NumberFormat.FRACTION_FIELD
+          fieldID = NumberFormat$Field.FRACTION
+          begin = 2 end = 3
+        }
+        {
+          fieldID = NumberFormat$Field.EXPONENT_SYMBOL
+          begin = 3 end = 4
+        }
+        {
+          fieldID = NumberFormat$Field.EXPONENT
+          begin = 4 end = 6
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("0.#E00")
+      valueClass = java.lang.Float
+      valueArgs = ("-.0012")
+    }
+    {
+      length = 8
+      text = "-1.2E-03"
+      0 = (NumberFormat$Field.SIGN)
+      1 = (NumberFormat$Field.INTEGER)
+      2 = (NumberFormat$Field.DECIMAL_SEPARATOR)
+      3 = (NumberFormat$Field.FRACTION)
+      4 = (NumberFormat$Field.EXPONENT_SYMBOL)
+      5 = (NumberFormat$Field.EXPONENT_SIGN)
+      6 = (NumberFormat$Field.EXPONENT)
+      7 = (NumberFormat$Field.EXPONENT)
+      limits = ( { attributes = (NumberFormat$Field.SIGN)
+                   begin = 0 end = 1 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 1 end = 2}
+                 { attributes = (NumberFormat$Field.DECIMAL_SEPARATOR)
+                   begin = 2 end = 3}
+                 { attributes = (NumberFormat$Field.FRACTION)
+                   begin = 3 end = 4}
+                 { attributes = (NumberFormat$Field.EXPONENT_SYMBOL)
+                   begin = 4 end = 5}
+                 { attributes = (NumberFormat$Field.EXPONENT_SIGN)
+                   begin = 5 end = 6}
+                 { attributes = (NumberFormat$Field.EXPONENT)
+                   begin = 6 end = 8}
+               )
+      fieldPositions =
+      (
+        {
+          fieldID = NumberFormat$Field.SIGN
+          begin = 0 end = 1
+        }
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 1 end = 2
+        }
+        {
+          fieldID = NumberFormat$Field.DECIMAL_SEPARATOR
+          begin = 2 end = 3
+        }
+        {
+          field = NumberFormat.FRACTION_FIELD
+          fieldID = NumberFormat$Field.FRACTION
+          begin = 3 end = 4
+        }
+        {
+          fieldID = NumberFormat$Field.EXPONENT_SYMBOL
+          begin = 4 end = 5
+        }
+        {
+          fieldID = NumberFormat$Field.EXPONENT_SIGN
+          begin = 5 end = 6
+        }
+        {
+          fieldID = NumberFormat$Field.EXPONENT
+          begin = 6 end = 8
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("#,###;(#,###)")
+      valueClass = java.lang.Integer
+      valueArgs = ("-1234")
+    }
+    {
+      length = 7
+      text = "(1,234)"
+      0 = ()
+      1 = (NumberFormat$Field.INTEGER)
+      2 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      3 = (NumberFormat$Field.INTEGER)
+      4 = (NumberFormat$Field.INTEGER)
+      5 = (NumberFormat$Field.INTEGER)
+      6 = ()
+      limits = ( { attributes = ()
+                   begin = 0 end = 1 end2 = 7 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 1 end = 2 end2 = 6}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 2 end = 3}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 2 end = 3}
+                 { attributes = ()
+                   begin = 6 begin2 = 0 end = 7}
+               )
+      fieldPositions =
+      (
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 1 end = 6
+        }
+        {
+          fieldID = NumberFormat$Field.GROUPING_SEPARATOR
+          begin = 2 end = 3
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("#,###;-#,###")
+      valueClass = java.lang.Integer
+      valueArgs = ("-134")
+    }
+    {
+      length = 4
+      text = "-134"
+      0 = (NumberFormat$Field.SIGN)
+      1 = (NumberFormat$Field.INTEGER)
+      2 = (NumberFormat$Field.INTEGER)
+      3 = (NumberFormat$Field.INTEGER)
+      limits = ( { attributes = (NumberFormat$Field.SIGN)
+                   begin = 0 end = 1 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 1 end = 4 }
+               )
+      fieldPositions =
+      (
+        {
+          fieldID = NumberFormat$Field.SIGN
+          begin = 0 end = 1
+        }
+        {
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 1 end = 4
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("+#,###")
+      valueClass = java.lang.Integer
+      valueArgs = ("134")
+    }
+    {
+      length = 4
+      text = "+134"
+      0 = ()
+      1 = (NumberFormat$Field.INTEGER)
+      2 = (NumberFormat$Field.INTEGER)
+      3 = (NumberFormat$Field.INTEGER)
+      limits = ( { attributes = (NumberFormat$Field.SIGN)
+                   begin = 0 end2 = 4 end = 1 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 1 end = 4 }
+               )
+      fieldPositions =
+      (
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 1 end = 4
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("##.0#%")
+      valueClass = java.lang.Float
+      valueArgs = (".1234")
+    }
+    {
+      length = 6
+      text = "12.34%"
+      0 = (NumberFormat$Field.INTEGER)
+      1 = (NumberFormat$Field.INTEGER)
+      2 = (NumberFormat$Field.DECIMAL_SEPARATOR)
+      3 = (NumberFormat$Field.FRACTION)
+      4 = (NumberFormat$Field.FRACTION)
+      5 = (NumberFormat$Field.PERCENT)
+      limits = ( { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 0 end = 2 }
+                 { attributes = (NumberFormat$Field.DECIMAL_SEPARATOR)
+                   begin = 2 end = 3 }
+                 { attributes = (NumberFormat$Field.FRACTION)
+                   begin = 3 end = 5 }
+                 { attributes = (NumberFormat$Field.PERCENT)
+                   begin = 5 end = 6 }
+               )
+      fieldPositions =
+      (
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 0 end = 2
+        }
+        {
+          fieldID = NumberFormat$Field.DECIMAL_SEPARATOR
+          begin = 2 end = 3
+        }
+        {
+          field = NumberFormat.FRACTION_FIELD
+          fieldID = NumberFormat$Field.FRACTION
+          begin = 3 end = 5
+        }
+        {
+          fieldID = NumberFormat$Field.PERCENT
+          begin = 5 end = 6
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("#,##.#\u2030")
+      valueClass = java.lang.Float
+      valueArgs = (".1234")
+    }
+    {
+      length = 7
+      text = "1,23.4\u2030"
+      0 = (NumberFormat$Field.INTEGER)
+      1 = (NumberFormat$Field.GROUPING_SEPARATOR
+           NumberFormat$Field.INTEGER)
+      2 = (NumberFormat$Field.INTEGER)
+      3 = (NumberFormat$Field.INTEGER)
+      4 = (NumberFormat$Field.DECIMAL_SEPARATOR)
+      5 = (NumberFormat$Field.FRACTION)
+      6 = (NumberFormat$Field.PERMILLE)
+      limits = ( { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 0 end = 1 end2 = 4 }
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 1 end = 2 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 1 end = 2 }
+                 { attributes = (NumberFormat$Field.DECIMAL_SEPARATOR)
+                   begin = 4 end = 5 }
+                 { attributes = (NumberFormat$Field.FRACTION)
+                   begin = 5 end = 6 }
+                 { attributes = (NumberFormat$Field.PERMILLE)
+                   begin = 6 end = 7 }
+               )
+      fieldPositions =
+      (
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 0 end = 4
+        }
+        {
+          fieldID = NumberFormat$Field.GROUPING_SEPARATOR
+          begin = 1 end = 2
+        }
+        {
+          fieldID = NumberFormat$Field.DECIMAL_SEPARATOR
+          begin = 4 end = 5
+        }
+        {
+          field = NumberFormat.FRACTION_FIELD
+          fieldID = NumberFormat$Field.FRACTION
+          begin = 5 end = 6
+        }
+        {
+          fieldID = NumberFormat$Field.PERMILLE
+          begin = 6 end = 7
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("\u00A40,000.00")
+      valueClass = java.lang.Float
+      valueArgs = ("12.51")
+    }
+    {
+      length = 9
+      text = "$0,012.51"
+      0 = (NumberFormat$Field.CURRENCY)
+      1 = (NumberFormat$Field.INTEGER)
+      2 = (NumberFormat$Field.GROUPING_SEPARATOR
+           NumberFormat$Field.INTEGER)
+      3 = (NumberFormat$Field.INTEGER)
+      4 = (NumberFormat$Field.INTEGER)
+      5 = (NumberFormat$Field.INTEGER)
+      6 = (NumberFormat$Field.DECIMAL_SEPARATOR)
+      7 = (NumberFormat$Field.FRACTION)
+      8 = (NumberFormat$Field.FRACTION)
+      limits = ( { attributes = (NumberFormat$Field.CURRENCY)
+                   begin = 0 end = 1 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 1 end = 2 end2 = 6 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 2 end = 3 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 3 begin2 = 1 end = 6 }
+                 { attributes = (NumberFormat$Field.DECIMAL_SEPARATOR)
+                   begin = 6 end = 7 }
+                 { attributes = (NumberFormat$Field.FRACTION)
+                   begin = 7 end = 9 }
+               )
+      fieldPositions =
+      (
+        {
+          fieldID = NumberFormat$Field.CURRENCY
+          begin = 0 end = 1
+        }
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 1 end = 6
+        }
+        {
+          fieldID = NumberFormat$Field.GROUPING_SEPARATOR
+          begin = 2 end = 3
+        }
+        {
+          fieldID = NumberFormat$Field.DECIMAL_SEPARATOR
+          begin = 6 end = 7
+        }
+        {
+          field = NumberFormat.FRACTION_FIELD
+          fieldID = NumberFormat$Field.FRACTION
+          begin = 7 end = 9
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("#,###")
+      valueClass = java.math.BigInteger
+      valueArgs = ("-12345678901234567890123456789012345")
+    }
+    {
+      length = 47
+      text = "-12,345,678,901,234,567,890,123,456,789,012,345"
+      0 = (NumberFormat$Field.SIGN)
+      1 = (NumberFormat$Field.INTEGER)
+      2 = (NumberFormat$Field.INTEGER)
+      3 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      4 = (NumberFormat$Field.INTEGER)
+      5 = (NumberFormat$Field.INTEGER)
+      6 = (NumberFormat$Field.INTEGER)
+      7 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      8 = (NumberFormat$Field.INTEGER)
+      9 = (NumberFormat$Field.INTEGER)
+      10 = (NumberFormat$Field.INTEGER)
+      11 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      12 = (NumberFormat$Field.INTEGER)
+      13 = (NumberFormat$Field.INTEGER)
+      14 = (NumberFormat$Field.INTEGER)
+      15 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      16 = (NumberFormat$Field.INTEGER)
+      17 = (NumberFormat$Field.INTEGER)
+      18 = (NumberFormat$Field.INTEGER)
+      19 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      20 = (NumberFormat$Field.INTEGER)
+      21 = (NumberFormat$Field.INTEGER)
+      22 = (NumberFormat$Field.INTEGER)
+      23 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      24 = (NumberFormat$Field.INTEGER)
+      25 = (NumberFormat$Field.INTEGER)
+      26 = (NumberFormat$Field.INTEGER)
+      27 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      28 = (NumberFormat$Field.INTEGER)
+      29 = (NumberFormat$Field.INTEGER)
+      30 = (NumberFormat$Field.INTEGER)
+      31 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      32 = (NumberFormat$Field.INTEGER)
+      33 = (NumberFormat$Field.INTEGER)
+      34 = (NumberFormat$Field.INTEGER)
+      35 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      36 = (NumberFormat$Field.INTEGER)
+      37 = (NumberFormat$Field.INTEGER)
+      38 = (NumberFormat$Field.INTEGER)
+      39 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      40 = (NumberFormat$Field.INTEGER)
+      41 = (NumberFormat$Field.INTEGER)
+      42 = (NumberFormat$Field.INTEGER)
+      43 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      44 = (NumberFormat$Field.INTEGER)
+      45 = (NumberFormat$Field.INTEGER)
+      46 = (NumberFormat$Field.INTEGER)
+      limits = (
+                 { attributes = (NumberFormat$Field.SIGN)
+                   begin = 0 end = 1 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 1 end = 3 end2 = 47 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 3 end = 4 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 4 begin2 = 1 end = 7 end2 = 47}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 7 end = 8 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 8 begin2 = 1 end = 11 end2 = 47}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 11 end = 12 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 12 begin2 = 1 end = 15 end2 = 47}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 15 end = 16 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 16 begin2 = 1 end = 19 end2 = 47}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 19 end = 20 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 20 begin2 = 1 end = 23 end2 = 47}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 23 end = 24 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 24 begin2 = 1 end = 27 end2 = 47}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 27 end = 28 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 28 begin2 = 1 end = 31 end2 = 47}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 31 end = 32 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 32 begin2 = 1 end = 35 end2 = 47}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 35 end = 36 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 36 begin2 = 1 end = 39 end2 = 47}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 39 end = 40 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 40 begin2 = 1 end = 43 end2 = 47}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 43 begin2 = 43 end = 44 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 44 begin2 = 1 end = 47}
+               )
+      fieldPositions =
+      (
+        {
+          fieldID = NumberFormat$Field.SIGN
+          begin = 0 end = 1
+        }
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 1 end = 47
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("#,###.#####################")
+      valueClass = java.math.BigDecimal
+      valueArgs = ("-123456789012345678901234567890.12345678901234567890")
+    }
+    {
+      length = 60
+      text = "-123,456,789,012,345,678,901,234,567,890.1234567890123456789"
+      0 = (NumberFormat$Field.SIGN)
+      1 = (NumberFormat$Field.INTEGER)
+      2 = (NumberFormat$Field.INTEGER)
+      3 = (NumberFormat$Field.INTEGER)
+      4 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      5 = (NumberFormat$Field.INTEGER)
+      6 = (NumberFormat$Field.INTEGER)
+      7 = (NumberFormat$Field.INTEGER)
+      8 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      9 = (NumberFormat$Field.INTEGER)
+      10 = (NumberFormat$Field.INTEGER)
+      11 = (NumberFormat$Field.INTEGER)
+      12 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      13 = (NumberFormat$Field.INTEGER)
+      14 = (NumberFormat$Field.INTEGER)
+      15 = (NumberFormat$Field.INTEGER)
+      16 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      17 = (NumberFormat$Field.INTEGER)
+      18 = (NumberFormat$Field.INTEGER)
+      19 = (NumberFormat$Field.INTEGER)
+      20 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      21 = (NumberFormat$Field.INTEGER)
+      22 = (NumberFormat$Field.INTEGER)
+      23 = (NumberFormat$Field.INTEGER)
+      24 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      25 = (NumberFormat$Field.INTEGER)
+      26 = (NumberFormat$Field.INTEGER)
+      27 = (NumberFormat$Field.INTEGER)
+      28 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      29 = (NumberFormat$Field.INTEGER)
+      30 = (NumberFormat$Field.INTEGER)
+      31 = (NumberFormat$Field.INTEGER)
+      32 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      33 = (NumberFormat$Field.INTEGER)
+      34 = (NumberFormat$Field.INTEGER)
+      35 = (NumberFormat$Field.INTEGER)
+      36 = (NumberFormat$Field.INTEGER NumberFormat$Field.GROUPING_SEPARATOR)
+      37 = (NumberFormat$Field.INTEGER)
+      38 = (NumberFormat$Field.INTEGER)
+      39 = (NumberFormat$Field.INTEGER)
+      40 = (NumberFormat$Field.DECIMAL_SEPARATOR)
+      41 = (NumberFormat$Field.FRACTION)
+      42 = (NumberFormat$Field.FRACTION)
+      43 = (NumberFormat$Field.FRACTION)
+      44 = (NumberFormat$Field.FRACTION)
+      45 = (NumberFormat$Field.FRACTION)
+      45 = (NumberFormat$Field.FRACTION)
+      45 = (NumberFormat$Field.FRACTION)
+      45 = (NumberFormat$Field.FRACTION)
+      45 = (NumberFormat$Field.FRACTION)
+      45 = (NumberFormat$Field.FRACTION)
+      45 = (NumberFormat$Field.FRACTION)
+      45 = (NumberFormat$Field.FRACTION)
+      46 = (NumberFormat$Field.FRACTION)
+      47 = (NumberFormat$Field.FRACTION)
+      48 = (NumberFormat$Field.FRACTION)
+      49 = (NumberFormat$Field.FRACTION)
+      50 = (NumberFormat$Field.FRACTION)
+      51 = (NumberFormat$Field.FRACTION)
+      52 = (NumberFormat$Field.FRACTION)
+      53 = (NumberFormat$Field.FRACTION)
+      54 = (NumberFormat$Field.FRACTION)
+      55 = (NumberFormat$Field.FRACTION)
+      56 = (NumberFormat$Field.FRACTION)
+      57 = (NumberFormat$Field.FRACTION)
+      58 = (NumberFormat$Field.FRACTION)
+      59 = (NumberFormat$Field.FRACTION)
+      limits = (
+                 { attributes = (NumberFormat$Field.SIGN)
+                   begin = 0 end = 1 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 1 end = 4 end2 = 40 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 4 end = 5 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 5 begin2 = 1 end = 8 end2 = 40}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 8 end = 9 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 9 begin2 = 1 end = 12 end2 = 40}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 12 end = 13 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 13 begin2 = 1 end = 16 end2 = 40}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 16 end = 17 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 17 begin2 = 1 end = 20 end2 = 40}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 20 end = 21 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 21 begin2 = 1 end = 24 end2 = 40}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 24 end = 25 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 25 begin2 = 1 end = 28 end2 = 40}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 28 end = 29 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 29 begin2 = 1 end = 32 end2 = 40}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 32 end = 33 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 33 begin2 = 1 end = 36 end2 = 40}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 36 end = 37 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 37 begin2 = 1 end = 40 end2 = 40}
+                 { attributes = (NumberFormat$Field.DECIMAL_SEPARATOR)
+                   begin = 40 end = 41 }
+                 { attributes = (NumberFormat$Field.FRACTION)
+                   begin = 41 begin2 = 41 end = 60 }
+               )
+      fieldPositions =
+      (
+        {
+          fieldID = NumberFormat$Field.SIGN
+          begin = 0 end = 1
+        }
+        {
+          fieldID = NumberFormat$Field.DECIMAL_SEPARATOR
+          begin = 40 end = 41
+        }
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 1 end = 40
+        }
+        {
+          field = NumberFormat.FRACTION_FIELD
+          fieldID = NumberFormat$Field.FRACTION
+          begin = 41 end = 60
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("#,###")
+      valueClass = java.lang.Long
+      valueArgs = ("9223372036854775807")
+    }
+    {
+      length = 25
+      text = "9,223,372,036,854,775,807"
+      0 = (NumberFormat$Field.INTEGER)
+      1 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      2 = (NumberFormat$Field.INTEGER)
+      3 = (NumberFormat$Field.INTEGER)
+      4 = (NumberFormat$Field.INTEGER)
+      5 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      6 = (NumberFormat$Field.INTEGER)
+      7 = (NumberFormat$Field.INTEGER)
+      8 = (NumberFormat$Field.INTEGER)
+      9 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      10 = (NumberFormat$Field.INTEGER)
+      11 = (NumberFormat$Field.INTEGER)
+      12 = (NumberFormat$Field.INTEGER)
+      13 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      14 = (NumberFormat$Field.INTEGER)
+      15 = (NumberFormat$Field.INTEGER)
+      16 = (NumberFormat$Field.INTEGER)
+      17 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      18 = (NumberFormat$Field.INTEGER)
+      19 = (NumberFormat$Field.INTEGER)
+      20 = (NumberFormat$Field.INTEGER)
+      21 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      22 = (NumberFormat$Field.INTEGER)
+      23 = (NumberFormat$Field.INTEGER)
+      24 = (NumberFormat$Field.INTEGER)
+      limits = (
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 0 end = 1 end2 = 25}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 1 end = 2}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 1 end = 2}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 5 end = 6}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 5 end = 6}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 9 end = 10}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 9 end = 10}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 13 end = 14}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 13 end = 14}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 17 end = 18}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 17 end = 18}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 21 end = 22}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 21 end = 22}
+               )
+      fieldPositions =
+      (
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 0 end = 25
+        }
+        {
+          fieldID = NumberFormat$Field.GROUPING_SEPARATOR
+          begin = 1 end = 2
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("#,###")
+      valueClass = java.util.concurrent.atomic.AtomicLong
+      valueArgs = ("9223372036854775807")
+    }
+    {
+      length = 25
+      text = "9,223,372,036,854,775,807"
+      0 = (NumberFormat$Field.INTEGER)
+      1 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      2 = (NumberFormat$Field.INTEGER)
+      3 = (NumberFormat$Field.INTEGER)
+      4 = (NumberFormat$Field.INTEGER)
+      5 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      6 = (NumberFormat$Field.INTEGER)
+      7 = (NumberFormat$Field.INTEGER)
+      8 = (NumberFormat$Field.INTEGER)
+      9 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      10 = (NumberFormat$Field.INTEGER)
+      11 = (NumberFormat$Field.INTEGER)
+      12 = (NumberFormat$Field.INTEGER)
+      13 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      14 = (NumberFormat$Field.INTEGER)
+      15 = (NumberFormat$Field.INTEGER)
+      16 = (NumberFormat$Field.INTEGER)
+      17 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      18 = (NumberFormat$Field.INTEGER)
+      19 = (NumberFormat$Field.INTEGER)
+      20 = (NumberFormat$Field.INTEGER)
+      21 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      22 = (NumberFormat$Field.INTEGER)
+      23 = (NumberFormat$Field.INTEGER)
+      24 = (NumberFormat$Field.INTEGER)
+      limits = (
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 0 end = 1 end2 = 25}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 1 end = 2}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 1 end = 2}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 5 end = 6}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 5 end = 6}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 9 end = 10}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 9 end = 10}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 13 end = 14}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 13 end = 14}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 17 end = 18}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 17 end = 18}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 21 end = 22}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 21 end = 22}
+               )
+      fieldPositions =
+      (
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 0 end = 25
+        }
+        {
+          fieldID = NumberFormat$Field.GROUPING_SEPARATOR
+          begin = 1 end = 2
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("#,###")
+      valueClass = java.lang.Long
+      valueArgs = ("-9223372036854775808")
+    }
+    {
+      length = 26
+      text = "-9,223,372,036,854,775,808"
+      0 = (NumberFormat$Field.SIGN)
+      1 = (NumberFormat$Field.INTEGER)
+      2 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      3 = (NumberFormat$Field.INTEGER)
+      4 = (NumberFormat$Field.INTEGER)
+      5 = (NumberFormat$Field.INTEGER)
+      6 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      7 = (NumberFormat$Field.INTEGER)
+      8 = (NumberFormat$Field.INTEGER)
+      9 = (NumberFormat$Field.INTEGER)
+      10 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      11 = (NumberFormat$Field.INTEGER)
+      12 = (NumberFormat$Field.INTEGER)
+      13 = (NumberFormat$Field.INTEGER)
+      14 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      15 = (NumberFormat$Field.INTEGER)
+      16 = (NumberFormat$Field.INTEGER)
+      17 = (NumberFormat$Field.INTEGER)
+      18 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      19 = (NumberFormat$Field.INTEGER)
+      20 = (NumberFormat$Field.INTEGER)
+      21 = (NumberFormat$Field.INTEGER)
+      22 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      23 = (NumberFormat$Field.INTEGER)
+      24 = (NumberFormat$Field.INTEGER)
+      25 = (NumberFormat$Field.INTEGER)
+      limits = (
+                 { attributes = (NumberFormat$Field.SIGN)
+                   begin = 0 end = 1 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 1 end = 2 end2 = 26}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 2 end = 3}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 2 end = 3}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 6 end = 7}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 6 end = 7}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 10 end = 11}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 10 end = 11}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 14 end = 15}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 14 end = 15}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 18 end = 19}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 18 end = 19}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 22 end = 23}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 22 end = 23}
+               )
+      fieldPositions =
+      (
+        {
+          fieldID = NumberFormat$Field.SIGN
+          begin = 0 end = 1
+        }
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 1 end = 26
+        }
+        {
+          fieldID = NumberFormat$Field.GROUPING_SEPARATOR
+          begin = 2 end = 3
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("#,###")
+      valueClass = java.util.concurrent.atomic.AtomicLong
+      valueArgs = ("-9223372036854775808")
+    }
+    {
+      length = 26
+      text = "-9,223,372,036,854,775,808"
+      0 = (NumberFormat$Field.SIGN)
+      1 = (NumberFormat$Field.INTEGER)
+      2 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      3 = (NumberFormat$Field.INTEGER)
+      4 = (NumberFormat$Field.INTEGER)
+      5 = (NumberFormat$Field.INTEGER)
+      6 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      7 = (NumberFormat$Field.INTEGER)
+      8 = (NumberFormat$Field.INTEGER)
+      9 = (NumberFormat$Field.INTEGER)
+      10 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      11 = (NumberFormat$Field.INTEGER)
+      12 = (NumberFormat$Field.INTEGER)
+      13 = (NumberFormat$Field.INTEGER)
+      14 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      15 = (NumberFormat$Field.INTEGER)
+      16 = (NumberFormat$Field.INTEGER)
+      17 = (NumberFormat$Field.INTEGER)
+      18 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      19 = (NumberFormat$Field.INTEGER)
+      20 = (NumberFormat$Field.INTEGER)
+      21 = (NumberFormat$Field.INTEGER)
+      22 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      23 = (NumberFormat$Field.INTEGER)
+      24 = (NumberFormat$Field.INTEGER)
+      25 = (NumberFormat$Field.INTEGER)
+      limits = (
+                 { attributes = (NumberFormat$Field.SIGN)
+                   begin = 0 end = 1 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 1 end = 2 end2 = 26}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 2 end = 3}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 2 end = 3}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 6 end = 7}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 6 end = 7}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 10 end = 11}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 10 end = 11}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 14 end = 15}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 14 end = 15}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 18 end = 19}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 18 end = 19}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 22 end = 23}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 22 end = 23}
+               )
+      fieldPositions =
+      (
+        {
+          fieldID = NumberFormat$Field.SIGN
+          begin = 0 end = 1
+        }
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 1 end = 26
+        }
+        {
+          fieldID = NumberFormat$Field.GROUPING_SEPARATOR
+          begin = 2 end = 3
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("#,###")
+      valueClass = java.util.concurrent.atomic.AtomicInteger
+      valueArgs = ("2147483647")
+    }
+    {
+      length = 13
+      text = "2,147,483,647"
+      0 = (NumberFormat$Field.INTEGER)
+      1 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      2 = (NumberFormat$Field.INTEGER)
+      3 = (NumberFormat$Field.INTEGER)
+      4 = (NumberFormat$Field.INTEGER)
+      5 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      6 = (NumberFormat$Field.INTEGER)
+      7 = (NumberFormat$Field.INTEGER)
+      8 = (NumberFormat$Field.INTEGER)
+      9 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      10 = (NumberFormat$Field.INTEGER)
+      11 = (NumberFormat$Field.INTEGER)
+      12 = (NumberFormat$Field.INTEGER)
+      limits = (
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 0 end = 1 end2 = 13}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 1 end = 2}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 1 end = 2}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 5 end = 6}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 5 end = 6}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 9 end = 10}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 9 end = 10}
+               )
+      fieldPositions =
+      (
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 0 end = 13
+        }
+        {
+          fieldID = NumberFormat$Field.GROUPING_SEPARATOR
+          begin = 1 end = 2
+        }
+      )
+    }
+
+    {
+      class = java.text.DecimalFormat
+      args = ("#,###")
+      valueClass = java.util.concurrent.atomic.AtomicInteger
+      valueArgs = ("-2147483648")
+    }
+    {
+      length = 14
+      text = "-2,147,483,648"
+      0 = (NumberFormat$Field.SIGN)
+      1 = (NumberFormat$Field.INTEGER)
+      2 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      3 = (NumberFormat$Field.INTEGER)
+      4 = (NumberFormat$Field.INTEGER)
+      5 = (NumberFormat$Field.INTEGER)
+      6 = (NumberFormat$Field.INTEGER
+           NumberFormat$Field.GROUPING_SEPARATOR)
+      7 = (NumberFormat$Field.INTEGER)
+      8 = (NumberFormat$Field.INTEGER)
+      9 = (NumberFormat$Field.INTEGER)
+      10 = (NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      11 = (NumberFormat$Field.INTEGER)
+      12 = (NumberFormat$Field.INTEGER)
+      13 = (NumberFormat$Field.INTEGER)
+      limits = (
+                 { attributes = (NumberFormat$Field.SIGN)
+                   begin = 0 end = 1 }
+                 { attributes = (NumberFormat$Field.INTEGER)
+                   begin = 1 end = 2 end2 = 14}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 2 end = 3}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 2 end = 3}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 6 end = 7}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 6 end = 7}
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 10 end = 11}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 10 end = 11}
+               )
+      fieldPositions =
+      (
+        {
+          fieldID = NumberFormat$Field.SIGN
+          begin = 0 end = 1
+        }
+        {
+          field = NumberFormat.INTEGER_FIELD
+          fieldID = NumberFormat$Field.INTEGER
+          begin = 1 end = 14
+        }
+        {
+          fieldID = NumberFormat$Field.GROUPING_SEPARATOR
+          begin = 2 end = 3
+        }
+      )
+    }
+  )
+}

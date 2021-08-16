@@ -1,0 +1,18 @@
+package  p;
+
+super public class Outer
+	version 49:0
+{
+
+
+public Method "<init>":"()V"
+	stack 1 locals 1
+{
+		aload_0;
+		invokespecial	Method java/lang/Object."<init>":"()V";
+		return;
+}
+
+public static interface InnerClass I=class Outer$I of class Outer;
+
+} // end Class Outer

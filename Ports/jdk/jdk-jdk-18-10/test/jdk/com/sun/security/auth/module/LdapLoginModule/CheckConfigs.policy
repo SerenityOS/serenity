@@ -1,0 +1,10 @@
+grant codeBase "file:${test.classes}/*" {
+    // The following permissions are not required because the test is
+    // not expected to connect to an LDAP server
+    //
+    //permission java.net.SocketPermission "*:389", "connect";
+    //permission java.net.SocketPermission "*:636", "connect";
+    //permission javax.security.auth.AuthPermission "modifyPrincipals";
+    permission java.lang.RuntimePermission "accessClassInPackage.com.sun.jndi.ldap";
+    permission java.lang.RuntimePermission "ldapDnsProvider";
+};

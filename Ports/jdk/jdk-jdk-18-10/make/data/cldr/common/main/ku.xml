@@ -1,0 +1,1408 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ku"/>
+	</identity>
+	<localeDisplayNames>
+		<localeDisplayPattern>
+			<localePattern>{0} ({1})</localePattern>
+			<localeSeparator>{0}, {1}</localeSeparator>
+			<localeKeyTypePattern>{0}: {1}</localeKeyTypePattern>
+		</localeDisplayPattern>
+		<languages>
+			<language type="aa">afarî</language>
+			<language type="ab">abxazî</language>
+			<language type="ace">açehî</language>
+			<language type="ady">adîgeyî</language>
+			<language type="af">afrîkansî</language>
+			<language type="ain">aynuyî</language>
+			<language type="ale">alêwîtî</language>
+			<language type="am">amharî</language>
+			<language type="an">aragonî</language>
+			<language type="ar">erebî</language>
+			<language type="ar_001">erebiya standard</language>
+			<language type="as">asamî</language>
+			<language type="ast">astûrî</language>
+			<language type="av">avarî</language>
+			<language type="ay">aymarayî</language>
+			<language type="az">azerî</language>
+			<language type="ba">başkîrî</language>
+			<language type="ban">balînî</language>
+			<language type="be">belarusî</language>
+			<language type="bem">bembayî</language>
+			<language type="bg">bulgarî</language>
+			<language type="bho">bojpûrî</language>
+			<language type="bi">bîslamayî</language>
+			<language type="bla">blakfotî</language>
+			<language type="bm">bambarayî</language>
+			<language type="bn">bengalî</language>
+			<language type="bo">tîbetî</language>
+			<language type="br">bretonî</language>
+			<language type="bs">bosnî</language>
+			<language type="bug">bugî</language>
+			<language type="ca">katalanî</language>
+			<language type="ce">çeçenî</language>
+			<language type="ceb">sebwanoyî</language>
+			<language type="ch">çamoroyî</language>
+			<language type="chk">çûkî</language>
+			<language type="chm">marî</language>
+			<language type="chr">çerokî</language>
+			<language type="chy">çeyenî</language>
+			<language type="ckb">soranî</language>
+			<language type="co">korsîkayî</language>
+			<language type="cs">çekî</language>
+			<language type="cv">çuvaşî</language>
+			<language type="cy">weylsî</language>
+			<language type="da">danmarkî</language>
+			<language type="de">elmanî</language>
+			<language type="dsb">sorbiya jêrîn</language>
+			<language type="dua">diwalayî</language>
+			<language type="dv">divehî</language>
+			<language type="dz">conxayî</language>
+			<language type="ee">eweyî</language>
+			<language type="el">yewnanî</language>
+			<language type="en">îngilîzî</language>
+			<language type="eo">esperantoyî</language>
+			<language type="es">spanî</language>
+			<language type="et">estonî</language>
+			<language type="eu">baskî</language>
+			<language type="fa">farisî</language>
+			<language type="ff">fulahî</language>
+			<language type="fi">fînî</language>
+			<language type="fil">fîlîpînoyî</language>
+			<language type="fj">fîjî</language>
+			<language type="fo">ferî</language>
+			<language type="fr">frensî</language>
+			<language type="fur">friyolî</language>
+			<language type="fy">frîsî</language>
+			<language type="ga">îrî</language>
+			<language type="gd">gaelîka skotî</language>
+			<language type="gil">kîrîbatî</language>
+			<language type="gl">galîsî</language>
+			<language type="gn">guwaranî</language>
+			<language type="gor">gorontaloyî</language>
+			<language type="gsw">elmanîşî</language>
+			<language type="gu">gujaratî</language>
+			<language type="gv">manksî</language>
+			<language type="ha">hawsayî</language>
+			<language type="haw">hawayî</language>
+			<language type="he">îbranî</language>
+			<language type="hi">hindî</language>
+			<language type="hil">hîlîgaynonî</language>
+			<language type="hr">xirwatî</language>
+			<language type="hsb">sorbiya jorîn</language>
+			<language type="ht">haîtî</language>
+			<language type="hu">mecarî</language>
+			<language type="hy">ermenî</language>
+			<language type="hz">hereroyî</language>
+			<language type="ia">interlingua</language>
+			<language type="id">indonezî</language>
+			<language type="ig">îgboyî</language>
+			<language type="ilo">îlokanoyî</language>
+			<language type="inh">îngûşî</language>
+			<language type="io">îdoyî</language>
+			<language type="is">îzlendî</language>
+			<language type="it">îtalî</language>
+			<language type="iu">înuîtî</language>
+			<language type="ja">japonî</language>
+			<language type="jbo">lojbanî</language>
+			<language type="jv">javayî</language>
+			<language type="ka">gurcî</language>
+			<language type="kab">kabîlî</language>
+			<language type="kea">kapverdî</language>
+			<language type="kk">qazaxî</language>
+			<language type="kl">kalalîsûtî</language>
+			<language type="km">ximêrî</language>
+			<language type="kn">kannadayî</language>
+			<language type="ko">koreyî</language>
+			<language type="kok">konkanî</language>
+			<language type="ks">keşmîrî</language>
+			<language type="ksh">rîpwarî</language>
+			<language type="ku">kurdî</language>
+			<language type="kv">komî</language>
+			<language type="kw">kornî</language>
+			<language type="ky">kirgizî</language>
+			<language type="lad">ladînoyî</language>
+			<language type="lb">luksembûrgî</language>
+			<language type="lez">lezgînî</language>
+			<language type="lg">lugandayî</language>
+			<language type="li">lîmbûrgî</language>
+			<language type="lkt">lakotayî</language>
+			<language type="ln">lingalayî</language>
+			<language type="lo">lawsî</language>
+			<language type="lrc">luriya bakur</language>
+			<language type="lt">lîtwanî</language>
+			<language type="lv">latviyayî</language>
+			<language type="mad">madurayî</language>
+			<language type="mas">masayî</language>
+			<language type="mdf">mokşayî</language>
+			<language type="mg">malagasî</language>
+			<language type="mh">marşalî</language>
+			<language type="mi">maorî</language>
+			<language type="mic">mîkmakî</language>
+			<language type="min">mînangkabawî</language>
+			<language type="mk">makedonî</language>
+			<language type="ml">malayalamî</language>
+			<language type="mn">mongolî</language>
+			<language type="moh">mohawkî</language>
+			<language type="mr">maratî</language>
+			<language type="ms">malezî</language>
+			<language type="mt">maltayî</language>
+			<language type="my">burmayî</language>
+			<language type="myv">erzayî</language>
+			<language type="mzn">mazenderanî</language>
+			<language type="na">nawrûyî</language>
+			<language type="nap">napolîtanî</language>
+			<language type="nb">norwecî (bokmål)</language>
+			<language type="ne">nepalî</language>
+			<language type="niu">nîwî</language>
+			<language type="nl">holendî</language>
+			<language type="nl_BE">flamî</language>
+			<language type="nn">norwecî (nynorsk)</language>
+			<language type="nso">sotoyiya bakur</language>
+			<language type="nv">navajoyî</language>
+			<language type="oc">oksîtanî</language>
+			<language type="om">oromoyî</language>
+			<language type="or">oriyayî</language>
+			<language type="os">osetî</language>
+			<language type="pa">puncabî</language>
+			<language type="pam">kapampanganî</language>
+			<language type="pap">papyamentoyî</language>
+			<language type="pau">palawî</language>
+			<language type="pl">polonî</language>
+			<language type="prg">prûsyayî</language>
+			<language type="ps">peştûyî</language>
+			<language type="pt">portugalî</language>
+			<language type="qu">keçwayî</language>
+			<language type="rap">rapanuyî</language>
+			<language type="rar">rarotongî</language>
+			<language type="rm">romancî</language>
+			<language type="ro">romanî</language>
+			<language type="ru">rusî</language>
+			<language type="rup">aromanî</language>
+			<language type="rw">kînyariwandayî</language>
+			<language type="sa">sanskrîtî</language>
+			<language type="sc">sardînî</language>
+			<language type="scn">sicîlî</language>
+			<language type="sco">skotî</language>
+			<language type="sd">sindhî</language>
+			<language type="se">samiya bakur</language>
+			<language type="si">kîngalî</language>
+			<language type="sk">slovakî</language>
+			<language type="sl">slovenî</language>
+			<language type="sm">samoayî</language>
+			<language type="smn">samiya înarî</language>
+			<language type="sn">şonayî</language>
+			<language type="so">somalî</language>
+			<language type="sq">elbanî</language>
+			<language type="sr">sirbî</language>
+			<language type="srn">sirananî</language>
+			<language type="ss">swazî</language>
+			<language type="st">sotoyiya başûr</language>
+			<language type="su">sundanî</language>
+			<language type="sv">swêdî</language>
+			<language type="sw">swahîlî</language>
+			<language type="swb">komorî</language>
+			<language type="syr">siryanî</language>
+			<language type="ta">tamîlî</language>
+			<language type="te">telûgûyî</language>
+			<language type="tet">tetûmî</language>
+			<language type="tg">tacikî</language>
+			<language type="th">tayî</language>
+			<language type="ti">tigrînî</language>
+			<language type="tk">tirkmenî</language>
+			<language type="tlh">klîngonî</language>
+			<language type="tn">tswanayî</language>
+			<language type="to">tongî</language>
+			<language type="tpi">tokpisinî</language>
+			<language type="tr">tirkî</language>
+			<language type="trv">tarokoyî</language>
+			<language type="ts">tsongayî</language>
+			<language type="tt">teterî</language>
+			<language type="tum">tumbukayî</language>
+			<language type="tvl">tuvalûyî</language>
+			<language type="ty">tahîtî</language>
+			<language type="tzm">temazîxtî</language>
+			<language type="udm">udmurtî</language>
+			<language type="ug">oygurî</language>
+			<language type="uk">ukraynî</language>
+			<language type="und" draft="unconfirmed">zimanê nenas</language>
+			<language type="ur">urdûyî</language>
+			<language type="uz">ozbekî</language>
+			<language type="vi">viyetnamî</language>
+			<language type="vo">volapûkî</language>
+			<language type="wa">walonî</language>
+			<language type="war">warayî</language>
+			<language type="wo">wolofî</language>
+			<language type="xh">xosayî</language>
+			<language type="yi">yidîşî</language>
+			<language type="yo">yorubayî</language>
+			<language type="yue">kantonî</language>
+			<language type="zh" draft="unconfirmed">çînî</language>
+			<language type="zh" alt="menu" draft="unconfirmed">çînî, mandarînî</language>
+			<language type="zh_Hans" draft="unconfirmed">çîniya sadekirî</language>
+			<language type="zh_Hans" alt="long" draft="unconfirmed">çîniya mandarînî ya sadekirî</language>
+			<language type="zh_Hant" draft="unconfirmed">çîniya kevneşopî</language>
+			<language type="zh_Hant" alt="long" draft="unconfirmed">çîniya mandarînî ya kevneşopî</language>
+			<language type="zu">zuluyî</language>
+			<language type="zza">zazakî</language>
+		</languages>
+		<scripts>
+			<script type="Arab">erebî</script>
+			<script type="Armn">ermenî</script>
+			<script type="Beng">bengalî</script>
+			<script type="Cyrl">kirîlî</script>
+			<script type="Deva">devanagarî</script>
+			<script type="Geor">gurcî</script>
+			<script type="Grek">yewnanî</script>
+			<script type="Hans" draft="unconfirmed">sadekirî</script>
+			<script type="Hans" alt="stand-alone" draft="unconfirmed">haniya sadekirî</script>
+			<script type="Hant" draft="unconfirmed">kevneşopî</script>
+			<script type="Hant" alt="stand-alone" draft="unconfirmed">haniya kevneşopî</script>
+			<script type="Jpan" draft="unconfirmed">japonî</script>
+			<script type="Khmr">ximêrî</script>
+			<script type="Kore" draft="unconfirmed">koreyî</script>
+			<script type="Latn">latînî</script>
+			<script type="Mong">mongolî</script>
+			<script type="Tibt">tîbetî</script>
+			<script type="Zsym">sembol</script>
+			<script type="Zxxx">ne nivîsandî</script>
+			<script type="Zyyy">hevpar</script>
+			<script type="Zzzz">nivîsa nenas</script>
+		</scripts>
+		<territories>
+			<territory type="001">Cîhan</territory>
+			<territory type="002">Afrîka</territory>
+			<territory type="003">Amerîkaya Bakur</territory>
+			<territory type="005">Amerîkaya Başûr</territory>
+			<territory type="009">Okyanûsya</territory>
+			<territory type="011" draft="unconfirmed">Afrîkaya Rojava</territory>
+			<territory type="013">Amerîkaya Navîn</territory>
+			<territory type="014" draft="unconfirmed">Afrîkaya Rojhilat</territory>
+			<territory type="015">Afrîkaya Bakur</territory>
+			<territory type="017" draft="unconfirmed">Afrîkaya Navîn</territory>
+			<territory type="019">Amerîka</territory>
+			<territory type="029">Karîb</territory>
+			<territory type="053">Awistralasya</territory>
+			<territory type="054">Melanezya</territory>
+			<territory type="057">Herêma Mîkronezya</territory>
+			<territory type="061">Polînezya</territory>
+			<territory type="142">Asya</territory>
+			<territory type="150">Ewropa</territory>
+			<territory type="151">Ewropaya Rojhilat</territory>
+			<territory type="155">Ewropaya Rojava</territory>
+			<territory type="419">Amerîkaya Latînî</territory>
+			<territory type="AD">Andorra</territory>
+			<territory type="AE">Emîrtiyên Erebî yên Yekbûyî</territory>
+			<territory type="AF">Efxanistan</territory>
+			<territory type="AG">Antîgua û Berbûda</territory>
+			<territory type="AL">Albanya</territory>
+			<territory type="AM">Ermenistan</territory>
+			<territory type="AO">Angola</territory>
+			<territory type="AQ">Antarktîka</territory>
+			<territory type="AR">Arjentîn</territory>
+			<territory type="AS">Samoaya Amerîkanî</territory>
+			<territory type="AT">Awistirya</territory>
+			<territory type="AU">Awistralya</territory>
+			<territory type="AW">Arûba</territory>
+			<territory type="AZ">Azerbaycan</territory>
+			<territory type="BA">Bosniya û Herzegovîna</territory>
+			<territory type="BB">Barbados</territory>
+			<territory type="BD">Bangladeş</territory>
+			<territory type="BE">Belçîka</territory>
+			<territory type="BF">Burkîna Faso</territory>
+			<territory type="BG">Bulgaristan</territory>
+			<territory type="BH">Behreyn</territory>
+			<territory type="BI">Burundî</territory>
+			<territory type="BJ">Bênîn</territory>
+			<territory type="BL">Saint-Barthélemy</territory>
+			<territory type="BM">Bermûda</territory>
+			<territory type="BN">Brûney</territory>
+			<territory type="BO">Bolîvya</territory>
+			<territory type="BR">Brazîl</territory>
+			<territory type="BS">Bahama</territory>
+			<territory type="BT">Bûtan</territory>
+			<territory type="BW">Botswana</territory>
+			<territory type="BY">Belarûs</territory>
+			<territory type="BZ">Belîze</territory>
+			<territory type="CA">Kanada</territory>
+			<territory type="CD">Kongo - Kînşasa</territory>
+			<territory type="CD" alt="variant">Kongo (KDK)</territory>
+			<territory type="CF">Komara Afrîkaya Navend</territory>
+			<territory type="CG">Kongo - Brazzaville</territory>
+			<territory type="CG" alt="variant">Kongo (Komar)</territory>
+			<territory type="CH">Swîsre</territory>
+			<territory type="CI">Peravê Diranfîl</territory>
+			<territory type="CK">Giravên Cook</territory>
+			<territory type="CL">Şîle</territory>
+			<territory type="CM">Kamerûn</territory>
+			<territory type="CN">Çîn</territory>
+			<territory type="CO">Kolombiya</territory>
+			<territory type="CR">Kosta Rîka</territory>
+			<territory type="CU">Kûba</territory>
+			<territory type="CV">Kap Verde</territory>
+			<territory type="CY">Kîpros</territory>
+			<territory type="CZ">Çekya</territory>
+			<territory type="CZ" alt="variant">Komara Çekî</territory>
+			<territory type="DE">Almanya</territory>
+			<territory type="DJ">Cîbûtî</territory>
+			<territory type="DK">Danîmarka</territory>
+			<territory type="DM">Domînîka</territory>
+			<territory type="DO">Komara Domînîk</territory>
+			<territory type="DZ">Cezayir</territory>
+			<territory type="EC">Ekuador</territory>
+			<territory type="EE">Estonya</territory>
+			<territory type="EG">Misir</territory>
+			<territory type="EH">Sahraya Rojava</territory>
+			<territory type="ER">Erîtrea</territory>
+			<territory type="ES">Spanya</territory>
+			<territory type="ET">Etiyopya</territory>
+			<territory type="EU">Yekîtiya Ewropayê</territory>
+			<territory type="FI">Fînlenda</territory>
+			<territory type="FJ">Fîjî</territory>
+			<territory type="FK">Giravên Malvîn</territory>
+			<territory type="FK" alt="variant">Giravên Falkland</territory>
+			<territory type="FM">Mîkronezya</territory>
+			<territory type="FO">Giravên Feroe</territory>
+			<territory type="FR">Fransa</territory>
+			<territory type="GA">Gabon</territory>
+			<territory type="GB">Keyaniya Yekbûyî</territory>
+			<territory type="GB" alt="short">KY</territory>
+			<territory type="GD">Grenada</territory>
+			<territory type="GE">Gurcistan</territory>
+			<territory type="GF">Guyanaya Fransî</territory>
+			<territory type="GH">Gana</territory>
+			<territory type="GI">Cîbraltar</territory>
+			<territory type="GL">Grînlenda</territory>
+			<territory type="GM">Gambiya</territory>
+			<territory type="GN">Gîne</territory>
+			<territory type="GP">Guadeloupe</territory>
+			<territory type="GQ">Gîneya Rojbendî</territory>
+			<territory type="GR">Yewnanistan</territory>
+			<territory type="GT">Guatemala</territory>
+			<territory type="GU">Guam</territory>
+			<territory type="GW">Gîne-Bissau</territory>
+			<territory type="GY">Guyana</territory>
+			<territory type="HK" alt="short">Hong Kong</territory>
+			<territory type="HN">Hondûras</territory>
+			<territory type="HR">Kroatya</territory>
+			<territory type="HT">Haîtî</territory>
+			<territory type="HU">Macaristan</territory>
+			<territory type="IC">Giravên Qenariyê</territory>
+			<territory type="ID">Îndonezya</territory>
+			<territory type="IE">Îrlenda</territory>
+			<territory type="IL">Îsraêl</territory>
+			<territory type="IM">Girava Man</territory>
+			<territory type="IN">Hindistan</territory>
+			<territory type="IQ">Iraq</territory>
+			<territory type="IR">Îran</territory>
+			<territory type="IS">Îslenda</territory>
+			<territory type="IT">Îtalya</territory>
+			<territory type="JM">Jamaîka</territory>
+			<territory type="JO">Urdun</territory>
+			<territory type="JP">Japon</territory>
+			<territory type="KE">Kenya</territory>
+			<territory type="KG">Qirgizistan</territory>
+			<territory type="KH">Kamboca</territory>
+			<territory type="KI">Kirîbatî</territory>
+			<territory type="KM">Komor</territory>
+			<territory type="KN">Saint Kitts û Nevîs</territory>
+			<territory type="KP">Korêya Bakur</territory>
+			<territory type="KR">Korêya Başûr</territory>
+			<territory type="KW">Kuweyt</territory>
+			<territory type="KY">Giravên Kaymanê</territory>
+			<territory type="KZ">Qazaxistan</territory>
+			<territory type="LA">Laos</territory>
+			<territory type="LB">Libnan</territory>
+			<territory type="LC">Saint Lucia</territory>
+			<territory type="LI">Liechtenstein</territory>
+			<territory type="LK">Srî Lanka</territory>
+			<territory type="LR">Lîberya</territory>
+			<territory type="LS">Lesoto</territory>
+			<territory type="LT">Lîtvanya</territory>
+			<territory type="LU">Lûksembûrg</territory>
+			<territory type="LV">Letonya</territory>
+			<territory type="LY">Lîbya</territory>
+			<territory type="MA">Maroko</territory>
+			<territory type="MC">Monako</territory>
+			<territory type="MD">Moldova</territory>
+			<territory type="ME">Montenegro</territory>
+			<territory type="MG">Madagaskar</territory>
+			<territory type="MH">Giravên Marşal</territory>
+			<territory type="MK">Makedonya</territory>
+			<territory type="ML">Malî</territory>
+			<territory type="MM">Myanmar (Birmanya)</territory>
+			<territory type="MN">Mongolya</territory>
+			<territory type="MO" alt="short">Makao</territory>
+			<territory type="MP">Giravên Bakurê Marianan</territory>
+			<territory type="MQ">Martinique</territory>
+			<territory type="MR">Morîtanya</territory>
+			<territory type="MT">Malta</territory>
+			<territory type="MU">Maurîtius</territory>
+			<territory type="MV">Maldîv</territory>
+			<territory type="MW">Malawî</territory>
+			<territory type="MX">Meksîk</territory>
+			<territory type="MY">Malezya</territory>
+			<territory type="MZ">Mozambîk</territory>
+			<territory type="NA">Namîbya</territory>
+			<territory type="NC">Kaledonyaya Nû</territory>
+			<territory type="NE">Nîjer</territory>
+			<territory type="NF">Girava Norfolk</territory>
+			<territory type="NG">Nîjerya</territory>
+			<territory type="NI">Nîkaragua</territory>
+			<territory type="NL">Holenda</territory>
+			<territory type="NO">Norwêc</territory>
+			<territory type="NP">Nepal</territory>
+			<territory type="NR">Naûrû</territory>
+			<territory type="NU">Niûe</territory>
+			<territory type="NZ">Nû Zelenda</territory>
+			<territory type="OM">Oman</territory>
+			<territory type="PA">Panama</territory>
+			<territory type="PE">Perû</territory>
+			<territory type="PF">Polînezyaya Fransî</territory>
+			<territory type="PG">Papua Gîneya Nû</territory>
+			<territory type="PH">Filîpîn</territory>
+			<territory type="PK">Pakistan</territory>
+			<territory type="PL">Polonya</territory>
+			<territory type="PM">Saint-Pierre û Miquelon</territory>
+			<territory type="PN">Giravên Pitcairn</territory>
+			<territory type="PR">Porto Rîko</territory>
+			<territory type="PS">Xakên filistînî</territory>
+			<territory type="PS" alt="short">Filistîn</territory>
+			<territory type="PT">Portûgal</territory>
+			<territory type="PW">Palau</territory>
+			<territory type="PY">Paraguay</territory>
+			<territory type="QA">Qeter</territory>
+			<territory type="RE">Réunion</territory>
+			<territory type="RO">Romanya</territory>
+			<territory type="RS">Serbistan</territory>
+			<territory type="RU">Rûsya</territory>
+			<territory type="RW">Rwanda</territory>
+			<territory type="SA">Erebistana Siyûdî</territory>
+			<territory type="SB">Giravên Salomon</territory>
+			<territory type="SC">Seyşel</territory>
+			<territory type="SD">Sûdan</territory>
+			<territory type="SE">Swêd</territory>
+			<territory type="SG">Singapûr</territory>
+			<territory type="SI">Slovenya</territory>
+			<territory type="SK">Slovakya</territory>
+			<territory type="SL">Sierra Leone</territory>
+			<territory type="SM">San Marîno</territory>
+			<territory type="SN">Senegal</territory>
+			<territory type="SO">Somalya</territory>
+			<territory type="SR">Sûrînam</territory>
+			<territory type="SS">Sûdana Başûr</territory>
+			<territory type="ST">Sao Tome û Prînsîpe</territory>
+			<territory type="SV">El Salvador</territory>
+			<territory type="SY">Sûrî</territory>
+			<territory type="SZ">Swazîlenda</territory>
+			<territory type="TC">Giravên Turk û Kaîkos</territory>
+			<territory type="TD">Çad</territory>
+			<territory type="TG">Togo</territory>
+			<territory type="TH">Taylenda</territory>
+			<territory type="TJ">Tacîkistan</territory>
+			<territory type="TK">Tokelau</territory>
+			<territory type="TL">Tîmora-Leste</territory>
+			<territory type="TL" alt="variant">Tîmora Rojhilat</territory>
+			<territory type="TM">Tirkmenistan</territory>
+			<territory type="TN">Tûnis</territory>
+			<territory type="TO">Tonga</territory>
+			<territory type="TR">Tirkiye</territory>
+			<territory type="TT">Trînîdad û Tobago</territory>
+			<territory type="TV">Tûvalû</territory>
+			<territory type="TW">Taywan</territory>
+			<territory type="TZ">Tanzanya</territory>
+			<territory type="UA">Ûkrayna</territory>
+			<territory type="UG">Ûganda</territory>
+			<territory type="UN">Neteweyên Yekbûyî</territory>
+			<territory type="US">Dewletên Yekbûyî yên Amerîkayê</territory>
+			<territory type="US" alt="short">DYA</territory>
+			<territory type="UY">Ûrûguay</territory>
+			<territory type="UZ">Ûzbêkistan</territory>
+			<territory type="VA">Vatîkan</territory>
+			<territory type="VC">Saint Vincent û Giravên Grenadîn</territory>
+			<territory type="VE">Venezuela</territory>
+			<territory type="VN">Viyetnam</territory>
+			<territory type="VU">Vanûatû</territory>
+			<territory type="WF">Wallis û Futuna</territory>
+			<territory type="WS">Samoa</territory>
+			<territory type="XK">Kosovo</territory>
+			<territory type="YE">Yemen</territory>
+			<territory type="ZA">Afrîkaya Başûr</territory>
+			<territory type="ZM">Zambiya</territory>
+			<territory type="ZW">Zîmbabwe</territory>
+		</territories>
+		<keys>
+			<key type="calendar">salname</key>
+			<key type="collation" draft="unconfirmed">rêzkirin</key>
+			<key type="currency">diwîz</key>
+		</keys>
+		<types>
+			<type key="calendar" type="chinese">salnameya çînî</type>
+			<type key="calendar" type="gregorian">salnameya gregorî</type>
+			<type key="calendar" type="hebrew">salnameya îbranî</type>
+			<type key="calendar" type="islamic">salnameya koçî</type>
+			<type key="calendar" type="iso8601">salnameya ISO-8601</type>
+			<type key="calendar" type="japanese">salnameya japonî</type>
+			<type key="calendar" type="persian">salnameya îranî</type>
+			<type key="calendar" type="roc">salnameya Komara Çînê</type>
+			<type key="numbers" type="roman">hejmarên romî</type>
+		</types>
+		<codePatterns>
+			<codePattern type="language">ziman: {0}</codePattern>
+			<codePattern type="script">nivîs: {0}</codePattern>
+			<codePattern type="territory">herêm: {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a b c ç d e ê f g h i î j k l m n o p q r s ş t u û v w x y z]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[á à ă â å ä ã ā æ è ĕ ë ē é ì ĭ ï ī í ñ ó ò ŏ ô ø ō œ ß ù ŭ ū ú ÿ]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B C Ç D E Ê F G H I Î J K L M N O P Q R S Ş T U Û V W X Y Z]</exemplarCharacters>
+		<exemplarCharacters type="punctuation">[\- ‐ ‑ – — , ; \: ! ? . … ' ‘ ’ &quot; “ ” ( ) \[ \] § @ * / \&amp; # † ‡ ′ ″]</exemplarCharacters>
+		<ellipsis type="final">{0}…</ellipsis>
+		<ellipsis type="initial">…{0}</ellipsis>
+		<ellipsis type="medial">{0}…{1}</ellipsis>
+		<ellipsis type="word-final">{0} …</ellipsis>
+		<ellipsis type="word-initial">… {0}</ellipsis>
+		<ellipsis type="word-medial">{0} … {1}</ellipsis>
+		<moreInformation>?</moreInformation>
+		<parseLenients scope="date" level="lenient">
+			<parseLenient sample=":" draft="contributed">[\:∶]</parseLenient>
+		</parseLenients>
+		<parseLenients scope="general" level="lenient">
+			<parseLenient sample="$" draft="contributed">[\$﹩＄$]</parseLenient>
+			<parseLenient sample="£" draft="contributed">[£₤]</parseLenient>
+		</parseLenients>
+		<parseLenients scope="number" level="lenient">
+			<parseLenient sample="-" draft="contributed">[\-‒⁻₋−➖﹣－]</parseLenient>
+		</parseLenients>
+	</characters>
+	<delimiters>
+		<quotationStart>“</quotationStart>
+		<quotationEnd>”</quotationEnd>
+		<alternateQuotationStart>‘</alternateQuotationStart>
+		<alternateQuotationEnd>’</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateTimeFormats>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern>{1} {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="E">ccc</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">rêb</month>
+							<month type="2">reş</month>
+							<month type="3">ada</month>
+							<month type="4">avr</month>
+							<month type="5">gul</month>
+							<month type="6">pûş</month>
+							<month type="7">tîr</month>
+							<month type="8">gel</month>
+							<month type="9">rez</month>
+							<month type="10">kew</month>
+							<month type="11">ser</month>
+							<month type="12">ber</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">R</month>
+							<month type="2">R</month>
+							<month type="3">A</month>
+							<month type="4">A</month>
+							<month type="5">G</month>
+							<month type="6">P</month>
+							<month type="7">T</month>
+							<month type="8">G</month>
+							<month type="9">R</month>
+							<month type="10">K</month>
+							<month type="11">S</month>
+							<month type="12">B</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">rêbendanê</month>
+							<month type="2">reşemiyê</month>
+							<month type="3">adarê</month>
+							<month type="4">avrêlê</month>
+							<month type="5">gulanê</month>
+							<month type="6">pûşperê</month>
+							<month type="7">tîrmehê</month>
+							<month type="8">gelawêjê</month>
+							<month type="9">rezberê</month>
+							<month type="10">kewçêrê</month>
+							<month type="11">sermawezê</month>
+							<month type="12">berfanbarê</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1">rêb</month>
+							<month type="2">reş</month>
+							<month type="3">ada</month>
+							<month type="4">avr</month>
+							<month type="5">gul</month>
+							<month type="6">pûş</month>
+							<month type="7">tîr</month>
+							<month type="8">gel</month>
+							<month type="9">rez</month>
+							<month type="10">kew</month>
+							<month type="11">ser</month>
+							<month type="12">ber</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1">R</month>
+							<month type="2">R</month>
+							<month type="3">A</month>
+							<month type="4">A</month>
+							<month type="5">G</month>
+							<month type="6">P</month>
+							<month type="7">T</month>
+							<month type="8">G</month>
+							<month type="9">R</month>
+							<month type="10">K</month>
+							<month type="11">S</month>
+							<month type="12">B</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">rêbendan</month>
+							<month type="2">reşemî</month>
+							<month type="3">adar</month>
+							<month type="4">avrêl</month>
+							<month type="5">gulan</month>
+							<month type="6">pûşper</month>
+							<month type="7">tîrmeh</month>
+							<month type="8">gelawêj</month>
+							<month type="9">rezber</month>
+							<month type="10">kewçêr</month>
+							<month type="11">sermawez</month>
+							<month type="12">berfanbar</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">yş</day>
+							<day type="mon">dş</day>
+							<day type="tue">sş</day>
+							<day type="wed">çş</day>
+							<day type="thu">pş</day>
+							<day type="fri">în</day>
+							<day type="sat">ş</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">Y</day>
+							<day type="mon">D</day>
+							<day type="tue">S</day>
+							<day type="wed">Ç</day>
+							<day type="thu">P</day>
+							<day type="fri">Î</day>
+							<day type="sat">Ş</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">yş</day>
+							<day type="mon">dş</day>
+							<day type="tue">sş</day>
+							<day type="wed">çş</day>
+							<day type="thu">pş</day>
+							<day type="fri">în</day>
+							<day type="sat">ş</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">yekşem</day>
+							<day type="mon">duşem</day>
+							<day type="tue">sêşem</day>
+							<day type="wed">çarşem</day>
+							<day type="thu">pêncşem</day>
+							<day type="fri">în</day>
+							<day type="sat">şemî</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun">yş</day>
+							<day type="mon">dş</day>
+							<day type="tue">sş</day>
+							<day type="wed">çş</day>
+							<day type="thu">pş</day>
+							<day type="fri">în</day>
+							<day type="sat">ş</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun">Y</day>
+							<day type="mon">D</day>
+							<day type="tue">S</day>
+							<day type="wed">Ç</day>
+							<day type="thu">P</day>
+							<day type="fri">Î</day>
+							<day type="sat">Ş</day>
+						</dayWidth>
+						<dayWidth type="short">
+							<day type="sun">yş</day>
+							<day type="mon">dş</day>
+							<day type="tue">sş</day>
+							<day type="wed">çş</day>
+							<day type="thu">pş</day>
+							<day type="fri">în</day>
+							<day type="sat">ş</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">yekşem</day>
+							<day type="mon">duşem</day>
+							<day type="tue">sêşem</day>
+							<day type="wed">çarşem</day>
+							<day type="thu">pêncşem</day>
+							<day type="fri">în</day>
+							<day type="sat">şemî</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">Ç1</quarter>
+							<quarter type="2">Ç2</quarter>
+							<quarter type="3">Ç3</quarter>
+							<quarter type="4">Ç4</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">1</quarter>
+							<quarter type="2">2</quarter>
+							<quarter type="3">3</quarter>
+							<quarter type="4">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">Çarêka 1em</quarter>
+							<quarter type="2">Çarêka 2em</quarter>
+							<quarter type="3">Çarêka 3em</quarter>
+							<quarter type="4">Çarêka 4em</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">Ç1</quarter>
+							<quarter type="2">Ç2</quarter>
+							<quarter type="3">Ç3</quarter>
+							<quarter type="4">Ç4</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1">1</quarter>
+							<quarter type="2">2</quarter>
+							<quarter type="3">3</quarter>
+							<quarter type="4">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">Çarêka 1em</quarter>
+							<quarter type="2">Çarêka 2em</quarter>
+							<quarter type="3">Çarêka 3em</quarter>
+							<quarter type="4">Çarêka 4em</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">BN</dayPeriod>
+							<dayPeriod type="pm">PN</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">BN</dayPeriod>
+							<dayPeriod type="pm">PN</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">berî zayînê</era>
+						<era type="0" alt="variant">berî zayînê</era>
+						<era type="1">piştî zayînê</era>
+						<era type="1" alt="variant">piştî zayînê</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">BZ</era>
+						<era type="1">PZ</era>
+					</eraAbbr>
+				</eras>
+				<dateTimeFormats>
+					<intervalFormats>
+						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="H">
+							<greatestDifference id="H">HH–HH</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hm">
+							<greatestDifference id="H">HH:mm–HH:mm</greatestDifference>
+							<greatestDifference id="m">HH:mm–HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H">HH:mm–HH:mm v</greatestDifference>
+							<greatestDifference id="m">HH:mm–HH:mm v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H">HH–HH v</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="islamic">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="wide">
+							<month type="1" draft="unconfirmed">muẖerem</month>
+							<month type="2" draft="unconfirmed">sefer</month>
+							<month type="3" draft="unconfirmed">rebîʿulewel</month>
+							<month type="4" draft="unconfirmed">rebîʿulaxer</month>
+							<month type="5" draft="unconfirmed">cemazîyelewel</month>
+							<month type="6" draft="unconfirmed">cemazîyelaxer</month>
+							<month type="7" draft="unconfirmed">receb</month>
+							<month type="8" draft="unconfirmed">şeʿban</month>
+							<month type="9" draft="unconfirmed">remezan</month>
+							<month type="10" draft="unconfirmed">şewal</month>
+							<month type="11" draft="unconfirmed">zîlqeʿde</month>
+							<month type="12" draft="unconfirmed">zîlẖece</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>serdem</displayName>
+			</field>
+			<field type="year">
+				<displayName>sal</displayName>
+				<relative type="-1">par</relative>
+				<relative type="0">îsal</relative>
+				<relative type="1">sala piştî</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">di salekê de</relativeTimePattern>
+					<relativeTimePattern count="other">di {0} salan de</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">berî {0} salê</relativeTimePattern>
+					<relativeTimePattern count="other">berî {0} salan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-short">
+				<displayName>sal</displayName>
+				<relative type="-1">par</relative>
+				<relative type="0">îsal</relative>
+				<relative type="1">sala bê</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">piştî salekê</relativeTimePattern>
+					<relativeTimePattern count="other">piştî {0} salan</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">berî salekê</relativeTimePattern>
+					<relativeTimePattern count="other">berî {0} salan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="year-narrow">
+				<displayName>sl</displayName>
+				<relative type="-1">par</relative>
+				<relative type="0">îsal</relative>
+				<relative type="1">sala bê</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">piştî salekê</relativeTimePattern>
+					<relativeTimePattern count="other">piştî {0} salan</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">berî salekê</relativeTimePattern>
+					<relativeTimePattern count="other">berî {0} salan</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="quarter">
+				<displayName>çarêk</displayName>
+			</field>
+			<field type="quarter-short">
+				<displayName>çrk.</displayName>
+			</field>
+			<field type="quarter-narrow">
+				<displayName>çrk.</displayName>
+			</field>
+			<field type="month">
+				<displayName>meh</displayName>
+				<relative type="-1">meha borî</relative>
+				<relative type="0">vê mehê</relative>
+				<relative type="1">meha were</relative>
+			</field>
+			<field type="month-short">
+				<displayName>m.</displayName>
+				<relative type="-1">meha br.</relative>
+				<relative type="0">vê mehê</relative>
+				<relative type="1">meha bê</relative>
+			</field>
+			<field type="month-narrow">
+				<displayName>m.</displayName>
+				<relative type="-1">meha br.</relative>
+				<relative type="0">vê mehê</relative>
+				<relative type="1">meha bê</relative>
+			</field>
+			<field type="week">
+				<displayName>hefte</displayName>
+				<relative type="-1">hefteya borî</relative>
+				<relative type="0">vê hefteyê</relative>
+				<relative type="1">hefteya were</relative>
+				<relativePeriod>hefteya {0}</relativePeriod>
+			</field>
+			<field type="week-short">
+				<displayName>hf.</displayName>
+				<relative type="-1">hft. borî</relative>
+				<relative type="0">vê hft.</relative>
+				<relative type="1">hft. bê</relative>
+				<relativePeriod>hft. {0}</relativePeriod>
+			</field>
+			<field type="week-narrow">
+				<displayName>hf.</displayName>
+				<relative type="-1">hft. borî</relative>
+				<relative type="0">vê hft.</relative>
+				<relative type="1">hft. bê</relative>
+				<relativePeriod>hft. {0}</relativePeriod>
+			</field>
+			<field type="weekOfMonth">
+				<displayName>hefteya mehê</displayName>
+			</field>
+			<field type="day">
+				<displayName>roj</displayName>
+				<relative type="-1">duh</relative>
+				<relative type="0">îro</relative>
+				<relative type="1">sibe</relative>
+			</field>
+			<field type="day-short">
+				<displayName>r.</displayName>
+			</field>
+			<field type="day-narrow">
+				<displayName>r.</displayName>
+			</field>
+			<field type="dayOfYear">
+				<displayName>roja salê</displayName>
+			</field>
+			<field type="dayOfYear-short">
+				<displayName>roja salê</displayName>
+			</field>
+			<field type="dayOfYear-narrow">
+				<displayName>roja salê</displayName>
+			</field>
+			<field type="weekday">
+				<displayName>roja hefteyê</displayName>
+			</field>
+			<field type="weekday-short">
+				<displayName>roja hefteyê</displayName>
+			</field>
+			<field type="weekday-narrow">
+				<displayName>roja hefteyê</displayName>
+			</field>
+			<field type="weekdayOfMonth">
+				<displayName>roja mehê</displayName>
+			</field>
+			<field type="weekdayOfMonth-short">
+				<displayName>roja mehê</displayName>
+			</field>
+			<field type="weekdayOfMonth-narrow">
+				<displayName>roja mehê</displayName>
+			</field>
+			<field type="dayperiod-short">
+				<displayName>BN/PN</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>BN/PN</displayName>
+			</field>
+			<field type="dayperiod-narrow">
+				<displayName>BN/PN</displayName>
+			</field>
+			<field type="hour">
+				<displayName>saet</displayName>
+			</field>
+			<field type="hour-short">
+				<displayName>st.</displayName>
+			</field>
+			<field type="hour-narrow">
+				<displayName>st.</displayName>
+			</field>
+			<field type="minute">
+				<displayName>deqîqe</displayName>
+			</field>
+			<field type="minute-short">
+				<displayName>d.</displayName>
+			</field>
+			<field type="minute-narrow">
+				<displayName>d.</displayName>
+			</field>
+			<field type="second">
+				<displayName>saniye</displayName>
+			</field>
+			<field type="second-short">
+				<displayName>s.</displayName>
+			</field>
+			<field type="second-narrow">
+				<displayName>s.</displayName>
+			</field>
+			<field type="zone">
+				<displayName>qada demê</displayName>
+			</field>
+			<field type="zone-short">
+				<displayName>qad</displayName>
+			</field>
+			<field type="zone-narrow">
+				<displayName>qad</displayName>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group>.</group>
+			<percentSign>%</percentSign>
+			<plusSign>+</plusSign>
+			<minusSign>-</minusSign>
+			<exponential>E</exponential>
+			<superscriptingExponent>×</superscriptingExponent>
+			<perMille>‰</perMille>
+			<infinity>∞</infinity>
+			<nan>NaN</nan>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<scientificFormats numberSystem="latn">
+			<scientificFormatLength>
+				<scientificFormat>
+					<pattern>#E0</pattern>
+				</scientificFormat>
+			</scientificFormatLength>
+		</scientificFormats>
+		<percentFormats numberSystem="latn">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern>%#,##0</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>#,##0.00 ¤</pattern>
+				</currencyFormat>
+				<currencyFormat type="accounting">
+					<pattern>#,##0.00 ¤;(#,##0.00 ¤)</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<unitPattern count="one">{0} {1}</unitPattern>
+			<unitPattern count="other">{0} {1}</unitPattern>
+		</currencyFormats>
+		<currencies>
+			<currency type="EUR">
+				<displayName>ewro</displayName>
+				<displayName count="one">ewro</displayName>
+				<displayName count="other">ewro</displayName>
+			</currency>
+			<currency type="TRY">
+				<symbol>₺</symbol>
+			</currency>
+		</currencies>
+		<miscPatterns numberSystem="latn">
+			<pattern type="atLeast">⩾{0}</pattern>
+			<pattern type="range">{0}–{1}</pattern>
+		</miscPatterns>
+		<minimalPairs>
+			<pluralMinimalPairs count="one" draft="contributed">rojek</pluralMinimalPairs>
+			<pluralMinimalPairs count="other" draft="contributed">{0} roj</pluralMinimalPairs>
+		</minimalPairs>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="angle-revolution">
+				<displayName>dewr</displayName>
+				<unitPattern count="one">{0} dewr</unitPattern>
+				<unitPattern count="other">{0} dewr</unitPattern>
+			</unit>
+			<unit type="angle-radian">
+				<displayName>radyan</displayName>
+				<unitPattern count="one">{0} radyan</unitPattern>
+				<unitPattern count="other">{0} radyan</unitPattern>
+			</unit>
+			<unit type="angle-degree">
+				<displayName>derece</displayName>
+				<unitPattern count="one">{0} derece</unitPattern>
+				<unitPattern count="other">{0} derece</unitPattern>
+			</unit>
+			<unit type="angle-arc-minute">
+				<displayName>xuleka kevanî</displayName>
+				<unitPattern count="one">{0} xuleka kevanî</unitPattern>
+				<unitPattern count="other">{0} xulekên kevanî</unitPattern>
+			</unit>
+			<unit type="angle-arc-second">
+				<displayName>çirkeya kevanî</displayName>
+				<unitPattern count="one">{0} çirkeya kevanî</unitPattern>
+				<unitPattern count="other">{0} çirkeyên kevanî</unitPattern>
+			</unit>
+			<unit type="concentr-karat">
+				<displayName>qerat</displayName>
+				<unitPattern count="one">{0} qerat</unitPattern>
+				<unitPattern count="other">{0} qerat</unitPattern>
+			</unit>
+			<unit type="concentr-percent">
+				<displayName>ji sedî</displayName>
+				<unitPattern count="one">ji sedî {0}</unitPattern>
+				<unitPattern count="other">ji sedî {0}</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<displayName>sal</displayName>
+				<unitPattern count="one">{0} sal</unitPattern>
+				<unitPattern count="other">{0} sal</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>meh</displayName>
+				<unitPattern count="one">{0} meh</unitPattern>
+				<unitPattern count="other">{0} meh</unitPattern>
+				<perUnitPattern>{0}/meh</perUnitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName>hefte</displayName>
+				<unitPattern count="one">{0} hefte</unitPattern>
+				<unitPattern count="other">{0} hefte</unitPattern>
+				<perUnitPattern>{0}/hefte</perUnitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName>roj</displayName>
+				<unitPattern count="one">{0} roj</unitPattern>
+				<unitPattern count="other">{0} roj</unitPattern>
+				<perUnitPattern>{0}/roj</perUnitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName>saet</displayName>
+				<unitPattern count="one">{0} saet</unitPattern>
+				<unitPattern count="other">{0} saet</unitPattern>
+				<perUnitPattern>{0}/st</perUnitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>deqîqe</displayName>
+				<unitPattern count="one">{0} deqîqe</unitPattern>
+				<unitPattern count="other">{0} deqîqe</unitPattern>
+				<perUnitPattern>{0}/d</perUnitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName>sanî</displayName>
+				<unitPattern count="one">{0} saniye</unitPattern>
+				<unitPattern count="other">{0} saniye</unitPattern>
+				<perUnitPattern>{0}/s</perUnitPattern>
+			</unit>
+			<coordinateUnit>
+				<coordinateUnitPattern type="east">{0} rojhilat</coordinateUnitPattern>
+				<coordinateUnitPattern type="north">{0} bakur</coordinateUnitPattern>
+				<coordinateUnitPattern type="south">{0} başûr</coordinateUnitPattern>
+				<coordinateUnitPattern type="west">{0} rojava</coordinateUnitPattern>
+			</coordinateUnit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="angle-revolution">
+				<displayName>dwr</displayName>
+				<unitPattern count="one">{0} dwr</unitPattern>
+				<unitPattern count="other">{0} dwr</unitPattern>
+			</unit>
+			<unit type="angle-radian">
+				<displayName>radyan</displayName>
+				<unitPattern count="one">{0} rad</unitPattern>
+				<unitPattern count="other">{0} rad</unitPattern>
+			</unit>
+			<unit type="angle-degree">
+				<displayName>derece</displayName>
+			</unit>
+			<unit type="angle-arc-minute">
+				<displayName>xlk. kevanî</displayName>
+			</unit>
+			<unit type="angle-arc-second">
+				<displayName>çrk. kevanî</displayName>
+			</unit>
+			<unit type="concentr-karat">
+				<displayName>qerat</displayName>
+			</unit>
+			<unit type="concentr-percent">
+				<unitPattern count="one">%{0}</unitPattern>
+				<unitPattern count="other">%{0}</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-kilometer">
+				<displayName>l/km</displayName>
+				<unitPattern count="one">{0} l/km</unitPattern>
+				<unitPattern count="other">{0} l/km</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-100-kilometer">
+				<displayName>l/100 km</displayName>
+				<unitPattern count="one">{0} l/100 km</unitPattern>
+				<unitPattern count="other">{0} l/100 km</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<displayName>sal</displayName>
+				<unitPattern count="one">{0} sal</unitPattern>
+				<unitPattern count="other">{0} sal</unitPattern>
+				<perUnitPattern>{0}/sal</perUnitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>meh</displayName>
+				<unitPattern count="one">{0} m</unitPattern>
+				<unitPattern count="other">{0} m</unitPattern>
+				<perUnitPattern>{0}/m</perUnitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName>hf</displayName>
+				<unitPattern count="one">{0} hf</unitPattern>
+				<unitPattern count="other">{0} hf</unitPattern>
+				<perUnitPattern>{0}/hf</perUnitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName>roj</displayName>
+				<unitPattern count="one">{0} roj</unitPattern>
+				<unitPattern count="other">{0} roj</unitPattern>
+				<perUnitPattern>{0}/r</perUnitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName>saet</displayName>
+				<unitPattern count="one">{0} st</unitPattern>
+				<unitPattern count="other">{0} st</unitPattern>
+				<perUnitPattern>{0}/st</perUnitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>d</displayName>
+				<unitPattern count="one">{0} d</unitPattern>
+				<unitPattern count="other">{0} d</unitPattern>
+				<perUnitPattern>{0}/d</perUnitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName>s</displayName>
+				<unitPattern count="one">{0} s</unitPattern>
+				<unitPattern count="other">{0} s</unitPattern>
+				<perUnitPattern>{0}/s</perUnitPattern>
+			</unit>
+			<coordinateUnit>
+				<coordinateUnitPattern type="east">{0} Rh</coordinateUnitPattern>
+				<coordinateUnitPattern type="north">{0} Bk</coordinateUnitPattern>
+				<coordinateUnitPattern type="south">{0} Bş</coordinateUnitPattern>
+				<coordinateUnitPattern type="west">{0} Ra</coordinateUnitPattern>
+			</coordinateUnit>
+		</unitLength>
+		<unitLength type="narrow">
+			<unit type="concentr-percent">
+				<unitPattern count="one">%{0}</unitPattern>
+				<unitPattern count="other">%{0}</unitPattern>
+			</unit>
+			<unit type="consumption-liter-per-100-kilometer">
+				<displayName>l/100km</displayName>
+				<unitPattern count="one">{0}l/100km</unitPattern>
+				<unitPattern count="other">{0}l/100km</unitPattern>
+			</unit>
+			<unit type="duration-year">
+				<displayName>sl</displayName>
+				<unitPattern count="one">{0}sl</unitPattern>
+				<unitPattern count="other">{0}sl</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName>meh</displayName>
+				<unitPattern count="one">{0}m</unitPattern>
+				<unitPattern count="other">{0}m</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<unitPattern count="one">{0}hf</unitPattern>
+				<unitPattern count="other">{0}hf</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName>roj</displayName>
+				<unitPattern count="one">{0}r</unitPattern>
+				<unitPattern count="other">{0}r</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName>saet</displayName>
+				<unitPattern count="one">{0}st</unitPattern>
+				<unitPattern count="other">{0}st</unitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName>d</displayName>
+				<unitPattern count="one">{0}d</unitPattern>
+				<unitPattern count="other">{0}d</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName>s</displayName>
+				<unitPattern count="one">{0}s</unitPattern>
+				<unitPattern count="other">{0}s</unitPattern>
+			</unit>
+			<coordinateUnit>
+				<coordinateUnitPattern type="east">{0}Rh</coordinateUnitPattern>
+				<coordinateUnitPattern type="north">{0}Bk</coordinateUnitPattern>
+				<coordinateUnitPattern type="south">{0}Bş</coordinateUnitPattern>
+				<coordinateUnitPattern type="west">{0}Ra</coordinateUnitPattern>
+			</coordinateUnit>
+		</unitLength>
+	</units>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0} û {1}</listPatternPart>
+			<listPatternPart type="2">{0} û {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="or">
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0} an {1}</listPatternPart>
+			<listPatternPart type="2">{0} an {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="standard-short">
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0} û {1}</listPatternPart>
+			<listPatternPart type="2">{0} û {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="unit">
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0} û {1}</listPatternPart>
+			<listPatternPart type="2">{0} û {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="unit-narrow">
+			<listPatternPart type="start">{0} {1}</listPatternPart>
+			<listPatternPart type="middle">{0} {1}</listPatternPart>
+			<listPatternPart type="end">{0} {1}</listPatternPart>
+			<listPatternPart type="2">{0} {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="unit-short">
+			<listPatternPart type="start">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="end">{0} û {1}</listPatternPart>
+			<listPatternPart type="2">{0} û {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<yesstr>erê:e</yesstr>
+			<nostr>na:n</nostr>
+		</messages>
+	</posix>
+	<characterLabels>
+		<characterLabel type="animal">heywan</characterLabel>
+		<characterLabel type="animals_nature">heywan an xweza</characterLabel>
+	</characterLabels>
+</ldml>

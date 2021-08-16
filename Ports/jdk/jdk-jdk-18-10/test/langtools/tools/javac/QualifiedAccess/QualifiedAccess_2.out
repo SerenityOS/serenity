@@ -1,0 +1,7 @@
+QualifiedAccess_2.java:40:22: compiler.err.report.access: A.B, private, A
+QualifiedAccess_2.java:41:22: compiler.err.report.access: A.B, private, A
+QualifiedAccess_2.java:45:15: compiler.err.not.def.public.cant.access: pack1.P1.Foo, pack1.P1
+QualifiedAccess_2.java:52:29: compiler.err.report.access: Y.Quux.Quem, private, Y.Quux
+QualifiedAccess_2.java:30:25: compiler.err.report.access: pack1.P1.R.S, private, pack1.P1.R
+QualifiedAccess_2.java:54:25: compiler.err.report.access: Y.Quux.Quem, private, Y.Quux
+6 errors

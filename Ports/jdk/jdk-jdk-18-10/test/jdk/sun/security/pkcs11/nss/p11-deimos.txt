@@ -1,0 +1,14 @@
+#
+#
+#
+# Configuration to run unit tests with the Deimos (SCA1000) software
+#
+
+name = Deimos
+
+#showInfo = true
+
+library = /opt/SUNWconn/lib/libpkcs11.so
+
+attributes = compatibility
+

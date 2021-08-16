@@ -1,0 +1,5 @@
+LambdaConv21.java:25:43: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.inconvertible.types: void, java.lang.Void))
+LambdaConv21.java:32:33: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.missing.ret.val: java.lang.Void))
+LambdaConv21.java:33:53: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.unexpected.ret.val))
+LambdaConv21.java:36:33: compiler.err.prob.found.req: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.missing.ret.val: java.lang.Void))
+4 errors

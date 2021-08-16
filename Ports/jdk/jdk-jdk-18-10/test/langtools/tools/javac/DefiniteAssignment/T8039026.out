@@ -1,0 +1,4 @@
+T8039026.java:10:23: compiler.err.var.might.not.have.been.initialized: y
+T8039026.java:12:28: compiler.err.var.might.not.have.been.initialized: x
+T8039026.java:18:13: compiler.err.var.might.already.be.assigned: y
+3 errors

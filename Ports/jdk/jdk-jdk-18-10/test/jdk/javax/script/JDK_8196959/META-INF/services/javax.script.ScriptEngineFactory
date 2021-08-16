@@ -1,0 +1,2 @@
+# Factory that does many bad things to stress ScriptEngineManager
+BadFactory

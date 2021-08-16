@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE HTMLlat1 SYSTEM \"include.dtd\">
+<content>
+    <header>This is the header</header>
+    Some content
+    <footer>footer</footer>
+</content>

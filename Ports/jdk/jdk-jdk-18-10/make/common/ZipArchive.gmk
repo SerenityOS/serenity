@@ -1,0 +1,173 @@
+#
+# Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+ifndef _ZIP_ARCHIVE_GMK
+_ZIP_ARCHIVE_GMK := 1
+
+ifeq (,$(_MAKEBASE_GMK))
+  $(error You must include MakeBase.gmk prior to including ZipArchive.gmk)
+endif
+
+# Setup make rules for creating a zip archive.
+#
+# Parameter 1 is the name of the rule. This name is used as variable prefix,
+# and the targets generated are listed in a variable by that name.
+#
+# Remaining parameters are named arguments. These include:
+#   SRC
+#   ZIP
+#   INCLUDES
+#   INCLUDE_FILES
+#   EXCLUDES
+#   EXCLUDE_FILES
+#   EXCLUDE_PATTERNS - Patterns with at most one % wildcard matching filenames
+#                      and not directories.
+#   EXCLUDE_PATTERNS_$dir - Exclude patterns just like above but specific to one
+#                           src dir
+#   SUFFIXES
+#   EXTRA_DEPS
+#   FOLLOW_SYMLINKS - Set to explicitly follow symlinks. Affects performance of
+#                     finding files.
+#   ZIP_OPTIONS extra options to pass to zip
+SetupZipArchive = $(NamedParamsMacroTemplate)
+define SetupZipArchiveBody
+
+  # Create a version $1_SRC with a guaranteed trailing slash
+  $1_SRC_SLASH := $$(addsuffix /, $$(patsubst %/, %, $$($1_SRC)))
+
+  # To avoid running find over too large sets of files, which causes make to crash
+  # on some configurations (cygwin), use INCLUDES and INCLUDE_FILES to build a set
+  # of directories to run find in, if available.
+  ifneq ($$($1_INCLUDES)$$($1_INCLUDE_FILES),)
+    $1_FIND_LIST := $$(wildcard $$(foreach s,$$($1_SRC_SLASH), \
+        $$(addprefix $$s,$$($1_INCLUDES) $$($1_INCLUDE_FILES))))
+  else
+    $1_FIND_LIST := $$($1_SRC_SLASH)
+  endif
+
+  # Find all files in the source tree.
+  # If asked to, follow symlinks in this find since that is what zip does. To do
+  # this, we need to call ShellFindFiles directly.
+  ifeq ($$($1_FOLLOW_SYMLINKS), true)
+    $1_ALL_SRCS := $$(call not-containing,_the.,$$(call ShellFindFiles,$$($1_FIND_LIST), , -L))
+  else
+    $1_ALL_SRCS := $$(call not-containing,_the.,$$(call FindFiles,$$($1_FIND_LIST)))
+  endif
+
+  # Filter on suffixes if set
+  ifneq ($$($1_SUFFIXES),)
+    $1_ALL_SRCS := $$(filter $$(addprefix %, $$($1_SUFFIXES)), $$($1_ALL_SRCS))
+  endif
+
+  ifneq ($$($1_INCLUDES),)
+    ifneq ($$($1_SUFFIXES),)
+      $1_ZIP_INCLUDES := $$(foreach s,$$($1_SUFFIXES), \
+          $$(addprefix -i$(SPACE)$(DQUOTE),$$(addsuffix /*$$s$(DQUOTE),$$($1_INCLUDES))))
+    else
+      $1_ZIP_INCLUDES := $$(addprefix -i$(SPACE)$(DQUOTE),$$(addsuffix /*$(DQUOTE),$$($1_INCLUDES)))
+    endif
+  else
+    ifneq ($$($1_SUFFIXES),)
+      $1_ZIP_INCLUDES := $$(foreach s,$$($1_SUFFIXES), \
+          $$(addprefix -i$(SPACE)$(DQUOTE),*$$s$(DQUOTE)))
+    endif
+  endif
+  ifneq ($$($1_INCLUDE_FILES),)
+    $1_ZIP_INCLUDES += $$(addprefix -i$(SPACE),$$($1_INCLUDE_FILES))
+  endif
+  ifneq ($$($1_EXCLUDES),)
+    $1_ZIP_EXCLUDES := $$(addprefix -x$(SPACE)$(DQUOTE),$$(addsuffix /*$(DQUOTE),$$($1_EXCLUDES)))
+    $1_SRC_EXCLUDES := $$(foreach s,$$($1_SRC_SLASH),$$(addprefix $$s,$$(addsuffix /%,$$($1_EXCLUDES))))
+    $1_ALL_SRCS := $$(filter-out $$($1_SRC_EXCLUDES),$$($1_ALL_SRCS))
+  endif
+  ifneq ($$($1_EXCLUDE_FILES),)
+    $1_SRC_EXCLUDE_FILES := $$(addprefix %, $$($1_EXCLUDE_FILES)) $$($1_EXCLUDE_FILES)
+    $1_ALL_SRCS := $$(filter-out $$($1_SRC_EXCLUDE_FILES), $$($1_ALL_SRCS))
+    $$(foreach s, $$($1_SRC_SLASH), \
+      $$(eval $1_ZIP_EXCLUDES_$$s += \
+          $$(addprefix -x$$(SPACE), $$(patsubst $$s%,%, $$($1_EXCLUDE_FILES))) \
+      ) \
+    )
+  endif
+  ifneq ($$($1_EXCLUDE_PATTERNS), )
+    $1_ALL_SRCS := $$(filter-out $$($1_EXCLUDE_PATTERNS), $$($1_ALL_SRCS))
+    $1_ZIP_EXCLUDES += $$(addprefix -x$(SPACE), $$(subst %,\*,$$($1_EXCLUDE_PATTERNS)))
+  endif
+  # Rewrite src dir specific exclude patterns to zip excludes
+  $$(foreach s, $$($1_SRC_SLASH), \
+    $$(if $$($1_EXCLUDE_PATTERNS_$$s), \
+      $$(eval $1_ZIP_EXCLUDES_$$s += \
+          $$(addprefix -x$$(SPACE), $$(subst %,\*,$$($1_EXCLUDE_PATTERNS_$$s))) \
+      ) \
+    ) \
+  )
+
+  # Use a slightly shorter name for logging, but with enough path to identify this zip.
+  $1_NAME:=$$(subst $$(OUTPUTDIR)/,,$$($1_ZIP))
+
+  # Now $1_ALL_SRCS should contain all sources that are going to be put into the zip.
+  # I.e. the zip -i and -x options should match the filtering done in the makefile.
+  # Explicitly excluded files can be given with absolute path. The patsubst solution
+  # isn't perfect but the likelyhood of an absolute path to match something in a src
+  # dir is very small.
+  # If zip has nothing to do, it returns 12 and would fail the build. Check for 12
+  # and only fail if it's not.
+  $$($1_ZIP) : $$($1_ALL_SRCS) $$($1_EXTRA_DEPS)
+	$$(call LogWarn, Updating $$($1_NAME))
+	$$(call MakeTargetDir)
+        # Find duplicate file names in the SRC and generate excludes for all
+        # instances that should not be included. Run this rather expensive
+        # calculation as part of the recipe to avoid running it when nothing
+        # needs to be rebuilt. The drawback is that we cannot exclude these
+        # files from the make prerequisites list, but the number of files is
+        # usually small so a very rare unnecessary rebuild is worth it.
+        # (The inner most foreach here is used instead of eval to declare a
+        # local variable.)
+	$$(foreach root, $$($1_SRC_SLASH), \
+	  $$(foreach file, $$(filter $$(root)%, $$($1_ALL_SRCS)), \
+	    $$(foreach relfile, $$(patsubst $$(root)%, %, $$(file)), \
+	      $$(if $$($1_relfiles_$$(call DoubleDollar, $$(relfile))), \
+	        $$(eval $1_ZIP_EXCLUDES_$$(root) += -x $$(relfile)) \
+	      , \
+	        $$(eval $1_relfiles_$$(call DoubleDollar, $$(relfile)) := 1) \
+	      ) \
+	    ) \
+	  ) \
+	)
+	$$(foreach s,$$($1_SRC_SLASH), $$(call ExecuteWithLog, \
+	    $$(SUPPORT_OUTPUTDIR)/zip/$$(patsubst $$(OUTPUTDIR)/%,%, $$@), \
+	    (cd $$s && $(ZIPEXE) -qru $$($1_ZIP_OPTIONS) $$@ . \
+	        $$($1_ZIP_INCLUDES) $$($1_ZIP_EXCLUDES) -x \*_the.\* \
+	        $$($1_ZIP_EXCLUDES_$$s) \
+	        || test "$$$$?" = "12" \
+	    ))$$(NEWLINE) \
+	) true \
+	$(TOUCH) $$@
+
+  # Add zip to target list
+  $1 += $$($1_ZIP)
+endef
+
+endif # _ZIP_ARCHIVE_GMK

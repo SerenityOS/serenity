@@ -1,0 +1,5 @@
+MethodReference37.java:24:38: compiler.err.prob.found.req: (compiler.misc.invalid.mref: kindname.constructor, (compiler.misc.cant.apply.symbol: kindname.constructor, Inner, compiler.misc.no.args, MethodReference37.Outer, kindname.class, MethodReference37.Outer.Inner, (compiler.misc.arg.length.mismatch)))
+MethodReference37.java:29:39: compiler.err.prob.found.req: (compiler.misc.invalid.mref: kindname.constructor, (compiler.misc.cant.apply.symbol: kindname.constructor, Inner, compiler.misc.no.args, MethodReference37.Outer, kindname.class, MethodReference37.Outer.Inner, (compiler.misc.arg.length.mismatch)))
+MethodReference37.java:34:40: compiler.err.invalid.mref: kindname.constructor, (compiler.misc.cant.access.inner.cls.constr: Inner, MethodReference37.Outer, MethodReference37.Outer)
+MethodReference37.java:38:41: compiler.err.invalid.mref: kindname.constructor, (compiler.misc.cant.access.inner.cls.constr: Inner, MethodReference37.Outer, MethodReference37.Outer)
+4 errors

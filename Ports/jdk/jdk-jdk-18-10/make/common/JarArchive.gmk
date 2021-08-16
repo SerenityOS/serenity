@@ -1,0 +1,281 @@
+#
+# Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+ifndef _JAR_ARCHIVE_GMK
+_JAR_ARCHIVE_GMK := 1
+
+ifeq (,$(_MAKEBASE_GMK))
+  $(error You must include MakeBase.gmk prior to including JarArchive.gmk)
+endif
+
+FALSE_FIND_PATTERN:=-name FILE_NAME_THAT_DOESNT_EXIST
+
+# Setup make rules for creating a jar archive.
+#
+# Parameter 1 is the name of the rule. This name is used as variable prefix,
+# and the targets generated are listed in a variable by that name.
+#
+# Remaining parameters are named arguments. These include:
+#   DEPENDENCIES:=List of dependencies for the jar target. If left empty,
+#       dependencies are calculated automatically from the source files found.
+#       For this to work, the source files must exist when the makefile is
+#       parsed.
+#   SRCS:=List of directories in where to find files to add to archive
+#   BIN:=Directory where to store build control files
+#   SUFFIXES:=File suffixes to include in jar
+#   INCLUDES:=List of directories/packages in SRCS that should be included
+#   EXCLUDES:=List of directories/packages in SRCS that should be excluded
+#   EXCLUDE_FILES:=List of files in SRCS that should be excluded
+#   EXTRA_FILES:=List of files in SRCS that should be included regardless of suffix match.
+#   JAR:=Jar file to create
+#   MANIFEST:=Optional manifest file template.
+#   JARMAIN:=Optional main class to add to manifest
+#   JARINDEX:=true means generate the index in the jar file.
+#   SKIP_METAINF:=Set to prevent contents of an META-INF directory to be automatically
+#       added to the archive.
+#   EXTRA_MANIFEST_ATTR:=Extra attribute to add to manifest.
+#   CHECK_COMPRESS_JAR Check the COMPRESS_JAR variable
+#   JAR_CMD:=Optionally override the jar command to use when creating the archive.
+SetupJarArchive = $(NamedParamsMacroTemplate)
+define SetupJarArchiveBody
+
+  $1_JARMAIN:=$(strip $$($1_JARMAIN))
+  $1_JARNAME:=$$(notdir $$($1_JAR))
+  $1_JAR_OUTPUT_DIR := $$(patsubst %/, %, $$(dir $$($1_JAR)))
+  $$(call SetIfEmpty, $1_BIN, $$($1_JAR_OUTPUT_DIR))
+  $1_MANIFEST_FILE:=$$($1_BIN)/_the.$$($1_JARNAME)_manifest
+  $1_DELETESS_FILE:=$$($1_BIN)/_the.$$($1_JARNAME)_deletess
+  $1_DELETES_FILE:=$$($1_BIN)/_the.$$($1_JARNAME)_deletes
+  $$(call SetIfEmpty, $1_JAR_CMD, $$(JAR))
+
+  ifeq (,$$($1_SUFFIXES))
+    # No suffix was set, default to classes.
+    $1_SUFFIXES:=.class
+  endif
+  # Convert suffixes to a find expression
+  $1_FIND_PATTERNS:=$(FALSE_FIND_PATTERN) $$(patsubst %,$(SPACE)-o$(SPACE)-name$(SPACE)$(DQUOTE)*%$(DQUOTE),$$($1_SUFFIXES))
+  # On windows, a lot of includes/excludes risk making the command line too long, so
+  # writing the grep patterns to files.
+  # Grep returns 1 if nothing is matched. Do not fail the build for this.
+  ifneq (,$$($1_INCLUDES))
+    $1_GREP_INCLUDE_PATTERNS:=$$(call EscapeDollar, \
+        $$(foreach src,$$($1_SRCS), $$(addprefix $$(src)/,$$($1_INCLUDES))))
+    # If there are a lot of include patterns, output to file to shorten command lines
+    ifeq ($$(word 20,$$($1_GREP_INCLUDE_PATTERNS)),)
+      $1_GREP_INCLUDES:=| ( $(GREP) $$(patsubst %,$(SPACE)-e$(SPACE)$(DQUOTE)%$(DQUOTE),$$($1_GREP_INCLUDE_PATTERNS)) \
+          || test "$$$$?" = "1" )
+    else
+      $1_GREP_INCLUDE_OUTPUT = \
+          $$(eval $$(call ListPathsSafely,$1_GREP_INCLUDE_PATTERNS, \
+              $$($1_BIN)/_the.$$($1_JARNAME)_include))
+      $1_GREP_INCLUDES:=| ( $(GREP) -f $$($1_BIN)/_the.$$($1_JARNAME)_include \
+          || test "$$$$?" = "1" )
+    endif
+  endif
+  ifneq (,$$($1_EXCLUDES)$$($1_EXCLUDE_FILES))
+    $1_GREP_EXCLUDE_PATTERNS:=$$(call EscapeDollar, \
+        $$(foreach src,$$($1_SRCS),$$(addprefix $$(src)/, \
+        $$($1_EXCLUDES) $$($1_EXCLUDE_FILES))))
+    # If there are a lot of include patterns, output to file to shorten command lines
+    ifeq ($$(word 20,$$($1_GREP_EXCLUDE_PATTERNS)),)
+      $1_GREP_EXCLUDES:=| ( $(GREP) -v $$(patsubst %,$(SPACE)-e$(SPACE)$(DQUOTE)%$(DQUOTE),$$($1_GREP_EXCLUDE_PATTERNS)) \
+          || test "$$$$?" = "1" )
+    else
+      $1_GREP_EXCLUDE_OUTPUT = \
+          $$(eval $$(call ListPathsSafely,$1_GREP_EXCLUDE_PATTERNS, \
+              $$($1_BIN)/_the.$$($1_JARNAME)_exclude))
+      $1_GREP_EXCLUDES:=| ( $(GREP) -v -f $$($1_BIN)/_the.$$($1_JARNAME)_exclude \
+          || test "$$$$?" = "1" )
+    endif
+  endif
+
+  # Check if this jar needs to have its index generated.
+  ifneq (,$$($1_JARINDEX))
+    $1_JARINDEX = (cd $$(dir $$@) && $$($1_JAR_CMD) -i $$(notdir $$@))
+  else
+    $1_JARINDEX = true
+  endif
+  # When this macro is run in the same makefile as the java compilation, dependencies are
+  # transfered in make variables. When the macro is run in a different makefile than the
+  # java compilation, the dependencies need to be found in the filesystem.
+  $1_ORIG_DEPS := $$($1_DEPENDENCIES)
+  ifeq ($$($1_DEPENDENCIES), )
+    # Add all source roots to the find cache since we are likely going to run find
+    # on these more than once. The cache will only be updated if necessary.
+    $$(call FillFindCache, $$($1_FIND_LIST))
+    $1_DEPENDENCIES:=$$(filter $$(addprefix %,$$($1_SUFFIXES)), \
+        $$(call FindFiles,$$($1_SRCS)))
+    ifneq (,$$($1_GREP_INCLUDE_PATTERNS))
+      $1_DEPENDENCIES:=$$(filter $$(addsuffix %,$$($1_GREP_INCLUDE_PATTERNS)),$$($1_DEPENDENCIES))
+    endif
+    ifneq (,$$($1_GREP_EXCLUDE_PATTERNS))
+      $1_DEPENDENCIES:=$$(filter-out $$(addsuffix %,$$($1_GREP_EXCLUDE_PATTERNS)),$$($1_DEPENDENCIES))
+    endif
+    # Look for EXTRA_FILES in all SRCS dirs and as absolute paths.
+    $1_DEPENDENCIES+=$$(wildcard $$(foreach src, $$($1_SRCS), \
+        $$(addprefix $$(src)/, $$($1_EXTRA_FILES))) $$($1_EXTRA_FILES))
+    ifeq (,$$($1_SKIP_METAINF))
+      $1_DEPENDENCIES+=$$(call FindFiles,$$(wildcard $$(addsuffix /META-INF,$$($1_SRCS))))
+    endif
+  endif
+  # The dependency list should never be empty
+  ifeq ($$(strip $$($1_DEPENDENCIES)), )
+    $$(warning No dependencies found for $1)
+  endif
+
+  # Utility macros, to make the shell script receipt somewhat easier to decipher.
+
+  # Capture extra files is the same for both CAPTURE_CONTENTS and SCAPTURE_CONTENTS so
+  # only define it once to avoid duplication.
+  # The list of extra files might be long, so need to use ListPathsSafely to print
+  # them out to a separte file. Then process the contents of that file to rewrite
+  # into -C <dir> <file> lines.
+  # The EXTRA_FILES_RESOLVED varible must be set in the macro so that it's evaluated
+  # in the recipe when the files are guaranteed to exist.
+  $1_CAPTURE_EXTRA_FILES=\
+      $$(eval $1_EXTRA_FILES_RESOLVED:=$$(call DoubleDollar, \
+          $$(wildcard $$(foreach src, $$($1_SRCS), \
+          $$(addprefix $$(src)/, $$($1_EXTRA_FILES))) $$($1_EXTRA_FILES)))) \
+      $$(if $$($1_EXTRA_FILES_RESOLVED), \
+        $$(eval $$(call ListPathsSafely,$1_EXTRA_FILES_RESOLVED, \
+            $$($1_BIN)/_the.$$($1_JARNAME)_contents.extra)) \
+        $(SED) $$(foreach src,$$($1_SRCS), -e 's|$$(src)/|-C $$(src) |g') \
+            $$($1_BIN)/_the.$$($1_JARNAME)_contents.extra \
+            >> $$($1_BIN)/_the.$$($1_JARNAME)_contents $$(NEWLINE))
+
+  # The capture contents macro finds all files (matching the patterns, typically
+  # .class and .prp) that are newer than the jar-file, ie the new content to be put into the jar.
+  # NOTICE: please leave the parentheses space separated otherwise the AIX build will break!
+  $1_CAPTURE_CONTENTS=\
+      $(RM) $$($1_BIN)/_the.$$($1_JARNAME)_contents $$(NEWLINE) \
+      $$(foreach src,$$($1_SRCS), \
+        $(FIND) $$(src) -type f -a \( $$($1_FIND_PATTERNS) \) -a -newer $$@ $$($1_GREP_INCLUDES) \
+          $$($1_GREP_EXCLUDES) | $(SED) 's|$$(src)/|-C $$(src) |g' \
+        >> $$($1_BIN)/_the.$$($1_JARNAME)_contents $$(NEWLINE)) \
+      $$($1_CAPTURE_EXTRA_FILES)
+
+  # The capture metainf macro finds all files below the META-INF directory that are newer than the jar-file.
+  # Find returns non zero if the META-INF dir does not exist, ignore this.
+  ifeq (,$$($1_SKIP_METAINF))
+    $1_CAPTURE_METAINF =$$(foreach src,$$($1_SRCS), \
+        ( ( $(FIND) $$(src)/META-INF -type f -a -newer $$@ 2> /dev/null || true ) \
+            | $(SED) 's|$$(src)/|-C $$(src) |g' >> \
+        $$($1_BIN)/_the.$$($1_JARNAME)_contents ) $$(NEWLINE) )
+  endif
+  # The capture deletes macro finds all deleted files and concatenates them. The resulting file
+  # tells us what to remove from the jar-file.
+  $1_CAPTURE_DELETES=$$(foreach src,$$($1_SRCS),($(FIND) $$(src) -name _the.package.deleted -newer $$@ \
+      -exec $(SED) 's|$$(src)||g' \{\} >> $$($1_DELETES_FILE) \;) $$(NEWLINE))
+  # The update contents macro updates the jar file with the previously capture contents.
+  # Use 'wc -w' to see if the contents file is empty.
+  $1_UPDATE_CONTENTS=\
+      if [ "`$(WC) -l $$($1_BIN)/_the.$$($1_JARNAME)_contents | $(AWK) '{ print $$$$1 }'`" -gt "0" ]; then \
+        $(ECHO) "  updating" `$(WC) -l $$($1_BIN)/_the.$$($1_JARNAME)_contents | $(AWK) '{ print $$$$1 }'` files && \
+        $$($1_JAR_CMD) $$($1_JAR_UPDATE_OPTIONS) $$@ @$$($1_BIN)/_the.$$($1_JARNAME)_contents; \
+      fi $$(NEWLINE)
+  # The s-variants of the above macros are used when the jar is created from scratch.
+  # NOTICE: please leave the parentheses space separated otherwise the AIX build will break!
+  $1_SCAPTURE_CONTENTS=\
+      $(RM) $$($1_BIN)/_the.$$($1_JARNAME)_contents $$(NEWLINE) \
+      $$(foreach src,$$($1_SRCS), \
+        $(FIND) $$(src) -type f -a \( $$($1_FIND_PATTERNS) \) $$($1_GREP_INCLUDES) \
+            $$($1_GREP_EXCLUDES) | $(SED) 's|$$(src)/|-C $$(src) |g' \
+            >> $$($1_BIN)/_the.$$($1_JARNAME)_contents $$(NEWLINE)) \
+      $$($1_CAPTURE_EXTRA_FILES)
+
+  # Find returns non zero if the META-INF dir does not exist, ignore this.
+  ifeq (,$$($1_SKIP_METAINF))
+    $1_SCAPTURE_METAINF=$$(foreach src,$$($1_SRCS), \
+        ( ( $(FIND) $$(src)/META-INF -type f 2> /dev/null || true ) \
+            | $(SED) 's|$$(src)/|-C $$(src) |g' >> \
+        $$($1_BIN)/_the.$$($1_JARNAME)_contents) $$(NEWLINE) )
+  endif
+  $1_SUPDATE_CONTENTS=$$($1_JAR_CMD) $$($1_JAR_UPDATE_OPTIONS) $$@ @$$($1_BIN)/_the.$$($1_JARNAME)_contents $$(NEWLINE)
+
+  # Use a slightly shorter name for logging, but with enough path to identify this jar.
+  $1_NAME:=$$(subst $$(OUTPUTDIR)/,,$$($1_JAR))
+
+  ifneq (,$$($1_CHECK_COMPRESS_JAR))
+    $1_JAR_CREATE_OPTIONS := c0fm
+    $1_JAR_UPDATE_OPTIONS := u0f
+    ifeq ($(COMPRESS_JARS), true)
+      $1_JAR_CREATE_OPTIONS := cfm
+      $1_JAR_UPDATE_OPTIONS := uf
+    endif
+  else
+    $1_JAR_CREATE_OPTIONS := cfm
+    $1_JAR_UPDATE_OPTIONS := uf
+  endif
+
+  # Include all variables of significance in the vardeps file
+  $1_VARDEPS := $$($1_JAR_CMD) $$($1_JAR_CREATE_OPTIONS) $$($1_MANIFEST) \
+      $$($1_JARMAIN) $$($1_EXTRA_MANIFEST_ATTR) $$($1_ORIG_DEPS) $$($1_SRCS) \
+      $$($1_INCLUDES) $$($1_EXCLUDES) $$($1_EXCLUDE_FILES) $$($1_EXTRA_FILES)
+  $1_VARDEPS_FILE := $$(call DependOnVariable, $1_VARDEPS, $$($1_BIN)/_the.$$($1_JARNAME).vardeps)
+
+  # Here is the rule that creates/updates the jar file.
+  $$($1_JAR) : $$($1_DEPENDENCIES) $$($1_MANIFEST) $$($1_VARDEPS_FILE)
+	$$(call MakeTargetDir)
+	$$(call MakeDir, $$($1_BIN))
+	$$($1_GREP_INCLUDE_OUTPUT)
+	$$($1_GREP_EXCLUDE_OUTPUT)
+        # If the vardeps file is part of the newer prereq list, it means that
+        # either the jar file does not exist, or we need to recreate it from
+        # from scratch anyway since a simple update will not catch all the
+        # potential changes.
+	$$(if $$(filter $$($1_VARDEPS_FILE) $$($1_MANIFEST), $$?), \
+	  $$(if $$($1_MANIFEST), \
+	    $(CP) $$($1_MANIFEST) $$($1_MANIFEST_FILE) $$(NEWLINE) \
+	  , \
+	    $(RM) $$($1_MANIFEST_FILE) && $(TOUCH) $$($1_MANIFEST_FILE) $$(NEWLINE)) \
+	  $$(if $$($1_JARMAIN), \
+	    $(ECHO) "Main-Class: $$(strip $$($1_JARMAIN))" >> $$($1_MANIFEST_FILE) $$(NEWLINE)) \
+	  $$(if $$($1_EXTRA_MANIFEST_ATTR), \
+	    $(PRINTF) "$$($1_EXTRA_MANIFEST_ATTR)\n" >> $$($1_MANIFEST_FILE) $$(NEWLINE)) \
+	  $(ECHO) Creating $$($1_NAME) $$(NEWLINE) \
+	  $$($1_JAR_CMD) $$($1_JAR_CREATE_OPTIONS) $$@ $$($1_MANIFEST_FILE) $$(NEWLINE) \
+	  $$($1_SCAPTURE_CONTENTS) \
+	  $$($1_SCAPTURE_METAINF) \
+	  $$($1_SUPDATE_CONTENTS) \
+	  $$($1_JARINDEX) && true \
+	, \
+	  $(ECHO) Modifying $$($1_NAME) $$(NEWLINE) \
+	  $$($1_CAPTURE_CONTENTS) \
+	  $$($1_CAPTURE_METAINF) \
+	  $(RM) $$($1_DELETES_FILE) $$(NEWLINE) \
+	  $$($1_CAPTURE_DELETES) \
+	  $(CAT) $$($1_DELETES_FILE) > $$($1_DELETESS_FILE) $$(NEWLINE) \
+	  if [ -s $$($1_DELETESS_FILE) ]; then \
+	    $(ECHO) "  deleting" `$(WC) -l $$($1_DELETESS_FILE) | $(AWK) '{ print $$$$1 }'` files && \
+	    $(ZIPEXE) -q -d $$@ `$(CAT) $$($1_DELETESS_FILE)` ; \
+	  fi $$(NEWLINE) \
+	  $$($1_UPDATE_CONTENTS) true $$(NEWLINE) \
+	  $$($1_JARINDEX) && true )
+
+  # Add jar to target list
+  $1 += $$($1_JAR)
+endef
+
+endif # _JAR_ARCHIVE_GMK

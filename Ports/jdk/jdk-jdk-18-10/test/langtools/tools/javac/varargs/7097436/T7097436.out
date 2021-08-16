@@ -1,0 +1,6 @@
+T7097436.java:13:20: compiler.warn.varargs.unsafe.use.varargs.param: ls
+T7097436.java:14:25: compiler.warn.varargs.unsafe.use.varargs.param: ls
+T7097436.java:15:20: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.util.List<java.lang.String>[], java.lang.String)
+T7097436.java:16:26: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.util.List<java.lang.String>[], java.lang.Integer[])
+2 errors
+2 warnings

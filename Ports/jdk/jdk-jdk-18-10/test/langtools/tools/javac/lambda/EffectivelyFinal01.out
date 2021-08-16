@@ -1,0 +1,2 @@
+EffectivelyFinal01.java:15:65: compiler.err.cant.ref.non.effectively.final.var: nefPar, (compiler.misc.lambda)
+1 error

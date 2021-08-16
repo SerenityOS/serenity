@@ -1,0 +1,62 @@
+class Test1 {
+  0xCAFEBABE;
+  0; // minor version
+  60; // version
+  [13] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1     at 0x0A
+    class #4; // #2     at 0x0F
+    NameAndType #5 #6; // #3     at 0x12
+    Utf8 "java/lang/Object"; // #4     at 0x17
+    Utf8 "<init>"; // #5     at 0x2A
+    Utf8 "()F"; // #6     at 0x33
+    class #8; // #7     at 0x39
+    Utf8 "Test1"; // #8     at 0x3C
+    Utf8 "Code"; // #9     at 0x43
+    Utf8 "LineNumberTable"; // #10     at 0x4A
+    Utf8 "SourceFile"; // #11     at 0x5C
+    Utf8 "Test1.java"; // #12     at 0x69
+  } // Constant Pool
+
+  0x0021; // access [ ACC_PUBLIC ACC_SUPER ]
+  #7;// this_cpx
+  #2;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // Fields
+  } // Fields
+
+  [1] { // Methods
+    {  // method at 0x81
+      0x0001; // access
+      #5; // name_index       : <init>
+      #6; // descriptor_index : ()F
+      [1] { // Attributes
+        Attr(#9, 29) { // Code at 0x89
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#10, 6) { // LineNumberTable at 0xA0
+              [1] { // line_number_table
+                0  2; //  at 0xAC
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    }
+  } // Methods
+
+  [1] { // Attributes
+    Attr(#11, 2) { // SourceFile at 0xAE
+      #12;
+    } // end SourceFile
+  } // Attributes
+} // end class Test1

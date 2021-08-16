@@ -1,0 +1,6 @@
+LambdaEffectivelyFinalTest.java:30:21: compiler.err.var.might.not.have.been.initialized: y
+LambdaEffectivelyFinalTest.java:44:21: compiler.err.cant.ref.non.effectively.final.var: y, (compiler.misc.lambda)
+LambdaEffectivelyFinalTest.java:48:19: compiler.err.cant.ref.non.effectively.final.var: x, (compiler.misc.lambda)
+LambdaEffectivelyFinalTest.java:53:19: compiler.err.cant.ref.non.effectively.final.var: x, (compiler.misc.lambda)
+LambdaEffectivelyFinalTest.java:58:19: compiler.err.cant.ref.non.effectively.final.var: y, (compiler.misc.lambda)
+5 errors

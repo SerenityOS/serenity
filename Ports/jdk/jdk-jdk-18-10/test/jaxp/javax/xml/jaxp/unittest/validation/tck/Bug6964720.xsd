@@ -1,0 +1,53 @@
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="a" xmlns:a="a" xmlns:b="b">
+
+ <xs:element name="doc" type="a:derived"/>
+ <xs:complexType name="base">
+     <xs:sequence>
+	<xs:element name="sub" type="a:derived2"/>
+     </xs:sequence>
+     <xs:attributeGroup ref="a:attG-a1"/>
+ </xs:complexType>
+
+ <xs:complexType name="derived">
+    <xs:complexContent>
+	<xs:extension base="a:base">
+     <xs:sequence />
+     <xs:attributeGroup ref="a:attG-a2"/>
+	</xs:extension>
+    </xs:complexContent>
+ </xs:complexType>
+
+<xs:complexType name="base2">
+     <xs:sequence />
+     <xs:attributeGroup ref="a:attG1-54"/>
+ </xs:complexType>
+
+ <xs:complexType name="derived2">
+    <xs:complexContent>
+	<xs:extension base="a:base2">
+     <xs:sequence />
+     <xs:attributeGroup ref="a:attG2-54"/>
+	</xs:extension>
+    </xs:complexContent>
+ </xs:complexType>
+
+
+ <xs:attribute name="attA"/>
+ <xs:attributeGroup name="attG-a1">
+     <xs:anyAttribute namespace="##other" processContents="lax"/>
+ </xs:attributeGroup>
+
+ <xs:attributeGroup name="attG-a2">
+     <xs:anyAttribute namespace="##targetNamespace b c" processContents="lax"/>
+ </xs:attributeGroup>
+
+<xs:attributeGroup name="attG1-54">
+     <xs:anyAttribute namespace="##other" processContents="lax"/>
+ </xs:attributeGroup>
+
+ <xs:attributeGroup name="attG2-54">
+     <xs:anyAttribute namespace="##local b c" processContents="lax"/>
+ </xs:attributeGroup>
+
+</xs:schema>
+

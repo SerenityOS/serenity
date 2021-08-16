@@ -1,0 +1,68 @@
+Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+DESCRIPTION
+
+    This is a lock coarsening test. There are 2 threads, trying to acquire a shared
+    resource. The 1st thread has a number of adjacent lock that are subject to lock
+    coarsening:
+
+    ...
+
+    synchronized( lock )
+    {
+        lock.foo();
+    }
+
+    // (*)
+
+    synchronized( lock )
+    {
+        lock.foo();
+    }
+
+    ...
+
+
+    The test is written in such a way, that thread 2 will acquire the lock, if and
+    only if thread 1 is somewhere at point (*). Therefore, the fact that lock
+    coarsening occurred is described by the condition (numAcquiredLocks != 0).
+
+IMPLEMENTATION
+    The test has one parameter, -eliminateLocks, that tells whether the JVM option
+    -XX:+EliminateLocks has been specified, so running the test without
+    -eliminateLocks checks that lock coarsening didn't occur, and running it with
+    this option check that lock coarsening occurred.
+
+    Some hacks have been made to force JIT compile the method doit() (see comments in
+    the source).
+
+FAILURE ANALYSIS
+    If test fails try to run it with -XX:+PrintOptoAssembly and -XX:+LogCompilation
+    to understand if this is a test or product bug.
+
+    If compiled code of Thread_1::doit method have lot of locks that surround each
+    lock.foo() then coarsening did not happen and this is a product bug.
+
+    If lock coarsening occurs but not triggered by test then it's a test bug
+    that should be investigated. One of such problems could be caused if method doit()
+    was not compiled due to insufficient warm-up iterations. Also there may be a product bug
+    in compilation.

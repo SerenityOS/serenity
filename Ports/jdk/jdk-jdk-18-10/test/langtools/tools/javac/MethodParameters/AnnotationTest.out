@@ -1,0 +1,10 @@
+static interface AnnotationTest$Annos -- inner
+AnnotationTest$Annos.foo()
+AnnotationTest$Annos.value()
+class AnnotationTest -- 
+AnnotationTest.<init>(i, ji)
+AnnotationTest.foo(i, ji)
+static interface AnnotationTest$I -- inner
+AnnotationTest$I.m(i, ji)
+static interface AnnotationTest$Anno -- inner
+AnnotationTest$Anno.f()

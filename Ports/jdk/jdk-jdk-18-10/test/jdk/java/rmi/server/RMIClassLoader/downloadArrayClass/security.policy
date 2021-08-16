@@ -1,0 +1,22 @@
+/*
+ * security policy used by the test process
+ */
+
+grant {
+    permission java.util.PropertyPermission
+        "java.rmi.server.codebase", "read,write";
+
+    // permissions needed to move classes into separate codebase directories
+    permission java.io.FilePermission
+	"${test.classes}${/}-", "read,write,delete";
+    permission java.io.FilePermission
+	".${/}-", "read,write,delete";
+
+    // used by TestLibrary to determine test environment
+    permission java.util.PropertyPermission "test.*", "read";
+    permission java.util.PropertyPermission "user.dir", "read";
+    permission java.util.PropertyPermission "java.home", "read";
+
+    // allow exporting of remote objects on an arbitrary port
+    permission java.net.SocketPermission "*:1024-", "connect,accept,listen";
+};

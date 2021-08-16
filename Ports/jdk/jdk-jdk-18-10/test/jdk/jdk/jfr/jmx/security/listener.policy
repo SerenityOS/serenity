@@ -1,0 +1,11 @@
+// Minimum policy for JMX to activate JFR and create a recording.
+
+grant {
+
+permission java.lang.management.ManagementPermission "control";
+permission java.lang.management.ManagementPermission "monitor";
+permission "javax.management.MBeanPermission" "*", "addNotificationListener";
+permission "javax.management.MBeanPermission" "*", "invoke";
+permission "javax.management.MBeanServerPermission" "createMBeanServer";
+
+};

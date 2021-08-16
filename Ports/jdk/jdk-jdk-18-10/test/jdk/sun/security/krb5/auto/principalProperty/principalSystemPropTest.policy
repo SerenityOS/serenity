@@ -1,0 +1,22 @@
+grant {
+  	permission javax.security.auth.AuthPermission
+    	"createLoginContext.ValidPrincipalSystemPropTest";
+    	permission javax.security.auth.AuthPermission
+    	"createLoginContext.InvalidPrincipalSystemPropTest";
+    	permission javax.security.auth.AuthPermission
+    	"createLoginContext.NoPrincipalSystemPropTest";
+    	permission javax.security.auth.AuthPermission
+    	"createLoginContext.SelfPrincipalSystemPropTest";
+  	permission javax.security.auth.AuthPermission "doAs";
+  	permission javax.security.auth.AuthPermission "modifyPrincipals";
+  	permission javax.security.auth.AuthPermission "getSubject";
+  	permission java.util.PropertyPermission "*", "read,write";
+  	permission java.io.FilePermission "/-", "read,write,delete";
+  	permission java.io.FilePermission "*", "read,write,delete";
+  	permission java.lang.RuntimePermission "accessDeclaredMembers";
+  	permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+  	permission java.lang.RuntimePermission "accessClassInPackage.*";
+  	permission java.net.SocketPermission "*:*", 
+  		"listen,resolve,accept,connect";
+}; 
+

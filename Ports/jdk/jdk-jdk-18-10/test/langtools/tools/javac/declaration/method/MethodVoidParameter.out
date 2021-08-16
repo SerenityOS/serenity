@@ -1,0 +1,3 @@
+MethodVoidParameter.java:7:17: compiler.err.void.not.allowed.here
+MethodVoidParameter.java:8:17: compiler.err.void.not.allowed.here
+2 errors

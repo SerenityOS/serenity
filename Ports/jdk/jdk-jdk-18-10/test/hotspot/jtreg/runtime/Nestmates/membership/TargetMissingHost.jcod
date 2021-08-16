@@ -1,0 +1,170 @@
+/*
+ * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+// NestHost attribute refers to non-existent class
+
+class TestNestmateMembership$TargetMissingHost {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #8 #22; // #1
+    String #23; // #2
+    Field #7 #24; // #3
+    Field #25 #26; // #4
+    String #27; // #5
+    Method #28 #29; // #6
+    class #30; // #7
+    class #33; // #8
+    Utf8 "msg"; // #9
+    Utf8 "Ljava/lang/String;"; // #10
+    Utf8 "f"; // #11
+    Utf8 "I"; // #12
+    Utf8 "<init>"; // #13
+    Utf8 "()V"; // #14
+    Utf8 "Code"; // #15
+    Utf8 "LineNumberTable"; // #16
+    Utf8 "m"; // #17
+    Utf8 "SourceFile"; // #18
+    Utf8 "TestNestmateMembership.java"; // #19
+    Utf8 "NestHost"; // #20
+    class #34; // #21
+    NameAndType #13 #14; // #22
+    Utf8 "NoTargetMissingHost"; // #23
+    NameAndType #9 #10; // #24
+    class #35; // #25
+    NameAndType #36 #37; // #26
+    Utf8 "TargetMissingHost.m() - java version"; // #27
+    class #38; // #28
+    NameAndType #39 #40; // #29
+    Utf8 "TestNestmateMembership$TargetMissingHost"; // #30
+    Utf8 "TargetMissingHost"; // #31
+    Utf8 "InnerClasses"; // #32
+    Utf8 "java/lang/Object"; // #33
+    Utf8 "TestNestmateMembership"; // #34
+    Utf8 "java/lang/System"; // #35
+    Utf8 "out"; // #36
+    Utf8 "Ljava/io/PrintStream;"; // #37
+    Utf8 "java/io/PrintStream"; // #38
+    Utf8 "println"; // #39
+    Utf8 "(Ljava/lang/String;)V"; // #40
+    class #23; // #41 - added
+  } // Constant Pool
+
+  0x0020; // access
+  #7;// this_cpx
+  #8;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+    { // Member
+      0x0000; // access
+      #9; // name_cpx
+      #10; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x000A; // access
+      #11; // name_cpx
+      #12; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0002; // access
+      #13; // name_cpx
+      #14; // sig_cpx
+      [] { // Attributes
+        Attr(#15) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB700012A1202B5;
+            0x0003B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#16) { // LineNumberTable
+              [] { // LineNumberTable
+                0  354;
+                4  353;
+                10  354;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x000A; // access
+      #17; // name_cpx
+      #14; // sig_cpx
+      [] { // Attributes
+        Attr(#15) { // Code
+          2; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xB200041205B60006;
+            0xB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#16) { // LineNumberTable
+              [] { // LineNumberTable
+                0  357;
+                8  358;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#18) { // SourceFile
+      #19;
+    } // end SourceFile
+    ;
+    Attr(#20) { // NestHost
+      0x0029; // modified #41
+    } // end NestHost
+    ;
+    Attr(#32) { // InnerClasses
+      [] { // InnerClasses
+        #7 #21 #31 8;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class TestNestmateMembership$TargetMissingHost

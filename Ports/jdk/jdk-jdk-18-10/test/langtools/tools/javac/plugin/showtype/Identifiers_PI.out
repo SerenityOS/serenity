@@ -1,0 +1,6 @@
+Identifiers.java:5: Note: type is double
+    public double PI = Math.PI;
+                           ^
+Identifiers.java:6: Note: type is double
+    public double PIE = PI + E;
+                        ^

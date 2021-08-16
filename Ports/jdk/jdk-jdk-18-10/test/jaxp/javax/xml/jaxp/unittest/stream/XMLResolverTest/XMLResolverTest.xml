@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : XMLResolverTest.xml
+    Created on : April 6, 2004, 3:41 PM
+    Author     : neeraj
+    Description:
+        Purpose of the document follows.
+-->
+<!DOCTYPE root [
+    <!ENTITY replace SYSTEM 'replace1.txt'>
+]>
+<root>&replace;</root>

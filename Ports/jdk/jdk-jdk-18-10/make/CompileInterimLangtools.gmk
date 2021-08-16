@@ -1,0 +1,103 @@
+#
+# Copyright (c) 2014, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# This must be the first rule
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include JavaCompilation.gmk
+include Modules.gmk
+
+################################################################################
+# Generate interim versions of the module-info.java files for the interim
+# langtools modules. Each interim module has ".interim" added as suffix to the
+# original module name.
+
+INTERIM_MODULEINFO_PATTERN := \
+    $(foreach m, $(INTERIM_LANGTOOLS_BASE_MODULES), -e 's/$m\([,; ]\)/$m.interim\1/g')
+
+$(BUILDTOOLS_OUTPUTDIR)/gensrc/%.interim/module-info.java: \
+    $(TOPDIR)/src/%/share/classes/module-info.java
+	$(call LogInfo, Generating module-info.java for $*.interim)
+	$(call MakeDir, $(@D))
+	$(SED) $(INTERIM_MODULEINFO_PATTERN) $< > $@
+
+TARGETS += $(patsubst %, $(BUILDTOOLS_OUTPUTDIR)/gensrc/%/module-info.java, \
+    $(INTERIM_LANGTOOLS_MODULES))
+
+$(eval $(call SetupCopyFiles, COPY_PREVIEW_FEATURES, \
+    FILES := $(TOPDIR)/src/java.base/share/classes/jdk/internal/javac/PreviewFeature.java \
+        $(TOPDIR)/src/java.base/share/classes/jdk/internal/javac/NoPreview.java, \
+    DEST := $(BUILDTOOLS_OUTPUTDIR)/gensrc/java.base.interim/jdk/internal/javac/, \
+))
+
+TARGETS += $(COPY_PREVIEW_FEATURES)
+
+################################################################################
+# Setup the rules to build interim langtools, which is compiled by the boot
+# javac and can be run on the boot jdk. This will be used to compile the rest of
+# the product. Each module is compiled separately because a multi module setup
+# would require the source files to be copied into directories named after the
+# actual interim modules.
+
+# Param 1 - Name of module to compile
+define SetupInterimModule
+  $$(eval $$(call SetupJavaCompilation, BUILD_$1.interim, \
+      COMPILER := bootjdk, \
+      TARGET_RELEASE := $$(TARGET_RELEASE_BOOTJDK), \
+      SRC := $(BUILDTOOLS_OUTPUTDIR)/gensrc/$1.interim \
+          $$(wildcard $(SUPPORT_OUTPUTDIR)/gensrc/$1) \
+          $(TOPDIR)/src/$1/share/classes, \
+      EXCLUDES := sun, \
+      EXCLUDE_FILES := $(TOPDIR)/src/$1/share/classes/module-info.java \
+          Standard.java, \
+      EXTRA_FILES := $(BUILDTOOLS_OUTPUTDIR)/gensrc/$1.interim/module-info.java, \
+      COPY := .gif .png .xml .css .js .js.template .txt javax.tools.JavaCompilerTool, \
+      BIN := $(BUILDTOOLS_OUTPUTDIR)/interim_langtools_modules/$1.interim, \
+      DISABLED_WARNINGS := module options, \
+      JAVAC_FLAGS := \
+          --module-path $(BUILDTOOLS_OUTPUTDIR)/interim_langtools_modules \
+          $$(INTERIM_LANGTOOLS_ADD_EXPORTS) \
+          --patch-module java.base=$(BUILDTOOLS_OUTPUTDIR)/gensrc/java.base.interim \
+          --add-exports java.base/jdk.internal.javac=java.compiler.interim \
+          --add-exports java.base/jdk.internal.javac=jdk.compiler.interim, \
+  ))
+
+  $1_DEPS_INTERIM := $$(addsuffix .interim, $$(filter \
+      $$(INTERIM_LANGTOOLS_BASE_MODULES), $$(call FindTransitiveDepsForModule, $1)))
+
+  $$(BUILD_$1.interim): $$(foreach d, $$($1_DEPS_INTERIM), $$(BUILD_$$d)) $(COPY_PREVIEW_FEATURES)
+
+  TARGETS += $$(BUILD_$1.interim)
+endef
+
+$(foreach m, $(INTERIM_LANGTOOLS_BASE_MODULES), \
+  $(eval $(call SetupInterimModule,$m)) \
+)
+
+################################################################################
+
+all: $(TARGETS)

@@ -1,0 +1,944 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="os"/>
+	</identity>
+	<localeDisplayNames>
+		<localeDisplayPattern>
+			<localePattern draft="contributed">{0} ({1})</localePattern>
+			<localeSeparator draft="contributed">{0}, {1}</localeSeparator>
+			<localeKeyTypePattern draft="contributed">{0}: {1}</localeKeyTypePattern>
+		</localeDisplayPattern>
+		<languages>
+			<language type="ab" draft="contributed">абхазаг</language>
+			<language type="ady" draft="contributed">адыгейаг</language>
+			<language type="ae" draft="contributed">авестӕ</language>
+			<language type="af" draft="contributed">африкаанс</language>
+			<language type="ang" draft="contributed">рагон англисаг</language>
+			<language type="ar" draft="contributed">араббаг</language>
+			<language type="av" draft="contributed">авайраг</language>
+			<language type="az" draft="contributed">тӕтӕйраг</language>
+			<language type="ba" draft="contributed">башкираг</language>
+			<language type="bg" draft="contributed">болгайраг</language>
+			<language type="bs" draft="contributed">босниаг</language>
+			<language type="bua" draft="contributed">бурятаг</language>
+			<language type="ca" draft="contributed">каталайнаг</language>
+			<language type="ce" draft="contributed">цӕцӕйнаг</language>
+			<language type="cop" draft="contributed">коптаг</language>
+			<language type="cs" draft="contributed">чехаг</language>
+			<language type="cv" draft="contributed">чувашаг</language>
+			<language type="da" draft="contributed">даниаг</language>
+			<language type="de" draft="contributed">немыцаг</language>
+			<language type="de_AT" draft="contributed">австралиаг немыцаг</language>
+			<language type="de_CH" draft="contributed">швйецариаг немыцаг</language>
+			<language type="egy" draft="contributed">рагон египтаг</language>
+			<language type="el" draft="contributed">бердзейнаг</language>
+			<language type="en" draft="contributed">англисаг</language>
+			<language type="en_AU" draft="contributed">австралиаг англисаг</language>
+			<language type="en_CA" draft="contributed">канадӕйаг англисаг</language>
+			<language type="en_GB" draft="contributed">бритайнаг англисаг</language>
+			<language type="en_US" draft="contributed">америкаг англисаг</language>
+			<language type="eo" draft="contributed">есперанто</language>
+			<language type="es" draft="contributed">испайнаг</language>
+			<language type="es_419" draft="contributed">латинаг америкаг англисаг</language>
+			<language type="es_ES" draft="contributed">европӕйаг англисаг</language>
+			<language type="es_MX" draft="unconfirmed">мексикӕйаг испайнаг</language>
+			<language type="et" draft="contributed">естойнаг</language>
+			<language type="eu" draft="contributed">баскаг</language>
+			<language type="fa" draft="contributed">персайнаг</language>
+			<language type="fi" draft="contributed">финнаг</language>
+			<language type="fil" draft="contributed">филиппинаг</language>
+			<language type="fj" draft="contributed">фиджи</language>
+			<language type="fo" draft="contributed">фарераг</language>
+			<language type="fr" draft="contributed">францаг</language>
+			<language type="fr_CA" draft="contributed">канадӕйаг францаг</language>
+			<language type="fr_CH" draft="contributed">швейцариаг францаг</language>
+			<language type="fro" draft="contributed">рагон францаг</language>
+			<language type="ga" draft="contributed">ирландиаг</language>
+			<language type="grc" draft="contributed">рагон бердзейнаг</language>
+			<language type="he" draft="contributed">уираг</language>
+			<language type="hr" draft="contributed">хорватаг</language>
+			<language type="hu" draft="contributed">венгериаг</language>
+			<language type="hy" draft="contributed">сомихаг</language>
+			<language type="inh" draft="contributed">мӕхъӕлон</language>
+			<language type="it" draft="contributed">италиаг</language>
+			<language type="ja" draft="contributed">япойнаг</language>
+			<language type="ka" draft="contributed">гуырдзиаг</language>
+			<language type="kbd" draft="contributed">кӕсгон</language>
+			<language type="krc" draft="contributed">бӕлхъӕрон</language>
+			<language type="ku" draft="contributed">курдаг</language>
+			<language type="kum" draft="contributed">хъуымыхъхъаг</language>
+			<language type="la" draft="contributed">латинаг</language>
+			<language type="lez" draft="contributed">лекъаг</language>
+			<language type="mk" draft="contributed">мӕчъидон</language>
+			<language type="os">ирон</language>
+			<language type="pt" draft="contributed">португалиаг</language>
+			<language type="pt_BR" draft="contributed">бразилиаг португалиаг</language>
+			<language type="pt_PT" draft="contributed">европӕйаг полтугалиаг</language>
+			<language type="rom" draft="contributed">цигайнаг</language>
+			<language type="ru" draft="contributed">уырыссаг</language>
+			<language type="und" draft="contributed">нӕзонгӕ ӕвзаг</language>
+			<language type="zh" draft="contributed">китайаг</language>
+			<language type="zh_Hans" draft="contributed">ӕнцонгонд китайаг</language>
+			<language type="zh_Hant" draft="contributed">традицион китайаг</language>
+		</languages>
+		<scripts>
+			<script type="Arab" draft="contributed">Араббаг</script>
+			<script type="Cyrl" draft="contributed">Киррилицӕ</script>
+			<script type="Hans" draft="contributed">Ӕнцонгонд китайаг</script>
+			<script type="Hant" draft="contributed">Традицион китайаг</script>
+			<script type="Latn" draft="contributed">Латинаг</script>
+			<script type="Zxxx" draft="contributed">Нӕфысгӕ</script>
+			<script type="Zzzz" draft="contributed">Нӕзонгӕ скрипт</script>
+		</scripts>
+		<territories>
+			<territory type="001" draft="contributed">Дуне</territory>
+			<territory type="002" draft="contributed">Африкӕ</territory>
+			<territory type="009" draft="contributed">Океани</territory>
+			<territory type="019" draft="contributed">Америкӕ</territory>
+			<territory type="142" draft="contributed">Ази</territory>
+			<territory type="150" draft="contributed">Европӕ</territory>
+			<territory type="BR" draft="contributed">Бразили</territory>
+			<territory type="CN" draft="contributed">Китай</territory>
+			<territory type="DE" draft="contributed">Герман</territory>
+			<territory type="FR" draft="contributed">Франц</territory>
+			<territory type="GB" draft="contributed">Стыр Британи</territory>
+			<territory type="GE" draft="contributed">Гуырдзыстон</territory>
+			<territory type="IN" draft="contributed">Инди</territory>
+			<territory type="IT" draft="contributed">Итали</territory>
+			<territory type="JP" draft="contributed">Япон</territory>
+			<territory type="RU" draft="contributed">Уӕрӕсе</territory>
+			<territory type="US" draft="contributed">АИШ</territory>
+			<territory type="ZZ" draft="contributed">Нӕзонгӕ бӕстӕ</territory>
+		</territories>
+		<keys>
+			<key type="calendar" draft="contributed">Къӕлиндар</key>
+			<key type="numbers" draft="contributed">Нымӕцтӕ</key>
+		</keys>
+		<types>
+			<type key="calendar" type="gregorian" draft="contributed">Грегориан къӕлиндар</type>
+			<type key="calendar" type="hebrew" draft="contributed">Уирӕгты къӕлиндар</type>
+			<type key="calendar" type="persian" draft="contributed">Персайнаг къӕлиндар</type>
+			<type key="numbers" type="latn" draft="contributed">Нырыккон цифрӕтӕ</type>
+		</types>
+		<measurementSystemNames>
+			<measurementSystemName type="metric" draft="contributed">Метрикон</measurementSystemName>
+			<measurementSystemName type="UK" draft="contributed">СБ</measurementSystemName>
+			<measurementSystemName type="US" draft="contributed">АИШ</measurementSystemName>
+		</measurementSystemNames>
+		<codePatterns>
+			<codePattern type="language" draft="contributed">Ӕвзаг: {0}</codePattern>
+			<codePattern type="script" draft="contributed">Скрипт: {0}</codePattern>
+			<codePattern type="territory" draft="contributed">Бӕстӕ: {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[а ӕ б в г {гъ} д {дж} {дз} е ё ж з и й к {къ} л м н о п {пъ} р с т {тъ} у ф х {хъ} ц {цъ} ч {чъ} ш щ ъ ы ь э ю я]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[]</exemplarCharacters>
+		<exemplarCharacters type="index">[А Ӕ Б В Г {Гъ} Д {Дж} {Дз} Е Ё Ж З И Й К {Къ} Л М Н О П {Пъ} Р С Т {Тъ} У Ф Х {Хъ} Ц {Цъ} Ч {Чъ} Ш Щ Ы Э Ю Я]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[  \- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+		<exemplarCharacters type="punctuation">[\- ‐ ‑ – — , ; \: ! ? . … ' ‘ ‚ &quot; “ „ « » ( ) \[ \] \{ \} § @ * / \&amp; #]</exemplarCharacters>
+		<ellipsis type="final" draft="contributed">{0}…</ellipsis>
+		<ellipsis type="initial" draft="contributed">…{0}</ellipsis>
+		<ellipsis type="medial" draft="contributed">{0}…{1}</ellipsis>
+		<moreInformation draft="contributed">?</moreInformation>
+	</characters>
+	<delimiters>
+		<quotationStart draft="contributed">«</quotationStart>
+		<quotationEnd draft="contributed">»</quotationEnd>
+		<alternateQuotationStart draft="contributed">„</alternateQuotationStart>
+		<alternateQuotationEnd draft="contributed">“</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern draft="contributed">EEEE, d MMMM, y 'аз' G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern draft="contributed">d MMMM, y 'аз' G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern draft="contributed">dd MMM y 'аз' G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="contributed">dd.MM.yy GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern draft="contributed">{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern draft="contributed">{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern draft="contributed">{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern draft="contributed">{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d" draft="contributed">d</dateFormatItem>
+						<dateFormatItem id="h" draft="contributed">h a</dateFormatItem>
+						<dateFormatItem id="H" draft="contributed">HH</dateFormatItem>
+						<dateFormatItem id="hm" draft="contributed">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm" draft="contributed">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms" draft="contributed">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms" draft="contributed">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M" draft="contributed">L</dateFormatItem>
+						<dateFormatItem id="Md" draft="contributed">dd.MM</dateFormatItem>
+						<dateFormatItem id="MEd" draft="contributed">E, dd.MM</dateFormatItem>
+						<dateFormatItem id="MMM" draft="contributed">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd" draft="contributed">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd" draft="contributed">ccc, d MMM</dateFormatItem>
+						<dateFormatItem id="ms" draft="contributed">mm:ss</dateFormatItem>
+						<dateFormatItem id="y" draft="contributed">y</dateFormatItem>
+						<dateFormatItem id="yM" draft="contributed">MM.y</dateFormatItem>
+						<dateFormatItem id="yMEd" draft="contributed">E, dd.MM.y</dateFormatItem>
+						<dateFormatItem id="yMMM" draft="contributed">LLL y</dateFormatItem>
+						<dateFormatItem id="yMMMEd" draft="contributed">E, d MMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ" draft="contributed">y-'ӕм' 'азы' QQQ</dateFormatItem>
+						<dateFormatItem id="yQQQQ" draft="contributed">y-'ӕм' 'азы' QQQQ</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback draft="contributed">{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d" draft="contributed">d–d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="h">
+							<greatestDifference id="a" draft="contributed">h a – h a</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h–h a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="H">
+							<greatestDifference id="H" draft="contributed">HH–HH</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="a" draft="contributed">h:mm a – h:mm a</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h:mm–h:mm a</greatestDifference>
+							<greatestDifference id="m" draft="contributed">h:mm–h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hm">
+							<greatestDifference id="H" draft="contributed">HH:mm–HH:mm</greatestDifference>
+							<greatestDifference id="m" draft="contributed">HH:mm–HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="a" draft="contributed">h:mm a – h:mm a v</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h:mm–h:mm a v</greatestDifference>
+							<greatestDifference id="m" draft="contributed">h:mm–h:mm a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H" draft="contributed">HH:mm–HH:mm v</greatestDifference>
+							<greatestDifference id="m" draft="contributed">HH:mm–HH:mm v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="a" draft="contributed">h a – h a v</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h–h a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H" draft="contributed">HH–HH v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M" draft="contributed">M–M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d" draft="contributed">dd.MM – dd.MM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">dd.MM – dd.MM</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1" draft="contributed">янв.</month>
+							<month type="2" draft="contributed">фев.</month>
+							<month type="3" draft="contributed">мар.</month>
+							<month type="4" draft="contributed">апр.</month>
+							<month type="5" draft="contributed">майы</month>
+							<month type="6" draft="contributed">июны</month>
+							<month type="7" draft="contributed">июлы</month>
+							<month type="8" draft="contributed">авг.</month>
+							<month type="9" draft="contributed">сен.</month>
+							<month type="10" draft="contributed">окт.</month>
+							<month type="11" draft="contributed">ноя.</month>
+							<month type="12" draft="contributed">дек.</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1" draft="contributed">Я</month>
+							<month type="2" draft="contributed">Ф</month>
+							<month type="3" draft="contributed">М</month>
+							<month type="4" draft="contributed">А</month>
+							<month type="5" draft="contributed">М</month>
+							<month type="6" draft="contributed">И</month>
+							<month type="7" draft="contributed">И</month>
+							<month type="8" draft="contributed">А</month>
+							<month type="9" draft="contributed">С</month>
+							<month type="10" draft="contributed">О</month>
+							<month type="11" draft="contributed">Н</month>
+							<month type="12" draft="contributed">Д</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1" draft="contributed">январы</month>
+							<month type="2" draft="contributed">февралы</month>
+							<month type="3" draft="contributed">мартъийы</month>
+							<month type="4" draft="contributed">апрелы</month>
+							<month type="5" draft="contributed">майы</month>
+							<month type="6" draft="contributed">июны</month>
+							<month type="7" draft="contributed">июлы</month>
+							<month type="8" draft="contributed">августы</month>
+							<month type="9" draft="contributed">сентябры</month>
+							<month type="10" draft="contributed">октябры</month>
+							<month type="11" draft="contributed">ноябры</month>
+							<month type="12" draft="contributed">декабры</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="1" draft="contributed">Янв.</month>
+							<month type="2" draft="contributed">Февр.</month>
+							<month type="3" draft="contributed">Март.</month>
+							<month type="4" draft="contributed">Апр.</month>
+							<month type="5" draft="contributed">Май</month>
+							<month type="6" draft="contributed">Июнь</month>
+							<month type="7" draft="contributed">Июль</month>
+							<month type="8" draft="contributed">Авг.</month>
+							<month type="9" draft="contributed">Сент.</month>
+							<month type="10" draft="contributed">Окт.</month>
+							<month type="11" draft="contributed">Нояб.</month>
+							<month type="12" draft="contributed">Дек.</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="1" draft="contributed">Я</month>
+							<month type="2" draft="contributed">Ф</month>
+							<month type="3" draft="contributed">М</month>
+							<month type="4" draft="contributed">А</month>
+							<month type="5" draft="contributed">М</month>
+							<month type="6" draft="contributed">И</month>
+							<month type="7" draft="contributed">И</month>
+							<month type="8" draft="contributed">А</month>
+							<month type="9" draft="contributed">С</month>
+							<month type="10" draft="contributed">О</month>
+							<month type="11" draft="contributed">Н</month>
+							<month type="12" draft="contributed">Д</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1" draft="contributed">Январь</month>
+							<month type="2" draft="contributed">Февраль</month>
+							<month type="3" draft="contributed">Мартъи</month>
+							<month type="4" draft="contributed">Апрель</month>
+							<month type="5" draft="contributed">Май</month>
+							<month type="6" draft="contributed">Июнь</month>
+							<month type="7" draft="contributed">Июль</month>
+							<month type="8" draft="contributed">Август</month>
+							<month type="9" draft="contributed">Сентябрь</month>
+							<month type="10" draft="contributed">Октябрь</month>
+							<month type="11" draft="contributed">Ноябрь</month>
+							<month type="12" draft="contributed">Декабрь</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun" draft="contributed">хцб</day>
+							<day type="mon" draft="contributed">крс</day>
+							<day type="tue" draft="contributed">дцг</day>
+							<day type="wed" draft="contributed">ӕрт</day>
+							<day type="thu" draft="contributed">цпр</day>
+							<day type="fri" draft="contributed">мрб</day>
+							<day type="sat" draft="contributed">сбт</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun" draft="contributed">Х</day>
+							<day type="mon" draft="contributed">К</day>
+							<day type="tue" draft="contributed">Д</day>
+							<day type="wed" draft="contributed">Ӕ</day>
+							<day type="thu" draft="contributed">Ц</day>
+							<day type="fri" draft="contributed">М</day>
+							<day type="sat" draft="contributed">С</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun" draft="contributed">хуыцаубон</day>
+							<day type="mon" draft="contributed">къуырисӕр</day>
+							<day type="tue" draft="contributed">дыццӕг</day>
+							<day type="wed" draft="contributed">ӕртыццӕг</day>
+							<day type="thu" draft="contributed">цыппӕрӕм</day>
+							<day type="fri" draft="contributed">майрӕмбон</day>
+							<day type="sat" draft="contributed">сабат</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="abbreviated">
+							<day type="sun" draft="contributed">Хцб</day>
+							<day type="mon" draft="contributed">Крс</day>
+							<day type="tue" draft="contributed">Дцг</day>
+							<day type="wed" draft="contributed">Ӕрт</day>
+							<day type="thu" draft="contributed">Цпр</day>
+							<day type="fri" draft="contributed">Мрб</day>
+							<day type="sat" draft="contributed">Сбт</day>
+						</dayWidth>
+						<dayWidth type="narrow">
+							<day type="sun" draft="contributed">Х</day>
+							<day type="mon" draft="contributed">К</day>
+							<day type="tue" draft="contributed">Д</day>
+							<day type="wed" draft="contributed">Ӕ</day>
+							<day type="thu" draft="contributed">Ц</day>
+							<day type="fri" draft="contributed">М</day>
+							<day type="sat" draft="contributed">С</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun" draft="contributed">Хуыцаубон</day>
+							<day type="mon" draft="contributed">Къуырисӕр</day>
+							<day type="tue" draft="contributed">Дыццӕг</day>
+							<day type="wed" draft="contributed">Ӕртыццӕг</day>
+							<day type="thu" draft="contributed">Цыппӕрӕм</day>
+							<day type="fri" draft="contributed">Майрӕмбон</day>
+							<day type="sat" draft="contributed">Сабат</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1" draft="contributed">1-аг кв.</quarter>
+							<quarter type="2" draft="contributed">2-аг кв.</quarter>
+							<quarter type="3" draft="contributed">3-аг кв.</quarter>
+							<quarter type="4" draft="contributed">4-ӕм кв.</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1" draft="contributed">1</quarter>
+							<quarter type="2" draft="contributed">2</quarter>
+							<quarter type="3" draft="contributed">3</quarter>
+							<quarter type="4" draft="contributed">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1" draft="contributed">1-аг квартал</quarter>
+							<quarter type="2" draft="contributed">2-аг квартал</quarter>
+							<quarter type="3" draft="contributed">3-аг квартал</quarter>
+							<quarter type="4" draft="contributed">4-ӕм квартал</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1" draft="contributed">1-аг кв.</quarter>
+							<quarter type="2" draft="contributed">2-аг кв.</quarter>
+							<quarter type="3" draft="contributed">3-аг кв.</quarter>
+							<quarter type="4" draft="contributed">4-ӕм кв.</quarter>
+						</quarterWidth>
+						<quarterWidth type="narrow">
+							<quarter type="1" draft="contributed">1</quarter>
+							<quarter type="2" draft="contributed">2</quarter>
+							<quarter type="3" draft="contributed">3</quarter>
+							<quarter type="4" draft="contributed">4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1" draft="contributed">1-аг квартал</quarter>
+							<quarter type="2" draft="contributed">2-аг квартал</quarter>
+							<quarter type="3" draft="contributed">3-аг квартал</quarter>
+							<quarter type="4" draft="contributed">4-ӕм квартал</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am" draft="contributed">AM</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">PM</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am" draft="contributed">ӕмбисбоны размӕ</dayPeriod>
+							<dayPeriod type="pm" draft="contributed">ӕмбисбоны фӕстӕ</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraAbbr>
+						<era type="0" draft="contributed">н.д.а.</era>
+						<era type="1" draft="contributed">н.д.</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern draft="contributed">EEEE, d MMMM, y 'аз'</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern draft="contributed">d MMMM, y 'аз'</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern draft="contributed">dd MMM y 'аз'</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="contributed">dd.MM.yy</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern draft="contributed">HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern draft="contributed">HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern draft="contributed">HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern draft="contributed">HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<dateTimeFormatLength type="full">
+						<dateTimeFormat>
+							<pattern draft="contributed">{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="long">
+						<dateTimeFormat>
+							<pattern draft="contributed">{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="medium">
+						<dateTimeFormat>
+							<pattern draft="contributed">{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<dateTimeFormatLength type="short">
+						<dateTimeFormat>
+							<pattern draft="contributed">{1}, {0}</pattern>
+						</dateTimeFormat>
+					</dateTimeFormatLength>
+					<availableFormats>
+						<dateFormatItem id="d" draft="contributed">d</dateFormatItem>
+						<dateFormatItem id="h" draft="contributed">h a</dateFormatItem>
+						<dateFormatItem id="H" draft="contributed">HH</dateFormatItem>
+						<dateFormatItem id="hm" draft="contributed">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm" draft="contributed">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms" draft="contributed">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms" draft="contributed">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M" draft="contributed">L</dateFormatItem>
+						<dateFormatItem id="Md" draft="contributed">dd.MM</dateFormatItem>
+						<dateFormatItem id="MEd" draft="contributed">E, dd.MM</dateFormatItem>
+						<dateFormatItem id="MMM" draft="contributed">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd" draft="contributed">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd" draft="contributed">ccc, d MMM</dateFormatItem>
+						<dateFormatItem id="ms" draft="contributed">mm:ss</dateFormatItem>
+						<dateFormatItem id="y" draft="contributed">y</dateFormatItem>
+						<dateFormatItem id="yM" draft="contributed">MM.y</dateFormatItem>
+						<dateFormatItem id="yMEd" draft="contributed">E, dd.MM.y</dateFormatItem>
+						<dateFormatItem id="yMMM" draft="contributed">LLL y</dateFormatItem>
+						<dateFormatItem id="yMMMEd" draft="contributed">E, d MMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ" draft="contributed">y-'ӕм' 'азы' QQQ</dateFormatItem>
+						<dateFormatItem id="yQQQQ" draft="contributed">y-'ӕм' 'азы' QQQQ</dateFormatItem>
+					</availableFormats>
+					<intervalFormats>
+						<intervalFormatFallback draft="contributed">{0} – {1}</intervalFormatFallback>
+						<intervalFormatItem id="d">
+							<greatestDifference id="d" draft="contributed">d–d</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="h">
+							<greatestDifference id="a" draft="contributed">h a – h a</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h–h a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="H">
+							<greatestDifference id="H" draft="contributed">HH–HH</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hm">
+							<greatestDifference id="a" draft="contributed">h:mm a – h:mm a</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h:mm–h:mm a</greatestDifference>
+							<greatestDifference id="m" draft="contributed">h:mm–h:mm a</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hm">
+							<greatestDifference id="H" draft="contributed">HH:mm–HH:mm</greatestDifference>
+							<greatestDifference id="m" draft="contributed">HH:mm–HH:mm</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hmv">
+							<greatestDifference id="a" draft="contributed">h:mm a – h:mm a v</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h:mm–h:mm a v</greatestDifference>
+							<greatestDifference id="m" draft="contributed">h:mm–h:mm a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hmv">
+							<greatestDifference id="H" draft="contributed">HH:mm–HH:mm v</greatestDifference>
+							<greatestDifference id="m" draft="contributed">HH:mm–HH:mm v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="hv">
+							<greatestDifference id="a" draft="contributed">h a – h a v</greatestDifference>
+							<greatestDifference id="h" draft="contributed">h–h a v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Hv">
+							<greatestDifference id="H" draft="contributed">HH–HH v</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="M">
+							<greatestDifference id="M" draft="contributed">M–M</greatestDifference>
+						</intervalFormatItem>
+						<intervalFormatItem id="Md">
+							<greatestDifference id="d" draft="contributed">dd.MM – dd.MM</greatestDifference>
+							<greatestDifference id="M" draft="contributed">dd.MM – dd.MM</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName draft="contributed">Дуг</displayName>
+			</field>
+			<field type="year">
+				<displayName draft="contributed">Аз</displayName>
+			</field>
+			<field type="quarter">
+				<displayName draft="unconfirmed">квартал</displayName>
+			</field>
+			<field type="quarter-short">
+				<displayName draft="unconfirmed">кв.</displayName>
+			</field>
+			<field type="quarter-narrow">
+				<displayName draft="unconfirmed">кв.</displayName>
+			</field>
+			<field type="month">
+				<displayName draft="contributed">Мӕй</displayName>
+			</field>
+			<field type="week">
+				<displayName draft="contributed">Къуыри</displayName>
+			</field>
+			<field type="day">
+				<displayName draft="contributed">Бон</displayName>
+				<relative type="-2" draft="contributed">Ӕндӕрӕбон</relative>
+				<relative type="-1" draft="contributed">Знон</relative>
+				<relative type="0" draft="contributed">Абон</relative>
+				<relative type="1" draft="contributed">Сом</relative>
+				<relative type="2" draft="contributed">Иннӕбон</relative>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} боны фӕстӕ</relativeTimePattern>
+					<relativeTimePattern count="other">{0} боны фӕстӕ</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} бон раздӕр</relativeTimePattern>
+					<relativeTimePattern count="other">{0} боны размӕ</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="weekday">
+				<displayName draft="contributed">Къуырийы бон</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName draft="contributed">Боны период</displayName>
+			</field>
+			<field type="hour">
+				<displayName draft="contributed">Сахат</displayName>
+				<relativeTime type="future">
+					<relativeTimePattern count="one">{0} сахаты фӕстӕ</relativeTimePattern>
+					<relativeTimePattern count="other">{0} сахаты фӕстӕ</relativeTimePattern>
+				</relativeTime>
+				<relativeTime type="past">
+					<relativeTimePattern count="one">{0} сахаты размӕ</relativeTimePattern>
+					<relativeTimePattern count="other">{0} сахаты размӕ</relativeTimePattern>
+				</relativeTime>
+			</field>
+			<field type="minute">
+				<displayName draft="contributed">Минут</displayName>
+			</field>
+			<field type="second">
+				<displayName draft="contributed">Секунд</displayName>
+			</field>
+			<field type="zone">
+				<displayName draft="contributed">Рӕстӕджы зонӕ</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<hourFormat draft="contributed">+HH:mm;-HH:mm</hourFormat>
+			<gmtFormat draft="contributed">GMT{0}</gmtFormat>
+			<gmtZeroFormat draft="contributed">GMT</gmtZeroFormat>
+			<regionFormat draft="contributed">{0} рӕстӕг</regionFormat>
+			<fallbackFormat draft="contributed">{1} ({0})</fallbackFormat>
+			<zone type="Etc/Unknown">
+				<exemplarCity draft="contributed">Нӕзонгӕ</exemplarCity>
+			</zone>
+			<zone type="Europe/Minsk">
+				<exemplarCity draft="contributed">Минск</exemplarCity>
+			</zone>
+			<zone type="Asia/Tbilisi">
+				<exemplarCity draft="contributed">Тбилис</exemplarCity>
+			</zone>
+			<zone type="Europe/Moscow">
+				<exemplarCity draft="contributed">Мӕскуы</exemplarCity>
+			</zone>
+			<metazone type="Europe_Central">
+				<long>
+					<generic draft="contributed">Астӕуккаг Европӕйаг рӕстӕг</generic>
+					<standard draft="contributed">Астӕуккаг Европӕйаг стандартон рӕстӕг</standard>
+					<daylight draft="contributed">Астӕуккаг Европӕйаг сӕрдыгон рӕстӕг</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<long>
+					<generic draft="contributed">Скӕсӕн Европӕйаг рӕстӕг</generic>
+					<standard draft="contributed">Скӕсӕн Европӕйаг стандартон рӕстӕг</standard>
+					<daylight draft="contributed">Скӕсӕн Европӕйаг сӕрдыгон рӕстӕг</daylight>
+				</long>
+			</metazone>
+			<metazone type="Europe_Western">
+				<long>
+					<generic draft="contributed">Ныгъуылӕн Европӕйаг рӕстӕг</generic>
+					<standard draft="contributed">Ныгъуылӕн Европӕйаг стандартон рӕстӕг</standard>
+					<daylight draft="contributed">Ныгъуылӕн Европӕйаг сӕрдыгон рӕстӕг</daylight>
+				</long>
+			</metazone>
+			<metazone type="Georgia">
+				<long>
+					<generic draft="contributed">Гуырдзыстоны рӕстӕг</generic>
+					<standard draft="contributed">Гуырдзыстоны стандартон рӕстӕг</standard>
+					<daylight draft="contributed">Гуырдзыстоны сӕрдыгон рӕстӕг</daylight>
+				</long>
+			</metazone>
+			<metazone type="GMT">
+				<long>
+					<standard draft="contributed">Гринвичы рӕстӕмбис рӕстӕг</standard>
+				</long>
+			</metazone>
+			<metazone type="Moscow">
+				<long>
+					<generic draft="contributed">Мӕскуыйы рӕстӕг</generic>
+					<standard draft="contributed">Мӕскуыйы стандартон рӕстӕг</standard>
+					<daylight draft="contributed">Мӕскуыйы сӕрдыгон рӕстӕг</daylight>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>latn</defaultNumberingSystem>
+		<symbols numberSystem="latn">
+			<decimal draft="contributed">,</decimal>
+			<group draft="contributed"> </group>
+			<list draft="contributed">;</list>
+			<percentSign draft="contributed">%</percentSign>
+			<plusSign draft="contributed">+</plusSign>
+			<minusSign draft="contributed">-</minusSign>
+			<exponential draft="contributed">E</exponential>
+			<perMille draft="contributed">‰</perMille>
+			<infinity draft="contributed">∞</infinity>
+			<nan draft="contributed">НН</nan>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern draft="contributed">#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<scientificFormats numberSystem="latn">
+			<scientificFormatLength>
+				<scientificFormat>
+					<pattern draft="contributed">#E0</pattern>
+				</scientificFormat>
+			</scientificFormatLength>
+		</scientificFormats>
+		<percentFormats numberSystem="latn">
+			<percentFormatLength>
+				<percentFormat>
+					<pattern draft="contributed">#,##0%</pattern>
+				</percentFormat>
+			</percentFormatLength>
+		</percentFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern draft="contributed">¤ #,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="one" draft="provisional">¤ 0K</pattern>
+					<pattern type="1000" count="other" draft="provisional">¤ 0K</pattern>
+					<pattern type="10000" count="one" draft="provisional">¤ 00K</pattern>
+					<pattern type="10000" count="other" draft="provisional">¤ 00K</pattern>
+					<pattern type="100000" count="one" draft="provisional">¤ 000K</pattern>
+					<pattern type="100000" count="other" draft="provisional">¤ 000K</pattern>
+					<pattern type="1000000" count="one" draft="provisional">¤ 0M</pattern>
+					<pattern type="1000000" count="other" draft="provisional">¤ 0M</pattern>
+					<pattern type="10000000" count="one" draft="provisional">¤ 00M</pattern>
+					<pattern type="10000000" count="other" draft="provisional">¤ 00M</pattern>
+					<pattern type="100000000" count="one" draft="provisional">¤ 000M</pattern>
+					<pattern type="100000000" count="other" draft="provisional">¤ 000M</pattern>
+					<pattern type="1000000000" count="one" draft="provisional">¤ 0G</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">¤ 0G</pattern>
+					<pattern type="10000000000" count="one" draft="provisional">¤ 00G</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">¤ 00G</pattern>
+					<pattern type="100000000000" count="one" draft="provisional">¤ 000G</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">¤ 000G</pattern>
+					<pattern type="1000000000000" count="one" draft="provisional">¤ 0T</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">¤ 0T</pattern>
+					<pattern type="10000000000000" count="one" draft="provisional">¤ 00T</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">¤ 00T</pattern>
+					<pattern type="100000000000000" count="one" draft="provisional">¤ 000T</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">¤ 000T</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<unitPattern count="one" draft="contributed">{0} {1}</unitPattern>
+			<unitPattern count="other" draft="contributed">{0} {1}</unitPattern>
+		</currencyFormats>
+		<currencies>
+			<currency type="BRL">
+				<displayName draft="contributed">Бразилиаг реал</displayName>
+				<displayName count="one" draft="contributed">бразилиаг реал</displayName>
+				<displayName count="other" draft="contributed">бразилиаг реалы</displayName>
+				<symbol draft="contributed">R$</symbol>
+			</currency>
+			<currency type="EUR">
+				<displayName draft="contributed">Евро</displayName>
+				<displayName count="one" draft="contributed">евро</displayName>
+				<displayName count="other" draft="contributed">евройы</displayName>
+				<symbol draft="contributed">€</symbol>
+			</currency>
+			<currency type="GBP">
+				<displayName draft="contributed">Бритайнаг Фунт</displayName>
+				<displayName count="one" draft="contributed">бритайнаг фунт</displayName>
+				<displayName count="other" draft="contributed">бритайнаг фунты</displayName>
+				<symbol draft="contributed">£</symbol>
+			</currency>
+			<currency type="GEL">
+				<displayName draft="contributed">Лар</displayName>
+				<displayName count="one" draft="contributed">лар</displayName>
+				<displayName count="other" draft="contributed">лары</displayName>
+				<symbol>₾</symbol>
+			</currency>
+			<currency type="RUB">
+				<displayName draft="contributed">Сом</displayName>
+				<displayName count="one" draft="contributed">сом</displayName>
+				<displayName count="other" draft="contributed">сомы</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName draft="contributed">АИШ-ы Доллар</displayName>
+				<displayName count="one" draft="contributed">АИШ-ы доллар</displayName>
+				<displayName count="other" draft="contributed">АИШ-ы доллары</displayName>
+				<symbol draft="contributed">$</symbol>
+			</currency>
+			<currency type="XXX">
+				<displayName draft="contributed">Нӕзонгӕ валютӕ</displayName>
+				<displayName count="one" draft="contributed">нӕзонгӕ валютӕ</displayName>
+				<displayName count="other" draft="contributed">нӕзонгӕ валютӕйы</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="duration-year">
+				<displayName draft="contributed">азы</displayName>
+				<unitPattern count="one">{0} аз</unitPattern>
+				<unitPattern count="other">{0} азы</unitPattern>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="contributed">мӕйы</displayName>
+				<unitPattern count="one">{0} мӕй</unitPattern>
+				<unitPattern count="other">{0} мӕйы</unitPattern>
+			</unit>
+			<unit type="duration-week">
+				<displayName draft="contributed">къуырийы</displayName>
+				<unitPattern count="one">{0} къуыри</unitPattern>
+				<unitPattern count="other">{0} къуырийы</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="contributed">боны</displayName>
+				<unitPattern count="one">{0} бон</unitPattern>
+				<unitPattern count="other">{0} боны</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName draft="contributed">сахаты</displayName>
+				<unitPattern count="one">{0} сахат</unitPattern>
+				<unitPattern count="other">{0} сахаты</unitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName draft="contributed">минуты</displayName>
+				<unitPattern count="one">{0} минут</unitPattern>
+				<unitPattern count="other">{0} минуты</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName draft="contributed">секунды</displayName>
+				<unitPattern count="one">{0} секунд</unitPattern>
+				<unitPattern count="other">{0} секунды</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="duration-year">
+				<displayName draft="contributed">азы</displayName>
+			</unit>
+			<unit type="duration-month">
+				<displayName draft="contributed">мӕйы</displayName>
+			</unit>
+			<unit type="duration-week">
+				<displayName draft="contributed">къуырийы</displayName>
+			</unit>
+			<unit type="duration-day">
+				<displayName draft="contributed">боны</displayName>
+				<unitPattern count="one">{0} бон</unitPattern>
+				<unitPattern count="other">{0} боны</unitPattern>
+			</unit>
+			<unit type="duration-hour">
+				<displayName draft="contributed">сахаты</displayName>
+				<unitPattern count="one">{0} с.</unitPattern>
+				<unitPattern count="other">{0} с.</unitPattern>
+			</unit>
+			<unit type="duration-minute">
+				<displayName draft="contributed">минуты</displayName>
+				<unitPattern count="one">{0} мин.</unitPattern>
+				<unitPattern count="other">{0} мин.</unitPattern>
+			</unit>
+			<unit type="duration-second">
+				<displayName draft="contributed">секунды</displayName>
+			</unit>
+		</unitLength>
+	</units>
+	<listPatterns>
+		<listPattern>
+			<listPatternPart type="start" draft="contributed">{0}, {1}</listPatternPart>
+			<listPatternPart type="middle" draft="contributed">{0}, {1}</listPatternPart>
+			<listPatternPart type="end" draft="contributed">{0} ӕмӕ {1}</listPatternPart>
+			<listPatternPart type="2" draft="contributed">{0} ӕмӕ {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+	<posix>
+		<messages>
+			<yesstr draft="contributed">уойы:у</yesstr>
+			<nostr draft="contributed">нӕйы:н</nostr>
+		</messages>
+	</posix>
+</ldml>

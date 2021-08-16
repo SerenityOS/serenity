@@ -1,0 +1,2 @@
+T8161985a.java:14:17: compiler.err.override.meth: (compiler.misc.cant.override: getClass(), T8161985, getClass(), java.lang.Object), final
+1 error

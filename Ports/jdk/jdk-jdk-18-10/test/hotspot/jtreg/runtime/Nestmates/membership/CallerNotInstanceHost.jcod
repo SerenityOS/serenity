@@ -1,0 +1,389 @@
+/*
+ * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+// NestHost attribute refers to non-instance class
+
+class TestNestmateMembership$CallerNotInstanceHost {
+  0xCAFEBABE;
+  0; // minor version
+  55; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Field #36 #37; // #1
+    String #38; // #2
+    Method #39 #40; // #3
+    Method #7 #41; // #4
+    Method #9 #41; // #5
+    Method #14 #42; // #6
+    class #43; // #7
+    Method #7 #42; // #8
+    class #46; // #9
+    Method #9 #42; // #10
+    Field #7 #48; // #11
+    Field #9 #48; // #12
+    class #49; // #13
+    class #51; // #14
+    Utf8 "oa"; // #15
+    Utf8 "[LInvalidNestHost;"; // #16
+    Utf8 "f"; // #17
+    Utf8 "I"; // #18
+    Utf8 "m"; // #19
+    Utf8 "()V"; // #20
+    Utf8 "Code"; // #21
+    Utf8 "LineNumberTable"; // #22
+    Utf8 "invokeTarget"; // #23
+    Utf8 "invokeTargetNotInstanceHost"; // #24
+    Utf8 "<init>"; // #25
+    Utf8 "newTarget"; // #26
+    Utf8 "newTargetNotInstanceHost"; // #27
+    Utf8 "getFieldTarget"; // #28
+    Utf8 "getFieldTargetNotInstanceHost"; // #29
+    Utf8 "putFieldTarget"; // #30
+    Utf8 "putFieldTargetNotInstanceHost"; // #31
+    Utf8 "SourceFile"; // #32
+    Utf8 "TestNestmateMembership.java"; // #33
+    Utf8 "NestHost"; // #34
+    class #52; // #35
+    class #53; // #36
+    NameAndType #54 #55; // #37
+    Utf8 "CallerNotInstanceHost.m() - java version"; // #38
+    class #56; // #39
+    NameAndType #57 #58; // #40
+    NameAndType #19 #20; // #41
+    NameAndType #25 #20; // #42
+    Utf8 "TestNestmateMembership$Target"; // #43
+    Utf8 "Target"; // #44
+    Utf8 "InnerClasses"; // #45
+    Utf8 "TestNestmateMembership$TargetNotInstanceHost"; // #46
+    Utf8 "TargetNotInstanceHost"; // #47
+    NameAndType #17 #18; // #48
+    Utf8 "TestNestmateMembership$CallerNotInstanceHost"; // #49
+    Utf8 "CallerNotInstanceHost"; // #50
+    Utf8 "java/lang/Object"; // #51
+    Utf8 "TestNestmateMembership"; // #52
+    Utf8 "java/lang/System"; // #53
+    Utf8 "out"; // #54
+    Utf8 "Ljava/io/PrintStream;"; // #55
+    Utf8 "java/io/PrintStream"; // #56
+    Utf8 "println"; // #57
+    Utf8 "(Ljava/lang/String;)V"; // #58
+    class #16; // Added - #59
+  } // Constant Pool
+
+  0x0020; // access
+  #13;// this_cpx
+  #14;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+    { // Member
+      0x0000; // access
+      #15; // name_cpx
+      #16; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x000A; // access
+      #17; // name_cpx
+      #18; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x000A; // access
+      #19; // name_cpx
+      #20; // sig_cpx
+      [] { // Attributes
+        Attr(#21) { // Code
+          2; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xB200011202B60003;
+            0xB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#22) { // LineNumberTable
+              [] { // LineNumberTable
+                0  254;
+                8  255;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #23; // name_cpx
+      #20; // sig_cpx
+      [] { // Attributes
+        Attr(#21) { // Code
+          0; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xB80004B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#22) { // LineNumberTable
+              [] { // LineNumberTable
+                0  257;
+                3  258;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #24; // name_cpx
+      #20; // sig_cpx
+      [] { // Attributes
+        Attr(#21) { // Code
+          0; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0xB80005B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#22) { // LineNumberTable
+              [] { // LineNumberTable
+                0  260;
+                3  261;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0002; // access
+      #25; // name_cpx
+      #20; // sig_cpx
+      [] { // Attributes
+        Attr(#21) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0x2AB70006B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#22) { // LineNumberTable
+              [] { // LineNumberTable
+                0  265;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #26; // name_cpx
+      #20; // sig_cpx
+      [] { // Attributes
+        Attr(#21) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xBB000759B700084B;
+            0xB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#22) { // LineNumberTable
+              [] { // LineNumberTable
+                0  268;
+                8  269;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #27; // name_cpx
+      #20; // sig_cpx
+      [] { // Attributes
+        Attr(#21) { // Code
+          2; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xBB000959B7000A4B;
+            0xB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#22) { // LineNumberTable
+              [] { // LineNumberTable
+                0  271;
+                8  272;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #28; // name_cpx
+      #20; // sig_cpx
+      [] { // Attributes
+        Attr(#21) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xB2000B3BB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#22) { // LineNumberTable
+              [] { // LineNumberTable
+                0  279;
+                4  280;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #29; // name_cpx
+      #20; // sig_cpx
+      [] { // Attributes
+        Attr(#21) { // Code
+          1; // max_stack
+          1; // max_locals
+          Bytes[]{
+            0xB2000C3BB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#22) { // LineNumberTable
+              [] { // LineNumberTable
+                0  282;
+                4  283;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #30; // name_cpx
+      #20; // sig_cpx
+      [] { // Attributes
+        Attr(#21) { // Code
+          1; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0x102AB3000BB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#22) { // LineNumberTable
+              [] { // LineNumberTable
+                0  285;
+                5  286;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member
+      0x0009; // access
+      #31; // name_cpx
+      #20; // sig_cpx
+      [] { // Attributes
+        Attr(#21) { // Code
+          1; // max_stack
+          0; // max_locals
+          Bytes[]{
+            0x102AB3000CB1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#22) { // LineNumberTable
+              [] { // LineNumberTable
+                0  288;
+                5  289;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#32) { // SourceFile
+      #33;
+    } // end SourceFile
+    ;
+    Attr(#34) { // NestHost
+      0x003B; // modified #59
+    } // end NestHost
+    ;
+    Attr(#45) { // InnerClasses
+      [] { // InnerClasses
+        #7 #35 #44 8;
+        #9 #35 #47 8;
+        #13 #35 #50 8;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class TestNestmateMembership$CallerNotInstanceHost

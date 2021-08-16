@@ -1,0 +1,31 @@
+
+Use the test directory as you would for any other JDK regression test
+suite.  All bugs integrated into this workspace should have a
+corresponding test case checked in.  Ideally, every putback done should
+also include a run of the regression suite to make sure nothing was
+broken.
+
+
+templates
+=========
+This directory stores any useful templates for JSSE regression tests.
+
+JSSEClientServerTemplate
+	This template is to allow the quick set up of generic
+	client/server tests.  It forks off one thread to either be the
+	client or the server side (user-controlled), then runs the
+	tests in the main thread.
+
+	Modify the doClientSide and doServerSide as appropriate.
+
+
+etc
+===
+This directory stores keystore/truststores needed by the JSSE
+regression suite.  By consolidating the main keystores here, any
+expired certificates can be regenerated quickly.
+
+
+Expansions
+==========
+Please feel free to add any useful information here.

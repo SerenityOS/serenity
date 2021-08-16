@@ -1,0 +1,76 @@
+//
+// Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+
+// for JTwork/classes/0/test/lib/jdk/test/lib/net/SimpleSSLContext.class
+grant codeBase "file:${test.classes}/../../../../../test/lib/-" {
+    permission java.util.PropertyPermission "test.src.path", "read";
+    permission java.io.FilePermission "${test.src}/../../../../../lib/jdk/test/lib/net/testkeys", "read";
+};
+
+// for JTwork/classes/0/java/net/httpclient/http2/server/*
+grant codeBase "file:${test.classes}/../../../../../java/net/httpclient/http2/server/*" {
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal.net.http.common";
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal.net.http.frame";
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal.net.http.hpack";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.net.www.http";
+
+    permission java.net.SocketPermission "localhost:*", "accept,resolve";
+    permission java.lang.RuntimePermission "modifyThread";
+};
+
+grant codeBase "file:${test.classes}/*" {
+    permission java.net.URLPermission "http://localhost:*/http1/echo", "POST";
+    permission java.net.URLPermission "https://localhost:*/https1/echo", "POST";
+    permission java.net.URLPermission "http://localhost:*/http2/echo", "POST";
+    permission java.net.URLPermission "https://localhost:*/https2/echo", "POST";
+    permission java.net.URLPermission "https://localhost:*/http1/echo", "GET";
+    permission java.net.URLPermission "https://localhost:*/https1/echo", "GET";
+    permission java.net.URLPermission "http://localhost:*/http2/echo", "GET";
+    permission java.net.URLPermission "https://localhost:*/https2/echo", "GET";
+
+    // file permissions
+    permission java.io.FilePermission "${user.dir}${/}defaultFile.txt", "read,write,delete";
+    permission java.io.FilePermission "${user.dir}${/}file.zip", "read,write,delete";
+
+    // needed to access FileSystemProvider
+    permission java.lang.RuntimePermission "fileSystemProvider";
+
+    // for permission changes
+    permission java.security.SecurityPermission "getPolicy";
+    permission java.security.SecurityPermission "setPolicy";
+
+    // needed to grant permission to the HTTP/2 server
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal.net.http.common";
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal.net.http.frame";
+    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal.net.http.hpack";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.net.www.http";
+
+    // for HTTP/1.1 server logging
+    permission java.util.logging.LoggingPermission "control";
+
+    // needed to grant the HTTP servers
+    permission java.net.SocketPermission "localhost:*", "accept,resolve";
+
+    permission java.util.PropertyPermission "*", "read";
+    permission java.lang.RuntimePermission "modifyThread";
+};

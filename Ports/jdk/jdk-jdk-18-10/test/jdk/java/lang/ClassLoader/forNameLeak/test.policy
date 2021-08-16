@@ -1,0 +1,7 @@
+grant {
+  permission java.io.FilePermission "<<ALL FILES>>", "read, write, delete";
+  permission java.lang.RuntimePermission "createClassLoader";
+  permission java.lang.RuntimePermission "getClassLoader";
+  permission java.lang.RuntimePermission "modifyThread";
+  permission java.util.PropertyPermission "*", "read"; /* for Utils */
+};

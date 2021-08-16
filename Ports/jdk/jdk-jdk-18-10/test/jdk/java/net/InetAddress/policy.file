@@ -1,0 +1,10 @@
+grant {
+	permission javax.security.auth.AuthPermission "modifyPrincipals";
+	permission javax.security.auth.AuthPermission "doAsPrivileged";	
+	permission java.util.PropertyPermission "*", "read,write";
+};
+
+grant Principal MyPrincipal "test" { 
+	permission java.net.SocketPermission "${host.name}", "resolve";
+};
+

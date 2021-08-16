@@ -1,0 +1,2 @@
+NonSAM1.java:11:20: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: Planet, (compiler.misc.no.abstracts: kindname.interface, Planet))
+1 error

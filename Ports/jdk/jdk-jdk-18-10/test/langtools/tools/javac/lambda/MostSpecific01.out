@@ -1,0 +1,2 @@
+MostSpecific01.java:23:9: compiler.err.ref.ambiguous: m, kindname.method, m(Test.IntMapper,java.lang.String), Test, kindname.method, m(Test.LongMapper,java.lang.Integer), Test
+1 error

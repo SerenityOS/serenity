@@ -1,0 +1,5 @@
+CantAnnotatePackages.java:14:13: compiler.err.cant.type.annotate.scoping.1: @TA
+CantAnnotatePackages.java:19:18: compiler.err.cant.type.annotate.scoping.1: @TA
+CantAnnotatePackages.java:20:19: compiler.err.cant.type.annotate.scoping.1: @TA
+CantAnnotatePackages.java:21:24: compiler.err.cant.type.annotate.scoping.1: @TA
+4 errors

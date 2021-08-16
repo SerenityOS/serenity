@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" xml:base="http://local/base/dtd/">
+    <uriSuffix uriSuffix="docAlice.dtd" uri="http://local/dtd/docAliceUS.dtd" />
+
+    <uriSuffix uriSuffix="docBob.dtd" uri="docBobUS.dtd" />
+
+    <uriSuffix uriSuffix="docCarl.dtd" uri="docCarlUS.dtd" xml:base="http://local/carlBase/dtd/" />
+
+    <uriSuffix uriSuffix="docDavid.dtd" uri="docDavidUS1.dtd" />
+    <uriSuffix uriSuffix="docDavid.dtd" uri="docDavidUS2.dtd" />
+
+    <uriSuffix uriSuffix="docElla.dtd" uri="/" />
+    <uriSuffix uriSuffix="ella/docElla.dtd" uri="docEllaUS.dtd" />
+</catalog>

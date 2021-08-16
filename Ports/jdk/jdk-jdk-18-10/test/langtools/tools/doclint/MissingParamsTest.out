@@ -1,0 +1,14 @@
+MissingParamsTest.java:14: warning: no @param for param
+    MissingParamsTest(int param) { }
+    ^
+MissingParamsTest.java:17: warning: no @param for <T>
+    <T> MissingParamsTest() { }
+        ^
+MissingParamsTest.java:20: warning: no @param for param
+    void missingParam(int param) { }
+         ^
+MissingParamsTest.java:23: warning: no @param for <T>
+    <T> void missingTyparam() { }
+             ^
+4 warnings
+

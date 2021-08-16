@@ -1,0 +1,13 @@
+The jhat tool has been removed. jhat hprof file parser/validator
+are needed for tests. The old packages for jhat were moved here:
+com.sun.tools.hat.internal.model -> jdk.test.lib.hprof.model
+com.sun.tools.hat.internal.parser -> jdk.test.lib.hprof.parser
+com.sun.tools.hat.internal.util -> jdk.test.lib.hprof.util
+ 
+jhat was added in JDK 6 and its original implementation was from 
+java.net HAT project [1]. jhat is an experimental, unsupported tool. 
+There hasn't been much update to jhat tool in the JDK. In addition, 
+there are several better heap dump visualizer/analyzer emerged since 
+JDK 5/6 serviceability support.
+
+[1] https://java.net/projects/hat

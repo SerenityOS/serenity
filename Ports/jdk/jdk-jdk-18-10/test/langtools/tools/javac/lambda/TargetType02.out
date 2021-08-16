@@ -1,0 +1,5 @@
+TargetType02.java:33:14: compiler.err.prob.found.req: (compiler.misc.incompatible.bounds: Z, (compiler.misc.upper.bounds: java.lang.String), (compiler.misc.lower.bounds: java.lang.Integer))
+TargetType02.java:34:9: compiler.err.ref.ambiguous: call3, kindname.method, <Z>call3(TargetType02.S1<Z>), TargetType02, kindname.method, <Z>call3(TargetType02.S2<Z>), TargetType02
+TargetType02.java:35:9: compiler.err.ref.ambiguous: call3, kindname.method, <Z>call3(TargetType02.S1<Z>), TargetType02, kindname.method, <Z>call3(TargetType02.S2<Z>), TargetType02
+TargetType02.java:37:20: compiler.err.ref.ambiguous: call4, kindname.method, <Z>call4(TargetType02.S1<Z>), TargetType02, kindname.method, <Z>call4(TargetType02.S2<Z>), TargetType02
+4 errors

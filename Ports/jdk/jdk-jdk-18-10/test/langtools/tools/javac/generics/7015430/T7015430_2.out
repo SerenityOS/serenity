@@ -1,0 +1,15 @@
+T7015430.java:42:14: compiler.warn.unchecked.meth.invocation.applied: kindname.method, empty, java.lang.Iterable<E>, java.lang.Iterable, kindname.class, T7015430
+T7015430.java:42:15: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.lang.Iterable, java.lang.Iterable<E>
+T7015430.java:51:41: compiler.warn.unchecked.meth.invocation.applied: kindname.method, empty, java.lang.Iterable<E>, java.lang.Iterable, kindname.class, T7015430
+T7015430.java:51:42: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.lang.Iterable, java.lang.Iterable<E>
+T7015430.java:69:9: compiler.warn.unchecked.meth.invocation.applied: kindname.constructor, <init>, java.lang.Iterable<E>, java.lang.Iterable, kindname.class, T7015430
+T7015430.java:69:22: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.lang.Iterable, java.lang.Iterable<E>
+T7015430.java:78:9: compiler.warn.unchecked.meth.invocation.applied: kindname.constructor, <init>, java.lang.Iterable<E>, java.lang.Iterable, kindname.class, T7015430
+T7015430.java:78:40: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.lang.Iterable, java.lang.Iterable<E>
+T7015430.java:105:9: compiler.warn.unchecked.meth.invocation.applied: kindname.constructor, <init>, java.lang.Iterable<E>, java.lang.Iterable, kindname.class, T7015430
+T7015430.java:105:41: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.lang.Iterable, java.lang.Iterable<E>
+T7015430.java:114:9: compiler.warn.unchecked.meth.invocation.applied: kindname.constructor, <init>, java.lang.Iterable<E>, java.lang.Iterable, kindname.class, T7015430
+T7015430.java:114:22: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), java.lang.Iterable, java.lang.Iterable<E>
+T7015430.java:130:9: compiler.err.unreported.exception.need.to.catch.or.throw: java.lang.Exception
+1 error
+12 warnings

@@ -1,0 +1,105 @@
+#
+# Copyright (c) 2013, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+$(eval $(call IncludeCustomExtension, hotspot/lib/JvmFlags.gmk))
+
+################################################################################
+# Setup JVM_CFLAGS. These are shared between GensrcDtrace.gmk and CompileJvm.gmk.
+
+# This variable may be added to by a custom extension
+JVM_SRC_ROOTS += $(TOPDIR)/src/hotspot
+
+JVM_SRC_DIRS += $(call uniq, $(wildcard $(foreach d, $(JVM_SRC_ROOTS), \
+        $d/share \
+        $d/os/$(HOTSPOT_TARGET_OS) \
+        $d/os/$(HOTSPOT_TARGET_OS_TYPE) \
+        $d/cpu/$(HOTSPOT_TARGET_CPU_ARCH) \
+        $d/os_cpu/$(HOTSPOT_TARGET_OS)_$(HOTSPOT_TARGET_CPU_ARCH) \
+    ))) \
+    $(JVM_VARIANT_OUTPUTDIR)/gensrc
+    #
+
+JVM_CFLAGS_INCLUDES += \
+    $(patsubst %,-I%,$(JVM_SRC_DIRS)) \
+    -I$(TOPDIR)/src/hotspot/share/precompiled \
+    -I$(TOPDIR)/src/hotspot/share/include \
+    -I$(TOPDIR)/src/hotspot/os/$(HOTSPOT_TARGET_OS_TYPE)/include \
+    -I$(SUPPORT_OUTPUTDIR)/modules_include/java.base \
+    -I$(SUPPORT_OUTPUTDIR)/modules_include/java.base/$(OPENJDK_TARGET_OS_INCLUDE_SUBDIR) \
+    -I$(TOPDIR)/src/java.base/share/native/libjimage \
+    #
+
+# INCLUDE_SUFFIX_* is only meant for including the proper
+# platform files. Don't use it to guard code. Use the value of
+# HOTSPOT_TARGET_CPU_DEFINE etc. instead.
+# Remaining TARGET_ARCH_* is needed to select the cpu specific
+# sources for 64-bit ARM ports (arm versus aarch64).
+JVM_CFLAGS_TARGET_DEFINES += \
+    -DTARGET_ARCH_$(HOTSPOT_TARGET_CPU_ARCH) \
+    -DINCLUDE_SUFFIX_OS=_$(HOTSPOT_TARGET_OS) \
+    -DINCLUDE_SUFFIX_CPU=_$(HOTSPOT_TARGET_CPU_ARCH) \
+    -DINCLUDE_SUFFIX_COMPILER=_$(HOTSPOT_TOOLCHAIN_TYPE) \
+    -DTARGET_COMPILER_$(HOTSPOT_TOOLCHAIN_TYPE) \
+    -D$(HOTSPOT_TARGET_CPU_DEFINE) \
+    -DHOTSPOT_LIB_ARCH='"$(OPENJDK_TARGET_CPU_LEGACY_LIB)"' \
+    #
+
+ifeq ($(DEBUG_LEVEL), release)
+  # For hotspot, release builds differ internally between "optimized" and "product"
+  # in that "optimize" does not define PRODUCT.
+  ifneq ($(HOTSPOT_DEBUG_LEVEL), optimized)
+    JVM_CFLAGS_DEBUGLEVEL := -DPRODUCT
+  endif
+else ifeq ($(DEBUG_LEVEL), fastdebug)
+  JVM_CFLAGS_DEBUGLEVEL := -DASSERT
+  ifeq ($(call isTargetOs, windows aix), false)
+    # NOTE: Old build did not define CHECK_UNHANDLED_OOPS on Windows and AIX.
+    JVM_CFLAGS_DEBUGLEVEL += -DCHECK_UNHANDLED_OOPS
+  endif
+else ifeq ($(DEBUG_LEVEL), slowdebug)
+  # _NMT_NOINLINE_ informs NMT that no inlining is done by the compiler
+  JVM_CFLAGS_DEBUGLEVEL := -DASSERT -D_NMT_NOINLINE_
+endif
+
+JVM_CFLAGS += \
+    $(JVM_CFLAGS_DEBUGLEVEL) \
+    $(JVM_CFLAGS_TARGET_DEFINES) \
+    $(JVM_CFLAGS_FEATURES) \
+    $(JVM_CFLAGS_INCLUDES) \
+    $(EXTRA_CFLAGS) \
+    #
+
+# -DDONT_USE_PRECOMPILED_HEADER will exclude all includes in precompiled.hpp.
+ifeq ($(USE_PRECOMPILED_HEADER), false)
+  JVM_CFLAGS += -DDONT_USE_PRECOMPILED_HEADER
+endif
+
+ifneq ($(HOTSPOT_OVERRIDE_LIBPATH), )
+  JVM_CFLAGS += -DOVERRIDE_LIBPATH='"$(HOTSPOT_OVERRIDE_LIBPATH)"'
+endif
+
+ifeq ($(ENABLE_COMPATIBLE_CDS_ALIGNMENT), true)
+  JVM_CFLAGS += -DCOMPATIBLE_CDS_ALIGNMENT
+endif

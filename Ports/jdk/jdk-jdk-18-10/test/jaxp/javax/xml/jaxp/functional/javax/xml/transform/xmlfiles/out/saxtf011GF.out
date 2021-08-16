@@ -1,0 +1,37 @@
+startDocument
+startElement: , , countries
+startElement: , , country, name
+startElement: , , city
+characters
+endElement: , , city
+startElement: , , city
+characters
+endElement: , , city
+startElement: , , city
+characters
+endElement: , , city
+endElement: , , country
+startElement: , , country, name
+startElement: , , city
+characters
+endElement: , , city
+startElement: , , city
+characters
+endElement: , , city
+startElement: , , city
+characters
+endElement: , , city
+startElement: , , city
+characters
+endElement: , , city
+endElement: , , country
+startElement: , , country, name
+startElement: , , city
+characters
+endElement: , , city
+startElement: , , city
+characters
+endElement: , , city
+endElement: , , country
+endElement: , , countries
+endDocument

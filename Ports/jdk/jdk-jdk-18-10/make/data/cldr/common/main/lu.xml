@@ -1,0 +1,799 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="lu"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ak">Liakan</language>
+			<language type="am">Liamhariki</language>
+			<language type="ar">Arabi</language>
+			<language type="be">Belarusi</language>
+			<language type="bg">Bulegari</language>
+			<language type="bn">Bengali</language>
+			<language type="cs">Tsheki</language>
+			<language type="de">Lizelumani</language>
+			<language type="el">Giliki</language>
+			<language type="en">Lingelesa</language>
+			<language type="es">Lihispania</language>
+			<language type="fa">Mpepajemi</language>
+			<language type="fr">Mfwàlànsa</language>
+			<language type="ha">Hausa</language>
+			<language type="hi">Hindi</language>
+			<language type="hu">Hongili</language>
+			<language type="id">Lindonezia</language>
+			<language type="ig">Igbo</language>
+			<language type="it">Litali</language>
+			<language type="ja">Liyapani</language>
+			<language type="jv">Java</language>
+			<language type="ko">Likoreya</language>
+			<language type="lu">Tshiluba</language>
+			<language type="ms">Limalezia</language>
+			<language type="ne">nepali</language>
+			<language type="nl">olandi</language>
+			<language type="pa">Lipunjabi</language>
+			<language type="pl">Mpoloni</language>
+			<language type="pt">Mputulugɛsi</language>
+			<language type="ro">Liromani</language>
+			<language type="ru">Lirisi</language>
+			<language type="rw">kinyarwanda</language>
+			<language type="so">Lisomali</language>
+			<language type="sv">Lisuwidi</language>
+			<language type="ta">Mtamuili</language>
+			<language type="th">Ntailandi</language>
+			<language type="tr">Ntuluki</language>
+			<language type="uk">Nkrani</language>
+			<language type="ur">Urdu</language>
+			<language type="vi">Liviyetinamu</language>
+			<language type="yo">Nyoruba</language>
+			<language type="zh">shinɛ</language>
+			<language type="zu">Nzulu</language>
+		</languages>
+		<territories>
+			<territory type="AD">Andore</territory>
+			<territory type="AE">Lemila alabu</territory>
+			<territory type="AF">Afuganisita</territory>
+			<territory type="AG">Antiga ne Barbuda</territory>
+			<territory type="AI">Angiye</territory>
+			<territory type="AL">Alubani</territory>
+			<territory type="AM">Ameni</territory>
+			<territory type="AO">Angola</territory>
+			<territory type="AR">Alijantine</territory>
+			<territory type="AS">Samoa wa Ameriki</territory>
+			<territory type="AT">Otilisi</territory>
+			<territory type="AU">Ositali</territory>
+			<territory type="AW">Aruba</territory>
+			<territory type="AZ">Ajelbayidja</territory>
+			<territory type="BA">Mbosini ne Hezegovine</territory>
+			<territory type="BB">Barebade</territory>
+			<territory type="BD">Benguladeshi</territory>
+			<territory type="BE">Belejiki</territory>
+			<territory type="BF">Bukinafaso</territory>
+			<territory type="BG">Biligari</territory>
+			<territory type="BH">Bahrene</territory>
+			<territory type="BI">Burundi</territory>
+			<territory type="BJ">Bene</territory>
+			<territory type="BM">Bermuda</territory>
+			<territory type="BN">Brineyi</territory>
+			<territory type="BO">Mbolivi</territory>
+			<territory type="BR">Mnulezile</territory>
+			<territory type="BS">Bahamase</territory>
+			<territory type="BT">Butani</territory>
+			<territory type="BW">Mbotswana</territory>
+			<territory type="BY">Byelorisi</territory>
+			<territory type="BZ">Belize</territory>
+			<territory type="CA">Kanada</territory>
+			<territory type="CD">Ditunga wa Kongu</territory>
+			<territory type="CF">Ditunga dya Afrika wa munkatshi</territory>
+			<territory type="CG">Kongu</territory>
+			<territory type="CH">Swise</territory>
+			<territory type="CI">Kotedivuale</territory>
+			<territory type="CK">Lutanda lua Kookɛ</territory>
+			<territory type="CL">Shili</territory>
+			<territory type="CM">Kamerune</territory>
+			<territory type="CN">Shine</territory>
+			<territory type="CO">Kolombi</territory>
+			<territory type="CR">Kositarika</territory>
+			<territory type="CU">Kuba</territory>
+			<territory type="CV">Lutanda lua Kapevele</territory>
+			<territory type="CY">Shipele</territory>
+			<territory type="CZ">Ditunga dya Tsheka</territory>
+			<territory type="DE">Alemanu</territory>
+			<territory type="DJ">Djibuti</territory>
+			<territory type="DK">Danemalaku</territory>
+			<territory type="DM">Duminiku</territory>
+			<territory type="DO">Ditunga wa Duminiku</territory>
+			<territory type="DZ">Alijeri</territory>
+			<territory type="EC">Ekwatele</territory>
+			<territory type="EE">Esitoni</territory>
+			<territory type="EG">Mushidi</territory>
+			<territory type="ER">Elitele</territory>
+			<territory type="ES">Nsipani</territory>
+			<territory type="ET">Etshiopi</territory>
+			<territory type="FI">Filande</territory>
+			<territory type="FJ">Fuji</territory>
+			<territory type="FK">Lutanda lua Maluni</territory>
+			<territory type="FM">Mikronezi</territory>
+			<territory type="FR">Nfalanse</territory>
+			<territory type="GA">Ngabu</territory>
+			<territory type="GB">Angeletele</territory>
+			<territory type="GD">Ngelenade</territory>
+			<territory type="GE">Joriji</territory>
+			<territory type="GF">Giyane wa Nfalanse</territory>
+			<territory type="GH">Ngana</territory>
+			<territory type="GI">Jibeletale</territory>
+			<territory type="GL">Ngowelande</territory>
+			<territory type="GM">Gambi</territory>
+			<territory type="GN">Ngine</territory>
+			<territory type="GP">Ngwadelupe</territory>
+			<territory type="GQ">Gine Ekwatele</territory>
+			<territory type="GR">Ngeleka</territory>
+			<territory type="GT">Ngwatemala</territory>
+			<territory type="GU">Ngwame</territory>
+			<territory type="GW">Nginebisau</territory>
+			<territory type="GY">Ngiyane</territory>
+			<territory type="HN">Ondurase</territory>
+			<territory type="HR">Krowasi</territory>
+			<territory type="HT">Ayiti</territory>
+			<territory type="HU">Ongili</territory>
+			<territory type="ID">Indonezi</territory>
+			<territory type="IE">Irelande</territory>
+			<territory type="IL">Isirayele</territory>
+			<territory type="IN">Inde</territory>
+			<territory type="IO">Lutanda lwa Angeletele ku mbu wa Indiya</territory>
+			<territory type="IQ">Iraki</territory>
+			<territory type="IR">Ira</territory>
+			<territory type="IS">Isilande</territory>
+			<territory type="IT">Itali</territory>
+			<territory type="JM">Jamaiki</territory>
+			<territory type="JO">Jodani</territory>
+			<territory type="JP">Japu</territory>
+			<territory type="KE">Kenya</territory>
+			<territory type="KG">Kigizisita</territory>
+			<territory type="KH">Kambodza</territory>
+			<territory type="KI">Kiribati</territory>
+			<territory type="KM">Komoru</territory>
+			<territory type="KN">Santu krístofe ne Neves</territory>
+			<territory type="KP">Kore wa muulu</territory>
+			<territory type="KR">Kore wa mwinshi</territory>
+			<territory type="KW">Koweti</territory>
+			<territory type="KY">Lutanda lua Kayima</territory>
+			<territory type="KZ">Kazakusita</territory>
+			<territory type="LA">Lawosi</territory>
+			<territory type="LB">Liba</territory>
+			<territory type="LC">Santu lisi</territory>
+			<territory type="LI">Lishuteni</territory>
+			<territory type="LK">Sirilanka</territory>
+			<territory type="LR">Liberiya</territory>
+			<territory type="LS">Lesoto</territory>
+			<territory type="LT">Litwani</territory>
+			<territory type="LU">Likisambulu</territory>
+			<territory type="LV">Letoni</territory>
+			<territory type="LY">Libi</territory>
+			<territory type="MA">Maroke</territory>
+			<territory type="MC">Monaku</territory>
+			<territory type="MD">Molidavi</territory>
+			<territory type="MG">Madagasikari</territory>
+			<territory type="MH">Lutanda lua Marishale</territory>
+			<territory type="ML">Mali</territory>
+			<territory type="MM">Myamare</territory>
+			<territory type="MN">Mongoli</territory>
+			<territory type="MP">Lutanda lua Mariane wa muulu</territory>
+			<territory type="MQ">Martiniki</territory>
+			<territory type="MR">Moritani</territory>
+			<territory type="MS">Musera</territory>
+			<territory type="MT">Malite</territory>
+			<territory type="MU">Morise</territory>
+			<territory type="MV">Madive</territory>
+			<territory type="MW">Malawi</territory>
+			<territory type="MX">Meksike</territory>
+			<territory type="MY">Malezi</territory>
+			<territory type="MZ">Mozambiki</territory>
+			<territory type="NA">Namibi</territory>
+			<territory type="NC">Kaledoni wa mumu</territory>
+			<territory type="NE">Nijere</territory>
+			<territory type="NF">Lutanda lua Norfok</territory>
+			<territory type="NG">Nijerya</territory>
+			<territory type="NI">Nikaragwa</territory>
+			<territory type="NL">Olandɛ</territory>
+			<territory type="NO">Noriveje</territory>
+			<territory type="NP">Nepálɛ</territory>
+			<territory type="NR">Nauru</territory>
+			<territory type="NU">Nyue</territory>
+			<territory type="NZ">Zelanda wa mumu</territory>
+			<territory type="OM">Omane</territory>
+			<territory type="PA">Panama</territory>
+			<territory type="PE">Peru</territory>
+			<territory type="PF">Polinezi wa Nfalanse</territory>
+			<territory type="PG">Papwazi wa Nginɛ wa mumu</territory>
+			<territory type="PH">Nfilipi</territory>
+			<territory type="PK">Pakisita</territory>
+			<territory type="PL">Mpoloni</territory>
+			<territory type="PM">Santu pététo ne Mikelu</territory>
+			<territory type="PN">Pikairni</territory>
+			<territory type="PR">Mpotoriku</territory>
+			<territory type="PS">Palesine</territory>
+			<territory type="PT">Mputulugeshi</territory>
+			<territory type="PW">Palau</territory>
+			<territory type="PY">Palagwei</territory>
+			<territory type="QA">Katari</territory>
+			<territory type="RE">Lenyo</territory>
+			<territory type="RO">Romani</territory>
+			<territory type="RU">Risi</territory>
+			<territory type="RW">Rwanda</territory>
+			<territory type="SA">Alabu Nsawudi</territory>
+			<territory type="SB">Lutanda lua Solomu</territory>
+			<territory type="SC">Seshele</territory>
+			<territory type="SD">Suda</territory>
+			<territory type="SE">Suwedi</territory>
+			<territory type="SG">Singapure</territory>
+			<territory type="SH">Santu eleni</territory>
+			<territory type="SI">Siloveni</territory>
+			<territory type="SK">Silovaki</territory>
+			<territory type="SL">Siera Leone</territory>
+			<territory type="SM">Santu Marine</territory>
+			<territory type="SN">Senegale</territory>
+			<territory type="SO">Somali</territory>
+			<territory type="SR">Suriname</territory>
+			<territory type="ST">Sao Tome ne Presipɛ</territory>
+			<territory type="SV">Savadore</territory>
+			<territory type="SY">Siri</territory>
+			<territory type="SZ">Swazilandi</territory>
+			<territory type="TC">Lutanda lua Tuluki ne Kaiko</territory>
+			<territory type="TD">Tshadi</territory>
+			<territory type="TG">Togu</territory>
+			<territory type="TH">Tayilanda</territory>
+			<territory type="TJ">Tazikisita</territory>
+			<territory type="TK">Tokelau</territory>
+			<territory type="TL">Timoru wa diboku</territory>
+			<territory type="TM">Tukemenisita</territory>
+			<territory type="TN">Tinizi</territory>
+			<territory type="TO">Tonga</territory>
+			<territory type="TR">Tuluki</territory>
+			<territory type="TT">Tinidade ne Tobago</territory>
+			<territory type="TV">Tuvalu</territory>
+			<territory type="TW">Taiwani</territory>
+			<territory type="TZ">Tanzani</territory>
+			<territory type="UA">Ukreni</territory>
+			<territory type="UG">Uganda</territory>
+			<territory type="US">Ameriki</territory>
+			<territory type="UY">Irigwei</territory>
+			<territory type="UZ">Uzibekisita</territory>
+			<territory type="VA">Nvatika</territory>
+			<territory type="VC">Santu vesa ne Ngelenadine</territory>
+			<territory type="VE">Venezuela</territory>
+			<territory type="VG">Lutanda lua Vierzi wa Angeletele</territory>
+			<territory type="VI">Lutanda lua Vierzi wa Ameriki</territory>
+			<territory type="VN">Viyetiname</territory>
+			<territory type="VU">Vanuatu</territory>
+			<territory type="WF">Walise ne Futuna</territory>
+			<territory type="WS">Samoa</territory>
+			<territory type="YE">Yemenu</territory>
+			<territory type="YT">Mayote</territory>
+			<territory type="ZA">Afrika ya Súdi</territory>
+			<territory type="ZM">Zambi</territory>
+			<territory type="ZW">Zimbabwe</territory>
+		</territories>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a á à b c d e é è ɛ {ɛ\u0301} {ɛ\u0300} f h i í ì j k l m n {ng} {ny} o ó ò ɔ {ɔ\u0301} {ɔ\u0300} p {ph} q s {shi} t u ú ù v w y z]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[g r x]</exemplarCharacters>
+		<exemplarCharacters type="index">[A B C D E F H I J K L M N O P Q S T U V W Y Z]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+	</characters>
+	<delimiters>
+		<quotationStart>“</quotationStart>
+		<quotationEnd>”</quotationEnd>
+		<alternateQuotationStart>‘</alternateQuotationStart>
+		<alternateQuotationEnd>’</alternateQuotationEnd>
+	</delimiters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d/M/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="Ed">E d</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">E d/M</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E d MMM</dateFormatItem>
+						<dateFormatItem id="ms">m:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMd">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E d/M/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E d MMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">Cio</month>
+							<month type="2">Lui</month>
+							<month type="3">Lus</month>
+							<month type="4">Muu</month>
+							<month type="5">Lum</month>
+							<month type="6">Luf</month>
+							<month type="7">Kab</month>
+							<month type="8">Lush</month>
+							<month type="9">Lut</month>
+							<month type="10">Lun</month>
+							<month type="11">Kas</month>
+							<month type="12">Cis</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">Ciongo</month>
+							<month type="2">Lùishi</month>
+							<month type="3">Lusòlo</month>
+							<month type="4">Mùuyà</month>
+							<month type="5">Lumùngùlù</month>
+							<month type="6">Lufuimi</month>
+							<month type="7">Kabàlàshìpù</month>
+							<month type="8">Lùshìkà</month>
+							<month type="9">Lutongolo</month>
+							<month type="10">Lungùdi</month>
+							<month type="11">Kaswèkèsè</month>
+							<month type="12">Ciswà</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="narrow">
+							<month type="1">C</month>
+							<month type="2">L</month>
+							<month type="3">L</month>
+							<month type="4">M</month>
+							<month type="5">L</month>
+							<month type="6">L</month>
+							<month type="7">K</month>
+							<month type="8">L</month>
+							<month type="9">L</month>
+							<month type="10">L</month>
+							<month type="11">K</month>
+							<month type="12">C</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Lum</day>
+							<day type="mon">Nko</day>
+							<day type="tue">Ndy</day>
+							<day type="wed">Ndg</day>
+							<day type="thu">Njw</day>
+							<day type="fri">Ngv</day>
+							<day type="sat">Lub</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">Lumingu</day>
+							<day type="mon">Nkodya</day>
+							<day type="tue">Ndàayà</day>
+							<day type="wed">Ndangù</day>
+							<day type="thu">Njòwa</day>
+							<day type="fri">Ngòvya</day>
+							<day type="sat">Lubingu</day>
+						</dayWidth>
+					</dayContext>
+					<dayContext type="stand-alone">
+						<dayWidth type="narrow">
+							<day type="sun">L</day>
+							<day type="mon">N</day>
+							<day type="tue">N</day>
+							<day type="wed">N</day>
+							<day type="thu">N</day>
+							<day type="fri">N</day>
+							<day type="sat">L</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">M1</quarter>
+							<quarter type="2">M2</quarter>
+							<quarter type="3">M3</quarter>
+							<quarter type="4">M4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">Mueji 1</quarter>
+							<quarter type="2">Mueji 2</quarter>
+							<quarter type="3">Mueji 3</quarter>
+							<quarter type="4">Mueji 4</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">Dinda</dayPeriod>
+							<dayPeriod type="pm">Dilolo</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">Dinda</dayPeriod>
+							<dayPeriod type="pm">Dilolo</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0">Kumpala kwa Yezu Kli</era>
+						<era type="1">Kunyima kwa Yezu Kli</era>
+					</eraNames>
+					<eraAbbr>
+						<era type="0">kmp. Y.K.</era>
+						<era type="1">kny. Y. K.</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern>EEEE d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern>d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern>d MMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern>d/M/y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="d">d</dateFormatItem>
+						<dateFormatItem id="Ed">E d</dateFormatItem>
+						<dateFormatItem id="hm">h:mm a</dateFormatItem>
+						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
+						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Md">d/M</dateFormatItem>
+						<dateFormatItem id="MEd">E d/M</dateFormatItem>
+						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
+						<dateFormatItem id="MMMEd">E d MMM</dateFormatItem>
+						<dateFormatItem id="ms">m:ss</dateFormatItem>
+						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="yM">M/y</dateFormatItem>
+						<dateFormatItem id="yMd">d/M/y</dateFormatItem>
+						<dateFormatItem id="yMEd">E d/M/y</dateFormatItem>
+						<dateFormatItem id="yMMM">MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMd">d MMM y</dateFormatItem>
+						<dateFormatItem id="yMMMEd">E d MMM y</dateFormatItem>
+						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
+						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName>Tshipungu</displayName>
+			</field>
+			<field type="year">
+				<displayName>Tshidimu</displayName>
+			</field>
+			<field type="month">
+				<displayName>Ngondo</displayName>
+			</field>
+			<field type="week">
+				<displayName>Lubingu</displayName>
+			</field>
+			<field type="day">
+				<displayName>Dituku</displayName>
+				<relative type="-1">Makelela</relative>
+				<relative type="0">Lelu</relative>
+				<relative type="1">Malaba</relative>
+			</field>
+			<field type="weekday">
+				<displayName>Dituku dia lubingu</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName>Mutantshi wa diba</displayName>
+			</field>
+			<field type="hour">
+				<displayName>Diba</displayName>
+			</field>
+			<field type="minute">
+				<displayName>Kasunsu</displayName>
+			</field>
+			<field type="second">
+				<displayName>Kasunsukusu</displayName>
+			</field>
+			<field type="zone">
+				<displayName>Nzeepu</displayName>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group>.</group>
+		</symbols>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength>
+				<decimalFormat>
+					<pattern>#,##0.###</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>#,##0.00¤</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+			<currencyFormatLength type="short">
+				<currencyFormat type="standard">
+					<pattern type="1000" count="other" draft="provisional">0K¤</pattern>
+					<pattern type="10000" count="other" draft="provisional">00K¤</pattern>
+					<pattern type="100000" count="other" draft="provisional">000K¤</pattern>
+					<pattern type="1000000" count="other" draft="provisional">0M¤</pattern>
+					<pattern type="10000000" count="other" draft="provisional">00M¤</pattern>
+					<pattern type="100000000" count="other" draft="provisional">000M¤</pattern>
+					<pattern type="1000000000" count="other" draft="provisional">0G¤</pattern>
+					<pattern type="10000000000" count="other" draft="provisional">00G¤</pattern>
+					<pattern type="100000000000" count="other" draft="provisional">000G¤</pattern>
+					<pattern type="1000000000000" count="other" draft="provisional">0T¤</pattern>
+					<pattern type="10000000000000" count="other" draft="provisional">00T¤</pattern>
+					<pattern type="100000000000000" count="other" draft="provisional">000T¤</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="AED">
+				<displayName>Ndiriha wa Lemila alabu</displayName>
+			</currency>
+			<currency type="AOA">
+				<displayName>Kwanza wa Angola</displayName>
+			</currency>
+			<currency type="AUD">
+				<displayName>Ndola wa Ositali</displayName>
+			</currency>
+			<currency type="BHD">
+				<displayName>Ndina wa Bahrene</displayName>
+			</currency>
+			<currency type="BIF">
+				<displayName>Nfalanga wa Bulundi</displayName>
+			</currency>
+			<currency type="BWP">
+				<displayName>Pula wa Botswana</displayName>
+			</currency>
+			<currency type="CAD">
+				<displayName>Ndola wa Kanada</displayName>
+			</currency>
+			<currency type="CDF">
+				<displayName>Nfalanga wa Kongu</displayName>
+				<symbol>FC</symbol>
+			</currency>
+			<currency type="CHF">
+				<displayName>Nfalanga wa Swise</displayName>
+			</currency>
+			<currency type="CNY">
+				<displayName>Yuani Renminbi wa Shine</displayName>
+			</currency>
+			<currency type="CVE">
+				<displayName>Esikuludo wa Kapevere</displayName>
+			</currency>
+			<currency type="DJF">
+				<displayName>Nfalanga wa Dzibuti</displayName>
+			</currency>
+			<currency type="DZD">
+				<displayName>Ndina wa Alijeri</displayName>
+			</currency>
+			<currency type="EGP">
+				<displayName>Pauni wa Mushidi</displayName>
+			</currency>
+			<currency type="ERN">
+				<displayName>Nakfa wa Elitle</displayName>
+			</currency>
+			<currency type="ETB">
+				<displayName>Bira wa Etshiopi</displayName>
+			</currency>
+			<currency type="EUR">
+				<displayName>Iro</displayName>
+			</currency>
+			<currency type="GBP">
+				<displayName>Pauni wa Angeletele</displayName>
+			</currency>
+			<currency type="GHC">
+				<displayName>Sedi wa Ngana</displayName>
+			</currency>
+			<currency type="GMD">
+				<displayName>Ndalasi wa Ngambi</displayName>
+			</currency>
+			<currency type="GNS">
+				<displayName>Nfalanga wa Ngina</displayName>
+			</currency>
+			<currency type="INR">
+				<displayName>Rupi wa Inde</displayName>
+			</currency>
+			<currency type="JPY">
+				<displayName>Yeni wa Zapɔ</displayName>
+			</currency>
+			<currency type="KES">
+				<displayName>Nshili wa Kenya</displayName>
+			</currency>
+			<currency type="KMF">
+				<displayName>Nfalanga wa Komoru</displayName>
+			</currency>
+			<currency type="LRD">
+				<displayName>Ndola wa Liberya</displayName>
+			</currency>
+			<currency type="LSL">
+				<displayName>Loti wa Lesoto</displayName>
+			</currency>
+			<currency type="LYD">
+				<displayName>Ndina wa Libi</displayName>
+			</currency>
+			<currency type="MAD">
+				<displayName>Ndiriha wa Maroke</displayName>
+			</currency>
+			<currency type="MGA">
+				<displayName>Nfalanga wa Madagasikare</displayName>
+			</currency>
+			<currency type="MRO">
+				<displayName>Ugwiya wa Moritani (1973–2017)</displayName>
+			</currency>
+			<currency type="MRU">
+				<displayName>Ugwiya wa Moritani</displayName>
+			</currency>
+			<currency type="MUR">
+				<displayName>Rupia wa Morisi</displayName>
+			</currency>
+			<currency type="MWK">
+				<displayName>Kwasha wa Malawi</displayName>
+			</currency>
+			<currency type="MZM">
+				<displayName>Metikali wa Mozambiki</displayName>
+			</currency>
+			<currency type="NAD">
+				<displayName>Ndola wa Namibi</displayName>
+			</currency>
+			<currency type="NGN">
+				<displayName>Naira wa Nizerya</displayName>
+			</currency>
+			<currency type="RWF">
+				<displayName>Nfalanga wa Rwanda</displayName>
+			</currency>
+			<currency type="SAR">
+				<displayName>Riyale wa Alabu Nsawu</displayName>
+			</currency>
+			<currency type="SCR">
+				<displayName>Rupya wa Seshele</displayName>
+			</currency>
+			<currency type="SDG">
+				<displayName>Ndina wa Suda</displayName>
+			</currency>
+			<currency type="SDP">
+				<displayName>Pauni wa Suda</displayName>
+			</currency>
+			<currency type="SHP">
+				<displayName>Pauni wa Santu Elena</displayName>
+			</currency>
+			<currency type="SLL">
+				<displayName>Leone</displayName>
+			</currency>
+			<currency type="SOS">
+				<displayName>Nshili wa Somali</displayName>
+			</currency>
+			<currency type="STD">
+				<displayName>Dobra wa Sao Tome ne Presipe (1977–2017)</displayName>
+			</currency>
+			<currency type="STN">
+				<displayName>Dobra wa Sao Tome ne Presipe</displayName>
+			</currency>
+			<currency type="SZL">
+				<displayName>Lilangeni</displayName>
+			</currency>
+			<currency type="TND">
+				<displayName>Ndina wa Tinizi</displayName>
+			</currency>
+			<currency type="TZS">
+				<displayName>Nshili wa Tanzani</displayName>
+			</currency>
+			<currency type="UGX">
+				<displayName>Nshili wa Uganda</displayName>
+			</currency>
+			<currency type="USD">
+				<displayName>Ndola wa Ameriki</displayName>
+			</currency>
+			<currency type="XAF">
+				<displayName>Nfalanga CFA BEAC</displayName>
+			</currency>
+			<currency type="XOF">
+				<displayName>Nfalanga CFA BCEAO</displayName>
+			</currency>
+			<currency type="ZAR">
+				<displayName>Rande wa Afrika wa Mwinshi</displayName>
+			</currency>
+			<currency type="ZMK">
+				<displayName>Kwasha wa Zambi (1968–2012)</displayName>
+			</currency>
+			<currency type="ZMW">
+				<displayName>Kwasha wa Zambi</displayName>
+			</currency>
+			<currency type="ZWD">
+				<displayName>Ndola wa Zimbabwe</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+	<posix>
+		<messages>
+			<yesstr>Eyo:E</yesstr>
+			<nostr>To:T</nostr>
+		</messages>
+	</posix>
+</ldml>

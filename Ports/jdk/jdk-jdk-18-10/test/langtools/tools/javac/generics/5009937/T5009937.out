@@ -1,0 +1,2 @@
+T5009937.java:16:21: compiler.err.name.clash.same.erasure.no.hide: m(T5009937<java.lang.Integer>), T5009937.B, m(T5009937<java.lang.String>), T5009937.A
+1 error

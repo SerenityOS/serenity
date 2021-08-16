@@ -1,0 +1,138 @@
+<html>
+<head>
+<title>
+Command line HSDB
+</title>
+</head>
+<body>
+
+<h1>Command line HSDB</h1>
+<p>
+When debugging remote core dumps it is easier to work with command line tools instead of
+GUI tools. Command line HSDB (CLHSDB) tool is alternative to SA GUI tool HSDB.
+</p>
+
+<p>
+There is also JavaScript based SA command line interface called <a href="jsdb.html">jsdb</a>.
+But, CLHSDB supports Unix shell-like (or dbx/gdb-like) command line interface with
+support for output redirection/appending (familiar &gt;, &gt;&gt;), command history and so on.
+Each CLHSDB command can have zero or more arguments and optionally end with output redirection
+(or append) to a file. Commands may be stored in a file and run using <b>source</b> command.
+<b>help</b> command prints usage message for all supported commands (or a specific command)
+</p>
+
+<h3>Shell/batch scripts to run command line HSDB</h3>
+
+<ul>
+<li>clhsdbproc.sh
+<li>clhsdbproc64.sh
+<li>clhsdbwindbg.bat
+<li>clhsdbwindbg64.bat
+</ul>
+
+<h3>Annotated output of CLHSDB help command</h3>
+
+<pre>
+<code>
+Available commands:
+  assert true | false <font color="red">turn on/off asserts in SA code</font>
+  attach pid | exec core | debugserver  <font color="red">attach SA to a process, core, or remote debug server</font>
+  buildreplayjars [all | boot | app] <font color="red">build jars for replay, boot.jar for bootclasses, app.jar for application classes</font>
+  class name <font color="red">find a Java class from debuggee and print oop</font>
+  classes <font color="red">print all loaded Java classes with Klass*</font>
+  detach <font color="red">detach SA from current target</font>
+  dis address [ length ]  <font color="red">disassemble (x86) specified number of instructions from given address</font>
+  dissemble address <font color="red">disassemble nmethod</font>
+  dumpcfg -a | id <font color="red">Dump the PhaseCFG for every compiler thread that has one live</font>
+  dumpclass { address | name } [ directory ] <font color="red">dump .class file for given Klass* or class name</font>
+  dumpcodecache <font color="red">dump codecache contents</font>
+  dumpheap [ file ] <font color="red">dump heap in hprof binary format</font>
+  dumpideal -a | id <font color="red">dump ideal graph like debug flag -XX:+PrintIdeal</font>
+  dumpilt -a | id <font color="red">dump inline tree for C2 compilation</font>
+  dumpreplaydata &lt;address&gt; | -a | &lt;thread_id&gt; [&gt;replay.txt] <font color="red">dump replay data into a file</font>
+  echo [ true | false ] <font color="red">turn on/off command echo mode</font>
+  examine [ address/count ] | [ address,address] <font color="red">show contents of memory from given address</font>
+  field [ type [ name fieldtype isStatic offset address ] ] <font color="red">print info about a field of HotSpot type</font>
+  findpc address <font color="red">print info about pointer location</font>
+  findsym name <font color="red">print address of symbol in the executable or shared library</font>
+  flags [ flag ] <font color="red">show all -XX flag name value pairs. or just show given flag</font>
+  help [ command ] <font color="red">print help message for all commands or just given command</font>
+  history <font color="red">show command history. usual !command-number syntax works.</font>
+  inspect expression <font color="red">inspect a given oop</font>
+  intConstant [ name [ value ] ] <font color="red">print out hotspot integer constant(s)</font>
+  jdis address <font color="red">show bytecode disassembly of a given Method*</font>
+  jhisto <font color="red">show Java heap histogram</font>
+  jseval script <font color="red">evaluate a given string as JavaScript code</font>
+  jsload file <font color="red">load and evaluate a JavaScript file</font>
+  jstack [-v] <font color="red">show Java stack trace of all Java threads. -v is verbose mode</font>
+  livenmethods <font color="red">show all live nmethods</font>
+  longConstant [ name [ value ] ] <font color="red">print out hotspot long constant(s)s</font>
+  mem address [ length ] <font color="red">show contents of memory -- also shows closest ELF/COFF symbol if found</font>
+  pmap <font color="red">show Solaris pmap-like output</font>
+  print expression <font color="red">print given Klass*, Method* or arbitrary address</font>
+  printas type expression <font color="red">print given address as given HotSpot type. eg. print JavaThread &lt;address&gt;</font>
+  printmdo -a | expression <font color="red">print method data oop</font>
+  printstatics [ type ] <font color="red">print static fields of given HotSpot type (or all types if none specified)</font>
+  pstack [-v] <font color="red">show mixed mode stack trace for all Java, non-Java threads. -v is verbose mode</font>
+  quit <font color="red">quit CLHSDB tool</font>
+  reattach <font color="red">detach and re-attach SA to current target</font>
+  revptrs  <font color="red">find liveness of oops</font>
+  scanoops start end [ type ] <font color="red">scan a Oop from given start to end address</font>
+  search [ heap | codecache | threads ] value <font color="red">search a value in heap or codecache or threads</font>
+  source filename <font color="red">load and execute CLHSDB commands from given file</font>
+  symbol name <font color="red">show address of a given ELF/COFF symbol</font>
+  sysprops <font color="red">show all Java System properties</font>
+  thread id <font color="red">show thread of id</font>
+  threads <font color="red">show all Java threads</font>
+  tokenize ...
+  type [ type [ name super isOop isInteger isUnsigned size ] ] <font color="red">show info. on HotSpot type</font>
+  universe <font color="red">print gc universe</font>
+  vmstructsdump <font color="red">dump hotspot type library in text</font>
+  verbose true | false <font color="red">turn on/off verbose mode</font>
+  versioncheck [ true | false ] <font color="red">turn on/off debuggee VM version check</font>
+  whatis address <font color="red">print info about any arbitrary address</font>
+  where { -a | id } <font color="red">print Java stack trace of given Java thread or all Java threads (-a)</font>
+</code>
+</pre>
+
+<h3>JavaScript integration</h3>
+
+<p>Few CLHSDB commands are already implemented in JavaScript. It is possible to extend CLHSDB command set
+by implementing more commands in a JavaScript file and by loading it by <b>jsload</b> command. <b>jseval</b>
+command may be used to evaluate arbitrary JavaScript expression from a string. Any JavaScript function
+may be exposed as a CLHSDB command by registering it using JavaScript <b><code>registerCommand</code></b>
+function. This function accepts command name, usage and name of the JavaScript implementation function
+as arguments.
+</p>
+
+<h3>Simple CLHSDB command implemented in JavaScript</h3>
+
+<b>File: test.js</b>
+<pre>
+<code>
+function helloImpl(name) {
+    println("hello, " + name);
+}
+
+// register the above JavaScript function as CLHSDB command
+registerCommand("hello", "hello name", "helloImpl");
+</code>
+</pre>
+---------<br>
+
+"test.js" can be loaded in CLHSDB prompt using <b>jsload</b> command using
+
+<pre>
+<code>
+hsdb&gt; jsload test.js
+</code>
+</pre>
+
+<h3>Compilation Replay</h3>
+<p>
+When a java process crashes in compiled method, usually a core file is saved.
+The replay function can reproduce the compiling process in the core.
+<a href="cireplay.html">cireplay.html</a>
+
+</body>
+</html>

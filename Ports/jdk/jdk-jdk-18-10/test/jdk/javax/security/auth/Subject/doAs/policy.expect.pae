@@ -1,0 +1,19 @@
+grant codeBase "file:NestedActionsPAE.jar" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "file:WriteToFileExceptionAction.jar"
+        Principal javax.security.auth.x500.X500Principal "cn=Duke" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "file:ReadFromFileExceptionAction.jar"
+        Principal javax.security.auth.x500.X500Principal "cn=Duke" {
+    permission java.security.AllPermission;
+};
+
+// this code has limited permissions that should cause ACE
+grant codeBase "file:ReadPropertyExceptionAction.jar"
+        Principal javax.security.auth.x500.X500Principal "cn=Duke" {
+    permission javax.security.auth.AuthPermission "getSubject";
+};

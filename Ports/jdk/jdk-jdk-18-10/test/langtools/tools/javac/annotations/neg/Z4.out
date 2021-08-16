@@ -1,0 +1,2 @@
+Z4.java:13:32: compiler.err.cant.resolve.location: kindname.variable, teal, , , (compiler.misc.location: kindname.class, Color, null)
+1 error

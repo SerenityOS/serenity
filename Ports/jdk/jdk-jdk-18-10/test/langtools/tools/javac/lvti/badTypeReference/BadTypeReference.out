@@ -1,0 +1,3 @@
+BadTypeReference.java:14:9: compiler.err.illegal.ref.to.restricted.type: var
+BadTypeReference.java:15:21: compiler.err.illegal.ref.to.restricted.type: var
+2 errors

@@ -1,0 +1,187 @@
+#
+# Copyright (c) 2018, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include LibCommon.gmk
+
+################################################################################
+
+
+ifeq ($(call isTargetOs, linux), true)
+  JPACKAGE_APPLAUNCHER_SRC := \
+      $(call FindSrcDirsForComponent, jdk.jpackage, applauncher)
+  JPACKAGE_APPLAUNCHER_TOOLCHAIN := TOOLCHAIN_DEFAULT
+  JPACKAGE_APPLAUNCHER_INCLUDE_FILES := %.c
+else
+  JPACKAGE_APPLAUNCHER_SRC := \
+      $(call FindSrcDirsForComponent, jdk.jpackage, applauncher) \
+      $(call FindSrcDirsForComponent, jdk.jpackage, common)
+  JPACKAGE_APPLAUNCHER_TOOLCHAIN := TOOLCHAIN_LINK_CXX
+endif
+
+
+ifeq ($(call isTargetOs, windows), true)
+  JpackageWithStaticCrt = \
+      $(filter-out -MD, $1) -MT
+else
+  JpackageWithStaticCrt = \
+      $1
+endif
+
+
+JPACKAGE_OUTPUT_DIR := $(JDK_OUTPUTDIR)/modules/$(MODULE)/jdk/jpackage/internal/resources
+JPACKAGE_CXXFLAGS_windows := -EHsc -DUNICODE -D_UNICODE
+JPACKAGE_CFLAGS_windows := -DUNICODE -D_UNICODE
+JPACKAGE_APPLAUNCHER_INCLUDES := $(addprefix -I, $(JPACKAGE_APPLAUNCHER_SRC))
+
+# Output app launcher executable in resources dir, and symbols in the object dir
+$(eval $(call SetupJdkExecutable, BUILD_JPACKAGE_APPLAUNCHEREXE, \
+    NAME := jpackageapplauncher, \
+    OUTPUT_DIR := $(JPACKAGE_OUTPUT_DIR), \
+    SYMBOLS_DIR := $(SUPPORT_OUTPUTDIR)/native/$(MODULE)/jpackageapplauncher, \
+    SRC := $(JPACKAGE_APPLAUNCHER_SRC), \
+    INCLUDE_FILES := $(JPACKAGE_APPLAUNCHER_INCLUDE_FILES), \
+    TOOLCHAIN := $(JPACKAGE_APPLAUNCHER_TOOLCHAIN), \
+    OPTIMIZATION := LOW, \
+    CXXFLAGS := $(call JpackageWithStaticCrt, $(CXXFLAGS_JDKEXE)) \
+        $(JPACKAGE_APPLAUNCHER_INCLUDES), \
+    CFLAGS := $(call JpackageWithStaticCrt, $(CFLAGS_JDKEXE)) \
+        $(JPACKAGE_APPLAUNCHER_INCLUDES), \
+    CFLAGS_macosx := -Wno-format-nonliteral, \
+    CXXFLAGS_windows := $(JPACKAGE_CXXFLAGS_windows), \
+    CFLAGS_windows := $(JPACKAGE_CFLAGS_windows), \
+    LDFLAGS := $(LDFLAGS_JDKEXE), \
+    LIBS_macosx := $(LIBCXX) -framework Cocoa, \
+    LIBS_windows := $(LIBCXX), \
+    LIBS_linux := -ldl, \
+))
+
+JPACKAGE_TARGETS += $(BUILD_JPACKAGE_APPLAUNCHEREXE)
+
+
+################################################################################
+
+ifeq ($(call isTargetOs, linux), true)
+
+  JPACKAGE_LIBAPPLAUNCHER_SRC := \
+      $(call FindSrcDirsForComponent, jdk.jpackage, applauncher) \
+      $(call FindSrcDirsForComponent, jdk.jpackage, libapplauncher) \
+      $(call FindSrcDirsForComponent, jdk.jpackage, common)
+
+  JPACKAGE_LIBAPPLAUNCHER_INCLUDES := $(addprefix -I, $(JPACKAGE_LIBAPPLAUNCHER_SRC))
+
+  $(eval $(call SetupJdkLibrary, BUILD_JPACKAGE_LIBAPPLAUNCHER, \
+      NAME := jpackageapplauncher, \
+      OUTPUT_DIR := $(JPACKAGE_OUTPUT_DIR), \
+      SYMBOLS_DIR := $(SUPPORT_OUTPUTDIR)/native/$(MODULE)/libjpackageapplauncher, \
+      SRC := $(JPACKAGE_LIBAPPLAUNCHER_SRC), \
+      EXCLUDE_FILES := LinuxLauncher.c LinuxPackage.c, \
+      TOOLCHAIN := TOOLCHAIN_LINK_CXX, \
+      OPTIMIZATION := LOW, \
+      CXXFLAGS := $(CXXFLAGS_JDKLIB) $(JPACKAGE_LIBAPPLAUNCHER_INCLUDES), \
+      CFLAGS := $(CFLAGS_JDKLIB) $(JPACKAGE_LIBAPPLAUNCHER_INCLUDES), \
+      LDFLAGS := $(LDFLAGS_JDKLIB), \
+      LIBS := $(LIBCXX) -ldl, \
+  ))
+
+  JPACKAGE_TARGETS += $(BUILD_JPACKAGE_LIBAPPLAUNCHER)
+
+endif
+
+
+################################################################################
+
+ifeq ($(call isTargetOs, windows), true)
+
+  $(eval $(call SetupJdkLibrary, BUILD_LIB_JPACKAGE, \
+      NAME := jpackage, \
+      OPTIMIZATION := LOW, \
+      EXTRA_SRC := jdk.jpackage:common, \
+      CXXFLAGS := $(CXXFLAGS_JDKLIB) $(JPACKAGE_CXXFLAGS_windows), \
+      LDFLAGS := $(LDFLAGS_JDKLIB) $(LDFLAGS_CXX_JDK) \
+          $(call SET_SHARED_LIBRARY_ORIGIN), \
+      LIBS := $(LIBCXX), \
+  ))
+
+  JPACKAGE_TARGETS += $(BUILD_LIB_JPACKAGE)
+
+  # Build Wix custom action helper
+  # Output library in resources dir, and symbols in the object dir
+  $(eval $(call SetupJdkLibrary, BUILD_LIB_WIXHELPER, \
+      NAME := wixhelper, \
+      OUTPUT_DIR := $(JPACKAGE_OUTPUT_DIR), \
+      SYMBOLS_DIR := $(SUPPORT_OUTPUTDIR)/native/$(MODULE)/libwixhelper, \
+      OPTIMIZATION := LOW, \
+      CXXFLAGS := $(call JpackageWithStaticCrt, $(CXXFLAGS_JDKLIB)) \
+          $(JPACKAGE_CXXFLAGS_windows), \
+      LDFLAGS := $(LDFLAGS_JDKLIB) $(LDFLAGS_CXX_JDK), \
+      LIBS := $(LIBCXX), \
+      LIBS_windows := msi.lib Shlwapi.lib User32.lib, \
+  ))
+
+  JPACKAGE_TARGETS += $(BUILD_LIB_WIXHELPER)
+
+  JPACKAGE_MSIWRAPPER_SRC := \
+      $(call FindSrcDirsForComponent, jdk.jpackage, msiwrapper) \
+      $(call FindSrcDirsForComponent, jdk.jpackage, common)
+
+  # Build exe installer wrapper for msi installer
+  $(eval $(call SetupJdkExecutable, BUILD_JPACKAGE_MSIWRAPPER, \
+      NAME := msiwrapper, \
+      OUTPUT_DIR := $(JPACKAGE_OUTPUT_DIR), \
+      SYMBOLS_DIR := $(SUPPORT_OUTPUTDIR)/native/$(MODULE)/msiwrapper, \
+      SRC := $(JPACKAGE_MSIWRAPPER_SRC), \
+      CXXFLAGS := $(call JpackageWithStaticCrt, $(CXXFLAGS_JDKEXE)) \
+          $(addprefix -I, $(JPACKAGE_MSIWRAPPER_SRC)) $(JPACKAGE_CXXFLAGS_windows), \
+      LDFLAGS := $(LDFLAGS_JDKEXE), \
+      LIBS := $(LIBCXX), \
+  ))
+
+  JPACKAGE_TARGETS += $(BUILD_JPACKAGE_MSIWRAPPER)
+
+  # Build non-console version of launcher
+  $(eval $(call SetupJdkExecutable, BUILD_JPACKAGE_APPLAUNCHERWEXE, \
+      NAME := jpackageapplauncherw, \
+      OUTPUT_DIR := $(JPACKAGE_OUTPUT_DIR), \
+      SYMBOLS_DIR := $(SUPPORT_OUTPUTDIR)/native/$(MODULE)/jpackageapplauncherw, \
+      SRC := $(BUILD_JPACKAGE_APPLAUNCHEREXE_SRC), \
+      TOOLCHAIN := $(BUILD_JPACKAGE_APPLAUNCHEREXE_TOOLCHAIN), \
+      OPTIMIZATION := $(BUILD_JPACKAGE_APPLAUNCHEREXE_OPTIMIZATION), \
+      CXXFLAGS := $(BUILD_JPACKAGE_APPLAUNCHEREXE_CXXFLAGS), \
+      CXXFLAGS_windows := $(BUILD_JPACKAGE_APPLAUNCHEREXE_CXXFLAGS_windows) -DJP_LAUNCHERW, \
+      CFLAGS := $(BUILD_JPACKAGE_APPLAUNCHEREXE_CFLAGS), \
+      CFLAGS_windows := $(BUILD_JPACKAGE_APPLAUNCHEREXE_CFLAGS_windows) -DJP_LAUNCHERW, \
+      LDFLAGS := $(BUILD_JPACKAGE_APPLAUNCHEREXE_LDFLAGS), \
+      LIBS := $(BUILD_JPACKAGE_APPLAUNCHEREXE_LIBS), \
+      LIBS_windows := $(BUILD_JPACKAGE_APPLAUNCHEREXE_LIBS_windows), \
+  ))
+
+  JPACKAGE_TARGETS += $(BUILD_JPACKAGE_APPLAUNCHERWEXE)
+
+endif
+
+
+TARGETS += $(JPACKAGE_TARGETS)
+
+$(JPACKAGE_TARGETS): $(call FindLib, java.base, java)

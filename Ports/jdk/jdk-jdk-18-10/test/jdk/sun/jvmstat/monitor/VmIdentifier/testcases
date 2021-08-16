@@ -1,0 +1,692 @@
+<VmIdentifierTests>
+
+<testcase id="0" VmIdentifierInput="0">
+<description>
+pid resolved to local protocol on local host.
+</description>
+<VmIdentifier> //0 </VmIdentifier>
+<HostIdentifier> local://localhost </HostIdentifier>
+<Resolved> local://0@localhost </Resolved>
+</testcase>
+
+<testcase id="1" VmIdentifierInput="//0">
+<description>
+//pid resolved to local protocol on local host
+</description>
+<VmIdentifier> //0 </VmIdentifier>
+<HostIdentifier> local://localhost </HostIdentifier>
+<Resolved> local://0@localhost </Resolved>
+</testcase>
+
+<testcase id="2" VmIdentifierInput="local://0">
+<description>
+local://pid resolved to local protocol on local host
+</description>
+<VmIdentifier> local://0 </VmIdentifier>
+<HostIdentifier> local://localhost </HostIdentifier>
+<Resolved> local://0@localhost </Resolved>
+</testcase>
+
+<testcase id="3" VmIdentifierInput="//0@localhost">
+<description>
+//pid@localhost resolved to rmi protocol on local host
+</description>
+<VmIdentifier> //0@localhost </VmIdentifier>
+<HostIdentifier> rmi://localhost </HostIdentifier>
+<Resolved> rmi://0@localhost </Resolved>
+</testcase>
+
+<testcase id="4" VmIdentifierInput="local://0@localhost">
+<description>
+local://pid@localhost resolved to local protocol on local host
+</description>
+<VmIdentifier> local://0@localhost </VmIdentifier>
+<HostIdentifier> local://localhost </HostIdentifier>
+<Resolved> local://0@localhost </Resolved>
+</testcase>
+
+
+/* START dotted ip address tests */
+
+<testcase id="5" VmIdentifierInput="0@10.0.0.1">
+<description>
+pid@dotted_ip_address resolved to rmi protocol on specified ip
+</description>
+<VmIdentifier> //0@10.0.0.1 </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1 </HostIdentifier>
+<Resolved> rmi://0@10.0.0.1 </Resolved>
+</testcase>
+
+<testcase id="6" VmIdentifierInput="//0@10.0.0.1">
+<description>
+//pid@dotted_ip_address resolved to rmi protocol on specified ip
+</description>
+<VmIdentifier> //0@10.0.0.1 </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1 </HostIdentifier>
+<Resolved> rmi://0@10.0.0.1 </Resolved>
+</testcase>
+
+<testcase id="7" VmIdentifierInput="rmi://0@10.0.0.1">
+<description>
+rmi://pid@dotted_ip_address resolved to rmi protocol on specified ip
+</description>
+<VmIdentifier> rmi://0@10.0.0.1 </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1 </HostIdentifier>
+<Resolved> rmi://0@10.0.0.1 </Resolved>
+</testcase>
+
+<testcase id="8" VmIdentifierInput="0@10.0.0.1:1099">
+<description>
+pid@dotted_ip_address:port resolved to rmi protocol on specified host:port
+</description>
+<VmIdentifier> //0@10.0.0.1:1099 </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1:1099 </HostIdentifier> /* FIXME - verify */
+<Resolved> rmi://0@10.0.0.1:1099 </Resolved>
+</testcase>
+
+<testcase id="9" VmIdentifierInput="//0@10.0.0.1:1098">
+<description>
+//pid@dotted_ip_address:port resolved to rmi protocol on specified host:port
+</description>
+<VmIdentifier> //0@10.0.0.1:1098 </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1:1098 </HostIdentifier> /* FIXME - verify */
+<Resolved> rmi://0@10.0.0.1:1098 </Resolved>
+</testcase>
+
+<testcase id="10" VmIdentifierInput="rmi://0@10.0.0.1:1112">
+<description>
+rmi://pid@dotted_ip_address:port resolved to rmi protocol on specified host:port
+</description>
+<VmIdentifier> rmi://0@10.0.0.1:1112 </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1:1112 </HostIdentifier> /* FIXME - verify */
+<Resolved> rmi://0@10.0.0.1:1112 </Resolved>
+</testcase>
+
+<testcase id="11" VmIdentifierInput="0@10.0.0.1:1099/HotSpotPerfAgent">
+<description>
+pid@dotted_ip_address:port/path resolved to rmi protocol on specified
+host:port with specified path.
+</description>
+<VmIdentifier> //0@10.0.0.1:1099/HotSpotPerfAgent </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1:1099/HotSpotPerfAgent </HostIdentifier>
+<Resolved> rmi://0@10.0.0.1:1099/HotSpotPerfAgent </Resolved>
+</testcase>
+
+<testcase id="12" VmIdentifierInput="//0@10.0.0.1:1099/HotSpotPerfAgent">
+<description>
+//pid@dotted_ip_address:port/path resolved to rmi protocol on specified
+host:port with specified path.
+</description>
+<VmIdentifier> //0@10.0.0.1:1099/HotSpotPerfAgent </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1:1099/HotSpotPerfAgent </HostIdentifier>
+<Resolved> rmi://0@10.0.0.1:1099/HotSpotPerfAgent </Resolved>
+</testcase>
+
+<testcase id="13" VmIdentifierInput="rmi://0@10.0.0.1:1099/HotSpotPerfAgent">
+<description>
+rmi://pid@dotted_ip_address:port/path resolved to rmi protocol on
+specified host:port with specified path.
+</description>
+<VmIdentifier> rmi://0@10.0.0.1:1099/HotSpotPerfAgent </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1:1099/HotSpotPerfAgent </HostIdentifier>
+<Resolved> rmi://0@10.0.0.1:1099/HotSpotPerfAgent </Resolved>
+</testcase>
+
+<testcase id="14" VmIdentifierInput="0@10.0.0.1:1099?interval=1234">
+<description>
+pid@dotted_ip_address:port?query resolved to rmi protocol on
+specified host:port with specified query string.
+</description>
+<VmIdentifier> //0@10.0.0.1:1099?interval=1234 </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1:1099?interval=1234 </HostIdentifier>
+<Resolved> rmi://0@10.0.0.1:1099?interval=1234 </Resolved>
+</testcase>
+
+<testcase id="15" VmIdentifierInput="//0@10.0.0.1:1099?interval=1234">
+<description>
+//pid@dotted_ip_address:port?query resolved to rmi protocol on
+specified host:port with specified query string.
+</description>
+<VmIdentifier> //0@10.0.0.1:1099?interval=1234 </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1:1099?interval=1234 </HostIdentifier>
+<Resolved> rmi://0@10.0.0.1:1099?interval=1234 </Resolved>
+</testcase>
+
+<testcase id="16" VmIdentifierInput="rmi://0@10.0.0.1:1099?interval=1234">
+<description>
+rmi://pid@dotted_ip_address:port?query resolved to rmi protocol on
+specified host:port with specified query string.
+</description>
+<VmIdentifier> rmi://0@10.0.0.1:1099?interval=1234 </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1:1099?interval=1234 </HostIdentifier>
+<Resolved> rmi://0@10.0.0.1:1099?interval=1234 </Resolved>
+</testcase>
+
+<testcase id="17" VmIdentifierInput="0@10.0.0.1:1099#frag">
+<description>
+pid@dotted_ip_address:port#frag resolved to rmi protocol on
+ specified host:port with specified fragment string.
+</description>
+<VmIdentifier> //0@10.0.0.1:1099#frag </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1:1099#frag </HostIdentifier>
+<Resolved> rmi://0@10.0.0.1:1099#frag </Resolved>
+</testcase>
+
+<testcase id="18" VmIdentifierInput="//0@10.0.0.1:1099#frag">
+<description>
+//pid@dotted_ip_address:port#frag resolved to rmi protocol on
+specified host:port with specified fragment string.
+</description>
+<VmIdentifier> //0@10.0.0.1:1099#frag </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1:1099#frag </HostIdentifier>
+<Resolved> rmi://0@10.0.0.1:1099#frag </Resolved>
+</testcase>
+
+<testcase id="19" VmIdentifierInput="rmi://0@10.0.0.1:1099#frag">
+<description>
+rmi://pid@dotted_ip_address:port#frag resolved to rmi protocol
+on specified host:port with specified fragment string.
+</description>
+<VmIdentifier> rmi://0@10.0.0.1:1099#frag </VmIdentifier>
+<HostIdentifier> rmi://10.0.0.1:1099#frag </HostIdentifier>
+<Resolved> rmi://0@10.0.0.1:1099#frag </Resolved>
+</testcase>
+
+/* END dotted ip address tests */
+
+/* START hostname tests */
+
+<testcase id="20" VmIdentifierInput="0@hostname">
+<description>
+pid@hostname resolved to rmi protocol on specified host
+</description>
+<VmIdentifier> //0@hostname </VmIdentifier>
+<HostIdentifier> rmi://hostname </HostIdentifier>
+<Resolved> rmi://0@hostname </Resolved>
+</testcase>
+
+<testcase id="21" VmIdentifierInput="//0@hostname">
+<description>
+//pid@hostname resolved to rmi protocol on specified host
+</description>
+<VmIdentifier> //0@hostname </VmIdentifier>
+<HostIdentifier> rmi://hostname </HostIdentifier>
+<Resolved> rmi://0@hostname </Resolved>
+</testcase>
+
+<testcase id="22" VmIdentifierInput="rmi://0@hostname">
+<description>
+rmi://pid@hostname resolved to rmi protocol on specified host
+</description>
+<VmIdentifier> rmi://0@hostname </VmIdentifier>
+<HostIdentifier> rmi://hostname </HostIdentifier> /* FIXME - verify */
+<Resolved> rmi://0@hostname </Resolved>
+</testcase>
+
+<testcase id="23" VmIdentifierInput="0@hostname:1099">
+<description>
+pid@hostname:port resolved to rmi protocol on specified host:port
+</description>
+<VmIdentifier> //0@hostname:1099 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099 </HostIdentifier> /* FIXME - verify */
+<Resolved> rmi://0@hostname:1099 </Resolved>
+</testcase>
+
+<testcase id="24" VmIdentifierInput="//0@hostname:1099">
+<description>
+//pid@hostname:port resolved to rmi protocol on specified host:port
+</description>
+<VmIdentifier> //0@hostname:1099 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099 </HostIdentifier> /* FIXME - verify */
+<Resolved> rmi://0@hostname:1099 </Resolved>
+</testcase>
+
+<testcase id="25" VmIdentifierInput="rmi://0@hostname:1099">
+<description>
+rmi://pid@hostname:port resolved to rmi protocol on specified host:port
+</description>
+<VmIdentifier> rmi://0@hostname:1099 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099 </HostIdentifier>
+<Resolved> rmi://0@hostname:1099 </Resolved>
+</testcase>
+
+<testcase id="26" VmIdentifierInput="0@hostname:1099/HotSpotPerfAgent">
+<description>
+pid@hostname:port/path resolved to rmi protocol on specified host:port
+with specified path.
+</description>
+<VmIdentifier> //0@hostname:1099/HotSpotPerfAgent </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent </Resolved>
+</testcase>
+
+<testcase id="27" VmIdentifierInput="//0@hostname:1099/HotSpotPerfAgent">
+<description>
+//pid@hostname:port/path resolved to rmi protocol on specified host:port
+with specified path.
+</description>
+<VmIdentifier> //0@hostname:1099/HotSpotPerfAgent </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent </Resolved>
+</testcase>
+
+<testcase id="28" VmIdentifierInput="rmi://0@hostname:1099/HotSpotPerfAgent">
+<description>
+rmi://pid@hostname:port/path resolved to rmi protocol on specified host:port
+with specified path.
+</description>
+<VmIdentifier> rmi://0@hostname:1099/HotSpotPerfAgent </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent </Resolved>
+</testcase>
+
+<testcase id="29" VmIdentifierInput="0@hostname:1099?interval=1234">
+<description>
+pid@hostname:port?query resolved to rmi protocol on specified host:port
+with specified query string.
+</description>
+<VmIdentifier> //0@hostname:1099?interval=1234 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099?interval=1234 </HostIdentifier>
+<Resolved> rmi://0@hostname:1099?interval=1234 </Resolved>
+</testcase>
+
+<testcase id="30" VmIdentifierInput="//0@hostname:1099?interval=1234">
+<description>
+//pid@hostname:port?query resolved to rmi protocol on specified host:port
+with specified query string.
+</description>
+<VmIdentifier> //0@hostname:1099?interval=1234 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099?interval=1234 </HostIdentifier>
+<Resolved> rmi://0@hostname:1099?interval=1234 </Resolved>
+</testcase>
+
+<testcase id="31" VmIdentifierInput="rmi://0@hostname:1099?interval=1234">
+<description>
+rmi://pid@hostname:port?query resolved to rmi protocol on specified host:port
+with specified query string.
+</description>
+<VmIdentifier> rmi://0@hostname:1099?interval=1234 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099?interval=1234 </HostIdentifier>
+<Resolved> rmi://0@hostname:1099?interval=1234 </Resolved>
+</testcase>
+
+<testcase id="32" VmIdentifierInput="0@hostname:1099#frag">
+<description>
+pid@hostname:port#frag resolved to rmi protocol on specified host:port
+with specified fragment string.
+</description>
+<VmIdentifier> //0@hostname:1099#frag </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099#frag </HostIdentifier>
+<Resolved> rmi://0@hostname:1099#frag </Resolved>
+</testcase>
+
+<testcase id="33" VmIdentifierInput="//0@hostname:1099#frag">
+<description>
+//pid@hostname:port#frag resolved to rmi protocol on specified host:port
+with specified fragment string.
+</description>
+<VmIdentifier> //0@hostname:1099#frag </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099#frag </HostIdentifier>
+<Resolved> rmi://0@hostname:1099#frag </Resolved>
+</testcase>
+
+<testcase id="34" VmIdentifierInput="rmi://0@hostname:1099#frag">
+<description>
+rmi://pid@hostname:port#frag resolved to rmi protocol on specified host:port
+with specified fragment string.
+</description>
+<VmIdentifier> rmi://0@hostname:1099#frag </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099#frag </HostIdentifier>
+<Resolved> rmi://0@hostname:1099#frag </Resolved>
+</testcase>
+
+/* the remainder of the hostname tests don't have corresponding
+ * dotted-ip-address tests. 
+ *
+
+<testcase id="35" VmIdentifierInput="0@hostname:1099/HotSpotPerfAgent?interval=200">
+<description>
+pid@hostname:port/path?query resolved to rmi protocol on specified
+host:port with specified path and query string.
+</description>
+<VmIdentifier> //0@hostname:1099/HotSpotPerfAgent?interval=200 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent?interval=200 </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200 </Resolved>
+</testcase>
+
+<testcase id="36" VmIdentifierInput="//0@hostname:1099/HotSpotPerfAgent?interval=200">
+<description>
+//pid@hostname:port/path?query resolved to rmi protocol on specified
+host:port with specified path and query string.
+</description>
+<VmIdentifier> //0@hostname:1099/HotSpotPerfAgent?interval=200 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent?interval=200 </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200 </Resolved>
+</testcase>
+
+<testcase id="37" VmIdentifierInput="rmi://0@hostname:1099/HotSpotPerfAgent?interval=200">
+<description>
+rmi://pid@hostname:port/path?query resolved to rmi protocol on specified
+host:port with specified path and query string.
+</description>
+<VmIdentifier> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent?interval=200 </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200 </Resolved>
+</testcase>
+
+<testcase id="38" VmIdentifierInput="0@hostname:1099/HotSpotPerfAgent#frag">
+<description>
+pid@hostname:port/path#frag resolved to rmi protocol on specified
+host:port with specified path and frag string.
+</description>
+<VmIdentifier> //0@hostname:1099/HotSpotPerfAgent#frag </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent#frag </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent#frag </Resolved>
+</testcase>
+
+<testcase id="39" VmIdentifierInput="//0@hostname:1099/HotSpotPerfAgent#frag">
+<description>
+//pid@hostname:port/path#frag resolved to rmi protocol on specified
+host:port with specified path and frag string.
+</description>
+<VmIdentifier> //0@hostname:1099/HotSpotPerfAgent#frag </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent#frag </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent#frag </Resolved>
+</testcase>
+
+<testcase id="40" VmIdentifierInput="rmi://0@hostname:1099/HotSpotPerfAgent#frag">
+<description>
+rmi://pid@hostname:port/path#frag resolved to rmi protocol on specified
+host:port with specified path and frag string.
+</description>
+<VmIdentifier> rmi://0@hostname:1099/HotSpotPerfAgent#frag </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent#frag </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent#frag </Resolved>
+</testcase>
+
+<testcase id="41" VmIdentifierInput="0@hostname:1099/HotSpotPerfAgent?interval=200#frag">
+<description>
+pid@hostname:port/path?query#frag resolved to rmi protocol on specified
+host:port with specified path, query, and frag string.
+</description>
+<VmIdentifier> //0@hostname:1099/HotSpotPerfAgent?interval=200#frag </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent?interval=200#frag </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200#frag </Resolved>
+</testcase>
+
+<testcase id="42" VmIdentifierInput="//0@hostname:1099/HotSpotPerfAgent?interval=200#frag">
+<description>
+//pid@hostname:port/path?query#frag resolved to rmi protocol on specified
+host:port with specified path, query, and frag string.
+</description>
+<VmIdentifier> //0@hostname:1099/HotSpotPerfAgent?interval=200#frag </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent?interval=200#frag </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200#frag </Resolved>
+</testcase>
+
+<testcase id="43" VmIdentifierInput="rmi://0@hostname:1099/HotSpotPerfAgent?interval=200#frag">
+<description>
+rmi://pid@hostname:port/path?query#frag resolved to rmi protocol on specified
+host:port with specified path, query, and frag string.
+</description>
+<VmIdentifier> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200#frag </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent?interval=200#frag </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200#frag </Resolved>
+</testcase>
+
+<testcase id="44" VmIdentifierInput="0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw">
+<description>
+pid@hostname:port/path?query resolved to rmi protocol on specified
+host:port with specified path and multiple query string args.
+</description>
+<VmIdentifier> //0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent?interval=200+mode=rw </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw </Resolved>
+</testcase>
+
+<testcase id="45" VmIdentifierInput="//0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw">
+<description>
+//pid@hostname:port/path?query resolved to rmi protocol on specified
+host:port with specified path and multiple query string args.
+</description>
+<VmIdentifier> //0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent?interval=200+mode=rw </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw </Resolved>
+</testcase>
+
+<testcase id="46" VmIdentifierInput="rmi://0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw">
+<description>
+rmi://pid@hostname:port/path?query resolved to rmi protocol on specified
+host:port with specified path and multiple query string args.
+</description>
+<VmIdentifier> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent?interval=200+mode=rw </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw </Resolved>
+</testcase>
+
+<testcase id="47" VmIdentifierInput="0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw#frag">
+<description>
+pid@hostname:port/path?query#frag resolved to rmi protocol on specified
+host:port with specified path, multiple query string args, and a frag.
+</description>
+<VmIdentifier> //0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw#frag </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent?interval=200+mode=rw#frag </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw#frag </Resolved>
+</testcase>
+
+<testcase id="48" VmIdentifierInput="//0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw#frag">
+<description>
+//pid@hostname:port/path?query resolved to rmi protocol on specified
+host:port with specified path, multiple query string args, and a frag.
+</description>
+<VmIdentifier> //0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw#frag </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent?interval=200+mode=rw#frag </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw#frag </Resolved>
+</testcase>
+
+<testcase id="49" VmIdentifierInput="rmi://0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw#frag">
+<description>
+rmi://pid@hostname:port/path?query resolved to rmi protocol on specified
+host:port with specified path,and multiple query string args, and a frag.
+</description>
+<VmIdentifier> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw#frag </VmIdentifier>
+<HostIdentifier> rmi://hostname:1099/HotSpotPerfAgent?interval=200+mode=rw#frag </HostIdentifier>
+<Resolved> rmi://0@hostname:1099/HotSpotPerfAgent?interval=200+mode=rw#frag </Resolved>
+</testcase>
+
+/* END hostname tests */
+
+/* START protocol override tests */
+
+<testcase id="50" VmIdentifierInput="rmi://0">
+<description>
+rmi://pid overrides local protocol on localhost
+</description>
+<VmIdentifier> rmi://0 </VmIdentifier>
+<HostIdentifier> rmi://localhost </HostIdentifier>
+<Resolved> rmi://0@localhost </Resolved>
+</testcase>
+
+<testcase id="51" VmIdentifierInput="xyz://0">
+<description>
+protocol://pid overrides local protocol on localhost 
+</description>
+<VmIdentifier> xyz://0 </VmIdentifier>
+<HostIdentifier> xyz://localhost </HostIdentifier>
+<Resolved> xyz://0@localhost </Resolved>
+</testcase>
+
+<testcase id="52" VmIdentifierInput="xyz://0@10.0.0.1">
+<description>
+protocol://pid@dotted_ip_address overrides rmi protocol on specified address 
+</description>
+<VmIdentifier> xyz://0@10.0.0.1 </VmIdentifier>
+<HostIdentifier> xyz://10.0.0.1 </HostIdentifier>
+<Resolved> xyz://0@10.0.0.1 </Resolved>
+</testcase>
+
+<testcase id="53" VmIdentifierInput="xyz://0@hostname">
+<description>
+protocol://pid@hostname overrides rmi protocol on specified host 
+</description>
+<VmIdentifier> xyz://0@hostname </VmIdentifier>
+<HostIdentifier> xyz://hostname </HostIdentifier>
+<Resolved> xyz://0@hostname </Resolved>
+</testcase>
+
+/* END protocol override tests */
+
+/* START file:// URI tests */
+
+<testcase id="54" VmIdentifierInput="file:///tmp/hsperfdata_123">
+<description>
+file://path_to_file (note, file:///path/to/file)
+FIXME - verify: proven to work on unix
+</description>
+<VmIdentifier> file:///tmp/hsperfdata_123 </VmIdentifier>
+<HostIdentifier> file://localhost </HostIdentifier>
+<Resolved> file:///tmp/hsperfdata_123 </Resolved>
+</testcase>
+
+<testcase id="55" VmIdentifierInput="file:/tmp/hsperfdata_123">
+<description>
+file:path_to_file (note, file:/path/to/file)
+FIXME - verify: proven to work on unix
+</description>
+<VmIdentifier> file:/tmp/hsperfdata_123 </VmIdentifier>
+<HostIdentifier> file://localhost </HostIdentifier>
+<Resolved> file:/tmp/hsperfdata_123 </Resolved>
+</testcase>
+
+/* END file:// URI tests */
+
+/* Resolver tests */
+
+<testcase id="56" VmIdentifierInput="0" HostIdentifierInput="rmi://localhost">
+<description>
+pid resolved to prototol and host specified in given HostIdentifer
+</description>
+<VmIdentifier> //0 </VmIdentifier>
+<HostIdentifier> rmi://localhost </HostIdentifier>
+<Resolved> rmi://0@localhost </Resolved>
+</testcase>
+
+<testcase id="57" VmIdentifierInput="0@hostname:1199" HostIdentifierInput="rmi://localhost">
+<description>
+pid@hostname:port resolved to HostIdentifier protocol, but VmIdentifier host and port 
+</description>
+<VmIdentifier> //0@hostname:1199 </VmIdentifier>
+<HostIdentifier> rmi://localhost </HostIdentifier>
+<Resolved> rmi://0@hostname:1199 </Resolved>
+</testcase>
+
+<testcase id="58" VmIdentifierInput="0@hostname" HostIdentifierInput="rmi://localhost:1399">
+<description>
+pid@hostname resolved to HostIdentifier protocol and port, but VmIdentifier host
+</description>
+<VmIdentifier> //0@hostname </VmIdentifier>
+<HostIdentifier> rmi://localhost:1399 </HostIdentifier>
+<Resolved> rmi://0@hostname:1399 </Resolved>
+</testcase>
+
+<testcase id="59" VmIdentifierInput="0" HostIdentifierInput="rmi://hostname">
+<description>
+pid resolved to prototol and host specified in given HostIdentifer
+</description>
+<VmIdentifier> //0 </VmIdentifier>
+<HostIdentifier> rmi://hostname </HostIdentifier>
+<Resolved> rmi://0@hostname </Resolved>
+</testcase>
+
+<testcase id="60" VmIdentifierInput="0" HostIdentifierInput="rmi://hostname:1332/HotSpotPerfAgent">
+<description>
+pid resolved to prototol and host specified in given HostIdentifer
+</description>
+<VmIdentifier> //0 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1332/HotSpotPerfAgent </HostIdentifier>
+<Resolved> rmi://0@hostname:1332/HotSpotPerfAgent </Resolved>
+</testcase>
+
+<testcase id="61" VmIdentifierInput="0@hostname:1331" HostIdentifierInput="rmi://hostname:1332/HotSpotPerfAgent">
+<description>
+pid resolved to prototol and host specified in given HostIdentifer
+</description>
+<VmIdentifier> //0@hostname:1331 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1332/HotSpotPerfAgent </HostIdentifier>
+<Resolved> rmi://0@hostname:1331/HotSpotPerfAgent </Resolved>
+</testcase>
+
+<testcase id="62" VmIdentifierInput="0@hostname:1331/HotSpotPerfAgent2" HostIdentifierInput="rmi://hostname:1332/HotSpotPerfAgent">
+<description>
+pid resolved to prototol and host specified in given HostIdentifer
+</description>
+<VmIdentifier> //0@hostname:1331/HotSpotPerfAgent2 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1332/HotSpotPerfAgent </HostIdentifier>
+<Resolved> rmi://0@hostname:1331/HotSpotPerfAgent2 </Resolved>
+</testcase>
+
+<testcase id="63" VmIdentifierInput="0@hostname:1331/HotSpotPerfAgent2?interval=250" HostIdentifierInput="rmi://hostname:1332/HotSpotPerfAgent">
+<description>
+pid resolved to prototol and host specified in given HostIdentifer
+</description>
+<VmIdentifier> //0@hostname:1331/HotSpotPerfAgent2?interval=250 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1332/HotSpotPerfAgent </HostIdentifier>
+<Resolved> rmi://0@hostname:1331/HotSpotPerfAgent2?interval=250 </Resolved>
+</testcase>
+
+<testcase id="64" VmIdentifierInput="0@hostname:1331/HotSpotPerfAgent2?interval=250" HostIdentifierInput="rmi://hostname:1332/HotSpotPerfAgent?interval=200">
+<description>
+pid resolved to prototol and host specified in given HostIdentifer
+</description>
+<VmIdentifier> //0@hostname:1331/HotSpotPerfAgent2?interval=250 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1332/HotSpotPerfAgent?interval=200 </HostIdentifier>
+<Resolved> rmi://0@hostname:1331/HotSpotPerfAgent2?interval=250 </Resolved>
+</testcase>
+
+<testcase id="65" VmIdentifierInput="0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw" HostIdentifierInput="rmi://hostname:1332/HotSpotPerfAgent?interval=200">
+<description>
+pid resolved to prototol and host specified in given HostIdentifer
+</description>
+<VmIdentifier> //0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw </VmIdentifier>
+<HostIdentifier> rmi://hostname:1332/HotSpotPerfAgent?interval=200 </HostIdentifier>
+<Resolved> rmi://0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw </Resolved>
+</testcase>
+
+<testcase id="66" VmIdentifierInput="0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw" HostIdentifierInput="rmi://hostname:1332/HotSpotPerfAgent?interval=200+mode=r">
+<description>
+pid resolved to prototol and host specified in given HostIdentifer
+</description>
+<VmIdentifier> //0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw </VmIdentifier>
+<HostIdentifier> rmi://hostname:1332/HotSpotPerfAgent?interval=200+mode=r </HostIdentifier>
+<Resolved> rmi://0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw </Resolved>
+</testcase>
+
+<testcase id="67" VmIdentifierInput="0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw#frag2" HostIdentifierInput="rmi://hostname:1332/HotSpotPerfAgent?interval=200+mode=r">
+<description>
+pid resolved to prototol and host specified in given HostIdentifer
+</description>
+<VmIdentifier> //0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw#frag2 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1332/HotSpotPerfAgent?interval=200+mode=r </HostIdentifier>
+<Resolved> rmi://0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw#frag2 </Resolved>
+</testcase>
+
+<testcase id="68" VmIdentifierInput="0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw#frag2" HostIdentifierInput="rmi://hostname:1332/HotSpotPerfAgent?interval=200+mode=r#frag">
+<description>
+pid resolved to prototol and host specified in given HostIdentifer
+</description>
+<VmIdentifier> //0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw#frag2 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1332/HotSpotPerfAgent?interval=200+mode=r#frag </HostIdentifier>
+<Resolved> rmi://0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw#frag2 </Resolved>
+</testcase>
+
+<testcase id="70" VmIdentifierInput="xyz:0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw#frag2" HostIdentifierInput="rmi://hostname:1332/HotSpotPerfAgent?interval=200+mode=r#frag">
+<description>
+pid resolved to prototol and host specified in given HostIdentifer
+</description>
+<VmIdentifier> xyz://0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw#frag2 </VmIdentifier>
+<HostIdentifier> rmi://hostname:1332/HotSpotPerfAgent?interval=200+mode=r#frag </HostIdentifier>
+<Resolved> xyz://0@hostname:1331/HotSpotPerfAgent2?interval=250+mode=rw#frag2 </Resolved>
+</testcase>
+
+</VmIdentifierTests>
+

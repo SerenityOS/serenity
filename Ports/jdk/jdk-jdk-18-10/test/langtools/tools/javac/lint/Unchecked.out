@@ -1,0 +1,4 @@
+Unchecked.java:12:32: compiler.warn.prob.found.req: (compiler.misc.unchecked.assign), Unchecked, Unchecked<java.lang.String>
+- compiler.err.warnings.and.werror
+1 error
+1 warning

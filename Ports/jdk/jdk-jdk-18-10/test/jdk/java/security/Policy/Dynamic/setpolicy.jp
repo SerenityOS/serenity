@@ -1,0 +1,8 @@
+//
+// @bug 4244271
+
+
+grant {
+        permission java.security.SecurityPermission "setPolicy";
+        permission java.security.SecurityPermission "getPolicy";
+  };

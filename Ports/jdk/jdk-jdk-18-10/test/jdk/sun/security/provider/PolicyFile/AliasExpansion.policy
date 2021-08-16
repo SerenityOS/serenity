@@ -1,0 +1,22 @@
+keystore "file:${test.src}/Alias.keystore";
+
+grant {
+    permission javax.security.auth.PrivateCredentialPermission
+	"java.lang.String ${{alias:x509test person}}", "read";
+    permission java.security.SecurityPermission
+	"abcde ${{alias:x509test person}} fghij ${{alias:x509test person}}";
+    permission java.security.SecurityPermission
+	"${{alias:x509test person}}";
+    permission java.security.SecurityPermission
+	"${{alias:x509test person}} abc";
+
+    // these three are erroneous but should not cause the
+    // test to fail.  they should simply cause notification output to be
+    // dumped to stderr.
+    permission java.security.SecurityPermission
+	"${{alias:notthere}}";
+    permission java.security.SecurityPermission
+	"${{unsupported}}";
+    permission java.security.SecurityPermission
+	"${{alias}}";
+};

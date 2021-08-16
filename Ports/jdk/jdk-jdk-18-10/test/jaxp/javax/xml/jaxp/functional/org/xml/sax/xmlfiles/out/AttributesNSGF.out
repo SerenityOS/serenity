@@ -1,0 +1,36 @@
+uri <http://www.w3.org/TR/REC-html40> localName <html> qName <html>
+length: 0
+
+uri <http://www.w3.org/TR/REC-html40> localName <head> qName <head>
+length: 0
+
+uri <http://www.w3.org/TR/REC-html40> localName <title> qName <title>
+length: 0
+
+uri <http://www.w3.org/TR/REC-html40> localName <body> qName <body>
+length: 0
+
+uri <http://www.w3.org/TR/REC-html40> localName <p> qName <p>
+length: 0
+
+uri <urn:BooksAreUs.org:BookInfo> localName <title> qName <b:title>
+length: 1
+For index = 0
+getLocalName <style>
+getQName <style>
+getType <CDATA>
+getURI <>
+getValue <font-family: sans-serif;>
+
+Using localName, qname and uri pertaining to index = 0
+getIndex(qName) <0>
+getIndex(uri, localName) <0>
+getType(qName) <CDATA>
+getType(uri, localName) <CDATA>
+getValue(qName) <font-family: sans-serif;>
+getValue(uri, localName) <font-family: sans-serif;>
+
+
+uri <urn:BooksAreUs.org:BookInfo> localName <author> qName <b:author>
+length: 0
+

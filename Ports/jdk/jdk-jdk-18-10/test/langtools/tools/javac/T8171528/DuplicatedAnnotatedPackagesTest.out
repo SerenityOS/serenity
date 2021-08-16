@@ -1,0 +1,4 @@
+package-info.java:3:9: compiler.warn.pkg-info.already.seen: test
+package-info.java:2:1: compiler.err.already.annotated: kindname.package, test
+1 error
+1 warning

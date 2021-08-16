@@ -1,0 +1,108 @@
+import java.lang.annotation.*;
+import static java.lang.annotation.RetentionPolicy.*;
+import static java.lang.annotation.ElementType.*;
+import java.util.List;
+
+class testname <T> {                 // TestN.class
+    _As _Bs _Cs _Ds String data = "test";
+    _As _Bs _Cs _Ds Object mtest( _As _Bs _Cs _Ds testname <T> t){ return null;  }
+    Object mmtest( testname<T> t){ return null;  }
+
+    class Inner<U> {        // TestN$1$Inner.class
+         _As _Bs _Cs _Ds String i_odata1 = "test";
+         _As _Bs _Cs _Ds int    i_pdata1 = 0;
+         _As _Bs _Cs _Ds U      i_udata = null;
+//8015257
+         _As _Bs _Cs _Ds Object  _As _Bs _Cs _Ds [] _As _Bs _Cs _Ds [] i_sa1 = null;
+         _As _Bs _Cs _Ds  T    i_tdata = null;
+         _As _Bs _Cs _Ds String i_m1(){ return null; };
+         _As _Bs _Cs _Ds int    i_m2( _As _Bs _Cs _Ds Object o){return 0;}
+         _As _Bs _Cs _Ds
+        <_TAs _TBs _Cs _Ds U> Object i_um( _As _Bs _Cs _Ds  U u) { return null; }
+    }
+//8015323
+    _As _Bs _Cs _Ds Inner< _As _Bs _Cs _Ds String> IN = new  Inner< String>();
+
+    public void test() {
+ 
+        class Local1<U> {                   // TestN$Local1.class
+            _As _Bs _Cs _Ds  String l_odata1 = "test";
+            _As _Bs _Cs _Ds  int    l_pdata1 = 0;
+            _As _Bs _Cs _Ds  U      l_udata = null;
+//8015257
+            _As _Bs _Cs _Ds  Object _As _Bs _Cs _Ds  []_As _Bs _Cs _Ds  [] l_sa1 = null;
+            _TAs _TBs _Cs _Ds  T    l_tdata = null;
+            _As _Bs _Cs _Ds  String l_m1(){ return null; };
+            _As _Bs _Cs _Ds  int    l_m2(_As _Bs _Cs _Ds  Object o){return 0;}
+            _As _Bs _Cs _Ds 
+            <_TAs _TBs _Cs _Ds  U> Object l_um(_As _Bs _Cs _Ds   U u) { return null; }
+        }
+        // The below, as a local variable, will show up on test()
+       _As _Bs _Cs _Ds  Local1<_As _Bs _Cs _Ds  String> LC = new Local1<String>();
+ 
+        mtest( new testname<T>() {  // TestN$1
+                class InnerAnon<U> {        // TestN$1$InnerAnon.class
+                    _As _Bs _Cs _Ds  String ia_odata1 = "test";
+                    _As _Bs _Cs _Ds  int    ia_pdata1 = 0;
+                    _As _Bs _Cs _Ds  U      ia_udata = null;
+//8015257
+                    _As _Bs _Cs _Ds  Object _As _Bs _Cs _Ds  []_As _Bs _Cs _Ds  [] ia_sa1 = null;
+                    _TAs _TBs _Cs _Ds  T    ia_tdata = null;
+                    _As _Bs _Cs _Ds  String ia_m1(){ return null; };
+                    _As _Bs _Cs _Ds  int    ia_m2(_As _Bs _Cs _Ds  Object o){return 0;}
+                    _As _Bs _Cs _Ds 
+                    <_TAs _TBs _Cs _Ds  U> Object ia_um(_As _Bs _Cs _Ds   U u) { return null; }
+                }
+//8015257
+                _As _Bs _Cs _Ds  InnerAnon<_As _Bs _Cs _Ds  String> IA = new InnerAnon< String>();
+
+                _As _Bs _Cs _Ds String odata1 = "test";
+                _As _Bs _Cs _Ds int    pdata1 = 0;
+//8015257
+                _As _Bs _Cs _Ds Object _As _Bs _Cs _Ds []_As _Bs _Cs _Ds [] sa1 = null;
+                _As _Bs _Cs _Ds T tdata = null;
+
+                _As _Bs _Cs _Ds String m1(){ return null; };
+                _As _Bs _Cs _Ds int    m2(_As _Bs _Cs _Ds Object o){return 0;}
+
+                _As _Bs _Cs _Ds Object _As _Bs _Cs _Ds [] _As _Bs _Cs _Ds []
+                m3(String _As _Bs _Cs _Ds []_As _Bs _Cs _Ds [] sa){ return null; }
+
+                _As _Bs _Cs _Ds
+                <_TAs _TBs _Cs _Ds T> Object tm(_As _Bs _Cs _Ds  T t) { return null; }
+
+                public void atest( testname<T> t){
+                    t.mmtest( new testname<T>() {   // TestN$1$1.class 
+                        _As _Bs _Cs _Ds String mm_odata1 = "test";
+                        _As _Bs _Cs _Ds int    mm_pdata1 = 0;
+//8015257
+                        _As _Bs _Cs _Ds Object _As _Bs _Cs _Ds []_As _Bs _Cs _Ds [] mm_sa1 = null;
+                        _TAs _TBs _Cs _Ds T mm_tdata = null;
+
+                        _As _Bs _Cs _Ds String mm_m1(){ return null; };
+                        _As _Bs _Cs _Ds int    mm_m2(_As _Bs _Cs _Ds Object o){return 0;}
+
+                        _As _Bs _Cs _Ds String _As _Bs _Cs _Ds [] _As _Bs _Cs _Ds []
+                        mm_m3(String _As _Bs _Cs _Ds []_As _Bs _Cs _Ds [] sa){ return null; }
+
+                        _As _Bs _Cs _Ds
+                        <_TAs _TBs _Cs _Ds T> Object mm_tm(_As _Bs _Cs _Ds  T t) { return null; }
+                    });
+                }
+           });
+   }
+}
+@Retention(RUNTIME) @Target({TYPE_USE,FIELD})  @Repeatable( AC.class ) @interface A { }
+@Retention(RUNTIME) @Target({TYPE_USE,METHOD}) @Repeatable( BC.class ) @interface B { }
+@Retention(RUNTIME) @Target({TYPE_USE,FIELD})  @interface AC { A[] value(); }
+@Retention(RUNTIME) @Target({TYPE_USE,METHOD}) @interface BC { B[] value(); }
+
+@Retention(CLASS)   @Target({TYPE_USE,FIELD})  @Repeatable( CC.class ) @interface C { }
+@Retention(CLASS)   @Target({TYPE_USE,METHOD}) @Repeatable( DC.class ) @interface D { }
+@Retention(CLASS)   @Target({TYPE_USE,FIELD})  @interface CC { C[] value(); }
+@Retention(CLASS)   @Target({TYPE_USE,METHOD}) @interface DC { D[] value(); }
+
+@Retention(RUNTIME) @Target({TYPE_USE,TYPE_PARAMETER,FIELD})  @Repeatable( TAC.class ) @interface TA { }
+@Retention(RUNTIME) @Target({TYPE_USE,TYPE_PARAMETER,METHOD}) @Repeatable( TBC.class ) @interface TB { }
+@Retention(RUNTIME) @Target({TYPE_USE,TYPE_PARAMETER,FIELD})  @interface TAC { TA[] value(); }
+@Retention(RUNTIME) @Target({TYPE_USE,TYPE_PARAMETER,METHOD}) @interface TBC { TB[] value(); }

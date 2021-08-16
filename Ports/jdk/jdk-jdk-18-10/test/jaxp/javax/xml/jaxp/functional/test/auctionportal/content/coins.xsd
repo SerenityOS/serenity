@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.hibid.com/items"
+           xmlns="http://www.hibid.com/items"
+           xmlns:im="http://someimport.com"
+           elementFormDefault="qualified"
+           xmlns:it="http://www.hibid.com/items" >
+
+        <xs:import schemaLocation="coinsImportMe.xsd" namespace="http://someimport.com"/>
+
+          
+
+        <xs:element name="coin">
+           <xs:complexType>
+              <xs:sequence>
+	         <xs:element name="description" type="it:description" />
+	         <xs:element name="dates_data" type="im:dates_data" />
+              </xs:sequence>
+	   </xs:complexType>
+  	</xs:element>
+
+           <xs:complexType name="description">
+              <xs:sequence>
+	         <xs:element name="info" type="xs:string" />
+              </xs:sequence>
+	   </xs:complexType>
+
+
+          <xs:simpleType name="yearType">
+           <xs:restriction base="xs:int">
+              <xs:enumeration value="1930" />
+              <xs:enumeration value="1949" />
+           </xs:restriction>
+        </xs:simpleType>
+
+        <xs:element name="YearInfo">
+           <xs:complexType>
+              <xs:sequence>
+                 <xs:element name="reMintYear" type="yearType" />
+              </xs:sequence>
+           </xs:complexType>
+        </xs:element>
+
+
+</xs:schema>

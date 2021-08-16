@@ -1,0 +1,2 @@
+NoAnnotationMethods.java:10:9: compiler.err.intf.annotation.member.clash: annotationType(), java.lang.annotation.Annotation
+1 error

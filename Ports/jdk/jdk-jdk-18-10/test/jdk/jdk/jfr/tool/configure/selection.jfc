@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration version="2.0" label="Test selection">
+
+    <event name="com.example.Tiger">
+      <setting name="enabled">false</setting>
+      <setting name="threshold" control="animal">0 s</setting>
+    </event>
+
+    <event name="com.example.Lion">
+      <setting name="enabled">true</setting>
+      <setting name="threshold" control="animal">0 s</setting>
+    </event>
+
+    <event name="com.example.Cactus">
+      <setting name="threshold">0 s</setting>
+    </event>
+
+    <control>
+      <selection name="animal" label="Animal" default="off">
+        <option name="off" label="Off">0 s</option>
+        <option name="low" label="Low">1 s</option>
+        <option name="medium" label="Medium">10 s</option>
+        <option name="high" label="High">100 s</option>
+      </selection>
+    </control>
+
+</configuration>

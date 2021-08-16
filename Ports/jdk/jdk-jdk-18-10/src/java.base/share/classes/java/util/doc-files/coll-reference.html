@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<!--
+ Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+
+<html lang="en-US">
+<head>
+<title>Outline of the Collections Framework</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>
+<h1>Outline of the Collections Framework</h1>
+<!-- Body text begins here -->
+The collections framework consists of:
+<ul>
+<li><strong>Collection interfaces</strong> - The primary means by
+which collections are manipulated.
+<ul>
+<li><a href=
+"../Collection.html"><strong>Collection</strong></a>
+- A group of objects. No assumptions are made about the order of
+the collection (if any) or whether it can contain duplicate
+elements.</li>
+<li><a href=
+"../Set.html"><strong>Set</strong></a> - The
+familiar set abstraction. No duplicate elements permitted. May or
+may not be ordered. Extends the <code>Collection</code> interface.</li>
+<li><a href=
+"../List.html"><strong>List</strong></a> -
+Ordered collection, also known as a <i>sequence</i>. Duplicates are
+generally permitted. Allows positional access. Extends the
+<code>Collection</code> interface.</li>
+<li><a href=
+"../Queue.html"><strong>Queue</strong></a> - A
+collection designed for holding elements before processing. Besides
+basic <code>Collection</code> operations, queues provide additional
+insertion, extraction, and inspection operations.</li>
+<li><a href=
+"../Deque.html"><strong>Deque</strong></a> - A
+<em>double ended queue</em>, supporting element insertion and
+removal at both ends. Extends the <code>Queue</code> interface.</li>
+<li><a href=
+"../Map.html"><strong>Map</strong></a> - A
+mapping from keys to values. Each key can map to one value.</li>
+<li><a href=
+"../SortedSet.html"><strong>SortedSet</strong></a>
+- A set whose elements are automatically sorted, either in their
+<i>natural ordering</i> (see the <a href=
+"../../lang/Comparable.html"><code>Comparable</code></a>
+interface) or by a <a href=
+"../Comparator.html"><code>Comparator</code></a>
+object provided when a <code>SortedSet</code> instance is created.
+Extends the <code>Set</code> interface.</li>
+<li><a href=
+"../SortedMap.html"><strong>SortedMap</strong></a>
+- A map whose mappings are automatically sorted by key, either
+using the <i>natural ordering</i> of the keys or by a comparator
+provided when a <code>SortedMap</code> instance is created. Extends the
+<code>Map</code> interface.</li>
+<li><a href=
+"../NavigableSet.html"><strong>NavigableSet</strong></a>
+- A <code>SortedSet</code> extended with navigation methods reporting
+closest matches for given search targets. A <code>NavigableSet</code>
+may be accessed and traversed in either ascending or descending
+order.</li>
+<li><a href=
+"../NavigableMap.html"><strong>NavigableMap</strong></a>
+- A <code>SortedMap</code> extended with navigation methods returning
+the closest matches for given search targets. A
+<code>NavigableMap</code> can be accessed and traversed in either
+ascending or descending key order.</li>
+<li><a href=
+"../concurrent/BlockingQueue.html"><strong>BlockingQueue</strong></a>
+- A <code>Queue</code> with operations that wait for the queue to
+become nonempty when retrieving an element and that wait for space
+to become available in the queue when storing an element. (This
+interface is part of the <code><a href=
+"../concurrent/package-summary.html">java.util.concurrent</a></code>
+package.)</li>
+<li><a href=
+"../concurrent/TransferQueue.html"><strong>TransferQueue</strong></a>
+- A <code>BlockingQueue</code> in which producers can wait for
+consumers to receive elements. (This interface is part of the
+<code><a href=
+"../concurrent/package-summary.html">java.util.concurrent</a></code>
+package.)</li>
+<li><a href=
+"../concurrent/BlockingDeque.html"><strong>BlockingDeque</strong></a>
+- A <code>Deque</code> with operations that wait for the deque to
+become nonempty when retrieving an element and wait for space to
+become available in the deque when storing an element. Extends both
+the <code>Deque</code> and <code>BlockingQueue</code> interfaces. (This
+interface is part of the <code><a href=
+"../concurrent/package-summary.html">java.util.concurrent</a></code>
+package.)</li>
+<li><a href=
+"../concurrent/ConcurrentMap.html"><strong>ConcurrentMap</strong></a>
+- A <code>Map</code> with atomic <code>putIfAbsent</code>, <code>remove</code>,
+and <code>replace</code> methods. (This interface is part of the
+<code>java.util.concurrent</code> package.)</li>
+<li><a href=
+"../concurrent/ConcurrentNavigableMap.html"><strong>
+ConcurrentNavigableMap</strong></a> - A <code>ConcurrentMap</code> that
+is also a <code>NavigableMap</code>.</li>
+</ul>
+</li>
+<li><strong>General-purpose implementations</strong> - The primary
+implementations of the collection interfaces.
+<ul>
+<li><strong><a href=
+"../HashSet.html">HashSet</a></strong> - Hash
+table implementation of the <code>Set</code> interface. The best
+all-around implementation of the <code>Set</code> interface.</li>
+<li><a href=
+"../TreeSet.html"><strong>TreeSet</strong></a>
+- Red-black tree implementation of the <code>NavigableSet</code>
+interface.</li>
+<li><strong><a href=
+"../LinkedHashSet.html">LinkedHashSet</a></strong>
+- Hash table and linked list implementation of the <code>Set</code>
+interface. An insertion-ordered <code>Set</code> implementation that
+runs nearly as fast as <code>HashSet</code>.</li>
+<li><strong><a href=
+"../ArrayList.html">ArrayList</a></strong> -
+Resizable array implementation of the <code>List</code> interface (an
+unsynchronized <code>Vector</code>). The best all-around implementation
+of the <code>List</code> interface.</li>
+<li><strong><a href=
+"../ArrayDeque.html">ArrayDeque</a></strong> -
+Efficient, resizable array implementation of the <code>Deque</code>
+interface.</li>
+<li><a href=
+"../LinkedList.html"><strong>LinkedList</strong></a>
+- Doubly-linked list implementation of the <code>List</code> interface.
+Provides better performance than the <code>ArrayList</code>
+implementation if elements are frequently inserted or deleted
+within the list. Also implements the <code>Deque</code> interface. When
+accessed through the <code>Queue</code> interface, <code>LinkedList</code>
+acts as a FIFO queue.</li>
+<li><strong><a href=
+"../PriorityQueue.html">PriorityQueue</a></strong>
+- Heap implementation of an unbounded priority queue.</li>
+<li><strong><a href=
+"../HashMap.html">HashMap</a></strong> - Hash
+table implementation of the <code>Map</code> interface (an
+unsynchronized <code>Hashtable</code> that supports <code>null</code> keys
+and values). The best all-around implementation of the <code>Map</code>
+interface.</li>
+<li><a href=
+"../TreeMap.html"><strong>TreeMap</strong></a>
+Red-black tree implementation of the <code>NavigableMap</code>
+interface.</li>
+<li><strong><a href=
+"../LinkedHashMap.html">LinkedHashMap</a></strong>
+- Hash table and linked list implementation of the <code>Map</code>
+interface. An insertion-ordered <code>Map</code> implementation that
+runs nearly as fast as <code>HashMap</code>. Also useful for building
+caches (see <a href=
+"../LinkedHashMap.html#removeEldestEntry(java.util.Map.Entry)">
+removeEldestEntry(Map.Entry)</a> ).</li>
+</ul>
+</li>
+<li><strong>Wrapper implementations</strong> -
+Functionality-enhancing implementations for use with other
+implementations. Accessed solely through static factory methods.
+<ul>
+<li><a href=
+"../Collections.html#unmodifiableCollection(java.util.Collection)">
+<strong>Collections.unmodifiable<i>Interface</i></strong></a> -
+Returns an unmodifiable view of a specified collection that throws
+an <code>UnsupportedOperationException</code> if the user attempts to
+modify it.</li>
+<li><a href=
+"../Collections.html#synchronizedCollection(java.util.Collection)"
+id=
+"synchWrappers"><strong>Collections.synchronized<i>Interface</i></strong></a>
+- Returns a synchronized collection that is backed by the specified
+(typically unsynchronized) collection. As long as all accesses to
+the backing collection are through the returned collection, thread
+safety is guaranteed.</li>
+<li><a href=
+"../Collections.html#checkedCollection(java.util.Collection,java.lang.Class)">
+<strong>Collections.checked<i>Interface</i></strong></a> - Returns
+a dynamically type-safe view of the specified collection, which
+throws a <code>ClassCastException</code> if a client attempts to add an
+element of the wrong type. The generics mechanism in the language
+provides compile-time (static) type checking, but it is possible to
+bypass this mechanism. Dynamically type-safe views eliminate this
+possibility.</li>
+</ul>
+</li>
+<li><strong>Adapter implementations</strong> - Implementations that
+adapt one collections interface to another:
+<ul>
+<li><strong><a href=
+"../Collections.html#newSetFromMap(java.util.Map)">
+newSetFromMap(Map)</a></strong> - Creates a general-purpose
+<code>Set</code> implementation from a general-purpose <code>Map</code>
+implementation.</li>
+<li><strong><a href=
+"../Collections.html#asLifoQueue(java.util.Deque)">
+asLifoQueue(Deque)</a></strong> - Returns a view of a
+<code>Deque</code> as a Last In First Out (LIFO) <code>Queue</code>.</li>
+</ul>
+</li>
+<li><strong>Convenience implementations</strong> - High-performance
+"mini-implementations" of the collection interfaces.
+<ul>
+<li><a href=
+"../Arrays.html#asList(T...)"><strong>Arrays.asList</strong></a>
+- Enables an array to be viewed as a list.</li>
+<li><strong><a href=
+"../Collections.html#emptySet()">emptySet</a>,
+<a href=
+"../Collections.html#emptyList()">emptyList</a>
+and <a href=
+"../Collections.html#emptyMap()">emptyMap</a></strong>
+- Return an immutable empty set, list, or map.</li>
+<li><strong><a href=
+"../Collections.html#singleton(java.lang.Object)">
+singleton</a>, <a href=
+"../Collections.html#singletonList(java.lang.Object)">
+singletonList</a>, and <a href=
+"../Collections.html#singletonMap(K,V)">singletonMap</a></strong>
+- Return an immutable singleton set, list, or map, containing only
+the specified object (or key-value mapping).</li>
+<li><a href=
+"../Collections.html#nCopies(int,T)"><strong>
+nCopies</strong></a> - Returns an immutable list consisting of n
+copies of a specified object.</li>
+</ul>
+</li>
+<li><strong>Legacy implementations</strong> - Older collection
+classes were retrofitted to implement the collection interfaces.
+<ul>
+<li><a href=
+"../Vector.html"><strong>Vector</strong></a> -
+Synchronized resizable array implementation of the <code>List</code>
+interface with additional legacy methods.</li>
+<li><a href=
+"../Hashtable.html"><strong>Hashtable</strong></a>
+- Synchronized hash table implementation of the <code>Map</code>
+interface that does not allow <code>null</code> keys or values, plus
+additional legacy methods.</li>
+</ul>
+</li>
+<li><strong>Special-purpose implementations</strong>
+<ul>
+<li><strong><a href=
+"../WeakHashMap.html">WeakHashMap</a></strong>
+- An implementation of the <code>Map</code> interface that stores only
+<a href="../../lang/ref/WeakReference.html"><i>weak
+references</i></a> to its keys. Storing only weak references
+enables key-value pairs to be garbage collected when the key is no
+longer referenced outside of the <code>WeakHashMap</code>. This class
+is the easiest way to use the power of weak references. It is
+useful for implementing registry-like data structures, where the
+utility of an entry vanishes when its key is no longer reachable by
+any thread.</li>
+<li><strong><a href=
+"../IdentityHashMap.html">IdentityHashMap</a></strong>
+- Identity-based <code>Map</code> implementation based on a hash table.
+This class is useful for topology-preserving object graph
+transformations (such as serialization or deep copying). To perform
+these transformations, you must maintain an identity-based "node
+table" that keeps track of which objects have already been seen.
+Identity-based maps are also used to maintain
+object-to-meta-information mappings in dynamic debuggers and
+similar systems. Finally, identity-based maps are useful in
+preventing "spoof attacks" resulting from intentionally perverse
+equals methods. (<code>IdentityHashMap</code> never invokes the equals
+method on its keys.) An added benefit of this implementation is
+that it is fast.</li>
+<li><strong><a href=
+"../concurrent/CopyOnWriteArrayList.html">CopyOnWriteArrayList</a></strong>
+- A <code>List</code> implementation backed by an copy-on-write array.
+All mutative operations (such as <code>add</code>, <code>set</code>, and
+<code>remove</code>) are implemented by making a new copy of the array.
+No synchronization is necessary, even during iteration, and
+iterators are guaranteed never to throw
+<code>ConcurrentModificationException</code>. This implementation is
+well-suited to maintaining event-handler lists (where change is
+infrequent, and traversal is frequent and potentially
+time-consuming).</li>
+<li><strong><a href=
+"../concurrent/CopyOnWriteArraySet.html">CopyOnWriteArraySet</a></strong>
+- A <code>Set</code> implementation backed by a copy-on-write array.
+This implementation is similar to <code>CopyOnWriteArrayList</code>.
+Unlike most <code>Set</code> implementations, the <code>add</code>,
+<code>remove</code>, and <code>contains</code> methods require time
+proportional to the size of the set. This implementation is well
+suited to maintaining event-handler lists that must prevent
+duplicates.</li>
+<li><strong><a href=
+"../EnumSet.html">EnumSet</a></strong> - A
+high-performance <code>Set</code> implementation backed by a bit
+vector. All elements of each <code>EnumSet</code> instance must be
+elements of a single enum type.</li>
+<li><strong><a href=
+"../EnumMap.html">EnumMap</a></strong> - A
+high-performance <code>Map</code> implementation backed by an array.
+All keys in each <code>EnumMap</code> instance must be elements of a
+single enum type.</li>
+</ul>
+</li>
+<li><strong>Concurrent implementations</strong> - These
+implementations are part of <code>java.util.concurrent</code>.
+<ul>
+<li><strong><a href=
+"../concurrent/ConcurrentLinkedQueue.html">ConcurrentLinkedQueue</a></strong>
+- An unbounded first in, first out (FIFO) queue based on linked
+nodes.</li>
+<li><a href=
+"../concurrent/LinkedBlockingQueue.html"><strong>
+LinkedBlockingQueue</strong></a> - An optionally bounded FIFO
+blocking queue backed by linked nodes.</li>
+<li><a href=
+"../concurrent/ArrayBlockingQueue.html"><strong>
+ArrayBlockingQueue</strong></a> - A bounded FIFO blocking queue
+backed by an array.</li>
+<li><a href=
+"../concurrent/PriorityBlockingQueue.html"><strong>
+PriorityBlockingQueue</strong></a> - An unbounded blocking priority
+queue backed by a priority heap.</li>
+<li><a href=
+"../concurrent/DelayQueue.html"><strong>DelayQueue</strong></a>
+- A time-based scheduling queue backed by a priority heap.</li>
+<li><a href=
+"../concurrent/SynchronousQueue.html"><strong>SynchronousQueue</strong></a>
+- A simple rendezvous mechanism that uses the
+<code>BlockingQueue</code> interface.</li>
+<li><a href=
+"../concurrent/LinkedBlockingDeque.html"><strong>
+LinkedBlockingDeque</strong></a> - An optionally bounded FIFO
+blocking deque backed by linked nodes.</li>
+<li><a href=
+"../concurrent/LinkedTransferQueue.html"><strong>
+LinkedTransferQueue</strong></a> - An unbounded
+<code>TransferQueue</code> backed by linked nodes.</li>
+<li><a href=
+"../concurrent/ConcurrentHashMap.html"><strong>ConcurrentHashMap</strong></a>
+- A highly concurrent, high-performance <code>ConcurrentMap</code>
+implementation based on a hash table. This implementation never
+blocks when performing retrievals and enables the client to select
+the concurrency level for updates. It is intended as a drop-in
+replacement for <code><a href=
+"../Hashtable.html">Hashtable</a></code>. In
+addition to implementing <code>ConcurrentMap</code>, it supports all of
+the legacy methods of <code>Hashtable</code>.</li>
+<li><a href=
+"../concurrent/ConcurrentSkipListSet.html"><strong>
+ConcurrentSkipListSet</strong></a> - Skips list implementation of
+the <code>NavigableSet</code> interface.</li>
+<li><a href=
+"../concurrent/ConcurrentSkipListMap.html"><strong>
+ConcurrentSkipListMap</strong></a> - Skips list implementation of
+the <code>ConcurrentNavigableMap</code> interface.</li>
+</ul>
+</li>
+<li><strong>Abstract implementations</strong> - Skeletal
+implementations of the collection interfaces to facilitate custom
+implementations.
+<ul>
+<li><a href=
+"../AbstractCollection.html"><strong>AbstractCollection</strong></a>
+- Skeletal <code>Collection</code> implementation that is neither a set
+nor a list (such as a "bag" or multiset).</li>
+<li><a href=
+"../AbstractSet.html"><strong>AbstractSet</strong></a>
+- Skeletal <code>Set</code> implementation.</li>
+<li><a href=
+"../AbstractList.html"><strong>AbstractList</strong></a>
+- Skeletal <code>List</code> implementation backed by a random access
+data store (such as an array).</li>
+<li><a href=
+"../AbstractSequentialList.html"><strong>AbstractSequentialList</strong></a>
+- Skeletal <code>List</code> implementation backed by a sequential
+access data store (such as a linked list).</li>
+<li><a href=
+"../AbstractQueue.html"><strong>AbstractQueue</strong></a>
+- Skeletal <code>Queue</code> implementation.</li>
+<li><a href=
+"../AbstractMap.html"><strong>AbstractMap</strong></a>
+- Skeletal <code>Map</code> implementation.</li>
+</ul>
+</li>
+<li><strong>Algorithms</strong> - The <a href=
+"../Collections.html"><strong>Collections</strong></a>
+class contains these useful static methods.
+<ul>
+<li><strong><a href=
+"../Collections.html#sort(java.util.List)">sort(List)</a></strong>
+- Sorts a list using a merge sort algorithm, which provides average
+case performance comparable to a high quality quicksort, guaranteed
+O(n*log n) performance (unlike quicksort), and <em>stability</em>
+(unlike quicksort). A stable sort is one that does not reorder
+equal elements.</li>
+<li><strong><a href=
+"../Collections.html#binarySearch(java.util.List,T)">
+binarySearch(List, Object)</a></strong> - Searches for an element
+in an ordered list using the binary search algorithm.</li>
+<li><strong><a href=
+"../Collections.html#reverse(java.util.List)">reverse(List)</a></strong>
+- Reverses the order of the elements in a list.</li>
+<li><strong><a href=
+"../Collections.html#shuffle(java.util.List)">shuffle(List)</a></strong>
+- Randomly changes the order of the elements in a list.</li>
+<li><strong><a href=
+"../Collections.html#fill(java.util.List,T)">
+fill(List, Object)</a></strong> - Overwrites every element in a
+list with the specified value.</li>
+<li><strong><a href=
+"../Collections.html#copy(java.util.List,java.util.List)">
+copy(List dest, List src)</a></strong> - Copies the source list
+into the destination list.</li>
+<li><strong><a href=
+"../Collections.html#min(java.util.Collection)">
+min(Collection)</a></strong> - Returns the minimum element in a
+collection.</li>
+<li><strong><a href=
+"../Collections.html#max(java.util.Collection)">
+max(Collection)</a></strong> - Returns the maximum element in a
+collection.</li>
+<li><strong><a href=
+"../Collections.html#rotate(java.util.List,int)">
+rotate(List list, int distance)</a></strong> - Rotates all of the
+elements in the list by the specified distance.</li>
+<li><strong><a href=
+"../Collections.html#replaceAll(java.util.List,T,T)">
+replaceAll(List list, Object oldVal, Object newVal)</a></strong> -
+Replaces all occurrences of one specified value with another.</li>
+<li><strong><a href=
+"../Collections.html#indexOfSubList(java.util.List,java.util.List)">
+indexOfSubList(List source, List target)</a></strong> - Returns the
+index of the first sublist of source that is equal to target.</li>
+<li><strong><a href=
+"../Collections.html#lastIndexOfSubList(java.util.List,java.util.List)">
+lastIndexOfSubList(List source, List target)</a></strong> - Returns
+the index of the last sublist of source that is equal to
+target.</li>
+<li><strong><a href=
+"../Collections.html#swap(java.util.List,int,int)">
+swap(List, int, int)</a></strong> - Swaps the elements at the
+specified positions in the specified list.</li>
+<li><strong><a href=
+"../Collections.html#frequency(java.util.Collection,java.lang.Object)">
+frequency(Collection, Object)</a></strong> - Counts the number of
+times the specified element occurs in the specified
+collection.</li>
+<li><strong><a href=
+"../Collections.html#disjoint(java.util.Collection,java.util.Collection)">
+disjoint(Collection, Collection)</a></strong> - Determines whether
+two collections are disjoint, in other words, whether they contain
+no elements in common.</li>
+<li><strong><a href=
+"../Collections.html#addAll(java.util.Collection,T...)">
+addAll(Collection&lt;? super T&gt;, T...)</a></strong> - Adds all
+of the elements in the specified array to the specified
+collection.</li>
+</ul>
+</li>
+<li><strong>Infrastructure</strong>
+<ul>
+<li><strong>Iterators</strong> - Similar to the familiar <a href=
+"../Enumeration.html">Enumeration</a>
+interface, but more powerful, and with improved method names.
+<ul>
+<li><a href=
+"../Iterator.html"><strong>Iterator</strong></a>
+- In addition to the functionality of the <code>Enumeration</code>
+interface, enables the user to remove elements from the backing
+collection with well-defined, useful semantics.</li>
+<li><a href=
+"../ListIterator.html"><strong>ListIterator</strong></a>
+- Iterator for use with lists. In addition to the functionality of
+the <code>Iterator</code> interface, supports bidirectional iteration,
+element replacement, element insertion, and index retrieval.</li>
+</ul>
+</li>
+<li><strong>Ordering</strong>
+<ul>
+<li><a href=
+"../../lang/Comparable.html"><strong>Comparable</strong></a>
+- Imparts a <i>natural ordering</i> to classes that implement it.
+The natural ordering can be used to sort a list or maintain order
+in a sorted set or map. Many classes were retrofitted to implement
+this interface.</li>
+<li><a href=
+"../Comparator.html"><strong>Comparator</strong></a>
+- Represents an order relation, which can be used to sort a list or
+maintain order in a sorted set or map. Can override a type's
+natural ordering or order objects of a type that does not implement
+the <code>Comparable</code> interface.</li>
+</ul>
+</li>
+<li><strong>Runtime exceptions</strong>
+<ul>
+<li><a href=
+"../../lang/UnsupportedOperationException.html"><strong>
+UnsupportedOperationException</strong></a> - Thrown by collections
+if an unsupported optional operation is called.</li>
+<li><a href=
+"../ConcurrentModificationException.html"><strong>
+ConcurrentModificationException</strong></a> - Thrown by iterators
+and list iterators if the backing collection is changed
+unexpectedly while the iteration is in progress. Also thrown by
+<i>sublist</i> views of lists if the backing list is changed
+unexpectedly.</li>
+</ul>
+</li>
+<li><strong>Performance</strong>
+<ul>
+<li><strong><a href=
+"../RandomAccess.html">RandomAccess</a></strong>
+- Marker interface that lets <code>List</code> implementations indicate
+that they support fast (generally constant time) random access.
+This lets generic algorithms change their behavior to provide good
+performance when applied to either random or sequential access
+lists.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Array Utilities</strong>
+<ul>
+<li><a href=
+"../Arrays.html"><strong>Arrays</strong></a> -
+Contains static methods to sort, search, compare, hash, copy,
+resize, convert to <code>String</code>, and fill arrays of primitives
+and objects.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p style="font-size:smaller">
+Copyright &copy; 1998, 2017, Oracle and/or its affiliates. 500 Oracle Parkway<br>
+    Redwood Shores, CA 94065 USA. All rights reserved.</p>
+<!-- Body text ends here -->
+</body>
+</html>

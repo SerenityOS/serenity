@@ -1,0 +1,18 @@
+<?xml version='1.0'?>
+<data id="employee">
+   <employee id="employee">
+      <name>timepass</name>
+      <sex>M</sex>
+      <age>10</age>
+      <complexion>Fair</complexion>
+      <figure>36-28-36</figure>
+    </employee>
+    <employee>
+      <name>COOOOL</name>
+      <sex>F</sex>
+      <age>20</age>
+      <complexion>Dark</complexion>
+      <figure>26-32-26</figure>
+    </employee>
+</data>
+

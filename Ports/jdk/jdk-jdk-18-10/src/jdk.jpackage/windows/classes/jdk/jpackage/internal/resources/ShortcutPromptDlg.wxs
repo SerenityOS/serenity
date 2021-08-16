@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/*
+ * Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+-->
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+
+  <?define JpDesktopShortcutPromptControlY=140 ?>
+  <?define JpStartMenuShortcutPromptControlY=180 ?>
+
+  <?ifndef JpDesktopShortcutPrompt ?>
+    <?define JpStartMenuShortcutPromptControlY=$(var.JpDesktopShortcutPromptControlY) ?>
+  <?endif?>
+
+  <Fragment>
+    <UI>
+      <Dialog Id="ShortcutPromptDlg" Width="370" Height="270" Title="!(loc.ShortcutPromptDlg_Title)" NoMinimize="yes">
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes"
+                 Text="!(loc.ShortcutPromptDlgDescription)" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes"
+                 Text="!(loc.ShortcutPromptDlgTitle)" />
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no"
+                 Text="!(loc.ShortcutPromptDlgBannerBitmap)" />
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+
+        <?ifdef JpDesktopShortcutPrompt ?>
+        <Control Type="CheckBox" X="20" Width="200" Height="17" CheckBoxValue="1"
+                 Id="InstallDesktopShortcut"
+                 Y="$(var.JpDesktopShortcutPromptControlY)"
+                 Property="JP_INSTALL_DESKTOP_SHORTCUT"
+                 Text="!(loc.ShortcutPromptDlgDesktopShortcutControlLabel)"/>
+        <?endif?>
+
+        <?ifdef JpStartMenuShortcutPrompt ?>
+        <Control Type="CheckBox" X="20" Width="200" Height="17" CheckBoxValue="1"
+                 Id="InstallStartMenuShortcut"
+                 Y="$(var.JpStartMenuShortcutPromptControlY)"
+                 Property="JP_INSTALL_STARTMENU_SHORTCUT"
+                 Text="!(loc.ShortcutPromptDlgStartMenuShortcutControlLabel)"/>
+        <?endif?>
+
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes"
+                 Text="!(loc.WixUINext)" />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17"
+                 Text="!(loc.WixUIBack)" />
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes"
+                 Text="!(loc.WixUICancel)">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+      </Dialog>
+    </UI>
+  </Fragment>
+</Wix>

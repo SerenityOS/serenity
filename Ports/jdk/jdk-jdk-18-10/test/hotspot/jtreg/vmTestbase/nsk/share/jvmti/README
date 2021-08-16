@@ -1,0 +1,161 @@
+Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+---------------------------------------------------------------------------------
+
+This directory contains source files of testbase_nsk JVMTI framework,
+which provides support for JVMTI tests and accessing JVMTI environment.
+
+    Source files:
+        jvmti_tools.h
+        jvmti_tools.c
+        agent_tools.c
+        Injector.h
+        Injector.c
+        JVMTITools.h
+        JVMTITools.c
+
+    Naming conventions:
+        macroses:  NSK_JVMTI_*
+        functions: nsk_jvmti_*
+
+---------------------------------------------------------------------------------
+
+jvmti_tools.h
+
+Provides functions and macroses for invocation of JVMTI functions
+and checking JVMTI errors:
+
+    NSK_JVMTI_VERIFY(call)
+    NSK_JVMTI_VERIFY_NEGATIVE(call)
+    NSK_JVMTI_VERIFY_CODE(code, action)
+
+Also provides functions for running JVMTI agent:
+
+    - init agent with options:
+
+        int nsk_jvmti_parseOptions(const char options[]);
+
+    - access agent options
+
+        int  nsk_jvmti_getWaitTime();
+        void nsk_jvmti_setWaitTime(int waittime);
+
+        const char* nsk_jvmti_findOptionValue(const char name[]);
+        const char* nsk_jvmti_findOptionStringValue(const char name[], const char* defaultValue);
+        int nsk_jvmti_findOptionIntValue(const char name[], int defaultValue);
+
+        int nsk_jvmti_getOptionsCount();
+        const char* nsk_jvmti_getOptionName(int i);
+        const char* nsk_jvmti_getOptionValue(int i);
+
+    - create JVMTI environment and register agent thread
+
+        jvmtiEnv* nsk_jvmti_createJVMTIEnv(JavaVM* jvm, void* reserved);
+        int       nsk_jvmti_setAgentProc(jvmtiStartFunction proc, const void* arg);
+
+    - initialize multiple agent chain via processing of nativeMethodBind event
+
+        int nsk_jvmti_init_MA(jvmtiEventCallbacks* callbacks);
+
+    - access agent thread environment
+
+        jthread   nsk_jvmti_getAgentThread();
+        jvmtiEnv* nsk_jvmti_getAgentJVMTIEnv();
+        JNIEnv*   nsk_jvmti_getAgentJNIEnv();
+
+    - synchronize agent with debuggee
+
+        int  nsk_jvmti_waitForSync(jlong timeout);
+        int  nsk_jvmti_resumeSync();
+        void nsk_jvmti_sleep(jlong timeout);
+
+    - provide proper exit status
+
+        void nsk_jvmti_setFailStatus();
+        int  nsk_jvmti_isFailStatus();
+        jint nsk_jvmti_getStatus();
+
+    - use locations and breakpoints
+
+        int nsk_jvmti_addLocationCapabilities();
+        int nsk_jvmti_addBreakpointCapabilities();
+
+        jlocation nsk_jvmti_getLineLocation(jclass cls, jmethodID method, int line);
+        jlocation nsk_jvmti_setLineBreakpoint(jclass cls, jmethodID method, int line);
+        jlocation nsk_jvmti_clearLineBreakpoint(jclass cls, jmethodID method, int line);
+
+    - find classes and threads
+
+        jclass nsk_jvmti_classBySignature(const char signature[]);
+        jthread nsk_jvmti_threadByName(const char name[]);
+
+    - events management
+
+        int nsk_jvmti_isOptionalEvent(jvmtiEvent event);
+        int nsk_jvmti_enableEvents(jvmtiEventMode enable, int size,
+                                   jvmtiEvent list[], jthread thread);
+        void nsk_jvmti_showPossessedCapabilities(jvmtiEnv *jvmti);
+
+---------------------------------------------------------------------------------
+
+Typical example of usage of the NSK_JVMTI_VERIFY macro
+for invocation of JVMTI functions:
+
+    // jvmti->GetVersion(jvmti, &version)
+    if (!NSK_JVMTI_VERIFY(jvmti->GetVersion(&version) != NULL)) {
+        return JNI_ERR;
+    }
+
+or with saving error code:
+
+    // err = jvmti->GetVersion(jvmti, &version)
+    if (!NSK_JVMTI_VERIFY(err = jvmti->GetVersion(&version))) {
+        return err;
+    }
+        functions: nsk_jvmti_*
+
+---------------------------------------------------------------------------------
+
+JVMTITools.h
+
+Provides set of functions which convert JVMTI binary data to
+a null-terminated character string:
+
+
+    const char* TranslateEvent(jvmtiEvent event_type);
+    const char* TranslateState(jint flags);
+    const char* TranslateError(jvmtiError err);
+    const char* TranslatePhase(jvmtiPhase phase);
+    const char* TranslateRootKind(jvmtiHeapRootKind root);
+    const char* TranslateObjectRefKind(jvmtiObjectReferenceKind ref);
+
+---------------------------------------------------------------------------------
+
+Injector.h
+
+Provides class file format constants and the function which inject some
+profiling bytecodes into Java class files:
+
+    int Inject(const u1* old_bytes, const jint old_length,
+               u1** new_bytes, jint* new_length, int bci_mode);
+
+---------------------------------------------------------------------------------

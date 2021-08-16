@@ -1,0 +1,89 @@
+/*
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+super public class compiler/rangechecks/TestRangeCheckExceptionHandlerLoop
+	version 51:0
+{
+
+
+public Method "<init>":"()V"
+	stack 1 locals 1
+{
+		aload_0;
+		invokespecial	Method java/lang/Object."<init>":"()V";
+		return;
+}
+
+/* This method has an irreducible loop, with 2 entries, one is the exception handler
+
+    static void test(boolean flag, int[] array, Exception exception) throws Exception {
+        int i = 0;
+        if (flag) {
+            try {
+                throw exception;
+            } catch(Exception e) {
+                array[i] = 0;
+                i++;
+            }
+        }
+        if (i < 10) {
+            throw exception; // caught by exception handler above as well
+        }
+    }
+*/
+public static Method test:"(Z[ILjava/lang/Exception;)V"
+	throws java/lang/Exception
+	stack 3 locals 5
+{
+		iconst_0;
+		istore_3;
+		iload_0;
+		ifeq	L17;
+		try t0;
+		aload_2;
+		athrow;
+		endtry t0;
+		catch t0 java/lang/Exception;
+		catch t1 java/lang/Exception;
+		stack_frame_type full;
+		locals_map int, class "[I", class java/lang/Exception, int;
+		stack_map class java/lang/Exception;
+		astore	4;
+		aload_1;
+		iload_3;
+		iconst_0;
+		iastore;
+		iinc	3, 1;
+	L17:	stack_frame_type same;
+		iload_3;
+		bipush	10;
+		if_icmpge	L25;
+		try t1;
+		aload_2;
+		athrow;
+		endtry t1;
+	L25:	stack_frame_type same;
+		return;
+}
+} // end Class TestRangeCheckExceptionHandlerLoop

@@ -1,0 +1,604 @@
+
+    @Test(dataProvider = "$type$CompareOpProvider")
+    static void lt$vectorteststype$BroadcastSmokeTest(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] b = fb.apply(SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            VectorMask<$Wideboxtype$> mv = av.lt(b[i]);
+
+            // Check results as part of computation.
+            for (int j = 0; j < SPECIES.length(); j++) {
+                Assert.assertEquals(mv.laneIsSet(j), a[i + j] < b[i]);
+            }
+        }
+    }
+
+    @Test(dataProvider = "$type$CompareOpProvider")
+    static void eq$vectorteststype$BroadcastMaskedSmokeTest(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] b = fb.apply(SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            VectorMask<$Wideboxtype$> mv = av.eq(b[i]);
+
+            // Check results as part of computation.
+            for (int j = 0; j < SPECIES.length(); j++) {
+                Assert.assertEquals(mv.laneIsSet(j), a[i + j] == b[i]);
+            }
+        }
+    }
+
+#if[byteOrShort]
+    @Test(dataProvider = "$type$UnaryOpProvider")
+#else[byteOrShort]
+#if[Int]
+    @Test(dataProvider = "$type$UnaryOpProvider")
+#else[Int]
+    @Test(dataProvider = "$type$toIntUnaryOpProvider")
+#end[Int]
+#end[byteOrShort]
+    static void toIntArray$vectorteststype$SmokeTest(IntFunction<$type$[]> fa) {
+        $type$[] a = fa.apply(SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            int[] r = av.toIntArray();
+            assertArraysEquals(r, a, i);
+        }
+    }
+
+#if[FP]
+    @Test(dataProvider = "$type$toLongUnaryOpProvider")
+#else[FP]
+    @Test(dataProvider = "$type$UnaryOpProvider")
+#end[FP]
+    static void toLongArray$vectorteststype$SmokeTest(IntFunction<$type$[]> fa) {
+        $type$[] a = fa.apply(SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            long[] r = av.toLongArray();
+            assertArraysEquals(r, a, i);
+        }
+    }
+
+#if[!Double]
+    @Test(dataProvider = "$type$UnaryOpProvider")
+    static void toDoubleArray$vectorteststype$SmokeTest(IntFunction<$type$[]> fa) {
+        $type$[] a = fa.apply(SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            double[] r = av.toDoubleArray();
+            assertArraysEquals(r, a, i);
+        }
+    }
+#end[!Double]
+
+    @Test(dataProvider = "$type$UnaryOpProvider")
+    static void toString$vectorteststype$SmokeTest(IntFunction<$type$[]> fa) {
+        $type$[] a = fa.apply(SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            String str = av.toString();
+
+            $type$ subarr[] = Arrays.copyOfRange(a, i, i + SPECIES.length());
+            Assert.assertTrue(str.equals(Arrays.toString(subarr)), "at index " + i + ", string should be = " + Arrays.toString(subarr) + ", but is = " + str);
+        }
+    }
+
+    @Test(dataProvider = "$type$UnaryOpProvider")
+    static void hashCode$vectorteststype$SmokeTest(IntFunction<$type$[]> fa) {
+        $type$[] a = fa.apply(SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            int hash = av.hashCode();
+
+            $type$ subarr[] = Arrays.copyOfRange(a, i, i + SPECIES.length());
+            int expectedHash = Objects.hash(SPECIES, Arrays.hashCode(subarr));
+            Assert.assertTrue(hash == expectedHash, "at index " + i + ", hash should be = " + expectedHash + ", but is = " + hash);
+        }
+    }
+
+#if[byte]
+    @Test(dataProvider = "$type$UnaryOpProvider")
+    static void reinterpretAsBytes$vectorteststype$SmokeTest(IntFunction<$type$[]> fa) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] r = new $type$[a.length];
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            av.reinterpretAsBytes().intoArray(r, i);
+        }
+        assertArraysEquals(r, a, 0);
+    }
+#end[byte]
+
+#if[!Long]
+    static long ADDReduceLong($type$[] a, int idx) {
+        $type$ res = 0;
+        for (int i = idx; i < (idx + SPECIES.length()); i++) {
+            res += a[i];
+        }
+
+        return (long)res;
+    }
+
+    static long ADDReduceAllLong($type$[] a) {
+        long res = 0;
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            res += ADDReduceLong(a, i);
+        }
+
+        return res;
+    }
+
+    @Test(dataProvider = "$type$UnaryOpProvider")
+    static void ADDReduceLong$vectorteststype$(IntFunction<$type$[]> fa) {
+        $type$[] a = fa.apply(SPECIES.length());
+        long[] r = lfr.apply(SPECIES.length());
+        long ra = 0;
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            r[i] = av.reduceLanesToLong(VectorOperators.ADD);
+        }
+
+        ra = 0;
+        for (int i = 0; i < a.length; i ++) {
+            ra += r[i];
+        }
+
+        assertReductionLongArraysEquals(r, ra, a,
+                $vectorteststype$::ADDReduceLong, $vectorteststype$::ADDReduceAllLong);
+    }
+
+    static long ADDReduceLongMasked($type$[] a, int idx, boolean[] mask) {
+        $type$ res = 0;
+        for (int i = idx; i < (idx + SPECIES.length()); i++) {
+            if(mask[i % SPECIES.length()])
+                res += a[i];
+        }
+
+        return (long)res;
+    }
+
+    static long ADDReduceAllLongMasked($type$[] a, boolean[] mask) {
+        long res = 0;
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            res += ADDReduceLongMasked(a, i, mask);
+        }
+
+        return res;
+    }
+
+    @Test(dataProvider = "$type$UnaryOpMaskProvider")
+    static void ADDReduceLong$vectorteststype$Masked(IntFunction<$type$[]> fa, IntFunction<boolean[]> fm) {
+        $type$[] a = fa.apply(SPECIES.length());
+        long[] r = lfr.apply(SPECIES.length());
+        boolean[] mask = fm.apply(SPECIES.length());
+        VectorMask<$Wideboxtype$> vmask = VectorMask.fromArray(SPECIES, mask, 0);
+        long ra = 0;
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            r[i] = av.reduceLanesToLong(VectorOperators.ADD, vmask);
+        }
+
+        ra = 0;
+        for (int i = 0; i < a.length; i ++) {
+            ra += r[i];
+        }
+
+        assertReductionLongArraysEqualsMasked(r, ra, a, mask,
+                $vectorteststype$::ADDReduceLongMasked, $vectorteststype$::ADDReduceAllLongMasked);
+    }
+
+#if[FP]
+    @Test(dataProvider = "$type$toLongUnaryOpProvider")
+#else[FP]
+    @Test(dataProvider = "$type$UnaryOpProvider")
+#end[FP]
+    static void BroadcastLong$vectorteststype$SmokeTest(IntFunction<$type$[]> fa) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] r = new $type$[a.length];
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$.broadcast(SPECIES, (long)a[i]).intoArray(r, i);
+        }
+        assertBroadcastArraysEquals(r, a);
+    }
+
+    @Test(dataProvider = "$type$BinaryOpMaskProvider")
+    static void blend$vectorteststype$BroadcastLongSmokeTest(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb,
+                                          IntFunction<boolean[]> fm) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] b = fb.apply(SPECIES.length());
+        $type$[] r = fr.apply(SPECIES.length());
+        boolean[] mask = fm.apply(SPECIES.length());
+        VectorMask<$Wideboxtype$> vmask = VectorMask.fromArray(SPECIES, mask, 0);
+
+        for (int ic = 0; ic < INVOC_COUNT; ic++) {
+            for (int i = 0; i < a.length; i += SPECIES.length()) {
+                $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+                av.blend((long)b[i], vmask).intoArray(r, i);
+            }
+        }
+        assertBroadcastLongArraysEquals(r, a, b, mask, $vectorteststype$::blend);
+    }
+#end[!Long]
+
+#if[Long]
+    @Test(dataProvider = "$type$UnaryOpProvider")
+    static void ADDReduceLong$vectorteststype$(IntFunction<$type$[]> fa) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] r = fr.apply(SPECIES.length());
+        $type$ ra = 0;
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            r[i] = av.reduceLanesToLong(VectorOperators.ADD);
+        }
+
+        ra = 0;
+        for (int i = 0; i < a.length; i ++) {
+            ra += r[i];
+        }
+
+        assertReductionArraysEquals(r, ra, a,
+                $vectorteststype$::ADDReduce, $vectorteststype$::ADDReduceAll);
+    }
+
+    @Test(dataProvider = "$type$UnaryOpMaskProvider")
+    static void ADDReduceLong$vectorteststype$Masked(IntFunction<$type$[]> fa, IntFunction<boolean[]> fm) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] r = fr.apply(SPECIES.length());
+        boolean[] mask = fm.apply(SPECIES.length());
+        VectorMask<$Wideboxtype$> vmask = VectorMask.fromArray(SPECIES, mask, 0);
+        $type$ ra = 0;
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            r[i] = av.reduceLanesToLong(VectorOperators.ADD, vmask);
+        }
+
+        ra = 0;
+        for (int i = 0; i < a.length; i ++) {
+            ra += r[i];
+        }
+
+        assertReductionArraysEqualsMasked(r, ra, a, mask,
+                $vectorteststype$::ADDReduceMasked, $vectorteststype$::ADDReduceAllMasked);
+    }
+#end[Long]
+
+#if[Int]
+    @Test(dataProvider = "$type$UnaryOpShuffleProvider")
+#else[Int]
+    @Test(dataProvider = "$type$UnaryOpSelectFromProvider")
+#end[Int]
+    static void SelectFrom$vectorteststype$(IntFunction<$type$[]> fa,
+                                           BiFunction<Integer,Integer,$type$[]> fs) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] order = fs.apply(a.length, SPECIES.length());
+        $type$[] r = fr.apply(SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            $abstractvectortype$ bv = $abstractvectortype$.fromArray(SPECIES, order, i);
+            bv.selectFrom(av).intoArray(r, i);
+        }
+
+        assertSelectFromArraysEquals(r, a, order, SPECIES.length());
+    }
+
+#if[Int]
+    @Test(dataProvider = "$type$UnaryOpShuffleMaskProvider")
+#else[Int]
+    @Test(dataProvider = "$type$UnaryOpSelectFromMaskProvider")
+#end[Int]
+    static void SelectFrom$vectorteststype$MaskedSmokeTest(IntFunction<$type$[]> fa,
+                                                           BiFunction<Integer,Integer,$type$[]> fs,
+                                                           IntFunction<boolean[]> fm) {
+        $type$[] a = fa.apply(SPECIES.length());
+        $type$[] order = fs.apply(a.length, SPECIES.length());
+        $type$[] r = fr.apply(SPECIES.length());
+        boolean[] mask = fm.apply(SPECIES.length());
+        VectorMask<$Wideboxtype$> vmask = VectorMask.fromArray(SPECIES, mask, 0);
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            $abstractvectortype$ av = $abstractvectortype$.fromArray(SPECIES, a, i);
+            $abstractvectortype$ bv = $abstractvectortype$.fromArray(SPECIES, order, i);
+            bv.selectFrom(av, vmask).intoArray(r, i);
+        }
+
+        assertSelectFromArraysEquals(r, a, order, mask, SPECIES.length());
+    }
+
+    @Test(dataProvider = "shuffleProvider")
+    static void shuffleMiscellaneous$vectorteststype$SmokeTest(BiFunction<Integer,Integer,int[]> fs) {
+        int[] a = fs.apply(SPECIES.length() * BUFFER_REPS, SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            var shuffle = VectorShuffle.fromArray(SPECIES, a, i);
+            int hash = shuffle.hashCode();
+            int length = shuffle.length();
+
+            int subarr[] = Arrays.copyOfRange(a, i, i + SPECIES.length());
+            int expectedHash = Objects.hash(SPECIES, Arrays.hashCode(subarr));
+            Assert.assertTrue(hash == expectedHash, "at index " + i + ", hash should be = " + expectedHash + ", but is = " + hash);
+            Assert.assertEquals(length, SPECIES.length());
+        }
+    }
+
+    @Test(dataProvider = "shuffleProvider")
+    static void shuffleToString$vectorteststype$SmokeTest(BiFunction<Integer,Integer,int[]> fs) {
+        int[] a = fs.apply(SPECIES.length() * BUFFER_REPS, SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            var shuffle = VectorShuffle.fromArray(SPECIES, a, i);
+            String str = shuffle.toString();
+
+            int subarr[] = Arrays.copyOfRange(a, i, i + SPECIES.length());
+            Assert.assertTrue(str.equals("Shuffle" + Arrays.toString(subarr)), "at index " +
+                i + ", string should be = " + Arrays.toString(subarr) + ", but is = " + str);
+        }
+    }
+
+    @Test(dataProvider = "shuffleCompareOpProvider")
+    static void shuffleEquals$vectorteststype$SmokeTest(BiFunction<Integer,Integer,int[]> fa, BiFunction<Integer,Integer,int[]> fb) {
+        int[] a = fa.apply(SPECIES.length() * BUFFER_REPS, SPECIES.length());
+        int[] b = fb.apply(SPECIES.length() * BUFFER_REPS, SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            var av = VectorShuffle.fromArray(SPECIES, a, i);
+            var bv = VectorShuffle.fromArray(SPECIES, b, i);
+            boolean eq = av.equals(bv);
+            int to = i + SPECIES.length();
+            Assert.assertEquals(eq, Arrays.equals(a, i, to, b, i, to));
+        }
+    }
+
+    @Test(dataProvider = "maskCompareOpProvider")
+    static void maskEquals$vectorteststype$SmokeTest(IntFunction<boolean[]> fa, IntFunction<boolean[]> fb) {
+        boolean[] a = fa.apply(SPECIES.length());
+        boolean[] b = fb.apply(SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            var av = SPECIES.loadMask(a, i);
+            var bv = SPECIES.loadMask(b, i);
+            boolean equals = av.equals(bv);
+            int to = i + SPECIES.length();
+            Assert.assertEquals(equals, Arrays.equals(a, i, to, b, i, to));
+        }
+    }
+
+    static boolean beq(boolean a, boolean b) {
+        return (a == b);
+    }
+
+    @Test(dataProvider = "maskCompareOpProvider")
+    static void maskEq$vectorteststype$SmokeTest(IntFunction<boolean[]> fa, IntFunction<boolean[]> fb) {
+        boolean[] a = fa.apply(SPECIES.length());
+        boolean[] b = fb.apply(SPECIES.length());
+        boolean[] r = new boolean[a.length];
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            var av = SPECIES.loadMask(a, i);
+            var bv = SPECIES.loadMask(b, i);
+            var cv = av.eq(bv);
+            cv.intoArray(r, i);
+        }
+        assertArraysEquals(r, a, b, $vectorteststype$::beq);
+    }
+
+    @Test(dataProvider = "maskProvider")
+    static void maskHashCode$vectorteststype$SmokeTest(IntFunction<boolean[]> fa) {
+        boolean[] a = fa.apply(SPECIES.length());
+
+        for (int i = 0; i < a.length; i += SPECIES.length()) {
+            var vmask = SPECIES.loadMask(a, i);
+            int hash = vmask.hashCode();
+
+            boolean subarr[] = Arrays.copyOfRange(a, i, i + SPECIES.length());
+            int expectedHash = Objects.hash(SPECIES, Arrays.hashCode(subarr));
+            Assert.assertTrue(hash == expectedHash, "at index " + i + ", hash should be = " + expectedHash + ", but is = " + hash);
+        }
+    }
+
+    static int maskTrueCount(boolean[] a, int idx) {
+        int trueCount = 0;
+        for (int i = idx; i < idx + SPECIES.length(); i++) {
+            trueCount += a[i] ? 1 : 0;
+        }
+        return trueCount;
+    }
+
+    @Test(dataProvider = "maskProvider")
+    static void maskTrueCount$vectorteststype$SmokeTest(IntFunction<boolean[]> fa) {
+        boolean[] a = fa.apply(SPECIES.length());
+        int[] r = new int[a.length];
+
+        for (int ic = 0; ic < INVOC_COUNT * INVOC_COUNT; ic++) {
+            for (int i = 0; i < a.length; i += SPECIES.length()) {
+                var vmask = SPECIES.loadMask(a, i);
+                r[i] = vmask.trueCount();
+            }
+        }
+
+        assertMaskReductionArraysEquals(r, a, $vectorteststype$::maskTrueCount);
+    }
+
+    static int maskLastTrue(boolean[] a, int idx) {
+        int i = idx + SPECIES.length() - 1;
+        for (; i >= idx; i--) {
+            if (a[i]) {
+                break;
+            }
+        }
+        return i - idx;
+    }
+
+    @Test(dataProvider = "maskProvider")
+    static void maskLastTrue$vectorteststype$SmokeTest(IntFunction<boolean[]> fa) {
+        boolean[] a = fa.apply(SPECIES.length());
+        int[] r = new int[a.length];
+
+        for (int ic = 0; ic < INVOC_COUNT * INVOC_COUNT; ic++) {
+            for (int i = 0; i < a.length; i += SPECIES.length()) {
+                var vmask = SPECIES.loadMask(a, i);
+                r[i] = vmask.lastTrue();
+            }
+        }
+
+        assertMaskReductionArraysEquals(r, a, $vectorteststype$::maskLastTrue);
+    }
+
+    static int maskFirstTrue(boolean[] a, int idx) {
+        int i = idx;
+        for (; i < idx + SPECIES.length(); i++) {
+            if (a[i]) {
+                break;
+            }
+        }
+        return i - idx;
+    }
+
+    @Test(dataProvider = "maskProvider")
+    static void maskFirstTrue$vectorteststype$SmokeTest(IntFunction<boolean[]> fa) {
+        boolean[] a = fa.apply(SPECIES.length());
+        int[] r = new int[a.length];
+
+        for (int ic = 0; ic < INVOC_COUNT * INVOC_COUNT; ic++) {
+            for (int i = 0; i < a.length; i += SPECIES.length()) {
+                var vmask = SPECIES.loadMask(a, i);
+                r[i] = vmask.firstTrue();
+            }
+        }
+
+        assertMaskReductionArraysEquals(r, a, $vectorteststype$::maskFirstTrue);
+    }
+
+#if[!MaxBit]
+    @DataProvider
+    public static Object[][] longMaskProvider() {
+        return new Object[][]{
+                {0xFFFFFFFFFFFFFFFFL},
+                {0x0000000000000000L},
+                {0x5555555555555555L},
+                {0x0123456789abcdefL},
+        };
+    }
+
+    @Test(dataProvider = "longMaskProvider")
+    static void maskFromToLong$vectorteststype$SmokeTest(long inputLong) {
+        var vmask = VectorMask.fromLong(SPECIES, inputLong);
+        long outputLong = vmask.toLong();
+        Assert.assertEquals(outputLong, inputLong & (((1L << (SPECIES.length() - 1)) << 1) - 1));
+    }
+#end[!MaxBit]
+
+    @DataProvider
+    public static Object[][] offsetProvider() {
+        return new Object[][]{
+                {0},
+                {-1},
+                {+1},
+                {+2},
+                {-2},
+        };
+    }
+
+    @Test(dataProvider = "offsetProvider")
+    static void indexInRange$vectorteststype$SmokeTest(int offset) {
+        int limit = SPECIES.length() * BUFFER_REPS;
+        for (int i = 0; i < limit; i += SPECIES.length()) {
+            var actualMask = SPECIES.indexInRange(i + offset, limit);
+            var expectedMask = SPECIES.maskAll(true).indexInRange(i + offset, limit);
+            assert(actualMask.equals(expectedMask));
+            for (int j = 0; j < SPECIES.length(); j++)  {
+                int index = i + j + offset;
+                Assert.assertEquals(actualMask.laneIsSet(j), index >= 0 && index < limit);
+            }
+        }
+    }
+
+    @DataProvider
+    public static Object[][] lengthProvider() {
+        return new Object[][]{
+                {0},
+                {1},
+                {32},
+                {37},
+                {1024},
+                {1024+1},
+                {1024+5},
+        };
+    }
+
+    @Test(dataProvider = "lengthProvider")
+    static void loopBound$vectorteststype$SmokeTest(int length) {
+        int actualLoopBound = SPECIES.loopBound(length);
+        int expectedLoopBound = length - Math.floorMod(length, SPECIES.length());
+        Assert.assertEquals(actualLoopBound, expectedLoopBound);
+    }
+
+    @Test
+    static void ElementSize$vectorteststype$SmokeTest() {
+        $abstractvectortype$ av = $abstractvectortype$.zero(SPECIES);
+        int elsize = av.elementSize();
+        Assert.assertEquals(elsize, $Wideboxtype$.SIZE);
+    }
+
+    @Test
+    static void VectorShape$vectorteststype$SmokeTest() {
+        $abstractvectortype$ av = $abstractvectortype$.zero(SPECIES);
+        VectorShape vsh = av.shape();
+        assert(vsh.equals(VectorShape.$Shape$));
+    }
+
+    @Test
+    static void ShapeWithLanes$vectorteststype$SmokeTest() {
+        $abstractvectortype$ av = $abstractvectortype$.zero(SPECIES);
+        VectorShape vsh = av.shape();
+        VectorSpecies species = vsh.withLanes($type$.class);
+        assert(species.equals(SPECIES));
+    }
+
+    @Test
+    static void ElementType$vectorteststype$SmokeTest() {
+        $abstractvectortype$ av = $abstractvectortype$.zero(SPECIES);
+        assert(av.species().elementType() == $type$.class);
+    }
+
+    @Test
+    static void SpeciesElementSize$vectorteststype$SmokeTest() {
+        $abstractvectortype$ av = $abstractvectortype$.zero(SPECIES);
+        assert(av.species().elementSize() == $Wideboxtype$.SIZE);
+    }
+
+    @Test
+    static void VectorType$vectorteststype$SmokeTest() {
+        $abstractvectortype$ av = $abstractvectortype$.zero(SPECIES);
+        assert(av.species().vectorType() == av.getClass());
+    }
+
+    @Test
+    static void WithLanes$vectorteststype$SmokeTest() {
+        $abstractvectortype$ av = $abstractvectortype$.zero(SPECIES);
+        VectorSpecies species = av.species().withLanes($type$.class);
+        assert(species.equals(SPECIES));
+    }
+
+    @Test
+    static void WithShape$vectorteststype$SmokeTest() {
+        $abstractvectortype$ av = $abstractvectortype$.zero(SPECIES);
+        VectorShape vsh = av.shape();
+        VectorSpecies species = av.species().withShape(vsh);
+        assert(species.equals(SPECIES));
+    }

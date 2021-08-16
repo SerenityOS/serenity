@@ -1,0 +1,5 @@
+    @Test(dataProvider = "$type$UnaryOpProvider")
+    static void get$vectorteststype$(IntFunction<$type$[]> fa) {
+[[KERNEL]]
+        assertArraysEquals(r, a, $vectorteststype$::get);
+    }

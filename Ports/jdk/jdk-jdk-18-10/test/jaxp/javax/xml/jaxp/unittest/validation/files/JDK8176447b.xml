@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:noNamespaceSchemaLocation="JDK8176447b.xsd">
+    <e>
+        <e1 a1="a" >
+            <e2 a2="a"/>
+            <e2 a2="a"/>
+        </e1>
+        <e1 a1="a">
+            <e2 a2="b"/>
+            <e2 a2="a"/>
+        </e1>    
+    </e>
+</root>

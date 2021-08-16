@@ -1,0 +1,1041 @@
+//
+// This file is used for automated generation of java classes to wrap native structures.
+// For details on format of this file, see WrapperGenerator.java
+//
+// WARNING: If you modify this file, you need to regenerate sizes-32.txt and sizes-64.txt.
+// Run "make update-x11wrappers" to do this.
+//
+
+XExtData
+    number	int
+    next pointer XExtData
+    free_private pointer
+    private_data	pointer
+XIMText
+    length	short
+    feedback	pointer
+    encoding_is_wchar	Bool
+    string pointer
+XSetWindowAttributes
+    background_pixmap	long
+    background_pixel	long
+    border_pixmap	long
+    border_pixel	long
+    bit_gravity         int
+    win_gravity         int
+    backing_store	int
+    backing_planes	long
+    backing_pixel	long
+    save_under          Bool
+    event_mask          long
+    do_not_propagate_mask	long
+    override_redirect	Bool
+    colormap            long
+    cursor              long
+Visual
+    ext_data    pointer XExtData
+    visualid	long
+    class	int
+    red_mask	long
+    green_mask	long
+    blue_mask	long
+    bits_per_rgb	int
+    map_entries	int
+Depth
+    depth	int
+    nvisuals	int
+    visuals   pointer Visual
+XClassHint
+    res_name	pointer
+    res_class	pointer
+XIMPreeditCaretCallbackStruct
+    position	int
+    direction int
+    style     int
+XmbTextItem
+    chars	pointer byte
+    nchars	int
+    delta	int
+    font_set    pointer
+XStandardColormap
+    colormap    long
+    red_max	long
+    red_mult	long
+    green_max	long
+    green_mult	long
+    blue_max	long
+    blue_mult	long
+    base_pixel	long
+    visualid    long
+    killid      long
+XIMCallback
+    client_data	pointer
+    callback    pointer
+XKeyboardState
+    key_click_percent	int
+    bell_percent	int
+    bell_pitch          int
+    bell_duration	int
+    led_mask            long
+    global_auto_repeat	int
+    auto_repeats	array byte 32
+XCirculateEvent
+    type	int
+    serial	long
+    send_event	Bool
+    display long
+    event	long
+    window	long
+    place	int
+XWMHints
+    flags	long
+    initial_state	int
+    icon_pixmap pointer
+    icon_window long
+    icon_x	int
+    icon_y	int
+    icon_mask long
+    input	Bool
+    window_group long
+XCrossingEvent
+    type	int
+    serial	long
+    send_event	Bool
+    display     long
+    window	long
+    root	long
+    subwindow	long
+    time	ulong
+    x	int
+    y	int
+    x_root	int
+    y_root	int
+    mode	int
+    detail	int
+    same_screen	Bool
+    focus	Bool
+    state	int
+XIMStringConversionText
+    length	short
+    feedback	pointer
+    encoding_is_wchar	Bool
+    string      pointer
+XKeymapEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    window	long
+    key_vector	array byte 32
+XDestroyWindowEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    event	long
+    window	long
+XComposeStatus
+    compose_ptr	pointer
+    chars_matched	int
+XTextItem
+    chars	pointer
+    nchars	int
+    delta	int
+    font	long
+XIMStringConversionCallbackStruct
+    position	short
+    direction     int
+    operation	short
+    factor	short
+    text          pointer XIMStringConversionText
+XOMFontInfo
+    num_font	int
+    font_struct_list pointer
+    font_name_list	pointer
+XClientMessageEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    window	long
+    message_type	Atom
+    format	int
+    data        array long 5
+XMapRequestEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    parent	long
+    window	long
+XSelectionEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    requestor	long
+    selection	Atom
+    target	Atom
+    property	Atom
+    time	ulong
+XVisibilityEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    window	long
+    state	int
+XConfigureRequestEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    parent	long
+    window	long
+    x	int
+    y	int
+    width	int
+    height	int
+    border_width	int
+    above	long
+    detail	int
+    value_mask	long
+Screen
+    ext_data pointer XExtData
+    display pointer
+    root	long
+    width	int
+    height	int
+    mwidth	int
+    mheight	int
+    ndepths	int
+    depths pointer Depth
+    root_depth	int
+    root_visual pointer Visual
+    default_gc  long
+    cmap	long
+    white_pixel	long
+    black_pixel	long
+    max_maps	int
+    min_maps	int
+    backing_store	int
+    save_unders	Bool
+    root_input_mask	long
+XTextProperty
+    value	pointer byte
+    encoding    long
+    format	int
+    nitems	long
+XWindowChanges
+    x	int
+    y	int
+    width	int
+    height	int
+    border_width	int
+    sibling	long
+    stack_mode	int
+XVisualInfo
+    visual      pointer
+    visualid    long
+    screen	int
+    depth	int
+    class	int
+    red_mask	long
+    green_mask	long
+    blue_mask	long
+    colormap_size	int
+    bits_per_rgb	int
+XRenderDirectFormat
+    red         short
+    redMask     short
+    green       short
+    greenMask   short
+    blue        short
+    blueMask    short
+    alpha       short
+    alphaMask   short
+XRenderPictFormat
+    id          long
+    type        int
+    depth       int
+    direct      struct XRenderDirectFormat
+    colormap    long
+XIMHotKeyTrigger
+    keysym	long
+    modifier	int
+    modifier_mask	int
+XIMHotKeyTriggers
+    num_hot_key	int
+    key         pointer XIMHotKeyTrigger
+XIMStyles
+    count_styles	short
+    supported_styles	pointer long
+XIMStatusDrawCallbackStruct
+    type        int
+    data        long
+XWindowAttributes
+    x	int
+    y	int
+    width	int
+    height	int
+    border_width	int
+    depth	int
+    visual      pointer Visual
+    root	long
+    class	int
+    bit_gravity	int
+    win_gravity	int
+    backing_store	int
+    backing_planes	long
+    backing_pixel	long
+    save_under	Bool
+    colormap	long
+    map_installed	Bool
+    map_state	int
+    all_event_masks	long
+    your_event_mask	long
+    do_not_propagate_mask	long
+    override_redirect	Bool
+    screen pointer Screen
+XExtCodes
+    extension	int
+    major_opcode	int
+    first_event	int
+    first_error	int
+XPropertyEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    window	long
+    atom	Atom
+    time	ulong
+    state	int
+
+XSizeHints
+    flags	long
+    x           int
+    y           int
+    width	int
+    height	int
+    min_width	int
+    min_height	int
+    max_width	int
+    max_height	int
+    width_inc	int
+    height_inc	int
+    min_aspect.x int
+    min_aspect.y int
+    max_aspect.x int
+    max_aspect.y int
+    base_width   int
+    base_height  int
+    win_gravity  int
+XIconSize
+    min_width	int
+    min_height	int
+    max_width	int
+    max_height	int
+    width_inc	int
+    height_inc	int
+XwcTextItem
+    chars	pointer
+    nchars	int
+    delta	int
+    font_set    pointer
+XIMPreeditDrawCallbackStruct
+    caret	int
+    chg_first	int
+    chg_length	int
+    text        pointer XIMText
+XErrorEvent
+    type	int
+    display     long
+    resourceid	long
+    serial	long
+    error_code	byte
+    request_code	byte
+    minor_code	byte
+XSelectionClearEvent
+    type	int
+    serial	long
+    send_event	Bool
+    display long
+    window	long
+    selection	Atom
+    time	ulong
+XKeyboardControl
+    key_click_percent	int
+    bell_percent	int
+    bell_pitch	int
+    bell_duration	int
+    led	int
+    led_mode	int
+    key	int
+    auto_repeat_mode	int
+XAnyEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    window	long
+XTimeCoord
+    time	ulong
+    x	short
+    y	short
+XGravityEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    event	long
+    window	long
+    x           int
+    y           int
+XCharStruct
+    lbearing	short
+    rbearing	short
+    width	short
+    ascent	short
+    descent	short
+    attributes	short
+XArc
+    x	short
+    y	short
+    width	short
+    height	short
+    angle1	short
+    angle2	short
+XPoint
+    x	short
+    y	short
+ScreenFormat
+    ext_data pointer XExtData
+    depth	int
+    bits_per_pixel	int
+    scanline_pad	int
+XFocusChangeEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    window	long
+    mode	int
+    detail	int
+XResizeRequestEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    window	long
+    width	int
+    height	int
+
+XRectangle
+    x	short
+    y	short
+    width	short
+    height	short
+
+XMappingEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    window	long
+    request	int
+    first_keycode	int
+    count	int
+XSegment
+    x1	short
+    y1	short
+    x2	short
+    y2	short
+XColor
+    pixel	long
+    red         short
+    green	short
+    blue	short
+    flags	byte
+    pad         byte
+XKeyEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    window	long
+    root	long
+    subwindow	long
+    time	ulong
+    x	int
+    y	int
+    x_root	int
+    y_root	int
+    state	int
+    keycode	int
+    same_screen	Bool
+XReparentEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    event	long
+    window	long
+    parent	long
+    x           int
+    y           int
+    override_redirect	Bool
+XMotionEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    window	long
+    root	long
+    subwindow	long
+    time	ulong
+    x	int
+    y	int
+    x_root	int
+    y_root	int
+    state	int
+    is_hint	byte
+    same_screen	Bool
+XButtonEvent
+    type	int
+    serial	long
+    send_event Bool
+    display     long
+    window	long
+    root	long
+    subwindow	long
+    time	ulong
+    x	int
+    y	int
+    x_root	int
+    y_root	int
+    state	int
+    button	int
+    same_screen	Bool
+XHostAddress
+    family	int
+    length	int
+    address	pointer
+XOMCharSetList
+    charset_count	int
+    charset_list	pointer
+XNoExposeEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    drawable	long
+    major_code	int
+    minor_code	int
+XSelectionRequestEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    owner	long
+    requestor	long
+    selection	Atom
+    target	Atom
+    property	Atom
+    time	ulong
+XGCValues
+    function	int
+    plane_mask	long
+    foreground	long
+    background	long
+    line_width	int
+    line_style	int
+    cap_style	int
+    join_style	int
+    fill_style	int
+    fill_rule	int
+    arc_mode	int
+    tile	long
+    stipple	long
+    ts_x_origin	int
+    ts_y_origin	int
+    font	long
+    subwindow_mode	int
+    graphics_exposures	Bool
+    clip_x_origin	int
+    clip_y_origin	int
+    clip_mask	long
+    dash_offset	int
+    dashes	byte
+XImage
+    width	int
+    height	int
+    xoffset	int
+    format	int
+    data	pointer byte
+    byte_order	int
+    bitmap_unit	int
+    bitmap_bit_order	int
+    bitmap_pad	int
+    depth	int
+    bytes_per_line	int
+    bits_per_pixel	int
+    red_mask	long
+    green_mask	long
+    blue_mask	long
+    obdata	pointer
+    f.create_image pointer
+    f.destroy_image pointer
+    f.get_pixel pointer
+    f.put_pixel pointer
+    f.sub_image pointer
+    f.add_pixel pointer
+XIMValuesList
+    count_values	short
+    supported_values	pointer
+XColormapEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    window	long
+    colormap	long
+    new         Bool
+    state	int
+XIMPreeditStateNotifyCallbackStruct
+    state	long
+XCreateWindowEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    parent	long
+    window	long
+    x	int
+    y	int
+    width	int
+    height	int
+    border_width	int
+    override_redirect	Bool
+XConfigureEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    event	long
+    window	long
+    x	int
+    y	int
+    width	int
+    height	int
+    border_width	int
+    above	long
+    override_redirect	Bool
+XFontProp
+    name	long
+    card32	long
+XModifierKeymap
+    max_keypermod	int
+    modifiermap	pointer
+XCirculateRequestEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    parent	long
+    window	long
+    place	int
+XChar2b
+    byte1 byte
+    byte2 byte
+XTextItem16
+    chars       pointer XChar2b
+    nchars	int
+    delta	int
+    font	long
+XOMOrientation
+    num_orientation	int
+    orientation         pointer int
+XGraphicsExposeEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    drawable	long
+    x           int
+    y           int
+    width	int
+    height	int
+    count	int
+    major_code	int
+    minor_code	int
+XFontStruct
+    ext_data            pointer XExtData
+    fid                 long
+    direction           int
+    min_char_or_byte2   int
+    max_char_or_byte2   int
+    min_byte1           int
+    max_byte1           int
+    all_chars_exist	Bool
+    n_properties	int
+    properties          pointer XFontProp
+    min_bounds          struct XCharStruct
+    max_bounds          struct XCharStruct
+    per_char            pointer XCharStruct
+    ascent              int
+    descent             int
+XMapEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    event	long
+    window	long
+    override_redirect	int
+XExposeEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    window	long
+    x	int
+    y	int
+    width	int
+    height	int
+    count	int
+
+XFontSetExtents
+    max_ink_extent struct XRectangle
+    max_logical_extent struct XRectangle
+
+XUnmapEvent
+    type	int
+    serial	long
+    send_event  Bool
+    display     long
+    event	long
+    window	long
+    from_configure	Bool
+PropMwmHints
+    flags       long
+    functions   long
+    decorations long
+    inputMode   long
+    status      long
+XPixmapFormatValues
+    depth int
+    bits_per_pixel int
+    scanline_pad int
+awtImageData
+    Depth int
+    wsImageFormat struct XPixmapFormatValues
+    clrdata pointer
+    convert array pointer 32
+ColorEntry
+    r byte
+    g byte
+    b byte
+    flags byte
+ColorData
+    awt_Colors pointer ColorEntry
+    awt_numICMcolors int
+    awt_icmLUT pointer int
+    awt_icmLUT2Colors pointer byte
+    img_grays pointer byte
+    img_clr_tbl pointer byte
+    img_oda_red pointer byte
+    img_oda_green pointer byte
+    img_oda_blue pointer byte
+    pGrayInverseLutData pointer int
+    screendata int
+    representsPrimaries int
+
+AwtGraphicsConfigData
+    awt_depth int
+    awt_cmap long
+    awt_visInfo struct XVisualInfo
+    awt_num_colors int
+    awtImage pointer awtImageData
+    AwtColorMatch pointer
+    monoImage pointer
+    monoPixmap long
+    monoPixmapWidth int
+    monoPixmapHeight int
+    monoPixmapGC long
+    pixelStride int
+    color_data pointer ColorData
+    glxInfo pointer
+    isTranslucencySupported int
+    renderPictFormat struct XRenderPictFormat
+
+AwtScreenData
+    numConfigs int
+    root long
+    whitepixel long
+    blackpixel long
+    defaultConfig pointer AwtGraphicsConfigData
+    configs pointer      // AwtGraphicsConfigDataPtr *configs;
+
+XdbeSwapInfo
+    swap_window long
+    swap_action int
+
+XEvent
+   type int
+   xany struct XAnyEvent
+   xkey struct XKeyEvent
+   xbutton struct XButtonEvent
+   xmotion struct XMotionEvent
+   xcrossing struct XCrossingEvent
+   xfocus struct XFocusChangeEvent
+   xexpose struct XExposeEvent
+   xgraphicsexpose struct XGraphicsExposeEvent
+   xnoexpose struct XNoExposeEvent
+   xvisibility struct XVisibilityEvent
+   xcreatewindow struct XCreateWindowEvent
+   xdestroywindow struct XDestroyWindowEvent
+   xunmap struct XUnmapEvent
+   xmap struct XMapEvent
+   xmaprequest struct XMapRequestEvent
+   xreparent struct XReparentEvent
+   xconfigure struct XConfigureEvent
+   xgravity struct XGravityEvent
+   xresizerequest struct XResizeRequestEvent
+   xconfigurerequest struct XConfigureRequestEvent
+   xcirculate struct XCirculateEvent
+   xcirculaterequest struct XCirculateRequestEvent
+   xproperty struct XPropertyEvent
+   xselectionclear struct XSelectionClearEvent
+   xselectionrequest struct XSelectionRequestEvent
+   xselection struct XSelectionEvent
+   xcolormap struct XColormapEvent
+   xclient struct XClientMessageEvent
+   xmapping struct XMappingEvent
+   xerror struct XErrorEvent
+   xkeymap struct XKeymapEvent
+   pad array long 24
+
+XkbAnyEvent
+    type  int
+    serial  ulong
+    send_event  Bool
+    display  long
+    time  ulong
+    xkb_type  int
+    device  int
+
+XkbNewKeyboardNotifyEvent
+    type  int
+    serial  ulong
+    send_event  Bool
+    display  long
+    time  ulong
+    xkb_type  int
+    device  int
+    old_device  int
+    min_key_code  int
+    max_key_code  int
+    old_min_key_code  int
+    old_max_key_code  int
+    changed  int
+    req_major  byte
+    req_minor  byte
+
+XkbMapNotifyEvent
+    type  int
+    serial  ulong
+    send_event  Bool
+    display  long
+    time  ulong
+    xkb_type  int
+    device  int
+    changed  int
+    flags  int
+    first_type  int
+    num_types  int
+    min_key_code  int
+    max_key_code  int
+    first_key_sym  int
+    first_key_act  int
+    first_key_behavior  int
+    first_key_explicit  int
+    first_modmap_key  int
+    first_vmodmap_key  int
+    num_key_syms  int
+    num_key_acts  int
+    num_key_behaviors  int
+    num_key_explicit  int
+    num_modmap_keys  int
+    num_vmodmap_keys  int
+    vmods  int
+
+XkbStateNotifyEvent
+    type  int
+    serial  ulong
+    send_event  Bool
+    display  long
+    time  ulong
+    xkb_type  int
+    device  int
+    changed  int
+    group  int
+    base_group  int
+    latched_group  int
+    locked_group  int
+    mods  int
+    base_mods  int
+    latched_mods  int
+    locked_mods  int
+    compat_state  int
+    grab_mods  byte
+    compat_grab_mods  byte
+    lookup_mods  byte
+    compat_lookup_mods  byte
+    ptr_buttons  int
+    keycode  int
+    event_type  byte
+    req_major  byte
+    req_minor  byte
+
+XkbControlsNotifyEvent
+    type  int
+    serial  ulong
+    send_event  Bool
+    display  long
+    time  ulong
+    xkb_type  int
+    device  int
+    changed_ctrls  int
+    enabled_ctrls  int
+    enabled_ctrl_changes  int
+    num_groups  int
+    keycode  int
+    event_type  byte
+    req_major  byte
+    req_minor  byte
+
+XkbIndicatorNotifyEvent
+    type  int
+    serial  ulong
+    send_event  Bool
+    display  long
+    time  ulong
+    xkb_type  int
+    device  int
+    changed  int
+    state  int
+
+XkbNamesNotifyEvent
+    type  int
+    serial  ulong
+    send_event  Bool
+    display  long
+    time  ulong
+    xkb_type  int
+    device  int
+    changed  int
+    first_type  int
+    num_types  int
+    first_lvl  int
+    num_lvls  int
+    num_aliases  int
+    num_radio_groups  int
+    changed_vmods  int
+    changed_groups  int
+    changed_indicators  int
+    first_key  int
+    num_keys  int
+
+
+XkbCompatMapNotifyEvent
+    type  int
+    serial  ulong
+    send_event  Bool
+    display  long
+    time  ulong
+    xkb_type  int
+    device  int
+    changed_groups  int
+    first_si  int
+    num_si  int
+    num_total_si  int
+
+XkbBellNotifyEvent
+    type  int
+    serial  ulong
+    send_event  Bool
+    display  long
+    time  ulong
+    xkb_type  int
+    device  int
+    percent  int
+    pitch  int
+    duration  int
+    bell_class  int
+    bell_id  int
+    name  Atom
+    window  long
+    event_only  Bool
+
+XkbActionMessageEvent
+    type  int
+    serial  ulong
+    send_event  Bool
+    display  long
+    time  ulong
+    xkb_type  int
+    device  int
+    keycode  int
+    press  Bool
+    key_event_follows  Bool
+    group  int
+    mods  int
+    message array byte 7 //XkbActionMessageLength+1
+
+XkbAccessXNotifyEvent
+    type  int
+    serial  ulong
+    send_event  Bool
+    display  long
+    time  ulong
+    xkb_type  int
+    device  int
+    detail  int
+    keycode  int
+    sk_delay  int
+    debounce_delay  int
+
+XkbExtensionDeviceNotifyEvent
+    type  int
+    serial  ulong
+    send_event  Bool
+    display  long
+    time  ulong
+    xkb_type  int
+    device  int
+    reason  int
+    supported  int
+    unsupported  int
+    first_btn  int
+    num_btns  int
+    leds_defined  int
+    led_state  int
+    led_class  int
+    led_id  int
+
+XkbEvent
+    type  int
+    any  struct XkbAnyEvent
+    new_kbd  struct XkbNewKeyboardNotifyEvent
+    map  struct XkbMapNotifyEvent
+    state  struct XkbStateNotifyEvent
+    ctrls  struct XkbControlsNotifyEvent
+    indicators  struct XkbIndicatorNotifyEvent
+    names  struct XkbNamesNotifyEvent
+    compat  struct XkbCompatMapNotifyEvent
+    bell  struct XkbBellNotifyEvent
+    message  struct XkbActionMessageEvent
+    accessx  struct XkbAccessXNotifyEvent
+    device  struct XkbExtensionDeviceNotifyEvent
+    core  struct XEvent

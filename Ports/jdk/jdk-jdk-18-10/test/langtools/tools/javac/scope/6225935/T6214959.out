@@ -1,0 +1,2 @@
+T6214959.java:15:7: compiler.err.ref.ambiguous: y, kindname.method, y(), a.Star, kindname.method, y(), a.Ambiguous
+1 error

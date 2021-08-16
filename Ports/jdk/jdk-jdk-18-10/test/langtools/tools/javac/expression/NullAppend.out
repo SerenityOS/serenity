@@ -1,0 +1,2 @@
+NullAppend.java:11:21: compiler.err.operator.cant.be.applied.1: +, compiler.misc.type.null, compiler.misc.type.null
+1 error

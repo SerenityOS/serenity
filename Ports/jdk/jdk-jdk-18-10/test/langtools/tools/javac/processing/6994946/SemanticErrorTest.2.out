@@ -1,0 +1,4 @@
+- compiler.err.proc.messager: Deliberate Error
+SemanticErrorTest.java:13:1: compiler.err.proc.messager: Deliberate Error on Trees
+SemanticErrorTest.java:13:46: compiler.err.repeated.interface
+3 errors

@@ -1,0 +1,67 @@
+#
+# Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+include JavaCompilation.gmk
+
+################################################################################
+
+TOOLS_CLASSES_DIR := $(BUILDTOOLS_OUTPUTDIR)/tools_jigsaw_classes
+
+# When using an external BUILDJDK, make it possible to shortcut building of
+# these tools using the BUILD_JAVAC instead of having to build the complete
+# exploded image first.
+ifeq ($(EXTERNAL_BUILDJDK), true)
+  COMPILER := buildjdk
+  TARGET_RELEASE := $(TARGET_RELEASE_NEWJDK)
+else
+  COMPILER := interim
+  TARGET_RELEASE := $(TARGET_RELEASE_NEWJDK_UPGRADED)
+endif
+
+$(eval $(call SetupJavaCompilation, BUILD_JIGSAW_TOOLS, \
+    TARGET_RELEASE := $(TARGET_RELEASE), \
+    COMPILER := $(COMPILER), \
+    SRC := $(TOPDIR)/make/jdk/src/classes, \
+    INCLUDES := build/tools/deps \
+                build/tools/docs \
+                build/tools/jigsaw, \
+    COPY := .properties .html, \
+    BIN := $(TOOLS_CLASSES_DIR), \
+    DISABLED_WARNINGS := fallthrough, \
+    JAVAC_FLAGS := \
+        --add-modules jdk.jdeps \
+        --add-exports java.base/jdk.internal.module=ALL-UNNAMED \
+        --add-exports jdk.jdeps/com.sun.tools.jdeps=ALL-UNNAMED, \
+))
+
+TARGETS += $(BUILD_JIGSAW_TOOLS)
+
+################################################################################
+
+all: $(TARGETS)

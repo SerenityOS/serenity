@@ -1,0 +1,3 @@
+MissingDefaultCase1.java:19:1: compiler.err.duplicate.annotation.invalid.repeated: Foo
+MissingDefaultCase1.java:11:1: compiler.err.invalid.repeatable.annotation.elem.nondefault: FooContainer, other()
+2 errors

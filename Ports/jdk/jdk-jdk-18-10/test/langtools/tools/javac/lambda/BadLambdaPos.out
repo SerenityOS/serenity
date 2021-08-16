@@ -1,0 +1,9 @@
+BadLambdaPos.java:18:14: compiler.err.unexpected.lambda
+BadLambdaPos.java:18:30: compiler.err.unexpected.lambda
+BadLambdaPos.java:19:14: compiler.err.unexpected.lambda
+BadLambdaPos.java:23:18: compiler.err.unexpected.lambda
+BadLambdaPos.java:23:34: compiler.err.unexpected.lambda
+BadLambdaPos.java:24:21: compiler.err.unexpected.lambda
+BadLambdaPos.java:28:22: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: java.lang.Object)
+BadLambdaPos.java:29:28: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf: java.lang.Object)
+8 errors

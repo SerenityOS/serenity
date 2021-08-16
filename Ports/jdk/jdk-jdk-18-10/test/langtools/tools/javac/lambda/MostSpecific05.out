@@ -1,0 +1,2 @@
+MostSpecific05.java:25:11: compiler.err.ref.ambiguous: map, kindname.method, map(MostSpecific05.ObjectConverter<? extends A>), MostSpecific05.MyMapper, kindname.method, map(MostSpecific05.NumberConverter<? extends B>), MostSpecific05.MyMapper
+1 error

@@ -1,0 +1,1 @@
+'-Dmy.quote.single'='Property in single quote. Here a double qoute" Add some slashes \/' -D"my.quote.double"="Double qoute. Include single '." -'Xi'n"t" -X"X:ErrorFile"=./my' error file' -Djavax.net.ssl.trustStorePassword='data @+NEW'

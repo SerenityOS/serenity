@@ -1,0 +1,76 @@
+TagNotAllowed.java:12: error: tag not allowed here: <b>
+ * <dl> <b>abc</b> <dt> term </dt> <b>def</b> <dd> description </dd> <b>ghi</b> </dl>
+        ^
+TagNotAllowed.java:12: error: tag not allowed here: <b>
+ * <dl> <b>abc</b> <dt> term </dt> <b>def</b> <dd> description </dd> <b>ghi</b> </dl>
+                                   ^
+TagNotAllowed.java:12: error: tag not allowed here: <b>
+ * <dl> <b>abc</b> <dt> term </dt> <b>def</b> <dd> description </dd> <b>ghi</b> </dl>
+                                                                     ^
+TagNotAllowed.java:13: error: tag not allowed here: <b>
+ * <ol> <b>abc</b> <li> item </li> <b>def</b> <li> item </li> <b>ghi</b> </ol>
+        ^
+TagNotAllowed.java:13: error: tag not allowed here: <b>
+ * <ol> <b>abc</b> <li> item </li> <b>def</b> <li> item </li> <b>ghi</b> </ol>
+                                   ^
+TagNotAllowed.java:13: error: tag not allowed here: <b>
+ * <ol> <b>abc</b> <li> item </li> <b>def</b> <li> item </li> <b>ghi</b> </ol>
+                                                              ^
+TagNotAllowed.java:14: error: tag not allowed here: <b>
+ * <ul> <b>abc</b> <li> item </li> <b>def</b> <li> item </li> <b>ghi</b> </ul>
+        ^
+TagNotAllowed.java:14: error: tag not allowed here: <b>
+ * <ul> <b>abc</b> <li> item </li> <b>def</b> <li> item </li> <b>ghi</b> </ul>
+                                   ^
+TagNotAllowed.java:14: error: tag not allowed here: <b>
+ * <ul> <b>abc</b> <li> item </li> <b>def</b> <li> item </li> <b>ghi</b> </ul>
+                                                              ^
+TagNotAllowed.java:16: error: attribute not supported in HTML5: summary
+ * <table summary=description> <b>abc</b> </table>
+          ^
+TagNotAllowed.java:16: error: tag not allowed here: <b>
+ * <table summary=description> <b>abc</b> </table>
+                               ^
+TagNotAllowed.java:17: error: attribute not supported in HTML5: summary
+ * <table summary=description> <thead> <b>abc</b> </thead> </table>
+          ^
+TagNotAllowed.java:17: error: tag not allowed here: <b>
+ * <table summary=description> <thead> <b>abc</b> </thead> </table>
+                                       ^
+TagNotAllowed.java:18: error: attribute not supported in HTML5: summary
+ * <table summary=description> <tbody> <b>abc</b> </tbody> </table>
+          ^
+TagNotAllowed.java:18: error: tag not allowed here: <b>
+ * <table summary=description> <tbody> <b>abc</b> </tbody> </table>
+                                       ^
+TagNotAllowed.java:19: error: attribute not supported in HTML5: summary
+ * <table summary=description> <tfoot> <b>abc</b> </tfoot> </table>
+          ^
+TagNotAllowed.java:19: error: tag not allowed here: <b>
+ * <table summary=description> <tfoot> <b>abc</b> </tfoot> </table>
+                                       ^
+TagNotAllowed.java:20: error: attribute not supported in HTML5: summary
+ * <table summary=description> <tr> <b>abc</b> </tr> </table>
+          ^
+TagNotAllowed.java:20: error: tag not allowed here: <b>
+ * <table summary=description> <tr> <b>abc</b> </tr> </table>
+                                    ^
+TagNotAllowed.java:23: error: tag not allowed here: <img>
+ *   <img alt="image" src="image.png">
+     ^
+TagNotAllowed.java:24: error: tag not allowed here: <p>
+ *   <p> para </p>
+     ^
+TagNotAllowed.java:25: error: tag not supported in HTML5: big
+ *   <big> text </big>
+     ^
+TagNotAllowed.java:26: error: tag not allowed here: <small>
+ *   <small> text </small>
+     ^
+TagNotAllowed.java:27: error: tag not allowed here: <sub>
+ *   <sub> text </sub>
+     ^
+TagNotAllowed.java:28: error: tag not allowed here: <sup>
+ *   <sup> text </sup>
+     ^
+25 errors

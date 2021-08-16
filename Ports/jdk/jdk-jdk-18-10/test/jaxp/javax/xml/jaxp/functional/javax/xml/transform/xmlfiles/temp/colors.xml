@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<colors>
+<dark>
+ <container name="book">
+  <category name="developer" version="1">088ea6</category>
+  <category name="default" version="1">0839a6</category>
+ </container>
+</dark>
+</colors>
+

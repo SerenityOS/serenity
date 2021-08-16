@@ -1,0 +1,2 @@
+StaticMethodNegTest.java:23:12: compiler.err.not.encl.class: A
+1 error

@@ -1,0 +1,4 @@
+grant codeBase "file:./jars/*" {
+    permission java.lang.RuntimePermission "createClassLoader";
+    permission java.util.PropertyPermission "test.src", "read";
+};

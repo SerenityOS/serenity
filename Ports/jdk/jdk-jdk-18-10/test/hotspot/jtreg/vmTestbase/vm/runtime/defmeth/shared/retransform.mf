@@ -1,0 +1,3 @@
+Premain-Class: vm.runtime.defmeth.shared.Util$Transformer
+Can-Retransform-Classes: true
+Can-Redefine-Classes: true

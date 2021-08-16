@@ -1,0 +1,6 @@
+DeprecatedDocComment4.java:11:10: compiler.warn.missing.deprecated.annotation
+DeprecatedDocComment4.java:15:10: compiler.warn.missing.deprecated.annotation
+DeprecatedDocComment4.java:19:10: compiler.warn.missing.deprecated.annotation
+- compiler.err.warnings.and.werror
+1 error
+3 warnings

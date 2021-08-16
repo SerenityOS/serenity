@@ -1,0 +1,3 @@
+DeclVsUseErrorMessage.java:17:5: compiler.err.annotation.type.not.applicable
+DeclVsUseErrorMessage.java:21:23: compiler.err.annotation.type.not.applicable.to.type: DeclVsUseErrorMessage.A
+2 errors

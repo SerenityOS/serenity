@@ -1,0 +1,42 @@
+    static $type$[] [[TEST]]($type$[] a, $type$[] b, int origin, int part, boolean[] mask, int idx) {
+        $type$[] res = new $type$[SPECIES.length()];
+        for (int i = 0, j = 0; i < SPECIES.length(); i++){
+            if(i+origin < SPECIES.length())
+                res[i] = b[idx+i+origin];
+            else {
+                res[i] = b[idx+j];
+                j++;
+            }
+        }
+        for (int i = 0; i < SPECIES.length(); i++){
+            res[i] = mask[i] ? a[idx+i] : res[i];
+        }
+        $type$[] res1 = new $type$[SPECIES.length()];
+        if (part == 0) {
+            for (int i = 0, j = 0; i < SPECIES.length(); i++){
+                if (i < origin)
+                    res1[i] = b[idx+i];
+                else {
+                   res1[i] = res[j];
+                   j++;
+                }
+            }
+        } else if (part == 1) {
+            for (int i = 0, j = 0; i < SPECIES.length(); i++){
+                if (i < origin)
+                    res1[i] = res[SPECIES.length()-origin+i];
+                else {
+                    res1[i] = b[idx+origin+j];
+                    j++;
+                }
+            }
+        }
+        return res1;
+    }
+
+    @Test(dataProvider = "$type$BinaryOpMaskProvider")
+    static void [[TEST]]$vectorteststype$Masked(IntFunction<$type$[]> fa, IntFunction<$type$[]> fb,
+    IntFunction<boolean[]> fm) {
+[[KERNEL]]
+        assertArraysEquals(r, a, b, origin, part, mask, $vectorteststype$::[[TEST]]);
+    }

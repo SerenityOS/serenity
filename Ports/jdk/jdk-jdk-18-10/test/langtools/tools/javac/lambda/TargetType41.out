@@ -1,0 +1,2 @@
+TargetType41.java:13:9: compiler.err.cant.apply.symbol: kindname.method, m, java.lang.String,java.util.List<java.lang.String>, int,java.util.ArrayList<java.lang.Object>, kindname.class, TargetType41, (compiler.misc.infer.no.conforming.assignment.exists: X, (compiler.misc.inconvertible.types: int, java.lang.String))
+1 error

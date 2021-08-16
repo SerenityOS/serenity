@@ -1,0 +1,92 @@
+class LocalTest$4Local {
+  0xCAFEBABE;
+  0; // minor version
+  52; // version
+  [] { // Constant Pool
+    ; // first element is empty
+    Field #3 #16; // #1    
+    Method #4 #17; // #2    
+    class #18; // #3    
+    class #21; // #4    
+    Utf8 "this$0"; // #5    
+    Utf8 "LLocalTest;"; // #6    
+    Utf8 "<init>"; // #7    
+    Utf8 "(LLocalTest;)V"; // #8    
+    Utf8 "Code"; // #9    
+    Utf8 "LineNumberTable"; // #10    
+    Utf8 "SourceFile"; // #11    
+    Utf8 "LocalTest.java"; // #12    
+    Utf8 "EnclosingMethod"; // #13    
+    class #22; // #14    
+    NameAndType #23 #24; // #15    
+    NameAndType #5 #6; // #16    
+    NameAndType #7 #24; // #17    
+    Utf8 "LocalTest$4Local"; // #18    
+    Utf8 "Local"; // #19    
+    Utf8 "InnerClasses"; // #20    
+    Utf8 "java/lang/Object"; // #21    
+    Utf8 "LocalTest"; // #22    
+    Utf8 "test2"; // #23    
+    Utf8 "()V"; // #24    
+  } // Constant Pool
+
+  0x0020; // access
+  #3;// this_cpx
+  #4;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+    { // Member
+      0x1010; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [] { // Attributes
+      } // Attributes
+    } // Member
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0000; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [] { // Attributes
+        Attr(#9) { // Code
+          2; // max_stack
+          2; // max_locals
+          Bytes[]{
+            0x2A2BB500012AB700;
+            0x02B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#10) { // LineNumberTable
+              [] { // LineNumberTable
+                0  12;
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#11) { // SourceFile
+      #12;
+    } // end SourceFile
+    ;
+    Attr(#13) { // EnclosingMethod
+      #14 #15;
+    } // end EnclosingMethod
+    ;
+    Attr(#20) { // InnerClasses
+      [] { // InnerClasses
+        #3 #0 #19 0;
+      }
+    } // end InnerClasses
+  } // Attributes
+} // end class LocalTest$4Local

@@ -1,0 +1,4 @@
+TwrOnNonResource.java:11:30: compiler.err.prob.found.req: (compiler.misc.try.not.applicable.to.type: (compiler.misc.inconvertible.types: TwrOnNonResource, java.lang.AutoCloseable))
+TwrOnNonResource.java:14:30: compiler.err.prob.found.req: (compiler.misc.try.not.applicable.to.type: (compiler.misc.inconvertible.types: TwrOnNonResource, java.lang.AutoCloseable))
+TwrOnNonResource.java:17:30: compiler.err.prob.found.req: (compiler.misc.try.not.applicable.to.type: (compiler.misc.inconvertible.types: TwrOnNonResource, java.lang.AutoCloseable))
+3 errors

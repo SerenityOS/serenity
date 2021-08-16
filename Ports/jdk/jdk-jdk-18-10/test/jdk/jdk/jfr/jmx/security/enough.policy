@@ -1,0 +1,19 @@
+// Minimum policy for JMX to activate JFR and create a recording.
+
+grant {
+
+permission java.lang.management.ManagementPermission "control";
+permission java.lang.management.ManagementPermission "monitor";
+
+// in order for the test to accomplish dump/copyto on a user defined recording
+permission "java.io.FilePermission" "<<ALL FILES>>", "read,write,delete";
+permission "java.util.PropertyPermission" "user.dir", "read";
+permission "javax.management.MBeanPermission" "jdk.management.jfr.FlightRecorderMXBeanImpl#-[jdk.jfr.management:type=FlightRecorder]", "addNotificationListener";
+
+permission "javax.management.MBeanServerPermission" "createMBeanServer";
+permission "javax.management.MBeanPermission" "jdk.management.jfr.FlightRecorderMXBeanImpl#Recordings[jdk.jfr:type=FlightRecorder]", "getAttribute";
+permission "javax.management.MBeanPermission" "jdk.management.jfr.FlightRecorderMXBeanImpl#EventTypes[jdk.jfr:type=FlightRecorder]", "getAttribute";
+permission "javax.management.MBeanPermission" "jdk.management.jfr.FlightRecorderMXBeanImpl#Configurations[jdk.jfr:type=FlightRecorder]", "getAttribute";
+permission "javax.management.MBeanPermission" "jdk.management.jfr.FlightRecorderMXBeanImpl#newRecording[jdk.jfr:type=FlightRecorder]", "invoke";
+
+};

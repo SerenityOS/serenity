@@ -1,0 +1,4 @@
+CheckNoDuplicateErrors.java:13:45: compiler.err.cant.inherit.from.final: CheckNoDuplicateErrors_01
+CheckNoDuplicateErrors.java:14:48: compiler.err.intf.expected.here
+CheckNoDuplicateErrors.java:15:39: compiler.err.cant.inherit.from.final: CheckNoDuplicateErrors_01
+3 errors

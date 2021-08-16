@@ -1,0 +1,185 @@
+/*
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+// In this test, method main() in class CheckedExceptions declares that it
+// throws I, where I is an interface.  This should not cause an assert nor an
+// exception because JVMS 4.7.5 says that type checks of the classes listed
+// in the Exceptions attributes are only enforced at compile time.  (Note that
+// the types in a method's throws clause are passed to the JVM using the
+// Exceptions attribute.)
+
+// interface I { }
+file "I.class" {
+  0xCAFEBABE;
+  0; // minor version
+  59; // version
+  [7] { // Constant Pool
+    ; // first element is empty
+    class #2; // #1     at 0x0A
+    Utf8 "I"; // #2     at 0x0D
+    class #4; // #3     at 0x11
+    Utf8 "java/lang/Object"; // #4     at 0x14
+    Utf8 "SourceFile"; // #5     at 0x27
+    Utf8 "CheckedExceptions.java"; // #6     at 0x34
+  } // Constant Pool
+
+  0x0600; // access [ ACC_INTERFACE ]
+  #1;// this_cpx
+  #3;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [0] { // methods
+  } // methods
+
+  [1] { // Attributes
+    Attr(#5, 2) { // SourceFile at 0x5B
+      #6;
+    } // end SourceFile
+  } // Attributes
+} // end class I
+
+
+// public class CheckedExceptions {
+//     public static void main(String argv[]) throws I {
+//         System.out.println("Hello");
+//     }
+// }
+class CheckedExceptions {
+  0xCAFEBABE;
+  0; // minor version
+  59; // version
+  [32] { // Constant Pool
+    ; // first element is empty
+    Method #2 #3; // #1     at 0x0A
+    class #4; // #2     at 0x0F
+    NameAndType #5 #6; // #3     at 0x12
+    Utf8 "java/lang/Object"; // #4     at 0x17
+    Utf8 "<init>"; // #5     at 0x2A
+    Utf8 "()V"; // #6     at 0x33
+    Field #8 #9; // #7     at 0x39
+    class #10; // #8     at 0x3E
+    NameAndType #11 #12; // #9     at 0x41
+    Utf8 "java/lang/System"; // #10     at 0x46
+    Utf8 "out"; // #11     at 0x59
+    Utf8 "Ljava/io/PrintStream;"; // #12     at 0x5F
+    String #14; // #13     at 0x77
+    Utf8 "Hello"; // #14     at 0x7A
+    Method #16 #17; // #15     at 0x82
+    class #18; // #16     at 0x87
+    NameAndType #19 #20; // #17     at 0x8A
+    Utf8 "java/io/PrintStream"; // #18     at 0x8F
+    Utf8 "println"; // #19     at 0xA5
+    Utf8 "(Ljava/lang/String;)V"; // #20     at 0xAF
+    class #22; // #21     at 0xC7
+    Utf8 "CheckedExceptions"; // #22     at 0xCA
+    Utf8 "Code"; // #23     at 0xDE
+    Utf8 "LineNumberTable"; // #24     at 0xE5
+    Utf8 "main"; // #25     at 0xF7
+    Utf8 "([Ljava/lang/String;)V"; // #26     at 0xFE
+    Utf8 "Exceptions"; // #27     at 0x0117
+    class #29; // #28     at 0x0124
+    Utf8 "I"; // #29     at 0x0127
+    Utf8 "SourceFile"; // #30     at 0x0148
+    Utf8 "CheckedExceptions.java"; // #31     at 0x0155
+  } // Constant Pool
+
+  0x0021; // access [ ACC_PUBLIC ACC_SUPER ]
+  #21;// this_cpx
+  #2;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [0] { // fields
+  } // fields
+
+  [2] { // methods
+    { // Member at 0x017A
+      0x0001; // access
+      #5; // name_cpx
+      #6; // sig_cpx
+      [1] { // Attributes
+        Attr(#23, 29) { // Code at 0x0182
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#24, 6) { // LineNumberTable at 0x0199
+              [1] { // LineNumberTable
+                0  3; //  at 0x01A5
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x01A5
+      0x0009; // access
+      #25; // name_cpx
+      #26; // sig_cpx
+      [2] { // Attributes
+        Attr(#23, 37) { // Code at 0x01AD
+          2; // max_stack
+          1; // max_locals
+          Bytes[9]{
+            0xB20007120DB6000F;
+            0xB1;
+          }
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#24, 10) { // LineNumberTable at 0x01C8
+              [2] { // LineNumberTable
+                0  6; //  at 0x01D4
+                8  7; //  at 0x01D8
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+        ;
+        Attr(#27, 4) { // Exceptions at 0x01D8
+          [1] { // Exceptions
+            #28; //  at 0x01E2
+          }
+        } // end Exceptions
+      } // Attributes
+    } // Member
+  } // methods
+
+  [1] { // Attributes
+    Attr(#30, 2) { // SourceFile at 0x01E4
+      #31;
+    } // end SourceFile
+  } // Attributes
+} // end class CheckedExceptions

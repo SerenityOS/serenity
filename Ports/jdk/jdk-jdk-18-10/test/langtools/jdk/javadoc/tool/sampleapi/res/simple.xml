@@ -1,0 +1,532 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+<sampleapi>
+    <module name="UNNAMED">
+        <package name="sampleapi.simple">
+            <class basename="SampleClass" id="baseclass">
+                <modifier>public</modifier>
+                <modifier>none|abstract</modifier>
+                <member>
+                    <field basename="field">
+                        <modifier>none|public</modifier>
+                        <modifier>none|static</modifier>
+                        <modifier>none|final</modifier>
+                        <type>boolean|int|String</type>
+                    </field>
+                    <field basename="field">
+                        <modifier>protected|private</modifier>
+                        <type>String</type>
+                    </field>
+                    <constructor>
+                        <modifier>public</modifier>
+                        <param>none|int|int,boolean|int,String</param>
+                    </constructor>
+                    <constructor>
+                        <modifier>public</modifier>
+                        <param>String</param>
+                        <throw>NullPointerException</throw>
+                        <throw>SampleException0</throw>
+                    </constructor>
+                    <method basename="set">
+                        <modifier>public</modifier>
+                        <type>void</type>
+                        <param>int</param>
+                    </method>
+                    <method basename="get">
+                        <modifier>public</modifier>
+                        <type>int|boolean|String</type>
+                    </method>
+                    <method basename="doSomething">
+                        <modifier>public</modifier>
+                        <type>void|int</type>
+                        <param>none|int|Object,int</param>
+                        <throw>NullPointerException</throw>
+                        <throw>ArithmeticException</throw>
+                    </method>
+                </member>
+            </class>
+
+            <class basename="Derived">
+                <modifier>public</modifier>
+                <extend id="baseclass"/>
+                <member>
+                    <field basename="myField">
+                        <modifier>public</modifier>
+                        <type>int|boolean</type>
+                    </field>
+                    <constructor>
+                        <modifier>public</modifier>
+                        <param>none|int|int,boolean|int,String</param>
+                    </constructor>
+                    <method basename="myGet">
+                        <modifier>public</modifier>
+                        <type>int|boolean</type>
+                    </method>
+                </member>
+            </class>
+
+            <class basename="SampleSerial">
+                <import>java.io.Serializable</import>
+                <modifier>public</modifier>
+                <implement ref="Serializable"/>
+                <member>
+                    <field basename="specialData">
+                        <modifier>private|none|public</modifier>
+                        <type>boolean|int|String</type>
+                    </field>
+                </member>
+            </class>
+
+            <class basename="SampleSerial">
+                <import>java.io.Serializable</import>
+                <import>java.io.ObjectStreamField</import>
+                <modifier>public</modifier>
+                <implement ref="Serializable"/>
+                <member>
+                    <serialfield basename="serialField">String,Long,Boolean</serialfield>
+                    <method basename="justToBeHere">
+                        <modifier>public</modifier>
+                        <type>String|long|boolean</type>
+                    </method>
+                </member>
+            </class>
+
+            <class basename="SampleSerial">
+                <import>java.io.Serializable</import>
+                <import>java.io.ObjectOutputStream</import>
+                <import>java.io.ObjectOutput</import>
+                <import>java.io.IOException</import>
+                <import>java.io.ObjectStreamException</import>
+                <modifier>public</modifier>
+                <implement ref="Serializable"/>
+                <member>
+                    <method name="writeObject">
+                        <modifier>private</modifier>
+                        <param>ObjectOutputStream</param>
+                        <type>void</type>
+                        <throw>IOException</throw>
+                    </method>
+                    <method name="writeExternal">
+                        <modifier>public</modifier>
+                        <param>ObjectOutput</param>
+                        <type>void</type>
+                        <throw>IOException</throw>
+                    </method>
+                    <method name="writeReplace">
+                        <modifier>protected</modifier>
+                        <param>none</param>
+                        <type>Object</type>
+                        <throw>ObjectStreamException</throw>
+                    </method>
+                    <method name="writeSomethingElse">
+                        <modifier>public</modifier>
+                        <param>Object</param>
+                        <type>void</type>
+                        <throw>IOException</throw>
+                    </method>
+                </member>
+            </class>
+
+            <class basename="SampleSerial">
+                <import>java.io.Serializable</import>
+                <import>java.io.ObjectInputStream</import>
+                <import>java.io.ObjectInput</import>
+                <import>java.io.IOException</import>
+                <import>java.io.ObjectStreamException</import>
+                <modifier>public</modifier>
+                <implement ref="Serializable"/>
+                <member>
+                    <method name="readObject">
+                        <modifier>private</modifier>
+                        <param>ObjectInputStream</param>
+                        <type>void</type>
+                        <throw>IOException</throw>
+                        <throw>ClassNotFoundException</throw>
+                    </method>
+                    <method name="readExternal">
+                        <modifier>public</modifier>
+                        <param>ObjectInput</param>
+                        <type>void</type>
+                        <throw>IOException</throw>
+                    </method>
+                    <method name="readResolve">
+                        <modifier>protected</modifier>
+                        <param>none</param>
+                        <type>Object</type>
+                        <throw>ObjectStreamException</throw>
+                    </method>
+                    <method name="readSomethingElse">
+                        <modifier>public</modifier>
+                        <param>Object</param>
+                        <type>void</type>
+                        <throw>IOException</throw>
+                    </method>
+                </member>
+            </class>
+
+            <class basename="Container">
+                <modifier>public</modifier>
+                <member>
+                    <class basename="Inner">
+                        <modifier>public</modifier>
+                        <member>
+                            <field basename="value">
+                                <modifier>public</modifier>
+                                <type>int</type>
+                            </field>
+                        </member>
+                    </class>
+                    <class basename="Nested">
+                        <modifier>public</modifier>
+                        <modifier>static</modifier>
+                    </class>
+                    <interface basename="EventListener">
+                        <modifier>public</modifier>
+                        <modifier>static</modifier>
+                        <member>
+                            <method basename="onEvent">
+                                <modifier>public</modifier>
+                                <type>void</type>
+                            </method>
+                        </member>
+                    </interface>
+                </member> 
+            </class>
+
+            <!-- Errors and exceptions -->
+            <class basename="SampleError">
+                <modifier>public</modifier>
+                <extend ref="java.lang.Error"/>
+                <member>
+                    <field basename="errorInfo">
+                        <modifier>private</modifier>
+                        <type>boolean|int|String</type>
+                    </field>
+                    <constructor>
+                        <modifier>public</modifier>
+                        <param>String</param>
+                    </constructor>
+                    <method basename="getSampleData">
+                        <modifier>public</modifier>
+                        <type>int|String</type>
+                    </method>
+                </member>
+            </class>
+
+            <class basename="SampleException">
+                <modifier>public</modifier>
+                <extend ref="java.lang.Exception"/>
+                <member>
+                    <field basename="exceptionInfo">
+                        <modifier>private</modifier>
+                        <type>boolean|int|String</type>
+                    </field>
+                    <constructor>
+                        <modifier>public</modifier>
+                        <param>String</param>
+                    </constructor>
+                    <method basename="getSampleData">
+                        <modifier>public</modifier>
+                        <type>int|String</type>
+                    </method>
+                </member>
+            </class>
+
+            <interface basename="SampleInterface" id="baseinterface">
+                <modifier>public|none</modifier>
+                <member>
+                    <method basename="method">
+                        <modifier>public</modifier>
+                        <type>void|int|Object</type>
+                    </method>
+                </member>
+            </interface>
+
+            <class basename="Implementor">
+                <modifier>public</modifier>
+                <implement id="baseinterface"/>
+                <member>
+                    <field basename="myField">
+                        <modifier>public</modifier>
+                        <type>int|boolean</type>
+                    </field>
+                    <method basename="myGet">
+                        <modifier>public</modifier>
+                        <type>int|boolean</type>
+                    </method>
+                </member>
+            </class>
+
+            <class basename="GenericClass" tparam="T">
+                <import>java.util.List</import>
+                <modifier>public</modifier>
+                <member>
+                    <method basename="put">
+                        <modifier>public</modifier>
+                        <type>void</type>
+                        <param>T</param>
+                    </method>
+                    <method basename="get">
+                        <modifier>public</modifier>
+                        <type>T</type>
+                        <param>int</param>
+                    </method>
+                    <method basename="get">
+                        <modifier>public</modifier>
+                        <type>List&lt;T&gt;</type>
+                    </method>
+                </member>
+            </class>
+
+            <class basename="GenericClass" tparam="K,V">
+                <import>java.util.Set</import>
+                <import>java.util.List</import>
+                <import>java.util.Map</import>
+                <modifier>public</modifier>
+                <member>
+                    <method basename="put">
+                        <modifier>public</modifier>
+                        <type>void</type>
+                        <param>K,V</param>
+                    </method>
+                    <method basename="putMap">
+                        <modifier>public</modifier>
+                        <type>void</type>
+                        <param>Map&lt;K,V&gt;</param>
+                    </method>
+                    <method basename="get">
+                        <modifier>public</modifier>
+                        <type>V</type>
+                        <param>K</param>
+                    </method>
+                    <method basename="getV">
+                        <modifier>public</modifier>
+                        <type>Set&lt;V&gt;|List&lt;V&gt;</type>
+                    </method>
+                    <method basename="getK">
+                        <modifier>public</modifier>
+                        <type>Set&lt;K&gt;|List&lt;K&gt;</type>
+                    </method>
+                </member>
+            </class>
+
+            <class basename="GenericClass" tparam="M,N,O">
+                <import>java.util.Set</import>
+                <import>java.util.List</import>
+                <import>java.util.Map</import>
+                <modifier>public</modifier>
+                <member>
+                    <method basename="get">
+                        <modifier>public</modifier>
+                        <type>Set&lt;M&gt;|List&lt;M&gt;</type>
+                        <param>Map&lt;N,O&gt;</param>
+                    </method>
+                    <method basename="get">
+                        <modifier>public</modifier>
+                        <type>Set&lt;N&gt;|List&lt;N&gt;</type>
+                        <param>Map&lt;M,O&gt;</param>
+                    </method>
+                    <method basename="get">
+                        <modifier>public</modifier>
+                        <type>Set&lt;O&gt;|List&lt;O&gt;</type>
+                        <param>Map&lt;M,N&gt;</param>
+                    </method>
+                </member>
+            </class>
+
+            <class basename="GenericUtil"> <!-- public static generic methods like Collections -->
+                <import>java.util.Set</import>
+                <import>java.util.List</import>
+                <import>java.util.Map</import>
+                <import>java.util.function.Supplier</import>
+                <modifier>public</modifier>
+                <member>
+                    <method tparam="E" basename="getSomething">
+                        <modifier>public</modifier>
+                        <modifier>static</modifier>
+                        <type>Set&lt;? extends E&gt;|List&lt;? extends E&gt;</type>
+                    </method>
+                    <method tparam="V,K" basename="getMore">
+                        <modifier>public|private</modifier>
+                        <modifier>static</modifier>
+                        <type>Map&lt;V,K&gt;</type>
+                    </method>
+                    <method tparam="E" basename="doSomething">
+                        <modifier>public</modifier>
+                        <modifier>static</modifier>
+                        <type>void</type>
+                        <param>E</param>
+                    </method>
+                    <method tparam="X extends Throwable" basename="orElseThrow">
+                        <modifier>public|private</modifier>
+                        <modifier>static</modifier>
+                        <type>X</type>
+                        <param>Supplier&lt;? extends X&gt;</param>
+                        <throw>X</throw>
+                    </method>
+                </member>
+            </class>
+
+            <enum basename="SampleEnum">
+                <modifier>public</modifier>
+                <member>
+                    <constant basename="VALUE" count="3"/>
+                </member>
+            </enum>
+        
+            <enum basename="SampleEnum">
+                <modifier>public</modifier>
+                <member>
+                    <constant basename="VALUE" count="2"/>
+                    <constant basename="NOVALUE" count="1"/>
+                    <field basename="field">
+                        <modifier>private</modifier>
+                        <type>int|String</type>
+                    </field>
+                    <method basename="method">
+                        <modifier>public</modifier>
+                        <type>void|String</type>
+                    </method>
+                </member>
+            </enum>
+
+            <annodecl id="documented">
+                <class>Documented</class>
+            </annodecl>
+
+            <annodecl id="reten-source">
+                <class>Retention</class>
+                <arg name="value" value="RetentionPolicy.SOURCE"/>
+            </annodecl>
+
+            <annodecl id="reten-class">
+                <class>Retention</class>
+                <arg name="value" value="RetentionPolicy.CLASS"/>
+            </annodecl>
+
+            <annodecl id="reten-runtime">
+                <class>Retention</class>
+                <arg name="value" value="RetentionPolicy.RUNTIME"/>
+            </annodecl>
+
+            <annodecl id="target-method">
+                <class>Target</class>
+                <arg value="ElementType.METHOD"/>
+            </annodecl>
+
+            <annodecl id="target-field">
+                <class>Target</class>
+                <arg value="ElementType.FIELD"/>
+            </annodecl>
+
+            <annodecl id="target-type">
+                <class>Target</class>
+                <arg value="{ElementType.TYPE, ElementType.TYPE_USE}"/>
+            </annodecl>
+
+            <annotation basename="AnnotatedAnno">
+                <import>java.lang.annotation.Documented</import>
+                <anno>@documented</anno>
+                <modifier>public</modifier>
+                <member>
+                    <method basename="value">
+                        <modifier>public</modifier>
+                        <type>boolean|String</type>
+                    </method>
+                </member>
+            </annotation>
+
+            <annotation basename="AnnotatedAnno">
+                <import>java.lang.annotation.Retention</import>
+                <import>java.lang.annotation.RetentionPolicy</import>
+                <anno>@reten-source|@reten-class|@reten-runtime</anno>
+                <modifier>public</modifier>
+                <member>
+                    <method basename="value">
+                        <modifier>public</modifier>
+                        <type>int</type>
+                    </method>
+                </member>
+            </annotation>
+
+            <class basename="AnnoContainer">
+                <import>java.lang.annotation.Retention</import>
+                <import>java.lang.annotation.RetentionPolicy</import>
+                <import>java.lang.annotation.Target</import>
+                <import>java.lang.annotation.ElementType</import>
+                <modifier>public</modifier>
+                <member>
+                    <annotation basename="AnnotatedAnno">
+                        <anno>@reten-source|@reten-class|@reten-runtime</anno>
+                        <anno>@target-method|@target-field|@target-type</anno>
+                        <modifier>public</modifier>
+                        <modifier>static</modifier>
+                        <member>
+                            <method basename="value">
+                                <modifier>public</modifier>
+                                <type>String</type>
+                            </method>
+                        </member>
+                    </annotation>
+                </member>
+            </class>
+
+            <annodecl id="deprecated">
+                <class>Deprecated</class>
+            </annodecl>
+
+            <annodecl id="safevarargs">
+                <class>SafeVarargs</class>
+            </annodecl>
+
+            <annodecl id="suppresswarnings">
+                <class>SuppressWarnings</class>
+                <arg value="{&quot;unchecked&quot;, &quot;rawtypes&quot;}"/>
+            </annodecl>
+
+            <class basename="AnnotatedClass">
+                <modifier>public</modifier>
+                <member>
+                    <method basename="deprecatedMethod">
+                        <anno>@deprecated</anno>
+                        <modifier>public</modifier>
+                        <type>void</type>
+                    </method>
+                    <method basename="safeVarargsMethod">
+                        <anno>@safevarargs</anno>
+                        <modifier>public</modifier>
+                        <type>void|int</type>
+                        <param>String...</param>
+                    </method>
+                    <method basename="suppressWarningsMethod">
+                        <anno>@suppresswarnings</anno>
+                        <modifier>public</modifier>
+                        <type>void</type>
+                        <param>int|Object</param>
+                    </method>
+                </member>
+            </class>
+        </package>
+    </module>
+</sampleapi>

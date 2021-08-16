@@ -1,0 +1,7 @@
+grant {
+  permission java.io.FilePermission "${user.home}/-", "read";
+};
+
+grant codeBase "file:${test.classes}/-" {
+  permission java.lang.RuntimePermission "dynalink.exportLinkersAutomatically";
+};

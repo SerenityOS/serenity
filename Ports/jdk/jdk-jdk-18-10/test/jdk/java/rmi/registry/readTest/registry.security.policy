@@ -1,0 +1,12 @@
+grant {
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.rmi.registry";
+  permission java.util.PropertyPermission "env.class.path", "read";
+  permission java.io.FilePermission ".", "read";
+  permission java.util.PropertyPermission "user.dir", "read";
+  permission java.lang.RuntimePermission "createClassLoader";
+  permission java.lang.RuntimePermission "setContextClassLoader";
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.rmi.server";
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.rmi.transport";
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.rmi.transport.tcp";
+  permission java.net.SocketPermission "*:1024-", "listen,resolve,connect,accept";
+};

@@ -1,0 +1,3 @@
+var f = new RemoveFilter("Hide other subgraph");
+f.addRule(new RemoveFilter.RemoveRule(new MatcherSelector(new Properties.StringPropertyMatcher("category", "other"))));
+f.apply(graph);

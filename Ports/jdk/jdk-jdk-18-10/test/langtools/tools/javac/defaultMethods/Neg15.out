@@ -1,0 +1,2 @@
+Neg15.java:12:31: compiler.err.illegal.default.super.call: Neg15.K, (compiler.misc.overridden.default: m(), Neg15.J)
+1 error

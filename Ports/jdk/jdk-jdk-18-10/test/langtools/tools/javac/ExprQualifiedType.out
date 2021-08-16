@@ -1,0 +1,3 @@
+ExprQualifiedType.java:18:9: compiler.err.unexpected.type: kindname.class,kindname.package, kindname.value
+ExprQualifiedType.java:19:9: compiler.err.unexpected.type: kindname.class,kindname.package, kindname.value
+2 errors

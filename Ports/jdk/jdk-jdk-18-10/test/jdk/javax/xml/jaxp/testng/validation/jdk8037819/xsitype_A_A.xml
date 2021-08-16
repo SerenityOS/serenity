@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<A attr="typeY"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:type="Y">
+   <A attr="typeY" xsi:type="Y"/>
+</A>

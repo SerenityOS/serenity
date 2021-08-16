@@ -1,0 +1,130 @@
+/*
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+package compiler/conversions;
+
+public class Conversion
+  version 52:0
+{
+    Field booleanFld:Z;
+    Field byteFld:B;
+    Field charFld:C;
+    Field shortFld:S;
+    Field intFld:I;
+
+    public Method "<init>":"()V"
+      stack 1 locals 1
+    {
+        aload_0;
+        invokespecial Method java/lang/Object."<init>":"()V";
+        return;
+    }
+
+    public Method testBooleanConst:"()I"
+      stack 5 locals 1
+    {
+        aload_0;
+        ldc_w int 2;  // 2^1 (maximum boolean value is 1)
+        putfield  Field booleanFld:"Z";
+        aload_0;
+        getfield  Field booleanFld:"Z";
+        ireturn;
+    }
+
+    public Method testBoolean:"(I)I"
+      stack 5 locals 2
+    {
+        aload_0;
+        iload_1;
+        putfield  Field booleanFld:"Z";
+        aload_0;
+        getfield  Field booleanFld:"Z";
+        ireturn;
+    }
+
+    public Method testByteConst:"()I"
+      stack 5 locals 1
+    {
+        aload_0;
+        ldc_w int 256;  // 2^8 (maximum byte value is 2^7-1)
+        putfield  Field byteFld:"B";
+        aload_0;
+        getfield  Field byteFld:"B";
+        ireturn;
+    }
+
+    public Method testByte:"(I)I"
+      stack 5 locals 2
+    {
+        aload_0;
+        iload_1;
+        putfield  Field byteFld:"B";
+        aload_0;
+        getfield  Field byteFld:"B";
+        ireturn;
+    }
+
+    public Method testCharConst:"()I"
+      stack 5 locals 1
+    {
+        aload_0;
+        ldc_w int 131072;  // 2^17 (maximum char value is 2^16-1)
+        putfield  Field charFld:"C";
+        aload_0;
+        getfield  Field charFld:"C";
+        ireturn;
+    }
+
+    public Method testChar:"(I)I"
+      stack 5 locals 2
+    {
+        aload_0;
+        iload_1;
+        putfield  Field charFld:"C";
+        aload_0;
+        getfield  Field charFld:"C";
+        ireturn;
+    }
+
+    public Method testShortConst:"()I"
+      stack 5 locals 1
+    {
+        aload_0;
+        ldc_w int 65536;  // 2^16 (maximum short value is 2^15-1)
+        putfield  Field shortFld:"S";
+        aload_0;
+        getfield  Field shortFld:"S";
+        ireturn;
+    }
+
+    public Method testShort:"(I)I"
+      stack 5 locals 2
+    {
+        aload_0;
+        iload_1;
+        putfield  Field shortFld:"S";
+        aload_0;
+        getfield  Field shortFld:"S";
+        ireturn;
+    }
+}

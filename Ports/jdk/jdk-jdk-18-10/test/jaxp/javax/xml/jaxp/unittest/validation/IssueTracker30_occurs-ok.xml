@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<persons>
+    <person>
+        <full_name>Hege Refsnes</full_name>
+        <child_name>Cecilie</child_name>
+    </person>
+    <person>
+        <full_name>Tove Refsnes</full_name>
+        <child_name>Hege</child_name>
+        <child_name>Stale</child_name>
+        <child_name>Jim</child_name>
+    </person>
+    <person>
+        <full_name>Stale Refsnes</full_name>
+    </person>
+</persons>
+

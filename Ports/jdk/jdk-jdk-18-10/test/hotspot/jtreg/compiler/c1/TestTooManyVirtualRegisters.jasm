@@ -1,0 +1,4068 @@
+/*
+ * Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+super public class compiler/c1/TestTooManyVirtualRegisters
+	version 50:0
+{
+
+public Method "<init>":"()V"
+	stack 1 locals 1
+{
+		aload_0;
+		invokespecial	Method java/lang/Object."<init>":"()V";
+		return;
+}
+
+
+public Method foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V"
+	stack 0 locals 4
+{
+		return;
+}
+
+
+public static Method test:"(C)Z"
+	stack 5 locals 210
+{
+		new	class compiler/c1/TestTooManyVirtualRegisters;
+		dup;
+		invokespecial	Method "<init>":"()V";
+		astore_1;
+		iconst_m1;
+		istore_2;
+		iconst_m1;
+		istore_3;
+		iconst_m1;
+		istore	4;
+		iconst_m1;
+		istore	5;
+		iconst_m1;
+		istore	6;
+		iconst_m1;
+		istore	7;
+		iconst_m1;
+		istore	8;
+		iconst_m1;
+		istore	9;
+		iconst_m1;
+		istore	10;
+		iconst_m1;
+		istore	11;
+		iconst_m1;
+		istore	12;
+		iconst_m1;
+		istore	13;
+		iconst_m1;
+		istore	14;
+		iconst_m1;
+		istore	15;
+		iconst_m1;
+		istore	16;
+		iconst_m1;
+		istore	17;
+		iconst_m1;
+		istore	18;
+		iconst_m1;
+		istore	19;
+		iconst_m1;
+		istore	20;
+		iconst_m1;
+		istore	21;
+		iconst_m1;
+		istore	22;
+		iconst_m1;
+		istore	23;
+		iconst_m1;
+		istore	24;
+		iconst_m1;
+		istore	25;
+		iconst_m1;
+		istore	26;
+		iconst_m1;
+		istore	27;
+		iconst_m1;
+		istore	28;
+		iconst_m1;
+		istore	29;
+		iconst_m1;
+		istore	30;
+		iconst_m1;
+		istore	31;
+		iconst_m1;
+		istore	32;
+		iconst_m1;
+		istore	33;
+		iconst_m1;
+		istore	34;
+		iconst_m1;
+		istore	35;
+		iconst_m1;
+		istore	36;
+		iconst_m1;
+		istore	37;
+		iconst_m1;
+		istore	38;
+		iconst_m1;
+		istore	39;
+		iconst_m1;
+		istore	40;
+		iconst_m1;
+		istore	41;
+		iconst_m1;
+		istore	42;
+		iconst_m1;
+		istore	43;
+		iconst_m1;
+		istore	44;
+		iconst_m1;
+		istore	45;
+		iconst_m1;
+		istore	46;
+		iconst_m1;
+		istore	47;
+		iconst_m1;
+		istore	48;
+		iconst_m1;
+		istore	49;
+		iconst_m1;
+		istore	50;
+		iconst_m1;
+		istore	51;
+		iconst_m1;
+		istore	52;
+		iconst_m1;
+		istore	53;
+		iconst_m1;
+		istore	54;
+		iconst_m1;
+		istore	55;
+		iconst_m1;
+		istore	56;
+		iconst_m1;
+		istore	57;
+		iconst_m1;
+		istore	58;
+		iconst_m1;
+		istore	59;
+		iconst_m1;
+		istore	60;
+		iconst_m1;
+		istore	61;
+		iconst_m1;
+		istore	62;
+		iconst_m1;
+		istore	63;
+		iconst_m1;
+		istore	64;
+		iconst_m1;
+		istore	65;
+		iconst_m1;
+		istore	66;
+		iconst_m1;
+		istore	67;
+		iconst_m1;
+		istore	68;
+		iconst_m1;
+		istore	69;
+		iconst_m1;
+		istore	70;
+		iconst_m1;
+		istore	71;
+		iconst_m1;
+		istore	72;
+		iconst_m1;
+		istore	73;
+		iconst_m1;
+		istore	74;
+		iconst_m1;
+		istore	75;
+		iconst_m1;
+		istore	76;
+		iconst_m1;
+		istore	77;
+		iconst_m1;
+		istore	78;
+		iconst_m1;
+		istore	79;
+		iconst_m1;
+		istore	80;
+		iconst_m1;
+		istore	81;
+		iconst_m1;
+		istore	82;
+		iconst_m1;
+		istore	83;
+		iconst_m1;
+		istore	84;
+		iconst_m1;
+		istore	85;
+		iconst_m1;
+		istore	86;
+		iconst_m1;
+		istore	87;
+		iconst_m1;
+		istore	88;
+		iconst_m1;
+		istore	89;
+		iconst_m1;
+		istore	90;
+		iconst_m1;
+		istore	91;
+		iconst_m1;
+		istore	92;
+		iconst_m1;
+		istore	93;
+		iconst_m1;
+		istore	94;
+		iconst_m1;
+		istore	95;
+		iconst_m1;
+		istore	96;
+		iconst_m1;
+		istore	97;
+		iconst_m1;
+		istore	98;
+		iconst_m1;
+		istore	99;
+		iconst_m1;
+		istore	100;
+		iconst_m1;
+		istore	101;
+		iconst_m1;
+		istore	102;
+		iconst_m1;
+		istore	103;
+		iconst_m1;
+		istore	104;
+		iconst_m1;
+		istore	105;
+		iconst_m1;
+		istore	106;
+		iconst_m1;
+		istore	107;
+		iconst_m1;
+		istore	108;
+		iconst_m1;
+		istore	109;
+		iconst_m1;
+		istore	110;
+		iconst_m1;
+		istore	111;
+		iconst_m1;
+		istore	112;
+		iconst_m1;
+		istore	113;
+		iconst_m1;
+		istore	114;
+		iconst_m1;
+		istore	115;
+		iconst_m1;
+		istore	116;
+		iconst_m1;
+		istore	117;
+		iconst_m1;
+		istore	118;
+		iconst_m1;
+		istore	119;
+		iconst_m1;
+		istore	120;
+		iconst_m1;
+		istore	121;
+		iconst_m1;
+		istore	122;
+		iconst_m1;
+		istore	123;
+		iconst_m1;
+		istore	124;
+		iconst_m1;
+		istore	125;
+		iconst_m1;
+		istore	126;
+		iconst_m1;
+		istore	127;
+		iconst_m1;
+		istore	128;
+		iconst_m1;
+		istore	129;
+		iconst_m1;
+		istore	130;
+		iconst_m1;
+		istore	131;
+		iconst_m1;
+		istore	132;
+		iconst_m1;
+		istore	133;
+		iconst_m1;
+		istore	134;
+		iconst_m1;
+		istore	135;
+		iconst_m1;
+		istore	136;
+		iconst_m1;
+		istore	137;
+		iconst_m1;
+		istore	138;
+		iconst_m1;
+		istore	139;
+		iconst_m1;
+		istore	140;
+		iconst_m1;
+		istore	141;
+		iconst_m1;
+		istore	142;
+		iconst_m1;
+		istore	143;
+		iconst_m1;
+		istore	144;
+		iconst_m1;
+		istore	145;
+		iconst_m1;
+		istore	146;
+		iconst_m1;
+		istore	147;
+		iconst_m1;
+		istore	148;
+		iconst_m1;
+		istore	149;
+		iconst_m1;
+		istore	150;
+		iconst_m1;
+		istore	151;
+		iconst_m1;
+		istore	152;
+		iconst_m1;
+		istore	153;
+		iconst_m1;
+		istore	154;
+		iconst_m1;
+		istore	155;
+		iconst_m1;
+		istore	156;
+		iconst_m1;
+		istore	157;
+		iconst_m1;
+		istore	158;
+		iconst_m1;
+		istore	159;
+		iconst_m1;
+		istore	160;
+		iconst_m1;
+		istore	161;
+		iconst_m1;
+		istore	162;
+		iconst_m1;
+		istore	163;
+		iconst_m1;
+		istore	164;
+		iconst_m1;
+		istore	165;
+		iconst_m1;
+		istore	166;
+		iconst_m1;
+		istore	167;
+		iconst_m1;
+		istore	168;
+		iconst_m1;
+		istore	169;
+		iconst_m1;
+		istore	170;
+		iconst_m1;
+		istore	171;
+		iconst_m1;
+		istore	172;
+		iconst_m1;
+		istore	173;
+		iconst_m1;
+		istore	174;
+		iconst_m1;
+		istore	175;
+		iconst_m1;
+		istore	176;
+		iconst_m1;
+		istore	177;
+		iconst_m1;
+		istore	178;
+		iconst_m1;
+		istore	179;
+		iconst_m1;
+		istore	180;
+		iconst_m1;
+		istore	181;
+		iconst_m1;
+		istore	182;
+		iconst_m1;
+		istore	183;
+		iconst_m1;
+		istore	184;
+		iconst_m1;
+		istore	185;
+		iconst_m1;
+		istore	186;
+		iconst_m1;
+		istore	187;
+		iconst_m1;
+		istore	188;
+		iconst_m1;
+		istore	189;
+		iconst_m1;
+		istore	190;
+		iconst_m1;
+		istore	191;
+		iconst_m1;
+		istore	192;
+		iconst_m1;
+		istore	193;
+		iconst_m1;
+		istore	194;
+		iconst_m1;
+		istore	195;
+		iconst_m1;
+		istore	196;
+		iconst_m1;
+		istore	197;
+		iconst_m1;
+		istore	198;
+		iconst_m1;
+		istore	199;
+		iconst_m1;
+		istore	200;
+		iconst_m1;
+		istore	201;
+		iconst_m1;
+		istore	202;
+		iconst_m1;
+		istore	203;
+		iconst_m1;
+		istore	204;
+		iconst_m1;
+		istore	205;
+		iconst_m1;
+		istore	206;
+		iconst_m1;
+		istore	207;
+		iconst_0;
+		istore	208;
+		aconst_null;
+		astore	209;
+		iinc	2, 1;
+		iload_0;
+		bipush	65;
+if_icmpge	L641;
+        iconst_0;
+		goto	L5170;
+    L641:
+		iload_0;
+		bipush	90;
+		if_icmpgt	L651;
+		iconst_1;
+		goto	L5170;
+	L651:
+		iinc	3, 1;
+		iload_0;
+		bipush	97;
+		if_icmpge	L664;
+		iconst_0;
+		goto	L5170;
+	L664:
+		iload_0;
+		bipush	122;
+		if_icmpgt	L674;
+		iconst_1;
+		goto	L5170;
+	L674:
+		iinc	4, 1;
+		iload_0;
+		sipush	192;
+		if_icmpge	L688;
+		iconst_0;
+		goto	L5170;
+	L688:
+		iload_0;
+		sipush	214;
+		if_icmpgt	L699;
+		iconst_1;
+		goto	L5170;
+	L699:
+		iinc	5, 1;
+		iload_0;
+		sipush	216;
+		if_icmpge	L713;
+		iconst_0;
+		goto	L5170;
+	L713:
+		iload_0;
+		sipush	246;
+		if_icmpgt	L724;
+		iconst_1;
+		goto	L5170;
+	L724:
+		iinc	6, 1;
+		iload_0;
+		sipush	248;
+		if_icmpge	L738;
+		iconst_0;
+		goto	L5170;
+	L738:
+		iload_0;
+		sipush	255;
+		if_icmpgt	L749;
+		iconst_1;
+		goto	L5170;
+	L749:
+		iinc	7, 1;
+		iload_0;
+		sipush	256;
+		if_icmpge	L763;
+		iconst_0;
+		goto	L5170;
+	L763:
+		iload_0;
+		sipush	305;
+		if_icmpgt	L774;
+		iconst_1;
+		goto	L5170;
+	L774:
+		iinc	8, 1;
+		iload_0;
+		sipush	308;
+		if_icmpge	L788;
+		iconst_0;
+		goto	L5170;
+	L788:
+		iload_0;
+		sipush	318;
+		if_icmpgt	L799;
+		iconst_1;
+		goto	L5170;
+	L799:
+		iinc	9, 1;
+		iload_0;
+		sipush	321;
+		if_icmpge	L813;
+		iconst_0;
+		goto	L5170;
+	L813:
+		iload_0;
+		sipush	328;
+		if_icmpgt	L824;
+		iconst_1;
+		goto	L5170;
+	L824:
+		iinc	10, 1;
+		iload_0;
+		sipush	330;
+		if_icmpge	L838;
+		iconst_0;
+		goto	L5170;
+	L838:
+		iload_0;
+		sipush	382;
+		if_icmpgt	L849;
+		iconst_1;
+		goto	L5170;
+	L849:
+		iinc	11, 1;
+		iload_0;
+		sipush	384;
+		if_icmpge	L863;
+		iconst_0;
+		goto	L5170;
+	L863:
+		iload_0;
+		sipush	451;
+		if_icmpgt	L874;
+		iconst_1;
+		goto	L5170;
+	L874:
+		iinc	12, 1;
+		iload_0;
+		sipush	461;
+		if_icmpge	L888;
+		iconst_0;
+		goto	L5170;
+	L888:
+		iload_0;
+		sipush	496;
+		if_icmpgt	L899;
+		iconst_1;
+		goto	L5170;
+	L899:
+		iinc	13, 1;
+		iload_0;
+		sipush	500;
+		if_icmpge	L913;
+		iconst_0;
+		goto	L5170;
+	L913:
+		iload_0;
+		sipush	501;
+		if_icmpgt	L924;
+		iconst_1;
+		goto	L5170;
+	L924:
+		iinc	14, 1;
+		iload_0;
+		sipush	506;
+		if_icmpge	L938;
+		iconst_0;
+		goto	L5170;
+	L938:
+		iload_0;
+		sipush	535;
+		if_icmpgt	L949;
+		iconst_1;
+		goto	L5170;
+	L949:
+		iinc	15, 1;
+		iload_0;
+		sipush	592;
+		if_icmpge	L963;
+		iconst_0;
+		goto	L5170;
+	L963:
+		iload_0;
+		sipush	680;
+		if_icmpgt	L974;
+		iconst_1;
+		goto	L5170;
+	L974:
+		iinc	16, 1;
+		iload_0;
+		sipush	699;
+		if_icmpge	L988;
+		iconst_0;
+		goto	L5170;
+	L988:
+		iload_0;
+		sipush	705;
+		if_icmpgt	L999;
+		iconst_1;
+		goto	L5170;
+	L999:
+		iinc	17, 1;
+		iload_0;
+		sipush	902;
+		if_icmpne	L1013;
+		iconst_1;
+		goto	L5170;
+	L1013:
+		iinc	18, 1;
+		iload_0;
+		sipush	904;
+		if_icmpge	L1027;
+		iconst_0;
+		goto	L5170;
+	L1027:
+		iload_0;
+		sipush	906;
+		if_icmpgt	L1038;
+		iconst_1;
+		goto	L5170;
+	L1038:
+		iinc	19, 1;
+		iload_0;
+		sipush	908;
+		if_icmpne	L1052;
+		iconst_1;
+		goto	L5170;
+	L1052:
+		iinc	20, 1;
+		iload_0;
+		sipush	910;
+		if_icmpge	L1066;
+		iconst_0;
+		goto	L5170;
+	L1066:
+		iload_0;
+		sipush	929;
+		if_icmpgt	L1077;
+		iconst_1;
+		goto	L5170;
+	L1077:
+		iinc	21, 1;
+		iload_0;
+		sipush	931;
+		if_icmpge	L1091;
+		iconst_0;
+		goto	L5170;
+	L1091:
+		iload_0;
+		sipush	974;
+		if_icmpgt	L1102;
+		iconst_1;
+		goto	L5170;
+	L1102:
+		iinc	22, 1;
+		iload_0;
+		sipush	976;
+		if_icmpge	L1116;
+		iconst_0;
+		goto	L5170;
+	L1116:
+		iload_0;
+		sipush	982;
+		if_icmpgt	L1127;
+		iconst_1;
+		goto	L5170;
+	L1127:
+		iinc	23, 1;
+		iload_0;
+		sipush	986;
+		if_icmpne	L1141;
+		iconst_1;
+		goto	L5170;
+	L1141:
+		iinc	24, 1;
+		iload_0;
+		sipush	988;
+		if_icmpne	L1155;
+		iconst_1;
+		goto	L5170;
+	L1155:
+		iinc	25, 1;
+		iload_0;
+		sipush	990;
+		if_icmpne	L1169;
+		iconst_1;
+		goto	L5170;
+	L1169:
+		iinc	26, 1;
+		iload_0;
+		sipush	992;
+		if_icmpne	L1183;
+		iconst_1;
+		goto	L5170;
+	L1183:
+		iinc	27, 1;
+		iload_0;
+		sipush	994;
+		if_icmpge	L1197;
+		iconst_0;
+		goto	L5170;
+	L1197:
+		iload_0;
+		sipush	1011;
+		if_icmpgt	L1208;
+		iconst_1;
+		goto	L5170;
+	L1208:
+		iinc	28, 1;
+		iload_0;
+		sipush	1025;
+		if_icmpge	L1222;
+		iconst_0;
+		goto	L5170;
+	L1222:
+		iload_0;
+		sipush	1036;
+		if_icmpgt	L1233;
+		iconst_1;
+		goto	L5170;
+	L1233:
+		iinc	29, 1;
+		iload_0;
+		sipush	1038;
+		if_icmpge	L1247;
+		iconst_0;
+		goto	L5170;
+	L1247:
+		iload_0;
+		sipush	1103;
+		if_icmpgt	L1258;
+		iconst_1;
+		goto	L5170;
+	L1258:
+		iinc	30, 1;
+		iload_0;
+		sipush	1105;
+		if_icmpge	L1272;
+		iconst_0;
+		goto	L5170;
+	L1272:
+		iload_0;
+		sipush	1116;
+		if_icmpgt	L1283;
+		iconst_1;
+		goto	L5170;
+	L1283:
+		iinc	31, 1;
+		iload_0;
+		sipush	1118;
+		if_icmpge	L1297;
+		iconst_0;
+		goto	L5170;
+	L1297:
+		iload_0;
+		sipush	1153;
+		if_icmpgt	L1308;
+		iconst_1;
+		goto	L5170;
+	L1308:
+		iinc	32, 1;
+		iload_0;
+		sipush	1168;
+		if_icmpge	L1322;
+		iconst_0;
+		goto	L5170;
+	L1322:
+		iload_0;
+		sipush	1220;
+		if_icmpgt	L1333;
+		iconst_1;
+		goto	L5170;
+	L1333:
+		iinc	33, 1;
+		iload_0;
+		sipush	1223;
+		if_icmpge	L1347;
+		iconst_0;
+		goto	L5170;
+	L1347:
+		iload_0;
+		sipush	1224;
+		if_icmpgt	L1358;
+		iconst_1;
+		goto	L5170;
+	L1358:
+		iinc	34, 1;
+		iload_0;
+		sipush	1227;
+		if_icmpge	L1372;
+		iconst_0;
+		goto	L5170;
+	L1372:
+		iload_0;
+		sipush	1228;
+		if_icmpgt	L1383;
+		iconst_1;
+		goto	L5170;
+	L1383:
+		iinc	35, 1;
+		iload_0;
+		sipush	1232;
+		if_icmpge	L1397;
+		iconst_0;
+		goto	L5170;
+	L1397:
+		iload_0;
+		sipush	1259;
+		if_icmpgt	L1408;
+		iconst_1;
+		goto	L5170;
+	L1408:
+		iinc	36, 1;
+		iload_0;
+		sipush	1262;
+		if_icmpge	L1422;
+		iconst_0;
+		goto	L5170;
+	L1422:
+		iload_0;
+		sipush	1269;
+		if_icmpgt	L1433;
+		iconst_1;
+		goto	L5170;
+	L1433:
+		iinc	37, 1;
+		iload_0;
+		sipush	1272;
+		if_icmpge	L1447;
+		iconst_0;
+		goto	L5170;
+	L1447:
+		iload_0;
+		sipush	1273;
+		if_icmpgt	L1458;
+		iconst_1;
+		goto	L5170;
+	L1458:
+		iinc	38, 1;
+		iload_0;
+		sipush	1329;
+		if_icmpge	L1472;
+		iconst_0;
+		goto	L5170;
+	L1472:
+		iload_0;
+		sipush	1366;
+		if_icmpgt	L1483;
+		iconst_1;
+		goto	L5170;
+	L1483:
+		iinc	39, 1;
+		iload_0;
+		sipush	1369;
+		if_icmpne	L1497;
+		iconst_1;
+		goto	L5170;
+	L1497:
+		iinc	40, 1;
+		iload_0;
+		sipush	1377;
+		if_icmpge	L1511;
+		iconst_0;
+		goto	L5170;
+	L1511:
+		iload_0;
+		sipush	1414;
+		if_icmpgt	L1522;
+		iconst_1;
+		goto	L5170;
+	L1522:
+		iinc	41, 1;
+		iload_0;
+		sipush	1488;
+		if_icmpge	L1536;
+		iconst_0;
+		goto	L5170;
+	L1536:
+		iload_0;
+		sipush	1514;
+		if_icmpgt	L1547;
+		iconst_1;
+		goto	L5170;
+	L1547:
+		iinc	42, 1;
+		iload_0;
+		sipush	1520;
+		if_icmpge	L1561;
+		iconst_0;
+		goto	L5170;
+	L1561:
+		iload_0;
+		sipush	1522;
+		if_icmpgt	L1572;
+		iconst_1;
+		goto	L5170;
+	L1572:
+		iinc	43, 1;
+		iload_0;
+		sipush	1569;
+		if_icmpge	L1586;
+		iconst_0;
+		goto	L5170;
+	L1586:
+		iload_0;
+		sipush	1594;
+		if_icmpgt	L1597;
+		iconst_1;
+		goto	L5170;
+	L1597:
+		iinc	44, 1;
+		iload_0;
+		sipush	1601;
+		if_icmpge	L1611;
+		iconst_0;
+		goto	L5170;
+	L1611:
+		iload_0;
+		sipush	1610;
+		if_icmpgt	L1622;
+		iconst_1;
+		goto	L5170;
+	L1622:
+		iinc	45, 1;
+		iload_0;
+		sipush	1649;
+		if_icmpge	L1636;
+		iconst_0;
+		goto	L5170;
+	L1636:
+		iload_0;
+		sipush	1719;
+		if_icmpgt	L1647;
+		iconst_1;
+		goto	L5170;
+	L1647:
+		iinc	46, 1;
+		iload_0;
+		sipush	1722;
+		if_icmpge	L1661;
+		iconst_0;
+		goto	L5170;
+	L1661:
+		iload_0;
+		sipush	1726;
+		if_icmpgt	L1672;
+		iconst_1;
+		goto	L5170;
+	L1672:
+		iinc	47, 1;
+		iload_0;
+		sipush	1728;
+		if_icmpge	L1686;
+		iconst_0;
+		goto	L5170;
+	L1686:
+		iload_0;
+		sipush	1742;
+		if_icmpgt	L1697;
+		iconst_1;
+		goto	L5170;
+	L1697:
+		iinc	48, 1;
+		iload_0;
+		sipush	1744;
+		if_icmpge	L1711;
+		iconst_0;
+		goto	L5170;
+	L1711:
+		iload_0;
+		sipush	1747;
+		if_icmpgt	L1722;
+		iconst_1;
+		goto	L5170;
+	L1722:
+		iinc	49, 1;
+		iload_0;
+		sipush	1749;
+		if_icmpne	L1736;
+		iconst_1;
+		goto	L5170;
+	L1736:
+		iinc	50, 1;
+		iload_0;
+		sipush	1765;
+		if_icmpge	L1750;
+		iconst_0;
+		goto	L5170;
+	L1750:
+		iload_0;
+		sipush	1766;
+		if_icmpgt	L1761;
+		iconst_1;
+		goto	L5170;
+	L1761:
+		iinc	51, 1;
+		iload_0;
+		sipush	2309;
+		if_icmpge	L1775;
+		iconst_0;
+		goto	L5170;
+	L1775:
+		iload_0;
+		sipush	2361;
+		if_icmpgt	L1786;
+		iconst_1;
+		goto	L5170;
+	L1786:
+		iinc	52, 1;
+		iload_0;
+		sipush	2365;
+		if_icmpne	L1800;
+		iconst_1;
+		goto	L5170;
+	L1800:
+		iinc	53, 1;
+		iload_0;
+		sipush	2392;
+		if_icmpge	L1814;
+		iconst_0;
+		goto	L5170;
+	L1814:
+		iload_0;
+		sipush	2401;
+		if_icmpgt	L1825;
+		iconst_1;
+		goto	L5170;
+	L1825:
+		iinc	54, 1;
+		iload_0;
+		sipush	2437;
+		if_icmpge	L1839;
+		iconst_0;
+		goto	L5170;
+	L1839:
+		iload_0;
+		sipush	2444;
+		if_icmpgt	L1850;
+		iconst_1;
+		goto	L5170;
+	L1850:
+		iinc	55, 1;
+		iload_0;
+		sipush	2447;
+		if_icmpge	L1864;
+		iconst_0;
+		goto	L5170;
+	L1864:
+		iload_0;
+		sipush	2448;
+		if_icmpgt	L1875;
+		iconst_1;
+		goto	L5170;
+	L1875:
+		iinc	56, 1;
+		iload_0;
+		sipush	2451;
+		if_icmpge	L1889;
+		iconst_0;
+		goto	L5170;
+	L1889:
+		iload_0;
+		sipush	2472;
+		if_icmpgt	L1900;
+		iconst_1;
+		goto	L5170;
+	L1900:
+		iinc	57, 1;
+		iload_0;
+		sipush	2474;
+		if_icmpge	L1914;
+		iconst_0;
+		goto	L5170;
+	L1914:
+		iload_0;
+		sipush	2480;
+		if_icmpgt	L1925;
+		iconst_1;
+		goto	L5170;
+	L1925:
+		iinc	58, 1;
+		iload_0;
+		sipush	2482;
+		if_icmpne	L1939;
+		iconst_1;
+		goto	L5170;
+	L1939:
+		iinc	59, 1;
+		iload_0;
+		sipush	2486;
+		if_icmpge	L1953;
+		iconst_0;
+		goto	L5170;
+	L1953:
+		iload_0;
+		sipush	2489;
+		if_icmpgt	L1964;
+		iconst_1;
+		goto	L5170;
+	L1964:
+		iinc	60, 1;
+		iload_0;
+		sipush	2524;
+		if_icmpge	L1978;
+		iconst_0;
+		goto	L5170;
+	L1978:
+		iload_0;
+		sipush	2525;
+		if_icmpgt	L1989;
+		iconst_1;
+		goto	L5170;
+	L1989:
+		iinc	61, 1;
+		iload_0;
+		sipush	2527;
+		if_icmpge	L2003;
+		iconst_0;
+		goto	L5170;
+	L2003:
+		iload_0;
+		sipush	2529;
+		if_icmpgt	L2014;
+		iconst_1;
+		goto	L5170;
+	L2014:
+		iinc	62, 1;
+		iload_0;
+		sipush	2544;
+		if_icmpge	L2028;
+		iconst_0;
+		goto	L5170;
+	L2028:
+		iload_0;
+		sipush	2545;
+		if_icmpgt	L2039;
+		iconst_1;
+		goto	L5170;
+	L2039:
+		iinc	63, 1;
+		iload_0;
+		sipush	2565;
+		if_icmpge	L2053;
+		iconst_0;
+		goto	L5170;
+	L2053:
+		iload_0;
+		sipush	2570;
+		if_icmpgt	L2064;
+		iconst_1;
+		goto	L5170;
+	L2064:
+		iinc	64, 1;
+		iload_0;
+		sipush	2575;
+		if_icmpge	L2078;
+		iconst_0;
+		goto	L5170;
+	L2078:
+		iload_0;
+		sipush	2576;
+		if_icmpgt	L2089;
+		iconst_1;
+		goto	L5170;
+	L2089:
+		iinc	65, 1;
+		iload_0;
+		sipush	2579;
+		if_icmpge	L2103;
+		iconst_0;
+		goto	L5170;
+	L2103:
+		iload_0;
+		sipush	2600;
+		if_icmpgt	L2114;
+		iconst_1;
+		goto	L5170;
+	L2114:
+		iinc	66, 1;
+		iload_0;
+		sipush	2602;
+		if_icmpge	L2128;
+		iconst_0;
+		goto	L5170;
+	L2128:
+		iload_0;
+		sipush	2608;
+		if_icmpgt	L2139;
+		iconst_1;
+		goto	L5170;
+	L2139:
+		iinc	67, 1;
+		iload_0;
+		sipush	2610;
+		if_icmpge	L2153;
+		iconst_0;
+		goto	L5170;
+	L2153:
+		iload_0;
+		sipush	2611;
+		if_icmpgt	L2164;
+		iconst_1;
+		goto	L5170;
+	L2164:
+		iinc	68, 1;
+		iload_0;
+		sipush	2613;
+		if_icmpge	L2178;
+		iconst_0;
+		goto	L5170;
+	L2178:
+		iload_0;
+		sipush	2614;
+		if_icmpgt	L2189;
+		iconst_1;
+		goto	L5170;
+	L2189:
+		iinc	69, 1;
+		iload_0;
+		sipush	2616;
+		if_icmpge	L2203;
+		iconst_0;
+		goto	L5170;
+	L2203:
+		iload_0;
+		sipush	2617;
+		if_icmpgt	L2214;
+		iconst_1;
+		goto	L5170;
+	L2214:
+		iinc	70, 1;
+		iload_0;
+		sipush	2649;
+		if_icmpge	L2228;
+		iconst_0;
+		goto	L5170;
+	L2228:
+		iload_0;
+		sipush	2652;
+		if_icmpgt	L2239;
+		iconst_1;
+		goto	L5170;
+	L2239:
+		iinc	71, 1;
+		iload_0;
+		sipush	2654;
+		if_icmpne	L2253;
+		iconst_1;
+		goto	L5170;
+	L2253:
+		iinc	72, 1;
+		iload_0;
+		sipush	2674;
+		if_icmpge	L2267;
+		iconst_0;
+		goto	L5170;
+	L2267:
+		iload_0;
+		sipush	2676;
+		if_icmpgt	L2278;
+		iconst_1;
+		goto	L5170;
+	L2278:
+		iinc	73, 1;
+		iload_0;
+		sipush	2693;
+		if_icmpge	L2292;
+		iconst_0;
+		goto	L5170;
+	L2292:
+		iload_0;
+		sipush	2699;
+		if_icmpgt	L2303;
+		iconst_1;
+		goto	L5170;
+	L2303:
+		iinc	74, 1;
+		iload_0;
+		sipush	2701;
+		if_icmpne	L2317;
+		iconst_1;
+		goto	L5170;
+	L2317:
+		iinc	75, 1;
+		iload_0;
+		sipush	2703;
+		if_icmpge	L2331;
+		iconst_0;
+		goto	L5170;
+	L2331:
+		iload_0;
+		sipush	2705;
+		if_icmpgt	L2342;
+		iconst_1;
+		goto	L5170;
+	L2342:
+		iinc	76, 1;
+		iload_0;
+		sipush	2707;
+		if_icmpge	L2356;
+		iconst_0;
+		goto	L5170;
+	L2356:
+		iload_0;
+		sipush	2728;
+		if_icmpgt	L2367;
+		iconst_1;
+		goto	L5170;
+	L2367:
+		iinc	77, 1;
+		iload_0;
+		sipush	2730;
+		if_icmpge	L2381;
+		iconst_0;
+		goto	L5170;
+	L2381:
+		iload_0;
+		sipush	2736;
+		if_icmpgt	L2392;
+		iconst_1;
+		goto	L5170;
+	L2392:
+		iinc	78, 1;
+		iload_0;
+		sipush	2738;
+		if_icmpge	L2406;
+		iconst_0;
+		goto	L5170;
+	L2406:
+		iload_0;
+		sipush	2739;
+		if_icmpgt	L2417;
+		iconst_1;
+		goto	L5170;
+	L2417:
+		iinc	79, 1;
+		iload_0;
+		sipush	2741;
+		if_icmpge	L2431;
+		iconst_0;
+		goto	L5170;
+	L2431:
+		iload_0;
+		sipush	2745;
+		if_icmpgt	L2442;
+		iconst_1;
+		goto	L5170;
+	L2442:
+		iinc	80, 1;
+		iload_0;
+		sipush	2749;
+		if_icmpne	L2456;
+		iconst_1;
+		goto	L5170;
+	L2456:
+		iinc	81, 1;
+		iload_0;
+		sipush	2784;
+		if_icmpne	L2470;
+		iconst_1;
+		goto	L5170;
+	L2470:
+		iinc	82, 1;
+		iload_0;
+		sipush	2821;
+		if_icmpge	L2484;
+		iconst_0;
+		goto	L5170;
+	L2484:
+		iload_0;
+		sipush	2828;
+		if_icmpgt	L2495;
+		iconst_1;
+		goto	L5170;
+	L2495:
+		iinc	83, 1;
+		iload_0;
+		sipush	2831;
+		if_icmpge	L2509;
+		iconst_0;
+		goto	L5170;
+	L2509:
+		iload_0;
+		sipush	2832;
+		if_icmpgt	L2520;
+		iconst_1;
+		goto	L5170;
+	L2520:
+		iinc	84, 1;
+		iload_0;
+		sipush	2835;
+		if_icmpge	L2534;
+		iconst_0;
+		goto	L5170;
+	L2534:
+		iload_0;
+		sipush	2856;
+		if_icmpgt	L2545;
+		iconst_1;
+		goto	L5170;
+	L2545:
+		iinc	85, 1;
+		iload_0;
+		sipush	2858;
+		if_icmpge	L2559;
+		iconst_0;
+		goto	L5170;
+	L2559:
+		iload_0;
+		sipush	2864;
+		if_icmpgt	L2570;
+		iconst_1;
+		goto	L5170;
+	L2570:
+		iinc	86, 1;
+		iload_0;
+		sipush	2866;
+		if_icmpge	L2584;
+		iconst_0;
+		goto	L5170;
+	L2584:
+		iload_0;
+		sipush	2867;
+		if_icmpgt	L2595;
+		iconst_1;
+		goto	L5170;
+	L2595:
+		iinc	87, 1;
+		iload_0;
+		sipush	2870;
+		if_icmpge	L2609;
+		iconst_0;
+		goto	L5170;
+	L2609:
+		iload_0;
+		sipush	2873;
+		if_icmpgt	L2620;
+		iconst_1;
+		goto	L5170;
+	L2620:
+		iinc	88, 1;
+		iload_0;
+		sipush	2877;
+		if_icmpne	L2634;
+		iconst_1;
+		goto	L5170;
+	L2634:
+		iinc	89, 1;
+		iload_0;
+		sipush	2908;
+		if_icmpge	L2648;
+		iconst_0;
+		goto	L5170;
+	L2648:
+		iload_0;
+		sipush	2909;
+		if_icmpgt	L2659;
+		iconst_1;
+		goto	L5170;
+	L2659:
+		iinc	90, 1;
+		iload_0;
+		sipush	2911;
+		if_icmpge	L2673;
+		iconst_0;
+		goto	L5170;
+	L2673:
+		iload_0;
+		sipush	2913;
+		if_icmpgt	L2684;
+		iconst_1;
+		goto	L5170;
+	L2684:
+		iinc	91, 1;
+		iload_0;
+		sipush	2949;
+		if_icmpge	L2698;
+		iconst_0;
+		goto	L5170;
+	L2698:
+		iload_0;
+		sipush	2954;
+		if_icmpgt	L2709;
+		iconst_1;
+		goto	L5170;
+	L2709:
+		iinc	92, 1;
+		iload_0;
+		sipush	2958;
+		if_icmpge	L2723;
+		iconst_0;
+		goto	L5170;
+	L2723:
+		iload_0;
+		sipush	2960;
+		if_icmpgt	L2734;
+		iconst_1;
+		goto	L5170;
+	L2734:
+		iinc	93, 1;
+		iload_0;
+		sipush	2962;
+		if_icmpge	L2748;
+		iconst_0;
+		goto	L5170;
+	L2748:
+		iload_0;
+		sipush	2965;
+		if_icmpgt	L2759;
+		iconst_1;
+		goto	L5170;
+	L2759:
+		iinc	94, 1;
+		iload_0;
+		sipush	2969;
+		if_icmpge	L2773;
+		iconst_0;
+		goto	L5170;
+	L2773:
+		iload_0;
+		sipush	2970;
+		if_icmpgt	L2784;
+		iconst_1;
+		goto	L5170;
+	L2784:
+		iinc	95, 1;
+		iload_0;
+		sipush	2972;
+		if_icmpne	L2798;
+		iconst_1;
+		goto	L5170;
+	L2798:
+		iinc	96, 1;
+		iload_0;
+		sipush	2974;
+		if_icmpge	L2812;
+		iconst_0;
+		goto	L5170;
+	L2812:
+		iload_0;
+		sipush	2975;
+		if_icmpgt	L2823;
+		iconst_1;
+		goto	L5170;
+	L2823:
+		iinc	97, 1;
+		iload_0;
+		sipush	2979;
+		if_icmpge	L2837;
+		iconst_0;
+		goto	L5170;
+	L2837:
+		iload_0;
+		sipush	2980;
+		if_icmpgt	L2848;
+		iconst_1;
+		goto	L5170;
+	L2848:
+		iinc	98, 1;
+		iload_0;
+		sipush	2984;
+		if_icmpge	L2862;
+		iconst_0;
+		goto	L5170;
+	L2862:
+		iload_0;
+		sipush	2986;
+		if_icmpgt	L2873;
+		iconst_1;
+		goto	L5170;
+	L2873:
+		iinc	99, 1;
+		iload_0;
+		sipush	2990;
+		if_icmpge	L2887;
+		iconst_0;
+		goto	L5170;
+	L2887:
+		iload_0;
+		sipush	2997;
+		if_icmpgt	L2898;
+		iconst_1;
+		goto	L5170;
+	L2898:
+		iinc	100, 1;
+		iload_0;
+		sipush	2999;
+		if_icmpge	L2912;
+		iconst_0;
+		goto	L5170;
+	L2912:
+		iload_0;
+		sipush	3001;
+		if_icmpgt	L2923;
+		iconst_1;
+		goto	L5170;
+	L2923:
+		iinc	101, 1;
+		iload_0;
+		sipush	3077;
+		if_icmpge	L2937;
+		iconst_0;
+		goto	L5170;
+	L2937:
+		iload_0;
+		sipush	3084;
+		if_icmpgt	L2948;
+		iconst_1;
+		goto	L5170;
+	L2948:
+		iinc	102, 1;
+		iload_0;
+		sipush	3086;
+		if_icmpge	L2962;
+		iconst_0;
+		goto	L5170;
+	L2962:
+		iload_0;
+		sipush	3088;
+		if_icmpgt	L2973;
+		iconst_1;
+		goto	L5170;
+	L2973:
+		iinc	103, 1;
+		iload_0;
+		sipush	3090;
+		if_icmpge	L2987;
+		iconst_0;
+		goto	L5170;
+	L2987:
+		iload_0;
+		sipush	3112;
+		if_icmpgt	L2998;
+		iconst_1;
+		goto	L5170;
+	L2998:
+		iinc	104, 1;
+		iload_0;
+		sipush	3114;
+		if_icmpge	L3012;
+		iconst_0;
+		goto	L5170;
+	L3012:
+		iload_0;
+		sipush	3123;
+		if_icmpgt	L3023;
+		iconst_1;
+		goto	L5170;
+	L3023:
+		iinc	105, 1;
+		iload_0;
+		sipush	3125;
+		if_icmpge	L3037;
+		iconst_0;
+		goto	L5170;
+	L3037:
+		iload_0;
+		sipush	3129;
+		if_icmpgt	L3048;
+		iconst_1;
+		goto	L5170;
+	L3048:
+		iinc	106, 1;
+		iload_0;
+		sipush	3168;
+		if_icmpge	L3062;
+		iconst_0;
+		goto	L5170;
+	L3062:
+		iload_0;
+		sipush	3169;
+		if_icmpgt	L3073;
+		iconst_1;
+		goto	L5170;
+	L3073:
+		iinc	107, 1;
+		iload_0;
+		sipush	3205;
+		if_icmpge	L3087;
+		iconst_0;
+		goto	L5170;
+	L3087:
+		iload_0;
+		sipush	3212;
+		if_icmpgt	L3098;
+		iconst_1;
+		goto	L5170;
+	L3098:
+		iinc	108, 1;
+		iload_0;
+		sipush	3214;
+		if_icmpge	L3112;
+		iconst_0;
+		goto	L5170;
+	L3112:
+		iload_0;
+		sipush	3216;
+		if_icmpgt	L3123;
+		iconst_1;
+		goto	L5170;
+	L3123:
+		iinc	109, 1;
+		iload_0;
+		sipush	3218;
+		if_icmpge	L3137;
+		iconst_0;
+		goto	L5170;
+	L3137:
+		iload_0;
+		sipush	3240;
+		if_icmpgt	L3148;
+		iconst_1;
+		goto	L5170;
+	L3148:
+		iinc	110, 1;
+		iload_0;
+		sipush	3242;
+		if_icmpge	L3162;
+		iconst_0;
+		goto	L5170;
+	L3162:
+		iload_0;
+		sipush	3251;
+		if_icmpgt	L3173;
+		iconst_1;
+		goto	L5170;
+	L3173:
+		iinc	111, 1;
+		iload_0;
+		sipush	3253;
+		if_icmpge	L3187;
+		iconst_0;
+		goto	L5170;
+	L3187:
+		iload_0;
+		sipush	3257;
+		if_icmpgt	L3198;
+		iconst_1;
+		goto	L5170;
+	L3198:
+		iinc	112, 1;
+		iload_0;
+		sipush	3294;
+		if_icmpne	L3212;
+		iconst_1;
+		goto	L5170;
+	L3212:
+		iinc	113, 1;
+		iload_0;
+		sipush	3296;
+		if_icmpge	L3226;
+		iconst_0;
+		goto	L5170;
+	L3226:
+		iload_0;
+		sipush	3297;
+		if_icmpgt	L3237;
+		iconst_1;
+		goto	L5170;
+	L3237:
+		iinc	114, 1;
+		iload_0;
+		sipush	3333;
+		if_icmpge	L3251;
+		iconst_0;
+		goto	L5170;
+	L3251:
+		iload_0;
+		sipush	3340;
+		if_icmpgt	L3262;
+		iconst_1;
+		goto	L5170;
+	L3262:
+		iinc	115, 1;
+		iload_0;
+		sipush	3342;
+		if_icmpge	L3276;
+		iconst_0;
+		goto	L5170;
+	L3276:
+		iload_0;
+		sipush	3344;
+		if_icmpgt	L3287;
+		iconst_1;
+		goto	L5170;
+	L3287:
+		iinc	116, 1;
+		iload_0;
+		sipush	3346;
+		if_icmpge	L3301;
+		iconst_0;
+		goto	L5170;
+	L3301:
+		iload_0;
+		sipush	3368;
+		if_icmpgt	L3312;
+		iconst_1;
+		goto	L5170;
+	L3312:
+		iinc	117, 1;
+		iload_0;
+		sipush	3370;
+		if_icmpge	L3326;
+		iconst_0;
+		goto	L5170;
+	L3326:
+		iload_0;
+		sipush	3385;
+		if_icmpgt	L3337;
+		iconst_1;
+		goto	L5170;
+	L3337:
+		iinc	118, 1;
+		iload_0;
+		sipush	3424;
+		if_icmpge	L3351;
+		iconst_0;
+		goto	L5170;
+	L3351:
+		iload_0;
+		sipush	3425;
+		if_icmpgt	L3362;
+		iconst_1;
+		goto	L5170;
+	L3362:
+		iinc	119, 1;
+		iload_0;
+		sipush	3585;
+		if_icmpge	L3376;
+		iconst_0;
+		goto	L5170;
+	L3376:
+		iload_0;
+		sipush	3630;
+		if_icmpgt	L3387;
+		iconst_1;
+		goto	L5170;
+	L3387:
+		iinc	120, 1;
+		iload_0;
+		sipush	3632;
+		if_icmpne	L3401;
+		iconst_1;
+		goto	L5170;
+	L3401:
+		iinc	121, 1;
+		iload_0;
+		sipush	3634;
+		if_icmpge	L3415;
+		iconst_0;
+		goto	L5170;
+	L3415:
+		iload_0;
+		sipush	3635;
+		if_icmpgt	L3426;
+		iconst_1;
+		goto	L5170;
+	L3426:
+		iinc	122, 1;
+		iload_0;
+		sipush	3648;
+		if_icmpge	L3440;
+		iconst_0;
+		goto	L5170;
+	L3440:
+		iload_0;
+		sipush	3653;
+		if_icmpgt	L3451;
+		iconst_1;
+		goto	L5170;
+	L3451:
+		iinc	123, 1;
+		iload_0;
+		sipush	3713;
+		if_icmpge	L3465;
+		iconst_0;
+		goto	L5170;
+	L3465:
+		iload_0;
+		sipush	3714;
+		if_icmpgt	L3476;
+		iconst_1;
+		goto	L5170;
+	L3476:
+		iinc	124, 1;
+		iload_0;
+		sipush	3716;
+		if_icmpne	L3490;
+		iconst_1;
+		goto	L5170;
+	L3490:
+		iinc	125, 1;
+		iload_0;
+		sipush	3719;
+		if_icmpge	L3504;
+		iconst_0;
+		goto	L5170;
+	L3504:
+		iload_0;
+		sipush	3720;
+		if_icmpgt	L3515;
+		iconst_1;
+		goto	L5170;
+	L3515:
+		iinc	126, 1;
+		iload_0;
+		sipush	3722;
+		if_icmpne	L3529;
+		iconst_1;
+		goto	L5170;
+	L3529:
+		iinc	127, 1;
+		iload_0;
+		sipush	3725;
+		if_icmpne	L3543;
+		iconst_1;
+		goto	L5170;
+	L3543:
+		iinc	128, 1;
+		iload_0;
+		sipush	3732;
+		if_icmpge	L3557;
+		iconst_0;
+		goto	L5170;
+	L3557:
+		iload_0;
+		sipush	3735;
+		if_icmpgt	L3568;
+		iconst_1;
+		goto	L5170;
+	L3568:
+		iinc	129, 1;
+		iload_0;
+		sipush	3737;
+		if_icmpge	L3582;
+		iconst_0;
+		goto	L5170;
+	L3582:
+		iload_0;
+		sipush	3743;
+		if_icmpgt	L3593;
+		iconst_1;
+		goto	L5170;
+	L3593:
+		iinc	130, 1;
+		iload_0;
+		sipush	3745;
+		if_icmpge	L3607;
+		iconst_0;
+		goto	L5170;
+	L3607:
+		iload_0;
+		sipush	3747;
+		if_icmpgt	L3618;
+		iconst_1;
+		goto	L5170;
+	L3618:
+		iinc	131, 1;
+		iload_0;
+		sipush	3749;
+		if_icmpne	L3632;
+		iconst_1;
+		goto	L5170;
+	L3632:
+		iinc	132, 1;
+		iload_0;
+		sipush	3751;
+		if_icmpne	L3646;
+		iconst_1;
+		goto	L5170;
+	L3646:
+		iinc	133, 1;
+		iload_0;
+		sipush	3754;
+		if_icmpge	L3660;
+		iconst_0;
+		goto	L5170;
+	L3660:
+		iload_0;
+		sipush	3755;
+		if_icmpgt	L3671;
+		iconst_1;
+		goto	L5170;
+	L3671:
+		iinc	134, 1;
+		iload_0;
+		sipush	3757;
+		if_icmpge	L3685;
+		iconst_0;
+		goto	L5170;
+	L3685:
+		iload_0;
+		sipush	3758;
+		if_icmpgt	L3696;
+		iconst_1;
+		goto	L5170;
+	L3696:
+		iinc	135, 1;
+		iload_0;
+		sipush	3760;
+		if_icmpne	L3710;
+		iconst_1;
+		goto	L5170;
+	L3710:
+		iinc	136, 1;
+		iload_0;
+		sipush	3762;
+		if_icmpge	L3724;
+		iconst_0;
+		goto	L5170;
+	L3724:
+		iload_0;
+		sipush	3763;
+		if_icmpgt	L3735;
+		iconst_1;
+		goto	L5170;
+	L3735:
+		iinc	137, 1;
+		iload_0;
+		sipush	3773;
+		if_icmpne	L3749;
+		iconst_1;
+		goto	L5170;
+	L3749:
+		iinc	138, 1;
+		iload_0;
+		sipush	3776;
+		if_icmpge	L3763;
+		iconst_0;
+		goto	L5170;
+	L3763:
+		iload_0;
+		sipush	3780;
+		if_icmpgt	L3774;
+		iconst_1;
+		goto	L5170;
+	L3774:
+		iinc	139, 1;
+		iload_0;
+		sipush	3904;
+		if_icmpge	L3788;
+		iconst_0;
+		goto	L5170;
+	L3788:
+		iload_0;
+		sipush	3911;
+		if_icmpgt	L3799;
+		iconst_1;
+		goto	L5170;
+	L3799:
+		iinc	140, 1;
+		iload_0;
+		sipush	3913;
+		if_icmpge	L3813;
+		iconst_0;
+		goto	L5170;
+	L3813:
+		iload_0;
+		sipush	3945;
+		if_icmpgt	L3824;
+		iconst_1;
+		goto	L5170;
+	L3824:
+		iinc	141, 1;
+		iload_0;
+		sipush	4256;
+		if_icmpge	L3838;
+		iconst_0;
+		goto	L5170;
+	L3838:
+		iload_0;
+		sipush	4293;
+		if_icmpgt	L3849;
+		iconst_1;
+		goto	L5170;
+	L3849:
+		iinc	142, 1;
+		iload_0;
+		sipush	4304;
+		if_icmpge	L3863;
+		iconst_0;
+		goto	L5170;
+	L3863:
+		iload_0;
+		sipush	4342;
+		if_icmpgt	L3874;
+		iconst_1;
+		goto	L5170;
+	L3874:
+		iinc	143, 1;
+		iload_0;
+		sipush	4352;
+		if_icmpne	L3888;
+		iconst_1;
+		goto	L5170;
+	L3888:
+		iinc	144, 1;
+		iload_0;
+		sipush	4354;
+		if_icmpge	L3902;
+		iconst_0;
+		goto	L5170;
+	L3902:
+		iload_0;
+		sipush	4355;
+		if_icmpgt	L3913;
+		iconst_1;
+		goto	L5170;
+	L3913:
+		iinc	145, 1;
+		iload_0;
+		sipush	4357;
+		if_icmpge	L3927;
+		iconst_0;
+		goto	L5170;
+	L3927:
+		iload_0;
+		sipush	4359;
+		if_icmpgt	L3938;
+		iconst_1;
+		goto	L5170;
+	L3938:
+		iinc	146, 1;
+		iload_0;
+		sipush	4361;
+		if_icmpne	L3952;
+		iconst_1;
+		goto	L5170;
+	L3952:
+		iinc	147, 1;
+		iload_0;
+		sipush	4363;
+		if_icmpge	L3966;
+		iconst_0;
+		goto	L5170;
+	L3966:
+		iload_0;
+		sipush	4364;
+		if_icmpgt	L3977;
+		iconst_1;
+		goto	L5170;
+	L3977:
+		iinc	148, 1;
+		iload_0;
+		sipush	4366;
+		if_icmpge	L3991;
+		iconst_0;
+		goto	L5170;
+	L3991:
+		iload_0;
+		sipush	4370;
+		if_icmpgt	L4002;
+		iconst_1;
+		goto	L5170;
+	L4002:
+		iinc	149, 1;
+		iload_0;
+		sipush	4412;
+		if_icmpne	L4016;
+		iconst_1;
+		goto	L5170;
+	L4016:
+		iinc	150, 1;
+		iload_0;
+		sipush	4414;
+		if_icmpne	L4030;
+		iconst_1;
+		goto	L5170;
+	L4030:
+		iinc	151, 1;
+		iload_0;
+		sipush	4416;
+		if_icmpne	L4044;
+		iconst_1;
+		goto	L5170;
+	L4044:
+		iinc	152, 1;
+		iload_0;
+		sipush	4428;
+		if_icmpne	L4058;
+		iconst_1;
+		goto	L5170;
+	L4058:
+		iinc	153, 1;
+		iload_0;
+		sipush	4430;
+		if_icmpne	L4072;
+		iconst_1;
+		goto	L5170;
+	L4072:
+		iinc	154, 1;
+		iload_0;
+		sipush	4432;
+		if_icmpne	L4086;
+		iconst_1;
+		goto	L5170;
+	L4086:
+		iinc	155, 1;
+		iload_0;
+		sipush	4436;
+		if_icmpge	L4100;
+		iconst_0;
+		goto	L5170;
+	L4100:
+		iload_0;
+		sipush	4437;
+		if_icmpgt	L4111;
+		iconst_1;
+		goto	L5170;
+	L4111:
+		iinc	156, 1;
+		iload_0;
+		sipush	4441;
+		if_icmpne	L4125;
+		iconst_1;
+		goto	L5170;
+	L4125:
+		iinc	157, 1;
+		iload_0;
+		sipush	4447;
+		if_icmpge	L4139;
+		iconst_0;
+		goto	L5170;
+	L4139:
+		iload_0;
+		sipush	4449;
+		if_icmpgt	L4150;
+		iconst_1;
+		goto	L5170;
+	L4150:
+		iinc	158, 1;
+		iload_0;
+		sipush	4451;
+		if_icmpne	L4164;
+		iconst_1;
+		goto	L5170;
+	L4164:
+		iinc	159, 1;
+		iload_0;
+		sipush	4453;
+		if_icmpne	L4178;
+		iconst_1;
+		goto	L5170;
+	L4178:
+		iinc	160, 1;
+		iload_0;
+		sipush	4455;
+		if_icmpne	L4192;
+		iconst_1;
+		goto	L5170;
+	L4192:
+		iinc	161, 1;
+		iload_0;
+		sipush	4457;
+		if_icmpne	L4206;
+		iconst_1;
+		goto	L5170;
+	L4206:
+		iinc	162, 1;
+		iload_0;
+		sipush	4461;
+		if_icmpge	L4220;
+		iconst_0;
+		goto	L5170;
+	L4220:
+		iload_0;
+		sipush	4462;
+		if_icmpgt	L4231;
+		iconst_1;
+		goto	L5170;
+	L4231:
+		iinc	163, 1;
+		iload_0;
+		sipush	4466;
+		if_icmpge	L4245;
+		iconst_0;
+		goto	L5170;
+	L4245:
+		iload_0;
+		sipush	4467;
+		if_icmpgt	L4256;
+		iconst_1;
+		goto	L5170;
+	L4256:
+		iinc	164, 1;
+		iload_0;
+		sipush	4469;
+		if_icmpne	L4270;
+		iconst_1;
+		goto	L5170;
+	L4270:
+		iinc	165, 1;
+		iload_0;
+		sipush	4510;
+		if_icmpne	L4284;
+		iconst_1;
+		goto	L5170;
+	L4284:
+		iinc	166, 1;
+		iload_0;
+		sipush	4520;
+		if_icmpne	L4298;
+		iconst_1;
+		goto	L5170;
+	L4298:
+		iinc	167, 1;
+		iload_0;
+		sipush	4523;
+		if_icmpne	L4312;
+		iconst_1;
+		goto	L5170;
+	L4312:
+		iinc	168, 1;
+		iload_0;
+		sipush	4526;
+		if_icmpge	L4326;
+		iconst_0;
+		goto	L5170;
+	L4326:
+		iload_0;
+		sipush	4527;
+		if_icmpgt	L4337;
+		iconst_1;
+		goto	L5170;
+	L4337:
+		iinc	169, 1;
+		iload_0;
+		sipush	4535;
+		if_icmpge	L4351;
+		iconst_0;
+		goto	L5170;
+	L4351:
+		iload_0;
+		sipush	4536;
+		if_icmpgt	L4362;
+		iconst_1;
+		goto	L5170;
+	L4362:
+		iinc	170, 1;
+		iload_0;
+		sipush	4538;
+		if_icmpne	L4376;
+		iconst_1;
+		goto	L5170;
+	L4376:
+		iinc	171, 1;
+		iload_0;
+		sipush	4540;
+		if_icmpge	L4390;
+		iconst_0;
+		goto	L5170;
+	L4390:
+		iload_0;
+		sipush	4546;
+		if_icmpgt	L4401;
+		iconst_1;
+		goto	L5170;
+	L4401:
+		iinc	172, 1;
+		iload_0;
+		sipush	4587;
+		if_icmpne	L4415;
+		iconst_1;
+		goto	L5170;
+	L4415:
+		iinc	173, 1;
+		iload_0;
+		sipush	4592;
+		if_icmpne	L4429;
+		iconst_1;
+		goto	L5170;
+	L4429:
+		iinc	174, 1;
+		iload_0;
+		sipush	4601;
+		if_icmpne	L4443;
+		iconst_1;
+		goto	L5170;
+	L4443:
+		iinc	175, 1;
+		iload_0;
+		sipush	7680;
+		if_icmpge	L4457;
+		iconst_0;
+		goto	L5170;
+	L4457:
+		iload_0;
+		sipush	7835;
+		if_icmpgt	L4468;
+		iconst_1;
+		goto	L5170;
+	L4468:
+		iinc	176, 1;
+		iload_0;
+		sipush	7840;
+		if_icmpge	L4482;
+		iconst_0;
+		goto	L5170;
+	L4482:
+		iload_0;
+		sipush	7929;
+		if_icmpgt	L4493;
+		iconst_1;
+		goto	L5170;
+	L4493:
+		iinc	177, 1;
+		iload_0;
+		sipush	7936;
+		if_icmpge	L4507;
+		iconst_0;
+		goto	L5170;
+	L4507:
+		iload_0;
+		sipush	7957;
+		if_icmpgt	L4518;
+		iconst_1;
+		goto	L5170;
+	L4518:
+		iinc	178, 1;
+		iload_0;
+		sipush	7960;
+		if_icmpge	L4532;
+		iconst_0;
+		goto	L5170;
+	L4532:
+		iload_0;
+		sipush	7965;
+		if_icmpgt	L4543;
+		iconst_1;
+		goto	L5170;
+	L4543:
+		iinc	179, 1;
+		iload_0;
+		sipush	7968;
+		if_icmpge	L4557;
+		iconst_0;
+		goto	L5170;
+	L4557:
+		iload_0;
+		sipush	8005;
+		if_icmpgt	L4568;
+		iconst_1;
+		goto	L5170;
+	L4568:
+		iinc	180, 1;
+		iload_0;
+		sipush	8008;
+		if_icmpge	L4582;
+		iconst_0;
+		goto	L5170;
+	L4582:
+		iload_0;
+		sipush	8013;
+		if_icmpgt	L4593;
+		iconst_1;
+		goto	L5170;
+	L4593:
+		iinc	181, 1;
+		iload_0;
+		sipush	8016;
+		if_icmpge	L4607;
+		iconst_0;
+		goto	L5170;
+	L4607:
+		iload_0;
+		sipush	8023;
+		if_icmpgt	L4618;
+		iconst_1;
+		goto	L5170;
+	L4618:
+		iinc	182, 1;
+		iload_0;
+		sipush	8025;
+		if_icmpne	L4632;
+		iconst_1;
+		goto	L5170;
+	L4632:
+		iinc	183, 1;
+		iload_0;
+		sipush	8027;
+		if_icmpne	L4646;
+		iconst_1;
+		goto	L5170;
+	L4646:
+		iinc	184, 1;
+		iload_0;
+		sipush	8029;
+		if_icmpne	L4660;
+		iconst_1;
+		goto	L5170;
+	L4660:
+		iinc	185, 1;
+		iload_0;
+		sipush	8031;
+		if_icmpge	L4674;
+		iconst_0;
+		goto	L5170;
+	L4674:
+		iload_0;
+		sipush	8061;
+		if_icmpgt	L4685;
+		iconst_1;
+		goto	L5170;
+	L4685:
+		iinc	186, 1;
+		iload_0;
+		sipush	8064;
+		if_icmpge	L4699;
+		iconst_0;
+		goto	L5170;
+	L4699:
+		iload_0;
+		sipush	8116;
+		if_icmpgt	L4710;
+		iconst_1;
+		goto	L5170;
+	L4710:
+		iinc	187, 1;
+		iload_0;
+		sipush	8118;
+		if_icmpge	L4724;
+		iconst_0;
+		goto	L5170;
+	L4724:
+		iload_0;
+		sipush	8124;
+		if_icmpgt	L4735;
+		iconst_1;
+		goto	L5170;
+	L4735:
+		iinc	188, 1;
+		iload_0;
+		sipush	8126;
+		if_icmpne	L4749;
+		iconst_1;
+		goto	L5170;
+	L4749:
+		iinc	189, 1;
+		iload_0;
+		sipush	8130;
+		if_icmpge	L4763;
+		iconst_0;
+		goto	L5170;
+	L4763:
+		iload_0;
+		sipush	8132;
+		if_icmpgt	L4774;
+		iconst_1;
+		goto	L5170;
+	L4774:
+		iinc	190, 1;
+		iload_0;
+		sipush	8134;
+		if_icmpge	L4788;
+		iconst_0;
+		goto	L5170;
+	L4788:
+		iload_0;
+		sipush	8140;
+		if_icmpgt	L4799;
+		iconst_1;
+		goto	L5170;
+	L4799:
+		iinc	191, 1;
+		iload_0;
+		sipush	8144;
+		if_icmpge	L4813;
+		iconst_0;
+		goto	L5170;
+	L4813:
+		iload_0;
+		sipush	8147;
+		if_icmpgt	L4824;
+		iconst_1;
+		goto	L5170;
+	L4824:
+		iinc	192, 1;
+		iload_0;
+		sipush	8150;
+		if_icmpge	L4838;
+		iconst_0;
+		goto	L5170;
+	L4838:
+		iload_0;
+		sipush	8155;
+		if_icmpgt	L4849;
+		iconst_1;
+		goto	L5170;
+	L4849:
+		iinc	193, 1;
+		iload_0;
+		sipush	8160;
+		if_icmpge	L4863;
+		iconst_0;
+		goto	L5170;
+	L4863:
+		iload_0;
+		sipush	8172;
+		if_icmpgt	L4874;
+		iconst_1;
+		goto	L5170;
+	L4874:
+		iinc	194, 1;
+		iload_0;
+		sipush	8178;
+		if_icmpge	L4888;
+		iconst_0;
+		goto	L5170;
+	L4888:
+		iload_0;
+		sipush	8180;
+		if_icmpgt	L4899;
+		iconst_1;
+		goto	L5170;
+	L4899:
+		iinc	195, 1;
+		iload_0;
+		sipush	8182;
+		if_icmpge	L4913;
+		iconst_0;
+		goto	L5170;
+	L4913:
+		iload_0;
+		sipush	8188;
+		if_icmpgt	L4924;
+		iconst_1;
+		goto	L5170;
+	L4924:
+		iinc	196, 1;
+		iload_0;
+		sipush	8486;
+		if_icmpne	L4938;
+		iconst_1;
+		goto	L5170;
+	L4938:
+		iinc	197, 1;
+		iload_0;
+		sipush	8490;
+		if_icmpge	L4952;
+		iconst_0;
+		goto	L5170;
+	L4952:
+		iload_0;
+		sipush	8491;
+		if_icmpgt	L4963;
+		iconst_1;
+		goto	L5170;
+	L4963:
+		iinc	198, 1;
+		iload_0;
+		sipush	8494;
+		if_icmpne	L4977;
+		iconst_1;
+		goto	L5170;
+	L4977:
+		iinc	199, 1;
+		iload_0;
+		sipush	8576;
+		if_icmpge	L4991;
+		iconst_0;
+		goto	L5170;
+	L4991:
+		iload_0;
+		sipush	8578;
+		if_icmpgt	L5002;
+		iconst_1;
+		goto	L5170;
+	L5002:
+		iinc	200, 1;
+		iload_0;
+		sipush	12295;
+		if_icmpne	L5016;
+		iconst_1;
+		goto	L5170;
+	L5016:
+		iinc	201, 1;
+		iload_0;
+		sipush	12321;
+		if_icmpge	L5030;
+		iconst_0;
+		goto	L5170;
+	L5030:
+		iload_0;
+		sipush	12329;
+		if_icmpgt	L5041;
+		iconst_1;
+		goto	L5170;
+	L5041:
+		iinc	202, 1;
+		iload_0;
+		sipush	12353;
+		if_icmpge	L5055;
+		iconst_0;
+		goto	L5170;
+	L5055:
+		iload_0;
+		sipush	12436;
+		if_icmpgt	L5066;
+		iconst_1;
+		goto	L5170;
+	L5066:
+		iinc	203, 1;
+		iload_0;
+		sipush	12449;
+		if_icmpge	L5080;
+		iconst_0;
+		goto	L5170;
+	L5080:
+		iload_0;
+		sipush	12538;
+		if_icmpgt	L5091;
+		iconst_1;
+		goto	L5170;
+	L5091:
+		iinc	204, 1;
+		iload_0;
+		sipush	12549;
+		if_icmpge	L5105;
+		iconst_0;
+		goto	L5170;
+	L5105:
+		iload_0;
+		sipush	12588;
+		if_icmpgt	L5116;
+		iconst_1;
+		goto	L5170;
+	L5116:
+		iinc	205, 1;
+		iload_0;
+		sipush	19968;
+		if_icmpge	L5130;
+		iconst_0;
+		goto	L5170;
+	L5130:
+		iload_0;
+		ldc	int 40869;
+		if_icmpgt	L5140;
+		iconst_1;
+		goto	L5170;
+	L5140:
+		iinc	206, 1;
+		iload_0;
+		ldc	int 44032;
+		if_icmpge	L5153;
+		iconst_0;
+		goto	L5170;
+	L5153:
+		iload_0;
+		ldc	int 55203;
+		if_icmpgt	L5163;
+		iconst_1;
+		goto	L5170;
+	L5163:
+		iinc	207, 1;
+		iconst_0;
+		goto	L5170;
+	L5170:
+		istore	208;
+		goto	L5175;
+	L5175:
+		aconst_null;
+		dup;
+		aload_1;
+		swap;
+		iconst_3;
+		iload_2;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		iconst_4;
+		iload_3;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		iconst_5;
+		iload	4;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	6;
+		iload	5;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	7;
+		iload	6;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	8;
+		iload	7;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	9;
+		iload	8;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	10;
+		iload	9;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	11;
+		iload	10;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	12;
+		iload	11;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	13;
+		iload	12;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	14;
+		iload	13;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	15;
+		iload	14;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	16;
+		iload	15;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	17;
+		iload	16;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	18;
+		iload	17;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	19;
+		iload	18;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	20;
+		iload	19;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	21;
+		iload	20;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	22;
+		iload	21;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	23;
+		iload	22;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	24;
+		iload	23;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	25;
+		iload	24;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	26;
+		iload	25;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	27;
+		iload	26;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	28;
+		iload	27;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	29;
+		iload	28;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	30;
+		iload	29;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	31;
+		iload	30;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	32;
+		iload	31;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	33;
+		iload	32;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	34;
+		iload	33;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	35;
+		iload	34;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	36;
+		iload	35;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	37;
+		iload	36;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	38;
+		iload	37;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	39;
+		iload	38;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	40;
+		iload	39;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	41;
+		iload	40;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	42;
+		iload	41;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	43;
+		iload	42;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	44;
+		iload	43;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	45;
+		iload	44;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	46;
+		iload	45;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	47;
+		iload	46;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	48;
+		iload	47;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	49;
+		iload	48;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	50;
+		iload	49;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	51;
+		iload	50;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	52;
+		iload	51;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	53;
+		iload	52;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	54;
+		iload	53;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	55;
+		iload	54;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	56;
+		iload	55;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	57;
+		iload	56;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	58;
+		iload	57;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	59;
+		iload	58;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	60;
+		iload	59;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	61;
+		iload	60;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	62;
+		iload	61;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	63;
+		iload	62;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	64;
+		iload	63;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	65;
+		iload	64;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	66;
+		iload	65;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	67;
+		iload	66;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	68;
+		iload	67;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	69;
+		iload	68;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	70;
+		iload	69;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	71;
+		iload	70;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	72;
+		iload	71;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	73;
+		iload	72;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	74;
+		iload	73;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	75;
+		iload	74;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	76;
+		iload	75;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	77;
+		iload	76;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	78;
+		iload	77;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	79;
+		iload	78;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	80;
+		iload	79;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	81;
+		iload	80;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	82;
+		iload	81;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	83;
+		iload	82;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	84;
+		iload	83;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	85;
+		iload	84;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	86;
+		iload	85;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	87;
+		iload	86;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	88;
+		iload	87;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	89;
+		iload	88;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	90;
+		iload	89;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	91;
+		iload	90;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	92;
+		iload	91;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	93;
+		iload	92;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	94;
+		iload	93;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	95;
+		iload	94;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	96;
+		iload	95;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	97;
+		iload	96;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	98;
+		iload	97;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	99;
+		iload	98;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	100;
+		iload	99;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	101;
+		iload	100;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	102;
+		iload	101;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	103;
+		iload	102;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	104;
+		iload	103;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	105;
+		iload	104;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	106;
+		iload	105;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	107;
+		iload	106;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	108;
+		iload	107;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	109;
+		iload	108;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	110;
+		iload	109;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	111;
+		iload	110;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	112;
+		iload	111;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	113;
+		iload	112;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	114;
+		iload	113;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	115;
+		iload	114;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	116;
+		iload	115;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	117;
+		iload	116;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	118;
+		iload	117;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	119;
+		iload	118;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	120;
+		iload	119;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	121;
+		iload	120;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	122;
+		iload	121;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	123;
+		iload	122;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	124;
+		iload	123;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	125;
+		iload	124;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	126;
+		iload	125;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		bipush	127;
+		iload	126;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	128;
+		iload	127;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	129;
+		iload	128;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	130;
+		iload	129;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	131;
+		iload	130;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	132;
+		iload	131;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	133;
+		iload	132;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	134;
+		iload	133;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	135;
+		iload	134;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	136;
+		iload	135;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	137;
+		iload	136;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	138;
+		iload	137;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	139;
+		iload	138;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	140;
+		iload	139;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	141;
+		iload	140;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	142;
+		iload	141;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	143;
+		iload	142;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	144;
+		iload	143;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	145;
+		iload	144;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	146;
+		iload	145;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	147;
+		iload	146;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	148;
+		iload	147;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	149;
+		iload	148;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	150;
+		iload	149;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	151;
+		iload	150;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	152;
+		iload	151;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	153;
+		iload	152;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	154;
+		iload	153;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	155;
+		iload	154;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	156;
+		iload	155;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	157;
+		iload	156;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	158;
+		iload	157;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	159;
+		iload	158;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	160;
+		iload	159;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	161;
+		iload	160;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	162;
+		iload	161;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	163;
+		iload	162;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	164;
+		iload	163;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	165;
+		iload	164;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	166;
+		iload	165;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	167;
+		iload	166;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	168;
+		iload	167;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	169;
+		iload	168;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	170;
+		iload	169;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	171;
+		iload	170;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	172;
+		iload	171;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	173;
+		iload	172;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	174;
+		iload	173;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	175;
+		iload	174;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	176;
+		iload	175;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	177;
+		iload	176;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	178;
+		iload	177;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	179;
+		iload	178;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	180;
+		iload	179;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	181;
+		iload	180;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	182;
+		iload	181;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	183;
+		iload	182;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	184;
+		iload	183;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	185;
+		iload	184;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	186;
+		iload	185;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	187;
+		iload	186;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	188;
+		iload	187;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	189;
+		iload	188;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	190;
+		iload	189;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	191;
+		iload	190;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	192;
+		iload	191;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	193;
+		iload	192;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	194;
+		iload	193;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	195;
+		iload	194;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	196;
+		iload	195;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	197;
+		iload	196;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	198;
+		iload	197;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	199;
+		iload	198;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	200;
+		iload	199;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	201;
+		iload	200;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	202;
+		iload	201;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	203;
+		iload	202;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	204;
+		iload	203;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	205;
+		iload	204;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	206;
+		iload	205;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	207;
+		iload	206;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		dup;
+		aload_1;
+		swap;
+		sipush	208;
+		iload	207;
+		invokevirtual	Method compiler/c1/TestTooManyVirtualRegisters.foo:"(Lcompiler/c1/TestTooManyVirtualRegisters;II)V";
+		pop;
+		aload	209;
+		ifnull	L7324;
+		aload	209;
+		athrow;
+	L7324:
+		iload	208;
+		ireturn;
+}
+
+}

@@ -1,0 +1,4 @@
+grant {
+    permission FooPermission;
+    permission FooPermission;
+};

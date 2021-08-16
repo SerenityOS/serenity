@@ -1,0 +1,2 @@
+ImportCanonicalSameName.java:13:12: compiler.err.import.requires.canonical: p2.A.I
+1 error

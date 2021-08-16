@@ -1,0 +1,15 @@
+Usage: jcmd <pid | main class> <command ...|PerfCounter.print|-f file>
+   or: jcmd -l                                                    
+   or: jcmd -h                                                    
+                                                                  
+  command must be a valid jcmd command for the selected jvm.      
+  Use the command "help" to see which commands are available.   
+  If the pid is 0, commands will be sent to all Java processes.   
+  The main class argument will be used to match (either partially 
+  or fully) the class used to start Java.                         
+  If no options are given, lists Java processes (same as -l).     
+                                                                  
+  PerfCounter.print display the counters exposed by this process  
+  -f  read and execute commands from the file                     
+  -l  list JVM processes on the local machine                     
+  -? -h --help print this help message                            

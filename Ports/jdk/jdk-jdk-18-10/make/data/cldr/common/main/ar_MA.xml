@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="ar"/>
+		<territory type="MA"/>
+	</identity>
+	<characters>
+		<exemplarCharacters type="auxiliary">[\u200C\u200D\u200E\u200F پ چ ژ ڜ ڢ ڤ ڥ ٯ ڧ ڨ ک ڭ گ ݣ ی]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[\u200E \- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="4">أبريل</month>
+							<month type="5">ماي</month>
+							<month type="7">يوليوز</month>
+							<month type="8">غشت</month>
+							<month type="9">شتنبر</month>
+							<month type="11">نونبر</month>
+							<month type="12">دجنبر</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="4">أ</month>
+							<month type="5">م</month>
+							<month type="6">ن</month>
+							<month type="7">ل</month>
+							<month type="9">ش</month>
+							<month type="10">ك</month>
+							<month type="11">ب</month>
+							<month type="12">د</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="4">أبريل</month>
+							<month type="5">ماي</month>
+							<month type="7">يوليوز</month>
+							<month type="8">غشت</month>
+							<month type="9">شتنبر</month>
+							<month type="11">نونبر</month>
+							<month type="12">دجنبر</month>
+						</monthWidth>
+					</monthContext>
+					<monthContext type="stand-alone">
+						<monthWidth type="abbreviated">
+							<month type="5">ماي</month>
+							<month type="7">يوليوز</month>
+							<month type="8">غشت</month>
+							<month type="9">شتنبر</month>
+							<month type="11">نونبر</month>
+							<month type="12">دجنبر</month>
+						</monthWidth>
+						<monthWidth type="narrow">
+							<month type="4">أ</month>
+							<month type="5">م</month>
+							<month type="6">ن</month>
+							<month type="7">ل</month>
+							<month type="9">ش</month>
+							<month type="10">ك</month>
+							<month type="11">ب</month>
+							<month type="12">د</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="4">أبريل</month>
+							<month type="5">ماي</month>
+							<month type="7">يوليوز</month>
+							<month type="8">غشت</month>
+							<month type="9">شتنبر</month>
+							<month type="11">نونبر</month>
+							<month type="12">دجنبر</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern>HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern>HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern>HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern>HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+			</calendar>
+		</calendars>
+	</dates>
+	<numbers>
+		<defaultNumberingSystem>latn</defaultNumberingSystem>
+		<symbols numberSystem="latn">
+			<decimal>,</decimal>
+			<group>.</group>
+		</symbols>
+	</numbers>
+</ldml>

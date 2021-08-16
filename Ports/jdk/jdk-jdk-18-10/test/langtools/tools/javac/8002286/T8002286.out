@@ -1,0 +1,2 @@
+T8002286.java:8:22: compiler.err.cant.resolve.location.args: kindname.method, value, , , (compiler.misc.location: kindname.annotation, T8002286.Anno, null)
+1 error

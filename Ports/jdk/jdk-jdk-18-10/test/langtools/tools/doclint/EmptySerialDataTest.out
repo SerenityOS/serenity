@@ -1,0 +1,5 @@
+EmptySerialDataTest.java:18: warning: no description for @serialData
+     * @serialData
+       ^
+1 warning
+

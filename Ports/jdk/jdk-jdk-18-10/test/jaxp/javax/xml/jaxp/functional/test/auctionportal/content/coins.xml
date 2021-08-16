@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<im:coin 
+     xmlns:im="http://www.hibid.com/items" 
+     xmlns="http://www.hibid.com/items" 
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns:it="http://someimport.com">
+  <im:description> 
+    <im:info> 1950 gold coin
+    </im:info>
+  </im:description>
+  <dates_data xmlns="http://www.hibid.com/items">
+     <it:mint>1950-04-04T00:00:00</it:mint>
+     <it:circulation> 1960
+     </it:circulation>
+  </dates_data>
+</im:coin>

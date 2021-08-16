@@ -1,0 +1,4 @@
+grant {
+	permission java.lang.RuntimePermission "setFactory";
+};
+

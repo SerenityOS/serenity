@@ -1,0 +1,2 @@
+T7022054pos1.java:16:25: compiler.err.name.clash.same.erasure.no.override: m, java.lang.String, T7022054pos1.B, m, java.lang.String, T7022054pos1.A
+1 error

@@ -1,0 +1,2 @@
+ClassToTypeParm.java:12:15: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.lang.Class, T)
+1 error

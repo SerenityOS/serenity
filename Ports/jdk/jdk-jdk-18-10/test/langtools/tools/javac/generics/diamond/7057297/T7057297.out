@@ -1,0 +1,13 @@
+T7057297.java:14:41: compiler.err.cannot.create.array.with.diamond
+T7057297.java:15:41: compiler.err.cannot.create.array.with.diamond
+T7057297.java:16:41: compiler.err.cannot.create.array.with.diamond
+T7057297.java:18:41: compiler.err.cannot.create.array.with.diamond
+T7057297.java:19:41: compiler.err.cannot.create.array.with.diamond
+T7057297.java:20:41: compiler.err.cannot.create.array.with.diamond
+T7057297.java:22:69: compiler.err.cannot.create.array.with.diamond
+T7057297.java:23:69: compiler.err.cannot.create.array.with.diamond
+T7057297.java:24:69: compiler.err.cannot.create.array.with.diamond
+T7057297.java:26:69: compiler.err.cannot.create.array.with.diamond
+T7057297.java:27:69: compiler.err.cannot.create.array.with.diamond
+T7057297.java:28:69: compiler.err.cannot.create.array.with.diamond
+12 errors

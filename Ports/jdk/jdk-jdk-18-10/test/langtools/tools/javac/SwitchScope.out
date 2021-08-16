@@ -1,0 +1,2 @@
+SwitchScope.java:22:28: compiler.err.cant.resolve.location: kindname.class, Local, , , (compiler.misc.location: kindname.class, SwitchScope, null)
+1 error

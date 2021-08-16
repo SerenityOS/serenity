@@ -1,0 +1,3292 @@
+/*
+ * Copyright (c) 2015, 2020, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+/*
+ * @test
+ * @bug 8156486
+ * @run testng/othervm VarHandleTestMethodType$Type$
+ * @run testng/othervm -Djava.lang.invoke.VarHandle.VAR_HANDLE_GUARDS=true -Djava.lang.invoke.VarHandle.VAR_HANDLE_IDENTITY_ADAPT=true VarHandleTestMethodType$Type$
+ * @run testng/othervm -Djava.lang.invoke.VarHandle.VAR_HANDLE_GUARDS=false -Djava.lang.invoke.VarHandle.VAR_HANDLE_IDENTITY_ADAPT=false VarHandleTestMethodType$Type$
+ * @run testng/othervm -Djava.lang.invoke.VarHandle.VAR_HANDLE_GUARDS=false -Djava.lang.invoke.VarHandle.VAR_HANDLE_IDENTITY_ADAPT=true VarHandleTestMethodType$Type$
+ */
+
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.testng.Assert.*;
+
+import static java.lang.invoke.MethodType.*;
+
+public class VarHandleTestMethodType$Type$ extends VarHandleBaseTest {
+    static final $type$ static_final_v = $value1$;
+
+    static $type$ static_v = $value1$;
+
+    final $type$ final_v = $value1$;
+
+    $type$ v = $value1$;
+
+    VarHandle vhFinalField;
+
+    VarHandle vhField;
+
+    VarHandle vhStaticField;
+
+    VarHandle vhStaticFinalField;
+
+    VarHandle vhArray;
+
+    @BeforeClass
+    public void setup() throws Exception {
+        vhFinalField = MethodHandles.lookup().findVarHandle(
+                VarHandleTestMethodType$Type$.class, "final_v", $type$.class);
+
+        vhField = MethodHandles.lookup().findVarHandle(
+                VarHandleTestMethodType$Type$.class, "v", $type$.class);
+
+        vhStaticFinalField = MethodHandles.lookup().findStaticVarHandle(
+            VarHandleTestMethodType$Type$.class, "static_final_v", $type$.class);
+
+        vhStaticField = MethodHandles.lookup().findStaticVarHandle(
+            VarHandleTestMethodType$Type$.class, "static_v", $type$.class);
+
+        vhArray = MethodHandles.arrayElementVarHandle($type$[].class);
+    }
+
+    @DataProvider
+    public Object[][] accessTestCaseProvider() throws Exception {
+        List<AccessTestCase<?>> cases = new ArrayList<>();
+
+        cases.add(new VarHandleAccessTestCase("Instance field",
+                                              vhField, vh -> testInstanceFieldWrongMethodType(this, vh),
+                                              false));
+
+        cases.add(new VarHandleAccessTestCase("Static field",
+                                              vhStaticField, VarHandleTestMethodType$Type$::testStaticFieldWrongMethodType,
+                                              false));
+
+        cases.add(new VarHandleAccessTestCase("Array",
+                                              vhArray, VarHandleTestMethodType$Type$::testArrayWrongMethodType,
+                                              false));
+
+        for (VarHandleToMethodHandle f : VarHandleToMethodHandle.values()) {
+            cases.add(new MethodHandleAccessTestCase("Instance field",
+                                                     vhField, f, hs -> testInstanceFieldWrongMethodType(this, hs),
+                                                     false));
+
+            cases.add(new MethodHandleAccessTestCase("Static field",
+                                                     vhStaticField, f, VarHandleTestMethodType$Type$::testStaticFieldWrongMethodType,
+                                                     false));
+
+            cases.add(new MethodHandleAccessTestCase("Array",
+                                                     vhArray, f, VarHandleTestMethodType$Type$::testArrayWrongMethodType,
+                                                     false));
+        }
+        // Work around issue with jtreg summary reporting which truncates
+        // the String result of Object.toString to 30 characters, hence
+        // the first dummy argument
+        return cases.stream().map(tc -> new Object[]{tc.toString(), tc}).toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "accessTestCaseProvider")
+    public <T> void testAccess(String desc, AccessTestCase<T> atc) throws Throwable {
+        T t = atc.get();
+        int iters = atc.requiresLoop() ? ITERS : 1;
+        for (int c = 0; c < iters; c++) {
+            atc.testAccess(t);
+        }
+    }
+
+
+    static void testInstanceFieldWrongMethodType(VarHandleTestMethodType$Type$ recv, VarHandle vh) throws Throwable {
+        // Get
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.get(null);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.get(Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            $type$ x = ($type$) vh.get(0);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void x = (Void) vh.get(recv);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.get(recv);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.get();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.get(recv, Void.class);
+        });
+
+
+        // Set
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            vh.set(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            vh.set(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            vh.set(recv, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            vh.set(0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            vh.set();
+        });
+        checkWMTE(() -> { // >
+            vh.set(recv, $value1$, Void.class);
+        });
+
+
+        // GetVolatile
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getVolatile(null);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getVolatile(Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            $type$ x = ($type$) vh.getVolatile(0);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void x = (Void) vh.getVolatile(recv);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getVolatile(recv);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getVolatile();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getVolatile(recv, Void.class);
+        });
+
+
+        // SetVolatile
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            vh.setVolatile(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            vh.setVolatile(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            vh.setVolatile(recv, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            vh.setVolatile(0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            vh.setVolatile();
+        });
+        checkWMTE(() -> { // >
+            vh.setVolatile(recv, $value1$, Void.class);
+        });
+
+
+        // GetOpaque
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getOpaque(null);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getOpaque(Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            $type$ x = ($type$) vh.getOpaque(0);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void x = (Void) vh.getOpaque(recv);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getOpaque(recv);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getOpaque();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getOpaque(recv, Void.class);
+        });
+
+
+        // SetOpaque
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            vh.setOpaque(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            vh.setOpaque(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            vh.setOpaque(recv, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            vh.setOpaque(0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            vh.setOpaque();
+        });
+        checkWMTE(() -> { // >
+            vh.setOpaque(recv, $value1$, Void.class);
+        });
+
+
+        // GetAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAcquire(null);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAcquire(Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            $type$ x = ($type$) vh.getAcquire(0);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void x = (Void) vh.getAcquire(recv);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAcquire(recv);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAcquire(recv, Void.class);
+        });
+
+
+        // SetRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            vh.setRelease(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            vh.setRelease(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            vh.setRelease(recv, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            vh.setRelease(0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            vh.setRelease();
+        });
+        checkWMTE(() -> { // >
+            vh.setRelease(recv, $value1$, Void.class);
+        });
+
+
+#if[CAS]
+        // CompareAndSet
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            boolean r = vh.compareAndSet(null, $value1$, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            boolean r = vh.compareAndSet(Void.class, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.compareAndSet(recv, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.compareAndSet(recv, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            boolean r = vh.compareAndSet(0, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.compareAndSet();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.compareAndSet(recv, $value1$, $value1$, Void.class);
+        });
+
+
+        // WeakCompareAndSet
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            boolean r = vh.weakCompareAndSetPlain(null, $value1$, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            boolean r = vh.weakCompareAndSetPlain(Void.class, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.weakCompareAndSetPlain(recv, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.weakCompareAndSetPlain(recv, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            boolean r = vh.weakCompareAndSetPlain(0, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.weakCompareAndSetPlain();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.weakCompareAndSetPlain(recv, $value1$, $value1$, Void.class);
+        });
+
+
+        // WeakCompareAndSetVolatile
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            boolean r = vh.weakCompareAndSet(null, $value1$, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            boolean r = vh.weakCompareAndSet(Void.class, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.weakCompareAndSet(recv, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.weakCompareAndSet(recv, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            boolean r = vh.weakCompareAndSet(0, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.weakCompareAndSet();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.weakCompareAndSet(recv, $value1$, $value1$, Void.class);
+        });
+
+
+        // WeakCompareAndSetAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            boolean r = vh.weakCompareAndSetAcquire(null, $value1$, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            boolean r = vh.weakCompareAndSetAcquire(Void.class, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.weakCompareAndSetAcquire(recv, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.weakCompareAndSetAcquire(recv, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            boolean r = vh.weakCompareAndSetAcquire(0, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.weakCompareAndSetAcquire();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.weakCompareAndSetAcquire(recv, $value1$, $value1$, Void.class);
+        });
+
+
+        // WeakCompareAndSetRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            boolean r = vh.weakCompareAndSetRelease(null, $value1$, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            boolean r = vh.weakCompareAndSetRelease(Void.class, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.weakCompareAndSetRelease(recv, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.weakCompareAndSetRelease(recv, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            boolean r = vh.weakCompareAndSetRelease(0, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.weakCompareAndSetRelease();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.weakCompareAndSetRelease(recv, $value1$, $value1$, Void.class);
+        });
+
+
+        // CompareAndExchange
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.compareAndExchange(null, $value1$, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.compareAndExchange(Void.class, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            $type$ x = ($type$) vh.compareAndExchange(recv, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            $type$ x = ($type$) vh.compareAndExchange(recv, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.compareAndExchange(0, $value1$, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.compareAndExchange(recv, $value1$, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.compareAndExchange(recv, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.compareAndExchange();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.compareAndExchange(recv, $value1$, $value1$, Void.class);
+        });
+
+
+        // CompareAndExchangeAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.compareAndExchangeAcquire(null, $value1$, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.compareAndExchangeAcquire(Void.class, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            $type$ x = ($type$) vh.compareAndExchangeAcquire(recv, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            $type$ x = ($type$) vh.compareAndExchangeAcquire(recv, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.compareAndExchangeAcquire(0, $value1$, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.compareAndExchangeAcquire(recv, $value1$, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.compareAndExchangeAcquire(recv, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.compareAndExchangeAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.compareAndExchangeAcquire(recv, $value1$, $value1$, Void.class);
+        });
+
+
+        // CompareAndExchangeRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.compareAndExchangeRelease(null, $value1$, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.compareAndExchangeRelease(Void.class, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            $type$ x = ($type$) vh.compareAndExchangeRelease(recv, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            $type$ x = ($type$) vh.compareAndExchangeRelease(recv, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.compareAndExchangeRelease(0, $value1$, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.compareAndExchangeRelease(recv, $value1$, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.compareAndExchangeRelease(recv, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.compareAndExchangeRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.compareAndExchangeRelease(recv, $value1$, $value1$, Void.class);
+        });
+
+
+        // GetAndSet
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndSet(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndSet(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndSet(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndSet(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndSet(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndSet(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndSet();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndSet(recv, $value1$, Void.class);
+        });
+
+        // GetAndSetAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndSetAcquire(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndSetAcquire(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndSetAcquire(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndSetAcquire(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndSetAcquire(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndSetAcquire(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndSetAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndSetAcquire(recv, $value1$, Void.class);
+        });
+
+        // GetAndSetRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndSetRelease(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndSetRelease(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndSetRelease(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndSetRelease(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndSetRelease(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndSetRelease(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndSetRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndSetRelease(recv, $value1$, Void.class);
+        });
+#end[CAS]
+
+#if[AtomicAdd]
+        // GetAndAdd
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndAdd(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndAdd(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndAdd(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndAdd(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndAdd(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndAdd(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndAdd();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndAdd(recv, $value1$, Void.class);
+        });
+
+        // GetAndAddAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndAddAcquire(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndAddAcquire(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndAddAcquire(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndAddAcquire(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndAddAcquire(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndAddAcquire(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndAddAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndAddAcquire(recv, $value1$, Void.class);
+        });
+
+        // GetAndAddRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndAddRelease(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndAddRelease(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndAddRelease(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndAddRelease(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndAddRelease(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndAddRelease(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndAddRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndAddRelease(recv, $value1$, Void.class);
+        });
+#end[AtomicAdd]
+
+#if[Bitwise]
+        // GetAndBitwiseOr
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndBitwiseOr(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndBitwiseOr(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseOr(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndBitwiseOr(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseOr(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseOr(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseOr();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseOr(recv, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseOrAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseOrAcquire(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseOrAcquire(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire(recv, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseOrRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndBitwiseOrRelease(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndBitwiseOr(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseOr(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndBitwiseOr(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseOr(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseOr(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseOr();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseOr(recv, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseAnd
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndBitwiseAnd(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndBitwiseAnd(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseAnd(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndBitwiseAnd(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseAnd(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseAnd(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseAnd();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseAnd(recv, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseAndAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseAndAcquire(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseAndAcquire(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire(recv, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseAndRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndBitwiseAndRelease(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndBitwiseAnd(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseAnd(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndBitwiseAnd(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseAnd(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseAnd(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseAnd();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseAnd(recv, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseXor
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndBitwiseXor(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndBitwiseXor(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseXor(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndBitwiseXor(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseXor(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseXor(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseXor();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseXor(recv, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseXorAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseXorAcquire(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseXorAcquire(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire(recv, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseXorRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.getAndBitwiseXorRelease(null, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            $type$ x = ($type$) vh.getAndBitwiseXor(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseXor(recv, Void.class);
+        });
+        checkWMTE(() -> { // reciever primitive class
+            $type$ x = ($type$) vh.getAndBitwiseXor(0, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseXor(recv, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseXor(recv, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseXor();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseXor(recv, $value1$, Void.class);
+        });
+#end[Bitwise]
+    }
+
+    static void testInstanceFieldWrongMethodType(VarHandleTestMethodType$Type$ recv, Handles hs) throws Throwable {
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.GET)) {
+            // Incorrect argument types
+            checkNPE(() -> { // null receiver
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class)).
+                    invokeExact((VarHandleTestMethodType$Type$) null);
+            });
+            hs.checkWMTEOrCCE(() -> { // receiver reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, Class.class)).
+                    invokeExact(Void.class);
+            });
+            checkWMTE(() -> { // receiver primitive class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, int.class)).
+                    invokeExact(0);
+            });
+            // Incorrect return type
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // reference class
+                Void x = (Void) hs.get(am, methodType(Void.class, VarHandleTestMethodType$Type$.class)).
+                    invokeExact(recv);
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class, VarHandleTestMethodType$Type$.class)).
+                    invokeExact(recv);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                $type$ x = ($type$) hs.get(am, methodType($type$.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class, Class.class)).
+                    invokeExact(recv, Void.class);
+            });
+        }
+
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.SET)) {
+            // Incorrect argument types
+            checkNPE(() -> { // null receiver
+                hs.get(am, methodType(void.class, VarHandleTestMethodType$Type$.class, $type$.class)).
+                    invokeExact((VarHandleTestMethodType$Type$) null, $value1$);
+            });
+            hs.checkWMTEOrCCE(() -> { // receiver reference class
+                hs.get(am, methodType(void.class, Class.class, $type$.class)).
+                    invokeExact(Void.class, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // value reference class
+                hs.get(am, methodType(void.class, VarHandleTestMethodType$Type$.class, Class.class)).
+                    invokeExact(recv, Void.class);
+            });
+            checkWMTE(() -> { // receiver primitive class
+                hs.get(am, methodType(void.class, int.class, $type$.class)).
+                    invokeExact(0, $value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                hs.get(am, methodType(void.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                hs.get(am, methodType(void.class, VarHandleTestMethodType$Type$.class, $type$.class, Class.class)).
+                    invokeExact(recv, $value1$, Void.class);
+            });
+        }
+
+#if[CAS]
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.COMPARE_AND_SET)) {
+            // Incorrect argument types
+            checkNPE(() -> { // null receiver
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, VarHandleTestMethodType$Type$.class, $type$.class, $type$.class)).
+                    invokeExact((VarHandleTestMethodType$Type$) null, $value1$, $value1$);
+            });
+            hs.checkWMTEOrCCE(() -> { // receiver reference class
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, Class.class, $type$.class, $type$.class)).
+                    invokeExact(Void.class, $value1$, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // expected reference class
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, VarHandleTestMethodType$Type$.class, Class.class, $type$.class)).
+                    invokeExact(recv, Void.class, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // actual reference class
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, VarHandleTestMethodType$Type$.class, $type$.class, Class.class)).
+                    invokeExact(recv, $value1$, Void.class);
+            });
+            checkWMTE(() -> { // receiver primitive class
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, int.class , $type$.class, $type$.class)).
+                    invokeExact(0, $value1$, $value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                boolean r = (boolean) hs.get(am, methodType(boolean.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, VarHandleTestMethodType$Type$.class, $type$.class, $type$.class, Class.class)).
+                    invokeExact(recv, $value1$, $value1$, Void.class);
+            });
+        }
+
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.COMPARE_AND_EXCHANGE)) {
+            checkNPE(() -> { // null receiver
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class, $type$.class, $type$.class)).
+                    invokeExact((VarHandleTestMethodType$Type$) null, $value1$, $value1$);
+            });
+            hs.checkWMTEOrCCE(() -> { // receiver reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, Class.class, $type$.class, $type$.class)).
+                    invokeExact(Void.class, $value1$, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // expected reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class, Class.class, $type$.class)).
+                    invokeExact(recv, Void.class, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // actual reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class, $type$.class, Class.class)).
+                    invokeExact(recv, $value1$, Void.class);
+            });
+            checkWMTE(() -> { // reciever primitive class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, int.class , $type$.class, $type$.class)).
+                    invokeExact(0, $value1$, $value1$);
+            });
+            // Incorrect return type
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // reference class
+                Void r = (Void) hs.get(am, methodType(Void.class, VarHandleTestMethodType$Type$.class , $type$.class, $type$.class)).
+                    invokeExact(recv, $value1$, $value1$);
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class, VarHandleTestMethodType$Type$.class , $type$.class, $type$.class)).
+                    invokeExact(recv, $value1$, $value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                $type$ x = ($type$) hs.get(am, methodType($type$.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class, $type$.class, $type$.class, Class.class)).
+                    invokeExact(recv, $value1$, $value1$, Void.class);
+            });
+        }
+
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.GET_AND_SET)) {
+            checkNPE(() -> { // null receiver
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class, $type$.class)).
+                    invokeExact((VarHandleTestMethodType$Type$) null, $value1$);
+            });
+            hs.checkWMTEOrCCE(() -> { // receiver reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, Class.class, $type$.class)).
+                    invokeExact(Void.class, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // value reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class, Class.class)).
+                    invokeExact(recv, Void.class);
+            });
+            checkWMTE(() -> { // reciever primitive class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, int.class, $type$.class)).
+                    invokeExact(0, $value1$);
+            });
+            // Incorrect return type
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // reference class
+                Void r = (Void) hs.get(am, methodType(Void.class, VarHandleTestMethodType$Type$.class, $type$.class)).
+                    invokeExact(recv, $value1$);
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class, VarHandleTestMethodType$Type$.class, $type$.class)).
+                    invokeExact(recv, $value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                $type$ x = ($type$) hs.get(am, methodType($type$.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class, $type$.class)).
+                    invokeExact(recv, $value1$, Void.class);
+            });
+        }
+#end[CAS]
+
+#if[AtomicAdd]
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.GET_AND_ADD)) {
+            checkNPE(() -> { // null receiver
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class, $type$.class)).
+                    invokeExact((VarHandleTestMethodType$Type$) null, $value1$);
+            });
+            hs.checkWMTEOrCCE(() -> { // receiver reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, Class.class, $type$.class)).
+                    invokeExact(Void.class, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // value reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class, Class.class)).
+                    invokeExact(recv, Void.class);
+            });
+            checkWMTE(() -> { // reciever primitive class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, int.class, $type$.class)).
+                    invokeExact(0, $value1$);
+            });
+            // Incorrect return type
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // reference class
+                Void r = (Void) hs.get(am, methodType(Void.class, VarHandleTestMethodType$Type$.class, $type$.class)).
+                    invokeExact(recv, $value1$);
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class, VarHandleTestMethodType$Type$.class, $type$.class)).
+                    invokeExact(recv, $value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                $type$ x = ($type$) hs.get(am, methodType($type$.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class, $type$.class)).
+                    invokeExact(recv, $value1$, Void.class);
+            });
+        }
+#end[AtomicAdd]
+
+#if[Bitwise]
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.GET_AND_BITWISE)) {
+            checkNPE(() -> { // null receiver
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class, $type$.class)).
+                    invokeExact((VarHandleTestMethodType$Type$) null, $value1$);
+            });
+            hs.checkWMTEOrCCE(() -> { // receiver reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, Class.class, $type$.class)).
+                    invokeExact(Void.class, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // value reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class, Class.class)).
+                    invokeExact(recv, Void.class);
+            });
+            checkWMTE(() -> { // reciever primitive class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, int.class, $type$.class)).
+                    invokeExact(0, $value1$);
+            });
+            // Incorrect return type
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // reference class
+                Void r = (Void) hs.get(am, methodType(Void.class, VarHandleTestMethodType$Type$.class, $type$.class)).
+                    invokeExact(recv, $value1$);
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class, VarHandleTestMethodType$Type$.class, $type$.class)).
+                    invokeExact(recv, $value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                $type$ x = ($type$) hs.get(am, methodType($type$.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, VarHandleTestMethodType$Type$.class, $type$.class)).
+                    invokeExact(recv, $value1$, Void.class);
+            });
+        }
+#end[Bitwise]
+    }
+
+
+    static void testStaticFieldWrongMethodType(VarHandle vh) throws Throwable {
+        // Get
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void x = (Void) vh.get();
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.get();
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.get(Void.class);
+        });
+
+
+        // Set
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            vh.set(Void.class);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            vh.set();
+        });
+        checkWMTE(() -> { // >
+            vh.set($value1$, Void.class);
+        });
+
+
+        // GetVolatile
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void x = (Void) vh.getVolatile();
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getVolatile();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getVolatile(Void.class);
+        });
+
+
+        // SetVolatile
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            vh.setVolatile(Void.class);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            vh.setVolatile();
+        });
+        checkWMTE(() -> { // >
+            vh.setVolatile($value1$, Void.class);
+        });
+
+
+        // GetOpaque
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void x = (Void) vh.getOpaque();
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getOpaque();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getOpaque(Void.class);
+        });
+
+
+        // SetOpaque
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            vh.setOpaque(Void.class);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            vh.setOpaque();
+        });
+        checkWMTE(() -> { // >
+            vh.setOpaque($value1$, Void.class);
+        });
+
+
+        // GetAcquire
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void x = (Void) vh.getAcquire();
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAcquire(Void.class);
+        });
+
+
+        // SetRelease
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            vh.setRelease(Void.class);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            vh.setRelease();
+        });
+        checkWMTE(() -> { // >
+            vh.setRelease($value1$, Void.class);
+        });
+
+
+#if[CAS]
+        // CompareAndSet
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.compareAndSet(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.compareAndSet($value1$, Void.class);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.compareAndSet();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.compareAndSet($value1$, $value1$, Void.class);
+        });
+
+
+        // WeakCompareAndSet
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.weakCompareAndSetPlain(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.weakCompareAndSetPlain($value1$, Void.class);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.weakCompareAndSetPlain();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.weakCompareAndSetPlain($value1$, $value1$, Void.class);
+        });
+
+
+        // WeakCompareAndSetVolatile
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.weakCompareAndSet(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.weakCompareAndSet($value1$, Void.class);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.weakCompareAndSet();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.weakCompareAndSet($value1$, $value1$, Void.class);
+        });
+
+
+        // WeakCompareAndSetAcquire
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.weakCompareAndSetAcquire(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.weakCompareAndSetAcquire($value1$, Void.class);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.weakCompareAndSetAcquire();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.weakCompareAndSetAcquire($value1$, $value1$, Void.class);
+        });
+
+
+        // WeakCompareAndSetRelease
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.weakCompareAndSetRelease(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.weakCompareAndSetRelease($value1$, Void.class);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.weakCompareAndSetRelease();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.weakCompareAndSetRelease($value1$, $value1$, Void.class);
+        });
+
+
+        // CompareAndExchange
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            $type$ x = ($type$) vh.compareAndExchange(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            $type$ x = ($type$) vh.compareAndExchange($value1$, Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.compareAndExchange($value1$, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.compareAndExchange($value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.compareAndExchange();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.compareAndExchange($value1$, $value1$, Void.class);
+        });
+
+
+        // CompareAndExchangeAcquire
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            $type$ x = ($type$) vh.compareAndExchangeAcquire(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            $type$ x = ($type$) vh.compareAndExchangeAcquire($value1$, Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.compareAndExchangeAcquire($value1$, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.compareAndExchangeAcquire($value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.compareAndExchangeAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.compareAndExchangeAcquire($value1$, $value1$, Void.class);
+        });
+
+
+        // CompareAndExchangeRelease
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            $type$ x = ($type$) vh.compareAndExchangeRelease(Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            $type$ x = ($type$) vh.compareAndExchangeRelease($value1$, Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.compareAndExchangeRelease($value1$, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.compareAndExchangeRelease($value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.compareAndExchangeRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.compareAndExchangeRelease($value1$, $value1$, Void.class);
+        });
+
+
+        // GetAndSet
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndSet(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndSet($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndSet($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndSet();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndSet($value1$, Void.class);
+        });
+
+
+        // GetAndSetAcquire
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndSetAcquire(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndSetAcquire($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndSetAcquire($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndSetAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndSetAcquire($value1$, Void.class);
+        });
+
+
+        // GetAndSetRelease
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndSetRelease(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndSetRelease($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndSetRelease($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndSetRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndSetRelease($value1$, Void.class);
+        });
+#end[CAS]
+
+#if[AtomicAdd]
+        // GetAndAdd
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndAdd(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndAdd($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndAdd($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndAdd();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndAdd($value1$, Void.class);
+        });
+
+
+        // GetAndAddAcquire
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndAddAcquire(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndAddAcquire($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndAddAcquire($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndAddAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndAddAcquire($value1$, Void.class);
+        });
+
+
+        // GetAndAddRelease
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndAddRelease(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndAddRelease($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndAddRelease($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndAddRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndAddRelease($value1$, Void.class);
+        });
+#end[AtomicAdd]
+
+#if[Bitwise]
+        // GetAndBitwiseOr
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseOr(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseOr($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseOr($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseOr();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseOr($value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseOrAcquire
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseOrAcquire($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseOrAcquire($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire($value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseOrReleaseRelease
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseOrRelease(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseOrRelease($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseOrRelease($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseOrRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseOrRelease($value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseAnd
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseAnd(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseAnd($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseAnd($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseAnd();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseAnd($value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseAndAcquire
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseAndAcquire($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseAndAcquire($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire($value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseAndReleaseRelease
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseAndRelease(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseAndRelease($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseAndRelease($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseAndRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseAndRelease($value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseXor
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseXor(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseXor($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseXor($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseXor();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseXor($value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseXorAcquire
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseXorAcquire($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseXorAcquire($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire($value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseXorReleaseRelease
+        // Incorrect argument types
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseXorRelease(Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseXorRelease($value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseXorRelease($value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseXorRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseXorRelease($value1$, Void.class);
+        });
+#end[Bitwise]
+    }
+
+    static void testStaticFieldWrongMethodType(Handles hs) throws Throwable {
+        int i = 0;
+
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.GET)) {
+            // Incorrect return type
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // reference class
+                Void x = (Void) hs.get(am, methodType(Void.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class)).
+                    invokeExact();
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType(Class.class)).
+                    invokeExact(Void.class);
+            });
+        }
+
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.SET)) {
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // value reference class
+                hs.get(am, methodType(void.class, Class.class)).
+                    invokeExact(Void.class);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                hs.get(am, methodType(void.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                hs.get(am, methodType(void.class, $type$.class, Class.class)).
+                    invokeExact($value1$, Void.class);
+            });
+        }
+#if[CAS]
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.COMPARE_AND_SET)) {
+            // Incorrect argument types
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // expected reference class
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, Class.class, $type$.class)).
+                    invokeExact(Void.class, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // actual reference class
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, $type$.class, Class.class)).
+                    invokeExact($value1$, Void.class);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                boolean r = (boolean) hs.get(am, methodType(boolean.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, $type$.class, $type$.class, Class.class)).
+                    invokeExact($value1$, $value1$, Void.class);
+            });
+        }
+
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.COMPARE_AND_EXCHANGE)) {
+            // Incorrect argument types
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // expected reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, Class.class, $type$.class)).
+                    invokeExact(Void.class, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // actual reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$.class, Class.class)).
+                    invokeExact($value1$, Void.class);
+            });
+            // Incorrect return type
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // reference class
+                Void r = (Void) hs.get(am, methodType(Void.class, $type$.class, $type$.class)).
+                    invokeExact($value1$, $value1$);
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class, $type$.class, $type$.class)).
+                    invokeExact($value1$, $value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                $type$ x = ($type$) hs.get(am, methodType($type$.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$.class, $type$.class, Class.class)).
+                    invokeExact($value1$, $value1$, Void.class);
+            });
+        }
+
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.GET_AND_SET)) {
+            // Incorrect argument types
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // value reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, Class.class)).
+                    invokeExact(Void.class);
+            });
+            // Incorrect return type
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // reference class
+                Void r = (Void) hs.get(am, methodType(Void.class, $type$.class)).
+                    invokeExact($value1$);
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class, $type$.class)).
+                    invokeExact($value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                $type$ x = ($type$) hs.get(am, methodType($type$.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$.class, Class.class)).
+                    invokeExact($value1$, Void.class);
+            });
+        }
+#end[CAS]
+
+#if[AtomicAdd]
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.GET_AND_ADD)) {
+            // Incorrect argument types
+            check{#if[String]?CCE:WMTE}(() -> { // value reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, Class.class)).
+                    invokeExact(Void.class);
+            });
+            // Incorrect return type
+            check{#if[String]?CCE:WMTE}(() -> { // reference class
+                Void r = (Void) hs.get(am, methodType(Void.class, $type$.class)).
+                    invokeExact($value1$);
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class, $type$.class)).
+                    invokeExact($value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                $type$ x = ($type$) hs.get(am, methodType($type$.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$.class, Class.class)).
+                    invokeExact($value1$, Void.class);
+            });
+        }
+#end[AtomicAdd]
+
+#if[Bitwise]
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.GET_AND_BITWISE)) {
+            // Incorrect argument types
+            check{#if[String]?CCE:WMTE}(() -> { // value reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, Class.class)).
+                    invokeExact(Void.class);
+            });
+            // Incorrect return type
+            check{#if[String]?CCE:WMTE}(() -> { // reference class
+                Void r = (Void) hs.get(am, methodType(Void.class, $type$.class)).
+                    invokeExact($value1$);
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class, $type$.class)).
+                    invokeExact($value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                $type$ x = ($type$) hs.get(am, methodType($type$.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$.class, Class.class)).
+                    invokeExact($value1$, Void.class);
+            });
+        }
+#end[Bitwise]
+    }
+
+
+    static void testArrayWrongMethodType(VarHandle vh) throws Throwable {
+        $type$[] array = new $type$[10];
+        Arrays.fill(array, $value1$);
+
+        // Get
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.get(null, 0);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.get(Void.class, 0);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.get(0, 0);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.get(array, Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void x = (Void) vh.get(array, 0);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.get(array, 0);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.get();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.get(array, 0, Void.class);
+        });
+
+
+        // Set
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            vh.set(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            vh.set(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            vh.set(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            vh.set(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            vh.set(array, Void.class, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            vh.set();
+        });
+        checkWMTE(() -> { // >
+            vh.set(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetVolatile
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getVolatile(null, 0);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getVolatile(Void.class, 0);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getVolatile(0, 0);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getVolatile(array, Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void x = (Void) vh.getVolatile(array, 0);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getVolatile(array, 0);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getVolatile();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getVolatile(array, 0, Void.class);
+        });
+
+
+        // SetVolatile
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            vh.setVolatile(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            vh.setVolatile(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            vh.setVolatile(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            vh.setVolatile(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            vh.setVolatile(array, Void.class, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            vh.setVolatile();
+        });
+        checkWMTE(() -> { // >
+            vh.setVolatile(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetOpaque
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getOpaque(null, 0);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getOpaque(Void.class, 0);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getOpaque(0, 0);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getOpaque(array, Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void x = (Void) vh.getOpaque(array, 0);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getOpaque(array, 0);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getOpaque();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getOpaque(array, 0, Void.class);
+        });
+
+
+        // SetOpaque
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            vh.setOpaque(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            vh.setOpaque(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            vh.setOpaque(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            vh.setOpaque(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            vh.setOpaque(array, Void.class, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            vh.setOpaque();
+        });
+        checkWMTE(() -> { // >
+            vh.setOpaque(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAcquire(null, 0);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAcquire(Void.class, 0);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getAcquire(0, 0);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAcquire(array, Void.class);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void x = (Void) vh.getAcquire(array, 0);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAcquire(array, 0);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAcquire(array, 0, Void.class);
+        });
+
+
+        // SetRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            vh.setRelease(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            vh.setRelease(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            vh.setRelease(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            vh.setRelease(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            vh.setRelease(array, Void.class, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            vh.setRelease();
+        });
+        checkWMTE(() -> { // >
+            vh.setRelease(array, 0, $value1$, Void.class);
+        });
+
+
+#if[CAS]
+        // CompareAndSet
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            boolean r = vh.compareAndSet(null, 0, $value1$, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            boolean r = vh.compareAndSet(Void.class, 0, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.compareAndSet(array, 0, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.compareAndSet(array, 0, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            boolean r = vh.compareAndSet(0, 0, $value1$, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            boolean r = vh.compareAndSet(array, Void.class, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.compareAndSet();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.compareAndSet(array, 0, $value1$, $value1$, Void.class);
+        });
+
+
+        // WeakCompareAndSet
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            boolean r = vh.weakCompareAndSetPlain(null, 0, $value1$, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            boolean r = vh.weakCompareAndSetPlain(Void.class, 0, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.weakCompareAndSetPlain(array, 0, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.weakCompareAndSetPlain(array, 0, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            boolean r = vh.weakCompareAndSetPlain(0, 0, $value1$, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            boolean r = vh.weakCompareAndSetPlain(array, Void.class, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.weakCompareAndSetPlain();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.weakCompareAndSetPlain(array, 0, $value1$, $value1$, Void.class);
+        });
+
+
+        // WeakCompareAndSetVolatile
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            boolean r = vh.weakCompareAndSet(null, 0, $value1$, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            boolean r = vh.weakCompareAndSet(Void.class, 0, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.weakCompareAndSet(array, 0, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.weakCompareAndSet(array, 0, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            boolean r = vh.weakCompareAndSet(0, 0, $value1$, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            boolean r = vh.weakCompareAndSet(array, Void.class, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.weakCompareAndSet();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.weakCompareAndSet(array, 0, $value1$, $value1$, Void.class);
+        });
+
+
+        // WeakCompareAndSetAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            boolean r = vh.weakCompareAndSetAcquire(null, 0, $value1$, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            boolean r = vh.weakCompareAndSetAcquire(Void.class, 0, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.weakCompareAndSetAcquire(array, 0, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.weakCompareAndSetAcquire(array, 0, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            boolean r = vh.weakCompareAndSetAcquire(0, 0, $value1$, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            boolean r = vh.weakCompareAndSetAcquire(array, Void.class, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.weakCompareAndSetAcquire();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.weakCompareAndSetAcquire(array, 0, $value1$, $value1$, Void.class);
+        });
+
+
+        // WeakCompareAndSetRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            boolean r = vh.weakCompareAndSetRelease(null, 0, $value1$, $value1$);
+        });
+        checkCCE(() -> { // receiver reference class
+            boolean r = vh.weakCompareAndSetRelease(Void.class, 0, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            boolean r = vh.weakCompareAndSetRelease(array, 0, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            boolean r = vh.weakCompareAndSetRelease(array, 0, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // receiver primitive class
+            boolean r = vh.weakCompareAndSetRelease(0, 0, $value1$, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            boolean r = vh.weakCompareAndSetRelease(array, Void.class, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            boolean r = vh.weakCompareAndSetRelease();
+        });
+        checkWMTE(() -> { // >
+            boolean r = vh.weakCompareAndSetRelease(array, 0, $value1$, $value1$, Void.class);
+        });
+
+
+        // CompareAndExchange
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.compareAndExchange(null, 0, $value1$, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.compareAndExchange(Void.class, 0, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            $type$ x = ($type$) vh.compareAndExchange(array, 0, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            $type$ x = ($type$) vh.compareAndExchange(array, 0, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.compareAndExchange(0, 0, $value1$, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.compareAndExchange(array, Void.class, $value1$, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.compareAndExchange(array, 0, $value1$, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.compareAndExchange(array, 0, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.compareAndExchange();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.compareAndExchange(array, 0, $value1$, $value1$, Void.class);
+        });
+
+
+        // CompareAndExchangeAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.compareAndExchangeAcquire(null, 0, $value1$, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.compareAndExchangeAcquire(Void.class, 0, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            $type$ x = ($type$) vh.compareAndExchangeAcquire(array, 0, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            $type$ x = ($type$) vh.compareAndExchangeAcquire(array, 0, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.compareAndExchangeAcquire(0, 0, $value1$, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.compareAndExchangeAcquire(array, Void.class, $value1$, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.compareAndExchangeAcquire(array, 0, $value1$, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.compareAndExchangeAcquire(array, 0, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.compareAndExchangeAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.compareAndExchangeAcquire(array, 0, $value1$, $value1$, Void.class);
+        });
+
+
+        // CompareAndExchangeRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null receiver
+            $type$ x = ($type$) vh.compareAndExchangeRelease(null, 0, $value1$, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.compareAndExchangeRelease(Void.class, 0, $value1$, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // expected reference class
+            $type$ x = ($type$) vh.compareAndExchangeRelease(array, 0, Void.class, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // actual reference class
+            $type$ x = ($type$) vh.compareAndExchangeRelease(array, 0, $value1$, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.compareAndExchangeRelease(0, 0, $value1$, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.compareAndExchangeRelease(array, Void.class, $value1$, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.compareAndExchangeRelease(array, 0, $value1$, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.compareAndExchangeRelease(array, 0, $value1$, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.compareAndExchangeRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.compareAndExchangeRelease(array, 0, $value1$, $value1$, Void.class);
+        });
+
+
+        // GetAndSet
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndSet(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndSet(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndSet(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // reciarrayever primitive class
+            $type$ x = ($type$) vh.getAndSet(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndSet(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndSet(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndSet(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndSet();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndSet(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetAndSetAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndSetAcquire(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndSetAcquire(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndSetAcquire(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // reciarrayever primitive class
+            $type$ x = ($type$) vh.getAndSetAcquire(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndSetAcquire(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndSetAcquire(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndSetAcquire(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndSetAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndSetAcquire(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetAndSetRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndSetRelease(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndSetRelease(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndSetRelease(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // reciarrayever primitive class
+            $type$ x = ($type$) vh.getAndSetRelease(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndSetRelease(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndSetRelease(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndSetRelease(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndSetRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndSetRelease(array, 0, $value1$, Void.class);
+        });
+#end[CAS]
+
+#if[AtomicAdd]
+        // GetAndAdd
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndAdd(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndAdd(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndAdd(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getAndAdd(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndAdd(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndAdd(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndAdd(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndAdd();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndAdd(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetAndAddAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndAddAcquire(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndAddAcquire(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndAddAcquire(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getAndAddAcquire(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndAddAcquire(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndAddAcquire(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndAddAcquire(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndAddAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndAddAcquire(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetAndAddRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndAddRelease(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndAddRelease(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndAddRelease(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getAndAddRelease(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndAddRelease(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndAddRelease(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndAddRelease(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndAddRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndAddRelease(array, 0, $value1$, Void.class);
+        });
+#end[AtomicAdd]
+
+#if[Bitwise]
+        // GetAndBitwiseOr
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndBitwiseOr(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndBitwiseOr(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseOr(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getAndBitwiseOr(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndBitwiseOr(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseOr(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseOr(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseOr();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseOr(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseOrAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseOrAcquire(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseOrAcquire(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseOrAcquire(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseOrRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndBitwiseOrRelease(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndBitwiseOrRelease(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseOrRelease(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getAndBitwiseOrRelease(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndBitwiseOrRelease(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseOrRelease(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseOrRelease(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseOrRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseOrRelease(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseAnd
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndBitwiseAnd(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndBitwiseAnd(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseAnd(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getAndBitwiseAnd(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndBitwiseAnd(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseAnd(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseAnd(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseAnd();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseAnd(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseAndAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseAndAcquire(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseAndAcquire(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseAndAcquire(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseAndRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndBitwiseAndRelease(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndBitwiseAndRelease(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseAndRelease(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getAndBitwiseAndRelease(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndBitwiseAndRelease(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseAndRelease(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseAndRelease(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseAndRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseAndRelease(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseXor
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndBitwiseXor(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndBitwiseXor(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseXor(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getAndBitwiseXor(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndBitwiseXor(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseXor(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseXor(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseXor();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseXor(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseXorAcquire
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseXorAcquire(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseXorAcquire(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseXorAcquire(array, 0, $value1$, Void.class);
+        });
+
+
+        // GetAndBitwiseXorRelease
+        // Incorrect argument types
+        checkNPE(() -> { // null array
+            $type$ x = ($type$) vh.getAndBitwiseXorRelease(null, 0, $value1$);
+        });
+        checkCCE(() -> { // array reference class
+            $type$ x = ($type$) vh.getAndBitwiseXorRelease(Void.class, 0, $value1$);
+        });
+        check{#if[String]?CCE:WMTE}(() -> { // value reference class
+            $type$ x = ($type$) vh.getAndBitwiseXorRelease(array, 0, Void.class);
+        });
+        checkWMTE(() -> { // array primitive class
+            $type$ x = ($type$) vh.getAndBitwiseXorRelease(0, 0, $value1$);
+        });
+        checkWMTE(() -> { // index reference class
+            $type$ x = ($type$) vh.getAndBitwiseXorRelease(array, Void.class, $value1$);
+        });
+        // Incorrect return type
+        check{#if[String]?CCE:WMTE}(() -> { // reference class
+            Void r = (Void) vh.getAndBitwiseXorRelease(array, 0, $value1$);
+        });
+        checkWMTE(() -> { // primitive class
+            $wrong_primitive_type$ x = ($wrong_primitive_type$) vh.getAndBitwiseXorRelease(array, 0, $value1$);
+        });
+        // Incorrect arity
+        checkWMTE(() -> { // 0
+            $type$ x = ($type$) vh.getAndBitwiseXorRelease();
+        });
+        checkWMTE(() -> { // >
+            $type$ x = ($type$) vh.getAndBitwiseXorRelease(array, 0, $value1$, Void.class);
+        });
+#end[Bitwise]
+    }
+
+    static void testArrayWrongMethodType(Handles hs) throws Throwable {
+        $type$[] array = new $type$[10];
+        Arrays.fill(array, $value1$);
+
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.GET)) {
+            // Incorrect argument types
+            checkNPE(() -> { // null array
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class)).
+                    invokeExact(($type$[]) null, 0);
+            });
+            hs.checkWMTEOrCCE(() -> { // array reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, Class.class, int.class)).
+                    invokeExact(Void.class, 0);
+            });
+            checkWMTE(() -> { // array primitive class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, int.class, int.class)).
+                    invokeExact(0, 0);
+            });
+            checkWMTE(() -> { // index reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, Class.class)).
+                    invokeExact(array, Void.class);
+            });
+            // Incorrect return type
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // reference class
+                Void x = (Void) hs.get(am, methodType(Void.class, $type$[].class, int.class)).
+                    invokeExact(array, 0);
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class, $type$[].class, int.class)).
+                    invokeExact(array, 0);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                $type$ x = ($type$) hs.get(am, methodType($type$.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class, Class.class)).
+                    invokeExact(array, 0, Void.class);
+            });
+        }
+
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.SET)) {
+            // Incorrect argument types
+            checkNPE(() -> { // null array
+                hs.get(am, methodType(void.class, $type$[].class, int.class, $type$.class)).
+                    invokeExact(($type$[]) null, 0, $value1$);
+            });
+            hs.checkWMTEOrCCE(() -> { // array reference class
+                hs.get(am, methodType(void.class, Class.class, int.class, $type$.class)).
+                    invokeExact(Void.class, 0, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // value reference class
+                hs.get(am, methodType(void.class, $type$[].class, int.class, Class.class)).
+                    invokeExact(array, 0, Void.class);
+            });
+            checkWMTE(() -> { // receiver primitive class
+                hs.get(am, methodType(void.class, int.class, int.class, $type$.class)).
+                    invokeExact(0, 0, $value1$);
+            });
+            checkWMTE(() -> { // index reference class
+                hs.get(am, methodType(void.class, $type$[].class, Class.class, $type$.class)).
+                    invokeExact(array, Void.class, $value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                hs.get(am, methodType(void.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                hs.get(am, methodType(void.class, $type$[].class, int.class, Class.class)).
+                    invokeExact(array, 0, $value1$, Void.class);
+            });
+        }
+#if[CAS]
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.COMPARE_AND_SET)) {
+            // Incorrect argument types
+            checkNPE(() -> { // null receiver
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, $type$[].class, int.class, $type$.class, $type$.class)).
+                    invokeExact(($type$[]) null, 0, $value1$, $value1$);
+            });
+            hs.checkWMTEOrCCE(() -> { // receiver reference class
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, Class.class, int.class, $type$.class, $type$.class)).
+                    invokeExact(Void.class, 0, $value1$, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // expected reference class
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, $type$[].class, int.class, Class.class, $type$.class)).
+                    invokeExact(array, 0, Void.class, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // actual reference class
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, $type$[].class, int.class, $type$.class, Class.class)).
+                    invokeExact(array, 0, $value1$, Void.class);
+            });
+            checkWMTE(() -> { // receiver primitive class
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, int.class, int.class, $type$.class, $type$.class)).
+                    invokeExact(0, 0, $value1$, $value1$);
+            });
+            checkWMTE(() -> { // index reference class
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, $type$[].class, Class.class, $type$.class, $type$.class)).
+                    invokeExact(array, Void.class, $value1$, $value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                boolean r = (boolean) hs.get(am, methodType(boolean.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                boolean r = (boolean) hs.get(am, methodType(boolean.class, $type$[].class, int.class, $type$.class, $type$.class, Class.class)).
+                    invokeExact(array, 0, $value1$, $value1$, Void.class);
+            });
+        }
+
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.COMPARE_AND_EXCHANGE)) {
+            // Incorrect argument types
+            checkNPE(() -> { // null receiver
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class, $type$.class, $type$.class)).
+                    invokeExact(($type$[]) null, 0, $value1$, $value1$);
+            });
+            hs.checkWMTEOrCCE(() -> { // array reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, Class.class, int.class, $type$.class, $type$.class)).
+                    invokeExact(Void.class, 0, $value1$, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // expected reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class, Class.class, $type$.class)).
+                    invokeExact(array, 0, Void.class, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // actual reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class, $type$.class, Class.class)).
+                    invokeExact(array, 0, $value1$, Void.class);
+            });
+            checkWMTE(() -> { // array primitive class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, int.class, int.class, $type$.class, $type$.class)).
+                    invokeExact(0, 0, $value1$, $value1$);
+            });
+            checkWMTE(() -> { // index reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, Class.class, $type$.class, $type$.class)).
+                    invokeExact(array, Void.class, $value1$, $value1$);
+            });
+            // Incorrect return type
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // reference class
+                Void r = (Void) hs.get(am, methodType(Void.class, $type$[].class, int.class, $type$.class, $type$.class)).
+                    invokeExact(array, 0, $value1$, $value1$);
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class, $type$[].class, int.class, $type$.class, $type$.class)).
+                    invokeExact(array, 0, $value1$, $value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                $type$ x = ($type$) hs.get(am, methodType($type$.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class, $type$.class, $type$.class, Class.class)).
+                    invokeExact(array, 0, $value1$, $value1$, Void.class);
+            });
+        }
+
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.GET_AND_SET)) {
+            // Incorrect argument types
+            checkNPE(() -> { // null array
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class, $type$.class)).
+                    invokeExact(($type$[]) null, 0, $value1$);
+            });
+            hs.checkWMTEOrCCE(() -> { // array reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, Class.class, int.class, $type$.class)).
+                    invokeExact(Void.class, 0, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // value reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class, Class.class)).
+                    invokeExact(array, 0, Void.class);
+            });
+            checkWMTE(() -> { // array primitive class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, int.class, int.class, $type$.class)).
+                    invokeExact(0, 0, $value1$);
+            });
+            checkWMTE(() -> { // index reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, Class.class, $type$.class)).
+                    invokeExact(array, Void.class, $value1$);
+            });
+            // Incorrect return type
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // reference class
+                Void r = (Void) hs.get(am, methodType(Void.class, $type$[].class, int.class, $type$.class)).
+                    invokeExact(array, 0, $value1$);
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class, $type$[].class, int.class, $type$.class)).
+                    invokeExact(array, 0, $value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                $type$ x = ($type$) hs.get(am, methodType($type$.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class, $type$.class, Class.class)).
+                    invokeExact(array, 0, $value1$, Void.class);
+            });
+        }
+#end[CAS]
+
+#if[AtomicAdd]
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.GET_AND_ADD)) {
+            // Incorrect argument types
+            checkNPE(() -> { // null array
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class, $type$.class)).
+                    invokeExact(($type$[]) null, 0, $value1$);
+            });
+            hs.checkWMTEOrCCE(() -> { // array reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, Class.class, int.class, $type$.class)).
+                    invokeExact(Void.class, 0, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // value reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class, Class.class)).
+                    invokeExact(array, 0, Void.class);
+            });
+            checkWMTE(() -> { // array primitive class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, int.class, int.class, $type$.class)).
+                    invokeExact(0, 0, $value1$);
+            });
+            checkWMTE(() -> { // index reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, Class.class, $type$.class)).
+                    invokeExact(array, Void.class, $value1$);
+            });
+            // Incorrect return type
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // reference class
+                Void r = (Void) hs.get(am, methodType(Void.class, $type$[].class, int.class, $type$.class)).
+                    invokeExact(array, 0, $value1$);
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class, $type$[].class, int.class, $type$.class)).
+                    invokeExact(array, 0, $value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                $type$ x = ($type$) hs.get(am, methodType($type$.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class, $type$.class, Class.class)).
+                    invokeExact(array, 0, $value1$, Void.class);
+            });
+        }
+#end[AtomicAdd]
+
+#if[Bitwise]
+        for (TestAccessMode am : testAccessModesOfType(TestAccessType.GET_AND_BITWISE)) {
+            // Incorrect argument types
+            checkNPE(() -> { // null array
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class, $type$.class)).
+                    invokeExact(($type$[]) null, 0, $value1$);
+            });
+            hs.checkWMTEOrCCE(() -> { // array reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, Class.class, int.class, $type$.class)).
+                    invokeExact(Void.class, 0, $value1$);
+            });
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // value reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class, Class.class)).
+                    invokeExact(array, 0, Void.class);
+            });
+            checkWMTE(() -> { // array primitive class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, int.class, int.class, $type$.class)).
+                    invokeExact(0, 0, $value1$);
+            });
+            checkWMTE(() -> { // index reference class
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, Class.class, $type$.class)).
+                    invokeExact(array, Void.class, $value1$);
+            });
+            // Incorrect return type
+            {#if[String]?hs.checkWMTEOrCCE:checkWMTE}(() -> { // reference class
+                Void r = (Void) hs.get(am, methodType(Void.class, $type$[].class, int.class, $type$.class)).
+                    invokeExact(array, 0, $value1$);
+            });
+            checkWMTE(() -> { // primitive class
+                $wrong_primitive_type$ x = ($wrong_primitive_type$) hs.get(am, methodType($wrong_primitive_type$.class, $type$[].class, int.class, $type$.class)).
+                    invokeExact(array, 0, $value1$);
+            });
+            // Incorrect arity
+            checkWMTE(() -> { // 0
+                $type$ x = ($type$) hs.get(am, methodType($type$.class)).
+                    invokeExact();
+            });
+            checkWMTE(() -> { // >
+                $type$ x = ($type$) hs.get(am, methodType($type$.class, $type$[].class, int.class, $type$.class, Class.class)).
+                    invokeExact(array, 0, $value1$, Void.class);
+            });
+        }
+#end[Bitwise]
+    }
+}

@@ -1,0 +1,30 @@
+grant {
+    permission javax.security.auth.AuthPermission "createLoginContext.JMXPluggableAuthenticator";
+    permission java.net.SocketPermission "*:*", "accept,connect,listen,resolve";
+    permission java.lang.RuntimePermission "*";
+    permission java.security.SecurityPermission "createAccessControlContext";
+    permission javax.management.MBeanPermission "*", "getDomains";
+    permission javax.management.MBeanPermission "SimpleStandard#State[MBeans:type=SimpleStandard]", "getAttribute";
+    permission javax.security.auth.AuthPermission "getSubject";
+    permission javax.management.MBeanPermission "SimpleStandard#State[MBeans:type=SimpleStandard]", "setAttribute";
+    permission javax.management.MBeanPermission "SimpleStandard#-[MBeans:type=SimpleStandard]", "addNotificationListener";
+    permission javax.management.MBeanPermission "javax.management.MBeanServerDelegate#-[JMImplementation:type=MBeanServerDelegate]", "addNotificationListener";
+    permission javax.management.MBeanPermission "javax.management.MBeanServerDelegate#-[JMImplementation:type=MBeanServerDelegate]", "removeNotificationListener";
+    permission javax.management.MBeanPermission "SimpleStandard#-[MBeans:type=SimpleStandard]", "unregisterMBean";
+    permission javax.management.remote.SubjectDelegationPermission "javax.management.remote.JMXPrincipal.delegate";
+};
+
+grant principal javax.management.remote.JMXPrincipal "monitorRole" {
+    permission javax.management.remote.SubjectDelegationPermission "javax.management.remote.JMXPrincipal.delegate";
+};
+
+grant principal javax.management.remote.JMXPrincipal "delegate" {
+    permission javax.management.MBeanPermission "*", "getDomains";
+    permission javax.management.MBeanPermission "SimpleStandard#State[MBeans:type=SimpleStandard]", "getAttribute";
+    permission javax.security.auth.AuthPermission "getSubject";
+    permission javax.management.MBeanPermission "SimpleStandard#State[MBeans:type=SimpleStandard]", "setAttribute";
+    permission javax.management.MBeanPermission "SimpleStandard#-[MBeans:type=SimpleStandard]", "addNotificationListener";
+    permission javax.management.MBeanPermission "javax.management.MBeanServerDelegate#-[JMImplementation:type=MBeanServerDelegate]", "addNotificationListener";
+    permission javax.management.MBeanPermission "javax.management.MBeanServerDelegate#-[JMImplementation:type=MBeanServerDelegate]", "removeNotificationListener";
+    permission javax.management.MBeanPermission "SimpleStandard#-[MBeans:type=SimpleStandard]", "unregisterMBean";
+};

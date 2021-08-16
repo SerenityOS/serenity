@@ -1,0 +1,6 @@
+SomeVbc.java:15:13: compiler.warn.attempt.to.synchronize.on.instance.of.value.based.class
+- compiler.err.warnings.and.werror
+SomeVbc.java:26:13: compiler.warn.attempt.to.synchronize.on.instance.of.value.based.class
+JdkInternalAbuseOfVbc.java:17:13: compiler.warn.attempt.to.synchronize.on.instance.of.value.based.class
+1 error
+3 warnings

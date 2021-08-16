@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: com.sun.hotspot.igv.graph
+OpenIDE-Module-Localizing-Bundle: com/sun/hotspot/igv/graph/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

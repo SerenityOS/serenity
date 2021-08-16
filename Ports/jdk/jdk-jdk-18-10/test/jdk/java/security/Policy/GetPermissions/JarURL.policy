@@ -1,0 +1,8 @@
+grant codeBase "file:${user.dir}/*" {
+    permission java.security.AllPermission;
+};
+
+grant {
+    permission java.util.PropertyPermission "user.dir", "read";
+    permission java.security.SecurityPermission "getPolicy";
+};

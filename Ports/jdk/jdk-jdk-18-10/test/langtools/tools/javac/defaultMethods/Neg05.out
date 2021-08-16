@@ -1,0 +1,3 @@
+Neg05.java:10:40: compiler.err.override.incompatible.ret: (compiler.misc.clashes.with: m(), Neg05.IA3, m(), Neg05.IA2), java.lang.Number, java.lang.Integer
+Neg05.java:12:12: compiler.err.does.not.override.abstract: Neg05.C, m(), Neg05.IA3
+2 errors

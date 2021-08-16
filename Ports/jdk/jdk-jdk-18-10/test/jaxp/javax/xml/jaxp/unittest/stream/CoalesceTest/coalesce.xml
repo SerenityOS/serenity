@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE city [
+<!ENTITY a "insert">
+<!ENTITY b "<element1>subtree</element1>">
+
+]>
+<city name = "Bangalore" population = "100000">
+
+	<country state = "Karnatka">START India  <![CDATA[CS}}}}}}]]> India END</country>
+        <foo>&amp;&lt; <![CDATA[cdatastart<><>>><>><<<<cdataend]]> entitystart &a; entityend</foo>
+        &b;
+	<description>a&amp;b</description>
+         <?CityHotels Information about the hotels is passed to different appications for processing. ?>	
+
+</city>

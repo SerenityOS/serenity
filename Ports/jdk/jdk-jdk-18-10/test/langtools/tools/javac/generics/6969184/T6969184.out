@@ -1,0 +1,10 @@
+T6969184.java:13:30: compiler.err.cant.resolve.location: kindname.class, NonExistentClass, , , (compiler.misc.location: kindname.class, T6969184.C1<X>, null)
+T6969184.java:14:28: compiler.err.cant.resolve.location: kindname.class, NonExistentClass, , , (compiler.misc.location: kindname.class, T6969184.C1<X>, null)
+T6969184.java:18:31: compiler.err.cant.resolve.location: kindname.class, NonExistentBound, , , (compiler.misc.location: kindname.class, T6969184, null)
+T6969184.java:19:30: compiler.err.cant.resolve.location: kindname.class, NonExistentClass, , , (compiler.misc.location: kindname.class, T6969184.C2<X>, null)
+T6969184.java:20:28: compiler.err.cant.resolve.location: kindname.class, NonExistentClass, , , (compiler.misc.location: kindname.class, T6969184.C2<X>, null)
+T6969184.java:24:31: compiler.err.cant.resolve.location: kindname.class, NonExistentBound1, , , (compiler.misc.location: kindname.class, T6969184, null)
+T6969184.java:24:51: compiler.err.cant.resolve.location: kindname.class, NonExistentBound2, , , (compiler.misc.location: kindname.class, T6969184, null)
+T6969184.java:25:30: compiler.err.cant.resolve.location: kindname.class, NonExistentClass, , , (compiler.misc.location: kindname.class, T6969184.C3<X>, null)
+T6969184.java:26:28: compiler.err.cant.resolve.location: kindname.class, NonExistentClass, , , (compiler.misc.location: kindname.class, T6969184.C3<X>, null)
+9 errors

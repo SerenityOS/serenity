@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="kw"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ar" draft="unconfirmed">Arabek</language>
+			<language type="ar_001" draft="unconfirmed">Arabek Savonek Arnowydh</language>
+			<language type="br" draft="unconfirmed">Bretonek</language>
+			<language type="cy" draft="unconfirmed">Kembrek</language>
+			<language type="da" draft="unconfirmed">Danek</language>
+			<language type="de" draft="unconfirmed">Almaynek</language>
+			<language type="de_AT" draft="unconfirmed">Almaynek (Ostri)</language>
+			<language type="de_CH" draft="unconfirmed">Almaynek Ughel (Pow Swis)</language>
+			<language type="el" draft="unconfirmed">Greka</language>
+			<language type="en" draft="unconfirmed">Sowsnek</language>
+			<language type="en_AU" draft="unconfirmed">Sowsnek (Ostrali)</language>
+			<language type="en_CA" draft="unconfirmed">Sowsnek (Kanada)</language>
+			<language type="en_GB" draft="unconfirmed">Sowsnek (Breten Veur)</language>
+			<language type="en_GB" alt="short" draft="unconfirmed">Sowsnek (RU)</language>
+			<language type="en_US" alt="short" draft="unconfirmed">Sowsnek (SU)</language>
+			<language type="es" draft="unconfirmed">Spaynek</language>
+			<language type="eu" draft="unconfirmed">Baskek</language>
+			<language type="fr" draft="unconfirmed">Frenkek</language>
+			<language type="fr_CA" draft="unconfirmed">Frenkek (Kanada)</language>
+			<language type="fr_CH" draft="unconfirmed">Frenkek (Pow Swis)</language>
+			<language type="ga" draft="unconfirmed">Wordhonek</language>
+			<language type="gd" draft="unconfirmed">Godhalek Alban</language>
+			<language type="it" draft="unconfirmed">Italek</language>
+			<language type="ja" draft="unconfirmed">Japanek</language>
+			<language type="kw">kernewek</language>
+			<language type="nl" draft="unconfirmed">Iseldiryek</language>
+			<language type="pt" draft="unconfirmed">Portyngalek</language>
+			<language type="pt_PT" draft="unconfirmed">Portyngalek (Ewrop)</language>
+			<language type="ro_MD" draft="unconfirmed">Moldavek</language>
+			<language type="ru" draft="unconfirmed">Russek</language>
+			<language type="yue" draft="unconfirmed">Kantonek</language>
+			<language type="zh" draft="unconfirmed">Chinek</language>
+			<language type="zh_Hans" draft="unconfirmed">Chinek sempelhes</language>
+			<language type="zh_Hant" draft="unconfirmed">Chinek hengovek</language>
+		</languages>
+		<scripts>
+			<script type="Arab" draft="unconfirmed">Arabek</script>
+			<script type="Grek" draft="unconfirmed">Greka</script>
+			<script type="Hani" draft="unconfirmed">Han</script>
+			<script type="Hans" draft="unconfirmed">Sempelhes</script>
+			<script type="Hans" alt="stand-alone" draft="unconfirmed">Han sempelhes</script>
+			<script type="Hant" draft="unconfirmed">Hengovek</script>
+			<script type="Hant" alt="stand-alone" draft="unconfirmed">Han hengovek</script>
+			<script type="Latn" draft="unconfirmed">Latin</script>
+		</scripts>
+		<territories>
+			<territory type="001" draft="unconfirmed">An Bys</territory>
+			<territory type="002" draft="unconfirmed">Afrika</territory>
+			<territory type="003" draft="unconfirmed">Amerika Gledh</territory>
+			<territory type="019" draft="unconfirmed">An Amerikas</territory>
+			<territory type="142" draft="unconfirmed">Asi</territory>
+			<territory type="150" draft="unconfirmed">Europa</territory>
+			<territory type="BR" draft="unconfirmed">Brasil</territory>
+			<territory type="CN" draft="unconfirmed">China</territory>
+			<territory type="DE" draft="unconfirmed">Almayn</territory>
+			<territory type="EU" draft="unconfirmed">Unyans Europek</territory>
+			<territory type="FR" draft="unconfirmed">Pow Frenk</territory>
+			<territory type="GB">Rywvaneth Unys</territory>
+			<territory type="IN" draft="unconfirmed">Eynda</territory>
+			<territory type="IT" draft="unconfirmed">Itali</territory>
+			<territory type="JP" draft="unconfirmed">Japan</territory>
+			<territory type="RU" draft="unconfirmed">Russi</territory>
+			<territory type="UN" draft="unconfirmed">Kenedhlow Unys</territory>
+			<territory type="US" draft="unconfirmed">Statys Unys</territory>
+		</territories>
+		<keys>
+			<key type="calendar" draft="unconfirmed">kalans</key>
+		</keys>
+		<types>
+			<type key="calendar" type="gregorian" draft="unconfirmed">Kalans gregorek</type>
+		</types>
+		<codePatterns>
+			<codePattern type="language" draft="unconfirmed">Taves: {0}</codePattern>
+		</codePatterns>
+	</localeDisplayNames>
+	<characters>
+		<exemplarCharacters>[a b c d e f g h i j k l m n o p q r s t u v w x y z]</exemplarCharacters>
+		<exemplarCharacters type="index" draft="unconfirmed">[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]</exemplarCharacters>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern draft="unconfirmed">EEEE d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern draft="unconfirmed">d MMMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern draft="unconfirmed">d MMM y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="unconfirmed">dd/MM/y GGGGG</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<months>
+					<monthContext type="format">
+						<monthWidth type="abbreviated">
+							<month type="1">Gen</month>
+							<month type="2">Hwe</month>
+							<month type="3">Meu</month>
+							<month type="4">Ebr</month>
+							<month type="5">Me</month>
+							<month type="6">Met</month>
+							<month type="7">Gor</month>
+							<month type="8">Est</month>
+							<month type="9">Gwn</month>
+							<month type="10">Hed</month>
+							<month type="11">Du</month>
+							<month type="12">Kev</month>
+						</monthWidth>
+						<monthWidth type="wide">
+							<month type="1">mis Genver</month>
+							<month type="2">mis Hwevrer</month>
+							<month type="3">mis Meurth</month>
+							<month type="4">mis Ebrel</month>
+							<month type="5">mis Me</month>
+							<month type="6">mis Metheven</month>
+							<month type="7">mis Gortheren</month>
+							<month type="8">mis Est</month>
+							<month type="9">mis Gwynngala</month>
+							<month type="10">mis Hedra</month>
+							<month type="11">mis Du</month>
+							<month type="12">mis Kevardhu</month>
+						</monthWidth>
+					</monthContext>
+				</months>
+				<days>
+					<dayContext type="format">
+						<dayWidth type="abbreviated">
+							<day type="sun">Sul</day>
+							<day type="mon">Lun</day>
+							<day type="tue">Mth</day>
+							<day type="wed">Mhr</day>
+							<day type="thu">Yow</day>
+							<day type="fri">Gwe</day>
+							<day type="sat">Sad</day>
+						</dayWidth>
+						<dayWidth type="wide">
+							<day type="sun">dy Sul</day>
+							<day type="mon">dy Lun</day>
+							<day type="tue">dy Meurth</day>
+							<day type="wed">dy Merher</day>
+							<day type="thu">dy Yow</day>
+							<day type="fri">dy Gwener</day>
+							<day type="sat">dy Sadorn</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="abbreviated">
+							<dayPeriod type="am">a.m.</dayPeriod>
+							<dayPeriod type="pm">p.m.</dayPeriod>
+						</dayPeriodWidth>
+						<dayPeriodWidth type="wide">
+							<dayPeriod type="am">a.m.</dayPeriod>
+							<dayPeriod type="pm">p.m.</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraAbbr>
+						<era type="0">RC</era>
+						<era type="1">AD</era>
+					</eraAbbr>
+				</eras>
+				<dateFormats>
+					<dateFormatLength type="full">
+						<dateFormat>
+							<pattern draft="unconfirmed">EEEE d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="long">
+						<dateFormat>
+							<pattern draft="unconfirmed">d MMMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern draft="unconfirmed">d MMM y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+					<dateFormatLength type="short">
+						<dateFormat>
+							<pattern draft="unconfirmed">dd/MM/y</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern draft="unconfirmed">HH:mm:ss zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern draft="unconfirmed">HH:mm:ss z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern draft="unconfirmed">HH:mm:ss</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern draft="unconfirmed">HH:mm</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="year">
+				<displayName draft="unconfirmed">Bledhen</displayName>
+			</field>
+			<field type="month">
+				<displayName draft="unconfirmed">Mis</displayName>
+			</field>
+			<field type="week">
+				<displayName draft="unconfirmed">Seythun</displayName>
+			</field>
+			<field type="day">
+				<displayName draft="unconfirmed">Dedh</displayName>
+			</field>
+			<field type="weekday">
+				<displayName draft="unconfirmed">Dedh an seythun</displayName>
+			</field>
+			<field type="dayperiod">
+				<displayName draft="unconfirmed">AM/PM</displayName>
+			</field>
+			<field type="hour">
+				<displayName draft="unconfirmed">Eur</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<zone type="Etc/Unknown">
+				<exemplarCity draft="unconfirmed">Ankoth</exemplarCity>
+			</zone>
+			<metazone type="Europe_Central">
+				<short>
+					<generic draft="unconfirmed">CET</generic>
+					<standard draft="unconfirmed">CET</standard>
+					<daylight draft="unconfirmed">CEST</daylight>
+				</short>
+			</metazone>
+			<metazone type="Europe_Eastern">
+				<short>
+					<generic draft="unconfirmed">EET</generic>
+					<standard draft="unconfirmed">EET</standard>
+					<daylight draft="unconfirmed">EEST</daylight>
+				</short>
+			</metazone>
+			<metazone type="Europe_Western">
+				<short>
+					<generic draft="unconfirmed">WET</generic>
+					<standard draft="unconfirmed">WET</standard>
+					<daylight draft="unconfirmed">WEST</daylight>
+				</short>
+			</metazone>
+			<metazone type="GMT">
+				<short>
+					<standard draft="unconfirmed">GMT</standard>
+				</short>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="standard">
+					<pattern>¤#,##0.00</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="EUR">
+				<displayName draft="unconfirmed">Euro</displayName>
+			</currency>
+		</currencies>
+	</numbers>
+</ldml>

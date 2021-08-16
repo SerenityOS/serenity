@@ -1,0 +1,2 @@
+ErrorMessageTest.java:10:25: compiler.err.cant.resolve.location: kindname.class, MISSING, , , (compiler.misc.location: kindname.class, ErrorMessageTest, null)
+1 error

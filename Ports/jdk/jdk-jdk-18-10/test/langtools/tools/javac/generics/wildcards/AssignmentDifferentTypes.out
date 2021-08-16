@@ -1,0 +1,9 @@
+AssignmentDifferentTypes.java:23:20: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<Base>, Ref<Der>)
+AssignmentDifferentTypes.java:24:21: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<Der>, Ref<Base>)
+AssignmentDifferentTypes.java:25:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<compiler.misc.type.captureof: 1, ? extends Base>, Ref<? extends Der>)
+AssignmentDifferentTypes.java:26:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<Base>, Ref<? extends Der>)
+AssignmentDifferentTypes.java:27:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<compiler.misc.type.captureof: 1, ? super Base>, Ref<? extends Der>)
+AssignmentDifferentTypes.java:28:19: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<compiler.misc.type.captureof: 1, ? super Der>, Ref<? extends Base>)
+AssignmentDifferentTypes.java:29:21: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<compiler.misc.type.captureof: 1, ? super Der>, Ref<? super Base>)
+AssignmentDifferentTypes.java:30:21: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<Der>, Ref<? super Base>)
+8 errors

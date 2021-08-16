@@ -1,0 +1,8 @@
+<root>
+     t<![CDATA[ ]]>
+t   
+    <child1/>
+    t<!-- test comment --><child2/><child5>
+        t<?target1 test?><child51><child511>t</child511></child51><?target1 test?>
+        t
+    </child5></root> 

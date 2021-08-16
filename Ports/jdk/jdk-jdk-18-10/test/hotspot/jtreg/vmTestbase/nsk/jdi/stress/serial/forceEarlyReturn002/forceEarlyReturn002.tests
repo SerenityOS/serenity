@@ -1,0 +1,9 @@
+OPTIONS:shuffle
+nsk.jdi.ThreadReference.forceEarlyReturn.forceEarlyReturn001.forceEarlyReturn001
+nsk.jdi.ThreadReference.forceEarlyReturn.forceEarlyReturn002.forceEarlyReturn002
+nsk.jdi.ThreadReference.forceEarlyReturn.forceEarlyReturn003.forceEarlyReturn003
+nsk.jdi.ThreadReference.forceEarlyReturn.forceEarlyReturn004.forceEarlyReturn004
+nsk.jdi.ThreadReference.forceEarlyReturn.forceEarlyReturn005.forceEarlyReturn005
+nsk.jdi.ThreadReference.forceEarlyReturn.forceEarlyReturn008.forceEarlyReturn008
+nsk.jdi.ThreadReference.forceEarlyReturn.forceEarlyReturn013.forceEarlyReturn013
+nsk.jdi.ThreadReference.forceEarlyReturn.forceEarlyReturn014.forceEarlyReturn014

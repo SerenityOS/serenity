@@ -1,0 +1,320 @@
+class T {
+  0xCAFEBABE;
+  0; // minor version
+  49; // version
+  [73] { // Constant Pool
+    ; // first element is empty
+    Utf8 "T"; // #1     at 0x0A
+    class #1; // #2     at 0x1A
+    Utf8 "Ljava/lang/Enum<LT;>;"; // #3     at 0x1D
+    Utf8 "java/lang/Enum"; // #4     at 0x41
+    class #4; // #5     at 0x52
+    Utf8 "T.java"; // #6     at 0x55
+    Utf8 "T1"; // #7     at 0x61
+    Utf8 "LT;"; // #8     at 0x66
+    Utf8 "T2"; // #9     at 0x78
+    Utf8 "T3"; // #10     at 0x7D
+    Utf8 "myName"; // #11     at 0x82
+    Utf8 "Ljava/lang/String;"; // #12     at 0x8B
+    Utf8 "$VALUES"; // #13     at 0xA0
+    Utf8 "[LT;"; // #14     at 0xAA
+    Utf8 "values"; // #15     at 0xBD
+    Utf8 "()[LT;"; // #16     at 0xC6
+    NameAndType #13 #14; // #17     at 0xDB
+    Field #2 #17; // #18     at 0xE0
+    class #14; // #19     at 0xE5
+    Utf8 "clone"; // #20     at 0xE8
+    Utf8 "()Ljava/lang/Object;"; // #21     at 0xF0
+    NameAndType #20 #21; // #22     at 0x0107
+    Method #19 #22; // #23     at 0x010C
+    Utf8 "valueOf"; // #24     at 0x0111
+    Utf8 "(Ljava/lang/String;)LT;"; // #25     at 0x011B
+    Utf8 "(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Enum;"; // #26     at 0x0141
+    NameAndType #24 #26; // #27     at 0x0179
+    Method #5 #27; // #28     at 0x017E
+    Utf8 "name"; // #29     at 0x0183
+    Utf8 "getName"; // #30     at 0x018A
+    Utf8 "()Ljava/lang/String;"; // #31     at 0x0194
+    NameAndType #11 #12; // #32     at 0x01AB
+    Field #2 #32; // #33     at 0x01B0
+    Utf8 "this"; // #34     at 0x01B5
+    Utf8 "<init>"; // #35     at 0x01BC
+    Utf8 "(Ljava/lang/String;ILjava/lang/String;)V"; // #36     at 0x01C5
+    Utf8 "LNotNull;"; // #37     at 0x01F0
+    Utf8 "java/lang/IllegalArgumentException"; // #38     at 0x0216
+    class #38; // #39     at 0x023B
+    Utf8 "Argument 0 for @NotNull parameter of T.<init> must not be null"; // #40     at 0x023E
+    String #40; // #41     at 0x028B
+    Utf8 "(Ljava/lang/String;)V"; // #42     at 0x028E
+    NameAndType #35 #42; // #43     at 0x02A6
+    Method #39 #43; // #44     at 0x02AB
+    Utf8 "(Ljava/lang/String;I)V"; // #45     at 0x02B0
+    NameAndType #35 #45; // #46     at 0x02C9
+    Method #5 #46; // #47     at 0x02CE
+    Utf8 "<clinit>"; // #48     at 0x02D3
+    Utf8 "()V"; // #49     at 0x02DE
+    String #7; // #50     at 0x02E4
+    Utf8 "type1"; // #51     at 0x02E7
+    String #51; // #52     at 0x02EF
+    NameAndType #35 #36; // #53     at 0x02F2
+    Method #2 #53; // #54     at 0x02F7
+    NameAndType #7 #8; // #55     at 0x02FC
+    Field #2 #55; // #56     at 0x0301
+    String #9; // #57     at 0x0306
+    Utf8 "type2"; // #58     at 0x0309
+    String #58; // #59     at 0x0311
+    NameAndType #9 #8; // #60     at 0x0314
+    Field #2 #60; // #61     at 0x0319
+    String #10; // #62     at 0x031E
+    Utf8 "type3"; // #63     at 0x0321
+    String #63; // #64     at 0x0329
+    NameAndType #10 #8; // #65     at 0x032C
+    Field #2 #65; // #66     at 0x0331
+    Utf8 "Code"; // #67     at 0x0336
+    Utf8 "LineNumberTable"; // #68     at 0x033D
+    Utf8 "LocalVariableTable"; // #69     at 0x034F
+    Utf8 "Signature"; // #70     at 0x0364
+    Utf8 "RuntimeInvisibleParameterAnnotations"; // #71     at 0x0370
+    Utf8 "SourceFile"; // #72     at 0x0397
+  } // Constant Pool
+
+  0x4031; // access
+  #2;// this_cpx
+  #5;// super_cpx
+
+  [0] { // Interfaces
+  } // Interfaces
+
+  [5] { // fields
+    { // Member at 0x03AE
+      0x4019; // access
+      #7; // name_cpx
+      #8; // sig_cpx
+      [0] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x03B6
+      0x4019; // access
+      #9; // name_cpx
+      #8; // sig_cpx
+      [0] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x03BE
+      0x4019; // access
+      #10; // name_cpx
+      #8; // sig_cpx
+      [0] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x03C6
+      0x0012; // access
+      #11; // name_cpx
+      #12; // sig_cpx
+      [0] { // Attributes
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x03CE
+      0x101A; // access
+      #13; // name_cpx
+      #14; // sig_cpx
+      [0] { // Attributes
+      } // Attributes
+    } // Member
+  } // fields
+
+  [5] { // methods
+    { // Member at 0x03D8
+      0x0019; // access
+      #15; // name_cpx
+      #16; // sig_cpx
+      [1] { // Attributes
+        Attr(#67, 34) { // Code at 0x03E0
+          1; // max_stack
+          0; // max_locals
+          Bytes[10]{
+            0xB20012B60017C000;
+            0x13B0;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#68, 6) { // LineNumberTable at 0x03FC
+              [1] { // LineNumberTable
+                0  9; //  at 0x0408
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0408
+      0x0009; // access
+      #24; // name_cpx
+      #25; // sig_cpx
+      [1] { // Attributes
+        Attr(#67, 52) { // Code at 0x0410
+          2; // max_stack
+          1; // max_locals
+          Bytes[10]{
+            0x12022AB8001CC000;
+            0x02B0;
+          };
+          [0] { // Traps
+          } // end Traps
+          [2] { // Attributes
+            Attr(#69, 12) { // LocalVariableTable at 0x042C
+              [1] { // LocalVariableTable
+                0 10 29 12 0; //  at 0x043E
+              }
+            } // end LocalVariableTable
+            ;
+            Attr(#68, 6) { // LineNumberTable at 0x043E
+              [1] { // LineNumberTable
+                0  9; //  at 0x044A
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x044A
+      0x0001; // access
+      #30; // name_cpx
+      #31; // sig_cpx
+      [1] { // Attributes
+        Attr(#67, 47) { // Code at 0x0452
+          1; // max_stack
+          1; // max_locals
+          Bytes[5]{
+            0x2AB40021B0;
+          };
+          [0] { // Traps
+          } // end Traps
+          [2] { // Attributes
+            Attr(#69, 12) { // LocalVariableTable at 0x0469
+              [1] { // LocalVariableTable
+                0 5 34 8 0; //  at 0x047B
+              }
+            } // end LocalVariableTable
+            ;
+            Attr(#68, 6) { // LineNumberTable at 0x047B
+              [1] { // LineNumberTable
+                0  17; //  at 0x0487
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0487
+      0x0002; // access
+      #35; // name_cpx
+      #36; // sig_cpx
+      [3] { // Attributes
+        Attr(#67, 86) { // Code at 0x048F
+          3; // max_stack
+          4; // max_locals
+          Bytes[26]{
+            0x2BC7000DBB002759;
+            0x1229B7002CBF2A2B;
+            0x1CB7002F2A2DB500;
+            0x21B1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [2] { // Attributes
+            Attr(#69, 22) { // LocalVariableTable at 0x04BB
+              [2] { // LocalVariableTable
+                14 12 34 8 0; //  at 0x04CD
+                14 12 29 12 3; //  at 0x04D7
+              }
+            } // end LocalVariableTable
+            ;
+            Attr(#68, 14) { // LineNumberTable at 0x04D7
+              [3] { // LineNumberTable
+                14  20; //  at 0x04E3
+                20  21; //  at 0x04E7
+                25  22; //  at 0x04EB
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+        ;
+        Attr(#70, 2) { // Signature at 0x04EB
+          #42;
+        } // end Signature
+        ;
+        Attr(#71, 11) { // RuntimeInvisibleParameterAnnotations at 0x04F3
+          [3]b { // parameters
+            [1] { // annotations
+              {  //  annotation
+                #37;
+                [0] { // element_value_pairs
+                }  //  element_value_pairs
+              }  //  annotation
+            }
+            ;
+            [0] { // annotations
+            }
+            ;
+            [0] { // annotations
+            }
+          }
+        } // end RuntimeInvisibleParameterAnnotations
+      } // Attributes
+    } // Member
+    ;
+    { // Member at 0x0504
+      0x0008; // access
+      #48; // name_cpx
+      #49; // sig_cpx
+      [1] { // Attributes
+        Attr(#67, 107) { // Code at 0x050C
+          5; // max_stack
+          0; // max_locals
+          Bytes[71]{
+            0xBB00025912320312;
+            0x34B70036B30038BB;
+            0x000259123904123B;
+            0xB70036B3003DBB00;
+            0x0259123E051240B7;
+            0x0036B3004206BD00;
+            0x025903B200385359;
+            0x04B2003D535905B2;
+            0x004253B30012B1;
+          };
+          [0] { // Traps
+          } // end Traps
+          [1] { // Attributes
+            Attr(#68, 18) { // LineNumberTable at 0x0565
+              [4] { // LineNumberTable
+                0  10; //  at 0x0571
+                15  11; //  at 0x0575
+                30  12; //  at 0x0579
+                45  9; //  at 0x057D
+              }
+            } // end LineNumberTable
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [2] { // Attributes
+    Attr(#70, 2) { // Signature at 0x057F
+      #3;
+    } // end Signature
+    ;
+    Attr(#72, 2) { // SourceFile at 0x0587
+      #6;
+    } // end SourceFile
+  } // Attributes
+} // end class T

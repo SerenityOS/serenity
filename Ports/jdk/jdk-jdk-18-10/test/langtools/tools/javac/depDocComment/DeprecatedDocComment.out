@@ -1,0 +1,6 @@
+DeprecatedDocComment.java:27:28: compiler.warn.has.been.deprecated: deprecatedTest1(), DeprecatedDocComment2
+DeprecatedDocComment.java:31:28: compiler.warn.has.been.deprecated: deprecatedTest5(), DeprecatedDocComment2
+DeprecatedDocComment.java:32:28: compiler.warn.has.been.deprecated: deprecatedTest6(), DeprecatedDocComment2
+- compiler.err.warnings.and.werror
+1 error
+3 warnings

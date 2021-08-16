@@ -1,0 +1,19 @@
+// Hide secondary edges.
+remove("dump_spec", "FramePtr|ReturnAdr|I_O");
+removeInputs("name", "Root");
+var f = new RemoveSelfLoopsFilter("Remove Self-Loops");
+f.apply(graph);
+removeInputs("name", "SafePoint|CallStaticJava|CallDynamicJava|CallJava|CallLeaf|CallRuntime|AbstractLock|CallLeafNoFP|Call|CallStaticJavaDirect", 5);
+removeInputs("name", "Unlock|Lock", 7);
+removeInputs("name", "Allocate", 7);
+removeInputs("name", "AllocateArray", 9);
+
+// Combine projection nodes.
+var f = new CombineFilter("Combine Filter");
+f.addRule(new CombineFilter.CombineRule(new Properties.RegexpPropertyMatcher("name", ".*"), new Properties.RegexpPropertyMatcher("name", "Proj|IfFalse|IfTrue|JProj|MachProj|JumpProj|CatchProj")));
+f.addRule(new CombineFilter.CombineRule(new Properties.RegexpPropertyMatcher("name", "Cmp.*"), new Properties.RegexpPropertyMatcher("name", "Bool")));
+f.apply(graph);
+
+// Inline (split) constant nodes.
+split("name", "BoxLock");
+split("name", "(Con.*)|(loadCon.*)", "[dump_spec]");

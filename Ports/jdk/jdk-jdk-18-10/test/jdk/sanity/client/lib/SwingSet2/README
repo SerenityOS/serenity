@@ -1,0 +1,4 @@
+The content of this src folder was originally taken from openjdk SwingSet2 demo: http://hg.openjdk.java.net/jdk/jdk/file/2d5d75263e77/src/demo/share/jfc/SwingSet2.
+Then it was modified to increase testability and removed extra content and extra dependencies.
+
+This is NOT the official location of the SwingSet2 demo.

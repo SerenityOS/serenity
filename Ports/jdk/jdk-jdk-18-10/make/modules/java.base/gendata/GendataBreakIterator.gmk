@@ -1,0 +1,113 @@
+
+# Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+#
+# Make file for generating BreakIterator data files.
+#
+
+# input
+#
+# Notes: sun.text.resources.BreakIteratorRules no longer goes to runtime.
+# They are used at JDK build phase in order to create $(BIFILES) which
+# are used on runtime instead.
+#
+TEXT_PKG := sun/text/resources
+TEXT_PKG_LD := $(TEXT_PKG)/ext
+TEXT_SOURCES := $(TEXT_PKG)/BreakIteratorRules.java \
+    $(TEXT_PKG)/BreakIteratorInfo.java \
+    $(TEXT_PKG_LD)/BreakIteratorRules_th.java \
+    $(TEXT_PKG_LD)/BreakIteratorInfo_th.java
+
+# Generate BreakIteratorData
+BREAK_ITERATOR_CLASSES := $(BUILDTOOLS_OUTPUTDIR)/break_iterator_classes
+
+# These two files should be moved out to a build tool!
+$(eval $(call SetupJavaCompilation, BUILD_BREAKITERATOR_BASE, \
+    TARGET_RELEASE := $(TARGET_RELEASE_BOOTJDK), \
+    SRC := $(TOPDIR)/src/java.base/share/classes, \
+    INCLUDE_FILES := \
+        $(TEXT_PKG)/BreakIteratorRules.java \
+        $(TEXT_PKG)/BreakIteratorInfo.java, \
+    BIN := $(BREAK_ITERATOR_CLASSES)/java.base, \
+    DISABLED_WARNINGS := options, \
+))
+
+$(eval $(call SetupJavaCompilation, BUILD_BREAKITERATOR_LD, \
+    TARGET_RELEASE := $(TARGET_RELEASE_BOOTJDK), \
+    SRC := $(TOPDIR)/src/jdk.localedata/share/classes, \
+    INCLUDE_FILES := \
+        $(TEXT_PKG_LD)/BreakIteratorRules_th.java \
+        $(TEXT_PKG_LD)/BreakIteratorInfo_th.java, \
+    BIN := $(BREAK_ITERATOR_CLASSES)/jdk.localedata, \
+    DISABLED_WARNINGS := options, \
+))
+
+BREAK_ITERATOR_BOOTCLASSPATH := \
+    --patch-module java.base=$(BREAK_ITERATOR_CLASSES)/java.base \
+    --patch-module jdk.localedata=$(BREAK_ITERATOR_CLASSES)/jdk.localedata \
+    --add-exports java.base/sun.text=ALL-UNNAMED \
+    --add-exports java.base/sun.text.resources=ALL-UNNAMED \
+    --add-exports jdk.localedata/sun.text.resources.ext=ALL-UNNAMED \
+    #
+
+# Generate data resource files.
+# input
+UNICODEDATA := $(TOPDIR)/make/data/unicodedata/UnicodeData.txt
+
+# output
+BASE_DATA_PKG_DIR := $(JDK_OUTPUTDIR)/modules/java.base/sun/text/resources
+LD_DATA_PKG_DIR := $(JDK_OUTPUTDIR)/modules/jdk.localedata/sun/text/resources/ext
+BIFILES := $(BASE_DATA_PKG_DIR)/CharacterBreakIteratorData \
+    $(BASE_DATA_PKG_DIR)/WordBreakIteratorData \
+    $(BASE_DATA_PKG_DIR)/LineBreakIteratorData \
+    $(BASE_DATA_PKG_DIR)/SentenceBreakIteratorData
+BIFILES_TH := $(LD_DATA_PKG_DIR)/WordBreakIteratorData_th \
+    $(LD_DATA_PKG_DIR)/LineBreakIteratorData_th
+
+$(BIFILES): $(BASE_DATA_PKG_DIR)/_the.bifiles
+$(BASE_DATA_PKG_DIR)/_the.bifiles: JAVA_FLAGS += $(BREAK_ITERATOR_BOOTCLASSPATH)
+$(BASE_DATA_PKG_DIR)/_the.bifiles: $(BUILD_TOOLS_JDK) $(UNICODEDATA) \
+    $(BUILD_BREAKITERATOR_BASE) $(BUILD_BREAKITERATOR_LD)
+	$(call LogInfo, Generating BreakIteratorData)
+	$(call MakeDir, $(@D))
+	$(RM) $(BIFILES)
+	$(TOOL_GENERATEBREAKITERATORDATA) \
+	    -o $(@D) \
+	    -spec $(UNICODEDATA)
+	$(TOUCH) $@
+
+$(BIFILES_TH): $(LD_DATA_PKG_DIR)/_the.bifiles_th
+$(LD_DATA_PKG_DIR)/_the.bifiles_th: JAVA_FLAGS += $(BREAK_ITERATOR_BOOTCLASSPATH)
+$(LD_DATA_PKG_DIR)/_the.bifiles_th: $(BUILD_TOOLS_JDK) $(UNICODEDATA) \
+    $(BUILD_BREAKITERATOR_BASE) $(BUILD_BREAKITERATOR_LD)
+	$(call LogInfo, Generating BreakIteratorData_th)
+	$(RM) $(BIFILES_TH)
+	$(TOOL_GENERATEBREAKITERATORDATA) \
+	    -o $(@D) \
+	    -spec $(UNICODEDATA) \
+	    -language th
+	$(TOUCH) $@
+
+TARGETS += $(BIFILES) $(BIFILES_TH)

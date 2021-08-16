@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>The AWT Modality</title>
+  <style>
+    td {text-align: center;}
+  </style>
+</head>
+<!--
+ Copyright (c) 2005, 2021, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Oracle designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Oracle in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+
+<body>
+<main role="main">
+    <h1>The AWT Modality</h1>
+
+    <p>
+      This document, together with the API documentation for modality-related
+      classes (such as <code>java.awt.Dialog</code>), briefly describes the new
+      modality features and how to use them. It contains the following sections:
+    </p><ul>
+      <li><a href="#Definitions">Definitions</a></li>
+      <li><a href="#ModalityTypes">Modality types</a></li>
+      <li><a href="#ShowHideBlocking">Show/hide blocking</a></li>
+      <li><a href="#ModalExclusion">Modal exclusion</a></li>
+      <li><a href="#Related">Related AWT features</a></li>
+      <li><a href="#Security">Security</a></li>
+      <li><a href="#PlatformSupport">Platform support</a></li>
+      <li><a href="#Compatibility">Compatibility</a></li>
+      <li><a href="#Examples">Examples</a></li>
+    </ul>
+
+    <a id="Definitions"></a>
+    <h2>Definitions</h2>
+
+    <p>
+      Document - a window without an owner that, together with
+      all its child hierarchy, may be operated on as a single self-contained
+      document.
+      Every window belongs to some document &mdash; its root can be found as
+      the closest ancestor window without an owner.
+    </p><p>
+      <a id="ModalBlocked"></a>
+      Modal blocked window - a window, that:
+      </p><ul>
+        <li>doesn't receive any user input events
+        </li><li>doesn't receive input focus
+        </li><li>keeps its Z-order below the modal dialog that blocks it
+      </li></ul>
+      <blockquote>
+        <hr>
+          <b>Warning!</b> Some window managers allow users to change the window
+          Z-order in an arbitrary way &mdash; in that case the last requirement
+          may not be met.
+        <hr>
+      </blockquote>
+    <p>
+      Modal dialog - a dialog that blocks some windows while it is
+      visible. The blocked windows are determined according to the dialog's
+      scope of blocking.
+    </p><p>
+      Modal excluded window - a window that stays unblocked
+      while the modal dialog is visible. If a window is modal excluded
+      then all its owned windows and child components are also excluded.
+    </p><p>
+      Scope of blocking (SB) - the set of windows (instances of
+      <code>java.awt.Window</code> and all derived classes) that are blocked by
+      the modal dialog while it is visible.
+     <blockquote><hr>
+      <b>Note</b>: Everywhere in this document the notion of "window" is equal
+      to a top-level window in the Java programming language &mdash; in other words
+      an instance of <code>java.awt.Window</code> or any descendant class.
+      <hr></blockquote>
+
+    <a id="ModalityTypes"></a>
+    <h2>Modality types</h2>
+
+    <p>
+      There are four supported modality types :
+      </p><ul>
+        <li>toolkit
+        </li><li>application
+        </li><li>document
+        </li><li>modeless
+      </li></ul>
+      A dialog is, by default, modeless.  A modal dialog is, by default,
+      application-modal.
+    <ol>
+      <li>Modeless dialogs<br>
+        A modeless dialog doesn't block any windows while visible.
+      </li><li>Document-modal dialogs<br>
+        A document-modal dialog blocks all windows from the same
+        document except those from its child hierarchy. The document root
+        is determined as the closest ancestor window without an
+        owner.
+      </li><li>Application-modal dialogs<br>
+        An application-modal dialog blocks all windows from the same
+        application except for those from its child hierarchy.
+        If there are several applets launched in a browser, they can be
+        treated either as separate applications or a single application.
+	This behavior is implementation-dependent.
+      </li><li>Toolkit-modal dialogs<br>
+        A toolkit-modal dialog blocks all windows that run in the same
+        toolkit except those from its child hierarchy. If there
+        are several applets launched all of them run with the same toolkit,
+        so a toolkit-modal dialog shown from an applet may affect other
+        applets and all windows of the browser instance which embeds the
+        Java runtime environment for this toolkit.
+        See the security section below.
+    </li></ol>
+    <p>
+      Modality priority is arranged by the strength of blocking: modeless,
+      document-modal, application-modal and toolkit-modal. This arrangement
+      is used when determining what dialog should remain unblocked if two
+      are visible and block each other. It naturally reflects the nesting
+      of a dialog's scope of blocking (SB): a modeless dialog has an empty SB,
+      a document-modal dialog's SB is complete in some applications,
+      and all the applications are run in one toolkit.  </p><p>
+      Notes about owners:
+      </p><ul>
+        <li>Creating a document-modal dialog without an owner:<br>
+          Since <code>Dialog</code> is a class derived from
+	  <code>Window</code>, a <code>Dialog</code> instance automatically
+          becomes the root of the document if it has no owner. Thus, if
+          such a dialog is document-modal, its scope of blocking is empty
+          and it behaves the same way as a modeless dialog.
+        </li><li>Creating an application-modal or toolkit-modal dialog with an
+	  owner:<br>
+          The scope of blocking for an application- or toolkit-modal
+          dialog, as opposed to a document-modal dialog, doesn't depend on
+          its owner. Thus, in this case the only thing that the owner
+          affects is the Z-order: the dialog always stays on top of its owner.
+      </li></ul>
+    <blockquote><hr>
+      <b>Implementation note</b>: Changing the modality type for a visible
+      dialog may have no effect until it is hidden and then shown again.
+      <hr></blockquote>
+
+    <a id="ShowHideBlocking"></a>
+    <h2>Show/hide blocking</h2>
+
+    <p>
+      Showing the window or modeless dialog: "F"<br>
+      All the visible modal dialogs are looked through &mdash; if F is from the SB
+      of one of them, it becomes blocked by it. If there are several such
+      dialogs, the first shown is used. If no such dialogs exist, F remains
+      unblocked.
+    </p><p>
+      Showing the modal dialog: "M"<br>
+      When modal dialog M is shown, all the visible windows fall into one of
+      three distinct groups:
+      <ul>
+      <li>Blockers of M (modal dialogs that block M and
+      either are in M's child hierarchy, or are not blocked by M, or have
+      a greater mode of modality, or block some other blocker of M)
+      <li>Blocked by M (windows from M's SB that are not blockers and are
+      not in child hierarchy of any blocker)
+      <li>All other windows (windows or modeless
+      dialogs outside M's SB and modal dialogs outside M's SB that do not
+      block M).
+      </ul>
+      <p>
+      After the modal dialog M is shown, it becomes blocked by the first shown
+      dialog from the first group (if there are any), all the windows from the
+      second one become blocked by M, and all the windows from the third group
+      remain untouched.
+    </p><p>
+      In typical cases, when no child dialogs are shown before their owners,
+      this rule can be simplified. (The following, simplified case, may
+      leave out some details).
+      </p><p>
+      Showing the document-modal dialog: "M"<br>
+      All the visible application- and toolkit-modal dialogs are looked
+      through &mdash; if M is from the SB of one of them,
+      it becomes blocked by it. If there are several such dialogs,
+      the first shown is used. If no such dialogs exist, M remains unblocked.
+      </p><p>
+      Showing the application-modal dialog: "M"<br>
+      All the visible toolkit-modal dialogs are looked through &mdash;
+      if M is from the SB of one of them, it becomes blocked by it.
+      If there are several such dialogs, the first shown is used.
+      If no such dialogs exist, M remains unblocked.
+      </p><p>
+      Showing the toolkit-modal dialog: "M"<br>
+      M remains unblocked.
+
+          <table class="striped">
+	        <caption>The Standard Blocking Matrix</caption>
+            <thead><tr>
+              <th scope="col">current/shown</th>
+              <th scope="col">frame &amp; modeless</th>
+              <th scope="col">document</th>
+              <th scope="col">application</th>
+              <th scope="col">toolkit</th>
+            </tr></thead>
+            <tbody><tr>
+              <th scope="row">-</th>
+              <td>-</td>
+              <td>-</td>
+              <td>-</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <th scope="row">document</th>
+              <td>blocked</td>
+              <td>-</td>
+              <td>-</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <th scope="row">application</th>
+              <td>blocked</td>
+              <td>blocked</td>
+              <td>-</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <th scope="row">toolkit</th>
+              <td>blocked</td>
+              <td>blocked</td>
+              <td>blocked</td>
+              <td>-</td>
+            </tr>
+          </tbody>
+        </table>
+      <p>
+      After the modal dialog is shown, all the windows from its SB are blocked,
+      except those that block this modal dialog.
+    </p><p>
+      Hiding the window or modeless dialog: "F"<br>
+      If F was blocked by any modal dialog M, it becomes unblocked and is
+      removed from M's blocked windows list.
+    </p><p>
+      Hiding the modal dialog: "M"<br>
+      If M was blocked by any other modal dialog, for example, "N",
+      it becomes unblocked and
+      is removed from N's blocked windows list. Then, all the windows and dialogs
+      blocked by M become unblocked, and after that the same checks
+      (as in Showing the modal dialog: "M")
+      are performed for each of them in the order they were initially shown.
+
+    <a id="ModalExclusion"></a>
+    </p><h2>Modal exclusion</h2>
+
+    <p>
+      There are two modal exclusion types introduced as of JDK 6
+      </p><ul>
+        <li>Exclusion from blocking of toolkit-modal dialogs
+        </li><li>Exclusion from blocking of application-modal dialogs
+      </li></ul>
+      By default, a window's modal exclusion property is turned off.
+      <ol>
+        <li>Application-modal exclusion<br>
+          If a window is application-modal excluded, it is not blocked by any
+          application-modal dialogs. Also, it is not blocked by document-modal
+          dialogs from outside of its child hierarchy.
+        </li><li>Toolkit-modal exclusion<br>
+          If a window is toolkit-modal excluded, it is not blocked
+          by any application- or toolkit-modal dialogs. Also, it is not
+          blocked by document-modal dialogs from outside of their child hierarchy.
+      </li></ol>
+    <blockquote>
+      <hr>
+        <b>Implementation note</b>: Changing the modal exclusion type for a visible window
+        may have no effect until it is hidden and then shown again.<hr>
+    </blockquote>
+
+    <a id="Related"></a>
+    <h2>Related AWT features</h2>
+
+    <p>
+      Always-On-Top<br>
+      When a modal dialog that is not always-on-top blocks an always-on-top window,
+      their relative Z-order is unspecified and platform-dependent.
+    </p>
+    <p>
+      The <code>toFront()</code> and <code>toBack()</code> methods<br>
+      A modal dialog should always be above all its blocked windows. Thus, if a blocked
+      window is brought to the front, its blocking dialog, if any, is also brought to the
+      front and remains above the blocked window. Likewise, if a modal dialog is sent to
+      the back, all of its blocked windows are sent to the back to keep them below the
+      blocking dialog.
+    </p>
+    <p>
+      Minimizing, maximizing and closing blocked windows<br>
+      When a modal dialog blocks a window, the user may not be able to maximize or
+      minimize the blocked window&mdash; however, the actual behavior is unspecified
+      and platform-dependent. In any case, the user can't close the blocked window
+      interactively&mdash; but it can be closed programmatically by calling the
+      <code>setVisible(false)</code> or <code>dispose()</code> methods on the blocked
+      window.
+    </p>
+    <p>
+      Blocked windows activations<br>
+      When the user selects a blocked window, it may be brought to the front, along
+      with the blocking modal dialog which would then become the active window&mdash;
+      however, the actual behavior is unspecified and platform-dependent.
+    </p>
+    <p>
+      Hiding a modal dialog<br>
+      When the modal dialog that currently has focus is hidden, it is unspecified
+      and platform-dependent, which other window will become the active window.
+      Any of the following may become the active window:
+      <ol>
+        <li>The owner of the modal dialog - if the owner is unblocked.
+        </li><li>The <code>Window</code>, which was active before this modal dialog gained
+        focus - if the owner of the modal dialog is absent or is blocked.
+      </li></ol>
+      If the modal dialog to be hidden does not have focus, the active window remains
+      unchanged.
+
+    <a id="Security"></a>
+    <h2>Security</h2>
+
+    <p>
+      A special <code>AWTPermission</code>, <code>"toolkitModality"</code>,
+      is required to show toolkit-modal
+      dialogs. This would prevent, for example, blocking a browser or
+      Java Web Start (JWS) by modal dialogs shown from applets.
+    </p><p>
+      The same permission is required to exclude a window from toolkit modality.
+      This would prevent, for example, a dialog shown from an applet not to be
+      blocked by a browser's or JWS's modal dialog.
+
+    <a id="PlatformSupport"></a>
+    </p><h2>Platform support</h2>
+
+    <p>
+      Two <code>java.awt.Toolkit</code> methods allow you to check whether
+      the current platform supports specific modality features:
+      </p><ul>
+        <li><code>isModalityTypeSupported(modalityType)</code><br>
+          Returns whether the specified modality type is supported on
+	  the current platform.
+          If mode "M" is not supported and a dialog is set to M-modal,
+          it behaves as modeless.
+        </li>
+	<li><code>isModalExclusionTypeSupported(modalExclusionType)</code><br>
+          Returns whether the given modal exclusion type is supported on
+	  the current platform. If exclusion type "E" is not supported
+	  and a window is marked as E-excluded, this has no effect.
+      </li></ul>
+
+    <a id="Compatibility"></a>
+    <h2>Compatibility</h2>
+
+    <p>
+      The default modality type is application-modal. It is used by the API
+      calls: <code>Dialog.setModal(true)</code>,
+      <code>Dialog(owner, true)</code>, etc. Prior to JDK 6
+      the default type was toolkit-modal,
+      but the only distinction between application- and toolkit-modality is for
+      applets and applications launched from Java Web Start.
+
+    <a id="Examples"></a>
+    </p><h2>Examples</h2>
+
+    <h3>Example 1</h3>
+    <ol style="float: left">
+        <li>Frame F is shown<br>
+        <li>Document-modal dialog D<sub>i</sub> is shown<br>
+        <li>F becomes blocked by D<sub>i</sub> &mdash; it's in the same document<br>
+        <li>Document-modal dialog D<sub>ii</sub> is shown<br>
+        <li>D<sub>i</sub> becomes blocked by D<sub>ii</sub> &mdash; it's in the
+            same document<br>
+    </ol>
+    <p style="float: left; margin-left: 1em">
+        <img src="modal-example1.gif" alt="Example 1">
+    </p>
+
+    <h3 style="clear: left">Example 2</h3>
+    <ol style="float: left">
+        <li>Frame F is shown<br>
+        <li>Document-modal dialog D<sub>i</sub> is shown<br>
+        <li>F becomes blocked by D<sub>i</sub> &mdash; it's in the same document<br>
+        <li>Document-modal dialog D<sub>ii</sub> is shown<br>
+        <li>D<sub>i</sub> becomes blocked by D<sub>ii</sub> &mdash; it's in the
+            same document<br>
+    </ol>
+    <p style="float: left; margin-left: 1em">
+        <img src="modal-example2.gif" alt="Example 2">
+    </p>
+
+    <h3 style="clear: left">Example 3</h3>
+    <ol style="float: left">
+        <li>Frame F is shown<br>
+        <li>Toolkit-modal dialog D<sub>i</sub> is created, but not shown<br>
+        <li>Document-modal dialog D<sub>ii</sub> is shown<br>
+        <li>F becomes blocked by D<sub>ii</sub> &mdash; it's in the same document<br>
+        <li>Application-modal dialog D<sub>iii</sub> is shown<br>
+        <li>D<sub>ii</sub> becomes blocked by D<sub>iii</sub> &mdash;
+            it's in the same application<br>
+        <li>D<sub>i</sub> is shown<br>
+        <li>D<sub>i</sub> becomes blocked by D<sub>ii</sub> &mdash; it's its owner<br>
+        <li>D<sub>iii</sub> remains unblocked &mdash; it blocks D<sub>ii</sub> and
+            D<sub>ii</sub> blocks D<sub>i</sub><br>
+    </ol>
+    <p style="float: left; margin-left: 1em">
+        <img src="modal-example3.gif" alt="Example 3">
+    </p>
+
+    <h3 style="clear: left">Example 4</h3>
+    <ol style="float: left">
+        <li>Frame F is shown<br>
+        <li>Toolkit-modal dialog D<sub>i</sub> is created, but not shown<br>
+        <li>Document-modal dialog D<sub>ii</sub> is shown<br>
+        <li>F becomes blocked by D<sub>ii</sub> &mdash; it's in the same document<br>
+        <li>Application-modal dialog D<sub>iii</sub> is shown<br>
+        <li>D<sub>ii</sub> becomes blocked by D<sub>iii</sub> &mdash; it's in the
+            same application<br>
+        <li>D<sub>i</sub> is shown<br>
+        <li>D<sub>iii</sub> becomes blocked by D<sub>i</sub> &mdash; D<sub>i</sub>
+            is not blocked<br>
+        <li>D<sub>i</sub> remains unblocked<br>
+    </ol>
+    <p style="float: left; margin-left: 1em">
+        <img src="modal-example4.gif" alt="Example 4">
+    </p>
+    <br style="clear:both;">
+</main>
+</body></html>

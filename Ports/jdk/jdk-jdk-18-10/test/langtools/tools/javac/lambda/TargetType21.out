@@ -1,0 +1,5 @@
+TargetType21.java:28:9: compiler.err.ref.ambiguous: call, kindname.method, call(TargetType21.SAM2), TargetType21, kindname.method, <R,A>call(TargetType21.SAM3<R,A>), TargetType21
+TargetType21.java:32:9: compiler.err.ref.ambiguous: call, kindname.method, call(TargetType21.SAM1), TargetType21, kindname.method, <R,A>call(TargetType21.SAM3<R,A>), TargetType21
+TargetType21.java:32:13: compiler.err.cant.apply.symbol: kindname.method, call, TargetType21.SAM1, @14, kindname.class, TargetType21, (compiler.misc.no.conforming.assignment.exists: (compiler.misc.incompatible.ret.type.in.lambda: (compiler.misc.inconvertible.types: java.lang.Object, java.lang.String)))
+TargetType21.java:33:9: compiler.err.ref.ambiguous: call, kindname.method, call(TargetType21.SAM1), TargetType21, kindname.method, <R,A>call(TargetType21.SAM3<R,A>), TargetType21
+4 errors

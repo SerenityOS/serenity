@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2021 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<ldml>
+	<identity>
+		<version number="$Revision$"/>
+		<language type="es"/>
+		<territory type="DO"/>
+	</identity>
+	<localeDisplayNames>
+		<languages>
+			<language type="ace" draft="contributed">acehnés</language>
+			<language type="arp" draft="contributed">arapaho</language>
+			<language type="bho" draft="contributed">bhojpuri</language>
+			<language type="eu" draft="contributed">euskera</language>
+			<language type="grc" draft="contributed">griego antiguo</language>
+			<language type="lo" draft="contributed">lao</language>
+			<language type="nso" draft="contributed">sotho septentrional</language>
+			<language type="pa" draft="contributed">punyabí</language>
+			<language type="ss" draft="contributed">siswati</language>
+			<language type="sw" draft="contributed">suajili</language>
+			<language type="sw_CD" draft="contributed">suajili del Congo</language>
+			<language type="tn" draft="contributed">setswana</language>
+			<language type="wo" draft="contributed">wolof</language>
+			<language type="zgh" draft="contributed">tamazight marroquí estándar</language>
+		</languages>
+		<territories>
+			<territory type="BA" draft="contributed">Bosnia y Herzegovina</territory>
+			<territory type="GB" alt="short" draft="contributed">RU</territory>
+			<territory type="TA" draft="contributed">Tristán de Acuña</territory>
+			<territory type="UM" draft="contributed">Islas menores alejadas de EE. UU.</territory>
+		</territories>
+	</localeDisplayNames>
+	<dates>
+		<calendars>
+			<calendar type="generic">
+				<dateFormats>
+					<dateFormatLength type="medium">
+						<dateFormat>
+							<pattern draft="contributed">dd/MM/y G</pattern>
+						</dateFormat>
+					</dateFormatLength>
+				</dateFormats>
+			</calendar>
+			<calendar type="gregorian">
+				<days>
+					<dayContext type="format">
+						<dayWidth type="narrow">
+							<day type="sun" draft="contributed">D</day>
+							<day type="mon" draft="contributed">L</day>
+							<day type="tue" draft="contributed">M</day>
+							<day type="wed" draft="contributed">M</day>
+							<day type="thu" draft="contributed">J</day>
+							<day type="fri" draft="contributed">V</day>
+							<day type="sat" draft="contributed">S</day>
+						</dayWidth>
+					</dayContext>
+				</days>
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1" draft="contributed">Q1</quarter>
+							<quarter type="2" draft="contributed">Q2</quarter>
+							<quarter type="3" draft="contributed">Q3</quarter>
+							<quarter type="4" draft="contributed">Q4</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1" draft="contributed">Q1</quarter>
+							<quarter type="2" draft="contributed">Q2</quarter>
+							<quarter type="3" draft="contributed">Q3</quarter>
+							<quarter type="4" draft="contributed">Q4</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dayPeriods>
+					<dayPeriodContext type="format">
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="noon" draft="contributed">mediodía</dayPeriod>
+							<dayPeriod type="morning1" draft="contributed">día</dayPeriod>
+							<dayPeriod type="morning2" draft="contributed">mañana</dayPeriod>
+							<dayPeriod type="evening1" draft="contributed">tarde</dayPeriod>
+							<dayPeriod type="night1" draft="contributed">noche</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+					<dayPeriodContext type="stand-alone">
+						<dayPeriodWidth type="narrow">
+							<dayPeriod type="noon" draft="contributed">m.</dayPeriod>
+						</dayPeriodWidth>
+					</dayPeriodContext>
+				</dayPeriods>
+				<eras>
+					<eraNames>
+						<era type="0" alt="variant" draft="contributed">antes de la Era Común</era>
+						<era type="1" alt="variant" draft="contributed">Era Común</era>
+					</eraNames>
+				</eras>
+				<timeFormats>
+					<timeFormatLength type="full">
+						<timeFormat>
+							<pattern draft="contributed">h:mm:ss a zzzz</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="long">
+						<timeFormat>
+							<pattern draft="contributed">h:mm:ss a z</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="medium">
+						<timeFormat>
+							<pattern draft="contributed">h:mm:ss a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+					<timeFormatLength type="short">
+						<timeFormat>
+							<pattern draft="contributed">h:mm a</pattern>
+						</timeFormat>
+					</timeFormatLength>
+				</timeFormats>
+				<dateTimeFormats>
+					<availableFormats>
+						<dateFormatItem id="yMMMd" draft="contributed">d MMM 'de' y</dateFormatItem>
+					</availableFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="era">
+				<displayName draft="contributed">Era</displayName>
+			</field>
+			<field type="year">
+				<displayName draft="contributed">Año</displayName>
+			</field>
+			<field type="quarter">
+				<displayName draft="contributed">Trimestre</displayName>
+			</field>
+			<field type="month">
+				<displayName draft="contributed">Mes</displayName>
+			</field>
+			<field type="week">
+				<displayName draft="contributed">Semana</displayName>
+			</field>
+			<field type="day">
+				<displayName draft="contributed">Día</displayName>
+			</field>
+			<field type="weekday">
+				<displayName draft="contributed">Día de la semana</displayName>
+			</field>
+			<field type="minute">
+				<displayName draft="contributed">Minuto</displayName>
+			</field>
+			<field type="second">
+				<displayName draft="contributed">Segundo</displayName>
+			</field>
+		</fields>
+	</dates>
+	<numbers>
+		<currencyFormats numberSystem="latn">
+			<currencyFormatLength>
+				<currencyFormat type="accounting">
+					<pattern draft="contributed">¤#,##0.00;(¤#,##0.00)</pattern>
+				</currencyFormat>
+			</currencyFormatLength>
+		</currencyFormats>
+		<currencies>
+			<currency type="DOP">
+				<symbol>RD$</symbol>
+			</currency>
+			<currency type="USD">
+				<symbol>US$</symbol>
+			</currency>
+		</currencies>
+	</numbers>
+	<units>
+		<unitLength type="long">
+			<unit type="electric-ampere">
+				<displayName draft="contributed">amperios</displayName>
+				<unitPattern count="one" draft="contributed">{0} amperio</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} amperios</unitPattern>
+			</unit>
+			<unit type="electric-milliampere">
+				<displayName draft="contributed">miliamperios</displayName>
+				<unitPattern count="one" draft="contributed">{0} miliamperio</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} miliamperios</unitPattern>
+			</unit>
+			<unit type="electric-ohm">
+				<unitPattern count="one">{0} ohmio</unitPattern>
+				<unitPattern count="other">{0} ohmios</unitPattern>
+			</unit>
+		</unitLength>
+		<unitLength type="short">
+			<unit type="duration-day">
+				<displayName draft="contributed">d.</displayName>
+			</unit>
+			<unit type="duration-second">
+				<displayName draft="contributed">seg.</displayName>
+				<unitPattern count="one" draft="contributed">{0} seg.</unitPattern>
+				<unitPattern count="other" draft="contributed">{0} seg.</unitPattern>
+			</unit>
+			<unit type="electric-volt">
+				<displayName draft="contributed">voltios</displayName>
+			</unit>
+			<unit type="power-watt">
+				<displayName draft="contributed">vatios</displayName>
+			</unit>
+		</unitLength>
+		<unitLength type="narrow">
+			<unit type="duration-month">
+				<unitPattern count="one" draft="contributed">{0}m.</unitPattern>
+				<unitPattern count="other" draft="contributed">{0}m.</unitPattern>
+			</unit>
+			<unit type="duration-day">
+				<unitPattern count="one" draft="contributed">{0}d.</unitPattern>
+				<unitPattern count="other" draft="contributed">{0}d.</unitPattern>
+			</unit>
+		</unitLength>
+	</units>
+	<listPatterns>
+		<listPattern type="unit-narrow">
+			<listPatternPart type="end" draft="contributed">{0} y {1}</listPatternPart>
+		</listPattern>
+		<listPattern type="unit-short">
+			<listPatternPart type="end" draft="contributed">{0} y {1}</listPatternPart>
+		</listPattern>
+	</listPatterns>
+</ldml>

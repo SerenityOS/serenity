@@ -1,0 +1,11 @@
+BadLocalVarInferenceTest.java:19:13: compiler.err.cant.infer.local.var.type: x, (compiler.misc.local.missing.init)
+BadLocalVarInferenceTest.java:20:13: compiler.err.cant.infer.local.var.type: f, (compiler.misc.local.lambda.missing.target)
+BadLocalVarInferenceTest.java:21:13: compiler.err.cant.infer.local.var.type: m, (compiler.misc.local.mref.missing.target)
+BadLocalVarInferenceTest.java:22:13: compiler.err.cant.infer.local.var.type: g, (compiler.misc.local.cant.infer.null)
+BadLocalVarInferenceTest.java:23:13: compiler.err.cant.infer.local.var.type: d, (compiler.misc.local.self.ref)
+BadLocalVarInferenceTest.java:24:13: compiler.err.cant.infer.local.var.type: k, (compiler.misc.local.array.missing.target)
+BadLocalVarInferenceTest.java:25:29: compiler.err.does.not.override.abstract: compiler.misc.anonymous.class: BadLocalVarInferenceTest$1, m(java.lang.Object), BadLocalVarInferenceTest.Foo
+BadLocalVarInferenceTest.java:26:13: compiler.err.method.does.not.override.superclass
+BadLocalVarInferenceTest.java:29:27: compiler.err.cant.resolve.location.args: kindname.method, charAt, , int, (compiler.misc.location.1: kindname.variable, x, java.lang.Object)
+BadLocalVarInferenceTest.java:30:13: compiler.err.cant.infer.local.var.type: t, (compiler.misc.local.cant.infer.void)
+10 errors

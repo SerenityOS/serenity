@@ -1,0 +1,2 @@
+T7085024.java:11:32: compiler.err.cant.resolve.location: kindname.class, NonExistentClass, , , (compiler.misc.location: kindname.class, T7085024, null)
+1 error

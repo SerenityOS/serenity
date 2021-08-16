@@ -1,0 +1,2 @@
+T8194932.java:11:12: compiler.err.ref.ambiguous: m, kindname.method, m(), Foo, kindname.method, m(), Foo
+1 error

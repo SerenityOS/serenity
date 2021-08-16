@@ -1,0 +1,93 @@
+#
+# Copyright (c) 2016, 2017, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+default: all
+
+include $(SPEC)
+include MakeBase.gmk
+
+################################################################################
+# This makefile generates the "release" file into the exploded image. Jlink is
+# then responsible for using this as the base for release files in each linked
+# image.
+#
+################################################################################
+
+BASE_RELEASE_FILE := $(JDK_OUTPUTDIR)/release
+
+# Common way to emit a line into the release or info file
+define info-file-item # name value
+  $(PRINTF) '%s="%s"\n' $1 $2 >> $@
+endef
+
+# Param 1 - The file containing the MODULES list
+define create-info-file
+  $(if $(JDK_ARCH_ABI_PROP_NAME), \
+    $(call info-file-item, "SUN_ARCH_ABI", "$(JDK_ARCH_ABI_PROP_NAME)"))
+  $(call info-file-item, "SOURCE", "$(strip $(SOURCE_REVISION))")
+  $(call info-file-item, "IMPLEMENTOR", "$(COMPANY_NAME)")
+  $(if $(VENDOR_VERSION_STRING), \
+    $(call info-file-item, "IMPLEMENTOR_VERSION", "$(VENDOR_VERSION_STRING)"))
+  $(call info-file-item, "JAVA_VERSION_DATE", "$(VERSION_DATE)")
+  $(call info-file-item, "OS_NAME", "$(RELEASE_FILE_OS_NAME)")
+  $(call info-file-item, "OS_ARCH", "$(RELEASE_FILE_OS_ARCH)")
+  $(call info-file-item, "LIBC", "$(RELEASE_FILE_LIBC)")
+endef
+
+# Param 1 - The file containing the MODULES list
+define prepare-info-file
+  $(call LogInfo, Generating $(patsubst $(OUTPUTDIR)/%,%,$@))
+  $(call MakeDir, $(@D))
+  $(RM) $@
+endef
+
+define info-file
+  $(call prepare-info-file)
+  $(call create-info-file)
+endef
+
+# Create a variable dependency file common for all release info files.
+INFO_FILE_VARDEPS := $(call DependOnVariable, create-info-file)
+
+SOURCE_REVISION = $(shell \
+    if [ -f $(SOURCE_REVISION_TRACKER) ] ; then \
+      $(CAT) $(SOURCE_REVISION_TRACKER) ; \
+    fi)
+
+# The SOURCE_REVISION_TRACKER file may not exist. Only depend on it if it does.
+$(BASE_RELEASE_FILE): $(INFO_FILE_VARDEPS) $(wildcard $(SOURCE_REVISION_TRACKER))
+	$(info-file)
+
+TARGETS += $(BASE_RELEASE_FILE)
+
+################################################################################
+
+$(eval $(call IncludeCustomExtension, ReleaseFile.gmk))
+
+################################################################################
+
+all: $(TARGETS)
+
+.PHONY: all default

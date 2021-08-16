@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <xsd:element name="root">
+                <xsd:complexType>
+                        <xsd:sequence>
+                                <xsd:element ref="tid" maxOccurs="unbounded"/>
+                        </xsd:sequence>
+                </xsd:complexType>
+                <xsd:unique name="uid">
+                        <xsd:selector xpath=".//tid"/>
+                        <xsd:field xpath="./ /."/>
+                </xsd:unique>
+        </xsd:element>
+        <xsd:element name="tid" type="xsd:string"/>
+</xsd:schema>

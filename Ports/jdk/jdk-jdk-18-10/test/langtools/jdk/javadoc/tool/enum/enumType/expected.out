@@ -1,0 +1,18 @@
+enum pkg1.QuotablePerson
+  name: QuotablePerson / pkg1.QuotablePerson / pkg1.QuotablePerson
+  superclass:
+    java.lang.Enum<pkg1.QuotablePerson>
+  enum constants:
+    Thoreau
+    McLuhan
+    Pynchon
+    Mencken
+    Allen
+    Vidal
+    Occam
+    Groening
+    Juvenal
+    Eco
+  methods:
+    pkg1.QuotablePerson[] values()
+    pkg1.QuotablePerson valueOf(String)

@@ -1,0 +1,150 @@
+#
+# This is the copy of the old configuration files sbcs, dbcs and extsbcs
+# used in jdk8.
+############################### sbcs #########################################
+#
+# clzName	csName		hisName		containASCII	pkg
+#
+IBM437		IBM437		Cp437		false		sun.nio.cs
+IBM737		x-IBM737	Cp737		false		sun.nio.cs	
+IBM775		IBM775		Cp775		false		sun.nio.cs
+IBM850		IBM850		Cp850		false		sun.nio.cs
+IBM852		IBM852		Cp852		false		sun.nio.cs
+IBM855		IBM855		Cp855		false		sun.nio.cs
+IBM857		IBM857		Cp857		false		sun.nio.cs	
+IBM858		IBM00858	Cp858		false		sun.nio.cs
+IBM862		IBM862		Cp862		false		sun.nio.cs
+IBM866		IBM866		Cp866		false		sun.nio.cs
+IBM874		x-IBM874	Cp874		false		sun.nio.cs
+ISO_8859_2	ISO-8859-2	ISO8859_2	true		sun.nio.cs
+ISO_8859_4	ISO-8859-4	ISO8859_4	true		sun.nio.cs
+ISO_8859_5	ISO-8859-5	ISO8859_5	true		sun.nio.cs
+ISO_8859_7	ISO-8859-7	ISO8859_7	true		sun.nio.cs
+ISO_8859_9	ISO-8859-9	ISO8859_9	true		sun.nio.cs
+ISO_8859_13	ISO-8859-13	ISO8859_13	true		sun.nio.cs
+ISO_8859_15	ISO-8859-15	ISO8859_15	true		sun.nio.cs
+KOI8_R		KOI8-R		KOI8_R		true		sun.nio.cs
+KOI8_U		KOI8-U		KOI8_U		true		sun.nio.cs
+MS1250		windows-1250	Cp1250		true		sun.nio.cs
+MS1251		windows-1251	Cp1251		true		sun.nio.cs
+MS1252		windows-1252	Cp1252		true		sun.nio.cs
+MS1253		windows-1253	Cp1253		true		sun.nio.cs
+MS1254		windows-1254	Cp1254		true		sun.nio.cs
+MS1257		windows-1257	Cp1257		true		sun.nio.cs
+#
+############################### extsbcs #######################################
+#
+IBM037		IBM037		Cp037		false		sun.nio.cs.ext
+IBM1006		x-IBM1006	Cp1006		false		sun.nio.cs.ext
+IBM1025		x-IBM1025	Cp1025		false		sun.nio.cs.ext
+IBM1026		IBM1026		Cp1026		false		sun.nio.cs.ext
+IBM1046		x-IBM1046	Cp1046		false		sun.nio.cs.ext
+IBM1047		IBM1047		Cp1047		false		sun.nio.cs.ext
+IBM1097		x-IBM1097	Cp1097		false		sun.nio.cs.ext
+IBM1098		x-IBM1098	Cp1098		false		sun.nio.cs.ext
+IBM1112		x-IBM1112	Cp1112		false		sun.nio.cs.ext
+IBM1122		x-IBM1122	Cp1122		false		sun.nio.cs.ext
+IBM1123		x-IBM1123	Cp1123		false		sun.nio.cs.ext
+IBM1124		x-IBM1124	Cp1124		false		sun.nio.cs.ext
+# map tables for 1140-1149 are updated manualy with the u+20ac entry          
+IBM1140		IBM01140	Cp1140		false		sun.nio.cs.ext
+IBM1141		IBM01141	Cp1141		false		sun.nio.cs.ext
+IBM1142		IBM01142	Cp1142		false		sun.nio.cs.ext
+IBM1143		IBM01143	Cp1143		false		sun.nio.cs.ext
+IBM1144		IBM01144	Cp1144		false		sun.nio.cs.ext
+IBM1145		IBM01145	Cp1145		false		sun.nio.cs.ext
+IBM1146		IBM01146	Cp1146		false		sun.nio.cs.ext
+IBM1147		IBM01147	Cp1147		false		sun.nio.cs.ext
+IBM1148		IBM01148	Cp1148		false		sun.nio.cs.ext
+IBM1149		IBM01149	Cp1149		false		sun.nio.cs.ext
+IBM1166		x-IBM1166	Cp1166		false		sun.nio.cs.ext
+IBM273		IBM273		Cp273		false		sun.nio.cs.ext
+IBM277		IBM277		Cp277		false		sun.nio.cs.ext
+IBM278		IBM278		Cp278		false		sun.nio.cs.ext
+IBM280		IBM280		Cp280		false		sun.nio.cs.ext
+IBM284		IBM284		Cp284		false		sun.nio.cs.ext
+IBM285		IBM285		Cp285		false		sun.nio.cs.ext
+IBM290		IBM290		Cp290		false		sun.nio.cs.ext
+IBM297		IBM297		Cp297		false		sun.nio.cs.ext
+IBM420		IBM420		Cp420		false		sun.nio.cs.ext
+IBM424		IBM424		Cp424		false		sun.nio.cs.ext
+IBM500		IBM500		Cp500		false		sun.nio.cs.ext
+IBM833		x-IBM833	Cp833		false		sun.nio.cs.ext
+IBM838		IBM-Thai	Cp838		false		sun.nio.cs.ext
+IBM856		x-IBM856	Cp856		false		sun.nio.cs.ext
+IBM860		IBM860		Cp860		false		sun.nio.cs.ext
+IBM861		IBM861		Cp861		false		sun.nio.cs.ext
+IBM863		IBM863		Cp863		false		sun.nio.cs.ext
+IBM864		IBM864		Cp864		false		sun.nio.cs.ext
+IBM865		IBM865		Cp865		false		sun.nio.cs.ext
+IBM868		IBM868		Cp868		false		sun.nio.cs.ext
+IBM869		IBM869		Cp869		false		sun.nio.cs.ext
+IBM870		IBM870		Cp870		false		sun.nio.cs.ext
+IBM871		IBM871		Cp871		false		sun.nio.cs.ext
+IBM875		x-IBM875	Cp875		false		sun.nio.cs.ext
+IBM918		IBM918		Cp918		false		sun.nio.cs.ext
+IBM921		x-IBM921	Cp921		false		sun.nio.cs.ext
+IBM922		x-IBM922	Cp922		false		sun.nio.cs.ext
+# use name as hisname as well, cs did not support hisname prevously           
+ISO_8859_11	x-iso-8859-11	x-iso-8859-11	true		sun.nio.cs.ext
+ISO_8859_3	ISO-8859-3	ISO8859_3	true		sun.nio.cs.ext
+ISO_8859_6	ISO-8859-6	ISO8859_6	true		sun.nio.cs.ext
+ISO_8859_8	ISO-8859-8	ISO8859_8	true		sun.nio.cs.ext
+JIS_X_0201	JIS_X0201	JIS_X0201	true		sun.nio.cs.ext
+MS1255		windows-1255	Cp1255		true		sun.nio.cs.ext
+MS1256		windows-1256	Cp1256		true		sun.nio.cs.ext
+MS1258		windows-1258	Cp1258		true		sun.nio.cs.ext
+MS874		x-windows-874	MS874		true		sun.nio.cs.ext
+MacArabic	x-MacArabic	MacArabic	false		sun.nio.cs.ext
+MacCentralEurope	x-MacCentralEurope	MacCentralEurope	false	sun.nio.cs.ext
+MacCroatian	x-MacCroatian	MacCroatian	false		sun.nio.cs.ext
+MacCyrillic	x-MacCyrillic	MacCyrillic	false		sun.nio.cs.ext
+MacDingbat	x-MacDingbat	MacDingbat	false		sun.nio.cs.ext
+MacGreek	x-MacGreek	MacGreek	false		sun.nio.cs.ext
+MacHebrew	x-MacHebrew	MacHebrew	false		sun.nio.cs.ext
+MacIceland	x-MacIceland	MacIceland	false		sun.nio.cs.ext
+MacRoman	x-MacRoman	MacRoman	false		sun.nio.cs.ext
+MacRomania	x-MacRomania	MacRomania	false		sun.nio.cs.ext
+MacSymbol	x-MacSymbol	MacSymbol	false		sun.nio.cs.ext
+MacThai		x-MacThai	MacThai		false		sun.nio.cs.ext
+MacTurkish	x-MacTurkish	MacTurkish	false		sun.nio.cs.ext
+MacUkraine	x-MacUkraine	MacUkraine	false		sun.nio.cs.ext
+TIS_620		TIS-620		TIS620		true		sun.nio.cs.ext
+#
+############################### dbcs #########################################
+#
+#clzName  csName     hisName  dbtype    pkg               ascii   b1min  b1max  b2min b2max
+#
+Big5      Big5       Big5     basic     sun.nio.cs.ext    true    0xa1   0xf9   0x40  0xfe
+Johab     x-Johab    x-Johab  basic     sun.nio.cs.ext    true    0x84   0xf9   0x31  0xfe
+EUC_CN	  GB2312     EUC_CN   basic     sun.nio.cs.ext    true    0xa1   0xf7   0xa1  0xfe
+EUC_KR	  EUC-KR     EUC_KR   basic     sun.nio.cs.ext    true    0xa1   0xfd   0xa1  0xfe
+MS932	  windows-31j MS932   basic     sun.nio.cs.ext    true    0x81   0xfc   0x40  0xfc
+MS936	  x-mswin-936 MS936   basic     sun.nio.cs.ext    true    0x81   0xfe   0x40  0xfe
+MS949	  x-windows-949 MS949 basic     sun.nio.cs.ext    true    0x81   0xfe   0x41  0xfe
+MS950	  x-windows-950 MS950 basic     sun.nio.cs.ext    true    0x81   0xfe   0x40  0xfe
+GBK	  GBK        GBK      basic     sun.nio.cs.ext    true    0x81   0xfe   0x40  0xfe
+SJIS	  Shift_JIS  SJIS     basic     sun.nio.cs.ext    true    0x81   0xfc   0x40  0xfc
+PCK	  x-PCK      PCK      basic     sun.nio.cs.ext    true    0x81   0xfc   0x40  0xfc
+IBM1364	  x-IBM1364  Cp1364   ebcdic	sun.nio.cs.ext	  false   0x40   0xde   0x40  0xfe
+IBM1381	  x-IBM1381  Cp1381   basic     sun.nio.cs.ext    true    0x8c   0xf7   0xa1  0xfe
+IBM1383	  x-IBM1383  Cp1383   euc_sim   sun.nio.cs.ext    true    0xa1   0xfe   0xa1  0xfe
+IBM300	  x-IBM300   Cp300    dbcsonly  sun.nio.cs.ext    false   0x40   0x7f   0x40  0xfe
+IBM930	  x-IBM930   Cp930    ebcdic    sun.nio.cs.ext    false   0x40   0x7f   0x40  0xfe
+IBM933	  x-IBM933   Cp933    ebcdic    sun.nio.cs.ext    false   0x40   0xdd   0x40  0xfe
+IBM935	  x-IBM935   Cp935    ebcdic    sun.nio.cs.ext    false   0x40   0x7f   0x40  0xfe
+IBM937	  x-IBM937   Cp937    ebcdic    sun.nio.cs.ext    false   0x40   0xe2   0x40  0xfe
+IBM939	  x-IBM939   Cp939    ebcdic    sun.nio.cs.ext    false   0x40   0x7f   0x40  0xfe
+IBM942	  x-IBM942   Cp942    basic     sun.nio.cs.ext    false   0x81   0xfc   0x40  0xfc
+IBM943	  x-IBM943   Cp943    basic     sun.nio.cs.ext    false   0x81   0xfc   0x40  0xfc
+IBM948	  x-IBM948   Cp948    basic     sun.nio.cs.ext    true    0x81   0xfe   0x40  0xfc
+IBM949	  x-IBM949   Cp949    basic     sun.nio.cs.ext    false   0x8f   0xfe   0xa1  0xfe
+IBM950	  x-IBM950   Cp950    basic     sun.nio.cs.ext    true    0x81   0xfe   0x40  0xfe
+IBM970	  x-IBM970   Cp970    euc_sim   sun.nio.cs.ext    true    0xa1   0xfe   0xa1  0xfe
+JIS_X_0208          x-JIS0208          JIS0208          dbcsonly  sun.nio.cs.ext  false  0x21  0x7e  0x21  0x7e
+JIS_X_0212          JIS_X0212-1990     JIS0212          dbcsonly  sun.nio.cs.ext  false  0x21  0x7e  0x21  0x7e
+JIS_X_0208_Solaris  x-JIS0208_Solaris  JIS0208_Solaris  dbcsonly  sun.nio.cs.ext  false  0x21  0x9e  0x21  0x7e
+JIS_X_0208_MS5022X  x-JIS0208_MS5022X  JIS0208_MS5022X  dbcsonly  sun.nio.cs.ext  false  0x21  0x7e  0x21  0x7e
+JIS_X_0208_MS932    x-JIS0208_MS932    JIS0208_MS932    dbcsonly  sun.nio.cs.ext  false  0x21  0x7e  0x21  0x7e
+JIS_X_0212_Solaris  x-JIS0212_Solaris  JIS0212_Solaris  dbcsonly  sun.nio.cs.ext  false  0x21  0x7e  0x21  0x7e
+JIS_X_0212_MS5022X  x-JIS0212_MS5022X  JIS0212_MS5022X  dbcsonly  sun.nio.cs.ext  false  0x21  0x7e  0x21  0x7e

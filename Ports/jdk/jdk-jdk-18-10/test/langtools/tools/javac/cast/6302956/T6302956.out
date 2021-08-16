@@ -1,0 +1,2 @@
+T6302956.java:12:57: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: java.util.Properties, java.util.Map<java.lang.String,java.lang.String>)
+1 error

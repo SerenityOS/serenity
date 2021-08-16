@@ -1,0 +1,4 @@
+Warn2.java:18:18: compiler.warn.inexact.non-varargs.call: java.lang.Object, java.lang.Object[]
+- compiler.err.warnings.and.werror
+1 error
+1 warning

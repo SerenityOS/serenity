@@ -1,0 +1,8 @@
+AssignmentSameType.java:29:17: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<compiler.misc.type.captureof: 1, ? extends B>, Ref<B>)
+AssignmentSameType.java:30:17: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<compiler.misc.type.captureof: 1, ? super B>, Ref<B>)
+AssignmentSameType.java:31:17: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<compiler.misc.type.captureof: 1, ?>, Ref<B>)
+AssignmentSameType.java:32:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<compiler.misc.type.captureof: 1, ? super B>, Ref<? extends B>)
+AssignmentSameType.java:33:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<compiler.misc.type.captureof: 1, ?>, Ref<? extends B>)
+AssignmentSameType.java:34:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<compiler.misc.type.captureof: 1, ? extends B>, Ref<? super B>)
+AssignmentSameType.java:35:18: compiler.err.prob.found.req: (compiler.misc.inconvertible.types: Ref<compiler.misc.type.captureof: 1, ?>, Ref<? super B>)
+7 errors

@@ -1,0 +1,520 @@
+#
+# Copyright (c) 2000, 2016, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# Test data for FormatIteratorTest
+
+{
+  tests =
+  (
+    {
+      class = java.text.MessageFormat
+      args = ("0={0} 1={1}")
+      valueClass = java.lang.reflect.Array
+      valueArgs = ("zero" "one")
+    }
+    {
+      length = 12
+      text = "0=zero 1=one"
+      0 = ()
+      1 = ()
+      2 = (MessageFormat$Field.ARGUMENT)
+      3 = (MessageFormat$Field.ARGUMENT)
+      4 = (MessageFormat$Field.ARGUMENT)
+      5 = (MessageFormat$Field.ARGUMENT)
+      6 = ()
+      7 = ()
+      8 = ()
+      9 = (MessageFormat$Field.ARGUMENT)
+      10 = (MessageFormat$Field.ARGUMENT)
+      11 = (MessageFormat$Field.ARGUMENT)
+      limits = ( { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 2 end = 6}
+                 { attributes = ()
+                   begin = 0 begin2 = 0 end = 2 end2 = 12}
+                 { attributes = ()
+                   begin = 6 begin2 = 0 end = 9 end2 = 12}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 9 end = 12}
+               )
+      fieldPositions =
+      (
+        {
+          fieldID = MessageFormat$Field.ARGUMENT
+          begin = 2 end = 6
+        }
+      )
+    }
+
+    {
+      class = java.text.MessageFormat
+      args = ("0={0} 1={1} 0={0}")
+      valueClass = java.lang.reflect.Array
+      valueArgs = ("ze" "on")
+    }
+    {
+      length = 14
+      text = "0=ze 1=on 0=ze"
+      0 = ()
+      1 = ()
+      2 = (MessageFormat$Field.ARGUMENT)
+      3 = (MessageFormat$Field.ARGUMENT)
+      4 = ()
+      5 = ()
+      6 = ()
+      7 = (MessageFormat$Field.ARGUMENT)
+      8 = (MessageFormat$Field.ARGUMENT)
+      9 = ()
+      10 = ()
+      11 = ()
+      12 = (MessageFormat$Field.ARGUMENT)
+      13 = (MessageFormat$Field.ARGUMENT)
+      limits = (
+                 { attributes = ()
+                   begin = 0 end = 2 end2 = 14}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 2 end = 4}
+                 { attributes = ()
+                   begin = 4 begin2 = 0 end = 7 end2 = 14}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 7 end = 9}
+                 { attributes = ()
+                   begin = 9 begin2 = 0 end = 12 end2 = 14}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 12 end = 14}
+               )
+      fieldPositions =
+      (
+        {
+          fieldID = MessageFormat$Field.ARGUMENT
+          begin = 2 end = 4
+        }
+      )
+    }
+
+    {
+      class = java.text.MessageFormat
+      args = ("0={0,date} 1={1,number}")
+      valueClass = java.lang.reflect.Array
+      valueArgs = ((java.util.Date ("5/23/2001")) (Integer ("20122")))
+    }
+    {
+      length = 23
+      text = "0=May 23, 2001 1=20,122"
+      0 = ()
+      1 = ()
+      2 = (MessageFormat$Field.ARGUMENT DateFormat$Field.MONTH)
+      3 = (MessageFormat$Field.ARGUMENT DateFormat$Field.MONTH)
+      4 = (MessageFormat$Field.ARGUMENT DateFormat$Field.MONTH)
+      5 = (MessageFormat$Field.ARGUMENT)
+      6 = (MessageFormat$Field.ARGUMENT DateFormat$Field.DAY_OF_MONTH)
+      7 = (MessageFormat$Field.ARGUMENT DateFormat$Field.DAY_OF_MONTH)
+      8 = (MessageFormat$Field.ARGUMENT)
+      9 = (MessageFormat$Field.ARGUMENT)
+      10 = (MessageFormat$Field.ARGUMENT DateFormat$Field.YEAR)
+      11 = (MessageFormat$Field.ARGUMENT DateFormat$Field.YEAR)
+      12 = (MessageFormat$Field.ARGUMENT DateFormat$Field.YEAR)
+      13 = (MessageFormat$Field.ARGUMENT DateFormat$Field.YEAR)
+      14 = ()
+      15 = ()
+      16 = ()
+      17 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      18 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      19 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      20 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      21 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      22 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      limits = (
+                 { attributes = ()
+                   begin = 0 end = 2 end2 = 23}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 2 end = 5 end2 = 14}
+                 { attributes = (MessageFormat$Field.ARGUMENT
+                                 DateFormat$Field.MONTH)
+                   begin = 2 end = 5}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 5 begin2 = 2 end = 6 end2 = 14}
+                 { attributes = (DateFormat$Field.DAY_OF_MONTH)
+                   begin = 6 end = 8}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 8 begin2 = 2 end = 10 end2 = 14}
+                 { attributes = ()
+                   begin = 14 begin2 = 0 end = 17 end2 = 23}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 17 end = 19 end2 = 23}
+                 { attributes = (MessageFormat$Field.ARGUMENT
+                                 NumberFormat$Field.INTEGER)
+                   begin = 17 end = 19 end2 = 23}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 19 end = 20 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 20 begin2 = 17 end = 23}
+               )
+      fieldPositions =
+      (
+        {
+          fieldID = MessageFormat$Field.ARGUMENT
+          begin = 2 end = 14
+        }
+      )
+    }
+
+    {
+      class = java.text.MessageFormat
+      args = ("0={0,date} 1={1,number}")
+      valueClass = java.lang.reflect.Array
+      valueArgs = ((java.util.Date ("1/22/2003")) (java.math.BigInteger ("12345678901234567890123456789012345")))
+    }
+    {
+      length = 63
+      text = "0=Jan 22, 2003 1=12,345,678,901,234,567,890,123,456,789,012,345"
+      0 = ()
+      1 = ()
+      2 = (MessageFormat$Field.ARGUMENT DateFormat$Field.MONTH)
+      3 = (MessageFormat$Field.ARGUMENT DateFormat$Field.MONTH)
+      4 = (MessageFormat$Field.ARGUMENT DateFormat$Field.MONTH)
+      5 = (MessageFormat$Field.ARGUMENT)
+      6 = (MessageFormat$Field.ARGUMENT DateFormat$Field.DAY_OF_MONTH)
+      7 = (MessageFormat$Field.ARGUMENT DateFormat$Field.DAY_OF_MONTH)
+      8 = (MessageFormat$Field.ARGUMENT)
+      9 = (MessageFormat$Field.ARGUMENT)
+      10 = (MessageFormat$Field.ARGUMENT DateFormat$Field.YEAR)
+      11 = (MessageFormat$Field.ARGUMENT DateFormat$Field.YEAR)
+      12 = (MessageFormat$Field.ARGUMENT DateFormat$Field.YEAR)
+      13 = (MessageFormat$Field.ARGUMENT DateFormat$Field.YEAR)
+      14 = ()
+      15 = ()
+      16 = ()
+      17 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      18 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      19 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      20 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      21 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      22 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      23 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      24 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      25 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      26 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      27 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      28 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      29 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      30 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      31 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      32 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      33 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      34 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      35 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      36 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      37 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      38 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      39 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      40 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      41 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      42 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      43 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      44 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      45 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      46 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      47 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      48 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      49 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      50 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      51 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      52 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      53 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      54 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      55 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      56 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      57 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      58 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      59 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      60 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      61 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      62 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      limits = (
+                 { attributes = ()
+                   begin = 0 end = 2 end2 = 63}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 2 end = 5 end2 = 14}
+                 { attributes = (MessageFormat$Field.ARGUMENT
+                                 DateFormat$Field.MONTH)
+                   begin = 2 end = 5}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 5 begin2 = 2 end = 6 end2 = 14}
+                 { attributes = (DateFormat$Field.DAY_OF_MONTH)
+                   begin = 6 end = 8}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 8 begin2 = 2 end = 10 end2 = 14}
+                 { attributes = ()
+                   begin = 14 begin2 = 0 end = 17 end2 = 63}
+                 { attributes = (MessageFormat$Field.ARGUMENT
+                                 NumberFormat$Field.INTEGER)
+                   begin = 17 end = 19 end2 = 63}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 19 end = 20 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 20 begin2 = 17 end = 23 end2 = 63}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 23 end = 24 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 24 begin2 = 17 end = 27 end2 = 63}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 27 end = 28 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 28 begin2 = 17 end = 31 end2 = 63}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 31 end = 32 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 32 begin2 = 17 end = 35 end2 = 63}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 35 end = 36 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 36 begin2 = 17 end = 39 end2 = 63}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 39 end = 40 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 40 begin2 = 17 end = 43 end2 = 63}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 43 end = 44 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 44 begin2 = 17 end = 47 end2 = 63}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 47 end = 48 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 48 begin2 = 17 end = 51 end2 = 63}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 51 end = 52 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 52 begin2 = 17 end = 55 end2 = 63}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 55 end = 56 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 56 begin2 = 17 end = 59 end2 = 63}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 59 end = 60 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 60 begin2 = 17 end = 63}
+               )
+      fieldPositions =
+      (
+        {
+          fieldID = MessageFormat$Field.ARGUMENT
+          begin = 2 end = 14
+        }
+      )
+    }
+
+    {
+      class = java.text.MessageFormat
+      args = ("0={0,date} 1={1,number}")
+      valueClass = java.lang.reflect.Array
+      valueArgs = ((java.util.Date ("1/26/2003")) (java.math.BigDecimal ("-12345678901234567890.1239")))
+    }
+    {
+      length = 48
+      text = "0=Jan 26, 2003 1=-12,345,678,901,234,567,890.124"
+      0 = ()
+      1 = ()
+      2 = (MessageFormat$Field.ARGUMENT DateFormat$Field.MONTH)
+      3 = (MessageFormat$Field.ARGUMENT DateFormat$Field.MONTH)
+      4 = (MessageFormat$Field.ARGUMENT DateFormat$Field.MONTH)
+      5 = (MessageFormat$Field.ARGUMENT)
+      6 = (MessageFormat$Field.ARGUMENT DateFormat$Field.DAY_OF_MONTH)
+      7 = (MessageFormat$Field.ARGUMENT DateFormat$Field.DAY_OF_MONTH)
+      8 = (MessageFormat$Field.ARGUMENT)
+      9 = (MessageFormat$Field.ARGUMENT)
+      10 = (MessageFormat$Field.ARGUMENT DateFormat$Field.YEAR)
+      11 = (MessageFormat$Field.ARGUMENT DateFormat$Field.YEAR)
+      12 = (MessageFormat$Field.ARGUMENT DateFormat$Field.YEAR)
+      13 = (MessageFormat$Field.ARGUMENT DateFormat$Field.YEAR)
+      14 = ()
+      15 = ()
+      16 = ()
+      17 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.SIGN)
+      18 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      19 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      20 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      21 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      22 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      23 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      24 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      25 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      26 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      27 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      28 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      29 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      30 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      31 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      32 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      33 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      34 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      35 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      36 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      37 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      38 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      39 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      40 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER
+            NumberFormat$Field.GROUPING_SEPARATOR)
+      41 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      42 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      43 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.INTEGER)
+      44 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.DECIMAL_SEPARATOR)
+      45 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.FRACTION)
+      46 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.FRACTION)
+      47 = (MessageFormat$Field.ARGUMENT NumberFormat$Field.FRACTION)
+      limits = (
+                 { attributes = ()
+                   begin = 0 end = 2 end2 = 48}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 2 end = 5 end2 = 14}
+                 { attributes = (MessageFormat$Field.ARGUMENT
+                                 DateFormat$Field.MONTH)
+                   begin = 2 end = 5}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 5 begin2 = 2 end = 6 end2 = 14}
+                 { attributes = (DateFormat$Field.DAY_OF_MONTH)
+                   begin = 6 end = 8}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 8 begin2 = 2 end = 10 end2 = 14}
+                 { attributes = ()
+                   begin = 14 begin2 = 0 end = 17 end2 = 48}
+
+                 { attributes = (NumberFormat$Field.SIGN)
+                   begin = 17 end = 18 }
+                 { attributes = (MessageFormat$Field.ARGUMENT
+                                 NumberFormat$Field.INTEGER)
+                   begin = 18 end = 20 end2 = 44}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 20 end = 21 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 21 begin2 = 18 end = 24 end2 = 44}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 24 end = 25 }
+
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 25 begin2 = 18 end = 28 end2 = 44}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 28 end = 29 }
+
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 29 begin2 = 18 end = 32 end2 = 44}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 32 end = 33 }
+
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 33 begin2 = 18 end = 36 end2 = 44}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 36 end = 37 }
+
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 37 begin2 = 18 end = 40 end2 = 44}
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 40 end = 41 }
+                 { attributes = (NumberFormat$Field.INTEGER
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 41 begin2 = 18 end = 44 end2 = 44}
+
+                 { attributes = (NumberFormat$Field.GROUPING_SEPARATOR)
+                   begin = 44 begin2 = 41 end = 45 end2 = 48}
+
+                 { attributes = (NumberFormat$Field.FRACTION
+                                 MessageFormat$Field.ARGUMENT)
+                   begin = 45 end = 48}
+               )
+      fieldPositions =
+      (
+        {
+          fieldID = MessageFormat$Field.ARGUMENT
+          begin = 2 end = 14
+        }
+      )
+    }
+
+    {
+      class = java.text.MessageFormat
+      args = ("0={0,choice,-1#neg| 0#zero | 1#more}xx")
+      valueClass = java.lang.reflect.Array
+      valueArgs = ((Integer ("-11")))
+    }
+    {
+      length = 7
+      text = "0=negxx"
+      0 = ()
+      1 = ()
+      2 = (MessageFormat$Field.ARGUMENT)
+      3 = (MessageFormat$Field.ARGUMENT)
+      4 = (MessageFormat$Field.ARGUMENT)
+      5 = ()
+      6 = ()
+      limits = (
+                 { attributes = ()
+                   begin = 0 end = 2 end2 = 7}
+                 { attributes = (MessageFormat$Field.ARGUMENT)
+                   begin = 2 end = 5}
+                 { attributes = ()
+                   begin = 5 begin2 = 0 end = 7}
+               )
+      fieldPositions =
+      (
+        {
+          fieldID = MessageFormat$Field.ARGUMENT
+          begin = 2 end = 5
+        }
+      )
+    }
+  )
+}
+

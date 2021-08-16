@@ -1,0 +1,4 @@
+ExceptionsInLambda.java:20:25: compiler.err.unreported.exception.need.to.catch.or.throw: java.io.FileNotFoundException
+ExceptionsInLambda.java:23:32: compiler.err.unreported.exception.need.to.catch.or.throw: java.io.IOException
+ExceptionsInLambda.java:28:22: compiler.err.unreported.exception.need.to.catch.or.throw: java.io.FileNotFoundException
+3 errors

@@ -1,0 +1,91 @@
+#
+# Copyright (c) 2011, 2021, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+include LibCommon.gmk
+
+################################################################################
+
+$(eval $(call SetupJdkLibrary, BUILD_LIBJ2GSS, \
+    NAME := j2gss, \
+    OPTIMIZATION := LOW, \
+    CFLAGS := $(CFLAGS_JDKLIB), \
+    DISABLED_WARNINGS_gcc := undef, \
+    DISABLED_WARNINGS_clang := undef, \
+    LDFLAGS := $(LDFLAGS_JDKLIB) \
+        $(call SET_SHARED_LIBRARY_ORIGIN), \
+    LIBS := $(LIBDL), \
+))
+
+TARGETS += $(BUILD_LIBJ2GSS)
+
+################################################################################
+
+ifneq ($(BUILD_CRYPTO), false)
+
+  ifeq ($(call isTargetOs, windows), true)
+    $(eval $(call SetupJdkLibrary, BUILD_LIBW2K_LSA_AUTH, \
+        NAME := w2k_lsa_auth, \
+        OPTIMIZATION := LOW, \
+        CFLAGS := $(CFLAGS_JDKLIB), \
+        LDFLAGS := $(LDFLAGS_JDKLIB) \
+            $(call SET_SHARED_LIBRARY_ORIGIN), \
+        LIBS := advapi32.lib Secur32.lib netapi32.lib kernel32.lib user32.lib \
+            gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib \
+            ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib wsock32.lib, \
+    ))
+
+    TARGETS += $(BUILD_LIBW2K_LSA_AUTH)
+
+    $(eval $(call SetupJdkLibrary, BUILD_LIBSSPI_BRIDGE, \
+        NAME := sspi_bridge, \
+        OPTIMIZATION := LOW, \
+        CFLAGS := $(CFLAGS_JDKLIB) \
+            -I$(TOPDIR)/src/java.security.jgss/share/native/libj2gss, \
+        LDFLAGS := $(LDFLAGS_JDKLIB) \
+            $(call SET_SHARED_LIBRARY_ORIGIN) \
+    ))
+
+    TARGETS += $(BUILD_LIBSSPI_BRIDGE)
+  endif
+
+  ifeq ($(call isTargetOs, macosx), true)
+    # libosxkrb5 needs to call deprecated krb5 APIs so that java
+    # can use the native credentials cache.
+    $(eval $(call SetupJdkLibrary, BUILD_LIBOSXKRB5, \
+        NAME := osxkrb5, \
+        OPTIMIZATION := LOW, \
+        CFLAGS := $(CFLAGS_JDKLIB), \
+        DISABLED_WARNINGS_clang := deprecated-declarations, \
+        LDFLAGS := $(LDFLAGS_JDKLIB) \
+            $(call SET_SHARED_LIBRARY_ORIGIN), \
+        LIBS := -framework Cocoa -framework SystemConfiguration \
+            -framework Kerberos, \
+    ))
+
+    TARGETS += $(BUILD_LIBOSXKRB5)
+  endif
+endif
+
+################################################################################

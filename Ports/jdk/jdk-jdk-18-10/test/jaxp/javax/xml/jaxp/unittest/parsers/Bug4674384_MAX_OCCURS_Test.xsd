@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<xsd:schema
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns="test"
+  targetNamespace="test">
+
+     <xsd:element name="a" type="A"/>
+     <xsd:complexType name="A">
+          <xsd:sequence>
+	       <xsd:element name="b" type="xsd:string" maxOccurs="3000"/>
+	  </xsd:sequence>
+     </xsd:complexType>
+
+</xsd:schema>

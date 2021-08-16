@@ -1,0 +1,7 @@
+BindingsExistTest.java:9:61: compiler.err.match.binding.exists
+BindingsExistTest.java:11:36: compiler.err.match.binding.exists
+BindingsExistTest.java:16:35: compiler.err.already.defined: kindname.variable, k, kindname.method, t(java.lang.Object,java.lang.Object)
+BindingsExistTest.java:19:34: compiler.err.already.defined: kindname.variable, s2, kindname.method, t(java.lang.Object,java.lang.Object)
+BindingsExistTest.java:22:20: compiler.err.already.defined: kindname.variable, s3, kindname.method, t(java.lang.Object,java.lang.Object)
+BindingsExistTest.java:28:16: compiler.err.already.defined: kindname.variable, s4, kindname.method, t(java.lang.Object,java.lang.Object)
+6 errors

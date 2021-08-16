@@ -1,0 +1,9 @@
+NonSAM3.java:15:21: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: FooBar, (compiler.misc.incompatible.abstracts: kindname.interface, FooBar))
+NonSAM3.java:16:22: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: FooBar, (compiler.misc.incompatible.abstracts: kindname.interface, FooBar))
+NonSAM3.java:17:17: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: DE, (compiler.misc.incompatible.abstracts: kindname.interface, DE))
+NonSAM3.java:18:18: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: DE, (compiler.misc.incompatible.abstracts: kindname.interface, DE))
+NonSAM3.java:19:18: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: DE, (compiler.misc.incompatible.abstracts: kindname.interface, DE))
+NonSAM3.java:20:18: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: DE, (compiler.misc.incompatible.abstracts: kindname.interface, DE))
+NonSAM3.java:21:18: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: DE, (compiler.misc.incompatible.abstracts: kindname.interface, DE))
+NonSAM3.java:22:18: compiler.err.prob.found.req: (compiler.misc.not.a.functional.intf.1: DE, (compiler.misc.incompatible.abstracts: kindname.interface, DE))
+8 errors

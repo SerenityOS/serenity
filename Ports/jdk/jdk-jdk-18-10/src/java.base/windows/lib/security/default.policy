@@ -1,0 +1,16 @@
+grant codeBase "jrt:/jdk.accessibility" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "jrt:/jdk.crypto.mscapi" {
+    permission java.lang.RuntimePermission
+                   "accessClassInPackage.sun.security.*";
+    permission java.lang.RuntimePermission "loadLibrary.sunmscapi";
+    permission java.security.SecurityPermission "putProviderProperty.SunMSCAPI";
+    permission java.security.SecurityPermission
+                   "clearProviderProperties.SunMSCAPI";
+    permission java.security.SecurityPermission
+                   "removeProviderProperty.SunMSCAPI";
+    permission java.security.SecurityPermission "authProvider.SunMSCAPI";
+    permission java.util.PropertyPermission "*", "read";
+};

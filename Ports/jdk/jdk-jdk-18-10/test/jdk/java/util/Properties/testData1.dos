@@ -1,0 +1,35 @@
+# testcases
+key0=abcd\
+
+\
+key1=value1
+
+key2 \= abcde
+key3
+
+   #key4=abcde
+key5 ===Arial,ANSI_CHARSET
+key6= WingDings,SYMBOL_CHARSET \\\
+ abc
+key7 Symbol,SYMBOL_CHARSET \
+
+	keyabcdef
+
+key8notassign   abcdef
+key9\ Term=ABCDE
+
+\\:key10=bar
+
+\\\\:key11=bar2
+
+\\\:key12=bar2
+
+key13dialog.3=
+key14_asdfa    
+key15  \ abcdef
+key16\ b=  \ abcdef
+key17=\
+#bar\
+baz
+
+

@@ -1,0 +1,6 @@
+VERSION: 1.0
+@SECTION: String
+31: shred_test_string_unique_14325
+31: shared_test_string_intern_12345
+7: test123
+

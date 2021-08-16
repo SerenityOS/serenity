@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<A xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <A xsi:type="idType" idAttr="ONE"/>
+   <A xsi:type="idType" idAttr="ONE"/>
+   <A xsi:type="idrefType" idrefAttr="TWO"/>
+</A>

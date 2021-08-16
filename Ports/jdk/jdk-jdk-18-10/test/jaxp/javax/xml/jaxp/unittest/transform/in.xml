@@ -1,0 +1,3 @@
+<Iteration><ViewEditor  ViewType='PieChart' DataSet='_Employees' ModifierID='undefined' Context='Data' Page='chartFields' ViewName='Pie Chart' bViewEditorAnimation="false" ><Translated><String name="DATA_OBJECTS">Data Objects</String>
+<String name="VIEWEDITOR_TAB_FIELDS">Fields</String>
+</Translated></ViewEditor><HelpTopicId>bam_as_viewedit_doselect</HelpTopicId></Iteration>

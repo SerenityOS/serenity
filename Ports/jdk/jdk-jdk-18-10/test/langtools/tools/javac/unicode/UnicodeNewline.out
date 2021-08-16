@@ -1,0 +1,6 @@
+UnicodeNewline.java:11: cannot find symbol
+    xyzzy plugh; // error should be HERE
+    ^
+  symbol:   class xyzzy
+  location: class UnicodeNewline
+1 error

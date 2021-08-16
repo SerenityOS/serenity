@@ -1,0 +1,2 @@
+CastConversionMatch.java:11:26: compiler.err.type.found.req: int, (compiler.misc.type.req.class.array)
+1 error

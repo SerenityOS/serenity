@@ -1,0 +1,246 @@
+<HTML>
+<BODY>
+<HEAD>
+<TITLE>Certificate Attributes</TITLE>
+</HEAD>
+<h2><center>Certificate Attributes</center></h2>
+<font size=3><center>July 1998</font></center>
+<p>
+In JDK1.2 we provide an implementation of X.509 (version 3).
+The X509CertImpl class supports the following methods to
+manipulate the various attributes of a certificate:
+<pre>
+     Object get(String name)
+     void set(String name, Object value), and
+     void delete(String name)
+</pre>
+A list of all the X.509 v3 Certificate attributes that can be manipulated
+is provided in the following table.
+For example, if you want to get the signature component of
+the certificate:
+<pre>
+     X509CertImpl cert;
+     // get the certificate object
+     byte[] sig = (byte[])cert.get("x509.signature");
+                  // using the fully-qualified identifier
+OR
+     byte[] sig = (byte[])cert.get(X509CertImpl.SIG);
+                  // using defined constants
+</pre>
+<p>
+<table border=1>
+<caption>sun.security.x509.X509CertImpl</caption>
+<tr>
+<td><strong>Attribute</strong></td>
+<td><strong>Fully-qualified identifier</strong></td>
+<td><strong>Defined constants</strong></td>
+<td><strong>Type of Object returned</strong><br>
+(in sun.security.x509 unless fully-qualified)</td>
+</tr>
+<tr>
+<td>signatureAlgorithm</td>
+<td>x509.algorithm</td>
+<td>X509CertImpl.SIG_ALG</td>
+<td>AlgorithmId</td>
+</tr>
+<tr>
+<td>signature</td>
+<td>x509.signature</td>
+<td>X509CertImpl.SIG</td>
+<td>byte[]</td>
+</tr>
+<tr>
+<td>tbsCertificate</td>
+<td>x509.info</td>
+<td>X509CertInfo.IDENT</td>
+<td>X509CertInfo</td>
+</tr>
+<tr>
+<td>version</td>
+<td>x509.info.version<br>
+x509.info.version.number</td>
+<td>CertificateVersion.IDENT<br>
+none</td>
+<td>CertificateVersion<br>
+java.lang.Integer</td>
+</tr>
+<tr>
+<td>serialNumber</td>
+<td>x509.info.serialNumber<br>
+x509.info.serialNumber.number</td>
+<td>CertificateSerialNumber.IDENT<br>
+X509CertImpl.SERIAL_ID</td>
+<td>CertificateSerialNumber<br>
+SerialNumber</td>
+</tr>
+<tr>
+<td>signature</td>
+<td>x509.info.algorithmID<br>
+x509.info.algorithmID.algorithm</td>
+<td>CertificateAlgorithmId.IDENT<br>
+none</td>
+<td>CertificateAlgorithmId<br>
+AlgorithmId</td>
+</tr>
+<tr>
+<td>issuer</td>
+<td>x509.info.issuer<br>
+x509.info.issuer.dname</td>
+<td>none<br>
+X509CertImpl.ISSUER_DN</td>
+<td>X500Name<br>
+X500Name</td>
+</tr>
+<tr>
+<td>validity<br>
+validity.notAfter<br>
+validity.notBefore</td>
+<td>x509.info.validity<br>
+x509.info.validity.notAfter<br>
+x509.info.validity.notBefore</td>
+<td>CertificateValidity.IDENT<br>
+none<br>
+none</td>
+<td>CertificateValidity<br>
+java.util.Date<br>
+java.util.Date</td>
+</tr>
+<tr>
+<td>subject</td>
+<td>x509.info.subject<br>
+x509.info.subject.dname</td>
+<td>none<br>
+X509CertImpl.SUBJECT_DN</td>
+<td>X500Name<br>
+X500Name</td>
+</tr>
+<tr>
+<td>subjectPublicKeyInfo</td>
+<td>x509.info.key<br>
+x509.info.key.value</td>
+<td>CertificateX509Key.IDENT<br>
+X509CertImpl.PUBLIC_KEY</td>
+<td>CertificateX509Key<br>
+X509Key</td>
+</tr>
+<tr>
+<td>issuerUniqueID</td>
+<td>x509.info.issuerID<br>
+x509.info.issuerID.id</td>
+<td>none<br>
+none</td>
+<td>UniqueIdentity<br>
+UniqueIdentity</td>
+</tr>
+<tr>
+<td>subjectUniqueID</td>
+<td>x509.info.subjectID<br>
+x509.info.subjectID.id</td>
+<td>none<br>
+none</td>
+<td>UniqueIdentity<br>
+UniqueIdentity</td>
+</tr>
+<tr>
+<td>extensions</td>
+<td>x509.info.extensions</td>
+<td>CertificateExtensions.IDENT</td>
+<td>CertificateExtensions</td>
+</tr>
+</table>
+<br>
+<br>
+<table border=1>
+<caption>X.509 V3 certificate extensions</caption>
+<tr>
+<td><strong>Extension</strong></td>
+<td><strong>Extension attribute identifier</strong></td>
+<td><strong>Short form</strong></td>
+<td><strong>Type of Object returned</strong></td>
+</tr>
+<tr>
+<td>Authority Key Identifier</td>
+<td>x509.info.extensions.AuthorityKeyIdentifier</td>
+<td>AuthorityKeyIdentifierExtension.IDENT</td>
+<td>AuthorityKeyIdentifierExtension</td>
+</tr>
+<tr>
+<td>Subject Key Identifier</td>
+<td>x509.info.extensions.SubjectKeyIdentifier</td>
+<td>SubjectKeyIdentifierExtension.IDENT</td>
+<td>SubjectKeyIdentifierExtension</td>
+</tr>
+<tr>
+<td>Key Usage</td>
+<td>x509.info.extensions.KeyUsage</td>
+<td>KeyUsageExtension.IDENT</td>
+<td>KeyUsageExtension</td>
+</tr>
+<tr>
+<td>Private Key Usage Period</td>
+<td>x509.info.extensions.PrivateKeyUsage</td>
+<td>PrivateKeyUsageExtension.IDENT</td>
+<td>PrivateKeyUsageExtension</td>
+</tr>
+<tr>
+<td>Policy Mappings</td>
+<td>x509.info.extensions.PolicyMappings</td>
+<td>PolicyMappingsExtension.IDENT</td>
+<td>PolicyMappingsExtension</td>
+</tr>
+<tr>
+<td>Subject Alternative Name</td>
+<td>x509.info.extensions.SubjectAlternativeName</td>
+<td>SubjectAlternativeNameExtension.IDENT</td>
+<td>SubjectAlternativeNameExtension</td>
+</tr>
+<tr>
+<td>Issuer Alternative Name</td>
+<td>x509.info.extensions.IssuerAlternativeName</td>
+<td>IssuerAlternativeNameExtension.IDENT</td>
+<td>IssuerAlternativeNameExtension</td>
+</tr>
+<tr>
+<td>Basic Constraints</td>
+<td>x509.info.extensions.BasicConstraints</td>
+<td>BasicConstraintsExtension.IDENT</td>
+<td>BasicConstraintsExtension</td>
+</tr>
+<tr>
+<td>Name Constraints</td>
+<td>x509.info.extensions.NameConstraints</td>
+<td>NameConstraintsExtension.IDENT</td>
+<td>NameConstraintsExtension</td>
+</tr>
+<tr>
+<td>Policy Constraints</td>
+<td>x509.info.extensions.PolicyConstraints</td>
+<td>PolicyConstraintsExtension.IDENT</td>
+<td>PolicyConstraintsExtension</td>
+</tr>
+<tr>
+<td>Netscape Certificate Type</td>
+<td>x509.info.extensions.NetscapeCertType</td>
+<td>NetscapeCertTypeExtension.IDENT</td>
+<td>NetscapeCertTypeExtension</td>
+</tr>
+</table>
+<p>
+Extensions can be added by implementing the
+<code>sun.security.x509.CertAttrSet</code> interface and
+subclassing <code>sun.security.x509.Extension</code> class.
+Register the new extension using the OIDMap class.
+The following extensions are not currently supported from the
+PKIX profile:
+<table>
+<tr>
+<td>Name</td>
+<td>ObjectIdentifier</td>
+</tr>
+<tr>
+<td>CertificatePolicies</td>
+<td>2.5.29.32</td>
+</tr>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,104 @@
+Copyright (c) 2015, 2021, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+
+
+
+DESCRIPTION
+
+The purpose of this library is gathering diagnostic information on test
+failures and timeouts. The library runs platform specific tools, which are
+configured in the way described below. The collected data will be available
+in HTML format next to JTR files.
+
+The library uses JTHarness Observer and jtreg TimeoutHandler extensions points.
+
+DEPENDENCES
+
+The library requires jtreg 4b13+ and JDK 15+.
+
+BUILDING
+
+The library is built using the top level build-test-failure-handler target and
+is automatically included in the test image and picked up by hotspot and jdk
+test makefiles.
+
+CONFIGURATION
+
+Properties files are used to configure the library. They define which actions
+to be performed in case of individual test failure or timeout. Each platform
+family uses its own property file (named '<platform>.properties'). For platform
+independent actions, 'common.properties' is used.
+
+Actions to be performed on each failure are listed in 'environment' property.
+Extra actions for timeouts are listed in 'onTimeout'.
+
+Each action is defined via the following parameters:
+ - 'javaOnly' -- run the action only for java applications, false by default
+ - 'app' -- an application to run, mandatory parameter
+ - 'args' -- application command line arguments, none by default
+ - 'params' -- a structure which defines how an application should be run,
+ described below
+
+Actions listed in 'onTimeout' are "patterned" actions. Besides the parameters
+listed above, they also have 'pattern' parameter -- a string which will be
+replaced by PID in 'args' parameter before action execution.
+
+'params' structure has the following parameters:
+ - repeat -- how many times an action will be run, 1 by default
+ - pause -- delay in ms between iterations, 500 by default
+ - timeout -- time limitation for iteration in ms, 20 000 by default
+ - stopOnError -- if true, an action will be interrupted after the first error,
+ false by default
+
+From '<platform>.properties', the library reads the following parameters
+ - 'config.execSuffix' -- a suffix for all binary application file names
+ - 'config.getChildren' -- a "patterned" action used to get the list of all
+ children
+
+For simplicity we use parameter values inheritance. This means that we are
+looking for the most specified parameter value. If we do not find it, we are
+trying to find less specific value by reducing prefix.
+For example, if properties contains 'p1=A', 'a.p1=B', 'a.b.p1=C', then
+parameter 'p1' will be:
+ - 'C' for 'a.b.c'
+ - 'B' for 'a.c'
+ - 'A' for 'b.c'
+
+RUNNING
+
+To enable the library in jtreg, the following options should be set:
+ - '-timeoutHandlerDir' points to the built jar ('jtregFailureHandler.jar')
+ - '-observerDir' points to the built jar
+ - '-timeoutHandler' equals to jdk.test.failurehandler.jtreg.GatherProcessInfoTimeoutHandler
+ - '-observer' equals to jdk.test.failurehandler.jtreg.GatherDiagnosticInfoObserver
+
+In case of environment issues during an action execution, such as missing
+application, hung application, lack of disk space, etc, the corresponding
+warning appears and the library proceeds to next action.
+
+EXAMPLES
+
+$ ${JTREG_HOME}/bin/jtreg -jdk:${JAVA_HOME}                                   \
+ -timeoutHandlerDir:./image/lib/jtregFailureHandler.jar                       \
+ -observerDir:./image/lib/jtregFailureHandler.jar                             \
+ -timeoutHandler:jdk.test.failurehandler.jtreg.GatherProcessInfoTimeoutHandler\
+ -observer:jdk.test.failurehandler.jtreg.GatherDiagnosticInfoObserver         \
+ ${WS}/hotspot/test/

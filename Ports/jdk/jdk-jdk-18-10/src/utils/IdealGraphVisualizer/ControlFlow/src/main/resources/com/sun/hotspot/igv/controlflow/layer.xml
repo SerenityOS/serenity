@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.1//EN" "http://www.netbeans.org/dtds/filesystem-1_1.dtd">
+<filesystem>
+    <folder name="Actions">
+        <folder name="Window">
+            <file name="com-sun-hotspot-igv-controlflow-ControlFlowAction.instance"/>
+        </folder>
+    </folder>
+    <folder name="Menu">
+        <folder name="Window">
+            <file name="ControlFlowAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Window/com-sun-hotspot-igv-controlflow-ControlFlowAction.instance"/>
+            </file>
+        </folder>
+    </folder>
+    <folder name="Windows2">
+        <folder name="Components">
+            <file name="ControlFlowTopComponent.settings" url="ControlFlowTopComponentSettings.xml"/>
+        </folder>
+        <folder name="Modes">
+            <folder name="customRightTopMode">
+                <file name="ControlFlowTopComponent.wstcref" url="ControlFlowTopComponentWstcref.xml"/>
+            </folder>
+        </folder>
+    </folder>
+</filesystem>

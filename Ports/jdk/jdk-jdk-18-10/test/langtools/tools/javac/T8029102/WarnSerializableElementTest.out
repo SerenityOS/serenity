@@ -1,0 +1,35 @@
+WarnSerializableElementTest.java:56:44: compiler.warn.access.to.member.from.serializable.element: staticPackageField
+WarnSerializableElementTest.java:57:44: compiler.warn.access.to.member.from.serializable.element: staticProtectedField
+WarnSerializableElementTest.java:58:44: compiler.warn.access.to.member.from.serializable.element: staticPrivateField
+WarnSerializableElementTest.java:60:17: compiler.warn.access.to.member.from.serializable.element: packageField
+WarnSerializableElementTest.java:61:17: compiler.warn.access.to.member.from.serializable.element: protectedField
+WarnSerializableElementTest.java:62:17: compiler.warn.access.to.member.from.serializable.element: privateField
+WarnSerializableElementTest.java:64:44: compiler.warn.access.to.member.from.serializable.element: packageClassMethod(java.lang.String)
+WarnSerializableElementTest.java:65:44: compiler.warn.access.to.member.from.serializable.element: protectedClassMethod(java.lang.String)
+WarnSerializableElementTest.java:66:44: compiler.warn.access.to.member.from.serializable.element: privateClassMethod(java.lang.String)
+WarnSerializableElementTest.java:68:17: compiler.warn.access.to.member.from.serializable.element: packageInstanceMethod(java.lang.String)
+WarnSerializableElementTest.java:69:17: compiler.warn.access.to.member.from.serializable.element: protectedInstanceMethod(java.lang.String)
+WarnSerializableElementTest.java:70:17: compiler.warn.access.to.member.from.serializable.element: privateInstanceMethod(java.lang.String)
+WarnSerializableElementTest.java:72:29: compiler.warn.access.to.member.from.serializable.element: effectivelyNonPublicStaticField
+WarnSerializableElementTest.java:73:29: compiler.warn.access.to.member.from.serializable.element: effectivelyNonPublicClassMethod()
+WarnSerializableElementTest.java:76:18: compiler.warn.access.to.member.from.serializable.element: effectivelyNonPublicInstanceField
+WarnSerializableElementTest.java:77:18: compiler.warn.access.to.member.from.serializable.element: effectivelyNonPublicInstanceMethod()
+WarnSerializableElementTest.java:141:44: compiler.warn.access.to.member.from.serializable.element: staticPackageField
+WarnSerializableElementTest.java:142:44: compiler.warn.access.to.member.from.serializable.element: staticProtectedField
+WarnSerializableElementTest.java:143:44: compiler.warn.access.to.member.from.serializable.element: staticPrivateField
+WarnSerializableElementTest.java:148:21: compiler.warn.access.to.member.from.serializable.element: packageField
+WarnSerializableElementTest.java:149:21: compiler.warn.access.to.member.from.serializable.element: protectedField
+WarnSerializableElementTest.java:150:21: compiler.warn.access.to.member.from.serializable.element: privateField
+WarnSerializableElementTest.java:152:44: compiler.warn.access.to.member.from.serializable.element: packageClassMethod(java.lang.String)
+WarnSerializableElementTest.java:153:44: compiler.warn.access.to.member.from.serializable.element: protectedClassMethod(java.lang.String)
+WarnSerializableElementTest.java:154:44: compiler.warn.access.to.member.from.serializable.element: privateClassMethod(java.lang.String)
+WarnSerializableElementTest.java:156:21: compiler.warn.access.to.member.from.serializable.element: packageInstanceMethod(java.lang.String)
+WarnSerializableElementTest.java:157:21: compiler.warn.access.to.member.from.serializable.element: protectedInstanceMethod(java.lang.String)
+WarnSerializableElementTest.java:158:21: compiler.warn.access.to.member.from.serializable.element: privateInstanceMethod(java.lang.String)
+WarnSerializableElementTest.java:160:29: compiler.warn.access.to.member.from.serializable.element: effectivelyNonPublicStaticField
+WarnSerializableElementTest.java:161:29: compiler.warn.access.to.member.from.serializable.element: effectivelyNonPublicClassMethod()
+WarnSerializableElementTest.java:164:18: compiler.warn.access.to.member.from.serializable.element: effectivelyNonPublicInstanceField
+WarnSerializableElementTest.java:165:18: compiler.warn.access.to.member.from.serializable.element: effectivelyNonPublicInstanceMethod()
+- compiler.err.warnings.and.werror
+1 error
+32 warnings

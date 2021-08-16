@@ -1,0 +1,8 @@
+enum EnumTest -- 
+EnumTest.<init>($enum$name/*synthetic*/, $enum$ordinal/*synthetic*/)
+EnumTest.<init>($enum$name/*synthetic*/, $enum$ordinal/*synthetic*/, a, ba)
+EnumTest.ok(c, dc)
+EnumTest.$values()/*synthetic*/
+EnumTest.values()
+EnumTest.valueOf(A, BA)
+EnumTest.valueOf(name/*implicit*/)
