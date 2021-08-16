@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -10,7 +10,6 @@
 #include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <AK/IntrusiveList.h>
-#include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/FileSystem/FIFO.h>
@@ -19,11 +18,12 @@
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
+#include <Kernel/Library/ListedRefCounted.h>
 #include <Kernel/Locking/Mutex.h>
 
 namespace Kernel {
 
-class Inode : public RefCounted<Inode> {
+class Inode : public ListedRefCounted<Inode> {
     friend class VirtualFileSystem;
     friend class FileSystem;
 
@@ -134,7 +134,8 @@ private:
     Vector<Flock> m_flocks;
 
 public:
-    using List = IntrusiveList<Inode, RawPtr<Inode>, &Inode::m_inode_list_node>;
+    using AllInstancesList = IntrusiveList<Inode, RawPtr<Inode>, &Inode::m_inode_list_node>;
+    static SpinLockProtectedValue<Inode::AllInstancesList>& all_instances();
 };
 
 }
