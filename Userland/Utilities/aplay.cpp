@@ -42,6 +42,10 @@ int main(int argc, char** argv)
             out("{}/{}", loader->loaded_samples(), loader->total_samples());
             fflush(stdout);
             audio_client->enqueue(*samples);
+        } else if (loader->has_error()) {
+            outln();
+            outln("Error: {}", loader->error_string());
+            break;
         } else if (should_loop) {
             loader->reset();
         } else if (audio_client->get_remaining_samples()) {
