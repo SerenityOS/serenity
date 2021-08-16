@@ -45,7 +45,9 @@ int main(int argc, char** argv)
 
     generator.append(R"~~~(
 #include <AK/Assertions.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
+#include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {
 
@@ -151,6 +153,36 @@ bool is_pseudo_property(PropertyID property_id)
     default:
         return false;
     }
+}
+
+RefPtr<StyleValue> property_initial_value(PropertyID property_id)
+{
+    static HashMap<PropertyID, NonnullRefPtr<StyleValue>> initial_values;
+    if (initial_values.is_empty()) {
+        ParsingContext parsing_context;
+)~~~");
+
+    json.value().as_object().for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+
+        if (value.as_object().has("initial")) {
+            auto& initial_value = value.as_object().get("initial");
+            VERIFY(initial_value.is_string());
+            auto initial_value_string = initial_value.as_string();
+
+            auto member_generator = generator.fork();
+            member_generator.set("name:titlecase", title_casify(name));
+            member_generator.set("initial_value_string", initial_value_string);
+            member_generator.append(R"~~~(
+        if (auto parsed_value = Parser(parsing_context, "@initial_value_string@").parse_as_css_value(PropertyID::@name:titlecase@))
+            initial_values.set(PropertyID::@name:titlecase@, parsed_value.release_nonnull());
+)~~~");
+        }
+    });
+
+    generator.append(R"~~~(
+    }
+    return initial_values.get(property_id).value_or(nullptr);
 }
 
 } // namespace Web::CSS
