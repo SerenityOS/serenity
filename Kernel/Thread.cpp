@@ -805,7 +805,7 @@ bool Thread::should_ignore_signal(u8 signal) const
     auto& action = m_signal_action_data[signal];
     if (action.handler_or_sigaction.is_null())
         return default_signal_action(signal) == DefaultSignalAction::Ignore;
-    if ((sighandler_t)action.handler_or_sigaction.as_ptr() == SIG_IGN)
+    if ((sighandler_t)action.handler_or_sigaction.get() == SIG_IGN)
         return true;
     return false;
 }

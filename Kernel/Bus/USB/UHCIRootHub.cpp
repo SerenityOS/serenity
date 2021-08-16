@@ -15,8 +15,10 @@
 namespace Kernel::USB {
 
 static USBDeviceDescriptor uhci_root_hub_device_descriptor = {
-    sizeof(USBDeviceDescriptor), // 18 bytes long
-    DESCRIPTOR_TYPE_DEVICE,
+    {
+        sizeof(USBDeviceDescriptor), // 18 bytes long
+        DESCRIPTOR_TYPE_DEVICE,
+    },
     0x0110, // USB 1.1
     (u8)USB_CLASS_HUB,
     0,      // Hubs use subclass 0
@@ -32,8 +34,10 @@ static USBDeviceDescriptor uhci_root_hub_device_descriptor = {
 };
 
 static USBConfigurationDescriptor uhci_root_hub_configuration_descriptor = {
-    sizeof(USBConfigurationDescriptor), // 9 bytes long
-    DESCRIPTOR_TYPE_CONFIGURATION,
+    {
+        sizeof(USBConfigurationDescriptor), // 9 bytes long
+        DESCRIPTOR_TYPE_CONFIGURATION,
+    },
     sizeof(USBConfigurationDescriptor) + sizeof(USBInterfaceDescriptor) + sizeof(USBEndpointDescriptor) + sizeof(USBHubDescriptor), // Combined length of configuration, interface, endpoint and hub descriptors.
     1,                                                                                                                              // One interface descriptor
     1,                                                                                                                              // Configuration #1
@@ -43,8 +47,10 @@ static USBConfigurationDescriptor uhci_root_hub_configuration_descriptor = {
 };
 
 static USBInterfaceDescriptor uhci_root_hub_interface_descriptor = {
-    sizeof(USBInterfaceDescriptor), // 9 bytes long
-    DESCRIPTOR_TYPE_INTERFACE,
+    {
+        sizeof(USBInterfaceDescriptor), // 9 bytes long
+        DESCRIPTOR_TYPE_INTERFACE,
+    },
     0, // Interface #0
     0, // Alternate setting
     1, // One endpoint
@@ -55,8 +61,10 @@ static USBInterfaceDescriptor uhci_root_hub_interface_descriptor = {
 };
 
 static USBEndpointDescriptor uhci_root_hub_endpoint_descriptor = {
-    sizeof(USBEndpointDescriptor), // 7 bytes long
-    DESCRIPTOR_TYPE_ENDPOINT,
+    {
+        sizeof(USBEndpointDescriptor), // 7 bytes long
+        DESCRIPTOR_TYPE_ENDPOINT,
+    },
     USBEndpoint::ENDPOINT_ADDRESS_DIRECTION_IN | 1,           // IN Endpoint #1
     USBEndpoint::ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_INTERRUPT, // Interrupt endpoint
     2,                                                        // Max Packet Size FIXME: I'm not sure what this is supposed to be as it is implementation defined. 2 is the number of bytes Get Port Status returns.
@@ -65,8 +73,10 @@ static USBEndpointDescriptor uhci_root_hub_endpoint_descriptor = {
 
 // NOTE: UHCI does not provide us anything for the Root Hub's Hub Descriptor.
 static USBHubDescriptor uhci_root_hub_hub_descriptor = {
-    sizeof(USBHubDescriptor), // 7 bytes long. FIXME: Add the size of the VLAs at the end once they're supported.
-    DESCRIPTOR_TYPE_HUB,
+    {
+        sizeof(USBHubDescriptor), // 7 bytes long. FIXME: Add the size of the VLAs at the end once they're supported.
+        DESCRIPTOR_TYPE_HUB,
+    },
     UHCIController::NUMBER_OF_ROOT_PORTS, // 2 ports
     0x0,                                  // Ganged power switching, not a compound device, global over-current protection.
     0x0,                                  // UHCI ports are always powered, so there's no time from power on to power good.
