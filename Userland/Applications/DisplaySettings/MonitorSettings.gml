@@ -18,7 +18,7 @@
     @GUI::Widget {
         shrink_to_fit: true
         layout: @GUI::HorizontalBoxLayout {
-            margins: [16, 8, 8, 6]
+            margins: [8, 8, 6, 16]
         }
 
         @GUI::Label {
@@ -34,7 +34,7 @@
 
     @GUI::GroupBox {
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 24, 16, 6]
+            margins: [24, 16, 6, 16]
         }
 
         title: "Screen settings"

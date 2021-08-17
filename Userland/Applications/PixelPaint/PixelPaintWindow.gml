@@ -51,7 +51,7 @@
             @GUI::GroupBox {
                 title: "Layers"
                 layout: @GUI::VerticalBoxLayout {
-                    margins: [6, 16, 6, 6]
+                    margins: [16, 6, 6, 6]
                 }
 
                 @PixelPaint::LayerListWidget {

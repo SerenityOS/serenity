@@ -77,7 +77,7 @@ void EvaluateExpressionDialog::build(Window* parent_window)
     auto& button_container_inner = button_container_outer.add<GUI::Widget>();
     button_container_inner.set_layout<GUI::HorizontalBoxLayout>();
     button_container_inner.layout()->set_spacing(6);
-    button_container_inner.layout()->set_margins({ 4, 4, 0, 4 });
+    button_container_inner.layout()->set_margins({ 4, 0, 4, 4 });
     button_container_inner.layout()->add_spacer();
 
     m_evaluate_button = button_container_inner.add<GUI::Button>();

@@ -11,7 +11,7 @@
         fixed_height: 170
 
         layout: @GUI::VerticalBoxLayout {
-            margins: [8, 16, 8, 8]
+            margins: [16, 8, 8, 8]
             spacing: 2
         }
 
@@ -101,7 +101,7 @@
         fixed_height: 110
 
         layout: @GUI::VerticalBoxLayout {
-            margins: [8, 16, 8, 8]
+            margins: [16, 8, 8, 8]
             spacing: 2
         }
 
