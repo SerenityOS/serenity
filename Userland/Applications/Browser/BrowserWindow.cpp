@@ -220,6 +220,9 @@ void BrowserWindow::build_menus()
                     tab.m_dom_inspector_window->set_title("DOM inspector");
                     tab.m_dom_inspector_window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
                     tab.m_dom_inspector_window->set_main_widget<InspectorWidget>();
+                    tab.m_dom_inspector_window->on_close = [&]() {
+                        tab.m_page_view->document()->set_inspected_node(nullptr);
+                    };
                 }
                 auto* inspector_widget = static_cast<InspectorWidget*>(tab.m_dom_inspector_window->main_widget());
                 inspector_widget->set_document(tab.m_page_view->document());
