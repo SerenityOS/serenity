@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/PlainMonthDay.h>
 #include <LibJS/Runtime/Temporal/PlainMonthDayConstructor.h>
@@ -56,43 +57,25 @@ Value PlainMonthDayConstructor::construct(FunctionObject& new_target)
         reference_iso_year = Value(1972);
     }
 
-    // 3. Let m be ? ToIntegerOrInfinity(isoMonth).
-    auto m = iso_month.to_integer_or_infinity(global_object);
+    // 3. Let m be ? ToIntegerThrowOnInfinity(isoMonth).
+    auto m = to_integer_throw_on_infinity(global_object, iso_month, ErrorType::TemporalInvalidPlainMonthDay);
     if (vm.exception())
         return {};
 
-    // 4. If m is +∞ or -∞, throw a RangeError exception.
-    if (Value(m).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainMonthDay);
-        return {};
-    }
-
-    // 5. Let d be ? ToIntegerOrInfinity(isoDay).
-    auto d = iso_day.to_integer_or_infinity(global_object);
+    // 4. Let d be ? ToIntegerThrowOnInfinity(isoDay).
+    auto d = to_integer_throw_on_infinity(global_object, iso_day, ErrorType::TemporalInvalidPlainMonthDay);
     if (vm.exception())
         return {};
 
-    // 6. If d is +∞ or -∞, throw a RangeError exception.
-    if (Value(d).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainMonthDay);
-        return {};
-    }
-
-    // 7. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
+    // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
     auto* calendar = to_temporal_calendar_with_iso_default(global_object, calendar_like);
     if (vm.exception())
         return {};
 
-    // 8. Let ref be ? ToIntegerOrInfinity(referenceISOYear).
-    auto ref = reference_iso_year.to_integer_or_infinity(global_object);
+    // 6. Let ref be ? ToIntegerThrowOnInfinity(referenceISOYear).
+    auto ref = to_integer_throw_on_infinity(global_object, reference_iso_year, ErrorType::TemporalInvalidPlainMonthDay);
     if (vm.exception())
         return {};
-
-    // 9. If ref is +∞ or -∞, throw a RangeError exception.
-    if (Value(ref).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainMonthDay);
-        return {};
-    }
 
     // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
     // This does not change the exposed behaviour as the call to CreateTemporalMonthDay will immediately check that these values are valid
@@ -102,7 +85,7 @@ Value PlainMonthDayConstructor::construct(FunctionObject& new_target)
         return {};
     }
 
-    // 10. Return ? CreateTemporalMonthDay(m, d, calendar, ref, NewTarget).
+    // 7. Return ? CreateTemporalMonthDay(m, d, calendar, ref, NewTarget).
     return create_temporal_month_day(global_object, m, d, *calendar, ref, &new_target);
 }
 

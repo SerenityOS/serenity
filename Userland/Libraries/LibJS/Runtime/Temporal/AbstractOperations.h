@@ -77,4 +77,26 @@ Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject&, String
 double to_positive_integer_or_infinity(GlobalObject&, Value argument);
 Object* prepare_temporal_fields(GlobalObject&, Object& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields);
 
+// 13.46 ToIntegerThrowOnInfinity ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-tointegerthrowoninfinity
+template<typename... Args>
+double to_integer_throw_on_infinity(GlobalObject& global_object, Value argument, ErrorType error_type, Args... args)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let integer be ? ToIntegerOrInfinity(argument).
+    auto integer = argument.to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    // 2. If integer is −∞ or +∞ , then
+    if (Value(integer).is_infinity()) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, error_type, args...);
+        return {};
+    }
+
+    // 3. Return integer.
+    return integer;
+}
+
 }
