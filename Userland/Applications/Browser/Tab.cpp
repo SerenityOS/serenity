@@ -220,6 +220,8 @@ Tab::Tab(BrowserWindow& window, Type type)
     m_link_context_menu->add_action(GUI::Action::create("&Download", [this](auto&) {
         start_download(m_link_context_menu_url);
     }));
+    m_link_context_menu->add_separator();
+    m_link_context_menu->add_action(window.inspect_dom_node_action());
 
     hooks().on_link_context_menu_request = [this](auto& url, auto& screen_position) {
         m_link_context_menu_url = url;
@@ -245,6 +247,8 @@ Tab::Tab(BrowserWindow& window, Type type)
     m_image_context_menu->add_action(GUI::Action::create("&Download", [this](auto&) {
         start_download(m_image_context_menu_url);
     }));
+    m_image_context_menu->add_separator();
+    m_image_context_menu->add_action(window.inspect_dom_node_action());
 
     hooks().on_image_context_menu_request = [this](auto& image_url, auto& screen_position, const Gfx::ShareableBitmap& shareable_bitmap) {
         m_image_context_menu_url = image_url;
@@ -354,9 +358,13 @@ Tab::Tab(BrowserWindow& window, Type type)
     m_page_context_menu->add_separator();
     m_page_context_menu->add_action(window.view_source_action());
     m_page_context_menu->add_action(window.inspect_dom_tree_action());
+    m_page_context_menu->add_action(window.inspect_dom_node_action());
     hooks().on_context_menu_request = [&](auto& screen_position) {
         m_page_context_menu->popup(screen_position);
     };
+
+    // FIXME: This is temporary, until the OOPWV properly supports the DOM Inspector
+    window.inspect_dom_node_action().set_enabled(type == Type::InProcessWebView);
 }
 
 Tab::~Tab()
@@ -502,6 +510,36 @@ BrowserWindow const& Tab::window() const
 BrowserWindow& Tab::window()
 {
     return static_cast<BrowserWindow&>(*Widget::window());
+}
+
+void Tab::show_inspector_window(Browser::Tab::InspectorTarget target)
+{
+    if (m_type == Tab::Type::InProcessWebView) {
+        if (!m_dom_inspector_window) {
+            m_dom_inspector_window = GUI::Window::construct(this);
+            m_dom_inspector_window->resize(300, 500);
+            m_dom_inspector_window->set_title("DOM inspector");
+            m_dom_inspector_window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
+            m_dom_inspector_window->set_main_widget<InspectorWidget>();
+            m_dom_inspector_window->on_close = [&]() {
+                m_page_view->document()->set_inspected_node(nullptr);
+            };
+        }
+        auto* inspector_widget = static_cast<InspectorWidget*>(m_dom_inspector_window->main_widget());
+        inspector_widget->set_document(m_page_view->document());
+        switch (target) {
+        case InspectorTarget::Document:
+            inspector_widget->set_inspected_node(nullptr);
+            break;
+        case InspectorTarget::HoveredElement:
+            inspector_widget->set_inspected_node(m_page_view->document()->hovered_node());
+            break;
+        }
+        m_dom_inspector_window->show();
+        m_dom_inspector_window->move_to_front();
+    } else {
+        m_web_content_view->inspect_dom_tree();
+    }
 }
 
 }
