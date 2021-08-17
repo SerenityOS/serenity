@@ -62,7 +62,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
 
     auto& main_widget = set_main_widget<TaskbarWidget>();
     main_widget.set_layout<GUI::HorizontalBoxLayout>();
-    main_widget.layout()->set_margins({ 3, 3, 1, 1 });
+    main_widget.layout()->set_margins({ 3, 1, 1, 3 });
 
     m_start_button = GUI::Button::construct("Serenity");
     set_start_button_font(Gfx::FontDatabase::default_font().bold_variant());

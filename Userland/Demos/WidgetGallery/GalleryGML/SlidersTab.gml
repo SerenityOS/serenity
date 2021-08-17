@@ -36,7 +36,7 @@
     @GUI::Widget {
         fixed_height: 88
         layout: @GUI::VerticalBoxLayout {
-            margins: [8, 0, 8, 0]
+            margins: [0, 8, 0, 8]
         }
 
         @GUI::Widget {

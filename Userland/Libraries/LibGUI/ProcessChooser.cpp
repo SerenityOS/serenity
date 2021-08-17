@@ -48,8 +48,8 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
     auto& button_container = widget.add<GUI::Widget>();
     button_container.set_fixed_height(30);
     button_container.set_layout<GUI::HorizontalBoxLayout>();
-    button_container.set_content_margins({ 0, 4, 0, 4 });
-    button_container.layout()->set_margins({ 0, 0, 4, 0 });
+    button_container.set_content_margins({ 4, 0, 4, 0 });
+    button_container.layout()->set_margins({ 0, 4, 0, 0 });
     button_container.layout()->add_spacer();
 
     auto& select_button = button_container.add<GUI::Button>(m_button_label);

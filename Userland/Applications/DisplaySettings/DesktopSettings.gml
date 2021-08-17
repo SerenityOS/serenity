@@ -7,7 +7,7 @@
 
     @GUI::GroupBox {
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 24, 16, 6]
+            margins: [24, 16, 6, 16]
         }
 
         title: "Workspaces"

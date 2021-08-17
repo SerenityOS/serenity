@@ -102,7 +102,7 @@ void MessageBox::build()
         if (icon()) {
             icon_width = icon()->width();
             if (icon_width > 0)
-                message_container.layout()->set_margins({ 8, 0, 0, 0 });
+                message_container.layout()->set_margins({ 0, 0, 0, 8 });
         }
     }
 

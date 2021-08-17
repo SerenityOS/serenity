@@ -10,7 +10,7 @@
         shrink_to_fit: true
 
         layout: @GUI::VerticalBoxLayout {
-            margins: [6, 16, 6, 6]
+            margins: [16, 6, 6, 6]
         }
 
         @GUI::RadioButton {
@@ -34,7 +34,7 @@
         shrink_to_fit: true
 
         layout: @GUI::VerticalBoxLayout {
-            margins: [6, 16, 6, 6]
+            margins: [16, 6, 6, 6]
         }
 
         @GUI::OpacitySlider {
@@ -50,7 +50,7 @@
         shrink_to_fit: true
 
         layout: @GUI::VerticalBoxLayout {
-            margins: [6, 16, 6, 6]
+            margins: [16, 6, 6, 6]
         }
 
         @GUI::SpinBox {
@@ -66,7 +66,7 @@
         shrink_to_fit: true
 
         layout: @GUI::VerticalBoxLayout {
-            margins: [6, 16, 6, 6]
+            margins: [16, 6, 6, 6]
         }
 
         @GUI::ComboBox {

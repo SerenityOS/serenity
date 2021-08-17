@@ -56,7 +56,7 @@ public:
         m_root_container = m_slider_window->set_main_widget<GUI::Label>();
         m_root_container->set_fill_with_background_color(true);
         m_root_container->set_layout<GUI::VerticalBoxLayout>();
-        m_root_container->layout()->set_margins({ 0, 4, 0, 4 });
+        m_root_container->layout()->set_margins({ 4, 0, 4, 0 });
         m_root_container->layout()->set_spacing(0);
         m_root_container->set_frame_thickness(2);
         m_root_container->set_frame_shape(Gfx::FrameShape::Container);
