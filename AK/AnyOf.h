@@ -27,6 +27,13 @@ constexpr bool any_of(Container&& container, auto const& predicate)
     return any_of(container.begin(), container.end(), predicate);
 }
 
+template<typename T, typename... Ts>
+requires(sizeof...(Ts) > 1) constexpr bool is_any_of(T variable, Ts... goals)
+{
+    return ((variable == goals) || ...);
+}
+
 }
 
 using AK::any_of;
+using AK::is_any_of;
