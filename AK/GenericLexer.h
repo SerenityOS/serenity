@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/AnyOf.h>
 #include <AK/StringView.h>
 
 namespace AK {
@@ -48,6 +49,18 @@ public:
             if (peek(i) != expected[i])
                 return false;
         return true;
+    }
+    template<typename... T>
+    requires(((IsSame<RemoveCVReference<T>, char>)&&...)) constexpr bool next_is_any_of(T const&... expected) const
+    {
+        return is_any_of(peek(), expected...);
+    }
+
+    template<typename... T>
+    requires(((IsSame<RemoveCVReference<T>, StringView>)&&...)) constexpr bool next_is_any_of(T const&... expected) const
+    {
+        // FIXME: not optimal
+        return ((next_is(expected)) || ...);
     }
 
     constexpr void retreat()
