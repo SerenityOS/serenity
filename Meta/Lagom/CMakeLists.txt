@@ -8,6 +8,7 @@ project(
     LANGUAGES C CXX
 )
 
+option(ENABLE_LAGOM_CCACHE "Enable ccache for Lagom builds" OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static libraries" ON)
 if (ENABLE_OSS_FUZZ)
     set(BUILD_SHARED_LIBS OFF) # Don't use shared libraries on oss-fuzz, for ease of integration with their infrastructure
@@ -24,6 +25,13 @@ get_filename_component(
 )
 
 find_package(Threads REQUIRED)
+
+if (ENABLE_LAGOM_CCACHE)
+    find_program(CCACHE_PROGRAM ccache)
+    if(CCACHE_PROGRAM)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+    endif()
+endif()
 
 include(${SERENITY_PROJECT_ROOT}/Meta/CMake/wasm_spec_tests.cmake)
 
