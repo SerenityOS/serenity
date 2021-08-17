@@ -11,3 +11,7 @@ BreakBeforeBraces: Custom
 BraceWrapping:
     AfterFunction: true
 NamespaceIndentation: None
+---
+Language: Proto
+BasedOnStyle: Google
+IndentWidth: 4
