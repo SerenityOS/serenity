@@ -325,6 +325,7 @@ set(ELF_SOURCES
 )
 
 generate_state_machine(../Userland/Libraries/LibVT/StateMachine.txt ../Userland/Libraries/LibVT/EscapeSequenceStateMachine.h)
+compile_protobuf(API/ProfileProtocol.proto API/ProfileProtocol.h)
 
 set(VT_SOURCES
     ../Userland/Libraries/LibVT/Terminal.cpp
@@ -463,6 +464,7 @@ endif()
 
 add_executable(Kernel ${SOURCES})
 add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
+add_dependencies(Kernel generate_ProfileProtocol.h)
 
 add_custom_command(
     OUTPUT linker.ld

@@ -1,0 +1,17 @@
+// FIXME: Address should be a FlatPtr
+message Frame {
+    string object_name = 0;
+    string symbol = 1;
+    uint64 address = 2;
+    uint32 offset = 3;
+}
+
+message Event {
+    uint64 time_stamp = 0;
+    uint64 serial_number = 1;
+    uint32 pid = 2;
+    uint32 tid = 3;
+    uint32 lost_samples = 4;
+    bool in_kernel = 5;
+    repeated Frame frames = 6;
+}
