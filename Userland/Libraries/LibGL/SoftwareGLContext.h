@@ -83,6 +83,7 @@ public:
     virtual void gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const void* indices) override;
     virtual void gl_color_mask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) override;
     virtual void gl_get_booleanv(GLenum pname, GLboolean* data) override;
+    virtual void gl_get_integerv(GLenum pname, GLint* data) override;
     virtual void present() override;
 
 private:

@@ -64,6 +64,8 @@ extern "C" {
 
 // Alpha blending
 #define GL_BLEND 0x0BE2
+#define GL_BLEND_SRC_ALPHA 0x0302
+#define GL_BLEND_DST_ALPHA 0x0304
 
 // Utility
 #define GL_VENDOR 0x1F00
@@ -358,6 +360,7 @@ GLAPI void glBindTexture(GLenum target, GLuint texture);
 GLAPI void glActiveTexture(GLenum texture);
 GLAPI void glGetFloatv(GLenum pname, GLfloat* params);
 GLAPI void glGetBooleanv(GLenum pname, GLboolean* data);
+GLAPI void glGetIntegerv(GLenum pname, GLint* data);
 GLAPI void glDepthMask(GLboolean flag);
 GLAPI void glEnableClientState(GLenum cap);
 GLAPI void glDisableClientState(GLenum cap);
