@@ -64,6 +64,12 @@ public:
     Function<void(const URL&, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)> on_set_cookie;
     Function<void()> on_dump_cookies;
 
+    enum class InspectorTarget {
+        Document,
+        HoveredElement
+    };
+    void show_inspector_window(InspectorTarget);
+
     const String& title() const { return m_title; }
     const Gfx::Bitmap* icon() const { return m_icon; }
 

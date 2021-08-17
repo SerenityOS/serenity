@@ -212,28 +212,17 @@ void BrowserWindow::build_menus()
 
     m_inspect_dom_tree_action = GUI::Action::create(
         "Inspect &DOM Tree", { Mod_None, Key_F12 }, [this](auto&) {
-            auto& tab = active_tab();
-            if (tab.m_type == Tab::Type::InProcessWebView) {
-                if (!tab.m_dom_inspector_window) {
-                    tab.m_dom_inspector_window = GUI::Window::construct(this);
-                    tab.m_dom_inspector_window->resize(300, 500);
-                    tab.m_dom_inspector_window->set_title("DOM inspector");
-                    tab.m_dom_inspector_window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
-                    tab.m_dom_inspector_window->set_main_widget<InspectorWidget>();
-                    tab.m_dom_inspector_window->on_close = [&]() {
-                        tab.m_page_view->document()->set_inspected_node(nullptr);
-                    };
-                }
-                auto* inspector_widget = static_cast<InspectorWidget*>(tab.m_dom_inspector_window->main_widget());
-                inspector_widget->set_document(tab.m_page_view->document());
-                tab.m_dom_inspector_window->show();
-                tab.m_dom_inspector_window->move_to_front();
-            } else {
-                tab.m_web_content_view->inspect_dom_tree();
-            }
+            active_tab().show_inspector_window(Tab::InspectorTarget::Document);
         },
         this);
     m_inspect_dom_tree_action->set_status_tip("Open DOM inspector window for this page");
+
+    m_inspect_dom_node_action = GUI::Action::create(
+        "&Inspect Element", [this](auto&) {
+            active_tab().show_inspector_window(Tab::InspectorTarget::HoveredElement);
+        },
+        this);
+    m_inspect_dom_node_action->set_status_tip("Open DOM inspector for this element");
 
     auto& inspect_menu = add_menu("&Inspect");
     inspect_menu.add_action(*m_view_source_action);
