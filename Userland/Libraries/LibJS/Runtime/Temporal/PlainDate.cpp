@@ -328,7 +328,7 @@ ISODate balance_iso_date(double year_, double month_, double day)
         month = balanced_year_month.month;
     }
 
-    // 16. Return the new Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
+    // 16. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
     return ISODate { .year = year, .month = static_cast<u8>(month), .day = static_cast<u8>(day) };
 }
 

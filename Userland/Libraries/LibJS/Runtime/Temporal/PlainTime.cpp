@@ -119,7 +119,7 @@ DaysAndTime balance_time(i64 hour, i64 minute, i64 second, i64 millisecond, i64 
     // 13. Set hour to hour modulo 24.
     hour %= 24;
 
-    // 14. Return the new Record { [[Days]]: days, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
+    // 14. Return the Record { [[Days]]: days, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
     return DaysAndTime {
         .days = static_cast<i32>(days),
         .hour = static_cast<u8>(hour),
