@@ -157,6 +157,7 @@ endif()
 
 add_subdirectory(Userland/DevTools/IPCCompiler)
 add_subdirectory(Userland/DevTools/StateMachineGenerator)
+add_subdirectory(Userland/DevTools/ProtoBufCompiler)
 add_subdirectory(Userland/Libraries/LibUnicode/CodeGenerators)
 add_subdirectory(Userland/Libraries/LibWeb/CodeGenerators)
 add_subdirectory(Meta/CMake/ConfigureComponents)

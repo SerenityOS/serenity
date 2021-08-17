@@ -241,6 +241,25 @@ function(compile_ipc source output)
     add_custom_target(generate_${output_name} DEPENDS ${output})
 endfunction()
 
+function(compile_protobuf source header)
+    get_filename_component(header_name ${header} NAME)
+    set(target_name "generate_${header_name}")
+    # Note: This function is called atleast twice with the same header, once in the kernel
+    #       and once in Userland by things that want to access the descirbed API
+    if(NOT TARGET ${target_name})
+        set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
+        set(output ${CMAKE_CURRENT_BINARY_DIR}/${header})
+        add_custom_command(
+            OUTPUT ${output}
+            COMMAND ${write_if_different} ${output} ${CMAKE_BINARY_DIR}/Userland/DevTools/ProtoBufCompiler/ProtoBufCompiler ${source}
+            VERBATIM
+            DEPENDS ProtoBufCompiler
+            MAIN_DEPENDENCY ${source}
+        )
+        add_custom_target(${target_name} DEPENDS ${output})
+    endif()
+endfunction()
+
 function(embed_resource target section file)
     get_filename_component(asm_file "${file}" NAME)
     set(asm_file "${CMAKE_CURRENT_BINARY_DIR}/${target}-${section}.s")
