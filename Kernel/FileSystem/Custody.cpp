@@ -10,20 +10,20 @@
 #include <AK/Vector.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/Locking/SpinLockProtectedValue.h>
+#include <Kernel/Locking/ProtectedValue.h>
 
 namespace Kernel {
 
-static Singleton<SpinLockProtectedValue<Custody::AllCustodiesList>> s_all_custodies;
+static Singleton<ProtectedValue<Custody::AllCustodiesList>> s_all_custodies;
 
-static SpinLockProtectedValue<Custody::AllCustodiesList>& all_custodies()
+static ProtectedValue<Custody::AllCustodiesList>& all_custodies()
 {
     return s_all_custodies;
 }
 
 KResultOr<NonnullRefPtr<Custody>> Custody::try_create(Custody* parent, StringView name, Inode& inode, int mount_flags)
 {
-    return all_custodies().with([&](auto& all_custodies) -> KResultOr<NonnullRefPtr<Custody>> {
+    return all_custodies().with_exclusive([&](auto& all_custodies) -> KResultOr<NonnullRefPtr<Custody>> {
         for (Custody& custody : all_custodies) {
             if (custody.parent() == parent
                 && custody.name() == name
@@ -47,7 +47,7 @@ KResultOr<NonnullRefPtr<Custody>> Custody::try_create(Custody* parent, StringVie
 
 bool Custody::unref() const
 {
-    bool should_destroy = all_custodies().with([&](auto&) {
+    bool should_destroy = all_custodies().with_exclusive([&](auto&) {
         if (deref_base())
             return false;
         m_all_custodies_list_node.remove();
