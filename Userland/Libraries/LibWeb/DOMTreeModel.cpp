@@ -131,4 +131,20 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     return {};
 }
 
+GUI::ModelIndex DOMTreeModel::index_for_node(DOM::Node* node) const
+{
+    if (!node)
+        return {};
+
+    DOM::Node* parent = node->parent();
+    if (!parent)
+        return {};
+
+    auto maybe_row = parent->index_of_child(*node);
+    if (maybe_row.has_value())
+        return create_index(maybe_row.value(), 0, node);
+
+    return {};
+}
+
 }
