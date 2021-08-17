@@ -10,6 +10,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
+#include <LibThreading/BackgroundAction.h>
 
 REGISTER_WIDGET(DisplaySettings, MonitorWidget)
 
@@ -26,23 +27,35 @@ MonitorWidget::MonitorWidget()
 
 bool MonitorWidget::set_wallpaper(String path)
 {
-    if (path == m_desktop_wallpaper_path)
+    if (!is_different_to_current_wallpaper_path(path))
         return false;
 
-    if (path.is_empty()) {
-        m_wallpaper_bitmap = nullptr;
+    Threading::BackgroundAction<RefPtr<Gfx::Bitmap>>::create(
+        [path](auto&) {
+            RefPtr<Gfx::Bitmap> bmp;
+            if (!path.is_empty())
+                bmp = Gfx::Bitmap::try_load_from_file(path);
+            return bmp;
+        },
+
+        [this, path](RefPtr<Gfx::Bitmap> bitmap) {
+            // If we've been requested to change while we were loading the bitmap, don't bother spending the cost to
+            // move and render the now stale bitmap.
+            if (is_different_to_current_wallpaper_path(path))
+                return;
+            if (!bitmap.is_null())
+                m_wallpaper_bitmap = move(bitmap);
+            else
+                m_wallpaper_bitmap = nullptr;
+            m_desktop_dirty = true;
+            update();
+        });
+
+    if (path.is_empty())
         m_desktop_wallpaper_path = nullptr;
-        m_desktop_dirty = true;
-        update();
-        return false;
-    }
+    else
+        m_desktop_wallpaper_path = move(path);
 
-    auto bitmap = Gfx::Bitmap::try_load_from_file(path);
-    if (bitmap)
-        m_wallpaper_bitmap = move(bitmap);
-    m_desktop_wallpaper_path = move(path);
-    m_desktop_dirty = true;
-    update();
     return true;
 }
 

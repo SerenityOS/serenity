@@ -47,6 +47,11 @@ private:
     Gfx::IntSize m_desktop_resolution;
     int m_desktop_scale_factor { 1 };
     Gfx::Color m_desktop_color;
+
+    bool is_different_to_current_wallpaper_path(String const& path)
+    {
+        return (!path.is_empty() && path != m_desktop_wallpaper_path) || (path.is_empty() && m_desktop_wallpaper_path != nullptr);
+    }
 };
 
 }
