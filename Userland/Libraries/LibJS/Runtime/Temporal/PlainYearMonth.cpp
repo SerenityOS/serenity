@@ -71,7 +71,7 @@ Optional<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_object, doub
             return {};
         }
 
-        // b. Return the new Record { [[Year]]: year, [[Month]]: month }.
+        // b. Return the Record { [[Year]]: year, [[Month]]: month }.
         return ISOYearMonth { .year = static_cast<i32>(year), .month = static_cast<u8>(month), .reference_iso_day = 0 };
     }
 
@@ -131,7 +131,7 @@ ISOYearMonth balance_iso_year_month(double year, double month)
     // 3. Set month to (month − 1) modulo 12 + 1.
     month = fmod(month - 1, 12) + 1;
 
-    // 4. Return the new Record { [[Year]]: year, [[Month]]: month }.
+    // 4. Return the Record { [[Year]]: year, [[Month]]: month }.
     return ISOYearMonth { .year = static_cast<i32>(year), .month = static_cast<u8>(month), .reference_iso_day = 0 };
 }
 

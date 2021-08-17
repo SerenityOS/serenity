@@ -156,7 +156,7 @@ Optional<ISODateTime> get_iso_parts_from_epoch(BigInt const& epoch_nanoseconds)
     // 11. Let nanosecond be remainderNs modulo 1000.
     auto nanosecond = static_cast<u16>(remainder_ns % 1000);
 
-    // 12. Return the new Record { [[Year]]: year, [[Month]]: month, [[Day]]: day, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
+    // 12. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
     return ISODateTime { .year = year, .month = month, .day = day, .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = microsecond, .nanosecond = nanosecond };
 }
 

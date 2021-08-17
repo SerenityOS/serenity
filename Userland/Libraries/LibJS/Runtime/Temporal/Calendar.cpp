@@ -813,7 +813,7 @@ Optional<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, O
     if (vm.exception())
         return {};
 
-    // 8. Return the new Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[ReferenceISODay]]: 1 }.
+    // 8. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[ReferenceISODay]]: 1 }.
     return ISOYearMonth { .year = result->year, .month = result->month, .reference_iso_day = 1 };
 }
 
@@ -892,7 +892,7 @@ Optional<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_object, Obj
             return {};
     }
 
-    // 14. Return the new Record { [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[ReferenceISOYear]]: referenceISOYear }.
+    // 14. Return the Record { [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[ReferenceISOYear]]: referenceISOYear }.
     return ISOMonthDay { .month = result->month, .day = result->day, .reference_iso_year = reference_iso_year };
 }
 
