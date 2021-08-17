@@ -214,7 +214,7 @@ bool CardStack::is_allowed_to_push(const Card& card, size_t stack_size, Movement
                 return false;
             return top_card.type() == card.type() && m_stack.size() == card.value();
         } else if (m_type == Normal) {
-            bool color_match;
+            bool color_match = true;
             switch (movement_rule) {
             case Alternating:
                 color_match = card.color() != top_card.color();
@@ -223,7 +223,6 @@ bool CardStack::is_allowed_to_push(const Card& card, size_t stack_size, Movement
                 color_match = card.color() == top_card.color();
                 break;
             case Any:
-                color_match = true;
                 break;
             }
 

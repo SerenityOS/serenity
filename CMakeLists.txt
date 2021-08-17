@@ -261,7 +261,6 @@ add_compile_options(-Wno-unused-private-field)
 add_compile_options(-Wno-unused-const-variable)
 add_compile_options(-Wno-unused-command-line-argument)
 add_compile_options(-Wwrite-strings)
-add_compile_options(-Wno-maybe-uninitialized)
 
 add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
 add_compile_options(-fno-exceptions)

@@ -23,8 +23,12 @@ using Test::Crash;
 
 #ifdef __clang__
 #    pragma clang optimize off
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wmaybe-uninitialized"
 #else
 #    pragma GCC optimize("O0")
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 
 int main(int argc, char** argv)
@@ -290,3 +294,9 @@ int main(int argc, char** argv)
 
     return 0;
 }
+
+#ifdef __clang__
+#    pragma clang diagnostic pop
+#else
+#    pragma GCC diagnostic pop
+#endif
