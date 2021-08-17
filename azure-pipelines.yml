@@ -8,6 +8,11 @@ jobs:
 
   - template: Meta/Azure/Lagom.yml
     parameters:
+      os: 'Linux'
+      fuzzer: 'Fuzz'
+
+  - template: Meta/Azure/Lagom.yml
+    parameters:
       os: 'macOS'
       allow_test_failures: true
 
