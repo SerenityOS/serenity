@@ -18,6 +18,7 @@ public:
 
     void set_document(Web::DOM::Document*);
     void set_dom_json(String);
+    void set_inspected_node(Web::DOM::Node*);
 
 private:
     InspectorWidget();

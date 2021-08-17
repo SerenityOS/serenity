@@ -7,6 +7,7 @@
 #pragma once
 
 #include "BookmarksBarWidget.h"
+#include "Tab.h"
 #include "WindowActions.h"
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Window.h>
@@ -34,6 +35,7 @@ public:
     GUI::Action& select_all_action() { return *m_select_all_action; }
     GUI::Action& view_source_action() { return *m_view_source_action; }
     GUI::Action& inspect_dom_tree_action() { return *m_inspect_dom_tree_action; }
+    GUI::Action& inspect_dom_node_action() { return *m_inspect_dom_node_action; }
 
 private:
     explicit BrowserWindow(CookieJar&, URL);
@@ -49,6 +51,7 @@ private:
     RefPtr<GUI::Action> m_select_all_action;
     RefPtr<GUI::Action> m_view_source_action;
     RefPtr<GUI::Action> m_inspect_dom_tree_action;
+    RefPtr<GUI::Action> m_inspect_dom_node_action;
 
     CookieJar& m_cookie_jar;
     WindowActions m_window_actions;
