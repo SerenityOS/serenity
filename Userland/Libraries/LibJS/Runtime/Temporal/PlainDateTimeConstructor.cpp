@@ -6,6 +6,7 @@
 
 #include <AK/Checked.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainDateTimeConstructor.h>
@@ -46,106 +47,52 @@ Value PlainDateTimeConstructor::construct(FunctionObject& new_target)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    // 2. Let isoYear be ? ToIntegerOrInfinity(isoYear).
-    auto iso_year = vm.argument(0).to_integer_or_infinity(global_object);
+    // 2. Let isoYear be ? ToIntegerThrowOnInfinity(isoYear).
+    auto iso_year = to_integer_throw_on_infinity(global_object, vm.argument(0), ErrorType::TemporalInvalidPlainDateTime);
     if (vm.exception())
         return {};
 
-    // 3. If isoYear is +∞ or -∞, throw a RangeError exception.
-    if (Value(iso_year).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
-        return {};
-    }
-
-    // 4. Let isoMonth be ? ToIntegerOrInfinity(isoMonth).
-    auto iso_month = vm.argument(1).to_integer_or_infinity(global_object);
+    // 3. Let isoMonth be ? ToIntegerThrowOnInfinity(isoMonth).
+    auto iso_month = to_integer_throw_on_infinity(global_object, vm.argument(1), ErrorType::TemporalInvalidPlainDateTime);
     if (vm.exception())
         return {};
 
-    // 5. If isoMonth is +∞ or -∞, throw a RangeError exception.
-    if (Value(iso_month).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
-        return {};
-    }
-
-    // 6. Let isoDay be ? ToIntegerOrInfinity(isoDay).
-    auto iso_day = vm.argument(2).to_integer_or_infinity(global_object);
+    // 4. Let isoDay be ? ToIntegerThrowOnInfinity(isoDay).
+    auto iso_day = to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidPlainDateTime);
     if (vm.exception())
         return {};
 
-    // 7. If isoDay is +∞ or -∞, throw a RangeError exception.
-    if (Value(iso_day).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
-        return {};
-    }
-
-    // 8. Let hour be ? ToIntegerOrInfinity(hour).
-    auto hour = vm.argument(3).to_integer_or_infinity(global_object);
+    // 5. Let hour be ? ToIntegerThrowOnInfinity(hour).
+    auto hour = to_integer_throw_on_infinity(global_object, vm.argument(3), ErrorType::TemporalInvalidPlainDateTime);
     if (vm.exception())
         return {};
 
-    // 9. If hour is +∞ or -∞, throw a RangeError exception.
-    if (Value(hour).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
-        return {};
-    }
-
-    // Let minute be ? ToIntegerOrInfinity(minute).
-    auto minute = vm.argument(4).to_integer_or_infinity(global_object);
+    // 6. Let minute be ? ToIntegerThrowOnInfinity(minute).
+    auto minute = to_integer_throw_on_infinity(global_object, vm.argument(4), ErrorType::TemporalInvalidPlainDateTime);
     if (vm.exception())
         return {};
 
-    // 11. If minute is +∞ or -∞, throw a RangeError exception.
-    if (Value(minute).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
-        return {};
-    }
-
-    // 12. Let second be ? ToIntegerOrInfinity(second).
-    auto second = vm.argument(5).to_integer_or_infinity(global_object);
+    // 7. Let second be ? ToIntegerThrowOnInfinity(second).
+    auto second = to_integer_throw_on_infinity(global_object, vm.argument(5), ErrorType::TemporalInvalidPlainDateTime);
     if (vm.exception())
         return {};
 
-    // 13. If second is +∞ or -∞, throw a RangeError exception.
-    if (Value(second).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
-        return {};
-    }
-
-    // 14. Let millisecond be ? ToIntegerOrInfinity(millisecond).
-    auto millisecond = vm.argument(6).to_integer_or_infinity(global_object);
+    // 8. Let millisecond be ? ToIntegerThrowOnInfinity(millisecond).
+    auto millisecond = to_integer_throw_on_infinity(global_object, vm.argument(6), ErrorType::TemporalInvalidPlainDateTime);
     if (vm.exception())
         return {};
 
-    // 15. If millisecond is +∞ or -∞, throw a RangeError exception.
-    if (Value(millisecond).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
-        return {};
-    }
-
-    // 16. Let microsecond be ? ToIntegerOrInfinity(microsecond).
-    auto microsecond = vm.argument(7).to_integer_or_infinity(global_object);
+    // 9. Let microsecond be ? ToIntegerThrowOnInfinity(microsecond).
+    auto microsecond = to_integer_throw_on_infinity(global_object, vm.argument(7), ErrorType::TemporalInvalidPlainDateTime);
     if (vm.exception())
         return {};
 
-    // 17. If microsecond is +∞ or -∞, throw a RangeError exception.
-    if (Value(microsecond).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
-        return {};
-    }
-
-    // 18. Let nanosecond be ? ToIntegerOrInfinity(nanosecond).
-    auto nanosecond = vm.argument(8).to_integer_or_infinity(global_object);
+    // 10. Let nanosecond be ? ToIntegerThrowOnInfinity(nanosecond).
+    auto nanosecond = to_integer_throw_on_infinity(global_object, vm.argument(8), ErrorType::TemporalInvalidPlainDateTime);
     if (vm.exception())
         return {};
 
-    // 19. If nanosecond is +∞ or -∞, throw a RangeError exception.
-    if (Value(nanosecond).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
-        return {};
-    }
-
-    // 20. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
+    // 11. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
     auto* calendar = to_temporal_calendar_with_iso_default(global_object, vm.argument(9));
     if (vm.exception())
         return {};
@@ -159,7 +106,7 @@ Value PlainDateTimeConstructor::construct(FunctionObject& new_target)
         return {};
     }
 
-    // 21. Return ? CreateTemporalDateTime(isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar, NewTarget).
+    // 12. Return ? CreateTemporalDateTime(isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar, NewTarget).
     return create_temporal_date_time(global_object, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond, *calendar, &new_target);
 }
 

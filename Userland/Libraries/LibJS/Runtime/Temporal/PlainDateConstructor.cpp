@@ -52,37 +52,22 @@ Value PlainDateConstructor::construct(FunctionObject& new_target)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    // 2. Let y be ? ToIntegerOrInfinity(isoYear).
-    auto y = vm.argument(0).to_integer_or_infinity(global_object);
+    // 2. Let y be ? ToIntegerThrowOnInfinity(isoYear).
+    auto y = to_integer_throw_on_infinity(global_object, vm.argument(0), ErrorType::TemporalInvalidPlainDate);
     if (vm.exception())
         return {};
-    // 3. If y is +∞ or -∞, throw a RangeError exception.
-    if (Value(y).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
-        return {};
-    }
 
-    // 4. Let m be ? ToIntegerOrInfinity(isoMonth).
-    auto m = vm.argument(1).to_integer_or_infinity(global_object);
+    // 3. Let m be ? ToIntegerThrowOnInfinity(isoMonth).
+    auto m = to_integer_throw_on_infinity(global_object, vm.argument(1), ErrorType::TemporalInvalidPlainDate);
     if (vm.exception())
         return {};
-    // 5. If m is +∞ or -∞, throw a RangeError exception.
-    if (Value(m).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
-        return {};
-    }
 
-    // 6. Let d be ? ToIntegerOrInfinity(isoDay).
-    auto d = vm.argument(2).to_integer_or_infinity(global_object);
+    // 4. Let d be ? ToIntegerThrowOnInfinity(isoDay).
+    auto d = to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidPlainDate);
     if (vm.exception())
         return {};
-    // 7. If d is +∞ or -∞, throw a RangeError exception.
-    if (Value(d).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
-        return {};
-    }
 
-    // 8. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
+    // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
     auto* calendar = to_temporal_calendar_with_iso_default(global_object, vm.argument(3));
     if (vm.exception())
         return {};
@@ -95,7 +80,7 @@ Value PlainDateConstructor::construct(FunctionObject& new_target)
         return {};
     }
 
-    // 9. Return ? CreateTemporalDate(y, m, d, calendar, NewTarget).
+    // 6. Return ? CreateTemporalDate(y, m, d, calendar, NewTarget).
     return create_temporal_date(global_object, y, m, d, *calendar, &new_target);
 }
 
