@@ -32,6 +32,7 @@ struct RasterizerOptions {
     float depth_min { 0 };
     float depth_max { 1 };
     GLenum depth_func { GL_LESS };
+    GLenum polygon_mode { GL_FILL };
 };
 
 class SoftwareRasterizer final {
