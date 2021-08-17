@@ -357,6 +357,7 @@ GLAPI void glTexParameterf(GLenum target, GLenum pname, GLfloat param);
 GLAPI void glBindTexture(GLenum target, GLuint texture);
 GLAPI void glActiveTexture(GLenum texture);
 GLAPI void glGetFloatv(GLenum pname, GLfloat* params);
+GLAPI void glGetBooleanv(GLenum pname, GLboolean* data);
 GLAPI void glDepthMask(GLboolean flag);
 GLAPI void glEnableClientState(GLenum cap);
 GLAPI void glDisableClientState(GLenum cap);
