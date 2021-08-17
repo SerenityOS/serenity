@@ -83,6 +83,7 @@ jobs:
         [ ! -e debug.log ] || cat debug.log
       displayName: 'Print Target Logs'
       workingDirectory: $(Build.SourcesDirectory)/Build
+      condition: failed()
 
     - script: |
         ccache -s
