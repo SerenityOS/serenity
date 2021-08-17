@@ -48,6 +48,15 @@ static void initialize_executable_icon_if_needed()
     s_executable_icon = Icon::default_icon("filetype-executable");
 }
 
+static void initialize_filetype_image_icon_if_needed()
+{
+    static bool initialized = false;
+    if (initialized)
+        return;
+    initialized = true;
+    s_filetype_image_icon = Icon::default_icon("filetype-image");
+}
+
 static void initialize_if_needed()
 {
     static bool s_initialized = false;
@@ -70,8 +79,7 @@ static void initialize_if_needed()
     s_symlink_icon = Icon::default_icon("filetype-symlink");
     s_socket_icon = Icon::default_icon("filetype-socket");
 
-    s_filetype_image_icon = Icon::default_icon("filetype-image");
-
+    initialize_filetype_image_icon_if_needed();
     initialize_executable_icon_if_needed();
 
     for (auto& filetype : config->keys("Icons")) {
@@ -114,7 +122,7 @@ Icon FileIconProvider::home_directory_open_icon()
 
 Icon FileIconProvider::filetype_image_icon()
 {
-    initialize_if_needed();
+    initialize_filetype_image_icon_if_needed();
     return s_filetype_image_icon;
 }
 
