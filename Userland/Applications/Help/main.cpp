@@ -96,11 +96,11 @@ int main(int argc, char* argv[])
     auto& left_tab_bar = splitter.add<GUI::TabWidget>();
     auto& tree_view_container = left_tab_bar.add_tab<GUI::Widget>("Browse");
     tree_view_container.set_layout<GUI::VerticalBoxLayout>();
-    tree_view_container.layout()->set_margins({ 4, 4, 4, 4 });
+    tree_view_container.layout()->set_margins(4);
     auto& tree_view = tree_view_container.add<GUI::TreeView>();
     auto& search_view = left_tab_bar.add_tab<GUI::Widget>("Search");
     search_view.set_layout<GUI::VerticalBoxLayout>();
-    search_view.layout()->set_margins({ 4, 4, 4, 4 });
+    search_view.layout()->set_margins(4);
     auto& search_box = search_view.add<GUI::TextBox>();
     auto& search_list_view = search_view.add<GUI::ListView>();
     search_box.set_fixed_height(20);

@@ -69,7 +69,7 @@ NotificationWindow::NotificationWindow(i32 client_id, const String& text, const 
 
     widget.set_fill_with_background_color(true);
     widget.set_layout<GUI::HorizontalBoxLayout>();
-    widget.layout()->set_margins({ 8, 8, 8, 8 });
+    widget.layout()->set_margins(8);
     widget.layout()->set_spacing(6);
 
     m_image = &widget.add<GUI::ImageWidget>();

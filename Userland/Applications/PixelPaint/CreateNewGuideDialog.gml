@@ -6,7 +6,7 @@
 
     @GUI::Widget {
         layout: @GUI::VerticalBoxLayout {
-            margins: [4,4,4,4]
+            margins: [4]
         }
 
         @GUI::GroupBox {
@@ -14,7 +14,7 @@
             shrink_to_fit: true
             
             layout: @GUI::HorizontalBoxLayout {
-                margins: [20,10,10,10]
+                margins: [20, 10, 10]
             }
 
             @GUI::RadioButton {
@@ -31,7 +31,7 @@
 
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout {
-            margins: [4,4,4,4]
+            margins: [4]
         }
         shrink_to_fit: true
 
@@ -50,7 +50,7 @@
         max_height: 24
 
         layout: @GUI::HorizontalBoxLayout {
-            margins: [4,4,4,4]
+            margins: [4]
         }
 
         @GUI::Widget {

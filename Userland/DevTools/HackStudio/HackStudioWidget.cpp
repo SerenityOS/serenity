@@ -107,7 +107,7 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
 
     m_editors_splitter = m_right_hand_stack->add<GUI::VerticalSplitter>();
     m_editors_splitter->layout()->set_spacing(5);
-    m_editors_splitter->layout()->set_margins({ 3, 0, 0, 0 });
+    m_editors_splitter->layout()->set_margins({ 3, 0, 0 });
     add_new_editor(*m_editors_splitter);
 
     m_switch_to_next_editor = create_switch_to_next_editor_action();
@@ -958,14 +958,14 @@ void HackStudioWidget::create_project_tab(GUI::Widget& parent)
 
     auto& tree_view_container = m_project_tab->add_tab<GUI::Widget>("Files");
     tree_view_container.set_layout<GUI::VerticalBoxLayout>();
-    tree_view_container.layout()->set_margins({ 2, 2, 2, 2 });
+    tree_view_container.layout()->set_margins(2);
 
     m_project_tree_view = tree_view_container.add<GUI::TreeView>();
     configure_project_tree_view();
 
     auto& class_view_container = m_project_tab->add_tab<GUI::Widget>("Classes");
     class_view_container.set_layout<GUI::VerticalBoxLayout>();
-    class_view_container.layout()->set_margins({ 2, 2, 2, 2 });
+    class_view_container.layout()->set_margins(2);
 
     m_class_view = class_view_container.add<ClassViewWidget>();
 

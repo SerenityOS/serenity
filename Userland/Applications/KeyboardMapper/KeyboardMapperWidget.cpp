@@ -28,7 +28,7 @@ void KeyboardMapperWidget::create_frame()
 {
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_margins({ 4, 4, 4, 4 });
+    layout()->set_margins(4);
 
     auto& main_widget = add<GUI::Widget>();
     main_widget.set_relative_rect(0, 0, 200, 200);

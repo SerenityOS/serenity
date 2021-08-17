@@ -60,12 +60,12 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();
-    main_widget.layout()->set_margins({ 2, 2, 2, 2 });
+    main_widget.layout()->set_margins(2);
     main_widget.layout()->set_spacing(4);
 
     auto& preview_box = main_widget.add<GUI::GroupBox>();
     preview_box.set_layout<GUI::VerticalBoxLayout>();
-    preview_box.layout()->set_margins({ 8, 8, 8, 8 });
+    preview_box.layout()->set_margins(8);
 
     auto& preview_label = preview_box.add<GUI::Label>();
     preview_label.set_font(editor.edited_font());

@@ -26,7 +26,7 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     : m_workbook(make<Workbook>(move(sheets)))
 {
     set_fill_with_background_color(true);
-    set_layout<GUI::VerticalBoxLayout>().set_margins({ 2, 2, 2, 2 });
+    set_layout<GUI::VerticalBoxLayout>().set_margins(2);
     auto& container = add<GUI::VerticalSplitter>();
 
     auto& top_bar = container.add<GUI::Frame>();
@@ -71,7 +71,7 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     m_inline_documentation_window->set_resizable(false);
     auto& inline_widget = m_inline_documentation_window->set_main_widget<GUI::Frame>();
     inline_widget.set_fill_with_background_color(true);
-    inline_widget.set_layout<GUI::VerticalBoxLayout>().set_margins({ 4, 4, 4, 4 });
+    inline_widget.set_layout<GUI::VerticalBoxLayout>().set_margins(4);
     inline_widget.set_frame_shape(Gfx::FrameShape::Box);
     m_inline_documentation_label = inline_widget.add<GUI::Label>();
     m_inline_documentation_label->set_fill_with_background_color(true);

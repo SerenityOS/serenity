@@ -15,7 +15,7 @@ InterruptsWidget::InterruptsWidget()
 {
     on_first_show = [this](auto&) {
         set_layout<GUI::VerticalBoxLayout>();
-        layout()->set_margins({ 4, 4, 4, 4 });
+        layout()->set_margins(4);
 
         Vector<GUI::JsonArrayModel::FieldSpec> interrupts_field;
         interrupts_field.empend("interrupt_line", "Line", Gfx::TextAlignment::CenterRight);

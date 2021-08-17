@@ -56,7 +56,7 @@ ShutdownDialog::ShutdownDialog()
     auto& left_container = content_container.add<GUI::Widget>();
     left_container.set_fixed_width(60);
     left_container.set_layout<GUI::VerticalBoxLayout>();
-    left_container.layout()->set_margins({ 12, 0, 0, 0 });
+    left_container.layout()->set_margins({ 12, 0, 0 });
 
     auto& icon_wrapper = left_container.add<GUI::Widget>();
     icon_wrapper.set_fixed_size(32, 48);

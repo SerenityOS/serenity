@@ -28,7 +28,7 @@ GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t ta
     main_widget.set_fill_with_background_color(true);
 
     auto& layout = main_widget.set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins({ 4, 4, 4, 4 });
+    layout.set_margins(4);
 
     auto& board_size_box = main_widget.add<GUI::Widget>();
     auto& input_layout = board_size_box.set_layout<GUI::HorizontalBoxLayout>();

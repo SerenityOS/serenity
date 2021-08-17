@@ -72,7 +72,7 @@ SamplerWidget::SamplerWidget(TrackManager& track_manager)
     : m_track_manager(track_manager)
 {
     set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_margins({ 10, 10, 10, 10 });
+    layout()->set_margins(10);
     layout()->set_spacing(10);
     set_fill_with_background_color(true);
 

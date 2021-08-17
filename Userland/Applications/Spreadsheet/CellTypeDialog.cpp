@@ -46,7 +46,7 @@ CellTypeDialog::CellTypeDialog(const Vector<Position>& positions, Sheet& sheet, 
     resize(285, 360);
 
     auto& main_widget = set_main_widget<GUI::Widget>();
-    main_widget.set_layout<GUI::VerticalBoxLayout>().set_margins({ 4, 4, 4, 4 });
+    main_widget.set_layout<GUI::VerticalBoxLayout>().set_margins(4);
     main_widget.set_fill_with_background_color(true);
 
     auto& tab_widget = main_widget.add<GUI::TabWidget>();
@@ -130,7 +130,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
     }
 
     auto& type_tab = tabs.add_tab<GUI::Widget>("Type");
-    type_tab.set_layout<GUI::HorizontalBoxLayout>().set_margins({ 4, 4, 4, 4 });
+    type_tab.set_layout<GUI::HorizontalBoxLayout>().set_margins(4);
     {
         auto& left_side = type_tab.add<GUI::Widget>();
         left_side.set_layout<GUI::VerticalBoxLayout>();
@@ -192,14 +192,14 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
     }
 
     auto& alignment_tab = tabs.add_tab<GUI::Widget>("Alignment");
-    alignment_tab.set_layout<GUI::VerticalBoxLayout>().set_margins({ 4, 4, 4, 4 });
+    alignment_tab.set_layout<GUI::VerticalBoxLayout>().set_margins(4);
     {
         // FIXME: Frame?
         // Horizontal alignment
         {
             auto& horizontal_alignment_selection_container = alignment_tab.add<GUI::Widget>();
             horizontal_alignment_selection_container.set_layout<GUI::HorizontalBoxLayout>();
-            horizontal_alignment_selection_container.layout()->set_margins({ 4, 0, 0, 0 });
+            horizontal_alignment_selection_container.layout()->set_margins({ 4, 0, 0 });
             horizontal_alignment_selection_container.set_fixed_height(22);
 
             auto& horizontal_alignment_label = horizontal_alignment_selection_container.add<GUI::Label>();
@@ -231,7 +231,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
         {
             auto& vertical_alignment_container = alignment_tab.add<GUI::Widget>();
             vertical_alignment_container.set_layout<GUI::HorizontalBoxLayout>();
-            vertical_alignment_container.layout()->set_margins({ 0, 4, 0, 0 });
+            vertical_alignment_container.layout()->set_margins({ 4, 0, 0 });
             vertical_alignment_container.set_fixed_height(22);
 
             auto& vertical_alignment_label = vertical_alignment_container.add<GUI::Label>();
@@ -261,7 +261,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
     }
 
     auto& colors_tab = tabs.add_tab<GUI::Widget>("Color");
-    colors_tab.set_layout<GUI::VerticalBoxLayout>().set_margins({ 4, 4, 4, 4 });
+    colors_tab.set_layout<GUI::VerticalBoxLayout>().set_margins(4);
     {
         // Static formatting
         {
@@ -273,7 +273,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
                 // FIXME: Somehow allow unsetting these.
                 auto& foreground_container = static_formatting_container.add<GUI::Widget>();
                 foreground_container.set_layout<GUI::HorizontalBoxLayout>();
-                foreground_container.layout()->set_margins({ 4, 0, 0, 0 });
+                foreground_container.layout()->set_margins({ 4, 0, 0 });
                 foreground_container.set_shrink_to_fit(true);
 
                 auto& foreground_label = foreground_container.add<GUI::Label>();
@@ -293,7 +293,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
                 // FIXME: Somehow allow unsetting these.
                 auto& background_container = static_formatting_container.add<GUI::Widget>();
                 background_container.set_layout<GUI::HorizontalBoxLayout>();
-                background_container.layout()->set_margins({ 4, 0, 0, 0 });
+                background_container.layout()->set_margins({ 4, 0, 0 });
                 background_container.set_shrink_to_fit(true);
 
                 auto& background_label = background_container.add<GUI::Label>();

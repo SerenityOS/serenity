@@ -1,6 +1,6 @@
 @GUI::Widget {
     layout: @GUI::VerticalBoxLayout {
-        margins: [20, 20, 20, 20]
+        margins: [20]
     }
 
     @GUI::HorizontalSplitter {
@@ -19,7 +19,7 @@
 
                     layout: @GUI::VerticalBoxLayout {
                         // FIXME: This is working around the fact that group boxes don't allocate space for their title and border!
-                        margins: [20, 10, 10, 10]
+                        margins: [20, 10, 10]
                     }
 
                     @GUI::RadioButton {
@@ -70,7 +70,7 @@
 
                     layout: @GUI::VerticalBoxLayout {
                         // FIXME: This is working around the fact that group boxes don't allocate space for their title and border!
-                        margins: [20, 10, 10, 10]
+                        margins: [20, 10, 10]
                     }
 
                     @GUI::RadioButton {
@@ -152,7 +152,7 @@
 
             layout: @GUI::VerticalBoxLayout {
                 // FIXME: This is working around the fact that group boxes don't allocate space for their title and border!
-                margins: [20, 10, 10, 10]
+                margins: [20, 10, 10]
             }
 
             @GUI::TextEditor {

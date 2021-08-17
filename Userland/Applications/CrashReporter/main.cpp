@@ -225,7 +225,7 @@ int main(int argc, char** argv)
 
     auto& backtrace_tab = tab_widget.add_tab<GUI::Widget>("Backtrace");
     backtrace_tab.set_layout<GUI::VerticalBoxLayout>();
-    backtrace_tab.layout()->set_margins({ 4, 4, 4, 4 });
+    backtrace_tab.layout()->set_margins(4);
 
     auto& backtrace_label = backtrace_tab.add<GUI::Label>("A backtrace for each thread alive during the crash is listed below:");
     backtrace_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -236,7 +236,7 @@ int main(int argc, char** argv)
     for (auto& backtrace : thread_backtraces) {
         auto& backtrace_text_editor = backtrace_tab_widget.add_tab<GUI::TextEditor>(backtrace.title);
         backtrace_text_editor.set_layout<GUI::VerticalBoxLayout>();
-        backtrace_text_editor.layout()->set_margins({ 4, 4, 4, 4 });
+        backtrace_text_editor.layout()->set_margins(4);
         backtrace_text_editor.set_text(backtrace.text);
         backtrace_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
         backtrace_text_editor.set_should_hide_unnecessary_scrollbars(true);
@@ -244,7 +244,7 @@ int main(int argc, char** argv)
 
     auto& cpu_registers_tab = tab_widget.add_tab<GUI::Widget>("CPU Registers");
     cpu_registers_tab.set_layout<GUI::VerticalBoxLayout>();
-    cpu_registers_tab.layout()->set_margins({ 4, 4, 4, 4 });
+    cpu_registers_tab.layout()->set_margins(4);
 
     auto& cpu_registers_label = cpu_registers_tab.add<GUI::Label>("The CPU register state for each thread alive during the crash is listed below:");
     cpu_registers_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -255,7 +255,7 @@ int main(int argc, char** argv)
     for (auto& cpu_registers : thread_cpu_registers) {
         auto& cpu_registers_text_editor = cpu_registers_tab_widget.add_tab<GUI::TextEditor>(cpu_registers.title);
         cpu_registers_text_editor.set_layout<GUI::VerticalBoxLayout>();
-        cpu_registers_text_editor.layout()->set_margins({ 4, 4, 4, 4 });
+        cpu_registers_text_editor.layout()->set_margins(4);
         cpu_registers_text_editor.set_text(cpu_registers.text);
         cpu_registers_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
         cpu_registers_text_editor.set_should_hide_unnecessary_scrollbars(true);
@@ -263,7 +263,7 @@ int main(int argc, char** argv)
 
     auto& environment_tab = tab_widget.add_tab<GUI::Widget>("Environment");
     environment_tab.set_layout<GUI::VerticalBoxLayout>();
-    environment_tab.layout()->set_margins({ 4, 4, 4, 4 });
+    environment_tab.layout()->set_margins(4);
 
     auto& environment_text_editor = environment_tab.add<GUI::TextEditor>();
     environment_text_editor.set_text(String::join("\n", environment));

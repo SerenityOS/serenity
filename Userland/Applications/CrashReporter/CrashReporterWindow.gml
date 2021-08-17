@@ -2,7 +2,7 @@
     fill_with_background_color: true
 
     layout: @GUI::VerticalBoxLayout {
-        margins: [5, 5, 5, 5]
+        margins: [5]
     }
 
     @GUI::Widget {

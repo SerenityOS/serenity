@@ -23,7 +23,7 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, String player_name)
     main_widget.set_fill_with_background_color(true);
 
     auto& layout = main_widget.set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins({ 4, 4, 4, 4 });
+    layout.set_margins(4);
 
     auto& name_box = main_widget.add<GUI::Widget>();
     auto& input_layout = name_box.set_layout<GUI::HorizontalBoxLayout>();
