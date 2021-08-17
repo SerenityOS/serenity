@@ -26,6 +26,7 @@ void InspectorWidget::set_inspected_node(GUI::ModelIndex const index)
         return;
     }
     auto* node = static_cast<Web::DOM::Node*>(index.internal_data());
+    m_inspected_node = node;
     m_document->set_inspected_node(node);
     if (node && node->is_element()) {
         auto& element = verify_cast<Web::DOM::Element>(*node);
@@ -70,6 +71,7 @@ InspectorWidget::~InspectorWidget()
 
 void InspectorWidget::set_document(Web::DOM::Document* document)
 {
+    document->set_inspected_node(m_inspected_node);
     if (m_document == document)
         return;
     m_document = document;
