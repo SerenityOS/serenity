@@ -30,13 +30,17 @@ PATH="$SCRIPT_DIR/../Toolchain/Local/qemu/bin:$PATH"
 # directory was changed to Toolchain/Local/qemu.
 PATH="$SCRIPT_DIR/../Toolchain/Local/i686/bin:$PATH"
 
+# We depend on GNU coreutils du for the --apparent-size extension.
+# GNU coreutils is a build dependency.
+if type gdu > /dev/null 2>&1; then
+    GNUDU="gdu"
+else
+    GNUDU="du"
+fi
+
 disk_usage() {
     # shellcheck disable=SC2003
-if [ "$(uname -s)" = "Darwin" ]; then
-    expr "$(du -sk "$1" | cut -f1)"
-else
-    expr "$(du -sk --apparent-size "$1" | cut -f1)"
-fi
+    expr "$(${GNUDU} -sk --apparent-size "$1" | cut -f1)"
 }
 
 inode_usage() {
