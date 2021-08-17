@@ -11,6 +11,27 @@ namespace GUI {
 class Margins {
 public:
     Margins() { }
+    Margins(int all)
+        : m_top(all)
+        , m_right(all)
+        , m_bottom(all)
+        , m_left(all)
+    {
+    }
+    Margins(int vertical, int horizontal)
+        : m_top(vertical)
+        , m_right(horizontal)
+        , m_bottom(vertical)
+        , m_left(horizontal)
+    {
+    }
+    Margins(int top, int horizontal, int bottom)
+        : m_top(top)
+        , m_right(horizontal)
+        , m_bottom(bottom)
+        , m_left(horizontal)
+    {
+    }
     Margins(int top, int right, int bottom, int left)
         : m_top(top)
         , m_right(right)
@@ -49,8 +70,8 @@ private:
 
 }
 
-#define REGISTER_MARGINS_PROPERTY(property_name, getter, setter)   \
-    register_property(                                             \
+#define REGISTER_MARGINS_PROPERTY(property_name, getter, setter) \
+    register_property(                                           \
         property_name, [this]() {                                  \
             auto m = getter();                                     \
             JsonObject margins_object;                             \
@@ -58,13 +79,23 @@ private:
             margins_object.set("right", m.right());                \
             margins_object.set("top", m.top());                    \
             margins_object.set("bottom", m.bottom());              \
-            return margins_object; },                               \
-        [this](auto& value) {                                      \
-            if (!value.is_array() || value.as_array().size() != 4) \
-                return false;                                      \
-            int m[4];                                              \
-            for (size_t i = 0; i < 4; ++i)                         \
-                m[i] = value.as_array().at(i).to_i32();            \
-            setter({ m[0], m[1], m[2], m[3] });                    \
-            return true;                                           \
+            return margins_object; },                             \
+        [this](auto& value) {                                    \
+            if (!value.is_array())                               \
+                return false;                                    \
+            auto size = value.as_array().size();                 \
+            if (size == 0 || size > 4)                           \
+                return false;                                    \
+            int m[4];                                            \
+            for (size_t i = 0; i < size; ++i)                    \
+                m[i] = value.as_array().at(i).to_i32();          \
+            if (size == 1)                                       \
+                setter({ m[0] });                                \
+            else if (size == 2)                                  \
+                setter({ m[0], m[1] });                          \
+            else if (size == 3)                                  \
+                setter({ m[0], m[1], m[2] });                    \
+            else                                                 \
+                setter({ m[0], m[1], m[2], m[3] });              \
+            return true;                                         \
         });

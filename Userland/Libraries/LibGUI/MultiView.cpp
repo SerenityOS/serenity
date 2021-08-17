@@ -20,7 +20,7 @@ namespace GUI {
 MultiView::MultiView()
 {
     set_active_widget(nullptr);
-    set_content_margins({ 2, 2, 2, 2 });
+    set_content_margins(2);
     m_icon_view = add<IconView>();
     m_table_view = add<TableView>();
     m_columns_view = add<ColumnsView>();

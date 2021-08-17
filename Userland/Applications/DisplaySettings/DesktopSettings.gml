@@ -2,12 +2,12 @@
     fill_with_background_color: true
 
     layout: @GUI::VerticalBoxLayout {
-        margins: [8, 8, 8, 8]
+        margins: [8]
     }
 
     @GUI::GroupBox {
         layout: @GUI::VerticalBoxLayout {
-            margins: [24, 16, 6, 16]
+            margins: [24, 16, 6]
         }
 
         title: "Workspaces"
@@ -17,7 +17,7 @@
             fixed_height: 32
 
             layout: @GUI::HorizontalBoxLayout {
-                margins: [6, 6, 6, 6]
+                margins: [6]
             }
 
             @GUI::Label {
@@ -57,7 +57,7 @@
             }
             @GUI::Widget {
                 layout: @GUI::VerticalBoxLayout {
-                    margins: [6, 6, 6, 6]
+                    margins: [6]
                 }
                 @GUI::Label {
                     text: "Use the Ctrl+Alt+Arrow hotkeys to move between workspaces."

@@ -39,7 +39,7 @@ public:
     {
         auto& layout = set_layout<GUI::HorizontalBoxLayout>();
         layout.set_spacing(12);
-        layout.set_margins({ 4, 4, 4, 4 });
+        layout.set_margins(4);
 
         m_image = add<GUI::ImageWidget>();
 
@@ -221,12 +221,12 @@ int main(int argc, char** argv)
     container.set_fill_with_background_color(true);
     container.set_frame_shadow(Gfx::FrameShadow::Raised);
     auto& layout = container.set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins({ 8, 8, 0, 8 });
+    layout.set_margins({ 8, 8, 0 });
 
     auto& text_box = container.add<GUI::TextBox>();
     auto& results_container = container.add<GUI::Widget>();
     auto& results_layout = results_container.set_layout<GUI::VerticalBoxLayout>();
-    results_layout.set_margins({ 10, 0, 10, 0 });
+    results_layout.set_margins({ 10, 0 });
 
     auto mark_selected_item = [&]() {
         for (size_t i = 0; i < app_state.visible_result_count; ++i) {

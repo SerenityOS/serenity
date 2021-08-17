@@ -190,11 +190,11 @@ static RefPtr<GUI::Window> create_find_window(VT::TerminalWidget& terminal)
     search.set_fill_with_background_color(true);
     search.set_background_role(ColorRole::Button);
     search.set_layout<GUI::VerticalBoxLayout>();
-    search.layout()->set_margins({ 4, 4, 4, 4 });
+    search.layout()->set_margins(4);
 
     auto& find = search.add<GUI::Widget>();
     find.set_layout<GUI::HorizontalBoxLayout>();
-    find.layout()->set_margins({ 4, 4, 4, 4 });
+    find.layout()->set_margins(4);
     find.set_fixed_height(30);
 
     auto& find_textbox = find.add<GUI::TextBox>();

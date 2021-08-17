@@ -47,7 +47,7 @@ ClockWidget::ClockWidget()
     auto& root_container = m_calendar_window->set_main_widget<GUI::Label>();
     root_container.set_fill_with_background_color(true);
     root_container.set_layout<GUI::VerticalBoxLayout>();
-    root_container.layout()->set_margins({ 2, 0, 2, 0 });
+    root_container.layout()->set_margins({ 2, 0 });
     root_container.layout()->set_spacing(0);
     root_container.set_frame_thickness(2);
     root_container.set_frame_shape(Gfx::FrameShape::Container);

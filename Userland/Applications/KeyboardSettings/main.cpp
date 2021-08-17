@@ -109,7 +109,7 @@ int main(int argc, char** argv)
     root_widget.set_layout<GUI::VerticalBoxLayout>();
     root_widget.set_fill_with_background_color(true);
     root_widget.layout()->set_spacing(0);
-    root_widget.layout()->set_margins({ 4, 4, 4, 4 });
+    root_widget.layout()->set_margins(4);
 
     auto& character_map_file_selection_container = root_widget.add<GUI::Widget>();
     character_map_file_selection_container.set_layout<GUI::HorizontalBoxLayout>();
@@ -154,7 +154,7 @@ int main(int argc, char** argv)
     bottom_widget.set_layout<GUI::HorizontalBoxLayout>();
     bottom_widget.layout()->add_spacer();
     bottom_widget.set_fixed_height(30);
-    bottom_widget.set_content_margins({ 4, 0, 4, 0 });
+    bottom_widget.set_content_margins({ 4, 0 });
 
     auto& ok_button = bottom_widget.add<GUI::Button>();
     ok_button.set_text("OK");

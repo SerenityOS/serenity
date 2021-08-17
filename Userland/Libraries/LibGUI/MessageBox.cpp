@@ -89,7 +89,7 @@ void MessageBox::build()
     widget.set_layout<VerticalBoxLayout>();
     widget.set_fill_with_background_color(true);
 
-    widget.layout()->set_margins({ 8, 8, 8, 8 });
+    widget.layout()->set_margins(8);
     widget.layout()->set_spacing(6);
 
     auto& message_container = widget.add<Widget>();

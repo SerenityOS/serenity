@@ -48,7 +48,7 @@ void EvaluateExpressionDialog::build(Window* parent_window)
     widget.set_layout<GUI::VerticalBoxLayout>();
     widget.set_fill_with_background_color(true);
 
-    widget.layout()->set_margins({ 6, 6, 6, 6 });
+    widget.layout()->set_margins(6);
     widget.layout()->set_spacing(6);
 
     m_text_editor = widget.add<GUI::TextBox>();
@@ -77,7 +77,7 @@ void EvaluateExpressionDialog::build(Window* parent_window)
     auto& button_container_inner = button_container_outer.add<GUI::Widget>();
     button_container_inner.set_layout<GUI::HorizontalBoxLayout>();
     button_container_inner.layout()->set_spacing(6);
-    button_container_inner.layout()->set_margins({ 4, 0, 4, 4 });
+    button_container_inner.layout()->set_margins({ 4, 0, 4 });
     button_container_inner.layout()->add_spacer();
 
     m_evaluate_button = button_container_inner.add<GUI::Button>();

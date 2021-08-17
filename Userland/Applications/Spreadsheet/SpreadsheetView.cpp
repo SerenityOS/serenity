@@ -151,7 +151,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     : m_sheet(sheet)
     , m_sheet_model(SheetModel::create(*m_sheet))
 {
-    set_layout<GUI::VerticalBoxLayout>().set_margins({ 2, 2, 2, 2 });
+    set_layout<GUI::VerticalBoxLayout>().set_margins(2);
     m_table_view = add<InfinitelyScrollableTableView>();
     m_table_view->set_grid_style(GUI::TableView::GridStyle::Both);
     m_table_view->set_selection_behavior(GUI::AbstractView::SelectionBehavior::SelectItems);

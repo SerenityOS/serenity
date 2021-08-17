@@ -41,7 +41,7 @@ WizardDialog::WizardDialog(Window* parent_window)
     auto& nav_container_widget = main_widget.add<Widget>();
     nav_container_widget.set_layout<HorizontalBoxLayout>();
     nav_container_widget.set_fixed_height(42);
-    nav_container_widget.layout()->set_margins({ 0, 10, 0, 10 });
+    nav_container_widget.layout()->set_margins({ 0, 10 });
     nav_container_widget.layout()->set_spacing(0);
     nav_container_widget.layout()->add_spacer();
 

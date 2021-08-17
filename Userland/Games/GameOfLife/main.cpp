@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     main_widget.set_fill_with_background_color(true);
 
     auto& main_toolbar = *main_widget.find_descendant_of_type_named<GUI::Toolbar>("toolbar");
-    main_toolbar.layout()->set_margins({ 0, 6, 0, 6 });
+    main_toolbar.layout()->set_margins({ 0, 6 });
 
     auto& board_widget_container = *main_widget.find_descendant_of_type_named<GUI::Widget>("board_widget_container");
     auto& board_layout = board_widget_container.set_layout<GUI::VerticalBoxLayout>();

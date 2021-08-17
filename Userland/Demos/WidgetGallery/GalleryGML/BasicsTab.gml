@@ -1,13 +1,13 @@
 @GUI::Widget {
     name: "basics_tab"
     layout: @GUI::VerticalBoxLayout {
-        margins: [4, 4, 4, 4]
+        margins: [4]
     }
 
     @GUI::GroupBox {
         fixed_height: 95
         layout: @GUI::VerticalBoxLayout {
-            margins: [8, 8, 8, 8]
+            margins: [8]
         }
 
         @GUI::HorizontalSplitter {
@@ -20,7 +20,7 @@
                 shadow: "Sunken"
                 thickness: 1
                 layout: @GUI::VerticalBoxLayout {
-                    margins: [3, 4, 3, 4]
+                    margins: [3, 4]
                 }
 
                 @GUI::Label {
@@ -37,7 +37,7 @@
 
             @GUI::Widget {
                 layout: @GUI::VerticalBoxLayout {
-                    margins: [0, 4, 0, 4]
+                    margins: [0, 4]
                 }
 
                 @GUI::Label {
@@ -85,7 +85,7 @@
     @GUI::Widget {
         fixed_height: 125
         layout: @GUI::VerticalBoxLayout {
-            margins: [3, 8, 3, 8]
+            margins: [3, 8]
         }
 
         @GUI::Widget {
@@ -237,7 +237,7 @@
 
     @GUI::GroupBox {
         layout: @GUI::VerticalBoxLayout {
-            margins: [8, 8, 8, 8]
+            margins: [8]
         }
 
         @GUI::Widget {

@@ -1,13 +1,13 @@
 @GUI::Widget {
     name: "sliders_tab"
     layout: @GUI::VerticalBoxLayout {
-        margins: [4, 4, 4, 4]
+        margins: [4]
     }
 
     @GUI::GroupBox {
         fixed_height: 129
         layout: @GUI::VerticalBoxLayout {
-            margins: [8, 8, 8, 8]
+            margins: [8]
         }
 
         @GUI::OpacitySlider {
@@ -24,7 +24,7 @@
             max_width: 394
             max_height: 79
             layout: @GUI::VerticalBoxLayout {
-                margins: [1, 1, 1, 1]
+                margins: [1]
             }
 
             @GUI::ImageWidget {
@@ -36,7 +36,7 @@
     @GUI::Widget {
         fixed_height: 88
         layout: @GUI::VerticalBoxLayout {
-            margins: [0, 8, 0, 8]
+            margins: [0, 8]
         }
 
         @GUI::Widget {
@@ -72,7 +72,7 @@
 
     @GUI::GroupBox {
         layout: @GUI::HorizontalBoxLayout {
-            margins: [8, 8, 8, 8]
+            margins: [8]
         }
 
         @GUI::VerticalProgressbar {
@@ -120,7 +120,7 @@
 
     @GUI::GroupBox {
         layout: @GUI::VerticalBoxLayout {
-            margins: [8, 8, 8, 8]
+            margins: [8]
         }
 
         @GUI::Widget {

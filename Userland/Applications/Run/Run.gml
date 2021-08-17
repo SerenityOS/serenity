@@ -2,7 +2,7 @@
     fill_with_background_color: true
 
     layout: @GUI::VerticalBoxLayout {
-        margins: [4, 4, 4, 4]
+        margins: [4]
     }
 
     @GUI::Widget {
@@ -24,7 +24,7 @@
 
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout {
-            margins: [4, 4, 4, 4]
+            margins: [4]
         }
 
         @GUI::Label {

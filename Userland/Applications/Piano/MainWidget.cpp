@@ -24,7 +24,7 @@ MainWidget::MainWidget(TrackManager& track_manager, AudioPlayerLoop& loop)
 {
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_spacing(2);
-    layout()->set_margins({ 2, 2, 2, 2 });
+    layout()->set_margins(2);
     set_fill_with_background_color(true);
 
     m_wave_widget = add<WaveWidget>(track_manager);

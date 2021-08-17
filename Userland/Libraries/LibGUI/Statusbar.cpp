@@ -21,7 +21,7 @@ Statusbar::Statusbar(int label_count)
 {
     set_fixed_height(18);
     set_layout<HorizontalBoxLayout>();
-    layout()->set_margins({ 0, 0, 0, 0 });
+    layout()->set_margins(0);
     layout()->set_spacing(2);
 
     m_corner = add<ResizeCorner>();

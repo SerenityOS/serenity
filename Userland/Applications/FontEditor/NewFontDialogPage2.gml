@@ -1,6 +1,6 @@
 @GUI::Widget {
     layout: @GUI::VerticalBoxLayout {
-        margins: [20, 20, 20, 20]
+        margins: [20]
     }
 
     @GUI::Widget {
@@ -11,7 +11,7 @@
             title: "Metadata"
             fixed_width: 200
             layout: @GUI::VerticalBoxLayout {
-                margins: [16, 8, 8, 8]
+                margins: [16, 8, 8]
             }
 
             @GUI::Widget {
@@ -125,7 +125,7 @@
             @GUI::Widget {
                 name: "glyph_editor_container"
                 layout: @GUI::VerticalBoxLayout {
-                    margins: [5, 0, 0, 0]
+                    margins: [5, 0, 0]
                 }
             }
 

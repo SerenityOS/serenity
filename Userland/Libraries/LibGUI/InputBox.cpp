@@ -52,7 +52,7 @@ void InputBox::build(InputType input_type)
     widget.set_layout<VerticalBoxLayout>();
     widget.set_fill_with_background_color(true);
 
-    widget.layout()->set_margins({ 6, 6, 6, 6 });
+    widget.layout()->set_margins(6);
     widget.layout()->set_spacing(6);
 
     auto& label_editor_container = widget.add<Widget>();

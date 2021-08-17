@@ -45,7 +45,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     main_widget.set_frame_shadow(Gfx::FrameShadow::Raised);
     main_widget.set_fill_with_background_color(true);
     auto& main_layout = main_widget.set_layout<VerticalBoxLayout>();
-    main_layout.set_margins({ 1, 1, 1, 1 });
+    main_layout.set_margins(1);
     main_layout.set_spacing(0);
 
     auto code_points = supported_emoji_code_points();

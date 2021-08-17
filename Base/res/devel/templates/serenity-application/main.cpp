@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     main_widget.set_fill_with_background_color(true);
 
     auto& layout = main_widget.set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins({ 16, 16, 16, 16 });
+    layout.set_margins(16);
 
     auto& button = main_widget.add<GUI::Button>("Click me!");
     button.on_click = [&](auto) {

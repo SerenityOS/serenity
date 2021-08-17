@@ -131,7 +131,7 @@ int main(int argc, char** argv)
 
     auto& tree_tab = tab_widget.add_tab<GUI::Widget>("Call Tree");
     tree_tab.set_layout<GUI::VerticalBoxLayout>();
-    tree_tab.layout()->set_margins({ 4, 4, 4, 4 });
+    tree_tab.layout()->set_margins(4);
     auto& bottom_splitter = tree_tab.add<GUI::VerticalSplitter>();
 
     auto& tree_view = bottom_splitter.add<GUI::TreeView>();
@@ -163,7 +163,7 @@ int main(int argc, char** argv)
 
     auto& samples_tab = tab_widget.add_tab<GUI::Widget>("Samples");
     samples_tab.set_layout<GUI::VerticalBoxLayout>();
-    samples_tab.layout()->set_margins({ 4, 4, 4, 4 });
+    samples_tab.layout()->set_margins(4);
 
     auto& samples_splitter = samples_tab.add<GUI::HorizontalSplitter>();
     auto& samples_table_view = samples_splitter.add<GUI::TableView>();
@@ -178,7 +178,7 @@ int main(int argc, char** argv)
 
     auto& signposts_tab = tab_widget.add_tab<GUI::Widget>("Signposts");
     signposts_tab.set_layout<GUI::VerticalBoxLayout>();
-    signposts_tab.layout()->set_margins({ 4, 4, 4, 4 });
+    signposts_tab.layout()->set_margins(4);
 
     auto& signposts_splitter = signposts_tab.add<GUI::HorizontalSplitter>();
     auto& signposts_table_view = signposts_splitter.add<GUI::TableView>();
@@ -262,7 +262,7 @@ static bool prompt_to_stop_profiling(pid_t pid, const String& process_name)
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
     auto& layout = widget.set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins({ 0, 0, 16, 0 });
+    layout.set_margins({ 0, 0, 16 });
 
     auto& timer_label = widget.add<GUI::Label>("...");
     Core::ElapsedTimer clock;

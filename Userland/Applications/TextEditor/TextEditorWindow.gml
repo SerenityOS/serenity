@@ -36,7 +36,7 @@
 
         layout: @GUI::VerticalBoxLayout {
             spacing: 2
-            margins: [5, 5, 5, 5]
+            margins: [5]
         }
 
         @GUI::Widget {
