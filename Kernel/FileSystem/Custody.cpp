@@ -40,7 +40,7 @@ KResultOr<NonnullRefPtr<Custody>> Custody::try_create(Custody* parent, StringVie
         if (!custody)
             return ENOMEM;
 
-        all_custodies.append(*custody);
+        all_custodies.prepend(*custody);
         return custody.release_nonnull();
     });
 }
