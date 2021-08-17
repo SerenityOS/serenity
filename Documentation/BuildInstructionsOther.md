@@ -92,6 +92,6 @@ doas pkg_add bash cmake g++ gcc git gmake gmp ninja ccache rsync coreutils qemu 
 ## FreeBSD prerequisites
 
 ```console
-pkg install bash coreutils git gmake ninja sudo gmp mpc mpfr ccache rsync
+pkg install bash cmake coreutils e2fsprogs fusefs-ext2 gcc git gmake ninja sudo gmp mpc mpfr ccache rsync
 ```
 
