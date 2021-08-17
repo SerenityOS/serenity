@@ -71,8 +71,8 @@ jobs:
           # *and* as actual output variable, in this order.
           message("  set-output name=time::${current_date}")
           message("::set-output name=time::${current_date}")
-          message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
-          message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
+          message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*[!llvm].patch', 'Toolchain/BuildIt.sh') }}")
+          message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*[!llvm].patch', 'Toolchain/BuildIt.sh') }}")
 
       - name: Toolchain cache
         # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
