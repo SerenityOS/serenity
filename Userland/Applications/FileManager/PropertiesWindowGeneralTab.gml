@@ -1,6 +1,6 @@
 @GUI::Widget {
     layout: @GUI::VerticalBoxLayout {
-        margins: [12, 8, 12, 8]
+        margins: [8, 12, 8, 12]
         spacing: 10
     }
 

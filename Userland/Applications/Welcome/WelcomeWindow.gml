@@ -17,7 +17,7 @@
             min_width: 340
             min_height: 160
             layout: @GUI::HorizontalBoxLayout {
-                margins: [0, 0, 16, 0]
+                margins: [0, 16, 0, 0]
             }
 
             @GUI::Widget {

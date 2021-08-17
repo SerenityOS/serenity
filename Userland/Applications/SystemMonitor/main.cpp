@@ -179,7 +179,7 @@ int main(int argc, char** argv)
 
     auto& tabwidget_container = main_widget.add<GUI::Widget>();
     tabwidget_container.set_layout<GUI::VerticalBoxLayout>();
-    tabwidget_container.layout()->set_margins({ 4, 0, 4, 4 });
+    tabwidget_container.layout()->set_margins({ 0, 4, 4, 4 });
     auto& tabwidget = tabwidget_container.add<GUI::TabWidget>();
 
     statusbar = main_widget.add<GUI::Statusbar>(3);
@@ -669,7 +669,7 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
 
     auto& cpu_graph_group_box = graphs_container->add<GUI::GroupBox>("CPU usage");
     cpu_graph_group_box.set_layout<GUI::HorizontalBoxLayout>();
-    cpu_graph_group_box.layout()->set_margins({ 6, 16, 6, 6 });
+    cpu_graph_group_box.layout()->set_margins({ 16, 6, 6, 6 });
     cpu_graph_group_box.set_fixed_height(120);
     Vector<GraphWidget&> cpu_graphs;
     for (size_t i = 0; i < ProcessModel::the().cpus().size(); i++) {
@@ -701,7 +701,7 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
 
     auto& memory_graph_group_box = graphs_container->add<GUI::GroupBox>("Memory usage");
     memory_graph_group_box.set_layout<GUI::VerticalBoxLayout>();
-    memory_graph_group_box.layout()->set_margins({ 6, 16, 6, 6 });
+    memory_graph_group_box.layout()->set_margins({ 16, 6, 6, 6 });
     memory_graph_group_box.set_fixed_height(120);
     auto& memory_graph = memory_graph_group_box.add<GraphWidget>();
     memory_graph.set_stack_values(true);

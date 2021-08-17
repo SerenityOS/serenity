@@ -240,7 +240,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     // Right Side
     auto& vertical_container = horizontal_container.add<Widget>();
     vertical_container.set_layout<VerticalBoxLayout>();
-    vertical_container.layout()->set_margins({ 8, 0, 0, 0 });
+    vertical_container.layout()->set_margins({ 0, 0, 0, 8 });
     vertical_container.set_fixed_width(128);
 
     auto& preview_container = vertical_container.add<Frame>();

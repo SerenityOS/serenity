@@ -14,7 +14,7 @@
             shrink_to_fit: true
             
             layout: @GUI::HorizontalBoxLayout {
-                margins: [10,20,10,10]
+                margins: [20,10,10,10]
             }
 
             @GUI::RadioButton {

@@ -19,7 +19,7 @@
 
                     layout: @GUI::VerticalBoxLayout {
                         // FIXME: This is working around the fact that group boxes don't allocate space for their title and border!
-                        margins: [10, 20, 10, 10]
+                        margins: [20, 10, 10, 10]
                     }
 
                     @GUI::RadioButton {
@@ -70,7 +70,7 @@
 
                     layout: @GUI::VerticalBoxLayout {
                         // FIXME: This is working around the fact that group boxes don't allocate space for their title and border!
-                        margins: [10, 20, 10, 10]
+                        margins: [20, 10, 10, 10]
                     }
 
                     @GUI::RadioButton {
@@ -133,7 +133,7 @@
                 fixed_height: 40
 
                 layout: @GUI::VerticalBoxLayout {
-                    margins: [6, 6, 6, 0]
+                    margins: [6, 6, 0, 6]
                 }
 
                 @GUI::Widget {
@@ -165,7 +165,7 @@
 
             layout: @GUI::VerticalBoxLayout {
                 // FIXME: This is working around the fact that group boxes don't allocate space for their title and border!
-                margins: [10, 20, 10, 10]
+                margins: [20, 10, 10, 10]
             }
 
             @GUI::StackWidget {

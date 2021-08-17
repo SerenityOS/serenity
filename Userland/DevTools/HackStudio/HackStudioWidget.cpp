@@ -107,7 +107,7 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
 
     m_editors_splitter = m_right_hand_stack->add<GUI::VerticalSplitter>();
     m_editors_splitter->layout()->set_spacing(5);
-    m_editors_splitter->layout()->set_margins({ 0, 3, 0, 0 });
+    m_editors_splitter->layout()->set_margins({ 3, 0, 0, 0 });
     add_new_editor(*m_editors_splitter);
 
     m_switch_to_next_editor = create_switch_to_next_editor_action();

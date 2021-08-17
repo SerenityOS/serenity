@@ -101,7 +101,7 @@ int main(int argc, char** argv)
 
     auto& toolbox = *main_widget.find_descendant_of_type_named<PixelPaint::ToolboxWidget>("toolbox");
     auto& tab_widget = *main_widget.find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
-    tab_widget.set_container_margins({ 4, 4, 5, 5 });
+    tab_widget.set_container_margins({ 4, 5, 5, 4 });
     tab_widget.set_close_button_enabled(true);
 
     auto& palette_widget = *main_widget.find_descendant_of_type_named<PixelPaint::PaletteWidget>("palette_widget");

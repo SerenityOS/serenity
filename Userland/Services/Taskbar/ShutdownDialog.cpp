@@ -56,7 +56,7 @@ ShutdownDialog::ShutdownDialog()
     auto& left_container = content_container.add<GUI::Widget>();
     left_container.set_fixed_width(60);
     left_container.set_layout<GUI::VerticalBoxLayout>();
-    left_container.layout()->set_margins({ 0, 12, 0, 0 });
+    left_container.layout()->set_margins({ 12, 0, 0, 0 });
 
     auto& icon_wrapper = left_container.add<GUI::Widget>();
     icon_wrapper.set_fixed_size(32, 48);
@@ -67,7 +67,7 @@ ShutdownDialog::ShutdownDialog()
 
     auto& right_container = content_container.add<GUI::Widget>();
     right_container.set_layout<GUI::VerticalBoxLayout>();
-    right_container.layout()->set_margins({ 0, 12, 12, 8 });
+    right_container.layout()->set_margins({ 12, 12, 8, 0 });
 
     auto& label = right_container.add<GUI::Label>("What would you like to do?");
     label.set_text_alignment(Gfx::TextAlignment::CenterLeft);

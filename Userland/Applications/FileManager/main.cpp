@@ -443,12 +443,12 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto& toolbar_container = *widget.find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
     auto& main_toolbar = *widget.find_descendant_of_type_named<GUI::Toolbar>("main_toolbar");
     auto& location_toolbar = *widget.find_descendant_of_type_named<GUI::Toolbar>("location_toolbar");
-    location_toolbar.layout()->set_margins({ 6, 3, 6, 3 });
+    location_toolbar.layout()->set_margins({ 3, 6, 3, 6 });
 
     auto& location_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("location_textbox");
 
     auto& breadcrumb_toolbar = *widget.find_descendant_of_type_named<GUI::Toolbar>("breadcrumb_toolbar");
-    breadcrumb_toolbar.layout()->set_margins({ 6, 0, 6, 0 });
+    breadcrumb_toolbar.layout()->set_margins({ 0, 6, 0, 6 });
     auto& breadcrumbbar = *widget.find_descendant_of_type_named<GUI::Breadcrumbbar>("breadcrumbbar");
 
     auto& splitter = *widget.find_descendant_of_type_named<GUI::HorizontalSplitter>("splitter");

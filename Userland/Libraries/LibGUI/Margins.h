@@ -11,26 +11,26 @@ namespace GUI {
 class Margins {
 public:
     Margins() { }
-    Margins(int left, int top, int right, int bottom)
-        : m_left(left)
-        , m_top(top)
+    Margins(int top, int right, int bottom, int left)
+        : m_top(top)
         , m_right(right)
         , m_bottom(bottom)
+        , m_left(left)
     {
     }
     ~Margins() { }
 
     bool is_null() const { return !m_left && !m_top && !m_right && !m_bottom; }
 
-    int left() const { return m_left; }
     int top() const { return m_top; }
     int right() const { return m_right; }
     int bottom() const { return m_bottom; }
+    int left() const { return m_left; }
 
-    void set_left(int value) { m_left = value; }
     void set_top(int value) { m_top = value; }
     void set_right(int value) { m_right = value; }
     void set_bottom(int value) { m_bottom = value; }
+    void set_left(int value) { m_left = value; }
 
     bool operator==(const Margins& other) const
     {
@@ -41,10 +41,10 @@ public:
     }
 
 private:
-    int m_left { 0 };
     int m_top { 0 };
     int m_right { 0 };
     int m_bottom { 0 };
+    int m_left { 0 };
 };
 
 }

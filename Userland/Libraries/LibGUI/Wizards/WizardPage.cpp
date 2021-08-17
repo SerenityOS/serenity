@@ -26,7 +26,7 @@ WizardPage::WizardPage(const String& title_text, const String& subtitle_text)
     header_widget.set_fixed_height(58);
 
     header_widget.set_layout<VerticalBoxLayout>();
-    header_widget.layout()->set_margins({ 30, 15, 30, 0 });
+    header_widget.layout()->set_margins({ 15, 30, 0, 30 });
     m_title_label = header_widget.add<Label>(title_text);
     m_title_label->set_font(Gfx::FontDatabase::default_font().bold_variant());
     m_title_label->set_fixed_height(m_title_label->font().glyph_height() + 2);

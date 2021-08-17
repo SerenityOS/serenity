@@ -9,7 +9,7 @@
     @GUI::Widget {
         shrink_to_fit: true
         layout: @GUI::VerticalBoxLayout {
-            margins: [4, 0, 4, 0]
+            margins: [0, 4, 0, 4]
         }
 
         @GUI::Label {

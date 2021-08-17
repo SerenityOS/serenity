@@ -262,7 +262,7 @@ static bool prompt_to_stop_profiling(pid_t pid, const String& process_name)
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
     auto& layout = widget.set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins(GUI::Margins(0, 0, 0, 16));
+    layout.set_margins({ 0, 0, 16, 0 });
 
     auto& timer_label = widget.add<GUI::Label>("...");
     Core::ElapsedTimer clock;

@@ -20,7 +20,7 @@
                 shadow: "Sunken"
                 thickness: 1
                 layout: @GUI::VerticalBoxLayout {
-                    margins: [4, 3, 4, 3]
+                    margins: [3, 4, 3, 4]
                 }
 
                 @GUI::Label {
@@ -37,7 +37,7 @@
 
             @GUI::Widget {
                 layout: @GUI::VerticalBoxLayout {
-                    margins: [4, 0, 4, 0]
+                    margins: [0, 4, 0, 4]
                 }
 
                 @GUI::Label {
@@ -85,7 +85,7 @@
     @GUI::Widget {
         fixed_height: 125
         layout: @GUI::VerticalBoxLayout {
-            margins: [8, 3, 8, 3]
+            margins: [3, 8, 3, 8]
         }
 
         @GUI::Widget {
