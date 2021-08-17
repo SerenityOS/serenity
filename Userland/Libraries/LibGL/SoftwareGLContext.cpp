@@ -1416,6 +1416,24 @@ void SoftwareGLContext::gl_get_booleanv(GLenum pname, GLboolean* data)
     }
 }
 
+void SoftwareGLContext::gl_get_integerv(GLenum pname, GLint* data)
+{
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    switch (pname) {
+    case GL_BLEND_SRC_ALPHA:
+        *data = m_blend_source_factor;
+        break;
+    case GL_BLEND_DST_ALPHA:
+        *data = m_blend_destination_factor;
+        break;
+    default:
+        // According to the Khronos docs, we always return GL_INVALID_ENUM if we encounter a non-accepted value
+        // for `pname`
+        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+    }
+}
+
 void SoftwareGLContext::gl_depth_mask(GLboolean flag)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_depth_mask, flag);
