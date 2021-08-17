@@ -2,7 +2,7 @@
     fill_with_background_color: true
 
     layout: @GUI::VerticalBoxLayout {
-        margins: [10, 10, 10, 10]
+        margins: [10]
         spacing: 5
     }
 
@@ -11,7 +11,7 @@
         fixed_height: 110
 
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 8, 8, 8]
+            margins: [16, 8, 8]
             spacing: 2
         }
 
@@ -60,7 +60,7 @@
         fixed_height: 110
 
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 8, 8, 8]
+            margins: [16, 8, 8]
             spacing: 2
         }
 
@@ -83,7 +83,7 @@
 
         @GUI::Widget {
             layout: @GUI::HorizontalBoxLayout {
-                margins: [8, 8, 8, 8]
+                margins: [8]
                 spacing: 8
             }
 
@@ -114,7 +114,7 @@
         fixed_height: 110
 
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 8, 8, 8]
+            margins: [16, 8, 8]
             spacing: 2
         }
 
@@ -137,7 +137,7 @@
 
         @GUI::Widget {
             layout: @GUI::HorizontalBoxLayout {
-                margins: [8, 8, 8, 8]
+                margins: [8]
                 spacing: 8
             }
 

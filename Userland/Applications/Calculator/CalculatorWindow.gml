@@ -13,7 +13,7 @@
 
         @GUI::Widget {
             layout: @GUI::VerticalBoxLayout {
-                margins: [8, 8, 8, 8]
+                margins: [8]
             }
 
             @GUI::TextBox {

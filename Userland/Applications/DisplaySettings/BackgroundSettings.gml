@@ -2,7 +2,7 @@
     fill_with_background_color: true
 
     layout: @GUI::VerticalBoxLayout {
-        margins: [8, 8, 8, 8]
+        margins: [8]
     }
 
     @DisplaySettings::MonitorWidget {

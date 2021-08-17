@@ -35,7 +35,7 @@ ToolboxWidget::ToolboxWidget()
 
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_spacing(0);
-    layout()->set_margins({ 2, 2, 2, 2 });
+    layout()->set_margins(2);
 
     m_action_group.set_exclusive(true);
     m_action_group.set_unchecking_allowed(false);

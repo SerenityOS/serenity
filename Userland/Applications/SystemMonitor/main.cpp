@@ -179,7 +179,7 @@ int main(int argc, char** argv)
 
     auto& tabwidget_container = main_widget.add<GUI::Widget>();
     tabwidget_container.set_layout<GUI::VerticalBoxLayout>();
-    tabwidget_container.layout()->set_margins({ 0, 4, 4, 4 });
+    tabwidget_container.layout()->set_margins({ 0, 4, 4 });
     auto& tabwidget = tabwidget_container.add<GUI::TabWidget>();
 
     statusbar = main_widget.add<GUI::Statusbar>(3);
@@ -214,7 +214,7 @@ int main(int argc, char** argv)
     tabwidget.add_widget("Interrupts", interrupts_widget);
 
     process_table_container.set_layout<GUI::VerticalBoxLayout>();
-    process_table_container.layout()->set_margins({ 4, 4, 4, 4 });
+    process_table_container.layout()->set_margins(4);
     process_table_container.layout()->set_spacing(0);
 
     auto& process_table_view = process_table_container.add<GUI::TableView>();
@@ -434,7 +434,7 @@ NonnullRefPtr<GUI::Window> build_process_window(pid_t pid)
     auto& hero_container = main_widget.add<GUI::Widget>();
     hero_container.set_shrink_to_fit(true);
     hero_container.set_layout<GUI::HorizontalBoxLayout>();
-    hero_container.layout()->set_margins({ 4, 4, 4, 4 });
+    hero_container.layout()->set_margins(4);
     hero_container.layout()->set_spacing(8);
 
     auto& icon_label = hero_container.add<GUI::Label>();
@@ -493,7 +493,7 @@ NonnullRefPtr<GUI::Widget> build_file_systems_tab()
 
     fs_widget->on_first_show = [](GUI::LazyWidget& self) {
         self.set_layout<GUI::VerticalBoxLayout>();
-        self.layout()->set_margins({ 4, 4, 4, 4 });
+        self.layout()->set_margins(4);
         auto& fs_table_view = self.add<GUI::TableView>();
 
         Vector<GUI::JsonArrayModel::FieldSpec> df_fields;
@@ -589,7 +589,7 @@ NonnullRefPtr<GUI::Widget> build_pci_devices_tab()
 
     pci_widget->on_first_show = [](GUI::LazyWidget& self) {
         self.set_layout<GUI::VerticalBoxLayout>();
-        self.layout()->set_margins({ 4, 4, 4, 4 });
+        self.layout()->set_margins(4);
         auto& pci_table_view = self.add<GUI::TableView>();
 
         auto db = PCIDB::Database::open();
@@ -648,7 +648,7 @@ NonnullRefPtr<GUI::Widget> build_devices_tab()
 
     devices_widget->on_first_show = [](GUI::LazyWidget& self) {
         self.set_layout<GUI::VerticalBoxLayout>();
-        self.layout()->set_margins({ 4, 4, 4, 4 });
+        self.layout()->set_margins(4);
 
         auto& devices_table_view = self.add<GUI::TableView>();
         devices_table_view.set_model(GUI::SortingProxyModel::create(DevicesModel::create()));
@@ -665,11 +665,11 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
     graphs_container->set_fill_with_background_color(true);
     graphs_container->set_background_role(ColorRole::Button);
     graphs_container->set_layout<GUI::VerticalBoxLayout>();
-    graphs_container->layout()->set_margins({ 4, 4, 4, 4 });
+    graphs_container->layout()->set_margins(4);
 
     auto& cpu_graph_group_box = graphs_container->add<GUI::GroupBox>("CPU usage");
     cpu_graph_group_box.set_layout<GUI::HorizontalBoxLayout>();
-    cpu_graph_group_box.layout()->set_margins({ 16, 6, 6, 6 });
+    cpu_graph_group_box.layout()->set_margins({ 16, 6, 6 });
     cpu_graph_group_box.set_fixed_height(120);
     Vector<GraphWidget&> cpu_graphs;
     for (size_t i = 0; i < ProcessModel::the().cpus().size(); i++) {
@@ -701,7 +701,7 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
 
     auto& memory_graph_group_box = graphs_container->add<GUI::GroupBox>("Memory usage");
     memory_graph_group_box.set_layout<GUI::VerticalBoxLayout>();
-    memory_graph_group_box.layout()->set_margins({ 16, 6, 6, 6 });
+    memory_graph_group_box.layout()->set_margins({ 16, 6, 6 });
     memory_graph_group_box.set_fixed_height(120);
     auto& memory_graph = memory_graph_group_box.add<GraphWidget>();
     memory_graph.set_stack_values(true);
@@ -734,7 +734,7 @@ NonnullRefPtr<GUI::Widget> build_processors_tab()
 
     processors_widget->on_first_show = [](GUI::LazyWidget& self) {
         self.set_layout<GUI::VerticalBoxLayout>();
-        self.layout()->set_margins({ 4, 4, 4, 4 });
+        self.layout()->set_margins(4);
 
         Vector<GUI::JsonArrayModel::FieldSpec> processors_field;
         processors_field.empend("processor", "Processor", Gfx::TextAlignment::CenterRight);

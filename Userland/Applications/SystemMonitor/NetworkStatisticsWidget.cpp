@@ -16,7 +16,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
 {
     on_first_show = [this](auto&) {
         set_layout<GUI::VerticalBoxLayout>();
-        layout()->set_margins({ 4, 4, 4, 4 });
+        layout()->set_margins(4);
         set_fill_with_background_color(true);
 
         m_network_connected_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-connected.png");
@@ -32,7 +32,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
 
         auto& adapters_group_box = add<GUI::GroupBox>("Adapters");
         adapters_group_box.set_layout<GUI::VerticalBoxLayout>();
-        adapters_group_box.layout()->set_margins({ 16, 6, 6, 6 });
+        adapters_group_box.layout()->set_margins({ 16, 6, 6 });
         adapters_group_box.set_fixed_height(120);
 
         m_adapter_table_view = adapters_group_box.add<GUI::TableView>();
@@ -69,7 +69,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
 
         auto& tcp_sockets_group_box = add<GUI::GroupBox>("TCP Sockets");
         tcp_sockets_group_box.set_layout<GUI::VerticalBoxLayout>();
-        tcp_sockets_group_box.layout()->set_margins({ 16, 6, 6, 6 });
+        tcp_sockets_group_box.layout()->set_margins({ 16, 6, 6 });
 
         m_tcp_socket_table_view = tcp_sockets_group_box.add<GUI::TableView>();
 
@@ -90,7 +90,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
 
         auto& udp_sockets_group_box = add<GUI::GroupBox>("UDP Sockets");
         udp_sockets_group_box.set_layout<GUI::VerticalBoxLayout>();
-        udp_sockets_group_box.layout()->set_margins({ 16, 6, 6, 6 });
+        udp_sockets_group_box.layout()->set_margins({ 16, 6, 6 });
 
         m_udp_socket_table_view = udp_sockets_group_box.add<GUI::TableView>();
 

@@ -12,7 +12,7 @@
 
     @GUI::TabWidget {
         name: "tab_widget"
-        container_margins: [0, 0, 0, 0]
+        container_margins: [0]
         uniform_tabs: true
         text_alignment: "CenterLeft"
     }

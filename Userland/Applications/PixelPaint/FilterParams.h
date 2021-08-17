@@ -50,7 +50,7 @@ private:
         main_widget.set_frame_shadow(Gfx::FrameShadow::Raised);
         main_widget.set_fill_with_background_color(true);
         auto& layout = main_widget.template set_layout<GUI::VerticalBoxLayout>();
-        layout.set_margins({ 4, 4, 4, 4 });
+        layout.set_margins(4);
 
         size_t index = 0;
         size_t columns = N;

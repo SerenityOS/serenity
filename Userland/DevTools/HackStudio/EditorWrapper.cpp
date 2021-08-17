@@ -24,7 +24,7 @@ EditorWrapper::EditorWrapper()
     label_wrapper.set_fixed_height(14);
     label_wrapper.set_fill_with_background_color(true);
     label_wrapper.set_layout<GUI::HorizontalBoxLayout>();
-    label_wrapper.layout()->set_margins({ 0, 2, 0, 2 });
+    label_wrapper.layout()->set_margins({ 0, 2 });
 
     m_filename_label = label_wrapper.add<GUI::Label>("(Untitled)");
     m_filename_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);

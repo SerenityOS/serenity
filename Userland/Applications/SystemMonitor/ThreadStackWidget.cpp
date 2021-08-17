@@ -14,7 +14,7 @@
 ThreadStackWidget::ThreadStackWidget()
 {
     set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_margins({ 4, 4, 4, 4 });
+    layout()->set_margins(4);
     m_stack_editor = add<GUI::TextEditor>();
     m_stack_editor->set_mode(GUI::TextEditor::ReadOnly);
     m_stack_editor->set_text("Symbolicating...");

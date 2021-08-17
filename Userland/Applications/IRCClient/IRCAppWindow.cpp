@@ -298,7 +298,7 @@ void IRCAppWindow::setup_widgets()
 
     auto& outer_container = widget.add<GUI::Widget>();
     outer_container.set_layout<GUI::VerticalBoxLayout>();
-    outer_container.layout()->set_margins({ 0, 2, 2, 2 });
+    outer_container.layout()->set_margins({ 0, 2, 2 });
 
     auto& horizontal_container = outer_container.add<GUI::HorizontalSplitter>();
 

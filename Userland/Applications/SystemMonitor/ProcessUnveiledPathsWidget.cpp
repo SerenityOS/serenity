@@ -13,7 +13,7 @@
 ProcessUnveiledPathsWidget::ProcessUnveiledPathsWidget()
 {
     set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_margins({ 4, 4, 4, 4 });
+    layout()->set_margins(4);
     m_table_view = add<GUI::TableView>();
 
     Vector<GUI::JsonArrayModel::FieldSpec> pid_unveil_fields;
