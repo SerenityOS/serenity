@@ -156,3 +156,51 @@ TEST_CASE(should_constexpr_ignore_until_pred)
     }();
     static_assert(sut.peek() == 'c');
 }
+
+TEST_CASE(consume_escaped_code_point)
+{
+    auto test = [](StringView test, Result<u32, GenericLexer::UnicodeEscapeError> expected, bool combine_surrogate_pairs = true) {
+        GenericLexer lexer(test);
+
+        auto actual = lexer.consume_escaped_code_point(combine_surrogate_pairs);
+        EXPECT_EQ(actual.is_error(), expected.is_error());
+
+        if (actual.is_error() && expected.is_error())
+            EXPECT_EQ(actual.error(), expected.error());
+        else
+            EXPECT_EQ(actual.value(), expected.value());
+    };
+
+    test("\\u"sv, GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape);
+    test("\\u{"sv, GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape);
+    test("\\u{1"sv, GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape);
+    test("\\u{}"sv, GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape);
+    test("\\u{x}"sv, GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape);
+
+    test("\\u{110000}"sv, GenericLexer::UnicodeEscapeError::UnicodeEscapeOverflow);
+    test("\\u{f00000000}"sv, GenericLexer::UnicodeEscapeError::UnicodeEscapeOverflow);
+
+    test("\\u{0}"sv, 0);
+    test("\\u{41}"sv, 0x41);
+    test("\\u{ffff}"sv, 0xffff);
+    test("\\u{10ffff}"sv, 0x10ffff);
+
+    test("\\u1"sv, GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape);
+    test("\\u11"sv, GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape);
+    test("\\u111"sv, GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape);
+    test("\\u111x"sv, GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape);
+    test("\\ud800\\u"sv, GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape);
+    test("\\ud800\\u1"sv, GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape);
+    test("\\ud800\\u11"sv, GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape);
+    test("\\ud800\\u111"sv, GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape);
+    test("\\ud800\\u111x"sv, GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape);
+
+    test("\\u0000"sv, 0x0);
+    test("\\u0041"sv, 0x41);
+    test("\\uffff"sv, 0xffff);
+
+    test("\\ud83d"sv, 0xd83d);
+    test("\\ud83d\\u1111"sv, 0xd83d);
+    test("\\ud83d\\ude00"sv, 0x1f600);
+    test("\\ud83d\\ude00"sv, 0xd83d, false);
+}
