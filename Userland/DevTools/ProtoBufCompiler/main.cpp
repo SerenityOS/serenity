@@ -166,6 +166,7 @@ void parse_field(GenericLexer& lexer, Message& message)
             } else {
                 field.type = FieldType::Custom;
                 // FIXME: FlyString Construction is not optimal here
+                // FIXME: Enum detection (they are VarInts)
                 field.type_name = move(type_name);
                 field.wire_type = WireTypes::LengthDelimited;
             }
@@ -526,6 +527,243 @@ void write_reader(SourceGenerator& generator, Message const& message)
 )~~~"sv);
 }
 
+void write_size_estimator(SourceGenerator& generator, Message const& message)
+{
+    generator.append(R"~~~(
+    size_t estimate_size() const
+    {
+        size_t estimate = 0;
+        size_t temp;
+        )~~~"sv);
+    for (auto const& field : message.fields) {
+        auto field_generator = generator.fork();
+        field_generator.set("field.name"sv, field.name);
+        field_generator.set("field.number"sv, field.number);
+        field_generator.set("field.type_name"sv, field.type_name);
+        field_generator.set("field.wire_type"sv, field.wire_type);
+
+        field_generator.append(R"~~~(// @field.name@
+        estimate += ceil_div(@field.number@<<3,128);
+        )~~~"sv);
+
+        if (field.repeated) {
+            // You can't/shouldn't shift booleans....
+            if (field.packed && field.type != FieldType::Bool) {
+                // these are only numeric types
+                if (field.wire_type == WireTypes::VarInt) {
+                    field_generator.append(R"~~~(estimate += ceil_div(@field.name@.size(), 128u);
+        for (auto value : @field.name@) {
+            estimate += ceil_div(@value@<<3u, 128u);
+        }
+        )~~~"sv);
+                } else {
+                    // run length:
+                    // estimate += AK::VarInt<size_t>::size(@field.name@.size() * sizeof(@field.type_name@));
+                    // ^= ceil_div(@field.name@.size() * sizeof(@field.type_name@), 128u);
+                    // data:
+                    // estimate += @field.name@.size() * sizeof(@field.type_name@);
+                    // =>
+                    // ceil_div(@field.name@.size() * sizeof(@field.type_name@), 128u) + @field.name@.size() * sizeof(@field.type_name@);
+                    // ^= ceil_div(a, 128u) + a = ceil_div(2u * a, 128u)
+                    // => estimate += AK::VarInt<size_t>::size(2 * @field.name@.size() * sizeof(@field.type_name@));
+                    // same applies for other fields aswell
+                    field_generator.append(R"~~~(estimate += AK::VarInt<size_t>::size(2u * @field.name@.size() * sizeof(@field.type_name@));
+        )~~~");
+                }
+            } else {
+                // Only String, Bytes and Custom (Message) should be here, all these
+                // are of WireType LengthDelimited
+                VERIFY(field.wire_type == WireTypes::LengthDelimited);
+                switch (field.type) {
+                case FieldType::String:
+                    field_generator.append(R"~~~(temp = 0;
+        for (auto const& value : @field.name@) {
+            temp += value.length();
+        }
+        estimate += AK::VarInt<size_t>::size(2u * temp);
+        )~~~");
+                    break;
+                case FieldType::Bytes:
+                    field_generator.append(R"~~~(temp = 0;
+        for (auto const& value : @field.name@) {
+            temp += calculate_base64_encoded_length(value.span());
+        }
+        estimate += AK::VarInt<size_t>::size(2u * temp);
+        )~~~");
+                    break;
+                case FieldType::Custom:
+                    field_generator.append(R"~~~(temp = 0;
+        for (auto const& value : @field.name@) {
+            temp += value.estimate_size();
+        }
+        estimate += AK::VarInt<size_t>::size(2u * temp);
+        )~~~");
+                    break;
+                default:
+                    VERIFY_NOT_REACHED();
+                }
+            }
+        } else {
+            switch (field.type) {
+            case FieldType::Bool:
+            case FieldType::Int32:
+            case FieldType::UInt32:
+            case FieldType::Int64:
+            case FieldType::UInt64:
+                field_generator.append(R"~~~(estimate += AK::VarInt<@field.type_name@>::size(@field.name@);
+        )~~~");
+                break;
+            case FieldType::SInt64:
+            case FieldType::SInt32:
+                field_generator.append(R"~~~(estimate += AK::SignedVarInt<@field.type_name@>::size_from_twos_complement(@field.name@);
+        )~~~");
+                break;
+            case FieldType::Fixed32:
+            case FieldType::Float:
+                field_generator.append(R"~~~(estimate += 4u;
+        )~~~");
+                break;
+            case FieldType::Fixed64:
+            case FieldType::Double:
+                field_generator.append(R"~~~(estimate += 8u;
+        )~~~");
+                break;
+            case FieldType::String:
+                field_generator.append(R"~~~(estimate += AK::VarInt<size_t>::size(2u * @field.name@.length());
+        )~~~"sv);
+                break;
+            case FieldType::Bytes:
+                field_generator.append(R"~~~(temp = calculate_base64_encoded_length(value.span());
+        estimate += AK::VarInt<size_t>::size(2u * temp);
+        )~~~"sv);
+                break;
+            case FieldType::Custom:
+                field_generator.append(R"~~~(temp = @field.name@.estimate_size();
+        estimate += AK::VarInt<size_t>::size(2u * temp);
+        )~~~"sv);
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }
+    }
+    generator.append("}\n"sv);
+}
+
+void write_writer(SourceGenerator& generator, Message const& message)
+{
+    generator.append(R"~~~(
+    size_t write_to_stream(OutputStream& stream) const
+    {
+        size_t bytes_written = 0;
+        )~~~"sv);
+    for (auto const& field : message.fields) {
+        auto field_generator = generator.fork();
+        field_generator.set("field.name"sv, field.name);
+        field_generator.set("field.number"sv, field.number);
+        field_generator.set("field.type_name"sv, field.type_name);
+        field_generator.set("field.wire_type"sv, field.wire_type);
+        if (field.repeated) {
+            if (field.packed) {
+                // these are only numeric types
+                if (field.wire_type == WireTypes::VarInt) {
+                    field_generator.append(R"~~~(// Writing @field.name@
+        AK::write_VarInt_array(@field.number@, @field.name@, stream);
+        )~~~"sv);
+                } else {
+                    VERIFY(is_any_of(field.wire_type, WireTypes::F32, WireTypes::F64));
+                    field_generator.append(R"~~~(// Writing @field.name@
+        bytes_written += AK::VarInt<size_t>::write_to_stream((@field.number@ << 3) | (u8) AK::WireType::LengthDelimited, stream);
+        bytes_written += AK::VarInt<size_t>::write_to_stream(sizeof(@field.type@)*@field.name@.size(), stream);
+        for (auto value : @field.name@)
+            bytes_written += FixedSizeType<@field.type_name@>::write_to_stream(value, stream);
+        )~~~"sv);
+                }
+            } else {
+                // Only String, Bytes and Custom (Message) should be here, all these
+                // are of WireType LengthDelimited
+                VERIFY(field.wire_type == WireTypes::LengthDelimited);
+                switch (field.type) {
+                case FieldType::String:
+                case FieldType::Bytes:
+                    field_generator.append(R"~~~(// Writing @field.name@
+        bytes_written += AK::write_bytes_array(@field.number@, @field.name@, stream);
+        )~~~"sv);
+                    break;
+                case FieldType::Custom:
+                    field_generator.append(R"~~~(// Writing @field.name@
+        for (auto const& value : @field.name@) {
+            bytes_written += AK::VarInt<size_t>::write_to_stream((@field.number@ << 3) | (u8)AK::WireType::LengthDelimited, stream);
+            bytes_written += value.write_to_stream(stream);
+        }
+        )~~~"sv);
+                    break;
+                default:
+                    VERIFY_NOT_REACHED();
+                }
+            }
+        } else {
+            switch (field.type) {
+            case FieldType::Bool:
+            case FieldType::Int32:
+            case FieldType::UInt32:
+            case FieldType::Int64:
+            case FieldType::UInt64:
+                field_generator.append(R"~~~(// Writing @field.name@
+        bytes_written += AK::VarInt<size_t>::write_to_stream((@field.number@ << 3) | (u8)AK::WireType::VarInt, stream);
+        bytes_written += AK::VarInt<@field.type_name@>::write_to_stream(@field.name@, stream);
+        )~~~"sv);
+                break;
+            case FieldType::SInt64:
+            case FieldType::SInt32:
+                field_generator.append(R"~~~(// Writing @field.name@
+        bytes_written += AK::VarInt<size_t>::write_to_stream((@field.number@ << 3) | (u8)AK::WireType::VarInt, stream);
+        bytes_written += AK::SignedVarInt<@field.type_name@>::write_to_stream(@field.name@, stream);
+        )~~~"sv);
+                break;
+            case FieldType::Fixed32:
+            case FieldType::Float:
+                field_generator.append(R"~~~(// Writing @field.name@
+        bytes_written += AK::VarInt<size_t>::write_to_stream((@field.number@ << 3) | (u8)AK::WireType::F32, stream);
+        bytes_written += AK::FixedSizeType<@field.type_name@>::write_to_stream(@field.name@, stream);
+        )~~~"sv);
+                break;
+            case FieldType::Fixed64:
+            case FieldType::Double:
+                field_generator.append(R"~~~(// Writing @field.name@
+        bytes_written += AK::VarInt<size_t>::write_to_stream((@field.number@ << 3) | (u8)AK::WireType::F64, stream);
+        bytes_written += AK::FixedSizeType<@field.type_name@>::write_to_stream(@field.name@, stream);
+        )~~~"sv);
+                break;
+            case FieldType::String:
+                field_generator.append(R"~~~(// Writing @field.name@
+        bytes_written += AK::VarInt<size_t>::write_to_stream((@field.number@ << 3) | (u8)AK::WireType::LengthDelimited, stream);
+        bytes_written += AK::LengthDelimited::write_to_stream(@field.name@.bytes(), stream);
+        )~~~"sv);
+                break;
+            case FieldType::Bytes:
+                field_generator.append(R"~~~(// Writing @field.name@
+        bytes_written += AK::VarInt<size_t>::write_to_stream((@field.number@ << 3) | (u8)AK::WireType::LengthDelimited, stream);
+        bytes_written += AK::LengthDelimited::write_to_stream(@field.name@.span(), stream);
+        )~~~"sv);
+                break;
+            case FieldType::Custom:
+                field_generator.append(R"~~~(// Writing @field.name@
+        bytes_written += AK::VarInt<size_t>::write_to_stream((@field.number@ << 3) | (u8)AK::WireType::LengthDelimited, stream);
+        bytes_written += AK::VarInt<size_t>::write_to_stream(@field.name@.estimate_size());
+        bytes_written += @field.name@.write_to_stream(stream);
+        )~~~"sv);
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }
+    }
+    generator.append(R"~~~(
+        return bytes_written;
+    })~~~"sv);
+}
+
 void write_messages(SourceGenerator& generator, NonnullOwnPtrVector<Message> const& messages)
 {
     for (auto const& message : messages) {
@@ -536,6 +774,8 @@ void write_messages(SourceGenerator& generator, NonnullOwnPtrVector<Message> con
         write_messages(message_generator, message.messages);
         write_fields(message_generator, message.fields);
         write_reader(message_generator, message);
+        write_size_estimator(message_generator, message);
+        write_writer(message_generator, message);
         generator.append("};\n"sv);
     }
 }
