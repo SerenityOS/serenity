@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <assert.h>
 #include <errno.h>
 #include <sys/ioctl.h>
@@ -39,6 +40,20 @@ int tcflow([[maybe_unused]] int fd, [[maybe_unused]] int action)
 int tcflush(int fd, int queue_selector)
 {
     return ioctl(fd, TCFLSH, queue_selector);
+}
+
+int tcdrain([[maybe_unused]] int fd)
+{
+    dbgln("TODO: tcdrain() not implemented");
+    errno = ENOSYS;
+    return -1;
+}
+
+int tcsendbreak([[maybe_unused]] int fd, [[maybe_unused]] int duration)
+{
+    dbgln("TODO: tcsendbreak() not implemented");
+    errno = ENOSYS;
+    return -1;
 }
 
 speed_t cfgetispeed(const struct termios* tp)
