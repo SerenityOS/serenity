@@ -106,6 +106,9 @@ public:
     bool is_muted() const { return m_muted; }
     void set_muted(bool);
 
+    int audiodevice_set_sample_rate(u16 sample_rate);
+    u16 audiodevice_get_sample_rate() const;
+
 private:
     void request_setting_sync();
 
