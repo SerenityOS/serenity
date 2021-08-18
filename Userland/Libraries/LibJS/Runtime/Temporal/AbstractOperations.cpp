@@ -540,7 +540,7 @@ Optional<TemporalDuration> parse_temporal_duration_string(GlobalObject& global_o
     TODO();
 }
 
-// 13.43 ParseTemporalTimeZoneString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
+// 13.44 ParseTemporalTimeZoneString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
 Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
 {
     auto& vm = global_object.vm();
@@ -633,7 +633,7 @@ Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_
     return TemporalTimeZone { .z = false, .offset = offset, .name = name };
 }
 
-// 13.45 ToPositiveIntegerOrInfinity ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveintegerorinfinity
+// 13.46 ToPositiveIntegerOrInfinity ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveintegerorinfinity
 double to_positive_integer_or_infinity(GlobalObject& global_object, Value argument)
 {
     auto& vm = global_object.vm();
@@ -661,7 +661,7 @@ double to_positive_integer_or_infinity(GlobalObject& global_object, Value argume
     return integer;
 }
 
-// 13.47 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
+// 13.48 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
 Object* prepare_temporal_fields(GlobalObject& global_object, Object& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields)
 {
     auto& vm = global_object.vm();
