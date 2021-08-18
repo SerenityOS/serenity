@@ -202,6 +202,7 @@ public:
     void did_disable_focused_widget(Badge<Widget>);
 
     Menu& add_menu(String name);
+    void flash_menubar_menu_for(const MenuItem&);
 
 protected:
     Window(Core::Object* parent = nullptr);

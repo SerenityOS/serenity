@@ -192,6 +192,40 @@ void ClientConnection::update_menu_item(i32 menu_id, i32 identifier, [[maybe_unu
         menu_item->set_checked(checked);
 }
 
+void ClientConnection::flash_menubar_menu(i32 window_id, i32 menu_id) {
+    auto itw = m_windows.find(window_id);
+    if (itw == m_windows.end()) {
+        did_misbehave("FlashMenubarMenu: Bad window ID");
+        return;
+    }
+    auto& window = *(*itw).value;
+
+    auto itm = m_menus.find(menu_id);
+    if (itm == m_menus.end()) {
+        did_misbehave("FlashMenubarMenu: Bad menu ID");
+        return;
+    }
+    auto& menu = *(*itm).value;
+
+    if (window.menubar().flash_menu(&menu)) {
+        window.frame().invalidate_menubar();
+
+        if (m_flashed_menu_timer &&
+            m_flashed_menu_timer->is_active()) {
+            m_flashed_menu_timer->on_timeout();
+            m_flashed_menu_timer->stop();
+        }
+
+        m_flashed_menu_timer = Core::Timer::create_single_shot(75, [&window] {
+            window.menubar().flash_menu(nullptr);
+            window.frame().invalidate_menubar();
+        });
+        m_flashed_menu_timer->start();
+    } else if (m_flashed_menu_timer) {
+        m_flashed_menu_timer->restart();
+    }
+}
+
 void ClientConnection::add_menu_separator(i32 menu_id)
 {
     auto it = m_menus.find(menu_id);

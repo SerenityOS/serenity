@@ -17,6 +17,7 @@
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/MenuItem.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -1179,6 +1180,14 @@ Menu& Window::add_menu(String name)
         WindowServerConnection::the().async_add_menu(m_window_id, menu.menu_id());
     }
     return menu;
+}
+
+void Window::flash_menubar_menu_for(const MenuItem& menu_item) {
+    auto menu_id = menu_item.menu_id();
+    if (menu_id < 0)
+        return;
+
+    WindowServerConnection::the().async_flash_menubar_menu(m_window_id, menu_id);
 }
 
 bool Window::is_modified() const
