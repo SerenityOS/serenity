@@ -61,7 +61,7 @@ struct TemporalTimeZone {
 
 MarkedValueList iterable_to_list_of_type(GlobalObject&, Value items, Vector<OptionType> const& element_types);
 Object* get_options_object(GlobalObject&, Value options);
-Value get_option(GlobalObject&, Object& options, String const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback);
+Value get_option(GlobalObject&, Object& options, PropertyName const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback);
 Optional<String> to_temporal_overflow(GlobalObject&, Object& normalized_options);
 Optional<String> to_temporal_rounding_mode(GlobalObject&, Object& normalized_options, String const& fallback);
 u64 to_temporal_rounding_increment(GlobalObject&, Object& normalized_options, Optional<double> dividend, bool inclusive);
