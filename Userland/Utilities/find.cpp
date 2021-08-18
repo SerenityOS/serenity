@@ -47,6 +47,8 @@ struct FileData {
     struct stat stat {
     };
     bool stat_is_valid : 1 { false };
+    // File type as returned from readdir(), or DT_UNKNOWN.
+    unsigned char d_type { DT_UNKNOWN };
 
     const struct stat* ensure_stat()
     {
@@ -62,6 +64,24 @@ struct FileData {
         }
 
         stat_is_valid = true;
+
+        if (S_ISREG(stat.st_mode))
+            d_type = DT_REG;
+        else if (S_ISDIR(stat.st_mode))
+            d_type = DT_DIR;
+        else if (S_ISCHR(stat.st_mode))
+            d_type = DT_CHR;
+        else if (S_ISBLK(stat.st_mode))
+            d_type = DT_BLK;
+        else if (S_ISFIFO(stat.st_mode))
+            d_type = DT_FIFO;
+        else if (S_ISLNK(stat.st_mode))
+            d_type = DT_LNK;
+        else if (S_ISSOCK(stat.st_mode))
+            d_type = DT_SOCK;
+        else
+            VERIFY_NOT_REACHED();
+
         return &stat;
     }
 };
@@ -86,7 +106,7 @@ private:
     }
 };
 
-class TypeCommand final : public StatCommand {
+class TypeCommand final : public Command {
 public:
     TypeCommand(const char* arg)
     {
@@ -97,24 +117,31 @@ public:
     }
 
 private:
-    virtual bool evaluate(const struct stat& stat) const override
+    virtual bool evaluate(FileData& file_data) const override
     {
-        auto type = stat.st_mode;
+        // First, make sure we have a type, but avoid calling
+        // sys$stat() unless we need to.
+        if (file_data.d_type == DT_UNKNOWN) {
+            if (file_data.ensure_stat() == nullptr)
+                return false;
+        }
+
+        auto type = file_data.d_type;
         switch (m_type) {
         case 'b':
-            return S_ISBLK(type);
+            return type == DT_BLK;
         case 'c':
-            return S_ISCHR(type);
+            return type == DT_CHR;
         case 'd':
-            return S_ISDIR(type);
+            return type == DT_DIR;
         case 'l':
-            return S_ISLNK(type);
+            return type == DT_LNK;
         case 'p':
-            return S_ISFIFO(type);
+            return type == DT_FIFO;
         case 'f':
-            return S_ISREG(type);
+            return type == DT_REG;
         case 's':
-            return S_ISSOCK(type);
+            return type == DT_SOCK;
         default:
             // We've verified this is a correct character before.
             VERIFY_NOT_REACHED();
@@ -481,12 +508,18 @@ static void walk_tree(FileData& root_data, Command& command)
     // * This is a directory.
     // * This is a symlink (that could point to a directory),
     //   and we're following symlinks.
-    struct stat stat;
-    int rc = fstatat(root_data.dirfd, root_data.basename, &stat, AT_SYMLINK_NOFOLLOW);
-    if (rc < 0)
+    // * The type is unknown, so it could be a directory.
+    switch (root_data.d_type) {
+    case DT_DIR:
+    case DT_UNKNOWN:
+        break;
+    case DT_LNK:
+        if (g_follow_symlinks)
+            break;
         return;
-    if (!S_ISDIR(stat.st_mode) && (!g_follow_symlinks || !S_ISLNK(stat.st_mode)))
+    default:
         return;
+    }
 
     int dirfd = openat(root_data.dirfd, root_data.basename, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
     if (dirfd < 0) {
@@ -517,6 +550,7 @@ static void walk_tree(FileData& root_data, Command& command)
             dirent->d_name,
             (struct stat) {},
             false,
+            dirent->d_type,
         };
         walk_tree(file_data, command);
     }
@@ -547,6 +581,7 @@ int main(int argc, char* argv[])
         basename.characters(),
         (struct stat) {},
         false,
+        DT_UNKNOWN,
     };
     auto command = parse_all_commands(argv);
     walk_tree(file_data, *command);
