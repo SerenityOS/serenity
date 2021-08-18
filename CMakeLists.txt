@@ -299,6 +299,8 @@ else()
     add_compile_options(-Wdouble-promotion)
 endif()
 
+add_link_options(LINKER:-z,text)
+
 if("${SERENITY_ARCH}" STREQUAL "i686")
     add_compile_options(-march=i686)
 else()
