@@ -11,7 +11,6 @@
 #include <AK/AllOf.h>
 #include <AK/AnyOf.h>
 #include <AK/Array.h>
-#include <AK/GenericLexer.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 
@@ -119,21 +118,6 @@ struct TypeErasedParameter {
     const void* value;
     Type type;
     void (*formatter)(TypeErasedFormatParams&, FormatBuilder&, FormatParser&, const void* value);
-};
-
-class FormatParser : public GenericLexer {
-public:
-    struct FormatSpecifier {
-        StringView flags;
-        size_t index;
-    };
-
-    explicit FormatParser(StringView input);
-
-    StringView consume_literal();
-    bool consume_number(size_t& value);
-    bool consume_specifier(FormatSpecifier& specifier);
-    bool consume_replacement_field(size_t& index);
 };
 
 class FormatBuilder {
