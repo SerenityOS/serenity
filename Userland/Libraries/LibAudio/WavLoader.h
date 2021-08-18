@@ -67,19 +67,11 @@ private:
     AK::InputMemoryStream* m_memory_stream;
     String m_error_string;
 
-    // TODO: We should probably move resampling into the audio server.
-    //
-    // It would avoid duplicate resampling code and would allow clients
-    // to be agnostic of the destination audio device's sample rate.
-    OwnPtr<ResampleHelper<double>> m_resampler;
-
     u32 m_sample_rate { 0 };
     u16 m_num_channels { 0 };
     PcmSampleFormat m_sample_format;
     size_t m_byte_offset_of_data_samples { 0 };
 
-    // FIXME: Get this value from the audio server
-    int m_device_sample_rate { 44100 };
     int m_loaded_samples { 0 };
     int m_total_samples { 0 };
 };
