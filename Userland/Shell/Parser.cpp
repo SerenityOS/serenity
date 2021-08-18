@@ -7,6 +7,7 @@
 #include "Parser.h"
 #include "Shell.h"
 #include <AK/AllOf.h>
+#include <AK/GenericLexer.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/TemporaryChange.h>

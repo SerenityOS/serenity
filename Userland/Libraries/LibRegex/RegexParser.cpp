@@ -8,6 +8,7 @@
 #include "RegexParser.h"
 #include "RegexDebug.h"
 #include <AK/CharacterTypes.h>
+#include <AK/GenericLexer.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
