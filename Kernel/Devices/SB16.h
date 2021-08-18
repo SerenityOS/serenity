@@ -38,6 +38,8 @@ public:
     virtual mode_t required_mode() const override { return 0220; }
     virtual String device_name() const override { return "audio"; }
 
+    virtual KResult ioctl(FileDescription&, unsigned, Userspace<void*>) override;
+
 private:
     // ^IRQHandler
     virtual bool handle_irq(const RegisterState&) override;
@@ -57,6 +59,7 @@ private:
 
     OwnPtr<Memory::Region> m_dma_region;
     int m_major_version { 0 };
+    u16 m_sample_rate { 44100 };
 
     WaitQueue m_irq_queue;
 };
