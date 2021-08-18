@@ -105,6 +105,14 @@ public:
         m_builder.appendff("{}", value);
     }
 
+    template<typename T>
+    void add(Vector<T> array)
+    {
+        for (auto const& value : array) {
+            add(value);
+        }
+    }
+
     JsonArraySerializer<Builder> add_array()
     {
         begin_item();
