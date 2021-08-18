@@ -25,7 +25,7 @@ sigsetjmp:
     mov $0, %rdi            // Set argument how
     mov $0, %rsi            // Set argument set
     lea 64(%rdi), %rdx      // Set argument oldset
-    call sigprocmask
+    call sigprocmask@plt
     mov %r12, %rdi          // Restore sigjmp_buf argument
 
 .Lsaveregs:

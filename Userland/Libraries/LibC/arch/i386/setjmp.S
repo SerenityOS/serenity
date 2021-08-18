@@ -31,7 +31,7 @@ sigsetjmp:
     push %eax
     push $0                 // Set argument set
     push $0                 // Set argument how
-    call sigprocmask
+    call sigprocmask@plt
     add $12, %esp
 
 .Lsaveregs:

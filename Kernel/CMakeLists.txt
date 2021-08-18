@@ -437,8 +437,9 @@ add_compile_definitions(KERNEL)
 #       It's needed because CLion doesn't understand the way we switch compilers mid-build.
 add_compile_definitions(__serenity__)
 
+add_link_options(LINKER:-z,notext)
+
 if (USE_CLANG_TOOLCHAIN)
-    add_link_options(LINKER:-z,notext)
     add_link_options(LINKER:--build-id=none)
 endif()
 
