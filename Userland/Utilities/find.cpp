@@ -43,12 +43,33 @@ struct FileData {
     int dirfd { -1 };
     // The file's basename, relative to the directory.
     const char* basename { nullptr };
+    // Optionally, cached information as returned by stat/lstat/fstatat.
+    struct stat stat {
+    };
+    bool stat_is_valid : 1 { false };
+
+    const struct stat* ensure_stat()
+    {
+        if (stat_is_valid)
+            return &stat;
+
+        int flags = g_follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW;
+        int rc = fstatat(dirfd, basename, &stat, flags);
+        if (rc < 0) {
+            perror(full_path.string().characters());
+            g_there_was_an_error = true;
+            return nullptr;
+        }
+
+        stat_is_valid = true;
+        return &stat;
+    }
 };
 
 class Command {
 public:
     virtual ~Command() { }
-    virtual bool evaluate(const FileData& file_data) const = 0;
+    virtual bool evaluate(FileData& file_data) const = 0;
 };
 
 class StatCommand : public Command {
@@ -56,17 +77,12 @@ public:
     virtual bool evaluate(const struct stat&) const = 0;
 
 private:
-    virtual bool evaluate(const FileData& file_data) const override
+    virtual bool evaluate(FileData& file_data) const override
     {
-        struct stat stat;
-        int flags = g_follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW;
-        int rc = fstatat(file_data.dirfd, file_data.basename, &stat, flags);
-        if (rc < 0) {
-            perror(file_data.full_path.string().characters());
-            g_there_was_an_error = true;
+        const struct stat* stat = file_data.ensure_stat();
+        if (!stat)
             return false;
-        }
-        return evaluate(stat);
+        return evaluate(*stat);
     }
 };
 
@@ -213,7 +229,7 @@ public:
     }
 
 private:
-    virtual bool evaluate(const FileData& file_data) const override
+    virtual bool evaluate(FileData& file_data) const override
     {
         return file_data.full_path.basename().matches(m_pattern, m_case_sensitivity);
     }
@@ -230,7 +246,7 @@ public:
     }
 
 private:
-    virtual bool evaluate(const FileData& file_data) const override
+    virtual bool evaluate(FileData& file_data) const override
     {
         out("{}{}", file_data.full_path, m_terminator);
         return true;
@@ -247,7 +263,7 @@ public:
     }
 
 private:
-    virtual bool evaluate(const FileData& file_data) const override
+    virtual bool evaluate(FileData& file_data) const override
     {
         pid_t pid = fork();
 
@@ -292,7 +308,7 @@ public:
     }
 
 private:
-    virtual bool evaluate(const FileData& file_data) const override
+    virtual bool evaluate(FileData& file_data) const override
     {
         return m_lhs->evaluate(file_data) && m_rhs->evaluate(file_data);
     }
@@ -310,7 +326,7 @@ public:
     }
 
 private:
-    virtual bool evaluate(const FileData& file_data) const override
+    virtual bool evaluate(FileData& file_data) const override
     {
         return m_lhs->evaluate(file_data) || m_rhs->evaluate(file_data);
     }
@@ -457,7 +473,7 @@ static const char* parse_options(int argc, char* argv[])
     }
 }
 
-static void walk_tree(const FileData& root_data, Command& command)
+static void walk_tree(FileData& root_data, Command& command)
 {
     command.evaluate(root_data);
 
@@ -499,6 +515,8 @@ static void walk_tree(const FileData& root_data, Command& command)
             root_data.full_path.append(dirent->d_name),
             dirfd,
             dirent->d_name,
+            (struct stat) {},
+            false,
         };
         walk_tree(file_data, command);
     }
@@ -527,6 +545,8 @@ int main(int argc, char* argv[])
         root_path,
         dirfd,
         basename.characters(),
+        (struct stat) {},
+        false,
     };
     auto command = parse_all_commands(argv);
     walk_tree(file_data, *command);
