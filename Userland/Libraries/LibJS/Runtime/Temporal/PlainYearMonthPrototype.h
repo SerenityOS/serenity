@@ -29,6 +29,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(in_leap_year_getter);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
+    JS_DECLARE_NATIVE_FUNCTION(to_json);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
     JS_DECLARE_NATIVE_FUNCTION(get_iso_fields);
 };
