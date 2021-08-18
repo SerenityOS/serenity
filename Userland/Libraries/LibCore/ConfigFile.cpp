@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,35 +14,52 @@
 
 namespace Core {
 
-NonnullRefPtr<ConfigFile> ConfigFile::get_for_lib(const String& lib_name)
+NonnullRefPtr<ConfigFile> ConfigFile::get_for_lib(String const& lib_name, AllowWriting allow_altering)
 {
     String directory = StandardPaths::config_directory();
     auto path = String::formatted("{}/lib/{}.ini", directory, lib_name);
 
-    return adopt_ref(*new ConfigFile(path));
+    return adopt_ref(*new ConfigFile(path, allow_altering));
 }
 
-NonnullRefPtr<ConfigFile> ConfigFile::get_for_app(const String& app_name)
+NonnullRefPtr<ConfigFile> ConfigFile::get_for_app(String const& app_name, AllowWriting allow_altering)
 {
     String directory = StandardPaths::config_directory();
     auto path = String::formatted("{}/{}.ini", directory, app_name);
-    return adopt_ref(*new ConfigFile(path));
+    return adopt_ref(*new ConfigFile(path, allow_altering));
 }
 
-NonnullRefPtr<ConfigFile> ConfigFile::get_for_system(const String& app_name)
+NonnullRefPtr<ConfigFile> ConfigFile::get_for_system(String const& app_name, AllowWriting allow_altering)
 {
     auto path = String::formatted("/etc/{}.ini", app_name);
-    return adopt_ref(*new ConfigFile(path));
+    return adopt_ref(*new ConfigFile(path, allow_altering));
 }
 
-NonnullRefPtr<ConfigFile> ConfigFile::open(const String& path)
+NonnullRefPtr<ConfigFile> ConfigFile::open(String const& filename, AllowWriting allow_altering)
 {
-    return adopt_ref(*new ConfigFile(path));
+    return adopt_ref(*new ConfigFile(filename, allow_altering));
 }
 
-ConfigFile::ConfigFile(const String& filename)
-    : m_filename(filename)
+NonnullRefPtr<ConfigFile> ConfigFile::open(String const& filename, int fd)
 {
+    return adopt_ref(*new ConfigFile(filename, fd));
+}
+
+ConfigFile::ConfigFile(const String& filename, AllowWriting allow_altering)
+    : m_file(File::construct(filename))
+{
+    if (!m_file->open(allow_altering == AllowWriting::Yes ? OpenMode::ReadWrite : OpenMode::ReadOnly))
+        return;
+
+    reparse();
+}
+
+ConfigFile::ConfigFile(String const& filename, int fd)
+    : m_file(File::construct(filename))
+{
+    if (!m_file->open(fd, OpenMode::ReadWrite, File::ShouldCloseFileDescriptor::Yes))
+        return;
+
     reparse();
 }
 
@@ -54,14 +72,10 @@ void ConfigFile::reparse()
 {
     m_groups.clear();
 
-    auto file = File::construct(m_filename);
-    if (!file->open(OpenMode::ReadOnly))
-        return;
-
     HashMap<String, String>* current_group = nullptr;
 
-    while (file->can_read_line()) {
-        auto line = file->read_line();
+    while (m_file->can_read_line()) {
+        auto line = m_file->read_line();
         auto* cp = line.characters();
 
         while (*cp && (*cp == ' ' || *cp == '\t' || *cp == '\n'))
@@ -149,18 +163,14 @@ bool ConfigFile::sync()
     if (!m_dirty)
         return true;
 
-    FILE* fp = fopen(m_filename.characters(), "wb");
-    if (!fp)
-        return false;
+    m_file->truncate(0);
 
     for (auto& it : m_groups) {
-        outln(fp, "[{}]", it.key);
+        m_file->write(String::formatted("[{}]\n", it.key));
         for (auto& jt : it.value)
-            outln(fp, "{}={}", jt.key, jt.value);
-        outln(fp);
+            m_file->write(String::formatted("{}={}\n", jt.key, jt.value));
+        m_file->write("\n");
     }
-
-    fclose(fp);
 
     m_dirty = false;
     return true;
