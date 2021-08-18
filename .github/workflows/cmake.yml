@@ -71,8 +71,8 @@ jobs:
           # *and* as actual output variable, in this order.
           message("  set-output name=time::${current_date}")
           message("::set-output name=time::${current_date}")
-          message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
-          message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
+          message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*[!llvm].patch', 'Toolchain/BuildIt.sh') }}")
+          message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*[!llvm].patch', 'Toolchain/BuildIt.sh') }}")
 
       - name: Toolchain cache
         # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
@@ -184,89 +184,3 @@ jobs:
         if: ${{ !cancelled() && matrix.debug-options == 'NORMAL_DEBUG'}}
         working-directory: ${{ github.workspace }}/Build
         run: '[ ! -e debug.log ] || cat debug.log'
-
-  build_and_test_lagom:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - with-fuzzers: FUZZ
-            os: ubuntu-20.04
-            allow-test-failure: false
-          - with-fuzzers: NO_FUZZ
-            os: ubuntu-20.04
-            allow-test-failure: false
-          - with-fuzzers: NO_FUZZ
-            os: macos-10.15
-            allow-test-failure: true
-
-    steps:
-    - uses: actions/checkout@v2
-
-    # === OS SETUP ===
-    #
-    - name: Install Ubuntu dependencies
-      run: |
-        sudo apt-get purge -y clang-11
-        sudo apt-get update
-        sudo apt-get install ninja-build
-        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 100
-        # Install wabt tools from github packages
-        wget https://github.com/WebAssembly/wabt/releases/download/1.0.23/wabt-1.0.23-ubuntu.tar.gz
-        tar -xzf ./wabt-1.0.23-ubuntu.tar.gz
-        rm ./wabt-1.0.23-ubuntu.tar.gz
-        echo "$PWD/wabt-1.0.23/bin" >> $GITHUB_PATH
-      if: ${{ runner.os == 'Linux' }}
-    - name: Install macOS dependencies
-      run: brew install ninja wabt
-      if: ${{ runner.os == 'macOS' }}
-    - name: Check versions
-      run: set +e; clang --version; clang++ --version; ninja --version; wat2wasm --version
-
-    # === PREPARE FOR BUILDING ===
-
-    - name: Create build directory
-      run: |
-        mkdir -p ${{ github.workspace }}/Meta/Lagom/Build
-        mkdir -p ${{ github.workspace }}/Meta/Lagom/Build/UCD
-
-    - name: UnicodeData cache
-      # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-      uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
-      with:
-        path: ${{ github.workspace }}/Meta/Lagom/Build/UCD/
-        key: UnicodeData-${{ hashFiles('Userland/Libraries/LibUnicode/unicode_data.cmake') }}
-      if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
-
-    # TODO: ccache
-    # https://cristianadam.eu/20200113/speeding-up-c-plus-plus-github-actions-using-ccache/
-    # https://github.com/cristianadam/HelloWorld/blob/master/.github/workflows/build_cmake.yml
-    # Ignore for now, since the other step dominates
-    - name: Create build environment (fuzz)
-      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
-      run: cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
-      if: ${{ matrix.with-fuzzers == 'FUZZ' }}
-
-    - name: Create build environment (no fuzz)
-      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
-      run: cmake -GNinja -DBUILD_LAGOM=ON -DINCLUDE_WASM_SPEC_TESTS=ON -DWASM_SPEC_TEST_SKIP_FORMATTING=ON -DENABLE_UNDEFINED_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10 ..
-      if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
-
-    # === ACTUALLY BUILD AND TEST ===
-
-    - name: Build Lagom
-      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
-      run: cmake --build .
-
-    - name: Run CMake tests
-      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
-      run: ninja test || ${{ matrix.allow-test-failure }}
-      timeout-minutes: 4
-      env:
-        CTEST_OUTPUT_ON_FAILURE: 1
-        # FIXME: enable detect_stack_use_after_return=1 #7420
-        ASAN_OPTIONS: "strict_string_checks=1:check_initialization_order=1:strict_init_order=1"
-        UBSAN_OPTIONS: "print_stacktrace=1:print_summary=1:halt_on_error=1"
-      if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}

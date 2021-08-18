@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
 #include <LibJS/Runtime/Temporal/PlainTimeConstructor.h>
 
@@ -44,71 +45,35 @@ Value PlainTimeConstructor::construct(FunctionObject& new_target)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    // 2. Let hour be ? ToIntegerOrInfinity(hour).
-    auto hour = vm.argument(0).to_integer_or_infinity(global_object);
+    // 2. Let hour be ? ToIntegerThrowOnInfinity(hour).
+    auto hour = to_integer_throw_on_infinity(global_object, vm.argument(0), ErrorType::TemporalInvalidPlainTime);
     if (vm.exception())
         return {};
 
-    // 3. If hour is +∞ or -∞, throw a RangeError exception.
-    if (Value(hour).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
-        return {};
-    }
-
-    // 4. Let minute be ? ToIntegerOrInfinity(hour).
-    auto minute = vm.argument(1).to_integer_or_infinity(global_object);
+    // 3. Let minute be ? ToIntegerThrowOnInfinity(hour).
+    auto minute = to_integer_throw_on_infinity(global_object, vm.argument(1), ErrorType::TemporalInvalidPlainTime);
     if (vm.exception())
         return {};
 
-    // 5. If minute is +∞ or -∞, throw a RangeError exception.
-    if (Value(minute).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
-        return {};
-    }
-
-    // 6. Let second be ? ToIntegerOrInfinity(hour).
-    auto second = vm.argument(2).to_integer_or_infinity(global_object);
+    // 4. Let second be ? ToIntegerThrowOnInfinity(hour).
+    auto second = to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidPlainTime);
     if (vm.exception())
         return {};
 
-    // 7. If second is +∞ or -∞, throw a RangeError exception.
-    if (Value(second).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
-        return {};
-    }
-
-    // 8. Let millisecond be ? ToIntegerOrInfinity(hour).
-    auto millisecond = vm.argument(3).to_integer_or_infinity(global_object);
+    // 5. Let millisecond be ? ToIntegerThrowOnInfinity(hour).
+    auto millisecond = to_integer_throw_on_infinity(global_object, vm.argument(3), ErrorType::TemporalInvalidPlainTime);
     if (vm.exception())
         return {};
 
-    // 9. If millisecond is +∞ or -∞, throw a RangeError exception.
-    if (Value(millisecond).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
-        return {};
-    }
-
-    // 10. Let microsecond be ? ToIntegerOrInfinity(hour).
-    auto microsecond = vm.argument(4).to_integer_or_infinity(global_object);
+    // 6. Let microsecond be ? ToIntegerThrowOnInfinity(hour).
+    auto microsecond = to_integer_throw_on_infinity(global_object, vm.argument(4), ErrorType::TemporalInvalidPlainTime);
     if (vm.exception())
         return {};
 
-    // 11. If microsecond is +∞ or -∞, throw a RangeError exception.
-    if (Value(microsecond).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
-        return {};
-    }
-
-    // 12. Let nanosecond be ? ToIntegerOrInfinity(hour).
-    auto nanosecond = vm.argument(5).to_integer_or_infinity(global_object);
+    // 7. Let nanosecond be ? ToIntegerThrowOnInfinity(hour).
+    auto nanosecond = to_integer_throw_on_infinity(global_object, vm.argument(5), ErrorType::TemporalInvalidPlainTime);
     if (vm.exception())
         return {};
-
-    // 13. If nanosecond is +∞ or -∞, throw a RangeError exception.
-    if (Value(nanosecond).is_infinity()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
-        return {};
-    }
 
     // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
     // This does not change the exposed behaviour as the call to CreateTemporalTime will immediately check that these values are valid
@@ -119,7 +84,7 @@ Value PlainTimeConstructor::construct(FunctionObject& new_target)
         return {};
     }
 
-    // 14. Return ? CreateTemporalTime(hour, minute, second, millisecond, microsecond, nanosecond, NewTarget).
+    // 8. Return ? CreateTemporalTime(hour, minute, second, millisecond, microsecond, nanosecond, NewTarget).
     return create_temporal_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, &new_target);
 }
 

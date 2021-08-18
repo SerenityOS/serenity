@@ -41,8 +41,6 @@ public:
     CustomPropertyResolutionTuple resolve_custom_property_with_specificity(DOM::Element&, String const&) const;
     Optional<StyleProperty> resolve_custom_property(DOM::Element&, String const&) const;
 
-    static bool is_inherited_property(CSS::PropertyID);
-
 private:
     template<typename Callback>
     void for_each_stylesheet(Callback) const;

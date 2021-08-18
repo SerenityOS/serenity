@@ -6,6 +6,7 @@
 
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonth.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonthConstructor.h>
@@ -28,19 +29,67 @@ void PlainYearMonth::visit_edges(Visitor& visitor)
     visitor.visit(&m_calendar);
 }
 
-// 9.5.5 BalanceISOYearMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-balanceisoyearmonth
-ISOYearMonth balance_iso_year_month(i32 year, i32 month)
+// 9.5.2 RegulateISOYearMonth ( year, month, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisoyearmonth
+Optional<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_object, double year, double month, String const& overflow)
 {
+    auto& vm = global_object.vm();
+
     // 1. Assert: year and month are integers.
+    VERIFY(year == trunc(year) && month == trunc(month));
 
-    // 2. Set year to year + floor((month - 1) / 12).
-    year += (month - 1) / 12;
+    // 2. Assert: overflow is either "constrain" or "reject".
+    // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
 
-    // 3. Set month to (month − 1) modulo 12 + 1.
-    month = (month - 1) % 12 + 1;
+    // 3. If overflow is "constrain", then
+    if (overflow == "constrain"sv) {
+        // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat `year` (a double) as normal integer from this point onwards.
+        // This does not change the exposed behaviour as the subsequent call to CreateTemporalYearMonth will check that its value is a valid ISO
+        // values (for years: -273975 - 273975) which is a subset of this check.
+        // If RegulateISOYearMonth is ever used outside ISOYearMonthFromFields, this may need to be changed.
+        if (!AK::is_within_range<i32>(year)) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
+            return {};
+        }
 
-    // 4. Return the new Record { [[Year]]: year, [[Month]]: month }.
-    return ISOYearMonth { .year = year, .month = static_cast<u8>(month) };
+        // a. Return ! ConstrainISOYearMonth(year, month).
+        return constrain_iso_year_month(year, month);
+    }
+
+    // 4. If overflow is "reject", then
+    if (overflow == "reject"sv) {
+        // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
+        // This does not change the exposed behaviour as the call to IsValidISOMonth and subsequent call to CreateTemporalDateTime will check
+        // that these values are valid ISO values (for years: -273975 - 273975, for months: 1 - 12) all of which are subsets of this check.
+        if (!AK::is_within_range<i32>(year) || !AK::is_within_range<u8>(month)) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
+            return {};
+        }
+
+        // a. If ! IsValidISOMonth(month) is false, throw a RangeError exception.
+        if (!is_valid_iso_month(month)) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
+            return {};
+        }
+
+        // b. Return the Record { [[Year]]: year, [[Month]]: month }.
+        return ISOYearMonth { .year = static_cast<i32>(year), .month = static_cast<u8>(month), .reference_iso_day = 0 };
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
+// 9.5.3 IsValidISOMonth ( month ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidisomonth
+bool is_valid_iso_month(u8 month)
+{
+    // 1. Assert: month is an integer.
+    // 2. If month < 1 or month > 12, then
+    if (month < 1 || month > 12) {
+        // a.Return false.
+        return false;
+    }
+
+    // 3. Return true.
+    return true;
 }
 
 // 9.5.4 ISOYearMonthWithinLimits ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthwithinlimits
@@ -68,6 +117,36 @@ bool iso_year_month_within_limits(i32 year, u8 month)
 
     // 5. Return true.
     return true;
+}
+
+// 9.5.5 BalanceISOYearMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-balanceisoyearmonth
+ISOYearMonth balance_iso_year_month(double year, double month)
+{
+    // 1. Assert: year and month are integers.
+    VERIFY(year == trunc(year) && month == trunc(month));
+
+    // 2. Set year to year + floor((month - 1) / 12).
+    year += floor((month - 1) / 12);
+
+    // 3. Set month to (month − 1) modulo 12 + 1.
+    month = fmod(month - 1, 12) + 1;
+
+    // 4. Return the Record { [[Year]]: year, [[Month]]: month }.
+    return ISOYearMonth { .year = static_cast<i32>(year), .month = static_cast<u8>(month), .reference_iso_day = 0 };
+}
+
+// 9.5.6 ConstrainISOYearMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-constrainisoyearmonth
+ISOYearMonth constrain_iso_year_month(double year, double month)
+{
+    // 1. Assert: year and month are integers.
+    VERIFY(year == trunc(year) && month == trunc(month));
+
+    // 2. Set month to ! ConstrainToRange(month, 1, 12).
+    month = constrain_to_range(month, 1, 12);
+
+    // 3. Return the Record { [[Year]]: year, [[Month]]: month }.
+    // NOTE: `year` is known to be in the i32 range.
+    return ISOYearMonth { .year = static_cast<i32>(year), .month = static_cast<u8>(month), .reference_iso_day = 0 };
 }
 
 // 9.5.7 CreateTemporalYearMonth ( isoYear, isoMonth, calendar, referenceISODay [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalyearmonth

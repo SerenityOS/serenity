@@ -461,7 +461,7 @@ Optional<ISODateTime> parse_iso_date_time(GlobalObject& global_object, [[maybe_u
         return {};
     }
 
-    // 18. Return the new Record { [[Year]]: year, [[Month]]: month, [[Day]]: day, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond, [[Calendar]]: calendar }.
+    // 18. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond, [[Calendar]]: calendar }.
     return ISODateTime { .year = year, .month = month, .day = day, .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = microsecond, .nanosecond = nanosecond, .calendar = calendar_part.has_value() ? *calendar_part : Optional<String>() };
 }
 
@@ -487,7 +487,7 @@ Optional<TemporalInstant> parse_temporal_instant_string(GlobalObject& global_obj
     // 5. Assert: timeZoneResult.[[OffsetString]] is not undefined.
     VERIFY(time_zone_result->offset.has_value());
 
-    // 6. Return the new Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[TimeZoneOffsetString]]: timeZoneResult.[[OffsetString]] }.
+    // 6. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[TimeZoneOffsetString]]: timeZoneResult.[[OffsetString]] }.
     return TemporalInstant { .year = result->year, .month = result->month, .day = result->day, .hour = result->hour, .minute = result->minute, .second = result->second, .millisecond = result->millisecond, .microsecond = result->microsecond, .nanosecond = result->nanosecond, .time_zone_offset = move(time_zone_result->offset) };
 }
 
@@ -528,7 +528,7 @@ Optional<TemporalDate> parse_temporal_date_string(GlobalObject& global_object, S
     if (vm.exception())
         return {};
 
-    // 4. Return the new Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
+    // 4. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
     return TemporalDate { .year = result->year, .month = result->month, .day = result->day, .calendar = move(result->calendar) };
 }
 
@@ -561,7 +561,7 @@ Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_
 
     // 4. If z is not undefined, then
     if (z_part.has_value()) {
-        // a. Return the new Record: { [[Z]]: "Z", [[OffsetString]]: "+00:00", [[Name]]: undefined }.
+        // a. Return the Record { [[Z]]: "Z", [[OffsetString]]: "+00:00", [[Name]]: undefined }.
         return TemporalTimeZone { .z = true, .offset = "+00:00", .name = {} };
     }
 
@@ -629,7 +629,7 @@ Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_
         name = canonicalize_time_zone_name(*name_part);
     }
 
-    // 8. Return the new Record: { [[Z]]: undefined, [[OffsetString]]: offsetString, [[Name]]: name }.
+    // 8. Return the Record { [[Z]]: undefined, [[OffsetString]]: offsetString, [[Name]]: name }.
     return TemporalTimeZone { .z = false, .offset = offset, .name = name };
 }
 
@@ -661,7 +661,7 @@ double to_positive_integer_or_infinity(GlobalObject& global_object, Value argume
     return integer;
 }
 
-// 13.46 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
+// 13.47 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
 Object* prepare_temporal_fields(GlobalObject& global_object, Object& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields)
 {
     auto& vm = global_object.vm();

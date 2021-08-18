@@ -1,11 +1,10 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
-#include <AK/StringView.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/TTY/SlavePTY.h>
@@ -24,8 +23,6 @@ DevPtsFS::DevPtsFS()
 DevPtsFS::~DevPtsFS()
 {
 }
-
-static Singleton<HashTable<unsigned>> s_ptys;
 
 KResult DevPtsFS::initialize()
 {
@@ -80,16 +77,6 @@ RefPtr<Inode> DevPtsFS::get_inode(InodeIdentifier inode_id) const
     return inode;
 }
 
-void DevPtsFS::register_slave_pty(SlavePTY& slave_pty)
-{
-    s_ptys->set(slave_pty.index());
-}
-
-void DevPtsFS::unregister_slave_pty(SlavePTY& slave_pty)
-{
-    s_ptys->remove(slave_pty.index());
-}
-
 DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs, InodeIndex index, SlavePTY* pty)
     : Inode(fs, index)
 {
@@ -129,11 +116,13 @@ KResult DevPtsFSInode::traverse_as_directory(Function<bool(FileSystem::Directory
     callback({ ".", identifier(), 0 });
     callback({ "..", identifier(), 0 });
 
-    for (unsigned pty_index : *s_ptys) {
-        String name = String::number(pty_index);
-        InodeIdentifier identifier = { fsid(), pty_index_to_inode_index(pty_index) };
-        callback({ name, identifier, 0 });
-    }
+    SlavePTY::all_instances().with([&](auto& list) {
+        for (SlavePTY& slave_pty : list) {
+            StringBuilder builder;
+            builder.appendff("{}", slave_pty.index());
+            callback({ builder.string_view(), { fsid(), pty_index_to_inode_index(slave_pty.index()) }, 0 });
+        }
+    });
 
     return KSuccess;
 }
@@ -145,17 +134,21 @@ KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::lookup(StringView name)
     if (name == "." || name == "..")
         return *this;
 
-    auto& fs = static_cast<DevPtsFS&>(this->fs());
-
     auto pty_index = name.to_uint();
-    if (pty_index.has_value() && s_ptys->contains(pty_index.value())) {
-        auto inode = fs.get_inode({ fsid(), pty_index_to_inode_index(pty_index.value()) });
-        if (!inode)
-            return ENOENT;
-        return inode.release_nonnull();
-    }
+    if (!pty_index.has_value())
+        return ENOENT;
 
-    return ENOENT;
+    return SlavePTY::all_instances().with([&](auto& list) -> KResultOr<NonnullRefPtr<Inode>> {
+        for (SlavePTY& slave_pty : list) {
+            if (slave_pty.index() != pty_index.value())
+                continue;
+            auto inode = fs().get_inode({ fsid(), pty_index_to_inode_index(pty_index.value()) });
+            if (!inode)
+                return ENOENT;
+            return inode.release_nonnull();
+        }
+        return ENOENT;
+    });
 }
 
 void DevPtsFSInode::flush_metadata()

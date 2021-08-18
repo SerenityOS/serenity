@@ -25,6 +25,8 @@ public:
 
     void disallow_html_comments() { m_allow_html_comments = false; };
 
+    Token force_slash_as_regex();
+
 private:
     void consume();
     bool consume_exponent();
@@ -32,8 +34,13 @@ private:
     bool consume_hexadecimal_number();
     bool consume_binary_number();
     bool consume_decimal_number();
+
+    bool is_unicode_character() const;
+    u32 current_code_point() const;
+
     bool is_eof() const;
     bool is_line_terminator() const;
+    bool is_whitespace() const;
     bool is_identifier_start() const;
     bool is_identifier_middle() const;
     bool is_line_comment_start(bool line_has_token_yet) const;
@@ -46,6 +53,8 @@ private:
     template<typename Callback>
     bool match_numeric_literal_separator_followed_by(Callback) const;
     bool slash_means_division() const;
+
+    TokenType consume_regex_literal();
 
     StringView m_source;
     size_t m_position { 0 };

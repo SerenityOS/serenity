@@ -428,6 +428,29 @@ RefPtr<Process> Process::from_pid(ProcessID pid)
     });
 }
 
+const Process::FileDescriptionAndFlags* Process::FileDescriptions::get_if_valid(size_t i) const
+{
+    ScopedSpinLock lock(m_fds_lock);
+    if (m_fds_metadatas.size() <= i)
+        return nullptr;
+
+    if (auto& metadata = m_fds_metadatas[i]; metadata.is_valid())
+        return &metadata;
+
+    return nullptr;
+}
+Process::FileDescriptionAndFlags* Process::FileDescriptions::get_if_valid(size_t i)
+{
+    ScopedSpinLock lock(m_fds_lock);
+    if (m_fds_metadatas.size() <= i)
+        return nullptr;
+
+    if (auto& metadata = m_fds_metadatas[i]; metadata.is_valid())
+        return &metadata;
+
+    return nullptr;
+}
+
 const Process::FileDescriptionAndFlags& Process::FileDescriptions::at(size_t i) const
 {
     ScopedSpinLock lock(m_fds_lock);

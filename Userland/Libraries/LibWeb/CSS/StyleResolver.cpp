@@ -102,38 +102,6 @@ void StyleResolver::sort_matching_rules(Vector<MatchingRule>& matching_rules) co
     });
 }
 
-bool StyleResolver::is_inherited_property(CSS::PropertyID property_id)
-{
-    static HashTable<CSS::PropertyID> inherited_properties;
-    if (inherited_properties.is_empty()) {
-        inherited_properties.set(CSS::PropertyID::BorderCollapse);
-        inherited_properties.set(CSS::PropertyID::BorderSpacing);
-        inherited_properties.set(CSS::PropertyID::Color);
-        inherited_properties.set(CSS::PropertyID::FontFamily);
-        inherited_properties.set(CSS::PropertyID::FontSize);
-        inherited_properties.set(CSS::PropertyID::FontStyle);
-        inherited_properties.set(CSS::PropertyID::FontVariant);
-        inherited_properties.set(CSS::PropertyID::FontWeight);
-        inherited_properties.set(CSS::PropertyID::LetterSpacing);
-        inherited_properties.set(CSS::PropertyID::LineHeight);
-        inherited_properties.set(CSS::PropertyID::ListStyle);
-        inherited_properties.set(CSS::PropertyID::ListStyleImage);
-        inherited_properties.set(CSS::PropertyID::ListStylePosition);
-        inherited_properties.set(CSS::PropertyID::ListStyleType);
-        inherited_properties.set(CSS::PropertyID::TextAlign);
-        inherited_properties.set(CSS::PropertyID::TextIndent);
-        inherited_properties.set(CSS::PropertyID::TextTransform);
-        inherited_properties.set(CSS::PropertyID::Visibility);
-        inherited_properties.set(CSS::PropertyID::WhiteSpace);
-        inherited_properties.set(CSS::PropertyID::WordSpacing);
-
-        // FIXME: This property is not supposed to be inherited, but we currently
-        //        rely on inheritance to propagate decorations into line boxes.
-        inherited_properties.set(CSS::PropertyID::TextDecorationLine);
-    }
-    return inherited_properties.contains(property_id);
-}
-
 enum class Edge {
     Top,
     Right,

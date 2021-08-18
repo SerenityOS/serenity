@@ -67,6 +67,7 @@ public:
     const unsigned char* bytes() const { return begin_ptr(); }
     size_t byte_length() const { return m_string.length(); }
     size_t byte_offset_of(const Utf8CodePointIterator&) const;
+    size_t byte_offset_of(size_t code_point_offset) const;
 
     Utf8View substring_view(size_t byte_offset, size_t byte_length) const;
     Utf8View substring_view(size_t byte_offset) const { return substring_view(byte_offset, byte_length() - byte_offset); }

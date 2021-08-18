@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibAudio/ClientConnection.h>
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
@@ -20,9 +22,14 @@
 class AudioWidget final : public GUI::Widget {
     C_OBJECT(AudioWidget)
 public:
-    AudioWidget()
+    AudioWidget(NonnullRefPtr<Core::ConfigFile> config, int initial_volume, bool initial_mute_state)
         : m_audio_client(Audio::ClientConnection::construct())
+        , m_config(move(config))
+        , m_show_percent(m_config->read_bool_entry("Applet", "ShowPercent", false))
+        , m_audio_muted(initial_mute_state)
+        , m_audio_volume(initial_volume)
     {
+
         m_audio_client->on_muted_state_change = [this](bool muted) {
             if (m_audio_muted == muted)
                 return;
@@ -64,8 +71,8 @@ public:
 
         m_percent_box = m_root_container->add<GUI::CheckBox>("\xE2\x84\xB9");
         m_percent_box->set_fixed_size(27, 16);
-        m_percent_box->set_checked(false);
-        m_percent_box->set_tooltip("Show percent");
+        m_percent_box->set_tooltip(m_show_percent ? "Hide percent" : "Show percent");
+        m_percent_box->set_checked(m_show_percent);
         m_percent_box->on_checked = [&](bool show_percent) {
             m_show_percent = show_percent;
             if (!m_show_percent) {
@@ -77,23 +84,29 @@ public:
             }
             reposition_slider_window();
             GUI::Application::the()->hide_tooltip();
+
+            m_config->write_bool_entry("Applet", "ShowPercent", m_show_percent);
+            auto sync_success = m_config->sync();
+            if (!sync_success)
+                warnln("Could not write applet configuration.");
         };
 
         m_slider = m_root_container->add<GUI::VerticalSlider>();
         m_slider->set_max(20);
-        m_slider->set_value(0);
+        int non_log_volume = sqrt(100 * m_audio_volume);
+        m_slider->set_value(-(non_log_volume / 5.0f) + 20);
         m_slider->set_knob_size_mode(GUI::Slider::KnobSizeMode::Proportional);
         m_slider->on_change = [&](int value) {
             int volume = clamp((20 - value) * 5, 0, 100);
-            float volume_log = ((volume / 100.0f) * (volume / 100.0f)) * 100.0f;
-            m_audio_client->set_main_mix_volume(volume_log);
+            double volume_log = ((volume / 100.0) * (volume / 100.0)) * 100.0;
+            m_audio_client->set_main_mix_volume(static_cast<i32>(volume_log));
             update();
         };
 
         m_mute_box = m_root_container->add<GUI::CheckBox>("\xE2\x9D\x8C");
         m_mute_box->set_fixed_size(27, 16);
-        m_mute_box->set_checked(false);
-        m_mute_box->set_tooltip("Mute");
+        m_mute_box->set_checked(m_audio_muted);
+        m_mute_box->set_tooltip(m_audio_muted ? "Unmute" : "Mute");
         m_mute_box->on_checked = [&](bool is_muted) {
             m_mute_box->set_tooltip(is_muted ? "Unmute" : "Mute");
             m_audio_client->set_muted(is_muted);
@@ -178,6 +191,7 @@ private:
     };
 
     NonnullRefPtr<Audio::ClientConnection> m_audio_client;
+    NonnullRefPtr<Core::ConfigFile> m_config;
     Vector<VolumeBitmapPair, 5> m_volume_level_bitmaps;
     bool m_show_percent { false };
     bool m_audio_muted { false };
@@ -192,10 +206,14 @@ private:
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath wpath cpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+
+    auto config = Core::ConfigFile::get_for_app("AudioApplet");
+    // To not upset the audio server state, we responsibly read this once.
+    auto audio_master_config = Core::ConfigFile::get_for_app("Audio");
 
     auto app = GUI::Application::construct(argc, argv);
 
@@ -203,19 +221,29 @@ int main(int argc, char** argv)
     window->set_has_alpha_channel(true);
     window->set_title("Audio");
     window->set_window_type(GUI::WindowType::Applet);
-    window->resize(16, 16);
 
-    window->set_main_widget<AudioWidget>();
+    window->set_main_widget<AudioWidget>(config, audio_master_config->read_num_entry("Master", "Volume", 100), audio_master_config->read_bool_entry("Master", "Mute", false));
     window->show();
 
+    // This positioning code depends on the window actually existing.
+    if (!config->read_bool_entry("Applet", "ShowPercent")) {
+        window->resize(16, 16);
+    } else {
+        window->resize(44, 16);
+    }
+
     if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+    if (unveil(config->filename().characters(), "rwc") < 0) {
         perror("unveil");
         return 1;
     }
 
     unveil(nullptr, nullptr);
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

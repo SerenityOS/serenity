@@ -1,0 +1,90 @@
+parameters:
+  arch: 'i686'
+
+jobs:
+  - job: 'Serenity_Clang_${{ parameters.arch }}'
+    timeoutInMinutes: 0 # Setting to 0 means the maximum allowed timeout is used.
+
+    variables:
+    - name: CCACHE_DIR
+      value: $(Build.SourcesDirectory)/.ccache
+
+    pool:
+      vmImage: ubuntu-20.04
+
+    steps:
+    - template: Setup.yml
+      parameters:
+        os: 'Serenity'
+
+    - template: Caches.yml
+      parameters:
+        arch: '${{ parameters.arch }}'
+        toolchain: 'clang'
+        build_directory: 'Build'
+
+    - script: ./Toolchain/BuildClang.sh
+      displayName: Build Toolchain
+      env:
+        TRY_USE_LOCAL_TOOLCHAIN: 'y'
+        ARCH: '${{ parameters.arch }}'
+
+    - script: |
+        mkdir -p Build
+      displayName: 'Create Build Directory'
+
+    - script: |
+        cmake -GNinja \
+          -DSERENITY_ARCH=${{ parameters.arch }} \
+          -DUSE_CLANG_TOOLCHAIN=ON \
+          -DENABLE_UNDEFINED_SANITIZER=ON \
+          -DENABLE_PCI_IDS_DOWNLOAD=OFF \
+          -DENABLE_USB_IDS_DOWNLOAD=OFF \
+          -DCMAKE_C_COMPILER=gcc-10 \
+          -DCMAKE_CXX_COMPILER=g++-10 \
+          ..
+      displayName: 'Create Build Environment'
+      workingDirectory: $(Build.SourcesDirectory)/Build
+
+    - script: |
+        cmake --build .
+      displayName: 'Build'
+      workingDirectory: $(Build.SourcesDirectory)/Build
+
+    - script: |
+        ninja install && ninja image
+      displayName: 'Create RootFS'
+      workingDirectory: $(Build.SourcesDirectory)/Build
+
+    - script: |
+        ninja run
+
+        echo "##[group]Verify Output File"
+        mkdir fsmount
+        sudo mount -t ext2 -o loop,rw _disk_image fsmount
+
+        echo "Results: "
+        sudo cat fsmount/home/anon/test-results.log
+        echo "##[endgroup]"
+
+        if ! sudo grep -q "Failed: 0" fsmount/home/anon/test-results.log
+        then
+          echo "##[error]:^( Tests failed, failing job"
+          exit 1
+        fi
+      displayName: 'Test'
+      workingDirectory: $(Build.SourcesDirectory)/Build
+      env:
+        SERENITY_QEMU_CPU: 'max,vmx=off'
+        SERENITY_KERNEL_CMDLINE: 'boot_mode=self-test'
+        SERENITY_RUN: 'ci'
+
+    - script: |
+        [ ! -e debug.log ] || cat debug.log
+      displayName: 'Print Target Logs'
+      workingDirectory: $(Build.SourcesDirectory)/Build
+      condition: failed()
+
+    - script: |
+        ccache -s
+      displayName: 'Cache Stats'

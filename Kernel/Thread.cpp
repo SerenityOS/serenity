@@ -32,23 +32,9 @@ namespace Kernel {
 
 static Singleton<SpinLockProtectedValue<Thread::GlobalList>> s_list;
 
-SpinLockProtectedValue<Thread::GlobalList>& Thread::all_threads()
+SpinLockProtectedValue<Thread::GlobalList>& Thread::all_instances()
 {
     return *s_list;
-}
-
-bool Thread::unref() const
-{
-    bool did_hit_zero = all_threads().with([&](auto&) {
-        if (deref_base())
-            return false;
-        m_global_thread_list_node.remove();
-        return true;
-    });
-
-    if (did_hit_zero)
-        delete this;
-    return did_hit_zero;
 }
 
 KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> process)
@@ -91,7 +77,7 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
         m_kernel_stack_region->set_name(KString::try_create(string));
     }
 
-    all_threads().with([&](auto& list) {
+    Thread::all_instances().with([&](auto& list) {
         list.append(*this);
     });
 
@@ -819,7 +805,7 @@ bool Thread::should_ignore_signal(u8 signal) const
     auto& action = m_signal_action_data[signal];
     if (action.handler_or_sigaction.is_null())
         return default_signal_action(signal) == DefaultSignalAction::Ignore;
-    if ((sighandler_t)action.handler_or_sigaction.as_ptr() == SIG_IGN)
+    if ((sighandler_t)action.handler_or_sigaction.get() == SIG_IGN)
         return true;
     return false;
 }
@@ -1258,7 +1244,7 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
 
 RefPtr<Thread> Thread::from_tid(ThreadID tid)
 {
-    return all_threads().with([&](auto& list) -> RefPtr<Thread> {
+    return Thread::all_instances().with([&](auto& list) -> RefPtr<Thread> {
         for (Thread& thread : list) {
             if (thread.tid() == tid)
                 return thread;

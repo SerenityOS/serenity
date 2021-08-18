@@ -237,18 +237,18 @@ bool is_valid_iso_date(i32 year, u8 month, u8 day)
 }
 
 // 3.5.6 BalanceISODate ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-balanceisodate
-ISODate balance_iso_date(i32 year, i32 month, i32 day)
+ISODate balance_iso_date(double year_, double month_, double day)
 {
     // 1. Assert: year, month, and day are integers.
 
     // 2. Let balancedYearMonth be ! BalanceISOYearMonth(year, month).
-    auto balanced_year_month = balance_iso_year_month(year, month);
+    auto balanced_year_month = balance_iso_year_month(year_, month_);
 
     // 3. Set month to balancedYearMonth.[[Month]].
-    month = balanced_year_month.month;
+    auto month = balanced_year_month.month;
 
     // 4. Set year to balancedYearMonth.[[Year]].
-    year = balanced_year_month.year;
+    auto year = balanced_year_month.year;
 
     // 5. NOTE: To deal with negative numbers of days whose absolute value is greater than the number of days in a year, the following section subtracts years and adds days until the number of days is greater than −366 or −365.
 
@@ -328,7 +328,7 @@ ISODate balance_iso_date(i32 year, i32 month, i32 day)
         month = balanced_year_month.month;
     }
 
-    // 16. Return the new Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
+    // 16. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
     return ISODate { .year = year, .month = static_cast<u8>(month), .day = static_cast<u8>(day) };
 }
 

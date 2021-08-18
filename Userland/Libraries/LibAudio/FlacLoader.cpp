@@ -414,8 +414,7 @@ void FlacLoaderPlugin::next_frame()
 
     VERIFY(left.size() == right.size());
 
-    // TODO: find the correct rescale offset
-    double sample_rescale = static_cast<double>(1 << pcm_bits_per_sample(m_current_frame->bit_depth));
+    double sample_rescale = static_cast<double>(1 << (pcm_bits_per_sample(m_current_frame->bit_depth) - 1));
     dbgln_if(AFLACLOADER_DEBUG, "Sample rescaled from {} bits: factor {:.1f}", pcm_bits_per_sample(m_current_frame->bit_depth), sample_rescale);
 
     m_current_frame_data.clear_with_capacity();
@@ -676,9 +675,9 @@ Vector<i32> FlacLoaderPlugin::decode_custom_lpc(FlacSubframeHeader& subframe, In
 
     // approximate the waveform with the predictor
     for (size_t i = subframe.order; i < m_current_frame->sample_count; ++i) {
-        i32 sample = 0;
+        i64 sample = 0;
         for (size_t t = 0; t < subframe.order; ++t) {
-            sample += coefficients[t] * decoded[i - t - 1];
+            sample += static_cast<i64>(coefficients[t]) * static_cast<i64>(decoded[i - t - 1]);
         }
         decoded[i] += sample >> lpc_shift;
     }
@@ -740,17 +739,17 @@ Vector<i32> FlacLoaderPlugin::decode_residual(Vector<i32>& decoded, FlacSubframe
 {
     u8 residual_mode = bit_input.read_bits_big_endian(2);
     u8 partition_order = bit_input.read_bits_big_endian(4);
-    u32 partitions = 1 << partition_order;
+    size_t partitions = 1 << partition_order;
 
     if (residual_mode == FlacResidualMode::Rice4Bit) {
         // decode a single Rice partition with four bits for the order k
-        for (u32 i = 0; i < partitions; ++i) {
+        for (size_t i = 0; i < partitions; ++i) {
             auto rice_partition = decode_rice_partition(4, partitions, i, subframe, bit_input);
             decoded.extend(move(rice_partition));
         }
     } else if (residual_mode == FlacResidualMode::Rice5Bit) {
         // five bits equivalent
-        for (u32 i = 0; i < partitions; ++i) {
+        for (size_t i = 0; i < partitions; ++i) {
             auto rice_partition = decode_rice_partition(5, partitions, i, subframe, bit_input);
             decoded.extend(move(rice_partition));
         }
@@ -782,11 +781,11 @@ ALWAYS_INLINE Vector<i32> FlacLoaderPlugin::decode_rice_partition(u8 partition_t
     // escape code for unencoded binary partition
     if (k == (1 << partition_type) - 1) {
         u8 unencoded_bps = bit_input.read_bits_big_endian(5);
-        for (u32 r = 0; r < residual_sample_count; ++r) {
+        for (size_t r = 0; r < residual_sample_count; ++r) {
             rice_partition[r] = bit_input.read_bits_big_endian(unencoded_bps);
         }
     } else {
-        for (u32 r = 0; r < residual_sample_count; ++r) {
+        for (size_t r = 0; r < residual_sample_count; ++r) {
             rice_partition[r] = decode_unsigned_exp_golomb(k, bit_input);
         }
     }

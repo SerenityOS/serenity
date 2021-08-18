@@ -266,6 +266,7 @@ namespace JS {
     P(log10)                                 \
     P(map)                                   \
     P(max)                                   \
+    P(mergeFields)                           \
     P(message)                               \
     P(microsecond)                           \
     P(microseconds)                          \
@@ -276,6 +277,7 @@ namespace JS {
     P(minutes)                               \
     P(month)                                 \
     P(monthCode)                             \
+    P(monthDayFromFields)                    \
     P(months)                                \
     P(monthsInYear)                          \
     P(multiline)                             \
@@ -391,7 +393,9 @@ namespace JS {
     P(toLowerCase)                           \
     P(toPlainDate)                           \
     P(toPlainDateTime)                       \
+    P(toPlainMonthDay)                       \
     P(toPlainTime)                           \
+    P(toPlainYearMonth)                      \
     P(toString)                              \
     P(toTemporalInstant)                     \
     P(toTimeString)                          \
@@ -420,6 +424,7 @@ namespace JS {
     P(withPlainDate)                         \
     P(writable)                              \
     P(year)                                  \
+    P(yearMonthFromFields)                   \
     P(years)                                 \
     P(zonedDateTime)                         \
     P(zonedDateTimeISO)

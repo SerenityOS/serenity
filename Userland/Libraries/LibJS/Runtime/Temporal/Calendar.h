@@ -9,6 +9,8 @@
 
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
+#include <LibJS/Runtime/Temporal/PlainMonthDay.h>
+#include <LibJS/Runtime/Temporal/PlainYearMonth.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Temporal {
@@ -48,6 +50,8 @@ Object* to_temporal_calendar(GlobalObject&, Value);
 Object* to_temporal_calendar_with_iso_default(GlobalObject&, Value);
 Object* get_temporal_calendar_with_iso_default(GlobalObject&, Object&);
 PlainDate* date_from_fields(GlobalObject&, Object& calendar, Object& fields, Object& options);
+PlainYearMonth* year_month_from_fields(GlobalObject&, Object& calendar, Object& fields, Object* options = nullptr);
+PlainMonthDay* month_day_from_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object* options = nullptr);
 bool calendar_equals(GlobalObject&, Object& one, Object& two);
 Object* consolidate_calendars(GlobalObject&, Object& one, Object& two);
 bool is_iso_leap_year(i32 year);
@@ -59,9 +63,12 @@ u8 to_iso_week_of_year(i32 year, u8 month, u8 day);
 String build_iso_month_code(u8 month);
 double resolve_iso_month(GlobalObject&, Object& fields);
 Optional<ISODate> iso_date_from_fields(GlobalObject&, Object& fields, Object& options);
+Optional<ISOYearMonth> iso_year_month_from_fields(GlobalObject&, Object& fields, Object& options);
+Optional<ISOMonthDay> iso_month_day_from_fields(GlobalObject&, Object& fields, Object& options);
 i32 iso_year(Object& temporal_object);
 u8 iso_month(Object& temporal_object);
 String iso_month_code(Object& temporal_object);
 u8 iso_day(Object& temporal_object);
+Object* default_merge_fields(GlobalObject&, Object& fields, Object& additional_fields);
 
 }

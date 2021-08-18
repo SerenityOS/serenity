@@ -293,6 +293,7 @@
     "initial": "normal"
   },
   "list-style": {
+    "inherited": true,
     "longhands": [
       "list-style-type",
       "list-style-position",
@@ -422,7 +423,8 @@
     "initial": "none"
   },
   "text-decoration-line": {
-    "inherited": false,
+    "__comment": "FIXME: This property is not supposed to be inherited, but we currently rely on inheritance to propagate decorations into line boxes.",
+    "inherited": true,
     "initial": "none"
   },
   "text-decoration-style": {

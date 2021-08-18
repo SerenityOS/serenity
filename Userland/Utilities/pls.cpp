@@ -15,6 +15,8 @@ int main(int argc, char** argv)
 {
     Vector<char const*> command;
     Core::ArgsParser args_parser;
+    uid_t as_user_uid = 0;
+    args_parser.add_option(as_user_uid, "User to execute as", nullptr, 'u', "UID");
     args_parser.add_positional_argument(command, "Command to run at elevated privilege level", "command");
     args_parser.parse(argc, argv);
 
@@ -25,6 +27,13 @@ int main(int argc, char** argv)
 
     if (seteuid(0) < 0) {
         perror("seteuid");
+        return 1;
+    }
+
+    // Fail gracefully if as_user_uid is invalid
+    auto as_user_or_error = Core::Account::from_uid(as_user_uid);
+    if (as_user_or_error.is_error()) {
+        warnln("{}", as_user_or_error.error());
         return 1;
     }
 
@@ -62,7 +71,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (setuid(0) < 0) {
+    if (setuid(as_user_uid) < 0) {
         perror("setuid");
         return 1;
     }

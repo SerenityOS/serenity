@@ -42,7 +42,7 @@ public:
     template<typename FunctionNodeType>
     NonnullRefPtr<FunctionNodeType> parse_function_node(u8 parse_options = FunctionNodeParseOptions::CheckForFunctionAndName);
     Vector<FunctionNode::Parameter> parse_formal_parameters(int& function_length, u8 parse_options = 0);
-    RefPtr<BindingPattern> parse_binding_pattern();
+    RefPtr<BindingPattern> parse_binding_pattern(bool strict_checks = false);
 
     struct PrimaryExpressionParseResult {
         NonnullRefPtr<Expression> result;
@@ -50,7 +50,13 @@ public:
     };
 
     NonnullRefPtr<Declaration> parse_declaration();
-    NonnullRefPtr<Statement> parse_statement();
+
+    enum class AllowLabelledFunction {
+        No,
+        Yes
+    };
+
+    NonnullRefPtr<Statement> parse_statement(AllowLabelledFunction allow_labelled_function = AllowLabelledFunction::No);
     NonnullRefPtr<BlockStatement> parse_block_statement();
     NonnullRefPtr<BlockStatement> parse_block_statement(bool& is_strict, bool error_on_binding = false);
     NonnullRefPtr<ReturnStatement> parse_return_statement();
@@ -91,7 +97,7 @@ public:
     NonnullRefPtr<ExportStatement> parse_export_statement(Program& program);
 
     RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
-    RefPtr<Statement> try_parse_labelled_statement();
+    RefPtr<Statement> try_parse_labelled_statement(AllowLabelledFunction allow_function);
     RefPtr<MetaProperty> try_parse_new_target_expression();
 
     struct Error {
@@ -114,8 +120,8 @@ public:
             String source_string { source };
             source_string.replace("\r\n", "\n");
             source_string.replace("\r", "\n");
-            source_string.replace(LINE_SEPARATOR, "\n");
-            source_string.replace(PARAGRAPH_SEPARATOR, "\n");
+            source_string.replace(LINE_SEPARATOR_STRING, "\n");
+            source_string.replace(PARAGRAPH_SEPARATOR_STRING, "\n");
             StringBuilder builder;
             builder.append(source_string.split_view('\n', true)[position.value().line - 1]);
             builder.append('\n');
@@ -153,8 +159,9 @@ private:
     bool match_secondary_expression(const Vector<TokenType>& forbidden = {}) const;
     bool match_statement() const;
     bool match_export_or_import() const;
-    bool match_declaration() const;
-    bool match_variable_declaration() const;
+    bool match_declaration();
+    bool try_match_let_declaration();
+    bool match_variable_declaration();
     bool match_identifier() const;
     bool match_identifier_name() const;
     bool match_property_key() const;
