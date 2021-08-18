@@ -29,8 +29,6 @@ WavLoaderPlugin::WavLoaderPlugin(const StringView& path)
     valid = parse_header();
     if (!valid)
         return;
-
-    m_resampler = make<ResampleHelper<double>>(m_sample_rate, m_device_sample_rate);
 }
 
 WavLoaderPlugin::WavLoaderPlugin(const ByteBuffer& buffer)
@@ -45,8 +43,6 @@ WavLoaderPlugin::WavLoaderPlugin(const ByteBuffer& buffer)
     valid = parse_header();
     if (!valid)
         return;
-
-    m_resampler = make<ResampleHelper<double>>(m_sample_rate, m_device_sample_rate);
 }
 
 RefPtr<Buffer> WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
@@ -81,7 +77,6 @@ RefPtr<Buffer> WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
 
     RefPtr<Buffer> buffer = Buffer::from_pcm_data(
         sample_data.bytes(),
-        *m_resampler,
         m_num_channels,
         m_sample_format);
 

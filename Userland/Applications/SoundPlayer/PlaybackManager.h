@@ -52,6 +52,7 @@ private:
     RefPtr<Audio::Loader> m_loader { nullptr };
     NonnullRefPtr<Audio::ClientConnection> m_connection;
     RefPtr<Audio::Buffer> m_current_buffer;
+    Optional<Audio::ResampleHelper<double>> m_resampler;
     RefPtr<Core::Timer> m_timer;
 
     // Controls the GUI update rate. A smaller value makes the visualizations nicer.

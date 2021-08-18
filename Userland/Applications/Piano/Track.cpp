@@ -127,7 +127,12 @@ String Track::set_recorded_sample(const StringView& path)
     NonnullRefPtr<Audio::Loader> loader = Audio::Loader::create(path);
     if (loader->has_error())
         return String(loader->error_string());
-    auto buffer = loader->get_more_samples(60 * sample_rate * sizeof(Sample)); // 1 minute maximum
+    auto buffer = loader->get_more_samples(60 * loader->sample_rate()); // 1 minute maximum
+    if (loader->has_error())
+        return String(loader->error_string());
+    // Resample to Piano's internal sample rate
+    auto resampler = Audio::ResampleHelper<double>(loader->sample_rate(), sample_rate);
+    buffer = Audio::resample_buffer(resampler, *buffer);
 
     if (!m_recorded_sample.is_empty())
         m_recorded_sample.clear();
