@@ -40,8 +40,6 @@ FlacLoaderPlugin::FlacLoaderPlugin(const StringView& path)
     reset();
     if (!m_valid)
         return;
-
-    m_resampler = make<ResampleHelper<i32>>(m_sample_rate, 44100);
 }
 
 FlacLoaderPlugin::FlacLoaderPlugin(const ByteBuffer& buffer)
@@ -58,8 +56,6 @@ FlacLoaderPlugin::FlacLoaderPlugin(const ByteBuffer& buffer)
     reset();
     if (!m_valid)
         return;
-
-    m_resampler = make<ResampleHelper<i32>>(m_sample_rate, 44100);
 }
 
 bool FlacLoaderPlugin::sniff()
@@ -348,8 +344,6 @@ void FlacLoaderPlugin::next_frame()
         FlacSubframeHeader new_subframe = next_subframe_header(bit_stream, i);
         CHECK_ERROR_STRING;
         Vector<i32> subframe_samples = parse_subframe(new_subframe, bit_stream);
-        m_resampler->reset();
-        subframe_samples = m_resampler->resample(subframe_samples);
         CHECK_ERROR_STRING;
         current_subframes.append(move(subframe_samples));
     }

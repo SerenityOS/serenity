@@ -45,7 +45,7 @@ i32 Buffer::allocate_id()
 }
 
 template<typename SampleReader>
-static void read_samples_from_stream(InputMemoryStream& stream, SampleReader read_sample, Vector<Frame>& samples, ResampleHelper<double>& resampler, int num_channels)
+static void read_samples_from_stream(InputMemoryStream& stream, SampleReader read_sample, Vector<Frame>& samples, int num_channels)
 {
     double norm_l = 0;
     double norm_r = 0;
@@ -53,29 +53,23 @@ static void read_samples_from_stream(InputMemoryStream& stream, SampleReader rea
     switch (num_channels) {
     case 1:
         for (;;) {
-            while (resampler.read_sample(norm_l, norm_r)) {
-                samples.append(Frame(norm_l));
-            }
             norm_l = read_sample(stream);
+            samples.append(Frame(norm_l));
 
             if (stream.handle_any_error()) {
                 break;
             }
-            resampler.process_sample(norm_l, norm_r);
         }
         break;
     case 2:
         for (;;) {
-            while (resampler.read_sample(norm_l, norm_r)) {
-                samples.append(Frame(norm_l, norm_r));
-            }
             norm_l = read_sample(stream);
             norm_r = read_sample(stream);
+            samples.append(Frame(norm_l, norm_r));
 
             if (stream.handle_any_error()) {
                 break;
             }
-            resampler.process_sample(norm_l, norm_r);
         }
         break;
     default:
@@ -128,32 +122,32 @@ static double read_norm_sample_8(InputMemoryStream& stream)
     return double(sample) / NumericLimits<u8>::max();
 }
 
-RefPtr<Buffer> Buffer::from_pcm_data(ReadonlyBytes data, ResampleHelper<double>& resampler, int num_channels, PcmSampleFormat sample_format)
+RefPtr<Buffer> Buffer::from_pcm_data(ReadonlyBytes data, int num_channels, PcmSampleFormat sample_format)
 {
     InputMemoryStream stream { data };
-    return from_pcm_stream(stream, resampler, num_channels, sample_format, data.size() / (pcm_bits_per_sample(sample_format) / 8));
+    return from_pcm_stream(stream, num_channels, sample_format, data.size() / (pcm_bits_per_sample(sample_format) / 8));
 }
 
-RefPtr<Buffer> Buffer::from_pcm_stream(InputMemoryStream& stream, ResampleHelper<double>& resampler, int num_channels, PcmSampleFormat sample_format, int num_samples)
+RefPtr<Buffer> Buffer::from_pcm_stream(InputMemoryStream& stream, int num_channels, PcmSampleFormat sample_format, int num_samples)
 {
     Vector<Frame> fdata;
     fdata.ensure_capacity(num_samples);
 
     switch (sample_format) {
     case PcmSampleFormat::Uint8:
-        read_samples_from_stream(stream, read_norm_sample_8, fdata, resampler, num_channels);
+        read_samples_from_stream(stream, read_norm_sample_8, fdata, num_channels);
         break;
     case PcmSampleFormat::Int16:
-        read_samples_from_stream(stream, read_norm_sample_16, fdata, resampler, num_channels);
+        read_samples_from_stream(stream, read_norm_sample_16, fdata, num_channels);
         break;
     case PcmSampleFormat::Int24:
-        read_samples_from_stream(stream, read_norm_sample_24, fdata, resampler, num_channels);
+        read_samples_from_stream(stream, read_norm_sample_24, fdata, num_channels);
         break;
     case PcmSampleFormat::Float32:
-        read_samples_from_stream(stream, read_float_sample_32, fdata, resampler, num_channels);
+        read_samples_from_stream(stream, read_float_sample_32, fdata, num_channels);
         break;
     case PcmSampleFormat::Float64:
-        read_samples_from_stream(stream, read_float_sample_64, fdata, resampler, num_channels);
+        read_samples_from_stream(stream, read_float_sample_64, fdata, num_channels);
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -192,6 +186,21 @@ Vector<SampleType> ResampleHelper<SampleType>::resample(Vector<SampleType> to_re
 }
 template Vector<i32> ResampleHelper<i32>::resample(Vector<i32>);
 template Vector<double> ResampleHelper<double>::resample(Vector<double>);
+
+NonnullRefPtr<Buffer> resample_buffer(ResampleHelper<double>& resampler, Buffer const& to_resample)
+{
+    Vector<Frame> resampled;
+    resampled.ensure_capacity(to_resample.sample_count() * ceil_div(resampler.source(), resampler.target()));
+    for (size_t i = 0; i < static_cast<size_t>(to_resample.sample_count()); ++i) {
+        auto sample = to_resample.samples()[i];
+        resampler.process_sample(sample.left, sample.right);
+
+        while (resampler.read_sample(sample.left, sample.right))
+            resampled.append(sample);
+    }
+
+    return Buffer::create_with_samples(move(resampled));
+}
 
 template<typename SampleType>
 void ResampleHelper<SampleType>::process_sample(SampleType sample_l, SampleType sample_r)

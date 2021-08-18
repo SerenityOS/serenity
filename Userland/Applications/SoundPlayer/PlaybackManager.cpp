@@ -15,6 +15,7 @@ PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ClientConnection> connecti
         next_buffer();
     });
     m_timer->stop();
+    m_device_sample_rate = connection->get_sample_rate();
 }
 
 PlaybackManager::~PlaybackManager()
@@ -30,6 +31,7 @@ void PlaybackManager::set_loader(NonnullRefPtr<Audio::Loader>&& loader)
         m_device_samples_per_buffer = PlaybackManager::buffer_size_ms / 1000.0f * m_device_sample_rate;
         u32 source_samples_per_buffer = PlaybackManager::buffer_size_ms / 1000.0f * m_loader->sample_rate();
         m_source_buffer_size_bytes = source_samples_per_buffer * m_loader->num_channels() * m_loader->bits_per_sample() / 8;
+        m_resampler = Audio::ResampleHelper<double>(m_loader->sample_rate(), m_device_sample_rate);
         m_timer->start();
     } else {
         m_timer->stop();
@@ -116,6 +118,9 @@ void PlaybackManager::next_buffer()
 
     if (audio_server_remaining_samples < m_device_samples_per_buffer) {
         m_current_buffer = m_loader->get_more_samples(m_source_buffer_size_bytes);
+        VERIFY(m_resampler.has_value());
+        m_resampler->reset();
+        m_current_buffer = Audio::resample_buffer(m_resampler.value(), *m_current_buffer);
         if (m_current_buffer)
             m_connection->enqueue(*m_current_buffer);
     }

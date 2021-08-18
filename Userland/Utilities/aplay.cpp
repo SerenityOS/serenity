@@ -35,12 +35,17 @@ int main(int argc, char** argv)
         loader->bits_per_sample(),
         loader->num_channels() == 1 ? "Mono" : "Stereo");
     out("\033[34;1mProgress\033[0m: \033[s");
+
+    auto resampler = Audio::ResampleHelper<double>(loader->sample_rate(), audio_client->get_sample_rate());
+
     for (;;) {
         auto samples = loader->get_more_samples();
         if (samples) {
             out("\033[u");
             out("{}/{}", loader->loaded_samples(), loader->total_samples());
             fflush(stdout);
+            resampler.reset();
+            samples = Audio::resample_buffer(resampler, *samples);
             audio_client->enqueue(*samples);
         } else if (loader->has_error()) {
             outln();

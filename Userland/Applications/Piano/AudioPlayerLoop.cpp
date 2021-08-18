@@ -31,12 +31,14 @@ AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, bool& need_to_writ
         (void)buffer_id;
         enqueue_audio();
     };
+    m_resampler = Audio::ResampleHelper<double>(Music::sample_rate, m_audio_client->get_sample_rate());
 }
 
 void AudioPlayerLoop::enqueue_audio()
 {
     m_track_manager.fill_buffer(m_buffer);
     NonnullRefPtr<Audio::Buffer> audio_buffer = music_samples_to_buffer(m_buffer);
+    audio_buffer = Audio::resample_buffer(m_resampler.value(), *audio_buffer);
     m_audio_client->async_enqueue(audio_buffer);
 
     // FIXME: This should be done somewhere else.
