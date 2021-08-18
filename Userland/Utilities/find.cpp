@@ -10,13 +10,15 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
-#include <LibCore/DirIterator.h>
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -459,28 +461,39 @@ static void walk_tree(const FileData& root_data, Command& command)
 {
     command.evaluate(root_data);
 
-    Core::DirIterator dir_iterator(root_data.full_path.string(), Core::DirIterator::SkipParentAndBaseDir);
-    if (dir_iterator.has_error() && dir_iterator.error() == ENOTDIR)
+    int dirfd = openat(root_data.dirfd, root_data.basename, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (dirfd < 0 && errno == ENOTDIR)
         return;
 
-    while (dir_iterator.has_next()) {
-        String basename = dir_iterator.next_path();
+    DIR* dir = fdopendir(dirfd);
+
+    while (true) {
+        errno = 0;
+        auto* dirent = readdir(dir);
+        if (!dirent)
+            break;
+
+        if (strcmp(dirent->d_name, ".") == 0 || strcmp(dirent->d_name, "..") == 0)
+            continue;
+
         FileData file_data {
-            root_data.full_path.append(basename),
-            dir_iterator.fd(),
-            basename.characters(),
+            root_data.full_path.append(dirent->d_name),
+            dirfd,
+            dirent->d_name,
         };
         struct stat stat;
-        if (g_follow_symlinks || fstatat(dir_iterator.fd(), basename.characters(), &stat, AT_SYMLINK_NOFOLLOW) < 0 || !S_ISLNK(stat.st_mode))
+        if (g_follow_symlinks || fstatat(dirfd, dirent->d_name, &stat, AT_SYMLINK_NOFOLLOW) < 0 || !S_ISLNK(stat.st_mode))
             walk_tree(file_data, command);
         else
             command.evaluate(file_data);
     }
 
-    if (dir_iterator.has_error()) {
-        warnln("{}: {}", root_data.full_path, dir_iterator.error_string());
+    if (errno != 0) {
+        perror(root_data.full_path.string().characters());
         g_there_was_an_error = true;
     }
+
+    closedir(dir);
 }
 
 int main(int argc, char* argv[])
