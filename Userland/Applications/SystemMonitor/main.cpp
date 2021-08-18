@@ -47,7 +47,7 @@
 #include <unistd.h>
 
 static NonnullRefPtr<GUI::Window> build_process_window(pid_t);
-static NonnullRefPtr<GUI::Widget> build_file_systems_tab();
+static NonnullRefPtr<GUI::Widget> build_storage_widget();
 static NonnullRefPtr<GUI::Widget> build_hardware_tab();
 static NonnullRefPtr<GUI::Widget> build_graphs_tab();
 
@@ -191,8 +191,8 @@ int main(int argc, char** argv)
     auto graphs_widget = build_graphs_tab();
     tabwidget.add_widget("Graphs", graphs_widget);
 
-    auto file_systems_widget = build_file_systems_tab();
-    tabwidget.add_widget("File systems", file_systems_widget);
+    auto storage_widget = build_storage_widget();
+    tabwidget.add_widget("Storage", storage_widget);
 
     auto hardware_widget = build_hardware_tab();
     tabwidget.add_widget("Hardware", hardware_widget);
@@ -375,7 +375,7 @@ int main(int argc, char** argv)
     else if (args_tab_view == "graphs")
         tabwidget.set_active_widget(graphs_widget);
     else if (args_tab_view == "fs")
-        tabwidget.set_active_widget(file_systems_widget);
+        tabwidget.set_active_widget(storage_widget);
     else if (args_tab_view == "hardware")
         tabwidget.set_active_widget(hardware_widget);
     else if (args_tab_view == "network")
@@ -468,11 +468,11 @@ NonnullRefPtr<GUI::Window> build_process_window(pid_t pid)
     return window;
 }
 
-NonnullRefPtr<GUI::Widget> build_file_systems_tab()
+NonnullRefPtr<GUI::Widget> build_storage_widget()
 {
-    auto fs_widget = GUI::LazyWidget::construct();
+    auto widget = GUI::LazyWidget::construct();
 
-    fs_widget->on_first_show = [](GUI::LazyWidget& self) {
+    widget->on_first_show = [](GUI::LazyWidget& self) {
         self.set_layout<GUI::VerticalBoxLayout>();
         self.layout()->set_margins(4);
         auto& fs_table_view = self.add<GUI::TableView>();
@@ -561,7 +561,7 @@ NonnullRefPtr<GUI::Widget> build_file_systems_tab()
 
         fs_table_view.model()->invalidate();
     };
-    return fs_widget;
+    return widget;
 }
 
 NonnullRefPtr<GUI::Widget> build_hardware_tab()
