@@ -481,8 +481,8 @@ Result<void, File::CopyError> File::copy_directory(String const& dst_path, Strin
 
         // FIXME: Implement utimens() and use it here.
         struct utimbuf timbuf;
-        timbuf.actime = src_stat.st_atim.tv_sec;
-        timbuf.modtime = src_stat.st_atim.tv_sec;
+        timbuf.actime = src_stat.st_atime;
+        timbuf.modtime = src_stat.st_atime;
         if (utime(dst_path.characters(), &timbuf) < 0)
             return CopyError { OSError(errno), false };
     }
