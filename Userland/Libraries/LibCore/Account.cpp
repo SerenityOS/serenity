@@ -11,6 +11,11 @@
 #ifndef AK_OS_MACOS
 #    include <crypt.h>
 #endif
+#ifdef __serenity__
+#    include <LibDl/dlfcn.h>
+#else
+#    include <dlfcn.h>
+#endif
 #include <errno.h>
 #include <grp.h>
 #include <pwd.h>
@@ -21,6 +26,11 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+static void* s_crypt_library;
+
+typedef char* (*CryptFunction)(char const* phrase, char const* setting);
+static CryptFunction s_crypt_function;
 
 namespace Core {
 
@@ -159,6 +169,18 @@ Result<Account, String> Account::from_uid(uid_t uid, Read options)
     return from_passwd(*pwd, *spwd);
 }
 
+static char* crypt_helper(char const* phrase, char const* setting)
+{
+    if (!s_crypt_function) {
+        s_crypt_library = dlopen("libcrypt.so", RTLD_NOW);
+        VERIFY(s_crypt_library);
+        // FIXME: Use crypt_r if it can be built in lagom.
+        s_crypt_function = (CryptFunction)dlsym(s_crypt_library, "crypt");
+        VERIFY(s_crypt_function);
+    }
+    return s_crypt_function(phrase, setting);
+}
+
 bool Account::authenticate(const char* password) const
 {
     // If there was no shadow entry for this account, authentication always fails.
@@ -169,8 +191,7 @@ bool Account::authenticate(const char* password) const
     if (m_password_hash.is_empty())
         return true;
 
-    // FIXME: Use crypt_r if it can be built in lagom.
-    char* hash = crypt(password, m_password_hash.characters());
+    char* hash = crypt_helper(password, m_password_hash.characters());
     return hash != nullptr && strcmp(hash, m_password_hash.characters()) == 0;
 }
 
@@ -190,7 +211,7 @@ bool Account::login() const
 
 void Account::set_password(const char* password)
 {
-    m_password_hash = crypt(password, get_salt().characters());
+    m_password_hash = crypt_helper(password, get_salt().characters());
 }
 
 void Account::set_password_enabled(bool enabled)

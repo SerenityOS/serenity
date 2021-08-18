@@ -214,7 +214,7 @@ file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
 file(GLOB LIBCORE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCore/*.cpp")
 lagom_lib(Core core
     SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES}
-    LIBS Threads::Threads
+    LIBS Threads::Threads ${CMAKE_DL_LIBS}
 )
 if (NOT APPLE)
     target_link_libraries(LagomCore crypt) # Core::Account uses crypt() but it's not in libcrypt on macOS
