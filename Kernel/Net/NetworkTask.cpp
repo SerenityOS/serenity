@@ -410,7 +410,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
     dbgln_if(TCP_DEBUG, "handle_tcp: looking for socket; tuple={}", tuple.to_string());
 
     auto socket = TCPSocket::from_tuple(tuple);
-    if (!socket) {
+    if (!socket && !tcp_packet.has_rst()) {
         dbgln("handle_tcp: No TCP socket for tuple {}. Sending RST.", tuple.to_string());
         send_tcp_rst(ipv4_packet, tcp_packet, adapter);
         return;
