@@ -1,0 +1,12 @@
+diff -Naur slang-2.3.2/autoconf/config.sub slang-2.3.2.serenity/autoconf/config.sub
+--- slang-2.3.2/autoconf/config.sub	2018-03-05 00:16:36.000000000 +0100
++++ slang-2.3.2.serenity/autoconf/config.sub	2021-08-18 22:37:40.070186332 +0200
+@@ -1373,7 +1373,7 @@
+ 	# The portable systems comes first.
+ 	# Each alternative MUST END IN A *, to match a version number.
+ 	# -sysv* is not here because it comes later, after sysvr4.
+-	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
++	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* | -serenity* \
+ 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -cnk* | -sunos | -sunos[34]*\
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
+ 	      | -sym* | -kopensolaris* | -plan9* \
