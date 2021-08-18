@@ -1,10 +1,13 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "PreviewWidget.h"
+#include <LibCore/ConfigFile.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/ColorInput.h>
@@ -55,8 +58,13 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd thread rpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd thread rpath unix", nullptr) < 0) {
         perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal/filesystemaccess", "rw") < 0) {
+        perror("unveil");
         return 1;
     }
 
@@ -76,8 +84,41 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
 
+    Vector<Gfx::ColorRole> color_roles;
+#define __ENUMERATE_COLOR_ROLE(role) color_roles.append(Gfx::ColorRole::role);
+    ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
+#undef __ENUMERATE_COLOR_ROLE
+
     auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+
+    Optional<String> path = {};
+
+    auto save_to_result = [&](FileSystemAccessClient::Result result) {
+        if (result.error != 0)
+            return;
+
+        path = result.chosen_file;
+
+        auto theme = Core::ConfigFile::open(*result.chosen_file, *result.fd);
+        for (auto role : color_roles) {
+            theme->write_entry("Colors", to_string(role), preview_palette.color(role).to_string());
+        }
+
+        theme->sync();
+    };
+
+    file_menu.add_action(GUI::CommonActions::make_save_action([&](auto&) {
+        if (path.has_value()) {
+            save_to_result(FileSystemAccessClient::Client::the().request_file(window->window_id(), *path, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
+        } else {
+            save_to_result(FileSystemAccessClient::Client::the().save_file(window->window_id(), "Theme", "ini"));
+        }
+    }));
+
+    file_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
+        save_to_result(FileSystemAccessClient::Client::the().save_file(window->window_id(), "Theme", "ini"));
+    }));
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Theme Editor", app_icon, window));
@@ -95,11 +136,6 @@ int main(int argc, char** argv)
 
     auto& combo_box = horizontal_container.add<GUI::ComboBox>();
     auto& color_input = horizontal_container.add<GUI::ColorInput>();
-
-    Vector<Gfx::ColorRole> color_roles;
-#define __ENUMERATE_COLOR_ROLE(role) color_roles.append(Gfx::ColorRole::role);
-    ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
-#undef __ENUMERATE_COLOR_ROLE
 
     combo_box.set_only_allow_values_from_model(true);
     combo_box.set_model(adopt_ref(*new ColorRoleModel(color_roles)));
