@@ -34,9 +34,9 @@ public:
         u32 texel = m_pixel_data.at(y * m_width + x);
 
         return {
-            (texel & 0xff) / 255.f,
-            ((texel >> 8) & 0xff) / 255.f,
             ((texel >> 16) & 0xff) / 255.f,
+            ((texel >> 8) & 0xff) / 255.f,
+            (texel & 0xff) / 255.f,
             ((texel >> 24) & 0xff) / 255.f
         };
     }

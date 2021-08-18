@@ -31,81 +31,48 @@ void Texture2D::upload_texture_data(GLenum, GLint lod, GLint internal_format, GL
     auto& mip = m_mipmaps[lod];
     const u8* pixel_byte_array = reinterpret_cast<const u8*>(pixels);
 
-    // Copy pixel data to storage
+    mip.pixel_data().clear();
+    if (format == GL_RGBA) {
+        for (auto i = 0; i < width * height * 4; i += 4) {
+            u32 r = pixel_byte_array[i + 0];
+            u32 g = pixel_byte_array[i + 1];
+            u32 b = pixel_byte_array[i + 2];
+            u32 a = pixel_byte_array[i + 3];
 
-    // Pixels are already 32-bits wide
-    if (format == GL_RGBA || format == GL_BGRA) {
-        mip.pixel_data().resize(width * height * sizeof(u32));
-        memcpy(mip.pixel_data().data(), pixels, width * height * sizeof(u32));
-    } else {
-        mip.pixel_data().resize(width * height * 3);
-        // Copy RGB or BGR pixel data
-        for (auto i = 0; i < width * height * 3; i += 3) {
-            u32 b0 = pixel_byte_array[i];     // B or R
-            u32 b1 = pixel_byte_array[i + 1]; // G
-            u32 b2 = pixel_byte_array[i + 2]; // R or B
-
-            u32 pixel = ((0xffu << 24) | (b0 << 16) | (b1 << 8) | b2);
+            u32 pixel = ((a << 24) | (r << 16) | (g << 8) | b);
             mip.pixel_data().append(pixel);
         }
-    }
+    } else if (format == GL_BGRA) {
+        for (auto i = 0; i < width * height * 4; i += 4) {
+            u32 b = pixel_byte_array[i + 0];
+            u32 g = pixel_byte_array[i + 1];
+            u32 r = pixel_byte_array[i + 2];
+            u32 a = pixel_byte_array[i + 3];
 
-    // Now we need to swizzle the texture data from `format` to `internal_format`
-    switch (format) {
-    case GL_BGR: {
-        if (internal_format == GL_RGB) {
-            swizzle(mip.pixel_data(), [](u32 pixel) -> u32 {
-                u8 r = pixel & 0xff;
-                u8 g = (pixel >> 8) & 0xff;
-                u8 b = (pixel >> 16) & 0xff;
-
-                return (0xff << 24) | (r << 16) | (g << 8) | b;
-            });
-        } else if (internal_format == GL_RGBA) {
-            swizzle(mip.pixel_data(), [](u32 pixel) -> u32 {
-                u8 r = pixel & 0xff;
-                u8 g = (pixel >> 8) & 0xff;
-                u8 b = (pixel >> 16) & 0xff;
-
-                return (r << 24) | (g << 16) | (b << 8) | 0xff;
-            });
+            u32 pixel = ((a << 24) | (r << 16) | (g << 8) | b);
+            mip.pixel_data().append(pixel);
         }
-    } break;
-    case GL_BGRA: {
-        if (internal_format == GL_RGB) {
-            swizzle(mip.pixel_data(), [](u32 pixel) -> u32 {
-                u8 r = (pixel >> 8) & 0xff;
-                u8 g = (pixel >> 16) & 0xff;
-                u8 b = (pixel >> 24) & 0xff;
+    } else if (format == GL_BGR) {
+        for (auto i = 0; i < width * height * 3; i += 3) {
+            u32 b = pixel_byte_array[i + 0];
+            u32 g = pixel_byte_array[i + 1];
+            u32 r = pixel_byte_array[i + 2];
+            u32 a = 255;
 
-                return (0xff << 24) | (r << 16) | (g << 8) | b;
-            });
-        } else if (internal_format == GL_RGBA) {
-            swizzle(mip.pixel_data(), [](u32 pixel) -> u32 {
-                u8 a = pixel & 0xff;
-                u8 r = (pixel >> 8) & 0xff;
-                u8 g = (pixel >> 16) & 0xff;
-                u8 b = (pixel >> 24) & 0xff;
-
-                return (r << 24) | (g << 16) | (b << 8) | a;
-            });
+            u32 pixel = ((a << 24) | (r << 16) | (g << 8) | b);
+            mip.pixel_data().append(pixel);
         }
-    } break;
-    case GL_RGB: {
-        if (internal_format == GL_RGBA) {
-            swizzle(mip.pixel_data(), [](u32 pixel) -> u32 {
-                u8 r = pixel & 0xff;
-                u8 g = (pixel >> 8) & 0xff;
-                u8 b = (pixel >> 16) & 0xff;
+    } else if (format == GL_RGB) {
+        for (auto i = 0; i < width * height * 3; i += 3) {
+            u32 r = pixel_byte_array[i + 0];
+            u32 g = pixel_byte_array[i + 1];
+            u32 b = pixel_byte_array[i + 2];
+            u32 a = 255;
 
-                return (r << 24) | (g << 16) | (b << 8) | 0xff;
-            });
+            u32 pixel = ((a << 24) | (r << 16) | (g << 8) | b);
+            mip.pixel_data().append(pixel);
         }
-    } break;
-    case GL_RGBA:
-        break;
-    default:
-        // Let's crash for now so we can implement format by format
+    } else {
         VERIFY_NOT_REACHED();
     }
 
