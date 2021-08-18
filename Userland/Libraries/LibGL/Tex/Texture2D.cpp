@@ -18,17 +18,18 @@ void Texture2D::upload_texture_data(GLenum, GLint lod, GLint internal_format, GL
     // Considering we control this library, and `gl.h` itself, we don't need to add any
     // checks here to see if we support them; the program will simply fail to compile..
 
-    // Somebody passed us in nullptr...
-    // Apparently this allocates memory on the GPU (according to Khronos docs..)?
+    auto& mip = m_mipmaps[lod];
+    mip.set_width(width);
+    mip.set_height(height);
+
+    // No pixel data was supplied. Just allocate texture memory and leave it uninitialized.
     if (pixels == nullptr) {
-        dbgln("LibGL: pixels == nullptr when uploading texture data.");
-        VERIFY_NOT_REACHED();
+        mip.pixel_data().resize(width * height);
+        return;
     }
 
     m_internal_format = internal_format;
 
-    // Get reference to the mip
-    auto& mip = m_mipmaps[lod];
     const u8* pixel_byte_array = reinterpret_cast<const u8*>(pixels);
 
     mip.pixel_data().clear();
@@ -75,9 +76,6 @@ void Texture2D::upload_texture_data(GLenum, GLint lod, GLint internal_format, GL
     } else {
         VERIFY_NOT_REACHED();
     }
-
-    mip.set_width(width);
-    mip.set_height(height);
 }
 
 MipMap const& Texture2D::mipmap(unsigned lod) const
