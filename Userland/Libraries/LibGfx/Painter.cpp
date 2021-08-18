@@ -228,10 +228,6 @@ void Painter::fill_rect_with_gradient(Orientation orientation, const IntRect& a_
         return;
     }
 
-#ifdef NO_FPU
-    return fill_rect(a_rect, gradient_start);
-#endif
-
     auto rect = to_physical(a_rect);
     auto clipped_rect = IntRect::intersection(rect, clip_rect() * scale());
     if (clipped_rect.is_empty())
