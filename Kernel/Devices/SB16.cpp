@@ -17,33 +17,32 @@
 #include <Kernel/Thread.h>
 
 namespace Kernel {
-#define SB16_DEFAULT_IRQ 5
 
 enum class SampleFormat : u8 {
     Signed = 0x10,
     Stereo = 0x20,
 };
 
-const u16 DSP_READ = 0x22A;
-const u16 DSP_WRITE = 0x22C;
-const u16 DSP_STATUS = 0x22E;
-const u16 DSP_R_ACK = 0x22F;
+constexpr int SB16_DEFAULT_IRQ = 5;
+
+constexpr u16 DSP_READ = 0x22A;
+constexpr u16 DSP_WRITE = 0x22C;
+constexpr u16 DSP_STATUS = 0x22E;
+constexpr u16 DSP_R_ACK = 0x22F;
 
 /* Write a value to the DSP write register */
 void SB16::dsp_write(u8 value)
 {
-    while (IO::in8(DSP_WRITE) & 0x80) {
+    while (IO::in8(DSP_WRITE) & 0x80)
         ;
-    }
     IO::out8(DSP_WRITE, value);
 }
 
 /* Reads the value of the DSP read register */
 u8 SB16::dsp_read()
 {
-    while (!(IO::in8(DSP_STATUS) & 0x80)) {
+    while (!(IO::in8(DSP_STATUS) & 0x80))
         ;
-    }
     return IO::in8(DSP_READ);
 }
 
@@ -62,7 +61,8 @@ static Singleton<SB16> s_the;
 
 UNMAP_AFTER_INIT SB16::SB16()
     : IRQHandler(SB16_DEFAULT_IRQ)
-    , CharacterDevice(42, 42) // ### ?
+    // FIXME: We can't change version numbers later, i.e. after the sound card is initialized.
+    , CharacterDevice(42, 42)
 {
     initialize();
 }
@@ -78,9 +78,8 @@ UNMAP_AFTER_INIT void SB16::detect()
     IO::out8(0x226, 0);
 
     auto data = dsp_read();
-    if (data != 0xaa) {
+    if (data != 0xaa)
         return;
-    }
     SB16::create();
 }
 
@@ -166,7 +165,7 @@ void SB16::set_irq_line(u8 irq_number)
     change_irq_number(irq_number);
 }
 
-bool SB16::can_read(const FileDescription&, size_t) const
+bool SB16::can_read(FileDescription const&, size_t) const
 {
     return false;
 }
@@ -178,9 +177,9 @@ KResultOr<size_t> SB16::read(FileDescription&, u64, UserOrKernelBuffer&, size_t)
 
 void SB16::dma_start(uint32_t length)
 {
-    const auto addr = m_dma_region->physical_page(0)->paddr().get();
-    const u8 channel = 5; // 16-bit samples use DMA channel 5 (on the master DMA controller)
-    const u8 mode = 0x48;
+    auto const addr = m_dma_region->physical_page(0)->paddr().get();
+    u8 const channel = 5; // 16-bit samples use DMA channel 5 (on the master DMA controller)
+    u8 const mode = 0x48;
 
     // Disable the DMA channel
     IO::out8(0xd4, 4 + (channel % 4));
@@ -210,7 +209,7 @@ void SB16::dma_start(uint32_t length)
     IO::out8(0xd4, (channel % 4));
 }
 
-bool SB16::handle_irq(const RegisterState&)
+bool SB16::handle_irq(RegisterState const&)
 {
     // FIXME: Check if the interrupt was actually for us or not... (shared IRQs)
 
@@ -231,7 +230,7 @@ void SB16::wait_for_irq()
     disable_irq();
 }
 
-KResultOr<size_t> SB16::write(FileDescription&, u64, const UserOrKernelBuffer& data, size_t length)
+KResultOr<size_t> SB16::write(FileDescription&, u64, UserOrKernelBuffer const& data, size_t length)
 {
     if (!m_dma_region) {
         auto page = MM.allocate_supervisor_physical_page();
@@ -250,7 +249,7 @@ KResultOr<size_t> SB16::write(FileDescription&, u64, const UserOrKernelBuffer& d
     dbgln_if(SB16_DEBUG, "SB16: Writing buffer of {} bytes", length);
 
     VERIFY(length <= PAGE_SIZE);
-    const int BLOCK_SIZE = 32 * 1024;
+    int const BLOCK_SIZE = 32 * 1024;
     if (length > BLOCK_SIZE) {
         return ENOSPC;
     }
