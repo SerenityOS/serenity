@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,16 +12,23 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/File.h>
 #include <LibGfx/Color.h>
 
 namespace Core {
 
 class ConfigFile : public RefCounted<ConfigFile> {
 public:
-    static NonnullRefPtr<ConfigFile> get_for_lib(const String& lib_name);
-    static NonnullRefPtr<ConfigFile> get_for_app(const String& app_name);
-    static NonnullRefPtr<ConfigFile> get_for_system(const String& app_name);
-    static NonnullRefPtr<ConfigFile> open(const String& path);
+    enum class AllowWriting {
+        Yes,
+        No,
+    };
+
+    static NonnullRefPtr<ConfigFile> get_for_lib(String const& lib_name, AllowWriting = AllowWriting::No);
+    static NonnullRefPtr<ConfigFile> get_for_app(String const& app_name, AllowWriting = AllowWriting::No);
+    static NonnullRefPtr<ConfigFile> get_for_system(String const& app_name, AllowWriting = AllowWriting::No);
+    static NonnullRefPtr<ConfigFile> open(String const& filename, AllowWriting = AllowWriting::No);
+    static NonnullRefPtr<ConfigFile> open(String const& filename, int fd);
     ~ConfigFile();
 
     bool has_group(const String&) const;
@@ -49,14 +57,15 @@ public:
     void remove_group(const String& group);
     void remove_entry(const String& group, const String& key);
 
-    String filename() const { return m_filename; }
+    String filename() const { return m_file->filename(); }
 
 private:
-    explicit ConfigFile(const String& filename);
+    explicit ConfigFile(String const& filename, AllowWriting);
+    explicit ConfigFile(String const& filename, int fd);
 
     void reparse();
 
-    String m_filename;
+    NonnullRefPtr<File> m_file;
     HashMap<String, HashMap<String, String>> m_groups;
     bool m_dirty { false };
 };
