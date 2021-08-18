@@ -218,8 +218,8 @@ KResult ProcFSExposedDirectory::traverse_as_directory(unsigned fsid, Function<bo
     auto parent_directory = m_parent_directory.strong_ref();
     if (parent_directory.is_null())
         return KResult(EINVAL);
-    callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, parent_directory->component_index() }, 0 });
+    callback({ ".", { fsid, component_index() }, DT_DIR });
+    callback({ "..", { fsid, parent_directory->component_index() }, DT_DIR });
 
     for (auto& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };

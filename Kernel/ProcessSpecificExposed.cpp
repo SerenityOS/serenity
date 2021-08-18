@@ -99,7 +99,7 @@ KResult Process::traverse_file_descriptions_directory(unsigned fsid, Function<bo
         }
         StringBuilder builder;
         builder.appendff("{}", count);
-        callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_file_description(pid(), count) }, 0 });
+        callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_file_description(pid(), count) }, DT_LNK });
         count++;
     });
     return KSuccess;
