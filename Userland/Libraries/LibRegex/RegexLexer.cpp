@@ -31,67 +31,39 @@ char const* Token::name() const
     return name(m_type);
 }
 
-Lexer::Lexer(StringView const source)
-    : m_source(source)
+Lexer::Lexer()
+    : GenericLexer(StringView { nullptr })
 {
 }
 
-ALWAYS_INLINE int Lexer::peek(size_t offset) const
+Lexer::Lexer(StringView const source)
+    : GenericLexer(source)
 {
-    if ((m_position + offset) >= m_source.length())
-        return EOF;
-    return (unsigned char)m_source[m_position + offset];
 }
 
 void Lexer::back(size_t offset)
 {
-    if (offset == m_position + 1)
-        offset = m_position; // 'position == 0' occurs twice.
+    if (offset == m_index + 1)
+        offset = m_index; // 'position == 0' occurs twice.
 
-    VERIFY(offset <= m_position);
+    VERIFY(offset <= m_index);
     if (!offset)
         return;
-    m_position -= offset;
-    m_previous_position = (m_position > 0) ? m_position - 1 : 0;
-    m_current_char = m_source[m_position];
+    m_index -= offset;
+    m_previous_position = (m_index > 0) ? m_index - 1 : 0;
 }
 
-ALWAYS_INLINE void Lexer::consume()
+char Lexer::consume()
 {
-    m_previous_position = m_position;
-
-    if (m_position >= m_source.length()) {
-        m_position = m_source.length() + 1;
-        m_current_char = EOF;
-        return;
-    }
-
-    m_current_char = m_source[m_position++];
+    m_previous_position = m_index;
+    return GenericLexer::consume();
 }
 
 void Lexer::reset()
 {
-    m_position = 0;
+    m_index = 0;
     m_current_token = { TokenType::Eof, 0, StringView(nullptr) };
-    m_current_char = 0;
     m_previous_position = 0;
-}
-
-bool Lexer::try_skip(char c)
-{
-    if (peek() != c)
-        return false;
-
-    consume();
-    return true;
-}
-
-char Lexer::skip()
-{
-    auto c = peek();
-    consume();
-    VERIFY(c != EOF);
-    return c;
 }
 
 Token Lexer::next()
@@ -99,18 +71,18 @@ Token Lexer::next()
     size_t token_start_position;
 
     auto begin_token = [&] {
-        token_start_position = m_position;
+        token_start_position = m_index;
     };
 
     auto commit_token = [&](auto type) -> Token& {
-        VERIFY(token_start_position + m_previous_position - token_start_position + 1 <= m_source.length());
-        auto substring = m_source.substring_view(token_start_position, m_previous_position - token_start_position + 1);
+        VERIFY(token_start_position + m_previous_position - token_start_position + 1 <= m_input.length());
+        auto substring = m_input.substring_view(token_start_position, m_previous_position - token_start_position + 1);
         m_current_token = Token(type, token_start_position, substring);
         return m_current_token;
     };
 
     auto emit_token = [&](auto type) -> Token& {
-        m_current_token = Token(type, m_position, m_source.substring_view(m_position, 1));
+        m_current_token = Token(type, m_index, m_input.substring_view(m_index, 1));
         consume();
         return m_current_token;
     };
@@ -137,7 +109,7 @@ Token Lexer::next()
         }
     };
 
-    while (m_position <= m_source.length()) {
+    while (m_index <= m_input.length()) {
         auto ch = peek();
         if (ch == '(')
             return emit_token(TokenType::LeftParen);
@@ -203,13 +175,13 @@ Token Lexer::next()
             }
         }
 
-        if (ch == EOF)
+        if (ch == '\0')
             break;
 
         return emit_token(TokenType::Char);
     }
 
-    return Token(TokenType::Eof, m_position, nullptr);
+    return Token(TokenType::Eof, m_index, nullptr);
 }
 
 }

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/GenericLexer.h>
 #include <AK/StringView.h>
 
 namespace regex {
@@ -63,27 +64,20 @@ private:
     StringView m_value { nullptr };
 };
 
-class Lexer {
+class Lexer : public GenericLexer {
 public:
-    Lexer() = default;
+    Lexer();
     explicit Lexer(StringView const source);
     Token next();
     void reset();
     void back(size_t offset);
-    void set_source(StringView const source) { m_source = source; }
-    bool try_skip(char);
-    char skip();
-    auto const& source() const { return m_source; }
+    char consume();
+    void set_source(StringView const source) { m_input = source; }
+    auto const& source() const { return m_input; }
 
 private:
-    ALWAYS_INLINE int peek(size_t offset = 0) const;
-    ALWAYS_INLINE void consume();
-
-    StringView m_source {};
-    size_t m_position { 0 };
     size_t m_previous_position { 0 };
     Token m_current_token { TokenType::Eof, 0, StringView(nullptr) };
-    int m_current_char { 0 };
 };
 
 }
