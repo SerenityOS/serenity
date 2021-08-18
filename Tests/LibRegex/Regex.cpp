@@ -698,6 +698,9 @@ TEST_CASE(ECMA262_unicode_match)
         { "\\ud83d\\ud83d"sv, "\xed\xa0\xbd\xed\xa0\xbd"sv, true, ECMAScriptFlags::Unicode },
         { "(?<=.{3})f"sv, "abcdef"sv, true, ECMAScriptFlags::Unicode },
         { "(?<=.{3})f"sv, "abc😀ef"sv, true, ECMAScriptFlags::Unicode },
+        { "(?<𝓑𝓻𝓸𝔀𝓷>brown)"sv, "brown"sv, true, ECMAScriptFlags::Unicode },
+        { "(?<\\u{1d4d1}\\u{1d4fb}\\u{1d4f8}\\u{1d500}\\u{1d4f7}>brown)"sv, "brown"sv, true, ECMAScriptFlags::Unicode },
+        { "(?<\\ud835\\udcd1\\ud835\\udcfb\\ud835\\udcf8\\ud835\\udd00\\ud835\\udcf7>brown)"sv, "brown"sv, true, ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {

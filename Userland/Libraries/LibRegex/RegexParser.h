@@ -53,6 +53,7 @@ public:
         size_t match_length_minimum;
         Error error;
         Token error_token;
+        Vector<FlyString> capture_groups;
     };
 
     explicit Parser(Lexer& lexer)
@@ -218,7 +219,7 @@ private:
     };
     StringView read_digits_as_string(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, bool hex = false, int max_count = -1, int min_count = -1);
     Optional<unsigned> read_digits(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, bool hex = false, int max_count = -1, int min_count = -1);
-    StringView read_capture_group_specifier(bool take_starting_angle_bracket = false);
+    FlyString read_capture_group_specifier(bool take_starting_angle_bracket = false);
 
     struct Script {
         Unicode::Script script {};
