@@ -57,14 +57,14 @@ static PlainYearMonth* typed_this(GlobalObject& global_object)
 // 9.3.3 get Temporal.PlainYearMonth.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.calendar
 JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::calendar_getter)
 {
-    // 1. Let plainYearMonth be the this value.
-    // 2. Perform ? RequireInternalSlot(plainYearMonth, [[InitializedTemporalYearMonth]]).
-    auto* plain_year_month = typed_this(global_object);
+    // 1. Let yearMonth be the this value.
+    // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
+    auto* year_month = typed_this(global_object);
     if (vm.exception())
         return {};
 
-    // 3. Return plainYearMonth.[[Calendar]].
-    return Value(&plain_year_month->calendar());
+    // 3. Return yearMonth.[[Calendar]].
+    return Value(&year_month->calendar());
 }
 
 // 9.3.4 get Temporal.PlainYearMonth.prototype.year, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.year

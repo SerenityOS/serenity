@@ -52,14 +52,14 @@ static PlainMonthDay* typed_this(GlobalObject& global_object)
 // 10.3.3 get Temporal.PlainMonthDay.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.calendar
 JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::calendar_getter)
 {
-    // 1. Let plainMonthDay be the this value.
-    // 2. Perform ? RequireInternalSlot(plainMonthDay, [[InitializedTemporalMonthDay]]).
-    auto* plain_month_day = typed_this(global_object);
+    // 1. Let monthDay be the this value.
+    // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
+    auto* month_day = typed_this(global_object);
     if (vm.exception())
         return {};
 
-    // 3. Return plainMonthDay.[[Calendar]].
-    return Value(&plain_month_day->calendar());
+    // 3. Return monthDay.[[Calendar]].
+    return Value(&month_day->calendar());
 }
 
 // 10.3.4 get Temporal.PlainMonthDay.prototype.monthCode, https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.monthcode
