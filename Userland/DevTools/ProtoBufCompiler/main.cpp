@@ -764,6 +764,100 @@ void write_writer(SourceGenerator& generator, Message const& message)
     })~~~"sv);
 }
 
+void write_json_writer(SourceGenerator& generator, Message const& message)
+{
+    generator.append(R"~~~(
+    template<typename Builder>
+    void write_to_json(JsonObjectSerializer<Builder>& builder) const
+    {
+        )~~~"sv);
+    for (auto const& field : message.fields) {
+        auto field_generator = generator.fork();
+        field_generator.set("field.name"sv, field.name);
+        field_generator.set("field.number"sv, field.number);
+        field_generator.set("field.type_name"sv, field.type_name);
+        field_generator.set("field.wire_type"sv, field.wire_type);
+        if (field.repeated) {
+            switch (field.type) {
+            case FieldType::Bool:
+            case FieldType::Int32:
+            case FieldType::Int64:
+            case FieldType::SInt32:
+            case FieldType::SInt64:
+            case FieldType::UInt32:
+            case FieldType::UInt64:
+            case FieldType::Float:
+            case FieldType::Double:
+            case FieldType::Fixed32:
+            case FieldType::Fixed64:
+            case FieldType::String:
+                field_generator.append(R"~~~(auto array = builder.add_array("@field.name@"sv);
+        array.add(@field.name@);
+        array.finish();
+
+        )~~~"sv);
+                break;
+            case FieldType::Bytes:
+                field_generator.append(R"~~~(auto array = builder.add_array("@field.name@"sv);
+        for (auto const& value : @field.name@) {
+            array.add(encode_base64(value.span()));
+        }
+        array.finish();
+
+        )~~~"sv);
+                break;
+            case FieldType::Custom:
+                field_generator.append(R"~~~(auto array = builder.add_array("@field.name@"sv);
+        for (auto const& value : @field.name@) {
+            auto object = array.add_object();
+            value.write_to_json(object);
+            object.finish();
+        }
+        array.finish();
+
+        )~~~"sv);
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        } else {
+            switch (field.type) {
+            case FieldType::Bool:
+            case FieldType::Int32:
+            case FieldType::Int64:
+            case FieldType::SInt32:
+            case FieldType::SInt64:
+            case FieldType::UInt32:
+            case FieldType::UInt64:
+            case FieldType::Float:
+            case FieldType::Double:
+            case FieldType::Fixed32:
+            case FieldType::Fixed64:
+            case FieldType::String:
+                field_generator.append(R"~~~(builder.add("@field.name@"sv, @field.name@);
+
+        )~~~"sv);
+                break;
+            case FieldType::Bytes:
+                field_generator.append(R"~~~(auto array = builder.add("@field.name@"sv, encode_base64(value.span()));
+
+        )~~~"sv);
+                break;
+            case FieldType::Custom:
+                field_generator.append(R"~~~(auto object = builder.add_objetc("@field.name@"sv);
+        value.write_to_json(object);
+        object.finish();
+
+        )~~~"sv);
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }
+    }
+    generator.append("}\n"sv);
+}
+
 void write_messages(SourceGenerator& generator, NonnullOwnPtrVector<Message> const& messages)
 {
     for (auto const& message : messages) {
@@ -776,6 +870,7 @@ void write_messages(SourceGenerator& generator, NonnullOwnPtrVector<Message> con
         write_reader(message_generator, message);
         write_size_estimator(message_generator, message);
         write_writer(message_generator, message);
+        write_json_writer(message_generator, message);
         generator.append("};\n"sv);
     }
 }
