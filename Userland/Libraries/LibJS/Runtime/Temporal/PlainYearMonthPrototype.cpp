@@ -39,6 +39,7 @@ void PlainYearMonthPrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
 }
@@ -202,6 +203,24 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_string)
 
     // 5. Return ? TemporalYearMonthToString(yearMonth, showCalendar).
     auto string = temporal_year_month_to_string(global_object, *year_month, *show_calendar);
+    if (vm.exception())
+        return {};
+
+    return js_string(vm, *string);
+}
+
+// 9.3.18 Temporal.PlainYearMonth.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tolocalestring
+// NOTE: This is the minimum toLocaleString implementation for engines without ECMA-402.
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_locale_string)
+{
+    // 1. Let yearMonth be the this value.
+    // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
+    auto* year_month = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return ? TemporalYearMonthToString(yearMonth, "auto").
+    auto string = temporal_year_month_to_string(global_object, *year_month, "auto"sv);
     if (vm.exception())
         return {};
 
