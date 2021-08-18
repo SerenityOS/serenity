@@ -338,10 +338,11 @@ void Menu::open_hovered_item(bool leave_menu_open)
     VERIFY(menu_window()->is_visible());
     if (!hovered_item())
         return;
-    if (hovered_item()->is_enabled())
+    if (hovered_item()->is_enabled()) {
         did_activate(*hovered_item(), leave_menu_open);
-    if (!leave_menu_open)
-        clear_hovered_item();
+        if (!leave_menu_open)
+            clear_hovered_item();
+    }
 }
 
 void Menu::descend_into_submenu_at_hovered_item()
