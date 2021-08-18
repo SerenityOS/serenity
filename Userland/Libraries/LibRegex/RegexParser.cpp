@@ -195,7 +195,8 @@ Parser::Result Parser::parse(Optional<AllOptions> regex_options)
         move(m_parser_state.named_capture_groups_count),
         move(m_parser_state.match_length_minimum),
         move(m_parser_state.error),
-        move(m_parser_state.error_token)
+        move(m_parser_state.error_token),
+        m_parser_state.named_capture_groups.keys()
     };
 }
 
@@ -2009,21 +2010,30 @@ bool ECMA262Parser::parse_unicode_property_escape(PropertyEscape& property, bool
         [](Empty&) -> bool { VERIFY_NOT_REACHED(); });
 }
 
-StringView ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_bracket)
+FlyString ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_bracket)
 {
     if (take_starting_angle_bracket && !consume("<"))
         return {};
 
-    auto start_token = m_parser_state.current_token;
-    size_t offset = 0;
-    while (match(TokenType::Char) || match(TokenType::Dollar)) {
+    StringBuilder builder;
+    while (match(TokenType::Char) || match(TokenType::Dollar) || match(TokenType::LeftCurly) || match(TokenType::RightCurly)) {
         auto c = m_parser_state.current_token.value();
         if (c == ">")
             break;
-        offset += consume().value().length();
+
+        if (try_skip("\\u"sv)) {
+            if (auto code_point = consume_escaped_code_point(true); code_point.has_value()) {
+                builder.append_code_point(*code_point);
+            } else {
+                set_error(Error::InvalidNameForCaptureGroup);
+                return {};
+            }
+        } else {
+            builder.append(consume().value());
+        }
     }
 
-    StringView name { start_token.value().characters_without_null_termination(), offset };
+    FlyString name = builder.build();
     if (!consume(">") || name.is_empty())
         set_error(Error::InvalidNameForCaptureGroup);
 
@@ -2146,7 +2156,7 @@ bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_mi
 
             stack.insert_bytecode_group_capture_left(group_index);
             stack.extend(move(capture_group_bytecode));
-            stack.insert_bytecode_group_capture_right(group_index, name);
+            stack.insert_bytecode_group_capture_right(group_index, name.view());
 
             match_length_minimum += length;
 
