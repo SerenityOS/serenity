@@ -6,6 +6,7 @@
 
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/GLContext.h>
 #include <LibGUI/ActionGroup.h>
@@ -33,7 +34,9 @@ class GLContextWidget final : public GUI::Frame {
     C_OBJECT(GLContextWidget);
 
 public:
-    bool load(const String& fname);
+    bool load_path(String const& fname);
+    bool load_fd_and_close(int fd, String const& fname);
+    bool load_file(Core::File& file, String const& fname);
     void toggle_rotate_x() { m_rotate_x = !m_rotate_x; }
     void toggle_rotate_y() { m_rotate_y = !m_rotate_y; }
     void toggle_rotate_z() { m_rotate_z = !m_rotate_z; }
@@ -191,26 +194,43 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     m_cycles++;
 }
 
-bool GLContextWidget::load(const String& filename)
+bool GLContextWidget::load_path(String const& filename)
 {
     auto file = Core::File::construct(filename);
-
-    if (!file->filename().ends_with(".obj")) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: invalid file type", filename), "Error", GUI::MessageBox::Type::Error);
-        return false;
-    }
 
     if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
         GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
         return false;
     }
 
-    if (file->is_device()) {
+    return load_file(file, filename);
+}
+
+bool GLContextWidget::load_fd_and_close(int fd, String const& filename)
+{
+    auto file = Core::File::construct();
+
+    if (!file->open(fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes) && file->error() != ENOENT) {
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+        return false;
+    }
+
+    return load_file(file, filename);
+}
+
+bool GLContextWidget::load_file(Core::File& file, String const& filename)
+{
+    if (!filename.ends_with(".obj")) {
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: invalid file type", filename), "Error", GUI::MessageBox::Type::Error);
+        return false;
+    }
+
+    if (file.is_device()) {
         GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open device files", filename), "Error", GUI::MessageBox::Type::Error);
         return false;
     }
 
-    if (file->is_directory()) {
+    if (file.is_directory()) {
         GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open directories", filename), "Error", GUI::MessageBox::Type::Error);
         return false;
     }
@@ -226,8 +246,21 @@ bool GLContextWidget::load(const String& filename)
     builder.append(filename.split('.').at(0));
     builder.append(".bmp");
 
+    String texture_path = Core::File::absolute_path(builder.string_view());
+
     // Attempt to open the texture file from disk
-    auto texture_image = Gfx::Bitmap::try_load_from_file(builder.string_view());
+    RefPtr<Gfx::Bitmap> texture_image;
+    if (Core::File::exists(texture_path)) {
+        texture_image = Gfx::Bitmap::try_load_from_file(texture_path);
+    } else {
+        auto result = FileSystemAccessClient::Client::the().request_file(window()->window_id(), builder.string_view(), Core::OpenMode::ReadOnly);
+
+        if (result.error != 0) {
+            return false;
+        }
+
+        texture_image = Gfx::Bitmap::try_load_from_fd_and_close(*result.fd, *result.chosen_file);
+    }
 
     GLuint tex;
     glGenTextures(1, &tex);
@@ -249,8 +282,33 @@ int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio thread recvfd sendfd rpath", nullptr) < 0) {
+    if (pledge("stdio thread recvfd sendfd rpath unix", nullptr) < 0) {
         perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal/filesystemaccess", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/home/anon/Documents/3D Models/teapot.obj", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/home/anon/Documents/3D Models/teapot.bmp", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
         return 1;
     }
 
@@ -273,20 +331,16 @@ int main(int argc, char** argv)
 
     auto& file_menu = window->add_menu("&File");
 
-    auto load_model = [&](StringView const& filename) {
-        if (widget.load(filename)) {
-            auto canonical_path = Core::File::real_path_for(filename);
-            window->set_title(String::formatted("{} - 3D File Viewer", canonical_path));
-        }
-    };
-
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
+        auto result = FileSystemAccessClient::Client::the().open_file(window->window_id());
 
-        if (!open_path.has_value())
+        if (result.error != 0)
             return;
 
-        load_model(open_path.value());
+        if (widget.load_fd_and_close(*result.fd, *result.chosen_file)) {
+            auto canonical_path = Core::File::absolute_path(*result.chosen_file);
+            window->set_title(String::formatted("{} - 3D File Viewer", canonical_path));
+        }
     }));
     file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
@@ -465,7 +519,10 @@ int main(int argc, char** argv)
     window->show();
 
     auto filename = argc > 1 ? argv[1] : "/home/anon/Documents/3D Models/teapot.obj";
-    load_model(filename);
+    if (widget.load_path(filename)) {
+        auto canonical_path = Core::File::absolute_path(filename);
+        window->set_title(String::formatted("{} - 3D File Viewer", canonical_path));
+    }
 
     return app->exec();
 }
