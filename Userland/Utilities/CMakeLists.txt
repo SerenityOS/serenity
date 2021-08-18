@@ -7,7 +7,7 @@ list(APPEND REQUIRED_TARGETS
     touch tr true umount uname uniq uptime w wc which whoami xargs yes less
 )
 list(APPEND RECOMMENDED_TARGETS
-    adjtime aplay avol bt checksum chres cksum copy fortune gunzip gzip init keymap lsirq lsof lspci man mknod mktemp
+    adjtime aplay asctl bt checksum chres cksum copy fortune gunzip gzip init keymap lsirq lsof lspci man mknod mktemp
     modload modunload nc netstat notify ntpquery open pape passwd pls printf pro shot tar tt unzip zip
 )
 
@@ -52,7 +52,7 @@ foreach(CMD_SRC ${CMD_SOURCES})
 endforeach()
 
 target_link_libraries(aplay LibAudio)
-target_link_libraries(avol LibAudio)
+target_link_libraries(asctl LibAudio)
 target_link_libraries(bt LibSymbolication)
 target_link_libraries(checksum LibCrypto)
 target_link_libraries(chres LibGUI)
