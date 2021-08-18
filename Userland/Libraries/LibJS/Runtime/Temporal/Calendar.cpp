@@ -477,6 +477,24 @@ PlainMonthDay* month_day_from_fields(GlobalObject& global_object, Object& calend
     return static_cast<PlainMonthDay*>(month_day_object);
 }
 
+// 12.1.27 FormatCalendarAnnotation ( id, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-formatcalendarannotation
+String format_calendar_annotation(StringView id, StringView show_calendar)
+{
+    // 1. Assert: showCalendar is "auto", "always", or "never".
+    VERIFY(show_calendar == "auto"sv || show_calendar == "always"sv || show_calendar == "never"sv);
+
+    // 2. If showCalendar is "never", return the empty String.
+    if (show_calendar == "never"sv)
+        return String::empty();
+
+    // 3. If showCalendar is "auto" and id is "iso8601", return the empty String.
+    if (show_calendar == "auto"sv && id == "iso8601"sv)
+        return String::empty();
+
+    // 4. Return the string-concatenation of "[u-ca=", id, and "]".
+    return String::formatted("[u-ca={}]", id);
+}
+
 // 12.1.28 CalendarEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-calendarequals
 bool calendar_equals(GlobalObject& global_object, Object& one, Object& two)
 {

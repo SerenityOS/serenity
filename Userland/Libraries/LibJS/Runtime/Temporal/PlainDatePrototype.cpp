@@ -51,6 +51,7 @@ void PlainDatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
@@ -395,6 +396,33 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::equals)
         return Value(false);
     // 7. Return ? CalendarEquals(temporalDate.[[Calendar]], other.[[Calendar]]).
     return Value(calendar_equals(global_object, temporal_date->calendar(), other->calendar()));
+}
+
+// 3.3.28 Temporal.PlainDate.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tostring
+JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_string)
+{
+    // 1. Let temporalDate be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
+    auto* temporal_date = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Set options to ? GetOptionsObject(options).
+    auto* options = get_options_object(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 4. Let showCalendar be ? ToShowCalendarOption(options).
+    auto show_calendar = to_show_calendar_option(global_object, *options);
+    if (vm.exception())
+        return {};
+
+    // 5. Return ? TemporalDateToString(temporalDate, showCalendar).
+    auto string = temporal_date_to_string(global_object, *temporal_date, *show_calendar);
+    if (vm.exception())
+        return {};
+
+    return js_string(vm, *string);
 }
 
 // 3.3.31 Temporal.PlainDate.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.valueof

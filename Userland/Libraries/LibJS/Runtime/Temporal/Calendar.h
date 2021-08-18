@@ -52,6 +52,7 @@ Object* get_temporal_calendar_with_iso_default(GlobalObject&, Object&);
 PlainDate* date_from_fields(GlobalObject&, Object& calendar, Object& fields, Object& options);
 PlainYearMonth* year_month_from_fields(GlobalObject&, Object& calendar, Object& fields, Object* options = nullptr);
 PlainMonthDay* month_day_from_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object* options = nullptr);
+String format_calendar_annotation(StringView id, StringView show_calendar);
 bool calendar_equals(GlobalObject&, Object& one, Object& two);
 Object* consolidate_calendars(GlobalObject&, Object& one, Object& two);
 bool is_iso_leap_year(i32 year);

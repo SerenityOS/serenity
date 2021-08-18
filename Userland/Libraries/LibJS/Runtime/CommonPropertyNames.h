@@ -80,6 +80,7 @@ namespace JS {
     P(byteLength)                            \
     P(byteOffset)                            \
     P(calendar)                              \
+    P(calendarName)                          \
     P(call)                                  \
     P(callee)                                \
     P(caller)                                \
