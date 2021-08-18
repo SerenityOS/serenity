@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2020-2021, Sergey Bugaev <bugaevc@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,10 +33,15 @@ template<typename... Parameters>
     exit(1);
 }
 
+struct FileData {
+    // Full path to the file; either absolute or relative to cwd.
+    LexicalPath full_path;
+};
+
 class Command {
 public:
     virtual ~Command() { }
-    virtual bool evaluate(const char* file_path) const = 0;
+    virtual bool evaluate(const FileData& file_data) const = 0;
 };
 
 class StatCommand : public Command {
@@ -44,13 +49,13 @@ public:
     virtual bool evaluate(const struct stat&) const = 0;
 
 private:
-    virtual bool evaluate(const char* file_path) const override
+    virtual bool evaluate(const FileData& file_data) const override
     {
         struct stat stat;
         auto stat_func = g_follow_symlinks ? ::stat : ::lstat;
-        int rc = stat_func(file_path, &stat);
+        int rc = stat_func(file_data.full_path.string().characters(), &stat);
         if (rc < 0) {
-            perror(file_path);
+            perror(file_data.full_path.string().characters());
             g_there_was_an_error = true;
             return false;
         }
@@ -201,10 +206,9 @@ public:
     }
 
 private:
-    virtual bool evaluate(const char* file_path) const override
+    virtual bool evaluate(const FileData& file_data) const override
     {
-        LexicalPath path { file_path };
-        return path.basename().matches(m_pattern, m_case_sensitivity);
+        return file_data.full_path.basename().matches(m_pattern, m_case_sensitivity);
     }
 
     StringView m_pattern;
@@ -219,9 +223,9 @@ public:
     }
 
 private:
-    virtual bool evaluate(const char* file_path) const override
+    virtual bool evaluate(const FileData& file_data) const override
     {
-        out("{}{}", file_path, m_terminator);
+        out("{}{}", file_data.full_path, m_terminator);
         return true;
     }
 
@@ -236,7 +240,7 @@ public:
     }
 
 private:
-    virtual bool evaluate(const char* file_path) const override
+    virtual bool evaluate(const FileData& file_data) const override
     {
         pid_t pid = fork();
 
@@ -251,7 +255,7 @@ private:
             auto argv = const_cast<Vector<char*>&>(m_argv);
             for (auto& arg : argv) {
                 if (StringView(arg) == "{}")
-                    arg = const_cast<char*>(file_path);
+                    arg = const_cast<char*>(file_data.full_path.string().characters());
             }
             argv.append(nullptr);
             execvp(m_argv[0], argv.data());
@@ -281,9 +285,9 @@ public:
     }
 
 private:
-    virtual bool evaluate(const char* file_path) const override
+    virtual bool evaluate(const FileData& file_data) const override
     {
-        return m_lhs->evaluate(file_path) && m_rhs->evaluate(file_path);
+        return m_lhs->evaluate(file_data) && m_rhs->evaluate(file_data);
     }
 
     NonnullOwnPtr<Command> m_lhs;
@@ -299,9 +303,9 @@ public:
     }
 
 private:
-    virtual bool evaluate(const char* file_path) const override
+    virtual bool evaluate(const FileData& file_data) const override
     {
-        return m_lhs->evaluate(file_path) || m_rhs->evaluate(file_path);
+        return m_lhs->evaluate(file_data) || m_rhs->evaluate(file_data);
     }
 
     NonnullOwnPtr<Command> m_lhs;
@@ -446,25 +450,26 @@ static const char* parse_options(int argc, char* argv[])
     }
 }
 
-static void walk_tree(const char* root_path, Command& command)
+static void walk_tree(const FileData& root_data, Command& command)
 {
-    command.evaluate(root_path);
+    command.evaluate(root_data);
 
-    Core::DirIterator dir_iterator(root_path, Core::DirIterator::SkipParentAndBaseDir);
+    Core::DirIterator dir_iterator(root_data.full_path.string(), Core::DirIterator::SkipParentAndBaseDir);
     if (dir_iterator.has_error() && dir_iterator.error() == ENOTDIR)
         return;
 
     while (dir_iterator.has_next()) {
-        auto path = dir_iterator.next_full_path();
+        LexicalPath path { dir_iterator.next_full_path() };
+        FileData file_data { path };
         struct stat stat;
-        if (g_follow_symlinks || ::lstat(path.characters(), &stat) < 0 || !S_ISLNK(stat.st_mode))
-            walk_tree(path.characters(), command);
+        if (g_follow_symlinks || ::lstat(path.string().characters(), &stat) < 0 || !S_ISLNK(stat.st_mode))
+            walk_tree(file_data, command);
         else
-            command.evaluate(path.characters());
+            command.evaluate(file_data);
     }
 
     if (dir_iterator.has_error()) {
-        warnln("{}: {}", root_path, dir_iterator.error_string());
+        warnln("{}: {}", root_data.full_path, dir_iterator.error_string());
         g_there_was_an_error = true;
     }
 }
@@ -472,7 +477,8 @@ static void walk_tree(const char* root_path, Command& command)
 int main(int argc, char* argv[])
 {
     LexicalPath root_path(parse_options(argc, argv));
+    FileData file_data { root_path };
     auto command = parse_all_commands(argv);
-    walk_tree(root_path.string().characters(), *command);
+    walk_tree(file_data, *command);
     return g_there_was_an_error ? 1 : 0;
 }
