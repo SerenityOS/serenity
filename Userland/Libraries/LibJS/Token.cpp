@@ -10,7 +10,6 @@
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <AK/StringBuilder.h>
-#include <AK/Utf16View.h>
 
 namespace JS {
 
@@ -103,21 +102,28 @@ String Token::string_value(StringValueStatus& status) const
         return {};
     };
 
-    auto decode_surrogate = [&lexer]() -> Optional<u16> {
-        u16 surrogate = 0;
-        for (int j = 0; j < 4; ++j) {
-            if (!lexer.next_is(is_ascii_hex_digit))
-                return {};
-            surrogate = (surrogate << 4u) | hex2int(lexer.consume());
-        }
-        return surrogate;
-    };
-
     StringBuilder builder;
     while (!lexer.is_eof()) {
         // No escape, consume one char and continue
         if (!lexer.next_is('\\')) {
             builder.append(lexer.consume());
+            continue;
+        }
+
+        // Unicode escape
+        if (lexer.next_is("\\u"sv)) {
+            auto code_point_or_error = lexer.consume_escaped_code_point();
+
+            if (code_point_or_error.is_error()) {
+                switch (code_point_or_error.error()) {
+                case GenericLexer::UnicodeEscapeError::MalformedUnicodeEscape:
+                    return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
+                case GenericLexer::UnicodeEscapeError::UnicodeEscapeOverflow:
+                    return encoding_failure(StringValueStatus::UnicodeEscapeOverflow);
+                }
+            }
+
+            builder.append_code_point(code_point_or_error.value());
             continue;
         }
 
@@ -147,47 +153,6 @@ String Token::string_value(StringValueStatus& status) const
                 return encoding_failure(StringValueStatus::MalformedHexEscape);
             auto code_point = hex2int(lexer.consume()) * 16 + hex2int(lexer.consume());
             VERIFY(code_point <= 255);
-            builder.append_code_point(code_point);
-            continue;
-        }
-        // Unicode escape
-        if (lexer.next_is('u')) {
-            lexer.ignore();
-            u32 code_point = 0;
-            if (lexer.next_is('{')) {
-                lexer.ignore();
-                while (true) {
-                    if (!lexer.next_is(is_ascii_hex_digit))
-                        return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
-                    auto new_code_point = (code_point << 4u) | hex2int(lexer.consume());
-                    if (new_code_point < code_point)
-                        return encoding_failure(StringValueStatus::UnicodeEscapeOverflow);
-                    code_point = new_code_point;
-                    if (lexer.next_is('}'))
-                        break;
-                }
-                lexer.ignore();
-            } else {
-                auto high_surrogate = decode_surrogate();
-                if (!high_surrogate.has_value())
-                    return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
-
-                if (Utf16View::is_high_surrogate(*high_surrogate) && lexer.consume_specific("\\u"sv)) {
-                    auto low_surrogate = decode_surrogate();
-                    if (!low_surrogate.has_value())
-                        return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
-
-                    if (Utf16View::is_low_surrogate(*low_surrogate)) {
-                        code_point = Utf16View::decode_surrogate_pair(*high_surrogate, *low_surrogate);
-                    } else {
-                        builder.append_code_point(*high_surrogate);
-                        code_point = *low_surrogate;
-                    }
-
-                } else {
-                    code_point = *high_surrogate;
-                }
-            }
             builder.append_code_point(code_point);
             continue;
         }
