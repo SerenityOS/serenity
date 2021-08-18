@@ -6,7 +6,6 @@ serenity_component(
 
 set(SOURCES
     GraphWidget.cpp
-    InterruptsWidget.cpp
     main.cpp
     MemoryStatsWidget.cpp
     NetworkStatisticsWidget.cpp
