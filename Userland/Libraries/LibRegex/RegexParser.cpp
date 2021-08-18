@@ -101,7 +101,7 @@ ALWAYS_INLINE bool Parser::try_skip(StringView str)
 
     size_t potentially_go_back { 0 };
     for (auto ch : str) {
-        if (!m_parser_state.lexer.try_skip(ch)) {
+        if (!m_parser_state.lexer.consume_specific(ch)) {
             m_parser_state.lexer.back(potentially_go_back);
             return false;
         }
@@ -129,7 +129,7 @@ ALWAYS_INLINE char Parser::skip()
         ch = m_parser_state.current_token.value()[0];
     } else {
         m_parser_state.lexer.back(m_parser_state.current_token.value().length());
-        ch = m_parser_state.lexer.skip();
+        ch = m_parser_state.lexer.consume();
     }
 
     m_parser_state.current_token = m_parser_state.lexer.next();
