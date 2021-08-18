@@ -461,9 +461,28 @@ static void walk_tree(const FileData& root_data, Command& command)
 {
     command.evaluate(root_data);
 
-    int dirfd = openat(root_data.dirfd, root_data.basename, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
-    if (dirfd < 0 && errno == ENOTDIR)
+    // We should try to read directory entries if either:
+    // * This is a directory.
+    // * This is a symlink (that could point to a directory),
+    //   and we're following symlinks.
+    struct stat stat;
+    int rc = fstatat(root_data.dirfd, root_data.basename, &stat, AT_SYMLINK_NOFOLLOW);
+    if (rc < 0)
         return;
+    if (!S_ISDIR(stat.st_mode) && (!g_follow_symlinks || !S_ISLNK(stat.st_mode)))
+        return;
+
+    int dirfd = openat(root_data.dirfd, root_data.basename, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (dirfd < 0) {
+        if (errno == ENOTDIR) {
+            // Above we decided to try to open this file because it could
+            // be a directory, but turns out it's not. This is fine though.
+            return;
+        }
+        perror(root_data.full_path.string().characters());
+        g_there_was_an_error = true;
+        return;
+    }
 
     DIR* dir = fdopendir(dirfd);
 
@@ -481,11 +500,7 @@ static void walk_tree(const FileData& root_data, Command& command)
             dirfd,
             dirent->d_name,
         };
-        struct stat stat;
-        if (g_follow_symlinks || fstatat(dirfd, dirent->d_name, &stat, AT_SYMLINK_NOFOLLOW) < 0 || !S_ISLNK(stat.st_mode))
-            walk_tree(file_data, command);
-        else
-            command.evaluate(file_data);
+        walk_tree(file_data, command);
     }
 
     if (errno != 0) {
