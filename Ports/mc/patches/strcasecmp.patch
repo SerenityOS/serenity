@@ -1,0 +1,11 @@
+--- mc-4.8.27/src/filemanager/ext.c     2021-08-01 18:45:58.000000000 +0200
++++ mc-4.8.27.serenity/src/filemanager/ext.c    2021-08-18 22:49:21.680182525 +0200
+@@ -947,7 +947,7 @@
+                 if (case_insense)
+                 {
+                     p += 2;
+-                    cmp_func = strncasecmp;
++                    cmp_func = str_ncasecmp;
+                 }
+
+                 if (*p == '.' && file_len >= (size_t) (q - p))

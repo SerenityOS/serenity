@@ -1,0 +1,38 @@
+diff -Naur mc-4.8.27/lib/strutil/strutil.c mc-4.8.27.serenity/lib/strutil/strutil.c
+--- mc-4.8.27/lib/strutil/strutil.c     2021-08-01 18:45:58.000000000 +0200
++++ mc-4.8.27.serenity/lib/strutil/strutil.c    2021-08-18 22:48:06.910182931 +0200
+@@ -26,7 +26,9 @@
+ #include <config.h>
+
+ #include <stdlib.h>
++#ifndef __serenity__
+ #include <langinfo.h>
++#endif
+ #include <string.h>
+ #include <errno.h>
+
+@@ -380,7 +382,11 @@
+            to utf-8 or UTF-8.
+            On Mac OS X, it returns the same case as the LANG input.
+            So let tranform result of nl_langinfo (CODESET) to upper case  unconditionally. */
++#ifndef __serenity__
+         term_encoding = g_ascii_strup (nl_langinfo (CODESET), -1);
++#else
++        term_encoding = "UTF-8";
++#endif
+     }
+
+     return term_encoding;
+diff -Naur mc-4.8.27/lib/strutil/strutilutf8.c mc-4.8.27.serenity/lib/strutil/strutilutf8.c
+--- mc-4.8.27/lib/strutil/strutilutf8.c 2021-08-01 18:45:58.000000000 +0200
++++ mc-4.8.27.serenity/lib/strutil/strutilutf8.c        2021-08-18 22:48:37.880182763 +0200
+@@ -26,7 +26,9 @@
+ #include <config.h>
+
+ #include <stdlib.h>
++#ifndef __serenity__
+ #include <langinfo.h>
++#endif
+ #include <string.h>
+
+ #include "lib/global.h"
