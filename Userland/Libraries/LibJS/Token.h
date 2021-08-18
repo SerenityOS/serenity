@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <AK/Variant.h>
 
 namespace JS {
 
@@ -172,11 +174,27 @@ enum class TokenCategory {
 
 class Token {
 public:
+    Token() = default;
+
     Token(TokenType type, String message, StringView trivia, StringView value, StringView filename, size_t line_number, size_t line_column, size_t offset)
         : m_type(type)
         , m_message(message)
         , m_trivia(trivia)
+        , m_original_value(value)
         , m_value(value)
+        , m_filename(filename)
+        , m_line_number(line_number)
+        , m_line_column(line_column)
+        , m_offset(offset)
+    {
+    }
+
+    Token(TokenType type, String message, StringView trivia, StringView original_value, FlyString value, StringView filename, size_t line_number, size_t line_column, size_t offset)
+        : m_type(type)
+        , m_message(message)
+        , m_trivia(trivia)
+        , m_original_value(original_value)
+        , m_value(move(value))
         , m_filename(filename)
         , m_line_number(line_number)
         , m_line_column(line_column)
@@ -192,7 +210,14 @@ public:
 
     const String& message() const { return m_message; }
     const StringView& trivia() const { return m_trivia; }
-    const StringView& value() const { return m_value; }
+    const StringView& original_value() const { return m_original_value; }
+    StringView value() const
+    {
+        return m_value.visit(
+            [](StringView const& view) { return view; },
+            [](FlyString const& identifier) { return identifier.view(); },
+            [](Empty) -> StringView { VERIFY_NOT_REACHED(); });
+    }
     const StringView& filename() const { return m_filename; }
     size_t line_number() const { return m_line_number; }
     size_t line_column() const { return m_line_column; }
@@ -213,14 +238,15 @@ public:
     bool trivia_contains_line_terminator() const;
 
 private:
-    TokenType m_type;
+    TokenType m_type { TokenType::Invalid };
     String m_message;
     StringView m_trivia;
-    StringView m_value;
+    StringView m_original_value;
+    Variant<Empty, StringView, FlyString> m_value { Empty {} };
     StringView m_filename;
-    size_t m_line_number;
-    size_t m_line_column;
-    size_t m_offset;
+    size_t m_line_number { 0 };
+    size_t m_line_column { 0 };
+    size_t m_offset { 0 };
 };
 
 }

@@ -210,7 +210,6 @@ constexpr OperatorPrecedenceTable g_operator_precedence;
 
 Parser::ParserState::ParserState(Lexer l, Program::Type program_type)
     : lexer(move(l))
-    , current_token(TokenType::Invalid, {}, {}, {}, {}, 0, 0, 0)
 {
     if (program_type == Program::Type::Module)
         lexer.disallow_html_comments();
@@ -680,7 +679,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
 
         if (match_property_key()) {
             StringView name;
-            if (!is_generator && m_state.current_token.value() == "static"sv) {
+            if (!is_generator && m_state.current_token.original_value() == "static"sv) {
                 if (match(TokenType::Identifier)) {
                     consume();
                     is_static = true;
@@ -2524,7 +2523,7 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
 {
     auto rule_start = push_start();
     auto match_for_in_of = [&]() {
-        return match(TokenType::In) || (match(TokenType::Identifier) && m_state.current_token.value() == "of");
+        return match(TokenType::In) || (match(TokenType::Identifier) && m_state.current_token.original_value() == "of");
     };
 
     consume(TokenType::For);
@@ -3019,7 +3018,7 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
     };
 
     auto match_as = [&] {
-        return match(TokenType::Identifier) && m_state.current_token.value() == "as"sv;
+        return match(TokenType::Identifier) && m_state.current_token.original_value() == "as"sv;
     };
 
     bool continue_parsing = true;
@@ -3134,11 +3133,15 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
         syntax_error("Cannot use export statement outside a module");
 
     auto match_as = [&] {
-        return match(TokenType::Identifier) && m_state.current_token.value() == "as"sv;
+        return match(TokenType::Identifier) && m_state.current_token.original_value() == "as"sv;
     };
 
     auto match_from = [&] {
-        return match(TokenType::Identifier) && m_state.current_token.value() == "from"sv;
+        return match(TokenType::Identifier) && m_state.current_token.original_value() == "from"sv;
+    };
+
+    auto match_default = [&] {
+        return match(TokenType::Default) && m_state.current_token.original_value() == "default"sv;
     };
 
     consume(TokenType::Export);
@@ -3158,7 +3161,7 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
 
     RefPtr<ASTNode> expression = {};
 
-    if (match(TokenType::Default)) {
+    if (match_default()) {
         auto default_position = position();
         consume(TokenType::Default);
 
