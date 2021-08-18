@@ -41,8 +41,9 @@ private:
     bool is_eof() const;
     bool is_line_terminator() const;
     bool is_whitespace() const;
-    bool is_identifier_start() const;
-    bool is_identifier_middle() const;
+    Optional<u32> is_unicode_escape(size_t& identifier_length) const;
+    Optional<u32> is_identifier_start(size_t& identifier_length) const;
+    Optional<u32> is_identifier_middle(size_t& identifier_length) const;
     bool is_line_comment_start(bool line_has_token_yet) const;
     bool is_block_comment_start() const;
     bool is_block_comment_end() const;
@@ -80,6 +81,10 @@ private:
     static HashMap<String, TokenType> s_three_char_tokens;
     static HashMap<String, TokenType> s_two_char_tokens;
     static HashMap<char, TokenType> s_single_char_tokens;
+
+    // Resolved identifiers must be kept alive for the duration of the parsing stage, otherwise
+    // the only references to these strings are deleted by the Token destructor.
+    Vector<FlyString> m_parsed_identifiers;
 };
 
 }
