@@ -22,6 +22,7 @@ set(SOURCES
     ColorInput.cpp
     ColorPicker.cpp
     ColumnsView.cpp
+    CommonActions.cpp
     CommonLocationsProvider.cpp
     ComboBox.cpp
     Command.cpp
