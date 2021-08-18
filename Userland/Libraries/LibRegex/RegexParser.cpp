@@ -92,6 +92,29 @@ ALWAYS_INLINE bool Parser::consume(String const& str)
     return true;
 }
 
+ALWAYS_INLINE Optional<u32> Parser::consume_escaped_code_point(bool unicode)
+{
+    if (match(TokenType::LeftCurly) && !unicode) {
+        // In non-Unicode mode, this should be parsed as a repetition symbol (repeating the 'u').
+        return static_cast<u32>('u');
+    }
+
+    m_parser_state.lexer.retreat(2 + !done()); // Go back to just before '\u' (+1 char, because we will have consumed an extra character)
+
+    if (auto code_point_or_error = m_parser_state.lexer.consume_escaped_code_point(unicode); !code_point_or_error.is_error()) {
+        m_parser_state.current_token = m_parser_state.lexer.next();
+        return code_point_or_error.value();
+    }
+
+    if (!unicode) {
+        // '\u' is allowed in non-unicode mode, just matches 'u'.
+        return static_cast<u32>('u');
+    }
+
+    set_error(Error::InvalidPattern);
+    return {};
+}
+
 ALWAYS_INLINE bool Parser::try_skip(StringView str)
 {
     if (str.starts_with(m_parser_state.current_token.value()))
@@ -1489,64 +1512,13 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     if (try_skip("u")) {
-        if (match(TokenType::LeftCurly)) {
-            if (!unicode) {
-                // In non-Unicode mode, this should be parsed as a repetition symbol (repeating the 'u').
-                match_length_minimum += 1;
-                stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'u' } });
-                return true;
-            }
-
-            consume();
-
-            auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 6);
-            if (code_point.has_value() && is_unicode(*code_point) && match(TokenType::RightCurly)) {
-                consume();
-                match_length_minimum += 1;
-                stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)code_point.value() } });
-                return true;
-            }
-
-            set_error(Error::InvalidPattern);
-            return false;
-        }
-
-        if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 4, 4); code_point.has_value()) {
-            // In Unicode mode, we need to combine surrogate pairs into a single code point. But we also need to be
-            // rather forgiving if the surrogate pairs are invalid. So if a second code unit follows this code unit,
-            // but doesn't form a valid surrogate pair, insert bytecode for both code units individually.
-            Optional<u32> low_surrogate;
-            if (unicode && Utf16View::is_high_surrogate(*code_point) && try_skip("\\u")) {
-                low_surrogate = read_digits(ReadDigitsInitialZeroState::Allow, true, 4);
-                if (!low_surrogate.has_value()) {
-                    set_error(Error::InvalidPattern);
-                    return false;
-                }
-
-                if (Utf16View::is_low_surrogate(*low_surrogate)) {
-                    *code_point = Utf16View::decode_surrogate_pair(*code_point, *low_surrogate);
-                    low_surrogate.clear();
-                }
-            }
-
+        if (auto code_point = consume_escaped_code_point(unicode); code_point.has_value()) {
             match_length_minimum += 1;
             stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)code_point.value() } });
-
-            if (low_surrogate.has_value()) {
-                match_length_minimum += 1;
-                stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)low_surrogate.value() } });
-            }
-
             return true;
-        } else if (!unicode) {
-            // '\u' is allowed in non-unicode mode, just matches 'u'.
-            match_length_minimum += 1;
-            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'u' } });
-            return true;
-        } else {
-            set_error(Error::InvalidPattern);
-            return false;
         }
+
+        return false;
     }
 
     // IdentityEscape
@@ -1847,16 +1819,11 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             }
 
             if (try_skip("u")) {
-                if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 4, 4); code_point.has_value()) {
+                if (auto code_point = consume_escaped_code_point(unicode); code_point.has_value()) {
                     // FIXME: While code point ranges are supported, code point matches as "Char" are not!
                     return { CharClassRangeElement { .code_point = code_point.value(), .is_character_class = false } };
-                } else if (!unicode) {
-                    // '\u' is allowed in non-unicode mode, just matches 'u'.
-                    return { CharClassRangeElement { .code_point = 'u', .is_character_class = false } };
-                } else {
-                    set_error(Error::InvalidPattern);
-                    return {};
                 }
+                return {};
             }
 
             // IdentityEscape
