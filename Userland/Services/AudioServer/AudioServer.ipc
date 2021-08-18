@@ -8,6 +8,10 @@ endpoint AudioServer
     get_main_mix_volume() => (i32 volume)
     set_main_mix_volume(i32 volume) => ()
 
+    // Audio device
+    set_sample_rate(u16 sample_rate) => ()
+    get_sample_rate() => (u16 sample_rate)
+
     // Buffer playback
     enqueue_buffer(Core::AnonymousBuffer buffer, i32 buffer_id, int sample_count) => (bool success)
     set_paused(bool paused) => ()

@@ -63,6 +63,16 @@ void ClientConnection::set_main_mix_volume(i32 volume)
     m_mixer.set_main_volume(volume);
 }
 
+Messages::AudioServer::GetSampleRateResponse ClientConnection::get_sample_rate()
+{
+    return { m_mixer.audiodevice_get_sample_rate() };
+}
+
+void ClientConnection::set_sample_rate(u16 sample_rate)
+{
+    m_mixer.audiodevice_set_sample_rate(sample_rate);
+}
+
 Messages::AudioServer::EnqueueBufferResponse ClientConnection::enqueue_buffer(Core::AnonymousBuffer const& buffer, i32 buffer_id, int sample_count)
 {
     if (!m_queue)
