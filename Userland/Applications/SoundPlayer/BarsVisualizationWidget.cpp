@@ -97,7 +97,10 @@ void BarsVisualizationWidget::set_buffer(RefPtr<Audio::Buffer> buffer, int sampl
     if (m_is_using_last)
         return;
     m_is_using_last = true;
-    VERIFY(buffer->sample_count() >= 256);
+    // FIXME: We should dynamically adapt to the sample count and e.g. perform the fft over multiple buffers.
+    // For now, the visualizer doesn't work with extremely low global sample rates.
+    if (buffer->sample_count() < 256)
+        return;
     m_sample_count = round_previous_power_of_2(samples_to_use);
     m_sample_buffer.resize(m_sample_count);
     for (int i = 0; i < m_sample_count; i++) {
