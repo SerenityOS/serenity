@@ -290,6 +290,7 @@ namespace JS {
     P(of)                                    \
     P(offset)                                \
     P(offsetNanoseconds)                     \
+    P(overflow)                              \
     P(ownKeys)                               \
     P(padEnd)                                \
     P(padStart)                              \
@@ -320,6 +321,8 @@ namespace JS {
     P(revocable)                             \
     P(revoke)                                \
     P(round)                                 \
+    P(roundingIncrement)                     \
+    P(roundingMode)                          \
     P(seal)                                  \
     P(second)                                \
     P(seconds)                               \
@@ -358,6 +361,7 @@ namespace JS {
     P(size)                                  \
     P(slice)                                 \
     P(small)                                 \
+    P(smallestUnit)                          \
     P(some)                                  \
     P(sort)                                  \
     P(source)                                \
