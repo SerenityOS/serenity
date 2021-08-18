@@ -35,15 +35,15 @@ static Gfx::RGBA32 to_rgba32(const FloatVector4& v)
     u8 g = clamped.y() * 255;
     u8 b = clamped.z() * 255;
     u8 a = clamped.w() * 255;
-    return a << 24 | b << 16 | g << 8 | r;
+    return a << 24 | r << 16 | g << 8 | b;
 }
 
 static FloatVector4 to_vec4(Gfx::RGBA32 rgba)
 {
     return {
-        (rgba & 0xff) / 255.0f,
-        ((rgba >> 8) & 0xff) / 255.0f,
         ((rgba >> 16) & 0xff) / 255.0f,
+        ((rgba >> 8) & 0xff) / 255.0f,
+        (rgba & 0xff) / 255.0f,
         ((rgba >> 24) & 0xff) / 255.0f
     };
 }

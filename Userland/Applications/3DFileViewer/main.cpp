@@ -225,7 +225,7 @@ bool GLContextWidget::load(const String& filename)
     if (texture_image) {
         // Upload texture data to the GL
         glBindTexture(GL_TEXTURE_2D, tex);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture_image->width(), texture_image->height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texture_image->scanline(0));
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture_image->width(), texture_image->height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, texture_image->scanline(0));
     } else {
         dbgln("3DFileViewer: Couldn't load texture for {}", filename);
     }
