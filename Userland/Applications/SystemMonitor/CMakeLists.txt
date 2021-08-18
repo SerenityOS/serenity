@@ -5,7 +5,6 @@ serenity_component(
 )
 
 set(SOURCES
-    DevicesModel.cpp
     GraphWidget.cpp
     InterruptsWidget.cpp
     main.cpp
