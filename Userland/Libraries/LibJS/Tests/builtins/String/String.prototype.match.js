@@ -55,3 +55,18 @@ test("UTF-16", () => {
     expect("😀😀".match(/\ud83d/g)).toEqual(["\ud83d", "\ud83d"]);
     expect("😀😀".match(/\ude00/g)).toEqual(["\ude00", "\ude00"]);
 });
+
+test("escaped code points", () => {
+    var string = "The quick brown fox jumped over the lazy dog's back";
+
+    var re = /(?<𝓑𝓻𝓸𝔀𝓷>brown)/u;
+    expect(string.match(re).groups.𝓑𝓻𝓸𝔀𝓷).toBe("brown");
+
+    re = /(?<\u{1d4d1}\u{1d4fb}\u{1d4f8}\u{1d500}\u{1d4f7}>brown)/u;
+    expect(string.match(re).groups.𝓑𝓻𝓸𝔀𝓷).toBe("brown");
+    expect(string.match(re).groups.𝓑𝓻𝓸𝔀𝓷).toBe("brown");
+
+    re = /(?<\ud835\udcd1\ud835\udcfb\ud835\udcf8\ud835\udd00\ud835\udcf7>brown)/u;
+    expect(string.match(re).groups.𝓑𝓻𝓸𝔀𝓷).toBe("brown");
+    expect(string.match(re).groups.𝓑𝓻𝓸𝔀𝓷).toBe("brown");
+});
