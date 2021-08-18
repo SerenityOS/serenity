@@ -12,6 +12,7 @@
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -36,6 +37,10 @@ template<typename... Parameters>
 struct FileData {
     // Full path to the file; either absolute or relative to cwd.
     LexicalPath full_path;
+    // The parent directory of the file.
+    int dirfd { -1 };
+    // The file's basename, relative to the directory.
+    const char* basename { nullptr };
 };
 
 class Command {
@@ -52,8 +57,8 @@ private:
     virtual bool evaluate(const FileData& file_data) const override
     {
         struct stat stat;
-        auto stat_func = g_follow_symlinks ? ::stat : ::lstat;
-        int rc = stat_func(file_data.full_path.string().characters(), &stat);
+        int flags = g_follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW;
+        int rc = fstatat(file_data.dirfd, file_data.basename, &stat, flags);
         if (rc < 0) {
             perror(file_data.full_path.string().characters());
             g_there_was_an_error = true;
@@ -459,10 +464,14 @@ static void walk_tree(const FileData& root_data, Command& command)
         return;
 
     while (dir_iterator.has_next()) {
-        LexicalPath path { dir_iterator.next_full_path() };
-        FileData file_data { path };
+        String basename = dir_iterator.next_path();
+        FileData file_data {
+            root_data.full_path.append(basename),
+            dir_iterator.fd(),
+            basename.characters(),
+        };
         struct stat stat;
-        if (g_follow_symlinks || ::lstat(path.string().characters(), &stat) < 0 || !S_ISLNK(stat.st_mode))
+        if (g_follow_symlinks || fstatat(dir_iterator.fd(), basename.characters(), &stat, AT_SYMLINK_NOFOLLOW) < 0 || !S_ISLNK(stat.st_mode))
             walk_tree(file_data, command);
         else
             command.evaluate(file_data);
@@ -477,8 +486,22 @@ static void walk_tree(const FileData& root_data, Command& command)
 int main(int argc, char* argv[])
 {
     LexicalPath root_path(parse_options(argc, argv));
-    FileData file_data { root_path };
+    String dirname = root_path.dirname();
+    String basename = root_path.basename();
+
+    int dirfd = open(dirname.characters(), O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (dirfd < 0) {
+        perror(dirname.characters());
+        return 1;
+    }
+
+    FileData file_data {
+        root_path,
+        dirfd,
+        basename.characters(),
+    };
     auto command = parse_all_commands(argv);
     walk_tree(file_data, *command);
+    close(dirfd);
     return g_there_was_an_error ? 1 : 0;
 }
