@@ -539,6 +539,9 @@ inline constexpr bool IsSpecializationOf = false;
 template<template<typename...> typename U, typename... Us>
 inline constexpr bool IsSpecializationOf<U<Us...>, U> = true;
 
+template<typename T, typename... Args>
+requires(IsCallableWithArguments<T, Args...>) using ReturnType = decltype(declval<T>()(declval<Args>()...));
+
 }
 using AK::Detail::AddConst;
 using AK::Detail::AddLvalueReference;
@@ -600,6 +603,7 @@ using AK::Detail::RemoveCVReference;
 using AK::Detail::RemovePointer;
 using AK::Detail::RemoveReference;
 using AK::Detail::RemoveVolatile;
+using AK::Detail::ReturnType;
 using AK::Detail::TrueType;
 using AK::Detail::UnderlyingType;
 using AK::Detail::Void;
