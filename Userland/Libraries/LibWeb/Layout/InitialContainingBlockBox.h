@@ -31,7 +31,12 @@ public:
     void recompute_selection_states();
 
 private:
+    virtual bool is_initial_containing_block_box() const override { return true; }
+
     LayoutRange m_selection;
 };
+
+template<>
+inline bool Node::fast_is<InitialContainingBlockBox>() const { return is_initial_containing_block_box(); }
 
 }
