@@ -14,6 +14,8 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/Timer.h>
 #include <pthread.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
 
 namespace AudioServer {
 
@@ -148,6 +150,23 @@ void Mixer::set_muted(bool muted)
     ClientConnection::for_each([muted](ClientConnection& client) {
         client.did_change_muted_state({}, muted);
     });
+}
+
+int Mixer::audiodevice_set_sample_rate(u16 sample_rate)
+{
+    int code = ioctl(m_device->fd(), SOUNDCARD_IOCTL_SET_SAMPLE_RATE, sample_rate);
+    if (code != 0)
+        dbgln("Error while setting sample rate to {}: ioctl returned with {}", sample_rate, strerror(code));
+    return code;
+}
+
+u16 Mixer::audiodevice_get_sample_rate() const
+{
+    u16 sample_rate = 0;
+    int code = ioctl(m_device->fd(), SOUNDCARD_IOCTL_GET_SAMPLE_RATE, &sample_rate);
+    if (code != 0)
+        dbgln("Error while getting sample rate: ioctl returned with {}", strerror(code));
+    return sample_rate;
 }
 
 void Mixer::request_setting_sync()

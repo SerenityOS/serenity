@@ -45,6 +45,8 @@ private:
     virtual Messages::AudioServer::GetPlayingBufferResponse get_playing_buffer() override;
     virtual Messages::AudioServer::GetMutedResponse get_muted() override;
     virtual void set_muted(bool) override;
+    virtual void set_sample_rate(u16 sample_rate) override;
+    virtual Messages::AudioServer::GetSampleRateResponse get_sample_rate() override;
 
     Mixer& m_mixer;
     RefPtr<BufferQueue> m_queue;
