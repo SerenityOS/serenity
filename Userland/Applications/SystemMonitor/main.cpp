@@ -49,7 +49,7 @@
 static NonnullRefPtr<GUI::Window> build_process_window(pid_t);
 static NonnullRefPtr<GUI::Widget> build_storage_widget();
 static NonnullRefPtr<GUI::Widget> build_hardware_tab();
-static NonnullRefPtr<GUI::Widget> build_graphs_tab();
+static NonnullRefPtr<GUI::Widget> build_performance_tab();
 
 static RefPtr<GUI::Statusbar> statusbar;
 
@@ -188,8 +188,8 @@ int main(int argc, char** argv)
 
     auto& process_table_container = tabwidget.add_tab<GUI::Widget>("Processes");
 
-    auto graphs_widget = build_graphs_tab();
-    tabwidget.add_widget("Graphs", graphs_widget);
+    auto performance_widget = build_performance_tab();
+    tabwidget.add_widget("Performance", performance_widget);
 
     auto storage_widget = build_storage_widget();
     tabwidget.add_widget("Storage", storage_widget);
@@ -373,7 +373,7 @@ int main(int argc, char** argv)
     if (args_tab_view == "processes")
         tabwidget.set_active_widget(&process_table_container);
     else if (args_tab_view == "graphs")
-        tabwidget.set_active_widget(graphs_widget);
+        tabwidget.set_active_widget(performance_widget);
     else if (args_tab_view == "fs")
         tabwidget.set_active_widget(storage_widget);
     else if (args_tab_view == "hardware")
@@ -661,7 +661,7 @@ NonnullRefPtr<GUI::Widget> build_hardware_tab()
     return widget;
 }
 
-NonnullRefPtr<GUI::Widget> build_graphs_tab()
+NonnullRefPtr<GUI::Widget> build_performance_tab()
 {
     auto graphs_container = GUI::Widget::construct();
 
