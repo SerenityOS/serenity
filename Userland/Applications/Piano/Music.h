@@ -23,7 +23,8 @@ struct Sample {
     i16 right;
 };
 
-constexpr int sample_count = 1 << 9;
+// HACK: needs to increase with device sample rate, but all of the sample_count stuff is static for now
+constexpr int sample_count = 1 << 12;
 
 constexpr int buffer_size = sample_count * sizeof(Sample);
 
