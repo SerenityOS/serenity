@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "DevicesModel.h"
 #include "GraphWidget.h"
 #include "InterruptsWidget.h"
 #include "MemoryStatsWidget.h"
@@ -51,7 +50,6 @@
 static NonnullRefPtr<GUI::Window> build_process_window(pid_t);
 static NonnullRefPtr<GUI::Widget> build_file_systems_tab();
 static NonnullRefPtr<GUI::Widget> build_pci_devices_tab();
-static NonnullRefPtr<GUI::Widget> build_devices_tab();
 static NonnullRefPtr<GUI::Widget> build_graphs_tab();
 static NonnullRefPtr<GUI::Widget> build_processors_tab();
 
@@ -200,9 +198,6 @@ int main(int argc, char** argv)
 
     auto pci_devices_widget = build_pci_devices_tab();
     tabwidget.add_widget("PCI devices", pci_devices_widget);
-
-    auto devices_widget = build_devices_tab();
-    tabwidget.add_widget("Devices", devices_widget);
 
     auto network_stats_widget = NetworkStatisticsWidget::construct();
     tabwidget.add_widget("Network", network_stats_widget);
@@ -391,8 +386,6 @@ int main(int argc, char** argv)
         tabwidget.set_active_widget(file_systems_widget);
     else if (args_tab_view == "pci")
         tabwidget.set_active_widget(pci_devices_widget);
-    else if (args_tab_view == "devices")
-        tabwidget.set_active_widget(devices_widget);
     else if (args_tab_view == "network")
         tabwidget.set_active_widget(network_stats_widget);
     else if (args_tab_view == "processors")
@@ -640,22 +633,6 @@ NonnullRefPtr<GUI::Widget> build_pci_devices_tab()
     };
 
     return pci_widget;
-}
-
-NonnullRefPtr<GUI::Widget> build_devices_tab()
-{
-    auto devices_widget = GUI::LazyWidget::construct();
-
-    devices_widget->on_first_show = [](GUI::LazyWidget& self) {
-        self.set_layout<GUI::VerticalBoxLayout>();
-        self.layout()->set_margins(4);
-
-        auto& devices_table_view = self.add<GUI::TableView>();
-        devices_table_view.set_model(GUI::SortingProxyModel::create(DevicesModel::create()));
-        devices_table_view.model()->invalidate();
-    };
-
-    return devices_widget;
 }
 
 NonnullRefPtr<GUI::Widget> build_graphs_tab()
