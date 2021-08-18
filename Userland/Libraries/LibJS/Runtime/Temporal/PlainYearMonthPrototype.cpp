@@ -6,6 +6,7 @@
 
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonth.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonthPrototype.h>
@@ -37,6 +38,7 @@ void PlainYearMonthPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.inLeapYear, in_leap_year_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
 }
@@ -177,6 +179,33 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::in_leap_year_getter)
 
     // 4. Return ? CalendarInLeapYear(calendar, yearMonth).
     return Value(calendar_in_leap_year(global_object, calendar, *year_month));
+}
+
+// 9.3.17 Temporal.PlainYearMonth.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tostring
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_string)
+{
+    // 1. Let yearMonth be the this value.
+    // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
+    auto* year_month = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Set options to ? GetOptionsObject(options).
+    auto* options = get_options_object(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 4. Let showCalendar be ? ToShowCalendarOption(options).
+    auto show_calendar = to_show_calendar_option(global_object, *options);
+    if (vm.exception())
+        return {};
+
+    // 5. Return ? TemporalYearMonthToString(yearMonth, showCalendar).
+    auto string = temporal_year_month_to_string(global_object, *year_month, *show_calendar);
+    if (vm.exception())
+        return {};
+
+    return js_string(vm, *string);
 }
 
 // 9.3.20 Temporal.PlainYearMonth.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.valueof
