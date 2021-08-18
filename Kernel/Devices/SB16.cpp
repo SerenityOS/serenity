@@ -15,6 +15,7 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Thread.h>
+#include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 
@@ -49,6 +50,8 @@ u8 SB16::dsp_read()
 /* Changes the sample rate of sound output */
 void SB16::set_sample_rate(uint16_t hz)
 {
+    dbgln("SB16: Changing sample rate to {} Hz", hz);
+    m_sample_rate = hz;
     dsp_write(0x41); // output
     dsp_write((u8)(hz >> 8));
     dsp_write((u8)hz);
@@ -115,6 +118,30 @@ UNMAP_AFTER_INIT void SB16::initialize()
     dmesgln("SB16: Found version {}.{}", m_major_version, vmin);
     set_irq_register(SB16_DEFAULT_IRQ);
     dmesgln("SB16: IRQ {}", get_irq_line());
+
+    set_sample_rate(m_sample_rate);
+}
+
+KResult SB16::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
+{
+    switch (request) {
+    case SOUNDCARD_IOCTL_GET_SAMPLE_RATE: {
+        auto output = static_ptr_cast<u16*>(arg);
+        if (!copy_to_user(output, &m_sample_rate))
+            return EFAULT;
+        return KSuccess;
+    }
+    case SOUNDCARD_IOCTL_SET_SAMPLE_RATE: {
+        auto sample_rate_value = static_cast<u16>(arg.ptr());
+        if (sample_rate_value == 0)
+            return EINVAL;
+        if (m_sample_rate != sample_rate_value)
+            set_sample_rate(sample_rate_value);
+        return KSuccess;
+    }
+    default:
+        return EINVAL;
+    }
 }
 
 void SB16::set_irq_register(u8 irq_number)
@@ -256,8 +283,6 @@ KResultOr<size_t> SB16::write(FileDescription&, u64, UserOrKernelBuffer const& d
 
     u8 mode = (u8)SampleFormat::Signed | (u8)SampleFormat::Stereo;
 
-    const int sample_rate = 44100;
-    set_sample_rate(sample_rate);
     if (!data.read(m_dma_region->vaddr().as_ptr(), length))
         return EFAULT;
     dma_start(length);
