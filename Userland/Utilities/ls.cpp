@@ -35,7 +35,8 @@
 struct FileMetadata {
     String name;
     String path;
-    struct stat stat;
+    struct stat stat {
+    };
 };
 
 static int do_file_system_object_long(const char* path);
@@ -148,10 +149,9 @@ int main(int argc, char** argv)
         metadata.name = path;
 
         int rc = lstat(path.characters(), &metadata.stat);
-        if (rc < 0) {
+        if (rc < 0)
             perror("lstat");
-            memset(&metadata.stat, 0, sizeof(metadata.stat));
-        }
+
         files.append(metadata);
     }
     quick_sort(files, filemetadata_comparator);
@@ -372,12 +372,11 @@ static bool print_filesystem_object(const String& path, const String& name, cons
 static int do_file_system_object_long(const char* path)
 {
     if (flag_list_directories_only) {
-        struct stat stat;
+        struct stat stat {
+        };
         int rc = lstat(path, &stat);
-        if (rc < 0) {
+        if (rc < 0)
             perror("lstat");
-            memset(&stat, 0, sizeof(stat));
-        }
         if (print_filesystem_object(path, path, stat))
             return 0;
         return 2;
@@ -393,12 +392,11 @@ static int do_file_system_object_long(const char* path)
 
     if (di.has_error()) {
         if (di.error() == ENOTDIR) {
-            struct stat stat;
+            struct stat stat {
+            };
             int rc = lstat(path, &stat);
-            if (rc < 0) {
+            if (rc < 0)
                 perror("lstat");
-                memset(&stat, 0, sizeof(stat));
-            }
             if (print_filesystem_object(path, path, stat))
                 return 0;
             return 2;
@@ -423,10 +421,9 @@ static int do_file_system_object_long(const char* path)
         metadata.path = builder.to_string();
         VERIFY(!metadata.path.is_null());
         int rc = lstat(metadata.path.characters(), &metadata.stat);
-        if (rc < 0) {
+        if (rc < 0)
             perror("lstat");
-            memset(&metadata.stat, 0, sizeof(metadata.stat));
-        }
+
         files.append(move(metadata));
     }
 
@@ -536,10 +533,8 @@ int do_file_system_object_short(const char* path)
         metadata.path = builder.to_string();
         VERIFY(!metadata.path.is_null());
         int rc = lstat(metadata.path.characters(), &metadata.stat);
-        if (rc < 0) {
+        if (rc < 0)
             perror("lstat");
-            memset(&metadata.stat, 0, sizeof(metadata.stat));
-        }
 
         files.append(metadata);
         if (metadata.name.length() > longest_name)
