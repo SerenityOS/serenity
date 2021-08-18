@@ -5,6 +5,7 @@
  */
 
 #include "Selector.h"
+#include <AK/GenericLexer.h>
 #include <AK/StringUtils.h>
 #include <ctype.h>
 

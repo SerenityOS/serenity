@@ -12,6 +12,7 @@
 #include "RegexParser.h"
 
 #include <AK/Forward.h>
+#include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>

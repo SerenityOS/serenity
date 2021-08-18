@@ -10,6 +10,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/Function.h>
+#include <AK/GenericLexer.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
