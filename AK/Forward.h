@@ -17,6 +17,7 @@ class ByteBuffer;
 
 class Bitmap;
 using ByteBuffer = AK::Detail::ByteBuffer<32>;
+class GenericLexer;
 class IPv4Address;
 class JsonArray;
 class JsonObject;
@@ -139,6 +140,7 @@ using AK::DuplexMemoryStream;
 using AK::FixedArray;
 using AK::FlyString;
 using AK::Function;
+using AK::GenericLexer;
 using AK::HashMap;
 using AK::HashTable;
 using AK::InputBitStream;
