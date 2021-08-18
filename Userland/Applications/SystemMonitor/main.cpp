@@ -194,11 +194,11 @@ int main(int argc, char** argv)
     auto storage_widget = build_storage_widget();
     tabwidget.add_widget("Storage", storage_widget);
 
-    auto hardware_widget = build_hardware_tab();
-    tabwidget.add_widget("Hardware", hardware_widget);
-
     auto network_stats_widget = NetworkStatisticsWidget::construct();
     tabwidget.add_widget("Network", network_stats_widget);
+
+    auto hardware_widget = build_hardware_tab();
+    tabwidget.add_widget("Hardware", hardware_widget);
 
     process_table_container.set_layout<GUI::VerticalBoxLayout>();
     process_table_container.layout()->set_margins(4);
