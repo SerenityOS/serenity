@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Result.h>
 #include <AK/StringView.h>
 
 namespace AK {
@@ -115,6 +116,13 @@ public:
     StringView consume_quoted_string(char escape_char = 0);
     String consume_and_unescape_string(char escape_char = '\\');
 
+    enum class UnicodeEscapeError {
+        MalformedUnicodeEscape,
+        UnicodeEscapeOverflow,
+    };
+
+    Result<u32, UnicodeEscapeError> consume_escaped_code_point(bool combine_surrogate_pairs = true);
+
     constexpr void ignore(size_t count = 1)
     {
         count = min(count, m_input.length() - m_index);
@@ -201,6 +209,10 @@ public:
 protected:
     StringView m_input;
     size_t m_index { 0 };
+
+private:
+    Result<u32, UnicodeEscapeError> decode_code_point();
+    Result<u32, UnicodeEscapeError> decode_single_or_paired_surrogate(bool combine_surrogate_pairs);
 };
 
 constexpr auto is_any_of(const StringView& values)
