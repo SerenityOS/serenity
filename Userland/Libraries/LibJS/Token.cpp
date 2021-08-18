@@ -56,7 +56,7 @@ double Token::double_value() const
 
     StringBuilder builder;
 
-    for (auto ch : m_value) {
+    for (auto ch : value()) {
         if (ch == '_')
             continue;
         builder.append(ch);
@@ -75,7 +75,7 @@ double Token::double_value() const
             return static_cast<double>(strtoul(value_string.characters() + 2, nullptr, 2));
         } else if (is_ascii_digit(value_string[1])) {
             // also octal, but syntax error in strict mode
-            if (!m_value.contains('8') && !m_value.contains('9'))
+            if (!value().contains('8') && !value().contains('9'))
                 return static_cast<double>(strtoul(value_string.characters() + 1, nullptr, 8));
         }
     }
@@ -95,7 +95,7 @@ String Token::string_value(StringValueStatus& status) const
     VERIFY(type() == TokenType::StringLiteral || type() == TokenType::TemplateLiteralString);
 
     auto is_template = type() == TokenType::TemplateLiteralString;
-    GenericLexer lexer(is_template ? m_value : m_value.substring_view(1, m_value.length() - 2));
+    GenericLexer lexer(is_template ? value() : value().substring_view(1, value().length() - 2));
 
     auto encoding_failure = [&status](StringValueStatus parse_status) -> String {
         status = parse_status;
@@ -195,7 +195,7 @@ String Token::string_value(StringValueStatus& status) const
 bool Token::bool_value() const
 {
     VERIFY(type() == TokenType::BoolLiteral);
-    return m_value == "true";
+    return value() == "true";
 }
 
 bool Token::is_identifier_name() const
