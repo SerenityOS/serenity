@@ -187,7 +187,7 @@ private:
     IntrusiveListStorage<T, Container>* m_storage = nullptr;
     IntrusiveListNode<T, Container>* m_next = nullptr;
     IntrusiveListNode<T, Container>* m_prev = nullptr;
-    SelfReferenceIfNeeded<Container, IsRaw> m_self;
+    [[no_unique_address]] SelfReferenceIfNeeded<Container, IsRaw> m_self;
 };
 
 }
