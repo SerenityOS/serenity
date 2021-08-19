@@ -685,7 +685,7 @@ void Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 
 void Processor::flush_tlb(Memory::PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
 {
-    if (s_smp_enabled && (!Memory::is_user_address(vaddr) || Process::current()->thread_count() > 1))
+    if (s_smp_enabled && (!Memory::is_user_address(vaddr) || Process::current().thread_count() > 1))
         smp_broadcast_flush_tlb(page_directory, vaddr, page_count);
     else
         flush_tlb_local(vaddr, page_count);

@@ -145,10 +145,16 @@ public:
 public:
     class ProcessProcFSTraits;
 
-    inline static Process* current()
+    inline static Process& current()
     {
         auto current_thread = Processor::current_thread();
-        return current_thread ? &current_thread->process() : nullptr;
+        VERIFY(current_thread);
+        return current_thread->process();
+    }
+
+    inline static bool has_current()
+    {
+        return Processor::current_thread();
     }
 
     template<typename EntryFunction>
@@ -948,25 +954,25 @@ inline ProcessID Thread::pid() const
     return m_process->pid();
 }
 
-#define REQUIRE_NO_PROMISES                        \
-    do {                                           \
-        if (Process::current()->has_promises()) {  \
-            dbgln("Has made a promise");           \
-            Process::current()->crash(SIGABRT, 0); \
-            VERIFY_NOT_REACHED();                  \
-        }                                          \
+#define REQUIRE_NO_PROMISES                       \
+    do {                                          \
+        if (Process::current().has_promises()) {  \
+            dbgln("Has made a promise");          \
+            Process::current().crash(SIGABRT, 0); \
+            VERIFY_NOT_REACHED();                 \
+        }                                         \
     } while (0)
 
-#define REQUIRE_PROMISE(promise)                                     \
-    do {                                                             \
-        if (Process::current()->has_promises()                       \
-            && !Process::current()->has_promised(Pledge::promise)) { \
-            dbgln("Has not pledged {}", #promise);                   \
-            (void)Process::current()->try_set_coredump_property(     \
-                "pledge_violation"sv, #promise);                     \
-            Process::current()->crash(SIGABRT, 0);                   \
-            VERIFY_NOT_REACHED();                                    \
-        }                                                            \
+#define REQUIRE_PROMISE(promise)                                    \
+    do {                                                            \
+        if (Process::current().has_promises()                       \
+            && !Process::current().has_promised(Pledge::promise)) { \
+            dbgln("Has not pledged {}", #promise);                  \
+            (void)Process::current().try_set_coredump_property(     \
+                "pledge_violation"sv, #promise);                    \
+            Process::current().crash(SIGABRT, 0);                   \
+            VERIFY_NOT_REACHED();                                   \
+        }                                                           \
     } while (0)
 }
 

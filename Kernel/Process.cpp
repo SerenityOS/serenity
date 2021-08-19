@@ -389,7 +389,7 @@ void create_signal_trampoline()
 void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
 {
     VERIFY(!is_dead());
-    VERIFY(Process::current() == this);
+    VERIFY(&Process::current() == this);
 
     if (out_of_memory) {
         dbgln("\033[31;1mOut of memory\033[m, killing: {}", *this);
@@ -720,7 +720,7 @@ void Process::terminate_due_to_signal(u8 signal)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(signal < 32);
-    VERIFY(Process::current() == this);
+    VERIFY(&Process::current() == this);
     dbgln("Terminating {} due to signal {}", *this, signal);
     {
         ProtectedDataMutationScope scope { *this };

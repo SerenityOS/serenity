@@ -214,14 +214,14 @@ static void dump(const RegisterState& regs)
 
 void handle_crash(RegisterState const& regs, char const* description, int signal, bool out_of_memory)
 {
-    auto process = Process::current();
-    if (!process) {
+    if (!Process::has_current())
         PANIC("{} with !current", description);
-    }
+
+    auto& process = Process::current();
 
     // If a process crashed while inspecting another process,
     // make sure we switch back to the right page tables.
-    MM.enter_process_paging_scope(*process);
+    MM.enter_process_paging_scope(process);
 
     dmesgln("CRASH: CPU #{} {} in ring {}", Processor::id(), description, (regs.cs & 3));
     dump(regs);
@@ -230,7 +230,7 @@ void handle_crash(RegisterState const& regs, char const* description, int signal
         PANIC("Crash in ring 0");
     }
 
-    process->crash(signal, regs.ip(), out_of_memory);
+    process.crash(signal, regs.ip(), out_of_memory);
 }
 
 EH_ENTRY_NO_CODE(6, illegal_instruction);

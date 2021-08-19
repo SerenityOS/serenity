@@ -43,9 +43,9 @@ void TTY::set_default_termios()
 
 KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
-    if (Process::current()->pgid() != pgid()) {
+    if (Process::current().pgid() != pgid()) {
         // FIXME: Should we propagate this error path somehow?
-        [[maybe_unused]] auto rc = Process::current()->send_signal(SIGTTIN, nullptr);
+        [[maybe_unused]] auto rc = Process::current().send_signal(SIGTTIN, nullptr);
         return EINTR;
     }
     if (m_input_buffer.size() < static_cast<size_t>(size))
@@ -82,8 +82,8 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
 
 KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
 {
-    if (m_termios.c_lflag & TOSTOP && Process::current()->pgid() != pgid()) {
-        [[maybe_unused]] auto rc = Process::current()->send_signal(SIGTTOU, nullptr);
+    if (m_termios.c_lflag & TOSTOP && Process::current().pgid() != pgid()) {
+        [[maybe_unused]] auto rc = Process::current().send_signal(SIGTTOU, nullptr);
         return EINTR;
     }
 
@@ -457,7 +457,7 @@ KResult TTY::set_termios(const termios& t)
 KResult TTY::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(tty);
-    auto& current_process = *Process::current();
+    auto& current_process = Process::current();
     Userspace<termios*> user_termios;
     Userspace<winsize*> user_winsize;
 

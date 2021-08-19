@@ -52,7 +52,7 @@ Region::~Region()
 
 KResultOr<NonnullOwnPtr<Region>> Region::try_clone()
 {
-    VERIFY(Process::current());
+    VERIFY(Process::has_current());
 
     if (m_shared) {
         VERIFY(!m_stack);
