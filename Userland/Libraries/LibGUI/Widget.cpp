@@ -303,6 +303,8 @@ void Widget::event(Core::Event& event)
         return handle_leave_event(event);
     case Event::EnabledChange:
         return change_event(static_cast<Event&>(event));
+    case Event::ContextMenu:
+        return context_menu_event(static_cast<ContextMenuEvent&>(event));
     default:
         return Core::Object::event(event);
     }
@@ -313,7 +315,7 @@ void Widget::handle_keydown_event(KeyEvent& event)
     keydown_event(event);
     if (event.key() == KeyCode::Key_Menu) {
         ContextMenuEvent c_event(window_relative_rect().bottom_right(), screen_relative_rect().bottom_right());
-        context_menu_event(c_event);
+        dispatch_event(c_event);
     }
 }
 
@@ -420,7 +422,7 @@ void Widget::handle_mousedown_event(MouseEvent& event)
     mousedown_event(event);
     if (event.button() == MouseButton::Right) {
         ContextMenuEvent c_event(event.position(), screen_relative_rect().location().translated(event.position()));
-        context_menu_event(c_event);
+        dispatch_event(c_event);
     }
 }
 
@@ -516,8 +518,9 @@ void Widget::mousewheel_event(MouseEvent& event)
     event.ignore();
 }
 
-void Widget::context_menu_event(ContextMenuEvent&)
+void Widget::context_menu_event(ContextMenuEvent& event)
 {
+    event.ignore();
 }
 
 void Widget::focusin_event(FocusEvent&)
