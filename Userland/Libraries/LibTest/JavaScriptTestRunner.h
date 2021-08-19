@@ -162,7 +162,7 @@ public:
     virtual ~TestRunner() = default;
 
 protected:
-    virtual void do_run_single_test(const String& test_path) override;
+    virtual void do_run_single_test(const String& test_path, size_t, size_t) override;
     virtual Vector<String> get_test_paths() const override;
     virtual JSFileResult run_file_test(const String& test_path);
     void print_file_result(const JSFileResult& file_result) const;
@@ -230,7 +230,7 @@ inline Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
     return json.value();
 }
 
-inline void TestRunner::do_run_single_test(const String& test_path)
+inline void TestRunner::do_run_single_test(const String& test_path, size_t, size_t)
 {
     auto file_result = run_file_test(test_path);
     if (!m_print_json)
