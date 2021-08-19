@@ -52,7 +52,23 @@ String kind_name(Kind);
 String class_name(Class);
 String type_name(Type);
 
-Optional<Core::DateTime> parse_utc_time(const StringView&);
-Optional<Core::DateTime> parse_generalized_time(const StringView&);
+Optional<struct tm> parse_utc_time_raw(StringView const&);
+Optional<struct tm> parse_generalized_time_raw(StringView const&);
+
+inline Optional<Core::DateTime> parse_utc_time(StringView const& string)
+{
+    auto maybe_timestamp = parse_utc_time_raw(string);
+    if (!maybe_timestamp.has_value())
+        return {};
+    return Core::DateTime::from_tm(maybe_timestamp.value());
+}
+
+inline Optional<Core::DateTime> parse_generalized_time(StringView const& string)
+{
+    auto maybe_timestamp = parse_generalized_time_raw(string);
+    if (!maybe_timestamp.has_value())
+        return {};
+    return Core::DateTime::from_tm(maybe_timestamp.value());
+}
 
 }

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/DateTime.h>
 #include <LibCrypto/ASN1/ASN1.h>
 
 namespace Crypto::ASN1 {
@@ -72,7 +73,7 @@ String type_name(Type type)
     return "InvalidType";
 }
 
-Optional<Core::DateTime> parse_utc_time(const StringView& time)
+Optional<struct tm> parse_utc_time_raw(StringView const& time)
 {
     // YYMMDDhhmm[ss]Z or YYMMDDhhmm[ss](+|-)hhmm
     GenericLexer lexer(time);
@@ -109,17 +110,30 @@ Optional<Core::DateTime> parse_utc_time(const StringView& time)
         return {};
     }
 
-    auto full_year = (Core::DateTime::now().year() / 100) * 100 + year_in_century.value();
+    time_t now;
+    ::time(&now);
+    tm now_tm;
+    localtime_r(&now, &now_tm);
+    auto current_year = now_tm.tm_year + 1900;
+
+    auto full_year = (current_year / 100) * 100 + year_in_century.value();
     auto full_seconds = seconds.value_or(0);
 
     // FIXME: Handle offsets!
     if (offset_hours.has_value() || offset_minutes.has_value())
         dbgln("FIXME: Implement UTCTime with offset!");
 
-    return Core::DateTime::create(full_year, month.value(), day.value(), hour.value(), minute.value(), full_seconds);
+    struct tm result;
+    result.tm_year = full_year - 1900;
+    result.tm_mon = month.value() - 1;
+    result.tm_mday = day.value();
+    result.tm_hour = hour.value();
+    result.tm_min = minute.value();
+    result.tm_sec = full_seconds;
+    return result;
 }
 
-Optional<Core::DateTime> parse_generalized_time(const StringView& time)
+Optional<struct tm> parse_generalized_time_raw(StringView const& time)
 {
     // YYYYMMDDhh[mm[ss[.fff]]] or YYYYMMDDhh[mm[ss[.fff]]]Z or YYYYMMDDhh[mm[ss[.fff]]](+|-)hhmm
     GenericLexer lexer(time);
@@ -183,7 +197,14 @@ done_parsing:;
         dbgln("FIXME: Implement GeneralizedTime with offset!");
 
     // Unceremonially drop the milliseconds on the floor.
-    return Core::DateTime::create(year.value(), month.value(), day.value(), hour.value(), minute.value_or(0), seconds.value_or(0));
+    struct tm result;
+    result.tm_year = year.value() - 1900;
+    result.tm_mon = month.value() - 1;
+    result.tm_mday = day.value();
+    result.tm_hour = hour.value();
+    result.tm_min = minute.value();
+    result.tm_sec = seconds.value_or(0);
+    return result;
 }
 
 }

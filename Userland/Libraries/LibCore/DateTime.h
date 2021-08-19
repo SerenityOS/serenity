@@ -35,6 +35,7 @@ public:
     static DateTime create(unsigned year, unsigned month = 1, unsigned day = 0, unsigned hour = 0, unsigned minute = 0, unsigned second = 0);
     static DateTime now();
     static DateTime from_timestamp(time_t);
+    static DateTime from_tm(struct tm);
     static Optional<DateTime> parse(const String& format, const String& string);
 
     bool operator<(const DateTime& other) const { return m_timestamp < other.m_timestamp; }

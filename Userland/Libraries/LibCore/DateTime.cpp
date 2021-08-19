@@ -29,14 +29,19 @@ DateTime DateTime::from_timestamp(time_t timestamp)
 {
     struct tm tm;
     localtime_r(&timestamp, &tm);
+    return from_tm(tm);
+}
+
+DateTime DateTime::from_tm(struct tm tm)
+{
     DateTime dt;
+    dt.m_timestamp = mktime(&tm);
     dt.m_year = tm.tm_year + 1900;
     dt.m_month = tm.tm_mon + 1;
     dt.m_day = tm.tm_mday;
     dt.m_hour = tm.tm_hour;
     dt.m_minute = tm.tm_min;
     dt.m_second = tm.tm_sec;
-    dt.m_timestamp = timestamp;
     return dt;
 }
 
