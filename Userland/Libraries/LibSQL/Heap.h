@@ -12,8 +12,6 @@
 #include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <LibCore/Object.h>
-#include <LibSQL/Meta.h>
-#include <LibSQL/Serialize.h>
 
 namespace SQL {
 
@@ -81,7 +79,17 @@ public:
         update_zero_block();
     }
 
-    void add_to_wal(u32 block, ByteBuffer& buffer) { m_write_ahead_log.set(block, buffer); }
+    void add_to_wal(u32 block, ByteBuffer& buffer)
+    {
+        dbgln_if(SQL_DEBUG, "Adding to WAL: block #{}, size {}", block, buffer.size());
+        dbgln_if(SQL_DEBUG, "{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
+            *buffer.offset_pointer(0), *buffer.offset_pointer(1),
+            *buffer.offset_pointer(2), *buffer.offset_pointer(3),
+            *buffer.offset_pointer(4), *buffer.offset_pointer(5),
+            *buffer.offset_pointer(6), *buffer.offset_pointer(7));
+        m_write_ahead_log.set(block, buffer);
+    }
+
     void flush();
 
 private:

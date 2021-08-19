@@ -28,23 +28,16 @@ public:
     ~HashBucket() override = default;
     Optional<u32> get(Key&);
     bool insert(Key const&);
-    Vector<Key> const& entries()
-    {
-        inflate();
-        return m_entries;
-    }
+    Vector<Key> const& entries();
     Key const& operator[](size_t);
-    Key const& operator[](size_t ix) const
-    {
-        VERIFY(ix < m_entries.size());
-        return m_entries[ix];
-    }
+    Key const& operator[](size_t ix) const;
     [[nodiscard]] u32 local_depth() const { return m_local_depth; }
     [[nodiscard]] u32 size() { return entries().size(); }
+    [[nodiscard]] size_t length() const;
     [[nodiscard]] u32 size() const { return m_entries.size(); }
     [[nodiscard]] u32 index() const { return m_index; }
-    void serialize(ByteBuffer&) const override;
-    IndexNode* as_index_node() override { return dynamic_cast<IndexNode*>(this); }
+    void serialize(Serializer&) const;
+    void deserialize(Serializer&);
     [[nodiscard]] HashIndex const& hash_index() const { return m_hash_index; }
     [[nodiscard]] HashBucket const* next_bucket();
     [[nodiscard]] HashBucket const* previous_bucket();
@@ -54,8 +47,6 @@ private:
     Optional<size_t> find_key_in_bucket(Key const&);
     void set_index(u32 index) { m_index = index; }
     void set_local_depth(u32 depth) { m_local_depth = depth; }
-    [[nodiscard]] size_t max_entries_in_bucket() const;
-    void inflate();
 
     HashIndex& m_hash_index;
     u32 m_local_depth { 1 };
@@ -88,7 +79,7 @@ public:
     void list_hash();
 
 private:
-    HashIndex(Heap&, NonnullRefPtr<TupleDescriptor> const&, u32);
+    HashIndex(Serializer&, NonnullRefPtr<TupleDescriptor> const&, u32);
 
     void expand();
     void write_directory_to_write_ahead_log();
@@ -107,10 +98,10 @@ private:
 class HashDirectoryNode : public IndexNode {
 public:
     HashDirectoryNode(HashIndex&, u32, size_t);
-    HashDirectoryNode(HashIndex&, u32, ByteBuffer&);
+    HashDirectoryNode(HashIndex&, u32);
     HashDirectoryNode(HashDirectoryNode const& other) = default;
-    void serialize(ByteBuffer&) const override;
-    IndexNode* as_index_node() override { return dynamic_cast<IndexNode*>(this); }
+    void deserialize(Serializer&);
+    void serialize(Serializer&) const;
     [[nodiscard]] u32 number_of_pointers() const { return min(max_pointers_in_node(), m_hash_index.size() - m_offset); }
     [[nodiscard]] bool is_last() const { return m_is_last; }
     static constexpr size_t max_pointers_in_node() { return (BLOCKSIZE - 3 * sizeof(u32)) / (2 * sizeof(u32)); }

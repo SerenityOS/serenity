@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibSQL/Serialize.h>
+#include <LibSQL/Serializer.h>
 #include <LibSQL/Value.h>
 #include <math.h>
 #include <string.h>
@@ -377,25 +377,19 @@ bool Value::operator>=(Value const& other) const
     return compare(other) >= 0;
 }
 
-void Value::serialize_to(ByteBuffer& buffer) const
+void Value::serialize(Serializer& serializer) const
 {
     u8 type_flags = (u8)type();
     if (is_null())
         type_flags |= (u8)SQLType::Null;
-    SQL::serialize_to(buffer, type_flags);
+    serializer.serialize<u8>(type_flags);
     if (!is_null())
-        m_impl.visit([&](auto& impl) { impl.serialize(buffer); });
+        m_impl.visit([&](auto& impl) { serializer.serialize(impl); });
 }
 
-void Value::deserialize(ByteBuffer& buffer, size_t& offset_at)
+void Value::deserialize(Serializer& serializer)
 {
-    m_impl.visit([&](auto& impl) { impl.deserialize(buffer, offset_at); });
-}
-
-Value Value::deserialize_from(ByteBuffer& buffer, size_t& at_offset)
-{
-    u8 type_flags;
-    SQL::deserialize_from(buffer, at_offset, type_flags);
+    auto type_flags = serializer.deserialize<u8>();
     bool is_null = false;
     if ((type_flags & (u8)SQLType::Null) && (type_flags != (u8)SQLType::Null)) {
         type_flags &= ~((u8)SQLType::Null);
@@ -403,14 +397,11 @@ Value Value::deserialize_from(ByteBuffer& buffer, size_t& at_offset)
     }
     auto type = (SQLType)type_flags;
     VERIFY(!is_null || (type != SQLType::Tuple && type != SQLType::Array));
-    Value ret(type);
+    setup(type);
     if (!is_null) {
-        ret.deserialize(buffer, at_offset);
+        m_impl.visit([&](auto& impl) { impl.deserialize(serializer); });
     }
-    return ret;
 }
-
-// -----------------------------------------------------------------
 
 bool NullImpl::can_cast(Value const& value)
 {
@@ -421,8 +412,6 @@ int NullImpl::compare(Value const& other)
 {
     return other.type() == SQLType::Null;
 }
-
-// -----------------------------------------------------------------
 
 String TextImpl::to_string() const
 {
@@ -490,7 +479,7 @@ void TextImpl::assign_bool(bool bool_value)
 
 size_t TextImpl::length() const
 {
-    return (is_null()) ? 0 : sizeof(u32) + min(value().length(), 64) + 1;
+    return (is_null()) ? 0 : sizeof(u32) + value().length();
 }
 
 int TextImpl::compare(Value const& other) const
@@ -777,30 +766,36 @@ bool ContainerValueImpl::append(Value const& value)
 
 bool ContainerValueImpl::append(BaseTypeImpl const& impl)
 {
-    if (m_max_size.has_value() && (size() >= m_max_size.value()))
-        return false;
     if (!validate(impl))
         return false;
     m_value.value().empend(impl);
     return true;
 }
 
-void ContainerValueImpl::serialize_values(ByteBuffer& buffer) const
+void ContainerValueImpl::serialize_values(Serializer& serializer) const
 {
-    serialize_to(buffer, (u32)size());
-    for (auto& value : value()) {
-        Value(value).serialize_to(buffer);
+    serializer.serialize((u32)size());
+    for (auto& impl : value()) {
+        serializer.serialize<Value>(Value(impl));
     }
 }
 
-void ContainerValueImpl::deserialize_values(ByteBuffer& buffer, size_t& at_offset)
+void ContainerValueImpl::deserialize_values(Serializer& serializer)
 {
-    u32 sz;
-    deserialize_from(buffer, at_offset, sz);
+    auto sz = serializer.deserialize<u32>();
     m_value = Vector<BaseTypeImpl>();
     for (auto ix = 0u; ix < sz; ix++) {
-        append(Value::deserialize_from(buffer, at_offset));
+        append(serializer.deserialize<Value>());
     }
+}
+
+size_t ContainerValueImpl::length() const
+{
+    size_t len = sizeof(u32);
+    for (auto& impl : value()) {
+        len += Value(impl).length();
+    }
+    return len;
 }
 
 void TupleImpl::assign(Value const& other)
@@ -820,7 +815,7 @@ void TupleImpl::assign(Value const& other)
 
 size_t TupleImpl::length() const
 {
-    return (m_descriptor) ? m_descriptor->data_length() : 0;
+    return m_descriptor->length() + ContainerValueImpl::length();
 }
 
 bool TupleImpl::can_cast(Value const& other_value) const
@@ -853,55 +848,61 @@ int TupleImpl::compare(Value const& other) const
     return 0;
 }
 
-void TupleImpl::serialize(ByteBuffer& buffer) const
+void TupleImpl::serialize(Serializer& serializer) const
 {
-    if (m_descriptor) {
-        serialize_to(buffer, (u32)m_descriptor->size());
-        for (auto& tuple_element : *m_descriptor) {
-            u8 elem_type = (u8)tuple_element.type;
-            serialize_to(buffer, elem_type);
-            u8 elem_order = (u8)tuple_element.order;
-            serialize_to(buffer, elem_order);
-        }
-    } else {
-        serialize_to(buffer, (u32)-1);
-    }
-    serialize_values(buffer);
+    serializer.serialize<TupleDescriptor>(*m_descriptor);
+    serialize_values(serializer);
 }
 
-void TupleImpl::deserialize(ByteBuffer& buffer, size_t& at_offset)
+void TupleImpl::deserialize(Serializer& serializer)
 {
-    u32 sz;
-    deserialize_from(buffer, at_offset, sz);
-    if (sz != (u32)-1) {
-        NonnullRefPtr<TupleDescriptor> serialized_descriptor = adopt_ref(*new TupleDescriptor);
-        for (auto ix = 0u; ix < sz; ix++) {
-            u8 elem_type, elem_order;
-            deserialize_from(buffer, at_offset, elem_type);
-            deserialize_from(buffer, at_offset, elem_order);
-            serialized_descriptor->empend("", (SQLType)elem_type, (Order)elem_order);
-        }
-        m_descriptor = serialized_descriptor;
-        m_max_size = m_descriptor->size();
-    } else {
-        m_descriptor = nullptr;
-        m_max_size = {};
+    m_descriptor = serializer.adopt_and_deserialize<TupleDescriptor>();
+    deserialize_values(serializer);
+}
+
+void TupleImpl::infer_descriptor()
+{
+    if (!m_descriptor) {
+        m_descriptor = adopt_ref(*new TupleDescriptor);
+        m_descriptor_inferred = true;
     }
-    deserialize_values(buffer, at_offset);
+}
+
+void TupleImpl::extend_descriptor(Value const& value)
+{
+    VERIFY(m_descriptor_inferred);
+    m_descriptor->empend("", value.type(), Order::Ascending);
+}
+
+bool TupleImpl::validate_before_assignment(Vector<Value> const& values)
+{
+    if (m_descriptor_inferred)
+        m_descriptor = nullptr;
+    if (!m_descriptor) {
+        infer_descriptor();
+        if (values.size() > m_descriptor->size()) {
+            for (auto ix = m_descriptor->size(); ix < values.size(); ix++) {
+                extend_descriptor(values[ix]);
+            }
+        }
+    }
+    return true;
 }
 
 bool TupleImpl::validate(BaseTypeImpl const& value)
 {
     if (!m_descriptor)
-        return true;
-    auto required_type = (*m_descriptor)[size()].type;
+        infer_descriptor();
+    if (m_descriptor_inferred && (this->value().size() == m_descriptor->size()))
+        extend_descriptor(Value(value));
+    if (m_descriptor->size() == this->value().size())
+        return false;
+    auto required_type = (*m_descriptor)[this->value().size()].type;
     return Value(value).type() == required_type;
 }
 
 bool TupleImpl::validate_after_assignment()
 {
-    if (!m_descriptor)
-        return true;
     for (auto ix = value().size(); ix < m_descriptor->size(); ++ix) {
         auto required_type = (*m_descriptor)[ix].type;
         append(Value(required_type));
@@ -925,11 +926,7 @@ void ArrayImpl::assign(Value const& other)
 
 size_t ArrayImpl::length() const
 {
-    size_t ret = 0;
-    for (auto& value : value()) {
-        ret += Value(value).length();
-    }
-    return ret;
+    return sizeof(u8) + sizeof(u32) + ContainerValueImpl::length();
 }
 
 bool ArrayImpl::can_cast(Value const& other_value) const
@@ -960,32 +957,31 @@ int ArrayImpl::compare(Value const& other) const
     return 0;
 }
 
-void ArrayImpl::serialize(ByteBuffer& buffer) const
+void ArrayImpl::serialize(Serializer& serializer) const
 {
-    serialize_to(buffer, (u8)m_element_type);
+    serializer.serialize((u8)m_element_type);
     if (m_max_size.has_value())
-        serialize_to(buffer, (u32)m_max_size.value());
+        serializer.serialize((u32)m_max_size.value());
     else
-        serialize_to(buffer, (u32)0);
-    serialize_values(buffer);
+        serializer.serialize((u32)0);
+    serialize_values(serializer);
 }
 
-void ArrayImpl::deserialize(ByteBuffer& buffer, size_t& at_offset)
+void ArrayImpl::deserialize(Serializer& serializer)
 {
-    u8 elem_type;
-    deserialize_from(buffer, at_offset, elem_type);
-    m_element_type = (SQLType)elem_type;
-    u32 max_sz;
-    deserialize_from(buffer, at_offset, max_sz);
+    m_element_type = (SQLType)serializer.deserialize<u8>();
+    auto max_sz = serializer.deserialize<u32>();
     if (max_sz)
         m_max_size = max_sz;
     else
         m_max_size = {};
-    deserialize_values(buffer, at_offset);
+    deserialize_values(serializer);
 }
 
 bool ArrayImpl::validate(BaseTypeImpl const& impl)
 {
+    if (m_max_size.has_value() && (size() >= m_max_size.value()))
+        return false;
     return Value(impl).type() == m_element_type;
 }
 

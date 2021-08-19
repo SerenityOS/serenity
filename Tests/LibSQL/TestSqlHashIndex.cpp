@@ -117,22 +117,22 @@ constexpr static u32 pointers[] = {
     4,
 };
 
-NonnullRefPtr<SQL::HashIndex> setup_hash_index(SQL::Heap& heap);
-void insert_and_get_to_and_from_hash_index(int num_keys);
-void insert_into_and_scan_hash_index(int num_keys);
+NonnullRefPtr<SQL::HashIndex> setup_hash_index(SQL::Serializer&);
+void insert_and_get_to_and_from_hash_index(int);
+void insert_into_and_scan_hash_index(int);
 
-NonnullRefPtr<SQL::HashIndex> setup_hash_index(SQL::Heap& heap)
+NonnullRefPtr<SQL::HashIndex> setup_hash_index(SQL::Serializer& serializer)
 {
     NonnullRefPtr<SQL::TupleDescriptor> tuple_descriptor = adopt_ref(*new SQL::TupleDescriptor);
     tuple_descriptor->append({ "key_value", SQL::SQLType::Integer, SQL::Order::Ascending });
     tuple_descriptor->append({ "text_value", SQL::SQLType::Text, SQL::Order::Ascending });
 
-    auto directory_pointer = heap.user_value(0);
+    auto directory_pointer = serializer.heap().user_value(0);
     if (!directory_pointer) {
-        directory_pointer = heap.new_record_pointer();
-        heap.set_user_value(0, directory_pointer);
+        directory_pointer = serializer.heap().new_record_pointer();
+        serializer.heap().set_user_value(0, directory_pointer);
     }
-    auto hash_index = SQL::HashIndex::construct(heap, tuple_descriptor, directory_pointer);
+    auto hash_index = SQL::HashIndex::construct(serializer, tuple_descriptor, directory_pointer);
     return hash_index;
 }
 
@@ -141,7 +141,8 @@ void insert_and_get_to_and_from_hash_index(int num_keys)
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
         auto heap = SQL::Heap::construct("/tmp/test.db");
-        auto hash_index = setup_hash_index(heap);
+        SQL::Serializer serializer(heap);
+        auto hash_index = setup_hash_index(serializer);
 
         for (auto ix = 0; ix < num_keys; ix++) {
             SQL::Key k(hash_index->descriptor());
@@ -157,14 +158,15 @@ void insert_and_get_to_and_from_hash_index(int num_keys)
 
     {
         auto heap = SQL::Heap::construct("/tmp/test.db");
-        auto hash_index = setup_hash_index(heap);
+        SQL::Serializer serializer(heap);
+        auto hash_index = setup_hash_index(serializer);
 
         for (auto ix = 0; ix < num_keys; ix++) {
             SQL::Key k(hash_index->descriptor());
             k[0] = keys[ix];
             k[1] = String::formatted("The key value is {} and the pointer is {}", keys[ix], pointers[ix]);
             auto pointer_opt = hash_index->get(k);
-            EXPECT(pointer_opt.has_value());
+            VERIFY(pointer_opt.has_value());
             EXPECT_EQ(pointer_opt.value(), pointers[ix]);
         }
     }
@@ -235,7 +237,8 @@ void insert_into_and_scan_hash_index(int num_keys)
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
         auto heap = SQL::Heap::construct("/tmp/test.db");
-        auto hash_index = setup_hash_index(heap);
+        SQL::Serializer serializer(heap);
+        auto hash_index = setup_hash_index(serializer);
 
         for (auto ix = 0; ix < num_keys; ix++) {
             SQL::Key k(hash_index->descriptor());
@@ -251,7 +254,8 @@ void insert_into_and_scan_hash_index(int num_keys)
 
     {
         auto heap = SQL::Heap::construct("/tmp/test.db");
-        auto hash_index = setup_hash_index(heap);
+        SQL::Serializer serializer(heap);
+        auto hash_index = setup_hash_index(serializer);
         Vector<bool> found;
         for (auto ix = 0; ix < num_keys; ix++) {
             found.append(false);

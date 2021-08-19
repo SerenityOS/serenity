@@ -9,7 +9,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StringBuilder.h>
 #include <LibSQL/BTree.h>
-#include <LibSQL/Serialize.h>
+#include <LibSQL/Serializer.h>
 
 namespace SQL {
 
@@ -53,17 +53,25 @@ DownPointer::DownPointer(DownPointer const& other)
 TreeNode* DownPointer::node()
 {
     if (!m_node)
-        inflate();
+        deserialize(m_owner->tree().serializer());
     return m_node;
 }
 
-void DownPointer::inflate()
+void DownPointer::deserialize(Serializer& serializer)
 {
     if (m_node || !m_pointer)
         return;
-    auto buffer = m_owner->tree().read_block(m_pointer);
-    size_t offset = 0;
-    m_node = make<TreeNode>(m_owner->tree(), m_owner, m_pointer, buffer, offset);
+    serializer.get_block(m_pointer);
+    m_node = serializer.make_and_deserialize<TreeNode>(m_owner->tree(), m_owner, m_pointer);
+}
+
+TreeNode::TreeNode(BTree& tree, u32 pointer)
+    : IndexNode(pointer)
+    , m_tree(tree)
+    , m_up(nullptr)
+    , m_entries()
+    , m_down()
+{
 }
 
 TreeNode::TreeNode(BTree& tree, TreeNode* up, u32 pointer)
@@ -103,34 +111,53 @@ TreeNode::TreeNode(BTree& tree, TreeNode* up, TreeNode* left, u32 pointer)
     m_is_leaf = left->pointer() == 0;
 }
 
-TreeNode::TreeNode(BTree& tree, TreeNode* up, u32 pointer, ByteBuffer& buffer, size_t& at_offset)
-    : IndexNode(pointer)
-    , m_tree(tree)
-    , m_up(up)
-    , m_entries()
-    , m_down()
+void TreeNode::deserialize(Serializer& serializer)
 {
-    u32 nodes;
-    deserialize_from<u32>(buffer, at_offset, nodes);
+    auto nodes = serializer.deserialize<u32>();
     dbgln_if(SQL_DEBUG, "Deserializing node. Size {}", nodes);
     if (nodes > 0) {
         for (u32 i = 0; i < nodes; i++) {
-            u32 left;
-            deserialize_from<u32>(buffer, at_offset, left);
+            auto left = serializer.deserialize<u32>();
             dbgln_if(SQL_DEBUG, "Down[{}] {}", i, left);
             if (!m_down.is_empty())
                 VERIFY((left == 0) == m_is_leaf);
             else
                 m_is_leaf = (left == 0);
-            m_entries.append(Key(m_tree.descriptor(), buffer, at_offset));
+            m_entries.append(serializer.deserialize<Key>(m_tree.descriptor()));
             m_down.empend(this, left);
         }
-        u32 right;
-        deserialize_from<u32>(buffer, at_offset, right);
+        auto right = serializer.deserialize<u32>();
         dbgln_if(SQL_DEBUG, "Right {}", right);
         VERIFY((right == 0) == m_is_leaf);
         m_down.empend(this, right);
     }
+}
+
+void TreeNode::serialize(Serializer& serializer) const
+{
+    u32 sz = size();
+    serializer.serialize<u32>(sz);
+    if (sz > 0) {
+        for (auto ix = 0u; ix < size(); ix++) {
+            auto& entry = m_entries[ix];
+            dbgln_if(SQL_DEBUG, "Serializing Left[{}] = {}", ix, m_down[ix].pointer());
+            serializer.serialize<u32>(is_leaf() ? 0u : m_down[ix].pointer());
+            serializer.serialize<Key>(entry);
+        }
+        dbgln_if(SQL_DEBUG, "Serializing Right = {}", m_down[size()].pointer());
+        serializer.serialize<u32>(is_leaf() ? 0u : m_down[size()].pointer());
+    }
+}
+
+size_t TreeNode::length() const
+{
+    if (!size())
+        return 0;
+    size_t len = sizeof(u32);
+    for (auto& key : m_entries) {
+        len += sizeof(u32) + key.length();
+    }
+    return len;
 }
 
 bool TreeNode::insert(Key const& key)
@@ -154,7 +181,7 @@ bool TreeNode::update_key_pointer(Key const& key)
             if (m_entries[ix].pointer() != key.pointer()) {
                 m_entries[ix].set_pointer(key.pointer());
                 dump_if(SQL_DEBUG, "To WAL");
-                tree().add_to_write_ahead_log(this);
+                tree().serializer().serialize_and_write<TreeNode>(*this, pointer());
             }
             return true;
         }
@@ -177,16 +204,6 @@ bool TreeNode::insert_in_leaf(Key const& key)
     dbgln_if(SQL_DEBUG, "[#{}] insert_in_leaf({})", pointer(), key.to_string());
     just_insert(key, nullptr);
     return true;
-}
-
-size_t TreeNode::max_keys_in_node()
-{
-    auto descriptor = m_tree.descriptor();
-    auto key_size = descriptor->data_length() + sizeof(u32);
-    auto ret = (BLOCKSIZE - 2 * sizeof(u32)) / key_size;
-    if ((ret % 2) == 0)
-        --ret;
-    return ret;
 }
 
 Key const& TreeNode::operator[](size_t ix) const
@@ -263,22 +280,6 @@ Optional<u32> TreeNode::get(Key& key)
     return down_node(size())->get(key);
 }
 
-void TreeNode::serialize(ByteBuffer& buffer) const
-{
-    u32 sz = size();
-    serialize_to<u32>(buffer, sz);
-    if (sz > 0) {
-        for (auto ix = 0u; ix < size(); ix++) {
-            auto& entry = m_entries[ix];
-            dbgln_if(SQL_DEBUG, "Serializing Left[{}] = {}", ix, m_down[ix].pointer());
-            serialize_to<u32>(buffer, is_leaf() ? 0u : m_down[ix].pointer());
-            entry.serialize(buffer);
-        }
-        dbgln_if(SQL_DEBUG, "Serializing Right = {}", m_down[size()].pointer());
-        serialize_to<u32>(buffer, is_leaf() ? 0u : m_down[size()].pointer());
-    }
-}
-
 void TreeNode::just_insert(Key const& key, TreeNode* right)
 {
     dbgln_if(SQL_DEBUG, "[#{}] just_insert({}, right = {})",
@@ -289,11 +290,11 @@ void TreeNode::just_insert(Key const& key, TreeNode* right)
             m_entries.insert(ix, key);
             VERIFY(is_leaf() == (right == nullptr));
             m_down.insert(ix + 1, DownPointer(this, right));
-            if (size() > max_keys_in_node()) {
+            if (length() > BLOCKSIZE) {
                 split();
             } else {
                 dump_if(SQL_DEBUG, "To WAL");
-                tree().add_to_write_ahead_log(this);
+                tree().serializer().serialize_and_write(*this, pointer());
             }
             return;
         }
@@ -301,11 +302,11 @@ void TreeNode::just_insert(Key const& key, TreeNode* right)
     m_entries.append(key);
     m_down.empend(this, right);
 
-    if (size() > max_keys_in_node()) {
+    if (length() > BLOCKSIZE) {
         split();
     } else {
         dump_if(SQL_DEBUG, "To WAL");
-        tree().add_to_write_ahead_log(this);
+        tree().serializer().serialize_and_write(*this, pointer());
     }
 }
 
@@ -317,15 +318,18 @@ void TreeNode::split()
         m_up = m_tree.new_root();
 
     // Take the left pointer for the new node:
-    DownPointer left = m_down.take(max_keys_in_node() / 2 + 1);
+    auto median_index = size() / 2;
+    if (!(size() % 2))
+        ++median_index;
+    DownPointer left = m_down.take(median_index);
 
     // Create the new right node:
     auto* new_node = new TreeNode(tree(), m_up, left);
 
     // Move the rightmost keys from this node to the new right node:
-    while (m_entries.size() > max_keys_in_node() / 2 + 1) {
-        auto entry = m_entries.take(max_keys_in_node() / 2 + 1);
-        auto down = m_down.take(max_keys_in_node() / 2 + 1);
+    while (m_entries.size() > median_index) {
+        auto entry = m_entries.take(median_index);
+        auto down = m_down.take(median_index);
 
         // Reparent to new right node:
         if (down.m_node != nullptr) {
@@ -340,9 +344,9 @@ void TreeNode::split()
     auto median = m_entries.take_last();
 
     dump_if(SQL_DEBUG, "Split Left To WAL");
-    tree().add_to_write_ahead_log(this);
+    tree().serializer().serialize_and_write(*this, pointer());
     new_node->dump_if(SQL_DEBUG, "Split Right to WAL");
-    tree().add_to_write_ahead_log(new_node);
+    tree().serializer().serialize_and_write(*new_node, pointer());
 
     m_up->just_insert(median, new_node);
 }

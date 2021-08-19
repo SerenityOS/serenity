@@ -120,23 +120,23 @@ constexpr static u32 pointers[] = {
     4,
 };
 
-NonnullRefPtr<SQL::BTree> setup_btree(SQL::Heap& heap);
-void insert_and_get_to_and_from_btree(int num_keys);
-void insert_into_and_scan_btree(int num_keys);
+NonnullRefPtr<SQL::BTree> setup_btree(SQL::Serializer&);
+void insert_and_get_to_and_from_btree(int);
+void insert_into_and_scan_btree(int);
 
-NonnullRefPtr<SQL::BTree> setup_btree(SQL::Heap& heap)
+NonnullRefPtr<SQL::BTree> setup_btree(SQL::Serializer& serializer)
 {
     NonnullRefPtr<SQL::TupleDescriptor> tuple_descriptor = adopt_ref(*new SQL::TupleDescriptor);
     tuple_descriptor->append({ "key_value", SQL::SQLType::Integer, SQL::Order::Ascending });
 
-    auto root_pointer = heap.user_value(0);
+    auto root_pointer = serializer.heap().user_value(0);
     if (!root_pointer) {
-        root_pointer = heap.new_record_pointer();
-        heap.set_user_value(0, root_pointer);
+        root_pointer = serializer.heap().new_record_pointer();
+        serializer.heap().set_user_value(0, root_pointer);
     }
-    auto btree = SQL::BTree::construct(heap, tuple_descriptor, true, root_pointer);
+    auto btree = SQL::BTree::construct(serializer, tuple_descriptor, true, root_pointer);
     btree->on_new_root = [&]() {
-        heap.set_user_value(0, btree->root());
+        serializer.heap().set_user_value(0, btree->root());
     };
     return btree;
 }
@@ -146,7 +146,8 @@ void insert_and_get_to_and_from_btree(int num_keys)
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
         auto heap = SQL::Heap::construct("/tmp/test.db");
-        auto btree = setup_btree(heap);
+        SQL::Serializer serializer(heap);
+        auto btree = setup_btree(serializer);
 
         for (auto ix = 0; ix < num_keys; ix++) {
             SQL::Key k(btree->descriptor());
@@ -161,13 +162,14 @@ void insert_and_get_to_and_from_btree(int num_keys)
 
     {
         auto heap = SQL::Heap::construct("/tmp/test.db");
-        auto btree = setup_btree(heap);
+        SQL::Serializer serializer(heap);
+        auto btree = setup_btree(serializer);
 
         for (auto ix = 0; ix < num_keys; ix++) {
             SQL::Key k(btree->descriptor());
             k[0] = keys[ix];
             auto pointer_opt = btree->get(k);
-            EXPECT(pointer_opt.has_value());
+            VERIFY(pointer_opt.has_value());
             EXPECT_EQ(pointer_opt.value(), pointers[ix]);
         }
     }
@@ -178,7 +180,8 @@ void insert_into_and_scan_btree(int num_keys)
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
         auto heap = SQL::Heap::construct("/tmp/test.db");
-        auto btree = setup_btree(heap);
+        SQL::Serializer serializer(heap);
+        auto btree = setup_btree(serializer);
 
         for (auto ix = 0; ix < num_keys; ix++) {
             SQL::Key k(btree->descriptor());
@@ -194,13 +197,14 @@ void insert_into_and_scan_btree(int num_keys)
 
     {
         auto heap = SQL::Heap::construct("/tmp/test.db");
-        auto btree = setup_btree(heap);
+        SQL::Serializer serializer(heap);
+        auto btree = setup_btree(serializer);
 
         int count = 0;
         SQL::Tuple prev;
         for (auto iter = btree->begin(); !iter.is_end(); iter++, count++) {
             auto key = (*iter);
-            if (prev.length()) {
+            if (prev.size()) {
                 EXPECT(prev < key);
             }
             auto key_value = (int)key[0];

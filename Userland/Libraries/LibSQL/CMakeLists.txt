@@ -17,6 +17,7 @@ set(SOURCES
     Key.cpp
     Meta.cpp
     Row.cpp
+    Serializer.cpp
     SQLClient.cpp
     TreeNode.cpp
     Tuple.cpp
