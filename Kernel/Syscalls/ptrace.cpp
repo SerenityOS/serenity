@@ -20,7 +20,7 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
 {
     ScopedSpinLock scheduler_lock(g_scheduler_lock);
     if (params.request == PT_TRACE_ME) {
-        if (Process::current()->tracer())
+        if (Process::current().tracer())
             return EBUSY;
 
         caller.set_wait_for_tracer_at_next_execve(true);

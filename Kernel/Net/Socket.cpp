@@ -34,7 +34,7 @@ Socket::Socket(int domain, int type, int protocol)
     , m_type(type)
     , m_protocol(protocol)
 {
-    auto& process = *Process::current();
+    auto& process = Process::current();
     m_origin = { process.pid().value(), process.uid(), process.gid() };
 }
 
@@ -57,7 +57,7 @@ RefPtr<Socket> Socket::accept()
     dbgln_if(SOCKET_DEBUG, "Socket({}) de-queueing connection", this);
     auto client = m_pending.take_first();
     VERIFY(!client->is_connected());
-    auto& process = *Process::current();
+    auto& process = Process::current();
     client->m_acceptor = { process.pid().value(), process.uid(), process.gid() };
     client->m_connected = true;
     client->m_role = Role::Accepted;

@@ -11,7 +11,7 @@ namespace Kernel {
 
 AsyncDeviceRequest::AsyncDeviceRequest(Device& device)
     : m_device(device)
-    , m_process(*Process::current())
+    , m_process(Process::current())
 {
 }
 

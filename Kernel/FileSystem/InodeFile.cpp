@@ -68,7 +68,7 @@ KResult InodeFile::ioctl(FileDescription& description, unsigned request, Userspa
 
     switch (request) {
     case FIBMAP: {
-        if (!Process::current()->is_superuser())
+        if (!Process::current().is_superuser())
             return EPERM;
 
         auto user_block_number = static_ptr_cast<int*>(arg);

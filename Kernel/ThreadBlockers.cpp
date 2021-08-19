@@ -599,7 +599,7 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, idtype_t id_type, pid_t id, K
     switch (id_type) {
     case P_PID: {
         m_waitee = Process::from_pid(m_waitee_id);
-        if (!m_waitee || m_waitee->ppid() != Process::current()->pid()) {
+        if (!m_waitee || m_waitee->ppid() != Process::current().pid()) {
             m_result = ECHILD;
             m_error = true;
         }
@@ -622,7 +622,7 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, idtype_t id_type, pid_t id, K
     // NOTE: unblock may be called within set_block_condition, in which
     // case it means that we already have a match without having to block.
     // In that case set_block_condition will return false.
-    if (m_error || !set_block_condition(Process::current()->wait_block_condition()))
+    if (m_error || !set_block_condition(Process::current().wait_block_condition()))
         m_should_block = false;
 }
 
@@ -630,7 +630,7 @@ void Thread::WaitBlocker::not_blocking(bool timeout_in_past)
 {
     VERIFY(timeout_in_past || !m_should_block);
     if (!m_error)
-        Process::current()->wait_block_condition().try_unblock(*this);
+        Process::current().wait_block_condition().try_unblock(*this);
 }
 
 void Thread::WaitBlocker::was_unblocked(bool)
@@ -643,7 +643,7 @@ void Thread::WaitBlocker::was_unblocked(bool)
     }
 
     if (try_unblock)
-        Process::current()->wait_block_condition().try_unblock(*this);
+        Process::current().wait_block_condition().try_unblock(*this);
 
     // If we were interrupted by SIGCHLD (which gets special handling
     // here) we're not going to return with EINTR. But we're going to

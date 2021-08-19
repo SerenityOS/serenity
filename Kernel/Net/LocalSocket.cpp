@@ -61,7 +61,7 @@ KResultOr<SocketPair> LocalSocket::create_connected_pair(int type)
     socket->m_address.sun_family = AF_LOCAL;
     memcpy(socket->m_address.sun_path, "[socketpair]", 13);
 
-    auto& process = *Process::current();
+    auto& process = Process::current();
     socket->m_acceptor = { process.pid().value(), process.uid(), process.gid() };
 
     socket->set_connected(true);
@@ -80,9 +80,9 @@ LocalSocket::LocalSocket(int type, NonnullOwnPtr<DoubleBuffer> client_buffer, No
     , m_for_client(move(client_buffer))
     , m_for_server(move(server_buffer))
 {
-    auto current_process = Process::current();
-    m_prebind_uid = current_process->euid();
-    m_prebind_gid = current_process->egid();
+    auto& current_process = Process::current();
+    m_prebind_uid = current_process.euid();
+    m_prebind_gid = current_process.egid();
     m_prebind_mode = 0666;
 
     m_for_client->set_unblock_callback([this]() {
@@ -137,7 +137,7 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
 
     mode_t mode = S_IFSOCK | (m_prebind_mode & 0777);
     UidAndGid owner { m_prebind_uid, m_prebind_gid };
-    auto result = VirtualFileSystem::the().open(path, O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, Process::current()->current_directory(), owner);
+    auto result = VirtualFileSystem::the().open(path, O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, Process::current().current_directory(), owner);
     if (result.is_error()) {
         if (result.error() == EEXIST)
             return set_so_error(EADDRINUSE);
@@ -179,7 +179,7 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
 
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) connect({})", this, safe_address);
 
-    auto description_or_error = VirtualFileSystem::the().open(safe_address, O_RDWR, 0, Process::current()->current_directory());
+    auto description_or_error = VirtualFileSystem::the().open(safe_address, O_RDWR, 0, Process::current().current_directory());
     if (description_or_error.is_error())
         return set_so_error(ECONNREFUSED);
 
@@ -445,8 +445,8 @@ KResult LocalSocket::chown(FileDescription&, uid_t uid, gid_t gid)
     if (m_file)
         return m_file->chown(uid, gid);
 
-    auto current_process = Process::current();
-    if (!current_process->is_superuser() && (current_process->euid() != uid || !current_process->in_group(gid)))
+    auto& current_process = Process::current();
+    if (!current_process.is_superuser() && (current_process.euid() != uid || !current_process.in_group(gid)))
         return set_so_error(EPERM);
 
     m_prebind_uid = uid;

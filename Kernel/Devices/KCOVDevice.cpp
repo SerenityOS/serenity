@@ -48,8 +48,7 @@ void KCOVDevice::free_thread()
 
 void KCOVDevice::free_process()
 {
-    auto process = Process::current();
-    auto pid = process->pid();
+    auto pid = Process::current().pid();
 
     auto maybe_kcov_instance = proc_instance->get(pid);
     if (!maybe_kcov_instance.has_value())
@@ -64,8 +63,7 @@ void KCOVDevice::free_process()
 
 KResultOr<NonnullRefPtr<FileDescription>> KCOVDevice::open(int options)
 {
-    auto process = Process::current();
-    auto pid = process->pid();
+    auto pid = Process::current().pid();
     if (proc_instance->get(pid).has_value())
         return EBUSY; // This process already open()ed the kcov device
     auto kcov_instance = new KCOVInstance(pid);
