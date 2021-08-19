@@ -8,6 +8,7 @@
 #include <AK/Assertions.h>
 #include <AK/HashTable.h>
 #include <AK/OwnPtr.h>
+#include <AK/ScopeGuard.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCpp/AST.h>
@@ -44,6 +45,11 @@ const CppComprehensionEngine::DocumentData* CppComprehensionEngine::get_document
 
 OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_document_data_for(const String& file)
 {
+    if (m_unfinished_documents.contains(file)) {
+        return {};
+    }
+    m_unfinished_documents.set(file);
+    ScopeGuard mark_finished([&file, this]() { m_unfinished_documents.remove(file); });
     auto document = filedb().get_or_create_from_filesystem(file);
     if (!document)
         return {};
