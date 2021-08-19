@@ -74,6 +74,7 @@ jobs:
         fi
       displayName: 'Test'
       workingDirectory: $(Build.SourcesDirectory)/Build
+      timeoutInMinutes: 60
       env:
         SERENITY_QEMU_CPU: 'max,vmx=off'
         SERENITY_KERNEL_CMDLINE: 'boot_mode=self-test'
