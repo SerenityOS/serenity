@@ -487,7 +487,7 @@ public:
     }
 
     RegexStringView view { nullptr };
-    Optional<StringView> capture_group_name {};
+    Optional<FlyString> capture_group_name {};
     size_t line { 0 };
     size_t column { 0 };
     size_t global_offset { 0 };
