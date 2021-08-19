@@ -95,11 +95,11 @@ TEST_CASE(serialize_text_value)
     SQL::Value v("Test");
     EXPECT(v.to_string() == "Test");
 
-    ByteBuffer buffer;
-    v.serialize_to(buffer);
+    SQL::Serializer serializer;
+    serializer.serialize<SQL::Value>(v);
 
-    size_t offset = 0;
-    auto v2 = SQL::Value::deserialize_from(buffer, offset);
+    serializer.rewind();
+    auto v2 = serializer.deserialize<SQL::Value>();
     EXPECT((String)v2 == "Test");
 }
 
@@ -146,11 +146,11 @@ TEST_CASE(serialize_int_value)
     EXPECT_EQ(v.type(), SQL::SQLType::Integer);
     EXPECT_EQ(v.to_int().value(), 42);
 
-    ByteBuffer buffer;
-    v.serialize_to(buffer);
+    SQL::Serializer serializer;
+    serializer.serialize<SQL::Value>(v);
 
-    size_t offset = 0;
-    auto v2 = SQL::Value::deserialize_from(buffer, offset);
+    serializer.rewind();
+    auto v2 = serializer.deserialize<SQL::Value>();
     EXPECT(!v2.is_null());
     EXPECT_EQ(v2.type(), SQL::SQLType::Integer);
     EXPECT_EQ(v2.to_int().value(), 42);
@@ -201,11 +201,11 @@ TEST_CASE(serialize_float_value)
     EXPECT_EQ(v.type(), SQL::SQLType::Float);
     EXPECT(v.to_double().value() - 3.14 < NumericLimits<double>().epsilon());
 
-    ByteBuffer buffer;
-    v.serialize_to(buffer);
+    SQL::Serializer serializer;
+    serializer.serialize<SQL::Value>(v);
 
-    size_t offset = 0;
-    auto v2 = SQL::Value::deserialize_from(buffer, offset);
+    serializer.rewind();
+    auto v2 = serializer.deserialize<SQL::Value>();
     EXPECT(!v2.is_null());
     EXPECT_EQ(v2.type(), SQL::SQLType::Float);
     EXPECT(v.to_double().value() - 3.14 < NumericLimits<double>().epsilon());
@@ -272,11 +272,11 @@ TEST_CASE(serialize_boolean_value)
     EXPECT_EQ(v.type(), SQL::SQLType::Boolean);
     EXPECT(bool(v));
 
-    ByteBuffer buffer;
-    v.serialize_to(buffer);
+    SQL::Serializer serializer;
+    serializer.serialize<SQL::Value>(v);
 
-    size_t offset = 0;
-    auto v2 = SQL::Value::deserialize_from(buffer, offset);
+    serializer.rewind();
+    auto v2 = serializer.deserialize<SQL::Value>();
     EXPECT(!v2.is_null());
     EXPECT_EQ(v2.type(), SQL::SQLType::Boolean);
     EXPECT(bool(v2));
@@ -374,11 +374,11 @@ TEST_CASE(serialize_tuple_value)
     values.append(SQL::Value(42));
     v = values;
 
-    ByteBuffer buffer;
-    v.serialize_to(buffer);
+    SQL::Serializer serializer;
+    serializer.serialize<SQL::Value>(v);
 
-    size_t offset = 0;
-    auto v2 = SQL::Value::deserialize_from(buffer, offset);
+    serializer.rewind();
+    auto v2 = serializer.deserialize<SQL::Value>();
     EXPECT(!v2.is_null());
     EXPECT_EQ(v2.type(), SQL::SQLType::Tuple);
     EXPECT_EQ(v, v2);
@@ -440,11 +440,11 @@ TEST_CASE(serialize_array_value)
     values.append(SQL::Value("Test 2"));
     v = values;
 
-    ByteBuffer buffer;
-    v.serialize_to(buffer);
+    SQL::Serializer serializer;
+    serializer.serialize<SQL::Value>(v);
 
-    size_t offset = 0;
-    auto v2 = SQL::Value::deserialize_from(buffer, offset);
+    serializer.rewind();
+    auto v2 = serializer.deserialize<SQL::Value>();
     EXPECT(!v2.is_null());
     EXPECT_EQ(v2.type(), SQL::SQLType::Array);
     EXPECT_EQ(v, v2);
@@ -497,13 +497,14 @@ TEST_CASE(serialize_tuple)
     tuple["col1"] = "Test";
     tuple["col2"] = 42;
 
-    auto buffer = ByteBuffer();
-    tuple.serialize(buffer);
     EXPECT_EQ((String)tuple[0], "Test");
     EXPECT_EQ((int)tuple[1], 42);
 
-    size_t offset = 0;
-    SQL::Tuple tuple2(descriptor, buffer, offset);
+    SQL::Serializer serializer;
+    serializer.serialize<SQL::Tuple>(tuple);
+
+    serializer.rewind();
+    auto tuple2 = serializer.deserialize<SQL::Tuple>();
     EXPECT(tuple2[0] == "Test");
     EXPECT(tuple2[1] == 42);
 }

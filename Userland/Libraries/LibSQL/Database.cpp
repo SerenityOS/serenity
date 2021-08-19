@@ -19,9 +19,10 @@ namespace SQL {
 
 Database::Database(String name)
     : m_heap(Heap::construct(name))
-    , m_schemas(BTree::construct(*m_heap, SchemaDef::index_def()->to_tuple_descriptor(), m_heap->schemas_root()))
-    , m_tables(BTree::construct(*m_heap, TableDef::index_def()->to_tuple_descriptor(), m_heap->tables_root()))
-    , m_table_columns(BTree::construct(*m_heap, ColumnDef::index_def()->to_tuple_descriptor(), m_heap->table_columns_root()))
+    , m_serializer(m_heap)
+    , m_schemas(BTree::construct(m_serializer, SchemaDef::index_def()->to_tuple_descriptor(), m_heap->schemas_root()))
+    , m_tables(BTree::construct(m_serializer, TableDef::index_def()->to_tuple_descriptor(), m_heap->tables_root()))
+    , m_table_columns(BTree::construct(m_serializer, ColumnDef::index_def()->to_tuple_descriptor(), m_heap->table_columns_root()))
 {
     m_schemas->on_new_root = [&]() {
         m_heap->set_schemas_root(m_schemas->root());
@@ -118,10 +119,7 @@ Vector<Row> Database::select_all(TableDef const& table)
     VERIFY(m_table_cache.get(table.key().hash()).has_value());
     Vector<Row> ret;
     for (auto pointer = table.pointer(); pointer; pointer = ret.last().next_pointer()) {
-        auto buffer_or_error = m_heap->read_block(pointer);
-        if (buffer_or_error.is_error())
-            VERIFY_NOT_REACHED();
-        ret.empend(table, pointer, buffer_or_error.value());
+        ret.append(m_serializer.deserialize_block<Row>(pointer, table, pointer));
     }
     return ret;
 }
@@ -134,10 +132,7 @@ Vector<Row> Database::match(TableDef const& table, Key const& key)
     // TODO Match key against indexes defined on table. If found,
     // use the index instead of scanning the table.
     for (auto pointer = table.pointer(); pointer;) {
-        auto buffer_or_error = m_heap->read_block(pointer);
-        if (buffer_or_error.is_error())
-            VERIFY_NOT_REACHED();
-        Row row(table, pointer, buffer_or_error.value());
+        auto row = m_serializer.deserialize_block<Row>(pointer, table, pointer);
         if (row.match(key))
             ret.append(row);
         pointer = ret.last().next_pointer();
@@ -164,9 +159,8 @@ bool Database::insert(Row& row)
 bool Database::update(Row& tuple)
 {
     VERIFY(m_table_cache.get(tuple.table()->key().hash()).has_value());
-    ByteBuffer buffer;
-    tuple.serialize(buffer);
-    m_heap->add_to_wal(tuple.pointer(), buffer);
+    m_serializer.reset();
+    return m_serializer.serialize_and_write<Tuple>(tuple, tuple.pointer());
 
     // TODO update indexes defined on table.
     return true;

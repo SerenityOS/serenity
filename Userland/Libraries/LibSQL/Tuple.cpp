@@ -8,7 +8,7 @@
 
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <LibSQL/Serialize.h>
+#include <LibSQL/Serializer.h>
 #include <LibSQL/Tuple.h>
 #include <LibSQL/TupleDescriptor.h>
 #include <LibSQL/Value.h>
@@ -31,44 +31,36 @@ Tuple::Tuple(NonnullRefPtr<TupleDescriptor> const& descriptor, u32 pointer)
     }
 }
 
-Tuple::Tuple(NonnullRefPtr<TupleDescriptor> const& descriptor, ByteBuffer& buffer, size_t& offset)
+Tuple::Tuple(NonnullRefPtr<TupleDescriptor> const& descriptor, Serializer& serializer)
     : Tuple(descriptor)
 {
-    deserialize(buffer, offset);
+    deserialize(serializer);
 }
 
-Tuple::Tuple(NonnullRefPtr<TupleDescriptor> const& descriptor, ByteBuffer& buffer)
-    : Tuple(descriptor)
+void Tuple::deserialize(Serializer& serializer)
 {
-    size_t offset = 0;
-    deserialize(buffer, offset);
-}
-
-void Tuple::deserialize(ByteBuffer& buffer, size_t& offset)
-{
-    dbgln_if(SQL_DEBUG, "deserialize tuple at offset {}", offset);
-    deserialize_from<u32>(buffer, offset, m_pointer);
+    dbgln_if(SQL_DEBUG, "deserialize tuple at offset {}", serializer.offset());
+    serializer.deserialize_to<u32>(m_pointer);
     dbgln_if(SQL_DEBUG, "pointer: {}", m_pointer);
+    auto sz = serializer.deserialize<u32>();
     m_data.clear();
-    for (auto& part : *m_descriptor) {
-        m_data.append(Value::deserialize_from(buffer, offset));
-        dbgln_if(SQL_DEBUG, "Deserialized element {} = {}", part.name, m_data.last().to_string());
+    m_descriptor->clear();
+    for (auto ix = 0u; ix < sz; ++ix) {
+        m_descriptor->append(serializer.deserialize<TupleElementDescriptor>());
+        m_data.append(serializer.deserialize<Value>());
     }
 }
 
-void Tuple::serialize(ByteBuffer& buffer) const
+void Tuple::serialize(Serializer& serializer) const
 {
     VERIFY(m_descriptor->size() == m_data.size());
     dbgln_if(SQL_DEBUG, "Serializing tuple pointer {}", pointer());
-    serialize_to<u32>(buffer, pointer());
+    serializer.serialize<u32>(pointer());
+    serializer.serialize<u32>((u32)m_descriptor->size());
     for (auto ix = 0u; ix < m_descriptor->size(); ix++) {
         auto& key_part = m_data[ix];
-        if constexpr (SQL_DEBUG) {
-            auto key_string = key_part.to_string();
-            auto& key_part_definition = (*m_descriptor)[ix];
-            dbgln("Serialized part {} = {}", key_part_definition.name, key_string);
-        }
-        key_part.serialize_to(buffer);
+        serializer.serialize<TupleElementDescriptor>((*m_descriptor)[ix]);
+        serializer.serialize<Value>(key_part);
     }
 }
 
@@ -158,6 +150,18 @@ bool Tuple::is_compatible(Tuple const& other) const
     return true;
 }
 
+size_t Tuple::length() const
+{
+    size_t len = 2 * sizeof(u32);
+    for (auto ix = 0u; ix < m_descriptor->size(); ix++) {
+        auto& descriptor = (*m_descriptor)[ix];
+        auto& value = m_data[ix];
+        len += descriptor.length();
+        len += value.length();
+    }
+    return len;
+}
+
 String Tuple::to_string() const
 {
     StringBuilder builder;
@@ -186,7 +190,7 @@ void Tuple::copy_from(const Tuple& other)
 {
     if (*m_descriptor != *other.m_descriptor) {
         m_descriptor->clear();
-        for (TupleElement const& part : *other.m_descriptor) {
+        for (TupleElementDescriptor const& part : *other.m_descriptor) {
             m_descriptor->append(part);
         }
     }

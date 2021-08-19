@@ -16,8 +16,7 @@ class IndexNode {
 public:
     virtual ~IndexNode() = default;
     [[nodiscard]] u32 pointer() const { return m_pointer; }
-    virtual void serialize(ByteBuffer&) const = 0;
-    virtual IndexNode* as_index_node() = 0;
+    IndexNode* as_index_node() { return dynamic_cast<IndexNode*>(this); }
 
 protected:
     explicit IndexNode(u32 pointer)
@@ -43,18 +42,16 @@ public:
     [[nodiscard]] u32 pointer() const { return m_pointer; }
 
 protected:
-    Index(Heap& heap, NonnullRefPtr<TupleDescriptor> const&, bool unique, u32 pointer);
-    Index(Heap& heap, NonnullRefPtr<TupleDescriptor> const&, u32 pointer);
+    Index(Serializer&, NonnullRefPtr<TupleDescriptor> const&, bool unique, u32 pointer);
+    Index(Serializer&, NonnullRefPtr<TupleDescriptor> const&, u32 pointer);
 
-    [[nodiscard]] Heap const& heap() const { return m_heap; }
-    [[nodiscard]] Heap& heap() { return m_heap; }
+    [[nodiscard]] Serializer& serializer() { return m_serializer; }
     void set_pointer(u32 pointer) { m_pointer = pointer; }
-    u32 new_record_pointer() { return m_heap.new_record_pointer(); }
-    ByteBuffer read_block(u32);
-    void add_to_write_ahead_log(IndexNode*);
+    u32 new_record_pointer() { return m_serializer.new_record_pointer(); }
+    //    ByteBuffer read_block(u32);
 
 private:
-    Heap& m_heap;
+    Serializer m_serializer;
     NonnullRefPtr<TupleDescriptor> m_descriptor;
     bool m_unique { false };
     u32 m_pointer { 0 };

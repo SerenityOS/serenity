@@ -6,7 +6,7 @@
 
 #include <LibSQL/Meta.h>
 #include <LibSQL/Row.h>
-#include <LibSQL/Serialize.h>
+#include <LibSQL/Serializer.h>
 #include <LibSQL/Tuple.h>
 
 namespace SQL {
@@ -21,26 +21,29 @@ Row::Row(TupleDescriptor const& descriptor)
 {
 }
 
-Row::Row(RefPtr<TableDef> table)
+Row::Row(RefPtr<TableDef> table, u32 pointer)
     : Tuple(table->to_tuple_descriptor())
     , m_table(table)
 {
-}
-
-Row::Row(RefPtr<TableDef> table, u32 pointer, ByteBuffer& buffer)
-    : Tuple(table->to_tuple_descriptor())
-{
-    // FIXME Sanitize constructor situation in Tuple so this can be better
-    size_t offset = 0;
-    deserialize(buffer, offset);
-    deserialize_from<u32>(buffer, offset, m_next_pointer);
     set_pointer(pointer);
 }
 
-void Row::serialize(ByteBuffer& buffer) const
+Row::Row(RefPtr<TableDef> table, u32 pointer, Serializer& serializer)
+    : Row(move(table), pointer)
 {
-    Tuple::serialize(buffer);
-    serialize_to<u32>(buffer, next_pointer());
+    Row::deserialize(serializer);
+}
+
+void Row::deserialize(Serializer& serializer)
+{
+    Tuple::deserialize(serializer);
+    m_next_pointer = serializer.deserialize<u32>();
+}
+
+void Row::serialize(Serializer& serializer) const
+{
+    Tuple::serialize(serializer);
+    serializer.serialize<u32>(next_pointer());
 }
 
 void Row::copy_from(Row const& other)

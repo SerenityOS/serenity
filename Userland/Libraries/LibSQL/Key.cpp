@@ -9,11 +9,6 @@
 
 namespace SQL {
 
-Key::Key()
-    : Tuple()
-{
-}
-
 Key::Key(NonnullRefPtr<TupleDescriptor> const& descriptor)
     : Tuple(descriptor)
 {
@@ -25,15 +20,15 @@ Key::Key(NonnullRefPtr<IndexDef> index)
 {
 }
 
-Key::Key(NonnullRefPtr<TupleDescriptor> const& descriptor, ByteBuffer& buffer, size_t& offset)
-    : Tuple(descriptor, buffer, offset)
+Key::Key(NonnullRefPtr<TupleDescriptor> const& descriptor, Serializer& serializer)
+    : Tuple(descriptor, serializer)
 {
 }
 
-Key::Key(RefPtr<IndexDef> index, ByteBuffer& buffer, size_t& offset)
+Key::Key(RefPtr<IndexDef> index, Serializer& serializer)
     : Key(index->to_tuple_descriptor())
 {
-    deserialize(buffer, offset);
+    Tuple::deserialize(serializer);
 }
 
 }

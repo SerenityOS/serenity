@@ -43,7 +43,7 @@ public:
     TreeNode* node();
 
 private:
-    void inflate();
+    void deserialize(Serializer&);
 
     TreeNode* m_owner;
     u32 m_pointer { 0 };
@@ -53,27 +53,27 @@ private:
 
 class TreeNode : public IndexNode {
 public:
+    TreeNode(BTree&, u32 = 0);
     TreeNode(BTree&, TreeNode*, u32 = 0);
     TreeNode(BTree&, TreeNode*, TreeNode*, u32 = 0);
-    TreeNode(BTree&, TreeNode*, u32 pointer, ByteBuffer&, size_t&);
     ~TreeNode() override = default;
 
     [[nodiscard]] BTree& tree() const { return m_tree; }
     [[nodiscard]] TreeNode* up() const { return m_up; }
     [[nodiscard]] size_t size() const { return m_entries.size(); }
+    [[nodiscard]] size_t length() const;
     [[nodiscard]] Vector<Key> entries() const { return m_entries; }
     [[nodiscard]] u32 down_pointer(size_t) const;
     [[nodiscard]] TreeNode* down_node(size_t);
     [[nodiscard]] bool is_leaf() const { return m_is_leaf; }
 
-    [[nodiscard]] size_t max_keys_in_node();
     Key const& operator[](size_t) const;
     bool insert(Key const&);
     bool update_key_pointer(Key const&);
     TreeNode* node_for(Key const&);
     Optional<u32> get(Key&);
-    void serialize(ByteBuffer&) const override;
-    IndexNode* as_index_node() override { return dynamic_cast<IndexNode*>(this); }
+    void deserialize(Serializer&);
+    void serialize(Serializer&) const;
 
 private:
     TreeNode(BTree&, TreeNode*, DownPointer&, u32 = 0);
@@ -111,8 +111,8 @@ public:
     Function<void(void)> on_new_root;
 
 private:
-    BTree(Heap& heap, NonnullRefPtr<TupleDescriptor> const&, bool unique, u32 pointer);
-    BTree(Heap& heap, NonnullRefPtr<TupleDescriptor> const&, u32 pointer);
+    BTree(Serializer&, NonnullRefPtr<TupleDescriptor> const&, bool unique, u32 pointer);
+    BTree(Serializer&, NonnullRefPtr<TupleDescriptor> const&, u32 pointer);
     void initialize_root();
     TreeNode* new_root();
     OwnPtr<TreeNode> m_root { nullptr };

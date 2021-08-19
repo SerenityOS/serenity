@@ -7,33 +7,43 @@
 #pragma once
 
 #include <AK/Vector.h>
+#include <LibSQL/Serializer.h>
 #include <LibSQL/Type.h>
 
 namespace SQL {
 
-struct TupleElement {
+struct TupleElementDescriptor {
     String name { "" };
     SQLType type { SQLType::Text };
     Order order { Order::Ascending };
 
-    bool operator==(TupleElement const&) const = default;
+    bool operator==(TupleElementDescriptor const&) const = default;
+
+    void serialize(Serializer& serializer) const
+    {
+        serializer.serialize(name);
+        serializer.serialize<u8>((u8)type);
+        serializer.serialize<u8>((u8)order);
+    }
+    void deserialize(Serializer& serializer)
+    {
+        name = serializer.deserialize<String>();
+        type = (SQLType)serializer.deserialize<u8>();
+        order = (Order)serializer.deserialize<u8>();
+    }
+
+    size_t length() const
+    {
+        return (sizeof(u32) + name.length()) + 2 * sizeof(u8);
+    }
 };
 
 class TupleDescriptor
-    : public Vector<TupleElement>
+    : public Vector<TupleElementDescriptor>
     , public RefCounted<TupleDescriptor> {
 public:
     TupleDescriptor() = default;
     ~TupleDescriptor() = default;
-
-    [[nodiscard]] size_t data_length() const
-    {
-        size_t sz = sizeof(u32);
-        for (auto& part : *this) {
-            sz += size_of(part.type);
-        }
-        return sz;
-    }
 
     [[nodiscard]] int compare_ignoring_names(TupleDescriptor const& other) const
     {
@@ -49,7 +59,32 @@ public:
         return 0;
     }
 
-    using Vector<TupleElement>::operator==;
+    void serialize(Serializer& serializer) const
+    {
+        serializer.serialize<u32>(size());
+        for (auto& element : *this) {
+            serializer.serialize<TupleElementDescriptor>(element);
+        }
+    }
+
+    void deserialize(Serializer& serializer)
+    {
+        auto sz = serializer.deserialize<u32>();
+        for (auto ix = 0u; ix < sz; ix++) {
+            append(serializer.deserialize<TupleElementDescriptor>());
+        }
+    }
+
+    size_t length() const
+    {
+        size_t len = sizeof(u32);
+        for (auto& element : *this) {
+            len += element.length();
+        }
+        return len;
+    }
+
+    using Vector<TupleElementDescriptor>::operator==;
 };
 
 }
