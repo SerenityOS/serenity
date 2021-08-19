@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Forward.h>
 #include <AK/HashFunctions.h>
 
@@ -39,6 +40,12 @@ template<typename T>
 requires(IsPointer<T>) struct Traits<T> : public GenericTraits<T> {
     static unsigned hash(T p) { return ptr_hash((FlatPtr)p); }
     static constexpr bool is_trivial() { return true; }
+};
+
+template<Enum T>
+struct Traits<T> : public GenericTraits<T> {
+    static unsigned hash(T value) { return Traits<UnderlyingType<T>>::hash(to_underlying(value)); }
+    static constexpr bool is_trivial() { return Traits<UnderlyingType<T>>::is_trivial(); }
 };
 
 }
