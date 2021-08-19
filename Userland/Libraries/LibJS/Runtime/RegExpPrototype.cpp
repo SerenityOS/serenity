@@ -141,7 +141,7 @@ static Value get_match_indices_array(GlobalObject& global_object, Utf16View cons
 }
 
 // 1.1.4.1.5 MakeIndicesArray ( S , indices, groupNames, hasGroups ), https://tc39.es/proposal-regexp-match-indices/#sec-makeindicesarray
-static Value make_indices_array(GlobalObject& global_object, Utf16View const& string, Vector<Optional<Match>> const& indices, HashMap<String, Match> const& group_names, bool has_groups)
+static Value make_indices_array(GlobalObject& global_object, Utf16View const& string, Vector<Optional<Match>> const& indices, HashMap<FlyString, Match> const& group_names, bool has_groups)
 {
     // Note: This implementation differs from the spec, but has the same behavior.
     //
@@ -268,7 +268,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
         return {};
 
     Vector<Optional<Match>> indices { Match::create(match) };
-    HashMap<String, Match> group_names;
+    HashMap<FlyString, Match> group_names;
 
     bool has_groups = result.n_named_capture_groups != 0;
     Object* groups_object = has_groups ? Object::create(global_object, nullptr) : nullptr;
@@ -285,7 +285,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
         array->create_data_property_or_throw(i + 1, capture_value);
 
         if (capture.capture_group_name.has_value()) {
-            auto group_name = capture.capture_group_name->to_string();
+            auto group_name = capture.capture_group_name.release_value();
             groups_object->create_data_property_or_throw(group_name, js_string(vm, capture.view.u16_view()));
             group_names.set(move(group_name), Match::create(capture));
         }
