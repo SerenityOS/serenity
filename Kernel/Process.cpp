@@ -195,11 +195,10 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
     auto process = Process::create(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true);
     if (!first_thread || !process)
         return {};
+    first_thread->regs().set_ip((FlatPtr)entry);
 #if ARCH(I386)
-    first_thread->regs().eip = (FlatPtr)entry;
     first_thread->regs().esp = FlatPtr(entry_data); // entry function argument is expected to be in regs.esp
 #else
-    first_thread->regs().rip = (FlatPtr)entry;
     first_thread->regs().rdi = FlatPtr(entry_data); // entry function argument is expected to be in regs.rdi
 #endif
 
@@ -769,13 +768,8 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_d
         thread->detach();
 
     auto& regs = thread->regs();
-#if ARCH(I386)
-    regs.eip = (FlatPtr)entry;
-    regs.esp = FlatPtr(entry_data); // entry function argument is expected to be in regs.rsp
-#else
-    regs.rip = (FlatPtr)entry;
-    regs.rsp = FlatPtr(entry_data); // entry function argument is expected to be in regs.rsp
-#endif
+    regs.set_ip((FlatPtr)entry);
+    regs.set_sp((FlatPtr)entry_data); // entry function argument is expected to be in the SP register
 
     ScopedSpinLock lock(g_scheduler_lock);
     thread->set_state(Thread::State::Runnable);

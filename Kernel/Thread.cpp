@@ -86,10 +86,10 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
 
     reset_fpu_state();
 
-#if ARCH(I386)
     // Only IF is set when a process boots.
-    m_regs.eflags = 0x0202;
+    m_regs.set_flags(0x0202);
 
+#if ARCH(I386)
     if (m_process->is_kernel_process()) {
         m_regs.cs = GDT_SELECTOR_CODE0;
         m_regs.ds = GDT_SELECTOR_DATA0;
@@ -106,9 +106,6 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
         m_regs.gs = GDT_SELECTOR_TLS | 3;
     }
 #else
-    // Only IF is set when a process boots.
-    m_regs.rflags = 0x0202;
-
     if (m_process->is_kernel_process())
         m_regs.cs = GDT_SELECTOR_CODE0;
     else
@@ -121,20 +118,15 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
     m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & ~(FlatPtr)0x7u;
 
     if (m_process->is_kernel_process()) {
-#if ARCH(I386)
-        m_regs.esp = m_regs.esp0 = m_kernel_stack_top;
-#else
-        m_regs.rsp = m_regs.rsp0 = m_kernel_stack_top;
-#endif
+        m_regs.set_sp(m_kernel_stack_top);
+        m_regs.set_sp0(m_kernel_stack_top);
     } else {
         // Ring 3 processes get a separate stack for ring 0.
         // The ring 3 stack will be assigned by exec().
 #if ARCH(I386)
         m_regs.ss0 = GDT_SELECTOR_DATA0;
-        m_regs.esp0 = m_kernel_stack_top;
-#else
-        m_regs.rsp0 = m_kernel_stack_top;
 #endif
+        m_regs.set_sp0(m_kernel_stack_top);
     }
 
     // We need to add another reference if we could successfully create
@@ -938,21 +930,12 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
 
     auto setup_stack = [&](RegisterState& state) {
-#if ARCH(I386)
-        FlatPtr stack = state.userspace_esp;
-        FlatPtr old_esp = stack;
-        FlatPtr ret_eip = state.eip;
-        FlatPtr ret_eflags = state.eflags;
+        FlatPtr stack = state.userspace_sp();
+        FlatPtr old_sp = stack;
+        FlatPtr ret_ip = state.ip();
+        FlatPtr ret_flags = state.flags();
 
-        dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to EIP {:p}, ESP {:p}", ret_eip, old_esp);
-#elif ARCH(X86_64)
-        FlatPtr stack = state.userspace_rsp;
-        FlatPtr old_rsp = stack;
-        FlatPtr ret_rip = state.rip;
-        FlatPtr ret_rflags = state.rflags;
-
-        dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to RIP {:p}, RSP {:p}", ret_rip, old_rsp);
-#endif
+        dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to IP {:p}, SP {:p}", ret_ip, old_sp);
 
 #if ARCH(I386)
         // Align the stack to 16 bytes.
@@ -963,14 +946,14 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         FlatPtr stack_alignment = (stack - 8) % 16;
         stack -= stack_alignment;
 
-        push_value_on_user_stack(stack, ret_eflags);
+        push_value_on_user_stack(stack, ret_flags);
 
-        push_value_on_user_stack(stack, ret_eip);
+        push_value_on_user_stack(stack, ret_ip);
         push_value_on_user_stack(stack, state.eax);
         push_value_on_user_stack(stack, state.ecx);
         push_value_on_user_stack(stack, state.edx);
         push_value_on_user_stack(stack, state.ebx);
-        push_value_on_user_stack(stack, old_esp);
+        push_value_on_user_stack(stack, old_sp);
         push_value_on_user_stack(stack, state.ebp);
         push_value_on_user_stack(stack, state.esi);
         push_value_on_user_stack(stack, state.edi);
@@ -984,9 +967,9 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         FlatPtr stack_alignment = stack % 16;
         stack -= 128 + stack_alignment;
 
-        push_value_on_user_stack(stack, ret_rflags);
+        push_value_on_user_stack(stack, ret_flags);
 
-        push_value_on_user_stack(stack, ret_rip);
+        push_value_on_user_stack(stack, ret_ip);
         push_value_on_user_stack(stack, state.r15);
         push_value_on_user_stack(stack, state.r14);
         push_value_on_user_stack(stack, state.r13);
@@ -999,7 +982,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         push_value_on_user_stack(stack, state.rcx);
         push_value_on_user_stack(stack, state.rdx);
         push_value_on_user_stack(stack, state.rbx);
-        push_value_on_user_stack(stack, old_rsp);
+        push_value_on_user_stack(stack, old_sp);
         push_value_on_user_stack(stack, state.rbp);
         push_value_on_user_stack(stack, state.rsi);
         push_value_on_user_stack(stack, state.rdi);
@@ -1014,11 +997,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
         // We write back the adjusted stack value into the register state.
         // We have to do this because we can't just pass around a reference to a packed field, as it's UB.
-#if ARCH(I386)
-        state.userspace_esp = stack;
-#else
-        state.userspace_rsp = stack;
-#endif
+        state.set_userspace_sp(stack);
 
         VERIFY((stack % 16) == 0);
     };
@@ -1030,7 +1009,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     auto& regs = get_register_dump_from_stack();
     setup_stack(regs);
     auto signal_trampoline_addr = process.signal_trampoline().get();
-    regs.set_ip_reg(signal_trampoline_addr);
+    regs.set_ip(signal_trampoline_addr);
 
     dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:#04x}:{:p} to deliver {}", state_string(), m_regs.cs, m_regs.ip(), signal);
 

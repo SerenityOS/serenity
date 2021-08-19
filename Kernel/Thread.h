@@ -105,11 +105,23 @@ struct ThreadRegisters {
     FlatPtr rsp0;
 #endif
     FlatPtr cs;
+
 #if ARCH(I386)
     FlatPtr eflags;
+    FlatPtr flags() const { return eflags; }
+    void set_flags(FlatPtr value) { eflags = value; }
+    void set_sp(FlatPtr value) { esp = value; }
+    void set_sp0(FlatPtr value) { esp0 = value; }
+    void set_ip(FlatPtr value) { eip = value; }
 #else
     FlatPtr rflags;
+    FlatPtr flags() const { return rflags; }
+    void set_flags(FlatPtr value) { rflags = value; }
+    void set_sp(FlatPtr value) { rsp = value; }
+    void set_sp0(FlatPtr value) { rsp0 = value; }
+    void set_ip(FlatPtr value) { rip = value; }
 #endif
+
     FlatPtr cr3;
 
     FlatPtr ip() const
