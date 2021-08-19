@@ -1323,7 +1323,7 @@ void SoftwareGLContext::gl_get_floatv(GLenum pname, GLfloat* params)
     default:
         // FIXME: Because glQuake only requires GL_MODELVIEW_MATRIX, that is the only parameter
         // that we currently support. More parameters should be supported.
-        TODO();
+        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 }
 
