@@ -6,6 +6,10 @@ parameters:
   ccache_version: 1 # Increment this number if CI has trouble with ccache.
 
 steps:
+  - script: |
+      echo "##vso[task.setvariable variable=timestamp]$(date -u +"%Y%m%d%H%M_%S")"
+    displayName: 'Stamps'
+
   - ${{ if ne(parameters.arch, 'Lagom') }}:
     - ${{ if eq(parameters.toolchain, 'clang') }}:
       - task: Cache@2
@@ -22,7 +26,9 @@ steps:
 
   - task: Cache@2
     inputs:
-      key: '"ccache" | "${{ parameters.os }}" | "${{ parameters.arch }}" | "${{ parameters.toolchain }}" | "${{ parameters.ccache_version }}"'
+      key: '"ccache" | "${{ parameters.os }}" | "${{ parameters.arch }}" | "${{ parameters.toolchain }}" | "${{ parameters.ccache_version }}" | "$(timestamp)"'
+      restoreKeys: |
+        "ccache" | "${{ parameters.os }}" | "${{ parameters.arch }}" | "${{ parameters.toolchain }}" | "${{ parameters.ccache_version }}"
       path: $(CCACHE_DIR)
     displayName: 'Compiler Cache'
 
