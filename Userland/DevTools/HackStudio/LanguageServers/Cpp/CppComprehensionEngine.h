@@ -140,6 +140,11 @@ private:
     void for_each_included_document_recursive(const DocumentData&, Func) const;
 
     HashMap<String, OwnPtr<DocumentData>> m_documents;
+
+    // A document's path will be in this set if we're currently processing it.
+    // A document is added to this set when we start processing it (e.g because it was #included) and removed when we're done.
+    // We use this to prevent circular #includes from looping indefinitely.
+    HashTable<String> m_unfinished_documents;
 };
 
 template<typename Func>
