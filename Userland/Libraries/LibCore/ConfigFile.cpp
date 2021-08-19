@@ -112,7 +112,7 @@ void ConfigFile::reparse()
     }
 }
 
-String ConfigFile::read_entry(const String& group, const String& key, const String& default_value) const
+String ConfigFile::read_entry(String const& group, String const& key, String const& default_value) const
 {
     if (!has_key(group, key)) {
         return default_value;
@@ -122,7 +122,7 @@ String ConfigFile::read_entry(const String& group, const String& key, const Stri
     return jt->value;
 }
 
-int ConfigFile::read_num_entry(const String& group, const String& key, int default_value) const
+int ConfigFile::read_num_entry(String const& group, String const& key, int default_value) const
 {
     if (!has_key(group, key)) {
         return default_value;
@@ -131,7 +131,7 @@ int ConfigFile::read_num_entry(const String& group, const String& key, int defau
     return read_entry(group, key).to_int().value_or(default_value);
 }
 
-bool ConfigFile::read_bool_entry(const String& group, const String& key, bool default_value) const
+bool ConfigFile::read_bool_entry(String const& group, String const& key, bool default_value) const
 {
     auto value = read_entry(group, key, default_value ? "1" : "0");
     if (value == "1" || value.to_lowercase() == "true")
@@ -139,21 +139,21 @@ bool ConfigFile::read_bool_entry(const String& group, const String& key, bool de
     return 0;
 }
 
-void ConfigFile::write_entry(const String& group, const String& key, const String& value)
+void ConfigFile::write_entry(String const& group, String const& key, String const& value)
 {
     m_groups.ensure(group).ensure(key) = value;
     m_dirty = true;
 }
 
-void ConfigFile::write_num_entry(const String& group, const String& key, int value)
+void ConfigFile::write_num_entry(String const& group, String const& key, int value)
 {
     write_entry(group, key, String::number(value));
 }
-void ConfigFile::write_bool_entry(const String& group, const String& key, bool value)
+void ConfigFile::write_bool_entry(String const& group, String const& key, bool value)
 {
     write_entry(group, key, value ? "1" : "0");
 }
-void ConfigFile::write_color_entry(const String& group, const String& key, Color value)
+void ConfigFile::write_color_entry(String const& group, String const& key, Color value)
 {
     write_entry(group, key, String::formatted("{},{},{},{}", value.red(), value.green(), value.blue(), value.alpha()));
 }
@@ -191,7 +191,7 @@ Vector<String> ConfigFile::groups() const
     return m_groups.keys();
 }
 
-Vector<String> ConfigFile::keys(const String& group) const
+Vector<String> ConfigFile::keys(String const& group) const
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())
@@ -199,7 +199,7 @@ Vector<String> ConfigFile::keys(const String& group) const
     return it->value.keys();
 }
 
-bool ConfigFile::has_key(const String& group, const String& key) const
+bool ConfigFile::has_key(String const& group, String const& key) const
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())
@@ -207,18 +207,18 @@ bool ConfigFile::has_key(const String& group, const String& key) const
     return it->value.contains(key);
 }
 
-bool ConfigFile::has_group(const String& group) const
+bool ConfigFile::has_group(String const& group) const
 {
     return m_groups.contains(group);
 }
 
-void ConfigFile::remove_group(const String& group)
+void ConfigFile::remove_group(String const& group)
 {
     m_groups.remove(group);
     m_dirty = true;
 }
 
-void ConfigFile::remove_entry(const String& group, const String& key)
+void ConfigFile::remove_entry(String const& group, String const& key)
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())
