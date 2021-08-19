@@ -53,7 +53,7 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
         if (!whole_region->is_mmap())
             return EPERM;
 
-        PerformanceManager::add_unmap_perf_event(*Process::current(), whole_region->range());
+        PerformanceManager::add_unmap_perf_event(Process::current(), whole_region->range());
 
         deallocate_region(*whole_region);
         return KSuccess;
@@ -83,7 +83,7 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
             new_region->map(page_directory());
         }
 
-        PerformanceManager::add_unmap_perf_event(*Process::current(), range_to_unmap);
+        PerformanceManager::add_unmap_perf_event(Process::current(), range_to_unmap);
 
         return KSuccess;
     }
@@ -133,7 +133,7 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
         new_region->map(page_directory());
     }
 
-    PerformanceManager::add_unmap_perf_event(*Process::current(), range_to_unmap);
+    PerformanceManager::add_unmap_perf_event(Process::current(), range_to_unmap);
 
     return KSuccess;
 }

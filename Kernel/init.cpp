@@ -262,7 +262,7 @@ void init_stage2(void*)
     // This is a little bit of a hack. We can't register our process at the time we're
     // creating it, but we need to be registered otherwise finalization won't be happy.
     // The colonel process gets away without having to do this because it never exits.
-    Process::register_new(*Process::current());
+    Process::register_new(Process::current());
 
     WorkQueue::initialize();
 
@@ -352,14 +352,14 @@ void init_stage2(void*)
 
     if (boot_profiling) {
         dbgln("Starting full system boot profiling");
-        MutexLocker mutex_locker(Process::current()->big_lock());
-        auto result = Process::current()->sys$profiling_enable(-1, ~0ull);
+        MutexLocker mutex_locker(Process::current().big_lock());
+        auto result = Process::current().sys$profiling_enable(-1, ~0ull);
         VERIFY(!result.is_error());
     }
 
     NetworkTask::spawn();
 
-    Process::current()->sys$exit(0);
+    Process::current().sys$exit(0);
     VERIFY_NOT_REACHED();
 }
 

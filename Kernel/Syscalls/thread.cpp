@@ -172,12 +172,8 @@ KResultOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
     if (!thread || thread->pid() != pid())
         return ESRCH;
 
-    auto process = Process::current();
-    if (!process)
-        return ESRCH;
-
     if (signal != 0)
-        thread->send_signal(signal, process);
+        thread->send_signal(signal, &Process::current());
 
     return 0;
 }

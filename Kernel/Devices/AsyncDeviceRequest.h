@@ -129,7 +129,7 @@ private:
     {
         if (buffer.is_kernel_buffer())
             return true;
-        return m_process == Process::current();
+        return m_process == &Process::current();
     }
 
     [[nodiscard]] static bool is_completed_result(RequestResult result)

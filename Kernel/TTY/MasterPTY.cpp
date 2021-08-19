@@ -41,9 +41,9 @@ MasterPTY::MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer)
     , m_buffer(move(buffer))
 {
     m_pts_name = String::formatted("/dev/pts/{}", m_index);
-    auto process = Process::current();
-    set_uid(process->uid());
-    set_gid(process->gid());
+    auto& process = Process::current();
+    set_uid(process.uid());
+    set_gid(process.gid());
 
     m_buffer->set_unblock_callback([this]() {
         if (m_slave)

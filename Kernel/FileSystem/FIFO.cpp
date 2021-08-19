@@ -129,7 +129,7 @@ KResultOr<size_t> FIFO::read(FileDescription& fd, u64, UserOrKernelBuffer& buffe
 KResultOr<size_t> FIFO::write(FileDescription& fd, u64, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (!m_readers) {
-        Thread::current()->send_signal(SIGPIPE, Process::current());
+        Thread::current()->send_signal(SIGPIPE, &Process::current());
         return EPIPE;
     }
     if (!fd.is_blocking() && m_buffer->space_for_writing() == 0)
