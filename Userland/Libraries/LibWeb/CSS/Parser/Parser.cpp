@@ -1399,7 +1399,7 @@ Optional<float> Parser::try_parse_float(StringView string)
     return is_negative ? -value : value;
 }
 
-RefPtr<StyleValue> Parser::parse_builtin_or_dynamic_value(ParsingContext const& context, StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_builtin_value(ParsingContext const&, StyleComponentValueRule const& component_value)
 {
     if (component_value.is(Token::Type::Ident)) {
         auto ident = component_value.token().ident();
@@ -1410,6 +1410,11 @@ RefPtr<StyleValue> Parser::parse_builtin_or_dynamic_value(ParsingContext const& 
         // FIXME: Implement `unset` keyword
     }
 
+    return {};
+}
+
+RefPtr<StyleValue> Parser::parse_dynamic_value(ParsingContext const& context, StyleComponentValueRule const& component_value)
+{
     if (component_value.is_function()) {
         auto& function = component_value.function();
 
@@ -2766,6 +2771,11 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     if (component_values.is_empty())
         return {};
 
+    if (component_values.size() == 1) {
+        if (auto parsed_value = parse_builtin_value(m_context, component_values.first()))
+            return parsed_value;
+    }
+
     // Special-case property handling
     switch (property_id) {
     case PropertyID::Background:
@@ -2875,8 +2885,11 @@ RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, Proper
         return LengthStyleValue::create(Length::make_px(strtof(string.characters(), nullptr)));
     }
 
-    if (auto builtin_or_dynamic = parse_builtin_or_dynamic_value(context, component_value))
-        return builtin_or_dynamic;
+    if (auto builtin = parse_builtin_value(context, component_value))
+        return builtin;
+
+    if (auto dynamic = parse_dynamic_value(context, component_value))
+        return dynamic;
 
     if (auto length = parse_length_value(context, component_value))
         return length;
