@@ -18,7 +18,7 @@ DateTime DateTime::now()
     return from_timestamp(time(nullptr));
 }
 
-DateTime DateTime::create(unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second)
+DateTime DateTime::create(int year, int month, int day, int hour, int minute, int second)
 {
     DateTime dt;
     dt.set_time(year, month, day, hour, minute, second);
@@ -60,15 +60,15 @@ bool DateTime::is_leap_year() const
     return ::is_leap_year(m_year);
 }
 
-void DateTime::set_time(unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second)
+void DateTime::set_time(int year, int month, int day, int hour, int minute, int second)
 {
     struct tm tm = {};
-    tm.tm_sec = (int)second;
-    tm.tm_min = (int)minute;
-    tm.tm_hour = (int)hour;
-    tm.tm_mday = (int)day;
-    tm.tm_mon = (int)month - 1;
-    tm.tm_year = (int)year - 1900;
+    tm.tm_sec = second;
+    tm.tm_min = minute;
+    tm.tm_hour = hour;
+    tm.tm_mday = day;
+    tm.tm_mon = month - 1;
+    tm.tm_year = year - 1900;
     tm.tm_isdst = -1;
     // mktime() doesn't read tm.tm_wday and tm.tm_yday, no need to fill them in.
 

@@ -29,10 +29,10 @@ public:
     unsigned day_of_year() const;
     bool is_leap_year() const;
 
-    void set_time(unsigned year, unsigned month = 1, unsigned day = 0, unsigned hour = 0, unsigned minute = 0, unsigned second = 0);
+    void set_time(int year, int month = 1, int day = 0, int hour = 0, int minute = 0, int second = 0);
     String to_string(const String& format = "%Y-%m-%d %H:%M:%S") const;
 
-    static DateTime create(unsigned year, unsigned month = 1, unsigned day = 0, unsigned hour = 0, unsigned minute = 0, unsigned second = 0);
+    static DateTime create(int year, int month = 1, int day = 0, int hour = 0, int minute = 0, int second = 0);
     static DateTime now();
     static DateTime from_timestamp(time_t);
     static Optional<DateTime> parse(const String& format, const String& string);
@@ -41,12 +41,12 @@ public:
 
 private:
     time_t m_timestamp { 0 };
-    unsigned m_year { 0 };
-    unsigned m_month { 0 };
-    unsigned m_day { 0 };
-    unsigned m_hour { 0 };
-    unsigned m_minute { 0 };
-    unsigned m_second { 0 };
+    int m_year { 0 };
+    int m_month { 0 };
+    int m_day { 0 };
+    int m_hour { 0 };
+    int m_minute { 0 };
+    int m_second { 0 };
 };
 
 }
