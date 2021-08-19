@@ -54,7 +54,7 @@ protected:
     void print_test_results_as_json() const;
 
     virtual Vector<String> get_test_paths() const = 0;
-    virtual void do_run_single_test(const String&) = 0;
+    virtual void do_run_single_test(const String&, size_t current_test_index, size_t num_tests) = 0;
     virtual const Vector<String>* get_failed_test_names() const { return nullptr; }
 
     String m_test_root;
@@ -115,7 +115,7 @@ inline void TestRunner::run(String test_glob)
         if (!path.matches(test_glob))
             continue;
         ++progress_counter;
-        do_run_single_test(path);
+        do_run_single_test(path, progress_counter, test_paths.size());
         if (m_print_progress)
             warn("\033]9;{};{};\033\\", progress_counter, test_paths.size());
     }
