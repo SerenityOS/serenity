@@ -35,6 +35,7 @@ void PlainMonthDayPrototype::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(vm.names.toJSON, to_json, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
 }
@@ -127,6 +128,23 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_string)
 // 10.3.9 Temporal.PlainMonthDay.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tolocalestring
 // NOTE: This is the minimum toLocaleString implementation for engines without ECMA-402.
 JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_locale_string)
+{
+    // 1. Let monthDay be the this value.
+    // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
+    auto* month_day = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return ? TemporalMonthDayToString(monthDay, "auto").
+    auto string = temporal_month_day_to_string(global_object, *month_day, "auto"sv);
+    if (vm.exception())
+        return {};
+
+    return js_string(vm, *string);
+}
+
+// 10.3.10 Temporal.PlainMonthDay.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tojson
+JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_json)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
