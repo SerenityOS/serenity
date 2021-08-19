@@ -48,7 +48,7 @@ inline bool is_leap_year(int year)
     return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
 }
 
-inline unsigned days_in_year(int year)
+inline int days_in_year(int year)
 {
     return 365 + is_leap_year(year);
 }
