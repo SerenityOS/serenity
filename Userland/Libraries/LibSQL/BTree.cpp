@@ -10,14 +10,14 @@
 
 namespace SQL {
 
-BTree::BTree(Heap& heap, NonnullRefPtr<TupleDescriptor> const& descriptor, bool unique, u32 pointer)
-    : Index(heap, descriptor, unique, pointer)
+BTree::BTree(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, bool unique, u32 pointer)
+    : Index(serializer, descriptor, unique, pointer)
     , m_root(nullptr)
 {
 }
 
-BTree::BTree(Heap& heap, NonnullRefPtr<TupleDescriptor> const& descriptor, u32 pointer)
-    : BTree(heap, descriptor, true, pointer)
+BTree::BTree(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, u32 pointer)
+    : BTree(serializer, descriptor, true, pointer)
 {
 }
 
@@ -37,10 +37,9 @@ BTreeIterator BTree::end()
 void BTree::initialize_root()
 {
     if (pointer()) {
-        if (pointer() < heap().size()) {
-            auto buffer = read_block(pointer());
-            size_t offset = 0;
-            m_root = make<TreeNode>(*this, nullptr, pointer(), buffer, offset);
+        if (serializer().has_block(pointer())) {
+            serializer().get_block(pointer());
+            m_root = serializer().make_and_deserialize<TreeNode>(*this, pointer());
         } else {
             m_root = make<TreeNode>(*this, nullptr, pointer());
         }
@@ -50,13 +49,14 @@ void BTree::initialize_root()
         if (on_new_root)
             on_new_root();
     }
+    m_root->dump_if(0, "initialize_root");
 }
 
 TreeNode* BTree::new_root()
 {
     set_pointer(new_record_pointer());
     m_root = make<TreeNode>(*this, nullptr, m_root.leak_ptr(), pointer());
-    add_to_write_ahead_log(m_root->as_index_node());
+    serializer().serialize_and_write(*m_root.ptr(), m_root->pointer());
     if (on_new_root)
         on_new_root();
     return m_root;

@@ -11,6 +11,7 @@
 #include <LibCore/Object.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Heap.h>
+#include <LibSQL/Meta.h>
 
 namespace SQL {
 
@@ -42,7 +43,8 @@ public:
     bool update(Row&);
 
 private:
-    RefPtr<Heap> m_heap;
+    NonnullRefPtr<Heap> m_heap;
+    Serializer m_serializer;
     RefPtr<BTree> m_schemas;
     RefPtr<BTree> m_tables;
     RefPtr<BTree> m_table_columns;

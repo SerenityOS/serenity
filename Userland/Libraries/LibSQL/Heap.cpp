@@ -9,7 +9,7 @@
 #include <AK/String.h>
 #include <LibCore/IODevice.h>
 #include <LibSQL/Heap.h>
-#include <LibSQL/Serialize.h>
+#include <LibSQL/Serializer.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -41,6 +41,7 @@ Heap::Heap(String file_name)
         read_zero_block();
     else
         initialize_zero_block();
+    dbgln_if(SQL_DEBUG, "Heap file {} opened. Size = {}", file_name, size());
 }
 
 Result<ByteBuffer, String> Heap::read_block(u32 block)
@@ -56,12 +57,18 @@ Result<ByteBuffer, String> Heap::read_block(u32 block)
     auto ret = m_file->read(BLOCKSIZE);
     if (ret.is_empty())
         return String("Could not read block");
+    dbgln_if(SQL_DEBUG, "{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
+        *ret.offset_pointer(0), *ret.offset_pointer(1),
+        *ret.offset_pointer(2), *ret.offset_pointer(3),
+        *ret.offset_pointer(4), *ret.offset_pointer(5),
+        *ret.offset_pointer(6), *ret.offset_pointer(7));
     return ret;
 }
 
 bool Heap::write_block(u32 block, ByteBuffer& buffer)
 {
-    VERIFY(block < m_next_block);
+    dbgln_if(SQL_DEBUG, "write_block({}): m_next_block {}", block, m_next_block);
+    VERIFY(block <= m_next_block);
     if (!seek_block(block))
         VERIFY_NOT_REACHED();
     dbgln_if(SQL_DEBUG, "Write heap block {} size {}", block, buffer.size());
@@ -71,6 +78,11 @@ bool Heap::write_block(u32 block, ByteBuffer& buffer)
         buffer.resize(BLOCKSIZE);
         memset(buffer.offset_pointer((int)sz), 0, BLOCKSIZE - sz);
     }
+    dbgln_if(SQL_DEBUG, "{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
+        *buffer.offset_pointer(0), *buffer.offset_pointer(1),
+        *buffer.offset_pointer(2), *buffer.offset_pointer(3),
+        *buffer.offset_pointer(4), *buffer.offset_pointer(5),
+        *buffer.offset_pointer(6), *buffer.offset_pointer(7));
     if (m_file->write(buffer.data(), (int)buffer.size())) {
         if (block == m_end_of_file)
             m_end_of_file++;
@@ -110,8 +122,7 @@ u32 Heap::new_record_pointer()
             VERIFY_NOT_REACHED();
         }
         auto new_pointer = m_free_list;
-        size_t offset = 0;
-        deserialize_from<u32>(block_or_error.value(), offset, m_free_list);
+        memcpy(&m_free_list, block_or_error.value().offset_pointer(0), sizeof(u32));
         update_zero_block();
         return new_pointer;
     }
@@ -134,6 +145,7 @@ void Heap::flush()
         write_block(block, buffer_or_empty.value());
     }
     m_write_ahead_log.clear();
+    dbgln_if(SQL_DEBUG, "WAL flushed. Heap size = {}", size());
 }
 
 constexpr static const char* FILE_ID = "SerenitySQL ";
