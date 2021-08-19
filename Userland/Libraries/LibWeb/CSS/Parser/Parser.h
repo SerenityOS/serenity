@@ -168,7 +168,8 @@ private:
     static Optional<Length> parse_length(ParsingContext const&, StyleComponentValueRule const&);
     static Optional<URL> parse_url_function(ParsingContext const&, StyleComponentValueRule const&);
 
-    static RefPtr<StyleValue> parse_builtin_or_dynamic_value(ParsingContext const&, StyleComponentValueRule const&);
+    static RefPtr<StyleValue> parse_builtin_value(ParsingContext const&, StyleComponentValueRule const&);
+    static RefPtr<StyleValue> parse_dynamic_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_length_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_numeric_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_identifier_value(ParsingContext const&, StyleComponentValueRule const&);
