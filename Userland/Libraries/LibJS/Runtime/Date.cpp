@@ -339,9 +339,11 @@ Value make_day(GlobalObject& global_object, Value year, Value month, Value date)
     // NOTE: This calculation has no side-effects and is unused, so we omit it
 
     // 8. Find a finite time value t such that YearFromTime(t) is ym and MonthFromTime(t) is mn and DateFromTime(t) is 1𝔽; but if this is not possible (because some argument is out of range), return NaN.
-    auto t = Core::DateTime::create(y, m + 1, 0).timestamp() * 1000;
+    if (!AK::is_within_range<int>(y) || !AK::is_within_range<int>(m + 1))
+        return js_nan();
+    auto t = Core::DateTime::create(static_cast<int>(y), static_cast<int>(m + 1), 0).timestamp() * 1000;
     // 9. Return Day(t) + dt - 1𝔽.
-    return Value(day(t) + dt - 1);
+    return Value(day(static_cast<double>(t)) + dt - 1);
 }
 
 // 21.4.1.13 MakeDate ( day, time ), https://tc39.es/ecma262/#sec-makedate
