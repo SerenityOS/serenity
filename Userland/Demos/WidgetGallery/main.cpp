@@ -8,8 +8,6 @@
 #include "GalleryWidget.h"
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
-#include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
 #include <unistd.h>
 
@@ -54,13 +52,6 @@ int main(int argc, char** argv)
     window->set_title("Widget Gallery");
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_main_widget<GalleryWidget>();
-
-    auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
-
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Widget Gallery", app_icon, window));
-
     window->show();
 
     return app->exec();
