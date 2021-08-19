@@ -5,6 +5,7 @@
  */
 
 #include <LibGfx/Painter.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
@@ -45,6 +46,22 @@ void InlineNode::paint_fragment(PaintContext& context, const LineBoxFragment& fr
 
     if (phase == PaintPhase::Background) {
         painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), computed_values().background_color());
+    }
+}
+
+void InlineNode::paint(PaintContext& context, PaintPhase phase)
+{
+    auto& painter = context.painter();
+
+    if (phase == PaintPhase::Foreground && document().inspected_node() == dom_node()) {
+        // FIXME: This paints a double-thick border between adjacent fragments, where ideally there
+        //        would be none. Once we implement non-rectangular outlines for the `outline` CSS
+        //        property, we can use that here instead.
+        containing_block()->for_each_fragment([&](auto& fragment) {
+            if (is_inclusive_ancestor_of(fragment.layout_node()))
+                painter.draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Magenta);
+            return IterationDecision::Continue;
+        });
     }
 }
 
