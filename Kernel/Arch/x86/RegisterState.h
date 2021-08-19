@@ -68,41 +68,35 @@ struct [[gnu::packed]] RegisterState {
     FlatPtr userspace_ss;
 #endif
 
+#if ARCH(I386)
     FlatPtr userspace_sp() const
     {
-#if ARCH(I386)
         return userspace_esp;
-#else
+    }
+    void set_userspace_sp(FlatPtr value) { userspace_esp = value; }
+    FlatPtr ip() const { return eip; }
+    void set_ip(FlatPtr value) { eip = value; }
+    void set_dx(FlatPtr value) { edx = value; }
+    FlatPtr bp() const { return ebp; }
+    void set_bp(FlatPtr value) { ebp = value; }
+    FlatPtr flags() const { return eflags; }
+    void set_flags(FlatPtr value) { eflags = value; }
+    void set_return_reg(FlatPtr value) { eax = value; }
+#elif ARCH(X86_64)
+    FlatPtr userspace_sp() const
+    {
         return userspace_rsp;
-#endif
     }
-
-    FlatPtr ip() const
-    {
-#if ARCH(I386)
-        return eip;
-#else
-        return rip;
+    void set_userspace_sp(FlatPtr value) { userspace_rsp = value; }
+    FlatPtr ip() const { return rip; }
+    void set_ip(FlatPtr value) { rip = value; }
+    void set_dx(FlatPtr value) { rdx = value; }
+    FlatPtr bp() const { return rbp; }
+    void set_bp(FlatPtr value) { rbp = value; }
+    FlatPtr flags() const { return rflags; }
+    void set_flags(FlatPtr value) { rflags = value; }
+    void set_return_reg(FlatPtr value) { rax = value; }
 #endif
-    }
-
-    FlatPtr bp() const
-    {
-#if ARCH(I386)
-        return ebp;
-#else
-        return rbp;
-#endif
-    }
-
-    FlatPtr flags() const
-    {
-#if ARCH(I386)
-        return eflags;
-#else
-        return rflags;
-#endif
-    }
 
     void capture_syscall_params(FlatPtr& function, FlatPtr& arg1, FlatPtr& arg2, FlatPtr& arg3, FlatPtr& arg4) const
     {
@@ -118,24 +112,6 @@ struct [[gnu::packed]] RegisterState {
         arg2 = rcx;
         arg3 = rbx;
         arg4 = rsi;
-#endif
-    }
-
-    void set_ip_reg(FlatPtr value)
-    {
-#if ARCH(I386)
-        eip = value;
-#else
-        rip = value;
-#endif
-    }
-
-    void set_return_reg(FlatPtr value)
-    {
-#if ARCH(I386)
-        eax = value;
-#else
-        rax = value;
 #endif
     }
 };

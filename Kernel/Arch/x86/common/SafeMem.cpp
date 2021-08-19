@@ -299,13 +299,8 @@ bool handle_safe_access_fault(RegisterState& regs, FlatPtr fault_address)
         else
             return false;
 
-#if ARCH(I386)
-        regs.eip = ip;
-        regs.edx = fault_address;
-#else
-        regs.rip = ip;
-        regs.rdx = fault_address;
-#endif
+        regs.set_ip(ip);
+        regs.set_dx(fault_address);
         return true;
     }
     if (ip >= (FlatPtr)&start_of_safemem_atomic_text && ip < (FlatPtr)&end_of_safemem_atomic_text) {
@@ -325,13 +320,8 @@ bool handle_safe_access_fault(RegisterState& regs, FlatPtr fault_address)
         else
             return false;
 
-#if ARCH(I386)
-        regs.eip = ip;
-        regs.edx = 1;
-#else
-        regs.rip = ip;
-        regs.rdx = 1;
-#endif
+        regs.set_ip(ip);
+        regs.set_dx(1);
         return true;
     }
     return false;

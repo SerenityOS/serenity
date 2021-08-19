@@ -60,14 +60,10 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
         thread->detach();
 
     auto& regs = thread->regs();
-#if ARCH(I386)
-    regs.eip = (FlatPtr)entry;
-    regs.eflags = 0x0202;
-    regs.esp = user_sp.value();
-#else
-    regs.rip = (FlatPtr)entry;
-    regs.rflags = 0x0202;
-    regs.rsp = user_sp.value();
+    regs.set_ip((FlatPtr)entry);
+    regs.set_flags(0x0202);
+    regs.set_sp(user_sp.value());
+#if ARCH(X86_64)
     regs.rdi = params.rdi;
     regs.rsi = params.rsi;
     regs.rdx = params.rdx;
