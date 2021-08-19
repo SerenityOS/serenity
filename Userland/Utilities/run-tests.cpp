@@ -46,7 +46,7 @@ public:
     virtual ~TestRunner() = default;
 
 protected:
-    virtual void do_run_single_test(const String& test_path) override;
+    virtual void do_run_single_test(const String& test_path, size_t current_text_index, size_t num_tests) override;
     virtual Vector<String> get_test_paths() const override;
     virtual const Vector<String>* get_failed_test_names() const override { return &m_failed_test_names; }
 
@@ -94,10 +94,12 @@ bool TestRunner::should_skip_test(const LexicalPath& test_path)
     return false;
 }
 
-void TestRunner::do_run_single_test(const String& test_path)
+void TestRunner::do_run_single_test(const String& test_path, size_t current_test_index, size_t num_tests)
 {
     g_currently_running_test = test_path;
-
+    auto test_relative_path = LexicalPath::relative_path(test_path, m_test_root);
+    outln(" START  {} ({}/{})", test_relative_path, current_test_index, num_tests);
+    fflush(stdout); // we really want to see the start text in case the test hangs
     auto test_result = run_test_file(test_path);
 
     switch (test_result.result) {
@@ -128,11 +130,11 @@ void TestRunner::do_run_single_test(const String& test_path)
         print_modifiers({ Test::CLEAR });
     } else {
         print_modifiers({ Test::BG_GREEN, Test::FG_BLACK, Test::FG_BOLD });
-        out(" PASS ");
+        out(" PASS  ");
         print_modifiers({ Test::CLEAR });
     }
 
-    out(" {}", LexicalPath::relative_path(test_path, m_test_root));
+    out(" {}", test_relative_path);
 
     print_modifiers({ Test::CLEAR, Test::ITALIC, Test::FG_GRAY });
     if (test_result.time_taken < 1000) {
