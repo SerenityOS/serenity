@@ -184,8 +184,7 @@ KResultOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserO
             m_content = move(tmp);
         }
         m_metadata.size = new_size;
-        set_metadata_dirty(true);
-        set_metadata_dirty(false);
+        notify_watchers();
     }
 
     if (!buffer.read(m_content->data() + offset, size)) // TODO: partial reads?
@@ -363,8 +362,7 @@ KResult TmpFSInode::set_atime(time_t time)
     MutexLocker locker(m_inode_lock);
 
     m_metadata.atime = time;
-    set_metadata_dirty(true);
-    set_metadata_dirty(false);
+    notify_watchers();
     return KSuccess;
 }
 
