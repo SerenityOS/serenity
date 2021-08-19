@@ -44,6 +44,14 @@ void StringBuilder::append(StringView const& str)
     m_buffer.append(str.characters_without_null_termination(), str.length());
 }
 
+void StringBuilder::append(ReadonlyBytes const& bytes)
+{
+    if (bytes.is_empty())
+        return;
+    will_append(bytes.size());
+    m_buffer.append(bytes);
+}
+
 void StringBuilder::append(char const* characters, size_t length)
 {
     append(StringView { characters, length });
