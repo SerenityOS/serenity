@@ -28,6 +28,7 @@ fi
 exec $SERENITY_KERNEL_DEBUGGER \
     -ex "file $(dirname "$0")/../Build/${SERENITY_ARCH:-i686}/Kernel/Prekernel/$prekernel_image" \
     -ex "set confirm off" \
+    -ex "directory $(dirname "$0")/../Build/${SERENITY_ARCH:-i686}/" \
     -ex "add-symbol-file $(dirname "$0")/../Build/${SERENITY_ARCH:-i686}/Kernel/Kernel -o $kernel_base" \
     -ex "set confirm on" \
     -ex "set arch $gdb_arch" \
