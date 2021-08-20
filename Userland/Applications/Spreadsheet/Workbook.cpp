@@ -51,7 +51,7 @@ Result<bool, String> Workbook::load(const StringView& filename)
         sb.append("Failed to open ");
         sb.append(filename);
         sb.append(" for reading. Error: ");
-        sb.append(file_or_error.error());
+        sb.append(file_or_error.error().string());
 
         return sb.to_string();
     }

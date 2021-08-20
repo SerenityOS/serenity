@@ -98,7 +98,7 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_path(Str
 {
     auto file_or_error = Core::File::open(file_path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error())
-        return file_or_error.error();
+        return String { file_or_error.error().string() };
 
     return try_create_from_pixel_paint_file(*file_or_error.value(), file_path);
 }
@@ -256,7 +256,7 @@ Result<void, String> Image::write_to_file(const String& file_path) const
 
     auto file_or_error = Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
     if (file_or_error.is_error())
-        return file_or_error.error();
+        return String { file_or_error.error().string() };
 
     if (!file_or_error.value()->write(builder.string_view()))
         return String { file_or_error.value()->error_string() };

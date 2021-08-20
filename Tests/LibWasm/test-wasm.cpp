@@ -18,7 +18,7 @@ TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
         return {};
     auto file = Core::File::open(filename, Core::OpenMode::ReadOnly);
     if (file.is_error()) {
-        vm.throw_exception<JS::TypeError>(global_object, file.error());
+        vm.throw_exception<JS::TypeError>(global_object, file.error().string());
         return {};
     }
     auto contents = file.value()->read_all();
