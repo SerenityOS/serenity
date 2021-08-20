@@ -219,6 +219,7 @@ public:
         Invalid,
         Inherit,
         Initial,
+        Unset,
         String,
         Length,
         Color,
@@ -245,6 +246,7 @@ public:
 
     bool is_inherit() const { return type() == Type::Inherit; }
     bool is_initial() const { return type() == Type::Initial; }
+    bool is_unset() const { return type() == Type::Unset; }
     bool is_color() const { return type() == Type::Color; }
     bool is_identifier() const { return type() == Type::Identifier || is_auto(); }
     bool is_image() const { return type() == Type::Image; }
@@ -266,11 +268,11 @@ public:
     bool is_overflow() const { return type() == Type::Overflow; }
     bool is_text_decoration() const { return type() == Type::TextDecoration; }
 
-    bool is_builtin() const { return is_inherit() || is_initial(); }
+    bool is_builtin() const { return is_inherit() || is_initial() || is_unset(); }
 
     bool is_builtin_or_dynamic() const
     {
-        return is_inherit() || is_initial() || is_custom_property() || is_calculated();
+        return is_builtin() || is_custom_property() || is_calculated();
     }
 
     virtual String to_string() const = 0;
@@ -564,6 +566,24 @@ public:
 private:
     InheritStyleValue()
         : StyleValue(Type::Inherit)
+    {
+    }
+};
+
+class UnsetStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<UnsetStyleValue> the()
+    {
+        static NonnullRefPtr<UnsetStyleValue> instance = adopt_ref(*new UnsetStyleValue);
+        return instance;
+    }
+    virtual ~UnsetStyleValue() override { }
+
+    String to_string() const override { return "unset"; }
+
+private:
+    UnsetStyleValue()
+        : StyleValue(Type::Unset)
     {
     }
 };
