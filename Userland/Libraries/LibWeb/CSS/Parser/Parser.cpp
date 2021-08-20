@@ -1404,9 +1404,9 @@ RefPtr<StyleValue> Parser::parse_builtin_value(ParsingContext const&, StyleCompo
     if (component_value.is(Token::Type::Ident)) {
         auto ident = component_value.token().ident();
         if (ident.equals_ignoring_case("inherit"))
-            return InheritStyleValue::create();
+            return InheritStyleValue::the();
         if (ident.equals_ignoring_case("initial"))
-            return InitialStyleValue::create();
+            return InitialStyleValue::the();
         // FIXME: Implement `unset` keyword
     }
 
@@ -2738,7 +2738,7 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(ParsingContext const& con
         decoration_style = IdentifierStyleValue::create(ValueID::Solid);
     // FIXME: Should default to 'currentcolor' special value: https://www.w3.org/TR/css-color-3/#currentcolor
     if (!decoration_color)
-        decoration_color = InitialStyleValue::create();
+        decoration_color = InitialStyleValue::the();
 
     return TextDecorationStyleValue::create(decoration_line.release_nonnull(), decoration_style.release_nonnull(), decoration_color.release_nonnull());
 }

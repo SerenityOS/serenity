@@ -534,7 +534,11 @@ private:
 
 class InitialStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<InitialStyleValue> create() { return adopt_ref(*new InitialStyleValue); }
+    static NonnullRefPtr<InitialStyleValue> the()
+    {
+        static NonnullRefPtr<InitialStyleValue> instance = adopt_ref(*new InitialStyleValue);
+        return instance;
+    }
     virtual ~InitialStyleValue() override { }
 
     String to_string() const override { return "initial"; }
@@ -548,7 +552,11 @@ private:
 
 class InheritStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<InheritStyleValue> create() { return adopt_ref(*new InheritStyleValue); }
+    static NonnullRefPtr<InheritStyleValue> the()
+    {
+        static NonnullRefPtr<InheritStyleValue> instance = adopt_ref(*new InheritStyleValue);
+        return instance;
+    }
     virtual ~InheritStyleValue() override { }
 
     String to_string() const override { return "inherit"; }
