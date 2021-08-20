@@ -2869,6 +2869,12 @@ RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, Proper
         }
     }
 
+    // FIXME: This is a hack for the `opacity` property which should really take an <alpha-value>
+    if (property_id == PropertyID::Opacity && component_value.is(Token::Type::Number)) {
+        String string = component_value.token().number_string_value();
+        return LengthStyleValue::create(Length::make_px(strtof(string.characters(), nullptr)));
+    }
+
     if (auto builtin_or_dynamic = parse_builtin_or_dynamic_value(context, component_value))
         return builtin_or_dynamic;
 
