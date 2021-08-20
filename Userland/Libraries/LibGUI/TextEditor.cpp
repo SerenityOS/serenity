@@ -847,13 +847,22 @@ void TextEditor::keydown_event(KeyEvent& event)
 
         if (m_cursor.column() < current_line().length()) {
             // Delete within line
-            TextRange erased_range(m_cursor, { m_cursor.line(), m_cursor.column() + 1 });
+            int erase_count = 1;
+            if (event.modifiers() == Mod_Ctrl) {
+                auto word_break_pos = document().first_word_break_after(m_cursor);
+                erase_count = word_break_pos.column() - m_cursor.column();
+            }
+            TextRange erased_range(m_cursor, { m_cursor.line(), m_cursor.column() + erase_count });
             execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
             return;
         }
         if (m_cursor.column() == current_line().length() && m_cursor.line() != line_count() - 1) {
             // Delete at end of line; merge with next line
-            TextRange erased_range(m_cursor, { m_cursor.line() + 1, 0 });
+            size_t erase_count = 0;
+            if (event.modifiers() == Mod_Ctrl) {
+                erase_count = document().first_word_break_after({ m_cursor.line() + 1, 0 }).column();
+            }
+            TextRange erased_range(m_cursor, { m_cursor.line() + 1, erase_count });
             execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
             return;
         }
