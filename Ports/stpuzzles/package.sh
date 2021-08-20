@@ -3,7 +3,7 @@ port=SimonTathamsPuzzles
 useconfigure=true
 version=git
 workdir=stpuzzles-main
-configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_SOURCE_DIR/Toolchain/CMake/CMakeToolchain.txt"
+configopts="-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
 files="https://github.com/SerenityPorts/stpuzzles/archive/refs/heads/main.zip stpuzzles.zip"
 
 configure() {
