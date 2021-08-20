@@ -10,6 +10,7 @@
 #include <AK/Debug.h>
 #include <AK/FileStream.h>
 #include <AK/Format.h>
+#include <alloca.h>
 #include <fcntl.h>
 #include <sched.h>
 #include <serenity.h>
@@ -75,6 +76,10 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$profiling_enable(arg1);
     case SC_profiling_disable:
         return virt$profiling_disable(arg1);
+    case SC_perf_event:
+        return virt$perf_event((int)arg1, arg2, arg3);
+    case SC_perf_register_string:
+        return virt$perf_register_string(arg1, arg2);
     case SC_disown:
         return virt$disown(arg1);
     case SC_purge:
@@ -248,8 +253,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_futex:
         return virt$futex(arg1);
     case SC_map_time_page:
-    case SC_perf_register_string:
-    case SC_perf_event:
         return -ENOSYS;
     default:
         reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
@@ -281,6 +284,37 @@ int Emulator::virt$profiling_enable(pid_t pid)
 int Emulator::virt$profiling_disable(pid_t pid)
 {
     return syscall(SC_profiling_disable, pid);
+}
+
+FlatPtr Emulator::virt$perf_event(int event, FlatPtr arg1, FlatPtr arg2)
+{
+    if (event == PERF_EVENT_SIGNPOST) {
+        if (is_profiling()) {
+            if (profiler_string_id_map().size() > arg1)
+                emit_profile_event(profile_stream(), "signpost", String::formatted("\"arg1\": {}, \"arg2\": {}", arg1, arg2));
+            syscall(SC_perf_event, PERF_EVENT_SIGNPOST, profiler_string_id_map().at(arg1), arg2);
+        } else {
+            syscall(SC_perf_event, PERF_EVENT_SIGNPOST, arg1, arg2);
+        }
+        return 0;
+    }
+    return -ENOSYS;
+}
+
+FlatPtr Emulator::virt$perf_register_string(FlatPtr string, size_t size)
+{
+    char* buffer = (char*)alloca(size + 4);
+    // FIXME: not nice, but works
+    __builtin_memcpy(buffer, "UE: ", 4);
+    mmu().copy_from_vm((buffer + 4), string, size);
+    auto ret = (int)syscall(SC_perf_register_string, buffer, size + 4);
+
+    if (ret >= 0 && is_profiling()) {
+        profiler_strings().append(make<String>(StringView { buffer + 4, size }));
+        profiler_string_id_map().append(ret);
+        ret = profiler_string_id_map().size() - 1;
+    }
+    return ret;
 }
 
 int Emulator::virt$disown(pid_t pid)
