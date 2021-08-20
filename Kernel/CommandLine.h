@@ -48,6 +48,8 @@ public:
     static void early_initialize(const char* cmd_line);
     static void initialize();
 
+    static bool initialized();
+
     enum class Validate {
         Yes,
         No,

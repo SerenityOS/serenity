@@ -16,6 +16,11 @@ static char s_cmd_line[1024];
 static constexpr StringView s_embedded_cmd_line = "";
 static CommandLine* s_the;
 
+bool CommandLine::initialized()
+{
+    return s_the != nullptr;
+}
+
 UNMAP_AFTER_INIT void CommandLine::early_initialize(const char* cmd_line)
 {
     if (!cmd_line)
