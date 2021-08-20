@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +19,7 @@ class File final : public IODevice {
 public:
     virtual ~File() override;
 
-    static Result<NonnullRefPtr<File>, String> open(String filename, OpenMode, mode_t = 0644);
+    static Result<NonnullRefPtr<File>, OSError> open(String filename, OpenMode, mode_t = 0644);
 
     String filename() const { return m_filename; }
     void set_filename(const String filename) { m_filename = move(filename); }

@@ -232,7 +232,7 @@ Result<Vector<Color>, String> PaletteWidget::load_palette_path(String const& fil
 {
     auto file_or_error = Core::File::open(file_path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error())
-        return file_or_error.error();
+        return String { file_or_error.error().string() };
 
     auto& file = *file_or_error.value();
     return load_palette_file(file);

@@ -13,7 +13,7 @@ TEST_CASE(file_readline)
     auto path = "long_lines.txt";
     auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {
-        warnln("Failed to open {}: {}", path, strerror(errno));
+        warnln("Failed to open {}: {}", path, file_or_error.error());
         VERIFY_NOT_REACHED();
     }
     auto file = file_or_error.release_value();

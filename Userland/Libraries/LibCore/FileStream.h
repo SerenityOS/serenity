@@ -20,7 +20,7 @@ public:
     {
     }
 
-    static Result<InputFileStream, String> open(StringView filename, OpenMode mode = OpenMode::ReadOnly, mode_t permissions = 0644)
+    static Result<InputFileStream, OSError> open(StringView filename, OpenMode mode = OpenMode::ReadOnly, mode_t permissions = 0644)
     {
         VERIFY(has_flag(mode, OpenMode::ReadOnly));
 
@@ -32,7 +32,7 @@ public:
         return InputFileStream { file_result.value() };
     }
 
-    static Result<Buffered<InputFileStream>, String> open_buffered(StringView filename, OpenMode mode = OpenMode::ReadOnly, mode_t permissions = 0644)
+    static Result<Buffered<InputFileStream>, OSError> open_buffered(StringView filename, OpenMode mode = OpenMode::ReadOnly, mode_t permissions = 0644)
     {
         VERIFY(has_flag(mode, OpenMode::ReadOnly));
 
@@ -89,7 +89,7 @@ public:
     {
     }
 
-    static Result<OutputFileStream, String> open(StringView filename, OpenMode mode = OpenMode::WriteOnly, mode_t permissions = 0644)
+    static Result<OutputFileStream, OSError> open(StringView filename, OpenMode mode = OpenMode::WriteOnly, mode_t permissions = 0644)
     {
         VERIFY(has_flag(mode, OpenMode::WriteOnly));
 
@@ -101,7 +101,7 @@ public:
         return OutputFileStream { file_result.value() };
     }
 
-    static Result<Buffered<OutputFileStream>, String> open_buffered(StringView filename, OpenMode mode = OpenMode::WriteOnly, mode_t permissions = 0644)
+    static Result<Buffered<OutputFileStream>, OSError> open_buffered(StringView filename, OpenMode mode = OpenMode::WriteOnly, mode_t permissions = 0644)
     {
         VERIFY(has_flag(mode, OpenMode::WriteOnly));
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,11 +27,11 @@
 
 namespace Core {
 
-Result<NonnullRefPtr<File>, String> File::open(String filename, OpenMode mode, mode_t permissions)
+Result<NonnullRefPtr<File>, OSError> File::open(String filename, OpenMode mode, mode_t permissions)
 {
     auto file = File::construct(move(filename));
     if (!file->open_impl(mode, permissions))
-        return String(file->error_string());
+        return OSError(file->error());
     return file;
 }
 
