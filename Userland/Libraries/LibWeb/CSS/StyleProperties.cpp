@@ -45,10 +45,34 @@ void StyleProperties::set_property(CSS::PropertyID id, const StringView& value)
 
 Optional<NonnullRefPtr<StyleValue>> StyleProperties::property(CSS::PropertyID id) const
 {
-    auto it = m_property_values.find((unsigned)id);
-    if (it == m_property_values.end())
+    auto fetch_initial = [](CSS::PropertyID id) -> Optional<NonnullRefPtr<StyleValue>> {
+        auto initial_value = property_initial_value(id);
+        if (initial_value)
+            return initial_value.release_nonnull();
         return {};
-    return it->value;
+    };
+    auto fetch_inherited = [](CSS::PropertyID) -> Optional<NonnullRefPtr<StyleValue>> {
+        // FIXME: Implement inheritance
+        return {};
+    };
+
+    auto it = m_property_values.find((unsigned)id);
+    if (it == m_property_values.end()) {
+        if (is_inherited_property(id)) {
+            return fetch_inherited(id);
+        } else {
+            // FIXME: This causes the Acid2 eyes to disappear for some reason
+            return fetch_initial(id);
+        }
+    }
+
+    auto& value = it->value;
+    if (value->is_initial())
+        return fetch_initial(id);
+    if (value->is_inherit())
+        return fetch_inherited(id);
+
+    return value;
 }
 
 Length StyleProperties::length_or_fallback(CSS::PropertyID id, const Length& fallback) const
