@@ -83,6 +83,13 @@ static void chown_wrapper(const char* path, uid_t uid, gid_t gid)
         VERIFY_NOT_REACHED();
     }
 }
+static void chmod_wrapper(const char* path, mode_t mode)
+{
+    int rc = chmod(path, mode);
+    if (rc < 0 && errno != ENOENT) {
+        VERIFY_NOT_REACHED();
+    }
+}
 
 static void chown_all_matching_device_nodes(group* group, unsigned major_number)
 {
@@ -341,6 +348,21 @@ static void prepare_synthetic_filesystems()
         VERIFY_NOT_REACHED();
     }
 
+    rc = symlink("/proc/self/fd/0", "/dev/stdin");
+    if (rc < 0) {
+        VERIFY_NOT_REACHED();
+    }
+
+    rc = symlink("/proc/self/fd/1", "/dev/stdout");
+    if (rc < 0) {
+        VERIFY_NOT_REACHED();
+    }
+
+    rc = symlink("/proc/self/fd/2", "/dev/stderr");
+    if (rc < 0) {
+        VERIFY_NOT_REACHED();
+    }
+
     populate_devfs();
 
     rc = mkdir("/dev/pts", 0755);
@@ -357,6 +379,7 @@ static void prepare_synthetic_filesystems()
     if (rc < 0) {
         VERIFY_NOT_REACHED();
     }
+    chmod_wrapper("/dev/urandom", 0666);
 
     auto phys_group = getgrnam("phys");
     VERIFY(phys_group);
@@ -376,19 +399,6 @@ static void prepare_synthetic_filesystems()
     VERIFY(audio_group);
     chown_wrapper("/dev/audio", 0, audio_group->gr_gid);
 
-    rc = symlink("/proc/self/fd/0", "/dev/stdin");
-    if (rc < 0) {
-        VERIFY_NOT_REACHED();
-    }
-    rc = symlink("/proc/self/fd/1", "/dev/stdout");
-    if (rc < 0) {
-        VERIFY_NOT_REACHED();
-    }
-    rc = symlink("/proc/self/fd/2", "/dev/stderr");
-    if (rc < 0) {
-        VERIFY_NOT_REACHED();
-    }
-
     // Note: We open the /dev/null device and set file descriptors 0, 1, 2 to it
     // because otherwise these file descriptors won't have a custody, making
     // the ProcFS file descriptor links (at /proc/PID/fd/{0,1,2}) to have an
@@ -396,7 +406,6 @@ static void prepare_synthetic_filesystems()
     // This affects also every other process that inherits the file descriptors
     // from SystemServer, so it is important for other things (also for ProcFS
     // tests that are running in CI mode).
-
     int stdin_new_fd = open("/dev/null", O_NONBLOCK);
     if (stdin_new_fd < 0) {
         VERIFY_NOT_REACHED();

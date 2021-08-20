@@ -46,11 +46,13 @@ public:
     DevTmpFS const& fs() const { return static_cast<DevTmpFS const&>(Inode::fs()); }
 
 protected:
-    DevTmpFSInode(DevTmpFS&);
+    explicit DevTmpFSInode(DevTmpFS&);
+    DevTmpFSInode(DevTmpFS&, unsigned, unsigned);
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual void flush_metadata() override;
+    virtual InodeMetadata metadata() const override final;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, OpenFileDescription*) override;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
@@ -59,11 +61,27 @@ protected:
     virtual KResult chown(UserID, GroupID) override;
     virtual KResult truncate(u64) override;
 
+    mode_t m_mode { 0600 };
+    UserID m_uid { 0 };
+    GroupID m_gid { 0 };
+    const unsigned m_major_number { 0 };
+    const unsigned m_minor_number { 0 };
+
+protected:
+    enum class Type {
+        BlockDevice,
+        CharacterDevice,
+        Directory,
+        RootDirectory,
+        Link
+    };
+    virtual Type node_type() const = 0;
+
 private:
     IntrusiveListNode<DevTmpFSInode, RefPtr<DevTmpFSInode>> m_list_node;
 };
 
-class DevTmpFSDeviceInode : public DevTmpFSInode {
+class DevTmpFSDeviceInode final : public DevTmpFSInode {
     friend class DevTmpFS;
     friend class DevTmpFSRootDirectoryInode;
     friend class DevTmpFSDirectoryInode;
@@ -74,25 +92,20 @@ public:
 
 private:
     DevTmpFSDeviceInode(DevTmpFS&, unsigned, unsigned, bool, NonnullOwnPtr<KString> name);
+    // ^DevTmpFSInode
+    virtual Type node_type() const override { return m_block_device ? Type::BlockDevice : Type::CharacterDevice; }
+
     // ^Inode
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
-    virtual InodeMetadata metadata() const override;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, OpenFileDescription*) override;
-    virtual KResult chown(UserID, GroupID) override;
-    virtual KResult chmod(mode_t) override;
 
     NonnullOwnPtr<KString> m_name;
-    const unsigned m_major_number;
-    const unsigned m_minor_number;
     const bool m_block_device;
-    mode_t m_required_mode;
-    UserID m_uid { 0 };
-    GroupID m_gid { 0 };
 };
 
-class DevTmpFSLinkInode : public DevTmpFSInode {
+class DevTmpFSLinkInode final : public DevTmpFSInode {
     friend class DevTmpFS;
-    friend class DevTmpFSRootDirectoryInode;
+    friend class DevTmpFSDirectoryInode;
 
 public:
     virtual StringView name() const override;
@@ -100,9 +113,11 @@ public:
 
 protected:
     DevTmpFSLinkInode(DevTmpFS&, NonnullOwnPtr<KString>);
+    // ^DevTmpFSInode
+    virtual Type node_type() const override { return Type::Link; }
+
     // ^Inode
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
-    virtual InodeMetadata metadata() const override;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, OpenFileDescription*) override;
 
     NonnullOwnPtr<KString> m_name;
@@ -115,28 +130,23 @@ class DevTmpFSDirectoryInode : public DevTmpFSInode {
 
 public:
     virtual ~DevTmpFSDirectoryInode() override;
+    virtual StringView name() const override { return m_name->view(); }
 
 protected:
-    DevTmpFSDirectoryInode(DevTmpFS&);
-    // ^Inode
-    virtual InodeMetadata metadata() const override;
+    // ^DevTmpFSInode
+    virtual Type node_type() const override { return Type::Directory; }
 
-    IntrusiveList<DevTmpFSInode, NonnullRefPtr<DevTmpFSInode>, &DevTmpFSInode::m_list_node> m_nodes;
-};
-
-class DevTmpFSPtsDirectoryInode final : public DevTmpFSDirectoryInode {
-    friend class DevTmpFS;
-    friend class DevTmpFSRootDirectoryInode;
-
-public:
-    virtual ~DevTmpFSPtsDirectoryInode() override;
-    virtual StringView name() const override { return "pts"; };
-
-private:
-    explicit DevTmpFSPtsDirectoryInode(DevTmpFS&);
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
+    virtual KResult remove_child(const StringView& name) override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
-    virtual InodeMetadata metadata() const override;
+    DevTmpFSDirectoryInode(DevTmpFS&, NonnullOwnPtr<KString> name);
+    // ^Inode
+    OwnPtr<KString> m_name;
+    IntrusiveList<DevTmpFSInode, NonnullRefPtr<DevTmpFSInode>, &DevTmpFSInode::m_list_node> m_nodes;
+
+private:
+    explicit DevTmpFSDirectoryInode(DevTmpFS&);
 };
 
 class DevTmpFSRootDirectoryInode final : public DevTmpFSDirectoryInode {
@@ -147,12 +157,12 @@ public:
     virtual StringView name() const override { return "."; }
 
 private:
+    // ^DevTmpFSInode
+    virtual Type node_type() const override { return Type::Directory; }
+
     explicit DevTmpFSRootDirectoryInode(DevTmpFS&);
-    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
-    virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
-    virtual InodeMetadata metadata() const override;
-    virtual KResult remove_child(const StringView& name) override;
+    virtual KResult chmod(mode_t) override;
+    virtual KResult chown(UserID, GroupID) override;
 };
 
 }
