@@ -162,7 +162,6 @@ public:
     Action& cut_action() { return *m_cut_action; }
     Action& copy_action() { return *m_copy_action; }
     Action& paste_action() { return *m_paste_action; }
-    Action& delete_action() { return *m_delete_action; }
     Action& go_to_line_action() { return *m_go_to_line_action; }
     Action& select_all_action() { return *m_select_all_action; }
 
@@ -352,7 +351,6 @@ private:
     RefPtr<Action> m_cut_action;
     RefPtr<Action> m_copy_action;
     RefPtr<Action> m_paste_action;
-    RefPtr<Action> m_delete_action;
     RefPtr<Action> m_go_to_line_action;
     RefPtr<Action> m_select_all_action;
     Core::ElapsedTimer m_triple_click_timer;

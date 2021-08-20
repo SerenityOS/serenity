@@ -333,7 +333,6 @@ MainWidget::MainWidget()
     m_toolbar->add_action(m_editor->cut_action());
     m_toolbar->add_action(m_editor->copy_action());
     m_toolbar->add_action(m_editor->paste_action());
-    m_toolbar->add_action(m_editor->delete_action());
 
     m_toolbar->add_separator();
 
@@ -390,7 +389,6 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     edit_menu.add_action(m_editor->cut_action());
     edit_menu.add_action(m_editor->copy_action());
     edit_menu.add_action(m_editor->paste_action());
-    edit_menu.add_action(m_editor->delete_action());
     edit_menu.add_separator();
     edit_menu.add_action(*m_vim_emulation_setting_action);
     edit_menu.add_separator();
