@@ -1,0 +1,10 @@
+--- mruby-3.0.0/mrbgems/mruby-io/src/io.c	2021-08-20 00:27:04.837317416 -0400
++++ mruby-3.0.0.serenity/mrbgems/mruby-io/src/io.c	2021-08-20 00:28:51.960390750 -0400
+@@ -49,6 +49,7 @@
+   #include <sys/wait.h>
+   #include <sys/time.h>
+   #include <unistd.h>
++  #include <sys/select.h>
+   typedef size_t fsize_t;
+   typedef time_t ftime_t;
+   typedef suseconds_t fsuseconds_t;
