@@ -84,7 +84,7 @@ protected:
     ALWAYS_INLINE Optional<u32> consume_escaped_code_point(bool unicode);
     ALWAYS_INLINE bool try_skip(StringView);
     ALWAYS_INLINE bool lookahead_any(StringView);
-    ALWAYS_INLINE char skip();
+    ALWAYS_INLINE unsigned char skip();
     ALWAYS_INLINE void back(size_t = 1);
     ALWAYS_INLINE void reset();
     ALWAYS_INLINE bool done() const;
