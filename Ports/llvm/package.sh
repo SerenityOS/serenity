@@ -3,7 +3,7 @@ port=llvm
 useconfigure=true
 version=12.0.0
 workdir=llvm-project-llvmorg-${version}
-configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_SOURCE_DIR/Toolchain/CMake/CMakeToolchain.txt"
+configopts="-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
 files="https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-${version}.zip llvm.zip f77723b70a5d4ab14899feda87d6cf601612165899abb2f6c7b670e517f45e2d"
 auth_type=sha256
 
