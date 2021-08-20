@@ -57,6 +57,8 @@ private:
     RefPtr<GUI::Action> m_paste_action;
     RefPtr<GUI::Action> m_delete_action;
 
+    RefPtr<GUI::Action> m_copy_character_action;
+
     RefPtr<GUI::Action> m_undo_action;
     RefPtr<GUI::Action> m_redo_action;
     RefPtr<UndoGlyph> m_undo_glyph;
