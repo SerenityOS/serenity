@@ -528,13 +528,16 @@ Vector<Token> Lexer::lex()
         if (ch == '#') {
             begin_token();
             consume();
+            while (AK::is_ascii_space(peek()))
+                consume();
 
+            size_t directive_start = m_index;
             if (is_valid_first_character_of_identifier(peek()))
                 while (peek() && is_valid_nonfirst_character_of_identifier(peek()))
                     consume();
 
-            auto directive = StringView(m_input.characters_without_null_termination() + token_start_index, m_index - token_start_index);
-            if (directive == "#include") {
+            auto directive = StringView(m_input.characters_without_null_termination() + directive_start, m_index - directive_start);
+            if (directive == "include"sv) {
                 commit_token(Token::Type::IncludeStatement);
 
                 if (is_ascii_space(peek())) {
