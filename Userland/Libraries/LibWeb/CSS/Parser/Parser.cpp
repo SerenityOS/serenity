@@ -1407,7 +1407,9 @@ RefPtr<StyleValue> Parser::parse_builtin_value(ParsingContext const&, StyleCompo
             return InheritStyleValue::the();
         if (ident.equals_ignoring_case("initial"))
             return InitialStyleValue::the();
-        // FIXME: Implement `unset` keyword
+        if (ident.equals_ignoring_case("unset"))
+            return UnsetStyleValue::the();
+        // FIXME: Implement `revert` and `revert-layer` keywords, from Cascade4 and Cascade5 respectively
     }
 
     return {};
