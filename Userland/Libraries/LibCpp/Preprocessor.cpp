@@ -16,47 +16,48 @@ Preprocessor::Preprocessor(const String& filename, const StringView& program)
     : m_filename(filename)
     , m_program(program)
 {
-    GenericLexer program_lexer { m_program };
-    for (;;) {
-        if (program_lexer.is_eof())
-            break;
-        auto line = program_lexer.consume_until('\n');
-        bool has_multiline = false;
-        while (line.ends_with('\\') && !program_lexer.is_eof()) {
-            auto continuation = program_lexer.consume_until('\n');
-            line = StringView { line.characters_without_null_termination(), line.length() + continuation.length() + 1 };
-            // Append an empty line to keep the line count correct.
-            m_lines.append({});
-            has_multiline = true;
-        }
-
-        if (has_multiline)
-            m_lines.last() = line;
-        else
-            m_lines.append(line);
-    }
 }
 
 Vector<Token> Preprocessor::process_and_lex()
 {
-    for (; m_line_index < m_lines.size(); ++m_line_index) {
-        auto& line = m_lines[m_line_index];
+    Lexer lexer { m_program };
+    lexer.set_ignore_whitespace(true);
+    auto tokens = lexer.lex();
 
-        bool include_in_processed_text = false;
-        if (line.starts_with("#")) {
-            auto keyword = handle_preprocessor_line(line);
-            if (m_options.keep_include_statements && keyword == "include")
-                include_in_processed_text = true;
-        } else if (m_state == State::Normal) {
-            include_in_processed_text = true;
+    for (size_t token_index = 0; token_index < tokens.size(); ++token_index) {
+        auto& token = tokens[token_index];
+        m_current_line = token.start().line;
+        if (token.type() == Token::Type::PreprocessorStatement) {
+            handle_preprocessor_statement(token.text());
+            continue;
         }
 
-        if (include_in_processed_text) {
-            process_line(line);
+        if (m_state != State::Normal)
+            continue;
+
+        if (token.type() == Token::Type::IncludeStatement) {
+            if (token_index >= tokens.size() - 1 || tokens[token_index + 1].type() != Token::Type::IncludePath)
+                continue;
+            handle_include_statement(tokens[token_index + 1].text());
+            if (m_options.keep_include_statements) {
+                m_processed_tokens.append(tokens[token_index]);
+                m_processed_tokens.append(tokens[token_index + 1]);
+            }
+            continue;
         }
+
+        if (token.type() == Token::Type::Identifier) {
+            if (auto defined_value = m_definitions.find(token.text()); defined_value != m_definitions.end()) {
+                auto last_substituted_token_index = do_substitution(tokens, token_index, defined_value->value);
+                token_index = last_substituted_token_index;
+                continue;
+            }
+        }
+
+        m_processed_tokens.append(token);
     }
 
-    return m_tokens;
+    return m_processed_tokens;
 }
 
 static void consume_whitespace(GenericLexer& lexer)
@@ -85,7 +86,7 @@ static void consume_whitespace(GenericLexer& lexer)
     }
 }
 
-Preprocessor::PreprocessorKeyword Preprocessor::handle_preprocessor_line(const StringView& line)
+void Preprocessor::handle_preprocessor_statement(StringView const& line)
 {
     GenericLexer lexer(line);
 
@@ -94,23 +95,25 @@ Preprocessor::PreprocessorKeyword Preprocessor::handle_preprocessor_line(const S
     consume_whitespace(lexer);
     auto keyword = lexer.consume_until(' ');
     if (keyword.is_empty() || keyword.is_null() || keyword.is_whitespace())
-        return {};
+        return;
 
     handle_preprocessor_keyword(keyword, lexer);
-    return keyword;
+}
+
+void Preprocessor::handle_include_statement(StringView const& include_path)
+{
+    m_included_paths.append(include_path);
+    if (definitions_in_header_callback) {
+        for (auto& def : definitions_in_header_callback(include_path))
+            m_definitions.set(def.key, def.value);
+    }
 }
 
 void Preprocessor::handle_preprocessor_keyword(const StringView& keyword, GenericLexer& line_lexer)
 {
     if (keyword == "include") {
-        consume_whitespace(line_lexer);
-        auto include_path = line_lexer.consume_all();
-        m_included_paths.append(include_path);
-        if (definitions_in_header_callback) {
-            for (auto& def : definitions_in_header_callback(include_path))
-                m_definitions.set(def.key, def.value);
-        }
-        return;
+        // Should have called 'handle_include_statement'.
+        VERIFY_NOT_REACHED();
     }
 
     if (keyword == "else") {
@@ -218,25 +221,6 @@ void Preprocessor::handle_preprocessor_keyword(const StringView& keyword, Generi
     }
 }
 
-void Preprocessor::process_line(StringView const& line)
-{
-    Lexer line_lexer { line, m_line_index };
-    line_lexer.set_ignore_whitespace(true);
-    auto tokens = line_lexer.lex();
-
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        auto& token = tokens[i];
-        if (token.type() == Token::Type::Identifier) {
-            if (auto defined_value = m_definitions.find(token.text()); defined_value != m_definitions.end()) {
-                auto last_substituted_token_index = do_substitution(tokens, i, defined_value->value);
-                i = last_substituted_token_index;
-                continue;
-            }
-        }
-        m_tokens.append(token);
-    }
-}
-
 size_t Preprocessor::do_substitution(Vector<Token> const& tokens, size_t token_index, Definition const& defined_value)
 {
     if (defined_value.value.is_null())
@@ -265,7 +249,7 @@ size_t Preprocessor::do_substitution(Vector<Token> const& tokens, size_t token_i
             continue;
         token.set_start(original_tokens.first().start());
         token.set_end(original_tokens.first().end());
-        m_tokens.append(token);
+        m_processed_tokens.append(token);
     }
     return macro_call->end_token_index;
 }
@@ -322,7 +306,7 @@ Optional<Preprocessor::Definition> Preprocessor::create_definition(StringView li
 
     Definition definition;
     definition.filename = m_filename;
-    definition.line = m_line_index;
+    definition.line = m_current_line;
 
     definition.key = tokens.first().text();
 
@@ -356,9 +340,19 @@ Optional<Preprocessor::Definition> Preprocessor::create_definition(StringView li
     }
 
     if (token_index < tokens.size())
-        definition.value = line.substring_view(tokens[token_index].start().column);
+        definition.value = remove_escaped_newlines(line.substring_view(tokens[token_index].start().column));
 
     return definition;
+}
+
+String Preprocessor::remove_escaped_newlines(StringView const& value)
+{
+    AK::StringBuilder processed_value;
+    GenericLexer lexer { value };
+    while (!lexer.is_eof()) {
+        processed_value.append(lexer.consume_until("\\\n"));
+    }
+    return processed_value.to_string();
 }
 
 String Preprocessor::evaluate_macro_call(MacroCall const& macro_call, Definition const& definition)
