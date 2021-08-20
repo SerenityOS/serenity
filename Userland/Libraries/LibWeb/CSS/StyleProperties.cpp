@@ -361,7 +361,7 @@ Optional<float> StyleProperties::flex_shrink_factor() const
     auto value = property(CSS::PropertyID::FlexShrink);
     if (!value.has_value())
         return {};
-    if (!value.value()->is_numeric()) {
+    if (value.value()->is_numeric()) {
         auto numeric = verify_cast<CSS::NumericStyleValue>(value.value().ptr());
         return numeric->value();
     }
