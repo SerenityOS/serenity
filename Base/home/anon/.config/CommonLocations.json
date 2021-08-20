@@ -1,5 +1,4 @@
 [
-    { "name": "Root", "path": "/" },
     { "name": "Home", "path": "/home/anon" },
     { "name": "Documents", "path": "/home/anon/Documents" },
     { "name": "Desktop", "path": "/home/anon/Desktop" },

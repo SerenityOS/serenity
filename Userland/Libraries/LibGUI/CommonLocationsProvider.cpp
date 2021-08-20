@@ -30,7 +30,6 @@ static void initialize_if_needed()
     }
 
     // Fallback : If the user doesn't have custom locations, use some default ones.
-    s_common_locations.append({ "Root", "/" });
     s_common_locations.append({ "Home", Core::StandardPaths::home_directory() });
     s_common_locations.append({ "Downloads", Core::StandardPaths::downloads_directory() });
     s_initialized = true;
