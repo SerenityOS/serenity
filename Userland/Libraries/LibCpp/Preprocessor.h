@@ -49,10 +49,11 @@ public:
     Function<Definitions(StringView)> definitions_in_header_callback { nullptr };
 
 private:
-    using PreprocessorKeyword = StringView;
-    PreprocessorKeyword handle_preprocessor_line(StringView const&);
+    void handle_preprocessor_statement(StringView const&);
+    void handle_include_statement(StringView const&);
     void handle_preprocessor_keyword(StringView const& keyword, GenericLexer& line_lexer);
-    void process_line(StringView const& line);
+    String remove_escaped_newlines(StringView const& value);
+
     size_t do_substitution(Vector<Token> const& tokens, size_t token_index, Definition const&);
     Optional<Definition> create_definition(StringView line);
 
@@ -69,13 +70,12 @@ private:
 
     String m_filename;
     String m_program;
-    Vector<StringView> m_lines;
 
-    Vector<Token> m_tokens;
+    Vector<Token> m_processed_tokens;
     Definitions m_definitions;
     Vector<Substitution> m_substitutions;
 
-    size_t m_line_index { 0 };
+    size_t m_current_line { 0 };
     size_t m_current_depth { 0 };
     Vector<size_t> m_depths_of_taken_branches;
     Vector<size_t> m_depths_of_not_taken_branches;
