@@ -323,10 +323,15 @@ static void populate_devfs()
     umask(old_mask);
 }
 
-static void prepare_devfs()
+static void prepare_synthetic_filesystems()
 {
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
-    int rc = mount(-1, "/sys", "sys", 0);
+    int rc = mount(-1, "/proc", "proc", MS_NOSUID);
+    if (rc != 0) {
+        VERIFY_NOT_REACHED();
+    }
+
+    rc = mount(-1, "/sys", "sys", 0);
     if (rc != 0) {
         VERIFY_NOT_REACHED();
     }
@@ -445,14 +450,14 @@ static void create_tmp_coredump_directory()
 
 int main(int, char**)
 {
-    prepare_devfs();
+    mount_all_filesystems();
+    prepare_synthetic_filesystems();
 
     if (pledge("stdio proc exec tty accept unix rpath wpath cpath chown fattr id sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    mount_all_filesystems();
     create_tmp_coredump_directory();
     parse_boot_mode();
 
