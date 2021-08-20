@@ -71,6 +71,13 @@ Optional<NonnullRefPtr<StyleValue>> StyleProperties::property(CSS::PropertyID id
         return fetch_initial(id);
     if (value->is_inherit())
         return fetch_inherited(id);
+    if (value->is_unset()) {
+        if (is_inherited_property(id)) {
+            return fetch_inherited(id);
+        } else {
+            return fetch_initial(id);
+        }
+    }
 
     return value;
 }
