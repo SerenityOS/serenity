@@ -192,12 +192,6 @@ Optional<String> get_standardized_encoding(const String& encoding)
     return {};
 }
 
-bool is_standardized_encoding(const String& encoding)
-{
-    auto standardized_encoding = get_standardized_encoding(encoding);
-    return standardized_encoding.has_value() && encoding.equals_ignoring_case(standardized_encoding.value());
-}
-
 String UTF8Decoder::to_utf8(const StringView& input)
 {
     return input;
