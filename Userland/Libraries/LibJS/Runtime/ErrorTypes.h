@@ -61,6 +61,7 @@
     M(NotASymbol, "{} is not a symbol")                                                                                                 \
     M(NotIterable, "{} is not iterable")                                                                                                \
     M(NotObjectCoercible, "{} cannot be converted to an object")                                                                        \
+    M(NotUndefined, "{} is not undefined")                                                                                              \
     M(ObjectDefineOwnPropertyReturnedFalse, "Object's [[DefineOwnProperty]] method returned false")                                     \
     M(ObjectDeleteReturnedFalse, "Object's [[Delete]] method returned false")                                                           \
     M(ObjectFreezeFailed, "Could not freeze object")                                                                                    \
