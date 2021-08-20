@@ -86,10 +86,10 @@ public:
 
 class VirtIODevice : public PCI::Device {
 public:
-    VirtIODevice(PCI::Address, String);
     virtual ~VirtIODevice() override;
 
 protected:
+    VirtIODevice(PCI::Address, String);
     const String m_class_name;
 
     struct MappedMMIO {
