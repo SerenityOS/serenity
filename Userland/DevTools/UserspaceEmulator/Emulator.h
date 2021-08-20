@@ -33,11 +33,13 @@ public:
 
     Emulator(String const& executable_path, Vector<String> const& arguments, Vector<String> const& environment);
 
-    void set_profiling_details(bool should_dump_profile, size_t instruction_interval, OutputFileStream* profile_stream)
+    void set_profiling_details(bool should_dump_profile, size_t instruction_interval, OutputFileStream* profile_stream, NonnullOwnPtrVector<String>* profiler_strings, Vector<int>* profiler_string_id_map)
     {
         m_is_profiling = should_dump_profile;
         m_profile_instruction_interval = instruction_interval;
         m_profile_stream = profile_stream;
+        m_profiler_strings = profiler_strings;
+        m_profiler_string_id_map = profiler_string_id_map;
     }
 
     void set_in_region_of_interest(bool value)
@@ -46,6 +48,9 @@ public:
     }
 
     OutputFileStream& profile_stream() { return *m_profile_stream; }
+    NonnullOwnPtrVector<String>& profiler_strings() { return *m_profiler_strings; }
+    Vector<int>& profiler_string_id_map() { return *m_profiler_string_id_map; }
+
     bool is_profiling() const { return m_is_profiling; }
     bool is_in_region_of_interest() const { return m_is_in_region_of_interest; }
     size_t profile_instruction_interval() const { return m_profile_instruction_interval; }
@@ -137,6 +142,8 @@ private:
     int virt$gethostname(FlatPtr, ssize_t);
     int virt$profiling_enable(pid_t);
     int virt$profiling_disable(pid_t);
+    FlatPtr virt$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
+    FlatPtr virt$perf_register_string(FlatPtr, size_t);
     int virt$disown(pid_t);
     int virt$purge(int mode);
     u32 virt$mmap(u32);
@@ -274,6 +281,9 @@ private:
     RangeAllocator m_range_allocator;
 
     OutputFileStream* m_profile_stream { nullptr };
+    Vector<int>* m_profiler_string_id_map { nullptr };
+    NonnullOwnPtrVector<String>* m_profiler_strings { nullptr };
+
     bool m_is_profiling { false };
     size_t m_profile_instruction_interval { 0 };
     bool m_is_in_region_of_interest { false };

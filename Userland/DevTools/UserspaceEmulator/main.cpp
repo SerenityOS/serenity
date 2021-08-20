@@ -59,6 +59,9 @@ int main(int argc, char** argv, char** env)
         profile_dump_path = String::formatted("{}.{}.profile", LexicalPath(executable_path).basename(), getpid());
 
     OwnPtr<OutputFileStream> profile_stream;
+    OwnPtr<NonnullOwnPtrVector<String>> profile_strings;
+    OwnPtr<Vector<int>> profile_string_id_map;
+
     if (dump_profile) {
         profile_output_file = fopen(profile_dump_path.characters(), "w+");
         if (profile_output_file == nullptr) {
@@ -67,6 +70,8 @@ int main(int argc, char** argv, char** env)
             return 1;
         }
         profile_stream = make<OutputFileStream>(profile_output_file);
+        profile_strings = make<NonnullOwnPtrVector<String>>();
+        profile_string_id_map = make<Vector<int>>();
 
         profile_stream->write_or_error(R"({"events":[)"sv.bytes());
         timeval tv {};
@@ -85,7 +90,8 @@ int main(int argc, char** argv, char** env)
 
     // FIXME: It might be nice to tear down the emulator properly.
     auto& emulator = *new UserspaceEmulator::Emulator(executable_path, arguments, environment);
-    emulator.set_profiling_details(dump_profile, profile_instruction_interval, profile_stream);
+
+    emulator.set_profiling_details(dump_profile, profile_instruction_interval, profile_stream, profile_strings, profile_string_id_map);
     emulator.set_in_region_of_interest(!enable_roi_mode);
 
     if (!emulator.load_elf())
@@ -109,8 +115,14 @@ int main(int argc, char** argv, char** env)
 
     rc = emulator.exec();
 
-    if (dump_profile)
-        emulator.profile_stream().write_or_error(R"(], "strings": []})"sv.bytes());
-
+    if (dump_profile) {
+        emulator.profile_stream().write_or_error(", \"strings\": ["sv.bytes());
+        if (emulator.profiler_strings().size()) {
+            for (size_t i = 0; i < emulator.profiler_strings().size() - 1; ++i)
+                emulator.profile_stream().write_or_error(String::formatted("\"{}\", ", emulator.profiler_strings().at(i)).bytes());
+            emulator.profile_stream().write_or_error(String::formatted("\"{}\"", emulator.profiler_strings().last()).bytes());
+        }
+        emulator.profile_stream().write_or_error("]}"sv.bytes());
+    }
     return rc;
 }
