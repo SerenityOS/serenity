@@ -1,4 +1,5 @@
 set(AK_TEST_SOURCES
+    TestFixedPoint.cpp
     TestAllOf.cpp
     TestAnyOf.cpp
     TestArray.cpp
