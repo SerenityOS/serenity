@@ -10,9 +10,9 @@
 
 namespace Kernel {
 
-static Singleton<SpinLockProtectedValue<ProcessGroup::List>> s_process_groups;
+static Singleton<SpinLockProtected<ProcessGroup::List>> s_process_groups;
 
-SpinLockProtectedValue<ProcessGroup::List>& process_groups()
+SpinLockProtected<ProcessGroup::List>& process_groups()
 {
     return *s_process_groups;
 }

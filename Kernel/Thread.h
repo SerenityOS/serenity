@@ -27,7 +27,7 @@
 #include <Kernel/Library/ListedRefCounted.h>
 #include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/LockMode.h>
-#include <Kernel/Locking/SpinLockProtectedValue.h>
+#include <Kernel/Locking/SpinLockProtected.h>
 #include <Kernel/Memory/VirtualRange.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/TimerQueue.h>
@@ -1389,7 +1389,7 @@ public:
     using ListInProcess = IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_process_thread_list_node>;
     using GlobalList = IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_global_thread_list_node>;
 
-    static SpinLockProtectedValue<GlobalList>& all_instances();
+    static SpinLockProtected<GlobalList>& all_instances();
 };
 
 AK_ENUM_BITWISE_OPERATORS(Thread::FileBlocker::BlockFlags);

@@ -11,10 +11,11 @@
 namespace Kernel {
 
 template<typename T>
-class SpinLockProtectedValue : private T
+class SpinLockProtected
+    : private T
     , public SpinLockContendedResource {
-    AK_MAKE_NONCOPYABLE(SpinLockProtectedValue);
-    AK_MAKE_NONMOVABLE(SpinLockProtectedValue);
+    AK_MAKE_NONCOPYABLE(SpinLockProtected);
+    AK_MAKE_NONMOVABLE(SpinLockProtected);
 
 protected:
     using LockedConst = SpinLockLockedResource<T const>;
@@ -26,7 +27,7 @@ protected:
 public:
     using T::T;
 
-    SpinLockProtectedValue() = default;
+    SpinLockProtected() = default;
 
     template<typename Callback>
     decltype(auto) with(Callback callback) const

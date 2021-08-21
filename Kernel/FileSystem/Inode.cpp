@@ -22,9 +22,9 @@
 
 namespace Kernel {
 
-static Singleton<SpinLockProtectedValue<Inode::AllInstancesList>> s_all_instances;
+static Singleton<SpinLockProtected<Inode::AllInstancesList>> s_all_instances;
 
-SpinLockProtectedValue<Inode::AllInstancesList>& Inode::all_instances()
+SpinLockProtected<Inode::AllInstancesList>& Inode::all_instances()
 {
     return s_all_instances;
 }

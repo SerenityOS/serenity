@@ -74,7 +74,7 @@ private:
 
 public:
     using AllInstancesList = IntrusiveList<VMObject, RawPtr<VMObject>, &VMObject::m_list_node>;
-    static SpinLockProtectedValue<VMObject::AllInstancesList>& all_instances();
+    static SpinLockProtected<VMObject::AllInstancesList>& all_instances();
 };
 
 template<typename Callback>
