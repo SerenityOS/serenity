@@ -124,16 +124,11 @@ void ListView::paint_list_item(Painter& painter, int row_index, int painted_item
             painter.blit(row_rect.location(), *bitmap, bitmap->rect(), opacity);
         }
     } else {
-        Color text_color;
-        if (is_selected_row)
-            text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
-        else
-            text_color = index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
         auto text_rect = row_rect;
         text_rect.translate_by(horizontal_padding(), 0);
         text_rect.set_width(text_rect.width() - horizontal_padding() * 2);
         auto text_alignment = index.data(ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
-        painter.draw_text(text_rect, data.to_string(), font, text_alignment, text_color);
+        draw_item_text(painter, index, is_selected_row, text_rect, data.to_string(), font, text_alignment, Gfx::TextElision::None);
     }
 }
 
