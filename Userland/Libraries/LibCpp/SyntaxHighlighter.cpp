@@ -59,10 +59,9 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
 {
     auto text = m_client->get_text();
     Cpp::Lexer lexer(text);
-    auto tokens = lexer.lex();
 
     Vector<GUI::TextDocumentSpan> spans;
-    for (auto& token : tokens) {
+    lexer.lex_iterable([&](auto token) {
         // FIXME: The +1 for the token end column is a quick hack due to not wanting to modify the lexer (which is also used by the parser). Maybe there's a better way to do this.
         dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "{} @ {}:{} - {}:{}", token.type_as_string(), token.start().line, token.start().column, token.end().line, token.end().column + 1);
         GUI::TextDocumentSpan span;
@@ -74,7 +73,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         span.is_skippable = token.type() == Cpp::Token::Type::Whitespace;
         span.data = static_cast<u64>(token.type());
         spans.append(span);
-    }
+    });
     m_client->do_set_spans(move(spans));
 
     m_has_brace_buddies = false;

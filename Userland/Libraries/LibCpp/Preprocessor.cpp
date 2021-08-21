@@ -244,13 +244,13 @@ size_t Preprocessor::do_substitution(Vector<Token> const& tokens, size_t token_i
     m_substitutions.append({ original_tokens, defined_value, processed_value });
 
     Lexer lexer(processed_value);
-    for (auto& token : lexer.lex()) {
+    lexer.lex_iterable([&](auto token) {
         if (token.type() == Token::Type::Whitespace)
-            continue;
+            return;
         token.set_start(original_tokens.first().start());
         token.set_end(original_tokens.first().end());
         m_processed_tokens.append(token);
-    }
+    });
     return macro_call->end_token_index;
 }
 
@@ -363,26 +363,25 @@ String Preprocessor::evaluate_macro_call(MacroCall const& macro_call, Definition
     }
 
     Lexer lexer { definition.value };
-    auto tokens = lexer.lex();
-
     StringBuilder processed_value;
-    for (auto& token : tokens) {
+    lexer.lex_iterable([&](auto token) {
         if (token.type() != Token::Type::Identifier) {
             processed_value.append(token.text());
-            continue;
+            return;
         }
 
         auto param_index = definition.parameters.find_first_index(token.text());
         if (!param_index.has_value()) {
             processed_value.append(token.text());
-            continue;
+            return;
         }
 
         auto& argument = macro_call.arguments[*param_index];
         for (auto& arg_token : argument.tokens) {
             processed_value.append(arg_token.text());
         }
-    }
+    });
+
     return processed_value.to_string();
 }
 

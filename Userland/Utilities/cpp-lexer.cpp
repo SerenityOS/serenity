@@ -24,9 +24,7 @@ int main(int argc, char** argv)
     StringView content_view(content);
 
     Cpp::Lexer lexer(content);
-    auto tokens = lexer.lex();
-
-    for (auto& token : tokens) {
+    lexer.lex_iterable([](auto token) {
         outln("{}", token.to_string());
-    }
+    });
 }
