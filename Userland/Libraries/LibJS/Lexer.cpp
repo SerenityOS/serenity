@@ -363,7 +363,7 @@ bool Lexer::is_whitespace() const
     if (!is_unicode_character())
         return false;
     auto code_point = current_code_point();
-    if (code_point == NO_BREAK_SPACE)
+    if (code_point == NO_BREAK_SPACE || code_point == ZERO_WIDTH_NO_BREAK_SPACE)
         return true;
 
     static auto space_separator_category = Unicode::general_category_from_string("Space_Separator"sv);
