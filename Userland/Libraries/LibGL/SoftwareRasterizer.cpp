@@ -483,9 +483,7 @@ SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
 void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Array<TextureUnit, 32>& texture_units)
 {
     rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &texture_units](const FloatVector2& uv, const FloatVector4& color, float z) -> FloatVector4 {
-        // TODO: We'd do some kind of multitexturing/blending here
-        // Construct a vector for the texel we want to sample
-        FloatVector4 texel = color;
+        FloatVector4 fragment = color;
 
         for (const auto& texture_unit : texture_units) {
 
@@ -493,8 +491,27 @@ void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Array
             if (!texture_unit.is_bound())
                 continue;
 
-            // FIXME: Don't assume Texture2D, _and_ work out how we blend/do multitexturing properly.....
-            texel = texel * static_ptr_cast<Texture2D>(texture_unit.bound_texture())->sampler().sample(uv);
+            // FIXME: Don't assume Texture2D
+            auto texel = texture_unit.bound_texture_2d()->sampler().sample(uv);
+
+            // FIXME: Implement more blend modes
+            switch (texture_unit.env_mode()) {
+            case GL_MODULATE:
+            default:
+                fragment = fragment * texel;
+                break;
+            case GL_REPLACE:
+                fragment = texel;
+                break;
+            case GL_DECAL: {
+                float src_alpha = fragment.w();
+                float one_minus_src_alpha = 1 - src_alpha;
+                fragment.set_x(texel.x() * src_alpha + fragment.x() * one_minus_src_alpha);
+                fragment.set_y(texel.y() * src_alpha + fragment.y() * one_minus_src_alpha);
+                fragment.set_z(texel.z() * src_alpha + fragment.z() * one_minus_src_alpha);
+                break;
+            }
+            }
         }
 
         // Calculate fog
@@ -516,10 +533,10 @@ void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Array
             }
 
             // Mix texel with fog
-            texel = mix(m_options.fog_color, texel, factor);
+            fragment = mix(m_options.fog_color, fragment, factor);
         }
 
-        return texel;
+        return fragment;
     });
 }
 
