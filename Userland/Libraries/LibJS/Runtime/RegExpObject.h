@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Optional.h>
 #include <AK/Result.h>
 #include <LibJS/AST.h>
 #include <LibJS/Runtime/Object.h>
@@ -27,26 +26,21 @@ public:
     // FIXME: Enable 'BrowserExtended' only if in a browser context.
     static constexpr regex::RegexOptions<ECMAScriptFlags> default_flags { (regex::ECMAScriptFlags)regex::AllFlags::Global | (regex::ECMAScriptFlags)regex::AllFlags::SkipTrimEmptyMatches | regex::ECMAScriptFlags::BrowserExtended };
 
-    static RegExpObject* create(GlobalObject&);
     static RegExpObject* create(GlobalObject&, Regex<ECMA262> regex, String pattern, String flags);
 
-    RegExpObject(Object& prototype);
     RegExpObject(Regex<ECMA262> regex, String pattern, String flags, Object& prototype);
-
-    RegExpObject* regexp_initialize(GlobalObject&, Value pattern, Value flags);
-
     virtual void initialize(GlobalObject&) override;
     virtual ~RegExpObject() override;
 
     const String& pattern() const { return m_pattern; }
     const String& flags() const { return m_flags; }
-    const Regex<ECMA262>& regex() { return *m_regex; }
-    const Regex<ECMA262>& regex() const { return *m_regex; }
+    const Regex<ECMA262>& regex() { return m_regex; }
+    const Regex<ECMA262>& regex() const { return m_regex; }
 
 private:
     String m_pattern;
     String m_flags;
-    Optional<Regex<ECMA262>> m_regex;
+    Regex<ECMA262> m_regex;
 };
 
 }

@@ -278,29 +278,10 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                             pass = z >= *depth;
                             break;
                         case GL_NOTEQUAL:
-#ifdef __SSE__
                             pass = z != *depth;
-#else
-                            pass = bit_cast<u32>(z) != bit_cast<u32>(*depth);
-#endif
                             break;
                         case GL_EQUAL:
-#ifdef __SSE__
                             pass = z == *depth;
-#else
-                            //
-                            // This is an interesting quirk that occurs due to us using the x87 FPU when Serenity is
-                            // compiled for the i386 target. When we calculate our depth value to be stored in the buffer,
-                            // it is an 80-bit x87 floating point number, however, when stored into the DepthBuffer, this is
-                            // truncated to 32 bits. This 38 bit loss of precision means that when x87 `FCOMP` is eventually
-                            // used here the comparison fails.
-                            // This could be solved by using a `long double` for the depth buffer, however this would take
-                            // up significantly more space and is completely overkill for a depth buffer. As such, comparing
-                            // the first 32-bits of this depth value is "good enough" that if we get a hit on it being
-                            // equal, we can pretty much guarantee that it's actually equal.
-                            //
-                            pass = bit_cast<u32>(z) == bit_cast<u32>(*depth);
-#endif
                             break;
                         case GL_LEQUAL:
                             pass = z <= *depth;

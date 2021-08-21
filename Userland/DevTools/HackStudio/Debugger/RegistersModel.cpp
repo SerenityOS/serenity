@@ -89,7 +89,7 @@ RegistersModel::RegistersModel(const PtraceRegisters& current_regs, const Ptrace
     m_registers.append({ "ss", current_regs.ss, current_regs.ss != previous_regs.ss });
     m_registers.append({ "ds", current_regs.ds, current_regs.ds != previous_regs.ds });
     m_registers.append({ "es", current_regs.es, current_regs.es != previous_regs.es });
-    m_registers.append({ "fs", current_regs.fs, current_regs.fs != previous_regs.fs });
+    m_registers.append({ "fs", current_regs.fs, current_regs.ds != previous_regs.fs });
     m_registers.append({ "gs", current_regs.gs, current_regs.gs != previous_regs.gs });
 }
 

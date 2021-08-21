@@ -6,7 +6,6 @@
 
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainMonthDay.h>
 #include <LibJS/Runtime/Temporal/PlainMonthDayConstructor.h>
@@ -58,39 +57,6 @@ PlainMonthDay* create_temporal_month_day(GlobalObject& global_object, u8 iso_mon
 
     // 10. Return object.
     return object;
-}
-
-// 10.5.3 TemporalMonthDayToString ( monthDay, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalmonthdaytostring
-Optional<String> temporal_month_day_to_string(GlobalObject& global_object, PlainMonthDay& month_day, StringView show_calendar)
-{
-    auto& vm = global_object.vm();
-
-    // 1. Assert: Type(monthDay) is Object.
-    // 2. Assert: monthDay has an [[InitializedTemporalMonthDay]] internal slot.
-
-    // 3. Let month be monthDay.[[ISOMonth]] formatted as a two-digit decimal number, padded to the left with a zero if necessary.
-    // 4. Let day be monthDay.[[ISODay]] formatted as a two-digit decimal number, padded to the left with a zero if necessary.
-    // 5. Let result be the string-concatenation of month, the code unit 0x002D (HYPHEN-MINUS), and day.
-    auto result = String::formatted("{:02}-{:02}", month_day.iso_month(), month_day.iso_day());
-
-    // 6. Let calendarID be ? ToString(monthDay.[[Calendar]]).
-    auto calendar_id = Value(&month_day.calendar()).to_string(global_object);
-    if (vm.exception())
-        return {};
-
-    // 7. If calendarID is not "iso8601", then
-    if (calendar_id != "iso8601"sv) {
-        // a. Let year be ! PadISOYear(monthDay.[[ISOYear]]).
-        // b. Set result to the string-concatenation of year, the code unit 0x002D (HYPHEN-MINUS), and result.
-        result = String::formatted("{}-{}", pad_iso_year(month_day.iso_year()), result);
-    }
-
-    // 8. Let calendarString be ! FormatCalendarAnnotation(calendarID, showCalendar).
-    auto calendar_string = format_calendar_annotation(calendar_id, show_calendar);
-
-    // 9. Set result to the string-concatenation of result and calendarString.
-    // 10. Return result.
-    return String::formatted("{}{}", result, calendar_string);
 }
 
 }

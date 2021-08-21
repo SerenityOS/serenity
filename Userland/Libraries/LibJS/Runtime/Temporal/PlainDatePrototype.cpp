@@ -428,7 +428,6 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_string)
 }
 
 // 3.3.29 Temporal.PlainDate.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tolocalestring
-// NOTE: This is the minimum toLocaleString implementation for engines without ECMA-402.
 JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_locale_string)
 {
     // 1. Let temporalDate be the this value.

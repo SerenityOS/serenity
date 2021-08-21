@@ -65,7 +65,7 @@ private:
 
         void flap()
         {
-            const float flap_strength = 10.0f;
+            const float flap_strength = 15.0f;
             velocity = -flap_strength;
         }
 

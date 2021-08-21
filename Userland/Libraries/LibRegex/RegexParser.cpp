@@ -145,9 +145,9 @@ ALWAYS_INLINE bool Parser::lookahead_any(StringView str)
     return false;
 }
 
-ALWAYS_INLINE unsigned char Parser::skip()
+ALWAYS_INLINE char Parser::skip()
 {
-    unsigned char ch;
+    char ch;
     if (m_parser_state.current_token.value().length() == 1) {
         ch = m_parser_state.current_token.value()[0];
     } else {
@@ -1287,7 +1287,7 @@ bool ECMA262Parser::parse_atom(ByteCode& stack, size_t& match_length_minimum, bo
         // Also part of AtomEscape.
         auto token = consume();
         match_length_minimum += 1;
-        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (u8)token.value()[1] } });
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)token.value()[1] } });
         return true;
     }
     if (try_skip("\\")) {
@@ -1326,7 +1326,7 @@ bool ECMA262Parser::parse_atom(ByteCode& stack, size_t& match_length_minimum, bo
         if (m_should_use_browser_extended_grammar) {
             auto token = consume();
             match_length_minimum += 1;
-            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (u8)token.value()[0] } });
+            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)token.value()[0] } });
             return true;
         } else {
             return false;
@@ -1336,7 +1336,7 @@ bool ECMA262Parser::parse_atom(ByteCode& stack, size_t& match_length_minimum, bo
     if (match_ordinary_characters()) {
         auto token = consume().value();
         match_length_minimum += 1;
-        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (u8)token[0] } });
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)token[0] } });
         return true;
     }
 
@@ -1594,7 +1594,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
             // Allow all SourceCharacter's as escapes here.
             auto token = consume();
             match_length_minimum += 1;
-            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (u8)token.value()[0] } });
+            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)token.value()[0] } });
             return true;
         }
 

@@ -687,8 +687,6 @@ TEST_CASE(ECMA262_unicode_match)
         ECMAScriptFlags options {};
     };
     _test tests[] {
-        { "\xf0\x9d\x8c\x86"sv, "abcdef"sv, false, ECMAScriptFlags::Unicode },
-        { "[\xf0\x9d\x8c\x86]"sv, "abcdef"sv, false, ECMAScriptFlags::Unicode },
         { "\\ud83d"sv, "😀"sv, true },
         { "\\ud83d"sv, "😀"sv, false, ECMAScriptFlags::Unicode },
         { "\\ude00"sv, "😀"sv, true },

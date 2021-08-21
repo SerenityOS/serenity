@@ -103,19 +103,9 @@ String parse_regex_pattern(StringView pattern, bool unicode)
     return builder.build();
 }
 
-RegExpObject* RegExpObject::create(GlobalObject& global_object)
-{
-    return global_object.heap().allocate<RegExpObject>(global_object, *global_object.regexp_prototype());
-}
-
 RegExpObject* RegExpObject::create(GlobalObject& global_object, Regex<ECMA262> regex, String pattern, String flags)
 {
     return global_object.heap().allocate<RegExpObject>(global_object, move(regex), move(pattern), move(flags), *global_object.regexp_prototype());
-}
-
-RegExpObject::RegExpObject(Object& prototype)
-    : Object(prototype)
-{
 }
 
 RegExpObject::RegExpObject(Regex<ECMA262> regex, String pattern, String flags, Object& prototype)
@@ -124,7 +114,7 @@ RegExpObject::RegExpObject(Regex<ECMA262> regex, String pattern, String flags, O
     , m_flags(move(flags))
     , m_regex(move(regex))
 {
-    VERIFY(m_regex->parser_result.error == regex::Error::NoError);
+    VERIFY(m_regex.parser_result.error == regex::Error::NoError);
 }
 
 RegExpObject::~RegExpObject()
@@ -138,8 +128,8 @@ void RegExpObject::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.lastIndex, Value(0), Attribute::Writable);
 }
 
-// 22.2.3.2.2 RegExpInitialize ( obj, pattern, flags ), https://tc39.es/ecma262/#sec-regexpinitialize
-RegExpObject* RegExpObject::regexp_initialize(GlobalObject& global_object, Value pattern, Value flags)
+// 22.2.3.2.4 RegExpCreate ( P, F ), https://tc39.es/ecma262/#sec-regexpcreate
+RegExpObject* regexp_create(GlobalObject& global_object, Value pattern, Value flags)
 {
     auto& vm = global_object.vm();
 
@@ -179,22 +169,11 @@ RegExpObject* RegExpObject::regexp_initialize(GlobalObject& global_object, Value
         return {};
     }
 
-    m_pattern = move(original_pattern);
-    m_flags = move(f);
-    m_regex = move(regex);
-
-    set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
+    auto* object = RegExpObject::create(global_object, move(regex), move(original_pattern), move(f));
+    object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
     if (vm.exception())
         return {};
-
-    return this;
-}
-
-// 22.2.3.2.4 RegExpCreate ( P, F ), https://tc39.es/ecma262/#sec-regexpcreate
-RegExpObject* regexp_create(GlobalObject& global_object, Value pattern, Value flags)
-{
-    auto* regexp_object = RegExpObject::create(global_object);
-    return regexp_object->regexp_initialize(global_object, pattern, flags);
+    return object;
 }
 
 }
