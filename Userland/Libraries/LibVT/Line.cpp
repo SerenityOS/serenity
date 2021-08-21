@@ -51,7 +51,7 @@ void Line::push_cells_into_next_line(size_t new_length, Line* next_line, bool cu
 
     // Push as many cells as _wouldn't_ fit into the next line.
     auto cells_to_preserve = !next_line->m_terminated_at.has_value() && next_line->is_empty() ? 0 : m_terminated_at.value_or(0);
-    auto preserved_cells = max(new_length, cells_to_preserve);
+    auto preserved_cells = min(max(new_length, cells_to_preserve), length());
     auto cells_to_push_into_next_line = length() - preserved_cells;
     if (!cells_to_push_into_next_line)
         return;
