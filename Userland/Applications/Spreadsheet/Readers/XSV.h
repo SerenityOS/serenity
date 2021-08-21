@@ -148,6 +148,8 @@ public:
             return m_index == other.m_index && &m_xsv == &other.m_xsv;
         }
 
+        constexpr size_t index() const { return m_index; }
+
     private:
         XSV& m_xsv;
         size_t m_index { 0 };
