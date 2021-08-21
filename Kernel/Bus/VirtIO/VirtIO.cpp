@@ -44,7 +44,8 @@ UNMAP_AFTER_INIT void VirtIO::detect()
 }
 
 UNMAP_AFTER_INIT VirtIODevice::VirtIODevice(PCI::Address address, String class_name)
-    : PCI::Device(address, PCI::get_interrupt_line(address))
+    : PCI::DeviceController(address)
+    , IRQHandler(PCI::get_interrupt_line(address))
     , m_class_name(move(class_name))
     , m_io_base(IOAddress(PCI::get_BAR0(pci_address()) & ~1))
 {

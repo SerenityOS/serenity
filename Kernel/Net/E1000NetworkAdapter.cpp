@@ -220,7 +220,8 @@ UNMAP_AFTER_INIT bool E1000NetworkAdapter::initialize()
 }
 
 UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
-    : PCI::Device(address, irq)
+    : PCI::DeviceController(address)
+    , IRQHandler(irq)
     , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16), "E1000 RX Descriptors", Memory::Region::Access::ReadWrite))
     , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors + 16), "E1000 TX Descriptors", Memory::Region::Access::ReadWrite))
 {

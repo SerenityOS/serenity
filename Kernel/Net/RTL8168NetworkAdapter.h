@@ -9,8 +9,9 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Bus/PCI/Device.h>
+#include <Kernel/Bus/PCI/DeviceController.h>
 #include <Kernel/IO.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Random.h>
 
@@ -18,7 +19,8 @@ namespace Kernel {
 
 // RTL8618 / RTL8111 Driver based on https://people.freebsd.org/~wpaul/RealTek/RTL8111B_8168B_Registers_DataSheet_1.0.pdf
 class RTL8168NetworkAdapter final : public NetworkAdapter
-    , public PCI::Device {
+    , public PCI::DeviceController
+    , public IRQHandler {
 public:
     static RefPtr<RTL8168NetworkAdapter> try_to_initialize(PCI::Address);
 
