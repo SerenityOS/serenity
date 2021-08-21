@@ -9,7 +9,7 @@
 #include <AK/RefCounted.h>
 #include <AK/Types.h>
 #include <Kernel/Graphics/Console/VGAConsole.h>
-#include <Kernel/Locking/SpinLock.h>
+#include <Kernel/Locking/Spinlock.h>
 
 namespace Kernel::Graphics {
 class TextModeConsole final : public VGAConsole {
@@ -39,7 +39,7 @@ private:
 
     explicit TextModeConsole(const VGACompatibleAdapter&);
 
-    mutable SpinLock<u8> m_vga_lock;
+    mutable Spinlock<u8> m_vga_lock;
     u16 m_vga_start_row { 0 };
     u16 m_current_vga_start_address { 0 };
     u8* m_current_vga_window { nullptr };

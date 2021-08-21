@@ -80,7 +80,7 @@ bool BMIDEChannel::handle_irq(const RegisterState&)
     // clear bus master interrupt status
     m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 4);
 
-    ScopedSpinLock lock(m_request_lock);
+    ScopedSpinlock lock(m_request_lock);
     dbgln_if(PATA_DEBUG, "BMIDEChannel: interrupt: DRQ={}, BSY={}, DRDY={}",
         (status & ATA_SR_DRQ) != 0,
         (status & ATA_SR_BSY) != 0,
@@ -116,7 +116,7 @@ void BMIDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult re
     // before Processor::deferred_call_queue returns!
     g_io_work->queue([this, result]() {
         dbgln_if(PATA_DEBUG, "BMIDEChannel::complete_current_request result: {}", (int)result);
-        ScopedSpinLock lock(m_request_lock);
+        ScopedSpinlock lock(m_request_lock);
         VERIFY(m_current_request);
         auto current_request = m_current_request;
         m_current_request.clear();
@@ -146,7 +146,7 @@ void BMIDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
     VERIFY(!m_current_request.is_null());
     VERIFY(m_current_request->block_count() <= 256);
 
-    ScopedSpinLock m_lock(m_request_lock);
+    ScopedSpinlock m_lock(m_request_lock);
     dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_write_sectors ({} x {})", m_current_request->block_index(), m_current_request->block_count());
 
     prdt().offset = m_dma_buffer_page->paddr().get();
@@ -194,7 +194,7 @@ void BMIDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
     VERIFY(!m_current_request.is_null());
     VERIFY(m_current_request->block_count() <= 256);
 
-    ScopedSpinLock m_lock(m_request_lock);
+    ScopedSpinlock m_lock(m_request_lock);
     dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_read_sectors ({} x {})", m_current_request->block_index(), m_current_request->block_count());
 
     // Note: This is a fix for a quirk for an IDE controller on ICH7 machine.

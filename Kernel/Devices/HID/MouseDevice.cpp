@@ -20,7 +20,7 @@ MouseDevice::~MouseDevice()
 
 bool MouseDevice::can_read(const FileDescription&, size_t) const
 {
-    ScopedSpinLock lock(m_queue_lock);
+    ScopedSpinlock lock(m_queue_lock);
     return !m_queue.is_empty();
 }
 
@@ -29,7 +29,7 @@ KResultOr<size_t> MouseDevice::read(FileDescription&, u64, UserOrKernelBuffer& b
     VERIFY(size > 0);
     size_t nread = 0;
     size_t remaining_space_in_buffer = static_cast<size_t>(size) - nread;
-    ScopedSpinLock lock(m_queue_lock);
+    ScopedSpinlock lock(m_queue_lock);
     while (!m_queue.is_empty() && remaining_space_in_buffer) {
         auto packet = m_queue.dequeue();
         lock.unlock();

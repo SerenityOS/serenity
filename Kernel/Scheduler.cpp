@@ -28,7 +28,7 @@ struct SchedulerData {
     bool in_scheduler { true };
 };
 
-RecursiveSpinLock g_scheduler_lock;
+RecursiveSpinlock g_scheduler_lock;
 
 static u32 time_slice_for(const Thread& thread)
 {
@@ -53,9 +53,9 @@ struct ThreadReadyQueues {
     Array<ThreadReadyQueue, count> queues;
 };
 
-static Singleton<SpinLockProtected<ThreadReadyQueues>> g_ready_queues;
+static Singleton<SpinlockProtected<ThreadReadyQueues>> g_ready_queues;
 
-static SpinLockProtected<TotalTimeScheduled> g_total_time_scheduled;
+static SpinlockProtected<TotalTimeScheduled> g_total_time_scheduled;
 
 // The Scheduler::current_time function provides a current time for scheduling purposes,
 // which may not necessarily relate to wall time
@@ -227,7 +227,7 @@ bool Scheduler::pick_next()
             scheduler_data.in_scheduler = false;
         });
 
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedSpinlock lock(g_scheduler_lock);
 
     if constexpr (SCHEDULER_RUNNABLE_DEBUG) {
         dump_thread_list();
@@ -347,7 +347,7 @@ void Scheduler::enter_current(Thread& prev_thread, bool is_first)
         // Check if we have any signals we should deliver (even if we don't
         // end up switching to another thread).
         if (!current_thread->is_in_block() && current_thread->previous_mode() != Thread::PreviousMode::KernelMode && current_thread->current_trap()) {
-            ScopedSpinLock lock(current_thread->get_lock());
+            ScopedSpinlock lock(current_thread->get_lock());
             if (current_thread->state() == Thread::Running && current_thread->pending_signals_for_state()) {
                 current_thread->dispatch_one_pending_signal();
             }
@@ -485,7 +485,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
     }
 
     if (current_thread->previous_mode() == Thread::PreviousMode::UserMode && current_thread->should_die() && !current_thread->is_blocked()) {
-        ScopedSpinLock scheduler_lock(g_scheduler_lock);
+        ScopedSpinlock scheduler_lock(g_scheduler_lock);
         dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Terminating user mode thread {}", Processor::id(), *current_thread);
         current_thread->set_state(Thread::Dying);
         Processor::current().invoke_scheduler_async();
@@ -517,7 +517,7 @@ void Scheduler::invoke_async()
     VERIFY(!processor.in_irq());
 
     // Since this function is called when leaving critical sections (such
-    // as a SpinLock), we need to check if we're not already doing this
+    // as a Spinlock), we need to check if we're not already doing this
     // to prevent recursion
     if (!ProcessorSpecific<SchedulerData>::get().in_scheduler)
         pick_next();

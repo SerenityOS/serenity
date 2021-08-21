@@ -8,7 +8,7 @@
 
 #include <AK/Atomic.h>
 #include <AK/RefCounted.h>
-#include <Kernel/Locking/SpinLock.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/VMObject.h>
 #include <Kernel/Thread.h>
 
@@ -37,7 +37,7 @@ public:
 
     bool is_empty_and_no_imminent_waits()
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSpinlock lock(m_lock);
         return is_empty_and_no_imminent_waits_locked();
     }
     bool is_empty_and_no_imminent_waits_locked();

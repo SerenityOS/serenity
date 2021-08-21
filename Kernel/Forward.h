@@ -48,7 +48,7 @@ class ProcFSSystemBoolean;
 class ProcFSSystemDirectory;
 class Process;
 class ProcessGroup;
-class RecursiveSpinLock;
+class RecursiveSpinlock;
 class Scheduler;
 class Socket;
 class SysFS;
@@ -84,9 +84,9 @@ class VirtualRangeAllocator;
 }
 
 template<typename BaseType>
-class SpinLock;
+class Spinlock;
 template<typename LockType>
-class ScopedSpinLock;
+class ScopedSpinlock;
 template<typename T>
 class KResultOr;
 

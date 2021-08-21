@@ -197,7 +197,7 @@ bool IDEChannel::handle_irq(const RegisterState&)
 
     m_entropy_source.add_random_event(status);
 
-    ScopedSpinLock lock(m_request_lock);
+    ScopedSpinlock lock(m_request_lock);
     dbgln_if(PATA_DEBUG, "IDEChannel: interrupt: DRQ={}, BSY={}, DRDY={}",
         (status & ATA_SR_DRQ) != 0,
         (status & ATA_SR_BSY) != 0,
@@ -223,7 +223,7 @@ bool IDEChannel::handle_irq(const RegisterState&)
     // trigger page faults
     g_io_work->queue([this]() {
         MutexLocker locker(m_lock);
-        ScopedSpinLock lock(m_request_lock);
+        ScopedSpinlock lock(m_request_lock);
         if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
             dbgln_if(PATA_DEBUG, "IDEChannel: Read block {}/{}", m_current_request_block_index, m_current_request->block_count());
 
@@ -498,7 +498,7 @@ void IDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
     VERIFY(!m_current_request.is_null());
     VERIFY(m_current_request->block_count() <= 256);
 
-    ScopedSpinLock m_lock(m_request_lock);
+    ScopedSpinlock m_lock(m_request_lock);
     dbgln_if(PATA_DEBUG, "IDEChannel::ata_read_sectors");
     dbgln_if(PATA_DEBUG, "IDEChannel: Reading {} sector(s) @ LBA {}", m_current_request->block_count(), m_current_request->block_index());
     ata_access(Direction::Read, slave_request, m_current_request->block_index(), m_current_request->block_count(), capabilities);
@@ -536,7 +536,7 @@ void IDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
     VERIFY(!m_current_request.is_null());
     VERIFY(m_current_request->block_count() <= 256);
 
-    ScopedSpinLock m_lock(m_request_lock);
+    ScopedSpinlock m_lock(m_request_lock);
     dbgln_if(PATA_DEBUG, "IDEChannel: Writing {} sector(s) @ LBA {}", m_current_request->block_count(), m_current_request->block_index());
     ata_access(Direction::Write, slave_request, m_current_request->block_index(), m_current_request->block_count(), capabilities);
     ata_do_write_sector();

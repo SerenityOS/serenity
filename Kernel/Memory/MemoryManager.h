@@ -14,7 +14,7 @@
 #include <Kernel/Arch/x86/PageFault.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Forward.h>
-#include <Kernel/Locking/SpinLock.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AllocationStrategy.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/PhysicalRegion.h>
@@ -93,14 +93,14 @@ struct PhysicalMemoryRange {
 struct MemoryManagerData {
     static ProcessorSpecificDataID processor_specific_data_id() { return ProcessorSpecificDataID::MemoryManager; }
 
-    SpinLock<u8> m_quickmap_in_use;
+    Spinlock<u8> m_quickmap_in_use;
     u32 m_quickmap_prev_flags;
 
     PhysicalAddress m_last_quickmap_pd;
     PhysicalAddress m_last_quickmap_pt;
 };
 
-extern RecursiveSpinLock s_mm_lock;
+extern RecursiveSpinlock s_mm_lock;
 
 // This class represents a set of committed physical pages.
 // When you ask MemoryManager to commit pages for you, you get one of these in return.
@@ -197,7 +197,7 @@ public:
 
     SystemMemoryInfo get_system_memory_info()
     {
-        ScopedSpinLock lock(s_mm_lock);
+        ScopedSpinlock lock(s_mm_lock);
         return m_system_memory_info;
     }
 

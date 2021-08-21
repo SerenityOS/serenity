@@ -70,7 +70,7 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
 
 void KernelRng::wait_for_entropy()
 {
-    ScopedSpinLock lock(get_lock());
+    ScopedSpinlock lock(get_lock());
     if (!resource().is_ready()) {
         dbgln("Entropy starvation...");
         m_seed_queue.wait_forever("KernelRng");

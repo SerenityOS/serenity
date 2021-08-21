@@ -60,7 +60,7 @@ private:
     Memory::TypedMapping<BochsDisplayMMIORegisters volatile> m_registers;
     RefPtr<FramebufferDevice> m_framebuffer_device;
     RefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
-    SpinLock<u8> m_console_mode_switch_lock;
+    Spinlock<u8> m_console_mode_switch_lock;
     bool m_console_enabled { false };
     bool m_io_required { false };
 };

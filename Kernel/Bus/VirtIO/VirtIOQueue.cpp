@@ -43,13 +43,13 @@ VirtIOQueue::~VirtIOQueue()
 
 void VirtIOQueue::enable_interrupts()
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     m_driver->flags = 0;
 }
 
 void VirtIOQueue::disable_interrupts()
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     m_driver->flags = 1;
 }
 

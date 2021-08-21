@@ -9,7 +9,7 @@
 #include <AK/RefCounted.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/Devices/HID/MouseDevice.h>
-#include <Kernel/Locking/SpinLock.h>
+#include <Kernel/Locking/Spinlock.h>
 
 namespace Kernel {
 
@@ -53,36 +53,36 @@ public:
 
     bool reset_device(HIDDevice::Type device)
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSpinlock lock(m_lock);
         return do_reset_device(device);
     }
 
     u8 send_command(HIDDevice::Type device, u8 command)
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSpinlock lock(m_lock);
         return do_send_command(device, command);
     }
     u8 send_command(HIDDevice::Type device, u8 command, u8 data)
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSpinlock lock(m_lock);
         return do_send_command(device, command, data);
     }
 
     u8 read_from_device(HIDDevice::Type device)
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSpinlock lock(m_lock);
         return do_read_from_device(device);
     }
 
     void wait_then_write(u8 port, u8 data)
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSpinlock lock(m_lock);
         do_wait_then_write(port, data);
     }
 
     u8 wait_then_read(u8 port)
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSpinlock lock(m_lock);
         return do_wait_then_read(port);
     }
 
@@ -105,7 +105,7 @@ private:
     void do_wait_then_write(u8 port, u8 data);
     u8 do_wait_then_read(u8 port);
 
-    SpinLock<u8> m_lock;
+    Spinlock<u8> m_lock;
     bool m_first_port_available { false };
     bool m_second_port_available { false };
     bool m_is_dual_channel { false };

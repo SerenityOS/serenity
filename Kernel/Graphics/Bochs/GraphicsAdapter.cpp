@@ -208,7 +208,7 @@ bool BochsGraphicsAdapter::set_y_offset(size_t output_port_index, size_t y_offse
 
 void BochsGraphicsAdapter::enable_consoles()
 {
-    ScopedSpinLock lock(m_console_mode_switch_lock);
+    ScopedSpinlock lock(m_console_mode_switch_lock);
     VERIFY(m_framebuffer_console);
     m_console_enabled = true;
     m_registers->bochs_regs.y_offset = 0;
@@ -218,7 +218,7 @@ void BochsGraphicsAdapter::enable_consoles()
 }
 void BochsGraphicsAdapter::disable_consoles()
 {
-    ScopedSpinLock lock(m_console_mode_switch_lock);
+    ScopedSpinlock lock(m_console_mode_switch_lock);
     VERIFY(m_framebuffer_console);
     VERIFY(m_framebuffer_device);
     m_console_enabled = false;

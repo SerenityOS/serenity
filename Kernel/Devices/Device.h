@@ -52,7 +52,7 @@ public:
     NonnullRefPtr<AsyncRequestType> make_request(Args&&... args)
     {
         auto request = adopt_ref(*new AsyncRequestType(*this, forward<Args>(args)...));
-        ScopedSpinLock lock(m_requests_lock);
+        ScopedSpinlock lock(m_requests_lock);
         bool was_empty = m_requests.is_empty();
         m_requests.append(request);
         if (was_empty)
@@ -73,7 +73,7 @@ private:
     uid_t m_uid { 0 };
     gid_t m_gid { 0 };
 
-    SpinLock<u8> m_requests_lock;
+    Spinlock<u8> m_requests_lock;
     DoublyLinkedList<RefPtr<AsyncDeviceRequest>> m_requests;
 };
 

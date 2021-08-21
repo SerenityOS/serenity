@@ -60,7 +60,7 @@ void PS2MouseDevice::irq_handle_byte_read(u8 byte)
         m_entropy_source.add_random_event(m_data.dword);
 
         {
-            ScopedSpinLock lock(m_queue_lock);
+            ScopedSpinlock lock(m_queue_lock);
             m_queue.enqueue(parse_data_packet(m_data));
         }
         evaluate_block_conditions();

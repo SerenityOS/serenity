@@ -40,7 +40,7 @@ public:
     bool framebuffer_devices_allowed() const { return m_framebuffer_devices_allowed; }
     bool framebuffer_devices_exist() const;
 
-    SpinLock<u8>& main_vga_lock() { return m_main_vga_lock; }
+    Spinlock<u8>& main_vga_lock() { return m_main_vga_lock; }
     RefPtr<Graphics::Console> console() const { return m_console; }
 
     void deactivate_graphical_mode();
@@ -56,7 +56,7 @@ private:
     unsigned m_current_minor_number { 0 };
     const bool m_framebuffer_devices_allowed;
 
-    SpinLock<u8> m_main_vga_lock;
+    Spinlock<u8> m_main_vga_lock;
 };
 
 }

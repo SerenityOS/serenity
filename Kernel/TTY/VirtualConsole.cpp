@@ -259,7 +259,7 @@ void VirtualConsole::on_key_pressed(KeyEvent event)
 
 KResultOr<size_t> VirtualConsole::on_tty_write(const UserOrKernelBuffer& data, size_t size)
 {
-    ScopedSpinLock global_lock(ConsoleManagement::the().tty_write_lock());
+    ScopedSpinlock global_lock(ConsoleManagement::the().tty_write_lock());
     auto result = data.read_buffered<512>(size, [&](u8 const* buffer, size_t buffer_bytes) {
         for (size_t i = 0; i < buffer_bytes; ++i)
             m_console_impl.on_input(buffer[i]);

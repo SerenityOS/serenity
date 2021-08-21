@@ -282,7 +282,7 @@ OwnPtr<PerformanceEventBuffer> PerformanceEventBuffer::try_create_with_size(size
 
 void PerformanceEventBuffer::add_process(const Process& process, ProcessEventType event_type)
 {
-    ScopedSpinLock locker(process.address_space().get_lock());
+    ScopedSpinlock locker(process.address_space().get_lock());
 
     String executable;
     if (process.executable())

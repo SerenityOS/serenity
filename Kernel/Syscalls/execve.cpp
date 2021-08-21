@@ -682,7 +682,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     }
 
     {
-        ScopedSpinLock lock(g_scheduler_lock);
+        ScopedSpinlock lock(g_scheduler_lock);
         new_main_thread->set_state(Thread::State::Runnable);
     }
     u32 lock_count_to_restore;

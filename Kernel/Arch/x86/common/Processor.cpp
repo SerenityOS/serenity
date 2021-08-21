@@ -501,7 +501,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
     // is a chance a context switch may happen while we're trying
     // to get it. It also won't be entirely accurate and merely
     // reflect the status at the last context switch.
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedSpinlock lock(g_scheduler_lock);
     if (&thread == Processor::current_thread()) {
         VERIFY(thread.state() == Thread::Running);
         // Leave the scheduler lock. If we trigger page faults we may

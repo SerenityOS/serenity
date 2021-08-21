@@ -13,7 +13,7 @@ namespace Kernel {
 
 void Process::clear_futex_queues_on_exec()
 {
-    ScopedSpinLock lock(m_futex_lock);
+    ScopedSpinlock lock(m_futex_lock);
     for (auto& it : m_futex_queues) {
         bool did_wake_all;
         it.value->wake_all(did_wake_all);
@@ -88,7 +88,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
     auto do_wake = [&](FlatPtr user_address, u32 count, Optional<u32> bitmask) -> int {
         if (count == 0)
             return 0;
-        ScopedSpinLock locker(m_futex_lock);
+        ScopedSpinlock locker(m_futex_lock);
         auto futex_queue = find_futex_queue(user_address, false);
         if (!futex_queue)
             return 0;
@@ -117,7 +117,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
             }
             atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
 
-            ScopedSpinLock locker(m_futex_lock);
+            ScopedSpinlock locker(m_futex_lock);
             did_create = false;
             futex_queue = find_futex_queue(user_address, true, &did_create);
             VERIFY(futex_queue);
@@ -130,7 +130,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
 
         Thread::BlockResult block_result = futex_queue->wait_on(timeout, bitset);
 
-        ScopedSpinLock locker(m_futex_lock);
+        ScopedSpinlock locker(m_futex_lock);
         if (futex_queue->is_empty_and_no_imminent_waits()) {
             // If there are no more waiters, we want to get rid of the futex!
             remove_futex_queue(user_address);
@@ -150,7 +150,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
         atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
 
         int woken_or_requeued = 0;
-        ScopedSpinLock locker(m_futex_lock);
+        ScopedSpinlock locker(m_futex_lock);
         if (auto futex_queue = find_futex_queue(user_address, false)) {
             RefPtr<FutexQueue> target_futex_queue;
             bool is_empty, is_target_empty;

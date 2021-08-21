@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Locking/SpinLock.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/ScatterGatherList.h>
 
@@ -47,7 +47,7 @@ public:
     VirtIOQueueChain pop_used_buffer_chain(size_t& used);
     void discard_used_buffers();
 
-    SpinLock<u8>& lock() { return m_lock; }
+    Spinlock<u8>& lock() { return m_lock; }
 
     bool should_notify() const;
 
@@ -94,7 +94,7 @@ private:
     OwnPtr<VirtIOQueueDriver> m_driver { nullptr };
     OwnPtr<VirtIOQueueDevice> m_device { nullptr };
     OwnPtr<Memory::Region> m_queue_region;
-    SpinLock<u8> m_lock;
+    Spinlock<u8> m_lock;
 
     friend class VirtIOQueueChain;
 };

@@ -251,7 +251,7 @@ void KeyboardDevice::key_state_changed(u8 scan_code, bool pressed)
         HIDManagement::the().m_client->on_key_pressed(event);
 
     {
-        ScopedSpinLock lock(m_queue_lock);
+        ScopedSpinlock lock(m_queue_lock);
         m_queue.enqueue(event);
     }
 
@@ -281,7 +281,7 @@ bool KeyboardDevice::can_read(const FileDescription&, size_t) const
 KResultOr<size_t> KeyboardDevice::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     size_t nread = 0;
-    ScopedSpinLock lock(m_queue_lock);
+    ScopedSpinlock lock(m_queue_lock);
     while (nread < size) {
         if (m_queue.is_empty())
             break;

@@ -14,12 +14,12 @@
 namespace Kernel {
 
 template<typename BaseType = u32>
-class SpinLock {
-    AK_MAKE_NONCOPYABLE(SpinLock);
-    AK_MAKE_NONMOVABLE(SpinLock);
+class Spinlock {
+    AK_MAKE_NONCOPYABLE(Spinlock);
+    AK_MAKE_NONMOVABLE(Spinlock);
 
 public:
-    SpinLock() = default;
+    Spinlock() = default;
 
     ALWAYS_INLINE u32 lock()
     {
@@ -57,12 +57,12 @@ private:
     Atomic<BaseType> m_lock { 0 };
 };
 
-class RecursiveSpinLock {
-    AK_MAKE_NONCOPYABLE(RecursiveSpinLock);
-    AK_MAKE_NONMOVABLE(RecursiveSpinLock);
+class RecursiveSpinlock {
+    AK_MAKE_NONCOPYABLE(RecursiveSpinlock);
+    AK_MAKE_NONMOVABLE(RecursiveSpinlock);
 
 public:
-    RecursiveSpinLock() = default;
+    RecursiveSpinlock() = default;
 
     ALWAYS_INLINE u32 lock()
     {
@@ -116,15 +116,15 @@ private:
 };
 
 template<typename LockType>
-class [[nodiscard]] ScopedSpinLock {
+class [[nodiscard]] ScopedSpinlock {
 
-    AK_MAKE_NONCOPYABLE(ScopedSpinLock);
+    AK_MAKE_NONCOPYABLE(ScopedSpinlock);
 
 public:
-    ScopedSpinLock() = delete;
-    ScopedSpinLock& operator=(ScopedSpinLock&&) = delete;
+    ScopedSpinlock() = delete;
+    ScopedSpinlock& operator=(ScopedSpinlock&&) = delete;
 
-    ScopedSpinLock(LockType& lock)
+    ScopedSpinlock(LockType& lock)
         : m_lock(&lock)
     {
         VERIFY(m_lock);
@@ -132,7 +132,7 @@ public:
         m_have_lock = true;
     }
 
-    ScopedSpinLock(ScopedSpinLock&& from)
+    ScopedSpinlock(ScopedSpinlock&& from)
         : m_lock(from.m_lock)
         , m_prev_flags(from.m_prev_flags)
         , m_have_lock(from.m_have_lock)
@@ -142,7 +142,7 @@ public:
         from.m_have_lock = false;
     }
 
-    ~ScopedSpinLock()
+    ~ScopedSpinlock()
     {
         if (m_lock && m_have_lock) {
             m_lock->unlock(m_prev_flags);

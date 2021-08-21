@@ -8,7 +8,7 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/Mutex.h>
-#include <Kernel/Locking/SpinLock.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Thread.h>
 
 namespace Kernel {
@@ -21,7 +21,7 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
     VERIFY(mode != Mode::Unlocked);
     auto current_thread = Thread::current();
 
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     bool did_block = false;
     Mode current_mode = m_mode;
     switch (current_mode) {
@@ -145,7 +145,7 @@ void Mutex::unlock()
     // and also from within critical sections!
     VERIFY(!Processor::current().in_irq());
     auto current_thread = Thread::current();
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     Mode current_mode = m_mode;
     if constexpr (LOCK_TRACE_DEBUG) {
         if (current_mode == Mode::Shared)
@@ -196,7 +196,7 @@ void Mutex::unlock()
     }
 }
 
-void Mutex::block(Thread& current_thread, Mode mode, ScopedSpinLock<SpinLock<u8>>& lock, u32 requested_locks)
+void Mutex::block(Thread& current_thread, Mode mode, ScopedSpinlock<Spinlock<u8>>& lock, u32 requested_locks)
 {
     auto& blocked_thread_list = thread_list_for_mode(mode);
     VERIFY(!blocked_thread_list.contains(current_thread));
@@ -255,7 +255,7 @@ auto Mutex::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
     // and also from within critical sections!
     VERIFY(!Processor::current().in_irq());
     auto current_thread = Thread::current();
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     auto current_mode = m_mode;
     switch (current_mode) {
     case Mode::Exclusive: {
@@ -319,7 +319,7 @@ void Mutex::restore_lock(Mode mode, u32 lock_count, [[maybe_unused]] LockLocatio
     VERIFY(!Processor::current().in_irq());
     auto current_thread = Thread::current();
     bool did_block = false;
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     switch (mode) {
     case Mode::Exclusive: {
         auto previous_mode = m_mode;

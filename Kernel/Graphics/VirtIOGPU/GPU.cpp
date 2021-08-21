@@ -81,7 +81,7 @@ void GPU::handle_queue_update(u16 queue_index)
     VERIFY(queue_index == CONTROLQ);
 
     auto& queue = get_queue(CONTROLQ);
-    ScopedSpinLock queue_lock(queue.lock());
+    ScopedSpinlock queue_lock(queue.lock());
     queue.discard_used_buffers();
     m_outstanding_request.wake_all();
 }
@@ -242,7 +242,7 @@ void GPU::synchronous_virtio_gpu_command(PhysicalAddress buffer_start, size_t re
     VERIFY(m_outstanding_request.is_empty());
     auto& queue = get_queue(CONTROLQ);
     {
-        ScopedSpinLock lock(queue.lock());
+        ScopedSpinlock lock(queue.lock());
         VirtIOQueueChain chain { queue };
         chain.add_buffer_to_chain(buffer_start, request_size, BufferType::DeviceReadable);
         chain.add_buffer_to_chain(buffer_start.offset(request_size), response_size, BufferType::DeviceWritable);
