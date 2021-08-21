@@ -94,6 +94,7 @@ set(SOURCES
     Runtime/OrdinaryFunctionObject.cpp
     Runtime/PrimitiveString.cpp
     Runtime/Promise.cpp
+    Runtime/PromiseAllResolveElementFunction.cpp
     Runtime/PromiseConstructor.cpp
     Runtime/PromiseJobs.cpp
     Runtime/PromisePrototype.cpp

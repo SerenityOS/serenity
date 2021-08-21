@@ -6,14 +6,130 @@
 
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/Promise.h>
+#include <LibJS/Runtime/PromiseAllResolveElementFunction.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/PromiseReaction.h>
+#include <LibJS/Runtime/TemporaryClearException.h>
 
 namespace JS {
+
+// 27.2.4.1.1 GetPromiseResolve ( promiseConstructor ), https://tc39.es/ecma262/#sec-getpromiseresolve
+static Value get_promise_resolve(GlobalObject& global_object, Value constructor)
+{
+    VERIFY(constructor.is_constructor());
+    auto& vm = global_object.vm();
+
+    auto promise_resolve = constructor.get(global_object, vm.names.resolve);
+    if (vm.exception())
+        return {};
+    if (!promise_resolve.is_function()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, promise_resolve.to_string_without_side_effects());
+        return {};
+    }
+
+    return promise_resolve;
+}
+
+// 27.2.1.1.1 IfAbruptRejectPromise ( value, capability ), https://tc39.es/ecma262/#sec-ifabruptrejectpromise
+static Optional<Value> if_abrupt_reject_promise(GlobalObject& global_object, Value, PromiseCapability capability)
+{
+    auto& vm = global_object.vm();
+
+    if (auto* exception = vm.exception()) {
+        vm.clear_exception();
+        vm.stop_unwind();
+
+        (void)vm.call(*capability.reject, js_undefined(), exception->value());
+        return capability.promise;
+    }
+
+    return {};
+}
+
+static bool iterator_record_is_complete(GlobalObject& global_object, Object& iterator_record)
+{
+    auto& vm = global_object.vm();
+
+    // FIXME: Create a native iterator structure with the [[Done]] internal slot. For now, temporarily clear
+    //        the exception so we can access the "done" property on the iterator object.
+    TemporaryClearException clear_exception(vm);
+    return iterator_complete(global_object, iterator_record);
+}
+
+static void set_iterator_record_complete(GlobalObject& global_object, Object& iterator_record)
+{
+    auto& vm = global_object.vm();
+
+    // FIXME: Create a native iterator structure with the [[Done]] internal slot. For now, temporarily clear
+    //        the exception so we can access the "done" property on the iterator object.
+    TemporaryClearException clear_exception(vm);
+    iterator_record.set(vm.names.done, Value(true), Object::ShouldThrowExceptions::No);
+}
+
+// 27.2.4.1.2 PerformPromiseAll ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseall
+static Value perform_promise_all(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
+{
+    auto& vm = global_object.vm();
+
+    VERIFY(constructor.is_constructor());
+    VERIFY(promise_resolve.is_function());
+
+    auto* values = vm.heap().allocate_without_global_object<PromiseValueList>();
+    auto* remaining_elements_count = vm.heap().allocate_without_global_object<RemainingElements>(1);
+    size_t index = 0;
+
+    while (true) {
+        auto* next = iterator_step(global_object, iterator_record);
+        if (vm.exception()) {
+            set_iterator_record_complete(global_object, iterator_record);
+            return {};
+        }
+
+        if (!next) {
+            set_iterator_record_complete(global_object, iterator_record);
+            if (vm.exception())
+                return {};
+
+            if (--remaining_elements_count->value == 0) {
+                auto values_array = Array::create_from(global_object, values->values);
+                (void)vm.call(*result_capability.resolve, js_undefined(), values_array);
+                if (vm.exception())
+                    return {};
+            }
+
+            return result_capability.promise;
+        }
+
+        auto next_value = iterator_value(global_object, *next);
+        if (vm.exception()) {
+            set_iterator_record_complete(global_object, iterator_record);
+            return {};
+        }
+
+        values->values.append(js_undefined());
+
+        auto next_promise = vm.call(promise_resolve.as_function(), constructor, next_value);
+        if (vm.exception())
+            return {};
+
+        auto* on_fulfilled = PromiseAllResolveElementFunction::create(global_object, index, *values, result_capability, *remaining_elements_count);
+        on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
+
+        ++remaining_elements_count->value;
+
+        (void)next_promise.invoke(global_object, vm.names.then, on_fulfilled, result_capability.reject);
+        if (vm.exception())
+            return {};
+
+        ++index;
+    }
+}
 
 PromiseConstructor::PromiseConstructor(GlobalObject& global_object)
     : NativeFunction(vm().names.Promise.as_string(), *global_object.function_prototype())
@@ -29,8 +145,8 @@ void PromiseConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.promise_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.all, all, 1, attr);
     // TODO: Implement these functions below and uncomment this.
-    // define_native_function(vm.names.all, all, 1, attr);
     // define_native_function(vm.names.allSettled, all_settled, 1, attr);
     // define_native_function(vm.names.any, any, 1, attr);
     // define_native_function(vm.names.race, race, 1, attr);
@@ -80,7 +196,32 @@ Value PromiseConstructor::construct(FunctionObject& new_target)
 // 27.2.4.1 Promise.all ( iterable ), https://tc39.es/ecma262/#sec-promise.all
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
 {
-    TODO();
+    auto* constructor = vm.this_value(global_object).to_object(global_object);
+    if (!constructor)
+        return {};
+
+    auto promise_capability = new_promise_capability(global_object, constructor);
+    if (vm.exception())
+        return {};
+
+    auto promise_resolve = get_promise_resolve(global_object, constructor);
+    if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve, promise_capability); abrupt.has_value())
+        return abrupt.value();
+
+    auto iterator_record = get_iterator(global_object, vm.argument(0));
+    if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record, promise_capability); abrupt.has_value())
+        return abrupt.value();
+
+    auto result = perform_promise_all(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
+    if (vm.exception()) {
+        if (!iterator_record_is_complete(global_object, *iterator_record))
+            iterator_close(*iterator_record);
+
+        auto abrupt = if_abrupt_reject_promise(global_object, result, promise_capability);
+        return abrupt.value();
+    }
+
+    return result;
 }
 
 // 27.2.4.2 Promise.allSettled ( iterable ), https://tc39.es/ecma262/#sec-promise.allsettled
