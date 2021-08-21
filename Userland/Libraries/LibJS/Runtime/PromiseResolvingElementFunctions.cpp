@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/AggregateError.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PromiseReaction.h>
@@ -67,6 +68,35 @@ Value PromiseAllResolveElementFunction::resolve_element()
     if (--m_remaining_elements.value == 0) {
         auto values_array = Array::create_from(global_object, m_values.values);
         return vm.call(*m_capability.resolve, js_undefined(), values_array);
+    }
+
+    return js_undefined();
+}
+
+PromiseAnyRejectElementFunction* PromiseAnyRejectElementFunction::create(GlobalObject& global_object, size_t index, PromiseValueList& errors, PromiseCapability capability, RemainingElements& remaining_elements)
+{
+    return global_object.heap().allocate<PromiseAnyRejectElementFunction>(global_object, index, errors, capability, remaining_elements, *global_object.function_prototype());
+}
+
+PromiseAnyRejectElementFunction::PromiseAnyRejectElementFunction(size_t index, PromiseValueList& errors, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
+    : PromiseResolvingElementFunction(index, errors, move(capability), remaining_elements, prototype)
+{
+}
+
+Value PromiseAnyRejectElementFunction::resolve_element()
+{
+    auto& vm = this->vm();
+    auto& global_object = this->global_object();
+
+    m_values.values[m_index] = vm.argument(0);
+
+    if (--m_remaining_elements.value == 0) {
+        auto errors_array = Array::create_from(global_object, m_values.values);
+
+        auto* error = AggregateError::create(global_object);
+        error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true });
+
+        return vm.call(*m_capability.reject, js_undefined(), error);
     }
 
     return js_undefined();
