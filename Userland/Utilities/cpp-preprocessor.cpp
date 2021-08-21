@@ -19,7 +19,7 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
     auto file = Core::File::construct(path);
     if (!file->open(Core::OpenMode::ReadOnly)) {
-        perror("open");
+        warnln("Failed to open {}: {}", path, file->error_string());
         exit(1);
     }
     auto content = file->read_all();
