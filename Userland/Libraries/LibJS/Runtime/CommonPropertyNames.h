@@ -314,6 +314,7 @@ namespace JS {
     P(race)                                  \
     P(random)                                \
     P(raw)                                   \
+    P(reason)                                \
     P(reduce)                                \
     P(reduceRight)                           \
     P(reject)                                \
@@ -370,6 +371,7 @@ namespace JS {
     P(splice)                                \
     P(sqrt)                                  \
     P(startsWith)                            \
+    P(status)                                \
     P(sticky)                                \
     P(store)                                 \
     P(strike)                                \

@@ -74,6 +74,34 @@ private:
     virtual Value resolve_element() override;
 };
 
+// 27.2.4.2.2 Promise.allSettled Resolve Element Functions, https://tc39.es/ecma262/#sec-promise.allsettled-resolve-element-functions
+class PromiseAllSettledResolveElementFunction final : public PromiseResolvingElementFunction {
+    JS_OBJECT(PromiseResolvingFunction, NativeFunction);
+
+public:
+    static PromiseAllSettledResolveElementFunction* create(GlobalObject&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
+
+    explicit PromiseAllSettledResolveElementFunction(size_t, PromiseValueList&, PromiseCapability, RemainingElements&, Object& prototype);
+    virtual ~PromiseAllSettledResolveElementFunction() override = default;
+
+private:
+    virtual Value resolve_element() override;
+};
+
+// 27.2.4.2.3 Promise.allSettled Reject Element Functions, https://tc39.es/ecma262/#sec-promise.allsettled-reject-element-functions
+class PromiseAllSettledRejectElementFunction final : public PromiseResolvingElementFunction {
+    JS_OBJECT(PromiseResolvingFunction, NativeFunction);
+
+public:
+    static PromiseAllSettledRejectElementFunction* create(GlobalObject&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
+
+    explicit PromiseAllSettledRejectElementFunction(size_t, PromiseValueList&, PromiseCapability, RemainingElements&, Object& prototype);
+    virtual ~PromiseAllSettledRejectElementFunction() override = default;
+
+private:
+    virtual Value resolve_element() override;
+};
+
 // 27.2.4.3.2 Promise.any Reject Element Functions, https://tc39.es/ecma262/#sec-promise.any-reject-element-functions
 class PromiseAnyRejectElementFunction final : public PromiseResolvingElementFunction {
     JS_OBJECT(PromiseResolvingFunction, NativeFunction);
