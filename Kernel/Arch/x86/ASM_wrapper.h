@@ -91,7 +91,20 @@ FlatPtr read_cr4();
 u64 read_xcr0();
 
 void write_cr0(FlatPtr);
-void write_cr3(FlatPtr);
+
+//void write_cr3(FlatPtr);
+ALWAYS_INLINE void write_cr3(FlatPtr cr3)
+{
+    // NOTE: If you're here from a GPF crash, it's very likely that a PDPT entry is incorrect, not this!
+#if ARCH(I386)
+    asm volatile("mov %%eax, %%cr3" ::"a"(cr3)
+                 : "memory");
+#else
+    asm volatile("mov %%rax, %%cr3" ::"a"(cr3)
+                 : "memory");
+#endif
+}
+
 void write_cr4(FlatPtr);
 void write_xcr0(u64);
 

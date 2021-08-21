@@ -44,12 +44,14 @@ FlatPtr read_cr3()
     return cr3;
 }
 
+/*
 void write_cr3(FlatPtr cr3)
 {
     // NOTE: If you're here from a GPF crash, it's very likely that a PDPT entry is incorrect, not this!
     asm volatile("mov %%eax, %%cr3" ::"a"(cr3)
                  : "memory");
 }
+*/
 
 FlatPtr read_cr4()
 {
