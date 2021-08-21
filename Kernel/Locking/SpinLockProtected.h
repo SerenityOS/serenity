@@ -6,27 +6,46 @@
 
 #pragma once
 
-#include <Kernel/Locking/SpinLockResource.h>
+#include <Kernel/Locking/SpinLock.h>
 
 namespace Kernel {
 
 template<typename T>
-class SpinLockProtected
-    : private T
-    , public SpinLockContendedResource {
+class SpinLockProtected {
     AK_MAKE_NONCOPYABLE(SpinLockProtected);
     AK_MAKE_NONMOVABLE(SpinLockProtected);
 
-protected:
-    using LockedConst = SpinLockLockedResource<T const>;
-    using LockedMutable = SpinLockLockedResource<T>;
+private:
+    template<typename U>
+    class Locked {
+        AK_MAKE_NONCOPYABLE(Locked);
+        AK_MAKE_NONMOVABLE(Locked);
 
-    LockedConst lock_const() const { return LockedConst(static_cast<T const*>(this), this->SpinLockContendedResource::m_spinlock); }
-    LockedMutable lock_mutable() { return LockedMutable(static_cast<T*>(this), this->SpinLockContendedResource::m_spinlock); }
+    public:
+        Locked(U& value, RecursiveSpinLock& spinlock)
+            : m_value(value)
+            , m_locker(spinlock)
+        {
+        }
+
+        ALWAYS_INLINE U const* operator->() const { return &m_value; }
+        ALWAYS_INLINE U const& operator*() const { return m_value; }
+
+        ALWAYS_INLINE U* operator->() { return &m_value; }
+        ALWAYS_INLINE U& operator*() { return m_value; }
+
+        ALWAYS_INLINE U const& get() const { return m_value; }
+        ALWAYS_INLINE U& get() { return m_value; }
+
+    private:
+        U& m_value;
+        ScopedSpinLock<RecursiveSpinLock> m_locker;
+    };
+
+    auto lock_const() const { return Locked<T const>(m_value, m_spinlock); }
+    auto lock_mutable() { return Locked<T>(m_value, m_spinlock); }
 
 public:
-    using T::T;
-
     SpinLockProtected() = default;
 
     template<typename Callback>
@@ -60,6 +79,10 @@ public:
                 callback(item);
         });
     }
+
+private:
+    T m_value;
+    RecursiveSpinLock mutable m_spinlock;
 };
 
 }
