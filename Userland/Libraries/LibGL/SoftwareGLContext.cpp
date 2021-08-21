@@ -650,7 +650,7 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     RETURN_WITH_ERROR_IF((width & 2) != 0 || (height & 2) != 0, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(border < 0 || border > 1, GL_INVALID_VALUE);
 
-    m_active_texture_unit->bound_texture_2d()->upload_texture_data(target, level, internal_format, width, height, border, format, type, data);
+    m_active_texture_unit->bound_texture_2d()->upload_texture_data(target, level, internal_format, width, height, border, format, type, data, m_unpack_row_length);
 }
 
 void SoftwareGLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat param)
@@ -1803,6 +1803,20 @@ void SoftwareGLContext::gl_fogi(GLenum pname, GLint param)
     }
 
     m_rasterizer.set_options(options);
+}
+
+void SoftwareGLContext::gl_pixel_store(GLenum pname, GLfloat param)
+{
+    // FIXME: Implement missing parameters
+    switch (pname) {
+    case GL_UNPACK_ROW_LENGTH:
+        RETURN_WITH_ERROR_IF(param < 0, GL_INVALID_VALUE);
+        m_unpack_row_length = static_cast<size_t>(param);
+        break;
+    default:
+        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+        break;
+    }
 }
 
 void SoftwareGLContext::present()
