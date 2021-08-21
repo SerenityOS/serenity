@@ -74,4 +74,18 @@ private:
     virtual Value resolve_element() override;
 };
 
+// 27.2.4.3.2 Promise.any Reject Element Functions, https://tc39.es/ecma262/#sec-promise.any-reject-element-functions
+class PromiseAnyRejectElementFunction final : public PromiseResolvingElementFunction {
+    JS_OBJECT(PromiseResolvingFunction, NativeFunction);
+
+public:
+    static PromiseAnyRejectElementFunction* create(GlobalObject&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
+
+    explicit PromiseAnyRejectElementFunction(size_t, PromiseValueList&, PromiseCapability, RemainingElements&, Object& prototype);
+    virtual ~PromiseAnyRejectElementFunction() override = default;
+
+private:
+    virtual Value resolve_element() override;
+};
+
 }
