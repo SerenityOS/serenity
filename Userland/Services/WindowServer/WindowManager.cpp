@@ -66,7 +66,7 @@ RefPtr<Cursor> WindowManager::get_cursor(String const& name)
 
 void WindowManager::reload_config()
 {
-    m_config = Core::ConfigFile::open("/etc/WindowServer.ini");
+    m_config = Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes);
 
     unsigned virtual_desktop_rows = (unsigned)m_config->read_num_entry("VirtualDesktop", "Rows", default_window_stack_rows);
     unsigned virtual_desktop_columns = (unsigned)m_config->read_num_entry("VirtualDesktop", "Columns", default_window_stack_columns);

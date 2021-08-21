@@ -75,7 +75,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("FileManager");
+    RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("FileManager", Core::ConfigFile::AllowWriting::Yes);
 
     Core::ArgsParser args_parser;
     bool is_desktop_mode { false }, is_selection_mode { false }, ignore_path_resolution { false };

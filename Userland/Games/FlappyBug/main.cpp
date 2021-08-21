@@ -22,7 +22,7 @@ int main(int argc, char** argv)
     }
 
     auto app = GUI::Application::construct(argc, argv);
-    auto config = Core::ConfigFile::get_for_app("FlappyBug");
+    auto config = Core::ConfigFile::get_for_app("FlappyBug", Core::ConfigFile::AllowWriting::Yes);
 
     if (pledge("stdio rpath wpath cpath recvfd sendfd", nullptr) < 0) {
         perror("pledge");

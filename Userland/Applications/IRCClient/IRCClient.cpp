@@ -47,7 +47,7 @@ IRCClient::IRCClient(String server, int port)
     : m_nickname("seren1ty")
     , m_client_window_list_model(IRCWindowListModel::create(*this))
     , m_log(IRCLogBuffer::create())
-    , m_config(Core::ConfigFile::get_for_app("IRCClient"))
+    , m_config(Core::ConfigFile::get_for_app("IRCClient", Core::ConfigFile::AllowWriting::Yes))
 {
     struct passwd* user_pw = getpwuid(getuid());
     m_socket = Core::TCPSocket::construct(this);
