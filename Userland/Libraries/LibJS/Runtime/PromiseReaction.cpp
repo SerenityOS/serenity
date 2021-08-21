@@ -34,7 +34,7 @@ PromiseCapability new_promise_capability(GlobalObject& global_object, Value cons
             vm.template throw_exception<TypeError>(global_object, ErrorType::GetCapabilitiesExecutorCalledMultipleTimes);
             return {};
         }
-        if (!promise_capability_functions.resolve.is_undefined()) {
+        if (!promise_capability_functions.reject.is_undefined()) {
             vm.template throw_exception<TypeError>(global_object, ErrorType::GetCapabilitiesExecutorCalledMultipleTimes);
             return {};
         }
