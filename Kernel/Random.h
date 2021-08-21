@@ -37,7 +37,7 @@ public:
 
     bool get_random_bytes(u8* buffer, size_t n)
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         if (!is_ready())
             return false;
         if (m_p0_len >= reseed_threshold) {
@@ -156,7 +156,7 @@ public:
     void add_random_event(const T& event_data)
     {
         auto& kernel_rng = KernelRng::the();
-        ScopedSpinlock lock(kernel_rng.get_lock());
+        SpinlockLocker lock(kernel_rng.get_lock());
         // We don't lock this because on the off chance a pool is corrupted, entropy isn't lost.
         Event<T> event = { read_tsc(), m_source, event_data };
         kernel_rng.resource().add_random_event(event, m_pool);

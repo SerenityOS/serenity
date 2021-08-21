@@ -64,9 +64,9 @@ void VirtIOConsole::handle_queue_update(u16 queue_index)
     dbgln_if(VIRTIO_DEBUG, "VirtIOConsole: Handle queue update {}", queue_index);
 
     if (queue_index == CONTROL_RECEIVEQ) {
-        ScopedSpinlock ringbuffer_lock(m_control_receive_buffer->lock());
+        SpinlockLocker ringbuffer_lock(m_control_receive_buffer->lock());
         auto& queue = get_queue(CONTROL_RECEIVEQ);
-        ScopedSpinlock queue_lock(queue.lock());
+        SpinlockLocker queue_lock(queue.lock());
         size_t used;
         VirtIOQueueChain popped_chain = queue.pop_used_buffer_chain(used);
 
@@ -81,9 +81,9 @@ void VirtIOConsole::handle_queue_update(u16 queue_index)
             popped_chain = queue.pop_used_buffer_chain(used);
         }
     } else if (queue_index == CONTROL_TRANSMITQ) {
-        ScopedSpinlock ringbuffer_lock(m_control_transmit_buffer->lock());
+        SpinlockLocker ringbuffer_lock(m_control_transmit_buffer->lock());
         auto& queue = get_queue(CONTROL_TRANSMITQ);
-        ScopedSpinlock queue_lock(queue.lock());
+        SpinlockLocker queue_lock(queue.lock());
         size_t used;
         VirtIOQueueChain popped_chain = queue.pop_used_buffer_chain(used);
         auto number_of_messages = 0;
@@ -112,7 +112,7 @@ void VirtIOConsole::setup_multiport()
     m_control_transmit_buffer = make<Memory::RingBuffer>("VirtIOConsole control transmit queue", CONTROL_BUFFER_SIZE);
 
     auto& queue = get_queue(CONTROL_RECEIVEQ);
-    ScopedSpinlock queue_lock(queue.lock());
+    SpinlockLocker queue_lock(queue.lock());
     VirtIOQueueChain chain(queue);
     auto offset = 0ul;
 
@@ -184,7 +184,7 @@ void VirtIOConsole::process_control_message(ControlMessage message)
 }
 void VirtIOConsole::write_control_message(ControlMessage message)
 {
-    ScopedSpinlock ringbuffer_lock(m_control_transmit_buffer->lock());
+    SpinlockLocker ringbuffer_lock(m_control_transmit_buffer->lock());
 
     PhysicalAddress start_of_chunk;
     size_t length_of_chunk;
@@ -197,7 +197,7 @@ void VirtIOConsole::write_control_message(ControlMessage message)
     }
 
     auto& queue = get_queue(CONTROL_TRANSMITQ);
-    ScopedSpinlock queue_lock(queue.lock());
+    SpinlockLocker queue_lock(queue.lock());
     VirtIOQueueChain chain(queue);
 
     bool did_add_buffer = chain.add_buffer_to_chain(start_of_chunk, length_of_chunk, BufferType::DeviceReadable);

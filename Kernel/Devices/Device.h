@@ -52,7 +52,7 @@ public:
     NonnullRefPtr<AsyncRequestType> make_request(Args&&... args)
     {
         auto request = adopt_ref(*new AsyncRequestType(*this, forward<Args>(args)...));
-        ScopedSpinlock lock(m_requests_lock);
+        SpinlockLocker lock(m_requests_lock);
         bool was_empty = m_requests.is_empty();
         m_requests.append(request);
         if (was_empty)

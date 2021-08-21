@@ -37,7 +37,7 @@ public:
 
     bool is_empty_and_no_imminent_waits()
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         return is_empty_and_no_imminent_waits_locked();
     }
     bool is_empty_and_no_imminent_waits_locked();

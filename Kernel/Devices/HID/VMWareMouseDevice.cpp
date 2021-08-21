@@ -36,7 +36,7 @@ void VMWareMouseDevice::irq_handle_byte_read(u8)
     if (mouse_packet.has_value()) {
         m_entropy_source.add_random_event(mouse_packet.value());
         {
-            ScopedSpinlock lock(m_queue_lock);
+            SpinlockLocker lock(m_queue_lock);
             m_queue.enqueue(mouse_packet.value());
         }
         evaluate_block_conditions();

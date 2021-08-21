@@ -227,7 +227,7 @@ bool Scheduler::pick_next()
             scheduler_data.in_scheduler = false;
         });
 
-    ScopedSpinlock lock(g_scheduler_lock);
+    SpinlockLocker lock(g_scheduler_lock);
 
     if constexpr (SCHEDULER_RUNNABLE_DEBUG) {
         dump_thread_list();
@@ -347,7 +347,7 @@ void Scheduler::enter_current(Thread& prev_thread, bool is_first)
         // Check if we have any signals we should deliver (even if we don't
         // end up switching to another thread).
         if (!current_thread->is_in_block() && current_thread->previous_mode() != Thread::PreviousMode::KernelMode && current_thread->current_trap()) {
-            ScopedSpinlock lock(current_thread->get_lock());
+            SpinlockLocker lock(current_thread->get_lock());
             if (current_thread->state() == Thread::Running && current_thread->pending_signals_for_state()) {
                 current_thread->dispatch_one_pending_signal();
             }
@@ -485,7 +485,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
     }
 
     if (current_thread->previous_mode() == Thread::PreviousMode::UserMode && current_thread->should_die() && !current_thread->is_blocked()) {
-        ScopedSpinlock scheduler_lock(g_scheduler_lock);
+        SpinlockLocker scheduler_lock(g_scheduler_lock);
         dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Terminating user mode thread {}", Processor::id(), *current_thread);
         current_thread->set_state(Thread::Dying);
         Processor::current().invoke_scheduler_async();

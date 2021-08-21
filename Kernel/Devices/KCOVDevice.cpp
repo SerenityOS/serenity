@@ -84,7 +84,7 @@ KResult KCOVDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> a
         return ENXIO; // This proc hasn't opened the kcov dev yet
     auto kcov_instance = maybe_kcov_instance.value();
 
-    ScopedSpinlock lock(kcov_instance->lock);
+    SpinlockLocker lock(kcov_instance->lock);
     switch (request) {
     case KCOV_SETBUFSIZE: {
         if (kcov_instance->state >= KCOVInstance::TRACING) {

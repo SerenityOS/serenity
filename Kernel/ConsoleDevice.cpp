@@ -67,7 +67,7 @@ Kernel::KResultOr<size_t> ConsoleDevice::write(FileDescription&, u64, const Kern
 
 void ConsoleDevice::put_char(char ch)
 {
-    Kernel::ScopedSpinlock lock(g_console_lock);
+    Kernel::SpinlockLocker lock(g_console_lock);
 #ifdef CONSOLE_OUT_TO_BOCHS_DEBUG_PORT
     IO::out8(IO::BOCHS_DEBUG_PORT, ch);
 #endif

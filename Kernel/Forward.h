@@ -86,7 +86,7 @@ class VirtualRangeAllocator;
 template<typename BaseType>
 class Spinlock;
 template<typename LockType>
-class ScopedSpinlock;
+class SpinlockLocker;
 template<typename T>
 class KResultOr;
 

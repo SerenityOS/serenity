@@ -27,7 +27,7 @@ bool WaitQueue::should_add_blocker(Thread::Blocker& b, void* data)
 u32 WaitQueue::wake_one()
 {
     u32 did_wake = 0;
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_one", this);
     bool did_unblock_one = do_unblock([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
         VERIFY(data);
@@ -50,7 +50,7 @@ u32 WaitQueue::wake_n(u32 wake_count)
 {
     if (wake_count == 0)
         return 0; // should we assert instead?
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_n({})", this, wake_count);
     u32 did_wake = 0;
 
@@ -74,7 +74,7 @@ u32 WaitQueue::wake_n(u32 wake_count)
 
 u32 WaitQueue::wake_all()
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
 
     dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_all", this);
     u32 did_wake = 0;

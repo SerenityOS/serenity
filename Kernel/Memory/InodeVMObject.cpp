@@ -52,7 +52,7 @@ size_t InodeVMObject::amount_dirty() const
 
 int InodeVMObject::release_all_clean_pages()
 {
-    ScopedSpinlock locker(m_lock);
+    SpinlockLocker locker(m_lock);
 
     int count = 0;
     for (size_t i = 0; i < page_count(); ++i) {

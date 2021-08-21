@@ -57,7 +57,7 @@ KResultOr<size_t> SysFSUSBDeviceInformation::read_bytes(off_t offset, size_t cou
 
 KResult SysFSUSBBusDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     // Note: if the parent directory is null, it means something bad happened as this should not happen for the USB directory.
     VERIFY(m_parent_directory);
     callback({ ".", { fsid, component_index() }, 0 });
@@ -72,7 +72,7 @@ KResult SysFSUSBBusDirectory::traverse_as_directory(unsigned fsid, Function<bool
 
 RefPtr<SysFSComponent> SysFSUSBBusDirectory::lookup(StringView name)
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     for (auto& device_node : m_device_nodes) {
         if (device_node.name() == name) {
             return device_node;
@@ -93,7 +93,7 @@ RefPtr<SysFSUSBDeviceInformation> SysFSUSBBusDirectory::device_node_for(USB::Dev
 
 void SysFSUSBBusDirectory::plug(USB::Device& new_device)
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     auto device_node = device_node_for(new_device);
     VERIFY(!device_node);
     m_device_nodes.append(SysFSUSBDeviceInformation::create(new_device));
@@ -101,7 +101,7 @@ void SysFSUSBBusDirectory::plug(USB::Device& new_device)
 
 void SysFSUSBBusDirectory::unplug(USB::Device& deleted_device)
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     auto device_node = device_node_for(deleted_device);
     VERIFY(device_node);
     device_node->m_list_node.remove();

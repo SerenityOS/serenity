@@ -223,7 +223,7 @@ void AddressSpace::deallocate_region(Region& region)
 
 NonnullOwnPtr<Region> AddressSpace::take_region(Region& region)
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
 
     if (m_region_lookup_cache.region.unsafe_ptr() == &region)
         m_region_lookup_cache.region = nullptr;
@@ -235,7 +235,7 @@ NonnullOwnPtr<Region> AddressSpace::take_region(Region& region)
 
 Region* AddressSpace::find_region_from_range(VirtualRange const& range)
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     if (m_region_lookup_cache.range.has_value() && m_region_lookup_cache.range.value() == range && m_region_lookup_cache.region)
         return m_region_lookup_cache.region.unsafe_ptr();
 
@@ -253,7 +253,7 @@ Region* AddressSpace::find_region_from_range(VirtualRange const& range)
 
 Region* AddressSpace::find_region_containing(VirtualRange const& range)
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     auto candidate = m_regions.find_largest_not_above(range.base().get());
     if (!candidate)
         return nullptr;
@@ -265,7 +265,7 @@ Vector<Region*> AddressSpace::find_regions_intersecting(VirtualRange const& rang
     Vector<Region*> regions = {};
     size_t total_size_collected = 0;
 
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
 
     auto found_region = m_regions.find_largest_not_above(range.base().get());
     if (!found_region)
@@ -286,7 +286,7 @@ Vector<Region*> AddressSpace::find_regions_intersecting(VirtualRange const& rang
 Region* AddressSpace::add_region(NonnullOwnPtr<Region> region)
 {
     auto* ptr = region.ptr();
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     auto success = m_regions.try_insert(region->vaddr().get(), move(region));
     return success ? ptr : nullptr;
 }
@@ -324,7 +324,7 @@ void AddressSpace::dump_regions()
     dbgln("BEGIN{}         END{}        SIZE{}       ACCESS NAME",
         addr_padding, addr_padding, addr_padding);
 
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
 
     for (auto& sorted_region : m_regions) {
         auto& region = *sorted_region;
@@ -342,13 +342,13 @@ void AddressSpace::dump_regions()
 
 void AddressSpace::remove_all_regions(Badge<Process>)
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     m_regions.clear();
 }
 
 size_t AddressSpace::amount_dirty_private() const
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     // FIXME: This gets a bit more complicated for Regions sharing the same underlying VMObject.
     //        The main issue I'm thinking of is when the VMObject has physical pages that none of the Regions are mapping.
     //        That's probably a situation that needs to be looked at in general.
@@ -362,7 +362,7 @@ size_t AddressSpace::amount_dirty_private() const
 
 size_t AddressSpace::amount_clean_inode() const
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     HashTable<const InodeVMObject*> vmobjects;
     for (auto& region : m_regions) {
         if (region->vmobject().is_inode())
@@ -376,7 +376,7 @@ size_t AddressSpace::amount_clean_inode() const
 
 size_t AddressSpace::amount_virtual() const
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     size_t amount = 0;
     for (auto& region : m_regions) {
         amount += region->size();
@@ -386,7 +386,7 @@ size_t AddressSpace::amount_virtual() const
 
 size_t AddressSpace::amount_resident() const
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     // FIXME: This will double count if multiple regions use the same physical page.
     size_t amount = 0;
     for (auto& region : m_regions) {
@@ -397,7 +397,7 @@ size_t AddressSpace::amount_resident() const
 
 size_t AddressSpace::amount_shared() const
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     // FIXME: This will double count if multiple regions use the same physical page.
     // FIXME: It doesn't work at the moment, since it relies on PhysicalPage ref counts,
     //        and each PhysicalPage is only reffed by its VMObject. This needs to be refactored
@@ -411,7 +411,7 @@ size_t AddressSpace::amount_shared() const
 
 size_t AddressSpace::amount_purgeable_volatile() const
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     size_t amount = 0;
     for (auto& region : m_regions) {
         if (!region->vmobject().is_anonymous())
@@ -425,7 +425,7 @@ size_t AddressSpace::amount_purgeable_volatile() const
 
 size_t AddressSpace::amount_purgeable_nonvolatile() const
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     size_t amount = 0;
     for (auto& region : m_regions) {
         if (!region->vmobject().is_anonymous())

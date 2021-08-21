@@ -87,8 +87,8 @@ enum VGAColor : u8 {
 
 void TextModeConsole::set_cursor(size_t x, size_t y)
 {
-    ScopedSpinlock main_lock(GraphicsManagement::the().main_vga_lock());
-    ScopedSpinlock lock(m_vga_lock);
+    SpinlockLocker main_lock(GraphicsManagement::the().main_vga_lock());
+    SpinlockLocker lock(m_vga_lock);
     m_cursor_x = x;
     m_cursor_y = y;
     u16 value = m_current_vga_start_address + (y * width() + x);
@@ -99,22 +99,22 @@ void TextModeConsole::set_cursor(size_t x, size_t y)
 }
 void TextModeConsole::hide_cursor()
 {
-    ScopedSpinlock main_lock(GraphicsManagement::the().main_vga_lock());
-    ScopedSpinlock lock(m_vga_lock);
+    SpinlockLocker main_lock(GraphicsManagement::the().main_vga_lock());
+    SpinlockLocker lock(m_vga_lock);
     IO::out8(0x3D4, 0xA);
     IO::out8(0x3D5, 0x20);
 }
 void TextModeConsole::show_cursor()
 {
-    ScopedSpinlock main_lock(GraphicsManagement::the().main_vga_lock());
-    ScopedSpinlock lock(m_vga_lock);
+    SpinlockLocker main_lock(GraphicsManagement::the().main_vga_lock());
+    SpinlockLocker lock(m_vga_lock);
     IO::out8(0x3D4, 0xA);
     IO::out8(0x3D5, 0x20);
 }
 
 void TextModeConsole::clear(size_t x, size_t y, size_t length)
 {
-    ScopedSpinlock lock(m_vga_lock);
+    SpinlockLocker lock(m_vga_lock);
     auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
     for (size_t index = 0; index < length; index++) {
         buf[index] = 0x0720;
@@ -127,12 +127,12 @@ void TextModeConsole::write(size_t x, size_t y, char ch, bool critical)
 
 void TextModeConsole::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical)
 {
-    ScopedSpinlock lock(m_vga_lock);
+    SpinlockLocker lock(m_vga_lock);
     // If we are in critical printing mode, we need to handle new lines here
     // because there's no other responsible object to do that in the print call path
     if (critical && (ch == '\r' || ch == '\n')) {
         // Disable hardware VGA cursor
-        ScopedSpinlock main_lock(GraphicsManagement::the().main_vga_lock());
+        SpinlockLocker main_lock(GraphicsManagement::the().main_vga_lock());
         IO::out8(0x3D4, 0xA);
         IO::out8(0x3D5, 0x20);
 
@@ -162,7 +162,7 @@ void TextModeConsole::clear_vga_row(u16 row)
 
 void TextModeConsole::set_vga_start_row(u16 row)
 {
-    ScopedSpinlock lock(m_vga_lock);
+    SpinlockLocker lock(m_vga_lock);
     m_vga_start_row = row;
     m_current_vga_start_address = row * width();
     m_current_vga_window = m_current_vga_window + row * width() * bytes_per_base_glyph();

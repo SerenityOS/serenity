@@ -34,7 +34,7 @@ public:
 
     void unblock()
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         do_unblock([&](auto& b, void* data, bool&) {
             VERIFY(b.blocker_type() == Thread::Blocker::Type::File);
             auto& blocker = static_cast<Thread::FileBlocker&>(b);

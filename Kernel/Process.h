@@ -636,7 +636,7 @@ public:
 
         KResult try_clone(const Kernel::Process::FileDescriptions& other)
         {
-            ScopedSpinlock lock_other(other.m_fds_lock);
+            SpinlockLocker lock_other(other.m_fds_lock);
             if (!try_resize(other.m_fds_metadatas.size()))
                 return ENOMEM;
 
@@ -667,7 +667,7 @@ public:
 
         void clear()
         {
-            ScopedSpinlock lock(m_fds_lock);
+            SpinlockLocker lock(m_fds_lock);
             m_fds_metadatas.clear();
         }
 

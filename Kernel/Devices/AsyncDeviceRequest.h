@@ -61,7 +61,7 @@ public:
 
     [[nodiscard]] RequestWaitResult wait(Time* = nullptr);
 
-    void do_start(ScopedSpinlock<Spinlock<u8>>&& requests_lock)
+    void do_start(SpinlockLocker<Spinlock<u8>>&& requests_lock)
     {
         if (is_completed_result(m_result))
             return;

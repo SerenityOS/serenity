@@ -71,7 +71,7 @@ InodeIndex build_segmented_index_for_file_description(ProcessID pid, unsigned fd
 
 static size_t s_allocate_global_inode_index()
 {
-    ScopedSpinlock lock(s_index_lock);
+    SpinlockLocker lock(s_index_lock);
     s_next_inode_index = s_next_inode_index.value() + 1;
     // Note: Global ProcFS indices must be above 0 and up to maximum of what 36 bit (2 ^ 36 - 1) can represent.
     VERIFY(s_next_inode_index > 0);

@@ -116,15 +116,14 @@ private:
 };
 
 template<typename LockType>
-class [[nodiscard]] ScopedSpinlock {
-
-    AK_MAKE_NONCOPYABLE(ScopedSpinlock);
+class [[nodiscard]] SpinlockLocker {
+    AK_MAKE_NONCOPYABLE(SpinlockLocker);
 
 public:
-    ScopedSpinlock() = delete;
-    ScopedSpinlock& operator=(ScopedSpinlock&&) = delete;
+    SpinlockLocker() = delete;
+    SpinlockLocker& operator=(SpinlockLocker&&) = delete;
 
-    ScopedSpinlock(LockType& lock)
+    SpinlockLocker(LockType& lock)
         : m_lock(&lock)
     {
         VERIFY(m_lock);
@@ -132,7 +131,7 @@ public:
         m_have_lock = true;
     }
 
-    ScopedSpinlock(ScopedSpinlock&& from)
+    SpinlockLocker(SpinlockLocker&& from)
         : m_lock(from.m_lock)
         , m_prev_flags(from.m_prev_flags)
         , m_have_lock(from.m_have_lock)
@@ -142,7 +141,7 @@ public:
         from.m_have_lock = false;
     }
 
-    ~ScopedSpinlock()
+    ~SpinlockLocker()
     {
         if (m_lock && m_have_lock) {
             m_lock->unlock(m_prev_flags);

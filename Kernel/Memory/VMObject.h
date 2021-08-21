@@ -43,13 +43,13 @@ public:
 
     ALWAYS_INLINE void add_region(Region& region)
     {
-        ScopedSpinlock locker(m_lock);
+        SpinlockLocker locker(m_lock);
         m_regions.append(region);
     }
 
     ALWAYS_INLINE void remove_region(Region& region)
     {
-        ScopedSpinlock locker(m_lock);
+        SpinlockLocker locker(m_lock);
         m_regions.remove(region);
     }
 
@@ -80,7 +80,7 @@ public:
 template<typename Callback>
 inline void VMObject::for_each_region(Callback callback)
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     for (auto& region : m_regions) {
         callback(region);
     }
