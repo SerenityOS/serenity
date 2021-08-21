@@ -134,3 +134,8 @@ void glPolygonMode(GLenum face, GLenum mode)
 {
     g_gl_context->gl_polygon_mode(face, mode);
 }
+
+void glPixelStorei(GLenum pname, GLint param)
+{
+    g_gl_context->gl_pixel_store(pname, param);
+}
