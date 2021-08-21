@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "CharacterMapFileListModel.h"
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <LibCore/ConfigFile.h>
@@ -16,6 +15,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ComboBox.h>
+#include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
 
     auto& character_map_file_combo = character_map_file_selection_container.add<GUI::ComboBox>();
     character_map_file_combo.set_only_allow_values_from_model(true);
-    character_map_file_combo.set_model(*CharacterMapFileListModel::create(character_map_files));
+    character_map_file_combo.set_model(*GUI::ItemListModel<String>::create(character_map_files));
     character_map_file_combo.set_selected_index(initial_keymap_index);
 
     auto& num_lock_checkbox = root_widget.add<GUI::CheckBox>("Enable Num Lock on login");
