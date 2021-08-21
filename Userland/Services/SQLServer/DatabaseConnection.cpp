@@ -41,7 +41,7 @@ DatabaseConnection::DatabaseConnection(String database_name, int client_id)
     deferred_invoke([&](Object&) {
         m_database = SQL::Database::construct(String::formatted("/home/anon/sql/{}.db", m_database_name));
         m_accept_statements = true;
-        auto client_connection = ClientConnection::client_connection_for(client_id);
+        auto client_connection = ClientConnection::client_connection_for(m_client_id);
         if (client_connection)
             client_connection->async_connected(m_connection_id);
         else
