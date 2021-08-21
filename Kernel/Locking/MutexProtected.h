@@ -1,33 +1,52 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <Kernel/Locking/LockLocation.h>
-#include <Kernel/Locking/MutexContendedResource.h>
+#include <Kernel/Locking/Mutex.h>
 
 namespace Kernel {
 
 template<typename T>
-class MutexProtected
-    : private T
-    , public MutexContendedResource {
+class MutexProtected {
     AK_MAKE_NONCOPYABLE(MutexProtected);
     AK_MAKE_NONMOVABLE(MutexProtected);
 
-protected:
-    using LockedShared = LockedResource<T const, LockMode::Shared>;
-    using LockedExclusive = LockedResource<T, LockMode::Exclusive>;
+private:
+    template<typename U, LockMode lock_mode>
+    class Locked {
+        AK_MAKE_NONCOPYABLE(Locked);
+        AK_MAKE_NONMOVABLE(Locked);
 
-    LockedShared lock_shared(LockLocation const& location) const { return LockedShared(this, this->MutexContendedResource::m_mutex, location); }
-    LockedExclusive lock_exclusive(LockLocation const& location) { return LockedExclusive(this, this->MutexContendedResource::m_mutex, location); }
+    public:
+        Locked(U& value, Mutex& mutex, LockLocation const& location)
+            : m_value(value)
+            , m_locker(mutex, lock_mode, location)
+        {
+        }
+
+        ALWAYS_INLINE U const* operator->() const { return &m_value; }
+        ALWAYS_INLINE U const& operator*() const { return m_value; }
+
+        ALWAYS_INLINE U* operator->() requires(!IsConst<U>) { return &m_value; }
+        ALWAYS_INLINE U& operator*() requires(!IsConst<U>) { return m_value; }
+
+        ALWAYS_INLINE U const& get() const { return &m_value; }
+        ALWAYS_INLINE U& get() requires(!IsConst<U>) { return &m_value; }
+
+    private:
+        U& m_value;
+        MutexLocker m_locker;
+    };
+
+    auto lock_shared(LockLocation const& location) const { return Locked<T const, LockMode::Shared>(m_value, m_mutex, location); }
+    auto lock_exclusive(LockLocation const& location) { return Locked<T, LockMode::Exclusive>(m_value, m_mutex, location); }
 
 public:
-    using T::T;
-
     MutexProtected() = default;
 
     template<typename Callback>
@@ -63,6 +82,10 @@ public:
         },
             location);
     }
+
+private:
+    T m_value;
+    Mutex mutable m_mutex;
 };
 
 }
