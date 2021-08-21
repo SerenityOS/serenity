@@ -7,6 +7,7 @@
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/AggregateError.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
@@ -150,6 +151,30 @@ static Value perform_promise_all(GlobalObject& global_object, Object& iterator_r
         });
 }
 
+// 27.2.4.3.1 PerformPromiseAny ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseany
+static Value perform_promise_any(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
+{
+    auto& vm = global_object.vm();
+
+    return perform_promise_common(
+        global_object, iterator_record, constructor, result_capability, promise_resolve,
+        [&](PromiseValueList& errors) -> Value {
+            auto errors_array = Array::create_from(global_object, errors.values);
+
+            auto* error = AggregateError::create(global_object);
+            error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true });
+
+            vm.throw_exception(global_object, error);
+            return {};
+        },
+        [&](PromiseValueList& errors, RemainingElements& remaining_elements_count, Value next_promise, size_t index) {
+            auto* on_rejected = PromiseAnyRejectElementFunction::create(global_object, index, errors, result_capability, remaining_elements_count);
+            on_rejected->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
+
+            (void)next_promise.invoke(global_object, vm.names.then, result_capability.resolve, on_rejected);
+        });
+}
+
 PromiseConstructor::PromiseConstructor(GlobalObject& global_object)
     : NativeFunction(vm().names.Promise.as_string(), *global_object.function_prototype())
 {
@@ -165,9 +190,9 @@ void PromiseConstructor::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.all, all, 1, attr);
+    define_native_function(vm.names.any, any, 1, attr);
     // TODO: Implement these functions below and uncomment this.
     // define_native_function(vm.names.allSettled, all_settled, 1, attr);
-    // define_native_function(vm.names.any, any, 1, attr);
     // define_native_function(vm.names.race, race, 1, attr);
     define_native_function(vm.names.reject, reject, 1, attr);
     define_native_function(vm.names.resolve, resolve, 1, attr);
@@ -252,7 +277,32 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 // 27.2.4.3 Promise.any ( iterable ), https://tc39.es/ecma262/#sec-promise.any
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
 {
-    TODO();
+    auto* constructor = vm.this_value(global_object).to_object(global_object);
+    if (!constructor)
+        return {};
+
+    auto promise_capability = new_promise_capability(global_object, constructor);
+    if (vm.exception())
+        return {};
+
+    auto promise_resolve = get_promise_resolve(global_object, constructor);
+    if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve, promise_capability); abrupt.has_value())
+        return abrupt.value();
+
+    auto iterator_record = get_iterator(global_object, vm.argument(0));
+    if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record, promise_capability); abrupt.has_value())
+        return abrupt.value();
+
+    auto result = perform_promise_any(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
+    if (vm.exception()) {
+        if (!iterator_record_is_complete(global_object, *iterator_record))
+            iterator_close(*iterator_record);
+
+        auto abrupt = if_abrupt_reject_promise(global_object, result, promise_capability);
+        return abrupt.value();
+    }
+
+    return result;
 }
 
 // 27.2.4.5 Promise.race ( iterable ), https://tc39.es/ecma262/#sec-promise.race
