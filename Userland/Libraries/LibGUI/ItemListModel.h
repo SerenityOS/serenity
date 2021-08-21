@@ -77,6 +77,37 @@ public:
         return {};
     }
 
+    virtual bool is_searchable() const override { return true; }
+    virtual Vector<GUI::ModelIndex, 1> matches(StringView const& searching, unsigned flags, GUI::ModelIndex const&) override
+    {
+        Vector<GUI::ModelIndex, 1> found_indices;
+        if constexpr (IsTwoDimensional) {
+            for (auto it = m_data.begin(); it != m_data.end(); ++it) {
+                for (auto it2d = (*it).begin(); it2d != (*it).end(); ++it2d) {
+                    GUI::ModelIndex index = this->index(it.index(), it2d.index());
+                    if (!string_matches(data(index, ModelRole::Display).as_string(), searching, flags))
+                        continue;
+
+                    found_indices.append(index);
+                    if (flags & FirstMatchOnly)
+                        return found_indices;
+                }
+            }
+        } else {
+            for (auto it = m_data.begin(); it != m_data.end(); ++it) {
+                GUI::ModelIndex index = this->index(it.index());
+                if (!string_matches(data(index, ModelRole::Display).as_string(), searching, flags))
+                    continue;
+
+                found_indices.append(index);
+                if (flags & FirstMatchOnly)
+                    return found_indices;
+            }
+        }
+
+        return found_indices;
+    }
+
 protected:
     explicit ItemListModel(const Container& data, Optional<size_t> row_count = {}) requires(!IsTwoDimensional)
         : m_data(data)
