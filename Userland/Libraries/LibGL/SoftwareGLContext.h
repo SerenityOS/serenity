@@ -70,6 +70,7 @@ public:
     virtual void gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data) override;
     virtual void gl_tex_parameter(GLenum target, GLenum pname, GLfloat param) override;
     virtual void gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q) override;
+    virtual void gl_tex_env(GLenum target, GLenum pname, GLfloat param) override;
     virtual void gl_bind_texture(GLenum target, GLuint texture) override;
     virtual void gl_active_texture(GLenum texture) override;
     virtual void gl_get_floatv(GLenum pname, GLfloat* params) override;

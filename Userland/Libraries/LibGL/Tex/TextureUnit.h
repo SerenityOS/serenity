@@ -24,10 +24,14 @@ public:
     GLenum currently_bound_target() const { return m_currently_bound_target; }
     bool is_bound() const { return !m_currently_bound_texture.is_null(); }
 
+    void set_env_mode(GLenum mode) { m_env_mode = mode; }
+    GLenum env_mode() const { return m_env_mode; }
+
 private:
     mutable RefPtr<Texture2D> m_texture_target_2d { nullptr };
     mutable RefPtr<Texture> m_currently_bound_texture { nullptr };
     GLenum m_currently_bound_target;
+    GLenum m_env_mode { GL_MODULATE };
 };
 
 }

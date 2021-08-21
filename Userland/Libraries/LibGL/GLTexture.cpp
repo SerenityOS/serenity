@@ -46,3 +46,8 @@ void glTexParameterf(GLenum target, GLenum pname, GLfloat param)
 {
     g_gl_context->gl_tex_parameter(target, pname, param);
 }
+
+void glTexEnvf(GLenum target, GLenum pname, GLfloat param)
+{
+    g_gl_context->gl_tex_env(target, pname, param);
+}

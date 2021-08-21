@@ -358,6 +358,7 @@ GLAPI void glTexCoord2f(GLfloat s, GLfloat t);
 GLAPI void glTexCoord4fv(const GLfloat* v);
 GLAPI void glTexParameteri(GLenum target, GLenum pname, GLint param);
 GLAPI void glTexParameterf(GLenum target, GLenum pname, GLfloat param);
+GLAPI void glTexEnvf(GLenum target, GLenum pname, GLfloat param);
 GLAPI void glBindTexture(GLenum target, GLuint texture);
 GLAPI void glActiveTexture(GLenum texture);
 GLAPI void glGetFloatv(GLenum pname, GLfloat* params);

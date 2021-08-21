@@ -1482,6 +1482,36 @@ void SoftwareGLContext::gl_tex_coord_pointer(GLint size, GLenum type, GLsizei st
     m_client_tex_coord_pointer.pointer = pointer;
 }
 
+void SoftwareGLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_env, target, pname, param);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    if (target == GL_TEXTURE_ENV) {
+        if (pname == GL_TEXTURE_ENV_MODE) {
+            auto param_enum = static_cast<GLenum>(param);
+
+            switch (param_enum) {
+            case GL_MODULATE:
+            case GL_REPLACE:
+            case GL_DECAL:
+                m_active_texture_unit->set_env_mode(param_enum);
+                break;
+            default:
+                // FIXME: We currently only support a subset of possible param values. Implement the rest!
+                RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+                break;
+            }
+        } else {
+            // FIXME: We currently only support a subset of possible pname values. Implement the rest!
+            RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+        }
+    } else {
+        // FIXME: We currently only support a subset of possible target values. Implement the rest!
+        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+    }
+}
+
 void SoftwareGLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_arrays, mode, first, count);
