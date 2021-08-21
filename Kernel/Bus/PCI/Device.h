@@ -10,11 +10,11 @@
 #include <Kernel/Bus/PCI/Definitions.h>
 
 namespace Kernel {
-class PCI::DeviceController {
+class PCI::Device {
 public:
     Address pci_address() const { return m_pci_address; };
 
-    virtual ~DeviceController() = default;
+    virtual ~Device() = default;
     void enable_pin_based_interrupts() const;
     void disable_pin_based_interrupts() const;
 
@@ -28,7 +28,7 @@ public:
     void disable_extended_message_signalled_interrupts();
 
 protected:
-    explicit DeviceController(Address pci_address);
+    explicit Device(Address pci_address);
 
 private:
     Address m_pci_address;

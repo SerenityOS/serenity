@@ -8,7 +8,7 @@
 
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <Kernel/Bus/PCI/DeviceController.h>
+#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Definitions.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
