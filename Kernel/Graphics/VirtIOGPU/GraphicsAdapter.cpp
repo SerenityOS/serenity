@@ -19,7 +19,7 @@ NonnullRefPtr<GraphicsAdapter> GraphicsAdapter::initialize(PCI::Address base_add
 }
 
 GraphicsAdapter::GraphicsAdapter(PCI::Address base_address)
-    : PCI::DeviceController(base_address)
+    : PCI::Device(base_address)
 {
     m_gpu_device = adopt_ref(*new GPU(base_address)).leak_ref();
 }

@@ -92,7 +92,7 @@ KResult UHCIController::initialize()
 }
 
 UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::Address address)
-    : PCI::DeviceController(address)
+    : PCI::Device(address)
     , IRQHandler(PCI::get_interrupt_line(address))
     , m_io_base(PCI::get_BAR4(pci_address()) & ~1)
 {

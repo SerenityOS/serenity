@@ -10,7 +10,7 @@
 #include <AK/Platform.h>
 
 #include <AK/NonnullOwnPtr.h>
-#include <Kernel/Bus/PCI/DeviceController.h>
+#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/USB/UHCI/UHCIDescriptorPool.h>
 #include <Kernel/Bus/USB/UHCI/UHCIDescriptorTypes.h>
 #include <Kernel/Bus/USB/UHCI/UHCIRootHub.h>
@@ -25,7 +25,7 @@ namespace Kernel::USB {
 
 class UHCIController final
     : public USBController
-    , public PCI::DeviceController
+    , public PCI::Device
     , public IRQHandler {
 
     static constexpr u8 MAXIMUM_NUMBER_OF_TDS = 128; // Upper pool limit. This consumes the second page we have allocated

@@ -25,7 +25,7 @@ set(KERNEL_SOURCES
     Arch/PC/BIOS.cpp
     Arch/x86/SmapDisabler.h
     Bus/PCI/Access.cpp
-    Bus/PCI/DeviceController.cpp
+    Bus/PCI/Device.cpp
     Bus/PCI/IOAccess.cpp
     Bus/PCI/MMIOAccess.cpp
     Bus/PCI/Initializer.cpp

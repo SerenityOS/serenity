@@ -8,7 +8,7 @@
 
 #include <AK/OwnPtr.h>
 #include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Bus/PCI/DeviceController.h>
+#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -19,7 +19,7 @@ namespace Kernel {
 #define RTL8139_TX_BUFFER_COUNT 4
 
 class RTL8139NetworkAdapter final : public NetworkAdapter
-    , public PCI::DeviceController
+    , public PCI::Device
     , public IRQHandler {
 public:
     static RefPtr<RTL8139NetworkAdapter> try_to_initialize(PCI::Address);

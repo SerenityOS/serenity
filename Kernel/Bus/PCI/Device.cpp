@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Bus/PCI/DeviceController.h>
+#include <Kernel/Bus/PCI/Device.h>
 
 namespace Kernel {
 namespace PCI {
 
-DeviceController::DeviceController(Address address)
+Device::Device(Address address)
     : m_pci_address(address)
 {
 }
 
-bool DeviceController::is_msi_capable() const
+bool Device::is_msi_capable() const
 {
     for (const auto& capability : PCI::get_physical_id(pci_address()).capabilities()) {
         if (capability.id() == PCI_CAPABILITY_MSI)
@@ -22,7 +22,7 @@ bool DeviceController::is_msi_capable() const
     }
     return false;
 }
-bool DeviceController::is_msix_capable() const
+bool Device::is_msix_capable() const
 {
     for (const auto& capability : PCI::get_physical_id(pci_address()).capabilities()) {
         if (capability.id() == PCI_CAPABILITY_MSIX)
@@ -31,28 +31,28 @@ bool DeviceController::is_msix_capable() const
     return false;
 }
 
-void DeviceController::enable_pin_based_interrupts() const
+void Device::enable_pin_based_interrupts() const
 {
     PCI::enable_interrupt_line(pci_address());
 }
-void DeviceController::disable_pin_based_interrupts() const
+void Device::disable_pin_based_interrupts() const
 {
     PCI::disable_interrupt_line(pci_address());
 }
 
-void DeviceController::enable_message_signalled_interrupts()
+void Device::enable_message_signalled_interrupts()
 {
     TODO();
 }
-void DeviceController::disable_message_signalled_interrupts()
+void Device::disable_message_signalled_interrupts()
 {
     TODO();
 }
-void DeviceController::enable_extended_message_signalled_interrupts()
+void Device::enable_extended_message_signalled_interrupts()
 {
     TODO();
 }
-void DeviceController::disable_extended_message_signalled_interrupts()
+void Device::disable_extended_message_signalled_interrupts()
 {
     TODO();
 }

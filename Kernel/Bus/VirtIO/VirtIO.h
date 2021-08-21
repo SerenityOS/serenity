@@ -8,7 +8,7 @@
 
 #include <AK/NonnullOwnPtrVector.h>
 #include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Bus/PCI/DeviceController.h>
+#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/VirtIO/VirtIOQueue.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
@@ -85,7 +85,7 @@ public:
 };
 
 class VirtIODevice
-    : public PCI::DeviceController
+    : public PCI::Device
     , public IRQHandler {
 public:
     virtual ~VirtIODevice() override;

@@ -8,7 +8,7 @@
 
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <Kernel/Bus/PCI/DeviceController.h>
+#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
@@ -17,7 +17,7 @@
 namespace Kernel {
 
 class VGACompatibleAdapter : public GraphicsDevice
-    , public PCI::DeviceController {
+    , public PCI::Device {
     AK_MAKE_ETERNAL
 public:
     static NonnullRefPtr<VGACompatibleAdapter> initialize_with_preset_resolution(PCI::Address, PhysicalAddress, size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch);
@@ -53,5 +53,4 @@ protected:
     RefPtr<FramebufferDevice> m_framebuffer_device;
     RefPtr<Graphics::Console> m_framebuffer_console;
 };
-
 }
