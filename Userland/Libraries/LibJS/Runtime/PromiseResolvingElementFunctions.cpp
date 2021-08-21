@@ -73,6 +73,64 @@ Value PromiseAllResolveElementFunction::resolve_element()
     return js_undefined();
 }
 
+PromiseAllSettledResolveElementFunction* PromiseAllSettledResolveElementFunction::create(GlobalObject& global_object, size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements)
+{
+    return global_object.heap().allocate<PromiseAllSettledResolveElementFunction>(global_object, index, values, capability, remaining_elements, *global_object.function_prototype());
+}
+
+PromiseAllSettledResolveElementFunction::PromiseAllSettledResolveElementFunction(size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
+    : PromiseResolvingElementFunction(index, values, move(capability), remaining_elements, prototype)
+{
+}
+
+Value PromiseAllSettledResolveElementFunction::resolve_element()
+{
+    auto& vm = this->vm();
+    auto& global_object = this->global_object();
+
+    auto* object = Object::create(global_object, global_object.object_prototype());
+    object->create_data_property_or_throw(vm.names.status, js_string(vm, "fulfilled"sv));
+    object->create_data_property_or_throw(vm.names.value, vm.argument(0));
+
+    m_values.values[m_index] = object;
+
+    if (--m_remaining_elements.value == 0) {
+        auto values_array = Array::create_from(global_object, m_values.values);
+        return vm.call(*m_capability.resolve, js_undefined(), values_array);
+    }
+
+    return js_undefined();
+}
+
+PromiseAllSettledRejectElementFunction* PromiseAllSettledRejectElementFunction::create(GlobalObject& global_object, size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements)
+{
+    return global_object.heap().allocate<PromiseAllSettledRejectElementFunction>(global_object, index, values, capability, remaining_elements, *global_object.function_prototype());
+}
+
+PromiseAllSettledRejectElementFunction::PromiseAllSettledRejectElementFunction(size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
+    : PromiseResolvingElementFunction(index, values, move(capability), remaining_elements, prototype)
+{
+}
+
+Value PromiseAllSettledRejectElementFunction::resolve_element()
+{
+    auto& vm = this->vm();
+    auto& global_object = this->global_object();
+
+    auto* object = Object::create(global_object, global_object.object_prototype());
+    object->create_data_property_or_throw(vm.names.status, js_string(vm, "rejected"sv));
+    object->create_data_property_or_throw(vm.names.reason, vm.argument(0));
+
+    m_values.values[m_index] = object;
+
+    if (--m_remaining_elements.value == 0) {
+        auto values_array = Array::create_from(global_object, m_values.values);
+        return vm.call(*m_capability.resolve, js_undefined(), values_array);
+    }
+
+    return js_undefined();
+}
+
 PromiseAnyRejectElementFunction* PromiseAnyRejectElementFunction::create(GlobalObject& global_object, size_t index, PromiseValueList& errors, PromiseCapability capability, RemainingElements& remaining_elements)
 {
     return global_object.heap().allocate<PromiseAnyRejectElementFunction>(global_object, index, errors, capability, remaining_elements, *global_object.function_prototype());

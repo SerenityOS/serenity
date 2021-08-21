@@ -151,6 +151,33 @@ static Value perform_promise_all(GlobalObject& global_object, Object& iterator_r
         });
 }
 
+// 27.2.4.2.1 PerformPromiseAllSettled ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseallsettled
+static Value perform_promise_all_settled(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
+{
+    auto& vm = global_object.vm();
+
+    return perform_promise_common(
+        global_object, iterator_record, constructor, result_capability, promise_resolve,
+        [&](PromiseValueList& values) -> Value {
+            auto values_array = Array::create_from(global_object, values.values);
+
+            (void)vm.call(*result_capability.resolve, js_undefined(), values_array);
+            if (vm.exception())
+                return {};
+
+            return result_capability.promise;
+        },
+        [&](PromiseValueList& values, RemainingElements& remaining_elements_count, Value next_promise, size_t index) {
+            auto* on_fulfilled = PromiseAllSettledResolveElementFunction::create(global_object, index, values, result_capability, remaining_elements_count);
+            on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
+
+            auto* on_rejected = PromiseAllSettledRejectElementFunction::create(global_object, index, values, result_capability, remaining_elements_count);
+            on_rejected->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
+
+            (void)next_promise.invoke(global_object, vm.names.then, on_fulfilled, on_rejected);
+        });
+}
+
 // 27.2.4.3.1 PerformPromiseAny ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseany
 static Value perform_promise_any(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
 {
@@ -190,9 +217,9 @@ void PromiseConstructor::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.all, all, 1, attr);
+    define_native_function(vm.names.allSettled, all_settled, 1, attr);
     define_native_function(vm.names.any, any, 1, attr);
     // TODO: Implement these functions below and uncomment this.
-    // define_native_function(vm.names.allSettled, all_settled, 1, attr);
     // define_native_function(vm.names.race, race, 1, attr);
     define_native_function(vm.names.reject, reject, 1, attr);
     define_native_function(vm.names.resolve, resolve, 1, attr);
@@ -271,7 +298,32 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
 // 27.2.4.2 Promise.allSettled ( iterable ), https://tc39.es/ecma262/#sec-promise.allsettled
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 {
-    TODO();
+    auto* constructor = vm.this_value(global_object).to_object(global_object);
+    if (!constructor)
+        return {};
+
+    auto promise_capability = new_promise_capability(global_object, constructor);
+    if (vm.exception())
+        return {};
+
+    auto promise_resolve = get_promise_resolve(global_object, constructor);
+    if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve, promise_capability); abrupt.has_value())
+        return abrupt.value();
+
+    auto iterator_record = get_iterator(global_object, vm.argument(0));
+    if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record, promise_capability); abrupt.has_value())
+        return abrupt.value();
+
+    auto result = perform_promise_all_settled(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
+    if (vm.exception()) {
+        if (!iterator_record_is_complete(global_object, *iterator_record))
+            iterator_close(*iterator_record);
+
+        auto abrupt = if_abrupt_reject_promise(global_object, result, promise_capability);
+        return abrupt.value();
+    }
+
+    return result;
 }
 
 // 27.2.4.3 Promise.any ( iterable ), https://tc39.es/ecma262/#sec-promise.any
