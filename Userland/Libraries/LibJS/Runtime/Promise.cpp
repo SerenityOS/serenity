@@ -94,7 +94,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
         vm.enqueue_promise_job(*job);
         return js_undefined();
     });
-    resolve_function->define_direct_property(vm.names.name, js_string(vm, vm.names.resolve.as_string()), Attribute::Configurable);
+    resolve_function->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
     // 27.2.1.3.1 Promise Reject Functions, https://tc39.es/ecma262/#sec-promise-reject-functions
     auto* reject_function = PromiseResolvingFunction::create(global_object(), *this, *already_resolved, [](auto& vm, auto&, auto& promise, auto& already_resolved) {
@@ -105,7 +105,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
         auto reason = vm.argument(0);
         return promise.reject(reason);
     });
-    reject_function->define_direct_property(vm.names.name, js_string(vm, vm.names.reject.as_string()), Attribute::Configurable);
+    reject_function->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
     return { *resolve_function, *reject_function };
 }
