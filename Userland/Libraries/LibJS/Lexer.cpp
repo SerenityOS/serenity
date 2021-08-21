@@ -372,11 +372,14 @@ bool Lexer::is_whitespace() const
     return false;
 }
 
-Optional<u32> Lexer::is_unicode_escape(size_t& identifier_length) const
+// UnicodeEscapeSequence :: https://tc39.es/ecma262/#prod-UnicodeEscapeSequence
+//          u Hex4Digits
+//          u{ CodePoint }
+Optional<u32> Lexer::is_identifier_unicode_escape(size_t& identifier_length) const
 {
     GenericLexer lexer(source().substring_view(m_position - 1));
 
-    if (auto code_point_or_error = lexer.consume_escaped_code_point(); !code_point_or_error.is_error()) {
+    if (auto code_point_or_error = lexer.consume_escaped_code_point(false); !code_point_or_error.is_error()) {
         identifier_length = lexer.tell();
         return code_point_or_error.value();
     }
@@ -384,13 +387,18 @@ Optional<u32> Lexer::is_unicode_escape(size_t& identifier_length) const
     return {};
 }
 
+// IdentifierStart :: https://tc39.es/ecma262/#prod-IdentifierStart
+//          UnicodeIDStart
+//          $
+//          _
+//          \ UnicodeEscapeSequence
 Optional<u32> Lexer::is_identifier_start(size_t& identifier_length) const
 {
     u32 code_point = current_code_point();
     identifier_length = 1;
 
     if (code_point == '\\') {
-        if (auto maybe_code_point = is_unicode_escape(identifier_length); maybe_code_point.has_value())
+        if (auto maybe_code_point = is_identifier_unicode_escape(identifier_length); maybe_code_point.has_value())
             code_point = *maybe_code_point;
         else
             return {};
@@ -406,13 +414,19 @@ Optional<u32> Lexer::is_identifier_start(size_t& identifier_length) const
     return {};
 }
 
+// IdentifierPart :: https://tc39.es/ecma262/#prod-IdentifierPart
+//          UnicodeIDContinue
+//          $
+//          \ UnicodeEscapeSequence
+//          <ZWNJ>
+//          <ZWJ>
 Optional<u32> Lexer::is_identifier_middle(size_t& identifier_length) const
 {
     u32 code_point = current_code_point();
     identifier_length = 1;
 
     if (code_point == '\\') {
-        if (auto maybe_code_point = is_unicode_escape(identifier_length); maybe_code_point.has_value())
+        if (auto maybe_code_point = is_identifier_unicode_escape(identifier_length); maybe_code_point.has_value())
             code_point = *maybe_code_point;
         else
             return {};
@@ -574,12 +588,15 @@ Token Lexer::next()
                 token_type = TokenType::TemplateLiteralString;
         }
     } else if (auto code_point = is_identifier_start(identifier_length); code_point.has_value()) {
+        bool has_escaped_character = false;
         // identifier or keyword
         StringBuilder builder;
         do {
             builder.append_code_point(*code_point);
             for (size_t i = 0; i < identifier_length; ++i)
                 consume();
+
+            has_escaped_character |= identifier_length > 1;
 
             code_point = is_identifier_middle(identifier_length);
         } while (code_point.has_value());
@@ -592,7 +609,7 @@ Token Lexer::next()
         if (it == s_keywords.end())
             token_type = TokenType::Identifier;
         else
-            token_type = it->value;
+            token_type = has_escaped_character ? TokenType::EscapedKeyword : it->value;
     } else if (is_numeric_literal_start()) {
         token_type = TokenType::NumericLiteral;
         bool is_invalid_numeric_literal = false;

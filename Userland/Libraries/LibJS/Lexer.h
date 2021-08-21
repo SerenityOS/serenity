@@ -41,7 +41,7 @@ private:
     bool is_eof() const;
     bool is_line_terminator() const;
     bool is_whitespace() const;
-    Optional<u32> is_unicode_escape(size_t& identifier_length) const;
+    Optional<u32> is_identifier_unicode_escape(size_t& identifier_length) const;
     Optional<u32> is_identifier_start(size_t& identifier_length) const;
     Optional<u32> is_identifier_middle(size_t& identifier_length) const;
     bool is_line_comment_start(bool line_has_token_yet) const;

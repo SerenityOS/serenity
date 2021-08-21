@@ -74,6 +74,7 @@ constexpr const u32 ZERO_WIDTH_JOINER { 0x200D };
     __ENUMERATE_JS_TOKEN(Equals, Operator)                      \
     __ENUMERATE_JS_TOKEN(EqualsEquals, Operator)                \
     __ENUMERATE_JS_TOKEN(EqualsEqualsEquals, Operator)          \
+    __ENUMERATE_JS_TOKEN(EscapedKeyword, Identifier)            \
     __ENUMERATE_JS_TOKEN(ExclamationMark, Operator)             \
     __ENUMERATE_JS_TOKEN(ExclamationMarkEquals, Operator)       \
     __ENUMERATE_JS_TOKEN(ExclamationMarkEqualsEquals, Operator) \
