@@ -10,13 +10,13 @@
 #include <AK/Vector.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/Locking/ProtectedValue.h>
+#include <Kernel/Locking/MutexProtected.h>
 
 namespace Kernel {
 
-static Singleton<ProtectedValue<Custody::AllCustodiesList>> s_all_custodies;
+static Singleton<MutexProtected<Custody::AllCustodiesList>> s_all_custodies;
 
-static ProtectedValue<Custody::AllCustodiesList>& all_custodies()
+static MutexProtected<Custody::AllCustodiesList>& all_custodies()
 {
     return s_all_custodies;
 }

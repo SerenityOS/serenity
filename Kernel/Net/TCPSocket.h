@@ -11,7 +11,7 @@
 #include <AK/SinglyLinkedList.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/KResult.h>
-#include <Kernel/Locking/ProtectedValue.h>
+#include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/IPv4Socket.h>
 
 namespace Kernel {
@@ -142,10 +142,10 @@ public:
 
     bool should_delay_next_ack() const;
 
-    static ProtectedValue<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
+    static MutexProtected<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
     static RefPtr<TCPSocket> from_tuple(const IPv4SocketTuple& tuple);
 
-    static ProtectedValue<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& closing_sockets();
+    static MutexProtected<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& closing_sockets();
 
     RefPtr<TCPSocket> create_client(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
     void set_originator(TCPSocket& originator) { m_originator = originator; }
@@ -207,7 +207,7 @@ private:
         size_t size { 0 };
     };
 
-    ProtectedValue<UnackedPackets> m_unacked_packets;
+    MutexProtected<UnackedPackets> m_unacked_packets;
 
     u32 m_duplicate_acks { 0 };
 
@@ -226,7 +226,7 @@ private:
 
 public:
     using RetransmitList = IntrusiveList<TCPSocket, RawPtr<TCPSocket>, &TCPSocket::m_retransmit_list_node>;
-    static ProtectedValue<TCPSocket::RetransmitList>& sockets_for_retransmit();
+    static MutexProtected<TCPSocket::RetransmitList>& sockets_for_retransmit();
 };
 
 }

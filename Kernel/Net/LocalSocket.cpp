@@ -10,7 +10,7 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Locking/Mutex.h>
-#include <Kernel/Locking/ProtectedValue.h>
+#include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
 #include <Kernel/StdLib.h>
@@ -19,9 +19,9 @@
 
 namespace Kernel {
 
-static Singleton<ProtectedValue<LocalSocket::List>> s_list;
+static Singleton<MutexProtected<LocalSocket::List>> s_list;
 
-static ProtectedValue<LocalSocket::List>& all_sockets()
+static MutexProtected<LocalSocket::List>& all_sockets()
 {
     return *s_list;
 }

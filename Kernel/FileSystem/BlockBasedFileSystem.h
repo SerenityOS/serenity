@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
-#include <Kernel/Locking/ProtectedValue.h>
+#include <Kernel/Locking/MutexProtected.h>
 
 namespace Kernel {
 
@@ -44,7 +44,7 @@ private:
     DiskCache& cache() const;
     void flush_specific_block_if_needed(BlockIndex index);
 
-    mutable ProtectedValue<OwnPtr<DiskCache>> m_cache;
+    mutable MutexProtected<OwnPtr<DiskCache>> m_cache;
 };
 
 }

@@ -26,11 +26,11 @@
 
 namespace Kernel {
 
-static Singleton<ProtectedValue<IPv4Socket::List>> s_all_sockets;
+static Singleton<MutexProtected<IPv4Socket::List>> s_all_sockets;
 
 using BlockFlags = Thread::FileDescriptionBlocker::BlockFlags;
 
-ProtectedValue<IPv4Socket::List>& IPv4Socket::all_sockets()
+MutexProtected<IPv4Socket::List>& IPv4Socket::all_sockets()
 {
     return *s_all_sockets;
 }

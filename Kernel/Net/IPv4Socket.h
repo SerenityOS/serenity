@@ -10,7 +10,7 @@
 #include <AK/SinglyLinkedListWithCount.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/KBuffer.h>
-#include <Kernel/Locking/ProtectedValue.h>
+#include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/IPv4SocketTuple.h>
 #include <Kernel/Net/Socket.h>
@@ -135,7 +135,7 @@ private:
 public:
     using List = IntrusiveList<IPv4Socket, RawPtr<IPv4Socket>, &IPv4Socket::m_list_node>;
 
-    static ProtectedValue<IPv4Socket::List>& all_sockets();
+    static MutexProtected<IPv4Socket::List>& all_sockets();
 };
 
 }
