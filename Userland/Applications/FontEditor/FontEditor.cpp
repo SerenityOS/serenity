@@ -250,6 +250,19 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     m_copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
         m_glyph_editor_widget->copy_glyph();
     });
+    m_copy_character_action = GUI::Action::create("&Copy Character as Text", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"), [&](auto&) {
+        HashMap<String, String> metadata;
+        int glyph = m_glyph_map_widget->selected_glyph();
+        StringBuilder builder;
+
+        if (AK::UnicodeUtils::is_unicode_control_code_point(glyph))
+            builder.append(AK::UnicodeUtils::get_unicode_control_code_point_alias(glyph).value());
+        else
+            builder.append_code_point(glyph);
+
+        GUI::Clipboard::the().set_data(builder.to_byte_buffer(), "text/plain", metadata);
+    });
+    m_copy_character_action->set_status_tip("Copy character as text to clipboard");
     m_paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
         m_glyph_editor_widget->paste_glyph();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
@@ -297,6 +310,8 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     toolbar.add_action(*m_undo_action);
     toolbar.add_action(*m_redo_action);
     toolbar.add_separator();
+    toolbar.add_separator();
+    toolbar.add_action(*m_copy_character_action);
     toolbar.add_action(*m_open_preview_action);
 
     m_scale_five_action = GUI::Action::create_checkable("500%", { Mod_Ctrl, Key_1 }, [&](auto&) {
@@ -555,6 +570,8 @@ void FontEditorWidget::initialize_menubar(GUI::Window& window)
     edit_menu.add_action(*m_copy_action);
     edit_menu.add_action(*m_paste_action);
     edit_menu.add_action(*m_delete_action);
+    edit_menu.add_separator();
+    edit_menu.add_action(*m_copy_character_action);
 
     auto& view_menu = window.add_menu("&View");
     view_menu.add_action(*m_open_preview_action);
