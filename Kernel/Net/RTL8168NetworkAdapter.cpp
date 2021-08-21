@@ -192,7 +192,8 @@ UNMAP_AFTER_INIT RefPtr<RTL8168NetworkAdapter> RTL8168NetworkAdapter::try_to_ini
 }
 
 UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(PCI::Address address, u8 irq)
-    : PCI::Device(address, irq)
+    : PCI::DeviceController(address)
+    , IRQHandler(irq)
     , m_io_base(PCI::get_BAR0(pci_address()) & ~1)
     , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(TXDescriptor) * (number_of_rx_descriptors + 1)), "RTL8168 RX", Memory::Region::Access::ReadWrite))
     , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(RXDescriptor) * (number_of_tx_descriptors + 1)), "RTL8168 TX", Memory::Region::Access::ReadWrite))

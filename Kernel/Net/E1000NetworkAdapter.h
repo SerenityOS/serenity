@@ -8,7 +8,7 @@
 
 #include <AK/OwnPtr.h>
 #include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Bus/PCI/Device.h>
+#include <Kernel/Bus/PCI/DeviceController.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -17,7 +17,8 @@
 namespace Kernel {
 
 class E1000NetworkAdapter : public NetworkAdapter
-    , public PCI::Device {
+    , public PCI::DeviceController
+    , public IRQHandler {
 public:
     static RefPtr<E1000NetworkAdapter> try_to_initialize(PCI::Address);
 
