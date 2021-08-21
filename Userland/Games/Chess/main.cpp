@@ -26,7 +26,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     auto& widget = window->set_main_widget<ChessWidget>();
 
-    RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Chess", Core::ConfigFile::AllowWriting::Yes);
+    RefPtr<Core::ConfigFile> config = Core::ConfigFile::open_for_app("Chess", Core::ConfigFile::AllowWriting::Yes);
 
     if (pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec", nullptr) < 0) {
         perror("pledge");

@@ -17,7 +17,7 @@ int main(int, char**)
         return 1;
     }
 
-    auto config = Core::ConfigFile::get_for_app("Audio", Core::ConfigFile::AllowWriting::Yes);
+    auto config = Core::ConfigFile::open_for_app("Audio", Core::ConfigFile::AllowWriting::Yes);
     if (unveil(config->filename().characters(), "rwc") < 0) {
         perror("unveil");
         return 1;

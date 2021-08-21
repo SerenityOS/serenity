@@ -291,7 +291,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal", Core::ConfigFile::AllowWriting::Yes);
+    RefPtr<Core::ConfigFile> config = Core::ConfigFile::open_for_app("Terminal", Core::ConfigFile::AllowWriting::Yes);
     Core::File::ensure_parent_directories(config->filename());
 
     int ptm_fd;

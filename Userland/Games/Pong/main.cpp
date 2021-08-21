@@ -28,7 +28,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto config = Core::ConfigFile::get_for_app("Pong");
+    auto config = Core::ConfigFile::open_for_app("Pong");
 
     if (unveil("/res", "r") < 0) {
         perror("unveil");
