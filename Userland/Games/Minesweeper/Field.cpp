@@ -488,7 +488,7 @@ void Field::set_field_size(size_t rows, size_t columns, size_t mine_count)
     if (m_rows == rows && m_columns == columns && m_mine_count == mine_count)
         return;
     {
-        auto config = Core::ConfigFile::get_for_app("Minesweeper");
+        auto config = Core::ConfigFile::get_for_app("Minesweeper", Core::ConfigFile::AllowWriting::Yes);
         config->write_num_entry("Game", "MineCount", mine_count);
         config->write_num_entry("Game", "Rows", rows);
         config->write_num_entry("Game", "Columns", columns);
@@ -503,7 +503,7 @@ void Field::set_field_size(size_t rows, size_t columns, size_t mine_count)
 
 void Field::set_single_chording(bool enabled)
 {
-    auto config = Core::ConfigFile::get_for_app("Minesweeper");
+    auto config = Core::ConfigFile::get_for_app("Minesweeper", Core::ConfigFile::AllowWriting::Yes);
     m_single_chording = enabled;
     config->write_bool_entry("Minesweeper", "SingleChording", m_single_chording);
 }

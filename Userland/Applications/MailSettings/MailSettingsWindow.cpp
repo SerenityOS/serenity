@@ -43,7 +43,7 @@ void MailSettingsWindow::write_values()
 
 MailSettingsWindow::MailSettingsWindow()
 {
-    m_config = Core::ConfigFile::get_for_app("Mail");
+    m_config = Core::ConfigFile::get_for_app("Mail", Core::ConfigFile::AllowWriting::Yes);
     if (unveil(m_config->filename().characters(), "rwc") < 0) {
         perror("unveil");
         GUI::Application::the()->quit();

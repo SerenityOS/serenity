@@ -90,7 +90,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_close_on_finish_checkbox->set_checked(close_on_finish);
 
     m_close_on_finish_checkbox->on_checked = [&](bool checked) {
-        auto browser_config = Core::ConfigFile::get_for_app("Browser");
+        auto browser_config = Core::ConfigFile::get_for_app("Browser", Core::ConfigFile::AllowWriting::Yes);
         browser_config->write_bool_entry("Preferences", "CloseDownloadWidgetOnFinish", checked);
     };
 

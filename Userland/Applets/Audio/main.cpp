@@ -211,7 +211,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto config = Core::ConfigFile::get_for_app("AudioApplet");
+    auto config = Core::ConfigFile::get_for_app("AudioApplet", Core::ConfigFile::AllowWriting::Yes);
     // To not upset the audio server state, we responsibly read this once.
     auto audio_master_config = Core::ConfigFile::get_for_app("Audio");
 

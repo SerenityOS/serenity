@@ -68,7 +68,7 @@ int main(int argc, char** argv)
         return rc;
     }
 
-    auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini"));
+    auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini", Core::ConfigFile::AllowWriting::Yes));
     mapper_config->write_entry("Mapping", "Keymap", path);
     mapper_config->sync();
 
