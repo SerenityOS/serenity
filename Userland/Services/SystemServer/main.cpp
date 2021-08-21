@@ -215,7 +215,7 @@ int main(int, char**)
     // Read our config and instantiate services.
     // This takes care of setting up sockets.
     NonnullRefPtrVector<Service> services;
-    auto config = Core::ConfigFile::get_for_system("SystemServer");
+    auto config = Core::ConfigFile::open_for_system("SystemServer");
     for (auto name : config->groups()) {
         auto service = Service::construct(*config, name);
         if (service->is_enabled())

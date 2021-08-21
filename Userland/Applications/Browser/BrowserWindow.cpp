@@ -277,7 +277,7 @@ void BrowserWindow::build_menus()
 
     m_change_homepage_action = GUI::Action::create(
         "Set Homepage URL", [this](auto&) {
-            auto config = Core::ConfigFile::get_for_app("Browser", Core::ConfigFile::AllowWriting::Yes);
+            auto config = Core::ConfigFile::open_for_app("Browser", Core::ConfigFile::AllowWriting::Yes);
             String homepage_url = config->read_entry("Preferences", "Home", "about:blank");
             if (GUI::InputBox::show(this, homepage_url, "Enter URL", "Change homepage URL") == GUI::InputBox::ExecOK) {
                 if (URL(homepage_url).is_valid()) {
@@ -300,7 +300,7 @@ void BrowserWindow::build_menus()
         auto action = GUI::Action::create_checkable(
             name, [&](auto&) {
                 g_search_engine = url_format;
-                auto config = Core::ConfigFile::get_for_app("Browser", Core::ConfigFile::AllowWriting::Yes);
+                auto config = Core::ConfigFile::open_for_app("Browser", Core::ConfigFile::AllowWriting::Yes);
                 config->write_entry("Preferences", "SearchEngine", g_search_engine);
             },
             this);
@@ -317,7 +317,7 @@ void BrowserWindow::build_menus()
     m_disable_search_engine_action = GUI::Action::create_checkable(
         "Disable", [](auto&) {
             g_search_engine = {};
-            auto config = Core::ConfigFile::get_for_app("Browser", Core::ConfigFile::AllowWriting::Yes);
+            auto config = Core::ConfigFile::open_for_app("Browser", Core::ConfigFile::AllowWriting::Yes);
             config->write_entry("Preferences", "SearchEngine", g_search_engine);
         },
         this);
@@ -347,7 +347,7 @@ void BrowserWindow::build_menus()
         }
 
         g_search_engine = search_engine;
-        auto config = Core::ConfigFile::get_for_app("Browser", Core::ConfigFile::AllowWriting::Yes);
+        auto config = Core::ConfigFile::open_for_app("Browser", Core::ConfigFile::AllowWriting::Yes);
         config->write_entry("Preferences", "SearchEngine", g_search_engine);
         action.set_status_tip(search_engine);
     });

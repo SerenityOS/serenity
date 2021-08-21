@@ -19,7 +19,7 @@ int main()
         return 1;
     }
 
-    auto keyboard_settings_config = Core::ConfigFile::get_for_app("KeyboardSettings");
+    auto keyboard_settings_config = Core::ConfigFile::open_for_app("KeyboardSettings");
 
     if (unveil("/bin/keymap", "x") < 0) {
         perror("unveil /bin/keymap");

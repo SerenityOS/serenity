@@ -24,9 +24,9 @@ public:
         No,
     };
 
-    static NonnullRefPtr<ConfigFile> get_for_lib(String const& lib_name, AllowWriting = AllowWriting::No);
-    static NonnullRefPtr<ConfigFile> get_for_app(String const& app_name, AllowWriting = AllowWriting::No);
-    static NonnullRefPtr<ConfigFile> get_for_system(String const& app_name, AllowWriting = AllowWriting::No);
+    static NonnullRefPtr<ConfigFile> open_for_lib(String const& lib_name, AllowWriting = AllowWriting::No);
+    static NonnullRefPtr<ConfigFile> open_for_app(String const& app_name, AllowWriting = AllowWriting::No);
+    static NonnullRefPtr<ConfigFile> open_for_system(String const& app_name, AllowWriting = AllowWriting::No);
     static NonnullRefPtr<ConfigFile> open(String const& filename, AllowWriting = AllowWriting::No);
     static NonnullRefPtr<ConfigFile> open(String const& filename, int fd);
     ~ConfigFile();

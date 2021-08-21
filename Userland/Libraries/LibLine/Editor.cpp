@@ -39,7 +39,7 @@ namespace Line {
 Configuration Configuration::from_config(const StringView& libname)
 {
     Configuration configuration;
-    auto config_file = Core::ConfigFile::get_for_lib(libname);
+    auto config_file = Core::ConfigFile::open_for_lib(libname);
 
     // Read behaviour options.
     auto refresh = config_file->read_entry("behaviour", "refresh", "lazy");

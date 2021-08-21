@@ -329,7 +329,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto config = config_file.is_empty() ? Core::ConfigFile::get_for_app("Tests") : Core::ConfigFile::open(config_file);
+    auto config = config_file.is_empty() ? Core::ConfigFile::open_for_app("Tests") : Core::ConfigFile::open(config_file);
     if (config->num_groups() == 0)
         warnln("Empty configuration file ({}) loaded!", config_file.is_empty() ? "User config for Tests" : config_file.characters());
 

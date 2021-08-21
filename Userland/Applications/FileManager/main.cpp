@@ -75,7 +75,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("FileManager", Core::ConfigFile::AllowWriting::Yes);
+    RefPtr<Core::ConfigFile> config = Core::ConfigFile::open_for_app("FileManager", Core::ConfigFile::AllowWriting::Yes);
 
     Core::ArgsParser args_parser;
     bool is_desktop_mode { false }, is_selection_mode { false }, ignore_path_resolution { false };
@@ -415,7 +415,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
         }
     };
 
-    auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
+    auto wm_config = Core::ConfigFile::open_for_app("WindowManager");
     auto selected_wallpaper = wm_config->read_entry("Background", "Wallpaper", "");
     if (!selected_wallpaper.is_empty()) {
         GUI::Desktop::the().set_wallpaper(selected_wallpaper, false);

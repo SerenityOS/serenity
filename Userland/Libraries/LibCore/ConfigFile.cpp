@@ -14,7 +14,7 @@
 
 namespace Core {
 
-NonnullRefPtr<ConfigFile> ConfigFile::get_for_lib(String const& lib_name, AllowWriting allow_altering)
+NonnullRefPtr<ConfigFile> ConfigFile::open_for_lib(String const& lib_name, AllowWriting allow_altering)
 {
     String directory = StandardPaths::config_directory();
     auto path = String::formatted("{}/lib/{}.ini", directory, lib_name);
@@ -22,14 +22,14 @@ NonnullRefPtr<ConfigFile> ConfigFile::get_for_lib(String const& lib_name, AllowW
     return adopt_ref(*new ConfigFile(path, allow_altering));
 }
 
-NonnullRefPtr<ConfigFile> ConfigFile::get_for_app(String const& app_name, AllowWriting allow_altering)
+NonnullRefPtr<ConfigFile> ConfigFile::open_for_app(String const& app_name, AllowWriting allow_altering)
 {
     String directory = StandardPaths::config_directory();
     auto path = String::formatted("{}/{}.ini", directory, app_name);
     return adopt_ref(*new ConfigFile(path, allow_altering));
 }
 
-NonnullRefPtr<ConfigFile> ConfigFile::get_for_system(String const& app_name, AllowWriting allow_altering)
+NonnullRefPtr<ConfigFile> ConfigFile::open_for_system(String const& app_name, AllowWriting allow_altering)
 {
     auto path = String::formatted("/etc/{}.ini", app_name);
     return adopt_ref(*new ConfigFile(path, allow_altering));
