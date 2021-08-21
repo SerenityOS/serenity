@@ -11,7 +11,7 @@
 #include <AK/Types.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
-#include <Kernel/Locking/SpinLock.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/PhysicalAddress.h>
 
@@ -53,7 +53,7 @@ private:
     size_t m_framebuffer_width { 0 };
     size_t m_framebuffer_height { 0 };
 
-    SpinLock<u8> m_activation_lock;
+    Spinlock<u8> m_activation_lock;
 
     RefPtr<Memory::AnonymousVMObject> m_real_framebuffer_vmobject;
     RefPtr<Memory::AnonymousVMObject> m_swapped_framebuffer_vmobject;

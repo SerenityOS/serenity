@@ -11,7 +11,7 @@
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/IO.h>
-#include <Kernel/Locking/SpinLock.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/kstdio.h>
 
@@ -20,7 +20,7 @@
 static bool serial_debug;
 // A recursive spinlock allows us to keep writing in the case where a
 // page fault happens in the middle of a dbgln(), etc
-static RecursiveSpinLock s_log_lock;
+static RecursiveSpinlock s_log_lock;
 
 void set_serial_debug(bool on_or_off)
 {
@@ -153,7 +153,7 @@ static inline void internal_dbgputch(char ch)
 
 extern "C" void dbgputch(char ch)
 {
-    ScopedSpinLock lock(s_log_lock);
+    ScopedSpinlock lock(s_log_lock);
     internal_dbgputch(ch);
 }
 
@@ -161,7 +161,7 @@ extern "C" void dbgputstr(const char* characters, size_t length)
 {
     if (!characters)
         return;
-    ScopedSpinLock lock(s_log_lock);
+    ScopedSpinlock lock(s_log_lock);
     for (size_t i = 0; i < length; ++i)
         internal_dbgputch(characters[i]);
 }
@@ -175,7 +175,7 @@ extern "C" void kernelputstr(const char* characters, size_t length)
 {
     if (!characters)
         return;
-    ScopedSpinLock lock(s_log_lock);
+    ScopedSpinlock lock(s_log_lock);
     for (size_t i = 0; i < length; ++i)
         console_out(characters[i]);
 }
@@ -184,7 +184,7 @@ extern "C" void kernelcriticalputstr(const char* characters, size_t length)
 {
     if (!characters)
         return;
-    ScopedSpinLock lock(s_log_lock);
+    ScopedSpinlock lock(s_log_lock);
     for (size_t i = 0; i < length; ++i)
         critical_console_out(characters[i]);
 }

@@ -117,7 +117,7 @@ VirtualAddress MMIOAccess::get_device_configuration_space(Address address)
 
 u8 MMIOAccess::read8_field(Address address, u32 field)
 {
-    ScopedSpinLock lock(m_access_lock);
+    ScopedSpinlock lock(m_access_lock);
     VERIFY(field <= 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Reading 8-bit field {:#08x} for {}", field, address);
     return *((volatile u8*)(get_device_configuration_space(address).get() + (field & 0xfff)));
@@ -125,7 +125,7 @@ u8 MMIOAccess::read8_field(Address address, u32 field)
 
 u16 MMIOAccess::read16_field(Address address, u32 field)
 {
-    ScopedSpinLock lock(m_access_lock);
+    ScopedSpinlock lock(m_access_lock);
     VERIFY(field < 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Reading 16-bit field {:#08x} for {}", field, address);
     u16 data = 0;
@@ -135,7 +135,7 @@ u16 MMIOAccess::read16_field(Address address, u32 field)
 
 u32 MMIOAccess::read32_field(Address address, u32 field)
 {
-    ScopedSpinLock lock(m_access_lock);
+    ScopedSpinlock lock(m_access_lock);
     VERIFY(field <= 0xffc);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Reading 32-bit field {:#08x} for {}", field, address);
     u32 data = 0;
@@ -145,21 +145,21 @@ u32 MMIOAccess::read32_field(Address address, u32 field)
 
 void MMIOAccess::write8_field(Address address, u32 field, u8 value)
 {
-    ScopedSpinLock lock(m_access_lock);
+    ScopedSpinlock lock(m_access_lock);
     VERIFY(field <= 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Writing 8-bit field {:#08x}, value={:#02x} for {}", field, value, address);
     *((volatile u8*)(get_device_configuration_space(address).get() + (field & 0xfff))) = value;
 }
 void MMIOAccess::write16_field(Address address, u32 field, u16 value)
 {
-    ScopedSpinLock lock(m_access_lock);
+    ScopedSpinlock lock(m_access_lock);
     VERIFY(field < 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Writing 16-bit field {:#08x}, value={:#02x} for {}", field, value, address);
     ByteReader::store<u16>(get_device_configuration_space(address).offset(field & 0xfff).as_ptr(), value);
 }
 void MMIOAccess::write32_field(Address address, u32 field, u32 value)
 {
-    ScopedSpinLock lock(m_access_lock);
+    ScopedSpinlock lock(m_access_lock);
     VERIFY(field <= 0xffc);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Writing 32-bit field {:#08x}, value={:#02x} for {}", field, value, address);
     ByteReader::store<u32>(get_device_configuration_space(address).offset(field & 0xfff).as_ptr(), value);

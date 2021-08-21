@@ -14,7 +14,7 @@
 namespace Kernel {
 
 static Singleton<TimerQueue> s_the;
-static SpinLock<u8> g_timerqueue_lock;
+static Spinlock<u8> g_timerqueue_lock;
 
 Time Timer::remaining() const
 {
@@ -67,7 +67,7 @@ bool TimerQueue::add_timer_without_id(NonnullRefPtr<Timer> timer, clockid_t cloc
     // returning from the timer handler and a call to cancel_timer().
     timer->setup(clock_id, deadline, move(callback));
 
-    ScopedSpinLock lock(g_timerqueue_lock);
+    ScopedSpinlock lock(g_timerqueue_lock);
     timer->m_id = 0; // Don't generate a timer id
     add_timer_locked(move(timer));
     return true;
@@ -75,7 +75,7 @@ bool TimerQueue::add_timer_without_id(NonnullRefPtr<Timer> timer, clockid_t cloc
 
 TimerId TimerQueue::add_timer(NonnullRefPtr<Timer>&& timer)
 {
-    ScopedSpinLock lock(g_timerqueue_lock);
+    ScopedSpinlock lock(g_timerqueue_lock);
 
     timer->m_id = ++m_timer_id_count;
     VERIFY(timer->m_id != 0); // wrapped
@@ -130,7 +130,7 @@ bool TimerQueue::cancel_timer(TimerId id)
     Timer* found_timer = nullptr;
     Queue* timer_queue = nullptr;
 
-    ScopedSpinLock lock(g_timerqueue_lock);
+    ScopedSpinlock lock(g_timerqueue_lock);
     for (auto& timer : m_timer_queue_monotonic.list) {
         if (timer.m_id == id) {
             found_timer = &timer;
@@ -207,7 +207,7 @@ bool TimerQueue::cancel_timer(Timer& timer, bool* was_in_use)
     if (!did_already_run) {
         timer.clear_in_use();
 
-        ScopedSpinLock lock(g_timerqueue_lock);
+        ScopedSpinlock lock(g_timerqueue_lock);
         if (timer_queue.list.contains(timer)) {
             // The timer has not fired, remove it
             VERIFY(timer.ref_count() > 1);
@@ -251,7 +251,7 @@ void TimerQueue::remove_timer_locked(Queue& queue, Timer& timer)
 
 void TimerQueue::fire()
 {
-    ScopedSpinLock lock(g_timerqueue_lock);
+    ScopedSpinlock lock(g_timerqueue_lock);
 
     auto fire_timers = [&](Queue& queue) {
         auto* timer = queue.list.first();
@@ -274,7 +274,7 @@ void TimerQueue::fire()
                 // our reference and don't execute the callback.
                 if (!timer->set_cancelled()) {
                     timer->m_callback();
-                    ScopedSpinLock lock(g_timerqueue_lock);
+                    ScopedSpinlock lock(g_timerqueue_lock);
                     m_timers_executing.remove(*timer);
                 }
                 timer->clear_in_use();

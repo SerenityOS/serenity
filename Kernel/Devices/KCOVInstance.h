@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Locking/SpinLock.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 
 namespace Kernel {
@@ -35,7 +35,7 @@ public:
     bool has_buffer() const { return m_buffer != nullptr; }
     void buffer_add_pc(u64 pc);
 
-    SpinLock<u8> lock;
+    Spinlock<u8> lock;
     enum {
         UNUSED = 0,
         OPENED = 1,

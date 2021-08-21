@@ -39,12 +39,12 @@ public:
     [[nodiscard]] Mode force_unlock_if_locked(u32&);
     [[nodiscard]] bool is_locked() const
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSpinlock lock(m_lock);
         return m_mode != Mode::Unlocked;
     }
     [[nodiscard]] bool own_lock() const
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSpinlock lock(m_lock);
         if (m_mode == Mode::Exclusive)
             return m_holder == Thread::current();
         if (m_mode == Mode::Shared)
@@ -77,7 +77,7 @@ private:
         return mode == Mode::Exclusive ? m_blocked_threads_list_exclusive : m_blocked_threads_list_shared;
     }
 
-    void block(Thread&, Mode, ScopedSpinLock<SpinLock<u8>>&, u32);
+    void block(Thread&, Mode, ScopedSpinlock<Spinlock<u8>>&, u32);
     void unblock_waiters(Mode);
 
     const char* m_name { nullptr };
@@ -98,7 +98,7 @@ private:
     BlockedThreadList m_blocked_threads_list_exclusive;
     BlockedThreadList m_blocked_threads_list_shared;
 
-    mutable SpinLock<u8> m_lock;
+    mutable Spinlock<u8> m_lock;
 };
 
 class MutexLocker {

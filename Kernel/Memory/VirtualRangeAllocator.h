@@ -8,7 +8,7 @@
 
 #include <AK/RedBlackTree.h>
 #include <AK/Traits.h>
-#include <Kernel/Locking/SpinLock.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/VirtualRange.h>
 
 namespace Kernel::Memory {
@@ -35,7 +35,7 @@ private:
 
     RedBlackTree<FlatPtr, VirtualRange> m_available_ranges;
     VirtualRange m_total_range;
-    mutable SpinLock<u8> m_lock;
+    mutable Spinlock<u8> m_lock;
 };
 
 }

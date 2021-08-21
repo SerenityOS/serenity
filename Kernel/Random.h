@@ -37,7 +37,7 @@ public:
 
     bool get_random_bytes(u8* buffer, size_t n)
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSpinlock lock(m_lock);
         if (!is_ready())
             return false;
         if (m_p0_len >= reseed_threshold) {
@@ -82,7 +82,7 @@ public:
         return is_seeded() || m_p0_len >= reseed_threshold;
     }
 
-    SpinLock<u8>& get_lock() { return m_lock; }
+    Spinlock<u8>& get_lock() { return m_lock; }
 
 private:
     void reseed()
@@ -108,7 +108,7 @@ private:
     size_t m_p0_len { 0 };
     ByteBuffer m_key;
     HashType m_pools[pool_count];
-    SpinLock<u8> m_lock;
+    Spinlock<u8> m_lock;
 };
 
 class KernelRng : public Lockable<FortunaPRNG<Crypto::Cipher::AESCipher, Crypto::Hash::SHA256, 256>> {
@@ -122,7 +122,7 @@ public:
 
     void wake_if_ready();
 
-    SpinLock<u8>& get_lock() { return resource().get_lock(); }
+    Spinlock<u8>& get_lock() { return resource().get_lock(); }
 
 private:
     WaitQueue m_seed_queue;
@@ -156,7 +156,7 @@ public:
     void add_random_event(const T& event_data)
     {
         auto& kernel_rng = KernelRng::the();
-        ScopedSpinLock lock(kernel_rng.get_lock());
+        ScopedSpinlock lock(kernel_rng.get_lock());
         // We don't lock this because on the off chance a pool is corrupted, entropy isn't lost.
         Event<T> event = { read_tsc(), m_source, event_data };
         kernel_rng.resource().add_random_event(event, m_pool);

@@ -59,7 +59,7 @@ UNMAP_AFTER_INIT void ConsoleManagement::initialize()
         PANIC("Switch to tty value is invalid: {} ", tty_number);
     }
     m_active_console = &m_consoles[tty_number];
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     m_active_console->set_active(true);
     if (!m_active_console->is_graphical())
         m_active_console->clear();
@@ -67,7 +67,7 @@ UNMAP_AFTER_INIT void ConsoleManagement::initialize()
 
 void ConsoleManagement::switch_to(unsigned index)
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     VERIFY(m_active_console);
     VERIFY(index < m_consoles.size());
     if (m_active_console->index() == index)

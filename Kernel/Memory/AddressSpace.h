@@ -55,7 +55,7 @@ public:
 
     void remove_all_regions(Badge<Process>);
 
-    RecursiveSpinLock& get_lock() const { return m_lock; }
+    RecursiveSpinlock& get_lock() const { return m_lock; }
 
     size_t amount_clean_inode() const;
     size_t amount_dirty_private() const;
@@ -68,7 +68,7 @@ public:
 private:
     explicit AddressSpace(NonnullRefPtr<PageDirectory>);
 
-    mutable RecursiveSpinLock m_lock;
+    mutable RecursiveSpinlock m_lock;
 
     RefPtr<PageDirectory> m_page_directory;
 

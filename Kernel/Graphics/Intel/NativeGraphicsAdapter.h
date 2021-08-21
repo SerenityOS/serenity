@@ -161,9 +161,9 @@ private:
 
     Optional<PLLSettings> create_pll_settings(u64 target_frequency, u64 reference_clock, const PLLMaxSettings&);
 
-    SpinLock<u8> m_control_lock;
-    SpinLock<u8> m_modeset_lock;
-    mutable SpinLock<u8> m_registers_lock;
+    Spinlock<u8> m_control_lock;
+    Spinlock<u8> m_modeset_lock;
+    mutable Spinlock<u8> m_registers_lock;
 
     Graphics::VideoInfoBlock m_crt_edid;
     const PhysicalAddress m_registers;

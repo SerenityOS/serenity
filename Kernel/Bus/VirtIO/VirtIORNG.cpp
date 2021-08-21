@@ -44,7 +44,7 @@ void VirtIORNG::handle_queue_update(u16 queue_index)
     size_t available_entropy = 0, used;
     auto& queue = get_queue(REQUESTQ);
     {
-        ScopedSpinLock lock(queue.lock());
+        ScopedSpinlock lock(queue.lock());
         auto chain = queue.pop_used_buffer_chain(used);
         if (chain.is_empty())
             return;
@@ -64,7 +64,7 @@ void VirtIORNG::handle_queue_update(u16 queue_index)
 void VirtIORNG::request_entropy_from_host()
 {
     auto& queue = get_queue(REQUESTQ);
-    ScopedSpinLock lock(queue.lock());
+    ScopedSpinlock lock(queue.lock());
     VirtIOQueueChain chain(queue);
     chain.add_buffer_to_chain(m_entropy_buffer->physical_page(0)->paddr(), PAGE_SIZE, BufferType::DeviceWritable);
     supply_chain_and_notify(REQUESTQ, chain);

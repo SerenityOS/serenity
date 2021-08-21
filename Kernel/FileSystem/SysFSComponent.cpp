@@ -9,12 +9,12 @@
 
 namespace Kernel {
 
-static SpinLock<u8> s_index_lock;
+static Spinlock<u8> s_index_lock;
 static InodeIndex s_next_inode_index { 0 };
 
 static size_t allocate_inode_index()
 {
-    ScopedSpinLock lock(s_index_lock);
+    ScopedSpinlock lock(s_index_lock);
     s_next_inode_index = s_next_inode_index.value() + 1;
     VERIFY(s_next_inode_index > 0);
     return s_next_inode_index.value();

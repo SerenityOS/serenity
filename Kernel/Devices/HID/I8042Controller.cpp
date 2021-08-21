@@ -35,7 +35,7 @@ UNMAP_AFTER_INIT void I8042Controller::detect_devices()
 {
     u8 configuration;
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSpinlock lock(m_lock);
         // Disable devices
         do_wait_then_write(I8042_STATUS, 0xad);
         do_wait_then_write(I8042_STATUS, 0xa7); // ignored if it doesn't exist
@@ -103,7 +103,7 @@ UNMAP_AFTER_INIT void I8042Controller::detect_devices()
             m_first_port_available = false;
             configuration &= ~1;
             configuration |= 1 << 4;
-            ScopedSpinLock lock(m_lock);
+            ScopedSpinlock lock(m_lock);
             do_wait_then_write(I8042_STATUS, 0x60);
             do_wait_then_write(I8042_BUFFER, configuration);
         }
@@ -116,7 +116,7 @@ UNMAP_AFTER_INIT void I8042Controller::detect_devices()
                 dbgln("I8042: Mouse device failed to initialize, disable");
                 m_second_port_available = false;
                 configuration |= 1 << 5;
-                ScopedSpinLock lock(m_lock);
+                ScopedSpinlock lock(m_lock);
                 do_wait_then_write(I8042_STATUS, 0x60);
                 do_wait_then_write(I8042_BUFFER, configuration);
             }

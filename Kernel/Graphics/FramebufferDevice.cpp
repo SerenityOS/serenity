@@ -27,7 +27,7 @@ NonnullRefPtr<FramebufferDevice> FramebufferDevice::create(const GraphicsDevice&
 
 KResultOr<Memory::Region*> FramebufferDevice::mmap(Process& process, FileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
-    ScopedSpinLock lock(m_activation_lock);
+    ScopedSpinlock lock(m_activation_lock);
     REQUIRE_PROMISE(video);
     if (!shared)
         return ENODEV;
@@ -80,7 +80,7 @@ KResultOr<Memory::Region*> FramebufferDevice::mmap(Process& process, FileDescrip
 
 void FramebufferDevice::deactivate_writes()
 {
-    ScopedSpinLock lock(m_activation_lock);
+    ScopedSpinlock lock(m_activation_lock);
     if (!m_userspace_framebuffer_region)
         return;
     memcpy(m_swapped_framebuffer_region->vaddr().as_ptr(), m_real_framebuffer_region->vaddr().as_ptr(), Memory::page_round_up(framebuffer_size_in_bytes()));
@@ -91,7 +91,7 @@ void FramebufferDevice::deactivate_writes()
 }
 void FramebufferDevice::activate_writes()
 {
-    ScopedSpinLock lock(m_activation_lock);
+    ScopedSpinlock lock(m_activation_lock);
     if (!m_userspace_framebuffer_region || !m_real_framebuffer_vmobject)
         return;
     // restore the image we had in the void area

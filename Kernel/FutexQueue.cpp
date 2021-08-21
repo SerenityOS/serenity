@@ -39,7 +39,7 @@ bool FutexQueue::should_add_blocker(Thread::Blocker& b, void* data)
 u32 FutexQueue::wake_n_requeue(u32 wake_count, const Function<FutexQueue*()>& get_target_queue, u32 requeue_count, bool& is_empty, bool& is_empty_target)
 {
     is_empty_target = false;
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
 
     dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n_requeue({}, {})", this, wake_count, requeue_count);
 
@@ -75,7 +75,7 @@ u32 FutexQueue::wake_n_requeue(u32 wake_count, const Function<FutexQueue*()>& ge
                 lock.unlock();
                 did_requeue = blockers_to_requeue.size();
 
-                ScopedSpinLock target_lock(target_futex_queue->m_lock);
+                ScopedSpinlock target_lock(target_futex_queue->m_lock);
                 // Now that we have the lock of the target, append the blockers
                 // and notify them that they completed the move
                 for (auto& info : blockers_to_requeue) {
@@ -100,7 +100,7 @@ u32 FutexQueue::wake_n(u32 wake_count, const Optional<u32>& bitset, bool& is_emp
         is_empty = false;
         return 0; // should we assert instead?
     }
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n({})", this, wake_count);
     u32 did_wake = 0;
     do_unblock([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
@@ -123,7 +123,7 @@ u32 FutexQueue::wake_n(u32 wake_count, const Optional<u32>& bitset, bool& is_emp
 
 u32 FutexQueue::wake_all(bool& is_empty)
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_all", this);
     u32 did_wake = 0;
     do_unblock([&](Thread::Blocker& b, void* data, bool&) {
@@ -148,7 +148,7 @@ bool FutexQueue::is_empty_and_no_imminent_waits_locked()
 
 bool FutexQueue::queue_imminent_wait()
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     if (m_was_removed)
         return false;
     m_imminent_waits++;
@@ -157,7 +157,7 @@ bool FutexQueue::queue_imminent_wait()
 
 bool FutexQueue::try_remove()
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     if (m_was_removed)
         return false;
     if (!is_empty_and_no_imminent_waits_locked())
@@ -168,7 +168,7 @@ bool FutexQueue::try_remove()
 
 void FutexQueue::did_remove()
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     VERIFY(m_was_removed);
     VERIFY(is_empty_and_no_imminent_waits_locked());
 }

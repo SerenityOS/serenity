@@ -53,7 +53,7 @@ private:
 
 public:
     using List = IntrusiveList<SlavePTY, RawPtr<SlavePTY>, &SlavePTY::m_list_node>;
-    static SpinLockProtected<SlavePTY::List>& all_instances();
+    static SpinlockProtected<SlavePTY::List>& all_instances();
 };
 
 }

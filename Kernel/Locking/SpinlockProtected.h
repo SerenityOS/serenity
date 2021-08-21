@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <Kernel/Locking/SpinLock.h>
+#include <Kernel/Locking/Spinlock.h>
 
 namespace Kernel {
 
 template<typename T>
-class SpinLockProtected {
-    AK_MAKE_NONCOPYABLE(SpinLockProtected);
-    AK_MAKE_NONMOVABLE(SpinLockProtected);
+class SpinlockProtected {
+    AK_MAKE_NONCOPYABLE(SpinlockProtected);
+    AK_MAKE_NONMOVABLE(SpinlockProtected);
 
 private:
     template<typename U>
@@ -22,7 +22,7 @@ private:
         AK_MAKE_NONMOVABLE(Locked);
 
     public:
-        Locked(U& value, RecursiveSpinLock& spinlock)
+        Locked(U& value, RecursiveSpinlock& spinlock)
             : m_value(value)
             , m_locker(spinlock)
         {
@@ -39,14 +39,14 @@ private:
 
     private:
         U& m_value;
-        ScopedSpinLock<RecursiveSpinLock> m_locker;
+        ScopedSpinlock<RecursiveSpinlock> m_locker;
     };
 
     auto lock_const() const { return Locked<T const>(m_value, m_spinlock); }
     auto lock_mutable() { return Locked<T>(m_value, m_spinlock); }
 
 public:
-    SpinLockProtected() = default;
+    SpinlockProtected() = default;
 
     template<typename Callback>
     decltype(auto) with(Callback callback) const
@@ -82,7 +82,7 @@ public:
 
 private:
     T m_value;
-    RecursiveSpinLock mutable m_spinlock;
+    RecursiveSpinlock mutable m_spinlock;
 };
 
 }

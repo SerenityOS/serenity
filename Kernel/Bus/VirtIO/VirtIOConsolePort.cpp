@@ -27,7 +27,7 @@ VirtIOConsolePort::VirtIOConsolePort(unsigned port, VirtIOConsole& console)
 void VirtIOConsolePort::init_receive_buffer()
 {
     auto& queue = m_console.get_queue(m_receive_queue);
-    ScopedSpinLock queue_lock(queue.lock());
+    ScopedSpinlock queue_lock(queue.lock());
     VirtIOQueueChain chain(queue);
 
     auto buffer_start = m_receive_buffer->start_of_region();
@@ -42,11 +42,11 @@ void VirtIOConsolePort::handle_queue_update(Badge<VirtIOConsole>, u16 queue_inde
     VERIFY(queue_index == m_transmit_queue || queue_index == m_receive_queue);
     if (queue_index == m_receive_queue) {
         auto& queue = m_console.get_queue(m_receive_queue);
-        ScopedSpinLock queue_lock(queue.lock());
+        ScopedSpinlock queue_lock(queue.lock());
         size_t used;
         VirtIOQueueChain popped_chain = queue.pop_used_buffer_chain(used);
 
-        ScopedSpinLock ringbuffer_lock(m_receive_buffer->lock());
+        ScopedSpinlock ringbuffer_lock(m_receive_buffer->lock());
         auto used_space = m_receive_buffer->reserve_space(used).value();
         auto remaining_space = m_receive_buffer->bytes_till_end();
 
@@ -65,9 +65,9 @@ void VirtIOConsolePort::handle_queue_update(Badge<VirtIOConsole>, u16 queue_inde
 
         evaluate_block_conditions();
     } else {
-        ScopedSpinLock ringbuffer_lock(m_transmit_buffer->lock());
+        ScopedSpinlock ringbuffer_lock(m_transmit_buffer->lock());
         auto& queue = m_console.get_queue(m_transmit_queue);
-        ScopedSpinLock queue_lock(queue.lock());
+        ScopedSpinlock queue_lock(queue.lock());
         size_t used;
         VirtIOQueueChain popped_chain = queue.pop_used_buffer_chain(used);
         do {
@@ -92,7 +92,7 @@ KResultOr<size_t> VirtIOConsolePort::read(FileDescription& desc, u64, UserOrKern
     if (!size)
         return 0;
 
-    ScopedSpinLock ringbuffer_lock(m_receive_buffer->lock());
+    ScopedSpinlock ringbuffer_lock(m_receive_buffer->lock());
 
     if (!can_read(desc, size))
         return EAGAIN;
@@ -102,7 +102,7 @@ KResultOr<size_t> VirtIOConsolePort::read(FileDescription& desc, u64, UserOrKern
 
     if (m_receive_buffer_exhausted && m_receive_buffer->used_bytes() == 0) {
         auto& queue = m_console.get_queue(m_receive_queue);
-        ScopedSpinLock queue_lock(queue.lock());
+        ScopedSpinlock queue_lock(queue.lock());
         VirtIOQueueChain new_chain(queue);
         new_chain.add_buffer_to_chain(m_receive_buffer->start_of_region(), RINGBUFFER_SIZE, BufferType::DeviceWritable);
         m_console.supply_chain_and_notify(m_receive_queue, new_chain);
@@ -122,9 +122,9 @@ KResultOr<size_t> VirtIOConsolePort::write(FileDescription& desc, u64, const Use
     if (!size)
         return 0;
 
-    ScopedSpinLock ringbuffer_lock(m_transmit_buffer->lock());
+    ScopedSpinlock ringbuffer_lock(m_transmit_buffer->lock());
     auto& queue = m_console.get_queue(m_transmit_queue);
-    ScopedSpinLock queue_lock(queue.lock());
+    ScopedSpinlock queue_lock(queue.lock());
 
     if (!can_write(desc, size))
         return EAGAIN;

@@ -224,7 +224,7 @@ void GenericFramebufferConsole::show_cursor()
 
 void GenericFramebufferConsole::clear(size_t x, size_t y, size_t length)
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     if (x == 0 && length == max_column()) {
         // if we need to clear the entire row, just clean it with quick memset :)
         auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * sizeof(u32) * width()];
@@ -264,19 +264,19 @@ void GenericFramebufferConsole::clear_glyph(size_t x, size_t y)
 
 void GenericFramebufferConsole::enable()
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     memset(framebuffer_data(), 0, height() * width() * sizeof(u32));
     m_enabled.store(true);
 }
 void GenericFramebufferConsole::disable()
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     m_enabled.store(false);
 }
 
 void GenericFramebufferConsole::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical)
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     if (!m_enabled.load())
         return;
 

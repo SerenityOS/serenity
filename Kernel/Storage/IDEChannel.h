@@ -157,7 +157,7 @@ protected:
     RefPtr<AsyncBlockDeviceRequest> m_current_request;
     u64 m_current_request_block_index { 0 };
     bool m_current_request_flushing_cache { false };
-    SpinLock<u8> m_request_lock;
+    Spinlock<u8> m_request_lock;
     Mutex m_lock { "IDEChannel" };
 
     IOAddressGroup m_io_group;

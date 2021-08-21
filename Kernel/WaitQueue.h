@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Atomic.h>
-#include <Kernel/Locking/SpinLock.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Thread.h>
 
 namespace Kernel {
@@ -20,7 +20,7 @@ public:
 
     void should_block(bool block)
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSpinlock lock(m_lock);
         m_should_block = block;
     }
 

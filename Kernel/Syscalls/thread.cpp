@@ -77,7 +77,7 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
 
     PerformanceManager::add_thread_created_event(*thread);
 
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedSpinlock lock(g_scheduler_lock);
     thread->set_priority(requested_thread_priority);
     thread->set_state(Thread::State::Runnable);
     return thread->tid().value();
@@ -207,7 +207,7 @@ KResultOr<FlatPtr> Process::sys$get_thread_name(pid_t tid, Userspace<char*> buff
     if (!thread || thread->pid() != pid())
         return ESRCH;
 
-    ScopedSpinLock locker(thread->get_lock());
+    ScopedSpinlock locker(thread->get_lock());
     auto thread_name = thread->name();
 
     if (thread_name.is_null()) {

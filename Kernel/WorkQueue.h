@@ -52,7 +52,7 @@ private:
     RefPtr<Thread> m_thread;
     WaitQueue m_wait_queue;
     IntrusiveList<WorkItem, RawPtr<WorkItem>, &WorkItem::m_node> m_items;
-    SpinLock<u8> m_lock;
+    Spinlock<u8> m_lock;
 };
 
 }

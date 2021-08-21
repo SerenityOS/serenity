@@ -93,7 +93,7 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 #endif
 
     {
-        ScopedSpinLock lock(address_space().get_lock());
+        ScopedSpinlock lock(address_space().get_lock());
         for (auto& region : address_space().regions()) {
             dbgln_if(FORK_DEBUG, "fork: cloning Region({}) '{}' @ {}", region, region->name(), region->vaddr());
             auto maybe_region_clone = region->try_clone();
@@ -120,7 +120,7 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     PerformanceManager::add_process_created_event(*child);
 
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedSpinlock lock(g_scheduler_lock);
     child_first_thread->set_affinity(Thread::current()->affinity());
     child_first_thread->set_state(Thread::State::Runnable);
 

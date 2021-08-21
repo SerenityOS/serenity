@@ -27,7 +27,7 @@ static HashMap<FlatPtr, PageDirectory*>& cr3_map()
 
 RefPtr<PageDirectory> PageDirectory::find_by_cr3(FlatPtr cr3)
 {
-    ScopedSpinLock lock(s_mm_lock);
+    ScopedSpinlock lock(s_mm_lock);
     return cr3_map().get(cr3).value_or({});
 }
 
@@ -60,7 +60,7 @@ RefPtr<PageDirectory> PageDirectory::try_create_for_userspace(VirtualRangeAlloca
     }
 
     // NOTE: Take the MM lock since we need it for quickmap.
-    ScopedSpinLock lock(s_mm_lock);
+    ScopedSpinlock lock(s_mm_lock);
 
 #if ARCH(X86_64)
     directory->m_pml4t = MM.allocate_user_physical_page();
@@ -159,7 +159,7 @@ UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
 
 PageDirectory::~PageDirectory()
 {
-    ScopedSpinLock lock(s_mm_lock);
+    ScopedSpinlock lock(s_mm_lock);
     if (m_space)
         cr3_map().remove(cr3());
 }

@@ -43,13 +43,13 @@ public:
 
     ALWAYS_INLINE void add_region(Region& region)
     {
-        ScopedSpinLock locker(m_lock);
+        ScopedSpinlock locker(m_lock);
         m_regions.append(region);
     }
 
     ALWAYS_INLINE void remove_region(Region& region)
     {
-        ScopedSpinLock locker(m_lock);
+        ScopedSpinlock locker(m_lock);
         m_regions.remove(region);
     }
 
@@ -63,7 +63,7 @@ protected:
     IntrusiveListNode<VMObject> m_list_node;
     FixedArray<RefPtr<PhysicalPage>> m_physical_pages;
 
-    mutable RecursiveSpinLock m_lock;
+    mutable RecursiveSpinlock m_lock;
 
 private:
     VMObject& operator=(VMObject const&) = delete;
@@ -74,13 +74,13 @@ private:
 
 public:
     using AllInstancesList = IntrusiveList<VMObject, RawPtr<VMObject>, &VMObject::m_list_node>;
-    static SpinLockProtected<VMObject::AllInstancesList>& all_instances();
+    static SpinlockProtected<VMObject::AllInstancesList>& all_instances();
 };
 
 template<typename Callback>
 inline void VMObject::for_each_region(Callback callback)
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinlock lock(m_lock);
     for (auto& region : m_regions) {
         callback(region);
     }

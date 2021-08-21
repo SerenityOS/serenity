@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Locking/SpinLock.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/WaitQueue.h>
@@ -27,7 +27,7 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(const char* name)
             WorkItem* item;
             bool have_more;
             {
-                ScopedSpinLock lock(m_lock);
+                ScopedSpinlock lock(m_lock);
                 item = m_items.take_first();
                 have_more = !m_items.is_empty();
             }
@@ -48,7 +48,7 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(const char* name)
 void WorkQueue::do_queue(WorkItem* item)
 {
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSpinlock lock(m_lock);
         m_items.append(*item);
     }
     m_wait_queue.wake_one();

@@ -42,7 +42,7 @@ namespace Kernel {
 
 static void create_signal_trampoline();
 
-RecursiveSpinLock g_profiling_lock;
+RecursiveSpinlock g_profiling_lock;
 static Atomic<pid_t> next_pid;
 static Singleton<MutexProtected<Process::List>> s_processes;
 READONLY_AFTER_INIT HashMap<String, OwnPtr<Module>>* g_modules;
@@ -205,7 +205,7 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
     if (do_register == RegisterProcess::Yes)
         register_new(*process);
 
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedSpinlock lock(g_scheduler_lock);
     first_thread->set_affinity(affinity);
     first_thread->set_state(Thread::State::Runnable);
     return process;
@@ -429,7 +429,7 @@ RefPtr<Process> Process::from_pid(ProcessID pid)
 
 const Process::FileDescriptionAndFlags* Process::FileDescriptions::get_if_valid(size_t i) const
 {
-    ScopedSpinLock lock(m_fds_lock);
+    ScopedSpinlock lock(m_fds_lock);
     if (m_fds_metadatas.size() <= i)
         return nullptr;
 
@@ -440,7 +440,7 @@ const Process::FileDescriptionAndFlags* Process::FileDescriptions::get_if_valid(
 }
 Process::FileDescriptionAndFlags* Process::FileDescriptions::get_if_valid(size_t i)
 {
-    ScopedSpinLock lock(m_fds_lock);
+    ScopedSpinlock lock(m_fds_lock);
     if (m_fds_metadatas.size() <= i)
         return nullptr;
 
@@ -452,20 +452,20 @@ Process::FileDescriptionAndFlags* Process::FileDescriptions::get_if_valid(size_t
 
 const Process::FileDescriptionAndFlags& Process::FileDescriptions::at(size_t i) const
 {
-    ScopedSpinLock lock(m_fds_lock);
+    ScopedSpinlock lock(m_fds_lock);
     VERIFY(m_fds_metadatas[i].is_allocated());
     return m_fds_metadatas[i];
 }
 Process::FileDescriptionAndFlags& Process::FileDescriptions::at(size_t i)
 {
-    ScopedSpinLock lock(m_fds_lock);
+    ScopedSpinlock lock(m_fds_lock);
     VERIFY(m_fds_metadatas[i].is_allocated());
     return m_fds_metadatas[i];
 }
 
 RefPtr<FileDescription> Process::FileDescriptions::file_description(int fd) const
 {
-    ScopedSpinLock lock(m_fds_lock);
+    ScopedSpinlock lock(m_fds_lock);
     if (fd < 0)
         return nullptr;
     if (static_cast<size_t>(fd) < m_fds_metadatas.size())
@@ -475,7 +475,7 @@ RefPtr<FileDescription> Process::FileDescriptions::file_description(int fd) cons
 
 void Process::FileDescriptions::enumerate(Function<void(const FileDescriptionAndFlags&)> callback) const
 {
-    ScopedSpinLock lock(m_fds_lock);
+    ScopedSpinlock lock(m_fds_lock);
     for (auto& file_description_metadata : m_fds_metadatas) {
         callback(file_description_metadata);
     }
@@ -483,7 +483,7 @@ void Process::FileDescriptions::enumerate(Function<void(const FileDescriptionAnd
 
 void Process::FileDescriptions::change_each(Function<void(FileDescriptionAndFlags&)> callback)
 {
-    ScopedSpinLock lock(m_fds_lock);
+    ScopedSpinlock lock(m_fds_lock);
     for (auto& file_description_metadata : m_fds_metadatas) {
         callback(file_description_metadata);
     }
@@ -501,7 +501,7 @@ size_t Process::FileDescriptions::open_count() const
 
 KResultOr<Process::ScopedDescriptionAllocation> Process::FileDescriptions::allocate(int first_candidate_fd)
 {
-    ScopedSpinLock lock(m_fds_lock);
+    ScopedSpinlock lock(m_fds_lock);
     for (size_t i = first_candidate_fd; i < max_open(); ++i) {
         if (!m_fds_metadatas[i].is_allocated()) {
             m_fds_metadatas[i].allocate();
@@ -771,7 +771,7 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_d
     regs.set_ip((FlatPtr)entry);
     regs.set_sp((FlatPtr)entry_data); // entry function argument is expected to be in the SP register
 
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedSpinlock lock(g_scheduler_lock);
     thread->set_state(Thread::State::Runnable);
     return thread;
 }

@@ -76,7 +76,7 @@ private:
         void uncommit_one();
 
     public:
-        SpinLock<u8> m_lock;
+        Spinlock<u8> m_lock;
         CommittedPhysicalPageSet m_committed_pages;
     };
 

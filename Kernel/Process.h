@@ -636,7 +636,7 @@ public:
 
         KResult try_clone(const Kernel::Process::FileDescriptions& other)
         {
-            ScopedSpinLock lock_other(other.m_fds_lock);
+            ScopedSpinlock lock_other(other.m_fds_lock);
             if (!try_resize(other.m_fds_metadatas.size()))
                 return ENOMEM;
 
@@ -667,7 +667,7 @@ public:
 
         void clear()
         {
-            ScopedSpinLock lock(m_fds_lock);
+            ScopedSpinlock lock(m_fds_lock);
             m_fds_metadatas.clear();
         }
 
@@ -677,7 +677,7 @@ public:
     private:
         FileDescriptions() = default;
         static constexpr size_t m_max_open_file_descriptors { FD_SETSIZE };
-        mutable SpinLock<u8> m_fds_lock;
+        mutable Spinlock<u8> m_fds_lock;
         Vector<FileDescriptionAndFlags> m_fds_metadatas;
     };
 
@@ -743,10 +743,10 @@ public:
     const FileDescriptions& fds() const { return m_fds; }
 
 private:
-    SpinLockProtected<Thread::ListInProcess>& thread_list() { return m_thread_list; }
-    SpinLockProtected<Thread::ListInProcess> const& thread_list() const { return m_thread_list; }
+    SpinlockProtected<Thread::ListInProcess>& thread_list() { return m_thread_list; }
+    SpinlockProtected<Thread::ListInProcess> const& thread_list() const { return m_thread_list; }
 
-    SpinLockProtected<Thread::ListInProcess> m_thread_list;
+    SpinlockProtected<Thread::ListInProcess> m_thread_list;
 
     FileDescriptions m_fds;
 
@@ -779,7 +779,7 @@ private:
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
 
     FutexQueues m_futex_queues;
-    SpinLock<u8> m_futex_lock;
+    Spinlock<u8> m_futex_lock;
 
     // This member is used in the implementation of ptrace's PT_TRACEME flag.
     // If it is set to true, the process will stop at the next execve syscall
@@ -812,7 +812,7 @@ public:
 // The second page is being used exclusively for write-protected values.
 static_assert(sizeof(Process) == (PAGE_SIZE * 2));
 
-extern RecursiveSpinLock g_profiling_lock;
+extern RecursiveSpinlock g_profiling_lock;
 
 MutexProtected<Process::List>& processes();
 
