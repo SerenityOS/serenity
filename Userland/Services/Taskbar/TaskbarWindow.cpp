@@ -116,7 +116,7 @@ void TaskbarWindow::create_quick_launch_bar()
     quick_launch_bar.layout()->set_spacing(0);
     quick_launch_bar.set_frame_thickness(0);
 
-    auto config = Core::ConfigFile::get_for_app("Taskbar");
+    auto config = Core::ConfigFile::open_for_app("Taskbar");
     constexpr const char* quick_launch = "QuickLaunch";
 
     // FIXME: Core::ConfigFile does not keep the order of the entries.

@@ -103,7 +103,7 @@ int main(int argc, char** argv)
 
     auto app_icon = GUI::Icon::default_icon("app-browser");
 
-    auto m_config = Core::ConfigFile::get_for_app("Browser");
+    auto m_config = Core::ConfigFile::open_for_app("Browser");
     Browser::g_home_url = m_config->read_entry("Preferences", "Home", "about:blank");
     Browser::g_search_engine = m_config->read_entry("Preferences", "SearchEngine", {});
 

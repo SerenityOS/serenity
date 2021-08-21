@@ -20,7 +20,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     auto launcher = LaunchServer::Launcher();
 
     launcher.load_handlers();
-    launcher.load_config(Core::ConfigFile::get_for_app("LaunchServer"));
+    launcher.load_config(Core::ConfigFile::open_for_app("LaunchServer"));
 
     if (pledge("stdio accept rpath proc exec", nullptr) < 0) {
         perror("pledge");

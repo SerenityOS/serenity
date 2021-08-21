@@ -23,7 +23,7 @@ SnakeGame::SnakeGame()
     srand(time(nullptr));
     reset();
 
-    auto config = Core::ConfigFile::get_for_app("Snake");
+    auto config = Core::ConfigFile::open_for_app("Snake");
     m_high_score = config->read_num_entry("Snake", "HighScore", 0);
     m_high_score_text = String::formatted("Best: {}", m_high_score);
 }
@@ -131,7 +131,7 @@ void SnakeGame::timer_event(Core::TimerEvent&)
             m_high_score = m_score;
             m_high_score_text = String::formatted("Best: {}", m_high_score);
             update(high_score_rect());
-            auto config = Core::ConfigFile::get_for_app("Snake", Core::ConfigFile::AllowWriting::Yes);
+            auto config = Core::ConfigFile::open_for_app("Snake", Core::ConfigFile::AllowWriting::Yes);
             config->write_num_entry("Snake", "HighScore", m_high_score);
         }
         update(score_rect());

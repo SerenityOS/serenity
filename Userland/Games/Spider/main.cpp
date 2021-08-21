@@ -39,7 +39,7 @@ int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
     auto app_icon = GUI::Icon::default_icon("app-spider");
-    auto config = Core::ConfigFile::get_for_app("Spider", Core::ConfigFile::AllowWriting::Yes);
+    auto config = Core::ConfigFile::open_for_app("Spider", Core::ConfigFile::AllowWriting::Yes);
 
     if (pledge("stdio recvfd sendfd rpath wpath cpath", nullptr) < 0) {
         perror("pledge");

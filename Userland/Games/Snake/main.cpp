@@ -31,7 +31,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto config = Core::ConfigFile::get_for_app("Snake");
+    auto config = Core::ConfigFile::open_for_app("Snake");
 
     if (unveil("/res", "r") < 0) {
         perror("unveil");
