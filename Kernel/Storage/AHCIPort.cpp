@@ -124,7 +124,7 @@ bool AHCIPort::is_interrupts_enabled() const
 void AHCIPort::recover_from_fatal_error()
 {
     MutexLocker locker(m_lock);
-    ScopedSpinlock lock(m_hard_lock);
+    SpinlockLocker lock(m_hard_lock);
     dmesgln("{}: AHCI Port {} fatal error, shutting down!", m_parent_handler->hba_controller()->pci_address(), representative_port_index());
     dmesgln("{}: AHCI Port {} fatal error, SError {}", m_parent_handler->hba_controller()->pci_address(), representative_port_index(), (u32)m_port_registers.serr);
     stop_command_list_processing();
@@ -208,7 +208,7 @@ void AHCIPort::eject()
 bool AHCIPort::reset()
 {
     MutexLocker locker(m_lock);
-    ScopedSpinlock lock(m_hard_lock);
+    SpinlockLocker lock(m_hard_lock);
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Resetting", representative_port_index());
 
@@ -233,12 +233,12 @@ bool AHCIPort::reset()
 bool AHCIPort::initialize_without_reset()
 {
     MutexLocker locker(m_lock);
-    ScopedSpinlock lock(m_hard_lock);
+    SpinlockLocker lock(m_hard_lock);
     dmesgln("AHCI Port {}: {}", representative_port_index(), try_disambiguate_sata_status());
     return initialize(lock);
 }
 
-bool AHCIPort::initialize(ScopedSpinlock<Spinlock<u8>>& main_lock)
+bool AHCIPort::initialize(SpinlockLocker<Spinlock<u8>>& main_lock)
 {
     VERIFY(m_lock.is_locked());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Initialization. Signature = {:#08x}", representative_port_index(), static_cast<u32>(m_port_registers.sig));
@@ -504,7 +504,7 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
     VERIFY(is_operable());
     VERIFY(m_lock.is_locked());
     VERIFY(m_current_scatter_list);
-    ScopedSpinlock lock(m_hard_lock);
+    SpinlockLocker lock(m_hard_lock);
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Do a {}, lba {}, block count {}", representative_port_index(), direction == AsyncBlockDeviceRequest::RequestType::Write ? "write" : "read", lba, block_count);
     if (!spin_until_ready())
@@ -591,7 +591,7 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
     return true;
 }
 
-bool AHCIPort::identify_device(ScopedSpinlock<Spinlock<u8>>& main_lock)
+bool AHCIPort::identify_device(SpinlockLocker<Spinlock<u8>>& main_lock)
 {
     VERIFY(m_lock.is_locked());
     VERIFY(is_operable());
@@ -654,7 +654,7 @@ bool AHCIPort::identify_device(ScopedSpinlock<Spinlock<u8>>& main_lock)
 bool AHCIPort::shutdown()
 {
     MutexLocker locker(m_lock);
-    ScopedSpinlock lock(m_hard_lock);
+    SpinlockLocker lock(m_hard_lock);
     rebase();
     set_interface_state(AHCI::DeviceDetectionInitialization::DisableInterface);
     return true;
@@ -740,7 +740,7 @@ void AHCIPort::stop_fis_receiving() const
     m_port_registers.cmd = m_port_registers.cmd & 0xFFFFFFEF;
 }
 
-bool AHCIPort::initiate_sata_reset(ScopedSpinlock<Spinlock<u8>>& main_lock)
+bool AHCIPort::initiate_sata_reset(SpinlockLocker<Spinlock<u8>>& main_lock)
 {
     VERIFY(m_lock.is_locked());
     VERIFY(m_hard_lock.is_locked());

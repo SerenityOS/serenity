@@ -192,7 +192,7 @@ IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::Address address)
     m_registers_region = MM.allocate_kernel_region(PhysicalAddress(PCI::get_BAR0(address)).page_base(), bar0_space_size, "Intel Native Graphics Registers", Memory::Region::Access::ReadWrite);
     PCI::enable_bus_mastering(address);
     {
-        ScopedSpinlock control_lock(m_control_lock);
+        SpinlockLocker control_lock(m_control_lock);
         set_gmbus_default_rate();
         set_gmbus_pin_pair(GMBusPinPair::DedicatedAnalog);
     }
@@ -277,7 +277,7 @@ void IntelNativeGraphicsAdapter::write_to_register(IntelGraphics::RegisterIndex 
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_registers_region);
-    ScopedSpinlock lock(m_registers_lock);
+    SpinlockLocker lock(m_registers_lock);
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics {}: Write to {} value of {:x}", pci_address(), convert_register_index_to_string(index), value);
     auto* reg = (volatile u32*)m_registers_region->vaddr().offset(index).as_ptr();
     *reg = value;
@@ -286,7 +286,7 @@ u32 IntelNativeGraphicsAdapter::read_from_register(IntelGraphics::RegisterIndex 
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_registers_region);
-    ScopedSpinlock lock(m_registers_lock);
+    SpinlockLocker lock(m_registers_lock);
     auto* reg = (volatile u32*)m_registers_region->vaddr().offset(index).as_ptr();
     u32 value = *reg;
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics {}: Read from {} value of {:x}", pci_address(), convert_register_index_to_string(index), value);
@@ -373,7 +373,7 @@ void IntelNativeGraphicsAdapter::gmbus_read(unsigned address, u8* buf, size_t le
 
 void IntelNativeGraphicsAdapter::gmbus_read_edid()
 {
-    ScopedSpinlock control_lock(m_control_lock);
+    SpinlockLocker control_lock(m_control_lock);
     gmbus_write(DDC2_I2C_ADDRESS, 0);
     gmbus_read(DDC2_I2C_ADDRESS, (u8*)&m_crt_edid, sizeof(Graphics::VideoInfoBlock));
 }
@@ -409,8 +409,8 @@ void IntelNativeGraphicsAdapter::enable_output(PhysicalAddress fb_address, size_
 
 bool IntelNativeGraphicsAdapter::set_crt_resolution(size_t width, size_t height)
 {
-    ScopedSpinlock control_lock(m_control_lock);
-    ScopedSpinlock modeset_lock(m_modeset_lock);
+    SpinlockLocker control_lock(m_control_lock);
+    SpinlockLocker modeset_lock(m_modeset_lock);
     if (!is_resolution_valid(width, height)) {
         return false;
     }

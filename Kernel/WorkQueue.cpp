@@ -27,7 +27,7 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(const char* name)
             WorkItem* item;
             bool have_more;
             {
-                ScopedSpinlock lock(m_lock);
+                SpinlockLocker lock(m_lock);
                 item = m_items.take_first();
                 have_more = !m_items.is_empty();
             }
@@ -48,7 +48,7 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(const char* name)
 void WorkQueue::do_queue(WorkItem* item)
 {
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         m_items.append(*item);
     }
     m_wait_queue.wake_one();

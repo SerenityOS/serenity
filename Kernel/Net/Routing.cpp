@@ -34,7 +34,7 @@ public:
             return false;
 
         {
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker lock(m_lock);
             if (m_did_unblock)
                 return false;
             m_did_unblock = true;
@@ -97,7 +97,7 @@ void ARPTableBlocker::not_blocking(bool timeout_in_past)
         return table.get(ip_addr());
     });
 
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     if (!m_did_unblock) {
         m_did_unblock = true;
         m_addr = move(addr);

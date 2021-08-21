@@ -59,7 +59,7 @@ KResultOr<size_t> SerialDevice::read(FileDescription&, u64, UserOrKernelBuffer& 
     if (!size)
         return 0;
 
-    ScopedSpinlock lock(m_serial_lock);
+    SpinlockLocker lock(m_serial_lock);
     if (!(get_line_status() & DataReady))
         return 0;
 
@@ -80,7 +80,7 @@ KResultOr<size_t> SerialDevice::write(FileDescription& description, u64, const U
     if (!size)
         return 0;
 
-    ScopedSpinlock lock(m_serial_lock);
+    SpinlockLocker lock(m_serial_lock);
     if (!can_write(description, size))
         return EAGAIN;
 

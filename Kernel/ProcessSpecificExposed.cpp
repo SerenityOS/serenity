@@ -211,7 +211,7 @@ KResult Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) const
 {
     JsonArraySerializer array { builder };
     {
-        ScopedSpinlock lock(address_space().get_lock());
+        SpinlockLocker lock(address_space().get_lock());
         for (auto& region : address_space().regions()) {
             if (!region->is_user() && !Process::current().is_superuser())
                 continue;

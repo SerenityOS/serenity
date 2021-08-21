@@ -321,7 +321,7 @@ ByteBuffer CoreDump::create_notes_segment_data() const
 
 KResult CoreDump::write()
 {
-    ScopedSpinlock lock(m_process->address_space().get_lock());
+    SpinlockLocker lock(m_process->address_space().get_lock());
     ProcessPagingScope scope(m_process);
 
     ByteBuffer notes_segment = create_notes_segment_data();

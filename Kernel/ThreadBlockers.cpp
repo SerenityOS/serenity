@@ -41,14 +41,14 @@ bool Thread::Blocker::set_block_condition(Thread::BlockCondition& block_conditio
 
 Thread::Blocker::~Blocker()
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     if (m_block_condition)
         m_block_condition->remove_blocker(*this, m_block_data);
 }
 
 void Thread::Blocker::begin_blocking(Badge<Thread>)
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     VERIFY(!m_is_blocking);
     VERIFY(!m_blocked_thread);
     m_blocked_thread = Thread::current();
@@ -57,7 +57,7 @@ void Thread::Blocker::begin_blocking(Badge<Thread>)
 
 auto Thread::Blocker::end_blocking(Badge<Thread>, bool did_timeout) -> BlockResult
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     // if m_is_blocking is false here, some thread forced to
     // unblock us when we get here. This is only called from the
     // thread that was blocked.
@@ -76,7 +76,7 @@ Thread::JoinBlocker::JoinBlocker(Thread& joinee, KResult& try_join_result, void*
     {
         // We need to hold our lock to avoid a race where try_join succeeds
         // but the joinee is joining immediately
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         try_join_result = joinee.try_join([&]() {
             if (!set_block_condition(joinee.m_join_condition))
                 m_should_block = false;
@@ -105,7 +105,7 @@ void Thread::JoinBlocker::not_blocking(bool timeout_in_past)
 bool Thread::JoinBlocker::unblock(void* value, bool from_add_blocker)
 {
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         if (m_did_unblock)
             return false;
         m_did_unblock = true;
@@ -132,7 +132,7 @@ Thread::QueueBlocker::~QueueBlocker()
 bool Thread::QueueBlocker::unblock()
 {
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         if (m_did_unblock)
             return false;
         m_did_unblock = true;
@@ -164,7 +164,7 @@ void Thread::FutexBlocker::finish_requeue(FutexQueue& futex_queue)
 bool Thread::FutexBlocker::unblock_bitset(u32 bitset)
 {
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         if (m_did_unblock || (bitset != FUTEX_BITSET_MATCH_ANY && (m_bitset & bitset) == 0))
             return false;
 
@@ -178,7 +178,7 @@ bool Thread::FutexBlocker::unblock_bitset(u32 bitset)
 bool Thread::FutexBlocker::unblock(bool force)
 {
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         if (m_did_unblock)
             return force;
         m_did_unblock = true;
@@ -205,7 +205,7 @@ bool Thread::FileDescriptionBlocker::unblock(bool from_add_blocker, void*)
         return false;
 
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         if (m_did_unblock)
             return false;
         m_did_unblock = true;
@@ -364,7 +364,7 @@ void Thread::SelectBlocker::not_blocking(bool timeout_in_past)
 {
     // Either the timeout was in the past or we didn't add all blockers
     VERIFY(timeout_in_past || !m_should_block);
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     if (!m_should_block || !m_did_unblock) {
         m_did_unblock = true;
         if (!timeout_in_past) {
@@ -380,7 +380,7 @@ bool Thread::SelectBlocker::unblock(bool from_add_blocker, void* data)
     auto& fd_info = *static_cast<FDInfo*>(data);
 
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         if (m_did_unblock)
             return false;
 
@@ -425,7 +425,7 @@ void Thread::SelectBlocker::was_unblocked(bool did_timeout)
     Blocker::was_unblocked(did_timeout);
     if (!did_timeout && !was_interrupted()) {
         {
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker lock(m_lock);
             VERIFY(m_did_unblock);
         }
         size_t count = collect_unblocked_flags();
@@ -447,7 +447,7 @@ Thread::WaitBlockCondition::ProcessBlockInfo::~ProcessBlockInfo()
 
 void Thread::WaitBlockCondition::try_unblock(Thread::WaitBlocker& blocker)
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     // We if we have any processes pending
     for (size_t i = 0; i < m_processes.size(); i++) {
         auto& info = m_processes[i];
@@ -472,7 +472,7 @@ void Thread::WaitBlockCondition::try_unblock(Thread::WaitBlocker& blocker)
 
 void Thread::WaitBlockCondition::disowned_by_waiter(Process& process)
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     if (m_finalized)
         return;
     for (size_t i = 0; i < m_processes.size();) {
@@ -502,7 +502,7 @@ bool Thread::WaitBlockCondition::unblock(Process& process, WaitBlocker::UnblockF
     bool did_wait = false;
     bool was_waited_already = false;
 
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     if (m_finalized)
         return false;
     if (flags != WaitBlocker::UnblockFlags::Terminated) {
@@ -573,7 +573,7 @@ bool Thread::WaitBlockCondition::should_add_blocker(Blocker& b, void*)
 
 void Thread::WaitBlockCondition::finalize()
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     VERIFY(!m_finalized);
     m_finalized = true;
 
@@ -637,7 +637,7 @@ void Thread::WaitBlocker::was_unblocked(bool)
 {
     bool got_sigchld, try_unblock;
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         try_unblock = !m_did_unblock;
         got_sigchld = m_got_sigchild;
     }
@@ -720,7 +720,7 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
             return false;
         break;
     case UnblockFlags::Disowned:
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         // Disowning must unblock anyone waiting for this process explicitly
         if (!m_did_unblock)
             do_was_disowned();
@@ -730,7 +730,7 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
     if (flags == UnblockFlags::Terminated) {
         VERIFY(process.is_dead());
 
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         if (m_did_unblock)
             return false;
         // Up until this point, this function may have been called
@@ -739,7 +739,7 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
     } else {
         siginfo_t siginfo {};
         {
-            ScopedSpinlock lock(g_scheduler_lock);
+            SpinlockLocker lock(g_scheduler_lock);
             // We need to gather the information before we release the scheduler lock!
             siginfo.si_signo = SIGCHLD;
             siginfo.si_pid = process.pid().value();
@@ -759,7 +759,7 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
             }
         }
 
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         if (m_did_unblock)
             return false;
         // Up until this point, this function may have been called

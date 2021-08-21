@@ -136,7 +136,7 @@ struct KmallocGlobalHeap {
                             // onto the region. Unless we already used the backup
                             // memory, in which case we want to use the region as the
                             // new backup.
-                            ScopedSpinlock lock(s_lock);
+                            SpinlockLocker lock(s_lock);
                             if (!m_global_heap.m_backup_memory) {
                                 if constexpr (KMALLOC_DEBUG) {
                                     dmesgln("kmalloc: Queued memory region at {}, bytes: {} will be used as new backup", region->vaddr(), region->size());
@@ -235,7 +235,7 @@ void* kmalloc_eternal(size_t size)
 
     size = round_up_to_power_of_two(size, sizeof(void*));
 
-    ScopedSpinlock lock(s_lock);
+    SpinlockLocker lock(s_lock);
     void* ptr = s_next_eternal_ptr;
     s_next_eternal_ptr += size;
     VERIFY(s_next_eternal_ptr < s_end_of_eternal_range);
@@ -246,7 +246,7 @@ void* kmalloc_eternal(size_t size)
 void* kmalloc(size_t size)
 {
     kmalloc_verify_nospinlock_held();
-    ScopedSpinlock lock(s_lock);
+    SpinlockLocker lock(s_lock);
     ++g_kmalloc_call_count;
 
     if (g_dump_kmalloc_stacks && Kernel::g_kernel_symbols_available) {
@@ -277,7 +277,7 @@ void kfree(void* ptr)
         return;
 
     kmalloc_verify_nospinlock_held();
-    ScopedSpinlock lock(s_lock);
+    SpinlockLocker lock(s_lock);
     ++g_kfree_call_count;
     ++g_nested_kfree_calls;
 
@@ -375,7 +375,7 @@ void operator delete[](void* ptr, size_t size) noexcept
 
 void get_kmalloc_stats(kmalloc_stats& stats)
 {
-    ScopedSpinlock lock(s_lock);
+    SpinlockLocker lock(s_lock);
     stats.bytes_allocated = g_kmalloc_global->m_heap.allocated_bytes();
     stats.bytes_free = g_kmalloc_global->m_heap.free_bytes() + g_kmalloc_global->backup_memory_bytes();
     stats.bytes_eternal = g_kmalloc_bytes_eternal;

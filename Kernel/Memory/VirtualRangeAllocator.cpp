@@ -25,7 +25,7 @@ void VirtualRangeAllocator::initialize_with_range(VirtualAddress base, size_t si
 
 void VirtualRangeAllocator::initialize_from_parent(VirtualRangeAllocator const& parent_allocator)
 {
-    ScopedSpinlock lock(parent_allocator.m_lock);
+    SpinlockLocker lock(parent_allocator.m_lock);
     m_total_range = parent_allocator.m_total_range;
     m_available_ranges.clear();
     for (auto it = parent_allocator.m_available_ranges.begin(); !it.is_end(); ++it) {
@@ -103,7 +103,7 @@ Optional<VirtualRange> VirtualRangeAllocator::allocate_anywhere(size_t size, siz
     if (Checked<size_t>::addition_would_overflow(effective_size, alignment))
         return {};
 
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
 
     for (auto it = m_available_ranges.begin(); !it.is_end(); ++it) {
         auto& available_range = *it;
@@ -142,7 +142,7 @@ Optional<VirtualRange> VirtualRangeAllocator::allocate_specific(VirtualAddress b
         return {};
     }
 
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     for (auto it = m_available_ranges.begin(); !it.is_end(); ++it) {
         auto& available_range = *it;
         if (!available_range.contains(base, size))
@@ -159,7 +159,7 @@ Optional<VirtualRange> VirtualRangeAllocator::allocate_specific(VirtualAddress b
 
 void VirtualRangeAllocator::deallocate(VirtualRange const& range)
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
     VERIFY(m_total_range.contains(range));
     VERIFY(range.size());
     VERIFY((range.size() % PAGE_SIZE) == 0);

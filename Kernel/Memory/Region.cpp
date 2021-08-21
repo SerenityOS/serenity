@@ -43,8 +43,8 @@ Region::~Region()
     MM.unregister_region(*this);
 
     if (m_page_directory) {
-        ScopedSpinlock page_lock(m_page_directory->get_lock());
-        ScopedSpinlock lock(s_mm_lock);
+        SpinlockLocker page_lock(m_page_directory->get_lock());
+        SpinlockLocker lock(s_mm_lock);
         unmap(ShouldDeallocateVirtualRange::Yes);
         VERIFY(!m_page_directory);
     }
@@ -183,7 +183,7 @@ bool Region::map_individual_page_impl(size_t page_index)
     }
 
     // NOTE: We have to take the MM lock for PTE's to stay valid while we use them.
-    ScopedSpinlock mm_locker(s_mm_lock);
+    SpinlockLocker mm_locker(s_mm_lock);
 
     auto* pte = MM.ensure_pte(*m_page_directory, page_vaddr);
     if (!pte)
@@ -208,12 +208,12 @@ bool Region::map_individual_page_impl(size_t page_index)
 
 bool Region::do_remap_vmobject_page(size_t page_index, bool with_flush)
 {
-    ScopedSpinlock lock(vmobject().m_lock);
+    SpinlockLocker lock(vmobject().m_lock);
     if (!m_page_directory)
         return true; // not an error, region may have not yet mapped it
     if (!translate_vmobject_page(page_index))
         return true; // not an error, region doesn't map this page
-    ScopedSpinlock page_lock(m_page_directory->get_lock());
+    SpinlockLocker page_lock(m_page_directory->get_lock());
     VERIFY(physical_page(page_index));
     bool success = map_individual_page_impl(page_index);
     if (with_flush)
@@ -236,8 +236,8 @@ void Region::unmap(ShouldDeallocateVirtualRange deallocate_range)
 {
     if (!m_page_directory)
         return;
-    ScopedSpinlock page_lock(m_page_directory->get_lock());
-    ScopedSpinlock lock(s_mm_lock);
+    SpinlockLocker page_lock(m_page_directory->get_lock());
+    SpinlockLocker lock(s_mm_lock);
     size_t count = page_count();
     for (size_t i = 0; i < count; ++i) {
         auto vaddr = vaddr_from_page_index(i);
@@ -259,8 +259,8 @@ void Region::set_page_directory(PageDirectory& page_directory)
 
 bool Region::map(PageDirectory& page_directory, ShouldFlushTLB should_flush_tlb)
 {
-    ScopedSpinlock page_lock(page_directory.get_lock());
-    ScopedSpinlock lock(s_mm_lock);
+    SpinlockLocker page_lock(page_directory.get_lock());
+    SpinlockLocker lock(s_mm_lock);
 
     // FIXME: Find a better place for this sanity check(?)
     if (is_user() && !is_shared()) {
@@ -338,7 +338,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     auto& page_slot = physical_page_slot(page_index_in_region);
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
 
-    ScopedSpinlock locker(vmobject().m_lock);
+    SpinlockLocker locker(vmobject().m_lock);
 
     if (!page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page()) {
         dbgln_if(PAGE_FAULT_DEBUG, "MM: zero_page() but page already present. Fine with me!");
@@ -401,7 +401,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[page_index_in_vmobject];
 
     {
-        ScopedSpinlock locker(inode_vmobject.m_lock);
+        SpinlockLocker locker(inode_vmobject.m_lock);
         if (!vmobject_physical_page_entry.is_null()) {
             dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_fault: Page faulted in by someone else before reading, remapping.");
             if (!remap_vmobject_page(page_index_in_vmobject))
@@ -433,7 +433,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         memset(page_buffer + nread, 0, PAGE_SIZE - nread);
     }
 
-    ScopedSpinlock locker(inode_vmobject.m_lock);
+    SpinlockLocker locker(inode_vmobject.m_lock);
 
     if (!vmobject_physical_page_entry.is_null()) {
         // Someone else faulted in this page while we were reading from the inode.

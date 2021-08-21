@@ -28,7 +28,7 @@ KResultOr<FlatPtr> Process::sys$sched_setparam(int pid, Userspace<const struct s
         return EINVAL;
 
     auto* peer = Thread::current();
-    ScopedSpinlock lock(g_scheduler_lock);
+    SpinlockLocker lock(g_scheduler_lock);
     if (pid != 0)
         peer = Thread::from_tid(pid);
 
@@ -49,7 +49,7 @@ KResultOr<FlatPtr> Process::sys$sched_getparam(pid_t pid, Userspace<struct sched
     int priority;
     {
         auto* peer = Thread::current();
-        ScopedSpinlock lock(g_scheduler_lock);
+        SpinlockLocker lock(g_scheduler_lock);
         if (pid != 0) {
             // FIXME: PID/TID BUG
             // The entire process is supposed to be affected.

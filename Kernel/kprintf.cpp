@@ -153,7 +153,7 @@ static inline void internal_dbgputch(char ch)
 
 extern "C" void dbgputch(char ch)
 {
-    ScopedSpinlock lock(s_log_lock);
+    SpinlockLocker lock(s_log_lock);
     internal_dbgputch(ch);
 }
 
@@ -161,7 +161,7 @@ extern "C" void dbgputstr(const char* characters, size_t length)
 {
     if (!characters)
         return;
-    ScopedSpinlock lock(s_log_lock);
+    SpinlockLocker lock(s_log_lock);
     for (size_t i = 0; i < length; ++i)
         internal_dbgputch(characters[i]);
 }
@@ -175,7 +175,7 @@ extern "C" void kernelputstr(const char* characters, size_t length)
 {
     if (!characters)
         return;
-    ScopedSpinlock lock(s_log_lock);
+    SpinlockLocker lock(s_log_lock);
     for (size_t i = 0; i < length; ++i)
         console_out(characters[i]);
 }
@@ -184,7 +184,7 @@ extern "C" void kernelcriticalputstr(const char* characters, size_t length)
 {
     if (!characters)
         return;
-    ScopedSpinlock lock(s_log_lock);
+    SpinlockLocker lock(s_log_lock);
     for (size_t i = 0; i < length; ++i)
         critical_console_out(characters[i]);
 }

@@ -16,7 +16,7 @@ namespace Kernel::Memory {
 KResultOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
 {
     // We need to acquire our lock so we copy a sane state
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
 
     if (is_purgeable() && is_volatile()) {
         // If this object is purgeable+volatile, create a new zero-filled purgeable+volatile
@@ -178,7 +178,7 @@ AnonymousVMObject::~AnonymousVMObject()
 
 size_t AnonymousVMObject::purge()
 {
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
 
     if (!is_purgeable() || !is_volatile())
         return 0;
@@ -206,7 +206,7 @@ KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
 {
     VERIFY(is_purgeable());
 
-    ScopedSpinlock locker(m_lock);
+    SpinlockLocker locker(m_lock);
 
     was_purged = m_was_purged;
     if (m_volatile == is_volatile)
@@ -306,7 +306,7 @@ size_t AnonymousVMObject::cow_pages() const
 PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, VirtualAddress vaddr)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    ScopedSpinlock lock(m_lock);
+    SpinlockLocker lock(m_lock);
 
     if (is_volatile()) {
         // A COW fault in a volatile region? Userspace is writing to volatile memory, this is a bug. Crash.
@@ -379,13 +379,13 @@ AnonymousVMObject::SharedCommittedCowPages::~SharedCommittedCowPages()
 
 NonnullRefPtr<PhysicalPage> AnonymousVMObject::SharedCommittedCowPages::take_one()
 {
-    ScopedSpinlock locker(m_lock);
+    SpinlockLocker locker(m_lock);
     return m_committed_pages.take_one();
 }
 
 void AnonymousVMObject::SharedCommittedCowPages::uncommit_one()
 {
-    ScopedSpinlock locker(m_lock);
+    SpinlockLocker locker(m_lock);
     m_committed_pages.uncommit_one();
 }
 

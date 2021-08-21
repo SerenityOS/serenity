@@ -20,7 +20,7 @@ public:
 
     void should_block(bool block)
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         m_should_block = block;
     }
 

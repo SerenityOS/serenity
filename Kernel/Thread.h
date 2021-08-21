@@ -177,13 +177,13 @@ public:
 
     void detach()
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         m_is_joinable = false;
     }
 
     [[nodiscard]] bool is_joinable() const
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         return m_is_joinable;
     }
 
@@ -200,7 +200,7 @@ public:
 
     void set_name(OwnPtr<KString> name)
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         m_name = move(name);
     }
 
@@ -309,28 +309,28 @@ public:
         virtual void was_unblocked(bool did_timeout)
         {
             if (did_timeout) {
-                ScopedSpinlock lock(m_lock);
+                SpinlockLocker lock(m_lock);
                 m_did_timeout = true;
             }
         }
         void set_interrupted_by_death()
         {
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker lock(m_lock);
             do_set_interrupted_by_death();
         }
         void set_interrupted_by_signal(u8 signal)
         {
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker lock(m_lock);
             do_set_interrupted_by_signal(signal);
         }
         u8 was_interrupted_by_signal() const
         {
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker lock(m_lock);
             return do_get_interrupted_by_signal();
         }
         virtual Thread::BlockResult block_result()
         {
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker lock(m_lock);
             if (m_was_interrupted_by_death)
                 return Thread::BlockResult::InterruptedByDeath;
             if (m_was_interrupted_by_signal != 0)
@@ -370,7 +370,7 @@ public:
             RefPtr<Thread> thread;
 
             {
-                ScopedSpinlock lock(m_lock);
+                SpinlockLocker lock(m_lock);
                 if (m_is_blocking) {
                     m_is_blocking = false;
                     VERIFY(m_blocked_thread);
@@ -409,13 +409,13 @@ public:
 
         virtual ~BlockCondition()
         {
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker lock(m_lock);
             VERIFY(m_blockers.is_empty());
         }
 
         bool add_blocker(Blocker& blocker, void* data)
         {
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker lock(m_lock);
             if (!should_add_blocker(blocker, data))
                 return false;
             m_blockers.append({ &blocker, data });
@@ -424,7 +424,7 @@ public:
 
         void remove_blocker(Blocker& blocker, void* data)
         {
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker lock(m_lock);
             // NOTE: it's possible that the blocker is no longer present
             m_blockers.remove_first_matching([&](auto& info) {
                 return info.blocker == &blocker && info.data == data;
@@ -433,7 +433,7 @@ public:
 
         bool is_empty() const
         {
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker lock(m_lock);
             return is_empty_locked();
         }
 
@@ -441,7 +441,7 @@ public:
         template<typename UnblockOne>
         bool unblock(UnblockOne unblock_one)
         {
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker lock(m_lock);
             return do_unblock(unblock_one);
         }
 
@@ -785,7 +785,7 @@ public:
         if (Thread::current() == this)
             return EDEADLK;
 
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         if (!m_is_joinable || state() == Dead)
             return EINVAL;
 
@@ -808,7 +808,7 @@ public:
     [[nodiscard]] bool is_blocked() const { return m_state == Blocked; }
     [[nodiscard]] bool is_in_block() const
     {
-        ScopedSpinlock lock(m_block_lock);
+        SpinlockLocker lock(m_block_lock);
         return m_in_block;
     }
 
@@ -841,7 +841,7 @@ public:
         // tick or entering the next system call, or if it's in kernel
         // mode then we will intercept prior to returning back to user
         // mode.
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         while (state() == Thread::Stopped) {
             lock.unlock();
             // We shouldn't be holding the big lock here
@@ -850,7 +850,7 @@ public:
         }
     }
 
-    void block(Kernel::Mutex&, ScopedSpinlock<Spinlock<u8>>&, u32);
+    void block(Kernel::Mutex&, SpinlockLocker<Spinlock<u8>>&, u32);
 
     template<typename BlockerType, class... Args>
     [[nodiscard]] BlockResult block(const BlockTimeout& timeout, Args&&... args)
@@ -860,13 +860,13 @@ public:
         ScopedCritical critical;
         VERIFY(!Memory::s_mm_lock.own_lock());
 
-        ScopedSpinlock block_lock(m_block_lock);
+        SpinlockLocker block_lock(m_block_lock);
         // We need to hold m_block_lock so that nobody can unblock a blocker as soon
         // as it is constructed and registered elsewhere
         m_in_block = true;
         BlockerType blocker(forward<Args>(args)...);
 
-        ScopedSpinlock scheduler_lock(g_scheduler_lock);
+        SpinlockLocker scheduler_lock(g_scheduler_lock);
         // Relaxed semantics are fine for timeout_unblocked because we
         // synchronize on the spin locks already.
         Atomic<bool, AK::MemoryOrder::memory_order_relaxed> timeout_unblocked(false);
@@ -901,8 +901,8 @@ public:
                     VERIFY(!g_scheduler_lock.own_lock());
                     VERIFY(!m_block_lock.own_lock());
                     // NOTE: this may execute on the same or any other processor!
-                    ScopedSpinlock scheduler_lock(g_scheduler_lock);
-                    ScopedSpinlock block_lock(m_block_lock);
+                    SpinlockLocker scheduler_lock(g_scheduler_lock);
+                    SpinlockLocker block_lock(m_block_lock);
                     if (m_blocker && timeout_unblocked.exchange(true) == false)
                         unblock();
                 });
@@ -934,7 +934,7 @@ public:
             yield_without_releasing_big_lock();
             VERIFY(Processor::in_critical());
 
-            ScopedSpinlock block_lock2(m_block_lock);
+            SpinlockLocker block_lock2(m_block_lock);
             if (should_be_stopped() || state() == Stopped) {
                 dbgln("Thread should be stopped, current state: {}", state_string());
                 set_state(Thread::Blocked);
@@ -960,8 +960,8 @@ public:
         }
 
         if (blocker.was_interrupted_by_signal()) {
-            ScopedSpinlock scheduler_lock(g_scheduler_lock);
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker scheduler_lock(g_scheduler_lock);
+            SpinlockLocker lock(m_lock);
             dispatch_one_pending_signal();
         }
 
@@ -1120,7 +1120,7 @@ public:
         // We can't finalize until the thread is either detached or
         // a join has started. We can't make m_is_joinable atomic
         // because that would introduce a race in try_join.
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         return !m_is_joinable;
     }
 
@@ -1165,7 +1165,7 @@ public:
     {
         VERIFY(refs_delta != 0);
         m_holding_locks.fetch_add(refs_delta, AK::MemoryOrder::memory_order_relaxed);
-        ScopedSpinlock list_lock(m_holding_locks_lock);
+        SpinlockLocker list_lock(m_holding_locks_lock);
         if (refs_delta > 0) {
             bool have_existing = false;
             for (size_t i = 0; i < m_holding_locks_list.size(); i++) {
@@ -1236,7 +1236,7 @@ private:
     public:
         void thread_did_exit(void* exit_value)
         {
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker lock(m_lock);
             VERIFY(!m_thread_did_exit);
             m_thread_did_exit = true;
             m_exit_value.store(exit_value, AK::MemoryOrder::memory_order_release);
@@ -1244,7 +1244,7 @@ private:
         }
         void thread_finalizing()
         {
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker lock(m_lock);
             do_unblock_joiner();
         }
         void* exit_value() const
@@ -1255,7 +1255,7 @@ private:
 
         void try_unblock(JoinBlocker& blocker)
         {
-            ScopedSpinlock lock(m_lock);
+            SpinlockLocker lock(m_lock);
             if (m_thread_did_exit)
                 blocker.unblock(exit_value(), false);
         }

@@ -197,7 +197,7 @@ public:
 
     SystemMemoryInfo get_system_memory_info()
     {
-        ScopedSpinlock lock(s_mm_lock);
+        SpinlockLocker lock(s_mm_lock);
         return m_system_memory_info;
     }
 

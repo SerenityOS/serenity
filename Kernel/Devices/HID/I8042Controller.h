@@ -53,36 +53,36 @@ public:
 
     bool reset_device(HIDDevice::Type device)
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         return do_reset_device(device);
     }
 
     u8 send_command(HIDDevice::Type device, u8 command)
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         return do_send_command(device, command);
     }
     u8 send_command(HIDDevice::Type device, u8 command, u8 data)
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         return do_send_command(device, command, data);
     }
 
     u8 read_from_device(HIDDevice::Type device)
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         return do_read_from_device(device);
     }
 
     void wait_then_write(u8 port, u8 data)
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         do_wait_then_write(port, data);
     }
 
     u8 wait_then_read(u8 port)
     {
-        ScopedSpinlock lock(m_lock);
+        SpinlockLocker lock(m_lock);
         return do_wait_then_read(port);
     }
 

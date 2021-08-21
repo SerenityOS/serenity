@@ -39,7 +39,7 @@ private:
 
     private:
         U& m_value;
-        ScopedSpinlock<RecursiveSpinlock> m_locker;
+        SpinlockLocker<RecursiveSpinlock> m_locker;
     };
 
     auto lock_const() const { return Locked<T const>(m_value, m_spinlock); }
