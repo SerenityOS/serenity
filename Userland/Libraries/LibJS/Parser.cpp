@@ -404,6 +404,11 @@ NonnullRefPtr<Statement> Parser::parse_statement(AllowLabelledFunction allow_lab
         m_state.current_token = m_state.lexer.force_slash_as_regex();
         [[fallthrough]];
     default:
+        if (m_state.current_token.type() == TokenType::EscapedKeyword
+            && (m_state.strict_mode
+                || (m_state.current_token.value() != "yield"sv && m_state.current_token.value() != "let"sv)))
+            syntax_error("Keyword must not contain escaped characters");
+
         if (match_identifier_name()) {
             auto result = try_parse_labelled_statement(allow_labelled_function);
             if (!result.is_null())
@@ -545,7 +550,7 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
         load_state();
     };
 
-    if (match(TokenType::Yield) && (m_state.strict_mode || m_state.in_generator_function_context)) {
+    if (m_state.current_token.value() == "yield"sv && (m_state.strict_mode || m_state.in_generator_function_context)) {
         syntax_error("'yield' label not allowed in this context");
         return {};
     }
@@ -604,7 +609,8 @@ RefPtr<MetaProperty> Parser::try_parse_new_target_expression()
     consume();
     if (!match(TokenType::Identifier))
         return {};
-    if (consume().value() != "target")
+    // The string 'target' cannot have escapes so we check original value.
+    if (consume().original_value() != "target"sv)
         return {};
 
     state_rollback_guard.disarm();
@@ -847,6 +853,9 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
         if (!m_state.allow_super_property_lookup)
             syntax_error("'super' keyword unexpected here");
         return { create_ast_node<SuperExpression>({ m_state.current_token.filename(), rule_start.position(), position() }) };
+    case TokenType::EscapedKeyword:
+        syntax_error("Keyword must not contain escaped characters");
+        [[fallthrough]];
     case TokenType::Identifier: {
     read_as_identifier:;
         if (!try_parse_arrow_function_expression_failed_at_position(position())) {
@@ -2800,6 +2809,14 @@ bool Parser::match_variable_declaration()
 
 bool Parser::match_identifier() const
 {
+    if (m_state.current_token.type() == TokenType::EscapedKeyword) {
+        if (m_state.current_token.value() == "let"sv)
+            return !m_state.strict_mode;
+        if (m_state.current_token.value() == "yield"sv)
+            return !m_state.strict_mode && !m_state.in_generator_function_context;
+        return true;
+    }
+
     return m_state.current_token.type() == TokenType::Identifier
         || (m_state.current_token.type() == TokenType::Let && !m_state.strict_mode)
         || (m_state.current_token.type() == TokenType::Yield && !m_state.in_generator_function_context && !m_state.strict_mode); // See note in Parser::parse_identifier().
@@ -2859,6 +2876,9 @@ Token Parser::consume_identifier()
     if (match(TokenType::Identifier))
         return consume(TokenType::Identifier);
 
+    if (match(TokenType::EscapedKeyword))
+        return consume(TokenType::EscapedKeyword);
+
     // Note that 'let' is not a reserved keyword, but our lexer considers it such
     // As it's pretty nice to have that (for syntax highlighting and such), we'll
     // special-case it here instead.
@@ -2883,6 +2903,16 @@ Token Parser::consume_identifier_reference()
 {
     if (match(TokenType::Identifier))
         return consume(TokenType::Identifier);
+
+    if (match(TokenType::EscapedKeyword)) {
+        auto name = m_state.current_token.value();
+        if (name == "await"sv)
+            syntax_error("Identifier reference may not be 'await'");
+        else if (m_state.strict_mode && (name == "let"sv || name == "yield"sv))
+            syntax_error(String::formatted("'{}' is not allowed as an identifier in strict mode", name));
+
+        return consume();
+    }
 
     // See note in Parser::parse_identifier().
     if (match(TokenType::Let)) {

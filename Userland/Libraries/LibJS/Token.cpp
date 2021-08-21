@@ -204,6 +204,7 @@ bool Token::is_identifier_name() const
     // The standard defines this reversed: Identifiers are IdentifierNames except reserved words
     // https://tc39.es/ecma262/#prod-Identifier
     return m_type == TokenType::Identifier
+        || m_type == TokenType::EscapedKeyword
         || m_type == TokenType::Await
         || m_type == TokenType::BoolLiteral
         || m_type == TokenType::Break
