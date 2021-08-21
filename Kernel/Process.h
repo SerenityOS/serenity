@@ -24,7 +24,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/FutexQueue.h>
 #include <Kernel/Locking/Mutex.h>
-#include <Kernel/Locking/ProtectedValue.h>
+#include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Memory/AddressSpace.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/ProcessExposed.h>
@@ -37,7 +37,7 @@
 
 namespace Kernel {
 
-ProtectedValue<String>& hostname();
+MutexProtected<String>& hostname();
 Time kgettimeofday();
 
 #define ENUMERATE_PLEDGE_PROMISES         \
@@ -814,7 +814,7 @@ static_assert(sizeof(Process) == (PAGE_SIZE * 2));
 
 extern RecursiveSpinLock g_profiling_lock;
 
-ProtectedValue<Process::List>& processes();
+MutexProtected<Process::List>& processes();
 
 template<IteratorFunction<Process&> Callback>
 inline void Process::for_each(Callback callback)

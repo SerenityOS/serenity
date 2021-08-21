@@ -20,7 +20,7 @@
 #include <Kernel/FileSystem/UnveilNode.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
-#include <Kernel/Locking/ProtectedValue.h>
+#include <Kernel/Locking/MutexProtected.h>
 
 namespace Kernel {
 
@@ -93,7 +93,7 @@ private:
     RefPtr<Inode> m_root_inode;
     RefPtr<Custody> m_root_custody;
 
-    ProtectedValue<Vector<Mount, 16>> m_mounts;
+    MutexProtected<Vector<Mount, 16>> m_mounts;
 };
 
 }

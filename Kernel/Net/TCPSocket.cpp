@@ -9,7 +9,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>
-#include <Kernel/Locking/ProtectedValue.h>
+#include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -56,16 +56,16 @@ void TCPSocket::set_state(State new_state)
         evaluate_block_conditions();
 }
 
-static Singleton<ProtectedValue<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>> s_socket_closing;
+static Singleton<MutexProtected<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>> s_socket_closing;
 
-ProtectedValue<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& TCPSocket::closing_sockets()
+MutexProtected<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& TCPSocket::closing_sockets()
 {
     return *s_socket_closing;
 }
 
-static Singleton<ProtectedValue<HashMap<IPv4SocketTuple, TCPSocket*>>> s_socket_tuples;
+static Singleton<MutexProtected<HashMap<IPv4SocketTuple, TCPSocket*>>> s_socket_tuples;
 
-ProtectedValue<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
+MutexProtected<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
 {
     return *s_socket_tuples;
 }
@@ -512,9 +512,9 @@ KResult TCPSocket::close()
     return result;
 }
 
-static Singleton<ProtectedValue<TCPSocket::RetransmitList>> s_sockets_for_retransmit;
+static Singleton<MutexProtected<TCPSocket::RetransmitList>> s_sockets_for_retransmit;
 
-ProtectedValue<TCPSocket::RetransmitList>& TCPSocket::sockets_for_retransmit()
+MutexProtected<TCPSocket::RetransmitList>& TCPSocket::sockets_for_retransmit()
 {
     return *s_sockets_for_retransmit;
 }

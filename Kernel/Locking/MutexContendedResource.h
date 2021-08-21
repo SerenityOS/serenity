@@ -36,15 +36,15 @@ private:
     MutexLocker m_mutex_locker;
 };
 
-class ContendedResource {
+class MutexContendedResource {
     template<typename, LockMode>
     friend class LockedResource;
 
-    AK_MAKE_NONCOPYABLE(ContendedResource);
-    AK_MAKE_NONMOVABLE(ContendedResource);
+    AK_MAKE_NONCOPYABLE(MutexContendedResource);
+    AK_MAKE_NONMOVABLE(MutexContendedResource);
 
 public:
-    ContendedResource() = default;
+    MutexContendedResource() = default;
 
 protected:
     mutable Mutex m_mutex;

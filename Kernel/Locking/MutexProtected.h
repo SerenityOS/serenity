@@ -6,28 +6,29 @@
 
 #pragma once
 
-#include <Kernel/Locking/ContendedResource.h>
 #include <Kernel/Locking/LockLocation.h>
+#include <Kernel/Locking/MutexContendedResource.h>
 
 namespace Kernel {
 
 template<typename T>
-class ProtectedValue : private T
-    , public ContendedResource {
-    AK_MAKE_NONCOPYABLE(ProtectedValue);
-    AK_MAKE_NONMOVABLE(ProtectedValue);
+class MutexProtected
+    : private T
+    , public MutexContendedResource {
+    AK_MAKE_NONCOPYABLE(MutexProtected);
+    AK_MAKE_NONMOVABLE(MutexProtected);
 
 protected:
     using LockedShared = LockedResource<T const, LockMode::Shared>;
     using LockedExclusive = LockedResource<T, LockMode::Exclusive>;
 
-    LockedShared lock_shared(LockLocation const& location) const { return LockedShared(this, this->ContendedResource::m_mutex, location); }
-    LockedExclusive lock_exclusive(LockLocation const& location) { return LockedExclusive(this, this->ContendedResource::m_mutex, location); }
+    LockedShared lock_shared(LockLocation const& location) const { return LockedShared(this, this->MutexContendedResource::m_mutex, location); }
+    LockedExclusive lock_exclusive(LockLocation const& location) { return LockedExclusive(this, this->MutexContendedResource::m_mutex, location); }
 
 public:
     using T::T;
 
-    ProtectedValue() = default;
+    MutexProtected() = default;
 
     template<typename Callback>
     decltype(auto) with_shared(Callback callback, LockLocation const& location = LockLocation::current()) const

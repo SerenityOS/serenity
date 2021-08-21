@@ -7,7 +7,7 @@
 #include <AK/HashMap.h>
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Locking/ProtectedValue.h>
+#include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/NetworkingManagement.h>
@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-static Singleton<ProtectedValue<HashMap<IPv4Address, MACAddress>>> s_arp_table;
+static Singleton<MutexProtected<HashMap<IPv4Address, MACAddress>>> s_arp_table;
 
 class ARPTableBlocker : public Thread::Blocker {
 public:
@@ -104,7 +104,7 @@ void ARPTableBlocker::not_blocking(bool timeout_in_past)
     }
 }
 
-ProtectedValue<HashMap<IPv4Address, MACAddress>>& arp_table()
+MutexProtected<HashMap<IPv4Address, MACAddress>>& arp_table()
 {
     return *s_arp_table;
 }
