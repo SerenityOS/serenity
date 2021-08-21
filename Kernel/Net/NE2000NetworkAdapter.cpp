@@ -161,7 +161,7 @@ UNMAP_AFTER_INIT RefPtr<NE2000NetworkAdapter> NE2000NetworkAdapter::try_to_initi
 }
 
 UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address, u8 irq)
-    : PCI::DeviceController(address)
+    : PCI::Device(address)
     , IRQHandler(irq)
     , m_io_base(PCI::get_BAR0(pci_address()) & ~3)
 {

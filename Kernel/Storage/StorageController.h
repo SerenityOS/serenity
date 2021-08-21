@@ -9,7 +9,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Bus/PCI/DeviceController.h>
+#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/IO.h>
 #include <Kernel/Locking/Mutex.h>

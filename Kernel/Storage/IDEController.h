@@ -18,7 +18,7 @@ namespace Kernel {
 class AsyncBlockDeviceRequest;
 
 class IDEController final : public StorageController
-    , public PCI::DeviceController {
+    , public PCI::Device {
     AK_MAKE_ETERNAL
 public:
     static NonnullRefPtr<IDEController> initialize(PCI::Address address, bool force_pio);

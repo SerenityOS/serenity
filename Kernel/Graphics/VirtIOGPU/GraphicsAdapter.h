@@ -14,7 +14,7 @@ namespace Kernel::Graphics::VirtIOGPU {
 
 class GraphicsAdapter final
     : public GraphicsDevice
-    , public PCI::DeviceController {
+    , public PCI::Device {
     AK_MAKE_ETERNAL
 
 public:
@@ -40,5 +40,4 @@ private:
     RefPtr<GPU> m_gpu_device;
     bool m_created_framebuffer_devices { false };
 };
-
 }

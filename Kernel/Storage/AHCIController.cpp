@@ -80,7 +80,7 @@ volatile AHCI::HBA& AHCIController::hba() const
 
 AHCIController::AHCIController(PCI::Address address)
     : StorageController()
-    , PCI::DeviceController(address)
+    , PCI::Device(address)
     , m_hba_region(default_hba_region())
     , m_capabilities(capabilities())
 {

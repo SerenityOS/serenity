@@ -52,7 +52,7 @@ void IDEController::complete_current_request(AsyncDeviceRequest::RequestResult)
 
 UNMAP_AFTER_INIT IDEController::IDEController(PCI::Address address, bool force_pio)
     : StorageController()
-    , PCI::DeviceController(address)
+    , PCI::Device(address)
 {
     PCI::enable_io_space(address);
     PCI::enable_memory_space(address);

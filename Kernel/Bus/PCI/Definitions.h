@@ -255,8 +255,7 @@ class MMIOAccess;
 class WindowedMMIOAccess;
 class IOAccess;
 class MMIOSegment;
-class DeviceController;
-
+class Device;
 }
 
 }
