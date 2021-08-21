@@ -35,7 +35,7 @@ HexEditorWidget::HexEditorWidget()
 {
     load_from_gml(hex_editor_window_gml);
 
-    m_config = Core::ConfigFile::get_for_app("HexEditor");
+    m_config = Core::ConfigFile::get_for_app("HexEditor", Core::ConfigFile::AllowWriting::Yes);
 
     m_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");

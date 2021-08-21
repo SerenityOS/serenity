@@ -37,7 +37,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
 
-    auto config = Core::ConfigFile::get_for_app("2048");
+    auto config = Core::ConfigFile::get_for_app("2048", Core::ConfigFile::AllowWriting::Yes);
 
     size_t board_size = config->read_num_entry("", "board_size", 4);
     u32 target_tile = config->read_num_entry("", "target_tile", 2048);

@@ -777,7 +777,7 @@ Messages::WindowServer::SetSystemFontsResponse ClientConnection::set_system_font
 
     WindowManager::the().invalidate_after_theme_or_font_change();
 
-    auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini");
+    auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes);
     wm_config->write_entry("Fonts", "Default", default_font_query);
     wm_config->write_entry("Fonts", "FixedWidth", fixed_width_font_query);
     return true;

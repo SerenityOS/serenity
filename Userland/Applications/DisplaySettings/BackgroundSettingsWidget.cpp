@@ -118,7 +118,7 @@ void BackgroundSettingsWidget::load_current_settings()
 
 void BackgroundSettingsWidget::apply_settings()
 {
-    auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
+    auto wm_config = Core::ConfigFile::get_for_app("WindowManager", Core::ConfigFile::AllowWriting::Yes);
     wm_config->write_entry("Background", "Wallpaper", m_monitor_widget->wallpaper());
 
     if (!m_monitor_widget->wallpaper().is_empty()) {

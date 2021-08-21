@@ -34,7 +34,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto config = Core::ConfigFile::open(path);
+    auto config = Core::ConfigFile::open(path, value_to_write ? Core::ConfigFile::AllowWriting::Yes : Core::ConfigFile::AllowWriting::No);
 
     if (value_to_write) {
         config->write_entry(group, key, value_to_write);
