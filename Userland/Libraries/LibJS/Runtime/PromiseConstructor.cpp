@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Function.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
@@ -72,8 +73,10 @@ static void set_iterator_record_complete(GlobalObject& global_object, Object& it
     iterator_record.set(vm.names.done, Value(true), Object::ShouldThrowExceptions::No);
 }
 
-// 27.2.4.1.2 PerformPromiseAll ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseall
-static Value perform_promise_all(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
+using EndOfElementsCallback = Function<Value(PromiseValueList&)>;
+using InvokeElementFunctionCallback = Function<void(PromiseValueList&, RemainingElements&, Value, size_t)>;
+
+static Value perform_promise_common(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve, EndOfElementsCallback end_of_list, InvokeElementFunctionCallback invoke_element_function)
 {
     auto& vm = global_object.vm();
 
@@ -96,13 +99,8 @@ static Value perform_promise_all(GlobalObject& global_object, Object& iterator_r
             if (vm.exception())
                 return {};
 
-            if (--remaining_elements_count->value == 0) {
-                auto values_array = Array::create_from(global_object, values->values);
-                (void)vm.call(*result_capability.resolve, js_undefined(), values_array);
-                if (vm.exception())
-                    return {};
-            }
-
+            if (--remaining_elements_count->value == 0)
+                return end_of_list(*values);
             return result_capability.promise;
         }
 
@@ -118,17 +116,38 @@ static Value perform_promise_all(GlobalObject& global_object, Object& iterator_r
         if (vm.exception())
             return {};
 
-        auto* on_fulfilled = PromiseAllResolveElementFunction::create(global_object, index, *values, result_capability, *remaining_elements_count);
-        on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
-
         ++remaining_elements_count->value;
 
-        (void)next_promise.invoke(global_object, vm.names.then, on_fulfilled, result_capability.reject);
+        invoke_element_function(*values, *remaining_elements_count, next_promise, index);
         if (vm.exception())
             return {};
 
         ++index;
     }
+}
+
+// 27.2.4.1.2 PerformPromiseAll ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseall
+static Value perform_promise_all(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
+{
+    auto& vm = global_object.vm();
+
+    return perform_promise_common(
+        global_object, iterator_record, constructor, result_capability, promise_resolve,
+        [&](PromiseValueList& values) -> Value {
+            auto values_array = Array::create_from(global_object, values.values);
+
+            (void)vm.call(*result_capability.resolve, js_undefined(), values_array);
+            if (vm.exception())
+                return {};
+
+            return result_capability.promise;
+        },
+        [&](PromiseValueList& values, RemainingElements& remaining_elements_count, Value next_promise, size_t index) {
+            auto* on_fulfilled = PromiseAllResolveElementFunction::create(global_object, index, values, result_capability, remaining_elements_count);
+            on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
+
+            (void)next_promise.invoke(global_object, vm.names.then, on_fulfilled, result_capability.reject);
+        });
 }
 
 PromiseConstructor::PromiseConstructor(GlobalObject& global_object)
