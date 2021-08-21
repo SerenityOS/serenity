@@ -8,7 +8,7 @@
 
 #include <AK/NonnullOwnPtrVector.h>
 #include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Bus/PCI/Device.h>
+#include <Kernel/Bus/PCI/DeviceController.h>
 #include <Kernel/Bus/VirtIO/VirtIOQueue.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
@@ -84,7 +84,9 @@ public:
     static void detect();
 };
 
-class VirtIODevice : public PCI::Device {
+class VirtIODevice
+    : public PCI::DeviceController
+    , public IRQHandler {
 public:
     virtual ~VirtIODevice() override;
 
@@ -240,5 +242,4 @@ private:
     bool m_did_setup_queues { false };
     u32 m_notify_multiplier { 0 };
 };
-
 }

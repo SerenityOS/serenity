@@ -8,15 +8,17 @@
 
 #include <AK/OwnPtr.h>
 #include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Bus/PCI/Device.h>
+#include <Kernel/Bus/PCI/DeviceController.h>
 #include <Kernel/IO.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Random.h>
 
 namespace Kernel {
 
 class NE2000NetworkAdapter final : public NetworkAdapter
-    , public PCI::Device {
+    , public PCI::DeviceController
+    , public IRQHandler {
 public:
     static RefPtr<NE2000NetworkAdapter> try_to_initialize(PCI::Address);
 

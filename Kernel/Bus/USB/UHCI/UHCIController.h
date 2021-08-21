@@ -10,12 +10,13 @@
 #include <AK/Platform.h>
 
 #include <AK/NonnullOwnPtr.h>
-#include <Kernel/Bus/PCI/Device.h>
+#include <Kernel/Bus/PCI/DeviceController.h>
 #include <Kernel/Bus/USB/UHCI/UHCIDescriptorPool.h>
 #include <Kernel/Bus/USB/UHCI/UHCIDescriptorTypes.h>
 #include <Kernel/Bus/USB/UHCI/UHCIRootHub.h>
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/IO.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Process.h>
 #include <Kernel/Time/TimeManagement.h>
@@ -24,7 +25,8 @@ namespace Kernel::USB {
 
 class UHCIController final
     : public USBController
-    , public PCI::Device {
+    , public PCI::DeviceController
+    , public IRQHandler {
 
     static constexpr u8 MAXIMUM_NUMBER_OF_TDS = 128; // Upper pool limit. This consumes the second page we have allocated
     static constexpr u8 MAXIMUM_NUMBER_OF_QHS = 64;
@@ -109,5 +111,4 @@ private:
     // Bitfield containing whether a given port should signal a change in suspend or not.
     u8 m_port_suspend_change_statuses { 0 };
 };
-
 }
