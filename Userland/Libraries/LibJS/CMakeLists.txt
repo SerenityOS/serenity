@@ -94,11 +94,11 @@ set(SOURCES
     Runtime/OrdinaryFunctionObject.cpp
     Runtime/PrimitiveString.cpp
     Runtime/Promise.cpp
-    Runtime/PromiseAllResolveElementFunction.cpp
     Runtime/PromiseConstructor.cpp
     Runtime/PromiseJobs.cpp
     Runtime/PromisePrototype.cpp
     Runtime/PromiseReaction.cpp
+    Runtime/PromiseResolvingElementFunctions.cpp
     Runtime/PromiseResolvingFunction.cpp
     Runtime/PropertyDescriptor.cpp
     Runtime/ProxyConstructor.cpp

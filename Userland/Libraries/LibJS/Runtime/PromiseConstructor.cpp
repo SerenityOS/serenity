@@ -12,9 +12,9 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/Promise.h>
-#include <LibJS/Runtime/PromiseAllResolveElementFunction.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/PromiseReaction.h>
+#include <LibJS/Runtime/PromiseResolvingElementFunctions.h>
 #include <LibJS/Runtime/TemporaryClearException.h>
 
 namespace JS {
