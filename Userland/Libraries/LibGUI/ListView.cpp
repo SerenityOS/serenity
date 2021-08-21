@@ -146,13 +146,33 @@ void ListView::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
-    painter.translate(frame_thickness(), frame_thickness());
-    painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
+
+    Gfx::IntPoint model_to_view_translation;
+    model_to_view_translation += Gfx::IntPoint(frame_thickness(), frame_thickness());
+    model_to_view_translation += Gfx::IntPoint(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
+
+    painter.translate(model_to_view_translation);
+
+    Gfx::IntPoint model_to_window_translation;
+    model_to_window_translation += model_to_view_translation;
+    model_to_window_translation += window_relative_rect().location();
 
     int exposed_width = max(content_size().width(), width());
-    int painted_item_index = 0;
 
-    for (int row_index = 0; row_index < model()->row_count(); ++row_index) {
+    Gfx::IntRect model_clip_rect = painter.clip_rect().translated(-model_to_window_translation);
+    int first_row = model_clip_rect.y() / item_height();
+    int last_row = model_clip_rect.bottom() / item_height();
+
+    if (first_row < 0)
+        first_row = 0;
+
+    int row_count = model()->row_count();
+    if (last_row >= row_count)
+        last_row = row_count - 1;
+
+    int painted_item_index = first_row;
+
+    for (int row_index = first_row; row_index <= last_row; ++row_index) {
         paint_list_item(painter, row_index, painted_item_index);
         ++painted_item_index;
     };
