@@ -6,6 +6,7 @@
 
 #include "Lexer.h"
 #include <AK/CharacterTypes.h>
+#include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
@@ -205,15 +206,13 @@ static bool is_known_type(StringView const& string)
     return types.contains(string);
 }
 
-Vector<Token> Lexer::lex()
+void Lexer::lex_impl(Function<void(Token)> callback)
 {
-    Vector<Token> tokens;
-
     size_t token_start_index = 0;
     Position token_start_position;
 
     auto emit_single_char_token = [&](auto type) {
-        tokens.empend(type, m_position, m_position, m_input.substring_view(m_index, 1));
+        callback(Token(type, m_position, m_position, m_input.substring_view(m_index, 1)));
         consume();
     };
 
@@ -224,7 +223,7 @@ Vector<Token> Lexer::lex()
     auto commit_token = [&](auto type) {
         if (m_options.ignore_whitespace && type == Token::Type::Whitespace)
             return;
-        tokens.empend(type, token_start_position, m_previous_position, m_input.substring_view(token_start_index, m_index - token_start_index));
+        callback(Token(type, token_start_position, m_previous_position, m_input.substring_view(token_start_index, m_index - token_start_index)));
     };
 
     auto emit_token_equals = [&](auto type, auto equals_type) {
@@ -784,6 +783,14 @@ Vector<Token> Lexer::lex()
         dbgln("Unimplemented token character: {}", ch);
         emit_single_char_token(Token::Type::Unknown);
     }
+}
+
+Vector<Token> Lexer::lex()
+{
+    Vector<Token> tokens;
+    lex_impl([&](auto token) {
+        tokens.append(move(token));
+    });
     return tokens;
 }
 
