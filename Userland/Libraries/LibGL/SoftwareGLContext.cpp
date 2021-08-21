@@ -1733,18 +1733,6 @@ void SoftwareGLContext::gl_color_mask(GLboolean red, GLboolean green, GLboolean 
     m_rasterizer.set_options(options);
 }
 
-void SoftwareGLContext::gl_polygon_mode(GLenum face, GLenum mode)
-{
-    RETURN_WITH_ERROR_IF(!(face == GL_BACK || face == GL_FRONT || face == GL_FRONT_AND_BACK), GL_INVALID_ENUM);
-    RETURN_WITH_ERROR_IF(!(mode == GL_POINT || mode == GL_LINE || mode == GL_FILL), GL_INVALID_ENUM);
-    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-
-    auto options = m_rasterizer.options();
-    options.polygon_mode = mode;
-
-    m_rasterizer.set_options(options);
-}
-
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);

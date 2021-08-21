@@ -129,8 +129,3 @@ void glDepthFunc(GLenum func)
 {
     g_gl_context->gl_depth_func(func);
 }
-
-void glPolygonMode(GLenum face, GLenum mode)
-{
-    g_gl_context->gl_polygon_mode(face, mode);
-}

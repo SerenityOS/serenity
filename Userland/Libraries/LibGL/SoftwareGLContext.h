@@ -86,7 +86,6 @@ public:
     virtual void gl_get_integerv(GLenum pname, GLint* data) override;
     virtual void gl_depth_range(GLdouble min, GLdouble max) override;
     virtual void gl_depth_func(GLenum func) override;
-    virtual void gl_polygon_mode(GLenum face, GLenum mode) override;
     virtual void present() override;
 
 private:
