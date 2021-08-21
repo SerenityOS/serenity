@@ -1518,6 +1518,7 @@ NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(Assignme
             parser.m_state.allow_super_property_lookup = m_state.allow_super_property_lookup;
             parser.m_state.allow_super_constructor_call = m_state.allow_super_constructor_call;
             parser.m_state.in_function_context = m_state.in_function_context;
+            parser.m_state.in_formal_parameter_context = m_state.in_formal_parameter_context;
             parser.m_state.in_generator_function_context = m_state.in_generator_function_context;
             parser.m_state.in_arrow_function_context = m_state.in_arrow_function_context;
             parser.m_state.in_break_context = m_state.in_break_context;
@@ -1631,6 +1632,10 @@ NonnullRefPtr<NewExpression> Parser::parse_new_expression()
 NonnullRefPtr<YieldExpression> Parser::parse_yield_expression()
 {
     auto rule_start = push_start();
+
+    if (m_state.in_formal_parameter_context)
+        syntax_error("'Yield' expression is not allowed in formal parameters of generator function");
+
     consume(TokenType::Yield);
     RefPtr<Expression> argument;
     bool yield_from = false;
@@ -1841,6 +1846,7 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
     auto rule_start = push_start();
     bool has_default_parameter = false;
     bool has_rest_parameter = false;
+    TemporaryChange formal_parameter_context_change { m_state.in_formal_parameter_context, true };
 
     Vector<FunctionNode::Parameter> parameters;
 
@@ -1914,8 +1920,6 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
             bool is_generator = parse_options & FunctionNodeParseOptions::IsGeneratorFunction;
             if ((is_generator || m_state.strict_mode) && default_value && default_value->fast_is<Identifier>() && static_cast<Identifier&>(*default_value).string() == "yield"sv)
                 syntax_error("Generator function parameter initializer cannot contain a reference to an identifier named \"yield\"");
-            if (default_value && is<YieldExpression>(*default_value))
-                syntax_error("Yield expression not allowed in formal parameter");
         }
         parameters.append({ move(parameter), default_value, is_rest });
         if (match(TokenType::ParenClose))

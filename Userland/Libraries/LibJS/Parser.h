@@ -250,6 +250,7 @@ private:
         bool allow_super_property_lookup { false };
         bool allow_super_constructor_call { false };
         bool in_function_context { false };
+        bool in_formal_parameter_context { false };
         bool in_generator_function_context { false };
         bool in_arrow_function_context { false };
         bool in_break_context { false };
