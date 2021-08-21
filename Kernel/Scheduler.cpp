@@ -53,9 +53,9 @@ struct ThreadReadyQueues {
     Array<ThreadReadyQueue, count> queues;
 };
 
-static Singleton<SpinLockProtectedValue<ThreadReadyQueues>> g_ready_queues;
+static Singleton<SpinLockProtected<ThreadReadyQueues>> g_ready_queues;
 
-static SpinLockProtectedValue<TotalTimeScheduled> g_total_time_scheduled;
+static SpinLockProtected<TotalTimeScheduled> g_total_time_scheduled;
 
 // The Scheduler::current_time function provides a current time for scheduling purposes,
 // which may not necessarily relate to wall time

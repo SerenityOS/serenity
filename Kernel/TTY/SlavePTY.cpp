@@ -13,9 +13,9 @@
 
 namespace Kernel {
 
-static Singleton<SpinLockProtectedValue<SlavePTY::List>> s_all_instances;
+static Singleton<SpinLockProtected<SlavePTY::List>> s_all_instances;
 
-SpinLockProtectedValue<SlavePTY::List>& SlavePTY::all_instances()
+SpinLockProtected<SlavePTY::List>& SlavePTY::all_instances()
 {
     return s_all_instances;
 }

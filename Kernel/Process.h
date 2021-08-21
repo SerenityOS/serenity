@@ -743,10 +743,10 @@ public:
     const FileDescriptions& fds() const { return m_fds; }
 
 private:
-    SpinLockProtectedValue<Thread::ListInProcess>& thread_list() { return m_thread_list; }
-    SpinLockProtectedValue<Thread::ListInProcess> const& thread_list() const { return m_thread_list; }
+    SpinLockProtected<Thread::ListInProcess>& thread_list() { return m_thread_list; }
+    SpinLockProtected<Thread::ListInProcess> const& thread_list() const { return m_thread_list; }
 
-    SpinLockProtectedValue<Thread::ListInProcess> m_thread_list;
+    SpinLockProtected<Thread::ListInProcess> m_thread_list;
 
     FileDescriptions m_fds;
 

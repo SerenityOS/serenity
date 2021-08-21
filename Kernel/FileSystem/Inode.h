@@ -135,7 +135,7 @@ private:
 
 public:
     using AllInstancesList = IntrusiveList<Inode, RawPtr<Inode>, &Inode::m_inode_list_node>;
-    static SpinLockProtectedValue<Inode::AllInstancesList>& all_instances();
+    static SpinLockProtected<Inode::AllInstancesList>& all_instances();
 };
 
 }

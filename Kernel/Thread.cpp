@@ -30,9 +30,9 @@
 
 namespace Kernel {
 
-static Singleton<SpinLockProtectedValue<Thread::GlobalList>> s_list;
+static Singleton<SpinLockProtected<Thread::GlobalList>> s_list;
 
-SpinLockProtectedValue<Thread::GlobalList>& Thread::all_instances()
+SpinLockProtected<Thread::GlobalList>& Thread::all_instances()
 {
     return *s_list;
 }
