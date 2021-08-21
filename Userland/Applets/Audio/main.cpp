@@ -82,7 +82,6 @@ public:
                 window()->resize(44, 16);
                 m_percent_box->set_tooltip("Hide percent");
             }
-            reposition_slider_window();
             GUI::Application::the()->hide_tooltip();
 
             m_config->write_bool_entry("Applet", "ShowPercent", m_show_percent);
@@ -143,6 +142,8 @@ private:
 
     virtual void paint_event(GUI::PaintEvent& event) override
     {
+        reposition_slider_window();
+
         GUI::Painter painter(*this);
         painter.add_clip_rect(event.rect());
         painter.clear_rect(event.rect(), Color::from_rgba(0));
