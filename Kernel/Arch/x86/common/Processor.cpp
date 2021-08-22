@@ -1296,11 +1296,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 extern "C" FlatPtr do_init_context(Thread* thread, u32 flags)
 {
     VERIFY_INTERRUPTS_DISABLED();
-#if ARCH(I386)
-    thread->regs().eflags = flags;
-#else
-    thread->regs().rflags = flags;
-#endif
+    thread->regs().set_flags(flags);
     return Processor::current().init_context(*thread, true);
 }
 
