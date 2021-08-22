@@ -88,7 +88,11 @@ int main(int argc, char** argv)
 
     if (pid == getpid()) {
         GUI::MessageBox::show(window, "Cannot inspect Inspector itself!", "Error", GUI::MessageBox::Type::Error);
-        return 1;
+        if (gui_mode) {
+            goto choose_pid;
+        } else {
+            return 1;
+        }
     }
 
     RemoteProcess remote_process(pid);
