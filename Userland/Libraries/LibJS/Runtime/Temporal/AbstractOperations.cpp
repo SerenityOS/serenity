@@ -10,6 +10,7 @@
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
+#include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
@@ -510,8 +511,10 @@ Optional<TemporalInstant> parse_temporal_instant_string(GlobalObject& global_obj
 }
 
 // 13.37 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
-Optional<String> parse_temporal_calendar_string([[maybe_unused]] GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
+Optional<String> parse_temporal_calendar_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
 {
+    auto& vm = global_object.vm();
+
     // 1. Assert: Type(isoString) is String.
 
     // 2. If isoString does not satisfy the syntax of a TemporalCalendarString (see 13.33), then
@@ -526,7 +529,14 @@ Optional<String> parse_temporal_calendar_string([[maybe_unused]] GlobalObject& g
         return "iso8601";
     }
 
-    // 5. Return id.
+    // 5. If ! IsBuiltinCalendar(id) is false, then
+    if (!is_builtin_calendar(*id_part)) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, *id_part);
+        return {};
+    }
+
+    // 6. Return id.
     return id_part.value();
 }
 
