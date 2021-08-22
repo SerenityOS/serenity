@@ -451,9 +451,12 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         return PageFaultResponse::OutOfMemory;
     }
 
-    u8* dest_ptr = MM.quickmap_page(*vmobject_physical_page_entry);
-    memcpy(dest_ptr, page_buffer, PAGE_SIZE);
-    MM.unquickmap_page();
+    {
+        SpinlockLocker mm_locker(s_mm_lock);
+        u8* dest_ptr = MM.quickmap_page(*vmobject_physical_page_entry);
+        memcpy(dest_ptr, page_buffer, PAGE_SIZE);
+        MM.unquickmap_page();
+    }
 
     remap_vmobject_page(page_index_in_vmobject);
     return PageFaultResponse::Continue;

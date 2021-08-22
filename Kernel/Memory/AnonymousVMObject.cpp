@@ -346,9 +346,10 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
         }
     }
 
-    u8* dest_ptr = MM.quickmap_page(*page);
     dbgln_if(PAGE_FAULT_DEBUG, "      >> COW {} <- {}", page->paddr(), page_slot->paddr());
     {
+        SpinlockLocker mm_locker(s_mm_lock);
+        u8* dest_ptr = MM.quickmap_page(*page);
         SmapDisabler disabler;
         void* fault_at;
         if (!safe_memcpy(dest_ptr, vaddr.as_ptr(), PAGE_SIZE, fault_at)) {
@@ -361,9 +362,9 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
             else
                 VERIFY_NOT_REACHED();
         }
+        MM.unquickmap_page();
     }
     page_slot = move(page);
-    MM.unquickmap_page();
     set_should_cow(page_index, false);
     return PageFaultResponse::Continue;
 }
