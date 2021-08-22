@@ -223,7 +223,7 @@ void handle_crash(RegisterState const& regs, char const* description, int signal
     // make sure we switch back to the right page tables.
     MM.enter_process_paging_scope(process);
 
-    dmesgln("CRASH: CPU #{} {} in ring {}", Processor::id(), description, (regs.cs & 3));
+    dmesgln("CRASH: CPU #{} {} in ring {}", Processor::current_id(), description, (regs.cs & 3));
     dump(regs);
 
     if (!(regs.cs & 3)) {
@@ -275,7 +275,7 @@ void page_fault_handler(TrapFrame* trap)
     if constexpr (PAGE_FAULT_DEBUG) {
         u32 fault_page_directory = read_cr3();
         dbgln("CPU #{} ring {} {} page fault in PD={:#x}, {}{} {}",
-            Processor::is_initialized() ? Processor::id() : 0,
+            Processor::is_initialized() ? Processor::current_id() : 0,
             regs.cs & 3,
             regs.exception_code & 1 ? "PV" : "NP",
             fault_page_directory,

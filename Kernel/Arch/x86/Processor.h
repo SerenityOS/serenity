@@ -308,7 +308,7 @@ public:
         return (Thread*)read_gs_ptr(__builtin_offsetof(Processor, m_idle_thread));
     }
 
-    ALWAYS_INLINE u32 get_id() const
+    ALWAYS_INLINE u32 id() const
     {
         // NOTE: This variant should only be used when iterating over all
         // Processor instances, or when it's guaranteed that the thread
@@ -318,7 +318,7 @@ public:
         return m_cpu;
     }
 
-    ALWAYS_INLINE static u32 id()
+    ALWAYS_INLINE static u32 current_id()
     {
         // See comment in Processor::current_thread
         return read_gs_ptr(__builtin_offsetof(Processor, m_cpu));
@@ -326,7 +326,7 @@ public:
 
     ALWAYS_INLINE static bool is_bootstrap_processor()
     {
-        return Processor::id() == 0;
+        return Processor::current_id() == 0;
     }
 
     ALWAYS_INLINE static FlatPtr current_in_irq()

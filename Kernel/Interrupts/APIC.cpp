@@ -483,15 +483,15 @@ UNMAP_AFTER_INIT void APIC::init_finished(u32 cpu)
 
 void APIC::broadcast_ipi()
 {
-    dbgln_if(APIC_SMP_DEBUG, "SMP: Broadcast IPI from CPU #{}", Processor::id());
+    dbgln_if(APIC_SMP_DEBUG, "SMP: Broadcast IPI from CPU #{}", Processor::current_id());
     wait_for_pending_icr();
     write_icr(ICRReg(IRQ_APIC_IPI + IRQ_VECTOR_BASE, ICRReg::Fixed, ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf));
 }
 
 void APIC::send_ipi(u32 cpu)
 {
-    dbgln_if(APIC_SMP_DEBUG, "SMP: Send IPI from CPU #{} to CPU #{}", Processor::id(), cpu);
-    VERIFY(cpu != Processor::id());
+    dbgln_if(APIC_SMP_DEBUG, "SMP: Send IPI from CPU #{} to CPU #{}", Processor::current_id(), cpu);
+    VERIFY(cpu != Processor::current_id());
     VERIFY(cpu < 8);
     wait_for_pending_icr();
     write_icr(ICRReg(IRQ_APIC_IPI + IRQ_VECTOR_BASE, ICRReg::Fixed, ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::NoShorthand, cpu));
@@ -575,7 +575,7 @@ u32 APIC::get_timer_divisor()
 
 bool APICIPIInterruptHandler::handle_interrupt(const RegisterState&)
 {
-    dbgln_if(APIC_SMP_DEBUG, "APIC IPI on CPU #{}", Processor::id());
+    dbgln_if(APIC_SMP_DEBUG, "APIC IPI on CPU #{}", Processor::current_id());
     return true;
 }
 
@@ -588,7 +588,7 @@ bool APICIPIInterruptHandler::eoi()
 
 bool APICErrInterruptHandler::handle_interrupt(const RegisterState&)
 {
-    dbgln("APIC: SMP error on CPU #{}", Processor::id());
+    dbgln("APIC: SMP error on CPU #{}", Processor::current_id());
     return true;
 }
 

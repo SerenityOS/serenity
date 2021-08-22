@@ -333,10 +333,10 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
     VERIFY(m_self == this);
     VERIFY(&current() == this); // sanity check
 
-    dmesgln("CPU[{}]: Supported features: {}", id(), features_string());
+    dmesgln("CPU[{}]: Supported features: {}", current_id(), features_string());
     if (!has_feature(CPUFeature::RDRAND))
-        dmesgln("CPU[{}]: No RDRAND support detected, randomness will be poor", id());
-    dmesgln("CPU[{}]: Physical address bit width: {}", id(), m_physical_address_bit_width);
+        dmesgln("CPU[{}]: No RDRAND support detected, randomness will be poor", current_id());
+    dmesgln("CPU[{}]: Physical address bit width: {}", current_id(), m_physical_address_bit_width);
 
     if (cpu == 0)
         idt_init();
@@ -378,7 +378,7 @@ UNMAP_AFTER_INIT void Processor::detect_hypervisor()
     hypervisor_signature_buffer[12] = '\0';
     StringView hypervisor_signature(hypervisor_signature_buffer);
 
-    dmesgln("CPU[{}]: CPUID hypervisor signature '{}' ({:#x} {:#x} {:#x}), max leaf {:#x}", id(), hypervisor_signature, hypervisor_leaf_range.ebx(), hypervisor_leaf_range.ecx(), hypervisor_leaf_range.edx(), hypervisor_leaf_range.eax());
+    dmesgln("CPU[{}]: CPUID hypervisor signature '{}' ({:#x} {:#x} {:#x}), max leaf {:#x}", current_id(), hypervisor_signature, hypervisor_leaf_range.ebx(), hypervisor_leaf_range.ecx(), hypervisor_leaf_range.edx(), hypervisor_leaf_range.eax());
 
     if (hypervisor_signature == "Microsoft Hv"sv)
         detect_hypervisor_hyperv(hypervisor_leaf_range);
@@ -397,18 +397,18 @@ UNMAP_AFTER_INIT void Processor::detect_hypervisor_hyperv(CPUID const& hyperviso
     interface_signature_buffer[4] = '\0';
     StringView hyperv_interface_signature(interface_signature_buffer);
 
-    dmesgln("CPU[{}]: Hyper-V interface signature '{}' ({:#x})", id(), hyperv_interface_signature, hypervisor_interface.eax());
+    dmesgln("CPU[{}]: Hyper-V interface signature '{}' ({:#x})", current_id(), hyperv_interface_signature, hypervisor_interface.eax());
 
     if (hypervisor_leaf_range.eax() < 0x40000001)
         return;
 
     CPUID hypervisor_sysid(0x40000002);
-    dmesgln("CPU[{}]: Hyper-V system identity {}.{}, build number {}", id(), hypervisor_sysid.ebx() >> 16, hypervisor_sysid.ebx() & 0xFFFF, hypervisor_sysid.eax());
+    dmesgln("CPU[{}]: Hyper-V system identity {}.{}, build number {}", current_id(), hypervisor_sysid.ebx() >> 16, hypervisor_sysid.ebx() & 0xFFFF, hypervisor_sysid.eax());
 
     if (hypervisor_leaf_range.eax() < 0x40000005 || hyperv_interface_signature != "Hv#1"sv)
         return;
 
-    dmesgln("CPU[{}]: Hyper-V hypervisor detected", id());
+    dmesgln("CPU[{}]: Hyper-V hypervisor detected", current_id());
 
     // TODO: Actually do something with Hyper-V.
 }
@@ -510,7 +510,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
         lock.unlock();
         capture_current_thread();
     } else if (thread.is_active()) {
-        VERIFY(thread.cpu() != Processor::id());
+        VERIFY(thread.cpu() != Processor::current_id());
         // If this is the case, the thread is currently running
         // on another processor. We can't trust the kernel stack as
         // it may be changing at any time. We need to probably send
@@ -520,7 +520,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
         smp_unicast(
             thread.cpu(),
             [&]() {
-                dbgln("CPU[{}] getting stack for cpu #{}", Processor::id(), proc.get_id());
+                dbgln("CPU[{}] getting stack for cpu #{}", Processor::current_id(), proc.id());
                 ProcessPagingScope paging_scope(thread.process());
                 VERIFY(&Processor::current() != &proc);
                 VERIFY(&thread == Processor::current_thread());
@@ -743,7 +743,7 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
         VERIFY(wake_count > 0);
     }
 
-    u32 current_id = Processor::current().id();
+    u32 current_id = Processor::current_id();
 
     u32 did_wake_count = 0;
     auto& apic = APIC::the();
@@ -841,7 +841,7 @@ bool Processor::smp_process_pending_messages()
             next_msg = cur_msg->next;
             auto msg = cur_msg->msg;
 
-            dbgln_if(SMP_DEBUG, "SMP[{}]: Processing message {}", id(), VirtualAddress(msg));
+            dbgln_if(SMP_DEBUG, "SMP[{}]: Processing message {}", current_id(), VirtualAddress(msg));
 
             switch (msg->type) {
             case ProcessorMessage::Callback:
@@ -853,7 +853,7 @@ bool Processor::smp_process_pending_messages()
                     VERIFY(Memory::is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
                     if (read_cr3() != msg->flush_tlb.page_directory->cr3()) {
                         // This processor isn't using this page directory right now, we can ignore this request
-                        dbgln_if(SMP_DEBUG, "SMP[{}]: No need to flush {} pages at {}", id(), msg->flush_tlb.page_count, VirtualAddress(msg->flush_tlb.ptr));
+                        dbgln_if(SMP_DEBUG, "SMP[{}]: No need to flush {} pages at {}", current_id(), msg->flush_tlb.page_count, VirtualAddress(msg->flush_tlb.ptr));
                         break;
                     }
                 }
@@ -890,7 +890,7 @@ bool Processor::smp_enqueue_message(ProcessorMessage& msg)
     // Note that it's quite possible that the other processor may pop
     // the queue at any given time. We rely on the fact that the messages
     // are pooled and never get freed!
-    auto& msg_entry = msg.per_proc_entries[get_id()];
+    auto& msg_entry = msg.per_proc_entries[id()];
     VERIFY(msg_entry.msg == &msg);
     ProcessorMessageEntry* next = nullptr;
     for (;;) {
@@ -907,16 +907,16 @@ bool Processor::smp_enqueue_message(ProcessorMessage& msg)
 
 void Processor::smp_broadcast_message(ProcessorMessage& msg)
 {
-    auto& cur_proc = Processor::current();
+    auto& current_processor = Processor::current();
 
-    dbgln_if(SMP_DEBUG, "SMP[{}]: Broadcast message {} to cpus: {} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), count(), VirtualAddress(&cur_proc));
+    dbgln_if(SMP_DEBUG, "SMP[{}]: Broadcast message {} to cpus: {} processor: {}", current_processor.id(), VirtualAddress(&msg), count(), VirtualAddress(&current_processor));
 
     msg.refs.store(count() - 1, AK::MemoryOrder::memory_order_release);
     VERIFY(msg.refs > 0);
     bool need_broadcast = false;
     for_each(
         [&](Processor& proc) {
-            if (&proc != &cur_proc) {
+            if (&proc != &current_processor) {
                 if (proc.smp_enqueue_message(msg))
                     need_broadcast = true;
             }
@@ -948,15 +948,15 @@ void Processor::smp_broadcast_wait_sync(ProcessorMessage& msg)
 
 void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
 {
-    auto& cur_proc = Processor::current();
-    VERIFY(cpu != cur_proc.get_id());
-    auto& target_proc = processors()[cpu];
+    auto& current_processor = Processor::current();
+    VERIFY(cpu != current_processor.id());
+    auto& target_processor = processors()[cpu];
     msg.async = async;
 
-    dbgln_if(SMP_DEBUG, "SMP[{}]: Send message {} to cpu #{} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), cpu, VirtualAddress(&target_proc));
+    dbgln_if(SMP_DEBUG, "SMP[{}]: Send message {} to cpu #{} processor: {}", current_processor.id(), VirtualAddress(&msg), cpu, VirtualAddress(&target_processor));
 
     msg.refs.store(1u, AK::MemoryOrder::memory_order_release);
-    if (target_proc->smp_enqueue_message(msg)) {
+    if (target_processor->smp_enqueue_message(msg)) {
         APIC::the().send_ipi(cpu);
     }
 
@@ -969,7 +969,7 @@ void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
             // We need to process any messages that may have been sent to
             // us while we're waiting. This also checks if another processor
             // may have requested us to halt.
-            cur_proc.smp_process_pending_messages();
+            current_processor.smp_process_pending_messages();
         }
 
         smp_cleanup_message(msg);
@@ -1279,7 +1279,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     if (from_regs.cr3 != to_regs.cr3)
         write_cr3(to_regs.cr3);
 
-    to_thread->set_cpu(processor.get_id());
+    to_thread->set_cpu(processor.id());
 
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);
