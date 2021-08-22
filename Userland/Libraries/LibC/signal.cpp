@@ -197,9 +197,10 @@ static_assert(sizeof(sys_signame) == sizeof(const char*) * NSIG);
 int getsignalbyname(const char* name)
 {
     VERIFY(name);
+    StringView name_sv(name);
     for (size_t i = 0; i < NSIG; ++i) {
-        auto* signal_name = sys_signame[i];
-        if (!strcmp(signal_name, name))
+        auto signal_name = StringView(sys_signame[i]);
+        if (signal_name == name_sv || (name_sv.starts_with("SIG") && signal_name == name_sv.substring_view(3)))
             return i;
     }
     errno = EINVAL;
