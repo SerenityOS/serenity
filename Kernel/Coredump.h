@@ -13,15 +13,15 @@
 
 namespace Kernel {
 
-class CoreDump {
+class Coredump {
 public:
-    static OwnPtr<CoreDump> create(NonnullRefPtr<Process>, const String& output_path);
+    static OwnPtr<Coredump> create(NonnullRefPtr<Process>, const String& output_path);
 
-    ~CoreDump() = default;
+    ~Coredump() = default;
     [[nodiscard]] KResult write();
 
 private:
-    CoreDump(NonnullRefPtr<Process>, NonnullRefPtr<FileDescription>&&);
+    Coredump(NonnullRefPtr<Process>, NonnullRefPtr<FileDescription>&&);
     static RefPtr<FileDescription> create_target_file(const Process&, const String& output_path);
 
     [[nodiscard]] KResult write_elf_header();

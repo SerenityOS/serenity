@@ -118,7 +118,7 @@ public:
     MAKE_ALIGNED_ALLOCATED(Process, PAGE_SIZE);
 
     friend class Thread;
-    friend class CoreDump;
+    friend class Coredump;
     friend class ProcFSProcessFileDescriptions;
 
     // Helper class to temporarily unprotect a process's protected data so you can write to it.
@@ -190,8 +190,9 @@ public:
 
     bool is_profiling() const { return m_profiling; }
     void set_profiling(bool profiling) { m_profiling = profiling; }
-    bool should_core_dump() const { return m_should_dump_core; }
-    void set_dump_core(bool dump_core) { m_should_dump_core = dump_core; }
+
+    bool should_generate_coredump() const { return m_should_generate_coredump; }
+    void set_should_generate_coredump(bool b) { m_should_generate_coredump = b; }
 
     bool is_dying() const { return m_state.load(AK::MemoryOrder::memory_order_acquire) != State::Running; }
     bool is_dead() const { return m_state.load(AK::MemoryOrder::memory_order_acquire) == State::Dead; }
@@ -498,7 +499,7 @@ public:
     KResult set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr<KString> value);
     KResult try_set_coredump_property(StringView key, StringView value);
 
-    const NonnullRefPtrVector<Thread>& threads_for_coredump(Badge<CoreDump>) const { return m_threads_for_coredump; }
+    const NonnullRefPtrVector<Thread>& threads_for_coredump(Badge<Coredump>) const { return m_threads_for_coredump; }
 
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
 
@@ -754,7 +755,7 @@ private:
     Atomic<State> m_state { State::Running };
     bool m_profiling { false };
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_is_stopped { false };
-    bool m_should_dump_core { false };
+    bool m_should_generate_coredump { false };
 
     RefPtr<Custody> m_executable;
     RefPtr<Custody> m_cwd;

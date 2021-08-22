@@ -10,8 +10,8 @@
 #include <LibCompress/Gzip.h>
 #include <LibCore/File.h>
 #include <LibCore/FileWatcher.h>
-#include <LibCoreDump/Backtrace.h>
-#include <LibCoreDump/Reader.h>
+#include <LibCoredump/Backtrace.h>
+#include <LibCoredump/Reader.h>
 #include <serenity.h>
 #include <spawn.h>
 #include <sys/stat.h>
@@ -62,7 +62,7 @@ static bool compress_coredump(const String& coredump_path)
 
 static void print_backtrace(const String& coredump_path)
 {
-    auto coredump = CoreDump::Reader::create(coredump_path);
+    auto coredump = Coredump::Reader::create(coredump_path);
     if (!coredump) {
         dbgln("Could not open coredump '{}'", coredump_path);
         return;
@@ -70,7 +70,7 @@ static void print_backtrace(const String& coredump_path)
 
     size_t thread_index = 0;
     coredump->for_each_thread_info([&](auto& thread_info) {
-        CoreDump::Backtrace backtrace(*coredump, thread_info);
+        Coredump::Backtrace backtrace(*coredump, thread_info);
         if (thread_index > 0)
             dbgln();
         dbgln("--- Backtrace for thread #{} (TID {}) ---", thread_index, thread_info.tid);

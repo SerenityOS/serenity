@@ -10,12 +10,12 @@
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <LibCore/File.h>
-#include <LibCoreDump/Backtrace.h>
-#include <LibCoreDump/Reader.h>
-#include <LibELF/CoreDump.h>
+#include <LibCoredump/Backtrace.h>
+#include <LibCoredump/Reader.h>
+#include <LibELF/Core.h>
 #include <LibELF/Image.h>
 
-namespace CoreDump {
+namespace Coredump {
 
 ELFObjectInfo const* Backtrace::object_info_for_region(ELF::Core::MemoryRegionInfo const& region)
 {

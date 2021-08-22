@@ -48,7 +48,7 @@ set(KERNEL_SOURCES
     CMOS.cpp
     CommandLine.cpp
     ConsoleDevice.cpp
-    CoreDump.cpp
+    Coredump.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp

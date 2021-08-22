@@ -7,11 +7,11 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <LibCoreDump/Reader.h>
+#include <LibCoredump/Reader.h>
 #include <LibDebug/DebugInfo.h>
-#include <LibELF/CoreDump.h>
+#include <LibELF/Core.h>
 
-namespace CoreDump {
+namespace Coredump {
 
 struct ELFObjectInfo {
     ELFObjectInfo(NonnullRefPtr<MappedFile> file, NonnullOwnPtr<Debug::DebugInfo>&& debug_info, NonnullOwnPtr<ELF::Image> image)

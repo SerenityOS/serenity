@@ -12,7 +12,7 @@ namespace Kernel {
 
 class BlockDevice;
 class CharacterDevice;
-class CoreDump;
+class Coredump;
 class Custody;
 class DevFSDeviceInode;
 class DevFSDirectoryInode;
