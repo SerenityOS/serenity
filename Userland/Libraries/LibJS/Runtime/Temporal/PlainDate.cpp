@@ -183,7 +183,7 @@ Optional<ISODate> regulate_iso_date(GlobalObject& global_object, double year, do
         auto m = static_cast<u8>(month);
         auto d = static_cast<u8>(day);
         // a. If ! IsValidISODate(year, month, day) is false, throw a RangeError exception.
-        if (is_valid_iso_date(y, m, d)) {
+        if (!is_valid_iso_date(y, m, d)) {
             vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
             return {};
         }
