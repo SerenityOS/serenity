@@ -32,7 +32,6 @@ public:
     }
 
     bool queue_imminent_wait();
-    void did_remove();
     bool try_remove();
 
     bool is_empty_and_no_imminent_waits()
