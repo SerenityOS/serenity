@@ -245,7 +245,7 @@ Process::Process(const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool 
     , m_executable(move(executable))
     , m_cwd(move(cwd))
     , m_tty(tty)
-    , m_wait_block_condition(*this)
+    , m_wait_blocker_set(*this)
 {
     // Ensure that we protect the process data when exiting the constructor.
     ProtectedDataMutationScope scope { *this };
@@ -660,18 +660,18 @@ void Process::finalize()
     // reference if there are still waiters around, or whenever the last
     // waitable states are consumed. Unless there is no parent around
     // anymore, in which case we'll just drop it right away.
-    m_wait_block_condition.finalize();
+    m_wait_blocker_set.finalize();
 }
 
 void Process::disowned_by_waiter(Process& process)
 {
-    m_wait_block_condition.disowned_by_waiter(process);
+    m_wait_blocker_set.disowned_by_waiter(process);
 }
 
 void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal)
 {
     if (auto parent = Process::from_pid(ppid()))
-        parent->m_wait_block_condition.unblock(*this, flags, signal);
+        parent->m_wait_blocker_set.unblock(*this, flags, signal);
 }
 
 void Process::die()

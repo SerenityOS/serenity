@@ -386,7 +386,7 @@ void Thread::die_if_needed()
 void Thread::exit(void* exit_value)
 {
     VERIFY(Thread::current() == this);
-    m_join_condition.thread_did_exit(exit_value);
+    m_join_blocker_set.thread_did_exit(exit_value);
     set_should_die();
     u32 unlock_count;
     [[maybe_unused]] auto rc = unlock_process_if_locked(unlock_count);
@@ -511,7 +511,7 @@ void Thread::finalize()
         SpinlockLocker lock(g_scheduler_lock);
         dbgln_if(THREAD_DEBUG, "Finalizing thread {}", *this);
         set_state(Thread::State::Dead);
-        m_join_condition.thread_finalizing();
+        m_join_blocker_set.thread_finalizing();
     }
 
     if (m_dump_backtrace_on_finalization)

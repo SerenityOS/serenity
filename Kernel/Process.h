@@ -485,7 +485,7 @@ public:
 
     void disowned_by_waiter(Process& process);
     void unblock_waiters(Thread::WaitBlocker::UnblockFlags, u8 signal = 0);
-    Thread::WaitBlockerSet& wait_blocker_set() { return m_wait_block_condition; }
+    Thread::WaitBlockerSet& wait_blocker_set() { return m_wait_blocker_set; }
 
     template<typename Callback>
     void for_each_coredump_property(Callback callback) const
@@ -787,7 +787,7 @@ private:
     // and wait for a tracer to attach.
     bool m_wait_for_tracer_at_next_execve { false };
 
-    Thread::WaitBlockerSet m_wait_block_condition;
+    Thread::WaitBlockerSet m_wait_blocker_set;
 
     struct CoredumpProperty {
         OwnPtr<KString> key;

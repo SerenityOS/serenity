@@ -1329,7 +1329,7 @@ private:
     Vector<HoldingLockInfo> m_holding_locks_list;
 #endif
 
-    JoinBlockerSet m_join_condition;
+    JoinBlockerSet m_join_blocker_set;
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_is_active { false };
     bool m_is_joinable { true };
     bool m_handling_page_fault { false };

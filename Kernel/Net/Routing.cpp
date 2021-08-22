@@ -80,13 +80,13 @@ protected:
     }
 };
 
-static Singleton<ARPTableBlockerSet> s_arp_table_block_condition;
+static Singleton<ARPTableBlockerSet> s_arp_table_blocker_set;
 
 ARPTableBlocker::ARPTableBlocker(IPv4Address ip_addr, Optional<MACAddress>& addr)
     : m_ip_addr(ip_addr)
     , m_addr(addr)
 {
-    if (!add_to_blocker_set(*s_arp_table_block_condition))
+    if (!add_to_blocker_set(*s_arp_table_blocker_set))
         m_should_block = false;
 }
 
@@ -117,7 +117,7 @@ void update_arp_table(const IPv4Address& ip_addr, const MACAddress& addr, Update
         if (update == UpdateArp::Delete)
             table.remove(ip_addr);
     });
-    s_arp_table_block_condition->unblock(ip_addr, addr);
+    s_arp_table_blocker_set->unblock(ip_addr, addr);
 
     if constexpr (ARP_DEBUG) {
         arp_table().with_shared([&](const auto& table) {
