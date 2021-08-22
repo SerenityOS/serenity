@@ -95,10 +95,7 @@ public:
     {
         assign(nullptr);
 #ifdef SANITIZE_PTRS
-        if constexpr (sizeof(T*) == 8)
-            m_bits.store(0xb0b0b0b0b0b0b0b0, AK::MemoryOrder::memory_order_relaxed);
-        else
-            m_bits.store(0xb0b0b0b0, AK::MemoryOrder::memory_order_relaxed);
+        m_bits.store(explode_byte(0xb0), AK::MemoryOrder::memory_order_relaxed);
 #endif
     }
 
