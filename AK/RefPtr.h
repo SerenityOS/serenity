@@ -182,10 +182,7 @@ public:
     {
         clear();
 #ifdef SANITIZE_PTRS
-        if constexpr (sizeof(T*) == 8)
-            m_bits.store(0xe0e0e0e0e0e0e0e0, AK::MemoryOrder::memory_order_relaxed);
-        else
-            m_bits.store(0xe0e0e0e0, AK::MemoryOrder::memory_order_relaxed);
+        m_bits.store(explode_byte(0xe0), AK::MemoryOrder::memory_order_relaxed);
 #endif
     }
 
