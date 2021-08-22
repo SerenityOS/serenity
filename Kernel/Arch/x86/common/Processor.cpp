@@ -549,7 +549,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             // to be ebp.
             ProcessPagingScope paging_scope(thread.process());
             auto& regs = thread.regs();
-            FlatPtr* stack_top = reinterpret_cast<FlatPtr*>(regs.sp());
+            auto* stack_top = reinterpret_cast<FlatPtr*>(regs.sp());
             if (Memory::is_user_range(VirtualAddress(stack_top), sizeof(FlatPtr))) {
                 if (!copy_from_user(&frame_ptr, &((FlatPtr*)stack_top)[0]))
                     frame_ptr = 0;
@@ -1220,7 +1220,7 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
 
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);
-    Processor::current().restore_in_critical(in_critical);
+    Processor::restore_in_critical(in_critical);
 
     // Since we got here and don't have Scheduler::context_switch in the
     // call stack (because this is the first time we switched into this
@@ -1283,7 +1283,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);
-    processor.restore_in_critical(in_critical);
+    Processor::restore_in_critical(in_critical);
 
     if (has_fxsr)
         asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
