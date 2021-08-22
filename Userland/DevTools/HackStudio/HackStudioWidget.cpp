@@ -668,6 +668,9 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
         m_open_files_vector.append(relative_file_path);
 
         update_window_title();
+
+        m_project->model().invalidate();
+        update_tree_view();
     });
 }
 
@@ -865,6 +868,7 @@ void HackStudioWidget::set_current_editor_wrapper(RefPtr<EditorWrapper> editor_w
 {
     m_current_editor_wrapper = editor_wrapper;
     update_window_title();
+    update_tree_view();
 }
 
 void HackStudioWidget::configure_project_tree_view()
@@ -1228,6 +1232,15 @@ void HackStudioWidget::update_gml_preview()
 {
     auto gml_content = current_editor_wrapper().filename().ends_with(".gml") ? current_editor_wrapper().editor().text() : "";
     m_gml_preview_widget->load_gml(gml_content);
+}
+
+void HackStudioWidget::update_tree_view()
+{
+    auto index = m_project->model().index(m_current_editor_wrapper->filename(), GUI::FileSystemModel::Column::Name);
+    if (index.is_valid()) {
+        m_project_tree_view->expand_all_parents_of(index);
+        m_project_tree_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
+    }
 }
 
 void HackStudioWidget::update_window_title()
