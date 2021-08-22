@@ -39,16 +39,23 @@ void ListView::update_content_size()
     if (!model())
         return set_content_size({});
 
+    if (!m_cached_content_width.has_value())
+        m_cached_content_width = calculate_content_width();
+
+    int content_width = max(m_cached_content_width.value(), widget_inner_rect().width());
+
+    int content_height = item_count() * item_height();
+    set_content_size({ content_width, content_height });
+}
+
+int ListView::calculate_content_width() const
+{
     int content_width = 0;
     for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {
         auto text = model()->index(row, m_model_column).data();
         content_width = max(content_width, font().width(text.to_string()) + horizontal_padding() + 1);
     }
-
-    content_width = max(content_width, widget_inner_rect().width());
-
-    int content_height = item_count() * item_height();
-    set_content_size({ content_width, content_height });
+    return content_width;
 }
 
 void ListView::resize_event(ResizeEvent& event)
@@ -60,6 +67,7 @@ void ListView::resize_event(ResizeEvent& event)
 void ListView::model_did_update(unsigned flags)
 {
     AbstractView::model_did_update(flags);
+    m_cached_content_width.clear();
     update_content_size();
     update();
 }
@@ -285,6 +293,13 @@ void ListView::scroll_into_view(const ModelIndex& index, bool scroll_horizontall
     if (!model())
         return;
     AbstractScrollableWidget::scroll_into_view(content_rect(index.row()), scroll_horizontally, scroll_vertically);
+}
+
+void ListView::did_change_font()
+{
+    m_cached_content_width.clear();
+
+    AbstractView::did_change_font();
 }
 
 }

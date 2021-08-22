@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <LibGUI/AbstractView.h>
 
 namespace GUI {
@@ -45,6 +46,7 @@ public:
 protected:
     ListView();
     virtual void paint_list_item(Painter&, int row_index, int painted_item_index);
+    virtual void did_change_font() override;
 
 private:
     virtual void model_did_update(unsigned flags) override;
@@ -56,11 +58,13 @@ private:
     Gfx::IntRect content_rect(int row) const;
     int item_count() const;
     void update_content_size();
+    int calculate_content_width() const;
 
     int m_horizontal_padding { 2 };
     int m_model_column { 0 };
     bool m_alternating_row_colors { true };
     bool m_hover_highlighting { false };
+    Optional<int> m_cached_content_width;
 };
 
 }
