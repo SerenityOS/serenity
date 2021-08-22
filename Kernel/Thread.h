@@ -855,6 +855,7 @@ public:
         SpinlockLocker block_lock(m_block_lock);
         // We need to hold m_block_lock so that nobody can unblock a blocker as soon
         // as it is constructed and registered elsewhere
+        VERIFY(!m_in_block);
         m_in_block = true;
         BlockerType blocker(forward<Args>(args)...);
 
