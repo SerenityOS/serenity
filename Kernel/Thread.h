@@ -151,7 +151,6 @@ class Thread
 
     friend class Mutex;
     friend class Process;
-    friend class ProtectedProcessBase;
     friend class Scheduler;
     friend struct ThreadReadyQueue;
 
@@ -160,8 +159,6 @@ public:
     {
         return Processor::current_thread();
     }
-
-    static void initialize();
 
     static KResultOr<NonnullRefPtr<Thread>> try_create(NonnullRefPtr<Process>);
     ~Thread();
@@ -251,11 +248,6 @@ public:
             default:
                 return false;
             }
-        }
-
-        [[nodiscard]] bool timed_out() const
-        {
-            return m_type == InterruptedByTimeout;
         }
 
     private:
@@ -696,7 +688,7 @@ public:
         };
 
         typedef Vector<FDInfo, FD_SETSIZE> FDVector;
-        SelectBlocker(FDVector& fds);
+        explicit SelectBlocker(FDVector& fds);
         virtual ~SelectBlocker();
 
         virtual bool unblock(bool, void*) override;
@@ -750,7 +742,7 @@ public:
         friend class WaitBlocker;
 
     public:
-        WaitBlockCondition(Process& process)
+        explicit WaitBlockCondition(Process& process)
             : m_process(process)
         {
         }
@@ -1296,7 +1288,7 @@ private:
     mutable RecursiveSpinlock m_block_lock;
     NonnullRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
-    ThreadRegisters m_regs;
+    ThreadRegisters m_regs {};
     DebugRegisterState m_debug_register_state {};
     TrapFrame* m_current_trap { nullptr };
     u32 m_saved_critical { 1 };
