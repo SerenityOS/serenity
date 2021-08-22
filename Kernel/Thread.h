@@ -398,7 +398,7 @@ public:
 
         virtual ~BlockerSet()
         {
-            SpinlockLocker lock(m_lock);
+            VERIFY(!m_lock.is_locked());
             VERIFY(m_blockers.is_empty());
         }
 
