@@ -73,6 +73,7 @@ Optional<ISODateTime> parse_iso_date_time(GlobalObject&, String const& iso_strin
 Optional<TemporalInstant> parse_temporal_instant_string(GlobalObject&, String const& iso_string);
 Optional<String> parse_temporal_calendar_string(GlobalObject&, String const& iso_string);
 Optional<TemporalDate> parse_temporal_date_string(GlobalObject&, String const& iso_string);
+Optional<ISODateTime> parse_temporal_date_time_string(GlobalObject&, String const& iso_string);
 Optional<TemporalDuration> parse_temporal_duration_string(GlobalObject&, String const& iso_string);
 Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject&, String const& iso_string);
 double to_positive_integer_or_infinity(GlobalObject&, Value argument);

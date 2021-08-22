@@ -7,10 +7,15 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
+#include <LibJS/Runtime/Temporal/Calendar.h>
+#include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainDateTimeConstructor.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
+#include <LibJS/Runtime/Temporal/TimeZone.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 
 namespace JS::Temporal {
 
@@ -91,6 +96,143 @@ bool iso_date_time_within_limits(GlobalObject& global_object, i32 year, u8 month
     }
     // 5. Return true.
     return true;
+}
+
+// 5.5.3 InterpretTemporalDateTimeFields ( calendar, fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-interprettemporaldatetimefields
+Optional<ISODateTime> interpret_temporal_date_time_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object& options)
+{
+    auto& vm = global_object.vm();
+
+    Optional<TemporalTime> time_result;
+
+    // 1. Let timeResult be ? ToTemporalTimeRecord(fields).
+    time_result = to_temporal_time_record(global_object, fields);
+    if (vm.exception())
+        return {};
+
+    // 2. Let temporalDate be ? DateFromFields(calendar, fields, options).
+    auto* temporal_date = date_from_fields(global_object, calendar, fields, options);
+    if (vm.exception())
+        return {};
+
+    // 3. Let overflow be ? ToTemporalOverflow(options).
+    auto overflow = to_temporal_overflow(global_object, options);
+    if (vm.exception())
+        return {};
+
+    // 4. Let timeResult be ? RegulateTime(timeResult.[[Hour]], timeResult.[[Minute]], timeResult.[[Second]], timeResult.[[Millisecond]], timeResult.[[Microsecond]], timeResult.[[Nanosecond]], overflow).
+    time_result = regulate_time(global_object, time_result->hour, time_result->minute, time_result->second, time_result->millisecond, time_result->microsecond, time_result->nanosecond, *overflow);
+    if (vm.exception())
+        return {};
+
+    // 5. Return the Record { [[Year]]: temporalDate.[[ISOYear]], [[Month]]: temporalDate.[[ISOMonth]], [[Day]]: temporalDate.[[ISODay]], [[Hour]]: timeResult.[[Hour]], [[Minute]]: timeResult.[[Minute]], [[Second]]: timeResult.[[Second]], [[Millisecond]]: timeResult.[[Millisecond]], [[Microsecond]]: timeResult.[[Microsecond]], [[Nanosecond]]: timeResult.[[Nanosecond]] }.
+    return ISODateTime {
+        .year = temporal_date->iso_year(),
+        .month = temporal_date->iso_month(),
+        .day = temporal_date->iso_day(),
+        .hour = static_cast<u8>(time_result->hour),
+        .minute = static_cast<u8>(time_result->minute),
+        .second = static_cast<u8>(time_result->second),
+        .millisecond = static_cast<u16>(time_result->millisecond),
+        .microsecond = static_cast<u16>(time_result->microsecond),
+        .nanosecond = static_cast<u16>(time_result->nanosecond),
+    };
+}
+
+// 5.5.4 ToTemporalDateTime ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldatetime
+PlainDateTime* to_temporal_date_time(GlobalObject& global_object, Value item, Object* options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    if (!options)
+        options = Object::create(global_object, nullptr);
+
+    Object* calendar;
+    ISODateTime result;
+
+    // 2. If Type(item) is Object, then
+    if (item.is_object()) {
+        auto& item_object = item.as_object();
+
+        // a. If item has an [[InitializedTemporalDateTime]] internal slot, then
+        if (is<PlainDateTime>(item_object)) {
+            // i. Return item.
+            return &static_cast<PlainDateTime&>(item_object);
+        }
+
+        // b. If item has an [[InitializedTemporalZonedDateTime]] internal slot, then
+        if (is<ZonedDateTime>(item_object)) {
+            auto& zoned_date_time = static_cast<ZonedDateTime&>(item_object);
+
+            // i. Let instant be ! CreateTemporalInstant(item.[[Nanoseconds]]).
+            auto* instant = create_temporal_instant(global_object, zoned_date_time.nanoseconds());
+
+            // ii. Return ? BuiltinTimeZoneGetPlainDateTimeFor(item.[[TimeZone]], instant, item.[[Calendar]]).
+            return builtin_time_zone_get_plain_date_time_for(global_object, &zoned_date_time.time_zone(), *instant, zoned_date_time.calendar());
+        }
+
+        // c. If item has an [[InitializedTemporalDate]] internal slot, then
+        if (is<PlainDate>(item_object)) {
+            auto& plain_date = static_cast<PlainDate&>(item_object);
+
+            // i. Return ? CreateTemporalDateTime(item.[[ISOYear]], item.[[ISOMonth]], item.[[ISODay]], 0, 0, 0, 0, 0, 0, item.[[Calendar]]).
+            return create_temporal_date_time(global_object, plain_date.iso_year(), plain_date.iso_month(), plain_date.iso_day(), 0, 0, 0, 0, 0, 0, plain_date.calendar());
+        }
+
+        // d. Let calendar be ? GetTemporalCalendarWithISODefault(item).
+        calendar = get_temporal_calendar_with_iso_default(global_object, item_object);
+        if (vm.exception())
+            return {};
+
+        // e. Let fieldNames be ? CalendarFields(calendar, « "day", "hour", "microsecond", "millisecond", "minute", "month", "monthCode", "nanosecond", "second", "year" »).
+        auto field_names = calendar_fields(global_object, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv });
+        if (vm.exception())
+            return {};
+
+        // f. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
+        auto* fields = prepare_temporal_fields(global_object, item_object, field_names, {});
+        if (vm.exception())
+            return {};
+
+        // g. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
+        auto maybe_result = interpret_temporal_date_time_fields(global_object, *calendar, *fields, *options);
+        if (vm.exception())
+            return {};
+        result = move(*maybe_result);
+    }
+    // 3. Else,
+    else {
+        // a. Perform ? ToTemporalOverflow(options).
+        (void)to_temporal_overflow(global_object, *options);
+        if (vm.exception())
+            return {};
+
+        // b. Let string be ? ToString(item).
+        auto string = item.to_string(global_object);
+        if (vm.exception())
+            return {};
+
+        // c. Let result be ? ParseTemporalDateTimeString(string).
+        auto maybe_result = parse_temporal_date_time_string(global_object, string);
+        if (vm.exception())
+            return {};
+        result = move(*maybe_result);
+
+        // d. Assert: ! IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
+        VERIFY(is_valid_iso_date(result.year, result.month, result.day));
+
+        // e. Assert: ! IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
+        VERIFY(is_valid_time(result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
+
+        // f. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
+        calendar = to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined());
+        if (vm.exception())
+            return {};
+    }
+
+    // 4. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], calendar).
+    return create_temporal_date_time(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, *calendar);
 }
 
 // 5.5.5 BalanceISODateTime ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-balanceisodatetime

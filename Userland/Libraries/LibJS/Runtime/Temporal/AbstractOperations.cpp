@@ -560,6 +560,26 @@ Optional<TemporalDate> parse_temporal_date_string(GlobalObject& global_object, S
     return TemporalDate { .year = result->year, .month = result->month, .day = result->day, .calendar = move(result->calendar) };
 }
 
+// 13.39 ParseTemporalDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatetimestring
+Optional<ISODateTime> parse_temporal_date_time_string(GlobalObject& global_object, String const& iso_string)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(isoString) is String.
+
+    // 2. If isoString does not satisfy the syntax of a TemporalDateTimeString (see 13.33), then
+    // a. Throw a RangeError exception.
+    // TODO
+
+    // 3. Let result be ? ParseISODateTime(isoString).
+    auto result = parse_iso_date_time(global_object, iso_string);
+    if (vm.exception())
+        return {};
+
+    // 4. Return result.
+    return result;
+}
+
 // 13.40 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
 Optional<TemporalDuration> parse_temporal_duration_string(GlobalObject& global_object, String const& iso_string)
 {
