@@ -78,7 +78,12 @@ bool EditingEngine::on_key(const KeyEvent& event)
             }
         }
         if (event.ctrl()) {
+            m_editor->update_selection(event.shift());
             move_to_next_span(event);
+            if (event.shift() && m_editor->selection()->start().is_valid()) {
+                m_editor->selection()->set_end(m_editor->cursor());
+                m_editor->did_update_selection();
+            }
             return true;
         }
         m_editor->update_selection(event.shift());
