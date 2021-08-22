@@ -279,6 +279,9 @@ public:
     class BlockerSet;
 
     class Blocker {
+        AK_MAKE_NONMOVABLE(Blocker);
+        AK_MAKE_NONCOPYABLE(Blocker);
+
     public:
         enum class Type {
             Unknown = 0,
@@ -336,6 +339,8 @@ public:
         BlockResult end_blocking(Badge<Thread>, bool);
 
     protected:
+        Blocker() { }
+
         void do_set_interrupted_by_death()
         {
             m_was_interrupted_by_death = true;
