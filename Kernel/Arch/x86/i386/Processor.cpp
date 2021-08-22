@@ -58,9 +58,9 @@ NAKED void do_assume_context(Thread*, u32)
     // clang-format on
 }
 
-String Processor::platform_string() const
+StringView Processor::platform_string()
 {
-    return "i386";
+    return "i386"sv;
 }
 
 FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
