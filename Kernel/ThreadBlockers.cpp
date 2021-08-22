@@ -41,7 +41,7 @@ bool Thread::Blocker::add_to_blocker_set(Thread::BlockerSet& blocker_set, void* 
 
 Thread::Blocker::~Blocker()
 {
-    SpinlockLocker lock(m_lock);
+    VERIFY(!m_lock.is_locked());
     if (m_blocker_set)
         m_blocker_set->remove_blocker(*this, m_block_data);
 }
