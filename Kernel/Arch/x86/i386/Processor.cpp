@@ -180,7 +180,7 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
 
 void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
-    VERIFY(!in_irq());
+    VERIFY(!m_in_irq);
     VERIFY(m_in_critical == 1);
     VERIFY(is_kernel_mode());
 

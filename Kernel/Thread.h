@@ -847,7 +847,7 @@ public:
     template<typename BlockerType, class... Args>
     [[nodiscard]] BlockResult block(const BlockTimeout& timeout, Args&&... args)
     {
-        VERIFY(!Processor::current().in_irq());
+        VERIFY(!Processor::current_in_irq());
         VERIFY(this == Thread::current());
         ScopedCritical critical;
         VERIFY(!Memory::s_mm_lock.own_lock());
@@ -889,7 +889,7 @@ public:
                 // Process::kill_all_threads may be called at any time, which will mark all
                 // threads to die. In that case
                 timer_was_added = TimerQueue::the().add_timer_without_id(*m_block_timer, block_timeout.clock_id(), block_timeout.absolute_time(), [&]() {
-                    VERIFY(!Processor::current().in_irq());
+                    VERIFY(!Processor::current_in_irq());
                     VERIFY(!g_scheduler_lock.own_lock());
                     VERIFY(!m_block_lock.own_lock());
                     // NOTE: this may execute on the same or any other processor!

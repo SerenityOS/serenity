@@ -157,7 +157,7 @@ Thread::~Thread()
 
 void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock<u8>>& lock_lock, u32 lock_count)
 {
-    VERIFY(!Processor::current().in_irq());
+    VERIFY(!Processor::current_in_irq());
     VERIFY(this == Thread::current());
     ScopedCritical critical;
     VERIFY(!Memory::s_mm_lock.own_lock());
@@ -238,7 +238,7 @@ u32 Thread::unblock_from_lock(Kernel::Mutex& lock)
         SpinlockLocker scheduler_lock(g_scheduler_lock);
         SpinlockLocker block_lock(m_block_lock);
         VERIFY(m_blocking_lock == &lock);
-        VERIFY(!Processor::current().in_irq());
+        VERIFY(!Processor::current_in_irq());
         VERIFY(g_scheduler_lock.own_lock());
         VERIFY(m_block_lock.own_lock());
         VERIFY(m_blocking_lock == &lock);
@@ -251,7 +251,7 @@ u32 Thread::unblock_from_lock(Kernel::Mutex& lock)
         VERIFY(m_state != Thread::Runnable && m_state != Thread::Running);
         set_state(Thread::Runnable);
     };
-    if (Processor::current().in_irq()) {
+    if (Processor::current_in_irq()) {
         Processor::deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
             if (auto this_thread = self.strong_ref())
                 do_unblock();
@@ -272,7 +272,7 @@ void Thread::unblock_from_blocker(Blocker& blocker)
         if (!should_be_stopped() && !is_stopped())
             unblock();
     };
-    if (Processor::current().in_irq()) {
+    if (Processor::current_in_irq()) {
         Processor::deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
             if (auto this_thread = self.strong_ref())
                 do_unblock();
@@ -284,7 +284,7 @@ void Thread::unblock_from_blocker(Blocker& blocker)
 
 void Thread::unblock(u8 signal)
 {
-    VERIFY(!Processor::current().in_irq());
+    VERIFY(!Processor::current_in_irq());
     VERIFY(g_scheduler_lock.own_lock());
     VERIFY(m_block_lock.own_lock());
     if (m_state != Thread::Blocked)
@@ -377,7 +377,7 @@ void Thread::die_if_needed()
     // Now leave the critical section so that we can also trigger the
     // actual context switch
     Processor::clear_critical();
-    dbgln("die_if_needed returned from clear_critical!!! in irq: {}", Processor::current().in_irq());
+    dbgln("die_if_needed returned from clear_critical!!! in irq: {}", Processor::current_in_irq());
     // We should never get here, but the scoped scheduler lock
     // will be released by Scheduler::context_switch again
     VERIFY_NOT_REACHED();

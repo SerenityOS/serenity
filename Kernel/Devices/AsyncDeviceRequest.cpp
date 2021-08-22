@@ -135,7 +135,7 @@ void AsyncDeviceRequest::complete(RequestResult result)
         VERIFY(m_result == Started);
         m_result = result;
     }
-    if (Processor::current().in_irq()) {
+    if (Processor::current_in_irq()) {
         ref(); // Make sure we don't get freed
         Processor::deferred_call_queue([this]() {
             request_finished();

@@ -17,7 +17,7 @@ void __sanitizer_cov_trace_pc(void)
     if (g_in_early_boot) [[unlikely]]
         return;
 
-    if (Processor::current().in_irq()) [[unlikely]] {
+    if (Processor::current_in_irq()) [[unlikely]] {
         // Do not trace in interrupts.
         return;
     }
