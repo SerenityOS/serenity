@@ -687,11 +687,11 @@ PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
     VERIFY_INTERRUPTS_DISABLED();
     if (Processor::current_in_irq()) {
         dbgln("CPU[{}] BUG! Page fault while handling IRQ! code={}, vaddr={}, irq level: {}",
-            Processor::id(), fault.code(), fault.vaddr(), Processor::current_in_irq());
+            Processor::current_id(), fault.code(), fault.vaddr(), Processor::current_in_irq());
         dump_kernel_regions();
         return PageFaultResponse::ShouldCrash;
     }
-    dbgln_if(PAGE_FAULT_DEBUG, "MM: CPU[{}] handle_page_fault({:#04x}) at {}", Processor::id(), fault.code(), fault.vaddr());
+    dbgln_if(PAGE_FAULT_DEBUG, "MM: CPU[{}] handle_page_fault({:#04x}) at {}", Processor::current_id(), fault.code(), fault.vaddr());
     auto* region = find_region_from_vaddr(fault.vaddr());
     if (!region) {
         return PageFaultResponse::ShouldCrash;
@@ -1008,7 +1008,7 @@ u8* MemoryManager::quickmap_page(PhysicalAddress const& physical_address)
     mm_data.m_quickmap_prev_flags = mm_data.m_quickmap_in_use.lock();
     SpinlockLocker lock(s_mm_lock);
 
-    VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::id() * PAGE_SIZE);
+    VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
     u32 pte_idx = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
 
     auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[pte_idx];
@@ -1028,7 +1028,7 @@ void MemoryManager::unquickmap_page()
     SpinlockLocker lock(s_mm_lock);
     auto& mm_data = get_data();
     VERIFY(mm_data.m_quickmap_in_use.is_locked());
-    VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::id() * PAGE_SIZE);
+    VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
     u32 pte_idx = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
     auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[pte_idx];
     pte.clear();

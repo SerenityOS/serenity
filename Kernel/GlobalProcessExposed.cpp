@@ -530,7 +530,7 @@ private:
             [&](Processor& proc) {
                 auto& info = proc.info();
                 auto obj = array.add_object();
-                obj.add("processor", proc.get_id());
+                obj.add("processor", proc.id());
                 obj.add("cpuid", info.cpuid());
                 obj.add("family", info.display_family());
 
