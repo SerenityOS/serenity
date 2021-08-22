@@ -78,7 +78,7 @@ Thread::JoinBlocker::JoinBlocker(Thread& joinee, KResult& try_join_result, void*
         // but the joinee is joining immediately
         SpinlockLocker lock(m_lock);
         try_join_result = joinee.try_join([&]() {
-            if (!add_to_blocker_set(joinee.m_join_condition))
+            if (!add_to_blocker_set(joinee.m_join_blocker_set))
                 m_should_block = false;
         });
         m_join_error = try_join_result.is_error();
@@ -99,7 +99,7 @@ void Thread::JoinBlocker::not_blocking(bool timeout_in_past)
     // to supply us the information. We cannot hold the lock as unblock
     // could be called by the BlockerSet at any time!
     VERIFY(timeout_in_past);
-    m_joinee->m_join_condition.try_unblock(*this);
+    m_joinee->m_join_blocker_set.try_unblock(*this);
 }
 
 bool Thread::JoinBlocker::unblock(void* value, bool from_add_blocker)
