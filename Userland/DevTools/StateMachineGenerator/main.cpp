@@ -252,7 +252,7 @@ HashTable<String> actions(const StateMachine& machine)
     }
     if (machine.anywhere.has_value())
         do_state(machine.anywhere.value());
-    return move(table);
+    return table;
 }
 
 void generate_lookup_table(const StateMachine& machine, SourceGenerator& generator)
