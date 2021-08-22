@@ -522,10 +522,10 @@ public:
         bool m_should_block { true };
     };
 
-    class QueueBlocker final : public Blocker {
+    class WaitQueueBlocker final : public Blocker {
     public:
-        explicit QueueBlocker(WaitQueue&, StringView block_reason = {});
-        virtual ~QueueBlocker();
+        explicit WaitQueueBlocker(WaitQueue&, StringView block_reason = {});
+        virtual ~WaitQueueBlocker();
 
         virtual Type blocker_type() const override { return Type::Queue; }
         virtual StringView state_string() const override { return m_block_reason.is_null() ? m_block_reason : "Queue"sv; }
@@ -981,7 +981,7 @@ public:
     Thread::BlockResult wait_on(WaitQueue& wait_queue, const Thread::BlockTimeout& timeout, Args&&... args)
     {
         VERIFY(this == Thread::current());
-        return block<Thread::QueueBlocker>(timeout, wait_queue, forward<Args>(args)...);
+        return block<Thread::WaitQueueBlocker>(timeout, wait_queue, forward<Args>(args)...);
     }
 
     BlockResult sleep(clockid_t, const Time&, Time* = nullptr);

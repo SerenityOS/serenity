@@ -32,7 +32,7 @@ u32 WaitQueue::wake_one()
     bool did_unblock_one = unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
         VERIFY(data);
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
-        auto& blocker = static_cast<Thread::QueueBlocker&>(b);
+        auto& blocker = static_cast<Thread::WaitQueueBlocker&>(b);
         dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_one unblocking {}", this, data);
         if (blocker.unblock()) {
             stop_iterating = true;
@@ -57,7 +57,7 @@ u32 WaitQueue::wake_n(u32 wake_count)
     bool did_unblock_some = unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
         VERIFY(data);
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
-        auto& blocker = static_cast<Thread::QueueBlocker&>(b);
+        auto& blocker = static_cast<Thread::WaitQueueBlocker&>(b);
         dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_n unblocking {}", this, data);
         VERIFY(did_wake < wake_count);
         if (blocker.unblock()) {
@@ -82,7 +82,7 @@ u32 WaitQueue::wake_all()
     bool did_unblock_any = unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void* data, bool&) {
         VERIFY(data);
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
-        auto& blocker = static_cast<Thread::QueueBlocker&>(b);
+        auto& blocker = static_cast<Thread::WaitQueueBlocker&>(b);
 
         dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_all unblocking {}", this, data);
 

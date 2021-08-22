@@ -118,18 +118,18 @@ bool Thread::JoinBlocker::unblock(void* value, bool from_add_blocker)
     return true;
 }
 
-Thread::QueueBlocker::QueueBlocker(WaitQueue& wait_queue, StringView block_reason)
+Thread::WaitQueueBlocker::WaitQueueBlocker(WaitQueue& wait_queue, StringView block_reason)
     : m_block_reason(block_reason)
 {
     if (!add_to_blocker_set(wait_queue, Thread::current()))
         m_should_block = false;
 }
 
-Thread::QueueBlocker::~QueueBlocker()
+Thread::WaitQueueBlocker::~WaitQueueBlocker()
 {
 }
 
-bool Thread::QueueBlocker::unblock()
+bool Thread::WaitQueueBlocker::unblock()
 {
     {
         SpinlockLocker lock(m_lock);
