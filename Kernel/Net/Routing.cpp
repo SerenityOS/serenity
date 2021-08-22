@@ -59,7 +59,7 @@ class ARPTableBlockerSet final : public Thread::BlockerSet {
 public:
     void unblock(const IPv4Address& ip_addr, const MACAddress& addr)
     {
-        BlockerSet::unblock([&](auto& b, void*, bool&) {
+        BlockerSet::unblock_all_blockers_whose_conditions_are_met([&](auto& b, void*, bool&) {
             VERIFY(b.blocker_type() == Thread::Blocker::Type::Routing);
             auto& blocker = static_cast<ARPTableBlocker&>(b);
             return blocker.unblock(false, ip_addr, addr);

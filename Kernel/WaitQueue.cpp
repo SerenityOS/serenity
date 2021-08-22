@@ -29,7 +29,7 @@ u32 WaitQueue::wake_one()
     u32 did_wake = 0;
     SpinlockLocker lock(m_lock);
     dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_one", this);
-    bool did_unblock_one = do_unblock([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
+    bool did_unblock_one = unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
         VERIFY(data);
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
         auto& blocker = static_cast<Thread::QueueBlocker&>(b);
@@ -54,7 +54,7 @@ u32 WaitQueue::wake_n(u32 wake_count)
     dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_n({})", this, wake_count);
     u32 did_wake = 0;
 
-    bool did_unblock_some = do_unblock([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
+    bool did_unblock_some = unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
         VERIFY(data);
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
         auto& blocker = static_cast<Thread::QueueBlocker&>(b);
@@ -79,7 +79,7 @@ u32 WaitQueue::wake_all()
     dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_all", this);
     u32 did_wake = 0;
 
-    bool did_unblock_any = do_unblock([&](Thread::Blocker& b, void* data, bool&) {
+    bool did_unblock_any = unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void* data, bool&) {
         VERIFY(data);
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
         auto& blocker = static_cast<Thread::QueueBlocker&>(b);
