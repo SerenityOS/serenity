@@ -43,10 +43,7 @@ public:
     {
         clear();
 #ifdef SANITIZE_PTRS
-        if constexpr (sizeof(T*) == 8)
-            m_ptr = (T*)(0xe1e1e1e1e1e1e1e1);
-        else
-            m_ptr = (T*)(0xe1e1e1e1);
+        m_ptr = (T*)(explode_byte(0xe1));
 #endif
     }
 
