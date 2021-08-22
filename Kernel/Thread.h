@@ -525,7 +525,7 @@ public:
         bool m_should_block { true };
     };
 
-    class QueueBlocker : public Blocker {
+    class QueueBlocker final : public Blocker {
     public:
         explicit QueueBlocker(WaitQueue&, StringView block_reason = {});
         virtual ~QueueBlocker();
@@ -547,7 +547,7 @@ public:
         bool m_did_unblock { false };
     };
 
-    class FutexBlocker : public Blocker {
+    class FutexBlocker final : public Blocker {
     public:
         explicit FutexBlocker(FutexQueue&, u32);
         virtual ~FutexBlocker();

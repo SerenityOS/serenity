@@ -18,7 +18,7 @@ namespace Kernel {
 
 static Singleton<MutexProtected<HashMap<IPv4Address, MACAddress>>> s_arp_table;
 
-class ARPTableBlocker : public Thread::Blocker {
+class ARPTableBlocker final : public Thread::Blocker {
 public:
     ARPTableBlocker(IPv4Address ip_addr, Optional<MACAddress>& addr);
 
