@@ -15,9 +15,9 @@ bool WaitQueue::should_add_blocker(Thread::Blocker& b, void* data)
     VERIFY(data != nullptr); // Thread that is requesting to be blocked
     VERIFY(m_lock.is_locked());
     VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
-    if (m_wake_requested || !m_should_block) {
+    if (m_wake_requested) {
         m_wake_requested = false;
-        dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: do not block thread {}, {}", this, data, m_should_block ? "wake was pending" : "not blocking");
+        dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: do not block thread {}", this, data);
         return false;
     }
     dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: should block thread {}", this, data);
