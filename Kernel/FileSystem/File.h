@@ -21,9 +21,9 @@ namespace Kernel {
 
 class File;
 
-class FileBlockCondition final : public Thread::BlockCondition {
+class FileBlockerSet final : public Thread::BlockerSet {
 public:
-    FileBlockCondition() { }
+    FileBlockerSet() { }
 
     virtual bool should_add_blocker(Thread::Blocker& b, void* data) override
     {
@@ -112,7 +112,7 @@ public:
     virtual bool is_socket() const { return false; }
     virtual bool is_inode_watcher() const { return false; }
 
-    virtual FileBlockCondition& block_condition() { return m_block_condition; }
+    virtual FileBlockerSet& blocker_set() { return m_blocker_set; }
 
     size_t attach_count() const { return m_attach_count; }
 
@@ -138,10 +138,10 @@ private:
     ALWAYS_INLINE void do_evaluate_block_conditions()
     {
         VERIFY(!Processor::current_in_irq());
-        block_condition().unblock();
+        blocker_set().unblock();
     }
 
-    FileBlockCondition m_block_condition;
+    FileBlockerSet m_blocker_set;
     size_t m_attach_count { 0 };
 };
 

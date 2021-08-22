@@ -28,11 +28,11 @@ Thread::BlockTimeout::BlockTimeout(bool is_absolute, const Time* time, const Tim
         m_time += m_start_time;
 }
 
-bool Thread::Blocker::set_block_condition(Thread::BlockCondition& block_condition, void* data)
+bool Thread::Blocker::add_to_blocker_set(Thread::BlockerSet& blocker_set, void* data)
 {
-    VERIFY(!m_block_condition);
-    if (block_condition.add_blocker(*this, data)) {
-        m_block_condition = &block_condition;
+    VERIFY(!m_blocker_set);
+    if (blocker_set.add_blocker(*this, data)) {
+        m_blocker_set = &blocker_set;
         m_block_data = data;
         return true;
     }
@@ -42,8 +42,8 @@ bool Thread::Blocker::set_block_condition(Thread::BlockCondition& block_conditio
 Thread::Blocker::~Blocker()
 {
     SpinlockLocker lock(m_lock);
-    if (m_block_condition)
-        m_block_condition->remove_blocker(*this, m_block_data);
+    if (m_blocker_set)
+        m_blocker_set->remove_blocker(*this, m_block_data);
 }
 
 void Thread::Blocker::begin_blocking(Badge<Thread>)
@@ -78,7 +78,7 @@ Thread::JoinBlocker::JoinBlocker(Thread& joinee, KResult& try_join_result, void*
         // but the joinee is joining immediately
         SpinlockLocker lock(m_lock);
         try_join_result = joinee.try_join([&]() {
-            if (!set_block_condition(joinee.m_join_condition))
+            if (!add_to_blocker_set(joinee.m_join_condition))
                 m_should_block = false;
         });
         m_join_error = try_join_result.is_error();
@@ -90,14 +90,14 @@ Thread::JoinBlocker::JoinBlocker(Thread& joinee, KResult& try_join_result, void*
 void Thread::JoinBlocker::not_blocking(bool timeout_in_past)
 {
     if (!m_should_block) {
-        // set_block_condition returned false, so unblock was already called
+        // add_to_blocker_set returned false, so unblock was already called
         VERIFY(!timeout_in_past);
         return;
     }
     // If we should have blocked but got here it must have been that the
-    // timeout was already in the past. So we need to ask the BlockCondition
+    // timeout was already in the past. So we need to ask the BlockerSet
     // to supply us the information. We cannot hold the lock as unblock
-    // could be called by the BlockCondition at any time!
+    // could be called by the BlockerSet at any time!
     VERIFY(timeout_in_past);
     m_joinee->m_join_condition.try_unblock(*this);
 }
@@ -121,7 +121,7 @@ bool Thread::JoinBlocker::unblock(void* value, bool from_add_blocker)
 Thread::QueueBlocker::QueueBlocker(WaitQueue& wait_queue, StringView block_reason)
     : m_block_reason(block_reason)
 {
-    if (!set_block_condition(wait_queue, Thread::current()))
+    if (!add_to_blocker_set(wait_queue, Thread::current()))
         m_should_block = false;
 }
 
@@ -145,7 +145,7 @@ bool Thread::QueueBlocker::unblock()
 Thread::FutexBlocker::FutexBlocker(FutexQueue& futex_queue, u32 bitset)
     : m_bitset(bitset)
 {
-    if (!set_block_condition(futex_queue, Thread::current()))
+    if (!add_to_blocker_set(futex_queue, Thread::current()))
         m_should_block = false;
 }
 
@@ -156,7 +156,7 @@ Thread::FutexBlocker::~FutexBlocker()
 void Thread::FutexBlocker::finish_requeue(FutexQueue& futex_queue)
 {
     VERIFY(m_lock.own_lock());
-    set_block_condition_raw_locked(&futex_queue);
+    set_blocker_set_raw_locked(&futex_queue);
     // We can now release the lock
     m_lock.unlock(m_relock_flags);
 }
@@ -194,7 +194,7 @@ Thread::FileDescriptionBlocker::FileDescriptionBlocker(FileDescription& descript
     , m_unblocked_flags(unblocked_flags)
 {
     m_unblocked_flags = BlockFlags::None;
-    if (!set_block_condition(description.block_condition()))
+    if (!add_to_blocker_set(description.blocker_set()))
         m_should_block = false;
 }
 
@@ -220,19 +220,19 @@ bool Thread::FileDescriptionBlocker::unblock(bool from_add_blocker, void*)
 void Thread::FileDescriptionBlocker::not_blocking(bool timeout_in_past)
 {
     if (!m_should_block) {
-        // set_block_condition returned false, so unblock was already called
+        // add_to_blocker_set returned false, so unblock was already called
         VERIFY(!timeout_in_past);
         return;
     }
     // If we should have blocked but got here it must have been that the
-    // timeout was already in the past. So we need to ask the BlockCondition
+    // timeout was already in the past. So we need to ask the BlockerSet
     // to supply us the information. We cannot hold the lock as unblock
-    // could be called by the BlockCondition at any time!
+    // could be called by the BlockerSet at any time!
     VERIFY(timeout_in_past);
 
     // Just call unblock here because we will query the file description
-    // for the data and don't need any input from the FileBlockCondition.
-    // However, it's possible that if timeout_in_past is true then FileBlockCondition
+    // for the data and don't need any input from the FileBlockerSet.
+    // However, it's possible that if timeout_in_past is true then FileBlockerSet
     // may call us at any given time, so our call to unblock here may fail.
     // Either way, unblock will be called at least once, which provides
     // all the data we need.
@@ -349,7 +349,7 @@ Thread::SelectBlocker::SelectBlocker(FDVector& fds)
 
         if (!m_should_block)
             continue;
-        if (!fd_entry.description->block_condition().add_blocker(*this, &fd_entry))
+        if (!fd_entry.description->blocker_set().add_blocker(*this, &fd_entry))
             m_should_block = false;
     }
 }
@@ -357,7 +357,7 @@ Thread::SelectBlocker::SelectBlocker(FDVector& fds)
 Thread::SelectBlocker::~SelectBlocker()
 {
     for (auto& fd_entry : m_fds)
-        fd_entry.description->block_condition().remove_blocker(*this, &fd_entry);
+        fd_entry.description->blocker_set().remove_blocker(*this, &fd_entry);
 }
 
 void Thread::SelectBlocker::not_blocking(bool timeout_in_past)
@@ -434,18 +434,18 @@ void Thread::SelectBlocker::was_unblocked(bool did_timeout)
     }
 }
 
-Thread::WaitBlockCondition::ProcessBlockInfo::ProcessBlockInfo(NonnullRefPtr<Process>&& process, WaitBlocker::UnblockFlags flags, u8 signal)
+Thread::WaitBlockerSet::ProcessBlockInfo::ProcessBlockInfo(NonnullRefPtr<Process>&& process, WaitBlocker::UnblockFlags flags, u8 signal)
     : process(move(process))
     , flags(flags)
     , signal(signal)
 {
 }
 
-Thread::WaitBlockCondition::ProcessBlockInfo::~ProcessBlockInfo()
+Thread::WaitBlockerSet::ProcessBlockInfo::~ProcessBlockInfo()
 {
 }
 
-void Thread::WaitBlockCondition::try_unblock(Thread::WaitBlocker& blocker)
+void Thread::WaitBlockerSet::try_unblock(Thread::WaitBlocker& blocker)
 {
     SpinlockLocker lock(m_lock);
     // We if we have any processes pending
@@ -459,9 +459,9 @@ void Thread::WaitBlockCondition::try_unblock(Thread::WaitBlocker& blocker)
             if (blocker.is_wait()) {
                 if (info.flags == Thread::WaitBlocker::UnblockFlags::Terminated) {
                     m_processes.remove(i);
-                    dbgln_if(WAITBLOCK_DEBUG, "WaitBlockCondition[{}] terminated, remove {}", m_process, *info.process);
+                    dbgln_if(WAITBLOCK_DEBUG, "WaitBlockerSet[{}] terminated, remove {}", m_process, *info.process);
                 } else {
-                    dbgln_if(WAITBLOCK_DEBUG, "WaitBlockCondition[{}] terminated, mark as waited {}", m_process, *info.process);
+                    dbgln_if(WAITBLOCK_DEBUG, "WaitBlockerSet[{}] terminated, mark as waited {}", m_process, *info.process);
                     info.was_waited = true;
                 }
             }
@@ -470,7 +470,7 @@ void Thread::WaitBlockCondition::try_unblock(Thread::WaitBlocker& blocker)
     }
 }
 
-void Thread::WaitBlockCondition::disowned_by_waiter(Process& process)
+void Thread::WaitBlockerSet::disowned_by_waiter(Process& process)
 {
     SpinlockLocker lock(m_lock);
     if (m_finalized)
@@ -485,7 +485,7 @@ void Thread::WaitBlockCondition::disowned_by_waiter(Process& process)
                 VERIFY(did_unblock); // disowning must unblock everyone
                 return true;
             });
-            dbgln_if(WAITBLOCK_DEBUG, "WaitBlockCondition[{}] disowned {}", m_process, *info.process);
+            dbgln_if(WAITBLOCK_DEBUG, "WaitBlockerSet[{}] disowned {}", m_process, *info.process);
             m_processes.remove(i);
             continue;
         }
@@ -494,7 +494,7 @@ void Thread::WaitBlockCondition::disowned_by_waiter(Process& process)
     }
 }
 
-bool Thread::WaitBlockCondition::unblock(Process& process, WaitBlocker::UnblockFlags flags, u8 signal)
+bool Thread::WaitBlockerSet::unblock(Process& process, WaitBlocker::UnblockFlags flags, u8 signal)
 {
     VERIFY(flags != WaitBlocker::UnblockFlags::Disowned);
 
@@ -538,20 +538,20 @@ bool Thread::WaitBlockCondition::unblock(Process& process, WaitBlocker::UnblockF
                 info.flags = flags;
                 info.signal = signal;
                 info.was_waited = did_wait;
-                dbgln_if(WAITBLOCK_DEBUG, "WaitBlockCondition[{}] update {} flags={}, waited={}", m_process, process, (int)flags, info.was_waited);
+                dbgln_if(WAITBLOCK_DEBUG, "WaitBlockerSet[{}] update {} flags={}, waited={}", m_process, process, (int)flags, info.was_waited);
                 updated_existing = true;
                 break;
             }
         }
         if (!updated_existing) {
-            dbgln_if(WAITBLOCK_DEBUG, "WaitBlockCondition[{}] add {} flags: {}", m_process, process, (int)flags);
+            dbgln_if(WAITBLOCK_DEBUG, "WaitBlockerSet[{}] add {} flags: {}", m_process, process, (int)flags);
             m_processes.append(ProcessBlockInfo(process, flags, signal));
         }
     }
     return did_unblock_any;
 }
 
-bool Thread::WaitBlockCondition::should_add_blocker(Blocker& b, void*)
+bool Thread::WaitBlockerSet::should_add_blocker(Blocker& b, void*)
 {
     // NOTE: m_lock is held already!
     if (m_finalized)
@@ -571,7 +571,7 @@ bool Thread::WaitBlockCondition::should_add_blocker(Blocker& b, void*)
     return true;
 }
 
-void Thread::WaitBlockCondition::finalize()
+void Thread::WaitBlockerSet::finalize()
 {
     SpinlockLocker lock(m_lock);
     VERIFY(!m_finalized);
@@ -619,10 +619,10 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, idtype_t id_type, pid_t id, K
         VERIFY_NOT_REACHED();
     }
 
-    // NOTE: unblock may be called within set_block_condition, in which
+    // NOTE: unblock may be called within add_to_blocker_set, in which
     // case it means that we already have a match without having to block.
-    // In that case set_block_condition will return false.
-    if (m_error || !set_block_condition(Process::current().wait_block_condition()))
+    // In that case add_to_blocker_set will return false.
+    if (m_error || !add_to_blocker_set(Process::current().wait_blocker_set()))
         m_should_block = false;
 }
 
@@ -630,7 +630,7 @@ void Thread::WaitBlocker::not_blocking(bool timeout_in_past)
 {
     VERIFY(timeout_in_past || !m_should_block);
     if (!m_error)
-        Process::current().wait_block_condition().try_unblock(*this);
+        Process::current().wait_blocker_set().try_unblock(*this);
 }
 
 void Thread::WaitBlocker::was_unblocked(bool)
@@ -643,7 +643,7 @@ void Thread::WaitBlocker::was_unblocked(bool)
     }
 
     if (try_unblock)
-        Process::current().wait_block_condition().try_unblock(*this);
+        Process::current().wait_blocker_set().try_unblock(*this);
 
     // If we were interrupted by SIGCHLD (which gets special handling
     // here) we're not going to return with EINTR. But we're going to
@@ -768,7 +768,7 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
     }
 
     if (!from_add_blocker) {
-        // Only call unblock if we weren't called from within set_block_condition!
+        // Only call unblock if we weren't called from within add_to_blocker_set!
         VERIFY(flags != UnblockFlags::Disowned);
         unblock_from_blocker();
     }

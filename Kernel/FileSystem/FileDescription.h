@@ -125,7 +125,7 @@ public:
 
     KResult chown(uid_t, gid_t);
 
-    FileBlockCondition& block_condition();
+    FileBlockerSet& blocker_set();
 
     KResult apply_flock(Process const&, Userspace<flock const*>);
     KResult get_flock(Userspace<flock*>) const;
@@ -138,7 +138,7 @@ private:
 
     void evaluate_block_conditions()
     {
-        block_condition().unblock();
+        blocker_set().unblock();
     }
 
     RefPtr<Custody> m_custody;

@@ -276,7 +276,7 @@ public:
         bool m_should_block { false };
     };
 
-    class BlockCondition;
+    class BlockerSet;
 
     class Blocker {
     public:
@@ -374,16 +374,13 @@ public:
                 thread->unblock_from_blocker(*this);
         }
 
-        bool set_block_condition(BlockCondition&, void* = nullptr);
-        void set_block_condition_raw_locked(BlockCondition* block_condition)
-        {
-            m_block_condition = block_condition;
-        }
+        bool add_to_blocker_set(BlockerSet&, void* = nullptr);
+        void set_blocker_set_raw_locked(BlockerSet* blocker_set) { m_blocker_set = blocker_set; }
 
         mutable RecursiveSpinlock m_lock;
 
     private:
-        BlockCondition* m_block_condition { nullptr };
+        BlockerSet* m_blocker_set { nullptr };
         void* m_block_data { nullptr };
         Thread* m_blocked_thread { nullptr };
         u8 m_was_interrupted_by_signal { 0 };
@@ -392,14 +389,14 @@ public:
         bool m_did_timeout { false };
     };
 
-    class BlockCondition {
-        AK_MAKE_NONCOPYABLE(BlockCondition);
-        AK_MAKE_NONMOVABLE(BlockCondition);
+    class BlockerSet {
+        AK_MAKE_NONCOPYABLE(BlockerSet);
+        AK_MAKE_NONMOVABLE(BlockerSet);
 
     public:
-        BlockCondition() = default;
+        BlockerSet() = default;
 
-        virtual ~BlockCondition()
+        virtual ~BlockerSet()
         {
             SpinlockLocker lock(m_lock);
             VERIFY(m_blockers.is_empty());
@@ -738,11 +735,11 @@ public:
         bool m_should_block;
     };
 
-    class WaitBlockCondition final : public BlockCondition {
+    class WaitBlockerSet final : public BlockerSet {
         friend class WaitBlocker;
 
     public:
-        explicit WaitBlockCondition(Process& process)
+        explicit WaitBlockerSet(Process& process)
             : m_process(process)
         {
         }
@@ -1225,7 +1222,7 @@ private:
 
     friend class WaitQueue;
 
-    class JoinBlockCondition final : public BlockCondition {
+    class JoinBlockerSet final : public BlockerSet {
     public:
         void thread_did_exit(void* exit_value)
         {
@@ -1327,7 +1324,7 @@ private:
     Vector<HoldingLockInfo> m_holding_locks_list;
 #endif
 
-    JoinBlockCondition m_join_condition;
+    JoinBlockerSet m_join_condition;
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_is_active { false };
     bool m_is_joinable { true };
     bool m_handling_page_fault { false };

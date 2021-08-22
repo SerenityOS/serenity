@@ -442,14 +442,14 @@ bool Plan9FS::Blocker::is_completed() const
     return m_completion->completed;
 }
 
-bool Plan9FS::Plan9FSBlockCondition::should_add_blocker(Thread::Blocker& b, void*)
+bool Plan9FS::Plan9FSBlockerSet::should_add_blocker(Thread::Blocker& b, void*)
 {
     // NOTE: m_lock is held already!
     auto& blocker = static_cast<Blocker&>(b);
     return !blocker.is_completed();
 }
 
-void Plan9FS::Plan9FSBlockCondition::unblock_completed(u16 tag)
+void Plan9FS::Plan9FSBlockerSet::unblock_completed(u16 tag)
 {
     unblock([&](Thread::Blocker& b, void*, bool&) {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Plan9FS);
@@ -458,7 +458,7 @@ void Plan9FS::Plan9FSBlockCondition::unblock_completed(u16 tag)
     });
 }
 
-void Plan9FS::Plan9FSBlockCondition::unblock_all()
+void Plan9FS::Plan9FSBlockerSet::unblock_all()
 {
     unblock([&](Thread::Blocker& b, void*, bool&) {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Plan9FS);
@@ -467,7 +467,7 @@ void Plan9FS::Plan9FSBlockCondition::unblock_all()
     });
 }
 
-void Plan9FS::Plan9FSBlockCondition::try_unblock(Plan9FS::Blocker& blocker)
+void Plan9FS::Plan9FSBlockerSet::try_unblock(Plan9FS::Blocker& blocker)
 {
     if (m_fs.is_complete(*blocker.completion())) {
         SpinlockLocker lock(m_lock);

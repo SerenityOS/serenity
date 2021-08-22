@@ -55,11 +55,11 @@ private:
     bool m_should_block { true };
 };
 
-class ARPTableBlockCondition final : public Thread::BlockCondition {
+class ARPTableBlockerSet final : public Thread::BlockerSet {
 public:
     void unblock(const IPv4Address& ip_addr, const MACAddress& addr)
     {
-        BlockCondition::unblock([&](auto& b, void*, bool&) {
+        BlockerSet::unblock([&](auto& b, void*, bool&) {
             VERIFY(b.blocker_type() == Thread::Blocker::Type::Routing);
             auto& blocker = static_cast<ARPTableBlocker&>(b);
             return blocker.unblock(false, ip_addr, addr);
@@ -80,13 +80,13 @@ protected:
     }
 };
 
-static Singleton<ARPTableBlockCondition> s_arp_table_block_condition;
+static Singleton<ARPTableBlockerSet> s_arp_table_block_condition;
 
 ARPTableBlocker::ARPTableBlocker(IPv4Address ip_addr, Optional<MACAddress>& addr)
     : m_ip_addr(ip_addr)
     , m_addr(addr)
 {
-    if (!set_block_condition(*s_arp_table_block_condition))
+    if (!add_to_blocker_set(*s_arp_table_block_condition))
         m_should_block = false;
 }
 

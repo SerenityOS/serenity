@@ -112,9 +112,9 @@ String SlavePTY::device_name() const
     return String::formatted("{}", minor());
 }
 
-FileBlockCondition& SlavePTY::block_condition()
+FileBlockerSet& SlavePTY::blocker_set()
 {
-    return m_master->block_condition();
+    return m_master->blocker_set();
 }
 
 }
