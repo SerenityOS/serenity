@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS::Temporal {
@@ -50,8 +51,41 @@ struct DaysAndTime {
     u16 nanosecond;
 };
 
-bool is_valid_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond);
+struct TemporalTime {
+    double hour;
+    double minute;
+    double second;
+    double millisecond;
+    double microsecond;
+    double nanosecond;
+};
+
+// Table 3: Properties of a TemporalTimeLike, https://tc39.es/proposal-temporal/#table-temporal-temporaltimelike-properties
+
+template<typename StructT, typename ValueT>
+struct TemporalTimeLikeProperty {
+    ValueT StructT::*internal_slot { nullptr };
+    PropertyName property;
+};
+
+template<typename StructT, typename ValueT>
+auto temporal_time_like_properties = [](VM& vm) {
+    using PropertyT = TemporalTimeLikeProperty<StructT, ValueT>;
+    return AK::Array {
+        PropertyT { &StructT::hour, vm.names.hour },
+        PropertyT { &StructT::microsecond, vm.names.microsecond },
+        PropertyT { &StructT::millisecond, vm.names.millisecond },
+        PropertyT { &StructT::minute, vm.names.minute },
+        PropertyT { &StructT::nanosecond, vm.names.nanosecond },
+        PropertyT { &StructT::second, vm.names.second },
+    };
+};
+
+Optional<TemporalTime> regulate_time(GlobalObject&, double hour, double minute, double second, double millisecond, double microsecond, double nanosecond, StringView overflow);
+bool is_valid_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond);
 DaysAndTime balance_time(i64 hour, i64 minute, i64 second, i64 millisecond, i64 microsecond, i64 nanosecond);
+TemporalTime constrain_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond);
 PlainTime* create_temporal_time(GlobalObject&, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, FunctionObject* new_target = nullptr);
+Optional<TemporalTime> to_temporal_time_record(GlobalObject&, Object& temporal_time_like);
 
 }
