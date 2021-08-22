@@ -10,6 +10,7 @@
 *.cxxflags
 *.autosave
 Meta/Lagom/build
+Base/res/dictionaries
 Build
 Toolchain/Tarballs
 Toolchain/Build

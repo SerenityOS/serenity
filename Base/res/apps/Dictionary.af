@@ -1,0 +1,4 @@
+[App]
+Name=Dictionary
+Executable=/bin/Dictionary
+Category=Utilities
