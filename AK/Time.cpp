@@ -170,12 +170,12 @@ i64 Time::to_nanoseconds() const
 timespec Time::to_timespec() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
-    return { static_cast<i64>(m_seconds), static_cast<i32>(m_nanoseconds) };
+    return { static_cast<time_t>(m_seconds), static_cast<long>(m_nanoseconds) };
 }
 timeval Time::to_timeval() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
-    return { static_cast<i64>(m_seconds), static_cast<i32>(m_nanoseconds) / 1000 };
+    return { static_cast<time_t>(m_seconds), static_cast<suseconds_t>(m_nanoseconds) / 1000 };
 }
 
 Time Time::operator+(const Time& other) const
