@@ -8,6 +8,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
 #include <LibJS/Runtime/Temporal/PlainTimeConstructor.h>
@@ -33,8 +34,41 @@ void PlainTime::visit_edges(Visitor& visitor)
     visitor.visit(&m_calendar);
 }
 
+// 4.5.4 RegulateTime ( hour, minute, second, millisecond, microsecond, nanosecond, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulatetime
+Optional<TemporalTime> regulate_time(GlobalObject& global_object, double hour, double minute, double second, double millisecond, double microsecond, double nanosecond, StringView overflow)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: hour, minute, second, millisecond, microsecond and nanosecond are integers.
+    // NOTE: As the spec is currently written this assertion can fail, these are either integers _or_ infinity.
+    //       See https://github.com/tc39/proposal-temporal/issues/1672.
+
+    // 2. Assert: overflow is either "constrain" or "reject".
+    // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
+
+    // 3. If overflow is "constrain", then
+    if (overflow == "constrain"sv) {
+        // a. Return ! ConstrainTime(hour, minute, second, millisecond, microsecond, nanosecond).
+        return constrain_time(hour, minute, second, millisecond, microsecond, nanosecond);
+    }
+
+    // 4. If overflow is "reject", then
+    if (overflow == "reject"sv) {
+        // a. If ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
+        if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond)) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
+            return {};
+        }
+
+        // b. Return the Record { [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
+        return TemporalTime { .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = microsecond, .nanosecond = nanosecond };
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 // 4.5.5 IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidtime
-bool is_valid_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
+bool is_valid_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond)
 {
     // 1. Assert: hour, minute, second, millisecond, microsecond, and nanosecond are integers.
 
@@ -131,6 +165,33 @@ DaysAndTime balance_time(i64 hour, i64 minute, i64 second, i64 millisecond, i64 
     };
 }
 
+// 4.5.7 ConstrainTime ( hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-constraintime
+TemporalTime constrain_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond)
+{
+    // 1. Assert: hour, minute, second, millisecond, microsecond, and nanosecond are integers.
+
+    // 2. Set hour to ! ConstrainToRange(hour, 0, 23).
+    hour = constrain_to_range(hour, 0, 23);
+
+    // 3. Set minute to ! ConstrainToRange(minute, 0, 59).
+    minute = constrain_to_range(minute, 0, 59);
+
+    // 4. Set second to ! ConstrainToRange(second, 0, 59).
+    second = constrain_to_range(second, 0, 59);
+
+    // 5. Set millisecond to ! ConstrainToRange(millisecond, 0, 999).
+    millisecond = constrain_to_range(millisecond, 0, 999);
+
+    // 6. Set microsecond to ! ConstrainToRange(microsecond, 0, 999).
+    microsecond = constrain_to_range(microsecond, 0, 999);
+
+    // 7. Set nanosecond to ! ConstrainToRange(nanosecond, 0, 999).
+    nanosecond = constrain_to_range(nanosecond, 0, 999);
+
+    // 8. Return the Record { [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
+    return TemporalTime { .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = microsecond, .nanosecond = nanosecond };
+}
+
 // 4.5.8 CreateTemporalTime ( hour, minute, second, millisecond, microsecond, nanosecond [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltime
 PlainTime* create_temporal_time(GlobalObject& global_object, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, FunctionObject* new_target)
 {
@@ -162,6 +223,45 @@ PlainTime* create_temporal_time(GlobalObject& global_object, u8 hour, u8 minute,
 
     // 12. Return object.
     return object;
+}
+
+// 4.5.9 ToTemporalTimeRecord ( temporalTimeLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimerecord
+Optional<TemporalTime> to_temporal_time_record(GlobalObject& global_object, Object& temporal_time_like)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(temporalTimeLike) is Object.
+
+    // 2. Let result be the Record { [[Hour]]: undefined, [[Minute]]: undefined, [[Second]]: undefined, [[Millisecond]]: undefined, [[Microsecond]]: undefined, [[Nanosecond]]: undefined }.
+    auto result = TemporalTime {};
+
+    // 3. For each row of Table 3, except the header row, in table order, do
+    for (auto& [internal_slot, property] : temporal_time_like_properties<TemporalTime, double>(vm)) {
+        // a. Let property be the Property value of the current row.
+
+        // b. Let value be ? Get(temporalTimeLike, property).
+        auto value = temporal_time_like.get(property);
+        if (vm.exception())
+            return {};
+
+        // c. If value is undefined, then
+        if (value.is_undefined()) {
+            // i. Throw a TypeError exception.
+            vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, property);
+            return {};
+        }
+
+        // d. Set value to ? ToIntegerOrInfinity(value).
+        auto value_number = value.to_integer_or_infinity(global_object);
+        if (vm.exception())
+            return {};
+
+        // e. Set result's internal slot whose name is the Internal Slot value of the current row to value.
+        result.*internal_slot = value_number;
+    }
+
+    // 4. Return result.
+    return result;
 }
 
 }

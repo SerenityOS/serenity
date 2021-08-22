@@ -5,6 +5,7 @@
  */
 
 #include <AK/Checked.h>
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
@@ -27,6 +28,9 @@ void PlainDateTimeConstructor::initialize(GlobalObject& global_object)
 
     // 5.2.1 Temporal.PlainDateTime.prototype, https://tc39.es/proposal-temporal/#sec-temporal-plaindatetime-prototype
     define_direct_property(vm.names.prototype, global_object.temporal_plain_date_time_prototype(), 0);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.from, from, 1, attr);
 
     define_direct_property(vm.names.length, Value(3), Attribute::Configurable);
 }
@@ -108,6 +112,33 @@ Value PlainDateTimeConstructor::construct(FunctionObject& new_target)
 
     // 12. Return ? CreateTemporalDateTime(isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar, NewTarget).
     return create_temporal_date_time(global_object, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond, *calendar, &new_target);
+}
+
+// 5.2.2 Temporal.PlainDateTime.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.from
+JS_DEFINE_NATIVE_FUNCTION(PlainDateTimeConstructor::from)
+{
+    auto item = vm.argument(0);
+
+    // 1. Set options to ? GetOptionsObject(options).
+    auto* options = get_options_object(global_object, vm.argument(1));
+    if (vm.exception())
+        return {};
+
+    // 2. If Type(item) is Object and item has an [[InitializedTemporalDateTime]] internal slot, then
+    if (item.is_object() && is<PlainDateTime>(item.as_object())) {
+        auto& plain_date_time = static_cast<PlainDateTime&>(item.as_object());
+
+        // a. Perform ? ToTemporalOverflow(options).
+        (void)to_temporal_overflow(global_object, *options);
+        if (vm.exception())
+            return {};
+
+        // b. Return ? CreateTemporalDateTime(item.[[ISOYear]], item.[[ISOMonth]], item.[[ISODay]], item.[[ISOHour]], item.[[ISOMinute]], item.[[ISOSecond]], item.[[ISOMillisecond]], item.[[ISOMicrosecond]], item.[[ISONanosecond]], item.[[Calendar]]).
+        return create_temporal_date_time(global_object, plain_date_time.iso_year(), plain_date_time.iso_month(), plain_date_time.iso_day(), plain_date_time.iso_hour(), plain_date_time.iso_minute(), plain_date_time.iso_second(), plain_date_time.iso_millisecond(), plain_date_time.iso_microsecond(), plain_date_time.iso_nanosecond(), plain_date_time.calendar());
+    }
+
+    // 3. Return ? ToTemporalDateTime(item, options).
+    return to_temporal_date_time(global_object, item, options);
 }
 
 }

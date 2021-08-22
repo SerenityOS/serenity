@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 
@@ -49,6 +50,8 @@ private:
 
 BigInt* get_epoch_from_iso_parts(GlobalObject&, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond);
 bool iso_date_time_within_limits(GlobalObject&, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond);
+Optional<ISODateTime> interpret_temporal_date_time_fields(GlobalObject&, Object& calendar, Object& fields, Object& options);
+PlainDateTime* to_temporal_date_time(GlobalObject&, Value item, Object* options = nullptr);
 ISODateTime balance_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, i64 nanosecond);
 PlainDateTime* create_temporal_date_time(GlobalObject&, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object& calendar, FunctionObject* new_target = nullptr);
 
