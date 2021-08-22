@@ -392,10 +392,7 @@ public:
         return read_gs_ptr(__builtin_offsetof(Processor, m_in_critical));
     }
 
-    ALWAYS_INLINE const FPUState& clean_fpu_state() const
-    {
-        return s_clean_fpu_state;
-    }
+    ALWAYS_INLINE static FPUState const& clean_fpu_state() { return s_clean_fpu_state; }
 
     static void smp_enable();
     bool smp_process_pending_messages();

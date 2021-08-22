@@ -1231,7 +1231,7 @@ RefPtr<Thread> Thread::from_tid(ThreadID tid)
 
 void Thread::reset_fpu_state()
 {
-    memcpy(&m_fpu_state, &Processor::current().clean_fpu_state(), sizeof(FPUState));
+    memcpy(&m_fpu_state, &Processor::clean_fpu_state(), sizeof(FPUState));
 }
 
 bool Thread::should_be_stopped() const
