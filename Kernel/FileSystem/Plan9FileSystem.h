@@ -50,7 +50,7 @@ private:
 
     class Blocker;
 
-    class Plan9FSBlockCondition : public Thread::BlockCondition {
+    class Plan9FSBlockCondition final : public Thread::BlockCondition {
     public:
         Plan9FSBlockCondition(Plan9FS& fs)
             : m_fs(fs)

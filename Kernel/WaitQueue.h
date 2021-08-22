@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-class WaitQueue : public Thread::BlockCondition {
+class WaitQueue final : public Thread::BlockCondition {
 public:
     u32 wake_one();
     u32 wake_n(u32 wake_count);
