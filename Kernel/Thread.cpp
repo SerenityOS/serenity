@@ -61,7 +61,7 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
     : m_process(move(process))
     , m_kernel_stack_region(move(kernel_stack_region))
     , m_name(move(name))
-    , m_block_timer(block_timer)
+    , m_block_timer(move(block_timer))
 {
     bool is_first_thread = m_process->add_thread(*this);
     if (is_first_thread) {
@@ -142,7 +142,7 @@ Thread::~Thread()
 {
     {
         // We need to explicitly remove ourselves from the thread list
-        // here. We may get pre-empted in the middle of destructing this
+        // here. We may get preempted in the middle of destructing this
         // thread, which causes problems if the thread list is iterated.
         // Specifically, if this is the last thread of a process, checking
         // block conditions would access m_process, which would be in
@@ -252,7 +252,7 @@ u32 Thread::unblock_from_lock(Kernel::Mutex& lock)
         set_state(Thread::Runnable);
     };
     if (Processor::current().in_irq()) {
-        Processor::current().deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
+        Processor::deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
             if (auto this_thread = self.strong_ref())
                 do_unblock();
         });
@@ -273,7 +273,7 @@ void Thread::unblock_from_blocker(Blocker& blocker)
             unblock();
     };
     if (Processor::current().in_irq()) {
-        Processor::current().deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
+        Processor::deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
             if (auto this_thread = self.strong_ref())
                 do_unblock();
         });
@@ -599,12 +599,8 @@ void Thread::check_dispatch_pending_signal()
         }
     }
 
-    switch (result) {
-    case DispatchSignalResult::Yield:
+    if (result == DispatchSignalResult::Yield) {
         yield_without_releasing_big_lock();
-        break;
-    default:
-        break;
     }
 }
 
@@ -787,8 +783,9 @@ static DefaultSignalAction default_signal_action(u8 signal)
     case SIGTTIN:
     case SIGTTOU:
         return DefaultSignalAction::Stop;
+    default:
+        VERIFY_NOT_REACHED();
     }
-    VERIFY_NOT_REACHED();
 }
 
 bool Thread::should_ignore_signal(u8 signal) const
@@ -1021,7 +1018,7 @@ RegisterState& Thread::get_register_dump_from_stack()
     auto* trap = current_trap();
 
     // We should *always* have a trap. If we don't we're probably a kernel
-    // thread that hasn't been pre-empted. If we want to support this, we
+    // thread that hasn't been preempted. If we want to support this, we
     // need to capture the registers probably into m_regs and return it
     VERIFY(trap);
 
