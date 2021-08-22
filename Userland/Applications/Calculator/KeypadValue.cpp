@@ -107,7 +107,7 @@ KeypadValue::KeypadValue(double d)
     current_pow -= 1;
     while (d != 0) {
         m_value *= 10;
-        m_value += (u64)(d / AK::pow(10.0, (double)current_pow)) % 10;
+        m_value += (u64)(d / AK::pow(10.0, (double)current_pow) + 0.5) % 10;
         if (current_pow < 0)
             m_decimal_places += 1;
         current_pow -= 1;
