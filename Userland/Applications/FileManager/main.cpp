@@ -174,11 +174,6 @@ void do_paste(String const& target_directory, GUI::Window* window)
             dbgln("Cannot paste URI {}", uri_as_string);
             continue;
         }
-
-        auto new_path = String::formatted("{}/{}", target_directory, url.basename());
-        if (url.path() == new_path)
-            continue;
-
         source_paths.append(url.path());
     }
 

@@ -34,6 +34,8 @@ static int perform_delete(Vector<String> const& sources);
 static int execute_work_items(Vector<WorkItem> const& items);
 static void report_error(String message);
 static void report_warning(String message);
+static AK::Result<AK::NonnullRefPtr<Core::File>, AK::OSError> open_destination_file(String const& destination);
+static String deduplicate_destination_file_name(String const& destination);
 
 int main(int argc, char** argv)
 {
@@ -259,7 +261,8 @@ int execute_work_items(Vector<WorkItem> const& items)
                 report_warning(String::formatted("Failed to open {} for reading: {}", source, source_file_or_error.error()));
                 return false;
             }
-            auto destination_file_or_error = Core::File::open(destination, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
+            // FIXME: When the file already exists, let the user choose the next action instead of renaming it by default.
+            auto destination_file_or_error = open_destination_file(destination);
             if (destination_file_or_error.is_error()) {
                 report_warning(String::formatted("Failed to open {} for write: {}", destination, destination_file_or_error.error()));
                 return false;
@@ -292,6 +295,7 @@ int execute_work_items(Vector<WorkItem> const& items)
 
         case WorkItem::Type::CreateDirectory: {
             outln("MKDIR {}", item.destination);
+            // FIXME: Support deduplication like open_destination_file() when the directory already exists.
             if (mkdir(item.destination.characters(), 0755) < 0 && errno != EEXIST) {
                 auto original_errno = errno;
                 report_error(String::formatted("mkdir: {}", strerror(original_errno)));
@@ -364,4 +368,39 @@ int execute_work_items(Vector<WorkItem> const& items)
 
     outln("FINISH");
     return 0;
+}
+
+AK::Result<AK::NonnullRefPtr<Core::File>, AK::OSError> open_destination_file(String const& destination)
+{
+    auto destination_file_or_error = Core::File::open(destination, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate | Core::OpenMode::MustBeNew));
+    if (destination_file_or_error.is_error() && destination_file_or_error.error().error() == EEXIST) {
+        return open_destination_file(deduplicate_destination_file_name(destination));
+    }
+    return destination_file_or_error;
+}
+
+String deduplicate_destination_file_name(String const& destination)
+{
+    LexicalPath destination_path(destination);
+    auto title_without_counter = destination_path.title();
+    size_t next_counter = 1;
+
+    auto last_hyphen_index = title_without_counter.find_last('-');
+    if (last_hyphen_index.has_value()) {
+        auto counter_string = title_without_counter.substring_view(*last_hyphen_index + 1);
+        auto last_counter = counter_string.to_uint();
+        if (last_counter.has_value()) {
+            next_counter = *last_counter + 1;
+            title_without_counter = title_without_counter.substring_view(0, *last_hyphen_index);
+        }
+    }
+
+    StringBuilder basename;
+    basename.appendff("{}-{}", title_without_counter, next_counter);
+    if (!destination_path.extension().is_empty()) {
+        basename.append(".");
+        basename.append(destination_path.extension());
+    }
+
+    return LexicalPath::join(destination_path.dirname(), basename.to_string()).string();
 }
