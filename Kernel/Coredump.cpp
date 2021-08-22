@@ -9,7 +9,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/JsonObjectSerializer.h>
-#include <Kernel/CoreDump.h>
+#include <Kernel/Coredump.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -19,41 +19,41 @@
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
 #include <LibC/elf.h>
-#include <LibELF/CoreDump.h>
+#include <LibELF/Core.h>
 
 namespace Kernel {
 
-OwnPtr<CoreDump> CoreDump::create(NonnullRefPtr<Process> process, const String& output_path)
+OwnPtr<Coredump> Coredump::create(NonnullRefPtr<Process> process, const String& output_path)
 {
     if (!process->is_dumpable()) {
-        dbgln("Refusing to generate CoreDump for non-dumpable process {}", process->pid().value());
+        dbgln("Refusing to generate coredump for non-dumpable process {}", process->pid().value());
         return {};
     }
 
     auto fd = create_target_file(process, output_path);
     if (!fd)
         return {};
-    return adopt_own_if_nonnull(new (nothrow) CoreDump(move(process), fd.release_nonnull()));
+    return adopt_own_if_nonnull(new (nothrow) Coredump(move(process), fd.release_nonnull()));
 }
 
-CoreDump::CoreDump(NonnullRefPtr<Process> process, NonnullRefPtr<FileDescription>&& fd)
+Coredump::Coredump(NonnullRefPtr<Process> process, NonnullRefPtr<FileDescription>&& fd)
     : m_process(move(process))
     , m_fd(move(fd))
     , m_num_program_headers(m_process->address_space().region_count() + 1) // +1 for NOTE segment
 {
 }
 
-RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, const String& output_path)
+RefPtr<FileDescription> Coredump::create_target_file(const Process& process, const String& output_path)
 {
     auto output_directory = KLexicalPath::dirname(output_path);
     auto dump_directory = VirtualFileSystem::the().open_directory(output_directory, VirtualFileSystem::the().root_custody());
     if (dump_directory.is_error()) {
-        dbgln("Can't find directory '{}' for core dump", output_directory);
+        dbgln("Can't find directory '{}' for coredump", output_directory);
         return nullptr;
     }
     auto dump_directory_metadata = dump_directory.value()->inode().metadata();
     if (dump_directory_metadata.uid != 0 || dump_directory_metadata.gid != 0 || dump_directory_metadata.mode != 040777) {
-        dbgln("Refusing to put core dump in sketchy directory '{}'", output_directory);
+        dbgln("Refusing to put coredump in sketchy directory '{}'", output_directory);
         return nullptr;
     }
     auto fd_or_error = VirtualFileSystem::the().open(
@@ -64,14 +64,14 @@ RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, con
         UidAndGid { process.uid(), process.gid() });
 
     if (fd_or_error.is_error()) {
-        dbgln("Failed to open core dump '{}' for writing", output_path);
+        dbgln("Failed to open coredump '{}' for writing", output_path);
         return nullptr;
     }
 
     return fd_or_error.value();
 }
 
-KResult CoreDump::write_elf_header()
+KResult Coredump::write_elf_header()
 {
     ElfW(Ehdr) elf_file_header;
     elf_file_header.e_ident[EI_MAG0] = 0x7f;
@@ -117,7 +117,7 @@ KResult CoreDump::write_elf_header()
     return KSuccess;
 }
 
-KResult CoreDump::write_program_headers(size_t notes_size)
+KResult Coredump::write_program_headers(size_t notes_size)
 {
     size_t offset = sizeof(ElfW(Ehdr)) + m_num_program_headers * sizeof(ElfW(Phdr));
     for (auto& region : m_process->address_space().regions()) {
@@ -159,7 +159,7 @@ KResult CoreDump::write_program_headers(size_t notes_size)
     return KSuccess;
 }
 
-KResult CoreDump::write_regions()
+KResult Coredump::write_regions()
 {
     for (auto& region : m_process->address_space().regions()) {
         if (region->is_kernel())
@@ -190,7 +190,7 @@ KResult CoreDump::write_regions()
     return KSuccess;
 }
 
-KResult CoreDump::write_notes_segment(ByteBuffer& notes_segment)
+KResult Coredump::write_notes_segment(ByteBuffer& notes_segment)
 {
     auto result = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(notes_segment.data()), notes_segment.size());
     if (result.is_error())
@@ -198,7 +198,7 @@ KResult CoreDump::write_notes_segment(ByteBuffer& notes_segment)
     return KSuccess;
 }
 
-ByteBuffer CoreDump::create_notes_process_data() const
+ByteBuffer Coredump::create_notes_process_data() const
 {
     ByteBuffer process_data;
 
@@ -232,7 +232,7 @@ ByteBuffer CoreDump::create_notes_process_data() const
     return process_data;
 }
 
-ByteBuffer CoreDump::create_notes_threads_data() const
+ByteBuffer Coredump::create_notes_threads_data() const
 {
     ByteBuffer threads_data;
 
@@ -253,7 +253,7 @@ ByteBuffer CoreDump::create_notes_threads_data() const
     return threads_data;
 }
 
-ByteBuffer CoreDump::create_notes_regions_data() const
+ByteBuffer Coredump::create_notes_regions_data() const
 {
     ByteBuffer regions_data;
     size_t region_index = 0;
@@ -282,7 +282,7 @@ ByteBuffer CoreDump::create_notes_regions_data() const
     return regions_data;
 }
 
-ByteBuffer CoreDump::create_notes_metadata_data() const
+ByteBuffer Coredump::create_notes_metadata_data() const
 {
     ByteBuffer metadata_data;
 
@@ -303,7 +303,7 @@ ByteBuffer CoreDump::create_notes_metadata_data() const
     return metadata_data;
 }
 
-ByteBuffer CoreDump::create_notes_segment_data() const
+ByteBuffer Coredump::create_notes_segment_data() const
 {
     ByteBuffer notes_buffer;
 
@@ -319,7 +319,7 @@ ByteBuffer CoreDump::create_notes_segment_data() const
     return notes_buffer;
 }
 
-KResult CoreDump::write()
+KResult Coredump::write()
 {
     SpinlockLocker lock(m_process->address_space().get_lock());
     ProcessPagingScope scope(m_process);

@@ -11,11 +11,11 @@
 #include <Applications/CrashReporter/CrashReporterWindowGML.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCoreDump/Backtrace.h>
-#include <LibCoreDump/Reader.h>
+#include <LibCoredump/Backtrace.h>
+#include <LibCoredump/Reader.h>
 #include <LibDesktop/AppFile.h>
 #include <LibDesktop/Launcher.h>
-#include <LibELF/CoreDump.h>
+#include <LibELF/Core.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -36,9 +36,9 @@ struct TitleAndText {
     String text;
 };
 
-static TitleAndText build_backtrace(const CoreDump::Reader& coredump, const ELF::Core::ThreadInfo& thread_info, size_t thread_index)
+static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core::ThreadInfo const& thread_info, size_t thread_index)
 {
-    CoreDump::Backtrace backtrace(coredump, thread_info);
+    Coredump::Backtrace backtrace(coredump, thread_info);
     auto metadata = coredump.metadata();
 
     StringBuilder builder;
@@ -129,7 +129,7 @@ int main(int argc, char** argv)
     u8 termination_signal { 0 };
 
     {
-        auto coredump = CoreDump::Reader::create(coredump_path);
+        auto coredump = Coredump::Reader::create(coredump_path);
         if (!coredump) {
             warnln("Could not open coredump '{}'", coredump_path);
             return 1;

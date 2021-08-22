@@ -7,11 +7,11 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibCompress/Gzip.h>
-#include <LibCoreDump/Reader.h>
+#include <LibCoredump/Reader.h>
 #include <signal_numbers.h>
 #include <string.h>
 
-namespace CoreDump {
+namespace Coredump {
 
 OwnPtr<Reader> Reader::create(const String& path)
 {
@@ -40,10 +40,10 @@ Reader::Reader(ReadonlyBytes coredump_bytes)
 ByteBuffer Reader::decompress_coredump(const ReadonlyBytes& raw_coredump)
 {
     if (!Compress::GzipDecompressor::is_likely_compressed(raw_coredump))
-        return ByteBuffer::copy(raw_coredump); // handle old format core dumps (uncompressed)
+        return ByteBuffer::copy(raw_coredump); // handle old format coredumps (uncompressed)
     auto decompressed_coredump = Compress::GzipDecompressor::decompress_all(raw_coredump);
     if (!decompressed_coredump.has_value())
-        return ByteBuffer::copy(raw_coredump); // if we didn't manage to decompress it, try and parse it as decompressed core dump
+        return ByteBuffer::copy(raw_coredump); // if we didn't manage to decompress it, try and parse it as decompressed coredump
     return decompressed_coredump.value();
 }
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace CoreDump {
+namespace Coredump {
 
 class Backtrace;
 class Reader;

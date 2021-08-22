@@ -11,7 +11,7 @@
 #include <AK/Types.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
-#include <Kernel/CoreDump.h>
+#include <Kernel/Coredump.h>
 #include <Kernel/Debug.h>
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
 #    include <Kernel/Devices/KCOVDevice.h>
@@ -406,7 +406,7 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
         ProtectedDataMutationScope scope { *this };
         m_protected_values.termination_signal = signal;
     }
-    set_dump_core(!out_of_memory);
+    set_should_generate_coredump(!out_of_memory);
     address_space().dump_regions();
     VERIFY(is_user_process());
     die();
@@ -561,10 +561,10 @@ KResultOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Syscall::St
 bool Process::dump_core()
 {
     VERIFY(is_dumpable());
-    VERIFY(should_core_dump());
+    VERIFY(should_generate_coredump());
     dbgln("Generating coredump for pid: {}", pid().value());
     auto coredump_path = String::formatted("/tmp/coredump/{}_{}_{}", name(), pid().value(), kgettimeofday().to_truncated_seconds());
-    auto coredump = CoreDump::create(*this, coredump_path);
+    auto coredump = Coredump::create(*this, coredump_path);
     if (!coredump)
         return false;
     return !coredump->write().is_error();
@@ -615,7 +615,7 @@ void Process::finalize()
     dbgln_if(PROCESS_DEBUG, "Finalizing process {}", *this);
 
     if (is_dumpable()) {
-        if (m_should_dump_core)
+        if (m_should_generate_coredump)
             dump_core();
         if (m_perf_event_buffer) {
             dump_perfcore();

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/CoreDump.h>
+#include <Kernel/Coredump.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>

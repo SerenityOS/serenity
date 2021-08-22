@@ -10,10 +10,10 @@
 #include <AK/MappedFile.h>
 #include <AK/Noncopyable.h>
 #include <AK/OwnPtr.h>
-#include <LibELF/CoreDump.h>
+#include <LibELF/Core.h>
 #include <LibELF/Image.h>
 
-namespace CoreDump {
+namespace Coredump {
 
 class Reader {
     AK_MAKE_NONCOPYABLE(Reader);
