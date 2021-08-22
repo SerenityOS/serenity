@@ -27,13 +27,13 @@ public:
     template<class... Args>
     Thread::BlockResult wait_on(const Thread::BlockTimeout& timeout, Args&&... args)
     {
-        return Thread::current()->block<Thread::QueueBlocker>(timeout, *this, forward<Args>(args)...);
+        return Thread::current()->block<Thread::WaitQueueBlocker>(timeout, *this, forward<Args>(args)...);
     }
 
     template<class... Args>
     void wait_forever(Args&&... args)
     {
-        (void)Thread::current()->block<Thread::QueueBlocker>({}, *this, forward<Args>(args)...);
+        (void)Thread::current()->block<Thread::WaitQueueBlocker>({}, *this, forward<Args>(args)...);
     }
 
 protected:
