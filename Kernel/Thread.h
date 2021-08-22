@@ -427,30 +427,30 @@ public:
         }
 
     protected:
-        template<typename UnblockOne>
-        bool unblock(UnblockOne unblock_one)
+        template<typename Callback>
+        bool unblock_all_blockers_whose_conditions_are_met(Callback try_to_unblock_one)
         {
             SpinlockLocker lock(m_lock);
-            return do_unblock(unblock_one);
+            return unblock_all_blockers_whose_conditions_are_met_locked(try_to_unblock_one);
         }
 
-        template<typename UnblockOne>
-        bool do_unblock(UnblockOne unblock_one)
+        template<typename Callback>
+        bool unblock_all_blockers_whose_conditions_are_met_locked(Callback try_to_unblock_one)
         {
             VERIFY(m_lock.is_locked());
             bool stop_iterating = false;
-            bool did_unblock = false;
+            bool did_unblock_any = false;
             for (size_t i = 0; i < m_blockers.size() && !stop_iterating;) {
                 auto& info = m_blockers[i];
-                if (unblock_one(*info.blocker, info.data, stop_iterating)) {
+                if (bool did_unblock = try_to_unblock_one(*info.blocker, info.data, stop_iterating)) {
                     m_blockers.remove(i);
-                    did_unblock = true;
+                    did_unblock_any = true;
                     continue;
                 }
 
                 i++;
             }
-            return did_unblock;
+            return did_unblock_any;
         }
 
         bool is_empty_locked() const
@@ -1267,7 +1267,7 @@ private:
     private:
         void do_unblock_joiner()
         {
-            do_unblock([&](Blocker& b, void*, bool&) {
+            unblock_all_blockers_whose_conditions_are_met_locked([&](Blocker& b, void*, bool&) {
                 VERIFY(b.blocker_type() == Blocker::Type::Join);
                 auto& blocker = static_cast<JoinBlocker&>(b);
                 return blocker.unblock(exit_value(), false);

@@ -138,7 +138,7 @@ private:
 
     void evaluate_block_conditions()
     {
-        blocker_set().unblock();
+        blocker_set().unblock_all_blockers_whose_conditions_are_met();
     }
 
     RefPtr<Custody> m_custody;

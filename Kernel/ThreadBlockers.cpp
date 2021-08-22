@@ -478,7 +478,7 @@ void Thread::WaitBlockerSet::disowned_by_waiter(Process& process)
     for (size_t i = 0; i < m_processes.size();) {
         auto& info = m_processes[i];
         if (info.process == &process) {
-            do_unblock([&](Blocker& b, void*, bool&) {
+            unblock_all_blockers_whose_conditions_are_met_locked([&](Blocker& b, void*, bool&) {
                 VERIFY(b.blocker_type() == Blocker::Type::Wait);
                 auto& blocker = static_cast<WaitBlocker&>(b);
                 bool did_unblock = blocker.unblock(info.process, WaitBlocker::UnblockFlags::Disowned, 0, false);
@@ -515,7 +515,7 @@ bool Thread::WaitBlockerSet::unblock(Process& process, WaitBlocker::UnblockFlags
         }
     }
 
-    do_unblock([&](Blocker& b, void*, bool&) {
+    unblock_all_blockers_whose_conditions_are_met_locked([&](Blocker& b, void*, bool&) {
         VERIFY(b.blocker_type() == Blocker::Type::Wait);
         auto& blocker = static_cast<WaitBlocker&>(b);
         if (was_waited_already && blocker.is_wait())
