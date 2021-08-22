@@ -55,7 +55,7 @@ private:
     bool m_should_block { true };
 };
 
-class ARPTableBlockCondition : public Thread::BlockCondition {
+class ARPTableBlockCondition final : public Thread::BlockCondition {
 public:
     void unblock(const IPv4Address& ip_addr, const MACAddress& addr)
     {

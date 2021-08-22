@@ -1225,7 +1225,7 @@ private:
 
     friend class WaitQueue;
 
-    class JoinBlockCondition : public BlockCondition {
+    class JoinBlockCondition final : public BlockCondition {
     public:
         void thread_did_exit(void* exit_value)
         {

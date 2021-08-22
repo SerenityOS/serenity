@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-class FutexQueue
+class FutexQueue final
     : public RefCounted<FutexQueue>
     , public Thread::BlockCondition {
 public:

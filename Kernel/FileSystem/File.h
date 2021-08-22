@@ -21,7 +21,7 @@ namespace Kernel {
 
 class File;
 
-class FileBlockCondition : public Thread::BlockCondition {
+class FileBlockCondition final : public Thread::BlockCondition {
 public:
     FileBlockCondition() { }
 
