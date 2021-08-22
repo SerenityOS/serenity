@@ -184,7 +184,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     register_new(*process);
     error = 0;
 
-    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockCondition::finalize().
+    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
     (void)process.leak_ref();
 
     return process;
@@ -656,7 +656,7 @@ void Process::finalize()
     m_space->remove_all_regions({});
 
     VERIFY(ref_count() > 0);
-    // WaitBlockCondition::finalize will be in charge of dropping the last
+    // WaitBlockerSet::finalize will be in charge of dropping the last
     // reference if there are still waiters around, or whenever the last
     // waitable states are consumed. Unless there is no parent around
     // anymore, in which case we'll just drop it right away.

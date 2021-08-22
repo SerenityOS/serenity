@@ -126,7 +126,7 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     auto child_pid = child->pid().value();
 
-    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockCondition::finalize().
+    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
     (void)child.leak_ref();
 
     return child_pid;

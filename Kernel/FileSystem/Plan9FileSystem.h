@@ -50,9 +50,9 @@ private:
 
     class Blocker;
 
-    class Plan9FSBlockCondition final : public Thread::BlockCondition {
+    class Plan9FSBlockerSet final : public Thread::BlockerSet {
     public:
-        Plan9FSBlockCondition(Plan9FS& fs)
+        Plan9FSBlockerSet(Plan9FS& fs)
             : m_fs(fs)
         {
         }
@@ -87,7 +87,7 @@ private:
             , m_message(message)
             , m_completion(move(completion))
         {
-            set_block_condition(fs.m_completion_blocker);
+            add_to_blocker_set(fs.m_completion_blocker);
         }
         virtual StringView state_string() const override { return "Waiting"sv; }
         virtual Type blocker_type() const override { return Type::Plan9FS; }
@@ -136,7 +136,7 @@ private:
     size_t m_max_message_size { 4 * KiB };
 
     Mutex m_send_lock { "Plan9FS send" };
-    Plan9FSBlockCondition m_completion_blocker;
+    Plan9FSBlockerSet m_completion_blocker;
     HashMap<u16, NonnullRefPtr<ReceiveCompletion>> m_completions;
 
     Spinlock<u8> m_thread_lock;

@@ -443,9 +443,9 @@ KResult FileDescription::chown(uid_t uid, gid_t gid)
     return m_file->chown(*this, uid, gid);
 }
 
-FileBlockCondition& FileDescription::block_condition()
+FileBlockerSet& FileDescription::blocker_set()
 {
-    return m_file->block_condition();
+    return m_file->blocker_set();
 }
 
 KResult FileDescription::apply_flock(Process const& process, Userspace<flock const*> lock)
