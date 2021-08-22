@@ -18,12 +18,6 @@ public:
     u32 wake_n(u32 wake_count);
     u32 wake_all();
 
-    void should_block(bool block)
-    {
-        SpinlockLocker lock(m_lock);
-        m_should_block = block;
-    }
-
     template<class... Args>
     Thread::BlockResult wait_on(const Thread::BlockTimeout& timeout, Args&&... args)
     {
@@ -41,7 +35,6 @@ protected:
 
 private:
     bool m_wake_requested { false };
-    bool m_should_block { true };
 };
 
 }
