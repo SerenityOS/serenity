@@ -40,6 +40,9 @@ Usage: $NAME COMMAND [TARGET] [ARGS...]
                     attempt to find the BINARY_FILE in the appropriate build directory
     rebuild-toolchain: Deletes and re-builds the TARGET's toolchain
     rebuild-world:     Deletes and re-builds the toolchain and build environment for TARGET.
+    copy-src:   Same as image, but also copies the project's source tree to ~/Source/serenity
+                in the built disk image.
+
 
   Examples:
     $NAME run i686 smp=on
@@ -239,7 +242,7 @@ run_gdb() {
     fi
 }
 
-if [[ "$CMD" =~ ^(build|install|image|run|gdb|test|rebuild|recreate|kaddr2line|addr2line|setup-and-run)$ ]]; then
+if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kaddr2line|addr2line|setup-and-run)$ ]]; then
     cmd_with_target
     [[ "$CMD" != "recreate" && "$CMD" != "rebuild" ]] || delete_target
     [ "$TARGET" = "lagom" ] || ensure_toolchain
@@ -259,6 +262,13 @@ if [[ "$CMD" =~ ^(build|install|image|run|gdb|test|rebuild|recreate|kaddr2line|a
             build_target install
             build_target image
             ;;
+        copy-src)
+          lagom_unsupported
+          build_target
+          build_target install
+          export SERENITY_COPY_SOURCE=1
+          build_target image
+          ;;
         run)
             if [ "$TARGET" = "lagom" ]; then
                 build_target "${CMD_ARGS[0]}"
