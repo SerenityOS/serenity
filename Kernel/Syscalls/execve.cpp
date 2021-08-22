@@ -707,7 +707,7 @@ static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, 
     auxv.append({ ELF::AuxiliaryValue::Gid, (long)gid });
     auxv.append({ ELF::AuxiliaryValue::EGid, (long)egid });
 
-    auxv.append({ ELF::AuxiliaryValue::Platform, Processor::current().platform_string() });
+    auxv.append({ ELF::AuxiliaryValue::Platform, Processor::platform_string() });
     // FIXME: This is platform specific
     auxv.append({ ELF::AuxiliaryValue::HwCap, (long)CPUID(1).edx() });
 

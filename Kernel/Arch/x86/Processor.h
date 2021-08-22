@@ -424,7 +424,7 @@ public:
     FlatPtr init_context(Thread& thread, bool leave_crit);
     static Vector<FlatPtr> capture_stack_trace(Thread& thread, size_t max_frames = 0);
 
-    String platform_string() const;
+    static StringView platform_string();
 };
 
 template<typename T>

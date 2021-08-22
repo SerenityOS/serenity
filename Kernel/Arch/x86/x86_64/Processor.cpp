@@ -53,9 +53,9 @@ NAKED void do_assume_context(Thread*, u32)
     // clang-format on
 }
 
-String Processor::platform_string() const
+StringView Processor::platform_string()
 {
-    return "x86_64";
+    return "x86_64"sv;
 }
 
 // FIXME: For the most part this is a copy of the i386-specific function, get rid of the code duplication
