@@ -166,11 +166,4 @@ bool FutexQueue::try_remove()
     return true;
 }
 
-void FutexQueue::did_remove()
-{
-    SpinlockLocker lock(m_lock);
-    VERIFY(m_was_removed);
-    VERIFY(is_empty_and_no_imminent_waits_locked());
-}
-
 }

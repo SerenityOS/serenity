@@ -79,7 +79,6 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
     auto remove_futex_queue = [&](FlatPtr user_address) {
         if (auto it = m_futex_queues.find(user_address); it != m_futex_queues.end()) {
             if (it->value->try_remove()) {
-                it->value->did_remove();
                 m_futex_queues.remove(it);
             }
         }
