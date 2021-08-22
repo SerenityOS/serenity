@@ -252,16 +252,15 @@ bool Scheduler::pick_next()
 bool Scheduler::yield()
 {
     InterruptDisabler disabler;
-    auto& proc = Processor::current();
 
     auto current_thread = Thread::current();
-    dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: yielding thread {} in_irq={}", proc.get_id(), *current_thread, proc.in_irq());
+    dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: yielding thread {} in_irq={}", Processor::id(), *current_thread, Processor::current_in_irq());
     VERIFY(current_thread != nullptr);
-    if (proc.in_irq() || Processor::in_critical()) {
+    if (Processor::current_in_irq() || Processor::in_critical()) {
         // If we're handling an IRQ we can't switch context, or we're in
         // a critical section where we don't want to switch contexts, then
         // delay until exiting the trap or critical section
-        proc.invoke_scheduler_async();
+        Processor::current().invoke_scheduler_async();
         return false;
     }
 
@@ -269,7 +268,7 @@ bool Scheduler::yield()
         return false;
 
     if constexpr (SCHEDULER_DEBUG)
-        dbgln("Scheduler[{}]: yield returns to thread {} in_irq={}", Processor::id(), *current_thread, Processor::current().in_irq());
+        dbgln("Scheduler[{}]: yield returns to thread {} in_irq={}", Processor::id(), *current_thread, Processor::current_in_irq());
     return true;
 }
 
@@ -462,7 +461,7 @@ void Scheduler::add_time_scheduled(u64 time_to_add, bool is_kernel)
 void Scheduler::timer_tick(const RegisterState& regs)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(Processor::current().in_irq());
+    VERIFY(Processor::current_in_irq());
 
     auto current_thread = Processor::current_thread();
     if (!current_thread)
@@ -506,15 +505,14 @@ void Scheduler::timer_tick(const RegisterState& regs)
     }
 
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(Processor::current().in_irq());
+    VERIFY(Processor::current_in_irq());
     Processor::current().invoke_scheduler_async();
 }
 
 void Scheduler::invoke_async()
 {
     VERIFY_INTERRUPTS_DISABLED();
-    auto& processor = Processor::current();
-    VERIFY(!processor.in_irq());
+    VERIFY(!Processor::current_in_irq());
 
     // Since this function is called when leaving critical sections (such
     // as a Spinlock), we need to check if we're not already doing this

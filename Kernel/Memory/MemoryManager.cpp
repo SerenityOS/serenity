@@ -685,9 +685,9 @@ Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
 PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    if (Processor::current().in_irq()) {
+    if (Processor::current_in_irq()) {
         dbgln("CPU[{}] BUG! Page fault while handling IRQ! code={}, vaddr={}, irq level: {}",
-            Processor::id(), fault.code(), fault.vaddr(), Processor::current().in_irq());
+            Processor::id(), fault.code(), fault.vaddr(), Processor::current_in_irq());
         dump_kernel_regions();
         return PageFaultResponse::ShouldCrash;
     }

@@ -120,7 +120,7 @@ class Processor {
     u32 m_gdt_length;
 
     u32 m_cpu;
-    u32 m_in_irq;
+    FlatPtr m_in_irq {};
     volatile u32 m_in_critical {};
     static Atomic<u32> s_idle_cpu_mask;
 
@@ -329,9 +329,9 @@ public:
         return Processor::id() == 0;
     }
 
-    ALWAYS_INLINE u32& in_irq()
+    ALWAYS_INLINE static FlatPtr current_in_irq()
     {
-        return m_in_irq;
+        return read_gs_ptr(__builtin_offsetof(Processor, m_in_irq));
     }
 
     ALWAYS_INLINE static void restore_in_critical(u32 critical)

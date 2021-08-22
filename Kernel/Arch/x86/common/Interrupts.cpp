@@ -288,7 +288,7 @@ void page_fault_handler(TrapFrame* trap)
 
     bool faulted_in_kernel = !(regs.cs & 3);
 
-    if (faulted_in_kernel && Processor::current().in_irq()) {
+    if (faulted_in_kernel && Processor::current_in_irq()) {
         // If we're faulting in an IRQ handler, first check if we failed
         // due to safe_memcpy, safe_strnlen, or safe_memset. If we did,
         // gracefully continue immediately. Because we're in an IRQ handler
