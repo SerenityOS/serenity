@@ -102,6 +102,16 @@ UNMAP_AFTER_INIT void BIOSSysFSDirectory::initialize()
 
 void BIOSSysFSDirectory::create_components()
 {
+    if (m_dmi_entry_point.is_null() || m_smbios_structure_table.is_null())
+        return;
+    if (m_dmi_entry_point_length == 0) {
+        dbgln("BIOSSysFSDirectory: invalid dmi entry length");
+        return;
+    }
+    if (m_smbios_structure_table_length == 0) {
+        dbgln("BIOSSysFSDirectory: invalid smbios structure table length");
+        return;
+    }
     auto dmi_entry_point = DMIEntryPointExposedBlob::create(m_dmi_entry_point, m_dmi_entry_point_length);
     m_components.append(dmi_entry_point);
     auto smbios_table = SMBIOSExposedTable::create(m_smbios_structure_table, m_smbios_structure_table_length);
@@ -138,7 +148,9 @@ UNMAP_AFTER_INIT BIOSSysFSDirectory::BIOSSysFSDirectory()
     : SysFSDirectory("bios", SysFSComponentRegistry::the().root_directory())
 {
     auto entry_32bit = find_dmi_entry32bit_point();
-    m_dmi_entry_point = entry_32bit.value();
+    if (entry_32bit.has_value()) {
+        m_dmi_entry_point = entry_32bit.value();
+    }
 
     auto entry_64bit = find_dmi_entry64bit_point();
     if (entry_64bit.has_value()) {
