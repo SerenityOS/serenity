@@ -640,6 +640,7 @@ RefPtr<Document> Node::owner_document() const
 void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) const
 {
     object.add("name", node_name().view());
+    object.add("id", id());
     if (is_document()) {
         object.add("type", "document");
     } else if (is_element()) {
