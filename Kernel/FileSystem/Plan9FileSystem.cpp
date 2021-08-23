@@ -425,7 +425,7 @@ bool Plan9FS::Blocker::unblock(u16 tag)
     return unblock();
 }
 
-void Plan9FS::Blocker::not_blocking(bool)
+void Plan9FS::Blocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
 {
     {
         SpinlockLocker lock(m_lock);

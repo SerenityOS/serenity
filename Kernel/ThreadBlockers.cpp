@@ -87,18 +87,17 @@ Thread::JoinBlocker::JoinBlocker(Thread& joinee, KResult& try_join_result, void*
     }
 }
 
-void Thread::JoinBlocker::not_blocking(bool timeout_in_past)
+void Thread::JoinBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
 {
     if (!m_should_block) {
-        // add_to_blocker_set returned false, so unblock was already called
-        VERIFY(!timeout_in_past);
+        VERIFY(reason == UnblockImmediatelyReason::UnblockConditionAlreadyMet);
         return;
     }
     // If we should have blocked but got here it must have been that the
     // timeout was already in the past. So we need to ask the BlockerSet
     // to supply us the information. We cannot hold the lock as unblock
     // could be called by the BlockerSet at any time!
-    VERIFY(timeout_in_past);
+    VERIFY(reason == UnblockImmediatelyReason::TimeoutInThePast);
     m_joinee->m_join_blocker_set.try_unblock(*this);
 }
 
@@ -217,18 +216,17 @@ bool Thread::FileDescriptionBlocker::unblock(bool from_add_blocker, void*)
     return true;
 }
 
-void Thread::FileDescriptionBlocker::not_blocking(bool timeout_in_past)
+void Thread::FileDescriptionBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
 {
     if (!m_should_block) {
-        // add_to_blocker_set returned false, so unblock was already called
-        VERIFY(!timeout_in_past);
+        VERIFY(reason == UnblockImmediatelyReason::UnblockConditionAlreadyMet);
         return;
     }
     // If we should have blocked but got here it must have been that the
     // timeout was already in the past. So we need to ask the BlockerSet
     // to supply us the information. We cannot hold the lock as unblock
     // could be called by the BlockerSet at any time!
-    VERIFY(timeout_in_past);
+    VERIFY(reason == UnblockImmediatelyReason::TimeoutInThePast);
 
     // Just call unblock here because we will query the file description
     // for the data and don't need any input from the FileBlockerSet.
@@ -307,11 +305,11 @@ auto Thread::SleepBlocker::override_timeout(const BlockTimeout& timeout) -> cons
     return m_deadline;
 }
 
-void Thread::SleepBlocker::not_blocking(bool timeout_in_past)
+void Thread::SleepBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
 {
     // SleepBlocker::should_block should always return true, so timeout
     // in the past is the only valid case when this function is called
-    VERIFY(timeout_in_past);
+    VERIFY(reason == UnblockImmediatelyReason::TimeoutInThePast);
     calculate_remaining();
 }
 
@@ -360,14 +358,14 @@ Thread::SelectBlocker::~SelectBlocker()
         fd_entry.description->blocker_set().remove_blocker(*this, &fd_entry);
 }
 
-void Thread::SelectBlocker::not_blocking(bool timeout_in_past)
+void Thread::SelectBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
 {
     // Either the timeout was in the past or we didn't add all blockers
-    VERIFY(timeout_in_past || !m_should_block);
+    VERIFY(reason == UnblockImmediatelyReason::TimeoutInThePast || !m_should_block);
     SpinlockLocker lock(m_lock);
     if (!m_should_block || !m_did_unblock) {
         m_did_unblock = true;
-        if (!timeout_in_past) {
+        if (reason == UnblockImmediatelyReason::UnblockConditionAlreadyMet) {
             auto count = collect_unblocked_flags();
             VERIFY(count > 0);
         }
@@ -626,9 +624,9 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, idtype_t id_type, pid_t id, K
         m_should_block = false;
 }
 
-void Thread::WaitBlocker::not_blocking(bool timeout_in_past)
+void Thread::WaitBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
 {
-    VERIFY(timeout_in_past || !m_should_block);
+    VERIFY(reason == UnblockImmediatelyReason::TimeoutInThePast || !m_should_block);
     if (!m_error)
         Process::current().wait_blocker_set().try_unblock(*this);
 }

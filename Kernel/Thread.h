@@ -300,7 +300,14 @@ public:
         virtual Type blocker_type() const = 0;
         virtual const BlockTimeout& override_timeout(const BlockTimeout& timeout) { return timeout; }
         virtual bool can_be_interrupted() const { return true; }
-        virtual void not_blocking(bool) = 0;
+
+        enum class UnblockImmediatelyReason {
+            UnblockConditionAlreadyMet,
+            TimeoutInThePast,
+        };
+
+        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) = 0;
+
         virtual void was_unblocked(bool did_timeout)
         {
             if (did_timeout) {
@@ -515,7 +522,7 @@ public:
         virtual StringView state_string() const override { return "Joining"sv; }
         virtual bool can_be_interrupted() const override { return false; }
         virtual bool should_block() override { return !m_join_error && m_should_block; }
-        virtual void not_blocking(bool) override;
+        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
 
         bool unblock(void*, bool);
 
@@ -534,7 +541,7 @@ public:
 
         virtual Type blocker_type() const override { return Type::Queue; }
         virtual StringView state_string() const override { return m_block_reason.is_null() ? m_block_reason : "Queue"sv; }
-        virtual void not_blocking(bool) override { }
+        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override { }
 
         virtual bool should_block() override
         {
@@ -556,7 +563,7 @@ public:
 
         virtual Type blocker_type() const override { return Type::Futex; }
         virtual StringView state_string() const override { return "Futex"sv; }
-        virtual void not_blocking(bool) override { }
+        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override { }
 
         virtual bool should_block() override
         {
@@ -620,7 +627,7 @@ public:
         const FileDescription& blocked_description() const;
 
         virtual bool unblock(bool, void*) override;
-        virtual void not_blocking(bool) override;
+        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
 
     protected:
         explicit FileDescriptionBlocker(FileDescription&, BlockFlags, BlockFlags&);
@@ -670,7 +677,7 @@ public:
         virtual StringView state_string() const override { return "Sleeping"sv; }
         virtual Type blocker_type() const override { return Type::Sleep; }
         virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
-        virtual void not_blocking(bool) override;
+        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual void was_unblocked(bool) override;
         virtual Thread::BlockResult block_result() override;
 
@@ -694,7 +701,7 @@ public:
         virtual ~SelectBlocker();
 
         virtual bool unblock(bool, void*) override;
-        virtual void not_blocking(bool) override;
+        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual void was_unblocked(bool) override;
         virtual StringView state_string() const override { return "Selecting"sv; }
 
@@ -718,7 +725,7 @@ public:
         virtual StringView state_string() const override { return "Waiting"sv; }
         virtual Type blocker_type() const override { return Type::Wait; }
         virtual bool should_block() override { return m_should_block; }
-        virtual void not_blocking(bool) override;
+        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual void was_unblocked(bool) override;
 
         bool unblock(Process& process, UnblockFlags flags, u8 signal, bool from_add_blocker);
@@ -881,7 +888,7 @@ public:
             m_blocker = &blocker;
             if (!blocker.should_block()) {
                 // Don't block if the wake condition is already met
-                blocker.not_blocking(false);
+                blocker.will_unblock_immediately_without_blocking(Blocker::UnblockImmediatelyReason::UnblockConditionAlreadyMet);
                 m_blocker = nullptr;
                 m_in_block = false;
                 return BlockResult::NotBlocked;
@@ -903,7 +910,7 @@ public:
                 });
                 if (!timer_was_added) {
                     // Timeout is already in the past
-                    blocker.not_blocking(true);
+                    blocker.will_unblock_immediately_without_blocking(Blocker::UnblockImmediatelyReason::TimeoutInThePast);
                     m_blocker = nullptr;
                     m_in_block = false;
                     return BlockResult::InterruptedByTimeout;
