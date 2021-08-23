@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Arch/x86/MSR.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -115,7 +114,6 @@ static bool validate_inode_mmap_prot(const Process& process, int prot, const Ino
         // keep a Custody or something from mmap time.
         if ((prot & PROT_WRITE) && !metadata.may_write(process))
             return false;
-        InterruptDisabler disabler;
         if (auto shared_vmobject = inode.shared_vmobject()) {
             if ((prot & PROT_EXEC) && shared_vmobject->writable_mappings())
                 return false;
