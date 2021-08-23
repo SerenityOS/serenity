@@ -9,6 +9,7 @@
 #include "Shell/Formatter.h"
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
+#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -951,10 +952,7 @@ int Shell::builtin_time(int argc, const char** argv)
 
         warnln("Timing report:");
         warnln("==============");
-        warn("Command:         ");
-        for (auto& string : args)
-            warn("{} ", string);
-        warnln("");
+        warnln("Command:         {}", String::join(' ', args));
         warnln("Average time:    {} ms", average);
         warnln("Excluding first: {} ms", average_excluding_first);
     }
