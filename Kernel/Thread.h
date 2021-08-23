@@ -1371,7 +1371,7 @@ private:
     Atomic<bool> m_have_any_unmasked_pending_signals { false };
     Atomic<u32> m_nested_profiler_calls { 0 };
 
-    RefPtr<Timer> m_block_timer;
+    NonnullRefPtr<Timer> m_block_timer;
 
     bool m_is_profiling_suppressed { false };
 
