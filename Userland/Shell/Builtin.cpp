@@ -946,9 +946,7 @@ int Shell::builtin_time(int argc, const char** argv)
             total_time += static_cast<float>(time);
         float average = total_time / iteration_times.size();
 
-        float total_time_excluding_first = 0;
-        for (size_t i = 1; i < iteration_times.size(); ++i)
-            total_time_excluding_first += static_cast<float>(iteration_times[i]);
+        float total_time_excluding_first = total_time - static_cast<float>(iteration_times.first());
         float average_excluding_first = total_time_excluding_first / (iteration_times.size() - 1);
 
         warnln("Timing report:");
