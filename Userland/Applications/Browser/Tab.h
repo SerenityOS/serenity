@@ -22,6 +22,7 @@ class WebViewHooks;
 namespace Browser {
 
 class BrowserWindow;
+class InspectorWidget;
 
 class Tab final : public GUI::Widget {
     C_OBJECT(Tab);
@@ -82,7 +83,6 @@ private:
     void update_bookmark_button(const String& url);
     void start_download(const URL& url);
     void view_source(const URL& url, const String& source);
-    void view_dom_tree(const String&);
 
     History m_history;
 
@@ -90,6 +90,7 @@ private:
 
     RefPtr<GUI::UrlBox> m_location_box;
     RefPtr<GUI::Button> m_bookmark_button;
+    RefPtr<InspectorWidget> m_dom_inspector_widget;
     RefPtr<GUI::Window> m_console_window;
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::ToolbarContainer> m_toolbar_container;

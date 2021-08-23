@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Maciej Zygmanowski <sppmacd@pm.me>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -77,20 +78,6 @@ void Tab::view_source(const URL& url, const String& source)
     window->set_title(url.to_string());
     window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-text.png"));
     window->show();
-}
-
-void Tab::view_dom_tree(const String& dom_tree)
-{
-    auto window = GUI::Window::construct(&this->window());
-    window->resize(300, 500);
-    window->set_title("DOM inspector");
-    window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
-    window->set_main_widget<InspectorWidget>();
-
-    auto* inspector_widget = static_cast<InspectorWidget*>(window->main_widget());
-    inspector_widget->set_dom_json(dom_tree);
-    window->show();
-    window->move_to_front();
 }
 
 Tab::Tab(BrowserWindow& window)
@@ -290,7 +277,8 @@ Tab::Tab(BrowserWindow& window)
     };
 
     hooks().on_get_dom_tree = [this](auto& dom_tree) {
-        view_dom_tree(dom_tree);
+        if (m_dom_inspector_widget)
+            m_dom_inspector_widget->set_dom_json(dom_tree);
     };
 
     hooks().on_js_console_output = [this](auto& method, auto& line) {
@@ -479,7 +467,22 @@ BrowserWindow& Tab::window()
 
 void Tab::show_inspector_window(Browser::Tab::InspectorTarget)
 {
+    if (!m_dom_inspector_widget) {
+        auto window = GUI::Window::construct(&this->window());
+        window->resize(300, 500);
+        window->set_title("DOM inspector");
+        window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
+        window->on_close = [&]() {
+            // FIXME: Clear inspected node for OOPWV
+        };
+        m_dom_inspector_widget = window->set_main_widget<InspectorWidget>();
+    }
+
     m_web_content_view->inspect_dom_tree();
+
+    auto* window = m_dom_inspector_widget->window();
+    window->show();
+    window->move_to_front();
 }
 
 }
