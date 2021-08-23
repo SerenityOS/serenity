@@ -40,7 +40,6 @@ private:
     } __attribute__((packed));
 
     struct Sense {
-        uint8_t sensenum;
         Offset<Definition> definition_offset;
     } __attribute__((packed));
 

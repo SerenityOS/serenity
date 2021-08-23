@@ -71,7 +71,7 @@ StringView Dictionary::word_at_index(int word_index) const
 
 String Dictionary::definition_of(int word_index) const
 {
-    if (!(0 <= word_index && word_index < m_num_words)) {
+    if (word_index < 0 || word_index >= m_num_words) {
         return "";
     }
 
@@ -85,6 +85,7 @@ String Dictionary::definition_of(int word_index) const
     string_builder.append("\n\n");
 
     char last_part_of_speech = 0;
+    int sense_number = 0;
 
     int n = word_data.num_senses;
     for (int i = 0; i < n; i++) {
@@ -97,16 +98,19 @@ String Dictionary::definition_of(int word_index) const
             string_builder.append("\n\n");
 
             last_part_of_speech = definition.part_of_speech;
+            sense_number = 0;
         }
 
         if (n > 1)
-            string_builder.append(String::formatted("  {}. ", sense.sensenum));
+            string_builder.appendff("  {}. ", sense_number + 1);
 
         string_builder.append(definition.text);
         string_builder.append("\n\n");
+
+        sense_number += 1;
     }
 
-    return string_builder.string_view();
+    return string_builder.build();
 }
 
 void Dictionary::prefix_query(
@@ -128,16 +132,18 @@ void Dictionary::prefix_query(
 
     /* First, find the new first_index by padding the query with zeroes
            and finding the first entry that's >= it. */
+    int query_length = min(16, query.length());
     char query_chars[16] = {};
-    memcpy(query_chars, query.characters(), query.length());
+    memcpy(query_chars, query.to_lowercase().characters(), query_length);
 
-    for (int letter_index = 0; letter_index < 16; letter_index++) {
+    for (int letter_index = 0; letter_index < query_length; letter_index++) {
 
         char query_char = query_chars[letter_index];
 
         char const* p_item_char = &m_index[first_index][letter_index];
 
-        while (*p_item_char < query_char) {
+        /* OR with 32 to get the lowercase char */
+        while ((*p_item_char | 32) < query_char) {
             if (first_index + 1 == m_num_words)
                 break;
             first_index += 1;
@@ -145,19 +151,28 @@ void Dictionary::prefix_query(
         }
     }
 
-    char const* item_chars = (char const*)m_index[first_index];
+    char const* item_chars = m_index[first_index];
 
-    /* Now, find the new last_index by padding the query with 0xFF and
-           finding the last entry that's < it. */
-    for (char& c : query_chars)
-        if (c == 0)
-            c = 0xff;
-
+    /* Now, find the last_index by looking for the first word after first_index
+       that doesn't start with the query. */
     int last_index = first_index;
 
-    while (memcmp(item_chars, query_chars, 16) < 0) {
+    for (;;) {
+
+        bool is_prefix = true;
+        for (int i = 0; i < query_length; i++) {
+            if (query_chars[i] && query_chars[i] != (item_chars[i] | 32)) {
+                is_prefix = false;
+                break;
+            }
+        }
+
+        if (!is_prefix)
+            break;
+
         if (last_index + 1 == m_num_words)
             break;
+
         last_index += 1;
         item_chars += 16;
     }

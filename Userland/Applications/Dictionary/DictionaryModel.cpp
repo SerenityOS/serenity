@@ -51,7 +51,7 @@ void DictionaryModel::set_query(String query)
 
     if (query == "") {
         set_range(0, num_words);
-        m_query = query;
+        m_query = move(query);
         return;
     }
 

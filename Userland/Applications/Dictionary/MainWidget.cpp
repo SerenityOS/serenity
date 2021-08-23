@@ -36,8 +36,13 @@ MainWidget::MainWidget(StringView initial_query)
     m_editor->set_document(*m_document);
 
     m_list_view->on_selection_change = [this] {
-        int row = m_list_view->selection().first().row();
-        m_document->set_text(m_model->definition_of(row));
+        if (m_model->row_count() != 0) {
+            auto index = m_list_view->selection().first();
+            if (index.is_valid()) {
+                int row = index.row();
+                m_document->set_text(m_model->definition_of(row));
+            }
+        }
     };
 
     m_search->on_change = [this] {
@@ -88,6 +93,7 @@ void MainWidget::move_selection_by(int delta)
         if (0 <= new_row && new_row < n) {
             auto new_index = m_model->index(new_row, index.column());
             selection.set(new_index);
+            m_list_view->scroll_into_view(new_index, false, true);
         }
     }
 }

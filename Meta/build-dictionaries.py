@@ -120,20 +120,19 @@ with open('Base/res/dictionaries/wordnet.license', 'wt') as f:
 
 out = open('Base/res/dictionaries/wordnet.bin', 'wb')
 
-# To keep things simple, we'll throw out any words that
-# aren't entirely made of lowercase a-z letters. We'll
-# be using fixed-length records in the index, set at 16
-# lettters, so also throw out anything longer.
+# To keep things simple, we'll throw out any words that aren't
+# entirely made of A-Z letters. We'll be using fixed-length records in
+# the index, set at 16 lettters, so also throw out anything longer.
 
-simple_word_re = re.compile('^[a-z]+$')
+simple_word_re = re.compile('^[a-zA-Z]+$')
 max_word_length = 16
 
 
-def should_keep_word(lemma):
-    if not simple_word_re.match(lemma):
+def should_keep_word(word):
+    if not simple_word_re.match(word):
         return False
 
-    if len(lemma) > max_word_length:
+    if len(word) > max_word_length:
         return False
 
     return True
@@ -151,6 +150,19 @@ header_word_data_index_offset = out.tell()
 out.write(struct.pack('<I', 0))
 
 
+# Find lowercase words. Every casedword has a corresponding
+# word, but some of these are not real words (have no senses).
+lowercase_word_ids = set(
+    x[0] for x in
+    cur.execute('''
+        SELECT DISTINCT senses.wordid
+        FROM
+            senses
+        WHERE senses.casedwordid IS NULL
+    ''').fetchall()
+)
+
+
 # Write the index.
 align(out, 8)
 index_offset = out.tell()
@@ -158,22 +170,41 @@ write_at(out, header_index_offset, struct.pack('<I', index_offset))
 
 num_words = 0
 wordid_to_index = {}
-for wordid, lemma in cur.execute('''
-    SELECT words.wordid, words.lemma
+wordid_to_word = {}
+done_lowercase = set()
+for wordid, casedwordid, lemma, cased in cur.execute('''
+    SELECT words.wordid, casedwords.casedwordid, words.lemma, casedwords.cased
     FROM
-        words LEFT OUTER JOIN casedwords ON casedwords.wordid = words.wordid
-    WHERE casedwords.casedwordid IS NULL
+        words
+        LEFT JOIN casedwords ON casedwords.wordid = words.wordid
     ORDER BY words.wordid
 '''):
-    if not should_keep_word(lemma):
-        continue
+    items = []
+    if wordid in lowercase_word_ids and wordid not in done_lowercase:
+        items.append(
+            (wordid, None, lemma, None)
+        )
+        done_lowercase.add(wordid)
 
-    entry = lemma.encode('utf-8')
-    out.write(entry)
-    out.write(b'\0' * (max_word_length - len(entry)))
+    if casedwordid:
+        items.append(
+            (wordid, casedwordid, lemma, cased)
+        )
 
-    wordid_to_index[wordid] = num_words
-    num_words += 1
+    for wordid, casedwordid, lemma, cased in items:
+
+        word = cased or lemma
+
+        if not should_keep_word(word):
+            continue
+
+        entry = word.encode('utf-8')
+        out.write(entry)
+        out.write(b'\0' * (max_word_length - len(entry)))
+
+        wordid_to_index[(wordid, casedwordid)] = num_words
+        wordid_to_word[(wordid, casedwordid)] = word
+        num_words += 1
 
 assert out.tell() == index_offset + max_word_length * num_words
 
@@ -197,37 +228,34 @@ synsetid_to_reference_locations = collections.defaultdict(list)
 print("Writing word data")
 align(out, 8)
 word_data_offset = out.tell()
-for wordid, senses in itertools.groupby(
+for (wordid, casedwordid), senses in itertools.groupby(
     cur.execute('''
         select
-            words.wordid,
+            senses.wordid,
+            senses.casedwordid,
             senses.sensenum,
             senses.synsetid
         FROM
-            words
-            JOIN senses ON senses.wordid = words.wordid
+            senses
             JOIN synsets ON synsets.synsetid = senses.synsetid
-        order by words.wordid, synsets.pos, senses.sensenum
+        order by senses.wordid, senses.casedwordid, synsets.pos, senses.sensenum
     '''),
-    lambda row: row[0]
+    lambda row: (row[0], row[1])
 ):
-    word_index = wordid_to_index.get(wordid)
+
+    word_index = wordid_to_index.get((wordid, casedwordid))
     if word_index is None:
         continue
 
-    offset = out.tell()
-    out.seek(word_data_index_offset + 4 * word_index)
-    out.write(struct.pack('<I', offset))
-    out.seek(offset)
+    write_at(out, word_data_index_offset + 4 * word_index, struct.pack('<I', out.tell()))
 
-    senses = list(senses)
+    senses = list(x for x in senses if x[1] == casedwordid)
 
     # Number of senses
     out.write(struct.pack('<B', len(senses)))
 
     # Senses
-    for wordid, sensenum, synsetid in senses:
-        out.write(struct.pack('<B', sensenum))
+    for _wordid, sense_casedwordid, sensenum, synsetid in senses:
 
         synsetid_to_reference_locations[synsetid].append(out.tell())
         out.write(struct.pack('<I', 0))
