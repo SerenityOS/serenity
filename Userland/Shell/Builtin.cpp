@@ -9,6 +9,7 @@
 #include "Shell/Formatter.h"
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
+#include <AK/Statistics.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
@@ -898,8 +899,7 @@ int Shell::builtin_time(int argc, const char** argv)
 
     auto commands = expand_aliases({ move(command) });
 
-    Vector<int> iteration_times;
-    iteration_times.ensure_capacity(number_of_iterations);
+    AK::Statistics iteration_times;
 
     int exit_code = 1;
     for (int i = 0; i < number_of_iterations; ++i) {
@@ -909,25 +909,21 @@ int Shell::builtin_time(int argc, const char** argv)
             block_on_job(job);
             exit_code = job.exit_code();
         }
-        iteration_times.unchecked_append(timer.elapsed());
+        iteration_times.add(timer.elapsed());
     }
 
     if (number_of_iterations == 1) {
-        warnln("Time: {} ms", iteration_times.first());
+        warnln("Time: {} ms", iteration_times.values().first());
     } else {
-        float total_time = 0;
-        for (auto time : iteration_times)
-            total_time += static_cast<float>(time);
-        float average = total_time / number_of_iterations;
-
-        float total_time_excluding_first = total_time - static_cast<float>(iteration_times.first());
-        float average_excluding_first = total_time_excluding_first / (number_of_iterations - 1);
+        AK::Statistics iteration_times_excluding_first;
+        for (size_t i = 1; i < iteration_times.size(); i++)
+            iteration_times_excluding_first.add(iteration_times.values()[i]);
 
         warnln("Timing report:");
         warnln("==============");
         warnln("Command:         {}", String::join(' ', args));
-        warnln("Average time:    {} ms", average);
-        warnln("Excluding first: {} ms", average_excluding_first);
+        warnln("Average time:    {:.2} ms (median: {}, stddev: {:.2})", iteration_times.average(), iteration_times.median(), iteration_times.standard_deviation());
+        warnln("Excluding first: {:.2} ms (median: {}, stddev: {:.2})", iteration_times_excluding_first.average(), iteration_times_excluding_first.median(), iteration_times_excluding_first.standard_deviation());
     }
 
     return exit_code;
