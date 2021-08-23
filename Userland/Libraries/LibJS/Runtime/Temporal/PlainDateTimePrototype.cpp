@@ -6,6 +6,7 @@
 
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
@@ -54,6 +55,7 @@ void PlainDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.toPlainDate, to_plain_date, 0, attr);
+    define_native_function(vm.names.toPlainYearMonth, to_plain_year_month, 0, attr);
     define_native_function(vm.names.toPlainTime, to_plain_time, 0, attr);
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
 }
@@ -414,6 +416,32 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_date)
 
     // 3. Return ? CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
     return create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar());
+}
+
+// 5.3.38 Temporal.PlainDateTime.prototype.toPlainYearMonth ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplainyearmonth
+JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_year_month)
+{
+    // 1. Let dateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
+    auto* date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendar be dateTime.[[Calendar]].
+    auto& calendar = date_time->calendar();
+
+    // 4. Let fieldNames be ? CalendarFields(calendar, « "monthCode", "year" »).
+    auto field_names = calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv });
+    if (vm.exception())
+        return {};
+
+    // 5. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
+    auto* fields = prepare_temporal_fields(global_object, *date_time, field_names, {});
+    if (vm.exception())
+        return {};
+
+    // 6. Return ? YearMonthFromFields(calendar, fields).
+    return year_month_from_fields(global_object, calendar, *fields);
 }
 
 // 5.3.40 Temporal.PlainDateTime.prototype.toPlainTime ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaintime
