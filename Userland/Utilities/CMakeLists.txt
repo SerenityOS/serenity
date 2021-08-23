@@ -7,8 +7,8 @@ list(APPEND REQUIRED_TARGETS
     touch tr true umount uname uniq uptime w wc which whoami xargs yes less
 )
 list(APPEND RECOMMENDED_TARGETS
-    adjtime aplay avol bt checksum chres cksum copy fortune gunzip gzip init keymap lsirq lsof lspci man mknod mktemp
-    modload modunload nc netstat notify ntpquery open pape passwd pls printf pro shot tar tt unzip zip
+    adjtime aplay avol bt checksum chres cksum copy fortune gunzip gzip init keymap lsirq lsof lspci man mediaprobe 
+    mknod mktemp modload modunload nc netstat notify ntpquery open pape passwd pls printf pro shot tar tt unzip zip
 )
 
 # FIXME: Support specifying component dependencies for utilities (e.g. WebSocket for telws)
@@ -100,3 +100,4 @@ target_link_libraries(cpp-parser LibCpp LibGUI)
 target_link_libraries(cpp-preprocessor LibCpp LibGUI)
 target_link_libraries(wasm LibWasm LibLine)
 target_link_libraries(wsctl LibGUI)
+target_link_libraries(mediaprobe LibMedia)
