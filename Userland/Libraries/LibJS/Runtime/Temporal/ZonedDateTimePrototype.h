@@ -50,6 +50,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(to_plain_date);
     JS_DECLARE_NATIVE_FUNCTION(to_plain_time);
     JS_DECLARE_NATIVE_FUNCTION(to_plain_date_time);
+    JS_DECLARE_NATIVE_FUNCTION(to_plain_year_month);
     JS_DECLARE_NATIVE_FUNCTION(get_iso_fields);
 };
 
