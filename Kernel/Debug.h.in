@@ -166,6 +166,10 @@
 #cmakedefine01 LOCK_DEBUG
 #endif
 
+#ifndef LOCK_IN_CRITICAL_DEBUG
+#cmakedefine01 LOCK_IN_CRITICAL_DEBUG
+#endif
+
 #ifndef LOCK_RESTORE_DEBUG
 #cmakedefine01 LOCK_RESTORE_DEBUG
 #endif
