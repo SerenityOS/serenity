@@ -140,7 +140,7 @@ bool Thread::WaitQueueBlocker::unblock()
 Thread::FutexBlocker::FutexBlocker(FutexQueue& futex_queue, u32 bitset)
     : m_bitset(bitset)
 {
-    if (!add_to_blocker_set(futex_queue, Thread::current()))
+    if (!add_to_blocker_set(futex_queue))
         m_should_block = false;
 }
 

@@ -42,7 +42,7 @@ public:
     bool is_empty_and_no_imminent_waits_locked();
 
 protected:
-    virtual bool should_add_blocker(Thread::Blocker& b, void* data) override;
+    virtual bool should_add_blocker(Thread::Blocker& b, void*) override;
 
 private:
     size_t m_imminent_waits { 1 }; // We only create this object if we're going to be waiting, so start out with 1
