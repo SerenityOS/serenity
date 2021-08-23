@@ -49,8 +49,6 @@ void Thread::Blocker::begin_blocking(Badge<Thread>)
 {
     SpinlockLocker lock(m_lock);
     VERIFY(!m_is_blocking);
-    VERIFY(!m_blocked_thread);
-    m_blocked_thread = Thread::current();
     m_is_blocking = true;
 }
 
@@ -60,9 +58,8 @@ auto Thread::Blocker::end_blocking(Badge<Thread>, bool did_timeout) -> BlockResu
     // if m_is_blocking is false here, some thread forced to
     // unblock us when we get here. This is only called from the
     // thread that was blocked.
-    VERIFY(Thread::current() == m_blocked_thread);
+    VERIFY(Thread::current() == m_thread);
     m_is_blocking = false;
-    m_blocked_thread = nullptr;
 
     was_unblocked(did_timeout);
     return block_result();
