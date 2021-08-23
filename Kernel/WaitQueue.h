@@ -31,7 +31,7 @@ public:
     }
 
 protected:
-    virtual bool should_add_blocker(Thread::Blocker& b, void* data) override;
+    virtual bool should_add_blocker(Thread::Blocker& b, void*) override;
 
 private:
     bool m_wake_requested { false };

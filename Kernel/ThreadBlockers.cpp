@@ -116,7 +116,7 @@ bool Thread::JoinBlocker::unblock(void* value, bool from_add_blocker)
 Thread::WaitQueueBlocker::WaitQueueBlocker(WaitQueue& wait_queue, StringView block_reason)
     : m_block_reason(block_reason)
 {
-    if (!add_to_blocker_set(wait_queue, Thread::current()))
+    if (!add_to_blocker_set(wait_queue))
         m_should_block = false;
 }
 

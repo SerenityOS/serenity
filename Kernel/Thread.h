@@ -301,6 +301,8 @@ public:
         virtual const BlockTimeout& override_timeout(const BlockTimeout& timeout) { return timeout; }
         virtual bool can_be_interrupted() const { return true; }
 
+        Thread& thread() { return m_thread; }
+
         enum class UnblockImmediatelyReason {
             UnblockConditionAlreadyMet,
             TimeoutInThePast,
