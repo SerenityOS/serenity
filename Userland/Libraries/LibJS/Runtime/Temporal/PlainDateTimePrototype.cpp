@@ -56,6 +56,7 @@ void PlainDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.toPlainDate, to_plain_date, 0, attr);
     define_native_function(vm.names.toPlainYearMonth, to_plain_year_month, 0, attr);
+    define_native_function(vm.names.toPlainMonthDay, to_plain_month_day, 0, attr);
     define_native_function(vm.names.toPlainTime, to_plain_time, 0, attr);
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
 }
@@ -442,6 +443,32 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_year_month)
 
     // 6. Return ? YearMonthFromFields(calendar, fields).
     return year_month_from_fields(global_object, calendar, *fields);
+}
+
+// 5.3.39 Temporal.PlainDateTime.prototype.toPlainMonthDay ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplainmonthday
+JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_month_day)
+{
+    // 1. Let dateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
+    auto* date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendar be dateTime.[[Calendar]].
+    auto& calendar = date_time->calendar();
+
+    // 4. Let fieldNames be ? CalendarFields(calendar, « "day", "monthCode" »).
+    auto field_names = calendar_fields(global_object, calendar, { "day"sv, "monthCode"sv });
+    if (vm.exception())
+        return {};
+
+    // 5. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
+    auto* fields = prepare_temporal_fields(global_object, *date_time, field_names, {});
+    if (vm.exception())
+        return {};
+
+    // 6. Return ? MonthDayFromFields(calendar, fields).
+    return month_day_from_fields(global_object, calendar, *fields);
 }
 
 // 5.3.40 Temporal.PlainDateTime.prototype.toPlainTime ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaintime
