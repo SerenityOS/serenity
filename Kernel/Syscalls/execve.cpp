@@ -626,6 +626,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
         ptrace_locker.unlock();
         Thread::current()->send_urgent_signal_to_self(SIGSTOP);
     }
+    ptrace_locker.unlock(); // unlock before disabling interrupts as well
 
     // We enter a critical section here because we don't want to get interrupted between do_exec()
     // and Processor::assume_context() or the next context switch.
