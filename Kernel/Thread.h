@@ -393,7 +393,6 @@ public:
 
     private:
         BlockerSet* m_blocker_set { nullptr };
-        void* m_block_data { nullptr };
         Thread* m_blocked_thread { nullptr };
         u8 m_was_interrupted_by_signal { 0 };
         bool m_is_blocking { false };
@@ -423,12 +422,12 @@ public:
             return true;
         }
 
-        void remove_blocker(Blocker& blocker, void* data)
+        void remove_blocker(Blocker& blocker)
         {
             SpinlockLocker lock(m_lock);
             // NOTE: it's possible that the blocker is no longer present
-            m_blockers.remove_first_matching([&](auto& info) {
-                return info.blocker == &blocker && info.data == data;
+            m_blockers.remove_all_matching([&](auto& info) {
+                return info.blocker == &blocker;
             });
         }
 
