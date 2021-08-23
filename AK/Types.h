@@ -67,22 +67,16 @@ using nullptr_t = decltype(nullptr);
 
 static constexpr FlatPtr explode_byte(u8 b)
 {
-#if ARCH(I386)
-    return (u32)b << 24 | (u32)b << 16 | (u32)b << 8 | (u32)b;
-#else
-    return (u64)b << 56 | (u64)b << 48 | (u64)b << 40 | (u64)b << 32 | (u64)b << 24 | (u64)b << 16 | (u64)b << 8 | (u64)b;
-#endif
+    FlatPtr value = b;
+    if constexpr (sizeof(FlatPtr) == 4)
+        return value << 24 | value << 16 | value << 8 | value;
+    else if (sizeof(FlatPtr) == 8)
+        return value << 56 | value << 48 | value << 40 | value << 32 | value << 24 | value << 16 | value << 8 | value;
 }
 
-#if ARCH(I386)
-static_assert(explode_byte(0xff) == 0xffffffff);
-static_assert(explode_byte(0x80) == 0x80808080);
-static_assert(explode_byte(0x7f) == 0x7f7f7f7f);
-#else
-static_assert(explode_byte(0xff) == 0xffffffffffffffff);
-static_assert(explode_byte(0x80) == 0x8080808080808080);
-static_assert(explode_byte(0x7f) == 0x7f7f7f7f7f7f7f7f);
-#endif
+static_assert(explode_byte(0xff) == (FlatPtr)0xffffffffffffffffull);
+static_assert(explode_byte(0x80) == (FlatPtr)0x8080808080808080ull);
+static_assert(explode_byte(0x7f) == (FlatPtr)0x7f7f7f7f7f7f7f7full);
 static_assert(explode_byte(0) == 0);
 
 constexpr size_t align_up_to(const size_t value, const size_t alignment)
