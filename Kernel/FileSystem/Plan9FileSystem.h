@@ -91,7 +91,7 @@ private:
         }
         virtual StringView state_string() const override { return "Waiting"sv; }
         virtual Type blocker_type() const override { return Type::Plan9FS; }
-        virtual void not_blocking(bool) override;
+        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
 
         const NonnullRefPtr<ReceiveCompletion>& completion() const { return m_completion; }
         u16 tag() const { return m_completion->tag; }

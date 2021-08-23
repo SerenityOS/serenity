@@ -26,7 +26,7 @@ public:
     virtual Type blocker_type() const override { return Type::Routing; }
     virtual bool should_block() override { return m_should_block; }
 
-    virtual void not_blocking(bool) override;
+    virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
 
     bool unblock(bool from_add_blocker, const IPv4Address& ip_addr, const MACAddress& addr)
     {
@@ -90,9 +90,9 @@ ARPTableBlocker::ARPTableBlocker(IPv4Address ip_addr, Optional<MACAddress>& addr
         m_should_block = false;
 }
 
-void ARPTableBlocker::not_blocking(bool timeout_in_past)
+void ARPTableBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
 {
-    VERIFY(timeout_in_past || !m_should_block);
+    VERIFY(reason == UnblockImmediatelyReason::TimeoutInThePast || !m_should_block);
     auto addr = arp_table().with_shared([&](const auto& table) -> auto {
         return table.get(ip_addr());
     });
