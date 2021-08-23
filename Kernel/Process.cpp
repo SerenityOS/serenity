@@ -44,7 +44,7 @@ static void create_signal_trampoline();
 
 RecursiveSpinlock g_profiling_lock;
 static Atomic<pid_t> next_pid;
-static Singleton<MutexProtected<Process::List>> s_processes;
+static Singleton<SpinlockProtected<Process::List>> s_processes;
 READONLY_AFTER_INIT HashMap<String, OwnPtr<Module>>* g_modules;
 READONLY_AFTER_INIT Memory::Region* g_signal_trampoline_region;
 
@@ -55,7 +55,7 @@ MutexProtected<String>& hostname()
     return *s_hostname;
 }
 
-MutexProtected<Process::List>& processes()
+SpinlockProtected<Process::List>& processes()
 {
     return *s_processes;
 }
@@ -86,7 +86,7 @@ UNMAP_AFTER_INIT void Process::initialize()
 NonnullRefPtrVector<Process> Process::all_processes()
 {
     NonnullRefPtrVector<Process> output;
-    processes().with_shared([&](const auto& list) {
+    processes().with([&](const auto& list) {
         output.ensure_capacity(list.size_slow());
         for (const auto& process : list)
             output.append(NonnullRefPtr<Process>(process));
@@ -138,7 +138,7 @@ void Process::register_new(Process& process)
 {
     // Note: this is essentially the same like process->ref()
     RefPtr<Process> new_process = process;
-    processes().with_exclusive([&](auto& list) {
+    processes().with([&](auto& list) {
         list.prepend(process);
     });
 }
@@ -301,7 +301,7 @@ bool Process::unref() const
     // NOTE: We need to obtain the process list lock before doing anything,
     //       because otherwise someone might get in between us lowering the
     //       refcount and acquiring the lock.
-    auto did_hit_zero = processes().with_exclusive([&](auto& list) {
+    auto did_hit_zero = processes().with([&](auto& list) {
         auto new_ref_count = deref_base();
         if (new_ref_count > 0)
             return false;
@@ -418,7 +418,7 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
 
 RefPtr<Process> Process::from_pid(ProcessID pid)
 {
-    return processes().with_shared([&](const auto& list) -> RefPtr<Process> {
+    return processes().with([&](const auto& list) -> RefPtr<Process> {
         for (auto& process : list) {
             if (process.pid() == pid)
                 return &process;
@@ -696,7 +696,7 @@ void Process::die()
         m_threads_for_coredump.append(thread);
     });
 
-    processes().with_shared([&](const auto& list) {
+    processes().with([&](const auto& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;

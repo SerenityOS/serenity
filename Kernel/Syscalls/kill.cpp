@@ -65,7 +65,7 @@ KResult Process::do_killall(int signal)
     KResult error = KSuccess;
 
     // Send the signal to all processes we have access to for.
-    processes().for_each_shared([&](auto& process) {
+    processes().for_each([&](auto& process) {
         KResult res = KSuccess;
         if (process.pid() == pid())
             res = do_killself(signal);

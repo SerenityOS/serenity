@@ -916,7 +916,7 @@ KResult ProcFSRootDirectory::traverse_as_directory(unsigned fsid, Function<bool(
         InodeIdentifier identifier = { fsid, component.component_index() };
         callback({ component.name(), identifier, 0 });
     }
-    processes().for_each_shared([&](Process& process) {
+    processes().for_each([&](Process& process) {
         VERIFY(!(process.pid() < 0));
         u64 process_id = (u64)process.pid().value();
         InodeIdentifier identifier = { fsid, static_cast<InodeIndex>(process_id << 36) };
