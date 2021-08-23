@@ -33,7 +33,6 @@ bool Thread::Blocker::add_to_blocker_set(Thread::BlockerSet& blocker_set, void* 
     VERIFY(!m_blocker_set);
     if (blocker_set.add_blocker(*this, data)) {
         m_blocker_set = &blocker_set;
-        m_block_data = data;
         return true;
     }
     return false;
@@ -43,7 +42,7 @@ Thread::Blocker::~Blocker()
 {
     VERIFY(!m_lock.is_locked());
     if (m_blocker_set)
-        m_blocker_set->remove_blocker(*this, m_block_data);
+        m_blocker_set->remove_blocker(*this);
 }
 
 void Thread::Blocker::begin_blocking(Badge<Thread>)
@@ -355,7 +354,7 @@ Thread::SelectBlocker::SelectBlocker(FDVector& fds)
 Thread::SelectBlocker::~SelectBlocker()
 {
     for (auto& fd_entry : m_fds)
-        fd_entry.description->blocker_set().remove_blocker(*this, &fd_entry);
+        fd_entry.description->blocker_set().remove_blocker(*this);
 }
 
 void Thread::SelectBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
