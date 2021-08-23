@@ -815,13 +815,13 @@ static_assert(sizeof(Process) == (PAGE_SIZE * 2));
 
 extern RecursiveSpinlock g_profiling_lock;
 
-MutexProtected<Process::List>& processes();
+SpinlockProtected<Process::List>& processes();
 
 template<IteratorFunction<Process&> Callback>
 inline void Process::for_each(Callback callback)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    processes().with_shared([&](const auto& list) {
+    processes().with([&](const auto& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;
@@ -835,7 +835,7 @@ template<IteratorFunction<Process&> Callback>
 inline void Process::for_each_child(Callback callback)
 {
     ProcessID my_pid = pid();
-    processes().with_shared([&](const auto& list) {
+    processes().with([&](const auto& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;
@@ -876,7 +876,7 @@ inline IterationDecision Process::for_each_thread(Callback callback)
 template<IteratorFunction<Process&> Callback>
 inline void Process::for_each_in_pgrp(ProcessGroupID pgid, Callback callback)
 {
-    processes().with_shared([&](const auto& list) {
+    processes().with([&](const auto& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;
