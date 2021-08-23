@@ -14,6 +14,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/Userspace.h>
+#include <AK/Variant.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/API/Syscall.h>
@@ -541,7 +542,7 @@ private:
     KResult do_killall(int signal);
     KResult do_killself(int signal);
 
-    KResultOr<siginfo_t> do_waitid(idtype_t idtype, int id, int options);
+    KResultOr<siginfo_t> do_waitid(Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, int options);
 
     KResultOr<NonnullOwnPtr<KString>> get_syscall_path_argument(Userspace<const char*> user_path, size_t path_length) const;
     KResultOr<NonnullOwnPtr<KString>> get_syscall_path_argument(const Syscall::StringArgument&) const;
