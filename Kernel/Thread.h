@@ -15,6 +15,7 @@
 #include <AK/String.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Time.h>
+#include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
@@ -705,7 +706,7 @@ public:
             Disowned
         };
 
-        WaitBlocker(int wait_options, idtype_t id_type, pid_t id, KResultOr<siginfo_t>& result);
+        WaitBlocker(int wait_options, Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, KResultOr<siginfo_t>& result);
         virtual StringView state_string() const override { return "Waiting"sv; }
         virtual Type blocker_type() const override { return Type::Wait; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
@@ -720,13 +721,9 @@ public:
         void do_set_result(const siginfo_t&);
 
         const int m_wait_options;
-        const idtype_t m_id_type;
-        const pid_t m_waitee_id;
         KResultOr<siginfo_t>& m_result;
-        RefPtr<Process> m_waitee;
-        RefPtr<ProcessGroup> m_waitee_group;
+        Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> m_waitee;
         bool m_did_unblock { false };
-        bool m_error { false };
         bool m_got_sigchild { false };
     };
 

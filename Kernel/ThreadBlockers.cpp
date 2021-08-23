@@ -601,55 +601,23 @@ void Thread::WaitBlockerSet::finalize()
     }
 }
 
-Thread::WaitBlocker::WaitBlocker(int wait_options, idtype_t id_type, pid_t id, KResultOr<siginfo_t>& result)
+Thread::WaitBlocker::WaitBlocker(int wait_options, Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, KResultOr<siginfo_t>& result)
     : m_wait_options(wait_options)
-    , m_id_type(id_type)
-    , m_waitee_id(id)
     , m_result(result)
+    , m_waitee(move(waitee))
 {
 }
 
 bool Thread::WaitBlocker::setup_blocker()
 {
-    switch (m_id_type) {
-    case P_PID: {
-        m_waitee = Process::from_pid(m_waitee_id);
-        if (!m_waitee || m_waitee->ppid() != Process::current().pid()) {
-            m_result = ECHILD;
-            m_error = true;
-        }
-        break;
-    }
-    case P_PGID: {
-        m_waitee_group = ProcessGroup::from_pgid(m_waitee_id);
-        if (!m_waitee_group) {
-            m_result = ECHILD;
-            m_error = true;
-        }
-        break;
-    }
-    case P_ALL:
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-
-    if (m_error)
-        return false;
-
     if (m_wait_options & WNOHANG)
         return false;
-
-    // NOTE: unblock may be called within add_to_blocker_set, in which
-    // case it means that we already have a match without having to block.
-    // In that case add_to_blocker_set will return false.
     return add_to_blocker_set(Process::current().wait_blocker_set());
 }
 
 void Thread::WaitBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
 {
-    if (!m_error)
-        Process::current().wait_blocker_set().try_unblock(*this);
+    Process::current().wait_blocker_set().try_unblock(*this);
 }
 
 void Thread::WaitBlocker::was_unblocked(bool)
@@ -700,26 +668,20 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
 {
     VERIFY(flags != UnblockFlags::Terminated || signal == 0); // signal argument should be ignored for Terminated
 
-    switch (m_id_type) {
-    case P_PID:
-        VERIFY(m_waitee);
-        if (process.pid() != m_waitee_id)
-            return false;
-        break;
-    case P_PGID:
-        VERIFY(m_waitee_group);
-        if (process.pgid() != m_waitee_group->pgid())
-            return false;
-        break;
-    case P_ALL:
-        if (flags == UnblockFlags::Disowned) {
+    bool do_not_unblock = m_waitee.visit(
+        [&](NonnullRefPtr<Process> const& waitee_process) {
+            return &process != waitee_process;
+        },
+        [&](NonnullRefPtr<ProcessGroup> const& waitee_process_group) {
+            return waitee_process_group->pgid() != process.pgid();
+        },
+        [&](Empty const&) {
             // Generic waiter won't be unblocked by disown
-            return false;
-        }
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
+            return flags == UnblockFlags::Disowned;
+        });
+
+    if (do_not_unblock)
+        return false;
 
     switch (flags) {
     case UnblockFlags::Terminated:
