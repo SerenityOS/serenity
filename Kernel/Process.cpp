@@ -76,9 +76,9 @@ UNMAP_AFTER_INIT void Process::initialize()
 
     next_pid.store(0, AK::MemoryOrder::memory_order_release);
 
-    hostname().with_exclusive([&](auto& name) {
-        name = "courage";
-    });
+    // Note: This is called before scheduling is initialized, and before APs are booted.
+    //       So we can "safely" bypass the lock here.
+    reinterpret_cast<String&>(hostname()) = "courage";
 
     create_signal_trampoline();
 }
