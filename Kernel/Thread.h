@@ -346,7 +346,10 @@ public:
         BlockResult end_blocking(Badge<Thread>, bool);
 
     protected:
-        Blocker() { }
+        Blocker()
+            : m_thread(*Thread::current())
+        {
+        }
 
         void do_set_interrupted_by_death()
         {
@@ -371,19 +374,14 @@ public:
         }
         void unblock_from_blocker()
         {
-            RefPtr<Thread> thread;
-
             {
                 SpinlockLocker lock(m_lock);
-                if (m_is_blocking) {
-                    m_is_blocking = false;
-                    VERIFY(m_blocked_thread);
-                    thread = m_blocked_thread;
-                }
+                if (!m_is_blocking)
+                    return;
+                m_is_blocking = false;
             }
 
-            if (thread)
-                thread->unblock_from_blocker(*this);
+            m_thread->unblock_from_blocker(*this);
         }
 
         bool add_to_blocker_set(BlockerSet&, void* = nullptr);
@@ -393,7 +391,7 @@ public:
 
     private:
         BlockerSet* m_blocker_set { nullptr };
-        Thread* m_blocked_thread { nullptr };
+        NonnullRefPtr<Thread> m_thread;
         u8 m_was_interrupted_by_signal { 0 };
         bool m_is_blocking { false };
         bool m_was_interrupted_by_death { false };
