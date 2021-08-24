@@ -35,6 +35,8 @@ public:
     void js_console_initialize();
     void js_console_input(const String& js_source);
 
+    void run_javascript(StringView);
+
     String selected_text();
     void select_all();
 

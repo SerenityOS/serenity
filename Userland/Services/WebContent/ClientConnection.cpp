@@ -242,6 +242,23 @@ void ClientConnection::js_console_input(const String& js_source)
         m_console_client->handle_input(js_source);
 }
 
+void ClientConnection::run_javascript(String const& js_source)
+{
+    if (!page().top_level_browsing_context().document())
+        return;
+
+    auto& interpreter = page().top_level_browsing_context().document()->interpreter();
+
+    auto parser = JS::Parser(JS::Lexer(js_source));
+    auto program = parser.parse_program();
+    interpreter.run(interpreter.global_object(), *program);
+
+    if (interpreter.vm().exception()) {
+        dbgln("Exception :(");
+        interpreter.vm().clear_exception();
+    }
+}
+
 Messages::WebContentServer::GetSelectedTextResponse ClientConnection::get_selected_text()
 {
     return page().focused_context().selected_text();
