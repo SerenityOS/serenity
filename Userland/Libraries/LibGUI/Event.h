@@ -56,6 +56,7 @@ public:
         ScreenRectsChange,
         ActionEnter,
         ActionLeave,
+        AppletAreaRectChange,
 
         __Begin_WM_Events,
         WM_WindowRemoved,
@@ -449,6 +450,20 @@ public:
 private:
     Vector<Gfx::IntRect, 4> m_rects;
     size_t m_main_screen_index;
+};
+
+class AppletAreaRectChangeEvent final : public Event {
+public:
+    explicit AppletAreaRectChangeEvent(Gfx::IntRect rect)
+        : Event(Type::AppletAreaRectChange)
+        , m_rect(rect)
+    {
+    }
+
+    Gfx::IntRect rect() const { return m_rect; }
+
+private:
+    Gfx::IntRect const m_rect;
 };
 
 class FocusEvent final : public Event {

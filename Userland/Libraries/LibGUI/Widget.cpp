@@ -305,6 +305,8 @@ void Widget::event(Core::Event& event)
         return change_event(static_cast<Event&>(event));
     case Event::ContextMenu:
         return context_menu_event(static_cast<ContextMenuEvent&>(event));
+    case Event::AppletAreaRectChange:
+        return applet_area_rect_change_event(static_cast<AppletAreaRectChangeEvent&>(event));
     default:
         return Core::Object::event(event);
     }
@@ -576,6 +578,10 @@ void Widget::fonts_change_event(FontsChangeEvent&)
 }
 
 void Widget::screen_rects_change_event(ScreenRectsChangeEvent&)
+{
+}
+
+void Widget::applet_area_rect_change_event(AppletAreaRectChangeEvent&)
 {
 }
 
