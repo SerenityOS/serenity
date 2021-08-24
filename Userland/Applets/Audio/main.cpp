@@ -82,7 +82,6 @@ public:
                 window()->resize(44, 16);
                 m_percent_box->set_tooltip("Hide percent");
             }
-            reposition_slider_window();
             GUI::Application::the()->hide_tooltip();
 
             m_config->write_bool_entry("Applet", "ShowPercent", m_show_percent);
@@ -154,6 +153,11 @@ private:
             auto volume_text = m_audio_muted ? "mute" : String::formatted("{}%", m_audio_volume);
             painter.draw_text({ 16, 3, 24, 16 }, volume_text, Gfx::FontDatabase::default_fixed_width_font(), Gfx::TextAlignment::TopLeft, palette().window_text());
         }
+    }
+
+    virtual void applet_area_rect_change_event(GUI::AppletAreaRectChangeEvent&) override
+    {
+        reposition_slider_window();
     }
 
     void open()
