@@ -266,7 +266,6 @@ public:
         const Time* start_time() const { return !m_infinite ? &m_start_time : nullptr; }
         clockid_t clock_id() const { return m_clock_id; }
         bool is_infinite() const { return m_infinite; }
-        bool should_block() const { return m_infinite || m_should_block; };
 
     private:
         Time m_time {};
@@ -296,7 +295,6 @@ public:
         };
         virtual ~Blocker();
         virtual StringView state_string() const = 0;
-        virtual bool should_block() { return true; }
         virtual Type blocker_type() const = 0;
         virtual const BlockTimeout& override_timeout(const BlockTimeout& timeout) { return timeout; }
         virtual bool can_be_interrupted() const { return true; }
@@ -521,7 +519,6 @@ public:
         virtual Type blocker_type() const override { return Type::Join; }
         virtual StringView state_string() const override { return "Joining"sv; }
         virtual bool can_be_interrupted() const override { return false; }
-        virtual bool should_block() override { return !m_join_error && m_should_block; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
 
         virtual bool setup_blocker() override;
@@ -545,7 +542,6 @@ public:
         virtual Type blocker_type() const override { return Type::Queue; }
         virtual StringView state_string() const override { return m_block_reason.is_null() ? m_block_reason : "Queue"sv; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override { }
-        virtual bool should_block() override { return m_should_block; }
         virtual bool setup_blocker() override;
 
         bool unblock();
@@ -565,7 +561,6 @@ public:
         virtual Type blocker_type() const override { return Type::Futex; }
         virtual StringView state_string() const override { return "Futex"sv; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override { }
-        virtual bool should_block() override { return m_should_block; }
         virtual bool setup_blocker() override;
 
         u32 bitset() const { return m_bitset; }
@@ -609,11 +604,6 @@ public:
         };
 
         virtual Type blocker_type() const override { return Type::File; }
-
-        virtual bool should_block() override
-        {
-            return m_should_block;
-        }
 
         virtual bool unblock(bool, void*) = 0;
 
@@ -725,7 +715,6 @@ public:
         WaitBlocker(int wait_options, idtype_t id_type, pid_t id, KResultOr<siginfo_t>& result);
         virtual StringView state_string() const override { return "Waiting"sv; }
         virtual Type blocker_type() const override { return Type::Wait; }
-        virtual bool should_block() override { return m_should_block; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual void was_unblocked(bool) override;
         virtual bool setup_blocker() override;

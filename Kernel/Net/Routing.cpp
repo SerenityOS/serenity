@@ -24,7 +24,6 @@ public:
 
     virtual StringView state_string() const override { return "Routing (ARP)"sv; }
     virtual Type blocker_type() const override { return Type::Routing; }
-    virtual bool should_block() override { return m_should_block; }
     virtual bool setup_blocker() override;
 
     virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
