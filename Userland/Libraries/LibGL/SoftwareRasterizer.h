@@ -33,6 +33,12 @@ struct RasterizerOptions {
     float depth_max { 1 };
     GLenum depth_func { GL_LESS };
     GLenum polygon_mode { GL_FILL };
+    FloatVector4 fog_color {
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+    };
 };
 
 class SoftwareRasterizer final {
