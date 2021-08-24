@@ -13,3 +13,8 @@ void glFogfv(GLenum pname, GLfloat* params)
 {
     g_gl_context->gl_fogfv(pname, params);
 }
+
+void glFogf(GLenum pname, GLfloat param)
+{
+    g_gl_context->gl_fogf(pname, param);
+}
