@@ -109,7 +109,8 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
                 // TODO: tear down new process?
                 return ENOMEM;
             }
-            child_region->map(child->address_space().page_directory(), Memory::ShouldFlushTLB::No);
+            if (!child_region->map(child->address_space().page_directory(), Memory::ShouldFlushTLB::No))
+                return ENOMEM;
 
             if (region == m_master_tls_region.unsafe_ptr())
                 child->m_master_tls_region = child_region;
