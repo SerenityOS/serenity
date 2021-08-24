@@ -19,10 +19,8 @@ Thread::BlockTimeout::BlockTimeout(bool is_absolute, const Time* time, const Tim
 {
     if (m_infinite)
         return;
-    if (*time > Time::zero()) {
+    if (*time > Time::zero())
         m_time = *time;
-        m_should_block = true;
-    }
     m_start_time = start_time ? *start_time : TimeManagement::the().current_time(clock_id);
     if (!is_absolute)
         m_time += m_start_time;
