@@ -13,6 +13,7 @@
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Time.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
@@ -847,12 +848,12 @@ public:
         // We need to hold m_block_lock so that nobody can unblock a blocker as soon
         // as it is constructed and registered elsewhere
         VERIFY(!m_in_block);
-        m_in_block = true;
+        TemporaryChange in_block_change(m_in_block, true);
+
         BlockerType blocker(forward<Args>(args)...);
 
         if (!blocker.setup_blocker()) {
             blocker.will_unblock_immediately_without_blocking(Blocker::UnblockImmediatelyReason::UnblockConditionAlreadyMet);
-            m_in_block = false;
             return BlockResult::NotBlocked;
         }
 
@@ -893,7 +894,6 @@ public:
                     // Timeout is already in the past
                     blocker.will_unblock_immediately_without_blocking(Blocker::UnblockImmediatelyReason::TimeoutInThePast);
                     m_blocker = nullptr;
-                    m_in_block = false;
                     return BlockResult::InterruptedByTimeout;
                 }
             }
@@ -938,7 +938,6 @@ public:
                 m_blocker = nullptr;
             }
             dbgln_if(THREAD_DEBUG, "<-- Thread {} unblocked from {} ({})", *this, &blocker, blocker.state_string());
-            m_in_block = false;
             break;
         }
 
