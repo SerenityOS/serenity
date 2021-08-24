@@ -347,7 +347,7 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
         }
 
         // Remove the old region from our regions tree, since were going to add another region
-        // with the exact same start address, but dont deallocate it yet
+        // with the exact same start address, but do not deallocate it yet
         auto region = address_space().take_region(*old_region);
 
         // Unmap the old region here, specifying that we *don't* want the VM deallocated.
@@ -371,9 +371,11 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
 
         // Map the new regions using our page directory (they were just allocated and don't have one).
         for (auto* adjacent_region : adjacent_regions) {
-            adjacent_region->map(address_space().page_directory());
+            if (!adjacent_region->map(address_space().page_directory()))
+                return ENOMEM;
         }
-        new_region.map(address_space().page_directory());
+        if (!new_region.map(address_space().page_directory()))
+            return ENOMEM;
         return 0;
     }
 
@@ -438,9 +440,11 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
 
             // Map the new region using our page directory (they were just allocated and don't have one) if any.
             if (adjacent_regions.size())
-                adjacent_regions[0]->map(address_space().page_directory());
+                if (!adjacent_regions[0]->map(address_space().page_directory()))
+                    return ENOMEM;
 
-            new_region.map(address_space().page_directory());
+            if (!new_region.map(address_space().page_directory()))
+                return ENOMEM;
         }
 
         return 0;
