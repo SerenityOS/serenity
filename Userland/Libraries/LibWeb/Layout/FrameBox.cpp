@@ -7,7 +7,6 @@
 #include <AK/Debug.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Page/BrowsingContext.h>
