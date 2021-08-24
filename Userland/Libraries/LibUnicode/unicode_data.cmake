@@ -36,6 +36,13 @@ set(EMOJI_DATA_PATH ${CMAKE_BINARY_DIR}/UCD/emoji-data.txt)
 set(NORM_PROPS_URL https://www.unicode.org/Public/13.0.0/ucd/DerivedNormalizationProps.txt)
 set(NORM_PROPS_PATH ${CMAKE_BINARY_DIR}/UCD/DerivedNormalizationProps.txt)
 
+set(CLDR_PATH ${CMAKE_BINARY_DIR}/CLDR)
+set(CLDR_ZIP_URL https://github.com/unicode-org/cldr-json/releases/download/39.0.0/cldr-39.0.0-json-modern.zip)
+set(CLDR_ZIP_PATH ${CLDR_PATH}/cldr.zip)
+
+set(CLDR_LOCALES_SOURCE cldr-localenames-modern)
+set(CLDR_LOCALES_PATH ${CLDR_PATH}/${CLDR_LOCALES_SOURCE})
+
 if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     if (NOT EXISTS ${UNICODE_DATA_PATH})
         message(STATUS "Downloading UCD UnicodeData.txt from ${UNICODE_DATA_URL}...")
@@ -86,12 +93,27 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         file(DOWNLOAD ${NORM_PROPS_URL} ${NORM_PROPS_PATH} INACTIVITY_TIMEOUT 10)
     endif()
 
+    if (NOT EXISTS ${CLDR_ZIP_PATH})
+        message(STATUS "Downloading CLDR database from ${CLDR_ZIP_URL}...")
+        file(DOWNLOAD ${CLDR_ZIP_URL} ${CLDR_ZIP_PATH} INACTIVITY_TIMEOUT 10)
+    endif()
+    if(EXISTS ${CLDR_ZIP_PATH} AND NOT EXISTS ${CLDR_LOCALES_PATH})
+        message(STATUS "Extracting CLDR ${CLDR_LOCALES_SOURCE} from ${CLDR_ZIP_PATH}...")
+        execute_process(COMMAND unzip -q ${CLDR_ZIP_PATH} "${CLDR_LOCALES_SOURCE}/*" -d ${CLDR_PATH})
+    endif()
+
     set(UNICODE_DATA_HEADER LibUnicode/UnicodeData.h)
     set(UNICODE_DATA_IMPLEMENTATION LibUnicode/UnicodeData.cpp)
+
+    set(UNICODE_LOCALE_HEADER LibUnicode/UnicodeLocale.h)
+    set(UNICODE_LOCALE_IMPLEMENTATION LibUnicode/UnicodeLocale.cpp)
 
     if (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/LibUnicode") # Serenity build.
         set(UNICODE_DATA_HEADER UnicodeData.h)
         set(UNICODE_DATA_IMPLEMENTATION UnicodeData.cpp)
+
+        set(UNICODE_LOCALE_HEADER UnicodeLocale.h)
+        set(UNICODE_LOCALE_IMPLEMENTATION UnicodeLocale.cpp)
     endif()
 
     add_custom_command(
@@ -101,7 +123,14 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         DEPENDS GenerateUnicodeData ${UNICODE_DATA_PATH} ${SPECIAL_CASING_PATH} ${DERIVED_GENERAL_CATEGORY_PATH} ${PROP_LIST_PATH} ${DERIVED_CORE_PROP_PATH} ${DERIVED_BINARY_PROP_PATH} ${PROP_ALIAS_PATH} ${PROP_VALUE_ALIAS_PATH} ${SCRIPTS_PATH} ${SCRIPT_EXTENSIONS_PATH} ${EMOJI_DATA_PATH} ${NORM_PROPS_PATH}
     )
 
-    set(UNICODE_DATA_SOURCES ${UNICODE_DATA_HEADER} ${UNICODE_DATA_IMPLEMENTATION})
+    add_custom_command(
+        OUTPUT ${UNICODE_LOCALE_HEADER} ${UNICODE_LOCALE_IMPLEMENTATION}
+        COMMAND $<TARGET_FILE:GenerateUnicodeLocale> -h ${UNICODE_LOCALE_HEADER} -c ${UNICODE_LOCALE_IMPLEMENTATION} -l ${CLDR_LOCALES_PATH}
+        VERBATIM
+        DEPENDS GenerateUnicodeLocale ${CLDR_LOCALES_PATH}
+    )
+
+    set(UNICODE_DATA_SOURCES ${UNICODE_DATA_HEADER} ${UNICODE_DATA_IMPLEMENTATION} ${UNICODE_LOCALE_HEADER} ${UNICODE_LOCALE_IMPLEMENTATION})
     add_compile_definitions(ENABLE_UNICODE_DATA=1)
 else()
     add_compile_definitions(ENABLE_UNICODE_DATA=0)
