@@ -1745,6 +1745,26 @@ void SoftwareGLContext::gl_polygon_mode(GLenum face, GLenum mode)
     m_rasterizer.set_options(options);
 }
 
+void SoftwareGLContext::gl_fogfv(GLenum pname, GLfloat* params)
+{
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    auto options = m_rasterizer.options();
+
+    switch (pname) {
+    case GL_FOG_COLOR:
+        // Set rasterizer options fog color
+        // NOTE: We purposefully don't check for `nullptr` here (as with other calls). The spec states nothing
+        // about us checking for such things. If the programmer does so and hits SIGSEGV, that's on them.
+        options.fog_color = FloatVector4 { params[0], params[1], params[2], params[3] };
+        break;
+    default:
+        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+    }
+
+    m_rasterizer.set_options(options);
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);

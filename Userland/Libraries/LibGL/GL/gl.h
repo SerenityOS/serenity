@@ -374,6 +374,7 @@ GLAPI void glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* i
 GLAPI void glDepthRange(GLdouble nearVal, GLdouble farVal);
 GLAPI void glDepthFunc(GLenum func);
 GLAPI void glPolygonMode(GLenum face, GLenum mode);
+GLAPI void glFogfv(GLenum mode, GLfloat* params);
 
 #ifdef __cplusplus
 }
