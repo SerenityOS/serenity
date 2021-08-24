@@ -528,9 +528,7 @@ public:
         NonnullRefPtr<Thread> m_joinee;
         void*& m_joinee_exit_value;
         KResult& m_try_join_result;
-        bool m_join_error { false };
         bool m_did_unblock { false };
-        bool m_should_block { true };
     };
 
     class WaitQueueBlocker final : public Blocker {
@@ -548,7 +546,6 @@ public:
     protected:
         WaitQueue& m_wait_queue;
         StringView m_block_reason;
-        bool m_should_block { true };
         bool m_did_unblock { false };
     };
 
@@ -578,7 +575,6 @@ public:
         FutexQueue& m_futex_queue;
         u32 m_bitset { 0 };
         u32 m_relock_flags { 0 };
-        bool m_should_block { true };
         bool m_did_unblock { false };
     };
 
@@ -605,9 +601,6 @@ public:
         virtual Type blocker_type() const override { return Type::File; }
 
         virtual bool unblock(bool, void*) = 0;
-
-    protected:
-        bool m_should_block { true };
     };
 
     class FileDescriptionBlocker : public FileBlocker {
@@ -734,7 +727,6 @@ public:
         bool m_did_unblock { false };
         bool m_error { false };
         bool m_got_sigchild { false };
-        bool m_should_block;
     };
 
     class WaitBlockerSet final : public BlockerSet {

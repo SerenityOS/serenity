@@ -80,28 +80,25 @@ bool Thread::JoinBlocker::setup_blocker()
     // We need to hold our lock to avoid a race where try_join succeeds
     // but the joinee is joining immediately
     SpinlockLocker lock(m_lock);
+    bool should_block = true;
     m_try_join_result = m_joinee->try_join([&]() {
         if (!add_to_blocker_set(m_joinee->m_join_blocker_set))
-            m_should_block = false;
+            should_block = false;
     });
-    m_join_error = m_try_join_result.is_error();
-    if (m_join_error)
-        m_should_block = false;
-    return m_should_block;
+    if (m_try_join_result.is_error())
+        return false;
+    return should_block;
 }
 
 void Thread::JoinBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
 {
-    if (!m_should_block) {
-        VERIFY(reason == UnblockImmediatelyReason::UnblockConditionAlreadyMet);
-        return;
-    }
     // If we should have blocked but got here it must have been that the
     // timeout was already in the past. So we need to ask the BlockerSet
     // to supply us the information. We cannot hold the lock as unblock
     // could be called by the BlockerSet at any time!
-    VERIFY(reason == UnblockImmediatelyReason::TimeoutInThePast);
-    m_joinee->m_join_blocker_set.try_unblock(*this);
+    if (reason == UnblockImmediatelyReason::TimeoutInThePast) {
+        m_joinee->m_join_blocker_set.try_unblock(*this);
+    }
 }
 
 bool Thread::JoinBlocker::unblock(void* value, bool from_add_blocker)
@@ -128,9 +125,7 @@ Thread::WaitQueueBlocker::WaitQueueBlocker(WaitQueue& wait_queue, StringView blo
 
 bool Thread::WaitQueueBlocker::setup_blocker()
 {
-    if (!add_to_blocker_set(m_wait_queue))
-        m_should_block = false;
-    return m_should_block;
+    return add_to_blocker_set(m_wait_queue);
 }
 
 Thread::WaitQueueBlocker::~WaitQueueBlocker()
@@ -158,9 +153,7 @@ Thread::FutexBlocker::FutexBlocker(FutexQueue& futex_queue, u32 bitset)
 
 bool Thread::FutexBlocker::setup_blocker()
 {
-    if (!add_to_blocker_set(m_futex_queue))
-        m_should_block = false;
-    return m_should_block;
+    return add_to_blocker_set(m_futex_queue);
 }
 
 Thread::FutexBlocker::~FutexBlocker()
@@ -212,9 +205,7 @@ Thread::FileDescriptionBlocker::FileDescriptionBlocker(FileDescription& descript
 bool Thread::FileDescriptionBlocker::setup_blocker()
 {
     m_unblocked_flags = BlockFlags::None;
-    if (!add_to_blocker_set(m_blocked_description->blocker_set()))
-        m_should_block = false;
-    return m_should_block;
+    return add_to_blocker_set(m_blocked_description->blocker_set());
 }
 
 bool Thread::FileDescriptionBlocker::unblock(bool from_add_blocker, void*)
@@ -238,10 +229,9 @@ bool Thread::FileDescriptionBlocker::unblock(bool from_add_blocker, void*)
 
 void Thread::FileDescriptionBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
 {
-    if (!m_should_block) {
-        VERIFY(reason == UnblockImmediatelyReason::UnblockConditionAlreadyMet);
+    if (reason == UnblockImmediatelyReason::UnblockConditionAlreadyMet)
         return;
-    }
+
     // If we should have blocked but got here it must have been that the
     // timeout was already in the past. So we need to ask the BlockerSet
     // to supply us the information. We cannot hold the lock as unblock
@@ -366,15 +356,16 @@ Thread::SelectBlocker::SelectBlocker(FDVector& fds)
 
 bool Thread::SelectBlocker::setup_blocker()
 {
+    bool should_block = true;
     for (auto& fd_entry : m_fds) {
         fd_entry.unblocked_flags = FileBlocker::BlockFlags::None;
 
-        if (!m_should_block)
+        if (!should_block)
             continue;
         if (!fd_entry.description->blocker_set().add_blocker(*this, &fd_entry))
-            m_should_block = false;
+            should_block = false;
     }
-    return m_should_block;
+    return should_block;
 }
 
 Thread::SelectBlocker::~SelectBlocker()
@@ -385,15 +376,13 @@ Thread::SelectBlocker::~SelectBlocker()
 
 void Thread::SelectBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
 {
-    // Either the timeout was in the past or we didn't add all blockers
-    VERIFY(reason == UnblockImmediatelyReason::TimeoutInThePast || !m_should_block);
     SpinlockLocker lock(m_lock);
-    if (!m_should_block || !m_did_unblock) {
-        m_did_unblock = true;
-        if (reason == UnblockImmediatelyReason::UnblockConditionAlreadyMet) {
-            auto count = collect_unblocked_flags();
-            VERIFY(count > 0);
-        }
+    if (m_did_unblock)
+        return;
+    m_did_unblock = true;
+    if (reason == UnblockImmediatelyReason::UnblockConditionAlreadyMet) {
+        auto count = collect_unblocked_flags();
+        VERIFY(count > 0);
     }
 }
 
@@ -617,7 +606,6 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, idtype_t id_type, pid_t id, K
     , m_id_type(id_type)
     , m_waitee_id(id)
     , m_result(result)
-    , m_should_block(!(m_wait_options & WNOHANG))
 {
 }
 
@@ -658,9 +646,8 @@ bool Thread::WaitBlocker::setup_blocker()
     return add_to_blocker_set(Process::current().wait_blocker_set());
 }
 
-void Thread::WaitBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
+void Thread::WaitBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
 {
-    VERIFY(reason == UnblockImmediatelyReason::TimeoutInThePast || !m_should_block);
     if (!m_error)
         Process::current().wait_blocker_set().try_unblock(*this);
 }

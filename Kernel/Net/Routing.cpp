@@ -52,7 +52,6 @@ private:
     const IPv4Address m_ip_addr;
     Optional<MACAddress>& m_addr;
     bool m_did_unblock { false };
-    bool m_should_block { true };
 };
 
 class ARPTableBlockerSet final : public Thread::BlockerSet {
@@ -90,14 +89,11 @@ ARPTableBlocker::ARPTableBlocker(IPv4Address ip_addr, Optional<MACAddress>& addr
 
 bool ARPTableBlocker::setup_blocker()
 {
-    if (!add_to_blocker_set(*s_arp_table_blocker_set))
-        m_should_block = false;
-    return m_should_block;
+    return add_to_blocker_set(*s_arp_table_blocker_set);
 }
 
-void ARPTableBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
+void ARPTableBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
 {
-    VERIFY(reason == UnblockImmediatelyReason::TimeoutInThePast || !m_should_block);
     auto addr = arp_table().with_shared([&](const auto& table) -> auto {
         return table.get(ip_addr());
     });
