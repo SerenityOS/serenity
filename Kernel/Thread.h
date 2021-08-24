@@ -272,7 +272,6 @@ public:
         Time m_start_time {};
         clockid_t m_clock_id { CLOCK_MONOTONIC_COARSE };
         bool m_infinite { false };
-        bool m_should_block { false };
     };
 
     class BlockerSet;
