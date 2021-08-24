@@ -1,25 +1,25 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2020, Adam Hodgen <ant1441@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "DOMTreeModel.h"
+#include <AK/JsonObject.h>
 #include <AK/StringBuilder.h>
-#include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOM/Text.h>
 #include <ctype.h>
-#include <stdio.h>
 
 namespace Web {
 
-DOMTreeModel::DOMTreeModel(DOM::Document& document)
-    : m_document(document)
+DOMTreeModel::DOMTreeModel(JsonObject dom_tree)
+    : m_dom_tree(move(dom_tree))
 {
     m_document_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png"));
     m_element_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
     m_text_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png"));
+
+    map_dom_nodes_to_parent(nullptr, &m_dom_tree);
 }
 
 DOMTreeModel::~DOMTreeModel()
@@ -29,37 +29,50 @@ DOMTreeModel::~DOMTreeModel()
 GUI::ModelIndex DOMTreeModel::index(int row, int column, const GUI::ModelIndex& parent) const
 {
     if (!parent.is_valid()) {
-        return create_index(row, column, m_document.ptr());
+        return create_index(row, column, &m_dom_tree);
     }
-    auto& parent_node = *static_cast<DOM::Node*>(parent.internal_data());
-    return create_index(row, column, parent_node.child_at_index(row));
+
+    auto const& parent_node = *static_cast<JsonObject const*>(parent.internal_data());
+    auto const* children = get_children(parent_node);
+    if (!children)
+        return create_index(row, column, &m_dom_tree);
+
+    auto const& child_node = children->at(row).as_object();
+    return create_index(row, column, &child_node);
 }
 
 GUI::ModelIndex DOMTreeModel::parent_index(const GUI::ModelIndex& index) const
 {
+    // FIXME: Handle the template element (child elements are not stored in it, all of its children are in its document fragment "content")
+    //        Probably in the JSON generation in Node.cpp?
     if (!index.is_valid())
         return {};
-    auto& node = *static_cast<DOM::Node*>(index.internal_data());
-    if (!node.parent())
+
+    auto const& node = *static_cast<JsonObject const*>(index.internal_data());
+
+    auto const* parent_node = get_parent(node);
+    if (!parent_node)
         return {};
 
-    // FIXME: Handle the template element (child elements are not stored in it, all of its children are in its document fragment "content")
-
-    // No grandparent? Parent is the document!
-    if (!node.parent()->parent()) {
-        return create_index(0, 0, m_document.ptr());
+    // If the parent is the root document, we know it has index 0, 0
+    if (parent_node == &m_dom_tree) {
+        return create_index(0, 0, parent_node);
     }
 
-    // Walk the grandparent's children to find the index of node's parent in its parent.
-    // (This is needed to produce the row number of the GUI::ModelIndex corresponding to node's parent.)
-    int grandparent_child_index = 0;
-    for (auto* grandparent_child = node.parent()->parent()->first_child(); grandparent_child; grandparent_child = grandparent_child->next_sibling()) {
-        if (grandparent_child == node.parent())
-            return create_index(grandparent_child_index, 0, node.parent());
-        ++grandparent_child_index;
+    // Otherwise, we need to find the grandparent, to find the index of parent within that
+    auto const* grandparent_node = get_parent(*parent_node);
+    VERIFY(grandparent_node);
+
+    auto const* grandparent_children = get_children(*grandparent_node);
+    if (!grandparent_children)
+        return {};
+
+    for (size_t grandparent_child_index = 0; grandparent_child_index < grandparent_children->size(); ++grandparent_child_index) {
+        auto const& child = grandparent_children->at(grandparent_child_index).as_object();
+        if (&child == parent_node)
+            return create_index(grandparent_child_index, 0, parent_node);
     }
 
-    VERIFY_NOT_REACHED();
     return {};
 }
 
@@ -67,8 +80,10 @@ int DOMTreeModel::row_count(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return 1;
-    auto& node = *static_cast<DOM::Node*>(index.internal_data());
-    return node.child_count();
+
+    auto const& node = *static_cast<JsonObject const*>(index.internal_data());
+    auto const* children = get_children(node);
+    return children ? children->size() : 0;
 }
 
 int DOMTreeModel::column_count(const GUI::ModelIndex&) const
@@ -99,52 +114,56 @@ static String with_whitespace_collapsed(const StringView& string)
 
 GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    auto& node = *static_cast<DOM::Node*>(index.internal_data());
+    auto const& node = *static_cast<JsonObject const*>(index.internal_data());
+    auto node_name = node.get("name").as_string();
+    auto type = node.get("type").as_string_or("unknown");
+
     if (role == GUI::ModelRole::Icon) {
-        if (node.is_document())
+        if (type == "document")
             return m_document_icon;
-        if (node.is_element())
+        if (type == "element")
             return m_element_icon;
         // FIXME: More node type icons?
         return m_text_icon;
     }
     if (role == GUI::ModelRole::Display) {
-        if (node.is_text())
-            return with_whitespace_collapsed(verify_cast<DOM::Text>(node).data());
-        if (!node.is_element())
-            return node.node_name();
-        auto& element = verify_cast<DOM::Element>(node);
+        if (type == "text")
+            return with_whitespace_collapsed(node.get("text").as_string());
+        if (type != "element")
+            return node_name;
+
         StringBuilder builder;
         builder.append('<');
-        builder.append(element.local_name());
-        element.for_each_attribute([&](auto& name, auto& value) {
-            builder.append(' ');
-            builder.append(name);
-            builder.append('=');
-            builder.append('"');
-            builder.append(value);
-            builder.append('"');
-        });
+        builder.append(node_name.to_lowercase());
+        if (node.has("attributes")) {
+            auto attributes = node.get("attributes").as_object();
+            attributes.for_each_member([&builder](auto& name, JsonValue const& value) {
+                builder.append(' ');
+                builder.append(name);
+                builder.append('=');
+                builder.append('"');
+                builder.append(value.to_string());
+                builder.append('"');
+            });
+        }
         builder.append('>');
         return builder.to_string();
     }
     return {};
 }
 
-GUI::ModelIndex DOMTreeModel::index_for_node(DOM::Node* node) const
+void DOMTreeModel::map_dom_nodes_to_parent(JsonObject const* parent, JsonObject const* node)
 {
-    if (!node)
-        return {};
+    m_dom_node_to_parent_map.set(node, parent);
 
-    DOM::Node* parent = node->parent();
-    if (!parent)
-        return {};
+    auto const* children = get_children(*node);
+    if (!children)
+        return;
 
-    auto maybe_row = parent->index_of_child(*node);
-    if (maybe_row.has_value())
-        return create_index(maybe_row.value(), 0, node);
-
-    return {};
+    children->for_each([&](auto const& child) {
+        auto const& child_node = child.as_object();
+        map_dom_nodes_to_parent(node, &child_node);
+    });
 }
 
 }
