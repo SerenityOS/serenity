@@ -10,22 +10,31 @@
 // /!\ Read setjmp.h before modifying this file!
 //
 
+.Lget_pc:
+    mov (%esp), %ebx
+    ret
+
 .global setjmp
 setjmp:
-    mov 4(%esp), %ecx       // Grab jmp_buf argument
     xor %eax, %eax          // Grab val argument (hardcoded to zero)
     jmp .Lsigset_common
 
 .global sigsetjmp
 sigsetjmp:
-    mov 4(%esp), %ecx       // Grab jmp_buf argument
     mov 8(%esp), %eax       // Grab val argument
 
 .Lsigset_common:
+    mov 4(%esp), %ecx       // Grab jmp_buf argument
     mov %eax, 24(%ecx)      // Store val into did_save_signal_mask
     movl $0, 28(%ecx)       // Clear saved_signal_mask
     test %eax, %eax
     jz .Lsaveregs
+
+    push %ebp               // Prepare ABI-compliant call to sigprocmask
+    mov %esp, %ebp
+    push %ebx
+    call .Lget_pc           // Grab the GOT pointer
+    addl $_GLOBAL_OFFSET_TABLE_, %ebx
 
     lea 28(%ecx), %eax      // Set argument oldset
     push %eax
@@ -33,8 +42,11 @@ sigsetjmp:
     push $0                 // Set argument how
     call sigprocmask@plt
     add $12, %esp
+    pop %ebx
+    pop %ebp
 
 .Lsaveregs:
+    mov 4(%esp), %ecx       // Grab jmp_buf argument
     mov (%esp), %edx        // Grab return address
     mov %ebx, (0 * 4)(%ecx) // Save registers
     mov %esi, (1 * 4)(%ecx)
