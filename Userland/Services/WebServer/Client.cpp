@@ -288,6 +288,7 @@ void Client::send_error_response(unsigned code, HTTP::HttpRequest const& request
         builder.append(header);
         builder.append("\r\n");
     }
+    builder.append("Content-Type: text/html; charset=UTF-8\r\n");
 
     builder.append("\r\n");
     builder.append("<!DOCTYPE html><html><body><h1>");
