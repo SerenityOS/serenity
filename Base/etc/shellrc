@@ -1,7 +1,6 @@
 #!sh
 
 alias fm=FileManager
-alias irc=IRCClient
 alias mag=Magnifier
 alias ms=Minesweeper
 alias sh=Shell
