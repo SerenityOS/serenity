@@ -40,6 +40,7 @@ struct RasterizerOptions {
         0.0f,
     };
     GLfloat fog_density { 1.0f };
+    GLenum fog_mode { GL_EXP };
 };
 
 class SoftwareRasterizer final {
