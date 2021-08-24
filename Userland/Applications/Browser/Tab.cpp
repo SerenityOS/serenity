@@ -29,7 +29,6 @@
 #include <LibGUI/Window.h>
 #include <LibJS/Interpreter.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
-#include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -94,8 +93,7 @@ void Tab::view_dom_tree(const String& dom_tree)
     window->move_to_front();
 }
 
-Tab::Tab(BrowserWindow& window, Type type)
-    : m_type(type)
+Tab::Tab(BrowserWindow& window)
 {
     load_from_gml(tab_gml);
 
@@ -104,10 +102,7 @@ Tab::Tab(BrowserWindow& window, Type type)
 
     auto& webview_container = *find_descendant_of_type_named<GUI::Widget>("webview_container");
 
-    if (m_type == Type::InProcessWebView)
-        m_page_view = webview_container.add<Web::InProcessWebView>();
-    else
-        m_web_content_view = webview_container.add<Web::OutOfProcessWebView>();
+    m_web_content_view = webview_container.add<Web::OutOfProcessWebView>();
 
     auto& go_back_button = toolbar.add_action(window.go_back_action());
     go_back_button.on_context_menu_request = [this](auto& context_menu_event) {
@@ -305,15 +300,6 @@ Tab::Tab(BrowserWindow& window, Type type)
         }
     };
 
-    if (m_type == Type::InProcessWebView) {
-        hooks().on_set_document = [this](auto* document) {
-            if (document && m_console_window) {
-                auto* console_widget = static_cast<ConsoleWidget*>(m_console_window->main_widget());
-                console_widget->set_interpreter(document->interpreter().make_weak_ptr());
-            }
-        };
-    }
-
     auto focus_location_box_action = GUI::Action::create(
         "Focus location box", { Mod_Ctrl, Key_L }, Key_F6, [this](auto&) {
             m_location_box->set_focus(true);
@@ -364,7 +350,7 @@ Tab::Tab(BrowserWindow& window, Type type)
     };
 
     // FIXME: This is temporary, until the OOPWV properly supports the DOM Inspector
-    window.inspect_dom_node_action().set_enabled(type == Type::InProcessWebView);
+    window.inspect_dom_node_action().set_enabled(false);
 }
 
 Tab::~Tab()
@@ -374,19 +360,12 @@ Tab::~Tab()
 void Tab::load(const URL& url, LoadType load_type)
 {
     m_is_history_navigation = (load_type == LoadType::HistoryNavigation);
-
-    if (m_type == Type::InProcessWebView)
-        m_page_view->load(url);
-    else
-        m_web_content_view->load(url);
-
+    m_web_content_view->load(url);
     m_location_box->set_focus(false);
 }
 
 URL Tab::url() const
 {
-    if (m_type == Type::InProcessWebView)
-        return m_page_view->url();
     return m_web_content_view->url();
 }
 
@@ -442,16 +421,6 @@ void Tab::update_bookmark_button(const String& url)
 
 void Tab::did_become_active()
 {
-    if (m_type == Type::InProcessWebView) {
-        Web::ResourceLoader::the().on_load_counter_change = [this] {
-            if (Web::ResourceLoader::the().pending_loads() == 0) {
-                m_statusbar->set_text("");
-                return;
-            }
-            m_statusbar->set_text(String::formatted("Loading ({} pending resources...)", Web::ResourceLoader::the().pending_loads()));
-        };
-    }
-
     BookmarksBarWidget::the().on_bookmark_click = [this](auto& url, unsigned modifiers) {
         if (modifiers & Mod_Ctrl)
             on_tab_open_request(url);
@@ -480,15 +449,11 @@ void Tab::context_menu_requested(const Gfx::IntPoint& screen_position)
 
 GUI::AbstractScrollableWidget& Tab::view()
 {
-    if (m_type == Type::InProcessWebView)
-        return *m_page_view;
     return *m_web_content_view;
 }
 
 Web::WebViewHooks& Tab::hooks()
 {
-    if (m_type == Type::InProcessWebView)
-        return *m_page_view;
     return *m_web_content_view;
 }
 
@@ -512,34 +477,9 @@ BrowserWindow& Tab::window()
     return static_cast<BrowserWindow&>(*Widget::window());
 }
 
-void Tab::show_inspector_window(Browser::Tab::InspectorTarget target)
+void Tab::show_inspector_window(Browser::Tab::InspectorTarget)
 {
-    if (m_type == Tab::Type::InProcessWebView) {
-        if (!m_dom_inspector_window) {
-            m_dom_inspector_window = GUI::Window::construct(this);
-            m_dom_inspector_window->resize(300, 500);
-            m_dom_inspector_window->set_title("DOM inspector");
-            m_dom_inspector_window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
-            m_dom_inspector_window->set_main_widget<InspectorWidget>();
-            m_dom_inspector_window->on_close = [&]() {
-                m_page_view->document()->set_inspected_node(nullptr);
-            };
-        }
-        auto* inspector_widget = static_cast<InspectorWidget*>(m_dom_inspector_window->main_widget());
-        inspector_widget->set_document(m_page_view->document());
-        switch (target) {
-        case InspectorTarget::Document:
-            inspector_widget->set_inspected_node(nullptr);
-            break;
-        case InspectorTarget::HoveredElement:
-            inspector_widget->set_inspected_node(m_page_view->document()->hovered_node());
-            break;
-        }
-        m_dom_inspector_window->show();
-        m_dom_inspector_window->move_to_front();
-    } else {
-        m_web_content_view->inspect_dom_tree();
-    }
+    m_web_content_view->inspect_dom_tree();
 }
 
 }

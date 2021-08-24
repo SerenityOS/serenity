@@ -30,11 +30,6 @@ class Tab final : public GUI::Widget {
     friend class BrowserWindow;
 
 public:
-    enum class Type {
-        InProcessWebView,
-        OutOfProcessWebView,
-    };
-
     virtual ~Tab() override;
 
     URL url() const;
@@ -76,7 +71,7 @@ public:
     GUI::AbstractScrollableWidget& view();
 
 private:
-    explicit Tab(BrowserWindow&, Type);
+    explicit Tab(BrowserWindow&);
 
     BrowserWindow const& window() const;
     BrowserWindow& window();
@@ -89,16 +84,12 @@ private:
     void view_source(const URL& url, const String& source);
     void view_dom_tree(const String&);
 
-    Type m_type;
-
     History m_history;
 
-    RefPtr<Web::InProcessWebView> m_page_view;
     RefPtr<Web::OutOfProcessWebView> m_web_content_view;
 
     RefPtr<GUI::UrlBox> m_location_box;
     RefPtr<GUI::Button> m_bookmark_button;
-    RefPtr<GUI::Window> m_dom_inspector_window;
     RefPtr<GUI::Window> m_console_window;
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::ToolbarContainer> m_toolbar_container;
