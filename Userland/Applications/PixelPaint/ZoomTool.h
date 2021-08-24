@@ -22,7 +22,7 @@ public:
 
 private:
     RefPtr<GUI::Widget> m_properties_widget;
-    double m_sensitivity { 0.1 };
+    double m_sensitivity { 0.5 };
 };
 
 }
