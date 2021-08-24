@@ -231,6 +231,8 @@ public:
         return { AK::abs(dx_relative_to(other)), AK::abs(dy_relative_to(other)) };
     }
 
+    [[nodiscard]] Point end_point_for_square_aspect_ratio(Point const&) const;
+
     template<typename U>
     [[nodiscard]] Point<U> to_type() const
     {
