@@ -95,7 +95,11 @@ void RectangleTool::on_mousemove(Layer* layer, MouseEvent& event)
 
     m_draw_mode = event.layer_event().alt() ? DrawMode::FromCenter : DrawMode::FromCorner;
 
-    m_rectangle_end_position = event.layer_event().position();
+    if (event.layer_event().shift())
+        m_rectangle_end_position = m_rectangle_start_position.end_point_for_square_aspect_ratio(event.layer_event().position());
+    else
+        m_rectangle_end_position = event.layer_event().position();
+
     m_editor->update();
 }
 
