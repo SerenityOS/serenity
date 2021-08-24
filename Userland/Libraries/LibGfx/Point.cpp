@@ -19,6 +19,17 @@ void Point<T>::constrain(Rect<T> const& rect)
     m_y = AK::clamp<T>(y(), rect.top(), rect.bottom());
 }
 
+template<typename T>
+[[nodiscard]] Point<T> Point<T>::end_point_for_square_aspect_ratio(Point<T> const& previous_end_point) const
+{
+    const T dx = previous_end_point.x() - x();
+    const T dy = previous_end_point.y() - y();
+    const T x_sign = dx >= 0 ? 1 : -1;
+    const T y_sign = dy >= 0 ? 1 : -1;
+    const T abs_size = AK::max(AK::abs(dx), AK::abs(dy));
+    return { x() + x_sign * abs_size, y() + y_sign * abs_size };
+}
+
 template<>
 String IntPoint::to_string() const
 {
