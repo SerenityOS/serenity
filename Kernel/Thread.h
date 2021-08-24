@@ -862,46 +862,44 @@ public:
         // synchronize on the spin locks already.
         Atomic<bool, AK::MemoryOrder::memory_order_relaxed> timeout_unblocked(false);
         bool timer_was_added = false;
-        {
-            switch (state()) {
-            case Thread::Stopped:
-                // It's possible that we were requested to be stopped!
-                break;
-            case Thread::Running:
-                VERIFY(m_blocker == nullptr);
-                break;
-            default:
-                VERIFY_NOT_REACHED();
-            }
 
-            m_blocker = &blocker;
-
-            auto& block_timeout = blocker.override_timeout(timeout);
-            if (!block_timeout.is_infinite()) {
-                // Process::kill_all_threads may be called at any time, which will mark all
-                // threads to die. In that case
-                timer_was_added = TimerQueue::the().add_timer_without_id(*m_block_timer, block_timeout.clock_id(), block_timeout.absolute_time(), [&]() {
-                    VERIFY(!Processor::current_in_irq());
-                    VERIFY(!g_scheduler_lock.own_lock());
-                    VERIFY(!m_block_lock.own_lock());
-                    // NOTE: this may execute on the same or any other processor!
-                    SpinlockLocker scheduler_lock(g_scheduler_lock);
-                    SpinlockLocker block_lock(m_block_lock);
-                    if (m_blocker && timeout_unblocked.exchange(true) == false)
-                        unblock();
-                });
-                if (!timer_was_added) {
-                    // Timeout is already in the past
-                    blocker.will_unblock_immediately_without_blocking(Blocker::UnblockImmediatelyReason::TimeoutInThePast);
-                    m_blocker = nullptr;
-                    return BlockResult::InterruptedByTimeout;
-                }
-            }
-
-            blocker.begin_blocking({});
-
-            set_state(Thread::Blocked);
+        switch (state()) {
+        case Thread::Stopped:
+            // It's possible that we were requested to be stopped!
+            break;
+        case Thread::Running:
+            VERIFY(m_blocker == nullptr);
+            break;
+        default:
+            VERIFY_NOT_REACHED();
         }
+
+        m_blocker = &blocker;
+
+        if (auto& block_timeout = blocker.override_timeout(timeout); !block_timeout.is_infinite()) {
+            // Process::kill_all_threads may be called at any time, which will mark all
+            // threads to die. In that case
+            timer_was_added = TimerQueue::the().add_timer_without_id(*m_block_timer, block_timeout.clock_id(), block_timeout.absolute_time(), [&]() {
+                VERIFY(!Processor::current_in_irq());
+                VERIFY(!g_scheduler_lock.own_lock());
+                VERIFY(!m_block_lock.own_lock());
+                // NOTE: this may execute on the same or any other processor!
+                SpinlockLocker scheduler_lock(g_scheduler_lock);
+                SpinlockLocker block_lock(m_block_lock);
+                if (m_blocker && timeout_unblocked.exchange(true) == false)
+                    unblock();
+            });
+            if (!timer_was_added) {
+                // Timeout is already in the past
+                blocker.will_unblock_immediately_without_blocking(Blocker::UnblockImmediatelyReason::TimeoutInThePast);
+                m_blocker = nullptr;
+                return BlockResult::InterruptedByTimeout;
+            }
+        }
+
+        blocker.begin_blocking({});
+
+        set_state(Thread::Blocked);
 
         scheduler_lock.unlock();
         block_lock.unlock();
