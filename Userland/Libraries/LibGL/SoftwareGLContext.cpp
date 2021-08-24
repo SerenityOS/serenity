@@ -1783,6 +1783,24 @@ void SoftwareGLContext::gl_fogf(GLenum pname, GLfloat param)
     m_rasterizer.set_options(options);
 }
 
+void SoftwareGLContext::gl_fogi(GLenum pname, GLint param)
+{
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(!(param == GL_EXP || param == GL_EXP2 || param != GL_LINEAR), GL_INVALID_ENUM);
+
+    auto options = m_rasterizer.options();
+
+    switch (pname) {
+    case GL_FOG_MODE:
+        options.fog_mode = param;
+        break;
+    default:
+        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+    }
+
+    m_rasterizer.set_options(options);
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);

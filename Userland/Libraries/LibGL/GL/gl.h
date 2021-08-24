@@ -376,6 +376,7 @@ GLAPI void glDepthFunc(GLenum func);
 GLAPI void glPolygonMode(GLenum face, GLenum mode);
 GLAPI void glFogfv(GLenum mode, GLfloat* params);
 GLAPI void glFogf(GLenum pname, GLfloat param);
+GLAPI void glFogi(GLenum pname, GLint param);
 
 #ifdef __cplusplus
 }
