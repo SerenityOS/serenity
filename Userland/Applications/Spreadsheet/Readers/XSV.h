@@ -107,7 +107,14 @@ public:
         size_t index() const { return m_index; }
         size_t size() const { return m_xsv.headers().size(); }
 
-        // FIXME: Implement begin() and end(), keeping `Field' out of the API.
+        using ConstIterator = AK::SimpleIterator<const Row, const StringView>;
+        using Iterator = AK::SimpleIterator<Row, StringView>;
+
+        constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
+        constexpr Iterator begin() { return Iterator::begin(*this); }
+
+        constexpr ConstIterator end() const { return ConstIterator::end(*this); }
+        constexpr Iterator end() { return Iterator::end(*this); }
 
     private:
         XSV& m_xsv;
