@@ -321,6 +321,13 @@ void WindowServerConnection::screen_rects_changed(Vector<Gfx::IntRect> const& re
     });
 }
 
+void WindowServerConnection::applet_area_rect_changed(Gfx::IntRect const& rect)
+{
+    Window::for_each_window({}, [&](auto& window) {
+        Core::EventLoop::current().post_event(window, make<AppletAreaRectChangeEvent>(rect));
+    });
+}
+
 void WindowServerConnection::set_wallpaper_finished(bool)
 {
     // This is handled manually by Desktop::set_wallpaper().

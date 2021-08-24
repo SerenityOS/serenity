@@ -42,6 +42,10 @@ void WMClientConnection::set_applet_area_position(Gfx::IntPoint const& position)
     }
 
     AppletManager::the().set_position(position);
+
+    WindowServer::ClientConnection::for_each_client([](auto& connection) {
+        connection.post_message(Messages::WindowClient::AppletAreaRectChanged(AppletManager::the().window()->rect()));
+    });
 }
 
 void WMClientConnection::set_active_window(i32 client_id, i32 window_id)

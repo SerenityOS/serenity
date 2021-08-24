@@ -207,6 +207,7 @@ protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);
     virtual void screen_rects_change_event(ScreenRectsChangeEvent&);
+    virtual void applet_area_rect_change_event(AppletAreaRectChangeEvent&);
 
     virtual void enter_event(Core::Event&);
     virtual void leave_event(Core::Event&);
@@ -226,6 +227,7 @@ private:
     void handle_theme_change_event(ThemeChangeEvent&);
     void handle_fonts_change_event(FontsChangeEvent&);
     void handle_screen_rects_change_event(ScreenRectsChangeEvent&);
+    void handle_applet_area_rect_change_event(AppletAreaRectChangeEvent&);
     void handle_drag_move_event(DragEvent&);
     void handle_entered_event(Core::Event&);
     void handle_left_event(Core::Event&);
