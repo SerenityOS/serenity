@@ -13,7 +13,6 @@
 #include <LibGUI/TreeView.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOMTreeJSONModel.h>
 #include <LibWeb/DOMTreeModel.h>
 #include <LibWeb/StylePropertiesModel.h>
 
@@ -59,7 +58,7 @@ void InspectorWidget::set_dom_json(String json)
         return;
 
     m_dom_json = json;
-    m_dom_tree_view->set_model(Web::DOMTreeJSONModel::create(m_dom_json->view()));
+    m_dom_tree_view->set_model(Web::DOMTreeModel::create(m_dom_json->view()));
 
     // FIXME: Support the LayoutTreeModel
     // m_layout_tree_view->set_model(Web::LayoutTreeModel::create(*document));
