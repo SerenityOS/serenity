@@ -164,6 +164,7 @@ bool ConfigFile::sync()
         return true;
 
     m_file->truncate(0);
+    m_file->seek(0);
 
     for (auto& it : m_groups) {
         m_file->write(String::formatted("[{}]\n", it.key));
