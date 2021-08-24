@@ -748,7 +748,8 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VirtualRange 
         return {};
 
     auto region = maybe_region.release_value();
-    region->map(kernel_page_directory());
+    if (!region->map(kernel_page_directory()))
+        return {};
     return region;
 }
 

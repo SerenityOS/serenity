@@ -285,7 +285,8 @@ bool Region::map(PageDirectory& page_directory, ShouldFlushTLB should_flush_tlb)
 void Region::remap()
 {
     VERIFY(m_page_directory);
-    map(*m_page_directory);
+    auto result = map(*m_page_directory);
+    VERIFY(result);
 }
 
 PageFaultResponse Region::handle_fault(PageFault const& fault)
@@ -310,7 +311,8 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
             auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
             VERIFY(m_vmobject->is_anonymous());
             page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page({});
-            remap_vmobject_page(page_index_in_vmobject);
+            if (!remap_vmobject_page(page_index_in_vmobject))
+                return PageFaultResponse::OutOfMemory;
             return PageFaultResponse::Continue;
         }
         dbgln("BUG! Unexpected NP fault at {}", fault.vaddr());
@@ -458,7 +460,9 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         MM.unquickmap_page();
     }
 
-    remap_vmobject_page(page_index_in_vmobject);
+    if (!remap_vmobject_page(page_index_in_vmobject))
+        return PageFaultResponse::OutOfMemory;
+
     return PageFaultResponse::Continue;
 }
 

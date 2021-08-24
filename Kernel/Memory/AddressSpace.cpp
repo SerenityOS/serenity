@@ -80,7 +80,10 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
 
         // And finally we map the new region(s) using our page directory (they were just allocated and don't have one).
         for (auto* new_region : new_regions) {
-            new_region->map(page_directory());
+            // TODO: Ideally we should do this in a way that can be rolled back on failure, as failing here
+            // leaves the caller in an undefined state.
+            if (!new_region->map(page_directory()))
+                return ENOMEM;
         }
 
         PerformanceManager::add_unmap_perf_event(Process::current(), range_to_unmap);
@@ -130,7 +133,10 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
 
     // And finally map the new region(s) into our page directory.
     for (auto* new_region : new_regions) {
-        new_region->map(page_directory());
+        // TODO: Ideally we should do this in a way that can be rolled back on failure, as failing here
+        // leaves the caller in an undefined state.
+        if (!new_region->map(page_directory()))
+            return ENOMEM;
     }
 
     PerformanceManager::add_unmap_perf_event(Process::current(), range_to_unmap);
