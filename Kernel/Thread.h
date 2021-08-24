@@ -300,6 +300,7 @@ public:
         virtual Type blocker_type() const = 0;
         virtual const BlockTimeout& override_timeout(const BlockTimeout& timeout) { return timeout; }
         virtual bool can_be_interrupted() const { return true; }
+        virtual bool setup_blocker();
 
         Thread& thread() { return m_thread; }
 
@@ -523,11 +524,14 @@ public:
         virtual bool should_block() override { return !m_join_error && m_should_block; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
 
+        virtual bool setup_blocker() override;
+
         bool unblock(void*, bool);
 
     private:
         NonnullRefPtr<Thread> m_joinee;
         void*& m_joinee_exit_value;
+        KResult& m_try_join_result;
         bool m_join_error { false };
         bool m_did_unblock { false };
         bool m_should_block { true };
@@ -541,15 +545,13 @@ public:
         virtual Type blocker_type() const override { return Type::Queue; }
         virtual StringView state_string() const override { return m_block_reason.is_null() ? m_block_reason : "Queue"sv; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override { }
-
-        virtual bool should_block() override
-        {
-            return m_should_block;
-        }
+        virtual bool should_block() override { return m_should_block; }
+        virtual bool setup_blocker() override;
 
         bool unblock();
 
     protected:
+        WaitQueue& m_wait_queue;
         StringView m_block_reason;
         bool m_should_block { true };
         bool m_did_unblock { false };
@@ -563,11 +565,8 @@ public:
         virtual Type blocker_type() const override { return Type::Futex; }
         virtual StringView state_string() const override { return "Futex"sv; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override { }
-
-        virtual bool should_block() override
-        {
-            return m_should_block;
-        }
+        virtual bool should_block() override { return m_should_block; }
+        virtual bool setup_blocker() override;
 
         u32 bitset() const { return m_bitset; }
 
@@ -582,7 +581,8 @@ public:
         bool unblock(bool force = false);
 
     protected:
-        u32 m_bitset;
+        FutexQueue& m_futex_queue;
+        u32 m_bitset { 0 };
         u32 m_relock_flags { 0 };
         bool m_should_block { true };
         bool m_did_unblock { false };
@@ -627,6 +627,7 @@ public:
 
         virtual bool unblock(bool, void*) override;
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
+        virtual bool setup_blocker() override;
 
     protected:
         explicit FileDescriptionBlocker(FileDescription&, BlockFlags, BlockFlags&);
@@ -696,13 +697,14 @@ public:
         };
 
         typedef Vector<FDInfo, FD_SETSIZE> FDVector;
-        explicit SelectBlocker(FDVector& fds);
+        explicit SelectBlocker(FDVector&);
         virtual ~SelectBlocker();
 
         virtual bool unblock(bool, void*) override;
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual void was_unblocked(bool) override;
         virtual StringView state_string() const override { return "Selecting"sv; }
+        virtual bool setup_blocker() override;
 
     private:
         size_t collect_unblocked_flags();
@@ -726,6 +728,7 @@ public:
         virtual bool should_block() override { return m_should_block; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
         virtual void was_unblocked(bool) override;
+        virtual bool setup_blocker() override;
 
         bool unblock(Process& process, UnblockFlags flags, u8 signal, bool from_add_blocker);
         bool is_wait() const { return !(m_wait_options & WNOWAIT); }
@@ -867,6 +870,12 @@ public:
         m_in_block = true;
         BlockerType blocker(forward<Args>(args)...);
 
+        if (!blocker.setup_blocker()) {
+            blocker.will_unblock_immediately_without_blocking(Blocker::UnblockImmediatelyReason::UnblockConditionAlreadyMet);
+            m_in_block = false;
+            return BlockResult::NotBlocked;
+        }
+
         SpinlockLocker scheduler_lock(g_scheduler_lock);
         // Relaxed semantics are fine for timeout_unblocked because we
         // synchronize on the spin locks already.
@@ -885,13 +894,6 @@ public:
             }
 
             m_blocker = &blocker;
-            if (!blocker.should_block()) {
-                // Don't block if the wake condition is already met
-                blocker.will_unblock_immediately_without_blocking(Blocker::UnblockImmediatelyReason::UnblockConditionAlreadyMet);
-                m_blocker = nullptr;
-                m_in_block = false;
-                return BlockResult::NotBlocked;
-            }
 
             auto& block_timeout = blocker.override_timeout(timeout);
             if (!block_timeout.is_infinite()) {

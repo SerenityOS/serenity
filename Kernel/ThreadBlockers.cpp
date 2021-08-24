@@ -45,6 +45,11 @@ Thread::Blocker::~Blocker()
         m_blocker_set->remove_blocker(*this);
 }
 
+bool Thread::Blocker::setup_blocker()
+{
+    return true;
+}
+
 void Thread::Blocker::begin_blocking(Badge<Thread>)
 {
     SpinlockLocker lock(m_lock);
@@ -68,19 +73,23 @@ auto Thread::Blocker::end_blocking(Badge<Thread>, bool did_timeout) -> BlockResu
 Thread::JoinBlocker::JoinBlocker(Thread& joinee, KResult& try_join_result, void*& joinee_exit_value)
     : m_joinee(joinee)
     , m_joinee_exit_value(joinee_exit_value)
+    , m_try_join_result(try_join_result)
 {
-    {
-        // We need to hold our lock to avoid a race where try_join succeeds
-        // but the joinee is joining immediately
-        SpinlockLocker lock(m_lock);
-        try_join_result = joinee.try_join([&]() {
-            if (!add_to_blocker_set(joinee.m_join_blocker_set))
-                m_should_block = false;
-        });
-        m_join_error = try_join_result.is_error();
-        if (m_join_error)
+}
+
+bool Thread::JoinBlocker::setup_blocker()
+{
+    // We need to hold our lock to avoid a race where try_join succeeds
+    // but the joinee is joining immediately
+    SpinlockLocker lock(m_lock);
+    m_try_join_result = m_joinee->try_join([&]() {
+        if (!add_to_blocker_set(m_joinee->m_join_blocker_set))
             m_should_block = false;
-    }
+    });
+    m_join_error = m_try_join_result.is_error();
+    if (m_join_error)
+        m_should_block = false;
+    return m_should_block;
 }
 
 void Thread::JoinBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
@@ -114,10 +123,16 @@ bool Thread::JoinBlocker::unblock(void* value, bool from_add_blocker)
 }
 
 Thread::WaitQueueBlocker::WaitQueueBlocker(WaitQueue& wait_queue, StringView block_reason)
-    : m_block_reason(block_reason)
+    : m_wait_queue(wait_queue)
+    , m_block_reason(block_reason)
 {
-    if (!add_to_blocker_set(wait_queue))
+}
+
+bool Thread::WaitQueueBlocker::setup_blocker()
+{
+    if (!add_to_blocker_set(m_wait_queue))
         m_should_block = false;
+    return m_should_block;
 }
 
 Thread::WaitQueueBlocker::~WaitQueueBlocker()
@@ -138,10 +153,16 @@ bool Thread::WaitQueueBlocker::unblock()
 }
 
 Thread::FutexBlocker::FutexBlocker(FutexQueue& futex_queue, u32 bitset)
-    : m_bitset(bitset)
+    : m_futex_queue(futex_queue)
+    , m_bitset(bitset)
 {
-    if (!add_to_blocker_set(futex_queue))
+}
+
+bool Thread::FutexBlocker::setup_blocker()
+{
+    if (!add_to_blocker_set(m_futex_queue))
         m_should_block = false;
+    return m_should_block;
 }
 
 Thread::FutexBlocker::~FutexBlocker()
@@ -188,9 +209,14 @@ Thread::FileDescriptionBlocker::FileDescriptionBlocker(FileDescription& descript
     , m_flags(flags)
     , m_unblocked_flags(unblocked_flags)
 {
+}
+
+bool Thread::FileDescriptionBlocker::setup_blocker()
+{
     m_unblocked_flags = BlockFlags::None;
-    if (!add_to_blocker_set(description.blocker_set()))
+    if (!add_to_blocker_set(m_blocked_description->blocker_set()))
         m_should_block = false;
+    return m_should_block;
 }
 
 bool Thread::FileDescriptionBlocker::unblock(bool from_add_blocker, void*)
@@ -338,6 +364,10 @@ Thread::BlockResult Thread::SleepBlocker::block_result()
 Thread::SelectBlocker::SelectBlocker(FDVector& fds)
     : m_fds(fds)
 {
+}
+
+bool Thread::SelectBlocker::setup_blocker()
+{
     for (auto& fd_entry : m_fds) {
         fd_entry.unblocked_flags = FileBlocker::BlockFlags::None;
 
@@ -346,6 +376,7 @@ Thread::SelectBlocker::SelectBlocker(FDVector& fds)
         if (!fd_entry.description->blocker_set().add_blocker(*this, &fd_entry))
             m_should_block = false;
     }
+    return m_should_block;
 }
 
 Thread::SelectBlocker::~SelectBlocker()
@@ -590,7 +621,11 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, idtype_t id_type, pid_t id, K
     , m_result(result)
     , m_should_block(!(m_wait_options & WNOHANG))
 {
-    switch (id_type) {
+}
+
+bool Thread::WaitBlocker::setup_blocker()
+{
+    switch (m_id_type) {
     case P_PID: {
         m_waitee = Process::from_pid(m_waitee_id);
         if (!m_waitee || m_waitee->ppid() != Process::current().pid()) {
@@ -613,11 +648,16 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, idtype_t id_type, pid_t id, K
         VERIFY_NOT_REACHED();
     }
 
+    if (m_error)
+        return false;
+
+    if (m_wait_options & WNOHANG)
+        return false;
+
     // NOTE: unblock may be called within add_to_blocker_set, in which
     // case it means that we already have a match without having to block.
     // In that case add_to_blocker_set will return false.
-    if (m_error || !add_to_blocker_set(Process::current().wait_blocker_set()))
-        m_should_block = false;
+    return add_to_blocker_set(Process::current().wait_blocker_set());
 }
 
 void Thread::WaitBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)

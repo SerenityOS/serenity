@@ -87,8 +87,8 @@ private:
             , m_message(message)
             , m_completion(move(completion))
         {
-            add_to_blocker_set(fs.m_completion_blocker);
         }
+        virtual bool setup_blocker() override;
         virtual StringView state_string() const override { return "Waiting"sv; }
         virtual Type blocker_type() const override { return Type::Plan9FS; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;

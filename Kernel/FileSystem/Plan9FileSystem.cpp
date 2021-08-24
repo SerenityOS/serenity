@@ -425,6 +425,11 @@ bool Plan9FS::Blocker::unblock(u16 tag)
     return unblock();
 }
 
+bool Plan9FS::Blocker::setup_blocker()
+{
+    return add_to_blocker_set(m_fs.m_completion_blocker);
+}
+
 void Plan9FS::Blocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
 {
     {
