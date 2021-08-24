@@ -54,65 +54,65 @@ public:
 
     ~Region();
 
-    VirtualRange const& range() const { return m_range; }
-    VirtualAddress vaddr() const { return m_range.base(); }
-    size_t size() const { return m_range.size(); }
-    bool is_readable() const { return m_access & Access::Read; }
-    bool is_writable() const { return m_access & Access::Write; }
-    bool is_executable() const { return m_access & Access::Execute; }
+    [[nodiscard]] VirtualRange const& range() const { return m_range; }
+    [[nodiscard]] VirtualAddress vaddr() const { return m_range.base(); }
+    [[nodiscard]] size_t size() const { return m_range.size(); }
+    [[nodiscard]] bool is_readable() const { return m_access & Access::Read; }
+    [[nodiscard]] bool is_writable() const { return m_access & Access::Write; }
+    [[nodiscard]] bool is_executable() const { return m_access & Access::Execute; }
 
-    bool has_been_readable() const { return m_access & Access::HasBeenReadable; }
-    bool has_been_writable() const { return m_access & Access::HasBeenWritable; }
-    bool has_been_executable() const { return m_access & Access::HasBeenExecutable; }
+    [[nodiscard]] bool has_been_readable() const { return m_access & Access::HasBeenReadable; }
+    [[nodiscard]] bool has_been_writable() const { return m_access & Access::HasBeenWritable; }
+    [[nodiscard]] bool has_been_executable() const { return m_access & Access::HasBeenExecutable; }
 
-    bool is_cacheable() const { return m_cacheable; }
-    StringView name() const { return m_name ? m_name->view() : StringView {}; }
-    OwnPtr<KString> take_name() { return move(m_name); }
-    Region::Access access() const { return static_cast<Region::Access>(m_access); }
+    [[nodiscard]] bool is_cacheable() const { return m_cacheable; }
+    [[nodiscard]] StringView name() const { return m_name ? m_name->view() : StringView {}; }
+    [[nodiscard]] OwnPtr<KString> take_name() { return move(m_name); }
+    [[nodiscard]] Region::Access access() const { return static_cast<Region::Access>(m_access); }
 
     void set_name(OwnPtr<KString> name) { m_name = move(name); }
 
-    VMObject const& vmobject() const { return *m_vmobject; }
-    VMObject& vmobject() { return *m_vmobject; }
+    [[nodiscard]] VMObject const& vmobject() const { return *m_vmobject; }
+    [[nodiscard]] VMObject& vmobject() { return *m_vmobject; }
     void set_vmobject(NonnullRefPtr<VMObject>&&);
 
-    bool is_shared() const { return m_shared; }
+    [[nodiscard]] bool is_shared() const { return m_shared; }
     void set_shared(bool shared) { m_shared = shared; }
 
-    bool is_stack() const { return m_stack; }
+    [[nodiscard]] bool is_stack() const { return m_stack; }
     void set_stack(bool stack) { m_stack = stack; }
 
-    bool is_mmap() const { return m_mmap; }
+    [[nodiscard]] bool is_mmap() const { return m_mmap; }
     void set_mmap(bool mmap) { m_mmap = mmap; }
 
-    bool is_user() const { return !is_kernel(); }
-    bool is_kernel() const { return vaddr().get() < 0x00800000 || vaddr().get() >= kernel_mapping_base; }
+    [[nodiscard]] bool is_user() const { return !is_kernel(); }
+    [[nodiscard]] bool is_kernel() const { return vaddr().get() < 0x00800000 || vaddr().get() >= kernel_mapping_base; }
 
     PageFaultResponse handle_fault(PageFault const&);
 
     KResultOr<NonnullOwnPtr<Region>> try_clone();
 
-    bool contains(VirtualAddress vaddr) const
+    [[nodiscard]] bool contains(VirtualAddress vaddr) const
     {
         return m_range.contains(vaddr);
     }
 
-    bool contains(VirtualRange const& range) const
+    [[nodiscard]] bool contains(VirtualRange const& range) const
     {
         return m_range.contains(range);
     }
 
-    unsigned page_index_from_address(VirtualAddress vaddr) const
+    [[nodiscard]] unsigned page_index_from_address(VirtualAddress vaddr) const
     {
         return (vaddr - m_range.base()).get() / PAGE_SIZE;
     }
 
-    VirtualAddress vaddr_from_page_index(size_t page_index) const
+    [[nodiscard]] VirtualAddress vaddr_from_page_index(size_t page_index) const
     {
         return vaddr().offset(page_index * PAGE_SIZE);
     }
 
-    bool translate_vmobject_page(size_t& index) const
+    [[nodiscard]] bool translate_vmobject_page(size_t& index) const
     {
         auto first_index = first_page_index();
         if (index < first_index) {
@@ -128,17 +128,17 @@ public:
         return true;
     }
 
-    ALWAYS_INLINE size_t translate_to_vmobject_page(size_t page_index) const
+    [[nodiscard]] ALWAYS_INLINE size_t translate_to_vmobject_page(size_t page_index) const
     {
         return first_page_index() + page_index;
     }
 
-    size_t first_page_index() const
+    [[nodiscard]] size_t first_page_index() const
     {
         return m_offset_in_vmobject / PAGE_SIZE;
     }
 
-    size_t page_count() const
+    [[nodiscard]] size_t page_count() const
     {
         return size() / PAGE_SIZE;
     }
@@ -146,31 +146,31 @@ public:
     PhysicalPage const* physical_page(size_t index) const;
     RefPtr<PhysicalPage>& physical_page_slot(size_t index);
 
-    size_t offset_in_vmobject() const
+    [[nodiscard]] size_t offset_in_vmobject() const
     {
         return m_offset_in_vmobject;
     }
 
-    size_t offset_in_vmobject_from_vaddr(VirtualAddress vaddr) const
+    [[nodiscard]] size_t offset_in_vmobject_from_vaddr(VirtualAddress vaddr) const
     {
         return m_offset_in_vmobject + vaddr.get() - this->vaddr().get();
     }
 
-    size_t amount_resident() const;
-    size_t amount_shared() const;
-    size_t amount_dirty() const;
+    [[nodiscard]] size_t amount_resident() const;
+    [[nodiscard]] size_t amount_shared() const;
+    [[nodiscard]] size_t amount_dirty() const;
 
-    bool should_cow(size_t page_index) const;
+    [[nodiscard]] bool should_cow(size_t page_index) const;
     void set_should_cow(size_t page_index, bool);
 
-    size_t cow_pages() const;
+    [[nodiscard]] size_t cow_pages() const;
 
     void set_readable(bool b) { set_access_bit(Access::Read, b); }
     void set_writable(bool b) { set_access_bit(Access::Write, b); }
     void set_executable(bool b) { set_access_bit(Access::Execute, b); }
 
     void set_page_directory(PageDirectory&);
-    bool map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
+    [[nodiscard]] bool map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
     enum class ShouldDeallocateVirtualRange {
         No,
         Yes,
@@ -179,14 +179,14 @@ public:
 
     void remap();
 
-    bool is_syscall_region() const { return m_syscall_region; }
+    [[nodiscard]] bool is_syscall_region() const { return m_syscall_region; }
     void set_syscall_region(bool b) { m_syscall_region = b; }
 
 private:
     Region(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
 
-    bool remap_vmobject_page(size_t page_index, bool with_flush = true);
-    bool do_remap_vmobject_page(size_t page_index, bool with_flush = true);
+    [[nodiscard]] bool remap_vmobject_page(size_t page_index, bool with_flush = true);
+    [[nodiscard]] bool do_remap_vmobject_page(size_t page_index, bool with_flush = true);
 
     void set_access_bit(Access access, bool b)
     {
@@ -196,11 +196,11 @@ private:
             m_access &= ~access;
     }
 
-    PageFaultResponse handle_cow_fault(size_t page_index);
-    PageFaultResponse handle_inode_fault(size_t page_index);
-    PageFaultResponse handle_zero_fault(size_t page_index);
+    [[nodiscard]] PageFaultResponse handle_cow_fault(size_t page_index);
+    [[nodiscard]] PageFaultResponse handle_inode_fault(size_t page_index);
+    [[nodiscard]] PageFaultResponse handle_zero_fault(size_t page_index);
 
-    bool map_individual_page_impl(size_t page_index);
+    [[nodiscard]] bool map_individual_page_impl(size_t page_index);
 
     RefPtr<PageDirectory> m_page_directory;
     VirtualRange m_range;
