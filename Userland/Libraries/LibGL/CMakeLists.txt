@@ -7,6 +7,7 @@ set(SOURCES
     GLBlend.cpp
     GLColor.cpp
     GLContext.cpp
+    GLFog.cpp
     GLLights.cpp
     GLLists.cpp
     GLMat.cpp

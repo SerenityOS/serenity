@@ -87,6 +87,7 @@ public:
     virtual void gl_depth_range(GLdouble min, GLdouble max) override;
     virtual void gl_depth_func(GLenum func) override;
     virtual void gl_polygon_mode(GLenum face, GLenum mode) override;
+    virtual void gl_fogfv(GLenum pname, GLfloat* params) override;
     virtual void present() override;
 
 private:
