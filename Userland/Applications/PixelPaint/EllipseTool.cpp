@@ -89,7 +89,11 @@ void EllipseTool::on_mousemove(Layer*, MouseEvent& event)
 
     m_draw_mode = event.layer_event().alt() ? DrawMode::FromCenter : DrawMode::FromCorner;
 
-    m_ellipse_end_position = event.layer_event().position();
+    if (event.layer_event().shift())
+        m_ellipse_end_position = m_ellipse_start_position.end_point_for_square_aspect_ratio(event.layer_event().position());
+    else
+        m_ellipse_end_position = event.layer_event().position();
+
     m_editor->update();
 }
 
