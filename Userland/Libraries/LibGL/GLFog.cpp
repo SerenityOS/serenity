@@ -18,3 +18,8 @@ void glFogf(GLenum pname, GLfloat param)
 {
     g_gl_context->gl_fogf(pname, param);
 }
+
+void glFogi(GLenum pname, GLint param)
+{
+    g_gl_context->gl_fogi(pname, param);
+}

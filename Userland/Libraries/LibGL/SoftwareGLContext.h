@@ -89,6 +89,7 @@ public:
     virtual void gl_polygon_mode(GLenum face, GLenum mode) override;
     virtual void gl_fogfv(GLenum pname, GLfloat* params) override;
     virtual void gl_fogf(GLenum pname, GLfloat param) override;
+    virtual void gl_fogi(GLenum pname, GLint param) override;
     virtual void present() override;
 
 private:

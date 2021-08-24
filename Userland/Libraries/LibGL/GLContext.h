@@ -79,6 +79,7 @@ public:
     virtual void gl_polygon_mode(GLenum face, GLenum mode) = 0;
     virtual void gl_fogfv(GLenum pname, GLfloat* params) = 0;
     virtual void gl_fogf(GLenum pname, GLfloat params) = 0;
+    virtual void gl_fogi(GLenum pname, GLint param) = 0;
 
     virtual void present() = 0;
 };
