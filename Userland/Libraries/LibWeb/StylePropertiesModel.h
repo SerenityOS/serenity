@@ -1,18 +1,17 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
+#include <AK/JsonObject.h>
 #include <LibGUI/Model.h>
 #include <LibWeb/CSS/StyleProperties.h>
 
 namespace Web {
-
-class StyleProperties;
 
 class StylePropertiesModel final : public GUI::Model {
 public:
@@ -22,18 +21,26 @@ public:
         __Count
     };
 
-    static NonnullRefPtr<StylePropertiesModel> create(const CSS::StyleProperties& properties) { return adopt_ref(*new StylePropertiesModel(properties)); }
+    static NonnullRefPtr<StylePropertiesModel> create(StringView properties)
+    {
+        auto json_or_error = JsonValue::from_string(properties);
+        if (!json_or_error.has_value())
+            VERIFY_NOT_REACHED();
 
-    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
-    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
+        return adopt_ref(*new StylePropertiesModel(json_or_error.value().as_object()));
+    }
+
+    virtual ~StylePropertiesModel() override;
+
+    virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override;
+    virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Count; }
     virtual String column_name(int) const override;
-    virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
+    virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
 
 private:
-    explicit StylePropertiesModel(const CSS::StyleProperties& properties);
-    const CSS::StyleProperties& properties() const { return *m_properties; }
+    explicit StylePropertiesModel(JsonObject);
 
-    NonnullRefPtr<CSS::StyleProperties> m_properties;
+    JsonObject m_properties;
 
     struct Value {
         String name;

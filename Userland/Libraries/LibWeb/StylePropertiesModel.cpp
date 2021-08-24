@@ -1,23 +1,21 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "StylePropertiesModel.h"
 #include <AK/QuickSort.h>
-#include <LibWeb/CSS/PropertyID.h>
-#include <LibWeb/CSS/StyleProperties.h>
-#include <LibWeb/DOM/Document.h>
-#include <LibWeb/StylePropertiesModel.h>
 
 namespace Web {
 
-StylePropertiesModel::StylePropertiesModel(const CSS::StyleProperties& properties)
-    : m_properties(properties)
+StylePropertiesModel::StylePropertiesModel(JsonObject properties)
+    : m_properties(move(properties))
 {
-    properties.for_each_property([&](auto property_id, auto& property_value) {
+    m_properties.for_each_member([&](auto& property_name, auto& property_value) {
         Value value;
-        value.name = CSS::string_from_property_id(property_id);
+        value.name = property_name;
         value.value = property_value.to_string();
         m_values.append(value);
     });
@@ -25,7 +23,11 @@ StylePropertiesModel::StylePropertiesModel(const CSS::StyleProperties& propertie
     quick_sort(m_values, [](auto& a, auto& b) { return a.name < b.name; });
 }
 
-int StylePropertiesModel::row_count(const GUI::ModelIndex&) const
+StylePropertiesModel::~StylePropertiesModel()
+{
+}
+
+int StylePropertiesModel::row_count(GUI::ModelIndex const&) const
 {
     return m_values.size();
 }
@@ -41,7 +43,8 @@ String StylePropertiesModel::column_name(int column_index) const
         VERIFY_NOT_REACHED();
     }
 }
-GUI::Variant StylePropertiesModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
+
+GUI::Variant StylePropertiesModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
 {
     auto& value = m_values[index.row()];
     if (role == GUI::ModelRole::Display) {
