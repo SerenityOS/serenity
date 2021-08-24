@@ -13,6 +13,7 @@ class AbstractTableView;
 class AbstractView;
 class Action;
 class ActionGroup;
+class AppletAreaRectChangeEvent;
 class Application;
 class AutocompleteBox;
 class AutocompleteProvider;

@@ -319,6 +319,7 @@ protected:
     virtual void theme_change_event(ThemeChangeEvent&);
     virtual void fonts_change_event(FontsChangeEvent&);
     virtual void screen_rects_change_event(ScreenRectsChangeEvent&);
+    virtual void applet_area_rect_change_event(AppletAreaRectChangeEvent&);
 
     virtual void did_begin_inspection() override;
     virtual void did_end_inspection() override;

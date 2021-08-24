@@ -30,6 +30,8 @@ endpoint WindowClient
 
     screen_rects_changed(Vector<Gfx::IntRect> rects, u32 main_screen_index, u32 virtual_desktop_rows, u32 virtual_desktop_columns) =|
 
+    applet_area_rect_changed(Gfx::IntRect rect) =|
+
     set_wallpaper_finished(bool success) =|
 
     drag_accepted() =|
