@@ -9,7 +9,6 @@
 #include <LibGUI/Widget.h>
 #include <LibJS/Console.h>
 #include <LibJS/Forward.h>
-#include <LibWeb/InProcessWebView.h>
 
 namespace Browser {
 

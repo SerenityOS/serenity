@@ -12,9 +12,9 @@
 #include <LibWeb/DOM/Timer.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
-#include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Page/BrowsingContext.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Web::DOM {
 
