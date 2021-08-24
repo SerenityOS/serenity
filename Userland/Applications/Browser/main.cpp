@@ -29,7 +29,6 @@ namespace Browser {
 
 String g_search_engine;
 String g_home_url;
-bool g_single_process = false;
 
 }
 
@@ -48,17 +47,10 @@ int main(int argc, char** argv)
     const char* specified_url = nullptr;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(Browser::g_single_process, "Single-process mode", "single-process", 's');
     args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     auto app = GUI::Application::construct(argc, argv);
-
-    if (Browser::g_single_process) {
-        // Connect to the RequestServer and the WebSocket service immediately so we don't need to unveil their portals.
-        Web::ResourceLoader::the();
-        Web::HTML::WebSocketClientManager::the();
-    }
 
     // Connect to LaunchServer immediately and let it know that we won't ask for anything other than opening
     // the user's downloads directory.
