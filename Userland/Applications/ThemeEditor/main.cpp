@@ -143,6 +143,14 @@ int main(int argc, char** argv)
         theme->sync();
     };
 
+    file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+        auto result = FileSystemAccessClient::Client::the().open_file(window->window_id(), "Select theme file", "/res/themes");
+        if (result.error != 0)
+            return;
+
+        preview_widget.set_theme_from_file(*result.chosen_file, *result.fd);
+    }));
+
     file_menu.add_action(GUI::CommonActions::make_save_action([&](auto&) {
         if (path.has_value()) {
             save_to_result(FileSystemAccessClient::Client::the().request_file(window->window_id(), *path, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
