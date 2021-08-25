@@ -21,6 +21,8 @@ class Client final
     C_OBJECT(Client);
 
 public:
+    void pledge_domains(Vector<String> const&);
+
     String read_string(StringView domain, StringView group, StringView key, StringView fallback);
     i32 read_i32(StringView domain, StringView group, StringView key, i32 fallback);
     bool read_bool(StringView domain, StringView group, StringView key, bool fallback);
@@ -66,6 +68,16 @@ inline void write_i32(StringView domain, StringView group, StringView key, i32 v
 inline void write_bool(StringView domain, StringView group, StringView key, bool value)
 {
     Client::the().write_bool(domain, group, key, value);
+}
+
+inline void pledge_domains(Vector<String> const& domains)
+{
+    Client::the().pledge_domains(domains);
+}
+
+inline void pledge_domains(String const& domains)
+{
+    Client::the().pledge_domains({ domains });
 }
 
 }

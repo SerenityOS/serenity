@@ -19,6 +19,11 @@ Client& Client::the()
     return *s_the;
 }
 
+void Client::pledge_domains(Vector<String> const& domains)
+{
+    async_pledge_domains(domains);
+}
+
 String Client::read_string(StringView domain, StringView group, StringView key, StringView fallback)
 {
     return read_string_value(domain, group, key).value_or(fallback);
