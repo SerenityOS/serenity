@@ -143,6 +143,7 @@ Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
 * **Tobias Christiansen** - [TobyAsE](https://github.com/TobyAsE)
 * **Lenny Maiorani** - [ldm5180](https://github.com/ldm5180)
 * **sin-ack** - [sin-ack](https://github.com/sin-ack)
+* **Jesse Buhagiar** - [Quaker762](https://github.com/Quaker762)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
