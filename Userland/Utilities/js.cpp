@@ -29,6 +29,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/DisplayNames.h>
 #include <LibJS/Runtime/Map.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberObject.h>
@@ -503,6 +504,20 @@ static void print_temporal_zoned_date_time(JS::Object const& object, HashTable<J
     print_value(&zoned_date_time.calendar(), seen_objects);
 }
 
+static void print_intl_display_names(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& display_names = static_cast<JS::Intl::DisplayNames const&>(object);
+    print_type("Intl.DisplayNames");
+    out("\n  locale: ");
+    print_value(js_string(object.vm(), display_names.locale()), seen_objects);
+    out("\n  type: ");
+    print_value(js_string(object.vm(), display_names.type_string()), seen_objects);
+    out("\n  style: ");
+    print_value(js_string(object.vm(), display_names.style_string()), seen_objects);
+    out("\n  fallback: ");
+    print_value(js_string(object.vm(), display_names.fallback_string()), seen_objects);
+}
+
 static void print_primitive_wrapper_object(FlyString const& name, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     // BooleanObject, NumberObject, StringObject
@@ -576,6 +591,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_temporal_time_zone(object, seen_objects);
         if (is<JS::Temporal::ZonedDateTime>(object))
             return print_temporal_zoned_date_time(object, seen_objects);
+        if (is<JS::Intl::DisplayNames>(object))
+            return print_intl_display_names(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
