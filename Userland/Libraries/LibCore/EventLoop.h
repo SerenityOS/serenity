@@ -74,6 +74,8 @@ public:
     };
     static void notify_forked(ForkEvent);
 
+    static bool has_been_instantiated();
+
 private:
     void wait_for_event(WaitMode);
     Optional<Time> get_next_timer_expiration();
