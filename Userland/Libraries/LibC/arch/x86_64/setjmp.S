@@ -16,17 +16,20 @@ setjmp:
 
 .global sigsetjmp
 sigsetjmp:
-    mov %esi, 60(%rdi)      // Store val into did_save_signal_mask
-    movl $0, 64(%rdi)       // Clear saved_signal_mask
+    mov %esi, 64(%rdi)      // Store val into did_save_signal_mask
+    movl $0, 68(%rdi)       // Clear saved_signal_mask
     test %esi, %esi
     jz .Lsaveregs
 
-    mov %rdi, %r12          // Preserve sigjmp_buf argument
-    mov $0, %rdi            // Set argument how
+    push %rbp               // Prepare ABI-compliant call to sigprocmask
+    mov %rsp, %rbp
+    push %rdi
+    lea 68(%rdi), %rdx      // Set argument oldset
     mov $0, %rsi            // Set argument set
-    lea 64(%rdi), %rdx      // Set argument oldset
+    mov $0, %rdi            // Set argument how
     call sigprocmask@plt
-    mov %r12, %rdi          // Restore sigjmp_buf argument
+    pop %rdi
+    pop %rbp
 
 .Lsaveregs:
     mov %rbx, (0 * 8)(%rdi) // Save registers
