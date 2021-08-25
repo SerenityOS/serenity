@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,10 +7,9 @@
 #include <AK/QuickSort.h>
 #include <AK/URL.h>
 #include <Applications/Terminal/TerminalSettingsWindowGML.h>
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <LibCore/Process.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -291,9 +290,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    RefPtr<Core::ConfigFile> config = Core::ConfigFile::open_for_app("Terminal", Core::ConfigFile::AllowWriting::Yes);
-    Core::File::ensure_parent_directories(config->filename());
-
     int ptm_fd;
     pid_t shell_pid = forkpty(&ptm_fd, nullptr, nullptr, nullptr);
     if (shell_pid < 0) {
@@ -305,7 +301,7 @@ int main(int argc, char** argv)
         if (command_to_execute)
             run_command(command_to_execute, keep_open);
         else
-            run_command(config->read_entry("Startup", "Command", ""), false);
+            run_command(Config::read_string("Terminal", "Startup", "Command", ""), false);
         VERIFY_NOT_REACHED();
     }
 
@@ -319,7 +315,7 @@ int main(int argc, char** argv)
     window->set_background_color(Color::Black);
     window->set_double_buffering_enabled(false);
 
-    auto& terminal = window->set_main_widget<VT::TerminalWidget>(ptm_fd, true, config);
+    auto& terminal = window->set_main_widget<VT::TerminalWidget>(ptm_fd, true);
     terminal.on_command_exit = [&] {
         app->quit(0);
     };
@@ -332,7 +328,7 @@ int main(int argc, char** argv)
     terminal.apply_size_increments_to_window(*window);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto bell = config->read_entry("Window", "Bell", "Visible");
+    auto bell = Config::read_string("Terminal", "Window", "Bell", "Visible");
     if (bell == "AudibleBeep") {
         terminal.set_bell_mode(VT::TerminalWidget::BellMode::AudibleBeep);
     } else if (bell == "Disabled") {
@@ -344,11 +340,11 @@ int main(int argc, char** argv)
     RefPtr<GUI::Window> settings_window;
     RefPtr<GUI::Window> find_window;
 
-    auto new_opacity = config->read_num_entry("Window", "Opacity", 255);
+    auto new_opacity = Config::read_i32("Terminal", "Window", "Opacity", 255);
     terminal.set_opacity(new_opacity);
     window->set_has_alpha_channel(new_opacity < 255);
 
-    auto new_scrollback_size = config->read_num_entry("Terminal", "MaxHistorySize", terminal.max_history_size());
+    auto new_scrollback_size = Config::read_i32("Terminal", "Terminal", "MaxHistorySize", terminal.max_history_size());
     terminal.set_max_history_size(new_scrollback_size);
 
     auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"),
@@ -358,8 +354,8 @@ int main(int argc, char** argv)
             settings_window->show();
             settings_window->move_to_front();
             settings_window->on_close = [&]() {
-                config->write_num_entry("Window", "Opacity", terminal.opacity());
-                config->write_num_entry("Terminal", "MaxHistorySize", terminal.max_history_size());
+                Config::write_i32("Terminal", "Window", "Opacity", terminal.opacity());
+                Config::write_i32("Terminal", "Terminal", "MaxHistorySize", terminal.max_history_size());
 
                 auto bell = terminal.bell_mode();
                 auto bell_setting = String::empty();
@@ -370,9 +366,7 @@ int main(int argc, char** argv)
                 } else {
                     bell_setting = "Visible";
                 }
-                config->write_entry("Window", "Bell", bell_setting);
-
-                config->sync();
+                Config::write_string("Terminal", "Window", "Bell", bell_setting);
             };
         });
 
@@ -383,8 +377,7 @@ int main(int argc, char** argv)
             if (picker->exec() == GUI::Dialog::ExecOK) {
                 terminal.set_font_and_resize_to_fit(*picker->font());
                 window->resize(terminal.size());
-                config->write_entry("Text", "Font", picker->font()->qualified_name());
-                config->sync();
+                Config::write_string("Terminal", "Text", "Font", picker->font()->qualified_name());
             }
         });
 
@@ -468,7 +461,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil(config->filename().characters(), "rwc") < 0) {
+    if (unveil("/tmp/portal/config", "rw") < 0) {
         perror("unveil");
         return 1;
     }
@@ -476,7 +469,6 @@ int main(int argc, char** argv)
     unveil(nullptr, nullptr);
 
     window->show();
-    config->sync();
     int result = app->exec();
     dbgln("Exiting terminal, updating utmp");
     utmp_update(pts_name, 0, false);
