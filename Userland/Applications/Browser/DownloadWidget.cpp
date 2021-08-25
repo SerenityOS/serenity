@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,7 +7,7 @@
 #include "DownloadWidget.h"
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/ConfigFile.h>
+#include <LibConfig/Client.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
 #include <LibCore/StandardPaths.h>
@@ -36,8 +36,7 @@ DownloadWidget::DownloadWidget(const URL& url)
         m_destination_path = builder.to_string();
     }
 
-    auto browser_config = Core::ConfigFile::open_for_app("Browser");
-    auto close_on_finish = browser_config->read_bool_entry("Preferences", "CloseDownloadWidgetOnFinish", false);
+    auto close_on_finish = Config::read_bool("Browser", "Preferences", "CloseDownloadWidgetOnFinish", false);
 
     m_elapsed_timer.start();
     m_download = Web::ResourceLoader::the().protocol_client().start_request("GET", url);
@@ -90,8 +89,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_close_on_finish_checkbox->set_checked(close_on_finish);
 
     m_close_on_finish_checkbox->on_checked = [&](bool checked) {
-        auto browser_config = Core::ConfigFile::open_for_app("Browser", Core::ConfigFile::AllowWriting::Yes);
-        browser_config->write_bool_entry("Preferences", "CloseDownloadWidgetOnFinish", checked);
+        Config::write_bool("Browser", "Preferences", "CloseDownloadWidgetOnFinish", checked);
     };
 
     auto& button_container = add<GUI::Widget>();

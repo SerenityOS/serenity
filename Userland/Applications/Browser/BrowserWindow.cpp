@@ -13,7 +13,7 @@
 #include "InspectorWidget.h"
 #include "Tab.h"
 #include <Applications/Browser/BrowserWindowGML.h>
-#include <LibCore/ConfigFile.h>
+#include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
@@ -236,11 +236,10 @@ void BrowserWindow::build_menus()
 
     m_change_homepage_action = GUI::Action::create(
         "Set Homepage URL", [this](auto&) {
-            auto config = Core::ConfigFile::open_for_app("Browser", Core::ConfigFile::AllowWriting::Yes);
-            String homepage_url = config->read_entry("Preferences", "Home", "about:blank");
+            auto homepage_url = Config::read_string("Browser", "Preferences", "Home", "about:blank");
             if (GUI::InputBox::show(this, homepage_url, "Enter URL", "Change homepage URL") == GUI::InputBox::ExecOK) {
                 if (URL(homepage_url).is_valid()) {
-                    config->write_entry("Preferences", "Home", homepage_url);
+                    Config::write_string("Browser", "Preferences", "Home", homepage_url);
                     Browser::g_home_url = homepage_url;
                 } else {
                     GUI::MessageBox::show_error(this, "The URL you have entered is not valid");
@@ -259,8 +258,7 @@ void BrowserWindow::build_menus()
         auto action = GUI::Action::create_checkable(
             name, [&](auto&) {
                 g_search_engine = url_format;
-                auto config = Core::ConfigFile::open_for_app("Browser", Core::ConfigFile::AllowWriting::Yes);
-                config->write_entry("Preferences", "SearchEngine", g_search_engine);
+                Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
             },
             this);
         search_engine_menu.add_action(action);
@@ -276,8 +274,7 @@ void BrowserWindow::build_menus()
     m_disable_search_engine_action = GUI::Action::create_checkable(
         "Disable", [](auto&) {
             g_search_engine = {};
-            auto config = Core::ConfigFile::open_for_app("Browser", Core::ConfigFile::AllowWriting::Yes);
-            config->write_entry("Preferences", "SearchEngine", g_search_engine);
+            Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
         },
         this);
     search_engine_menu.add_action(*m_disable_search_engine_action);
@@ -306,8 +303,7 @@ void BrowserWindow::build_menus()
         }
 
         g_search_engine = search_engine;
-        auto config = Core::ConfigFile::open_for_app("Browser", Core::ConfigFile::AllowWriting::Yes);
-        config->write_entry("Preferences", "SearchEngine", g_search_engine);
+        Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
         action.set_status_tip(search_engine);
     });
     search_engine_menu.add_action(custom_search_engine_action);
