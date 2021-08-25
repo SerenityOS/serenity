@@ -1,5 +1,7 @@
 endpoint ConfigServer
 {
+    pledge_domains(Vector<String> domains) =|
+
     read_string_value(String domain, String group, String key) => (Optional<String> value)
     read_i32_value(String domain, String group, String key) => (Optional<i32> value)
     read_bool_value(String domain, String group, String key) => (Optional<bool> value)
