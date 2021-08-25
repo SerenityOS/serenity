@@ -77,6 +77,36 @@ int main(int argc, char** argv)
     ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
 #undef __ENUMERATE_COLOR_ROLE
 
+    auto& main_widget = window->set_main_widget<GUI::Widget>();
+    main_widget.set_fill_with_background_color(true);
+    main_widget.set_layout<GUI::VerticalBoxLayout>();
+
+    auto& preview_widget = main_widget.add<ThemeEditor::PreviewWidget>(app->palette());
+    preview_widget.set_fixed_size(480, 360);
+
+    auto& horizontal_container = main_widget.add<GUI::Widget>();
+    horizontal_container.set_layout<GUI::HorizontalBoxLayout>();
+    horizontal_container.set_fixed_size(480, 20);
+
+    auto& combo_box = horizontal_container.add<GUI::ComboBox>();
+    auto& color_input = horizontal_container.add<GUI::ColorInput>();
+
+    combo_box.set_only_allow_values_from_model(true);
+    combo_box.set_model(adopt_ref(*new ColorRoleModel(color_roles)));
+    combo_box.on_change = [&](auto&, auto& index) {
+        auto role = index.model()->data(index, GUI::ModelRole::Custom).to_color_role();
+        color_input.set_color(preview_palette.color(role));
+    };
+
+    combo_box.set_selected_index((size_t)Gfx::ColorRole::Window - 1);
+
+    color_input.on_change = [&] {
+        auto role = combo_box.model()->index(combo_box.selected_index()).data(GUI::ModelRole::Custom).to_color_role();
+        preview_palette.set_color(role, color_input.color());
+        preview_widget.set_preview_palette(preview_palette);
+    };
+    color_input.set_color(preview_palette.color(Gfx::ColorRole::Window));
+
     auto& file_menu = window->add_menu("&File");
 
     Optional<String> path = {};
@@ -112,36 +142,6 @@ int main(int argc, char** argv)
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Theme Editor", app_icon, window));
-
-    auto& main_widget = window->set_main_widget<GUI::Widget>();
-    main_widget.set_fill_with_background_color(true);
-    main_widget.set_layout<GUI::VerticalBoxLayout>();
-
-    auto& preview_widget = main_widget.add<ThemeEditor::PreviewWidget>(app->palette());
-    preview_widget.set_fixed_size(480, 360);
-
-    auto& horizontal_container = main_widget.add<GUI::Widget>();
-    horizontal_container.set_layout<GUI::HorizontalBoxLayout>();
-    horizontal_container.set_fixed_size(480, 20);
-
-    auto& combo_box = horizontal_container.add<GUI::ComboBox>();
-    auto& color_input = horizontal_container.add<GUI::ColorInput>();
-
-    combo_box.set_only_allow_values_from_model(true);
-    combo_box.set_model(adopt_ref(*new ColorRoleModel(color_roles)));
-    combo_box.on_change = [&](auto&, auto& index) {
-        auto role = index.model()->data(index, GUI::ModelRole::Custom).to_color_role();
-        color_input.set_color(preview_palette.color(role));
-    };
-
-    combo_box.set_selected_index((size_t)Gfx::ColorRole::Window - 1);
-
-    color_input.on_change = [&] {
-        auto role = combo_box.model()->index(combo_box.selected_index()).data(GUI::ModelRole::Custom).to_color_role();
-        preview_palette.set_color(role, color_input.color());
-        preview_widget.set_preview_palette(preview_palette);
-    };
-    color_input.set_color(preview_palette.color(Gfx::ColorRole::Window));
 
     window->resize(480, 385);
     window->set_resizable(false);
