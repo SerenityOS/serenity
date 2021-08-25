@@ -62,6 +62,11 @@ static HashTable<Notifier*>* s_notifiers;
 int EventLoop::s_wake_pipe_fds[2];
 static RefPtr<InspectorServerConnection> s_inspector_server_connection;
 
+bool EventLoop::has_been_instantiated()
+{
+    return s_main_event_loop;
+}
+
 class SignalHandlers : public RefCounted<SignalHandlers> {
     AK_MAKE_NONCOPYABLE(SignalHandlers);
     AK_MAKE_NONMOVABLE(SignalHandlers);
