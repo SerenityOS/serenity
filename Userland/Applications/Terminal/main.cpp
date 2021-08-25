@@ -276,6 +276,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    Config::pledge_domains("Terminal");
+
     const char* command_to_execute = nullptr;
     bool keep_open = false;
 
