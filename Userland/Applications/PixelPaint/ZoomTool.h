@@ -17,7 +17,7 @@ public:
     ZoomTool();
     virtual ~ZoomTool() override;
 
-    virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
+    virtual void on_mousedown(Layer&, MouseEvent&) override;
     virtual GUI::Widget* get_properties_widget() override;
 
 private:

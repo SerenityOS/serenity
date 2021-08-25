@@ -70,15 +70,16 @@ static void flood_fill(Gfx::Bitmap& bitmap, Gfx::IntPoint const& start_position,
     }
 }
 
-void BucketTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
+void BucketTool::on_mousedown(Layer& layer, MouseEvent& event)
 {
-    if (!layer.rect().contains(event.position()))
+    auto& layer_event = event.layer_event();
+    if (!layer.rect().contains(layer_event.position()))
         return;
 
     GUI::Painter painter(layer.bitmap());
-    auto target_color = layer.bitmap().get_pixel(event.x(), event.y());
+    auto target_color = layer.bitmap().get_pixel(layer_event.x(), layer_event.y());
 
-    flood_fill(layer.bitmap(), event.position(), target_color, m_editor->color_for(event), m_threshold);
+    flood_fill(layer.bitmap(), layer_event.position(), target_color, m_editor->color_for(layer_event), m_threshold);
 
     layer.did_modify_bitmap();
     m_editor->did_complete_action();

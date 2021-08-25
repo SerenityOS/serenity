@@ -19,9 +19,38 @@ class Tool {
 public:
     virtual ~Tool();
 
-    virtual void on_mousedown(Layer&, GUI::MouseEvent&, GUI::MouseEvent&) { }
-    virtual void on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent&) { }
-    virtual void on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent&) { }
+    class MouseEvent {
+    public:
+        enum class Action {
+            MouseDown,
+            MouseMove,
+            MouseUp
+        };
+
+        MouseEvent(Action action, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event, GUI::MouseEvent& raw_event)
+            : m_action(action)
+            , m_layer_event(layer_event)
+            , m_image_event(image_event)
+            , m_raw_event(raw_event)
+        {
+        }
+
+        Action action() const { return m_action; }
+        GUI::MouseEvent const& layer_event() const { return m_layer_event; }
+        GUI::MouseEvent const& image_event() const { return m_image_event; }
+        GUI::MouseEvent const& raw_event() const { return m_raw_event; }
+
+    private:
+        Action m_action;
+
+        GUI::MouseEvent& m_layer_event;
+        GUI::MouseEvent& m_image_event;
+        GUI::MouseEvent& m_raw_event;
+    };
+
+    virtual void on_mousedown(Layer&, MouseEvent&) { }
+    virtual void on_mousemove(Layer&, MouseEvent&) { }
+    virtual void on_mouseup(Layer&, MouseEvent&) { }
     virtual void on_context_menu(Layer&, GUI::ContextMenuEvent&) { }
     virtual void on_tool_button_contextmenu(GUI::ContextMenuEvent&) { }
     virtual void on_second_paint(Layer const&, GUI::PaintEvent&) { }

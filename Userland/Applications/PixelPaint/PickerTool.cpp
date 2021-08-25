@@ -18,14 +18,15 @@ PickerTool::~PickerTool()
 {
 }
 
-void PickerTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
+void PickerTool::on_mousedown(Layer& layer, MouseEvent& event)
 {
-    if (!layer.rect().contains(event.position()))
+    auto& layer_event = event.layer_event();
+    if (!layer.rect().contains(layer_event.position()))
         return;
-    auto color = layer.bitmap().get_pixel(event.position());
-    if (event.button() == GUI::MouseButton::Left)
+    auto color = layer.bitmap().get_pixel(layer_event.position());
+    if (layer_event.button() == GUI::MouseButton::Left)
         m_editor->set_primary_color(color);
-    else if (event.button() == GUI::MouseButton::Right)
+    else if (layer_event.button() == GUI::MouseButton::Right)
         m_editor->set_secondary_color(color);
 }
 

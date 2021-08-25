@@ -38,8 +38,9 @@ LineTool::~LineTool()
 {
 }
 
-void LineTool::on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent&)
+void LineTool::on_mousedown(Layer&, MouseEvent& event)
 {
+    auto& layer_event = event.layer_event();
     if (layer_event.button() != GUI::MouseButton::Left && layer_event.button() != GUI::MouseButton::Right)
         return;
 
@@ -54,9 +55,10 @@ void LineTool::on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEven
     m_editor->update();
 }
 
-void LineTool::on_mouseup(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
+void LineTool::on_mouseup(Layer& layer, MouseEvent& event)
 {
-    if (event.button() == m_drawing_button) {
+    auto& layer_event = event.layer_event();
+    if (layer_event.button() == m_drawing_button) {
         GUI::Painter painter(layer.bitmap());
         painter.draw_line(m_line_start_position, m_line_end_position, m_editor->color_for(m_drawing_button), m_thickness);
         m_drawing_button = GUI::MouseButton::None;
@@ -65,8 +67,9 @@ void LineTool::on_mouseup(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&
     }
 }
 
-void LineTool::on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent&)
+void LineTool::on_mousemove(Layer&, MouseEvent& event)
 {
+    auto& layer_event = event.layer_event();
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
