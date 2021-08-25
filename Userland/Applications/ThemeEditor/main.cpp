@@ -90,7 +90,6 @@ int main(int argc, char** argv)
 #undef __ENUMERATE_COLOR_ROLE
 
     auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     Optional<String> path = {};
 
@@ -119,6 +118,9 @@ int main(int argc, char** argv)
     file_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         save_to_result(FileSystemAccessClient::Client::the().save_file(window->window_id(), "Theme", "ini"));
     }));
+
+    file_menu.add_separator();
+    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Theme Editor", app_icon, window));
