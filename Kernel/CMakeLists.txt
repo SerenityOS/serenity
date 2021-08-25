@@ -395,7 +395,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-pie")
 # secure to run in production builds. Useful for coverage guided fuzzing.
 if (ENABLE_KERNEL_COVERAGE_COLLECTION)
     add_definitions(-DENABLE_KERNEL_COVERAGE_COLLECTION)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize-coverage=trace-pc")
+    add_compile_options(-fsanitize-coverage=trace-pc)
     set(KCOV_EXCLUDED_SOURCES
         # Make sure we don't instrument any code called from __sanitizer_cov_trace_pc
         # otherwise we'll end up with recursive calls to that function.
@@ -427,7 +427,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
 # is not currently meant to be used, besides when developing Kernel ASAN support.
 #
 if (ENABLE_KERNEL_ADDRESS_SANITIZER)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=kernel-address")
+    add_compile_options(-fsanitize=kernel-address)
 endif()
 
 add_compile_definitions(KERNEL)
