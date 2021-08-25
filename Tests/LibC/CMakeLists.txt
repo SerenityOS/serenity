@@ -6,6 +6,7 @@ set(TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/TestLibCExec.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TestLibCDirEnt.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TestLibCInodeWatcher.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestLibCSetjmp.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TestLibCString.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TestStackSmash.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TestIo.cpp
