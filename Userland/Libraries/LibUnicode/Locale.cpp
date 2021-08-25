@@ -11,6 +11,10 @@
 #include <AK/StringBuilder.h>
 #include <LibUnicode/Locale.h>
 
+#if ENABLE_UNICODE_DATA
+#    include <LibUnicode/UnicodeLocale.h>
+#endif
+
 namespace Unicode {
 
 bool is_unicode_language_subtag(StringView subtag)
@@ -147,6 +151,38 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
     // FIXME: Handle extensions and pu_extensions.
 
     return builder.build();
+}
+
+String const& default_locale()
+{
+    static String locale = "en"sv;
+    return locale;
+}
+
+bool is_locale_available([[maybe_unused]] StringView locale)
+{
+#if ENABLE_UNICODE_DATA
+    static auto const& available_locales = Detail::available_locales();
+    return available_locales.contains(locale);
+#else
+    return false;
+#endif
+}
+
+Optional<StringView> get_locale_territory_mapping([[maybe_unused]] StringView locale, [[maybe_unused]] StringView code)
+{
+#if ENABLE_UNICODE_DATA
+    static auto const& available_locales = Detail::available_locales();
+
+    auto it = available_locales.find(locale);
+    if (it == available_locales.end())
+        return {};
+
+    if (auto territory = Detail::territory_from_string(code); territory.has_value())
+        return it->value.territories[to_underlying(*territory)];
+#endif
+
+    return {};
 }
 
 }
