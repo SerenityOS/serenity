@@ -13,8 +13,8 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <Applications/FileManager/FileManagerWindowGML.h>
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
@@ -49,8 +49,8 @@
 
 using namespace FileManager;
 
-static int run_in_desktop_mode(RefPtr<Core::ConfigFile>);
-static int run_in_windowed_mode(RefPtr<Core::ConfigFile>, String initial_location, String entry_focused_on_init);
+static int run_in_desktop_mode();
+static int run_in_windowed_mode(String initial_location, String entry_focused_on_init);
 static void do_copy(Vector<String> const& selected_file_paths, FileOperation file_operation);
 static void do_paste(String const& target_directory, GUI::Window* window);
 static void do_create_link(Vector<String> const& selected_file_paths, GUI::Window* window);
@@ -75,8 +75,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    RefPtr<Core::ConfigFile> config = Core::ConfigFile::open_for_app("FileManager", Core::ConfigFile::AllowWriting::Yes);
-
     Core::ArgsParser args_parser;
     bool is_desktop_mode { false }, is_selection_mode { false }, ignore_path_resolution { false };
     String initial_location;
@@ -94,7 +92,7 @@ int main(int argc, char** argv)
     }
 
     if (is_desktop_mode)
-        return run_in_desktop_mode(move(config));
+        return run_in_desktop_mode();
 
     // our initial location is defined as, in order of precedence:
     // 1. the command-line path argument (e.g. FileManager /bin)
@@ -126,7 +124,7 @@ int main(int argc, char** argv)
         focused_entry = path.basename();
     }
 
-    return run_in_windowed_mode(move(config), initial_location, focused_entry);
+    return run_in_windowed_mode(initial_location, focused_entry);
 }
 
 void do_copy(Vector<String> const& selected_file_paths, FileOperation file_operation)
@@ -274,7 +272,7 @@ bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView c
     return added_open_menu_items;
 }
 
-int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
+int run_in_desktop_mode()
 {
     static constexpr char const* process_name = "FileManager (Desktop)";
     set_process_name(process_name, strlen(process_name));
@@ -415,8 +413,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
         }
     };
 
-    auto wm_config = Core::ConfigFile::open_for_app("WindowManager");
-    auto selected_wallpaper = wm_config->read_entry("Background", "Wallpaper", "");
+    auto selected_wallpaper = Config::read_string("WindowManager", "Background", "Wallpaper", "");
     if (!selected_wallpaper.is_empty()) {
         GUI::Desktop::the().set_wallpaper(selected_wallpaper, false);
     }
@@ -425,16 +422,16 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
     return GUI::Application::the()->exec();
 }
 
-int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_location, String entry_focused_on_init)
+int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
 {
     auto window = GUI::Window::construct();
     window->set_title("File Manager");
 
-    auto left = config->read_num_entry("Window", "Left", 150);
-    auto top = config->read_num_entry("Window", "Top", 75);
-    auto width = config->read_num_entry("Window", "Width", 640);
-    auto height = config->read_num_entry("Window", "Height", 480);
-    auto was_maximized = config->read_bool_entry("Window", "Maximized", false);
+    auto left = Config::read_i32("FileManager", "Window", "Left", 150);
+    auto top = Config::read_i32("FileManager", "Window", "Top", 75);
+    auto width = Config::read_i32("FileManager", "Window", "Width", 640);
+    auto height = Config::read_i32("FileManager", "Window", "Height", 480);
+    auto was_maximized = Config::read_i32("FileManager", "Window", "Maximized", false);
 
     auto& widget = window->set_main_widget<GUI::Widget>();
 
@@ -538,7 +535,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     RefPtr<GUI::Action> layout_statusbar_action;
     RefPtr<GUI::Action> layout_folderpane_action;
 
-    auto show_toolbar = config->read_bool_entry("Layout", "ShowToolbar", true);
+    auto show_toolbar = Config::read_bool("FileManager", "Layout", "ShowToolbar", true);
     layout_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
         if (action.is_checked()) {
             main_toolbar.set_visible(true);
@@ -549,13 +546,12 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 toolbar_container.set_visible(false);
         }
         show_toolbar = action.is_checked();
-        config->write_bool_entry("Layout", "ShowToolbar", action.is_checked());
-        config->sync();
+        Config::write_bool("FileManager", "Layout", "ShowToolbar", action.is_checked());
     });
     layout_toolbar_action->set_checked(show_toolbar);
     main_toolbar.set_visible(show_toolbar);
 
-    auto show_location = config->read_bool_entry("Layout", "ShowLocationBar", true);
+    auto show_location = Config::read_bool("FileManager", "Layout", "ShowLocationBar", true);
     layout_location_action = GUI::Action::create_checkable("&Location Bar", [&](auto& action) {
         if (action.is_checked()) {
             breadcrumb_toolbar.set_visible(true);
@@ -568,8 +564,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 toolbar_container.set_visible(false);
         }
         show_location = action.is_checked();
-        config->write_bool_entry("Layout", "ShowLocationBar", action.is_checked());
-        config->sync();
+        Config::write_bool("FileManager", "Layout", "ShowLocationBar", action.is_checked());
     });
     layout_location_action->set_checked(show_location);
     breadcrumb_toolbar.set_visible(show_location);
@@ -578,21 +573,19 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     layout_statusbar_action = GUI::Action::create_checkable("&Status Bar", [&](auto& action) {
         action.is_checked() ? statusbar.set_visible(true) : statusbar.set_visible(false);
-        config->write_bool_entry("Layout", "ShowStatusbar", action.is_checked());
-        config->sync();
+        Config::write_bool("FileManager", "Layout", "ShowStatusbar", action.is_checked());
     });
 
-    auto show_statusbar = config->read_bool_entry("Layout", "ShowStatusbar", true);
+    auto show_statusbar = Config::read_bool("FileManager", "Layout", "ShowStatusbar", true);
     layout_statusbar_action->set_checked(show_statusbar);
     statusbar.set_visible(show_statusbar);
 
     layout_folderpane_action = GUI::Action::create_checkable("&Folder Pane", { Mod_Ctrl, Key_P }, [&](auto& action) {
         action.is_checked() ? tree_view.set_visible(true) : tree_view.set_visible(false);
-        config->write_bool_entry("Layout", "ShowFolderPane", action.is_checked());
-        config->sync();
+        Config::write_bool("FileManager", "Layout", "ShowFolderPane", action.is_checked());
     });
 
-    auto show_folderpane = config->read_bool_entry("Layout", "ShowFolderPane", true);
+    auto show_folderpane = Config::read_bool("FileManager", "Layout", "ShowFolderPane", true);
     layout_folderpane_action->set_checked(show_folderpane);
     tree_view.set_visible(show_folderpane);
 
@@ -612,24 +605,21 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     view_as_icons_action = GUI::Action::create_checkable(
         "View as &Icons", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/icon-view.png"), [&](GUI::Action const&) {
             directory_view.set_view_mode(DirectoryView::ViewMode::Icon);
-            config->write_entry("DirectoryView", "ViewMode", "Icon");
-            config->sync();
+            Config::write_string("FileManager", "DirectoryView", "ViewMode", "Icon");
         },
         window);
 
     view_as_table_action = GUI::Action::create_checkable(
         "View as &Table", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/table-view.png"), [&](GUI::Action const&) {
             directory_view.set_view_mode(DirectoryView::ViewMode::Table);
-            config->write_entry("DirectoryView", "ViewMode", "Table");
-            config->sync();
+            Config::write_string("FileManager", "DirectoryView", "ViewMode", "Table");
         },
         window);
 
     view_as_columns_action = GUI::Action::create_checkable(
         "View as &Columns", { Mod_Ctrl, KeyCode::Key_3 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/columns-view.png"), [&](GUI::Action const&) {
             directory_view.set_view_mode(DirectoryView::ViewMode::Columns);
-            config->write_entry("DirectoryView", "ViewMode", "Columns");
-            config->sync();
+            Config::write_string("FileManager", "DirectoryView", "ViewMode", "Columns");
         },
         window);
 
@@ -867,11 +857,10 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         directory_view.set_should_show_dotfiles(action.is_checked());
         directories_model->set_should_show_dotfiles(action.is_checked());
         refresh_tree_view();
-        config->write_bool_entry("DirectoryView", "ShowDotFiles", action.is_checked());
-        config->sync();
+        Config::write_bool("FileManager", "DirectoryView", "ShowDotFiles", action.is_checked());
     });
 
-    auto show_dotfiles = config->read_bool_entry("DirectoryView", "ShowDotFiles", false);
+    auto show_dotfiles = Config::read_bool("FileManager", "DirectoryView", "ShowDotFiles", false);
     directory_view.set_should_show_dotfiles(show_dotfiles);
     action_show_dotfiles->set_checked(show_dotfiles);
 
@@ -1207,8 +1196,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     window->show();
 
-    // Read directory read mode from config.
-    auto dir_view_mode = config->read_entry("DirectoryView", "ViewMode", "Icon");
+    auto dir_view_mode = Config::read_string("FileManager", "DirectoryView", "ViewMode", "Icon");
 
     if (dir_view_mode.contains("Table")) {
         directory_view.set_view_mode(DirectoryView::ViewMode::Table);
@@ -1229,15 +1217,13 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     // Write window position to config file on close request.
     window->on_close_request = [&] {
-        config->write_bool_entry("Window", "Maximized", window->is_maximized());
+        Config::write_bool("FileManager", "Window", "Maximized", window->is_maximized());
         if (!window->is_maximized()) {
-            config->write_num_entry("Window", "Left", window->x());
-            config->write_num_entry("Window", "Top", window->y());
-            config->write_num_entry("Window", "Width", window->width());
-            config->write_num_entry("Window", "Height", window->height());
+            Config::write_i32("FileManager", "Window", "Left", window->x());
+            Config::write_i32("FileManager", "Window", "Top", window->y());
+            Config::write_i32("FileManager", "Window", "Width", window->width());
+            Config::write_i32("FileManager", "Window", "Height", window->height());
         }
-        config->sync();
-
         return GUI::Window::CloseRequestDecision::Close;
     };
 

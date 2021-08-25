@@ -22,4 +22,4 @@ set(SOURCES
 )
 
 serenity_app(FileManager ICON app-file-manager)
-target_link_libraries(FileManager LibGUI LibDesktop)
+target_link_libraries(FileManager LibGUI LibDesktop LibConfig)
