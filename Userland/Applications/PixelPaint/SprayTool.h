@@ -18,9 +18,9 @@ public:
     SprayTool();
     virtual ~SprayTool() override;
 
-    virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
-    virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
-    virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
+    virtual void on_mousedown(Layer&, MouseEvent&) override;
+    virtual void on_mouseup(Layer&, MouseEvent&) override;
+    virtual void on_mousemove(Layer&, MouseEvent&) override;
     virtual GUI::Widget* get_properties_widget() override;
     virtual Gfx::StandardCursor cursor() override { return Gfx::StandardCursor::Crosshair; }
 

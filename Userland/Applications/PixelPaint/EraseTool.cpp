@@ -35,29 +35,32 @@ Gfx::IntRect EraseTool::build_rect(Gfx::IntPoint const& pos, Gfx::IntRect const&
     return Gfx::IntRect(ex - eraser_radius, ey - eraser_radius, eraser_size, eraser_size).intersected(widget_rect);
 }
 
-void EraseTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
+void EraseTool::on_mousedown(Layer& layer, MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
+    auto& layer_event = event.layer_event();
+    if (layer_event.button() != GUI::MouseButton::Left && layer_event.button() != GUI::MouseButton::Right)
         return;
-    Gfx::IntRect r = build_rect(event.position(), layer.rect());
+    Gfx::IntRect r = build_rect(layer_event.position(), layer.rect());
     GUI::Painter painter(layer.bitmap());
     painter.clear_rect(r, get_color());
     layer.did_modify_bitmap(r.inflated(2, 2));
 }
 
-void EraseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
+void EraseTool::on_mousemove(Layer& layer, MouseEvent& event)
 {
-    if (event.buttons() & GUI::MouseButton::Left || event.buttons() & GUI::MouseButton::Right) {
-        Gfx::IntRect r = build_rect(event.position(), layer.rect());
+    auto& layer_event = event.layer_event();
+    if (layer_event.buttons() & GUI::MouseButton::Left || layer_event.buttons() & GUI::MouseButton::Right) {
+        Gfx::IntRect r = build_rect(layer_event.position(), layer.rect());
         GUI::Painter painter(layer.bitmap());
         painter.clear_rect(r, get_color());
         layer.did_modify_bitmap(r.inflated(2, 2));
     }
 }
 
-void EraseTool::on_mouseup(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
+void EraseTool::on_mouseup(Layer&, MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
+    auto& layer_event = event.layer_event();
+    if (layer_event.button() != GUI::MouseButton::Left && layer_event.button() != GUI::MouseButton::Right)
         return;
     m_editor->did_complete_action();
 }
