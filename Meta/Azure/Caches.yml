@@ -4,6 +4,7 @@ parameters:
   toolchain: 'gcc'
   build_directory: ''
   ccache_version: 1 # Increment this number if CI has trouble with ccache.
+  with_unicode_caches: true
 
 steps:
   - script: |
@@ -32,17 +33,18 @@ steps:
       path: $(CCACHE_DIR)
     displayName: 'Compiler Cache'
 
-  - task: Cache@2
-    inputs:
-      key: '"unicode_data" | Userland/Libraries/LibUnicode/unicode_data.cmake'
-      path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/UCD
-    displayName: 'UnicodeData Cache'
+  - ${{ if eq(parameters.with_unicode_caches, true) }}:
+    - task: Cache@2
+      inputs:
+        key: '"unicode_data" | Userland/Libraries/LibUnicode/unicode_data.cmake'
+        path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/UCD
+      displayName: 'UnicodeData Cache'
 
-  - task: Cache@2
-    inputs:
-      key: '"unicode_locale" | Userland/Libraries/LibUnicode/unicode_data.cmake'
-      path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/CLDR
-    displayName: 'UnicodeLocale Cache'
+    - task: Cache@2
+      inputs:
+        key: '"unicode_locale" | Userland/Libraries/LibUnicode/unicode_data.cmake'
+        path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/CLDR
+      displayName: 'UnicodeLocale Cache'
 
   - script: |
       ccache -M 5G
