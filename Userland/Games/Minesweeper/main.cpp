@@ -5,7 +5,7 @@
  */
 
 #include "Field.h"
-#include <LibCore/ConfigFile.h>
+#include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -28,19 +28,14 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
+    Config::pledge_domains("Minesweeper");
+
     if (pledge("stdio rpath wpath cpath recvfd sendfd", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    auto config = Core::ConfigFile::open_for_app("Minesweeper");
-
     if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(config->filename().characters(), "crw") < 0) {
         perror("unveil");
         return 1;
     }

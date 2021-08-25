@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,7 +7,7 @@
 #include "Field.h"
 #include <AK/HashTable.h>
 #include <AK/Queue.h>
-#include <LibCore/ConfigFile.h>
+#include <LibConfig/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
@@ -137,11 +137,10 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
     set_face(Face::Default);
 
     {
-        auto config = Core::ConfigFile::open_for_app("Minesweeper");
-        bool single_chording = config->read_num_entry("Minesweeper", "SingleChording", false);
-        int mine_count = config->read_num_entry("Game", "MineCount", 10);
-        int rows = config->read_num_entry("Game", "Rows", 9);
-        int columns = config->read_num_entry("Game", "Columns", 9);
+        bool single_chording = Config::read_bool("Minesweeper", "Game", "SingleChording", false);
+        int mine_count = Config::read_i32("Minesweeper", "Game", "MineCount", 10);
+        int rows = Config::read_i32("Minesweeper", "Game", "Rows", 9);
+        int columns = Config::read_i32("Minesweeper", "Game", "Columns", 9);
 
         // Do a quick sanity check to make sure the user hasn't tried anything crazy
         if (mine_count > rows * columns || rows <= 0 || columns <= 0 || mine_count <= 0)
@@ -488,10 +487,9 @@ void Field::set_field_size(size_t rows, size_t columns, size_t mine_count)
     if (m_rows == rows && m_columns == columns && m_mine_count == mine_count)
         return;
     {
-        auto config = Core::ConfigFile::open_for_app("Minesweeper", Core::ConfigFile::AllowWriting::Yes);
-        config->write_num_entry("Game", "MineCount", mine_count);
-        config->write_num_entry("Game", "Rows", rows);
-        config->write_num_entry("Game", "Columns", columns);
+        Config::write_i32("Minesweeper", "Game", "MineCount", mine_count);
+        Config::write_i32("Minesweeper", "Game", "Rows", rows);
+        Config::write_i32("Minesweeper", "Game", "Columns", columns);
     }
     m_rows = rows;
     m_columns = columns;
@@ -503,9 +501,8 @@ void Field::set_field_size(size_t rows, size_t columns, size_t mine_count)
 
 void Field::set_single_chording(bool enabled)
 {
-    auto config = Core::ConfigFile::open_for_app("Minesweeper", Core::ConfigFile::AllowWriting::Yes);
     m_single_chording = enabled;
-    config->write_bool_entry("Minesweeper", "SingleChording", m_single_chording);
+    Config::write_bool("Minesweeper", "Game", "SingleChording", m_single_chording);
 }
 
 Square::Square()
