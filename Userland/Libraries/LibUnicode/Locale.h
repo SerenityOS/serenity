@@ -37,4 +37,9 @@ Optional<LanguageID> parse_unicode_language_id(StringView);
 Optional<LocaleID> parse_unicode_locale_id(StringView);
 Optional<String> canonicalize_unicode_locale_id(LocaleID&);
 
+String const& default_locale();
+bool is_locale_available(StringView locale);
+
+Optional<StringView> get_locale_territory_mapping(StringView locale, StringView code);
+
 }
