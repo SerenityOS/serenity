@@ -12,6 +12,7 @@
 #include <AK/TemporaryChange.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
+#include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/MimeData.h>
 #include <LibDesktop/AppFile.h>
@@ -73,10 +74,9 @@ void TerminalWidget::set_pty_master_fd(int fd)
     };
 }
 
-TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Core::ConfigFile> config)
+TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
     : m_terminal(*this)
     , m_automatic_size_policy(automatic_size_policy)
-    , m_config(move(config))
 {
     static_assert(sizeof(m_colors) == sizeof(xterm_colors));
     memcpy(m_colors, xterm_colors, sizeof(m_colors));
@@ -95,8 +95,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
         update();
     };
 
-    dbgln("Load config file from {}", m_config->filename());
-    m_cursor_blink_timer->set_interval(m_config->read_num_entry("Text",
+    m_cursor_blink_timer->set_interval(Config::read_i32("Terminal", "Text",
         "CursorBlinkInterval",
         500));
     m_cursor_blink_timer->on_timeout = [this] {
@@ -113,7 +112,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     };
     m_auto_scroll_timer->start();
 
-    auto font_entry = m_config->read_entry("Text", "Font", "default");
+    auto font_entry = Config::read_string("Terminal", "Text", "Font", "default");
     if (font_entry == "default")
         set_font(Gfx::FontDatabase::default_fixed_width_font());
     else
@@ -121,7 +120,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
 
     m_line_height = font().glyph_height() + m_line_spacing;
 
-    m_terminal.set_size(m_config->read_num_entry("Window", "Width", 80), m_config->read_num_entry("Window", "Height", 25));
+    m_terminal.set_size(Config::read_i32("Terminal", "Window", "Width", 80), Config::read_i32("Terminal", "Window", "Height", 25));
 
     m_copy_action = GUI::Action::create("&Copy", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"), [this](auto&) {
         copy();
@@ -146,7 +145,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     update_copy_action();
     update_paste_action();
 
-    set_color_scheme(m_config->read_entry("Window", "ColorScheme", "Default"));
+    set_color_scheme(Config::read_string("Terminal", "Window", "ColorScheme", "Default"));
 }
 
 TerminalWidget::~TerminalWidget()

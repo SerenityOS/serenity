@@ -162,8 +162,7 @@ TerminalWrapper::TerminalWrapper(bool user_spawned)
 {
     set_layout<GUI::VerticalBoxLayout>();
 
-    RefPtr<Core::ConfigFile> config = Core::ConfigFile::open_for_app("Terminal");
-    m_terminal_widget = add<VT::TerminalWidget>(-1, false, config);
+    m_terminal_widget = add<VT::TerminalWidget>(-1, false);
 
     if (user_spawned)
         run_command("Shell");

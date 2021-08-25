@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/String.h>
-#include <LibCore/ConfigFile.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Timer.h>
@@ -28,7 +27,7 @@ class TerminalWidget final
     C_OBJECT(TerminalWidget);
 
 public:
-    TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Core::ConfigFile> config);
+    TerminalWidget(int ptm_fd, bool automatic_size_policy);
     virtual ~TerminalWidget() override;
 
     void set_pty_master_fd(int fd);
@@ -53,8 +52,6 @@ public:
 
     BellMode bell_mode() { return m_bell_mode; }
     void set_bell_mode(BellMode bm) { m_bell_mode = bm; };
-
-    RefPtr<Core::ConfigFile> config() const { return m_config; }
 
     bool has_selection() const;
     bool selection_contains(const VT::Position&) const;
@@ -208,7 +205,6 @@ private:
     RefPtr<Core::Timer> m_cursor_blink_timer;
     RefPtr<Core::Timer> m_visual_beep_timer;
     RefPtr<Core::Timer> m_auto_scroll_timer;
-    RefPtr<Core::ConfigFile> m_config;
 
     RefPtr<GUI::Scrollbar> m_scrollbar;
 

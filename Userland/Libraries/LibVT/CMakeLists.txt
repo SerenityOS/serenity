@@ -11,4 +11,4 @@ set(GENERATED_SOURCES
 
 generate_state_machine(StateMachine.txt EscapeSequenceStateMachine.h)
 serenity_lib(LibVT vt)
-target_link_libraries(LibVT LibC LibCore LibGUI LibGfx LibDesktop)
+target_link_libraries(LibVT LibC LibCore LibGUI LibGfx LibDesktop LibConfig)
