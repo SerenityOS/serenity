@@ -12,7 +12,7 @@
 class VirtualAddress {
 public:
     VirtualAddress() = default;
-    explicit VirtualAddress(FlatPtr address)
+    constexpr explicit VirtualAddress(FlatPtr address)
         : m_address(address)
     {
     }
@@ -22,11 +22,11 @@ public:
     {
     }
 
-    [[nodiscard]] bool is_null() const { return m_address == 0; }
-    [[nodiscard]] bool is_page_aligned() const { return (m_address & 0xfff) == 0; }
+    [[nodiscard]] constexpr bool is_null() const { return m_address == 0; }
+    [[nodiscard]] constexpr bool is_page_aligned() const { return (m_address & 0xfff) == 0; }
 
-    [[nodiscard]] VirtualAddress offset(FlatPtr o) const { return VirtualAddress(m_address + o); }
-    [[nodiscard]] FlatPtr get() const { return m_address; }
+    [[nodiscard]] constexpr VirtualAddress offset(FlatPtr o) const { return VirtualAddress(m_address + o); }
+    [[nodiscard]] constexpr FlatPtr get() const { return m_address; }
     void set(FlatPtr address) { m_address = address; }
     void mask(FlatPtr m) { m_address &= m; }
 
