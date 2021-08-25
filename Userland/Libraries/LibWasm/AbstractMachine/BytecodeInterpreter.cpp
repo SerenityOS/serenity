@@ -808,7 +808,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i64_shrs.value():
         return binary_numeric_operation<i64, i64, Operators::BitShiftRight>(configuration);
     case Instructions::i64_shru.value():
-        return binary_numeric_operation<u64, i64, Operators::BitShiftLeft>(configuration);
+        return binary_numeric_operation<u64, i64, Operators::BitShiftRight>(configuration);
     case Instructions::i64_rotl.value():
         return binary_numeric_operation<u64, i64, Operators::BitRotateLeft>(configuration);
     case Instructions::i64_rotr.value():
