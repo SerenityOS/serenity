@@ -34,4 +34,9 @@ add_custom_command(
 )
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Prekernel" DESTINATION boot)
-set_source_files_properties(${SOURCES} PROPERTIES COMPILE_FLAGS "-fno-sanitize-coverage=trace-pc -fno-sanitize=kernel-address")
+
+# Remove options which the Prekernel environment doesn't support.
+get_target_property(PREKERNEL_TARGET_OPTIONS ${PREKERNEL_TARGET} COMPILE_OPTIONS)
+list(REMOVE_ITEM PREKERNEL_TARGET_OPTIONS "-fsanitize-coverage=trace-pc")
+list(REMOVE_ITEM PREKERNEL_TARGET_OPTIONS "-fsanitize=kernel-address")
+set_target_properties(${PREKERNEL_TARGET} PROPERTIES COMPILE_OPTIONS "${PREKERNEL_TARGET_OPTIONS}")
