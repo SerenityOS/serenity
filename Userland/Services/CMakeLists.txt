@@ -1,6 +1,7 @@
 add_subdirectory(AudioServer)
 add_subdirectory(ChessEngine)
 add_subdirectory(Clipboard)
+add_subdirectory(ConfigServer)
 add_subdirectory(CrashDaemon)
 add_subdirectory(DHCPClient)
 add_subdirectory(EchoServer)
