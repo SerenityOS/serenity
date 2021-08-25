@@ -21,6 +21,7 @@ public:
 
     const Gfx::Palette& preview_palette() const { return m_preview_palette; }
     void set_preview_palette(const Gfx::Palette&);
+    void set_theme_from_file(String const& path, int fd);
 
 private:
     explicit PreviewWidget(const Gfx::Palette&);
