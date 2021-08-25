@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_app(Minesweeper ICON app-minesweeper)
-target_link_libraries(Minesweeper LibGUI)
+target_link_libraries(Minesweeper LibGUI LibConfig)
