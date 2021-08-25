@@ -38,6 +38,12 @@ steps:
       path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/UCD
     displayName: 'UnicodeData Cache'
 
+  - task: Cache@2
+    inputs:
+      key: '"unicode_locale" | Userland/Libraries/LibUnicode/unicode_data.cmake'
+      path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/CLDR
+    displayName: 'UnicodeLocale Cache'
+
   - script: |
       ccache -M 5G
       ccache -s
