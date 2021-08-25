@@ -17,10 +17,10 @@ public:
     EllipseTool();
     virtual ~EllipseTool() override;
 
-    virtual void on_mousedown(Layer&, MouseEvent&) override;
-    virtual void on_mousemove(Layer&, MouseEvent&) override;
-    virtual void on_mouseup(Layer&, MouseEvent&) override;
-    virtual void on_second_paint(Layer const&, GUI::PaintEvent&) override;
+    virtual void on_mousedown(Layer*, MouseEvent&) override;
+    virtual void on_mousemove(Layer*, MouseEvent&) override;
+    virtual void on_mouseup(Layer*, MouseEvent&) override;
+    virtual void on_second_paint(Layer const*, GUI::PaintEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
     virtual GUI::Widget* get_properties_widget() override;
     virtual Gfx::StandardCursor cursor() override { return Gfx::StandardCursor::Crosshair; }

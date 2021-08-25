@@ -20,7 +20,7 @@ ZoomTool::~ZoomTool()
 {
 }
 
-void ZoomTool::on_mousedown(Layer&, MouseEvent& event)
+void ZoomTool::on_mousedown(Layer*, MouseEvent& event)
 {
     auto& raw_event = event.raw_event();
     if (raw_event.button() != GUI::MouseButton::Left && raw_event.button() != GUI::MouseButton::Right)

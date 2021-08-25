@@ -63,8 +63,11 @@ void SprayTool::paint_it()
     layer->did_modify_bitmap(Gfx::IntRect::centered_on(m_last_pos, Gfx::IntSize(base_radius * 2, base_radius * 2)));
 }
 
-void SprayTool::on_mousedown(Layer&, MouseEvent& event)
+void SprayTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
+    if (!layer)
+        return;
+
     auto& layer_event = event.layer_event();
     m_color = m_editor->color_for(layer_event);
     m_last_pos = layer_event.position();
@@ -72,8 +75,11 @@ void SprayTool::on_mousedown(Layer&, MouseEvent& event)
     paint_it();
 }
 
-void SprayTool::on_mousemove(Layer&, MouseEvent& event)
+void SprayTool::on_mousemove(Layer* layer, MouseEvent& event)
 {
+    if (!layer)
+        return;
+
     m_last_pos = event.layer_event().position();
     if (m_timer->is_active()) {
         paint_it();
@@ -81,7 +87,7 @@ void SprayTool::on_mousemove(Layer&, MouseEvent& event)
     }
 }
 
-void SprayTool::on_mouseup(Layer&, MouseEvent&)
+void SprayTool::on_mouseup(Layer*, MouseEvent&)
 {
     if (m_timer->is_active()) {
         m_timer->stop();
