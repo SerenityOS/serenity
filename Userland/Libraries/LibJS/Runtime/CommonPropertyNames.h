@@ -144,6 +144,7 @@ namespace JS {
     P(exec)                                  \
     P(exp)                                   \
     P(expm1)                                 \
+    P(fallback)                              \
     P(fields)                                \
     P(fill)                                  \
     P(filter)                                \
@@ -262,6 +263,7 @@ namespace JS {
     P(link)                                  \
     P(load)                                  \
     P(localeCompare)                         \
+    P(localeMatcher)                         \
     P(log)                                   \
     P(log1p)                                 \
     P(log2)                                  \
@@ -376,6 +378,7 @@ namespace JS {
     P(store)                                 \
     P(strike)                                \
     P(stringify)                             \
+    P(style)                                 \
     P(sub)                                   \
     P(subarray)                              \
     P(substr)                                \
@@ -416,6 +419,7 @@ namespace JS {
     P(trimRight)                             \
     P(trimStart)                             \
     P(trunc)                                 \
+    P(type)                                  \
     P(undefined)                             \
     P(unescape)                              \
     P(unicode)                               \
