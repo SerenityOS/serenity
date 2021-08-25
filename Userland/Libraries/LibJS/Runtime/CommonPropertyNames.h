@@ -263,6 +263,7 @@ namespace JS {
     P(length)                                \
     P(link)                                  \
     P(load)                                  \
+    P(locale)                                \
     P(localeCompare)                         \
     P(localeMatcher)                         \
     P(log)                                   \
@@ -323,6 +324,7 @@ namespace JS {
     P(reject)                                \
     P(repeat)                                \
     P(resolve)                               \
+    P(resolvedOptions)                       \
     P(reverse)                               \
     P(revocable)                             \
     P(revoke)                                \
