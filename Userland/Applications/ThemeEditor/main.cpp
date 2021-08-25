@@ -115,13 +115,14 @@ int main(int argc, char** argv)
     combo_box.set_model(adopt_ref(*new ColorRoleModel(color_roles)));
     combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_color_role();
-        color_input.set_color(preview_palette.color(role));
+        color_input.set_color(preview_widget.preview_palette().color(role));
     };
 
     combo_box.set_selected_index((size_t)Gfx::ColorRole::Window - 1);
 
     color_input.on_change = [&] {
         auto role = combo_box.model()->index(combo_box.selected_index()).data(GUI::ModelRole::Custom).to_color_role();
+        auto preview_palette = preview_widget.preview_palette();
         preview_palette.set_color(role, color_input.color());
         preview_widget.set_preview_palette(preview_palette);
     };
@@ -137,7 +138,7 @@ int main(int argc, char** argv)
 
         auto theme = Core::ConfigFile::open(*result.chosen_file, *result.fd);
         for (auto role : color_roles) {
-            theme->write_entry("Colors", to_string(role), preview_palette.color(role).to_string());
+            theme->write_entry("Colors", to_string(role), preview_widget.preview_palette().color(role).to_string());
         }
 
         theme->sync();
