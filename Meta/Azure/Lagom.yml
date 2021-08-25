@@ -36,6 +36,10 @@ jobs:
         arch: 'Lagom'
         toolchain: '$(toolchain)'
         build_directory: 'Meta/Lagom/Build'
+        ${{ if eq(parameters.fuzzer, 'Fuzz') }}:
+          with_unicode_caches: false
+        ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
+          with_unicode_caches: true
 
     - script: |
         mkdir -p Meta/Lagom/Build
