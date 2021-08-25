@@ -8,7 +8,6 @@
 
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
-#include <LibCore/ConfigFile.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -42,8 +41,6 @@ public:
 
     void update_title();
     void initialize_menubar(GUI::Window&);
-
-    static RefPtr<Core::ConfigFile> open_config_file();
 
 private:
     MainWidget();
@@ -126,7 +123,6 @@ private:
     RefPtr<GUI::Action> m_sql_highlight;
 
     RefPtr<Web::OutOfProcessWebView> m_page_view;
-    RefPtr<Core::ConfigFile> m_config;
 
     bool m_auto_detect_preview_mode { false };
     bool m_use_regex { false };

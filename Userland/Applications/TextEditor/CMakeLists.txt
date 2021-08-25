@@ -15,4 +15,4 @@ set(SOURCES
 )
 
 serenity_app(TextEditor ICON app-text-editor)
-target_link_libraries(TextEditor LibWeb LibMarkdown LibGUI LibShell LibRegex LibDesktop LibCpp LibJS LibSQL LibFileSystemAccessClient)
+target_link_libraries(TextEditor LibWeb LibMarkdown LibGUI LibShell LibRegex LibDesktop LibCpp LibJS LibSQL LibFileSystemAccessClient LibConfig)

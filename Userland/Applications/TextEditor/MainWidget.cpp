@@ -9,6 +9,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <Applications/TextEditor/TextEditorWindowGML.h>
+#include <LibConfig/Client.h>
 #include <LibCore/File.h>
 #include <LibCpp/SyntaxHighlighter.h>
 #include <LibDesktop/Launcher.h>
@@ -45,8 +46,6 @@ namespace TextEditor {
 MainWidget::MainWidget()
 {
     load_from_gml(text_editor_window_gml);
-
-    m_config = open_config_file();
 
     m_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
@@ -344,15 +343,6 @@ MainWidget::~MainWidget()
 {
 }
 
-static RefPtr<Core::ConfigFile> s_config;
-
-RefPtr<Core::ConfigFile> MainWidget::open_config_file()
-{
-    if (!s_config)
-        s_config = Core::ConfigFile::open_for_app("TextEditor", Core::ConfigFile::AllowWriting::Yes);
-    return s_config;
-}
-
 Web::OutOfProcessWebView& MainWidget::ensure_web_view()
 {
     if (!m_page_view) {
@@ -432,28 +422,25 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_layout_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
         action.is_checked() ? m_toolbar_container->set_visible(true) : m_toolbar_container->set_visible(false);
-        m_config->write_bool_entry("Layout", "ShowToolbar", action.is_checked());
-        m_config->sync();
+        Config::write_bool("TextEditor", "Layout", "ShowToolbar", action.is_checked());
     });
-    auto show_toolbar = m_config->read_bool_entry("Layout", "ShowToolbar", true);
+    auto show_toolbar = Config::read_bool("TextEditor", "Layout", "ShowToolbar", true);
     m_layout_toolbar_action->set_checked(show_toolbar);
     m_toolbar_container->set_visible(show_toolbar);
 
     m_layout_statusbar_action = GUI::Action::create_checkable("&Status Bar", [&](auto& action) {
         action.is_checked() ? m_statusbar->set_visible(true) : m_statusbar->set_visible(false);
-        m_config->write_bool_entry("Layout", "ShowStatusbar", action.is_checked());
-        m_config->sync();
+        Config::write_bool("TextEditor", "Layout", "ShowStatusbar", action.is_checked());
     });
-    auto show_statusbar = m_config->read_bool_entry("Layout", "ShowStatusbar", true);
+    auto show_statusbar = Config::read_bool("TextEditor", "Layout", "ShowStatusbar", true);
     m_layout_statusbar_action->set_checked(show_statusbar);
     m_statusbar->set_visible(show_statusbar);
 
     m_layout_ruler_action = GUI::Action::create_checkable("Ruler", [&](auto& action) {
         action.is_checked() ? m_editor->set_ruler_visible(true) : m_editor->set_ruler_visible(false);
-        m_config->write_bool_entry("Layout", "ShowRuler", action.is_checked());
-        m_config->sync();
+        Config::write_bool("TextEditor", "Layout", "ShowRuler", action.is_checked());
     });
-    auto show_ruler = m_config->read_bool_entry("Layout", "ShowRuler", true);
+    auto show_ruler = Config::read_bool("TextEditor", "Layout", "ShowRuler", true);
     m_layout_ruler_action->set_checked(show_ruler);
     m_editor->set_ruler_visible(show_ruler);
 
