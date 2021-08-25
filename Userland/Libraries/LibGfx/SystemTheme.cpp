@@ -26,15 +26,14 @@ void set_system_theme(Core::AnonymousBuffer buffer)
     theme_page = theme_buffer.data<SystemTheme>();
 }
 
-Core::AnonymousBuffer load_system_theme(const String& path)
+Core::AnonymousBuffer load_system_theme(Core::ConfigFile const& file)
 {
-    auto file = Core::ConfigFile::open(path);
     auto buffer = Core::AnonymousBuffer::create_with_size(sizeof(SystemTheme));
 
     auto* data = buffer.data<SystemTheme>();
 
     auto get_color = [&](auto& name) {
-        auto color_string = file->read_entry("Colors", name);
+        auto color_string = file.read_entry("Colors", name);
         auto color = Color::from_string(color_string);
         if (!color.has_value())
             return Color(Color::Black);
@@ -42,7 +41,7 @@ Core::AnonymousBuffer load_system_theme(const String& path)
     };
 
     auto get_metric = [&](auto& name, auto role) {
-        int metric = file->read_num_entry("Metrics", name, -1);
+        int metric = file.read_num_entry("Metrics", name, -1);
         if (metric == -1) {
             switch (role) {
             case (int)MetricRole::TitleHeight:
@@ -60,7 +59,7 @@ Core::AnonymousBuffer load_system_theme(const String& path)
     };
 
     auto get_path = [&](auto& name, auto role, bool allow_empty) {
-        auto path = file->read_entry("Paths", name);
+        auto path = file.read_entry("Paths", name);
         if (path.is_empty()) {
             switch (role) {
             case (int)PathRole::TitleButtonIcons:
@@ -100,6 +99,11 @@ Core::AnonymousBuffer load_system_theme(const String& path)
     DO_PATH(TooltipShadow, true);
 
     return buffer;
+}
+
+Core::AnonymousBuffer load_system_theme(String const& path)
+{
+    return load_system_theme(Core::ConfigFile::open(path));
 }
 
 }
