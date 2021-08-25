@@ -175,6 +175,7 @@ namespace JS {
     P(get)                                   \
     P(getBigInt64)                           \
     P(getBigUint64)                          \
+    P(getCanonicalLocales)                   \
     P(getDate)                               \
     P(getDay)                                \
     P(getFloat32)                            \

@@ -17,6 +17,9 @@ public:
     explicit Intl(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
     virtual ~Intl() override = default;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(get_canonical_locales);
 };
 
 }
