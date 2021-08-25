@@ -145,8 +145,8 @@ Gfx::FloatPoint ImageEditor::editor_position_to_image_position(Gfx::IntPoint con
 
 void ImageEditor::second_paint_event(GUI::PaintEvent& event)
 {
-    if (m_active_tool && m_active_layer)
-        m_active_tool->on_second_paint(*m_active_layer, event);
+    if (m_active_tool)
+        m_active_tool->on_second_paint(m_active_layer, event);
 }
 
 GUI::MouseEvent ImageEditor::event_with_pan_and_scale_applied(GUI::MouseEvent const& event) const
@@ -194,13 +194,10 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
         }
     }
 
-    if (!m_active_layer)
-        return;
-
-    auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
+    auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
     auto image_event = event_with_pan_and_scale_applied(event);
     Tool::MouseEvent tool_event(Tool::MouseEvent::Action::MouseDown, layer_event, image_event, event);
-    m_active_tool->on_mousedown(*m_active_layer, tool_event);
+    m_active_tool->on_mousedown(m_active_layer.ptr(), tool_event);
 }
 
 void ImageEditor::mousemove_event(GUI::MouseEvent& event)
@@ -215,13 +212,13 @@ void ImageEditor::mousemove_event(GUI::MouseEvent& event)
         return;
     }
 
-    if (!m_active_layer || !m_active_tool)
+    if (!m_active_tool)
         return;
 
-    auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
+    auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
     auto image_event = event_with_pan_and_scale_applied(event);
     Tool::MouseEvent tool_event(Tool::MouseEvent::Action::MouseDown, layer_event, image_event, event);
-    m_active_tool->on_mousemove(*m_active_layer, tool_event);
+    m_active_tool->on_mousemove(m_active_layer.ptr(), tool_event);
 
     if (on_image_mouse_position_change) {
         on_image_mouse_position_change(image_event.position());
@@ -232,12 +229,12 @@ void ImageEditor::mouseup_event(GUI::MouseEvent& event)
 {
     set_override_cursor(m_active_cursor);
 
-    if (!m_active_layer || !m_active_tool)
+    if (!m_active_tool)
         return;
-    auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
+    auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
     auto image_event = event_with_pan_and_scale_applied(event);
     Tool::MouseEvent tool_event(Tool::MouseEvent::Action::MouseDown, layer_event, image_event, event);
-    m_active_tool->on_mouseup(*m_active_layer, tool_event);
+    m_active_tool->on_mouseup(m_active_layer.ptr(), tool_event);
 }
 
 void ImageEditor::mousewheel_event(GUI::MouseEvent& event)
@@ -248,9 +245,9 @@ void ImageEditor::mousewheel_event(GUI::MouseEvent& event)
 
 void ImageEditor::context_menu_event(GUI::ContextMenuEvent& event)
 {
-    if (!m_active_layer || !m_active_tool)
+    if (!m_active_tool)
         return;
-    m_active_tool->on_context_menu(*m_active_layer, event);
+    m_active_tool->on_context_menu(m_active_layer, event);
 }
 
 void ImageEditor::resize_event(GUI::ResizeEvent& event)

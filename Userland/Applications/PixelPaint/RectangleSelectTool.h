@@ -19,12 +19,12 @@ public:
     RectangleSelectTool();
     virtual ~RectangleSelectTool();
 
-    virtual void on_mousedown(Layer&, MouseEvent& event) override;
-    virtual void on_mousemove(Layer&, MouseEvent& event) override;
-    virtual void on_mouseup(Layer&, MouseEvent& event) override;
+    virtual void on_mousedown(Layer*, MouseEvent& event) override;
+    virtual void on_mousemove(Layer*, MouseEvent& event) override;
+    virtual void on_mouseup(Layer*, MouseEvent& event) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
     virtual void on_keyup(GUI::KeyEvent&) override;
-    virtual void on_second_paint(Layer const&, GUI::PaintEvent&) override;
+    virtual void on_second_paint(Layer const*, GUI::PaintEvent&) override;
     virtual GUI::Widget* get_properties_widget() override;
     virtual Gfx::StandardCursor cursor() override { return Gfx::StandardCursor::Crosshair; }
 

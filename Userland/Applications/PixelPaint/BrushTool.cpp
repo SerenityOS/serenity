@@ -25,8 +25,11 @@ BrushTool::~BrushTool()
 {
 }
 
-void BrushTool::on_mousedown(Layer& layer, MouseEvent& event)
+void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
+    if (!layer)
+        return;
+
     auto& layer_event = event.layer_event();
     if (layer_event.button() != GUI::MouseButton::Left && layer_event.button() != GUI::MouseButton::Right)
         return;
@@ -34,28 +37,31 @@ void BrushTool::on_mousedown(Layer& layer, MouseEvent& event)
     const int first_draw_opacity = 10;
 
     for (int i = 0; i < first_draw_opacity; ++i)
-        draw_point(layer.bitmap(), m_editor->color_for(layer_event), layer_event.position());
+        draw_point(layer->bitmap(), m_editor->color_for(layer_event), layer_event.position());
 
-    layer.did_modify_bitmap(Gfx::IntRect::centered_on(layer_event.position(), Gfx::IntSize { m_size * 2, m_size * 2 }));
+    layer->did_modify_bitmap(Gfx::IntRect::centered_on(layer_event.position(), Gfx::IntSize { m_size * 2, m_size * 2 }));
     m_last_position = layer_event.position();
 }
 
-void BrushTool::on_mousemove(Layer& layer, MouseEvent& event)
+void BrushTool::on_mousemove(Layer* layer, MouseEvent& event)
 {
+    if (!layer)
+        return;
+
     auto& layer_event = event.layer_event();
     if (!(layer_event.buttons() & GUI::MouseButton::Left || layer_event.buttons() & GUI::MouseButton::Right))
         return;
 
-    draw_line(layer.bitmap(), m_editor->color_for(layer_event), m_last_position, layer_event.position());
+    draw_line(layer->bitmap(), m_editor->color_for(layer_event), m_last_position, layer_event.position());
 
     auto modified_rect = Gfx::IntRect::from_two_points(m_last_position, layer_event.position()).inflated(m_size * 2, m_size * 2);
 
-    layer.did_modify_bitmap(modified_rect);
+    layer->did_modify_bitmap(modified_rect);
     m_last_position = layer_event.position();
     m_was_drawing = true;
 }
 
-void BrushTool::on_mouseup(Layer&, MouseEvent&)
+void BrushTool::on_mouseup(Layer*, MouseEvent&)
 {
     if (m_was_drawing) {
         m_editor->did_complete_action();

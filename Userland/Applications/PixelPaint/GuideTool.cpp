@@ -49,7 +49,7 @@ RefPtr<Guide> GuideTool::closest_guide(const Gfx::IntPoint& point)
     return nullptr;
 }
 
-void GuideTool::on_mousedown(Layer&, MouseEvent& event)
+void GuideTool::on_mousedown(Layer*, MouseEvent& event)
 {
     if (!m_editor)
         return;
@@ -85,7 +85,7 @@ void GuideTool::on_mousedown(Layer&, MouseEvent& event)
     }
 }
 
-void GuideTool::on_mouseup(Layer&, MouseEvent&)
+void GuideTool::on_mouseup(Layer*, MouseEvent&)
 {
     m_guide_origin = 0;
     m_event_origin = { 0, 0 };
@@ -104,7 +104,7 @@ void GuideTool::on_mouseup(Layer&, MouseEvent&)
     m_selected_guide = nullptr;
 }
 
-void GuideTool::on_mousemove(Layer&, MouseEvent& event)
+void GuideTool::on_mousemove(Layer*, MouseEvent& event)
 {
     if (!m_selected_guide)
         return;
@@ -132,7 +132,7 @@ void GuideTool::on_mousemove(Layer&, MouseEvent& event)
     editor()->layers_did_change();
 }
 
-void GuideTool::on_context_menu(Layer&, GUI::ContextMenuEvent& event)
+void GuideTool::on_context_menu(Layer*, GUI::ContextMenuEvent& event)
 {
     if (!m_editor)
         return;

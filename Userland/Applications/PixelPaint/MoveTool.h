@@ -15,9 +15,9 @@ public:
     MoveTool();
     virtual ~MoveTool() override;
 
-    virtual void on_mousedown(Layer&, MouseEvent&) override;
-    virtual void on_mousemove(Layer&, MouseEvent&) override;
-    virtual void on_mouseup(Layer&, MouseEvent&) override;
+    virtual void on_mousedown(Layer*, MouseEvent&) override;
+    virtual void on_mousemove(Layer*, MouseEvent&) override;
+    virtual void on_mouseup(Layer*, MouseEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
     virtual Gfx::StandardCursor cursor() override { return Gfx::StandardCursor::Move; }
 

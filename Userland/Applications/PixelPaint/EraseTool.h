@@ -18,9 +18,9 @@ public:
     EraseTool();
     virtual ~EraseTool() override;
 
-    virtual void on_mousedown(Layer&, MouseEvent& event) override;
-    virtual void on_mousemove(Layer&, MouseEvent& event) override;
-    virtual void on_mouseup(Layer&, MouseEvent& event) override;
+    virtual void on_mousedown(Layer*, MouseEvent& event) override;
+    virtual void on_mousemove(Layer*, MouseEvent& event) override;
+    virtual void on_mouseup(Layer*, MouseEvent& event) override;
     virtual GUI::Widget* get_properties_widget() override;
 
 private:
