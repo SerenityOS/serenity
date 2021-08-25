@@ -72,6 +72,9 @@ set(SOURCES
     Runtime/GlobalEnvironment.cpp
     Runtime/GlobalObject.cpp
     Runtime/IndexedProperties.cpp
+    Runtime/Intl/DisplayNames.cpp
+    Runtime/Intl/DisplayNamesConstructor.cpp
+    Runtime/Intl/DisplayNamesPrototype.cpp
     Runtime/Intl/Intl.cpp
     Runtime/IteratorOperations.cpp
     Runtime/IteratorPrototype.cpp

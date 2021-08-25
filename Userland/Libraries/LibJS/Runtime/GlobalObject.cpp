@@ -41,6 +41,8 @@
 #include <LibJS/Runtime/GeneratorObjectPrototype.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/DisplayNamesConstructor.h>
+#include <LibJS/Runtime/Intl/DisplayNamesPrototype.h>
 #include <LibJS/Runtime/Intl/Intl.h>
 #include <LibJS/Runtime/IteratorPrototype.h>
 #include <LibJS/Runtime/JSONObject.h>
