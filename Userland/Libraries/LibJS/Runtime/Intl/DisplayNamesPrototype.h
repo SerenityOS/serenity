@@ -20,6 +20,7 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(of);
+    JS_DECLARE_NATIVE_FUNCTION(resolved_options);
 };
 
 }
