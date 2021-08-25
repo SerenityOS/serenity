@@ -38,8 +38,11 @@ LineTool::~LineTool()
 {
 }
 
-void LineTool::on_mousedown(Layer&, MouseEvent& event)
+void LineTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
+    if (!layer)
+        return;
+
     auto& layer_event = event.layer_event();
     if (layer_event.button() != GUI::MouseButton::Left && layer_event.button() != GUI::MouseButton::Right)
         return;
@@ -55,20 +58,26 @@ void LineTool::on_mousedown(Layer&, MouseEvent& event)
     m_editor->update();
 }
 
-void LineTool::on_mouseup(Layer& layer, MouseEvent& event)
+void LineTool::on_mouseup(Layer* layer, MouseEvent& event)
 {
+    if (!layer)
+        return;
+
     auto& layer_event = event.layer_event();
     if (layer_event.button() == m_drawing_button) {
-        GUI::Painter painter(layer.bitmap());
+        GUI::Painter painter(layer->bitmap());
         painter.draw_line(m_line_start_position, m_line_end_position, m_editor->color_for(m_drawing_button), m_thickness);
         m_drawing_button = GUI::MouseButton::None;
-        layer.did_modify_bitmap();
+        layer->did_modify_bitmap();
         m_editor->did_complete_action();
     }
 }
 
-void LineTool::on_mousemove(Layer&, MouseEvent& event)
+void LineTool::on_mousemove(Layer* layer, MouseEvent& event)
 {
+    if (!layer)
+        return;
+
     auto& layer_event = event.layer_event();
     if (m_drawing_button == GUI::MouseButton::None)
         return;
@@ -82,15 +91,15 @@ void LineTool::on_mousemove(Layer&, MouseEvent& event)
     m_editor->update();
 }
 
-void LineTool::on_second_paint(Layer const& layer, GUI::PaintEvent& event)
+void LineTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 {
-    if (m_drawing_button == GUI::MouseButton::None)
+    if (!layer || m_drawing_button == GUI::MouseButton::None)
         return;
 
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
-    auto preview_start = m_editor->layer_position_to_editor_position(layer, m_line_start_position).to_type<int>();
-    auto preview_end = m_editor->layer_position_to_editor_position(layer, m_line_end_position).to_type<int>();
+    auto preview_start = m_editor->layer_position_to_editor_position(*layer, m_line_start_position).to_type<int>();
+    auto preview_end = m_editor->layer_position_to_editor_position(*layer, m_line_end_position).to_type<int>();
     painter.draw_line(preview_start, preview_end, m_editor->color_for(m_drawing_button), m_thickness);
 }
 

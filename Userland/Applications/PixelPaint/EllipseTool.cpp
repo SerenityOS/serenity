@@ -40,8 +40,11 @@ void EllipseTool::draw_using(GUI::Painter& painter, Gfx::IntRect const& ellipse_
     }
 }
 
-void EllipseTool::on_mousedown(Layer&, MouseEvent& event)
+void EllipseTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
+    if (!layer)
+        return;
+
     auto& layer_event = event.layer_event();
     if (layer_event.button() != GUI::MouseButton::Left && layer_event.button() != GUI::MouseButton::Right)
         return;
@@ -55,10 +58,13 @@ void EllipseTool::on_mousedown(Layer&, MouseEvent& event)
     m_editor->update();
 }
 
-void EllipseTool::on_mouseup(Layer& layer, MouseEvent& event)
+void EllipseTool::on_mouseup(Layer* layer, MouseEvent& event)
 {
+    if (!layer)
+        return;
+
     if (event.layer_event().button() == m_drawing_button) {
-        GUI::Painter painter(layer.bitmap());
+        GUI::Painter painter(layer->bitmap());
         draw_using(painter, Gfx::IntRect::from_two_points(m_ellipse_start_position, m_ellipse_end_position));
         m_drawing_button = GUI::MouseButton::None;
         m_editor->update();
@@ -66,7 +72,7 @@ void EllipseTool::on_mouseup(Layer& layer, MouseEvent& event)
     }
 }
 
-void EllipseTool::on_mousemove(Layer&, MouseEvent& event)
+void EllipseTool::on_mousemove(Layer*, MouseEvent& event)
 {
     if (m_drawing_button == GUI::MouseButton::None)
         return;
@@ -75,15 +81,15 @@ void EllipseTool::on_mousemove(Layer&, MouseEvent& event)
     m_editor->update();
 }
 
-void EllipseTool::on_second_paint(Layer const& layer, GUI::PaintEvent& event)
+void EllipseTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 {
-    if (m_drawing_button == GUI::MouseButton::None)
+    if (!layer || m_drawing_button == GUI::MouseButton::None)
         return;
 
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
-    auto preview_start = m_editor->layer_position_to_editor_position(layer, m_ellipse_start_position).to_type<int>();
-    auto preview_end = m_editor->layer_position_to_editor_position(layer, m_ellipse_end_position).to_type<int>();
+    auto preview_start = m_editor->layer_position_to_editor_position(*layer, m_ellipse_start_position).to_type<int>();
+    auto preview_end = m_editor->layer_position_to_editor_position(*layer, m_ellipse_end_position).to_type<int>();
     draw_using(painter, Gfx::IntRect::from_two_points(preview_start, preview_end));
 }
 

@@ -23,21 +23,27 @@ MoveTool::~MoveTool()
 {
 }
 
-void MoveTool::on_mousedown(Layer& layer, MouseEvent& event)
+void MoveTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
+    if (!layer)
+        return;
+
     auto& layer_event = event.layer_event();
     auto& image_event = event.image_event();
     if (layer_event.button() != GUI::MouseButton::Left)
         return;
-    if (!layer.rect().contains(layer_event.position()))
+    if (!layer->rect().contains(layer_event.position()))
         return;
-    m_layer_being_moved = layer;
+    m_layer_being_moved = *layer;
     m_event_origin = image_event.position();
-    m_layer_origin = layer.location();
+    m_layer_origin = layer->location();
 }
 
-void MoveTool::on_mousemove(Layer&, MouseEvent& event)
+void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
 {
+    if (!layer)
+        return;
+
     auto& image_event = event.image_event();
     if (!m_layer_being_moved)
         return;
@@ -46,8 +52,11 @@ void MoveTool::on_mousemove(Layer&, MouseEvent& event)
     m_editor->layers_did_change();
 }
 
-void MoveTool::on_mouseup(Layer&, MouseEvent& event)
+void MoveTool::on_mouseup(Layer* layer, MouseEvent& event)
 {
+    if (!layer)
+        return;
+
     auto& layer_event = event.layer_event();
     if (layer_event.button() != GUI::MouseButton::Left)
         return;
