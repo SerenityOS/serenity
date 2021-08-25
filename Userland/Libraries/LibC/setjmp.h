@@ -45,6 +45,14 @@ struct __jmp_buf {
 typedef struct __jmp_buf jmp_buf[1];
 typedef struct __jmp_buf sigjmp_buf[1];
 
+#ifdef __i386__
+static_assert(sizeof(struct __jmp_buf) == 32, "struct __jmp_buf unsynchronized with i386/setjmp.S");
+#elif __x86_64__
+static_assert(sizeof(struct __jmp_buf) == 72, "struct __jmp_buf unsynchronized with x86_64/setjmp.S");
+#else
+#    error
+#endif
+
 /**
  * Calling conventions mandates that sigsetjmp() cannot call setjmp(),
  * otherwise the restored calling environment will not be the original caller's
