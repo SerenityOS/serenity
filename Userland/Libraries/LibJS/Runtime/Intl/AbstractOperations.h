@@ -28,5 +28,6 @@ struct LocaleResult {
 Vector<String> canonicalize_locale_list(GlobalObject&, Value locales);
 Value get_option(GlobalObject& global_object, Value options, PropertyName const& property, Value::Type type, Vector<StringView> const& values, Fallback fallback);
 LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptions const& options, Vector<StringView> relevant_extension_keys);
+Value canonical_code_for_display_names(GlobalObject&, DisplayNames::Type type, StringView code);
 
 }

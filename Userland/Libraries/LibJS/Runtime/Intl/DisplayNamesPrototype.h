@@ -17,6 +17,9 @@ public:
     explicit DisplayNamesPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
     virtual ~DisplayNamesPrototype() override = default;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(of);
 };
 
 }
