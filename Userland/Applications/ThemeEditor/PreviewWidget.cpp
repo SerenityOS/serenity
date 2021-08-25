@@ -97,6 +97,16 @@ void PreviewWidget::set_preview_palette(const Gfx::Palette& palette)
     update();
 }
 
+void PreviewWidget::set_theme_from_file(String const& path, int fd)
+{
+    auto file = Core::ConfigFile::open(path, fd);
+    auto theme = Gfx::load_system_theme(file);
+    VERIFY(theme.is_valid());
+
+    m_preview_palette = Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(theme));
+    set_preview_palette(m_preview_palette);
+}
+
 void PreviewWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
