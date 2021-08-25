@@ -6,6 +6,7 @@
 
 #include "FileArgument.h"
 #include "MainWidget.h"
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
@@ -23,6 +24,8 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
+    Config::pledge_domains("TextEditor");
+
     char const* preview_mode = "auto";
     char const* file_to_edit = nullptr;
     Core::ArgsParser parser;
@@ -32,7 +35,6 @@ int main(int argc, char** argv)
     parser.parse(argc, argv);
 
     String file_to_edit_full_path;
-    auto config_filename = MainWidget::open_config_file()->filename();
 
     if (file_to_edit) {
         FileArgument parsed_argument(file_to_edit);
@@ -46,11 +48,6 @@ int main(int argc, char** argv)
                 return 1;
             }
         }
-    }
-
-    if (unveil(config_filename.characters(), "rwc") < 0) {
-        perror("unveil");
-        return 1;
     }
 
     if (unveil("/res", "r") < 0) {
