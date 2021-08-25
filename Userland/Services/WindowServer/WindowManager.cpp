@@ -1628,6 +1628,12 @@ void WindowManager::process_key_event(KeyEvent& event)
             }
         }
     }
+
+    if (event.type() == Event::KeyDown && event.modifiers() == Mod_Alt && event.key() == Key_F4 && active_input_window->type() != WindowType::Desktop) {
+        active_input_window->request_close();
+        return;
+    }
+
     active_input_window->dispatch_event(event);
 }
 
