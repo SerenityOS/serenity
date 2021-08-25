@@ -15,7 +15,7 @@ public:
     PickerTool();
     virtual ~PickerTool() override;
 
-    virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
+    virtual void on_mousedown(Layer&, MouseEvent&) override;
     virtual Gfx::StandardCursor cursor() override { return Gfx::StandardCursor::Crosshair; }
 };
 

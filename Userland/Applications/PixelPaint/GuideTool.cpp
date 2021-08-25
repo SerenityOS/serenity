@@ -49,12 +49,14 @@ RefPtr<Guide> GuideTool::closest_guide(const Gfx::IntPoint& point)
     return nullptr;
 }
 
-void GuideTool::on_mousedown(Layer&, GUI::MouseEvent& mouse_event, GUI::MouseEvent& image_event)
+void GuideTool::on_mousedown(Layer&, MouseEvent& event)
 {
     if (!m_editor)
         return;
 
-    if (mouse_event.button() != GUI::MouseButton::Left)
+    auto& image_event = event.image_event();
+
+    if (image_event.button() != GUI::MouseButton::Left)
         return;
 
     m_editor->set_guide_visibility(true);
@@ -83,7 +85,7 @@ void GuideTool::on_mousedown(Layer&, GUI::MouseEvent& mouse_event, GUI::MouseEve
     }
 }
 
-void GuideTool::on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent&)
+void GuideTool::on_mouseup(Layer&, MouseEvent&)
 {
     m_guide_origin = 0;
     m_event_origin = { 0, 0 };
@@ -102,11 +104,12 @@ void GuideTool::on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent&)
     m_selected_guide = nullptr;
 }
 
-void GuideTool::on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent& image_event)
+void GuideTool::on_mousemove(Layer&, MouseEvent& event)
 {
     if (!m_selected_guide)
         return;
 
+    auto& image_event = event.image_event();
     auto delta = image_event.position() - m_event_origin;
 
     auto relevant_offset = 0;

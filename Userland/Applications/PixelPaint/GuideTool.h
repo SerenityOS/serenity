@@ -18,9 +18,9 @@ public:
 
     virtual ~GuideTool() override;
 
-    virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
-    virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
-    virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
+    virtual void on_mousedown(Layer&, MouseEvent&) override;
+    virtual void on_mousemove(Layer&, MouseEvent&) override;
+    virtual void on_mouseup(Layer&, MouseEvent&) override;
     virtual void on_context_menu(Layer&, GUI::ContextMenuEvent&) override;
 
     virtual void on_tool_activation() override;

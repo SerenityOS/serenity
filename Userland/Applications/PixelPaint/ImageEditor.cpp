@@ -199,7 +199,8 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
 
     auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
     auto image_event = event_with_pan_and_scale_applied(event);
-    m_active_tool->on_mousedown(*m_active_layer, layer_event, image_event);
+    Tool::MouseEvent tool_event(Tool::MouseEvent::Action::MouseDown, layer_event, image_event, event);
+    m_active_tool->on_mousedown(*m_active_layer, tool_event);
 }
 
 void ImageEditor::mousemove_event(GUI::MouseEvent& event)
@@ -216,10 +217,11 @@ void ImageEditor::mousemove_event(GUI::MouseEvent& event)
 
     if (!m_active_layer || !m_active_tool)
         return;
+
     auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
     auto image_event = event_with_pan_and_scale_applied(event);
-
-    m_active_tool->on_mousemove(*m_active_layer, layer_event, image_event);
+    Tool::MouseEvent tool_event(Tool::MouseEvent::Action::MouseDown, layer_event, image_event, event);
+    m_active_tool->on_mousemove(*m_active_layer, tool_event);
 
     if (on_image_mouse_position_change) {
         on_image_mouse_position_change(image_event.position());
@@ -234,7 +236,8 @@ void ImageEditor::mouseup_event(GUI::MouseEvent& event)
         return;
     auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
     auto image_event = event_with_pan_and_scale_applied(event);
-    m_active_tool->on_mouseup(*m_active_layer, layer_event, image_event);
+    Tool::MouseEvent tool_event(Tool::MouseEvent::Action::MouseDown, layer_event, image_event, event);
+    m_active_tool->on_mouseup(*m_active_layer, tool_event);
 }
 
 void ImageEditor::mousewheel_event(GUI::MouseEvent& event)
