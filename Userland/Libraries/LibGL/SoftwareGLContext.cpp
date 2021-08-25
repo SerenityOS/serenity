@@ -545,6 +545,10 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         rasterizer_options.enable_alpha_test = true;
         update_rasterizer_options = true;
         break;
+    case GL_FOG:
+        rasterizer_options.fog_enabled = true;
+        update_rasterizer_options = true;
+        break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }

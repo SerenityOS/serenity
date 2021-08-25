@@ -28,6 +28,12 @@ constexpr static T interpolate(const T& v0, const T& v1, const T& v2, const Floa
     return v0 * barycentric_coords.x() + v1 * barycentric_coords.y() + v2 * barycentric_coords.z();
 }
 
+template<typename T>
+constexpr static T mix(const T& x, const T& y, float interp)
+{
+    return x * (1 - interp) + y * interp;
+}
+
 static Gfx::RGBA32 to_rgba32(const FloatVector4& v)
 {
     auto clamped = v.clamped(0, 1);
@@ -368,7 +374,11 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                         triangle.vertices[2].tex_coord,
                         barycentric);
 
-                    *pixel = pixel_shader(uv, vertex_color);
+                    // Calculate depth of fragment for fog
+                    float z = interpolate(triangle.vertices[0].position.z(), triangle.vertices[1].position.z(), triangle.vertices[2].position.z(), barycentric);
+                    z = options.depth_min + (options.depth_max - options.depth_min) * (z + 1) / 2;
+
+                    *pixel = pixel_shader(uv, vertex_color, z);
                 }
             }
 
@@ -470,16 +480,9 @@ SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
 {
 }
 
-void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle)
-{
-    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [](const FloatVector2&, const FloatVector4& color) -> FloatVector4 {
-        return color;
-    });
-}
-
 void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Array<TextureUnit, 32>& texture_units)
 {
-    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [&texture_units](const FloatVector2& uv, const FloatVector4& color) -> FloatVector4 {
+    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &texture_units](const FloatVector2& uv, const FloatVector4& color, float z) -> FloatVector4 {
         // TODO: We'd do some kind of multitexturing/blending here
         // Construct a vector for the texel we want to sample
         FloatVector4 texel = color;
@@ -492,6 +495,28 @@ void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Array
 
             // FIXME: Don't assume Texture2D, _and_ work out how we blend/do multitexturing properly.....
             texel = texel * static_ptr_cast<Texture2D>(texture_unit.bound_texture())->sampler().sample(uv);
+        }
+
+        // Calculate fog
+        // Math from here: https://opengl-notes.readthedocs.io/en/latest/topics/texturing/aliasing.html
+        if (m_options.fog_enabled) {
+            float factor = 0.0f;
+            switch (m_options.fog_mode) {
+            case GL_LINEAR:
+                factor = (m_options.fog_end - z) / (m_options.fog_end - m_options.fog_start);
+                break;
+            case GL_EXP:
+                factor = exp(-((m_options.fog_density * z)));
+                break;
+            case GL_EXP2:
+                factor = exp(-((m_options.fog_density * z) * (m_options.fog_density * z)));
+                break;
+            default:
+                break;
+            }
+
+            // Mix texel with fog
+            texel = mix(m_options.fog_color, texel, factor);
         }
 
         return texel;
