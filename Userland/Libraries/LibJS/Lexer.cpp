@@ -201,7 +201,7 @@ void Lexer::consume()
             char_size = 4;
         }
 
-        VERIFY(char_size > 1);
+        VERIFY(char_size >= 1);
         --char_size;
 
         m_position += char_size;
