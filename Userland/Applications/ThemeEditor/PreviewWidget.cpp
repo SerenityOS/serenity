@@ -6,9 +6,12 @@
 
 #include "PreviewWidget.h"
 #include <AK/StringView.h>
+#include <LibCore/MimeData.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/Statusbar.h>
@@ -164,6 +167,28 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
 void PreviewWidget::resize_event(GUI::ResizeEvent&)
 {
     m_gallery->set_relative_rect(Gfx::IntRect(0, 0, 320, 240).centered_within(rect()));
+}
+
+void PreviewWidget::drop_event(GUI::DropEvent& event)
+{
+    event.accept();
+    window()->move_to_front();
+
+    if (event.mime_data().has_urls()) {
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty())
+            return;
+        if (urls.size() > 1) {
+            GUI::MessageBox::show(window(), "ThemeEditor can only open one file at a time!", "One at a time please!", GUI::MessageBox::Type::Error);
+            return;
+        }
+
+        auto result = FileSystemAccessClient::Client::the().request_file(window()->window_id(), urls.first().path(), Core::OpenMode::ReadOnly);
+        if (result.error != 0)
+            return;
+
+        set_theme_from_file(urls.first().path(), *result.fd);
+    }
 }
 
 }

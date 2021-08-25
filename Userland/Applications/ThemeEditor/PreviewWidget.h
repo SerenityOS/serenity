@@ -30,6 +30,7 @@ private:
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
+    virtual void drop_event(GUI::DropEvent&) override;
 
     Gfx::Palette m_preview_palette;
 
