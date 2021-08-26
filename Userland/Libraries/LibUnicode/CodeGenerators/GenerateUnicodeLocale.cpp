@@ -126,11 +126,13 @@ static void parse_all_locales(String locale_names_path, UnicodeLocaleData& local
     }
 }
 
-static String format_identifier(StringView owner, StringView identifier)
+static String format_identifier(StringView owner, String identifier)
 {
+    identifier.replace("-"sv, "_"sv, true);
+
     if (all_of(identifier, is_ascii_digit))
         return String::formatted("{}_{}", owner[0], identifier);
-    return identifier.to_titlecase_string();
+    return identifier.to_titlecase();
 }
 
 static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData& locale_data)
@@ -138,12 +140,20 @@ static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData& 
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    auto generate_enum = [&](StringView name, Vector<String>& values) {
+    auto generate_enum = [&](StringView name, StringView default_, Vector<String>& values) {
         quick_sort(values);
 
         generator.set("name", name);
+        generator.set("underlying", ((values.size() + !default_.is_empty()) < 256) ? "u8"sv : "u16"sv);
+
         generator.append(R"~~~(
-enum class @name@ : u8 {)~~~");
+enum class @name@ : @underlying@ {)~~~");
+
+        if (!default_.is_empty()) {
+            generator.set("default", default_);
+            generator.append(R"~~~(
+    @default@,)~~~");
+        }
 
         for (auto const& value : values) {
             generator.set("value", format_identifier(name, value));
@@ -169,9 +179,11 @@ enum class @name@ : u8 {)~~~");
 namespace Unicode {
 )~~~");
 
-    generate_enum("Language"sv, locale_data.languages);
-    generate_enum("Territory"sv, locale_data.territories);
-    generate_enum("Variant"sv, locale_data.variants);
+    auto locales = locale_data.locales.keys();
+    generate_enum("Locale"sv, "None"sv, locales);
+    generate_enum("Language"sv, {}, locale_data.languages);
+    generate_enum("Territory"sv, {}, locale_data.territories);
+    generate_enum("Variant"sv, {}, locale_data.variants);
 
     generator.append(R"~~~(
 struct LocaleData {
@@ -187,6 +199,7 @@ namespace Detail {
 
 LocaleMap const& available_locales();
 
+Optional<Locale> locale_from_string(StringView const& locale);
 Optional<Language> language_from_string(StringView const& language);
 Optional<Territory> territory_from_string(StringView const& territory);
 
@@ -284,7 +297,7 @@ LocaleMap const& available_locales()
 }
 )~~~");
 
-    auto append_from_string = [&](StringView enum_title, StringView enum_snake, Vector<String>& values) {
+    auto append_from_string = [&](StringView enum_title, StringView enum_snake, Vector<String> const& values) {
         generator.set("enum_title", enum_title);
         generator.set("enum_snake", enum_snake);
 
@@ -311,6 +324,7 @@ Optional<@enum_title@> @enum_snake@_from_string(StringView const& @enum_snake@)
 )~~~");
     };
 
+    append_from_string("Locale"sv, "locale"sv, locale_data.locales.keys());
     append_from_string("Language"sv, "language"sv, locale_data.languages);
     append_from_string("Territory"sv, "territory"sv, locale_data.territories);
 
