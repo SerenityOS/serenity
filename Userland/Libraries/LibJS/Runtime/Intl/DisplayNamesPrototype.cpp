@@ -86,6 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
         result = Unicode::get_locale_script_mapping(display_names->locale(), code.as_string().string());
         break;
     case DisplayNames::Type::Currency:
+        result = Unicode::get_locale_currency_mapping(display_names->locale(), code.as_string().string());
         break;
     default:
         VERIFY_NOT_REACHED();

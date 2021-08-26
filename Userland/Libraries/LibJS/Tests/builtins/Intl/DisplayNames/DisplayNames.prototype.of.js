@@ -73,4 +73,19 @@ describe("correct behavior", () => {
         expect(es419.of("Aaaa")).toBe("Aaaa");
         expect(zhHant.of("Aaaa")).toBe("Aaaa");
     });
+
+    test("option type currency", () => {
+        const en = new Intl.DisplayNames("en", { type: "currency" });
+        expect(en.of("USD")).toBe("US Dollar");
+
+        const es419 = new Intl.DisplayNames("es-419", { type: "currency" });
+        expect(es419.of("USD")).toBe("dólar estadounidense");
+
+        const zhHant = new Intl.DisplayNames(["zh-Hant"], { type: "currency" });
+        expect(zhHant.of("USD")).toBe("美元");
+
+        expect(en.of("AAA")).toBe("AAA");
+        expect(es419.of("AAA")).toBe("AAA");
+        expect(zhHant.of("AAA")).toBe("AAA");
+    });
 });
