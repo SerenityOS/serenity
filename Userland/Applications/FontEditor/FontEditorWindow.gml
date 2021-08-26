@@ -1,6 +1,7 @@
 @GUI::Widget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
+        spacing: 2
     }
 
     @GUI::ToolbarContainer {
@@ -74,7 +75,7 @@
                 title: "Metadata"
                 fixed_height: 220
                 layout: @GUI::VerticalBoxLayout {
-                    margins: [8, 16, 8, 8]
+                    margins: [16, 8, 8, 8]
                 }
 
                 @GUI::Widget {
