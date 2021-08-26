@@ -195,4 +195,13 @@ Optional<StringView> get_locale_script_mapping([[maybe_unused]] StringView local
 #endif
 }
 
+Optional<StringView> get_locale_currency_mapping([[maybe_unused]] StringView locale, [[maybe_unused]] StringView currency)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_locale_currency_mapping(locale, currency);
+#else
+    return {};
+#endif
+}
+
 }

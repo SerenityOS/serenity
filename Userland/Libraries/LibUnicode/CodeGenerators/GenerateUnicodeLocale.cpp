@@ -27,6 +27,7 @@ struct Locale {
     HashMap<String, String> languages;
     HashMap<String, String> territories;
     HashMap<String, String> scripts;
+    HashMap<String, String> currencies;
 };
 
 struct UnicodeLocaleData {
@@ -35,6 +36,7 @@ struct UnicodeLocaleData {
     Vector<String> territories;
     Vector<String> scripts;
     Vector<String> variants;
+    Vector<String> currencies;
 };
 
 static void write_to_file_if_different(Core::File& file, StringView contents)
@@ -153,20 +155,53 @@ static void parse_locale_scripts(String locale_path, UnicodeLocaleData& locale_d
     });
 }
 
-static void parse_all_locales(String locale_names_path, UnicodeLocaleData& locale_data)
+static void parse_locale_currencies(String numbers_path, UnicodeLocaleData& locale_data, Locale& locale)
 {
-    LexicalPath locale_names(move(locale_names_path));
-    locale_names = locale_names.append("main"sv);
-    VERIFY(Core::File::is_directory(locale_names.string()));
+    LexicalPath currencies_path(move(numbers_path));
+    currencies_path = currencies_path.append("currencies.json"sv);
+    VERIFY(Core::File::exists(currencies_path.string()));
 
-    Core::DirIterator iterator(locale_names.string(), Core::DirIterator::SkipParentAndBaseDir);
+    auto currencies_file_or_error = Core::File::open(currencies_path.string(), Core::OpenMode::ReadOnly);
+    VERIFY(!currencies_file_or_error.is_error());
+
+    auto currencies = JsonParser(currencies_file_or_error.value()->read_all()).parse();
+    VERIFY(currencies.has_value());
+
+    auto const& main_object = currencies->as_object().get("main"sv);
+    auto const& locale_object = main_object.as_object().get(currencies_path.parent().basename());
+    auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
+    auto const& currencies_object = locale_numbers_object.as_object().get("currencies"sv);
+
+    currencies_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+        auto const& display_name = value.as_object().get("displayName"sv);
+        locale.currencies.set(key, display_name.as_string());
+        if (!locale_data.currencies.contains_slow(key))
+            locale_data.currencies.append(key);
+    });
+}
+
+static Core::DirIterator path_to_dir_iterator(String path)
+{
+    LexicalPath lexical_path(move(path));
+    lexical_path = lexical_path.append("main"sv);
+    VERIFY(Core::File::is_directory(lexical_path.string()));
+
+    Core::DirIterator iterator(lexical_path.string(), Core::DirIterator::SkipParentAndBaseDir);
     if (iterator.has_error()) {
-        warnln("{}: {}", locale_names.string(), iterator.error_string());
+        warnln("{}: {}", lexical_path.string(), iterator.error_string());
         VERIFY_NOT_REACHED();
     }
 
-    while (iterator.has_next()) {
-        auto locale_path = iterator.next_full_path();
+    return iterator;
+}
+
+static void parse_all_locales(String locale_names_path, String numbers_path, UnicodeLocaleData& locale_data)
+{
+    auto locale_names_iterator = path_to_dir_iterator(move(locale_names_path));
+    auto numbers_iterator = path_to_dir_iterator(move(numbers_path));
+
+    while (locale_names_iterator.has_next()) {
+        auto locale_path = locale_names_iterator.next_full_path();
         VERIFY(Core::File::is_directory(locale_path));
 
         auto& locale = locale_data.locales.ensure(LexicalPath::basename(locale_path));
@@ -174,6 +209,14 @@ static void parse_all_locales(String locale_names_path, UnicodeLocaleData& local
         parse_locale_languages(locale_path, locale);
         parse_locale_territories(locale_path, locale);
         parse_locale_scripts(locale_path, locale_data, locale);
+    }
+
+    while (numbers_iterator.has_next()) {
+        auto numbers_path = numbers_iterator.next_full_path();
+        VERIFY(Core::File::is_directory(numbers_path));
+
+        auto& locale = locale_data.locales.ensure(LexicalPath::basename(numbers_path));
+        parse_locale_currencies(numbers_path, locale_data, locale);
     }
 }
 
@@ -233,6 +276,7 @@ namespace Unicode {
     generate_enum("Language"sv, {}, locale_data.languages);
     generate_enum("Territory"sv, {}, locale_data.territories);
     generate_enum("ScriptTag"sv, {}, locale_data.scripts);
+    generate_enum("Currency"sv, {}, locale_data.currencies);
     generate_enum("Variant"sv, {}, locale_data.variants);
 
     generator.append(R"~~~(
@@ -248,6 +292,9 @@ Optional<Territory> territory_from_string(StringView const& territory);
 
 Optional<StringView> get_locale_script_tag_mapping(StringView locale, StringView script_tag);
 Optional<ScriptTag> script_tag_from_string(StringView const& script_tag);
+
+Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency);
+Optional<Currency> currency_from_string(StringView const& currency);
 
 }
 
@@ -352,6 +399,7 @@ static constexpr Array<Span<StringView const>, @size@> @name@ { {
     append_mapping("s_languages"sv, "s_languages_{}", locale_data.languages, [](auto const& value) { return value.languages; });
     append_mapping("s_territories"sv, "s_territories_{}", locale_data.territories, [](auto const& value) { return value.territories; });
     append_mapping("s_scripts"sv, "s_scripts_{}", locale_data.scripts, [](auto const& value) { return value.scripts; });
+    append_mapping("s_currencies"sv, "s_currencies_{}", locale_data.currencies, [](auto const& value) { return value.currencies; });
 
     generator.append(R"~~~(
 namespace Detail {
@@ -423,6 +471,9 @@ Optional<@enum_title@> @enum_snake@_from_string(StringView const& @enum_snake@)
     append_mapping_search("ScriptTag"sv, "script_tag"sv, "s_scripts"sv);
     append_from_string("ScriptTag"sv, "script_tag"sv, locale_data.scripts);
 
+    append_mapping_search("Currency"sv, "currency"sv, "s_currencies"sv);
+    append_from_string("Currency"sv, "currency"sv, locale_data.currencies);
+
     generator.append(R"~~~(
 }
 
@@ -466,7 +517,7 @@ int main(int argc, char** argv)
     auto generated_implementation_file = open_file(generated_implementation_path, "-c/--generated-implementation-path", Core::OpenMode::ReadWrite);
 
     UnicodeLocaleData locale_data;
-    parse_all_locales(locale_names_path, locale_data);
+    parse_all_locales(locale_names_path, numbers_path, locale_data);
 
     generate_unicode_locale_header(generated_header_file, locale_data);
     generate_unicode_locale_implementation(generated_implementation_file, locale_data);
