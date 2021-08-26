@@ -9,14 +9,14 @@ steps:
     - script: |
         sudo add-apt-repository ppa:canonical-server/server-backports
         sudo apt-get update
-        sudo apt-get install libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 ccache
+        sudo apt-get install libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 ccache unzip
       displayName: 'Install Dependencies'
 
   - ${{ if eq(parameters.os, 'Linux') }}:
     - script: |
         sudo apt-get purge -y clang-11
         sudo apt-get update
-        sudo apt-get install ninja-build ccache
+        sudo apt-get install ninja-build ccache unzip
 
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100
         sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 100
@@ -28,5 +28,5 @@ steps:
 
   - ${{ if eq(parameters.os, 'macOS') }}:
     - script: |
-        brew install ninja wabt ccache
+        brew install ninja wabt ccache unzip
       displayName: 'Install Dependencies'
