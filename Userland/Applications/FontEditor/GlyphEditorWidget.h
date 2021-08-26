@@ -47,7 +47,7 @@ public:
     void set_mode(Mode mode) { m_mode = mode; }
 
     Function<void(int)> on_glyph_altered;
-    Function<void(bool finalize)> on_undo_event;
+    Function<void()> on_undo_event;
 
 private:
     GlyphEditorWidget() {};

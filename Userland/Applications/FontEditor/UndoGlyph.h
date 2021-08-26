@@ -46,20 +46,23 @@ private:
 class GlyphUndoCommand : public GUI::Command {
 public:
     GlyphUndoCommand(UndoGlyph& glyph)
-        : m_state(glyph.save_state())
+        : m_undo_state(glyph.save_state())
         , m_undo_glyph(glyph)
     {
     }
     virtual void undo() override
     {
-        m_undo_glyph.restore_state(*m_state);
+        if (!m_redo_state)
+            m_redo_state = m_undo_state->save_state();
+        m_undo_glyph.restore_state(*m_undo_state);
     }
     virtual void redo() override
     {
-        undo();
+        m_undo_glyph.restore_state(*m_redo_state);
     }
 
 private:
-    RefPtr<UndoGlyph> m_state;
+    RefPtr<UndoGlyph> m_undo_state;
+    RefPtr<UndoGlyph> m_redo_state;
     UndoGlyph& m_undo_glyph;
 };
