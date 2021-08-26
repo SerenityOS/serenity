@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
+ * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Game.h"
 #include <Games/Solitaire/SolitaireGML.h>
-#include <LibCore/ConfigFile.h>
+#include <LibConfig/Client.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -24,7 +25,8 @@ int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
     auto app_icon = GUI::Icon::default_icon("app-solitaire");
-    auto config = Core::ConfigFile::open_for_app("Solitaire", Core::ConfigFile::AllowWriting::Yes);
+
+    Config::pledge_domains("Solitaire");
 
     if (pledge("stdio recvfd sendfd rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
@@ -36,7 +38,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil(config->filename().characters(), "crw") < 0) {
+    if (unveil("/tmp/portal/config", "rw") < 0) {
         perror("unveil");
         return 1;
     }
@@ -49,21 +51,19 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_title("Solitaire");
 
-    auto mode = static_cast<Solitaire::Mode>(config->read_num_entry("Settings", "Mode", static_cast<int>(Solitaire::Mode::SingleCardDraw)));
+    auto mode = static_cast<Solitaire::Mode>(Config::read_i32("Solitaire", "Settings", "Mode", static_cast<int>(Solitaire::Mode::SingleCardDraw)));
 
     auto update_mode = [&](Solitaire::Mode new_mode) {
         mode = new_mode;
-        config->write_num_entry("Settings", "Mode", static_cast<int>(mode));
-        if (!config->sync())
-            GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
+        Config::write_i32("Solitaire", "Settings", "Mode", static_cast<int>(mode));
     };
 
     auto high_score = [&]() {
         switch (mode) {
         case Solitaire::Mode::SingleCardDraw:
-            return static_cast<u32>(config->read_num_entry("HighScores", "SingleCardDraw", 0));
+            return static_cast<u32>(Config::read_i32("Solitaire", "HighScores", "SingleCardDraw", 0));
         case Solitaire::Mode::ThreeCardDraw:
-            return static_cast<u32>(config->read_num_entry("HighScores", "ThreeCardDraw", 0));
+            return static_cast<u32>(Config::read_i32("Solitaire", "HighScores", "ThreeCardDraw", 0));
         default:
             VERIFY_NOT_REACHED();
         }
@@ -72,17 +72,14 @@ int main(int argc, char** argv)
     auto update_high_score = [&](u32 new_high_score) {
         switch (mode) {
         case Solitaire::Mode::SingleCardDraw:
-            config->write_num_entry("HighScores", "SingleCardDraw", static_cast<int>(new_high_score));
+            Config::write_i32("Solitaire", "HighScores", "SingleCardDraw", static_cast<int>(new_high_score));
             break;
         case Solitaire::Mode::ThreeCardDraw:
-            config->write_num_entry("HighScores", "ThreeCardDraw", static_cast<int>(new_high_score));
+            Config::write_i32("Solitaire", "HighScores", "ThreeCardDraw", static_cast<int>(new_high_score));
             break;
         default:
             VERIFY_NOT_REACHED();
         }
-
-        if (!config->sync())
-            GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
     };
 
     if (mode >= Solitaire::Mode::__Count)
