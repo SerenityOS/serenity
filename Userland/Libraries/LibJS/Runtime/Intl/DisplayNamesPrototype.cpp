@@ -77,6 +77,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
 
     switch (display_names->type()) {
     case DisplayNames::Type::Language:
+        result = Unicode::get_locale_language_mapping(display_names->locale(), code.as_string().string());
         break;
     case DisplayNames::Type::Region:
         result = Unicode::get_locale_territory_mapping(display_names->locale(), code.as_string().string());
