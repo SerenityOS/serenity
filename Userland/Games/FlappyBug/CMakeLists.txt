@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_app(FlappyBug ICON app-flappybug)
-target_link_libraries(FlappyBug LibGUI)
+target_link_libraries(FlappyBug LibGUI LibConfig)
