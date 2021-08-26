@@ -5,6 +5,7 @@
  */
 
 #include <LibConfig/Client.h>
+#include <LibConfig/Listener.h>
 
 namespace Config {
 
@@ -22,6 +23,11 @@ Client& Client::the()
 void Client::pledge_domains(Vector<String> const& domains)
 {
     async_pledge_domains(domains);
+}
+
+void Client::monitor_domain(String const& domain)
+{
+    async_monitor_domain(domain);
 }
 
 String Client::read_string(StringView domain, StringView group, StringView key, StringView fallback)
@@ -52,6 +58,27 @@ void Client::write_i32(StringView domain, StringView group, StringView key, i32 
 void Client::write_bool(StringView domain, StringView group, StringView key, bool value)
 {
     async_write_bool_value(domain, group, key, value);
+}
+
+void Client::notify_changed_string_value(String const& domain, String const& group, String const& key, String const& value)
+{
+    Listener::for_each([&](auto& listener) {
+        listener.config_string_did_change(domain, group, key, value);
+    });
+}
+
+void Client::notify_changed_i32_value(String const& domain, String const& group, String const& key, i32 value)
+{
+    Listener::for_each([&](auto& listener) {
+        listener.config_i32_did_change(domain, group, key, value);
+    });
+}
+
+void Client::notify_changed_bool_value(String const& domain, String const& group, String const& key, bool value)
+{
+    Listener::for_each([&](auto& listener) {
+        listener.config_bool_did_change(domain, group, key, value);
+    });
 }
 
 }

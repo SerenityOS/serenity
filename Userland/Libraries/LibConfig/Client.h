@@ -22,6 +22,7 @@ class Client final
 
 public:
     void pledge_domains(Vector<String> const&);
+    void monitor_domain(String const&);
 
     String read_string(StringView domain, StringView group, StringView key, StringView fallback);
     i32 read_i32(StringView domain, StringView group, StringView key, i32 fallback);
@@ -38,6 +39,10 @@ private:
         : IPC::ServerConnection<ConfigClientEndpoint, ConfigServerEndpoint>(*this, "/tmp/portal/config")
     {
     }
+
+    void notify_changed_string_value(String const& domain, String const& group, String const& key, String const& value) override;
+    void notify_changed_i32_value(String const& domain, String const& group, String const& key, i32 value) override;
+    void notify_changed_bool_value(String const& domain, String const& group, String const& key, bool value) override;
 };
 
 inline String read_string(StringView domain, StringView group, StringView key, StringView fallback = {})
@@ -78,6 +83,11 @@ inline void pledge_domains(Vector<String> const& domains)
 inline void pledge_domains(String const& domains)
 {
     Client::the().pledge_domains({ domains });
+}
+
+inline void monitor_domain(String const& domain)
+{
+    Client::the().monitor_domain(domain);
 }
 
 }
