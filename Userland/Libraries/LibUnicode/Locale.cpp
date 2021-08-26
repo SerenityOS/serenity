@@ -162,27 +162,19 @@ String const& default_locale()
 bool is_locale_available([[maybe_unused]] StringView locale)
 {
 #if ENABLE_UNICODE_DATA
-    static auto const& available_locales = Detail::available_locales();
-    return available_locales.contains(locale);
+    return Detail::locale_from_string(locale).has_value();
 #else
     return false;
 #endif
 }
 
-Optional<StringView> get_locale_territory_mapping([[maybe_unused]] StringView locale, [[maybe_unused]] StringView code)
+Optional<StringView> get_locale_territory_mapping([[maybe_unused]] StringView locale, [[maybe_unused]] StringView territory)
 {
 #if ENABLE_UNICODE_DATA
-    static auto const& available_locales = Detail::available_locales();
-
-    auto it = available_locales.find(locale);
-    if (it == available_locales.end())
-        return {};
-
-    if (auto territory = Detail::territory_from_string(code); territory.has_value())
-        return it->value.territories[to_underlying(*territory)];
-#endif
-
+    return Detail::get_locale_territory_mapping(locale, territory);
+#else
     return {};
+#endif
 }
 
 }
