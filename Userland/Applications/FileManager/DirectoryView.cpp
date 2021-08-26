@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -10,6 +10,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
+#include <LibConfig/Client.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/StandardPaths.h>
@@ -322,6 +323,23 @@ void DirectoryView::model_did_update(unsigned flags)
     update_statusbar();
 }
 
+void DirectoryView::set_view_mode_from_string(String const& mode)
+{
+    if (m_mode == Mode::Desktop)
+        return;
+
+    if (mode.contains("Table")) {
+        set_view_mode(DirectoryView::ViewMode::Table);
+        m_view_as_table_action->set_checked(true);
+    } else if (mode.contains("Columns")) {
+        set_view_mode(DirectoryView::ViewMode::Columns);
+        m_view_as_columns_action->set_checked(true);
+    } else {
+        set_view_mode(DirectoryView::ViewMode::Icon);
+        m_view_as_icons_action->set_checked(true);
+    }
+}
+
 void DirectoryView::set_view_mode(ViewMode mode)
 {
     if (m_view_mode == mode)
@@ -551,6 +569,27 @@ void DirectoryView::setup_actions()
     m_force_delete_action = GUI::Action::create(
         "Delete Without Confirmation", { Mod_Shift, Key_Delete },
         [this](auto&) { do_delete(false); },
+        window());
+
+    m_view_as_icons_action = GUI::Action::create_checkable(
+        "View as &Icons", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/icon-view.png"), [&](GUI::Action const&) {
+            set_view_mode(DirectoryView::ViewMode::Icon);
+            Config::write_string("FileManager", "DirectoryView", "ViewMode", "Icon");
+        },
+        window());
+
+    m_view_as_table_action = GUI::Action::create_checkable(
+        "View as &Table", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/table-view.png"), [&](GUI::Action const&) {
+            set_view_mode(DirectoryView::ViewMode::Table);
+            Config::write_string("FileManager", "DirectoryView", "ViewMode", "Table");
+        },
+        window());
+
+    m_view_as_columns_action = GUI::Action::create_checkable(
+        "View as &Columns", { Mod_Ctrl, KeyCode::Key_3 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/columns-view.png"), [&](GUI::Action const&) {
+            set_view_mode(DirectoryView::ViewMode::Columns);
+            Config::write_string("FileManager", "DirectoryView", "ViewMode", "Columns");
+        },
         window());
 }
 

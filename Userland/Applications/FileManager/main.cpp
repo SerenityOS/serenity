@@ -601,36 +601,11 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
         location_toolbar.set_visible(false);
     };
 
-    RefPtr<GUI::Action> view_as_table_action;
-    RefPtr<GUI::Action> view_as_icons_action;
-    RefPtr<GUI::Action> view_as_columns_action;
-
-    view_as_icons_action = GUI::Action::create_checkable(
-        "View as &Icons", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/icon-view.png"), [&](GUI::Action const&) {
-            directory_view.set_view_mode(DirectoryView::ViewMode::Icon);
-            Config::write_string("FileManager", "DirectoryView", "ViewMode", "Icon");
-        },
-        window);
-
-    view_as_table_action = GUI::Action::create_checkable(
-        "View as &Table", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/table-view.png"), [&](GUI::Action const&) {
-            directory_view.set_view_mode(DirectoryView::ViewMode::Table);
-            Config::write_string("FileManager", "DirectoryView", "ViewMode", "Table");
-        },
-        window);
-
-    view_as_columns_action = GUI::Action::create_checkable(
-        "View as &Columns", { Mod_Ctrl, KeyCode::Key_3 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/columns-view.png"), [&](GUI::Action const&) {
-            directory_view.set_view_mode(DirectoryView::ViewMode::Columns);
-            Config::write_string("FileManager", "DirectoryView", "ViewMode", "Columns");
-        },
-        window);
-
     auto view_type_action_group = make<GUI::ActionGroup>();
     view_type_action_group->set_exclusive(true);
-    view_type_action_group->add_action(*view_as_icons_action);
-    view_type_action_group->add_action(*view_as_table_action);
-    view_type_action_group->add_action(*view_as_columns_action);
+    view_type_action_group->add_action(directory_view.view_as_icons_action());
+    view_type_action_group->add_action(directory_view.view_as_table_action());
+    view_type_action_group->add_action(directory_view.view_as_columns_action());
 
     auto tree_view_selected_file_paths = [&] {
         Vector<String> paths;
@@ -876,9 +851,9 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
 
     view_menu.add_separator();
 
-    view_menu.add_action(*view_as_icons_action);
-    view_menu.add_action(*view_as_table_action);
-    view_menu.add_action(*view_as_columns_action);
+    view_menu.add_action(directory_view.view_as_icons_action());
+    view_menu.add_action(directory_view.view_as_table_action());
+    view_menu.add_action(directory_view.view_as_columns_action());
     view_menu.add_separator();
     view_menu.add_action(action_show_dotfiles);
 
@@ -924,9 +899,9 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
     main_toolbar.add_action(paste_action);
 
     main_toolbar.add_separator();
-    main_toolbar.add_action(*view_as_icons_action);
-    main_toolbar.add_action(*view_as_table_action);
-    main_toolbar.add_action(*view_as_columns_action);
+    main_toolbar.add_action(directory_view.view_as_icons_action());
+    main_toolbar.add_action(directory_view.view_as_table_action());
+    main_toolbar.add_action(directory_view.view_as_columns_action());
 
     directory_view.on_path_change = [&](String const& new_path, bool can_read_in_path, bool can_write_in_path) {
         auto icon = GUI::FileIconProvider::icon_for_path(new_path);
@@ -1002,9 +977,9 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
         go_forward_action->set_enabled(directory_view.path_history_position() < directory_view.path_history_size() - 1);
         go_back_action->set_enabled(directory_view.path_history_position() > 0);
         open_parent_directory_action->set_enabled(new_path != "/");
-        view_as_table_action->set_enabled(can_read_in_path);
-        view_as_icons_action->set_enabled(can_read_in_path);
-        view_as_columns_action->set_enabled(can_read_in_path);
+        directory_view.view_as_table_action().set_enabled(can_read_in_path);
+        directory_view.view_as_icons_action().set_enabled(can_read_in_path);
+        directory_view.view_as_columns_action().set_enabled(can_read_in_path);
     };
 
     directory_view.on_accepted_drop = [&] {
@@ -1199,18 +1174,7 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
 
     window->show();
 
-    auto dir_view_mode = Config::read_string("FileManager", "DirectoryView", "ViewMode", "Icon");
-
-    if (dir_view_mode.contains("Table")) {
-        directory_view.set_view_mode(DirectoryView::ViewMode::Table);
-        view_as_table_action->set_checked(true);
-    } else if (dir_view_mode.contains("Columns")) {
-        directory_view.set_view_mode(DirectoryView::ViewMode::Columns);
-        view_as_columns_action->set_checked(true);
-    } else {
-        directory_view.set_view_mode(DirectoryView::ViewMode::Icon);
-        view_as_icons_action->set_checked(true);
-    }
+    directory_view.set_view_mode_from_string(Config::read_string("FileManager", "DirectoryView", "ViewMode", "Icon"));
 
     if (!entry_focused_on_init.is_empty()) {
         auto matches = directory_view.current_view().model()->matches(entry_focused_on_init, GUI::Model::MatchesFlag::MatchFull | GUI::Model::MatchesFlag::FirstMatchOnly);
