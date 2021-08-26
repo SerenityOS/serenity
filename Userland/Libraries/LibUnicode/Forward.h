@@ -19,7 +19,6 @@ enum class Script : u8;
 enum class Territory : u8;
 enum class WordBreakProperty : u8;
 
-struct LocaleData;
 struct SpecialCasing;
 struct UnicodeData;
 

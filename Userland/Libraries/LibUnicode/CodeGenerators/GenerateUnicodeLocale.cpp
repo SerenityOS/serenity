@@ -169,10 +169,8 @@ enum class @name@ : @underlying@ {)~~~");
     generator.append(R"~~~(
 #pragma once
 
-#include <AK/HashMap.h>
 #include <AK/Optional.h>
-#include <AK/Span.h>
-#include <AK/String.h>
+#include <AK/StringView.h>
 #include <AK/Types.h>
 #include <LibUnicode/Forward.h>
 
@@ -186,21 +184,12 @@ namespace Unicode {
     generate_enum("Variant"sv, {}, locale_data.variants);
 
     generator.append(R"~~~(
-struct LocaleData {
-    Language language;
-    Optional<Territory> territory;
-    Optional<Variant> variant;
-    Span<StringView const> territories;
-};
-
-using LocaleMap = HashMap<String, LocaleData>;
-
 namespace Detail {
-
-LocaleMap const& available_locales();
 
 Optional<Locale> locale_from_string(StringView const& locale);
 Optional<Language> language_from_string(StringView const& language);
+
+Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
 Optional<Territory> territory_from_string(StringView const& territory);
 
 }
@@ -220,10 +209,11 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
 
     generator.append(R"~~~(
 #include <AK/Array.h>
+#include <AK/HashMap.h>
+#include <AK/Span.h>
 #include <LibUnicode/UnicodeLocale.h>
 
 namespace Unicode {
-
 )~~~");
 
     auto format_mapping_name = [](StringView format, StringView name) {
@@ -234,16 +224,29 @@ namespace Unicode {
 
     auto append_mapping_list = [&](String name, auto const& keys, auto const& mappings) {
         generator.set("name", name);
+        generator.set("size", String::number(keys.size()));
+
         generator.append(R"~~~(
-static constexpr Array<StringView, @territories_size@> @name@ { {)~~~");
+static constexpr Array<StringView, @size@> @name@ { {
+    )~~~");
+
+        constexpr size_t max_values_per_row = 10;
+        size_t values_in_current_row = 0;
 
         for (auto const& key : keys) {
-            auto it = mappings.find(key);
-            VERIFY(it != mappings.end());
+            if (values_in_current_row++ > 0)
+                generator.append(" ");
 
-            generator.set("mapping"sv, it->value);
-            generator.append(R"~~~(
-    "@mapping@"sv,)~~~");
+            if (auto it = mappings.find(key); it != mappings.end())
+                generator.set("mapping"sv, String::formatted("\"{}\"sv", it->value));
+            else
+                generator.set("mapping"sv, "{}"sv);
+            generator.append("@mapping@,");
+
+            if (values_in_current_row == max_values_per_row) {
+                values_in_current_row = 0;
+                generator.append("\n    ");
+            }
         }
 
         generator.append(R"~~~(
@@ -251,51 +254,77 @@ static constexpr Array<StringView, @territories_size@> @name@ { {)~~~");
 )~~~");
     };
 
-    for (auto const& locale : locale_data.locales) {
-        auto mapping_name = format_mapping_name("s_territories_{}", locale.key);
-        append_mapping_list(move(mapping_name), locale_data.territories, locale.value.territories);
-    }
+    auto append_mapping = [&](StringView name, StringView format, auto const& keys, auto get_mapping_callback) {
+        Vector<String> mapping_names;
 
-    generator.append(R"~~~(
-static LocaleMap const& ensure_locale_map()
-{
-    static LocaleMap locale_map {};
-    locale_map.ensure_capacity(@locales_size@);
-)~~~");
+        for (auto const& locale : locale_data.locales) {
+            auto mapping_name = format_mapping_name(format, locale.key);
+            append_mapping_list(mapping_name, keys, get_mapping_callback(locale.value));
+            mapping_names.append(move(mapping_name));
+        }
 
-    for (auto const& locale : locale_data.locales) {
-        auto mapping_name = format_mapping_name("s_territories_{}", locale.key);
-        generator.set("mapping_name"sv, move(mapping_name));
-        generator.set("locale"sv, locale.key);
-        generator.set("language"sv, String::formatted("Language::{}", format_identifier("Language"sv, locale.value.language)));
+        quick_sort(mapping_names);
 
-        if (locale.value.territory.has_value())
-            generator.set("territory"sv, String::formatted("Territory::{}", format_identifier("Territory"sv, *locale.value.territory)));
-        else
-            generator.set("territory"sv, "{}"sv);
+        generator.set("name", name);
+        generator.set("size", String::number(locale_data.locales.size()));
+        generator.append(R"~~~(
+static constexpr Array<Span<StringView const>, @size@> @name@ { {
+    )~~~");
 
-        if (locale.value.variant.has_value())
-            generator.set("variant"sv, String::formatted("Variant::{}", format_identifier("Variant"sv, *locale.value.variant)));
-        else
-            generator.set("variant"sv, "{}"sv);
+        constexpr size_t max_values_per_row = 10;
+        size_t values_in_current_row = 0;
+
+        for (auto& mapping_name : mapping_names) {
+            if (values_in_current_row++ > 0)
+                generator.append(" ");
+
+            generator.set("name", move(mapping_name));
+            generator.append("@name@.span(),");
+
+            if (values_in_current_row == max_values_per_row) {
+                values_in_current_row = 0;
+                generator.append("\n    ");
+            }
+        }
 
         generator.append(R"~~~(
-    locale_map.set("@locale@"sv, { @language@, @territory@, @variant@, @mapping_name@.span() });)~~~");
-    }
+} };
+)~~~");
+    };
+
+    append_mapping("s_territories"sv, "s_territories_{}", locale_data.territories, [](auto const& value) { return value.territories; });
 
     generator.append(R"~~~(
-
-    return locale_map;
-}
-
 namespace Detail {
+)~~~");
 
-LocaleMap const& available_locales()
+    auto append_mapping_search = [&](StringView enum_title, StringView enum_snake, StringView collection_name) {
+        generator.set("enum_title", enum_title);
+        generator.set("enum_snake", enum_snake);
+        generator.set("collection_name", collection_name);
+        generator.append(R"~~~(
+Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringView @enum_snake@)
 {
-    static auto const& locale_map = ensure_locale_map();
-    return locale_map;
+    auto locale_value = locale_from_string(locale);
+    if (!locale_value.has_value())
+        return {};
+
+    auto @enum_snake@_value = @enum_snake@_from_string(@enum_snake@);
+    if (!@enum_snake@_value.has_value())
+        return {};
+
+    auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
+    auto @enum_snake@_index = to_underlying(*@enum_snake@_value);
+
+    auto const& mappings = @collection_name@.at(locale_index);
+    auto @enum_snake@_mapping = mappings.at(@enum_snake@_index);
+
+    if (@enum_snake@_mapping.is_empty())
+        return {};
+    return @enum_snake@_mapping;
 }
 )~~~");
+    };
 
     auto append_from_string = [&](StringView enum_title, StringView enum_snake, Vector<String> const& values) {
         generator.set("enum_title", enum_title);
@@ -304,7 +333,7 @@ LocaleMap const& available_locales()
         generator.append(R"~~~(
 Optional<@enum_title@> @enum_snake@_from_string(StringView const& @enum_snake@)
 {
-    static HashMap<String, @enum_title@> @enum_snake@_values { {)~~~");
+    static HashMap<StringView, @enum_title@> @enum_snake@_values { {)~~~");
 
         for (auto const& value : values) {
             generator.set("key"sv, value);
@@ -326,6 +355,8 @@ Optional<@enum_title@> @enum_snake@_from_string(StringView const& @enum_snake@)
 
     append_from_string("Locale"sv, "locale"sv, locale_data.locales.keys());
     append_from_string("Language"sv, "language"sv, locale_data.languages);
+
+    append_mapping_search("Territory"sv, "territory"sv, "s_territories"sv);
     append_from_string("Territory"sv, "territory"sv, locale_data.territories);
 
     generator.append(R"~~~(
