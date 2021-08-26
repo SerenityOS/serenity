@@ -18,7 +18,7 @@ class SQLClient
     C_OBJECT(SQLClient);
     virtual ~SQLClient();
 
-    Function<void(int)> on_connected;
+    Function<void(int, String const&)> on_connected;
     Function<void(int)> on_disconnected;
     Function<void(int, int, String const&)> on_connection_error;
     Function<void(int, int, String const&)> on_execution_error;
@@ -32,7 +32,7 @@ private:
     {
     }
 
-    virtual void connected(int connection_id) override;
+    virtual void connected(int connection_id, String const& connected_to_database) override;
     virtual void connection_error(int connection_id, int code, String const& message) override;
     virtual void execution_success(int statement_id, bool has_results, int created, int updated, int deleted) override;
     virtual void next_result(int statement_id, Vector<String> const&) override;

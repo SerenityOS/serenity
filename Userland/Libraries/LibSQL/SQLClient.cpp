@@ -12,10 +12,10 @@ SQLClient::~SQLClient()
 {
 }
 
-void SQLClient::connected(int connection_id)
+void SQLClient::connected(int connection_id, String const& connected_to_database)
 {
     if (on_connected)
-        on_connected(connection_id);
+        on_connected(connection_id, connected_to_database);
 }
 
 void SQLClient::disconnected(int connection_id)

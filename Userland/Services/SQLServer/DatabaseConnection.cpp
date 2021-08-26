@@ -43,7 +43,7 @@ DatabaseConnection::DatabaseConnection(String database_name, int client_id)
         m_accept_statements = true;
         auto client_connection = ClientConnection::client_connection_for(m_client_id);
         if (client_connection)
-            client_connection->async_connected(m_connection_id);
+            client_connection->async_connected(m_connection_id, m_database_name);
         else
             warnln("Cannot notify client of database connection. Client disconnected");
     });
