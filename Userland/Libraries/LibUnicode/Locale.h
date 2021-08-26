@@ -40,6 +40,7 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID&);
 String const& default_locale();
 bool is_locale_available(StringView locale);
 
+Optional<StringView> get_locale_language_mapping(StringView locale, StringView language);
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
 
 }

@@ -24,6 +24,7 @@ struct Locale {
     String language;
     Optional<String> territory;
     Optional<String> variant;
+    HashMap<String, String> languages;
     HashMap<String, String> territories;
 };
 
@@ -82,6 +83,28 @@ static void parse_identity(String locale_path, UnicodeLocaleData& locale_data, L
     }
 }
 
+static void parse_locale_languages(String locale_path, Locale& locale)
+{
+    LexicalPath languages_path(move(locale_path));
+    languages_path = languages_path.append("languages.json"sv);
+    VERIFY(Core::File::exists(languages_path.string()));
+
+    auto languages_file_or_error = Core::File::open(languages_path.string(), Core::OpenMode::ReadOnly);
+    VERIFY(!languages_file_or_error.is_error());
+
+    auto languages = JsonParser(languages_file_or_error.value()->read_all()).parse();
+    VERIFY(languages.has_value());
+
+    auto const& main_object = languages->as_object().get("main"sv);
+    auto const& locale_object = main_object.as_object().get(languages_path.parent().basename());
+    auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
+    auto const& languages_object = locale_display_names_object.as_object().get("languages"sv);
+
+    languages_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+        locale.languages.set(key, value.as_string());
+    });
+}
+
 static void parse_locale_territories(String locale_path, Locale& locale)
 {
     LexicalPath territories_path(move(locale_path));
@@ -122,6 +145,7 @@ static void parse_all_locales(String locale_names_path, UnicodeLocaleData& local
 
         auto& locale = locale_data.locales.ensure(LexicalPath::basename(locale_path));
         parse_identity(locale_path, locale_data, locale);
+        parse_locale_languages(locale_path, locale);
         parse_locale_territories(locale_path, locale);
     }
 }
@@ -187,6 +211,8 @@ namespace Unicode {
 namespace Detail {
 
 Optional<Locale> locale_from_string(StringView const& locale);
+
+Optional<StringView> get_locale_language_mapping(StringView locale, StringView language);
 Optional<Language> language_from_string(StringView const& language);
 
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
@@ -292,6 +318,7 @@ static constexpr Array<Span<StringView const>, @size@> @name@ { {
 )~~~");
     };
 
+    append_mapping("s_languages"sv, "s_languages_{}", locale_data.languages, [](auto const& value) { return value.languages; });
     append_mapping("s_territories"sv, "s_territories_{}", locale_data.territories, [](auto const& value) { return value.territories; });
 
     generator.append(R"~~~(
@@ -354,6 +381,8 @@ Optional<@enum_title@> @enum_snake@_from_string(StringView const& @enum_snake@)
     };
 
     append_from_string("Locale"sv, "locale"sv, locale_data.locales.keys());
+
+    append_mapping_search("Language"sv, "language"sv, "s_languages"sv);
     append_from_string("Language"sv, "language"sv, locale_data.languages);
 
     append_mapping_search("Territory"sv, "territory"sv, "s_territories"sv);
