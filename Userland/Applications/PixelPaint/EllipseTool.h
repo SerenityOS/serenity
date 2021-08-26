@@ -27,7 +27,7 @@ public:
     virtual Gfx::StandardCursor cursor() override { return Gfx::StandardCursor::Crosshair; }
 
 private:
-    enum class Mode {
+    enum class FillMode {
         Outline,
         Fill,
     };
@@ -44,7 +44,7 @@ private:
     Gfx::IntPoint m_ellipse_start_position;
     Gfx::IntPoint m_ellipse_end_position;
     int m_thickness { 1 };
-    Mode m_mode { Mode::Outline };
+    FillMode m_fill_mode { FillMode::Outline };
     DrawMode m_draw_mode { DrawMode::FromCorner };
 };
 

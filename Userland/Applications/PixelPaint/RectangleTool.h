@@ -27,7 +27,7 @@ public:
     virtual Gfx::StandardCursor cursor() override { return Gfx::StandardCursor::Crosshair; }
 
 private:
-    enum class Mode {
+    enum class FillMode {
         Outline,
         Fill,
         Gradient,
@@ -44,7 +44,7 @@ private:
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
     Gfx::IntPoint m_rectangle_start_position;
     Gfx::IntPoint m_rectangle_end_position;
-    Mode m_mode { Mode::Outline };
+    FillMode m_fill_mode { FillMode::Outline };
     DrawMode m_draw_mode { DrawMode::FromCorner };
 };
 

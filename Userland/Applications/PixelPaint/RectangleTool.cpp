@@ -36,14 +36,14 @@ void RectangleTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start
         rect = Gfx::IntRect::from_two_points(start_position, end_position);
     }
 
-    switch (m_mode) {
-    case Mode::Fill:
+    switch (m_fill_mode) {
+    case FillMode::Fill:
         painter.fill_rect(rect, m_editor->color_for(m_drawing_button));
         break;
-    case Mode::Outline:
+    case FillMode::Outline:
         painter.draw_rect(rect, m_editor->color_for(m_drawing_button));
         break;
-    case Mode::Gradient:
+    case FillMode::Gradient:
         painter.fill_rect_with_gradient(rect, m_editor->primary_color(), m_editor->secondary_color());
         break;
     default:
@@ -138,13 +138,13 @@ GUI::Widget* RectangleTool::get_properties_widget()
         auto& gradient_mode_radio = mode_radio_container.add<GUI::RadioButton>("Gradient");
 
         outline_mode_radio.on_checked = [&](bool) {
-            m_mode = Mode::Outline;
+            m_fill_mode = FillMode::Outline;
         };
         fill_mode_radio.on_checked = [&](bool) {
-            m_mode = Mode::Fill;
+            m_fill_mode = FillMode::Fill;
         };
         gradient_mode_radio.on_checked = [&](bool) {
-            m_mode = Mode::Gradient;
+            m_fill_mode = FillMode::Gradient;
         };
 
         outline_mode_radio.set_checked(true);
