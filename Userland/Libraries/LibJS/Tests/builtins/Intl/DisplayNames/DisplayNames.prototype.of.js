@@ -58,4 +58,19 @@ describe("correct behavior", () => {
         expect(es419.of("AA")).toBe("AA");
         expect(zhHant.of("AA")).toBe("AA");
     });
+
+    test("option type script", () => {
+        const en = new Intl.DisplayNames("en", { type: "script" });
+        expect(en.of("Latn")).toBe("Latin");
+
+        const es419 = new Intl.DisplayNames("es-419", { type: "script" });
+        expect(es419.of("Latn")).toBe("latín");
+
+        const zhHant = new Intl.DisplayNames(["zh-Hant"], { type: "script" });
+        expect(zhHant.of("Latn")).toBe("拉丁文");
+
+        expect(en.of("Aaaa")).toBe("Aaaa");
+        expect(es419.of("Aaaa")).toBe("Aaaa");
+        expect(zhHant.of("Aaaa")).toBe("Aaaa");
+    });
 });
