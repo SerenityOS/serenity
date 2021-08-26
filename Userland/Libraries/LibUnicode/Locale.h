@@ -42,5 +42,6 @@ bool is_locale_available(StringView locale);
 
 Optional<StringView> get_locale_language_mapping(StringView locale, StringView language);
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
+Optional<StringView> get_locale_script_mapping(StringView locale, StringView script);
 
 }
