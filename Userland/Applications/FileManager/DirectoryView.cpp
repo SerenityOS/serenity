@@ -390,7 +390,9 @@ bool DirectoryView::open(String const& path)
     if (real_path.is_null() || !Core::File::is_directory(path))
         return false;
 
-    chdir(real_path.characters());
+    if (chdir(real_path.characters()) < 0) {
+        perror("chdir");
+    }
     if (model().root_path() == real_path) {
         refresh();
     } else {
