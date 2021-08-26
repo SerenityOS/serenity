@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,13 +33,19 @@ private:
         Gradient,
     };
 
-    void draw_using(GUI::Painter&, Gfx::IntRect const&);
+    enum class DrawMode {
+        FromCenter,
+        FromCorner,
+    };
+
+    void draw_using(GUI::Painter&, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position);
 
     RefPtr<GUI::Widget> m_properties_widget;
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
     Gfx::IntPoint m_rectangle_start_position;
     Gfx::IntPoint m_rectangle_end_position;
     Mode m_mode { Mode::Outline };
+    DrawMode m_draw_mode { DrawMode::FromCorner };
 };
 
 }
