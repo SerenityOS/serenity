@@ -260,6 +260,9 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                         remember_flip_for_undo(top_card);
                     }
                 } else if (m_focused_cards.is_empty()) {
+                    if (is_auto_collecting() && attempt_to_move_card_to_foundations(to_check))
+                        break;
+
                     to_check.add_all_grabbed_cards(click_location, m_focused_cards);
                     m_mouse_down_location = click_location;
                     to_check.set_focused(true);
