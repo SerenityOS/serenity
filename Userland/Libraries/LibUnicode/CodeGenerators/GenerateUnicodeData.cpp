@@ -91,7 +91,6 @@ struct UnicodeData {
     Vector<SpecialCasing> special_casing;
     u32 largest_casing_transform_size { 0 };
     u32 largest_special_casing_size { 0 };
-    Vector<String> locales;
     Vector<String> conditions;
 
     Vector<CodePointData> code_point_data;
@@ -200,11 +199,10 @@ static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
                 casing.condition = move(conditions[0]);
             }
 
-            casing.locale = casing.locale.to_uppercase();
+            if (!casing.locale.is_empty())
+                casing.locale = String::formatted("{:c}{}", to_ascii_uppercase(casing.locale[0]), casing.locale.substring_view(1));
             casing.condition.replace("_", "", true);
 
-            if (!casing.locale.is_empty() && !unicode_data.locales.contains_slow(casing.locale))
-                unicode_data.locales.append(casing.locale);
             if (!casing.condition.is_empty() && !unicode_data.conditions.contains_slow(casing.condition))
                 unicode_data.conditions.append(casing.condition);
         }
@@ -487,11 +485,11 @@ enum class @name@ : @underlying@ {)~~~");
 #include <AK/Optional.h>
 #include <AK/Types.h>
 #include <LibUnicode/Forward.h>
+#include <LibUnicode/UnicodeLocale.h>
 
 namespace Unicode {
 )~~~");
 
-    generate_enum("Locale"sv, "None"sv, move(unicode_data.locales));
     generate_enum("Condition"sv, "None"sv, move(unicode_data.conditions));
     generate_enum("GeneralCategory"sv, {}, unicode_data.general_categories.keys(), unicode_data.general_category_aliases);
     generate_enum("Property"sv, {}, unicode_data.prop_list.keys(), unicode_data.prop_aliases);
