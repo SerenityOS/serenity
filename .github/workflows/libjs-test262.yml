@@ -48,7 +48,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install ninja-build
+          sudo apt-get install ninja-build unzip
 
       - name: Setup Python
         uses: actions/setup-python@v2
