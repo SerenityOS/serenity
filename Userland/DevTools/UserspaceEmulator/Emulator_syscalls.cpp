@@ -692,7 +692,18 @@ int Emulator::virt$getsockopt(FlatPtr params_addr)
         mmu().copy_to_vm((FlatPtr)params.value, &creds, sizeof(creds));
         return rc;
     }
+    if (params.option == SO_ERROR) {
+        int so_error;
+        socklen_t so_error_len = sizeof(so_error);
+        int rc = getsockopt(params.sockfd, params.level, SO_ERROR, &so_error, &so_error_len);
+        if (rc < 0)
+            return -errno;
+        // FIXME: Check params.value_size
+        mmu().copy_to_vm((FlatPtr)params.value, &so_error, sizeof(so_error));
+        return rc;
+    }
 
+    dbgln("Not implemented socket param: {}", params.option);
     TODO();
 }
 
