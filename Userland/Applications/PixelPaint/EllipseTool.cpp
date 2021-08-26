@@ -37,11 +37,11 @@ void EllipseTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_p
         ellipse_intersecting_rect = Gfx::IntRect::from_two_points(start_position, end_position);
     }
 
-    switch (m_mode) {
-    case Mode::Outline:
+    switch (m_fill_mode) {
+    case FillMode::Outline:
         painter.draw_ellipse_intersecting(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button), m_thickness);
         break;
-    case Mode::Fill:
+    case FillMode::Fill:
         painter.fill_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button));
         break;
     default:
@@ -148,10 +148,10 @@ GUI::Widget* EllipseTool::get_properties_widget()
         auto& fill_mode_radio = mode_radio_container.add<GUI::RadioButton>("Fill");
 
         outline_mode_radio.on_checked = [&](bool) {
-            m_mode = Mode::Outline;
+            m_fill_mode = FillMode::Outline;
         };
         fill_mode_radio.on_checked = [&](bool) {
-            m_mode = Mode::Fill;
+            m_fill_mode = FillMode::Fill;
         };
 
         outline_mode_radio.set_checked(true);
