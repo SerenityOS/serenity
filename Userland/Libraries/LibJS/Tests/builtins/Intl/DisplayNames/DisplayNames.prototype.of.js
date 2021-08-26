@@ -29,6 +29,21 @@ describe("correct behavior", () => {
         expect(Intl.DisplayNames.prototype.of).toHaveLength(1);
     });
 
+    test("option type language", () => {
+        const en = new Intl.DisplayNames("en", { type: "language" });
+        expect(en.of("en")).toBe("English");
+
+        const es419 = new Intl.DisplayNames("es-419", { type: "language" });
+        expect(es419.of("en")).toBe("inglés");
+
+        const zhHant = new Intl.DisplayNames(["zh-Hant"], { type: "language" });
+        expect(zhHant.of("en")).toBe("英文");
+
+        expect(en.of("zz")).toBe("zz");
+        expect(es419.of("zz")).toBe("zz");
+        expect(zhHant.of("zz")).toBe("zz");
+    });
+
     test("option type region", () => {
         const en = new Intl.DisplayNames("en", { type: "region" });
         expect(en.of("US")).toBe("United States");
