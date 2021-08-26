@@ -24,6 +24,7 @@ private:
     explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
 
     virtual void pledge_domains(Vector<String> const&) override;
+    virtual void monitor_domain(String const&) override;
     virtual Messages::ConfigServer::ReadStringValueResponse read_string_value([[maybe_unused]] String const& domain, [[maybe_unused]] String const& group, [[maybe_unused]] String const& key) override;
     virtual Messages::ConfigServer::ReadI32ValueResponse read_i32_value([[maybe_unused]] String const& domain, [[maybe_unused]] String const& group, [[maybe_unused]] String const& key) override;
     virtual Messages::ConfigServer::ReadBoolValueResponse read_bool_value([[maybe_unused]] String const& domain, [[maybe_unused]] String const& group, [[maybe_unused]] String const& key) override;
@@ -35,6 +36,8 @@ private:
 
     bool m_has_pledged { false };
     HashTable<String> m_pledged_domains;
+
+    HashTable<String> m_monitored_domains;
 };
 
 }
