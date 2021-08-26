@@ -92,6 +92,7 @@ int main(int argc, char** argv)
     }
 
     Config::pledge_domains({ "FileManager", "WindowManager" });
+    Config::monitor_domain("FileManager");
 
     if (is_desktop_mode)
         return run_in_desktop_mode();

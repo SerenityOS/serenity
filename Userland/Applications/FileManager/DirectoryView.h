@@ -8,6 +8,7 @@
 
 #include <AK/URL.h>
 #include <AK/Vector.h>
+#include <LibConfig/Listener.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ColumnsView.h>
@@ -38,7 +39,8 @@ private:
 
 class DirectoryView final
     : public GUI::StackWidget
-    , private GUI::ModelClient {
+    , private GUI::ModelClient
+    , public Config::Listener {
     C_OBJECT(DirectoryView);
 
 public:
@@ -129,6 +131,9 @@ public:
     GUI::Action& view_as_icons_action() { return *m_view_as_icons_action; }
     GUI::Action& view_as_table_action() { return *m_view_as_table_action; }
     GUI::Action& view_as_columns_action() { return *m_view_as_columns_action; }
+
+    // ^Config::Listener
+    virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value) override;
 
 private:
     explicit DirectoryView(Mode);

@@ -340,6 +340,17 @@ void DirectoryView::set_view_mode_from_string(String const& mode)
     }
 }
 
+void DirectoryView::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
+{
+    if (domain != "FileManager" || group != "DirectoryView")
+        return;
+
+    if (key == "ViewMode") {
+        set_view_mode_from_string(value);
+        return;
+    }
+}
+
 void DirectoryView::set_view_mode(ViewMode mode)
 {
     if (m_view_mode == mode)
