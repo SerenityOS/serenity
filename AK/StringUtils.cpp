@@ -411,6 +411,22 @@ String to_snakecase(const StringView& str)
     return builder.to_string();
 }
 
+String to_titlecase(StringView const& str)
+{
+    StringBuilder builder;
+    bool next_is_upper = true;
+
+    for (auto ch : str) {
+        if (next_is_upper)
+            builder.append_code_point(to_ascii_uppercase(ch));
+        else
+            builder.append_code_point(to_ascii_lowercase(ch));
+        next_is_upper = ch == ' ';
+    }
+
+    return builder.to_string();
+}
+
 }
 
 }
