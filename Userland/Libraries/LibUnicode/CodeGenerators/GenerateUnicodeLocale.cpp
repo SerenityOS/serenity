@@ -26,12 +26,14 @@ struct Locale {
     Optional<String> variant;
     HashMap<String, String> languages;
     HashMap<String, String> territories;
+    HashMap<String, String> scripts;
 };
 
 struct UnicodeLocaleData {
     HashMap<String, Locale> locales;
     Vector<String> languages;
     Vector<String> territories;
+    Vector<String> scripts;
     Vector<String> variants;
 };
 
@@ -127,6 +129,30 @@ static void parse_locale_territories(String locale_path, Locale& locale)
     });
 }
 
+static void parse_locale_scripts(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
+{
+    LexicalPath scripts_path(move(locale_path));
+    scripts_path = scripts_path.append("scripts.json"sv);
+    VERIFY(Core::File::exists(scripts_path.string()));
+
+    auto scripts_file_or_error = Core::File::open(scripts_path.string(), Core::OpenMode::ReadOnly);
+    VERIFY(!scripts_file_or_error.is_error());
+
+    auto scripts = JsonParser(scripts_file_or_error.value()->read_all()).parse();
+    VERIFY(scripts.has_value());
+
+    auto const& main_object = scripts->as_object().get("main"sv);
+    auto const& locale_object = main_object.as_object().get(scripts_path.parent().basename());
+    auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
+    auto const& scripts_object = locale_display_names_object.as_object().get("scripts"sv);
+
+    scripts_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+        locale.scripts.set(key, value.as_string());
+        if (!locale_data.scripts.contains_slow(key))
+            locale_data.scripts.append(key);
+    });
+}
+
 static void parse_all_locales(String locale_names_path, UnicodeLocaleData& locale_data)
 {
     LexicalPath locale_names(move(locale_names_path));
@@ -147,6 +173,7 @@ static void parse_all_locales(String locale_names_path, UnicodeLocaleData& local
         parse_identity(locale_path, locale_data, locale);
         parse_locale_languages(locale_path, locale);
         parse_locale_territories(locale_path, locale);
+        parse_locale_scripts(locale_path, locale_data, locale);
     }
 }
 
@@ -205,6 +232,7 @@ namespace Unicode {
     generate_enum("Locale"sv, "None"sv, locales);
     generate_enum("Language"sv, {}, locale_data.languages);
     generate_enum("Territory"sv, {}, locale_data.territories);
+    generate_enum("ScriptTag"sv, {}, locale_data.scripts);
     generate_enum("Variant"sv, {}, locale_data.variants);
 
     generator.append(R"~~~(
@@ -217,6 +245,9 @@ Optional<Language> language_from_string(StringView const& language);
 
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
 Optional<Territory> territory_from_string(StringView const& territory);
+
+Optional<StringView> get_locale_script_tag_mapping(StringView locale, StringView script_tag);
+Optional<ScriptTag> script_tag_from_string(StringView const& script_tag);
 
 }
 
@@ -320,6 +351,7 @@ static constexpr Array<Span<StringView const>, @size@> @name@ { {
 
     append_mapping("s_languages"sv, "s_languages_{}", locale_data.languages, [](auto const& value) { return value.languages; });
     append_mapping("s_territories"sv, "s_territories_{}", locale_data.territories, [](auto const& value) { return value.territories; });
+    append_mapping("s_scripts"sv, "s_scripts_{}", locale_data.scripts, [](auto const& value) { return value.scripts; });
 
     generator.append(R"~~~(
 namespace Detail {
@@ -387,6 +419,9 @@ Optional<@enum_title@> @enum_snake@_from_string(StringView const& @enum_snake@)
 
     append_mapping_search("Territory"sv, "territory"sv, "s_territories"sv);
     append_from_string("Territory"sv, "territory"sv, locale_data.territories);
+
+    append_mapping_search("ScriptTag"sv, "script_tag"sv, "s_scripts"sv);
+    append_from_string("ScriptTag"sv, "script_tag"sv, locale_data.scripts);
 
     generator.append(R"~~~(
 }
