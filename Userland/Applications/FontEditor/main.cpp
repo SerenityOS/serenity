@@ -52,7 +52,6 @@ int main(int argc, char** argv)
 
     RefPtr<Gfx::BitmapFont> edited_font;
     if (path == nullptr) {
-        path = "Untitled.font";
         edited_font = static_ptr_cast<Gfx::BitmapFont>(Gfx::FontDatabase::default_font().clone());
     } else {
         auto bitmap_font = Gfx::BitmapFont::load_from_file(path);
@@ -76,7 +75,6 @@ int main(int argc, char** argv)
     window->resize(440, 470);
 
     auto& font_editor = window->set_main_widget<FontEditorWidget>(path, move(edited_font));
-    font_editor.update_title();
 
     font_editor.initialize_menubar(*window);
 

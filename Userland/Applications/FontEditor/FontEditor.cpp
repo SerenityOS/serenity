@@ -156,11 +156,11 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     };
 
     m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-font.png"), [&](auto&) {
-        if (m_font_modified) {
+        if (window()->is_modified()) {
             auto result = GUI::MessageBox::show(window(), "Save changes to the current font?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (result == GUI::Dialog::ExecResult::ExecYes) {
                 m_save_action->activate();
-                if (m_font_modified)
+                if (window()->is_modified())
                     return;
             }
             if (result == GUI::Dialog::ExecResult::ExecCancel)
@@ -170,22 +170,9 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         if (new_font_wizard->exec() == GUI::Dialog::ExecOK) {
             auto metadata = new_font_wizard->new_font_metadata();
 
-            String name = metadata.name;
-            auto parts = name.split(' ');
-            if (parts.size() > 1)
-                name = parts[0];
-            parts.clear();
-
-            String weight = GUI::weight_to_name(metadata.weight).to_string();
-            parts = weight.split(' ');
-            if (parts.size() > 1)
-                weight = String::formatted("{}{}", parts[0], parts[1]);
-
             RefPtr<Gfx::BitmapFont> new_font = Gfx::BitmapFont::create(metadata.glyph_height, metadata.glyph_width, metadata.is_fixed_width, metadata.type);
-            String path = String::formatted("{}{}{}.font", name, weight, metadata.presentation_size);
             if (!new_font) {
-                String message = String::formatted("Failed to create new font: {}\n", path);
-                GUI::MessageBox::show(window(), message, "Font Editor", GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), "Failed to create new font.", "Font Editor", GUI::MessageBox::Type::Error);
                 return;
             }
 
@@ -195,17 +182,17 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
             new_font->set_weight(metadata.weight);
             new_font->set_baseline(metadata.baseline);
             new_font->set_mean_line(metadata.mean_line);
-            m_font_modified = true;
-            initialize(path, move(new_font));
+            window()->set_modified(true);
+            initialize({}, move(new_font));
         }
     });
     m_new_action->set_status_tip("Create a new font");
     m_open_action = GUI::CommonActions::make_open_action([&](auto&) {
-        if (m_font_modified) {
+        if (window()->is_modified()) {
             auto result = GUI::MessageBox::show(window(), "Save changes to the current font?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (result == GUI::Dialog::ExecResult::ExecYes) {
                 m_save_action->activate();
-                if (m_font_modified)
+                if (window()->is_modified())
                     return;
             }
             if (result == GUI::Dialog::ExecResult::ExecCancel)
@@ -227,18 +214,17 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
             GUI::MessageBox::show(window(), message, "Font Editor", GUI::MessageBox::Type::Error);
             return;
         }
-        m_font_newly_opened = true;
+        window()->set_modified(false);
         initialize(open_path.value(), move(new_font));
     });
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
-        LexicalPath lexical_path(m_path);
-        if (!lexical_path.dirname().is_empty())
-            save_as(m_path);
-        else
+        if (m_path.is_empty())
             m_save_as_action->activate();
+        else
+            save_as(m_path);
     });
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        LexicalPath lexical_path(m_path);
+        LexicalPath lexical_path(m_path.is_empty() ? "Untitled.font" : m_path);
         Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), lexical_path.title(), lexical_path.extension());
         if (!save_path.has_value())
             return;
@@ -347,7 +333,6 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
 
     m_glyph_editor_widget->on_undo_event = [this] {
         m_undo_stack->push(make<GlyphUndoCommand>(*m_undo_glyph));
-        did_change_undo_stack();
     };
 
     m_glyph_map_widget->on_glyph_selected = [&, update_statusbar](int glyph) {
@@ -518,15 +503,18 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
     deferred_invoke([this](auto&) {
         m_glyph_map_widget->set_focus(true);
         m_glyph_map_widget->scroll_to_glyph(m_glyph_map_widget->selected_glyph());
-        if (m_font_newly_opened)
-            m_font_modified = false;
+        window()->set_modified(false);
         update_title();
-        m_font_newly_opened = false;
     });
 
     m_undo_stack = make<GUI::UndoStack>();
     m_undo_glyph = adopt_ref(*new UndoGlyph(m_glyph_map_widget->selected_glyph(), *m_edited_font));
-    did_change_undo_stack();
+
+    m_undo_stack->on_state_change = [this] {
+        m_undo_action->set_enabled(m_undo_stack->can_undo());
+        m_redo_action->set_enabled(m_undo_stack->can_redo());
+        did_modify_font();
+    };
 
     if (on_initialize)
         on_initialize();
@@ -580,7 +568,7 @@ bool FontEditorWidget::save_as(const String& path)
         return false;
     }
     m_path = path;
-    m_font_modified = false;
+    window()->set_modified(false);
     update_title();
     return true;
 }
@@ -598,8 +586,6 @@ void FontEditorWidget::undo()
     if (!m_undo_stack->can_undo())
         return;
     m_undo_stack->undo();
-    did_change_undo_stack();
-
     m_glyph_editor_widget->update();
     m_glyph_map_widget->update();
     if (m_font_preview_window)
@@ -611,29 +597,20 @@ void FontEditorWidget::redo()
     if (!m_undo_stack->can_redo())
         return;
     m_undo_stack->redo();
-    did_change_undo_stack();
-
     m_glyph_editor_widget->update();
     m_glyph_map_widget->update();
     if (m_font_preview_window)
         m_font_preview_window->update();
 }
 
-void FontEditorWidget::did_change_undo_stack()
-{
-    m_undo_action->set_enabled(m_undo_stack->can_undo());
-    m_redo_action->set_enabled(m_undo_stack->can_redo());
-    did_modify_font();
-}
-
 bool FontEditorWidget::request_close()
 {
-    if (!m_font_modified)
+    if (!window()->is_modified())
         return true;
     auto result = GUI::MessageBox::show(window(), "Save changes to the current font?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
     if (result == GUI::MessageBox::ExecYes) {
         m_save_action->activate();
-        if (!m_font_modified)
+        if (!window()->is_modified())
             return true;
     }
     if (result == GUI::MessageBox::ExecNo)
@@ -644,18 +621,18 @@ bool FontEditorWidget::request_close()
 void FontEditorWidget::update_title()
 {
     StringBuilder title;
-    title.append(m_path);
-    if (m_font_modified && !m_font_newly_opened)
-        title.append(" (*)");
-    title.append(" - Font Editor");
-    if (window())
-        window()->set_title(title.to_string());
+    if (m_path.is_empty())
+        title.append("Untitled");
+    else
+        title.append(m_path);
+    title.append("[*] - Font Editor");
+    window()->set_title(title.to_string());
 }
 
 void FontEditorWidget::did_modify_font()
 {
-    if (m_font_modified)
+    if (!window() || window()->is_modified())
         return;
-    m_font_modified = true;
+    window()->set_modified(true);
     update_title();
 }

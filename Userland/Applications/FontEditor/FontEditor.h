@@ -39,7 +39,6 @@ private:
 
     void undo();
     void redo();
-    void did_change_undo_stack();
     void did_modify_font();
 
     RefPtr<Gfx::BitmapFont> m_edited_font;
@@ -90,6 +89,4 @@ private:
     Vector<String> m_font_weight_list;
     Vector<String> m_font_type_list;
     bool m_font_metadata { true };
-    bool m_font_modified { false };
-    bool m_font_newly_opened { true };
 };
