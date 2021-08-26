@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,7 +32,12 @@ private:
         Fill,
     };
 
-    void draw_using(GUI::Painter&, Gfx::IntRect const&);
+    enum class DrawMode {
+        FromCenter,
+        FromCorner,
+    };
+
+    void draw_using(GUI::Painter&, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position);
 
     RefPtr<GUI::Widget> m_properties_widget;
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
@@ -39,6 +45,7 @@ private:
     Gfx::IntPoint m_ellipse_end_position;
     int m_thickness { 1 };
     Mode m_mode { Mode::Outline };
+    DrawMode m_draw_mode { DrawMode::FromCorner };
 };
 
 }
