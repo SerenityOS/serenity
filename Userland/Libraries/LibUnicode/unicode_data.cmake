@@ -43,6 +43,9 @@ set(CLDR_ZIP_PATH ${CLDR_PATH}/cldr.zip)
 set(CLDR_LOCALES_SOURCE cldr-localenames-modern)
 set(CLDR_LOCALES_PATH ${CLDR_PATH}/${CLDR_LOCALES_SOURCE})
 
+set(CLDR_NUMBERS_SOURCE cldr-numbers-modern)
+set(CLDR_NUMBERS_PATH ${CLDR_PATH}/${CLDR_NUMBERS_SOURCE})
+
 if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     if (NOT EXISTS ${UNICODE_DATA_PATH})
         message(STATUS "Downloading UCD UnicodeData.txt from ${UNICODE_DATA_URL}...")
@@ -101,7 +104,14 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         message(STATUS "Extracting CLDR ${CLDR_LOCALES_SOURCE} from ${CLDR_ZIP_PATH}...")
         execute_process(COMMAND unzip -q ${CLDR_ZIP_PATH} "${CLDR_LOCALES_SOURCE}/*" -d ${CLDR_PATH} RESULT_VARIABLE unzip_result)
         if (NOT unzip_result EQUAL 0)
-            message(FATAL_ERROR "Failed to unzip ${CLDR_ZIP_PATH} with status ${unzip_result}")
+            message(FATAL_ERROR "Failed to unzip ${CLDR_LOCALES_SOURCE} from ${CLDR_ZIP_PATH} with status ${unzip_result}")
+        endif()
+    endif()
+    if(EXISTS ${CLDR_ZIP_PATH} AND NOT EXISTS ${CLDR_NUMBERS_PATH})
+        message(STATUS "Extracting CLDR ${CLDR_NUMBERS_SOURCE} from ${CLDR_ZIP_PATH}...")
+        execute_process(COMMAND unzip -q ${CLDR_ZIP_PATH} "${CLDR_NUMBERS_SOURCE}/*" -d ${CLDR_PATH} RESULT_VARIABLE unzip_result)
+        if (NOT unzip_result EQUAL 0)
+            message(FATAL_ERROR "Failed to unzip ${CLDR_NUMBERS_SOURCE} from ${CLDR_ZIP_PATH} with status ${unzip_result}")
         endif()
     endif()
 
@@ -128,9 +138,9 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
 
     add_custom_command(
         OUTPUT ${UNICODE_LOCALE_HEADER} ${UNICODE_LOCALE_IMPLEMENTATION}
-        COMMAND $<TARGET_FILE:GenerateUnicodeLocale> -h ${UNICODE_LOCALE_HEADER} -c ${UNICODE_LOCALE_IMPLEMENTATION} -l ${CLDR_LOCALES_PATH}
+        COMMAND $<TARGET_FILE:GenerateUnicodeLocale> -h ${UNICODE_LOCALE_HEADER} -c ${UNICODE_LOCALE_IMPLEMENTATION} -l ${CLDR_LOCALES_PATH} -n ${CLDR_NUMBERS_PATH}
         VERBATIM
-        DEPENDS GenerateUnicodeLocale ${CLDR_LOCALES_PATH}
+        DEPENDS GenerateUnicodeLocale ${CLDR_LOCALES_PATH} ${CLDR_NUMBERS_PATH}
     )
 
     set(UNICODE_DATA_SOURCES ${UNICODE_DATA_HEADER} ${UNICODE_DATA_IMPLEMENTATION} ${UNICODE_LOCALE_HEADER} ${UNICODE_LOCALE_IMPLEMENTATION})
