@@ -44,6 +44,8 @@ SERENITY_RUN="${SERENITY_RUN:-$1}"
 
 if [ -z "$SERENITY_QEMU_BIN" ]; then
     if command -v wslpath >/dev/null; then
+        # Some Windows systems don't have reg.exe's directory on the PATH by default.
+        PATH=$PATH:/mnt/c/Windows/System32
         QEMU_INSTALL_DIR=$(reg.exe query 'HKLM\Software\QEMU' /v Install_Dir /t REG_SZ | grep '^    Install_Dir' | sed 's/    / /g' | cut -f4- -d' ')
         if [ -z "$QEMU_INSTALL_DIR" ]; then
             if [ "$KVM_SUPPORT" -eq "0" ]; then
