@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,8 +26,16 @@ RectangleTool::~RectangleTool()
 {
 }
 
-void RectangleTool::draw_using(GUI::Painter& painter, Gfx::IntRect const& rect)
+void RectangleTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position)
 {
+    Gfx::IntRect rect;
+    if (m_draw_mode == DrawMode::FromCenter) {
+        auto delta = end_position - start_position;
+        rect = Gfx::IntRect::from_two_points(start_position - delta, end_position);
+    } else {
+        rect = Gfx::IntRect::from_two_points(start_position, end_position);
+    }
+
     switch (m_mode) {
     case Mode::Fill:
         painter.fill_rect(rect, m_editor->color_for(m_drawing_button));
@@ -67,8 +76,7 @@ void RectangleTool::on_mouseup(Layer* layer, MouseEvent& event)
 
     if (event.layer_event().button() == m_drawing_button) {
         GUI::Painter painter(layer->bitmap());
-        auto rect = Gfx::IntRect::from_two_points(m_rectangle_start_position, m_rectangle_end_position);
-        draw_using(painter, rect);
+        draw_using(painter, m_rectangle_start_position, m_rectangle_end_position);
         m_drawing_button = GUI::MouseButton::None;
         layer->did_modify_bitmap();
         m_editor->did_complete_action();
@@ -83,6 +91,8 @@ void RectangleTool::on_mousemove(Layer* layer, MouseEvent& event)
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
+    m_draw_mode = event.layer_event().alt() ? DrawMode::FromCenter : DrawMode::FromCorner;
+
     m_rectangle_end_position = event.layer_event().position();
     m_editor->update();
 }
@@ -94,10 +104,9 @@ void RectangleTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
-    auto rect = Gfx::IntRect::from_two_points(
-        m_editor->layer_position_to_editor_position(*layer, m_rectangle_start_position).to_type<int>(),
-        m_editor->layer_position_to_editor_position(*layer, m_rectangle_end_position).to_type<int>());
-    draw_using(painter, rect);
+    auto start_position = m_editor->layer_position_to_editor_position(*layer, m_rectangle_start_position).to_type<int>();
+    auto end_position = m_editor->layer_position_to_editor_position(*layer, m_rectangle_end_position).to_type<int>();
+    draw_using(painter, start_position, end_position);
 }
 
 void RectangleTool::on_keydown(GUI::KeyEvent& event)
