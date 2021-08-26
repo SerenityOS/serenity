@@ -186,6 +186,15 @@ int main(int argc, char** argv)
     three_card_draw_action->set_status_tip("Draw three cards at a time");
     draw_setting_actions.add_action(three_card_draw_action);
 
+    game.set_auto_collect(Config::read_bool("Solitaire", "Settings", "AutoCollect", false));
+    auto toggle_auto_collect_action = GUI::Action::create_checkable("Auto-&Collect", [&](auto& action) {
+        auto checked = action.is_checked();
+        game.set_auto_collect(checked);
+        Config::write_bool("Solitaire", "Settings", "AutoCollect", checked);
+    });
+    toggle_auto_collect_action->set_checked(game.is_auto_collecting());
+    toggle_auto_collect_action->set_status_tip("Auto-collect to foundation piles");
+
     auto& game_menu = window->add_menu("&Game");
 
     game_menu.add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
@@ -200,6 +209,8 @@ int main(int argc, char** argv)
     game_menu.add_separator();
     game_menu.add_action(single_card_draw_action);
     game_menu.add_action(three_card_draw_action);
+    game_menu.add_separator();
+    game_menu.add_action(toggle_auto_collect_action);
     game_menu.add_separator();
     game_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
