@@ -276,7 +276,7 @@ public:
     }
 
     virtual String to_string() const = 0;
-    virtual Length to_length() const { return Length::make_auto(); }
+    virtual Length to_length() const { return {}; }
     virtual Color to_color(const DOM::Document&) const { return {}; }
 
     CSS::ValueID to_identifier() const;
