@@ -69,6 +69,7 @@ enum class SearchDirection {
 Optional<size_t> find_any_of(StringView const& haystack, StringView const& needles, SearchDirection);
 
 String to_snakecase(const StringView&);
+String to_titlecase(StringView const&);
 
 }
 

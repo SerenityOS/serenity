@@ -446,6 +446,11 @@ String String::to_snakecase() const
     return StringUtils::to_snakecase(*this);
 }
 
+String String::to_titlecase() const
+{
+    return StringUtils::to_titlecase(*this);
+}
+
 bool operator<(const char* characters, const String& string)
 {
     if (!characters)

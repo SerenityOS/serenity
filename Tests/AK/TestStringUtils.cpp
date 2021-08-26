@@ -304,3 +304,17 @@ TEST_CASE(to_snakecase)
     EXPECT_EQ(AK::StringUtils::to_snakecase("FBar"), "f_bar");
     EXPECT_EQ(AK::StringUtils::to_snakecase("FooB"), "foo_b");
 }
+
+TEST_CASE(to_titlecase)
+{
+    EXPECT_EQ(AK::StringUtils::to_titlecase(""sv), ""sv);
+    EXPECT_EQ(AK::StringUtils::to_titlecase("f"sv), "F"sv);
+    EXPECT_EQ(AK::StringUtils::to_titlecase("foobar"sv), "Foobar"sv);
+    EXPECT_EQ(AK::StringUtils::to_titlecase("Foobar"sv), "Foobar"sv);
+    EXPECT_EQ(AK::StringUtils::to_titlecase("FOOBAR"sv), "Foobar"sv);
+    EXPECT_EQ(AK::StringUtils::to_titlecase("foo bar"sv), "Foo Bar"sv);
+    EXPECT_EQ(AK::StringUtils::to_titlecase("foo bAR"sv), "Foo Bar"sv);
+    EXPECT_EQ(AK::StringUtils::to_titlecase("foo  bar"sv), "Foo  Bar"sv);
+    EXPECT_EQ(AK::StringUtils::to_titlecase("foo   bar"sv), "Foo   Bar"sv);
+    EXPECT_EQ(AK::StringUtils::to_titlecase("   foo   bar   "sv), "   Foo   Bar   "sv);
+}
