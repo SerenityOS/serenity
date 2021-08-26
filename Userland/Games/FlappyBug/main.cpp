@@ -5,7 +5,7 @@
  */
 
 #include "Game.h"
-#include <LibCore/ConfigFile.h>
+#include <LibConfig/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -22,9 +22,10 @@ int main(int argc, char** argv)
     }
 
     auto app = GUI::Application::construct(argc, argv);
-    auto config = Core::ConfigFile::open_for_app("FlappyBug", Core::ConfigFile::AllowWriting::Yes);
 
-    if (pledge("stdio rpath wpath cpath recvfd sendfd", nullptr) < 0) {
+    Config::pledge_domains("FlappyBug");
+
+    if (pledge("stdio rpath recvfd sendfd", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -34,17 +35,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil(config->filename().characters(), "crw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");
         return 1;
     }
 
-    u32 high_score = static_cast<u32>(config->read_num_entry("Game", "HighScore", 0));
+    u32 high_score = Config::read_i32("FlappyBug", "Game", "HighScore", 0);
 
     auto window = GUI::Window::construct();
     window->resize(FlappyBug::Game::game_width, FlappyBug::Game::game_height);
@@ -59,11 +55,8 @@ int main(int argc, char** argv)
         if (score <= high_score)
             return high_score;
 
-        config->write_num_entry("Game", "HighScore", static_cast<int>(score));
+        Config::write_i32("FlappyBug", "Game", "HighScore", score);
         high_score = score;
-
-        if (!config->sync())
-            GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
 
         return high_score;
     };
