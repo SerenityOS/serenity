@@ -346,11 +346,11 @@
   },
   "min-height": {
     "inherited": false,
-    "initial": "0"
+    "initial": "auto"
   },
   "min-width": {
     "inherited": false,
-    "initial": "0"
+    "initial": "auto"
   },
   "opacity": {
     "inherited": false,
