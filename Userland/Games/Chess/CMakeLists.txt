@@ -13,4 +13,4 @@ set(SOURCES
 )
 
 serenity_app(Chess ICON app-chess)
-target_link_libraries(Chess LibChess LibGUI LibCore)
+target_link_libraries(Chess LibChess LibConfig LibGUI LibCore)

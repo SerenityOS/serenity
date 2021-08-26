@@ -5,7 +5,7 @@
  */
 
 #include "ChessWidget.h"
-#include <LibCore/ConfigFile.h>
+#include <LibConfig/Client.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -26,7 +26,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     auto& widget = window->set_main_widget<ChessWidget>();
 
-    RefPtr<Core::ConfigFile> config = Core::ConfigFile::open_for_app("Chess", Core::ConfigFile::AllowWriting::Yes);
+    Config::pledge_domains("Chess");
 
     if (pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec", nullptr) < 0) {
         perror("pledge");
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil(config->filename().characters(), "crw") < 0) {
+    if (unveil("/tmp/portal/config", "rw") < 0) {
         perror("unveil");
         return 1;
     }
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto size = config->read_num_entry("Display", "size", 512);
+    auto size = Config::read_i32("Chess", "Display", "size", 512);
     window->set_title("Chess");
     window->set_base_size({ 4, 4 });
     window->set_size_increment({ 8, 8 });
@@ -71,10 +71,10 @@ int main(int argc, char** argv)
 
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    widget.set_piece_set(config->read_entry("Style", "PieceSet", "stelar7"));
-    widget.set_board_theme(config->read_entry("Style", "BoardTheme", "Beige"));
-    widget.set_coordinates(config->read_bool_entry("Style", "Coordinates", true));
-    widget.set_show_available_moves(config->read_bool_entry("Style", "ShowAvailableMoves", true));
+    widget.set_piece_set(Config::read_string("Chess", "Style", "PieceSet", "stelar7"));
+    widget.set_board_theme(Config::read_string("Chess", "Style", "BoardTheme", "Beige"));
+    widget.set_coordinates(Config::read_bool("Chess", "Style", "Coordinates", true));
+    widget.set_show_available_moves(Config::read_bool("Chess", "Style", "ShowAvailableMoves", true));
 
     auto& game_menu = window->add_menu("&Game");
 
@@ -142,8 +142,7 @@ int main(int argc, char** argv)
         auto action = GUI::Action::create_checkable(set, [&](auto& action) {
             widget.set_piece_set(action.text());
             widget.update();
-            config->write_entry("Style", "PieceSet", action.text());
-            config->sync();
+            Config::write_string("Chess", "Style", "PieceSet", action.text());
         });
 
         piece_set_action_group.add_action(*action);
@@ -161,8 +160,7 @@ int main(int argc, char** argv)
         auto action = GUI::Action::create_checkable(theme, [&](auto& action) {
             widget.set_board_theme(action.text());
             widget.update();
-            config->write_entry("Style", "BoardTheme", action.text());
-            config->sync();
+            Config::write_string("Chess", "Style", "BoardTheme", action.text());
         });
         board_theme_action_group.add_action(*action);
         if (widget.board_theme().name == theme)
@@ -173,8 +171,7 @@ int main(int argc, char** argv)
     auto coordinates_action = GUI::Action::create_checkable("Coordinates", [&](auto& action) {
         widget.set_coordinates(action.is_checked());
         widget.update();
-        config->write_bool_entry("Style", "Coordinates", action.is_checked());
-        config->sync();
+        Config::write_bool("Chess", "Style", "Coordinates", action.is_checked());
     });
     coordinates_action->set_checked(widget.coordinates());
     style_menu.add_action(coordinates_action);
@@ -182,8 +179,7 @@ int main(int argc, char** argv)
     auto show_available_moves_action = GUI::Action::create_checkable("Show Available Moves", [&](auto& action) {
         widget.set_show_available_moves(action.is_checked());
         widget.update();
-        config->write_bool_entry("Style", "ShowAvailableMoves", action.is_checked());
-        config->sync();
+        Config::write_bool("Chess", "Style", "ShowAvailableMoves", action.is_checked());
     });
     show_available_moves_action->set_checked(widget.show_available_moves());
     style_menu.add_action(show_available_moves_action);
