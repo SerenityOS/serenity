@@ -345,8 +345,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         did_modify_font();
     };
 
-    m_glyph_editor_widget->on_undo_event = [this](bool) {
-        // FIXME: UndoStack no longer has finalization concept, so this needs some fixing.
+    m_glyph_editor_widget->on_undo_event = [this] {
         m_undo_stack->push(make<GlyphUndoCommand>(*m_undo_glyph));
         did_change_undo_stack();
     };
