@@ -107,14 +107,6 @@ LengthBox StyleProperties::length_box(CSS::PropertyID left_id, CSS::PropertyID t
     return box;
 }
 
-String StyleProperties::string_or_fallback(CSS::PropertyID id, const StringView& fallback) const
-{
-    auto value = property(id);
-    if (!value.has_value())
-        return fallback;
-    return value.value()->to_string();
-}
-
 Color StyleProperties::color_or_fallback(CSS::PropertyID id, const DOM::Document& document, Color fallback) const
 {
     auto value = property(id);
