@@ -58,12 +58,9 @@ Optional<NonnullRefPtr<StyleValue>> StyleProperties::property(CSS::PropertyID id
 
     auto it = m_property_values.find((unsigned)id);
     if (it == m_property_values.end()) {
-        if (is_inherited_property(id)) {
+        if (is_inherited_property(id))
             return fetch_inherited(id);
-        } else {
-            // FIXME: This causes the Acid2 eyes to disappear for some reason
-            return fetch_initial(id);
-        }
+        return fetch_initial(id);
     }
 
     auto& value = it->value;
