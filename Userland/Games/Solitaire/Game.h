@@ -40,6 +40,9 @@ public:
     void setup(Mode);
     void perform_undo();
 
+    bool is_auto_collecting() const { return m_auto_collect; }
+    void set_auto_collect(bool collect) { m_auto_collect = collect; }
+
     Function<void(uint32_t)> on_score_update;
     Function<void()> on_game_start;
     Function<void(GameOverReason, uint32_t)> on_game_end;
@@ -208,6 +211,8 @@ private:
 
     uint32_t m_score { 0 };
     uint8_t m_passes_left_before_punishment { 0 };
+
+    bool m_auto_collect { false };
 };
 
 }
