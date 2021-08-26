@@ -7,6 +7,7 @@
 #include "ClientConnection.h"
 #include <ConfigServer/ConfigClientEndpoint.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/FileWatcher.h>
 
 namespace ConfigServer {
 
@@ -15,6 +16,7 @@ static HashMap<int, RefPtr<ClientConnection>> s_connections;
 struct CachedDomain {
     String domain;
     NonnullRefPtr<Core::ConfigFile> config;
+    RefPtr<Core::FileWatcher> watcher;
 };
 
 static HashMap<String, NonnullOwnPtr<CachedDomain>> s_cache;
@@ -26,7 +28,30 @@ static Core::ConfigFile& ensure_domain_config(String const& domain)
         return *it->value->config;
 
     auto config = Core::ConfigFile::open_for_app(domain, Core::ConfigFile::AllowWriting::Yes);
-    auto cache_entry = make<CachedDomain>(domain, config);
+    // FIXME: Use a single FileWatcher with multiple watches inside.
+    auto watcher_or_error = Core::FileWatcher::create(InodeWatcherFlags::Nonblock);
+    VERIFY(!watcher_or_error.is_error());
+    auto result = watcher_or_error.value()->add_watch(config->filename(), Core::FileWatcherEvent::Type::ContentModified);
+    VERIFY(!result.is_error());
+    watcher_or_error.value()->on_change = [config, domain](auto&) {
+        auto new_config = Core::ConfigFile::open(config->filename());
+        // FIXME: Detect removed keys.
+        // FIXME: Detect type of keys.
+        for (auto& group : new_config->groups()) {
+            for (auto& key : new_config->keys(group)) {
+                auto old_value = config->read_entry(group, key);
+                auto new_value = new_config->read_entry(group, key);
+                if (old_value != new_value) {
+                    for (auto& it : s_connections) {
+                        if (it.value->is_monitoring_domain(domain)) {
+                            it.value->async_notify_changed_string_value(domain, group, key, new_value);
+                        }
+                    }
+                }
+            }
+        }
+    };
+    auto cache_entry = make<CachedDomain>(domain, config, watcher_or_error.release_value());
     s_cache.set(domain, move(cache_entry));
     return *config;
 }

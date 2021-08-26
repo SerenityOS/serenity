@@ -20,6 +20,8 @@ public:
 
     virtual void die() override;
 
+    bool is_monitoring_domain(String const& domain) const { return m_monitored_domains.contains(domain); }
+
 private:
     explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
 
