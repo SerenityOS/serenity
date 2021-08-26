@@ -433,7 +433,7 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
     auto top = Config::read_i32("FileManager", "Window", "Top", 75);
     auto width = Config::read_i32("FileManager", "Window", "Width", 640);
     auto height = Config::read_i32("FileManager", "Window", "Height", 480);
-    auto was_maximized = Config::read_i32("FileManager", "Window", "Maximized", false);
+    auto was_maximized = Config::read_bool("FileManager", "Window", "Maximized", false);
 
     auto& widget = window->set_main_widget<GUI::Widget>();
 
