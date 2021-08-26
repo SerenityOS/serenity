@@ -186,4 +186,13 @@ Optional<StringView> get_locale_territory_mapping([[maybe_unused]] StringView lo
 #endif
 }
 
+Optional<StringView> get_locale_script_mapping([[maybe_unused]] StringView locale, [[maybe_unused]] StringView script)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_locale_script_tag_mapping(locale, script);
+#else
+    return {};
+#endif
+}
+
 }
