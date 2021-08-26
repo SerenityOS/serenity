@@ -1,9 +1,11 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BitCast.h>
 #include <AK/ByteBuffer.h>
 #include <AK/String.h>
 #include <AK/URL.h>
@@ -98,12 +100,14 @@ Encoder& Encoder::operator<<(i64 value)
 
 Encoder& Encoder::operator<<(float value)
 {
-    union bits {
-        float as_float;
-        u32 as_u32;
-    } u;
-    u.as_float = value;
-    return *this << u.as_u32;
+    u32 as_u32 = bit_cast<u32>(value);
+    return *this << as_u32;
+}
+
+Encoder& Encoder::operator<<(double value)
+{
+    u64 as_u64 = bit_cast<u64>(value);
+    return *this << as_u64;
 }
 
 Encoder& Encoder::operator<<(char const* value)

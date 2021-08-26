@@ -78,6 +78,12 @@ bool Decoder::decode(float& value)
     return !m_stream.handle_any_error();
 }
 
+bool Decoder::decode(double& value)
+{
+    m_stream >> value;
+    return !m_stream.handle_any_error();
+}
+
 bool Decoder::decode(String& value)
 {
     i32 length = 0;

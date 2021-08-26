@@ -41,6 +41,7 @@ public:
     bool decode(i32&);
     bool decode(i64&);
     bool decode(float&);
+    bool decode(double&);
     bool decode(String&);
     bool decode(ByteBuffer&);
     bool decode(URL&);

@@ -37,6 +37,7 @@ public:
     Encoder& operator<<(i32);
     Encoder& operator<<(i64);
     Encoder& operator<<(float);
+    Encoder& operator<<(double);
     Encoder& operator<<(char const*);
     Encoder& operator<<(StringView const&);
     Encoder& operator<<(String const&);
