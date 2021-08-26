@@ -7,6 +7,7 @@
 #include <AK/Format.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/StandardPaths.h>
 #include <LibLine/Editor.h>
 #include <LibSQL/AST/Lexer.h>
@@ -97,8 +98,15 @@ void handle_command(StringView command)
 
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    String database_name(getlogin());
+
+    Core::ArgsParser args_parser;
+    args_parser.set_general_help("This is a client for the SerenitySQL database server.");
+    args_parser.add_option(database_name, "Database to connect to", "database", 'd', "database");
+    args_parser.parse(argc, argv);
+
     s_editor = Line::Editor::construct();
     s_editor->load_history(s_history_path);
 
@@ -172,8 +180,8 @@ int main()
         sql_client->async_disconnect(the_connection_id);
     };
 
-    sql_client->on_connected = [&](int connection_id) {
-        outln("** Connected to {} **", getlogin());
+    sql_client->on_connected = [&](int connection_id, String const& connected_to_database) {
+        outln("** Connected to {} **", connected_to_database);
         the_connection_id = connection_id;
         read_sql();
     };
@@ -212,7 +220,7 @@ int main()
         loop.quit(0);
     };
 
-    sql_client->connect(getlogin());
+    sql_client->connect(database_name);
     auto rc = loop.exec();
 
     s_editor->save_history(s_history_path);
