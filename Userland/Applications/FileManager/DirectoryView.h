@@ -80,6 +80,8 @@ public:
     void set_view_mode(ViewMode);
     ViewMode view_mode() const { return m_view_mode; }
 
+    void set_view_mode_from_string(String const&);
+
     GUI::AbstractView& current_view()
     {
         switch (m_view_mode) {
@@ -124,6 +126,9 @@ public:
     GUI::Action& delete_action() { return *m_delete_action; }
     GUI::Action& force_delete_action() { return *m_force_delete_action; }
     GUI::Action& rename_action() { return *m_rename_action; }
+    GUI::Action& view_as_icons_action() { return *m_view_as_icons_action; }
+    GUI::Action& view_as_table_action() { return *m_view_as_table_action; }
+    GUI::Action& view_as_columns_action() { return *m_view_as_columns_action; }
 
 private:
     explicit DirectoryView(Mode);
@@ -170,6 +175,10 @@ private:
     RefPtr<GUI::Action> m_delete_action;
     RefPtr<GUI::Action> m_force_delete_action;
     RefPtr<GUI::Action> m_rename_action;
+
+    RefPtr<GUI::Action> m_view_as_table_action;
+    RefPtr<GUI::Action> m_view_as_icons_action;
+    RefPtr<GUI::Action> m_view_as_columns_action;
 };
 
 }
