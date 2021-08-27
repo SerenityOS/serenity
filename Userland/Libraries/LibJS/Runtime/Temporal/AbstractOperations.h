@@ -53,6 +53,16 @@ struct TemporalDate {
     Optional<String> calendar;
 };
 
+struct TemporalTime {
+    u8 hour;
+    u8 minute;
+    u8 second;
+    u16 millisecond;
+    u16 microsecond;
+    u16 nanosecond;
+    Optional<String> calendar = {};
+};
+
 struct TemporalTimeZone {
     bool z;
     Optional<String> offset;
@@ -75,6 +85,7 @@ Optional<String> parse_temporal_calendar_string(GlobalObject&, String const& iso
 Optional<TemporalDate> parse_temporal_date_string(GlobalObject&, String const& iso_string);
 Optional<ISODateTime> parse_temporal_date_time_string(GlobalObject&, String const& iso_string);
 Optional<TemporalDuration> parse_temporal_duration_string(GlobalObject&, String const& iso_string);
+Optional<TemporalTime> parse_temporal_time_string(GlobalObject&, String const& iso_string);
 Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject&, String const& iso_string);
 double to_positive_integer_or_infinity(GlobalObject&, Value argument);
 Object* prepare_temporal_fields(GlobalObject&, Object& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields);
