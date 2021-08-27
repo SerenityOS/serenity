@@ -340,6 +340,34 @@ static Optional<TransformedExtension> parse_transformed_extension(GenericLexer& 
     return transformed_extension;
 }
 
+static Optional<OtherExtension> parse_other_extension(char key, GenericLexer& lexer)
+{
+    // https://unicode.org/reports/tr35/#other_extensions
+    //
+    // other_extensions = sep [alphanum-[tTuUxX]] (sep alphanum{2,8})+ ;
+    OtherExtension other_extension { .key = key };
+
+    if (!is_ascii_alphanumeric(key) || (key == 'x') || (key == 'X'))
+        return {};
+
+    while (true) {
+        auto segment = consume_next_segment(lexer);
+        if (!segment.has_value())
+            break;
+
+        if ((segment->length() < 2) || (segment->length() > 8) || !all_of(*segment, is_ascii_alphanumeric)) {
+            lexer.retreat(segment->length() + 1);
+            break;
+        }
+
+        other_extension.values.append(*segment);
+    }
+
+    if (other_extension.values.is_empty())
+        return {};
+    return other_extension;
+}
+
 static Optional<Extension> parse_extension(GenericLexer& lexer)
 {
     // https://unicode.org/reports/tr35/#extensions
@@ -348,7 +376,7 @@ static Optional<Extension> parse_extension(GenericLexer& lexer)
     size_t starting_position = lexer.tell();
 
     if (auto header = consume_next_segment(lexer); header.has_value() && (header->length() == 1)) {
-        switch ((*header)[0]) {
+        switch (char key = (*header)[0]) {
         case 'u':
         case 'U':
             if (auto extension = parse_unicode_locale_extension(lexer); extension.has_value())
@@ -362,7 +390,8 @@ static Optional<Extension> parse_extension(GenericLexer& lexer)
             break;
 
         default:
-            // FIXME: Handle other_extensions
+            if (auto extension = parse_other_extension(key, lexer); extension.has_value())
+                return Extension { extension.release_value() };
             break;
         }
     }

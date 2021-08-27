@@ -212,6 +212,40 @@ TEST_CASE(parse_unicode_locale_id_with_transformed_extension)
     pass("en-t-en-k0-aaa"sv, { Unicode::LanguageID { false, "en"sv }, { { "k0"sv, { "aaa"sv } } } });
 }
 
+TEST_CASE(parse_unicode_locale_id_with_other_extension)
+{
+    auto fail = [](StringView locale) {
+        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        EXPECT(!locale_id.has_value());
+    };
+    auto pass = [](StringView locale, Unicode::OtherExtension const& expected_extension) {
+        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        VERIFY(locale_id.has_value());
+        EXPECT_EQ(locale_id->extensions.size(), 1u);
+
+        auto const& actual_extension = locale_id->extensions[0].get<Unicode::OtherExtension>();
+        EXPECT_EQ(actual_extension.key, expected_extension.key);
+        EXPECT_EQ(actual_extension.values, expected_extension.values);
+    };
+
+    fail("en-z"sv);
+    fail("en-0"sv);
+    fail("en-z-"sv);
+    fail("en-0-"sv);
+    fail("en-z-a"sv);
+    fail("en-0-a"sv);
+    fail("en-z-aaaaaaaaa"sv);
+    fail("en-0-aaaaaaaaa"sv);
+    fail("en-z-aaa-"sv);
+    fail("en-0-aaa-"sv);
+    fail("en-z-aaa-a"sv);
+    fail("en-0-aaa-a"sv);
+
+    pass("en-z-aa", { 'z', { "aa"sv } });
+    pass("en-z-aa-bbb", { 'z', { "aa"sv, "bbb"sv } });
+    pass("en-z-aa-bbb-cccccccc", { 'z', { "aa"sv, "bbb"sv, "cccccccc"sv } });
+}
+
 TEST_CASE(canonicalize_unicode_locale_id)
 {
     auto test = [](StringView locale, StringView expected_canonical_locale) {

@@ -43,7 +43,12 @@ struct TransformedExtension {
     Vector<TransformedField> fields {};
 };
 
-using Extension = Variant<LocaleExtension, TransformedExtension>;
+struct OtherExtension {
+    char key {};
+    Vector<StringView> values {};
+};
+
+using Extension = Variant<LocaleExtension, TransformedExtension, OtherExtension>;
 
 struct LocaleID {
     LanguageID language_id {};
