@@ -340,9 +340,6 @@ Tab::Tab(BrowserWindow& window)
     hooks().on_context_menu_request = [&](auto& screen_position) {
         m_page_context_menu->popup(screen_position);
     };
-
-    // FIXME: This is temporary, until the OOPWV properly supports the DOM Inspector
-    window.inspect_dom_node_action().set_enabled(false);
 }
 
 Tab::~Tab()
@@ -469,7 +466,7 @@ BrowserWindow& Tab::window()
     return static_cast<BrowserWindow&>(*Widget::window());
 }
 
-void Tab::show_inspector_window(Browser::Tab::InspectorTarget)
+void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
 {
     if (!m_dom_inspector_widget) {
         auto window = GUI::Window::construct(&this->window());
@@ -482,8 +479,13 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget)
         m_dom_inspector_widget = window->set_main_widget<InspectorWidget>();
         m_dom_inspector_widget->set_web_view(*m_web_content_view);
     }
-
     m_web_content_view->inspect_dom_tree();
+
+    if (inspector_target == InspectorTarget::HoveredElement) {
+        Optional<i32> hovered_node = m_web_content_view->get_hovered_node_id();
+        VERIFY(hovered_node.has_value());
+        m_dom_inspector_widget->set_inspected_node(hovered_node.value());
+    }
 
     auto* window = m_dom_inspector_widget->window();
     window->show();
