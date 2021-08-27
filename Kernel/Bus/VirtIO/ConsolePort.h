@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <Kernel/Bus/VirtIO/VirtIO.h>
+#include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Memory/RingBuffer.h>
