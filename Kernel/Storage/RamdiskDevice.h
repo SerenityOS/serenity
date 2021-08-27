@@ -31,6 +31,9 @@ public:
 
     bool is_slave() const;
 
+    // ^StorageDevice
+    virtual CommandSet command_set() const override { return CommandSet::PlainMemory; }
+
     Mutex m_lock { "RamdiskDevice" };
 
     NonnullOwnPtr<Memory::Region> m_region;

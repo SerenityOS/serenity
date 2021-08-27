@@ -13,16 +13,14 @@
 
 namespace Kernel {
 
-StorageDevice::StorageDevice(const StorageController& controller, size_t sector_size, u64 max_addressable_block)
+StorageDevice::StorageDevice(size_t sector_size, u64 max_addressable_block)
     : BlockDevice(StorageManagement::major_number(), StorageManagement::minor_number(), sector_size)
-    , m_storage_controller(controller)
     , m_max_addressable_block(max_addressable_block)
 {
 }
 
-StorageDevice::StorageDevice(const StorageController& controller, int major, int minor, size_t sector_size, u64 max_addressable_block)
+StorageDevice::StorageDevice(int major, int minor, size_t sector_size, u64 max_addressable_block)
     : BlockDevice(major, minor, sector_size)
-    , m_storage_controller(controller)
     , m_max_addressable_block(max_addressable_block)
 {
 }
@@ -30,11 +28,6 @@ StorageDevice::StorageDevice(const StorageController& controller, int major, int
 StringView StorageDevice::class_name() const
 {
     return "StorageDevice";
-}
-
-NonnullRefPtr<StorageController> StorageDevice::controller() const
-{
-    return m_storage_controller;
 }
 
 KResultOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKernelBuffer& outbuf, size_t len)

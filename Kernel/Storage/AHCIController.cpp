@@ -11,7 +11,7 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Storage/AHCIController.h>
-#include <Kernel/Storage/SATADiskDevice.h>
+#include <Kernel/Storage/AHCIPortHandler.h>
 
 namespace Kernel {
 
@@ -58,9 +58,13 @@ size_t AHCIController::devices_count() const
     return count;
 }
 
-void AHCIController::start_request(const StorageDevice&, AsyncBlockDeviceRequest&)
+void AHCIController::start_request(const ATADevice& device, AsyncBlockDeviceRequest& request)
 {
-    VERIFY_NOT_REACHED();
+    // FIXME: For now we have one port handler, check all of them...
+    VERIFY(m_handlers.size() > 0);
+    auto port = m_handlers[0].port_at_index(device.ata_address().port);
+    VERIFY(port);
+    port->start_request(request);
 }
 
 void AHCIController::complete_current_request(AsyncDeviceRequest::RequestResult)
@@ -80,7 +84,7 @@ volatile AHCI::HBA& AHCIController::hba() const
 }
 
 AHCIController::AHCIController(PCI::Address address)
-    : StorageController()
+    : ATAController()
     , PCI::Device(address)
     , m_hba_region(default_hba_region())
     , m_capabilities(capabilities())

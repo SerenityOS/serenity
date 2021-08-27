@@ -29,7 +29,6 @@ class AHCIPort;
 class AHCIPortHandler final : public RefCounted<AHCIPortHandler>
     , public IRQHandler {
     friend class AHCIController;
-    friend class SATADiskDevice;
 
 public:
     UNMAP_AFTER_INIT static NonnullRefPtr<AHCIPortHandler> create(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
