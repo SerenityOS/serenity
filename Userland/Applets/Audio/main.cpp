@@ -38,8 +38,8 @@ public:
             update();
         };
 
-        m_audio_client->on_main_mix_volume_change = [this](int volume) {
-            m_audio_volume = volume;
+        m_audio_client->on_main_mix_volume_change = [this](double volume) {
+            m_audio_volume = static_cast<int>(volume * 100);
             if (!m_audio_muted)
                 update();
         };
@@ -87,14 +87,14 @@ public:
         };
 
         m_slider = m_root_container->add<GUI::VerticalSlider>();
-        m_slider->set_max(20);
-        int non_log_volume = sqrt(100 * m_audio_volume);
-        m_slider->set_value(-(non_log_volume / 5.0f) + 20);
+        m_slider->set_max(100);
+        m_slider->set_page_step(5);
+        m_slider->set_step(5);
+        m_slider->set_value(m_slider->max() - m_audio_volume);
         m_slider->set_knob_size_mode(GUI::Slider::KnobSizeMode::Proportional);
         m_slider->on_change = [&](int value) {
-            int volume = clamp((20 - value) * 5, 0, 100);
-            double volume_log = ((volume / 100.0) * (volume / 100.0)) * 100.0;
-            m_audio_client->set_main_mix_volume(static_cast<i32>(volume_log));
+            double volume = clamp(static_cast<double>(m_slider->max() - value) / m_slider->max(), 0.0, 1.0);
+            m_audio_client->set_main_mix_volume(volume);
             update();
         };
 
@@ -131,8 +131,7 @@ private:
     {
         if (m_audio_muted)
             return;
-        int new_slider_value = m_slider->value() + event.wheel_delta() / 4;
-        m_slider->set_value(new_slider_value);
+        m_slider->dispatch_event(event);
         update();
     }
 

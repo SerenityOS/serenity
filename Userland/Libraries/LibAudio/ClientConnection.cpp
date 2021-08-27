@@ -48,7 +48,7 @@ void ClientConnection::muted_state_changed(bool muted)
         on_muted_state_change(muted);
 }
 
-void ClientConnection::main_mix_volume_changed(i32 volume)
+void ClientConnection::main_mix_volume_changed(double volume)
 {
     if (on_main_mix_volume_change)
         on_main_mix_volume_change(volume);
