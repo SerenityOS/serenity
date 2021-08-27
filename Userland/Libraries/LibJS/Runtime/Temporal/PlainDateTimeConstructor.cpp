@@ -31,6 +31,7 @@ void PlainDateTimeConstructor::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.from, from, 1, attr);
+    define_native_function(vm.names.compare, compare, 2, attr);
 
     define_direct_property(vm.names.length, Value(3), Attribute::Configurable);
 }
@@ -139,6 +140,23 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimeConstructor::from)
 
     // 3. Return ? ToTemporalDateTime(item, options).
     return to_temporal_date_time(global_object, item, options);
+}
+
+// 5.2.3 Temporal.PlainDateTime.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.compare
+JS_DEFINE_NATIVE_FUNCTION(PlainDateTimeConstructor::compare)
+{
+    // 1. Set one to ? ToTemporalDateTime(one).
+    auto* one = to_temporal_date_time(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 2. Set two to ? ToTemporalDateTime(two).
+    auto two = to_temporal_date_time(global_object, vm.argument(1));
+    if (vm.exception())
+        return {};
+
+    // 3. Return 𝔽(! CompareISODateTime(one.[[ISOYear]], one.[[ISOMonth]], one.[[ISODay]], one.[[ISOHour]], one.[[ISOMinute]], one.[[ISOSecond]], one.[[ISOMillisecond]], one.[[ISOMicrosecond]], one.[[ISONanosecond]], two.[[ISOYear]], two.[[ISOMonth]], two.[[ISODay]], two.[[ISOHour]], two.[[ISOMinute]], two.[[ISOSecond]], two.[[ISOMillisecond]], two.[[ISOMicrosecond]], two.[[ISONanosecond]])).
+    return Value(compare_iso_date_time(one->iso_year(), one->iso_month(), one->iso_day(), one->iso_hour(), one->iso_minute(), one->iso_second(), one->iso_millisecond(), one->iso_microsecond(), one->iso_nanosecond(), two->iso_year(), two->iso_month(), two->iso_day(), two->iso_hour(), two->iso_minute(), two->iso_second(), two->iso_millisecond(), two->iso_microsecond(), two->iso_nanosecond()));
 }
 
 }
