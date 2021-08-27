@@ -39,6 +39,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(merge_fields);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(to_json);
+    JS_DECLARE_NATIVE_FUNCTION(era);
 };
 
 }
