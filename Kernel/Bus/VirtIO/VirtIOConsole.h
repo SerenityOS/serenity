@@ -21,7 +21,7 @@ public:
     VirtIOConsole(PCI::Address);
     virtual ~VirtIOConsole() override = default;
 
-    virtual StringView purpose() const override { return "VirtIOConsole"; }
+    virtual StringView purpose() const override { return class_name(); }
 
     unsigned device_id() const
     {
@@ -29,6 +29,7 @@ public:
     }
 
 private:
+    virtual StringView class_name() const override { return "VirtIOConsole"; }
     enum class ControlEvent : u16 {
         DeviceReady = 0,
         DeviceAdd = 1,

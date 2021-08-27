@@ -13,7 +13,7 @@ namespace Kernel {
 unsigned VirtIOConsole::next_device_id = 0;
 
 UNMAP_AFTER_INIT VirtIOConsole::VirtIOConsole(PCI::Address address)
-    : VirtIODevice(address, "VirtIOConsole")
+    : VirtIODevice(address)
     , m_device_id(next_device_id++)
 {
     if (auto cfg = get_config(ConfigurationType::Device)) {
