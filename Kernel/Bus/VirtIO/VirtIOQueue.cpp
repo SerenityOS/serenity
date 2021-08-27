@@ -7,16 +7,16 @@
 #include <AK/Atomic.h>
 #include <Kernel/Bus/VirtIO/VirtIOQueue.h>
 
-namespace Kernel {
+namespace Kernel::VirtIO {
 
-VirtIOQueue::VirtIOQueue(u16 queue_size, u16 notify_offset)
+Queue::Queue(u16 queue_size, u16 notify_offset)
     : m_queue_size(queue_size)
     , m_notify_offset(notify_offset)
     , m_free_buffers(queue_size)
 {
-    size_t size_of_descriptors = sizeof(VirtIOQueueDescriptor) * queue_size;
-    size_t size_of_driver = sizeof(VirtIOQueueDriver) + queue_size * sizeof(u16);
-    size_t size_of_device = sizeof(VirtIOQueueDevice) + queue_size * sizeof(VirtIOQueueDeviceItem);
+    size_t size_of_descriptors = sizeof(QueueDescriptor) * queue_size;
+    size_t size_of_driver = sizeof(QueueDriver) + queue_size * sizeof(u16);
+    size_t size_of_device = sizeof(QueueDevice) + queue_size * sizeof(QueueDeviceItem);
     auto queue_region_size = Memory::page_round_up(size_of_descriptors + size_of_driver + size_of_device);
     if (queue_region_size <= PAGE_SIZE)
         m_queue_region = MM.allocate_kernel_region(queue_region_size, "VirtIO Queue", Memory::Region::Access::ReadWrite);
@@ -26,9 +26,9 @@ VirtIOQueue::VirtIOQueue(u16 queue_size, u16 notify_offset)
     // TODO: ensure alignment!!!
     u8* ptr = m_queue_region->vaddr().as_ptr();
     memset(ptr, 0, m_queue_region->size());
-    m_descriptors = adopt_own_if_nonnull(reinterpret_cast<VirtIOQueueDescriptor*>(ptr));
-    m_driver = adopt_own_if_nonnull(reinterpret_cast<VirtIOQueueDriver*>(ptr + size_of_descriptors));
-    m_device = adopt_own_if_nonnull(reinterpret_cast<VirtIOQueueDevice*>(ptr + size_of_descriptors + size_of_driver));
+    m_descriptors = adopt_own_if_nonnull(reinterpret_cast<QueueDescriptor*>(ptr));
+    m_driver = adopt_own_if_nonnull(reinterpret_cast<QueueDriver*>(ptr + size_of_descriptors));
+    m_device = adopt_own_if_nonnull(reinterpret_cast<QueueDevice*>(ptr + size_of_descriptors + size_of_driver));
 
     for (auto i = 0; i + 1 < queue_size; i++) {
         m_descriptors[i].next = i + 1; // link all of the descriptors in a line
@@ -37,35 +37,35 @@ VirtIOQueue::VirtIOQueue(u16 queue_size, u16 notify_offset)
     enable_interrupts();
 }
 
-VirtIOQueue::~VirtIOQueue()
+Queue::~Queue()
 {
 }
 
-void VirtIOQueue::enable_interrupts()
+void Queue::enable_interrupts()
 {
     SpinlockLocker lock(m_lock);
     m_driver->flags = 0;
 }
 
-void VirtIOQueue::disable_interrupts()
+void Queue::disable_interrupts()
 {
     SpinlockLocker lock(m_lock);
     m_driver->flags = 1;
 }
 
-bool VirtIOQueue::new_data_available() const
+bool Queue::new_data_available() const
 {
     const auto index = AK::atomic_load(&m_device->index, AK::MemoryOrder::memory_order_relaxed);
     const auto used_tail = AK::atomic_load(&m_used_tail, AK::MemoryOrder::memory_order_relaxed);
     return index != used_tail;
 }
 
-VirtIOQueueChain VirtIOQueue::pop_used_buffer_chain(size_t& used)
+QueueChain Queue::pop_used_buffer_chain(size_t& used)
 {
     VERIFY(m_lock.is_locked());
     if (!new_data_available()) {
         used = 0;
-        return VirtIOQueueChain(*this);
+        return QueueChain(*this);
     }
 
     full_memory_barrier();
@@ -85,10 +85,10 @@ VirtIOQueueChain VirtIOQueue::pop_used_buffer_chain(size_t& used)
     // We are now done with this buffer chain
     m_used_tail++;
 
-    return VirtIOQueueChain(*this, descriptor_index, last_index, length_of_chain);
+    return QueueChain(*this, descriptor_index, last_index, length_of_chain);
 }
 
-void VirtIOQueue::discard_used_buffers()
+void Queue::discard_used_buffers()
 {
     VERIFY(m_lock.is_locked());
     size_t used;
@@ -97,7 +97,7 @@ void VirtIOQueue::discard_used_buffers()
     }
 }
 
-void VirtIOQueue::reclaim_buffer_chain(u16 chain_start_index, u16 chain_end_index, size_t length_of_chain)
+void Queue::reclaim_buffer_chain(u16 chain_start_index, u16 chain_end_index, size_t length_of_chain)
 {
     VERIFY(m_lock.is_locked());
     m_descriptors[chain_end_index].next = m_free_head;
@@ -105,13 +105,13 @@ void VirtIOQueue::reclaim_buffer_chain(u16 chain_start_index, u16 chain_end_inde
     m_free_buffers += length_of_chain;
 }
 
-bool VirtIOQueue::has_free_slots() const
+bool Queue::has_free_slots() const
 {
     const auto free_buffers = AK::atomic_load(&m_free_buffers, AK::MemoryOrder::memory_order_relaxed);
     return free_buffers > 0;
 }
 
-Optional<u16> VirtIOQueue::take_free_slot()
+Optional<u16> Queue::take_free_slot()
 {
     VERIFY(m_lock.is_locked());
     if (has_free_slots()) {
@@ -124,14 +124,14 @@ Optional<u16> VirtIOQueue::take_free_slot()
     }
 }
 
-bool VirtIOQueue::should_notify() const
+bool Queue::should_notify() const
 {
     VERIFY(m_lock.is_locked());
     auto device_flags = m_device->flags;
     return !(device_flags & VIRTQ_USED_F_NO_NOTIFY);
 }
 
-bool VirtIOQueueChain::add_buffer_to_chain(PhysicalAddress buffer_start, size_t buffer_length, BufferType buffer_type)
+bool QueueChain::add_buffer_to_chain(PhysicalAddress buffer_start, size_t buffer_length, BufferType buffer_type)
 {
     VERIFY(m_queue.lock().is_locked());
 
@@ -148,7 +148,7 @@ bool VirtIOQueueChain::add_buffer_to_chain(PhysicalAddress buffer_start, size_t 
         // Set start of chain if it hasn't been set
         m_start_of_chain_index = descriptor_index.value();
     } else {
-        // Link from previous element in VirtIOQueueChain
+        // Link from previous element in QueueChain
         m_queue.m_descriptors[m_end_of_chain_index.value()].flags |= VIRTQ_DESC_F_NEXT;
         m_queue.m_descriptors[m_end_of_chain_index.value()].next = descriptor_index.value();
     }
@@ -166,7 +166,7 @@ bool VirtIOQueueChain::add_buffer_to_chain(PhysicalAddress buffer_start, size_t 
     return true;
 }
 
-void VirtIOQueueChain::submit_to_queue()
+void QueueChain::submit_to_queue()
 {
     VERIFY(m_queue.lock().is_locked());
     VERIFY(m_start_of_chain_index.has_value());
@@ -183,7 +183,7 @@ void VirtIOQueueChain::submit_to_queue()
     m_chain_length = 0;
 }
 
-void VirtIOQueueChain::release_buffer_slots_to_queue()
+void QueueChain::release_buffer_slots_to_queue()
 {
     VERIFY(m_queue.lock().is_locked());
     if (m_start_of_chain_index.has_value()) {

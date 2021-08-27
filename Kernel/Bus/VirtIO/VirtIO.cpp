@@ -11,9 +11,9 @@
 #include <Kernel/CommandLine.h>
 #include <Kernel/Sections.h>
 
-namespace Kernel {
+namespace Kernel::VirtIO {
 
-UNMAP_AFTER_INIT void VirtIO::detect()
+UNMAP_AFTER_INIT void detect()
 {
     if (kernel_command_line().disable_virtio())
         return;
@@ -25,11 +25,11 @@ UNMAP_AFTER_INIT void VirtIO::detect()
             return;
         switch (id.device_id) {
         case PCI::DeviceID::VirtIOConsole: {
-            [[maybe_unused]] auto& unused = adopt_ref(*new VirtIOConsole(address)).leak_ref();
+            [[maybe_unused]] auto& unused = adopt_ref(*new Console(address)).leak_ref();
             break;
         }
         case PCI::DeviceID::VirtIOEntropy: {
-            [[maybe_unused]] auto& unused = adopt_ref(*new VirtIORNG(address)).leak_ref();
+            [[maybe_unused]] auto& unused = adopt_ref(*new RNG(address)).leak_ref();
             break;
         }
         case PCI::DeviceID::VirtIOGPU: {
@@ -43,7 +43,7 @@ UNMAP_AFTER_INIT void VirtIO::detect()
     });
 }
 
-StringView VirtIO::determine_device_class(const PCI::Address& address)
+StringView determine_device_class(const PCI::Address& address)
 {
     auto subsystem_device_id = PCI::get_subsystem_id(address);
     switch (subsystem_device_id) {
@@ -60,7 +60,7 @@ StringView VirtIO::determine_device_class(const PCI::Address& address)
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT VirtIODevice::VirtIODevice(PCI::Address address)
+UNMAP_AFTER_INIT VirtIO::Device::Device(PCI::Address address)
     : PCI::Device(address)
     , IRQHandler(PCI::get_interrupt_line(address))
     , m_io_base(IOAddress(PCI::get_BAR0(pci_address()) & ~1))
@@ -116,11 +116,11 @@ UNMAP_AFTER_INIT VirtIODevice::VirtIODevice(PCI::Address address)
     set_status_bit(DEVICE_STATUS_DRIVER);
 }
 
-VirtIODevice::~VirtIODevice()
+Device::~Device()
 {
 }
 
-auto VirtIODevice::mapping_for_bar(u8 bar) -> MappedMMIO&
+auto Device::mapping_for_bar(u8 bar) -> MappedMMIO&
 {
     VERIFY(m_use_mmio);
     auto& mapping = m_mmio[bar];
@@ -133,7 +133,7 @@ auto VirtIODevice::mapping_for_bar(u8 bar) -> MappedMMIO&
     return mapping;
 }
 
-void VirtIODevice::notify_queue(u16 queue_index)
+void Device::notify_queue(u16 queue_index)
 {
     dbgln_if(VIRTIO_DEBUG, "{}: notifying about queue change at idx: {}", VirtIO::determine_device_class(pci_address()), queue_index);
     if (!m_notify_cfg)
@@ -142,49 +142,49 @@ void VirtIODevice::notify_queue(u16 queue_index)
         config_write16(*m_notify_cfg, get_queue(queue_index).notify_offset() * m_notify_multiplier, queue_index);
 }
 
-u8 VirtIODevice::config_read8(const Configuration& config, u32 offset)
+u8 Device::config_read8(const Configuration& config, u32 offset)
 {
     return mapping_for_bar(config.bar).read<u8>(config.offset + offset);
 }
 
-u16 VirtIODevice::config_read16(const Configuration& config, u32 offset)
+u16 Device::config_read16(const Configuration& config, u32 offset)
 {
     return mapping_for_bar(config.bar).read<u16>(config.offset + offset);
 }
 
-u32 VirtIODevice::config_read32(const Configuration& config, u32 offset)
+u32 Device::config_read32(const Configuration& config, u32 offset)
 {
     return mapping_for_bar(config.bar).read<u32>(config.offset + offset);
 }
 
-void VirtIODevice::config_write8(const Configuration& config, u32 offset, u8 value)
+void Device::config_write8(const Configuration& config, u32 offset, u8 value)
 {
     mapping_for_bar(config.bar).write(config.offset + offset, value);
 }
 
-void VirtIODevice::config_write16(const Configuration& config, u32 offset, u16 value)
+void Device::config_write16(const Configuration& config, u32 offset, u16 value)
 {
     mapping_for_bar(config.bar).write(config.offset + offset, value);
 }
 
-void VirtIODevice::config_write32(const Configuration& config, u32 offset, u32 value)
+void Device::config_write32(const Configuration& config, u32 offset, u32 value)
 {
     mapping_for_bar(config.bar).write(config.offset + offset, value);
 }
 
-void VirtIODevice::config_write64(const Configuration& config, u32 offset, u64 value)
+void Device::config_write64(const Configuration& config, u32 offset, u64 value)
 {
     mapping_for_bar(config.bar).write(config.offset + offset, value);
 }
 
-u8 VirtIODevice::read_status_bits()
+u8 Device::read_status_bits()
 {
     if (!m_common_cfg)
         return in<u8>(REG_DEVICE_STATUS);
     return config_read8(*m_common_cfg, COMMON_CFG_DEVICE_STATUS);
 }
 
-void VirtIODevice::mask_status_bits(u8 status_mask)
+void Device::mask_status_bits(u8 status_mask)
 {
     m_status &= status_mask;
     if (!m_common_cfg)
@@ -193,7 +193,7 @@ void VirtIODevice::mask_status_bits(u8 status_mask)
         config_write8(*m_common_cfg, COMMON_CFG_DEVICE_STATUS, m_status);
 }
 
-void VirtIODevice::set_status_bit(u8 status_bit)
+void Device::set_status_bit(u8 status_bit)
 {
     m_status |= status_bit;
     if (!m_common_cfg)
@@ -202,7 +202,7 @@ void VirtIODevice::set_status_bit(u8 status_bit)
         config_write8(*m_common_cfg, COMMON_CFG_DEVICE_STATUS, m_status);
 }
 
-u64 VirtIODevice::get_device_features()
+u64 Device::get_device_features()
 {
     if (!m_common_cfg)
         return in<u32>(REG_DEVICE_FEATURES);
@@ -213,7 +213,7 @@ u64 VirtIODevice::get_device_features()
     return upper_bits | lower_bits;
 }
 
-bool VirtIODevice::accept_device_features(u64 device_features, u64 accepted_features)
+bool Device::accept_device_features(u64 device_features, u64 accepted_features)
 {
     VERIFY(!m_did_accept_features);
     m_did_accept_features = true;
@@ -260,7 +260,7 @@ bool VirtIODevice::accept_device_features(u64 device_features, u64 accepted_feat
     return true;
 }
 
-void VirtIODevice::reset_device()
+void Device::reset_device()
 {
     dbgln_if(VIRTIO_DEBUG, "{}: Reset device", VirtIO::determine_device_class(pci_address()));
     if (!m_common_cfg) {
@@ -276,7 +276,7 @@ void VirtIODevice::reset_device()
     }
 }
 
-bool VirtIODevice::setup_queue(u16 queue_index)
+bool Device::setup_queue(u16 queue_index)
 {
     if (!m_common_cfg)
         return false;
@@ -290,7 +290,7 @@ bool VirtIODevice::setup_queue(u16 queue_index)
 
     u16 queue_notify_offset = config_read16(*m_common_cfg, COMMON_CFG_QUEUE_NOTIFY_OFF);
 
-    auto queue = make<VirtIOQueue>(queue_size, queue_notify_offset);
+    auto queue = make<Queue>(queue_size, queue_notify_offset);
     if (queue->is_null())
         return false;
 
@@ -304,7 +304,7 @@ bool VirtIODevice::setup_queue(u16 queue_index)
     return true;
 }
 
-bool VirtIODevice::activate_queue(u16 queue_index)
+bool Device::activate_queue(u16 queue_index)
 {
     if (!m_common_cfg)
         return false;
@@ -316,7 +316,7 @@ bool VirtIODevice::activate_queue(u16 queue_index)
     return true;
 }
 
-bool VirtIODevice::setup_queues(u16 requested_queue_count)
+bool Device::setup_queues(u16 requested_queue_count)
 {
     VERIFY(!m_did_setup_queues);
     m_did_setup_queues = true;
@@ -348,7 +348,7 @@ bool VirtIODevice::setup_queues(u16 requested_queue_count)
     return true;
 }
 
-void VirtIODevice::finish_init()
+void Device::finish_init()
 {
     VERIFY(m_did_accept_features);                 // ensure features were negotiated
     VERIFY(m_did_setup_queues);                    // ensure queues were set-up
@@ -358,14 +358,14 @@ void VirtIODevice::finish_init()
     dbgln_if(VIRTIO_DEBUG, "{}: Finished initialization", VirtIO::determine_device_class(pci_address()));
 }
 
-u8 VirtIODevice::isr_status()
+u8 Device::isr_status()
 {
     if (!m_isr_cfg)
         return in<u8>(REG_ISR_STATUS);
     return config_read8(*m_isr_cfg, 0);
 }
 
-bool VirtIODevice::handle_irq(const RegisterState&)
+bool Device::handle_irq(const RegisterState&)
 {
     u8 isr_type = isr_status();
     if ((isr_type & (QUEUE_INTERRUPT | DEVICE_CONFIG_INTERRUPT)) == 0) {
@@ -392,7 +392,7 @@ bool VirtIODevice::handle_irq(const RegisterState&)
     return true;
 }
 
-void VirtIODevice::supply_chain_and_notify(u16 queue_index, VirtIOQueueChain& chain)
+void Device::supply_chain_and_notify(u16 queue_index, QueueChain& chain)
 {
     auto& queue = get_queue(queue_index);
     VERIFY(&chain.queue() == &queue);
