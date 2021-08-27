@@ -64,6 +64,8 @@ namespace Kernel {
 #define QUEUE_INTERRUPT 0x1
 #define DEVICE_CONFIG_INTERRUPT 0x2
 
+namespace VirtIO {
+
 enum class ConfigurationType : u8 {
     Common = 1,
     Notify = 2,
@@ -79,22 +81,18 @@ struct Configuration {
     u32 length;
 };
 
-class VirtIO {
-public:
-    static void detect();
-    static StringView determine_device_class(const PCI::Address& address);
-};
+void detect();
+StringView determine_device_class(const PCI::Address& address);
 
-class VirtIODevice
+class Device
     : public PCI::Device
     , public IRQHandler {
 public:
-    virtual ~VirtIODevice() override;
+    virtual ~Device() override;
 
 protected:
-    explicit VirtIODevice(PCI::Address);
-
     virtual StringView class_name() const = 0;
+    explicit Device(PCI::Address);
     struct MappedMMIO {
         OwnPtr<Memory::Region> base;
         size_t size { 0 };
@@ -166,13 +164,13 @@ protected:
     bool setup_queues(u16 requested_queue_count = 0);
     void finish_init();
 
-    VirtIOQueue& get_queue(u16 queue_index)
+    Queue& get_queue(u16 queue_index)
     {
         VERIFY(queue_index < m_queue_count);
         return m_queues[queue_index];
     }
 
-    const VirtIOQueue& get_queue(u16 queue_index) const
+    const Queue& get_queue(u16 queue_index) const
     {
         VERIFY(queue_index < m_queue_count);
         return m_queues[queue_index];
@@ -198,7 +196,7 @@ protected:
         return is_feature_set(m_accepted_features, feature);
     }
 
-    void supply_chain_and_notify(u16 queue_index, VirtIOQueueChain& chain);
+    void supply_chain_and_notify(u16 queue_index, QueueChain& chain);
 
     virtual bool handle_device_config_change() = 0;
     virtual void handle_queue_update(u16 queue_index) = 0;
@@ -227,7 +225,7 @@ private:
     u8 isr_status();
     virtual bool handle_irq(const RegisterState&) override;
 
-    NonnullOwnPtrVector<VirtIOQueue> m_queues;
+    NonnullOwnPtrVector<Queue> m_queues;
     NonnullOwnPtrVector<Configuration> m_configs;
     const Configuration* m_common_cfg { nullptr }; // Cached due to high usage
     const Configuration* m_notify_cfg { nullptr }; // Cached due to high usage
@@ -242,5 +240,6 @@ private:
     bool m_did_accept_features { false };
     bool m_did_setup_queues { false };
     u32 m_notify_multiplier { 0 };
+};
 };
 }

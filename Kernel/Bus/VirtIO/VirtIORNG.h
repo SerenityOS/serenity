@@ -11,18 +11,18 @@
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Random.h>
 
-namespace Kernel {
+namespace Kernel::VirtIO {
 
 #define REQUESTQ 0
 
-class VirtIORNG final
-    : public RefCounted<VirtIORNG>
-    , public VirtIODevice {
+class RNG final
+    : public RefCounted<RNG>
+    , public VirtIO::Device {
 public:
     virtual StringView purpose() const override { return class_name(); }
 
-    VirtIORNG(PCI::Address);
-    virtual ~VirtIORNG() override;
+    RNG(PCI::Address);
+    virtual ~RNG() override;
 
 private:
     virtual StringView class_name() const override { return "VirtIOConsole"; }

@@ -11,15 +11,15 @@
 #include <Kernel/Bus/VirtIO/VirtIOConsolePort.h>
 #include <Kernel/Memory/RingBuffer.h>
 
-namespace Kernel {
-class VirtIOConsole
-    : public VirtIODevice
-    , public RefCounted<VirtIOConsole> {
-    friend VirtIOConsolePort;
+namespace Kernel::VirtIO {
+class Console
+    : public VirtIO::Device
+    , public RefCounted<Console> {
+    friend VirtIO::ConsolePort;
 
 public:
-    VirtIOConsole(PCI::Address);
-    virtual ~VirtIOConsole() override = default;
+    Console(PCI::Address);
+    virtual ~Console() override = default;
 
     virtual StringView purpose() const override { return class_name(); }
 
@@ -61,7 +61,7 @@ private:
     virtual bool handle_device_config_change() override;
     virtual void handle_queue_update(u16 queue_index) override;
 
-    Vector<RefPtr<VirtIOConsolePort>> m_ports;
+    Vector<RefPtr<ConsolePort>> m_ports;
     void setup_multiport();
     void process_control_message(ControlMessage message);
     void write_control_message(ControlMessage message);

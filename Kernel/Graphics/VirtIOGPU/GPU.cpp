@@ -16,11 +16,11 @@
 namespace Kernel::Graphics::VirtIOGPU {
 
 GPU::GPU(PCI::Address address)
-    : VirtIODevice(address)
+    : VirtIO::Device(address)
     , m_scratch_space(MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Memory::Region::Access::ReadWrite))
 {
     VERIFY(!!m_scratch_space);
-    if (auto cfg = get_config(ConfigurationType::Device)) {
+    if (auto cfg = get_config(VirtIO::ConfigurationType::Device)) {
         m_device_configuration = cfg;
         bool success = negotiate_features([&](u64 supported_features) {
             u64 negotiated = 0;
@@ -65,7 +65,7 @@ bool GPU::handle_device_config_change()
     auto events = get_pending_events();
     if (events & VIRTIO_GPU_EVENT_DISPLAY) {
         // The host window was resized, in SerenityOS we completely ignore this event
-        dbgln_if(VIRTIO_DEBUG, "VirtIOGPU: Ignoring virtio gpu display resize event");
+        dbgln_if(VIRTIO_DEBUG, "VirtIO::GPU: Ignoring virtio gpu display resize event");
         clear_pending_events(VIRTIO_GPU_EVENT_DISPLAY);
     }
     if (events & ~VIRTIO_GPU_EVENT_DISPLAY) {
@@ -243,9 +243,9 @@ void GPU::synchronous_virtio_gpu_command(PhysicalAddress buffer_start, size_t re
     auto& queue = get_queue(CONTROLQ);
     {
         SpinlockLocker lock(queue.lock());
-        VirtIOQueueChain chain { queue };
-        chain.add_buffer_to_chain(buffer_start, request_size, BufferType::DeviceReadable);
-        chain.add_buffer_to_chain(buffer_start.offset(request_size), response_size, BufferType::DeviceWritable);
+        VirtIO::QueueChain chain { queue };
+        chain.add_buffer_to_chain(buffer_start, request_size, VirtIO::BufferType::DeviceReadable);
+        chain.add_buffer_to_chain(buffer_start.offset(request_size), response_size, VirtIO::BufferType::DeviceWritable);
         supply_chain_and_notify(CONTROLQ, chain);
         full_memory_barrier();
     }

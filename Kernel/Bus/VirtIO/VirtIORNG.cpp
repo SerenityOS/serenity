@@ -7,10 +7,10 @@
 #include <Kernel/Bus/VirtIO/VirtIORNG.h>
 #include <Kernel/Sections.h>
 
-namespace Kernel {
+namespace Kernel::VirtIO {
 
-UNMAP_AFTER_INIT VirtIORNG::VirtIORNG(PCI::Address address)
-    : VirtIODevice(address)
+UNMAP_AFTER_INIT RNG::RNG(PCI::Address address)
+    : VirtIO::Device(address)
 {
     bool success = negotiate_features([&](auto) {
         return 0;
@@ -20,7 +20,7 @@ UNMAP_AFTER_INIT VirtIORNG::VirtIORNG(PCI::Address address)
     }
     if (success) {
         finish_init();
-        m_entropy_buffer = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIORNG", Memory::Region::Access::ReadWrite);
+        m_entropy_buffer = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIO::RNG", Memory::Region::Access::ReadWrite);
         if (m_entropy_buffer) {
             memset(m_entropy_buffer->vaddr().as_ptr(), 0, m_entropy_buffer->size());
             request_entropy_from_host();
@@ -28,16 +28,16 @@ UNMAP_AFTER_INIT VirtIORNG::VirtIORNG(PCI::Address address)
     }
 }
 
-VirtIORNG::~VirtIORNG()
+RNG::~RNG()
 {
 }
 
-bool VirtIORNG::handle_device_config_change()
+bool RNG::handle_device_config_change()
 {
     VERIFY_NOT_REACHED(); // Device has no config
 }
 
-void VirtIORNG::handle_queue_update(u16 queue_index)
+void RNG::handle_queue_update(u16 queue_index)
 {
     VERIFY(queue_index == REQUESTQ);
     size_t available_entropy = 0, used;
@@ -53,18 +53,18 @@ void VirtIORNG::handle_queue_update(u16 queue_index)
         });
         chain.release_buffer_slots_to_queue();
     }
-    dbgln_if(VIRTIO_DEBUG, "VirtIORNG: received {} bytes of entropy!", available_entropy);
+    dbgln_if(VIRTIO_DEBUG, "VirtIO::RNG: received {} bytes of entropy!", available_entropy);
     for (auto i = 0u; i < available_entropy; i++) {
         m_entropy_source.add_random_event(m_entropy_buffer->vaddr().as_ptr()[i]);
     }
     // TODO: When should we get some more entropy?
 }
 
-void VirtIORNG::request_entropy_from_host()
+void RNG::request_entropy_from_host()
 {
     auto& queue = get_queue(REQUESTQ);
     SpinlockLocker lock(queue.lock());
-    VirtIOQueueChain chain(queue);
+    QueueChain chain(queue);
     chain.add_buffer_to_chain(m_entropy_buffer->physical_page(0)->paddr(), PAGE_SIZE, BufferType::DeviceWritable);
     supply_chain_and_notify(REQUESTQ, chain);
 }

@@ -12,21 +12,21 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Memory/RingBuffer.h>
 
-namespace Kernel {
+namespace Kernel::VirtIO {
 
-class VirtIOConsole;
+class Console;
 
 #define VIRTIO_CONSOLE_F_SIZE (1 << 0)
 #define VIRTIO_CONSOLE_F_MULTIPORT (1 << 1)
 #define VIRTIO_CONSOLE_F_EMERG_WRITE (1 << 2)
 
-class VirtIOConsolePort
+class ConsolePort
     : public CharacterDevice {
 public:
-    explicit VirtIOConsolePort(unsigned port, VirtIOConsole&);
-    void handle_queue_update(Badge<VirtIOConsole>, u16 queue_index);
+    explicit ConsolePort(unsigned port, VirtIO::Console&);
+    void handle_queue_update(Badge<VirtIO::Console>, u16 queue_index);
 
-    void set_open(Badge<VirtIOConsole>, bool state) { m_open = state; }
+    void set_open(Badge<VirtIO::Console>, bool state) { m_open = state; }
     bool is_open() const { return m_open; }
 
 private:
@@ -53,7 +53,7 @@ private:
     OwnPtr<Memory::RingBuffer> m_receive_buffer;
     OwnPtr<Memory::RingBuffer> m_transmit_buffer;
 
-    VirtIOConsole& m_console;
+    VirtIO::Console& m_console;
     unsigned m_port;
 
     bool m_open { false };

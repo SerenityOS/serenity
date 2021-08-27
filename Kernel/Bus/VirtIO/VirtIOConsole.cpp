@@ -8,19 +8,19 @@
 #include <Kernel/Bus/VirtIO/VirtIOConsole.h>
 #include <Kernel/Sections.h>
 
-namespace Kernel {
+namespace Kernel::VirtIO {
 
-unsigned VirtIOConsole::next_device_id = 0;
+unsigned Console::next_device_id = 0;
 
-UNMAP_AFTER_INIT VirtIOConsole::VirtIOConsole(PCI::Address address)
-    : VirtIODevice(address)
+UNMAP_AFTER_INIT Console::Console(PCI::Address address)
+    : VirtIO::Device(address)
     , m_device_id(next_device_id++)
 {
     if (auto cfg = get_config(ConfigurationType::Device)) {
         bool success = negotiate_features([&](u64 supported_features) {
             u64 negotiated = 0;
             if (is_feature_set(supported_features, VIRTIO_CONSOLE_F_SIZE))
-                dbgln("VirtIOConsole: Console size is not yet supported!");
+                dbgln("VirtIO::Console: Console size is not yet supported!");
             if (is_feature_set(supported_features, VIRTIO_CONSOLE_F_MULTIPORT))
                 negotiated |= VIRTIO_CONSOLE_F_MULTIPORT;
             return negotiated;
@@ -38,7 +38,7 @@ UNMAP_AFTER_INIT VirtIOConsole::VirtIOConsole(PCI::Address address)
                     m_ports.resize(max_nr_ports);
                 }
             });
-            dbgln("VirtIOConsole: cols: {}, rows: {}, max nr ports {}", cols, rows, max_nr_ports);
+            dbgln("VirtIO::Console: cols: {}, rows: {}, max nr ports {}", cols, rows, max_nr_ports);
             // Base receiveq/transmitq for port0 + optional control queues and 2 per every additional port
             success = setup_queues(2 + max_nr_ports > 0 ? 2 + 2 * max_nr_ports : 0);
         }
@@ -48,27 +48,27 @@ UNMAP_AFTER_INIT VirtIOConsole::VirtIOConsole(PCI::Address address)
             if (is_feature_accepted(VIRTIO_CONSOLE_F_MULTIPORT))
                 setup_multiport();
             else
-                m_ports.append(new VirtIOConsolePort(0u, *this));
+                m_ports.append(new VirtIO::ConsolePort(0u, *this));
         }
     }
 }
 
-bool VirtIOConsole::handle_device_config_change()
+bool Console::handle_device_config_change()
 {
-    dbgln("VirtIOConsole: Handle device config change");
+    dbgln("VirtIO::Console: Handle device config change");
     return true;
 }
 
-void VirtIOConsole::handle_queue_update(u16 queue_index)
+void Console::handle_queue_update(u16 queue_index)
 {
-    dbgln_if(VIRTIO_DEBUG, "VirtIOConsole: Handle queue update {}", queue_index);
+    dbgln_if(VIRTIO_DEBUG, "VirtIO::Console: Handle queue update {}", queue_index);
 
     if (queue_index == CONTROL_RECEIVEQ) {
         SpinlockLocker ringbuffer_lock(m_control_receive_buffer->lock());
         auto& queue = get_queue(CONTROL_RECEIVEQ);
         SpinlockLocker queue_lock(queue.lock());
         size_t used;
-        VirtIOQueueChain popped_chain = queue.pop_used_buffer_chain(used);
+        QueueChain popped_chain = queue.pop_used_buffer_chain(used);
 
         while (!popped_chain.is_empty()) {
             popped_chain.for_each([&](auto addr, auto) {
@@ -85,7 +85,7 @@ void VirtIOConsole::handle_queue_update(u16 queue_index)
         auto& queue = get_queue(CONTROL_TRANSMITQ);
         SpinlockLocker queue_lock(queue.lock());
         size_t used;
-        VirtIOQueueChain popped_chain = queue.pop_used_buffer_chain(used);
+        QueueChain popped_chain = queue.pop_used_buffer_chain(used);
         auto number_of_messages = 0;
         do {
             popped_chain.for_each([this](PhysicalAddress address, size_t length) {
@@ -106,14 +106,14 @@ void VirtIOConsole::handle_queue_update(u16 queue_index)
     }
 }
 
-void VirtIOConsole::setup_multiport()
+void Console::setup_multiport()
 {
     m_control_receive_buffer = make<Memory::RingBuffer>("VirtIOConsole control receive queue", CONTROL_BUFFER_SIZE);
     m_control_transmit_buffer = make<Memory::RingBuffer>("VirtIOConsole control transmit queue", CONTROL_BUFFER_SIZE);
 
     auto& queue = get_queue(CONTROL_RECEIVEQ);
     SpinlockLocker queue_lock(queue.lock());
-    VirtIOQueueChain chain(queue);
+    QueueChain chain(queue);
     auto offset = 0ul;
 
     while (offset < CONTROL_BUFFER_SIZE) {
@@ -132,7 +132,7 @@ void VirtIOConsole::setup_multiport()
     write_control_message(ready_event);
 }
 
-void VirtIOConsole::process_control_message(ControlMessage message)
+void Console::process_control_message(ControlMessage message)
 {
     switch (message.event) {
     case (u16)ControlEvent::DeviceAdd: {
@@ -145,7 +145,7 @@ void VirtIOConsole::process_control_message(ControlMessage message)
             return;
         }
 
-        m_ports.at(id) = new VirtIOConsolePort(id, *this);
+        m_ports.at(id) = new VirtIO::ConsolePort(id, *this);
         ControlMessage ready_event {
             .id = static_cast<u32>(id),
             .event = (u16)ControlEvent::PortReady,
@@ -182,7 +182,7 @@ void VirtIOConsole::process_control_message(ControlMessage message)
         dbgln("Unhandled message event {}!", message.event);
     }
 }
-void VirtIOConsole::write_control_message(ControlMessage message)
+void Console::write_control_message(ControlMessage message)
 {
     SpinlockLocker ringbuffer_lock(m_control_transmit_buffer->lock());
 
@@ -198,7 +198,7 @@ void VirtIOConsole::write_control_message(ControlMessage message)
 
     auto& queue = get_queue(CONTROL_TRANSMITQ);
     SpinlockLocker queue_lock(queue.lock());
-    VirtIOQueueChain chain(queue);
+    QueueChain chain(queue);
 
     bool did_add_buffer = chain.add_buffer_to_chain(start_of_chunk, length_of_chunk, BufferType::DeviceReadable);
     VERIFY(did_add_buffer);
@@ -206,7 +206,7 @@ void VirtIOConsole::write_control_message(ControlMessage message)
     supply_chain_and_notify(CONTROL_TRANSMITQ, chain);
 }
 
-void VirtIOConsole::send_open_control_message(unsigned port_number, bool open)
+void Console::send_open_control_message(unsigned port_number, bool open)
 {
     ControlMessage port_open {
         .id = static_cast<u32>(port_number),
