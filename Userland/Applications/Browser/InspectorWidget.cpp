@@ -19,6 +19,26 @@
 
 namespace Browser {
 
+void InspectorWidget::set_inspected_node(i32 node_id)
+{
+    if (!m_dom_json.has_value()) {
+        // DOM Tree hasn't been loaded yet, so make a note to inspect it later.
+        m_pending_inspect_node_id = node_id;
+        return;
+    }
+
+    auto* model = verify_cast<Web::DOMTreeModel>(m_dom_tree_view->model());
+    auto index = model->index_for_node(node_id);
+    if (!index.is_valid()) {
+        dbgln("InspectorWidget told to inspect non-existent node, id={}", node_id);
+        return;
+    }
+
+    m_dom_tree_view->expand_all_parents_of(index);
+    m_dom_tree_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
+    set_inspected_node(index);
+}
+
 void InspectorWidget::set_inspected_node(GUI::ModelIndex const index)
 {
     auto* json = static_cast<JsonObject const*>(index.internal_data());
@@ -27,16 +47,10 @@ void InspectorWidget::set_inspected_node(GUI::ModelIndex const index)
         return;
     m_inspected_node_id = inspected_node;
 
-    m_dom_tree_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
-    m_dom_tree_view->expand_all_parents_of(index);
-
     auto maybe_inspected_node_properties = m_web_view->inspect_dom_node(m_inspected_node_id);
     if (maybe_inspected_node_properties.has_value()) {
         auto inspected_node_properties = maybe_inspected_node_properties.value();
-        m_inspected_node_specified_values_json = inspected_node_properties.specified_values_json;
-        m_inspected_node_computed_values_json = inspected_node_properties.computed_values_json;
-        m_style_table_view->set_model(Web::StylePropertiesModel::create(m_inspected_node_specified_values_json.value().view()));
-        m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(m_inspected_node_computed_values_json.value().view()));
+        load_style_json(inspected_node_properties.specified_values_json, inspected_node_properties.computed_values_json);
     } else {
         m_inspected_node_specified_values_json.clear();
         m_inspected_node_computed_values_json.clear();
@@ -84,6 +98,12 @@ void InspectorWidget::set_dom_json(String json)
 
     // FIXME: Support the LayoutTreeModel
     // m_layout_tree_view->set_model(Web::LayoutTreeModel::create(*document));
+
+    if (m_pending_inspect_node_id.has_value()) {
+        i32 node_id = m_pending_inspect_node_id.value();
+        m_pending_inspect_node_id.clear();
+        set_inspected_node(node_id);
+    }
 }
 
 void InspectorWidget::set_dom_node_properties_json(i32 node_id, String specified_values_json, String computed_values_json)
@@ -93,6 +113,11 @@ void InspectorWidget::set_dom_node_properties_json(i32 node_id, String specified
         return;
     }
 
+    load_style_json(specified_values_json, computed_values_json);
+}
+
+void InspectorWidget::load_style_json(String specified_values_json, String computed_values_json)
+{
     m_inspected_node_specified_values_json = specified_values_json;
     m_inspected_node_computed_values_json = computed_values_json;
     m_style_table_view->set_model(Web::StylePropertiesModel::create(m_inspected_node_specified_values_json.value().view()));
