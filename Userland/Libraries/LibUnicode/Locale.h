@@ -53,6 +53,7 @@ using Extension = Variant<LocaleExtension, TransformedExtension, OtherExtension>
 struct LocaleID {
     LanguageID language_id {};
     Vector<Extension> extensions {};
+    Vector<StringView> private_use_extensions {};
 };
 
 // Note: These methods only verify that the provided strings match the EBNF grammar of the

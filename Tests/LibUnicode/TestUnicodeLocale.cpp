@@ -246,6 +246,30 @@ TEST_CASE(parse_unicode_locale_id_with_other_extension)
     pass("en-z-aa-bbb-cccccccc", { 'z', { "aa"sv, "bbb"sv, "cccccccc"sv } });
 }
 
+TEST_CASE(parse_unicode_locale_id_with_private_use_extension)
+{
+    auto fail = [](StringView locale) {
+        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        EXPECT(!locale_id.has_value());
+    };
+    auto pass = [](StringView locale, Vector<StringView> const& expected_extension) {
+        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        VERIFY(locale_id.has_value());
+        EXPECT_EQ(locale_id->private_use_extensions, expected_extension);
+    };
+
+    fail("en-x"sv);
+    fail("en-x-"sv);
+    fail("en-x-aaaaaaaaa"sv);
+    fail("en-x-aaa-"sv);
+    fail("en-x-aaa-aaaaaaaaa"sv);
+
+    pass("en-x-a", { "a"sv });
+    pass("en-x-aaaaaaaa", { "aaaaaaaa"sv });
+    pass("en-x-aaa-bbb", { "aaa"sv, "bbb"sv });
+    pass("en-x-aaa-x-bbb", { "aaa"sv, "x"sv, "bbb"sv });
+}
+
 TEST_CASE(canonicalize_unicode_locale_id)
 {
     auto test = [](StringView locale, StringView expected_canonical_locale) {
