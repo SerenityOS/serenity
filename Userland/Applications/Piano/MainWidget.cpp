@@ -42,13 +42,12 @@ MainWidget::MainWidget(TrackManager& track_manager, AudioPlayerLoop& loop)
     m_keys_and_knobs_container = add<GUI::Widget>();
     m_keys_and_knobs_container->set_layout<GUI::HorizontalBoxLayout>();
     m_keys_and_knobs_container->layout()->set_spacing(2);
-    m_keys_and_knobs_container->set_fixed_height(100);
+    m_keys_and_knobs_container->set_fixed_height(130);
     m_keys_and_knobs_container->set_fill_with_background_color(true);
 
     m_keys_widget = m_keys_and_knobs_container->add<KeysWidget>(track_manager);
 
     m_knobs_widget = m_keys_and_knobs_container->add<KnobsWidget>(track_manager, *this);
-    m_knobs_widget->set_fixed_width(350);
 
     m_roll_widget->set_keys_widget(m_keys_widget);
 }

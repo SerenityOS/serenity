@@ -11,6 +11,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Slider.h>
+#include <LibGfx/Orientation.h>
 
 KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
     : m_track_manager(track_manager)
@@ -21,7 +22,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
 
     m_labels_container = add<GUI::Widget>();
     m_labels_container->set_layout<GUI::HorizontalBoxLayout>();
-    m_labels_container->set_fixed_height(20);
+    m_labels_container->set_fixed_height(45);
 
     m_volume_label = m_labels_container->add<GUI::Label>("Volume");
     m_octave_label = m_labels_container->add<GUI::Label>("Octave");
@@ -30,7 +31,6 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
     m_decay_label = m_labels_container->add<GUI::Label>("Decay");
     m_sustain_label = m_labels_container->add<GUI::Label>("Sustain");
     m_release_label = m_labels_container->add<GUI::Label>("Release");
-    m_delay_label = m_labels_container->add<GUI::Label>("Delay");
 
     m_values_container = add<GUI::Widget>();
     m_values_container->set_layout<GUI::HorizontalBoxLayout>();
@@ -43,7 +43,6 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
     m_decay_value = m_values_container->add<GUI::Label>(String::number(m_track_manager.current_track().decay()));
     m_sustain_value = m_values_container->add<GUI::Label>(String::number(m_track_manager.current_track().sustain()));
     m_release_value = m_values_container->add<GUI::Label>(String::number(m_track_manager.current_track().release()));
-    m_delay_value = m_values_container->add<GUI::Label>(String::number(m_track_manager.current_track().delay()));
 
     m_knobs_container = add<GUI::Widget>();
     m_knobs_container->set_layout<GUI::HorizontalBoxLayout>();
@@ -140,18 +139,14 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
         m_release_value->set_text(String::number(new_release));
     };
 
-    m_delay_knob = m_knobs_container->add<GUI::VerticalSlider>();
-    m_delay_knob->set_tooltip("Delay speed, 0 = off");
-    m_delay_knob->set_range(0, delay_max);
-    m_delay_knob->set_value(delay_max - m_track_manager.current_track().delay());
-    m_release_knob->set_step(1);
-    m_delay_knob->on_change = [this](int value) {
-        int new_delay = delay_max - value;
-        if (m_change_underlying)
-            m_track_manager.current_track().set_delay(new_delay);
-        VERIFY(new_delay == m_track_manager.current_track().delay());
-        m_delay_value->set_text(String::number(new_delay));
-    };
+    for (auto& raw_parameter : m_track_manager.current_track().delay()->parameters()) {
+        // FIXME: We shouldn't do that, but we know the effect and it's nice.
+        auto& parameter = static_cast<LibDSP::ProcessorRangeParameter&>(raw_parameter);
+        m_delay_values.append(m_values_container->add<GUI::Label>(String::number(static_cast<double>(parameter.value()))));
+        auto& parameter_knob_value = m_delay_values.last();
+        m_delay_labels.append(m_labels_container->add<GUI::Label>(String::formatted("Delay: {}", parameter.name())));
+        m_delay_knobs.append(m_knobs_container->add<ProcessorParameterSlider>(Orientation::Vertical, parameter, parameter_knob_value));
+    }
 }
 
 KnobsWidget::~KnobsWidget()
@@ -174,7 +169,6 @@ void KnobsWidget::update_knobs()
     m_decay_knob->set_value(decay_max - m_track_manager.current_track().decay());
     m_sustain_knob->set_value(sustain_max - m_track_manager.current_track().sustain());
     m_release_knob->set_value(release_max - m_track_manager.current_track().release());
-    m_delay_knob->set_value(delay_max - m_track_manager.current_track().delay());
 
     m_change_underlying = true;
 }
