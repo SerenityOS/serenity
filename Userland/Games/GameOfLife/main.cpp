@@ -18,12 +18,34 @@
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
+#include <unistd.h>
 
 const char* click_tip = "Tip: click the board to toggle individual cells, or click+drag to toggle multiple cells";
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath recvfd sendfd unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     auto app = GUI::Application::construct(argc, argv);
+
+    if (pledge("stdio rpath recvfd sendfd", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     auto app_icon = GUI::Icon::default_icon("app-gameoflife");
 
     auto window = GUI::Window::construct();
