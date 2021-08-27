@@ -65,7 +65,7 @@ private:
 
         void flap()
         {
-            const float flap_strength = 10.0f;
+            const float flap_strength = 15.0f;
             velocity = -flap_strength;
         }
 
@@ -82,7 +82,7 @@ private:
     };
 
     struct Obstacle {
-        const float width { 20 };
+        const float width { 50 };
         Color color { Color::DarkGray };
         float x {};
         float gap_top_y { 200 };
