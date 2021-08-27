@@ -1,11 +1,12 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "SnakeGame.h"
-#include <LibCore/ConfigFile.h>
+#include <LibConfig/Client.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
@@ -23,8 +24,7 @@ SnakeGame::SnakeGame()
     srand(time(nullptr));
     reset();
 
-    auto config = Core::ConfigFile::open_for_app("Snake");
-    m_high_score = config->read_num_entry("Snake", "HighScore", 0);
+    m_high_score = Config::read_i32("Snake", "Snake", "HighScore", 0);
     m_high_score_text = String::formatted("Best: {}", m_high_score);
 }
 
@@ -131,8 +131,7 @@ void SnakeGame::timer_event(Core::TimerEvent&)
             m_high_score = m_score;
             m_high_score_text = String::formatted("Best: {}", m_high_score);
             update(high_score_rect());
-            auto config = Core::ConfigFile::open_for_app("Snake", Core::ConfigFile::AllowWriting::Yes);
-            config->write_num_entry("Snake", "HighScore", m_high_score);
+            Config::write_i32("Snake", "Snake", "HighScore", m_high_score);
         }
         update(score_rect());
         dirty_cells.append(m_fruit);
