@@ -37,6 +37,7 @@ void PlainYearMonthPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.monthsInYear, months_in_year_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.inLeapYear, in_leap_year_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.era, era_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.eraYear, era_year_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.toString, to_string, 0, attr);
@@ -198,6 +199,22 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::era_getter)
 
     // 4. Return ? CalendarEra(calendar, plainYearMonth).
     return calendar_era(global_object, calendar, *plain_year_month);
+}
+
+// 15.6.9.3 get Temporal.PlainYearMonth.prototype.eraYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.erayear
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::era_year_getter)
+{
+    // 1. Let plainYearMonth be the this value.
+    // 2. Perform ? RequireInternalSlot(plainYearMonth, [[InitializedTemporalYearMonth]]).
+    auto* plain_year_month = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendar be plainYearMonth.[[Calendar]].
+    auto& calendar = plain_year_month->calendar();
+
+    // 4. Return ? CalendarEraYear(calendar, plainYearMonth).
+    return calendar_era_year(global_object, calendar, *plain_year_month);
 }
 
 // 9.3.17 Temporal.PlainYearMonth.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tostring
