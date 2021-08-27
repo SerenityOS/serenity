@@ -50,6 +50,7 @@ private:
     virtual void did_request_image_context_menu(Gfx::IntPoint const&, URL const&, String const&, unsigned, Gfx::ShareableBitmap const&) override;
     virtual void did_get_source(URL const&, String const&) override;
     virtual void did_get_dom_tree(String const&) override;
+    virtual void did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style) override;
     virtual void did_js_console_output(String const&, String const&) override;
     virtual void did_change_favicon(Gfx::ShareableBitmap const&) override;
     virtual void did_request_alert(String const&) override;

@@ -281,6 +281,10 @@ Tab::Tab(BrowserWindow& window)
             m_dom_inspector_widget->set_dom_json(dom_tree);
     };
 
+    hooks().on_get_dom_node_properties = [this](auto node_id, auto& specified, auto& computed) {
+        m_dom_inspector_widget->set_dom_node_properties_json(node_id, specified, computed);
+    };
+
     hooks().on_js_console_output = [this](auto& method, auto& line) {
         if (m_console_window) {
             auto* console_widget = static_cast<ConsoleWidget*>(m_console_window->main_widget());

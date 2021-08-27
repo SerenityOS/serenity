@@ -28,6 +28,7 @@ endpoint WebContentClient
     did_request_prompt(String message, String default_) => (String response)
     did_get_source(URL url, String source) =|
     did_get_dom_tree(String dom_tree) =|
+    did_get_dom_node_properties(i32 node_id, String specified_style, String computed_style) =|
     did_js_console_output(String method, String line) =|
     did_change_favicon(Gfx::ShareableBitmap favicon) =|
     did_request_cookie(URL url, u8 source) => (String cookie)
