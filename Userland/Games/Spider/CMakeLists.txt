@@ -13,4 +13,4 @@ set(SOURCES
 )
 
 serenity_app(Spider ICON app-spider)
-target_link_libraries(Spider LibCards LibGUI LibGfx LibCore)
+target_link_libraries(Spider LibCards LibGUI LibGfx LibCore LibConfig)
