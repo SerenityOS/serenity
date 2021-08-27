@@ -88,7 +88,7 @@ void Game::keydown_event(GUI::KeyEvent& event)
         if (ready_to_start()) {
             m_active = true;
         }
-        if (m_active) {
+        if (m_active && m_bug.y > 20) {
             m_bug.flap();
         }
         break;
@@ -116,7 +116,7 @@ void Game::tick()
         m_obstacle.x -= 4 + m_difficulty / 16.0f;
         m_cloud.x -= m_difficulty / 16.0f;
 
-        if (m_bug.y > game_height || m_bug.y < 0) {
+        if (m_bug.y > game_height) {
             game_over();
         }
 
