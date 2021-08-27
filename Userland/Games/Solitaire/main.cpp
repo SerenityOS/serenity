@@ -23,12 +23,17 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     auto app = GUI::Application::construct(argc, argv);
     auto app_icon = GUI::Icon::default_icon("app-solitaire");
 
     Config::pledge_domains("Solitaire");
 
-    if (pledge("stdio recvfd sendfd rpath wpath cpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
