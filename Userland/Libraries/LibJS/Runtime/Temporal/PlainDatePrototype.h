@@ -32,6 +32,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(days_in_year_getter);
     JS_DECLARE_NATIVE_FUNCTION(months_in_year_getter);
     JS_DECLARE_NATIVE_FUNCTION(in_leap_year_getter);
+    JS_DECLARE_NATIVE_FUNCTION(era_getter);
     JS_DECLARE_NATIVE_FUNCTION(to_plain_year_month);
     JS_DECLARE_NATIVE_FUNCTION(to_plain_month_day);
     JS_DECLARE_NATIVE_FUNCTION(get_iso_fields);
