@@ -30,7 +30,7 @@ int main(int argc, char** argv)
 
     Config::pledge_domains("Hearts");
 
-    if (pledge("stdio recvfd sendfd rpath wpath cpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
