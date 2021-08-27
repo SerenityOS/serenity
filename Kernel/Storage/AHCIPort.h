@@ -37,7 +37,7 @@ class AHCIPort
     friend class AHCIController;
 
 public:
-    UNMAP_AFTER_INIT static NonnullRefPtr<AHCIPort> create(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
+    UNMAP_AFTER_INIT static NonnullRefPtr<AHCIPort> create(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u8 port_index);
 
     u32 port_index() const { return m_port_index; }
     u32 representative_port_index() const { return port_index() + 1; }
@@ -55,7 +55,7 @@ private:
     bool is_phy_enabled() const { return (m_port_registers.ssts & 0xf) == 3; }
     bool initialize(SpinlockLocker<Spinlock>&);
 
-    UNMAP_AFTER_INIT AHCIPort(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
+    UNMAP_AFTER_INIT AHCIPort(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u8 port_index);
 
     ALWAYS_INLINE void clear_sata_error_register() const;
 
@@ -116,7 +116,7 @@ private:
     RefPtr<Memory::PhysicalPage> m_fis_receive_page;
     RefPtr<ATADevice> m_connected_device;
 
-    u32 m_port_index;
+    u8 m_port_index;
     volatile AHCI::PortRegisters& m_port_registers;
     NonnullRefPtr<AHCIPortHandler> m_parent_handler;
     AHCI::PortInterruptStatusBitField m_interrupt_status;

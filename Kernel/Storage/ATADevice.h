@@ -21,8 +21,7 @@ public:
     // and subport can be a number from 0 to 14 (only 15 devices are allowed to
     // be connected to one SATA port multiplier).
     struct Address {
-        // FIXME: u32 for this value is wasteful, because even AHCI only support 32 ports
-        u32 port;
+        u8 port;
         u8 subport;
     };
 
