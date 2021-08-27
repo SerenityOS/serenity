@@ -28,6 +28,7 @@ endpoint WebContentServer
     get_source() =|
     inspect_dom_tree() =|
     inspect_dom_node(i32 node_id) => (bool has_style, String specified_style, String computed_style)
+    get_hovered_node_id() => (i32 node_id)
     js_console_initialize() =|
     js_console_input(String js_source) =|
 
