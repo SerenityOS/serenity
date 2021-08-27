@@ -261,6 +261,16 @@ Messages::WebContentServer::InspectDomNodeResponse ClientConnection::inspect_dom
     return { false, "", "" };
 }
 
+Messages::WebContentServer::GetHoveredNodeIdResponse ClientConnection::get_hovered_node_id()
+{
+    if (auto* document = page().top_level_browsing_context().document()) {
+        auto hovered_node = document->hovered_node();
+        if (hovered_node)
+            return hovered_node->id();
+    }
+    return (i32)0;
+}
+
 void ClientConnection::js_console_initialize()
 {
     if (auto* document = page().top_level_browsing_context().document()) {

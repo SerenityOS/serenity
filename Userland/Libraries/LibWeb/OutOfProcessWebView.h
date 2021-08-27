@@ -39,6 +39,7 @@ public:
     };
     Optional<DOMNodeProperties> inspect_dom_node(i32 node_id);
     void clear_inspected_dom_node();
+    i32 get_hovered_node_id();
 
     void js_console_initialize();
     void js_console_input(const String& js_source);
