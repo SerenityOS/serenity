@@ -12,6 +12,7 @@
 namespace Kernel {
 
 extern WorkQueue* g_io_work;
+extern WorkQueue* g_ahci_work;
 
 class WorkQueue {
     AK_MAKE_NONCOPYABLE(WorkQueue);

@@ -13,10 +13,12 @@
 namespace Kernel {
 
 WorkQueue* g_io_work;
+WorkQueue* g_ahci_work;
 
 UNMAP_AFTER_INIT void WorkQueue::initialize()
 {
     g_io_work = new WorkQueue("IO WorkQueue");
+    g_ahci_work = new WorkQueue("AHCI WorkQueue");
 }
 
 UNMAP_AFTER_INIT WorkQueue::WorkQueue(StringView name)

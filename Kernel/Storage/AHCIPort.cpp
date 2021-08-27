@@ -76,12 +76,12 @@ void AHCIPort::handle_interrupt()
         if ((m_port_registers.ssts & 0xf) != 3) {
             m_connected_device->prepare_for_unplug();
             StorageManagement::the().remove_device(*m_connected_device);
-            g_io_work->queue([this]() {
+            g_ahci_work->queue([this]() {
                 m_connected_device->before_removing();
                 m_connected_device.clear();
             });
         } else {
-            g_io_work->queue([this]() {
+            g_ahci_work->queue([this]() {
                 reset();
             });
         }
@@ -94,13 +94,13 @@ void AHCIPort::handle_interrupt()
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::INF)) {
         // We need to defer the reset, because we can receive interrupts when
         // resetting the device.
-        g_io_work->queue([this]() {
+        g_ahci_work->queue([this]() {
             reset();
         });
         return;
     }
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::IF) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::TFE) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::HBD) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::HBF)) {
-        g_io_work->queue([this]() {
+        g_ahci_work->queue([this]() {
             recover_from_fatal_error();
         });
         return;
@@ -114,7 +114,7 @@ void AHCIPort::handle_interrupt()
         if (!m_current_request) {
             dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request handled, probably identify request", representative_port_index());
         } else {
-            g_io_work->queue([this]() {
+            g_ahci_work->queue([this]() {
                 dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request handled", representative_port_index());
                 MutexLocker locker(m_lock);
                 VERIFY(m_current_request);
