@@ -22,7 +22,7 @@ class Game final : public GUI::Frame {
     C_OBJECT(Game);
 
 public:
-    static const int game_width = 560;
+    static const int game_width = 300;
     static const int game_height = 480;
 
     Function<u32(u32)> on_game_end;
@@ -87,11 +87,13 @@ private:
         float x {};
         float gap_top_y { 200 };
         float gap_height { 175 };
+        bool in { false };
+        bool lock { false };
 
         void reset()
         {
             x = game_width + width;
-            gap_top_y = get_random_uniform(game_height - gap_height);
+            gap_top_y = get_random_uniform(game_height - gap_height - width/1.5f) + width/3;
         }
 
         Gfx::FloatRect top_rect() const
@@ -102,6 +104,11 @@ private:
         Gfx::FloatRect bottom_rect() const
         {
             return { x - width, gap_top_y + gap_height, width, game_height - gap_top_y - gap_height };
+        }
+
+        Gfx::FloatRect score_rect() const
+        {
+            return { x - width / 2 - 1, gap_top_y, width / 2 + 1, gap_height };
         }
     };
 
@@ -140,7 +147,7 @@ private:
     };
 
     Bug m_bug;
-    Obstacle m_obstacle;
+    Obstacle m_obstacle, m_obstacle2;
     Cloud m_cloud;
     bool m_active;
     Optional<float> m_high_score {};

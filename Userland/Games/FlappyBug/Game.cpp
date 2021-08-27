@@ -19,10 +19,12 @@ void Game::reset()
 {
     m_active = false;
     m_last_score = m_difficulty;
-    m_difficulty = 1;
+    m_difficulty = 0;
     m_restart_cooldown = 3;
     m_bug.reset();
     m_obstacle.reset();
+    m_obstacle2.reset();
+    m_obstacle2.x = 999;
 }
 
 void Game::game_over()
@@ -66,6 +68,9 @@ void Game::paint_event(GUI::PaintEvent& event)
     painter.fill_rect(enclosing_int_rect(m_obstacle.top_rect()), m_obstacle.color);
     painter.fill_rect(enclosing_int_rect(m_obstacle.bottom_rect()), m_obstacle.color);
 
+    painter.fill_rect(enclosing_int_rect(m_obstacle2.top_rect()), Color::Red);
+    painter.fill_rect(enclosing_int_rect(m_obstacle2.bottom_rect()), Color::Red);
+
     painter.draw_scaled_bitmap(enclosing_int_rect(m_bug.rect()), *m_bug.current_bitmap(), m_bug.flapping_bitmap->rect());
 
     if (m_active) {
@@ -103,29 +108,67 @@ void Game::tick()
         update(enclosing_int_rect(m_bug.rect()));
         update(enclosing_int_rect(m_obstacle.top_rect()));
         update(enclosing_int_rect(m_obstacle.bottom_rect()));
+        update(enclosing_int_rect(m_obstacle.score_rect()));
+        update(enclosing_int_rect(m_obstacle2.top_rect()));
+        update(enclosing_int_rect(m_obstacle2.bottom_rect()));
+        update(enclosing_int_rect(m_obstacle2.score_rect()));
         update(m_cloud.rect());
     };
 
     if (m_active) {
         queue_update();
 
-        m_difficulty += 1.0f / 16.0f;
-
         m_bug.fall();
         m_bug.apply_velocity();
-        m_obstacle.x -= 4 + m_difficulty / 16.0f;
-        m_cloud.x -= m_difficulty / 16.0f;
+        m_obstacle.x -= SPEED;
+        m_obstacle2.x -= SPEED;
+        m_cloud.x -= ((m_difficulty + 1) * 5) / 16.0f;
 
         if (m_bug.y > game_height) {
             game_over();
         }
 
-        if (m_bug.rect().intersects(m_obstacle.top_rect()) || m_bug.rect().intersects(m_obstacle.bottom_rect())) {
+        if (
+            m_bug.rect().intersects(m_obstacle.top_rect()) || m_bug.rect().intersects(m_obstacle.bottom_rect()) ||
+            m_bug.rect().intersects(m_obstacle2.top_rect()) || m_bug.rect().intersects(m_obstacle2.bottom_rect())
+        ) {
             game_over();
+        }
+
+        if (
+            m_bug.rect().x() < m_obstacle.score_rect().x() + m_obstacle.score_rect().width() && 
+            m_bug.rect().x() > m_obstacle.score_rect().x()
+        ) {
+            if (m_obstacle.in == false) {
+                m_difficulty++;
+                m_obstacle.in = true;
+            }
+        } else {
+            m_obstacle.in = false;
+        }
+        if (
+            m_bug.rect().x() < m_obstacle2.score_rect().x() + m_obstacle2.score_rect().width() && 
+            m_bug.rect().x() > m_obstacle2.score_rect().x()
+        ) {
+            if (m_obstacle2.in == false) {
+                m_difficulty++;
+                m_obstacle2.in = true;
+            }
+        } else {
+            m_obstacle2.in = false;
         }
 
         if (m_obstacle.x < 0) {
             m_obstacle.reset();
+        }
+
+        if (m_obstacle.x > 0 && m_obstacle.x - m_obstacle.width / 2 < game_width / 2) {
+            if (m_obstacle.lock == false) {
+                m_obstacle2.reset();
+                m_obstacle.lock = true;
+            }
+        } else {
+            m_obstacle.lock = false;
         }
 
         if (m_cloud.x < 0) {
@@ -133,7 +176,7 @@ void Game::tick()
         }
     }
 
-    m_restart_cooldown -= 1.0f / 16.0f;
+    m_restart_cooldown -= 2.0f / 16.0f;
 
     queue_update();
 }
