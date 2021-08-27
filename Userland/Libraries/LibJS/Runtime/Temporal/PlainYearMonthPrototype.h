@@ -28,6 +28,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(months_in_year_getter);
     JS_DECLARE_NATIVE_FUNCTION(in_leap_year_getter);
     JS_DECLARE_NATIVE_FUNCTION(era_getter);
+    JS_DECLARE_NATIVE_FUNCTION(era_year_getter);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
     JS_DECLARE_NATIVE_FUNCTION(to_json);
