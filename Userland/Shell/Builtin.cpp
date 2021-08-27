@@ -946,10 +946,10 @@ int Shell::builtin_time(int argc, const char** argv)
         float total_time = 0;
         for (auto time : iteration_times)
             total_time += static_cast<float>(time);
-        float average = total_time / iteration_times.size();
+        float average = total_time / number_of_iterations;
 
         float total_time_excluding_first = total_time - static_cast<float>(iteration_times.first());
-        float average_excluding_first = total_time_excluding_first / (iteration_times.size() - 1);
+        float average_excluding_first = total_time_excluding_first / (number_of_iterations - 1);
 
         warnln("Timing report:");
         warnln("==============");
