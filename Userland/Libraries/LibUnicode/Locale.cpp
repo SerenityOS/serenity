@@ -78,6 +78,23 @@ static bool is_attribute(StringView type)
     return all_of(type, is_ascii_alphanumeric);
 }
 
+static bool is_transformed_key(StringView key)
+{
+    // tkey = alpha digit
+    if (key.length() != 2)
+        return false;
+    return is_ascii_alpha(key[0]) && is_ascii_digit(key[1]);
+}
+
+static bool is_single_transformed_value(StringView value)
+{
+    // tvalue = (sep alphanum{3,8})+
+    // Note: Consecutive values are not handled here, that is left to the caller.
+    if ((value.length() < 3) || (value.length() > 8))
+        return false;
+    return all_of(value, is_ascii_alphanumeric);
+}
+
 static Optional<StringView> consume_next_segment(GenericLexer& lexer, bool with_separator = true)
 {
     constexpr auto is_separator = is_any_of("-_"sv);
@@ -248,6 +265,81 @@ static Optional<LocaleExtension> parse_unicode_locale_extension(GenericLexer& le
     return locale_extension;
 }
 
+static Optional<TransformedExtension> parse_transformed_extension(GenericLexer& lexer)
+{
+    // https://unicode.org/reports/tr35/#transformed_extensions
+    //
+    // transformed_extensions = sep [tT] ((sep tlang (sep tfield)*) | (sep tfield)+)
+    TransformedExtension transformed_extension {};
+
+    enum class ParseState {
+        ParsingLanguageOrField,
+        ParsingLanguage,
+        ParsingField,
+        Done,
+    };
+
+    auto state = ParseState::ParsingLanguageOrField;
+
+    while (!lexer.is_eof() && (state != ParseState::Done)) {
+        auto segment = consume_next_segment(lexer);
+        if (!segment.has_value())
+            return {};
+
+        if (state == ParseState::ParsingLanguageOrField)
+            state = is_unicode_language_subtag(*segment) ? ParseState::ParsingLanguage : ParseState::ParsingField;
+
+        switch (state) {
+        case ParseState::ParsingLanguage:
+            lexer.retreat(segment->length());
+
+            if (auto language_id = parse_unicode_language_id(lexer); language_id.has_value()) {
+                transformed_extension.language = language_id.release_value();
+                state = ParseState::ParsingField;
+                break;
+            }
+
+            return {};
+
+        case ParseState::ParsingField: {
+            // tfield = tkey tvalue;
+            TransformedField field { .key = *segment };
+
+            if (!is_transformed_key(*segment)) {
+                lexer.retreat(segment->length() + 1);
+                state = ParseState::Done;
+                break;
+            }
+
+            while (true) {
+                auto value = consume_next_segment(lexer);
+
+                if (!value.has_value() || !is_single_transformed_value(*value)) {
+                    if (value.has_value())
+                        lexer.retreat(value->length() + 1);
+                    break;
+                }
+
+                field.values.append(*value);
+            }
+
+            if (field.values.is_empty())
+                return {};
+
+            transformed_extension.fields.append(move(field));
+            break;
+        }
+
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    if (!transformed_extension.language.has_value() && transformed_extension.fields.is_empty())
+        return {};
+    return transformed_extension;
+}
+
 static Optional<Extension> parse_extension(GenericLexer& lexer)
 {
     // https://unicode.org/reports/tr35/#extensions
@@ -263,8 +355,14 @@ static Optional<Extension> parse_extension(GenericLexer& lexer)
                 return Extension { extension.release_value() };
             break;
 
+        case 't':
+        case 'T':
+            if (auto extension = parse_transformed_extension(lexer); extension.has_value())
+                return Extension { extension.release_value() };
+            break;
+
         default:
-            // FIXME: Handle transformed_extensions / other_extensions
+            // FIXME: Handle other_extensions
             break;
         }
     }

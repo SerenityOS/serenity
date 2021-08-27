@@ -33,7 +33,17 @@ struct LocaleExtension {
     Vector<Keyword> keywords {};
 };
 
-using Extension = Variant<LocaleExtension>;
+struct TransformedField {
+    StringView key;
+    Vector<StringView> values {};
+};
+
+struct TransformedExtension {
+    Optional<LanguageID> language {};
+    Vector<TransformedField> fields {};
+};
+
+using Extension = Variant<LocaleExtension, TransformedExtension>;
 
 struct LocaleID {
     LanguageID language_id {};
