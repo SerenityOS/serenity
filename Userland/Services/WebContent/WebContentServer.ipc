@@ -27,6 +27,7 @@ endpoint WebContentServer
     debug_request(String request, String argument) =|
     get_source() =|
     inspect_dom_tree() =|
+    inspect_dom_node(i32 node_id) => (bool has_style, String specified_style, String computed_style)
     js_console_initialize() =|
     js_console_input(String js_source) =|
 
