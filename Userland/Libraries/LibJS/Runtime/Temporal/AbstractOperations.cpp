@@ -588,6 +588,26 @@ Optional<TemporalDuration> parse_temporal_duration_string(GlobalObject& global_o
     TODO();
 }
 
+// 13.43 ParseTemporalTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimestring
+Optional<TemporalTime> parse_temporal_time_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(isoString) is String.
+
+    // 2. If isoString does not satisfy the syntax of a TemporalTimeString (see 13.33), then
+    // a. Throw a RangeError exception.
+    // TODO
+
+    // 3. Let result be ? ParseISODateTime(isoString).
+    auto result = parse_iso_date_time(global_object, iso_string);
+    if (vm.exception())
+        return {};
+
+    // 4. Return the Record { [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]] }.
+    return TemporalTime { .hour = result->hour, .minute = result->minute, .second = result->second, .millisecond = result->millisecond, .microsecond = result->microsecond, .nanosecond = result->nanosecond, .calendar = move(result->calendar) };
+}
+
 // 13.44 ParseTemporalTimeZoneString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
 Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
 {

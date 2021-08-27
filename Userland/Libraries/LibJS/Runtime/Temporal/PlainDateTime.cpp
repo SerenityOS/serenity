@@ -103,10 +103,8 @@ Optional<ISODateTime> interpret_temporal_date_time_fields(GlobalObject& global_o
 {
     auto& vm = global_object.vm();
 
-    Optional<TemporalTime> time_result;
-
     // 1. Let timeResult be ? ToTemporalTimeRecord(fields).
-    time_result = to_temporal_time_record(global_object, fields);
+    auto unregulated_time_result = to_temporal_time_record(global_object, fields);
     if (vm.exception())
         return {};
 
@@ -121,7 +119,7 @@ Optional<ISODateTime> interpret_temporal_date_time_fields(GlobalObject& global_o
         return {};
 
     // 4. Let timeResult be ? RegulateTime(timeResult.[[Hour]], timeResult.[[Minute]], timeResult.[[Second]], timeResult.[[Millisecond]], timeResult.[[Microsecond]], timeResult.[[Nanosecond]], overflow).
-    time_result = regulate_time(global_object, time_result->hour, time_result->minute, time_result->second, time_result->millisecond, time_result->microsecond, time_result->nanosecond, *overflow);
+    auto time_result = regulate_time(global_object, unregulated_time_result->hour, unregulated_time_result->minute, unregulated_time_result->second, unregulated_time_result->millisecond, unregulated_time_result->microsecond, unregulated_time_result->nanosecond, *overflow);
     if (vm.exception())
         return {};
 
@@ -130,12 +128,12 @@ Optional<ISODateTime> interpret_temporal_date_time_fields(GlobalObject& global_o
         .year = temporal_date->iso_year(),
         .month = temporal_date->iso_month(),
         .day = temporal_date->iso_day(),
-        .hour = static_cast<u8>(time_result->hour),
-        .minute = static_cast<u8>(time_result->minute),
-        .second = static_cast<u8>(time_result->second),
-        .millisecond = static_cast<u16>(time_result->millisecond),
-        .microsecond = static_cast<u16>(time_result->microsecond),
-        .nanosecond = static_cast<u16>(time_result->nanosecond),
+        .hour = time_result->hour,
+        .minute = time_result->minute,
+        .second = time_result->second,
+        .millisecond = time_result->millisecond,
+        .microsecond = time_result->microsecond,
+        .nanosecond = time_result->nanosecond,
     };
 }
 
