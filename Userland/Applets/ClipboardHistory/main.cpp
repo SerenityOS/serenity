@@ -25,6 +25,7 @@ int main(int argc, char* argv[])
     auto app = GUI::Application::construct(argc, argv);
 
     Config::pledge_domains("ClipboardHistory");
+    Config::monitor_domain("ClipboardHistory");
 
     if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
         perror("pledge");

@@ -6,9 +6,9 @@
  */
 
 #include "ClipboardHistoryModel.h"
-#include <LibConfig/Client.h>
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
+#include <LibConfig/Client.h>
 
 NonnullRefPtr<ClipboardHistoryModel> ClipboardHistoryModel::create()
 {
@@ -120,4 +120,24 @@ void ClipboardHistoryModel::add_item(const GUI::Clipboard::DataAndType& item)
 void ClipboardHistoryModel::remove_item(int index)
 {
     m_history_items.remove(index);
+}
+
+void ClipboardHistoryModel::config_string_did_change(String const& domain, String const& group, String const& key, String const& value_string)
+{
+    if (domain != "ClipboardHistory" || group != "ClipboardHistory")
+        return;
+
+    // FIXME: Once we can get notified for `i32` changes, we can use that instead of this hack.
+    if (key == "NumHistoryItems") {
+        auto value_or_error = value_string.to_int();
+        if (!value_or_error.has_value())
+            return;
+        auto value = value_or_error.value();
+        if (value < (int)m_history_items.size()) {
+            m_history_items.remove(value, m_history_items.size() - value);
+            invalidate();
+        }
+        m_history_limit = value;
+        return;
+    }
 }
