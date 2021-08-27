@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Game.h"
-#include <LibCore/ConfigFile.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -28,14 +27,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto config = Core::ConfigFile::open_for_app("Pong");
-
     if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(config->filename().characters(), "rwc") < 0) {
         perror("unveil");
         return 1;
     }
