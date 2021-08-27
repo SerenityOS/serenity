@@ -126,7 +126,7 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
     if (m_boot_argument.starts_with("/dev/"sv)) {
         StringView storage_name = m_boot_argument.substring_view(5);
         for (auto& storage_device : m_storage_devices) {
-            if (storage_device.storage_name() == storage_name) {
+            if (storage_device.early_storage_name() == storage_name) {
                 m_boot_block_device = storage_device;
             }
         }

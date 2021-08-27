@@ -25,6 +25,7 @@
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
+#include <Kernel/Storage/ATADevice.h>
 #include <Kernel/Storage/StorageDevice.h>
 #include <Kernel/WaitQueue.h>
 
@@ -36,7 +37,6 @@ class IDEController;
 class IDEChannel : public RefCounted<IDEChannel>
     , public IRQHandler {
     friend class IDEController;
-    friend class PATADiskDevice;
     AK_MAKE_ETERNAL
 public:
     enum class ChannelType : u8 {
@@ -151,8 +151,8 @@ protected:
     volatile u8 m_device_error { 0 };
     EntropySource m_entropy_source;
 
-    RefPtr<StorageDevice> m_master;
-    RefPtr<StorageDevice> m_slave;
+    RefPtr<ATADevice> m_master;
+    RefPtr<ATADevice> m_slave;
 
     RefPtr<AsyncBlockDeviceRequest> m_current_request;
     u64 m_current_request_block_index { 0 };
