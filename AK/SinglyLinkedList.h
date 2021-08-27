@@ -149,6 +149,12 @@ public:
         m_tail = node;
     }
 
+    void consume_from(SinglyLinkedList &other_list)
+    {
+        while (!other_list.is_empty())
+            append(other_list.take_first());
+    }
+
     bool contains_slow(const T& value) const
     {
         return find(value) != end();
