@@ -19,9 +19,22 @@ class StorageDevice : public BlockDevice {
     friend class StorageManagement;
 
 public:
-    virtual u64 max_addressable_block() const { return m_max_addressable_block; }
+    // Note: this attribute describes the internal command set of a Storage device.
+    // For example, an ordinary harddrive utilizes the ATA command set, while
+    // an ATAPI device (e.g. Optical drive) that is connected to the ATA bus,
+    // is actually using SCSI commands (packets) encapsulated inside an ATA command.
+    // The IDE controller code being aware of the possibility of ATAPI devices attached
+    // to the ATA bus, will check whether the Command set is ATA or SCSI and will act
+    // accordingly.
+    enum class CommandSet {
+        PlainMemory,
+        SCSI,
+        ATA,
+        NVMe,
+    };
 
-    NonnullRefPtr<StorageController> controller() const;
+public:
+    virtual u64 max_addressable_block() const { return m_max_addressable_block; }
 
     // ^BlockDevice
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
@@ -30,19 +43,24 @@ public:
     virtual bool can_write(const OpenFileDescription&, size_t) const override;
     virtual void prepare_for_unplug() { m_partitions.clear(); }
 
-    StringView storage_name() const;
+    // FIXME: Remove this method after figuring out another scheme for naming.
+    StringView early_storage_name() const;
+
     NonnullRefPtrVector<DiskPartition> partitions() const { return m_partitions; }
 
+    virtual CommandSet command_set() const = 0;
+
 protected:
-    StorageDevice(const StorageController&, int, int, size_t, u64, NonnullOwnPtr<KString>);
+    StorageDevice(int, int, size_t, u64, NonnullOwnPtr<KString>);
     // ^DiskDevice
     virtual StringView class_name() const override;
 
 private:
     mutable IntrusiveListNode<StorageDevice, RefPtr<StorageDevice>> m_list_node;
-    NonnullRefPtr<StorageController> m_storage_controller;
     NonnullRefPtrVector<DiskPartition> m_partitions;
-    NonnullOwnPtr<KString> m_storage_device_name;
+
+    // FIXME: Remove this method after figuring out another scheme for naming.
+    NonnullOwnPtr<KString> m_early_storage_device_name;
     u64 m_max_addressable_block;
 };
 

@@ -22,7 +22,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/AHCI.h>
 #include <Kernel/Storage/AHCIPortHandler.h>
-#include <Kernel/Storage/StorageDevice.h>
+#include <Kernel/Storage/ATADevice.h>
 #include <Kernel/WaitQueue.h>
 
 namespace Kernel {
@@ -30,11 +30,11 @@ namespace Kernel {
 class AsyncBlockDeviceRequest;
 
 class AHCIPortHandler;
-class SATADiskDevice;
-class AHCIPort : public RefCounted<AHCIPort>
+class AHCIPort
+    : public RefCounted<AHCIPort>
     , public Weakable<AHCIPort> {
     friend class AHCIPortHandler;
-    friend class SATADiskDevice;
+    friend class AHCIController;
 
 public:
     UNMAP_AFTER_INIT static NonnullRefPtr<AHCIPort> create(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
@@ -114,7 +114,7 @@ private:
     RefPtr<Memory::PhysicalPage> m_command_list_page;
     OwnPtr<Memory::Region> m_command_list_region;
     RefPtr<Memory::PhysicalPage> m_fis_receive_page;
-    RefPtr<StorageDevice> m_connected_device;
+    RefPtr<ATADevice> m_connected_device;
 
     u32 m_port_index;
     volatile AHCI::PortRegisters& m_port_registers;

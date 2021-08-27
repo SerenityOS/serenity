@@ -12,9 +12,9 @@
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA.h>
+#include <Kernel/Storage/ATADiskDevice.h>
 #include <Kernel/Storage/IDEChannel.h>
 #include <Kernel/Storage/IDEController.h>
-#include <Kernel/Storage/PATADiskDevice.h>
 #include <Kernel/WorkQueue.h>
 
 namespace Kernel {
@@ -328,7 +328,7 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
 
         bool check_for_atapi = false;
         bool device_presence = true;
-        PATADiskDevice::InterfaceType interface_type = PATADiskDevice::InterfaceType::ATA;
+        bool command_set_is_atapi = false;
 
         size_t milliseconds_elapsed = 0;
         for (;;) {
@@ -344,7 +344,6 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
 
             if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRQ)) {
                 dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device appears to be ATA.", channel_type_string(), channel_string(i));
-                interface_type = PATADiskDevice::InterfaceType::ATA;
                 break;
             }
 
@@ -370,7 +369,7 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
             u8 ch = m_io_group.io_base().offset(ATA_REG_LBA2).in<u8>();
 
             if ((cl == 0x14 && ch == 0xEB) || (cl == 0x69 && ch == 0x96)) {
-                interface_type = PATADiskDevice::InterfaceType::ATAPI;
+                command_set_is_atapi = true;
                 dbgln("IDEChannel: {} {} device appears to be ATAPI. We're going to ignore it for now as we don't support it.", channel_type_string(), channel_string(i));
                 continue;
             } else {
@@ -409,11 +408,13 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
         if (identify_block.commands_and_feature_sets_supported[1] & (1 << 10))
             max_addressable_block = identify_block.user_addressable_logical_sectors_count;
 
-        dbgln("IDEChannel: {} {} {} device found: Name={}, Capacity={}, Capabilities={:#04x}", channel_type_string(), channel_string(i), interface_type == PATADiskDevice::InterfaceType::ATA ? "ATA" : "ATAPI", ((char*)bbuf.data() + 54), max_addressable_block * 512, capabilities);
+        dbgln("IDEChannel: {} {} {} device found: Name={}, Capacity={}, Capabilities={:#04x}", channel_type_string(), channel_string(i), !command_set_is_atapi ? "ATA" : "ATAPI", ((char*)bbuf.data() + 54), max_addressable_block * 512, capabilities);
+        // FIXME: Don't assume all drives will have logical sector size of 512 bytes.
+        ATADevice::Address address = { m_channel_type == ChannelType::Primary ? static_cast<u8>(0) : static_cast<u8>(1), static_cast<u8>(i) };
         if (i == 0) {
-            m_master = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Master, interface_type, capabilities, max_addressable_block);
+            m_master = ATADiskDevice::create(m_parent_controller, address, capabilities, 512, max_addressable_block);
         } else {
-            m_slave = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Slave, interface_type, capabilities, max_addressable_block);
+            m_slave = ATADiskDevice::create(m_parent_controller, address, capabilities, 512, max_addressable_block);
         }
     }
 }

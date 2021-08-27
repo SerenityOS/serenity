@@ -11,7 +11,7 @@
 #include <AK/Types.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/AHCI.h>
-#include <Kernel/Storage/StorageController.h>
+#include <Kernel/Storage/ATAController.h>
 #include <Kernel/Storage/StorageDevice.h>
 
 namespace Kernel {
@@ -19,7 +19,7 @@ namespace Kernel {
 class AsyncBlockDeviceRequest;
 class AHCIPortHandler;
 class AHCIPort;
-class AHCIController final : public StorageController
+class AHCIController final : public ATAController
     , public PCI::Device {
     friend class AHCIPortHandler;
     friend class AHCIPort;
@@ -32,7 +32,7 @@ public:
     virtual bool reset() override;
     virtual bool shutdown() override;
     virtual size_t devices_count() const override;
-    virtual void start_request(const StorageDevice&, AsyncBlockDeviceRequest&) override;
+    virtual void start_request(const ATADevice&, AsyncBlockDeviceRequest&) override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 
     const AHCI::HBADefinedCapabilities& hba_capabilities() const { return m_capabilities; };

@@ -10,9 +10,9 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Storage/ATADiskDevice.h>
 #include <Kernel/Storage/BMIDEChannel.h>
 #include <Kernel/Storage/IDEController.h>
-#include <Kernel/Storage/PATADiskDevice.h>
 
 namespace Kernel {
 
@@ -41,8 +41,18 @@ size_t IDEController::devices_count() const
     return count;
 }
 
-void IDEController::start_request(const StorageDevice&, AsyncBlockDeviceRequest&)
+void IDEController::start_request(const ATADevice& device, AsyncBlockDeviceRequest& request)
 {
+    auto& address = device.ata_address();
+    VERIFY(address.subport < 2);
+    switch (address.port) {
+    case 0:
+        m_channels[0].start_request(request, address.subport == 0 ? false : true, device.ata_capabilites());
+        return;
+    case 1:
+        m_channels[1].start_request(request, address.subport == 0 ? false : true, device.ata_capabilites());
+        return;
+    }
     VERIFY_NOT_REACHED();
 }
 
@@ -52,7 +62,7 @@ void IDEController::complete_current_request(AsyncDeviceRequest::RequestResult)
 }
 
 UNMAP_AFTER_INIT IDEController::IDEController(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
-    : StorageController()
+    : ATAController()
     , PCI::Device(device_identifier.address())
     , m_prog_if(device_identifier.prog_if())
     , m_interrupt_line(device_identifier.interrupt_line())
