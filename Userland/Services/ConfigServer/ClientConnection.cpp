@@ -50,6 +50,8 @@ static Core::ConfigFile& ensure_domain_config(String const& domain)
                 }
             }
         }
+        // FIXME: Refactor this whole thing so that we don't need a cache lookup here.
+        s_cache.get(domain).value()->config = new_config;
     };
     auto cache_entry = make<CachedDomain>(domain, config, watcher_or_error.release_value());
     s_cache.set(domain, move(cache_entry));
