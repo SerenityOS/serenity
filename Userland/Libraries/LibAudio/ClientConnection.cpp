@@ -54,4 +54,10 @@ void ClientConnection::main_mix_volume_changed(double volume)
         on_main_mix_volume_change(volume);
 }
 
+void ClientConnection::client_volume_changed(double volume)
+{
+    if (on_client_volume_change)
+        on_client_volume_change(volume);
+}
+
 }

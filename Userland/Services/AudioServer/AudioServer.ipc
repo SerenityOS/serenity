@@ -7,6 +7,8 @@ endpoint AudioServer
     get_muted() => (bool muted)
     get_main_mix_volume() => (double volume)
     set_main_mix_volume(double volume) => ()
+    get_self_volume() => (double volume)
+    set_self_volume(double volume) => ()
 
     // Audio device
     set_sample_rate(u16 sample_rate) => ()

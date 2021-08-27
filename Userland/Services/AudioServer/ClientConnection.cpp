@@ -53,6 +53,11 @@ void ClientConnection::did_change_main_mix_volume(Badge<Mixer>, double volume)
     async_main_mix_volume_changed(volume);
 }
 
+void ClientConnection::did_change_client_volume(Badge<ClientAudioStream>, double volume)
+{
+    async_client_volume_changed(volume);
+}
+
 Messages::AudioServer::GetMainMixVolumeResponse ClientConnection::get_main_mix_volume()
 {
     return m_mixer.main_volume();
@@ -71,6 +76,17 @@ Messages::AudioServer::GetSampleRateResponse ClientConnection::get_sample_rate()
 void ClientConnection::set_sample_rate(u16 sample_rate)
 {
     m_mixer.audiodevice_set_sample_rate(sample_rate);
+}
+
+Messages::AudioServer::GetSelfVolumeResponse ClientConnection::get_self_volume()
+{
+    return m_queue->volume().target();
+}
+
+void ClientConnection::set_self_volume(double volume)
+{
+    if (m_queue)
+        m_queue->set_volume(volume);
 }
 
 Messages::AudioServer::EnqueueBufferResponse ClientConnection::enqueue_buffer(Core::AnonymousBuffer const& buffer, i32 buffer_id, int sample_count)
