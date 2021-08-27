@@ -927,6 +927,7 @@ int Shell::builtin_time(int argc, const char** argv)
     auto commands = expand_aliases({ move(command) });
 
     Vector<int> iteration_times;
+    iteration_times.ensure_capacity(number_of_iterations);
 
     int exit_code = 1;
     for (int i = 0; i < number_of_iterations; ++i) {
@@ -936,7 +937,7 @@ int Shell::builtin_time(int argc, const char** argv)
             block_on_job(job);
             exit_code = job.exit_code();
         }
-        iteration_times.append(timer.elapsed());
+        iteration_times.unchecked_append(timer.elapsed());
     }
 
     if (number_of_iterations == 1) {
