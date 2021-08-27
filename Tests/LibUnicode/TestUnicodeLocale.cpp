@@ -146,6 +146,72 @@ TEST_CASE(parse_unicode_locale_id_with_unicode_locale_extension)
     pass("en-u-fff-gggg-xx-yyyy"sv, { { "fff"sv, "gggg"sv }, { { "xx"sv, { "yyyy"sv } } } });
 }
 
+TEST_CASE(parse_unicode_locale_id_with_transformed_extension)
+{
+    auto fail = [](StringView locale) {
+        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        EXPECT(!locale_id.has_value());
+    };
+    auto pass = [](StringView locale, Unicode::TransformedExtension const& expected_extension) {
+        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        VERIFY(locale_id.has_value());
+        EXPECT_EQ(locale_id->extensions.size(), 1u);
+
+        auto const& actual_extension = locale_id->extensions[0].get<Unicode::TransformedExtension>();
+
+        VERIFY(actual_extension.language.has_value() == expected_extension.language.has_value());
+        if (actual_extension.language.has_value()) {
+            EXPECT_EQ(actual_extension.language->language, expected_extension.language->language);
+            EXPECT_EQ(actual_extension.language->script, expected_extension.language->script);
+            EXPECT_EQ(actual_extension.language->region, expected_extension.language->region);
+            EXPECT_EQ(actual_extension.language->variants, expected_extension.language->variants);
+        }
+
+        EXPECT_EQ(actual_extension.fields.size(), expected_extension.fields.size());
+
+        for (size_t i = 0; i < actual_extension.fields.size(); ++i) {
+            auto const& actual_field = actual_extension.fields[i];
+            auto const& expected_field = expected_extension.fields[i];
+
+            EXPECT_EQ(actual_field.key, expected_field.key);
+            EXPECT_EQ(actual_field.values, expected_field.values);
+        }
+    };
+
+    fail("en-t"sv);
+    fail("en-t-"sv);
+    fail("en-t-a"sv);
+    fail("en-t-en-"sv);
+    fail("en-t-root"sv);
+    fail("en-t-aaaaaaaaa"sv);
+    fail("en-t-en-aaa"sv);
+    fail("en-t-en-latn-latn"sv);
+    fail("en-t-en-a"sv);
+    fail("en-t-en-00"sv);
+    fail("en-t-en-latn-0"sv);
+    fail("en-t-en-latn-00"sv);
+    fail("en-t-en-latn-xyz"sv);
+    fail("en-t-en-aaaaaaaaa"sv);
+    fail("en-t-en-latn-gb-aaaa"sv);
+    fail("en-t-en-latn-gb-aaaaaaaaa"sv);
+    fail("en-t-k0"sv);
+    fail("en-t-k0-aa"sv);
+    fail("en-t-k0-aaaaaaaaa"sv);
+
+    pass("en-t-en"sv, { Unicode::LanguageID { false, "en"sv }, {} });
+    pass("en-t-en-latn"sv, { Unicode::LanguageID { false, "en"sv, "latn"sv }, {} });
+    pass("en-t-en-us"sv, { Unicode::LanguageID { false, "en"sv, {}, "us"sv }, {} });
+    pass("en-t-en-latn-us"sv, { Unicode::LanguageID { false, "en"sv, "latn"sv, "us"sv }, {} });
+    pass("en-t-en-posix"sv, { Unicode::LanguageID { false, "en"sv, {}, {}, { "posix"sv } }, {} });
+    pass("en-t-en-latn-posix"sv, { Unicode::LanguageID { false, "en"sv, "latn"sv, {}, { "posix"sv } }, {} });
+    pass("en-t-en-us-posix"sv, { Unicode::LanguageID { false, "en"sv, {}, "us"sv, { "posix"sv } }, {} });
+    pass("en-t-en-latn-us-posix"sv, { Unicode::LanguageID { false, "en"sv, "latn"sv, "us"sv, { "posix"sv } }, {} });
+    pass("en-t-k0-aaa"sv, { {}, { { "k0"sv, { "aaa"sv } } } });
+    pass("en-t-k0-aaa-bbbb"sv, { {}, { { "k0"sv, { "aaa"sv, "bbbb" } } } });
+    pass("en-t-k0-aaa-k1-bbbb"sv, { {}, { { "k0"sv, { "aaa"sv } }, { "k1"sv, { "bbbb"sv } } } });
+    pass("en-t-en-k0-aaa"sv, { Unicode::LanguageID { false, "en"sv }, { { "k0"sv, { "aaa"sv } } } });
+}
+
 TEST_CASE(canonicalize_unicode_locale_id)
 {
     auto test = [](StringView locale, StringView expected_canonical_locale) {
