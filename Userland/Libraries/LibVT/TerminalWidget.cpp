@@ -869,8 +869,21 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
         m_auto_scroll_direction = AutoScrollDirection::None;
 
     VT::Position old_selection_end = m_selection.end();
-    m_selection.set_end(position);
-    if (old_selection_end != m_selection.end()) {
+    VT::Position old_selection_start = m_selection.start();
+
+    if (m_triple_click_timer.is_valid()) {
+        int start_column = 0;
+        int end_column = m_terminal.columns() - 1;
+
+        if (position.row() < m_left_mousedown_position_buffer.row())
+            m_selection.set({ position.row(), start_column }, { m_left_mousedown_position_buffer.row(), end_column });
+        else
+            m_selection.set({ m_left_mousedown_position_buffer.row(), start_column }, { position.row(), end_column });
+    } else {
+        m_selection.set_end(position);
+    }
+
+    if (old_selection_end != m_selection.end() || old_selection_start != m_selection.start()) {
         update_copy_action();
         update();
     }
