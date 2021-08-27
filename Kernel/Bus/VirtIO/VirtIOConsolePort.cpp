@@ -8,27 +8,27 @@
 #include <Kernel/Bus/VirtIO/VirtIOConsole.h>
 #include <Kernel/Bus/VirtIO/VirtIOConsolePort.h>
 
-namespace Kernel {
+namespace Kernel::VirtIO {
 
-unsigned VirtIOConsolePort::next_device_id = 0;
+unsigned ConsolePort::next_device_id = 0;
 
-VirtIOConsolePort::VirtIOConsolePort(unsigned port, VirtIOConsole& console)
+ConsolePort::ConsolePort(unsigned port, VirtIO::Console& console)
     : CharacterDevice(229, next_device_id++)
     , m_console(console)
     , m_port(port)
 {
-    m_receive_buffer = make<Memory::RingBuffer>("VirtIOConsolePort Receive", RINGBUFFER_SIZE);
-    m_transmit_buffer = make<Memory::RingBuffer>("VirtIOConsolePort Transmit", RINGBUFFER_SIZE);
+    m_receive_buffer = make<Memory::RingBuffer>("VirtIO::ConsolePort Receive", RINGBUFFER_SIZE);
+    m_transmit_buffer = make<Memory::RingBuffer>("VirtIO::ConsolePort Transmit", RINGBUFFER_SIZE);
     m_receive_queue = m_port == 0 ? 0 : m_port * 2 + 2;
     m_transmit_queue = m_port == 0 ? 1 : m_port * 2 + 3;
     init_receive_buffer();
 }
 
-void VirtIOConsolePort::init_receive_buffer()
+void ConsolePort::init_receive_buffer()
 {
     auto& queue = m_console.get_queue(m_receive_queue);
     SpinlockLocker queue_lock(queue.lock());
-    VirtIOQueueChain chain(queue);
+    QueueChain chain(queue);
 
     auto buffer_start = m_receive_buffer->start_of_region();
     auto did_add_buffer = chain.add_buffer_to_chain(buffer_start, RINGBUFFER_SIZE, BufferType::DeviceWritable);
@@ -36,15 +36,15 @@ void VirtIOConsolePort::init_receive_buffer()
     m_console.supply_chain_and_notify(m_receive_queue, chain);
 }
 
-void VirtIOConsolePort::handle_queue_update(Badge<VirtIOConsole>, u16 queue_index)
+void ConsolePort::handle_queue_update(Badge<VirtIO::Console>, u16 queue_index)
 {
-    dbgln_if(VIRTIO_DEBUG, "VirtIOConsolePort: Handle queue update for port {}", m_port);
+    dbgln_if(VIRTIO_DEBUG, "VirtIO::ConsolePort: Handle queue update for port {}", m_port);
     VERIFY(queue_index == m_transmit_queue || queue_index == m_receive_queue);
     if (queue_index == m_receive_queue) {
         auto& queue = m_console.get_queue(m_receive_queue);
         SpinlockLocker queue_lock(queue.lock());
         size_t used;
-        VirtIOQueueChain popped_chain = queue.pop_used_buffer_chain(used);
+        QueueChain popped_chain = queue.pop_used_buffer_chain(used);
 
         SpinlockLocker ringbuffer_lock(m_receive_buffer->lock());
         auto used_space = m_receive_buffer->reserve_space(used).value();
@@ -55,7 +55,7 @@ void VirtIOConsolePort::handle_queue_update(Badge<VirtIOConsole>, u16 queue_inde
         VERIFY(!queue.new_data_available());
         popped_chain.release_buffer_slots_to_queue();
 
-        VirtIOQueueChain new_chain(queue);
+        QueueChain new_chain(queue);
         if (remaining_space != 0) {
             new_chain.add_buffer_to_chain(used_space.offset(used), remaining_space, BufferType::DeviceWritable);
             m_console.supply_chain_and_notify(m_receive_queue, new_chain);
@@ -69,7 +69,7 @@ void VirtIOConsolePort::handle_queue_update(Badge<VirtIOConsole>, u16 queue_inde
         auto& queue = m_console.get_queue(m_transmit_queue);
         SpinlockLocker queue_lock(queue.lock());
         size_t used;
-        VirtIOQueueChain popped_chain = queue.pop_used_buffer_chain(used);
+        QueueChain popped_chain = queue.pop_used_buffer_chain(used);
         do {
             popped_chain.for_each([this](PhysicalAddress address, size_t length) {
                 m_transmit_buffer->reclaim_space(address, length);
@@ -82,12 +82,12 @@ void VirtIOConsolePort::handle_queue_update(Badge<VirtIOConsole>, u16 queue_inde
     }
 }
 
-bool VirtIOConsolePort::can_read(const FileDescription&, size_t) const
+bool ConsolePort::can_read(const FileDescription&, size_t) const
 {
     return m_receive_buffer->used_bytes() > 0;
 }
 
-KResultOr<size_t> VirtIOConsolePort::read(FileDescription& desc, u64, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> ConsolePort::read(FileDescription& desc, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (!size)
         return 0;
@@ -103,7 +103,7 @@ KResultOr<size_t> VirtIOConsolePort::read(FileDescription& desc, u64, UserOrKern
     if (m_receive_buffer_exhausted && m_receive_buffer->used_bytes() == 0) {
         auto& queue = m_console.get_queue(m_receive_queue);
         SpinlockLocker queue_lock(queue.lock());
-        VirtIOQueueChain new_chain(queue);
+        QueueChain new_chain(queue);
         new_chain.add_buffer_to_chain(m_receive_buffer->start_of_region(), RINGBUFFER_SIZE, BufferType::DeviceWritable);
         m_console.supply_chain_and_notify(m_receive_queue, new_chain);
         m_receive_buffer_exhausted = false;
@@ -112,12 +112,12 @@ KResultOr<size_t> VirtIOConsolePort::read(FileDescription& desc, u64, UserOrKern
     return bytes_copied;
 }
 
-bool VirtIOConsolePort::can_write(const FileDescription&, size_t) const
+bool ConsolePort::can_write(const FileDescription&, size_t) const
 {
     return m_console.get_queue(m_transmit_queue).has_free_slots() && m_transmit_buffer->has_space();
 }
 
-KResultOr<size_t> VirtIOConsolePort::write(FileDescription& desc, u64, const UserOrKernelBuffer& data, size_t size)
+KResultOr<size_t> ConsolePort::write(FileDescription& desc, u64, const UserOrKernelBuffer& data, size_t size)
 {
     if (!size)
         return 0;
@@ -129,7 +129,7 @@ KResultOr<size_t> VirtIOConsolePort::write(FileDescription& desc, u64, const Use
     if (!can_write(desc, size))
         return EAGAIN;
 
-    VirtIOQueueChain chain(queue);
+    QueueChain chain(queue);
 
     size_t total_bytes_copied = 0;
     do {
@@ -151,12 +151,12 @@ KResultOr<size_t> VirtIOConsolePort::write(FileDescription& desc, u64, const Use
     return total_bytes_copied;
 }
 
-String VirtIOConsolePort::device_name() const
+String ConsolePort::device_name() const
 {
     return String::formatted("hvc{}p{}", m_console.device_id(), m_port);
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> VirtIOConsolePort::open(int options)
+KResultOr<NonnullRefPtr<FileDescription>> ConsolePort::open(int options)
 {
     if (!m_open)
         m_console.send_open_control_message(m_port, true);
