@@ -38,6 +38,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(days_in_year_getter);
     JS_DECLARE_NATIVE_FUNCTION(months_in_year_getter);
     JS_DECLARE_NATIVE_FUNCTION(in_leap_year_getter);
+    JS_DECLARE_NATIVE_FUNCTION(era_getter);
     JS_DECLARE_NATIVE_FUNCTION(with_plain_time);
     JS_DECLARE_NATIVE_FUNCTION(with_plain_date);
     JS_DECLARE_NATIVE_FUNCTION(with_calendar);
