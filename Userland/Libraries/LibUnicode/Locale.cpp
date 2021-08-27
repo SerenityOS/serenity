@@ -53,7 +53,26 @@ bool is_unicode_variant_subtag(StringView subtag)
     return false;
 }
 
-Optional<LanguageID> parse_unicode_language_id(StringView language)
+static Optional<StringView> consume_next_segment(GenericLexer& lexer, bool with_separator)
+{
+    constexpr auto is_separator = is_any_of("-_"sv);
+
+    if (with_separator) {
+        if (!lexer.next_is(is_separator))
+            return {};
+        lexer.ignore();
+    }
+
+    auto segment = lexer.consume_until(is_separator);
+    if (segment.is_empty()) {
+        lexer.retreat(with_separator);
+        return {};
+    }
+
+    return segment;
+}
+
+static Optional<LanguageID> parse_unicode_language_id(GenericLexer& lexer)
 {
     // https://unicode.org/reports/tr35/#Unicode_language_identifier
     //
@@ -64,48 +83,90 @@ Optional<LanguageID> parse_unicode_language_id(StringView language)
     //                       (sep unicode_variant_subtag)*
     LanguageID language_id {};
 
-    if (language == "root"sv) {
+    if (lexer.consume_specific("root"sv)) {
         language_id.is_root = true;
         return language_id;
     }
 
-    auto segments = language.split_view_if(is_any_of("-_"sv), true); // keep_empty=true to ensure valid data follows a separator.
-    size_t index = 0;
+    enum class ParseState {
+        ParsingLanguageOrScript,
+        ParsingScript,
+        ParsingRegion,
+        ParsingVariant,
+        Done,
+    };
 
-    if (segments.size() == index)
-        return {};
+    auto state = ParseState::ParsingLanguageOrScript;
 
-    if (is_unicode_language_subtag(segments[index])) {
-        language_id.language = segments[index];
-        if (segments.size() == ++index)
-            return language_id;
-    }
-
-    if (is_unicode_script_subtag(segments[index])) {
-        language_id.script = segments[index];
-        if (segments.size() == ++index)
-            return language_id;
-    } else if (!language_id.language.has_value()) {
-        return {};
-    }
-
-    if (is_unicode_region_subtag(segments[index])) {
-        language_id.region = segments[index];
-        if (segments.size() == ++index)
-            return language_id;
-    }
-
-    while (index < segments.size()) {
-        if (!is_unicode_variant_subtag(segments[index]))
+    while (!lexer.is_eof() && (state != ParseState::Done)) {
+        auto segment = consume_next_segment(lexer, state != ParseState::ParsingLanguageOrScript);
+        if (!segment.has_value())
             return {};
-        language_id.variants.append(segments[index++]);
+
+        switch (state) {
+        case ParseState::ParsingLanguageOrScript:
+            if (is_unicode_language_subtag(*segment)) {
+                state = ParseState::ParsingScript;
+                language_id.language = *segment;
+            } else if (is_unicode_script_subtag(*segment)) {
+                state = ParseState::ParsingRegion;
+                language_id.script = *segment;
+            } else {
+                return {};
+            }
+            break;
+
+        case ParseState::ParsingScript:
+            if (is_unicode_script_subtag(*segment)) {
+                state = ParseState::ParsingRegion;
+                language_id.script = *segment;
+                break;
+            }
+
+            state = ParseState::ParsingRegion;
+            [[fallthrough]];
+
+        case ParseState::ParsingRegion:
+            if (is_unicode_region_subtag(*segment)) {
+                state = ParseState::ParsingVariant;
+                language_id.region = *segment;
+                break;
+            }
+
+            state = ParseState::ParsingVariant;
+            [[fallthrough]];
+
+        case ParseState::ParsingVariant:
+            if (is_unicode_variant_subtag(*segment)) {
+                language_id.variants.append(*segment);
+            } else {
+                lexer.retreat(segment->length() + 1);
+                state = ParseState::Done;
+            }
+            break;
+
+        default:
+            VERIFY_NOT_REACHED();
+        }
     }
+
+    return language_id;
+}
+
+Optional<LanguageID> parse_unicode_language_id(StringView language)
+{
+    GenericLexer lexer { language };
+
+    auto language_id = parse_unicode_language_id(lexer);
+    if (!lexer.is_eof())
+        return {};
 
     return language_id;
 }
 
 Optional<LocaleID> parse_unicode_locale_id(StringView locale)
 {
+    GenericLexer lexer { locale };
     LocaleID locale_id {};
 
     // https://unicode.org/reports/tr35/#Unicode_locale_identifier
@@ -113,11 +174,15 @@ Optional<LocaleID> parse_unicode_locale_id(StringView locale)
     // unicode_locale_id = unicode_language_id
     //                     extensions*
     //                     pu_extensions?
-    auto language_id = parse_unicode_language_id(locale);
+    auto language_id = parse_unicode_language_id(lexer);
     if (!language_id.has_value())
         return {};
 
     // FIXME: Handle extensions and pu_extensions.
+
+    if (!lexer.is_eof())
+        return {};
+
     return LocaleID { language_id.release_value() };
 }
 
