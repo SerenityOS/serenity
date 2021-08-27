@@ -38,6 +38,7 @@ void PlainTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.nanosecond, nanosecond_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toPlainDateTime, to_plain_date_time, 1, attr);
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
@@ -145,6 +146,48 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::nanosecond_getter)
 
     // 3. Return 𝔽(temporalTime.[[ISONanosecond]]).
     return Value(temporal_time->iso_nanosecond());
+}
+
+// 4.3.16 Temporal.PlainTime.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.equals
+JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::equals)
+{
+    // 1. Let temporalTime be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
+    auto* temporal_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Set other to ? ToTemporalTime(other).
+    auto* other = to_temporal_time(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 4. If temporalTime.[[ISOHour]] ≠ other.[[ISOHour]], return false.
+    if (temporal_time->iso_hour() != other->iso_hour())
+        return Value(false);
+
+    // 5. If temporalTime.[[ISOMinute]] ≠ other.[[ISOMinute]], return false.
+    if (temporal_time->iso_minute() != other->iso_minute())
+        return Value(false);
+
+    // 6. If temporalTime.[[ISOSecond]] ≠ other.[[ISOSecond]], return false.
+    if (temporal_time->iso_second() != other->iso_second())
+        return Value(false);
+
+    // 7. If temporalTime.[[ISOMillisecond]] ≠ other.[[ISOMillisecond]], return false.
+    if (temporal_time->iso_millisecond() != other->iso_millisecond())
+        return Value(false);
+
+    // 8. If temporalTime.[[ISOMicrosecond]] ≠ other.[[ISOMicrosecond]], return false.
+    if (temporal_time->iso_microsecond() != other->iso_microsecond())
+        return Value(false);
+
+    // 9. If temporalTime.[[ISONanosecond]] ≠ other.[[ISONanosecond]], return false.
+    if (temporal_time->iso_nanosecond() != other->iso_nanosecond())
+        return Value(false);
+
+    // 10. Return true.
+    return Value(true);
 }
 
 // 4.3.17 Temporal.PlainTime.prototype.toPlainDateTime ( temporalDate ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.toplaindatetime
