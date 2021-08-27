@@ -400,6 +400,45 @@ static Optional<Extension> parse_extension(GenericLexer& lexer)
     return {};
 }
 
+static Vector<StringView> parse_private_use_extensions(GenericLexer& lexer)
+{
+    // https://unicode.org/reports/tr35/#pu_extensions
+    //
+    // pu_extensions = = sep [xX] (sep alphanum{1,8})+ ;
+    size_t starting_position = lexer.tell();
+
+    auto header = consume_next_segment(lexer);
+    if (!header.has_value())
+        return {};
+
+    auto parse_values = [&]() -> Vector<StringView> {
+        Vector<StringView> extensions;
+
+        while (true) {
+            auto segment = consume_next_segment(lexer);
+            if (!segment.has_value())
+                break;
+
+            if ((segment->length() < 1) || (segment->length() > 8) || !all_of(*segment, is_ascii_alphanumeric)) {
+                lexer.retreat(segment->length() + 1);
+                break;
+            }
+
+            extensions.append(*segment);
+        }
+
+        return extensions;
+    };
+
+    if ((header->length() == 1) && (((*header)[0] == 'x') || ((*header)[0] == 'X'))) {
+        if (auto extensions = parse_values(); !extensions.is_empty())
+            return extensions;
+    }
+
+    lexer.retreat(lexer.tell() - starting_position);
+    return {};
+}
+
 Optional<LanguageID> parse_unicode_language_id(StringView language)
 {
     GenericLexer lexer { language };
@@ -433,7 +472,7 @@ Optional<LocaleID> parse_unicode_locale_id(StringView locale)
         locale_id.extensions.append(extension.release_value());
     }
 
-    // FIXME: Handle pu_extensions.
+    locale_id.private_use_extensions = parse_private_use_extensions(lexer);
 
     if (!lexer.is_eof())
         return {};
