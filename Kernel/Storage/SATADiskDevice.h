@@ -37,7 +37,7 @@ private:
 
     // ^DiskDevice
     virtual StringView class_name() const override;
-    NonnullRefPtr<AHCIPort> m_port;
+    WeakPtr<AHCIPort> m_port;
 };
 
 }
