@@ -93,11 +93,12 @@ set(KERNEL_SOURCES
     Storage/AHCIController.cpp
     Storage/AHCIPort.cpp
     Storage/AHCIPortHandler.cpp
-    Storage/SATADiskDevice.cpp
+    Storage/ATADevice.cpp
+    Storage/ATADiskDevice.cpp
+    Storage/ATAPIDiscDevice.cpp
     Storage/BMIDEChannel.cpp
     Storage/IDEController.cpp
     Storage/IDEChannel.cpp
-    Storage/PATADiskDevice.cpp
     Storage/RamdiskController.cpp
     Storage/RamdiskDevice.cpp
     Storage/StorageManagement.cpp

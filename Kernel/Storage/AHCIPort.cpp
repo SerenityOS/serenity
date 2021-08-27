@@ -14,7 +14,7 @@
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Storage/AHCIPort.h>
 #include <Kernel/Storage/ATA.h>
-#include <Kernel/Storage/SATADiskDevice.h>
+#include <Kernel/Storage/ATADiskDevice.h>
 #include <Kernel/Storage/StorageManagement.h>
 #include <Kernel/WorkQueue.h>
 
@@ -319,7 +319,7 @@ bool AHCIPort::initialize(SpinlockLocker<Spinlock>& main_lock)
 
         // FIXME: We don't support ATAPI devices yet, so for now we don't "create" them
         if (!is_atapi_attached()) {
-            m_connected_device = SATADiskDevice::create(m_parent_handler->hba_controller(), *this, logical_sector_size, max_addressable_sector);
+            m_connected_device = ATADiskDevice::create(m_parent_handler->hba_controller(), { m_port_index, 0 }, 0, logical_sector_size, max_addressable_sector);
         } else {
             dbgln("AHCI Port {}: Ignoring ATAPI devices for now as we don't currently support them.", representative_port_index());
         }

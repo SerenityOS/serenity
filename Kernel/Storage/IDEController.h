@@ -9,15 +9,15 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Storage/ATAController.h>
 #include <Kernel/Storage/IDEChannel.h>
-#include <Kernel/Storage/StorageController.h>
 #include <Kernel/Storage/StorageDevice.h>
 
 namespace Kernel {
 
 class AsyncBlockDeviceRequest;
 
-class IDEController final : public StorageController
+class IDEController final : public ATAController
     , public PCI::Device {
     AK_MAKE_ETERNAL
 public:
@@ -28,7 +28,7 @@ public:
     virtual bool reset() override;
     virtual bool shutdown() override;
     virtual size_t devices_count() const override;
-    virtual void start_request(const StorageDevice&, AsyncBlockDeviceRequest&) override;
+    virtual void start_request(const ATADevice&, AsyncBlockDeviceRequest&) override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 
     bool is_bus_master_capable() const;

@@ -31,11 +31,6 @@ size_t RamdiskController::devices_count() const
     return m_devices.size();
 }
 
-void RamdiskController::start_request(const StorageDevice&, AsyncBlockDeviceRequest&)
-{
-    VERIFY_NOT_REACHED();
-}
-
 void RamdiskController::complete_current_request(AsyncDeviceRequest::RequestResult)
 {
     VERIFY_NOT_REACHED();
