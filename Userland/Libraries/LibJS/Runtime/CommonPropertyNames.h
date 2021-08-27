@@ -136,6 +136,7 @@ namespace JS {
     P(epochSeconds)                          \
     P(equals)                                \
     P(era)                                   \
+    P(eraYear)                               \
     P(error)                                 \
     P(errors)                                \
     P(escape)                                \
