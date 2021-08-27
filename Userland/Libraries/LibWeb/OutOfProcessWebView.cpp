@@ -402,6 +402,22 @@ void OutOfProcessWebView::inspect_dom_tree()
     client().async_inspect_dom_tree();
 }
 
+Optional<OutOfProcessWebView::DOMNodeProperties> OutOfProcessWebView::inspect_dom_node(i32 node_id)
+{
+    auto response = client().inspect_dom_node(node_id);
+    if (!response.has_style())
+        return {};
+    return DOMNodeProperties {
+        .specified_values_json = response.specified_style(),
+        .computed_values_json = response.computed_style()
+    };
+}
+
+void OutOfProcessWebView::clear_inspected_dom_node()
+{
+    client().inspect_dom_node(0);
+}
+
 void OutOfProcessWebView::js_console_initialize()
 {
     client().async_js_console_initialize();

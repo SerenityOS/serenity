@@ -31,7 +31,15 @@ public:
 
     void debug_request(const String& request, const String& argument = {});
     void get_source();
+
     void inspect_dom_tree();
+    struct DOMNodeProperties {
+        String specified_values_json;
+        String computed_values_json;
+    };
+    Optional<DOMNodeProperties> inspect_dom_node(i32 node_id);
+    void clear_inspected_dom_node();
+
     void js_console_initialize();
     void js_console_input(const String& js_source);
 
