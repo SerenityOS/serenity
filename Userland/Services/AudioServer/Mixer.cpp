@@ -49,9 +49,9 @@ Mixer::~Mixer()
 {
 }
 
-NonnullRefPtr<BufferQueue> Mixer::create_queue(ClientConnection& client)
+NonnullRefPtr<ClientAudioStream> Mixer::create_queue(ClientConnection& client)
 {
-    auto queue = adopt_ref(*new BufferQueue(client));
+    auto queue = adopt_ref(*new ClientAudioStream(client));
     pthread_mutex_lock(&m_pending_mutex);
     m_pending_mixing.append(*queue);
     m_added_queue = true;
@@ -191,12 +191,12 @@ void Mixer::request_setting_sync()
     }
 }
 
-BufferQueue::BufferQueue(ClientConnection& client)
+ClientAudioStream::ClientAudioStream(ClientConnection& client)
     : m_client(client)
 {
 }
 
-void BufferQueue::enqueue(NonnullRefPtr<Audio::Buffer>&& buffer)
+void ClientAudioStream::enqueue(NonnullRefPtr<Audio::Buffer>&& buffer)
 {
     m_remaining_samples += buffer->sample_count();
     m_queue.enqueue(move(buffer));
