@@ -16,7 +16,7 @@
 namespace Kernel::Graphics::VirtIOGPU {
 
 GPU::GPU(PCI::Address address)
-    : VirtIODevice(address, "GPU")
+    : VirtIODevice(address)
     , m_scratch_space(MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Memory::Region::Access::ReadWrite))
 {
     VERIFY(!!m_scratch_space);
@@ -65,7 +65,7 @@ bool GPU::handle_device_config_change()
     auto events = get_pending_events();
     if (events & VIRTIO_GPU_EVENT_DISPLAY) {
         // The host window was resized, in SerenityOS we completely ignore this event
-        dbgln_if(VIRTIO_DEBUG, "{}: Ignoring virtio gpu display resize event", m_class_name);
+        dbgln_if(VIRTIO_DEBUG, "VirtIOGPU: Ignoring virtio gpu display resize event");
         clear_pending_events(VIRTIO_GPU_EVENT_DISPLAY);
     }
     if (events & ~VIRTIO_GPU_EVENT_DISPLAY) {

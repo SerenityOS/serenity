@@ -19,12 +19,13 @@ class VirtIORNG final
     : public RefCounted<VirtIORNG>
     , public VirtIODevice {
 public:
-    virtual StringView purpose() const override { return m_class_name; }
+    virtual StringView purpose() const override { return class_name(); }
 
     VirtIORNG(PCI::Address);
     virtual ~VirtIORNG() override;
 
 private:
+    virtual StringView class_name() const override { return "VirtIOConsole"; }
     virtual bool handle_device_config_change() override;
     virtual void handle_queue_update(u16 queue_index) override;
     void request_entropy_from_host();

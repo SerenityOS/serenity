@@ -10,7 +10,7 @@
 namespace Kernel {
 
 UNMAP_AFTER_INIT VirtIORNG::VirtIORNG(PCI::Address address)
-    : VirtIODevice(address, "VirtIORNG")
+    : VirtIODevice(address)
 {
     bool success = negotiate_features([&](auto) {
         return 0;

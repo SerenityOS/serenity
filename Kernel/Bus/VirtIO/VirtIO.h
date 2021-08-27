@@ -82,6 +82,7 @@ struct Configuration {
 class VirtIO {
 public:
     static void detect();
+    static StringView determine_device_class(const PCI::Address& address);
 };
 
 class VirtIODevice
@@ -91,9 +92,9 @@ public:
     virtual ~VirtIODevice() override;
 
 protected:
-    VirtIODevice(PCI::Address, String);
-    const String m_class_name;
+    explicit VirtIODevice(PCI::Address);
 
+    virtual StringView class_name() const = 0;
     struct MappedMMIO {
         OwnPtr<Memory::Region> base;
         size_t size { 0 };

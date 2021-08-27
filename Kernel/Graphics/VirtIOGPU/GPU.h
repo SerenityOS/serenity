@@ -77,6 +77,8 @@ public:
     void flush_dirty_rectangle(ScanoutID, Protocol::Rect const& dirty_rect, ResourceID);
 
 private:
+    virtual StringView class_name() const override { return "VirtIOGPU"; }
+
     struct Scanout {
         RefPtr<FrameBufferDevice> framebuffer;
         RefPtr<Console> console;
