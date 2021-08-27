@@ -96,7 +96,7 @@ private:
 
         Gfx::FloatRect top_rect() const
         {
-            return { x - width, 0, width, gap_top_y };
+            return { x - width, -50, width, gap_top_y + 50 };
         }
 
         Gfx::FloatRect bottom_rect() const
