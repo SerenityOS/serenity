@@ -155,6 +155,7 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 void DOMTreeModel::map_dom_nodes_to_parent(JsonObject const* parent, JsonObject const* node)
 {
     m_dom_node_to_parent_map.set(node, parent);
+    m_node_id_to_dom_node_map.set(node->get("id").to_i32(), node);
 
     auto const* children = get_children(*node);
     if (!children)
@@ -164,6 +165,23 @@ void DOMTreeModel::map_dom_nodes_to_parent(JsonObject const* parent, JsonObject 
         auto const& child_node = child.as_object();
         map_dom_nodes_to_parent(node, &child_node);
     });
+}
+
+GUI::ModelIndex DOMTreeModel::index_for_node(i32 node_id) const
+{
+    auto node = m_node_id_to_dom_node_map.get(node_id).value_or(nullptr);
+    if (node) {
+        auto* parent = get_parent(*node);
+        auto parent_children = get_children(*parent);
+        for (size_t i = 0; i < parent_children->size(); i++) {
+            if (&parent_children->at(i).as_object() == node) {
+                return create_index(i, 0, node);
+            }
+        }
+    }
+
+    dbgln("Didn't find index for node {}!", node_id);
+    return {};
 }
 
 }

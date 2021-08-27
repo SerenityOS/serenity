@@ -33,6 +33,8 @@ public:
     virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex& parent = GUI::ModelIndex()) const override;
     virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
 
+    GUI::ModelIndex index_for_node(i32 node_id) const;
+
 private:
     explicit DOMTreeModel(JsonObject);
 
@@ -57,6 +59,7 @@ private:
     GUI::Icon m_text_icon;
     JsonObject m_dom_tree;
     HashMap<JsonObject const*, JsonObject const*> m_dom_node_to_parent_map;
+    HashMap<i32, JsonObject const*> m_node_id_to_dom_node_map;
 };
 
 }
