@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "ProcessorParameterSlider.h"
+#include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/Frame.h>
 
 class TrackManager;
@@ -33,7 +35,7 @@ private:
     RefPtr<GUI::Label> m_decay_label;
     RefPtr<GUI::Label> m_sustain_label;
     RefPtr<GUI::Label> m_release_label;
-    RefPtr<GUI::Label> m_delay_label;
+    NonnullRefPtrVector<GUI::Label> m_delay_labels;
 
     RefPtr<GUI::Widget> m_values_container;
     RefPtr<GUI::Label> m_volume_value;
@@ -43,7 +45,7 @@ private:
     RefPtr<GUI::Label> m_decay_value;
     RefPtr<GUI::Label> m_sustain_value;
     RefPtr<GUI::Label> m_release_value;
-    RefPtr<GUI::Label> m_delay_value;
+    NonnullRefPtrVector<GUI::Label> m_delay_values;
 
     RefPtr<GUI::Widget> m_knobs_container;
     RefPtr<GUI::Slider> m_volume_knob;
@@ -53,7 +55,7 @@ private:
     RefPtr<GUI::Slider> m_decay_knob;
     RefPtr<GUI::Slider> m_sustain_knob;
     RefPtr<GUI::Slider> m_release_knob;
-    RefPtr<GUI::Slider> m_delay_knob;
+    NonnullRefPtrVector<ProcessorParameterSlider> m_delay_knobs;
 
     bool m_change_underlying { true };
 };
