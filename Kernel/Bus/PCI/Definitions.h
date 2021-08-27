@@ -32,8 +32,8 @@ namespace Kernel {
 #define PCI_BAR3 0x1C                 // u32
 #define PCI_BAR4 0x20                 // u32
 #define PCI_BAR5 0x24                 // u32
-#define PCI_SUBSYSTEM_ID 0x2C         // u16
-#define PCI_SUBSYSTEM_VENDOR_ID 0x2E  // u16
+#define PCI_SUBSYSTEM_VENDOR_ID 0x2C  // u16
+#define PCI_SUBSYSTEM_ID 0x2E         // u16
 #define PCI_CAPABILITIES_POINTER 0x34 // u8
 #define PCI_INTERRUPT_LINE 0x3C       // byte
 #define PCI_SECONDARY_BUS 0x19        // byte
