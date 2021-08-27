@@ -5,6 +5,7 @@
  */
 
 #include "ClipboardHistoryModel.h"
+#include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ImageWidget.h>
@@ -22,6 +23,8 @@ int main(int argc, char* argv[])
     }
 
     auto app = GUI::Application::construct(argc, argv);
+
+    Config::pledge_domains("ClipboardHistory");
 
     if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
         perror("pledge");

@@ -1,16 +1,23 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ClipboardHistoryModel.h"
+#include <LibConfig/Client.h>
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
 
 NonnullRefPtr<ClipboardHistoryModel> ClipboardHistoryModel::create()
 {
     return adopt_ref(*new ClipboardHistoryModel());
+}
+
+ClipboardHistoryModel::ClipboardHistoryModel()
+    : m_history_limit(Config::read_i32("ClipboardHistory", "ClipboardHistory", "NumHistoryItems", 20))
+{
 }
 
 ClipboardHistoryModel::~ClipboardHistoryModel()
