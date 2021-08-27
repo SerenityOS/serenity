@@ -17,7 +17,7 @@ class Buffer;
 
 namespace AudioServer {
 
-class BufferQueue;
+class ClientAudioStream;
 class Mixer;
 
 class ClientConnection final : public IPC::ClientConnection<AudioClientEndpoint, AudioServerEndpoint> {
@@ -49,7 +49,7 @@ private:
     virtual Messages::AudioServer::GetSampleRateResponse get_sample_rate() override;
 
     Mixer& m_mixer;
-    RefPtr<BufferQueue> m_queue;
+    RefPtr<ClientAudioStream> m_queue;
 };
 
 }
