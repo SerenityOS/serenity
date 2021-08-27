@@ -35,90 +35,90 @@ template<typename T1 = Void<>, typename T2 = Void<>>
 class PairedPtr : public BaseValueType<T1>
 {
 public:
-	using BaseType = BaseValueType<T1>;
-	using ConnectedPairedPtrType = PairedPtr<T2, T1>;
+    using BaseType = BaseValueType<T1>;
+    using ConnectedPairedPtrType = PairedPtr<T2, T1>;
 
-	template<typename, typename> friend class PairedPtr;
-	template<typename T12, typename T22> friend bool operator==(const PairedPtr<T12, T22> &, const PairedPtr<T12, T22> &);
-	template<typename T12, typename T22> friend bool operator!=(const PairedPtr<T12, T22> &, const PairedPtr<T12, T22> &);
-	template<typename T12, typename T22> friend bool operator==(const PairedPtr<T12, T22> &, std::nullptr_t);
-	template<typename T12, typename T22> friend bool operator!=(const PairedPtr<T12, T22> &, std::nullptr_t);
-	template<typename T12, typename T22> friend bool operator==(std::nullptr_t, const PairedPtr<T12, T22> &);
-	template<typename T12, typename T22> friend bool operator!=(std::nullptr_t, const PairedPtr<T12, T22> &);
+    template<typename, typename> friend class PairedPtr;
+    template<typename T12, typename T22> friend bool operator==(const PairedPtr<T12, T22> &, const PairedPtr<T12, T22> &);
+    template<typename T12, typename T22> friend bool operator!=(const PairedPtr<T12, T22> &, const PairedPtr<T12, T22> &);
+    template<typename T12, typename T22> friend bool operator==(const PairedPtr<T12, T22> &, std::nullptr_t);
+    template<typename T12, typename T22> friend bool operator!=(const PairedPtr<T12, T22> &, std::nullptr_t);
+    template<typename T12, typename T22> friend bool operator==(std::nullptr_t, const PairedPtr<T12, T22> &);
+    template<typename T12, typename T22> friend bool operator!=(std::nullptr_t, const PairedPtr<T12, T22> &);
 
-	PairedPtr()
-	{
-	}
+    PairedPtr()
+    {
+    }
 
-	PairedPtr(ConnectedPairedPtrType *ptr) : m_connected_paired_ptr{ ptr }
-	{
-		if (m_connected_paired_ptr) m_connected_paired_ptr->m_connected_paired_ptr = this;
-	}
+    PairedPtr(ConnectedPairedPtrType *ptr) : m_connected_paired_ptr{ ptr }
+    {
+        if (m_connected_paired_ptr) m_connected_paired_ptr->m_connected_paired_ptr = this;
+    }
 
-	PairedPtr(PairedPtr &&other) noexcept : PairedPtr{ other.m_connected_paired_ptr }
-	{
-		BaseType::operator=(static_cast<BaseType&&>(forward<PairedPtr>(other)));
-		other.m_connected_paired_ptr = nullptr;
-	}
+    PairedPtr(PairedPtr &&other) noexcept : PairedPtr{ other.m_connected_paired_ptr }
+    {
+        BaseType::operator=(static_cast<BaseType&&>(forward<PairedPtr>(other)));
+        other.m_connected_paired_ptr = nullptr;
+    }
 
-	PairedPtr(const PairedPtr &other) = delete;
-	PairedPtr & operator=(const PairedPtr &other) = delete;
+    PairedPtr(const PairedPtr &other) = delete;
+    PairedPtr & operator=(const PairedPtr &other) = delete;
 
-	PairedPtr & operator=(PairedPtr &&other) noexcept
-	{
-		if (m_connected_paired_ptr)
-		{
-			if (other.m_connected_paired_ptr)
-				swap(m_connected_paired_ptr->m_connected_paired_ptr, other.m_connected_paired_ptr->m_connected_paired_ptr);
-			else
-				m_connected_paired_ptr->m_connected_paired_ptr = &other;
-		}
-		else if (other.m_connected_paired_ptr)
-			other.m_connected_paired_ptr->m_connected_paired_ptr = this;
+    PairedPtr & operator=(PairedPtr &&other) noexcept
+    {
+        if (m_connected_paired_ptr)
+        {
+            if (other.m_connected_paired_ptr)
+                swap(m_connected_paired_ptr->m_connected_paired_ptr, other.m_connected_paired_ptr->m_connected_paired_ptr);
+            else
+                m_connected_paired_ptr->m_connected_paired_ptr = &other;
+        }
+        else if (other.m_connected_paired_ptr)
+            other.m_connected_paired_ptr->m_connected_paired_ptr = this;
 
-		swap(m_connected_paired_ptr, other.m_connected_paired_ptr);
+        swap(m_connected_paired_ptr, other.m_connected_paired_ptr);
 
-		BaseType::operator=(static_cast<BaseType&&>(forward<PairedPtr>(other)));
+        BaseType::operator=(static_cast<BaseType&&>(forward<PairedPtr>(other)));
 
-		return *this;
-	}
+        return *this;
+    }
 
-	PairedPtr & operator=(ConnectedPairedPtrType *ptr)
-	{
-		return *this = PairedPtr(ptr);
-	}
+    PairedPtr & operator=(ConnectedPairedPtrType *ptr)
+    {
+        return *this = PairedPtr(ptr);
+    }
 
-	~PairedPtr()
-	{
-		disconnect();
-	}
+    ~PairedPtr()
+    {
+        disconnect();
+    }
 
-	void disconnect()
-	{
-		if (m_connected_paired_ptr)
-		{
-			m_connected_paired_ptr->m_connected_paired_ptr = nullptr;
-			m_connected_paired_ptr = nullptr;
-		}
-	}
+    void disconnect()
+    {
+        if (m_connected_paired_ptr)
+        {
+            m_connected_paired_ptr->m_connected_paired_ptr = nullptr;
+            m_connected_paired_ptr = nullptr;
+        }
+    }
 
-	const ConnectedPairedPtrType * connected_ptr() const
-	{
-		return m_connected_paired_ptr;
-	}
+    const ConnectedPairedPtrType * connected_ptr() const
+    {
+        return m_connected_paired_ptr;
+    }
 
-	operator bool() const
-	{
-        	return (m_connected_paired_ptr);
-	}
+    operator bool() const
+    {
+            return (m_connected_paired_ptr);
+    }
 
-	bool operator!() const
-	{
-        	return !(m_connected_paired_ptr);
-	}
+    bool operator!() const
+    {
+            return !(m_connected_paired_ptr);
+    }
 
 protected:
-	ConnectedPairedPtrType *m_connected_paired_ptr = nullptr;
+    ConnectedPairedPtrType *m_connected_paired_ptr = nullptr;
 
 };
 
