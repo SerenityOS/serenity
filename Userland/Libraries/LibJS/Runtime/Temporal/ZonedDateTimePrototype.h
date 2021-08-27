@@ -46,6 +46,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(offset_nanoseconds_getter);
     JS_DECLARE_NATIVE_FUNCTION(offset_getter);
     JS_DECLARE_NATIVE_FUNCTION(era_getter);
+    JS_DECLARE_NATIVE_FUNCTION(era_year_getter);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
     JS_DECLARE_NATIVE_FUNCTION(to_instant);
     JS_DECLARE_NATIVE_FUNCTION(to_plain_date);
