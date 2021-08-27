@@ -307,7 +307,7 @@ void LayerListWidget::relayout_gadgets()
     for (auto& gadget : m_gadgets) {
         if (gadget.is_moving)
             continue;
-        if (hole_index.has_value() && index == hole_index.value())
+        if (index == hole_index)
             y += vertical_step;
         gadget.rect = { 0, y, widget_inner_rect().width(), gadget_height };
         y += vertical_step;
