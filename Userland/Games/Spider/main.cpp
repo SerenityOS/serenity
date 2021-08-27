@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2021, Jamie Mansfield <jmansfield@cadixdev.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Game.h"
 #include <Games/Spider/SpiderGML.h>
-#include <LibCore/ConfigFile.h>
+#include <LibConfig/Client.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -39,7 +40,8 @@ int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
     auto app_icon = GUI::Icon::default_icon("app-spider");
-    auto config = Core::ConfigFile::open_for_app("Spider", Core::ConfigFile::AllowWriting::Yes);
+
+    Config::pledge_domains("Spider");
 
     if (pledge("stdio recvfd sendfd rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
@@ -47,11 +49,6 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(config->filename().characters(), "crw") < 0) {
         perror("unveil");
         return 1;
     }
@@ -64,13 +61,11 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_title("Spider");
 
-    auto mode = static_cast<Spider::Mode>(config->read_num_entry("Settings", "Mode", static_cast<int>(Spider::Mode::SingleSuit)));
+    auto mode = static_cast<Spider::Mode>(Config::read_i32("Spider", "Settings", "Mode", static_cast<int>(Spider::Mode::SingleSuit)));
 
     auto update_mode = [&](Spider::Mode new_mode) {
         mode = new_mode;
-        config->write_num_entry("Settings", "Mode", static_cast<int>(mode));
-        if (!config->sync())
-            GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
+        Config::write_i32("Spider", "Settings", "Mode", static_cast<int>(mode));
     };
 
     auto mode_id = [&]() {
@@ -84,54 +79,40 @@ int main(int argc, char** argv)
         }
     };
 
-    auto statistic_display = static_cast<StatisticDisplay>(config->read_num_entry("Settings", "StatisticDisplay", static_cast<int>(StatisticDisplay::HighScore)));
+    auto statistic_display = static_cast<StatisticDisplay>(Config::read_i32("Spider", "Settings", "StatisticDisplay", static_cast<int>(StatisticDisplay::HighScore)));
     auto update_statistic_display = [&](StatisticDisplay new_statistic_display) {
         statistic_display = new_statistic_display;
-        config->write_num_entry("Settings", "StatisticDisplay", static_cast<int>(statistic_display));
-        if (!config->sync())
-            GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
+        Config::write_i32("Spider", "Settings", "StatisticDisplay", static_cast<int>(statistic_display));
     };
 
     auto high_score = [&]() {
-        return static_cast<u32>(config->read_num_entry("HighScores", mode_id(), 0));
+        return static_cast<u32>(Config::read_i32("Spider", "HighScores", mode_id(), 0));
     };
 
     auto update_high_score = [&](u32 new_high_score) {
-        config->write_num_entry("HighScores", mode_id(), static_cast<int>(new_high_score));
-
-        if (!config->sync())
-            GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
+        Config::write_i32("Spider", "HighScores", mode_id(), static_cast<int>(new_high_score));
     };
 
     auto best_time = [&]() {
-        return static_cast<u32>(config->read_num_entry("BestTimes", mode_id(), 0));
+        return static_cast<u32>(Config::read_i32("Spider", "BestTimes", mode_id(), 0));
     };
 
     auto update_best_time = [&](u32 new_best_time) {
-        config->write_num_entry("BestTimes", mode_id(), static_cast<int>(new_best_time));
-
-        if (!config->sync())
-            GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
+        Config::write_i32("Spider", "BestTimes", mode_id(), static_cast<int>(new_best_time));
     };
 
     auto total_wins = [&]() {
-        return static_cast<u32>(config->read_num_entry("TotalWins", mode_id(), 0));
+        return static_cast<u32>(Config::read_i32("Spider", "TotalWins", mode_id(), 0));
     };
     auto increment_total_wins = [&]() {
-        config->write_num_entry("TotalWins", mode_id(), static_cast<int>(total_wins() + 1));
-
-        if (!config->sync())
-            GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
+        Config::write_i32("Spider", "TotalWins", mode_id(), static_cast<int>(total_wins() + 1));
     };
 
     auto total_losses = [&]() {
-        return static_cast<u32>(config->read_num_entry("TotalLosses", mode_id(), 0));
+        return static_cast<u32>(Config::read_i32("Spider", "TotalLosses", mode_id(), 0));
     };
     auto increment_total_losses = [&]() {
-        config->write_num_entry("TotalLosses", mode_id(), static_cast<int>(total_losses() + 1));
-
-        if (!config->sync())
-            GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
+        Config::write_i32("Spider", "TotalLosses", mode_id(), static_cast<int>(total_losses() + 1));
     };
 
     if (mode >= Spider::Mode::__Count)
