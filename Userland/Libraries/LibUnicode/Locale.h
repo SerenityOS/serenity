@@ -9,6 +9,7 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibUnicode/Forward.h>
 
@@ -22,8 +23,21 @@ struct LanguageID {
     Vector<StringView> variants {};
 };
 
+struct Keyword {
+    StringView key {};
+    Vector<StringView> types {};
+};
+
+struct LocaleExtension {
+    Vector<StringView> attributes {};
+    Vector<Keyword> keywords {};
+};
+
+using Extension = Variant<LocaleExtension>;
+
 struct LocaleID {
     LanguageID language_id {};
+    Vector<Extension> extensions {};
 };
 
 // Note: These methods only verify that the provided strings match the EBNF grammar of the
