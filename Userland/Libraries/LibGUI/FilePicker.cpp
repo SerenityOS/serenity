@@ -252,6 +252,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     }
 
     m_location_textbox->set_icon(FileIconProvider::icon_for_path(path).bitmap_for_size(16));
+    m_model->on_complete();
 }
 
 FilePicker::~FilePicker()
