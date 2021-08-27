@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Optional.h>
-#include <LibCore/ConfigFile.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
