@@ -8,8 +8,8 @@
 
 #include <AK/BinaryBufferWriter.h>
 #include <AK/DistinctNumeric.h>
-#include <Kernel/Bus/VirtIO/VirtIO.h>
-#include <Kernel/Bus/VirtIO/VirtIOQueue.h>
+#include <Kernel/Bus/VirtIO/Device.h>
+#include <Kernel/Bus/VirtIO/Queue.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/Protocol.h>
 

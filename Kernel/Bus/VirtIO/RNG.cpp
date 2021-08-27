@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Bus/VirtIO/VirtIORNG.h>
+#include <Kernel/Bus/VirtIO/RNG.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::VirtIO {

@@ -39,11 +39,11 @@ set(KERNEL_SOURCES
     Bus/USB/USBManagement.cpp
     Bus/USB/USBPipe.cpp
     Bus/USB/USBTransfer.cpp
-    Bus/VirtIO/VirtIO.cpp
-    Bus/VirtIO/VirtIOConsole.cpp
-    Bus/VirtIO/VirtIOConsolePort.cpp
-    Bus/VirtIO/VirtIOQueue.cpp
-    Bus/VirtIO/VirtIORNG.cpp
+    Bus/VirtIO/Console.cpp
+    Bus/VirtIO/ConsolePort.cpp
+    Bus/VirtIO/Device.cpp
+    Bus/VirtIO/Queue.cpp
+    Bus/VirtIO/RNG.cpp
     CMOS.cpp
     CommandLine.cpp
     ConsoleDevice.cpp

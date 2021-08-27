@@ -14,7 +14,7 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Bus/USB/USBManagement.h>
-#include <Kernel/Bus/VirtIO/VirtIO.h>
+#include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/FullDevice.h>
