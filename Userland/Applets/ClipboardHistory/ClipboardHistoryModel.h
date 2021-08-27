@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,6 +29,7 @@ public:
     void remove_item(int index);
 
 private:
+    ClipboardHistoryModel();
     void add_item(const GUI::Clipboard::DataAndType& item);
 
     // ^GUI::Model
@@ -40,5 +42,5 @@ private:
     virtual void clipboard_content_did_change(const String&) override { add_item(GUI::Clipboard::the().data_and_type()); }
 
     Vector<GUI::Clipboard::DataAndType> m_history_items;
-    size_t m_history_limit { 20 };
+    size_t m_history_limit;
 };
