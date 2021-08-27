@@ -5,6 +5,7 @@
  */
 
 #include "HexEditorWidget.h"
+#include <LibConfig/Client.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menubar.h>
 #include <stdio.h>
@@ -18,6 +19,8 @@ int main(int argc, char** argv)
     }
 
     auto app = GUI::Application::construct(argc, argv);
+
+    Config::pledge_domains("HexEditor");
 
     if (pledge("stdio recvfd sendfd rpath cpath wpath thread", nullptr) < 0) {
         perror("pledge");
