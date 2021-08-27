@@ -38,12 +38,17 @@ static String format_seconds(uint64_t seconds_elapsed)
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     auto app = GUI::Application::construct(argc, argv);
     auto app_icon = GUI::Icon::default_icon("app-spider");
 
     Config::pledge_domains("Spider");
 
-    if (pledge("stdio recvfd sendfd rpath wpath cpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
