@@ -5,7 +5,9 @@ else()
     add_compile_options(-Os)
 endif()
 
-if ("${SERENITY_ARCH}" STREQUAL "i686")
+if ("${SERENITY_ARCH}" STREQUAL "aarch64")
+    set(KERNEL_ARCH aarch64)
+elseif ("${SERENITY_ARCH}" STREQUAL "i686")
     set(KERNEL_ARCH i386)
 elseif("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(KERNEL_ARCH x86_64)
@@ -283,24 +285,26 @@ set(KERNEL_SOURCES
     kprintf.cpp
 )
 
-set(KERNEL_SOURCES
-    ${KERNEL_SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/ASM_wrapper.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Boot/ap_setup.S
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/InterruptEntry.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Processor.cpp
-)
+if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
+    set(KERNEL_SOURCES
+        ${KERNEL_SOURCES}
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/ASM_wrapper.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Boot/ap_setup.S
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/InterruptEntry.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Processor.cpp
+    )
 
-set(KERNEL_SOURCES
-    ${KERNEL_SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ASM_wrapper.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPU.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Interrupts.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Processor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ProcessorInfo.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/SafeMem.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/TrapFrame.cpp
-)
+    set(KERNEL_SOURCES
+        ${KERNEL_SOURCES}
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ASM_wrapper.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPU.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Interrupts.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Processor.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ProcessorInfo.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/SafeMem.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/TrapFrame.cpp
+    )
+endif()
 
 set(AK_SOURCES
     ../AK/FlyString.cpp
@@ -351,7 +355,11 @@ set(SOURCES
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -Wvla -Wnull-dereference")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -ffreestanding -fbuiltin")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-80387 -mno-mmx -mno-sse -mno-sse2")
+
+if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-80387 -mno-mmx -mno-sse -mno-sse2")
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-asynchronous-unwind-tables")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-strong")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
@@ -508,5 +516,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/kernel.map" DESTINATION res)
 serenity_install_headers(Kernel)
 serenity_install_sources(Kernel)
 
-add_subdirectory(Prekernel)
+if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
+    add_subdirectory(Prekernel)
+endif()
 add_subdirectory(Modules)
