@@ -48,7 +48,7 @@ void ClientConnection::did_change_muted_state(Badge<Mixer>, bool muted)
     async_muted_state_changed(muted);
 }
 
-void ClientConnection::did_change_main_mix_volume(Badge<Mixer>, int volume)
+void ClientConnection::did_change_main_mix_volume(Badge<Mixer>, double volume)
 {
     async_main_mix_volume_changed(volume);
 }
@@ -58,7 +58,7 @@ Messages::AudioServer::GetMainMixVolumeResponse ClientConnection::get_main_mix_v
     return m_mixer.main_volume();
 }
 
-void ClientConnection::set_main_mix_volume(i32 volume)
+void ClientConnection::set_main_mix_volume(double volume)
 {
     m_mixer.set_main_volume(volume);
 }

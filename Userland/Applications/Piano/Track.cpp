@@ -95,8 +95,8 @@ void Track::fill_sample(Sample& sample)
         default:
             VERIFY_NOT_REACHED();
         }
-        new_sample.left += note_sample.left * m_power[note] * volume_factor * (static_cast<double>(volume()) / volume_max);
-        new_sample.right += note_sample.right * m_power[note] * volume_factor * (static_cast<double>(volume()) / volume_max);
+        new_sample.left += note_sample.left * m_power[note] * NumericLimits<i16>::max() * volume_factor * (static_cast<double>(volume()) / volume_max);
+        new_sample.right += note_sample.right * m_power[note] * NumericLimits<i16>::max() * volume_factor * (static_cast<double>(volume()) / volume_max);
     }
 
     auto new_sample_dsp = LibDSP::Signal(LibDSP::Sample { new_sample.left / NumericLimits<i16>::max(), new_sample.right / NumericLimits<i16>::max() });
@@ -104,6 +104,9 @@ void Track::fill_sample(Sample& sample)
 
     new_sample.left = delayed_sample.left * NumericLimits<i16>::max();
     new_sample.right = delayed_sample.right * NumericLimits<i16>::max();
+
+    new_sample.left = clamp(new_sample.left, NumericLimits<i16>::min(), NumericLimits<i16>::max());
+    new_sample.right = clamp(new_sample.right, NumericLimits<i16>::min(), NumericLimits<i16>::max());
 
     sample.left += new_sample.left;
     sample.right += new_sample.right;

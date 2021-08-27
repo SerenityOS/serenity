@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Math.h>
 #include <AK/MemoryStream.h>
 #include <AK/String.h>
 #include <AK/Types.h>
@@ -16,25 +17,32 @@
 #include <string.h>
 
 namespace Audio {
+using namespace AK::Exponentials;
+
+// Constants for logarithmic volume. See Frame::operator*
+// Corresponds to 60dB
+constexpr double DYNAMIC_RANGE = 1000;
+constexpr double VOLUME_A = 1 / DYNAMIC_RANGE;
+double const VOLUME_B = log(DYNAMIC_RANGE);
 
 // A single sample in an audio buffer.
 // Values are floating point, and should range from -1.0 to +1.0
 struct Frame {
-    Frame()
+    constexpr Frame()
         : left(0)
         , right(0)
     {
     }
 
     // For mono
-    Frame(double left)
+    constexpr Frame(double left)
         : left(left)
         , right(left)
     {
     }
 
     // For stereo
-    Frame(double left, double right)
+    constexpr Frame(double left, double right)
         : left(left)
         , right(right)
     {
@@ -53,24 +61,52 @@ struct Frame {
             right = -1;
     }
 
-    void scale(int percent)
+    // Logarithmic scaling, as audio should ALWAYS do.
+    // Reference: https://www.dr-lex.be/info-stuff/volumecontrols.html
+    // We use the curve `factor = a * exp(b * change)`,
+    // where change is the input fraction we want to change by,
+    // a = 1/1000, b = ln(1000) = 6.908 and factor is the multiplier used.
+    // The value 1000 represents the dynamic range in sound pressure, which corresponds to 60 dB(A).
+    // This is a good dynamic range because it can represent all loudness values from
+    // 30 dB(A) (barely hearable with background noise)
+    // to 90 dB(A) (almost too loud to hear and about the reasonable limit of actual sound equipment).
+    ALWAYS_INLINE Frame& log_multiply(double const change)
     {
-        double pct = (double)percent / 100.0;
-        left *= pct;
-        right *= pct;
+        double factor = VOLUME_A * exp(VOLUME_B * change);
+        left *= factor;
+        right *= factor;
+        return *this;
     }
 
-    // FIXME: This is temporary until we have log scaling
-    Frame scaled(double fraction) const
+    ALWAYS_INLINE Frame log_multiplied(double const volume_change)
     {
-        return Frame { left * fraction, right * fraction };
+        Frame new_frame { left, right };
+        new_frame.log_multiply(volume_change);
+        return new_frame;
     }
 
-    Frame& operator+=(const Frame& other)
+    constexpr Frame& operator*=(double const mult)
+    {
+        left *= mult;
+        right *= mult;
+        return *this;
+    }
+
+    constexpr Frame operator*(double const mult)
+    {
+        return { left * mult, right * mult };
+    }
+
+    constexpr Frame& operator+=(Frame const& other)
     {
         left += other.left;
         right += other.right;
         return *this;
+    }
+
+    constexpr Frame operator+(Frame const& other)
+    {
+        return { left + other.left, right + other.right };
     }
 
     double left;
