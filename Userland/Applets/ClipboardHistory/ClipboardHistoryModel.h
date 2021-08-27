@@ -8,11 +8,13 @@
 #pragma once
 
 #include <AK/Vector.h>
+#include <LibConfig/Listener.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Model.h>
 
 class ClipboardHistoryModel final : public GUI::Model
-    , public GUI::Clipboard::ClipboardClient {
+    , public GUI::Clipboard::ClipboardClient
+    , public Config::Listener {
 public:
     static NonnullRefPtr<ClipboardHistoryModel> create();
 
@@ -27,6 +29,9 @@ public:
 
     const GUI::Clipboard::DataAndType& item_at(int index) const { return m_history_items[index]; }
     void remove_item(int index);
+
+    // ^Config::Listener
+    virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value) override;
 
 private:
     ClipboardHistoryModel();
