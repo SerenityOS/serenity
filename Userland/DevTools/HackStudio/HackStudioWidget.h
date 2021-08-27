@@ -34,7 +34,8 @@ class HackStudioWidget : public GUI::Widget {
 
 public:
     virtual ~HackStudioWidget() override;
-    bool open_file(const String& filename);
+
+    bool open_file(String const& filename, size_t line = 0, size_t column = 0);
     void close_file_in_all_editors(String const& filename);
 
     void update_actions();

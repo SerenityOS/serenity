@@ -132,8 +132,7 @@ void open_file(const String& filename)
 
 void open_file(const String& filename, size_t line, size_t column)
 {
-    s_hack_studio_widget->open_file(filename);
-    s_hack_studio_widget->current_editor_wrapper().editor().set_cursor({ line, column });
+    s_hack_studio_widget->open_file(filename, line, column);
 }
 
 RefPtr<EditorWrapper> current_editor_wrapper()
