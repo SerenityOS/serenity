@@ -485,6 +485,9 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
         Optional<i32> hovered_node = m_web_content_view->get_hovered_node_id();
         VERIFY(hovered_node.has_value());
         m_dom_inspector_widget->set_inspected_node(hovered_node.value());
+    } else {
+        VERIFY(inspector_target == InspectorTarget::Document);
+        m_dom_inspector_widget->select_default_node();
     }
 
     auto* window = m_dom_inspector_widget->window();

@@ -52,10 +52,7 @@ void InspectorWidget::set_inspected_node(GUI::ModelIndex const index)
         auto inspected_node_properties = maybe_inspected_node_properties.value();
         load_style_json(inspected_node_properties.specified_values_json, inspected_node_properties.computed_values_json);
     } else {
-        m_inspected_node_specified_values_json.clear();
-        m_inspected_node_computed_values_json.clear();
-        m_style_table_view->set_model(nullptr);
-        m_computed_style_table_view->set_model(nullptr);
+        clear_style_json();
     }
 }
 
@@ -88,6 +85,18 @@ InspectorWidget::~InspectorWidget()
 {
 }
 
+void InspectorWidget::select_default_node()
+{
+    clear_style_json();
+
+    // FIXME: Select the <body> element, or else the root node.
+    m_dom_tree_view->collapse_tree();
+    m_dom_tree_view->set_cursor({}, GUI::AbstractView::SelectionUpdate::ClearIfNotSelected);
+
+    m_layout_tree_view->collapse_tree();
+    m_layout_tree_view->set_cursor({}, GUI::AbstractView::SelectionUpdate::ClearIfNotSelected);
+}
+
 void InspectorWidget::set_dom_json(String json)
 {
     if (m_dom_json.has_value() && m_dom_json.value() == json)
@@ -103,6 +112,8 @@ void InspectorWidget::set_dom_json(String json)
         i32 node_id = m_pending_inspect_node_id.value();
         m_pending_inspect_node_id.clear();
         set_inspected_node(node_id);
+    } else {
+        select_default_node();
     }
 }
 
@@ -122,6 +133,14 @@ void InspectorWidget::load_style_json(String specified_values_json, String compu
     m_inspected_node_computed_values_json = computed_values_json;
     m_style_table_view->set_model(Web::StylePropertiesModel::create(m_inspected_node_specified_values_json.value().view()));
     m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(m_inspected_node_computed_values_json.value().view()));
+}
+
+void InspectorWidget::clear_style_json()
+{
+    m_inspected_node_specified_values_json.clear();
+    m_inspected_node_computed_values_json.clear();
+    m_style_table_view->set_model(nullptr);
+    m_computed_style_table_view->set_model(nullptr);
 }
 
 }

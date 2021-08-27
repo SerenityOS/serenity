@@ -22,12 +22,14 @@ public:
     void set_dom_node_properties_json(i32 node_id, String specified_values_json, String computed_values_json);
 
     void set_inspected_node(i32 node_id);
+    void select_default_node();
 
 private:
     InspectorWidget();
 
     void set_inspected_node(GUI::ModelIndex);
     void load_style_json(String specified_values_json, String computed_values_json);
+    void clear_style_json();
 
     RefPtr<Web::OutOfProcessWebView> m_web_view;
 
