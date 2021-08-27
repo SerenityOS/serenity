@@ -20,4 +20,4 @@ set(SOURCES
 )
 
 serenity_app(HexEditor ICON app-hex-editor)
-target_link_libraries(HexEditor LibGUI)
+target_link_libraries(HexEditor LibGUI LibConfig)

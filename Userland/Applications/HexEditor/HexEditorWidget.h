@@ -33,8 +33,6 @@ private:
 
     virtual void drop_event(GUI::DropEvent&) override;
 
-    RefPtr<Core::ConfigFile> m_config;
-
     RefPtr<HexEditor> m_editor;
     String m_path;
     String m_name;

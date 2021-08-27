@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +12,7 @@
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <Applications/HexEditor/HexEditorWindowGML.h>
-#include <LibCore/ConfigFile.h>
+#include <LibConfig/Client.h>
 #include <LibCore/File.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
@@ -34,8 +35,6 @@ REGISTER_WIDGET(HexEditor, HexEditor);
 HexEditorWidget::HexEditorWidget()
 {
     load_from_gml(hex_editor_window_gml);
-
-    m_config = Core::ConfigFile::open_for_app("HexEditor", Core::ConfigFile::AllowWriting::Yes);
 
     m_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
@@ -185,8 +184,7 @@ HexEditorWidget::HexEditorWidget()
 
     m_layout_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
         m_toolbar_container->set_visible(action.is_checked());
-        m_config->write_bool_entry("Layout", "ShowToolbar", action.is_checked());
-        m_config->sync();
+        Config::write_bool("HexEditor", "Layout", "ShowToolbar", action.is_checked());
     });
 
     m_layout_search_results_action = GUI::Action::create_checkable("&Search Results", [&](auto& action) {
@@ -279,14 +277,14 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
 
     auto& view_menu = window.add_menu("&View");
 
-    auto show_toolbar = m_config->read_bool_entry("Layout", "ShowToolbar", true);
+    auto show_toolbar = Config::read_bool("HexEditor", "Layout", "ShowToolbar", true);
     m_layout_toolbar_action->set_checked(show_toolbar);
     m_toolbar_container->set_visible(show_toolbar);
     view_menu.add_action(*m_layout_toolbar_action);
     view_menu.add_action(*m_layout_search_results_action);
     view_menu.add_separator();
 
-    auto bytes_per_row = m_config->read_num_entry("Layout", "BytesPerRow", 16);
+    auto bytes_per_row = Config::read_i32("HexEditor", "Layout", "BytesPerRow", 16);
     m_editor->set_bytes_per_row(bytes_per_row);
     m_editor->update();
 
@@ -296,8 +294,7 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
         auto action = GUI::Action::create_checkable(String::number(i), [this, i](auto&) {
             m_editor->set_bytes_per_row(i);
             m_editor->update();
-            m_config->write_num_entry("Layout", "BytesPerRow", i);
-            m_config->sync();
+            Config::write_i32("HexEditor", "Layout", "BytesPerRow", i);
         });
         m_bytes_per_row_actions.add_action(action);
         bytes_per_row_menu.add_action(action);
