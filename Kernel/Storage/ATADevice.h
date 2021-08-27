@@ -30,7 +30,6 @@ public:
 
     // ^BlockDevice
     virtual void start_request(AsyncBlockDeviceRequest&) override;
-    virtual String storage_name() const override;
 
     u16 ata_capabilites() const { return m_capabilities; }
     const Address& ata_address() const { return m_ata_address; }

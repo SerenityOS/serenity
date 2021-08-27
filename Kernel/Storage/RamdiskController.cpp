@@ -59,7 +59,14 @@ RamdiskController::~RamdiskController()
 {
 }
 
-RefPtr<StorageDevice> RamdiskController::device(u32 index) const
+RefPtr<StorageDevice> RamdiskController::search_for_device(StorageAddress address) const
+{
+    VERIFY(address.subport == 0);
+    VERIFY(address.logical_unit_number == 0);
+    return device_by_index(address.port);
+}
+
+RefPtr<StorageDevice> RamdiskController::device_by_index(u32 index) const
 {
     if (index >= m_devices.size())
         return nullptr;

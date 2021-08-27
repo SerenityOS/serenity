@@ -24,12 +24,15 @@ public:
     static NonnullRefPtr<IDEController> initialize(PCI::Address address, bool force_pio);
     virtual ~IDEController() override;
 
-    virtual RefPtr<StorageDevice> device(u32 index) const override;
+    virtual RefPtr<StorageDevice> search_for_device(StorageAddress) const override;
+    virtual RefPtr<StorageDevice> device_by_index(u32) const override;
     virtual bool reset() override;
     virtual bool shutdown() override;
     virtual size_t devices_count() const override;
     virtual void start_request(const ATADevice&, AsyncBlockDeviceRequest&) override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
+
+    virtual Optional<size_t> max_devices_count() const override { return 4; }
 
     bool is_bus_master_capable() const;
     bool is_pci_native_mode_enabled() const;
@@ -39,7 +42,6 @@ private:
     bool is_pci_native_mode_enabled_on_secondary_channel() const;
     IDEController(PCI::Address address, bool force_pio);
 
-    RefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
     void initialize(bool force_pio);
     void detect_disks();
 

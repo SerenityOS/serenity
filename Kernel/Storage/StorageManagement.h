@@ -24,6 +24,9 @@ class StorageManagement {
 public:
     StorageManagement();
     static bool initialized();
+    static void enumerate_disk_partitions_on_new_device(StorageDevice&);
+    static OwnPtr<PartitionTable> try_to_initialize_partition_table(const StorageDevice&);
+
     void initialize(String boot_argument, bool force_pio);
     static StorageManagement& the();
 
@@ -32,26 +35,22 @@ public:
     static int major_number();
     static int minor_number();
 
-    void remove_device(StorageDevice&);
-
 private:
     bool boot_argument_contains_partition_uuid();
 
     void enumerate_controllers(bool force_pio);
     void enumerate_storage_devices();
-    void enumerate_disk_partitions() const;
 
     void determine_boot_device();
     void determine_boot_device_with_partition_uuid();
 
-    OwnPtr<PartitionTable> try_to_initialize_partition_table(const StorageDevice&) const;
+    void determine_boot_device_with_defined_prefix(StringView prefix);
 
     RefPtr<BlockDevice> boot_block_device() const;
 
     String m_boot_argument;
     WeakPtr<BlockDevice> m_boot_block_device;
     NonnullRefPtrVector<StorageController> m_controllers;
-    IntrusiveList<&StorageDevice::m_list_node> m_storage_devices;
 };
 
 }

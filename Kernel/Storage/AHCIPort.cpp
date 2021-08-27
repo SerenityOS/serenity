@@ -75,7 +75,6 @@ void AHCIPort::handle_interrupt()
         clear_sata_error_register();
         if ((m_port_registers.ssts & 0xf) != 3) {
             m_connected_device->prepare_for_unplug();
-            StorageManagement::the().remove_device(*m_connected_device);
             g_ahci_work->queue([this]() {
                 m_connected_device->before_removing();
                 m_connected_device.clear();
@@ -320,6 +319,11 @@ bool AHCIPort::initialize(SpinlockLocker<Spinlock>& main_lock)
         // FIXME: We don't support ATAPI devices yet, so for now we don't "create" them
         if (!is_atapi_attached()) {
             m_connected_device = ATADiskDevice::create(m_parent_handler->hba_controller(), { m_port_index, 0 }, 0, logical_sector_size, max_addressable_sector);
+            g_io_work->queue([this]() {
+                // Note: We must do this from a WorkQueue because the Spinlock prevents from IRQs
+                // to happen, thus preventing reading from the drive if used outside of WorkQueue scope.
+                StorageManagement::enumerate_disk_partitions_on_new_device(*m_connected_device);
+            });
         } else {
             dbgln("AHCI Port {}: Ignoring ATAPI devices for now as we don't currently support them.", representative_port_index());
         }

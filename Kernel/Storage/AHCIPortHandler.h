@@ -44,6 +44,7 @@ public:
     bool is_responsible_for_port_index(u32 port_index) const { return m_taken_ports.is_set_at(port_index); }
 
 private:
+    void initialize();
     UNMAP_AFTER_INIT AHCIPortHandler(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
 
     //^ IRQHandler

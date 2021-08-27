@@ -22,14 +22,31 @@ namespace Kernel {
 
 class AsyncBlockDeviceRequest;
 class StorageDevice;
+
+// Note: We work with SCSI addresses as this is the standard addressing
+// in many other Unix systems that utilize SCSI as an abstraction layer.
+// For ATA devices, the logical_unit_number member is ignored,
+// For ATAPI devices, the logical_unit_number member can describe a sub-index of
+// the device (like a function of a PCI device).
+// For both ATA and ATAPI, on IDE controllers, port represents Primary or Secondary,
+// and subport represents Master or Slave. For AHCI HBAs, port is the actual port on the
+// the HBA, subport is related to a device being connected via a port multiplier.
+struct StorageAddress {
+    u8 port;
+    u8 subport;
+    u8 logical_unit_number;
+};
+
 class StorageController : public RefCounted<StorageController> {
     AK_MAKE_ETERNAL
 
 public:
     virtual ~StorageController() = default;
 
-    virtual RefPtr<StorageDevice> device(u32 index) const = 0;
+    virtual RefPtr<StorageDevice> search_for_device(StorageAddress) const = 0;
+    virtual RefPtr<StorageDevice> device_by_index(u32) const = 0;
     virtual size_t devices_count() const = 0;
+    virtual Optional<size_t> max_devices_count() const = 0;
 
 protected:
     virtual bool reset() = 0;

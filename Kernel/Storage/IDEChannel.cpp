@@ -15,6 +15,7 @@
 #include <Kernel/Storage/ATADiskDevice.h>
 #include <Kernel/Storage/IDEChannel.h>
 #include <Kernel/Storage/IDEController.h>
+#include <Kernel/Storage/StorageManagement.h>
 #include <Kernel/WorkQueue.h>
 
 namespace Kernel {
@@ -42,7 +43,7 @@ RefPtr<StorageDevice> IDEChannel::slave_device() const
     return m_slave;
 }
 
-UNMAP_AFTER_INIT void IDEChannel::initialize()
+UNMAP_AFTER_INIT void IDEChannel::reset()
 {
     disable_irq();
     dbgln_if(PATA_DEBUG, "IDEChannel: {} IO base: {}", channel_type_string(), m_io_group.io_base());
@@ -71,11 +72,6 @@ UNMAP_AFTER_INIT void IDEChannel::initialize()
         dbgln("IDEChannel: reset failed, busy flag on slave stuck");
         return;
     }
-
-    detect_disks();
-
-    // Note: calling to detect_disks could generate an interrupt, clear it if that's the case
-    clear_pending_interrupts();
 }
 
 UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
@@ -84,7 +80,7 @@ UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, u8 irq,
     , m_io_group(io_group)
     , m_parent_controller(controller)
 {
-    initialize();
+    reset();
 }
 
 UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, IOAddressGroup io_group, ChannelType type)
@@ -93,7 +89,7 @@ UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, IOAddre
     , m_io_group(io_group)
     , m_parent_controller(controller)
 {
-    initialize();
+    reset();
 }
 
 void IDEChannel::clear_pending_interrupts() const
@@ -413,10 +409,23 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
         ATADevice::Address address = { m_channel_type == ChannelType::Primary ? static_cast<u8>(0) : static_cast<u8>(1), static_cast<u8>(i) };
         if (i == 0) {
             m_master = ATADiskDevice::create(m_parent_controller, address, capabilities, 512, max_addressable_block);
+            StorageManagement::enumerate_disk_partitions_on_new_device(*m_master);
         } else {
             m_slave = ATADiskDevice::create(m_parent_controller, address, capabilities, 512, max_addressable_block);
+            StorageManagement::enumerate_disk_partitions_on_new_device(*m_slave);
         }
     }
+}
+
+size_t IDEChannel::connected_devices_count() const
+{
+    // FIXME: Consider to put a lock here, just in case we handle an hotplug event...
+    size_t count = 0;
+    if (m_master)
+        count++;
+    if (m_slave)
+        count++;
+    return count;
 }
 
 void IDEChannel::ata_access(Direction direction, bool slave_request, u64 lba, u8 block_count, u16 capabilities)

@@ -27,7 +27,6 @@ public:
 
     // ^DiskDevice
     virtual StringView class_name() const override;
-    virtual String storage_name() const override;
 
     bool is_slave() const;
 

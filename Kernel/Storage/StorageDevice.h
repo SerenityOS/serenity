@@ -42,9 +42,6 @@ public:
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
     virtual bool can_write(const OpenFileDescription&, size_t) const override;
 
-    // FIXME: This is being used only during early boot, find a better way to find devices...
-    virtual String storage_name() const = 0;
-
     virtual void prepare_for_unplug() { m_partitions.clear(); }
 
     NonnullRefPtrVector<DiskPartition> partitions() const { return m_partitions; }
@@ -58,7 +55,6 @@ protected:
     virtual StringView class_name() const override;
 
 private:
-    mutable IntrusiveListNode<StorageDevice, RefPtr<StorageDevice>> m_list_node;
     NonnullRefPtrVector<DiskPartition> m_partitions;
     u64 m_max_addressable_block;
 };

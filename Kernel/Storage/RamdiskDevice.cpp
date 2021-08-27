@@ -59,11 +59,4 @@ void RamdiskDevice::start_request(AsyncBlockDeviceRequest& request)
     }
 }
 
-String RamdiskDevice::storage_name() const
-{
-    // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
-    size_t drive_index = minor() / 16;
-    return String::formatted("ramdisk{}", drive_index);
-}
-
 }

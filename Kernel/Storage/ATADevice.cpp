@@ -31,9 +31,4 @@ void ATADevice::start_request(AsyncBlockDeviceRequest& request)
     controller->start_request(*this, request);
 }
 
-String ATADevice::storage_name() const
-{
-    return String::formatted("hd{:c}", 'a' + minor());
-}
-
 }

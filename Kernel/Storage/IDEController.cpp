@@ -33,12 +33,7 @@ bool IDEController::shutdown()
 
 size_t IDEController::devices_count() const
 {
-    size_t count = 0;
-    for (u32 index = 0; index < 4; index++) {
-        if (!device(index).is_null())
-            count++;
-    }
-    return count;
+    return m_channels[0].connected_devices_count() + m_channels[1].connected_devices_count();
 }
 
 void IDEController::start_request(const ATADevice& device, AsyncBlockDeviceRequest& request)
@@ -145,16 +140,28 @@ UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
         VERIFY(irq_line != 0);
     }
 
+    auto finish_channel_initialization = [this](IDEChannel& channel) {
+        m_channels.append(channel);
+        // Note: We first append the channel to m_channels because when we detect disks,
+        // we try to detect partitions too, which might cause to read from the "new"
+        // detected harddrive.
+        channel.detect_disks();
+        // Note: calling to detect_disks could generate an interrupt, clear it if that's the case
+        channel.clear_pending_interrupts();
+    };
+
     if (is_pci_native_mode_enabled_on_primary_channel()) {
-        if (force_pio)
-            m_channels.append(IDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
-        else
-            m_channels.append(BMIDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+        if (force_pio) {
+            finish_channel_initialization(*IDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
+        } else {
+            finish_channel_initialization(*BMIDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+        }
     } else {
-        if (force_pio)
-            m_channels.append(IDEChannel::create(*this, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
-        else
-            m_channels.append(BMIDEChannel::create(*this, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+        if (force_pio) {
+            finish_channel_initialization(*IDEChannel::create(*this, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
+        } else {
+            finish_channel_initialization(*BMIDEChannel::create(*this, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+        }
     }
 
     m_channels[0].enable_irq();
@@ -174,7 +181,33 @@ UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
     m_channels[1].enable_irq();
 }
 
-RefPtr<StorageDevice> IDEController::device_by_channel_and_position(u32 index) const
+RefPtr<StorageDevice> IDEController::search_for_device(StorageAddress address) const
+{
+    switch (address.port) {
+    case 0:
+        switch (address.subport) {
+        case 0:
+            return m_channels[0].master_device();
+        case 1:
+            return m_channels[0].slave_device();
+        default:
+            VERIFY_NOT_REACHED();
+        }
+        break;
+    case 1:
+        switch (address.subport) {
+        case 0:
+            return m_channels[1].master_device();
+        case 1:
+            return m_channels[1].slave_device();
+        default:
+            VERIFY_NOT_REACHED();
+        }
+        break;
+    }
+    return nullptr;
+}
+RefPtr<StorageDevice> IDEController::device_by_index(u32 index) const
 {
     switch (index) {
     case 0:
@@ -186,20 +219,7 @@ RefPtr<StorageDevice> IDEController::device_by_channel_and_position(u32 index) c
     case 3:
         return m_channels[1].slave_device();
     }
-    VERIFY_NOT_REACHED();
+    return nullptr;
 }
 
-RefPtr<StorageDevice> IDEController::device(u32 index) const
-{
-    NonnullRefPtrVector<StorageDevice> connected_devices;
-    for (size_t index = 0; index < 4; index++) {
-        auto checked_device = device_by_channel_and_position(index);
-        if (checked_device.is_null())
-            continue;
-        connected_devices.append(checked_device.release_nonnull());
-    }
-    if (index >= connected_devices.size())
-        return nullptr;
-    return connected_devices[index];
-}
 }

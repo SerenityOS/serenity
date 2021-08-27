@@ -154,8 +154,15 @@ void AHCIController::initialize()
     PCI::enable_interrupt_line(pci_address());
     PCI::enable_bus_mastering(pci_address());
     enable_global_interrupts();
-    m_handlers.append(AHCIPortHandler::create(*this, PCI::get_interrupt_line(pci_address()),
-        AHCI::MaskedBitField((volatile u32&)(hba().control_regs.pi))));
+    auto handler = AHCIPortHandler::create(*this, PCI::get_interrupt_line(pci_address()),
+        AHCI::MaskedBitField((volatile u32&)(hba().control_regs.pi)));
+    m_handlers.append(handler);
+    // Note: We first append the handler to m_handlers because when we detect disks,
+    // we try to detect partitions too, which might cause to read from the "new"
+    // detected harddrive.
+    // This happens on IDEChannel too, and unfortunately there's no good way
+    // to avoid this pattern.
+    handler->initialize();
 }
 
 void AHCIController::disable_global_interrupts() const
@@ -181,24 +188,15 @@ RefPtr<StorageDevice> AHCIController::device_by_port(u32 port_index) const
     return nullptr;
 }
 
-RefPtr<StorageDevice> AHCIController::device(u32 index) const
+RefPtr<StorageDevice> AHCIController::search_for_device(StorageAddress address) const
 {
-    NonnullRefPtrVector<StorageDevice> connected_devices;
-    u32 pi = hba().control_regs.pi;
-    u32 bit = __builtin_ffsl(pi);
-    while (bit) {
-        dbgln_if(AHCI_DEBUG, "Checking implemented port {}, pi {:b}", bit - 1, pi);
-        pi &= ~(1u << (bit - 1));
-        auto checked_device = device_by_port(bit - 1);
-        bit = __builtin_ffsl(pi);
-        if (checked_device.is_null())
-            continue;
-        connected_devices.append(checked_device.release_nonnull());
-    }
-    dbgln_if(AHCI_DEBUG, "Connected device count: {}, Index: {}", connected_devices.size(), index);
-    if (index >= connected_devices.size())
-        return nullptr;
-    return connected_devices[index];
+    VERIFY(address.logical_unit_number == 0);
+    // FIXME: subport might not be 0, if there's a port multiplier.
+    VERIFY(address.subport == 0);
+    return device_by_port(address.port);
 }
-
+RefPtr<StorageDevice> AHCIController::device_by_index(u32 index) const
+{
+    return device_by_port(index);
+}
 }

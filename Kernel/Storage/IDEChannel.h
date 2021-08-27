@@ -103,9 +103,11 @@ public:
 
     virtual bool is_dma_enabled() const { return false; }
 
+    size_t connected_devices_count() const;
+
 private:
     void complete_current_request(AsyncDeviceRequest::RequestResult);
-    void initialize();
+    void reset();
 
 protected:
     enum class LBAMode : u8 {

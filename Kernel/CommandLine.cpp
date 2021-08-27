@@ -132,7 +132,7 @@ UNMAP_AFTER_INIT bool CommandLine::is_force_pio() const
 
 UNMAP_AFTER_INIT StringView CommandLine::root_device() const
 {
-    return lookup("root"sv).value_or("/dev/hda"sv);
+    return lookup("root"sv).value_or("hd0"sv);
 }
 
 UNMAP_AFTER_INIT AcpiFeatureLevel CommandLine::acpi_feature_level() const

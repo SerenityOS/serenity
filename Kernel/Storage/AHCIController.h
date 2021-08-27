@@ -28,12 +28,17 @@ public:
     UNMAP_AFTER_INIT static NonnullRefPtr<AHCIController> initialize(PCI::Address address);
     virtual ~AHCIController() override;
 
-    virtual RefPtr<StorageDevice> device(u32 index) const override;
+    virtual RefPtr<StorageDevice> search_for_device(StorageAddress) const override;
+    virtual RefPtr<StorageDevice> device_by_index(u32) const override;
     virtual bool reset() override;
     virtual bool shutdown() override;
     virtual size_t devices_count() const override;
     virtual void start_request(const ATADevice&, AsyncBlockDeviceRequest&) override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
+
+    // FIXME: Currently we don't support port multipliers, but in theory each multipler
+    // can have 15 disks attached to it.
+    virtual Optional<size_t> max_devices_count() const override { return 32; }
 
     const AHCI::HBADefinedCapabilities& hba_capabilities() const { return m_capabilities; };
 

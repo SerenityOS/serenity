@@ -29,9 +29,22 @@ UNMAP_AFTER_INIT StorageManagement::StorageManagement()
 {
 }
 
-void StorageManagement::remove_device(StorageDevice& device)
+void StorageManagement::enumerate_disk_partitions_on_new_device(StorageDevice& device)
 {
-    m_storage_devices.remove(device);
+    // FIXME: Add proper locking to this...
+    VERIFY_INTERRUPTS_ENABLED();
+    VERIFY(!device.partitions().size());
+    auto partition_table = try_to_initialize_partition_table(device);
+    if (!partition_table)
+        return;
+    for (size_t partition_index = 0; partition_index < partition_table->partitions_count(); partition_index++) {
+        auto partition_metadata = partition_table->partition(partition_index);
+        if (!partition_metadata.has_value())
+            continue;
+        // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
+        auto disk_partition = DiskPartition::create(const_cast<StorageDevice&>(device), (partition_index + (16 * device.minor())), partition_metadata.value());
+        const_cast<StorageDevice&>(device).m_partitions.append(disk_partition);
+    }
 }
 
 bool StorageManagement::boot_argument_contains_partition_uuid()
@@ -59,20 +72,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
     m_controllers.append(RamdiskController::initialize());
 }
 
-UNMAP_AFTER_INIT void StorageManagement::enumerate_storage_devices()
-{
-    VERIFY(!m_controllers.is_empty());
-    for (auto& controller : m_controllers) {
-        for (size_t device_index = 0; device_index < controller.devices_count(); device_index++) {
-            auto device = controller.device(device_index);
-            if (device.is_null())
-                continue;
-            m_storage_devices.append(device.release_nonnull());
-        }
-    }
-}
-
-UNMAP_AFTER_INIT OwnPtr<PartitionTable> StorageManagement::try_to_initialize_partition_table(const StorageDevice& device) const
+OwnPtr<PartitionTable> StorageManagement::try_to_initialize_partition_table(const StorageDevice& device)
 {
     auto mbr_table_or_result = MBRPartitionTable::try_to_initialize(device);
     if (!mbr_table_or_result.is_error())
@@ -92,38 +92,50 @@ UNMAP_AFTER_INIT OwnPtr<PartitionTable> StorageManagement::try_to_initialize_par
     return {};
 }
 
-UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions() const
+void StorageManagement::determine_boot_device_with_defined_prefix(StringView prefix)
 {
-    VERIFY(!m_storage_devices.is_empty());
-    NonnullRefPtrVector<DiskPartition> partitions;
-    size_t device_index = 0;
-    for (auto& device : m_storage_devices) {
-        auto partition_table = try_to_initialize_partition_table(device);
-        if (!partition_table)
-            continue;
-        for (size_t partition_index = 0; partition_index < partition_table->partitions_count(); partition_index++) {
-            auto partition_metadata = partition_table->partition(partition_index);
-            if (!partition_metadata.has_value())
+    StringView storage_name = m_boot_argument.substring_view(prefix.length());
+    auto index_parts = String(storage_name).split(',');
+    VERIFY(index_parts.size() <= 2);
+    VERIFY(index_parts.size() >= 1);
+    size_t storage_device_index = index_parts[0].to_uint(TrimWhitespace::No).value();
+    // FIXME: For now, the code that handles the highest count of drives is AHCI
+    // so it's 32 ports without port multipliers.
+    VERIFY(storage_device_index < 32);
+    NonnullRefPtrVector<StorageDevice> devices;
+    for (auto& storage_controller : m_controllers) {
+        size_t max_devices_count = storage_controller.devices_count();
+        if (auto possible_max_devices_count = storage_controller.max_devices_count(); possible_max_devices_count.has_value())
+            max_devices_count = possible_max_devices_count.value();
+
+        for (size_t device_index = 0; device_index < max_devices_count; device_index++) {
+            StorageAddress address = { static_cast<u8>(device_index), 0, 0 };
+            auto device = storage_controller.search_for_device(address);
+            if (!device)
                 continue;
-            // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
-            auto disk_partition = DiskPartition::create(const_cast<StorageDevice&>(device), (partition_index + (16 * device_index)), partition_metadata.value());
-            partitions.append(disk_partition);
-            const_cast<StorageDevice&>(device).m_partitions.append(disk_partition);
+            devices.append(*device);
         }
-        device_index++;
     }
+    if (!(storage_device_index < devices.size()))
+        return;
+    if (index_parts.size() == 1) {
+        // No partition was specified, try to use a whole StorageDevice
+        m_boot_block_device = devices[storage_device_index];
+        return;
+    }
+
+    size_t partition_index = index_parts[1].to_uint(TrimWhitespace::No).value();
+    // Note: We start counting from 0 in partition_index.
+    if (devices[storage_device_index].partitions().size() < (partition_index + 1))
+        return;
+    m_boot_block_device = devices[storage_device_index].partitions()[partition_index];
 }
 
 UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
 {
     VERIFY(!m_controllers.is_empty());
-    if (m_boot_argument.starts_with("/dev/")) {
-        StringView storage_name = m_boot_argument.substring_view(5);
-        for (auto& storage_device : m_storage_devices) {
-            if (storage_device.storage_name() == storage_name) {
-                m_boot_block_device = storage_device;
-            }
-        }
+    if (m_boot_argument.starts_with("hd")) {
+        determine_boot_device_with_defined_prefix("hd");
     }
 
     if (m_boot_block_device.is_null()) {
@@ -133,7 +145,6 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
 
 UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uuid()
 {
-    VERIFY(!m_storage_devices.is_empty());
     VERIFY(m_boot_argument.starts_with("PARTUUID="));
 
     auto partition_uuid = UUID(m_boot_argument.substring_view(strlen("PARTUUID=")));
@@ -141,13 +152,22 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uu
     if (partition_uuid.to_string().length() != 36) {
         PANIC("StorageManagement: Specified partition UUID is not valid");
     }
-    for (auto& storage_device : m_storage_devices) {
-        for (auto& partition : storage_device.partitions()) {
-            if (partition.metadata().unique_guid().is_zero())
+    for (auto& storage_controller : m_controllers) {
+        size_t max_devices_count = storage_controller.devices_count();
+        if (auto possible_max_devices_count = storage_controller.max_devices_count(); possible_max_devices_count.has_value())
+            max_devices_count = possible_max_devices_count.value();
+
+        for (size_t device_index = 0; device_index < max_devices_count; device_index++) {
+            auto device = storage_controller.device_by_index(device_index);
+            if (!device)
                 continue;
-            if (partition.metadata().unique_guid() == partition_uuid) {
-                m_boot_block_device = partition;
-                break;
+            for (auto& partition : device->partitions()) {
+                if (partition.metadata().unique_guid().is_zero())
+                    continue;
+                if (partition.metadata().unique_guid() == partition_uuid) {
+                    m_boot_block_device = partition;
+                    return;
+                }
             }
         }
     }
@@ -191,8 +211,6 @@ UNMAP_AFTER_INIT void StorageManagement::initialize(String root_device, bool for
     VERIFY(s_device_minor_number == 0);
     m_boot_argument = root_device;
     enumerate_controllers(force_pio);
-    enumerate_storage_devices();
-    enumerate_disk_partitions();
     if (!boot_argument_contains_partition_uuid()) {
         determine_boot_device();
         return;
