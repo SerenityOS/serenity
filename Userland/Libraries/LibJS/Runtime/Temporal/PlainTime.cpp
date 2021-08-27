@@ -264,4 +264,61 @@ Optional<TemporalTime> to_temporal_time_record(GlobalObject& global_object, Obje
     return result;
 }
 
+// 4.5.11 CompareTemporalTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2 ), https://tc39.es/proposal-temporal/#sec-temporal-comparetemporaltime
+i8 compare_temporal_time(u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2)
+{
+    // 1. Assert: h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, and ns2 are integers.
+
+    // 2. If h1 > h2, return 1.
+    if (hour1 > hour2)
+        return 1;
+
+    // 3. If h1 < h2, return -1.
+    if (hour1 < hour2)
+        return -1;
+
+    // 4. If min1 > min2, return 1.
+    if (minute1 > minute2)
+        return 1;
+
+    // 5. If min1 < min2, return -1.
+    if (minute1 < minute2)
+        return -1;
+
+    // 6. If s1 > s2, return 1.
+    if (second1 > second2)
+        return 1;
+
+    // 7. If s1 < s2, return -1.
+    if (second1 < second2)
+        return -1;
+
+    // 8. If ms1 > ms2, return 1.
+    if (millisecond1 > millisecond2)
+        return 1;
+
+    // 9. If ms1 < ms2, return -1.
+    if (millisecond1 < millisecond2)
+        return -1;
+
+    // 10. If mus1 > mus2, return 1.
+    if (microsecond1 > microsecond2)
+        return 1;
+
+    // 11. If mus1 < mus2, return -1.
+    if (microsecond1 < microsecond2)
+        return -1;
+
+    // 12. If ns1 > ns2, return 1.
+    if (nanosecond1 > nanosecond2)
+        return 1;
+
+    // 13. If ns1 < ns2, return -1.
+    if (nanosecond1 < nanosecond2)
+        return -1;
+
+    // 14. Return 0.
+    return 0;
+}
+
 }
