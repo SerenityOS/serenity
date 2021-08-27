@@ -5,6 +5,7 @@ serenity_component(
 
 set(SOURCES
     Fire.cpp
+    Palette.cpp
 )
 
 serenity_app(Fire ICON app-fire)

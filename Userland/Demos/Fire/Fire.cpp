@@ -22,8 +22,10 @@
  *  [ ] handle fire bitmap edges better
 */
 
+#include "Palette.h"
 #include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Icon.h>
@@ -42,30 +44,20 @@
 #define FIRE_HEIGHT 200
 #define FIRE_MAX 29
 
-static const Color s_palette[] = {
-    Color(0x07, 0x07, 0x07), Color(0x1F, 0x07, 0x07), Color(0x2F, 0x0F, 0x07),
-    Color(0x47, 0x0F, 0x07), Color(0x57, 0x17, 0x07), Color(0x67, 0x1F, 0x07),
-    Color(0x77, 0x1F, 0x07), Color(0x9F, 0x2F, 0x07), Color(0xAF, 0x3F, 0x07),
-    Color(0xBF, 0x47, 0x07), Color(0xC7, 0x47, 0x07), Color(0xDF, 0x4F, 0x07),
-    Color(0xDF, 0x57, 0x07), Color(0xD7, 0x5F, 0x07), Color(0xD7, 0x5F, 0x07),
-    Color(0xD7, 0x67, 0x0F), Color(0xCF, 0x6F, 0x0F), Color(0xCF, 0x7F, 0x0F),
-    Color(0xCF, 0x87, 0x17), Color(0xC7, 0x87, 0x17), Color(0xC7, 0x8F, 0x17),
-    Color(0xC7, 0x97, 0x1F), Color(0xBF, 0x9F, 0x1F), Color(0xBF, 0xA7, 0x27),
-    Color(0xBF, 0xAF, 0x2F), Color(0xB7, 0xAF, 0x2F), Color(0xB7, 0xB7, 0x37),
-    Color(0xCF, 0xCF, 0x6F), Color(0xEF, 0xEF, 0xC7), Color(0xFF, 0xFF, 0xFF)
-};
-
 class Fire : public GUI::Frame {
     C_OBJECT(Fire);
 
 public:
     virtual ~Fire() override;
     void set_stat_label(RefPtr<GUI::Label> l) { stats = l; };
+    void set_palette(NonnullOwnPtr<Palette>&& p) { palette = move(p); };
+    void init_fire_palette();
 
 private:
     Fire();
     RefPtr<Gfx::Bitmap> bitmap;
     RefPtr<GUI::Label> stats;
+    OwnPtr<Palette> palette;
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
@@ -79,14 +71,18 @@ private:
     int phase;
 };
 
+void Fire::init_fire_palette()
+{
+    /* Initialize fire palette */
+    for (int i = 0; i < 30; i++)
+        bitmap->set_palette_color(i, palette->palette()[i]);
+}
+
 Fire::Fire()
 {
     bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::Indexed8, { FIRE_WIDTH, FIRE_HEIGHT });
-
-    /* Initialize fire palette */
-    for (int i = 0; i < 30; i++)
-        bitmap->set_palette_color(i, s_palette[i]);
-
+    palette = make<Palette>(Palette::FireColor::Orange);
+    init_fire_palette();
     /* Set remaining entries to white */
     for (int i = 30; i < 256; i++)
         bitmap->set_palette_color(i, Color::White);
@@ -230,6 +226,37 @@ int main(int argc, char** argv)
     time.set_relative_rect({ 0, 4, 40, 10 });
     time.move_by({ window->width() - time.width(), 0 });
     fire.set_stat_label(time);
+
+    auto& palette_menu = window->add_menu("&Palette");
+    GUI::ActionGroup palette_action_group;
+    palette_action_group.set_exclusive(true);
+    palette_action_group.set_unchecking_allowed(false);
+    auto orange_action = GUI::Action::create_checkable("&Orange", [&](auto& action) {
+        if (action.is_checked()) {
+            fire.set_palette(make<Palette>(Palette::FireColor::Orange));
+            fire.init_fire_palette();
+        }
+    });
+    auto green_action = GUI::Action::create_checkable("&Green", [&](auto& action) {
+        if (action.is_checked()) {
+            fire.set_palette(make<Palette>(Palette::FireColor::Green));
+            fire.init_fire_palette();
+        }
+    });
+    auto purple_action = GUI::Action::create_checkable("&Purple", [&](auto& action) {
+        if (action.is_checked()) {
+            fire.set_palette(make<Palette>(Palette::FireColor::Purple));
+            fire.init_fire_palette();
+        }
+    });
+    palette_action_group.add_action(*orange_action);
+    palette_action_group.add_action(*green_action);
+    palette_action_group.add_action(*purple_action);
+
+    palette_menu.add_action(*orange_action);
+    palette_menu.add_action(*green_action);
+    palette_menu.add_action(*purple_action);
+    orange_action->set_checked(true);
 
     window->show();
 
