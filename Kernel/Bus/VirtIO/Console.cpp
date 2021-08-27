@@ -12,6 +12,11 @@ namespace Kernel::VirtIO {
 
 unsigned Console::next_device_id = 0;
 
+UNMAP_AFTER_INIT NonnullRefPtr<Console> Console::must_create(PCI::Address address)
+{
+    return adopt_ref_if_nonnull(new Console(address)).release_nonnull();
+}
+
 UNMAP_AFTER_INIT Console::Console(PCI::Address address)
     : VirtIO::Device(address)
     , m_device_id(next_device_id++)

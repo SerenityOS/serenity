@@ -25,11 +25,11 @@ UNMAP_AFTER_INIT void detect()
             return;
         switch (id.device_id) {
         case PCI::DeviceID::VirtIOConsole: {
-            [[maybe_unused]] auto& unused = adopt_ref(*new Console(address)).leak_ref();
+            [[maybe_unused]] auto& unused = Console::must_create(address).leak_ref();
             break;
         }
         case PCI::DeviceID::VirtIOEntropy: {
-            [[maybe_unused]] auto& unused = adopt_ref(*new RNG(address)).leak_ref();
+            [[maybe_unused]] auto& unused = RNG::must_create(address).leak_ref();
             break;
         }
         case PCI::DeviceID::VirtIOGPU: {

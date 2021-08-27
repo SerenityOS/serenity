@@ -18,7 +18,7 @@ class Console
     friend VirtIO::ConsolePort;
 
 public:
-    Console(PCI::Address);
+    static NonnullRefPtr<Console> must_create(PCI::Address address);
     virtual ~Console() override = default;
 
     virtual StringView purpose() const override { return class_name(); }
@@ -30,6 +30,7 @@ public:
 
 private:
     virtual StringView class_name() const override { return "VirtIOConsole"; }
+    explicit Console(PCI::Address);
     enum class ControlEvent : u16 {
         DeviceReady = 0,
         DeviceAdd = 1,
