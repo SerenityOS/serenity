@@ -47,6 +47,7 @@ Value calendar_days_in_year(GlobalObject&, Object& calendar, Object& date_like);
 Value calendar_months_in_year(GlobalObject&, Object& calendar, Object& date_like);
 Value calendar_in_leap_year(GlobalObject&, Object& calendar, Object& date_like);
 Value calendar_era(GlobalObject&, Object& calendar, Object& date_like);
+Value calendar_era_year(GlobalObject&, Object& calendar, Object& date_like);
 Object* to_temporal_calendar(GlobalObject&, Value);
 Object* to_temporal_calendar_with_iso_default(GlobalObject&, Value);
 Object* get_temporal_calendar_with_iso_default(GlobalObject&, Object&);
