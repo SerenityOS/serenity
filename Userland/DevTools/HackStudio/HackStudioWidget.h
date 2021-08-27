@@ -41,7 +41,9 @@ public:
     void update_actions();
     Project& project();
     GUI::TextEditor& current_editor();
+    GUI::TextEditor const& current_editor() const;
     EditorWrapper& current_editor_wrapper();
+    EditorWrapper const& current_editor_wrapper() const;
     void set_current_editor_wrapper(RefPtr<EditorWrapper>);
 
     const String& active_file() const { return m_current_editor_wrapper->filename(); }
@@ -93,6 +95,7 @@ private:
     NonnullRefPtr<GUI::Action> create_build_action();
     NonnullRefPtr<GUI::Action> create_run_action();
     NonnullRefPtr<GUI::Action> create_stop_action();
+    void create_location_history_actions();
 
     void add_new_editor(GUI::Widget& parent);
     RefPtr<EditorWrapper> get_editor_of_file(const String& filename);
@@ -128,6 +131,16 @@ private:
     void update_gml_preview();
     void update_tree_view();
     void update_window_title();
+    void on_cursor_change();
+
+    struct ProjectLocation {
+        String filename;
+        size_t line { 0 };
+        size_t column { 0 };
+    };
+
+    ProjectLocation current_project_location() const;
+    void update_history_actions();
 
     NonnullRefPtrVector<EditorWrapper> m_all_editor_wrappers;
     RefPtr<EditorWrapper> m_current_editor_wrapper;
@@ -137,6 +150,12 @@ private:
     Vector<String> m_open_files_vector; // NOTE: This contains the keys from m_open_files and m_file_watchers
 
     OwnPtr<Project> m_project;
+
+    Vector<ProjectLocation> m_locations_history;
+    // This index is the boundary between the "Go Back" and "Go Forward" locations.
+    // It always points at one past the current location in the list.
+    size_t m_locations_history_end_index { 0 };
+    bool m_locations_history_disabled { false };
 
     RefPtr<GUI::TreeView> m_project_tree_view;
     RefPtr<GUI::ListView> m_open_files_view;
@@ -181,6 +200,8 @@ private:
     RefPtr<GUI::Action> m_debug_action;
     RefPtr<GUI::Action> m_build_action;
     RefPtr<GUI::Action> m_run_action;
+    RefPtr<GUI::Action> m_locations_history_back_action;
+    RefPtr<GUI::Action> m_locations_history_forward_action;
 
     GUI::ActionGroup m_wrapping_mode_actions;
     RefPtr<GUI::Action> m_no_wrapping_action;
