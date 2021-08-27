@@ -20,11 +20,12 @@
 
 int main(int argc, char** argv)
 {
-    auto app = GUI::Application::construct(argc, argv);
-    auto app_icon = GUI::Icon::default_icon("app-chess");
+    if (pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
-    auto window = GUI::Window::construct();
-    auto& widget = window->set_main_widget<ChessWidget>();
+    auto app = GUI::Application::construct(argc, argv);
 
     Config::pledge_domains("Chess");
 
@@ -32,6 +33,11 @@ int main(int argc, char** argv)
         perror("pledge");
         return 1;
     }
+
+    auto app_icon = GUI::Icon::default_icon("app-chess");
+
+    auto window = GUI::Window::construct();
+    auto& widget = window->set_main_widget<ChessWidget>();
 
     if (unveil("/res", "r") < 0) {
         perror("unveil");
