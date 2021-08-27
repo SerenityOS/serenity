@@ -8,6 +8,8 @@
 
 namespace FlappyBug {
 
+const float SPEED = 3.0f;
+
 Game::Game()
 {
     set_override_cursor(Gfx::StandardCursor::Hidden);
@@ -174,6 +176,7 @@ void Game::tick()
         if (m_cloud.x < 0) {
             m_cloud.reset();
         }
+
     }
 
     m_restart_cooldown -= 2.0f / 16.0f;

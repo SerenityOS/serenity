@@ -41,7 +41,7 @@ private:
 
     struct Bug {
         const float x { 50 };
-        const float radius { 16 };
+        const float radius { 14 };
         const float starting_y { 200 };
         const RefPtr<Gfx::Bitmap> falling_bitmap { Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/falling.png") };
         const RefPtr<Gfx::Bitmap> flapping_bitmap { Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/flapping.png") };
