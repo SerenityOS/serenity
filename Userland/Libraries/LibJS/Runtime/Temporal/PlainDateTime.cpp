@@ -304,4 +304,22 @@ PlainDateTime* create_temporal_date_time(GlobalObject& global_object, i32 iso_ye
     return object;
 }
 
+// 5.5.8 CompareISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, d2, h2, min2, s2, ms2, mus2, ns2 ),https://tc39.es/proposal-temporal/#sec-temporal-compareisodatetime
+i8 compare_iso_date_time(i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, i32 year2, u8 month2, u8 day2, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2)
+{
+    // 1. Assert: y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, d2, h2, min2, s2, ms2, mus2, and ns2 are integers.
+
+    // 2. Let dateResult be ! CompareISODate(y1, mon1, d1, y2, mon2, d2).
+    auto date_result = compare_iso_date(year1, month1, day1, year2, month2, day2);
+
+    // 3. If dateResult is not 0, then
+    if (date_result != 0) {
+        // a. Return dateResult.
+        return date_result;
+    }
+
+    // 4. Return ! CompareTemporalTime(h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2).
+    return compare_temporal_time(hour1, minute1, second1, millisecond1, microsecond1, nanosecond1, hour2, minute2, second2, millisecond2, microsecond2, nanosecond2);
+}
+
 }
