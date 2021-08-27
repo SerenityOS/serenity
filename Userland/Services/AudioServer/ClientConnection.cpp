@@ -38,7 +38,7 @@ void ClientConnection::die()
     s_connections.remove(client_id());
 }
 
-void ClientConnection::did_finish_playing_buffer(Badge<BufferQueue>, int buffer_id)
+void ClientConnection::did_finish_playing_buffer(Badge<ClientAudioStream>, int buffer_id)
 {
     async_finished_playing_buffer(buffer_id);
 }

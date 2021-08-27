@@ -30,10 +30,10 @@ constexpr double SAMPLE_HEADROOM = 0.7;
 
 class ClientConnection;
 
-class BufferQueue : public RefCounted<BufferQueue> {
+class ClientAudioStream : public RefCounted<ClientAudioStream> {
 public:
-    explicit BufferQueue(ClientConnection&);
-    ~BufferQueue() { }
+    explicit ClientAudioStream(ClientConnection&);
+    ~ClientAudioStream() { }
 
     bool is_full() const { return m_queue.size() >= 3; }
     void enqueue(NonnullRefPtr<Audio::Buffer>&&);
@@ -109,7 +109,7 @@ public:
     Mixer(NonnullRefPtr<Core::ConfigFile> config);
     virtual ~Mixer() override;
 
-    NonnullRefPtr<BufferQueue> create_queue(ClientConnection&);
+    NonnullRefPtr<ClientAudioStream> create_queue(ClientConnection&);
 
     // To the outside world, we pretend that the target volume is already reached, even though it may be still fading.
     double main_volume() const { return m_main_volume.target(); }
@@ -124,7 +124,7 @@ public:
 private:
     void request_setting_sync();
 
-    Vector<NonnullRefPtr<BufferQueue>> m_pending_mixing;
+    Vector<NonnullRefPtr<ClientAudioStream>> m_pending_mixing;
     Atomic<bool> m_added_queue { false };
     pthread_mutex_t m_pending_mutex;
     pthread_cond_t m_pending_cond;
