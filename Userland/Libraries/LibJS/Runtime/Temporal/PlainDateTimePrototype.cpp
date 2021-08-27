@@ -53,6 +53,7 @@ void PlainDateTimePrototype::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.withPlainDate, with_plain_date, 1, attr);
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
+    define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.toPlainDate, to_plain_date, 0, attr);
     define_native_function(vm.names.toPlainYearMonth, to_plain_year_month, 0, attr);
@@ -396,6 +397,31 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with_calendar)
 
     // 4. Return ? CreateTemporalDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], calendar).
     return create_temporal_date_time(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), *calendar);
+}
+
+// 5.3.31 Temporal.PlainDateTime.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.equals
+JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::equals)
+{
+    // 1. Let dateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
+    auto* date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Set other to ? ToTemporalDateTime(other).
+    auto* other = to_temporal_date_time(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 4. Let result be ! CompareISODateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], other.[[ISOYear]], other.[[ISOMonth]], other.[[ISODay]], other.[[ISOHour]], other.[[ISOMinute]], other.[[ISOSecond]], other.[[ISOMillisecond]], other.[[ISOMicrosecond]], other.[[ISONanosecond]]).
+    auto result = compare_iso_date_time(date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), other->iso_year(), other->iso_month(), other->iso_day(), other->iso_hour(), other->iso_minute(), other->iso_second(), other->iso_millisecond(), other->iso_microsecond(), other->iso_nanosecond());
+
+    // 5. If result is not 0, return false.
+    if (result != 0)
+        return Value(false);
+
+    // 6. Return ? CalendarEquals(dateTime.[[Calendar]], other.[[Calendar]]).
+    return Value(calendar_equals(global_object, date_time->calendar(), other->calendar()));
 }
 
 // 5.3.35 Temporal.PlainDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.valueof
