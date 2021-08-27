@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,6 +15,7 @@
 #include <AK/URL.h>
 #include <Applications/FileManager/FileManagerWindowGML.h>
 #include <LibConfig/Client.h>
+#include <LibConfig/Listener.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
@@ -93,6 +95,7 @@ int main(int argc, char** argv)
 
     Config::pledge_domains({ "FileManager", "WindowManager" });
     Config::monitor_domain("FileManager");
+    Config::monitor_domain("WindowManager");
 
     if (is_desktop_mode)
         return run_in_desktop_mode();
@@ -438,6 +441,14 @@ int run_in_desktop_mode()
             desktop_view_context_menu->popup(event.screen_position());
         }
     };
+
+    struct BackgroundWallpaperListener : Config::Listener {
+        virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value) override
+        {
+            if (domain == "WindowManager" && group == "Background" && key == "Wallpaper")
+                GUI::Desktop::the().set_wallpaper(value, false);
+        }
+    } wallpaper_listener;
 
     auto selected_wallpaper = Config::read_string("WindowManager", "Background", "Wallpaper", "");
     if (!selected_wallpaper.is_empty()) {
