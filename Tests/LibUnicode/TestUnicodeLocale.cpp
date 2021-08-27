@@ -100,6 +100,52 @@ TEST_CASE(parse_unicode_locale_id)
     pass("aaa-bbbb-cc-1234-5678"sv, "aaa"sv, "bbbb"sv, "cc"sv, { "1234"sv, "5678"sv });
 }
 
+TEST_CASE(parse_unicode_locale_id_with_unicode_locale_extension)
+{
+    auto fail = [](StringView locale) {
+        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        EXPECT(!locale_id.has_value());
+    };
+    auto pass = [](StringView locale, Unicode::LocaleExtension const& expected_extension) {
+        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        VERIFY(locale_id.has_value());
+        EXPECT_EQ(locale_id->extensions.size(), 1u);
+
+        auto const& actual_extension = locale_id->extensions[0].get<Unicode::LocaleExtension>();
+        VERIFY(actual_extension.attributes == expected_extension.attributes);
+        EXPECT_EQ(actual_extension.keywords.size(), expected_extension.keywords.size());
+
+        for (size_t i = 0; i < actual_extension.keywords.size(); ++i) {
+            auto const& actual_keyword = actual_extension.keywords[i];
+            auto const& expected_keyword = expected_extension.keywords[i];
+
+            EXPECT_EQ(actual_keyword.key, expected_keyword.key);
+            EXPECT_EQ(actual_keyword.types, expected_keyword.types);
+        }
+    };
+
+    fail("en-u"sv);
+    fail("en-u-"sv);
+    fail("en-u-x"sv);
+    fail("en-u-xx-"sv);
+    fail("en-u--xx"sv);
+    fail("en-u-xx-xxxxx-"sv);
+    fail("en-u-xx--xxxxx"sv);
+    fail("en-u-xx-xxxxxxxxx"sv);
+    fail("en-u-xxxxx-"sv);
+    fail("en-u-xxxxxxxxx"sv);
+
+    pass("en-u-xx"sv, { {}, { { "xx"sv, {} } } });
+    pass("en-u-xx-yyyy"sv, { {}, { { "xx"sv, { "yyyy"sv } } } });
+    pass("en-u-xx-yyyy-zzzz"sv, { {}, { { "xx"sv, { "yyyy"sv, "zzzz"sv } } } });
+    pass("en-u-xx-yyyy-zzzz-aa"sv, { {}, { { "xx"sv, { "yyyy"sv, "zzzz"sv } }, { "aa"sv, {} } } });
+    pass("en-u-xxx"sv, { { "xxx"sv }, {} });
+    pass("en-u-fff-gggg"sv, { { "fff"sv, "gggg"sv }, {} });
+    pass("en-u-fff-xx"sv, { { "fff"sv }, { { "xx"sv, {} } } });
+    pass("en-u-fff-xx-yyyy"sv, { { "fff"sv }, { { "xx"sv, { "yyyy"sv } } } });
+    pass("en-u-fff-gggg-xx-yyyy"sv, { { "fff"sv, "gggg"sv }, { { "xx"sv, { "yyyy"sv } } } });
+}
+
 TEST_CASE(canonicalize_unicode_locale_id)
 {
     auto test = [](StringView locale, StringView expected_canonical_locale) {

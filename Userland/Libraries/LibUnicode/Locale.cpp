@@ -53,7 +53,32 @@ bool is_unicode_variant_subtag(StringView subtag)
     return false;
 }
 
-static Optional<StringView> consume_next_segment(GenericLexer& lexer, bool with_separator)
+static bool is_key(StringView key)
+{
+    // key = alphanum alpha
+    if (key.length() != 2)
+        return false;
+    return is_ascii_alphanumeric(key[0]) && is_ascii_alpha(key[1]);
+}
+
+static bool is_single_type(StringView type)
+{
+    // type = alphanum{3,8} (sep alphanum{3,8})*
+    // Note: Consecutive types are not handled here, that is left to the caller.
+    if ((type.length() < 3) || (type.length() > 8))
+        return false;
+    return all_of(type, is_ascii_alphanumeric);
+}
+
+static bool is_attribute(StringView type)
+{
+    // attribute = alphanum{3,8}
+    if ((type.length() < 3) || (type.length() > 8))
+        return false;
+    return all_of(type, is_ascii_alphanumeric);
+}
+
+static Optional<StringView> consume_next_segment(GenericLexer& lexer, bool with_separator = true)
 {
     constexpr auto is_separator = is_any_of("-_"sv);
 
@@ -153,6 +178,101 @@ static Optional<LanguageID> parse_unicode_language_id(GenericLexer& lexer)
     return language_id;
 }
 
+static Optional<LocaleExtension> parse_unicode_locale_extension(GenericLexer& lexer)
+{
+    // https://unicode.org/reports/tr35/#unicode_locale_extensions
+    //
+    // unicode_locale_extensions = sep [uU] ((sep keyword)+ | (sep attribute)+ (sep keyword)*)
+    LocaleExtension locale_extension {};
+
+    enum class ParseState {
+        ParsingAttributeOrKeyword,
+        ParsingAttribute,
+        ParsingKeyword,
+        Done,
+    };
+
+    auto state = ParseState::ParsingAttributeOrKeyword;
+
+    while (!lexer.is_eof() && (state != ParseState::Done)) {
+        auto segment = consume_next_segment(lexer);
+        if (!segment.has_value())
+            return {};
+
+        if (state == ParseState::ParsingAttributeOrKeyword)
+            state = is_key(*segment) ? ParseState::ParsingKeyword : ParseState::ParsingAttribute;
+
+        switch (state) {
+        case ParseState::ParsingAttribute:
+            if (is_attribute(*segment)) {
+                locale_extension.attributes.append(*segment);
+                break;
+            }
+
+            state = ParseState::ParsingKeyword;
+            [[fallthrough]];
+
+        case ParseState::ParsingKeyword: {
+            // keyword = key (sep type)?
+            Keyword keyword { .key = *segment };
+
+            if (!is_key(*segment)) {
+                lexer.retreat(segment->length() + 1);
+                state = ParseState::Done;
+                break;
+            }
+
+            while (true) {
+                auto type = consume_next_segment(lexer);
+
+                if (!type.has_value() || !is_single_type(*type)) {
+                    if (type.has_value())
+                        lexer.retreat(type->length() + 1);
+                    break;
+                }
+
+                keyword.types.append(*type);
+            }
+
+            locale_extension.keywords.append(move(keyword));
+            break;
+        }
+
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    if (locale_extension.attributes.is_empty() && locale_extension.keywords.is_empty())
+        return {};
+    return locale_extension;
+}
+
+static Optional<Extension> parse_extension(GenericLexer& lexer)
+{
+    // https://unicode.org/reports/tr35/#extensions
+    //
+    // extensions = unicode_locale_extensions | transformed_extensions | other_extensions
+    size_t starting_position = lexer.tell();
+
+    if (auto header = consume_next_segment(lexer); header.has_value() && (header->length() == 1)) {
+        switch ((*header)[0]) {
+        case 'u':
+        case 'U':
+            if (auto extension = parse_unicode_locale_extension(lexer); extension.has_value())
+                return Extension { extension.release_value() };
+            break;
+
+        default:
+            // FIXME: Handle transformed_extensions / other_extensions
+            break;
+        }
+    }
+
+    lexer.retreat(lexer.tell() - starting_position);
+    return {};
+}
+
 Optional<LanguageID> parse_unicode_language_id(StringView language)
 {
     GenericLexer lexer { language };
@@ -167,7 +287,6 @@ Optional<LanguageID> parse_unicode_language_id(StringView language)
 Optional<LocaleID> parse_unicode_locale_id(StringView locale)
 {
     GenericLexer lexer { locale };
-    LocaleID locale_id {};
 
     // https://unicode.org/reports/tr35/#Unicode_locale_identifier
     //
@@ -178,12 +297,21 @@ Optional<LocaleID> parse_unicode_locale_id(StringView locale)
     if (!language_id.has_value())
         return {};
 
-    // FIXME: Handle extensions and pu_extensions.
+    LocaleID locale_id { language_id.release_value() };
+
+    while (true) {
+        auto extension = parse_extension(lexer);
+        if (!extension.has_value())
+            break;
+        locale_id.extensions.append(extension.release_value());
+    }
+
+    // FIXME: Handle pu_extensions.
 
     if (!lexer.is_eof())
         return {};
 
-    return LocaleID { language_id.release_value() };
+    return locale_id;
 }
 
 Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
