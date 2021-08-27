@@ -88,6 +88,7 @@ void Mixer::mix()
                 continue;
             }
             ++active_queues;
+            queue->volume().advance_time();
 
             for (int i = 0; i < mixed_buffer_length; ++i) {
                 auto& mixed_sample = mixed_buffer[i];
@@ -95,6 +96,7 @@ void Mixer::mix()
                 if (!queue->get_next_sample(sample))
                     break;
                 sample.log_multiply(SAMPLE_HEADROOM);
+                sample.log_multiply(queue->volume());
                 mixed_sample += sample;
             }
         }
