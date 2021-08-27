@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Singleton.h>
 #include <AK/UUID.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
@@ -21,21 +22,16 @@
 
 namespace Kernel {
 
-static StorageManagement* s_the;
-static size_t s_device_minor_number;
+static Singleton<StorageManagement> s_the;
+static Atomic<size_t> s_device_minor_number;
 
-UNMAP_AFTER_INIT StorageManagement::StorageManagement(String boot_argument, bool force_pio)
-    : m_boot_argument(boot_argument)
-    , m_controllers(enumerate_controllers(force_pio))
-    , m_storage_devices(enumerate_storage_devices())
-    , m_disk_partitions(enumerate_disk_partitions())
+UNMAP_AFTER_INIT StorageManagement::StorageManagement()
 {
-    s_device_minor_number = 0;
-    if (!boot_argument_contains_partition_uuid()) {
-        determine_boot_device();
-        return;
-    }
-    determine_boot_device_with_partition_uuid();
+}
+
+void StorageManagement::remove_device(StorageDevice& device)
+{
+    m_storage_devices.remove(device);
 }
 
 bool StorageManagement::boot_argument_contains_partition_uuid()
@@ -43,40 +39,37 @@ bool StorageManagement::boot_argument_contains_partition_uuid()
     return m_boot_argument.starts_with("PARTUUID=");
 }
 
-UNMAP_AFTER_INIT NonnullRefPtrVector<StorageController> StorageManagement::enumerate_controllers(bool force_pio) const
+UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
 {
-    NonnullRefPtrVector<StorageController> controllers;
+    VERIFY(m_controllers.is_empty());
     if (!kernel_command_line().disable_physical_storage()) {
         if (kernel_command_line().is_ide_enabled()) {
             PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
                 if (PCI::get_class(address) == PCI_MASS_STORAGE_CLASS_ID && PCI::get_subclass(address) == PCI_IDE_CTRL_SUBCLASS_ID) {
-                    controllers.append(IDEController::initialize(address, force_pio));
+                    m_controllers.append(IDEController::initialize(address, force_pio));
                 }
             });
         }
         PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
             if (PCI::get_class(address) == PCI_MASS_STORAGE_CLASS_ID && PCI::get_subclass(address) == PCI_SATA_CTRL_SUBCLASS_ID && PCI::get_programming_interface(address) == PCI_AHCI_IF_PROGIF) {
-                controllers.append(AHCIController::initialize(address));
+                m_controllers.append(AHCIController::initialize(address));
             }
         });
     }
-    controllers.append(RamdiskController::initialize());
-    return controllers;
+    m_controllers.append(RamdiskController::initialize());
 }
 
-UNMAP_AFTER_INIT NonnullRefPtrVector<StorageDevice> StorageManagement::enumerate_storage_devices() const
+UNMAP_AFTER_INIT void StorageManagement::enumerate_storage_devices()
 {
     VERIFY(!m_controllers.is_empty());
-    NonnullRefPtrVector<StorageDevice> devices;
     for (auto& controller : m_controllers) {
         for (size_t device_index = 0; device_index < controller.devices_count(); device_index++) {
             auto device = controller.device(device_index);
             if (device.is_null())
                 continue;
-            devices.append(device.release_nonnull());
+            m_storage_devices.append(device.release_nonnull());
         }
     }
-    return devices;
 }
 
 UNMAP_AFTER_INIT OwnPtr<PartitionTable> StorageManagement::try_to_initialize_partition_table(const StorageDevice& device) const
@@ -99,7 +92,7 @@ UNMAP_AFTER_INIT OwnPtr<PartitionTable> StorageManagement::try_to_initialize_par
     return {};
 }
 
-UNMAP_AFTER_INIT NonnullRefPtrVector<DiskPartition> StorageManagement::enumerate_disk_partitions() const
+UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions() const
 {
     VERIFY(!m_storage_devices.is_empty());
     NonnullRefPtrVector<DiskPartition> partitions;
@@ -119,7 +112,6 @@ UNMAP_AFTER_INIT NonnullRefPtrVector<DiskPartition> StorageManagement::enumerate
         }
         device_index++;
     }
-    return partitions;
 }
 
 UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
@@ -141,7 +133,7 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
 
 UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uuid()
 {
-    VERIFY(!m_disk_partitions.is_empty());
+    VERIFY(!m_storage_devices.is_empty());
     VERIFY(m_boot_argument.starts_with("PARTUUID="));
 
     auto partition_uuid = UUID(m_boot_argument.substring_view(strlen("PARTUUID=")));
@@ -149,20 +141,21 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uu
     if (partition_uuid.to_string().length() != 36) {
         PANIC("StorageManagement: Specified partition UUID is not valid");
     }
-
-    for (auto& partition : m_disk_partitions) {
-        if (partition.metadata().unique_guid().is_zero())
-            continue;
-        if (partition.metadata().unique_guid() == partition_uuid) {
-            m_boot_block_device = partition;
-            break;
+    for (auto& storage_device : m_storage_devices) {
+        for (auto& partition : storage_device.partitions()) {
+            if (partition.metadata().unique_guid().is_zero())
+                continue;
+            if (partition.metadata().unique_guid() == partition_uuid) {
+                m_boot_block_device = partition;
+                break;
+            }
         }
     }
 }
 
 RefPtr<BlockDevice> StorageManagement::boot_block_device() const
 {
-    return m_boot_block_device;
+    return m_boot_block_device.strong_ref();
 }
 
 int StorageManagement::major_number()
@@ -171,7 +164,9 @@ int StorageManagement::major_number()
 }
 int StorageManagement::minor_number()
 {
-    return s_device_minor_number++;
+    auto minor_number = s_device_minor_number.load();
+    s_device_minor_number++;
+    return minor_number;
 }
 
 NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
@@ -191,15 +186,18 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
     return file_system;
 }
 
-bool StorageManagement::initialized()
-{
-    return (s_the != nullptr);
-}
-
 UNMAP_AFTER_INIT void StorageManagement::initialize(String root_device, bool force_pio)
 {
-    VERIFY(!StorageManagement::initialized());
-    s_the = new StorageManagement(root_device, force_pio);
+    VERIFY(s_device_minor_number == 0);
+    m_boot_argument = root_device;
+    enumerate_controllers(force_pio);
+    enumerate_storage_devices();
+    enumerate_disk_partitions();
+    if (!boot_argument_contains_partition_uuid()) {
+        determine_boot_device();
+        return;
+    }
+    determine_boot_device_with_partition_uuid();
 }
 
 StorageManagement& StorageManagement::the()

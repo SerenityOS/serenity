@@ -319,7 +319,7 @@ void init_stage2(void*)
     PTYMultiplexer::initialize();
     SB16::detect();
 
-    StorageManagement::initialize(kernel_command_line().root_device(), kernel_command_line().is_force_pio());
+    StorageManagement::the().initialize(kernel_command_line().root_device(), kernel_command_line().is_force_pio());
     if (VirtualFileSystem::the().mount_root(StorageManagement::the().root_filesystem()).is_error()) {
         PANIC("VirtualFileSystem::mount_root failed");
     }

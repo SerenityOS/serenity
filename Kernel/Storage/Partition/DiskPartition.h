@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
+#include <AK/WeakPtr.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Storage/Partition/DiskPartitionMetadata.h>
 
@@ -32,7 +33,7 @@ private:
 
     DiskPartition(BlockDevice&, unsigned, DiskPartitionMetadata);
 
-    NonnullRefPtr<BlockDevice> m_device;
+    WeakPtr<BlockDevice> m_device;
     DiskPartitionMetadata m_metadata;
 };
 
