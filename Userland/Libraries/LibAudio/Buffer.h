@@ -60,6 +60,12 @@ struct Frame {
         right *= pct;
     }
 
+    // FIXME: This is temporary until we have log scaling
+    Frame scaled(double fraction) const
+    {
+        return Frame { left * fraction, right * fraction };
+    }
+
     Frame& operator+=(const Frame& other)
     {
         left += other.left;

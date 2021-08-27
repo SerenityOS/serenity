@@ -63,6 +63,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * JavaScript engine (LibJS)
 * Markdown (LibMarkdown)
 * Audio (LibAudio)
+* Digital Signal Processing/Synthesizer Chains (LibDSP)
 * PCI database (LibPCIDB)
 * Terminal emulation (LibVT)
 * Out-of-process network protocol I/O (LibProtocol)
