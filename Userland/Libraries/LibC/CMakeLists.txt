@@ -67,7 +67,12 @@ set(LIBC_SOURCES
 file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../../AK/*.cpp")
 file(GLOB ELF_SOURCES CONFIGURE_DEPENDS "../LibELF/*.cpp")
 
-if ("${SERENITY_ARCH}" STREQUAL "i686")
+if ("${SERENITY_ARCH}" STREQUAL "aarch64")
+    set(ASM_SOURCES "arch/aarch64/setjmp.S")
+    set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/aarch64/entry.S ../LibELF/Arch/aarch64/plt_trampoline.S)
+    set(CRTI_SOURCE "arch/aarch64/crti.S")
+    set(CRTN_SOURCE "arch/aarch64/crtn.S")
+elseif ("${SERENITY_ARCH}" STREQUAL "i686")
     set(ASM_SOURCES "arch/i386/setjmp.S")
     set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/i386/entry.S ../LibELF/Arch/i386/plt_trampoline.S)
     set(CRTI_SOURCE "arch/i386/crti.S")
