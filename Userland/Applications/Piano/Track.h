@@ -12,6 +12,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/SinglyLinkedList.h>
 #include <LibAudio/Buffer.h>
+#include <LibDSP/Effects.h>
 
 using RollIter = AK::SinglyLinkedListIterator<SinglyLinkedList<RollNote>, RollNote>;
 
@@ -31,7 +32,7 @@ public:
     int decay() const { return m_decay; }
     int sustain() const { return m_sustain; }
     int release() const { return m_release; }
-    int delay() const { return m_delay; }
+    NonnullRefPtr<LibDSP::Effects::Delay> delay() { return m_delay; }
 
     void fill_sample(Sample& sample);
     void reset();
@@ -45,7 +46,6 @@ public:
     void set_decay(int decay);
     void set_sustain(int sustain);
     void set_release(int release);
-    void set_delay(int delay);
 
 private:
     Audio::Frame sine(size_t note);
@@ -57,8 +57,6 @@ private:
 
     void sync_roll(int note);
     void set_sustain_impl(int sustain);
-
-    Vector<Sample> m_delay_buffer;
 
     Vector<Audio::Frame> m_recorded_sample;
 
@@ -79,11 +77,11 @@ private:
     double m_sustain_level;
     int m_release;
     double m_release_step[note_count];
-    int m_delay { 0 };
-    size_t m_delay_samples { 0 };
-    size_t m_delay_index { 0 };
 
     const u32& m_time;
+
+    NonnullRefPtr<LibDSP::Transport> m_temporary_transport;
+    NonnullRefPtr<LibDSP::Effects::Delay> m_delay;
 
     SinglyLinkedList<RollNote> m_roll_notes[note_count];
     RollIter m_roll_iterators[note_count];
