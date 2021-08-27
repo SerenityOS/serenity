@@ -5,9 +5,9 @@
  */
 
 #include <Kernel/Bus/PCI/IDs.h>
-#include <Kernel/Bus/VirtIO/VirtIO.h>
-#include <Kernel/Bus/VirtIO/VirtIOConsole.h>
-#include <Kernel/Bus/VirtIO/VirtIORNG.h>
+#include <Kernel/Bus/VirtIO/Console.h>
+#include <Kernel/Bus/VirtIO/Device.h>
+#include <Kernel/Bus/VirtIO/RNG.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Sections.h>
 
