@@ -135,6 +135,7 @@ namespace JS {
     P(epochNanoseconds)                      \
     P(epochSeconds)                          \
     P(equals)                                \
+    P(era)                                   \
     P(error)                                 \
     P(errors)                                \
     P(escape)                                \
