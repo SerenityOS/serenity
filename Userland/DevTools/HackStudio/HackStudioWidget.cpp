@@ -215,6 +215,9 @@ void HackStudioWidget::open_project(const String& root_path)
     }
     for (auto& editor_wrapper : m_all_editor_wrappers)
         editor_wrapper.set_project_root(LexicalPath(m_project->root_path()));
+
+    m_locations_history.clear();
+    m_locations_history_end_index = 0;
 }
 
 Vector<String> HackStudioWidget::selected_file_paths() const
@@ -242,7 +245,6 @@ bool HackStudioWidget::open_file(const String& full_filename, size_t line, size_
     if (full_filename.starts_with(project().root_path())) {
         filename = LexicalPath::relative_path(full_filename, project().root_path());
     }
-    dbgln("HackStudio is opening {}", filename);
     if (Core::File::is_directory(filename) || !Core::File::exists(filename))
         return false;
 
@@ -270,10 +272,10 @@ bool HackStudioWidget::open_file(const String& full_filename, size_t line, size_
                 warnln("Couldn't watch '{}'", filename);
             }
         }
-
         m_open_files_view->model()->invalidate();
     }
 
+    current_editor().on_cursor_change = nullptr; // Disable callback while we're swapping the document.
     current_editor().set_document(const_cast<GUI::TextDocument&>(new_project_file->document()));
     if (new_project_file->could_render_text()) {
         current_editor_wrapper().set_mode_displayable();
@@ -296,7 +298,7 @@ bool HackStudioWidget::open_file(const String& full_filename, size_t line, size_
 
     current_editor().set_focus(true);
 
-    current_editor().on_cursor_change = [this] { update_statusbar(); };
+    current_editor().on_cursor_change = [this] { on_cursor_change(); };
     current_editor_wrapper().on_change = [this] { update_gml_preview(); };
     current_editor().set_cursor(line, column);
     update_gml_preview();
@@ -337,7 +339,18 @@ EditorWrapper& HackStudioWidget::current_editor_wrapper()
     return *m_current_editor_wrapper;
 }
 
+EditorWrapper const& HackStudioWidget::current_editor_wrapper() const
+{
+    VERIFY(m_current_editor_wrapper);
+    return *m_current_editor_wrapper;
+}
+
 GUI::TextEditor& HackStudioWidget::current_editor()
+{
+    return current_editor_wrapper().editor();
+}
+
+GUI::TextEditor const& HackStudioWidget::current_editor() const
 {
     return current_editor_wrapper().editor();
 }
@@ -565,7 +578,7 @@ void HackStudioWidget::add_new_editor(GUI::Widget& parent)
     m_all_editor_wrappers.append(wrapper);
     wrapper->editor().set_focus(true);
     wrapper->set_project_root(LexicalPath(m_project->root_path()));
-    wrapper->editor().on_cursor_change = [this] { update_statusbar(); };
+    wrapper->editor().on_cursor_change = [this] { on_cursor_change(); };
     wrapper->on_change = [this] { update_gml_preview(); };
     set_edit_mode(EditMode::Text);
 }
@@ -1140,6 +1153,12 @@ void HackStudioWidget::create_view_menu(GUI::Window& window)
     view_menu.add_action(*m_remove_current_editor_action);
     view_menu.add_action(*m_add_terminal_action);
     view_menu.add_action(*m_remove_current_terminal_action);
+
+    view_menu.add_separator();
+
+    create_location_history_actions();
+    view_menu.add_action(*m_locations_history_back_action);
+    view_menu.add_action(*m_locations_history_forward_action);
 }
 
 void HackStudioWidget::create_help_menu(GUI::Window& window)
@@ -1274,6 +1293,85 @@ void HackStudioWidget::update_tree_view()
 void HackStudioWidget::update_window_title()
 {
     window()->set_title(String::formatted("{} - {} - Hack Studio", m_current_editor_wrapper->filename_label().text(), m_project->name()));
+}
+
+void HackStudioWidget::on_cursor_change()
+{
+    update_statusbar();
+    if (current_editor_wrapper().filename().is_null())
+        return;
+
+    auto current_location = current_project_location();
+
+    if (m_locations_history_end_index != 0) {
+        auto last = m_locations_history[m_locations_history_end_index - 1];
+        if (current_location.filename == last.filename && current_location.line == last.line)
+            return;
+    }
+
+    // Clear "Go Forward" locations
+    VERIFY(m_locations_history_end_index <= m_locations_history.size());
+    m_locations_history.remove(m_locations_history_end_index, m_locations_history.size() - m_locations_history_end_index);
+
+    m_locations_history.append(current_location);
+
+    constexpr size_t max_locations = 30;
+    if (m_locations_history.size() > max_locations)
+        m_locations_history.take_first();
+
+    m_locations_history_end_index = m_locations_history.size();
+
+    update_history_actions();
+}
+
+void HackStudioWidget::create_location_history_actions()
+{
+    m_locations_history_back_action = GUI::Action::create("Go Back", { Mod_Alt | Mod_Shift, Key_Left }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"), [this](auto&) {
+        if (m_locations_history_end_index <= 1)
+            return;
+
+        auto location = m_locations_history[m_locations_history_end_index - 2];
+        --m_locations_history_end_index;
+
+        m_locations_history_disabled = true;
+        open_file(location.filename, location.line, location.column);
+        m_locations_history_disabled = false;
+
+        update_history_actions();
+    });
+
+    m_locations_history_forward_action = GUI::Action::create("Go Forward", { Mod_Alt | Mod_Shift, Key_Right }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"), [this](auto&) {
+        if (m_locations_history_end_index == m_locations_history.size())
+            return;
+
+        auto location = m_locations_history[m_locations_history_end_index];
+        ++m_locations_history_end_index;
+
+        m_locations_history_disabled = true;
+        open_file(location.filename, location.line, location.column);
+        m_locations_history_disabled = false;
+
+        update_history_actions();
+    });
+    m_locations_history_forward_action->set_enabled(false);
+}
+
+HackStudioWidget::ProjectLocation HackStudioWidget::current_project_location() const
+{
+    return ProjectLocation { current_editor_wrapper().filename(), current_editor().cursor().line(), current_editor().cursor().column() };
+}
+
+void HackStudioWidget::update_history_actions()
+{
+    if (m_locations_history_end_index <= 1)
+        m_locations_history_back_action->set_enabled(false);
+    else
+        m_locations_history_back_action->set_enabled(true);
+
+    if (m_locations_history_end_index == m_locations_history.size())
+        m_locations_history_forward_action->set_enabled(false);
+    else
+        m_locations_history_forward_action->set_enabled(true);
 }
 
 }
