@@ -15,6 +15,7 @@
 #include <Kernel/Storage/AHCIPort.h>
 #include <Kernel/Storage/ATA.h>
 #include <Kernel/Storage/SATADiskDevice.h>
+#include <Kernel/Storage/StorageManagement.h>
 #include <Kernel/WorkQueue.h>
 
 namespace Kernel {
@@ -70,6 +71,22 @@ void AHCIPort::handle_interrupt()
     if (m_interrupt_status.raw_value() == 0) {
         return;
     }
+    if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::PRC) && m_interrupt_status.is_set(AHCI::PortInterruptFlag::PC)) {
+        clear_sata_error_register();
+        if ((m_port_registers.ssts & 0xf) != 3) {
+            m_connected_device->prepare_for_unplug();
+            StorageManagement::the().remove_device(*m_connected_device);
+            g_io_work->queue([this]() {
+                m_connected_device->before_removing();
+                m_connected_device.clear();
+            });
+        } else {
+            g_io_work->queue([this]() {
+                reset();
+            });
+        }
+        return;
+    }
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::PRC)) {
         clear_sata_error_register();
         m_wait_connect_for_completion = true;
@@ -102,6 +119,11 @@ void AHCIPort::handle_interrupt()
                 MutexLocker locker(m_lock);
                 VERIFY(m_current_request);
                 VERIFY(m_current_scatter_list);
+                if (!m_connected_device) {
+                    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request success", representative_port_index());
+                    complete_current_request(AsyncDeviceRequest::Failure);
+                    return;
+                }
                 if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
                     if (auto result = m_current_request->write_to_buffer(m_current_request->buffer(), m_current_scatter_list->dma_region().as_ptr(), m_connected_device->block_size() * m_current_request->block_count()); result.is_error()) {
                         dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request failure, memory fault occurred when reading in data.", representative_port_index());

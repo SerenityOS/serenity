@@ -34,7 +34,7 @@ StringView SATADiskDevice::class_name() const
 
 void SATADiskDevice::start_request(AsyncBlockDeviceRequest& request)
 {
-    m_port->start_request(request);
+    m_port.strong_ref()->start_request(request);
 }
 
 String SATADiskDevice::storage_name() const
