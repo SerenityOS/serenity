@@ -55,6 +55,7 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
     define_native_function(vm.names.era, era, 1, attr);
+    define_native_function(vm.names.eraYear, era_year, 1, attr);
 }
 
 static Calendar* typed_this(GlobalObject& global_object)
@@ -587,6 +588,38 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::era)
 
     // 5. Let era be the result of implementation-defined processing of temporalDateLike and the value of calendar.[[Identifier]].
     // 6. Return era.
+
+    // NOTE: No support for non-iso8601 calendars yet.
+    VERIFY_NOT_REACHED();
+}
+
+// 15.6.2.7 Temporal.Calendar.prototype.eraYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.erayear
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::era_year)
+{
+    auto temporal_date_like = vm.argument(0);
+
+    // 1. Let calendar be the this value.
+    // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
+    auto* calendar = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], or [[InitializedTemporalYearMonth]] internal slot, then
+    if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
+        // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
+        temporal_date_like = to_temporal_date(global_object, temporal_date_like);
+        if (vm.exception())
+            return {};
+    }
+
+    // 4. If calendar.[[Identifier]] is "iso8601", then
+    if (calendar->identifier() == "iso8601"sv) {
+        // a. Return undefined.
+        return js_undefined();
+    }
+
+    // 5. Let eraYear be the result of implementation-defined processing of temporalDateLike and the value of calendar.[[Identifier]].
+    // 6. Return 𝔽(eraYear).
 
     // NOTE: No support for non-iso8601 calendars yet.
     VERIFY_NOT_REACHED();
