@@ -40,7 +40,7 @@ Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config)
     pthread_cond_init(&m_pending_cond, nullptr);
 
     m_muted = m_config->read_bool_entry("Master", "Mute", false);
-    m_main_volume = m_config->read_num_entry("Master", "Volume", 100);
+    m_main_volume = static_cast<double>(m_config->read_num_entry("Master", "Volume", 100)) / 100.0;
 
     m_sound_thread->start();
 }
@@ -78,18 +78,23 @@ void Mixer::mix()
         Audio::Frame mixed_buffer[1024];
         auto mixed_buffer_length = (int)(sizeof(mixed_buffer) / sizeof(Audio::Frame));
 
+        m_main_volume.advance_time();
+
+        int active_queues = 0;
         // Mix the buffers together into the output
         for (auto& queue : active_mix_queues) {
             if (!queue->client()) {
                 queue->clear();
                 continue;
             }
+            ++active_queues;
 
             for (int i = 0; i < mixed_buffer_length; ++i) {
                 auto& mixed_sample = mixed_buffer[i];
                 Audio::Frame sample;
                 if (!queue->get_next_sample(sample))
                     break;
+                sample.log_multiply(SAMPLE_HEADROOM);
                 mixed_sample += sample;
             }
         }
@@ -103,7 +108,11 @@ void Mixer::mix()
             for (int i = 0; i < mixed_buffer_length; ++i) {
                 auto& mixed_sample = mixed_buffer[i];
 
-                mixed_sample.scale(m_main_volume);
+                // Even though it's not realistic, the user expects no sound at 0%.
+                if (m_main_volume < 0.01)
+                    mixed_sample = { 0 };
+                else
+                    mixed_sample.log_multiply(m_main_volume);
                 mixed_sample.clip();
 
                 LittleEndian<i16> out_sample;
@@ -121,20 +130,20 @@ void Mixer::mix()
     }
 }
 
-void Mixer::set_main_volume(int volume)
+void Mixer::set_main_volume(double volume)
 {
     if (volume < 0)
         m_main_volume = 0;
-    else if (volume > 200)
-        m_main_volume = 200;
+    else if (volume > 2)
+        m_main_volume = 2;
     else
         m_main_volume = volume;
 
-    m_config->write_num_entry("Master", "Volume", volume);
+    m_config->write_num_entry("Master", "Volume", static_cast<int>(volume * 100));
     request_setting_sync();
 
     ClientConnection::for_each([&](ClientConnection& client) {
-        client.did_change_main_mix_volume({}, m_main_volume);
+        client.did_change_main_mix_volume({}, main_volume());
     });
 }
 

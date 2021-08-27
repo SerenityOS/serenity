@@ -47,7 +47,7 @@ public:
     virtual void set_volume(double volume)
     {
         m_player_state.volume = volume;
-        client_connection().set_main_mix_volume((double)(volume * 100));
+        client_connection().set_self_volume(volume);
     }
     virtual void set_loaded_file_samplerate(int samplerate) { m_player_state.loaded_file_samplerate = samplerate; }
     virtual void set_looping_file(bool loop)

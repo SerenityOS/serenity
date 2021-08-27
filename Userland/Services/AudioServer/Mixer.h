@@ -8,6 +8,7 @@
 #pragma once
 
 #include "ClientConnection.h"
+#include "FadingProperty.h"
 #include <AK/Atomic.h>
 #include <AK/Badge.h>
 #include <AK/ByteBuffer.h>
@@ -22,6 +23,10 @@
 #include <LibThreading/Thread.h>
 
 namespace AudioServer {
+
+// Headroom, i.e. fixed attenuation for all audio streams.
+// This is to prevent clipping when two streams with low headroom (e.g. normalized & compressed) are playing.
+constexpr double SAMPLE_HEADROOM = 0.7;
 
 class ClientConnection;
 
@@ -82,6 +87,10 @@ public:
         return -1;
     }
 
+    FadingProperty<double>& volume() { return m_volume; }
+    double volume() const { return m_volume; }
+    void set_volume(double const volume) { m_volume = volume; }
+
 private:
     RefPtr<Audio::Buffer> m_current;
     Queue<NonnullRefPtr<Audio::Buffer>> m_queue;
@@ -89,7 +98,9 @@ private:
     int m_remaining_samples { 0 };
     int m_played_samples { 0 };
     bool m_paused { false };
+
     WeakPtr<ClientConnection> m_client;
+    FadingProperty<double> m_volume { 1 };
 };
 
 class Mixer : public Core::Object {
@@ -100,8 +111,9 @@ public:
 
     NonnullRefPtr<BufferQueue> create_queue(ClientConnection&);
 
-    int main_volume() const { return m_main_volume; }
-    void set_main_volume(int volume);
+    // To the outside world, we pretend that the target volume is already reached, even though it may be still fading.
+    double main_volume() const { return m_main_volume.target(); }
+    void set_main_volume(double volume);
 
     bool is_muted() const { return m_muted; }
     void set_muted(bool);
@@ -122,7 +134,7 @@ private:
     NonnullRefPtr<Threading::Thread> m_sound_thread;
 
     bool m_muted { false };
-    int m_main_volume { 100 };
+    FadingProperty<double> m_main_volume { 1 };
 
     NonnullRefPtr<Core::ConfigFile> m_config;
     RefPtr<Core::Timer> m_config_write_timer;

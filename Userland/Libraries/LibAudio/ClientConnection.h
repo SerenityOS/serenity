@@ -27,12 +27,12 @@ public:
 
     Function<void(i32 buffer_id)> on_finish_playing_buffer;
     Function<void(bool muted)> on_muted_state_change;
-    Function<void(int volume)> on_main_mix_volume_change;
+    Function<void(double volume)> on_main_mix_volume_change;
 
 private:
     virtual void finished_playing_buffer(i32) override;
     virtual void muted_state_changed(bool) override;
-    virtual void main_mix_volume_changed(i32) override;
+    virtual void main_mix_volume_changed(double) override;
 };
 
 }

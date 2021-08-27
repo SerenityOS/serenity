@@ -30,7 +30,8 @@ constexpr int buffer_size = sample_count * sizeof(Sample);
 
 constexpr double sample_rate = 44100;
 
-constexpr double volume_factor = 1800;
+// Headroom for the synth
+constexpr double volume_factor = 0.1;
 
 enum Switch {
     Off,
