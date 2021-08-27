@@ -424,6 +424,11 @@ void OutOfProcessWebView::clear_inspected_dom_node()
     client().inspect_dom_node(0);
 }
 
+i32 OutOfProcessWebView::get_hovered_node_id()
+{
+    return client().get_hovered_node_id();
+}
+
 void OutOfProcessWebView::js_console_initialize()
 {
     client().async_js_console_initialize();
