@@ -236,7 +236,7 @@ Vector<String> HackStudioWidget::selected_file_paths() const
     return files;
 }
 
-bool HackStudioWidget::open_file(const String& full_filename)
+bool HackStudioWidget::open_file(const String& full_filename, size_t line, size_t column)
 {
     String filename = full_filename;
     if (full_filename.starts_with(project().root_path())) {
@@ -298,6 +298,7 @@ bool HackStudioWidget::open_file(const String& full_filename)
 
     current_editor().on_cursor_change = [this] { update_statusbar(); };
     current_editor_wrapper().on_change = [this] { update_gml_preview(); };
+    current_editor().set_cursor(line, column);
     update_gml_preview();
 
     return true;
