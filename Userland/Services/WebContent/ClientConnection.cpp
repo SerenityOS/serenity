@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -221,6 +222,43 @@ void ClientConnection::inspect_dom_tree()
     if (auto* doc = page().top_level_browsing_context().document()) {
         async_did_get_dom_tree(doc->dump_dom_tree_as_json());
     }
+}
+
+Messages::WebContentServer::InspectDomNodeResponse ClientConnection::inspect_dom_node(i32 node_id)
+{
+    if (auto* doc = page().top_level_browsing_context().document()) {
+        Web::DOM::Node* node = Web::DOM::Node::from_id(node_id);
+        if (!node || (&node->document() != doc)) {
+            doc->set_inspected_node(nullptr);
+            return { false, "", "" };
+        }
+
+        doc->set_inspected_node(node);
+
+        if (node->is_element()) {
+            auto& element = verify_cast<Web::DOM::Element>(*node);
+            if (!element.specified_css_values())
+                return { false, "", "" };
+
+            auto serialize_json = [](Web::CSS::StyleProperties const& properties) -> String {
+                StringBuilder builder;
+
+                JsonObjectSerializer serializer(builder);
+                properties.for_each_property([&](auto property_id, auto& value) {
+                    serializer.add(Web::CSS::string_from_property_id(property_id), value.to_string());
+                });
+                serializer.finish();
+
+                return builder.to_string();
+            };
+
+            String specified_values_json = serialize_json(*element.specified_css_values());
+            String computed_values_json = serialize_json(element.computed_style());
+            return { true, specified_values_json, computed_values_json };
+        }
+    }
+
+    return { false, "", "" };
 }
 
 void ClientConnection::js_console_initialize()
