@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,7 +9,7 @@
 #include "Game.h"
 #include "SettingsDialog.h"
 #include <Games/Hearts/HeartsGML.h>
-#include <LibCore/ConfigFile.h>
+#include <LibConfig/Client.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -26,7 +27,8 @@ int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
     auto app_icon = GUI::Icon::default_icon("app-hearts");
-    auto config = Core::ConfigFile::open_for_app("Hearts", Core::ConfigFile::AllowWriting::Yes);
+
+    Config::pledge_domains("Hearts");
 
     if (pledge("stdio recvfd sendfd rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
@@ -34,11 +36,6 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(config->filename().characters(), "crw") < 0) {
         perror("unveil");
         return 1;
     }
@@ -60,7 +57,7 @@ int main(int argc, char** argv)
     auto& statusbar = *widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     statusbar.set_text(0, "Score: 0");
 
-    String player_name = config->read_entry("", "player_name", "Gunnar");
+    String player_name = Config::read_string("Hearts", "", "player_name", "Gunnar");
 
     game.on_status_change = [&](const AK::StringView& status) {
         statusbar.set_override_text(status);
@@ -84,12 +81,7 @@ int main(int argc, char** argv)
 
         player_name = settings_dialog->player_name();
 
-        config->write_entry("", "player_name", player_name);
-
-        if (!config->sync()) {
-            GUI::MessageBox::show(window, "Settings could not be saved!", "Error", GUI::MessageBox::Type::Error);
-            return;
-        }
+        Config::write_string("Hearts", "", "player_name", player_name);
 
         GUI::MessageBox::show(window, "Settings have been successfully saved and will take effect in the next game.", "Settings Changed Successfully", GUI::MessageBox::Type::Information);
     };
