@@ -341,6 +341,12 @@ void OutOfProcessWebView::notify_server_did_get_dom_tree(const String& dom_tree)
         on_get_dom_tree(dom_tree);
 }
 
+void OutOfProcessWebView::notify_server_did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style)
+{
+    if (on_get_dom_node_properties)
+        on_get_dom_node_properties(node_id, specified_style, computed_style);
+}
+
 void OutOfProcessWebView::notify_server_did_js_console_output(const String& method, const String& line)
 {
     if (on_js_console_output)
