@@ -124,6 +124,9 @@ public:
     void define_direct_property(PropertyName const& property_name, Value value, PropertyAttributes attributes) { storage_set(property_name, { value, attributes }); };
     void define_direct_accessor(PropertyName const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes);
 
+    void define_direct_property_without_transition(PropertyName const&, Value, PropertyAttributes);
+    void define_direct_accessor_without_transition(PropertyName const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes);
+
     void define_native_function(PropertyName const&, Function<Value(VM&, GlobalObject&)>, i32 length, PropertyAttributes attributes);
     void define_native_accessor(PropertyName const&, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attributes);
 
