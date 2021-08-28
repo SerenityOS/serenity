@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-    .align 4
-    .globl _invoke_entry
-    .hidden _invoke_entry
-    .type _invoke_entry,@function
+.align 4
+.globl _invoke_entry
+.hidden _invoke_entry
+.type _invoke_entry,@function
 _invoke_entry: # (argc, argv, envp, entry)
     // The System V ABI for x86 and x86_64 prescribes that the stack pointer is 16-byte aligned
     andq $~15, %rsp
