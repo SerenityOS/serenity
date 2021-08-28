@@ -206,10 +206,10 @@ function averageIf(condition, cells) {
 function median(cells) {
     const values = numericResolve(cells);
 
-    if (values.length == 0) return 0;
+    if (values.length === 0) return 0;
 
     function qselect(arr, idx) {
-        if (arr.length == 1) return arr[0];
+        if (arr.length === 1) return arr[0];
 
         const pivot = arr[0];
         const ls = arr.filter(x => x < pivot);
