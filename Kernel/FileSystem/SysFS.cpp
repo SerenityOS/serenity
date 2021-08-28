@@ -119,7 +119,7 @@ InodeMetadata SysFSInode::metadata() const
     metadata.mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
     metadata.uid = 0;
     metadata.gid = 0;
-    metadata.size = m_associated_component->size();
+    metadata.size = 0;
     metadata.mtime = mepoch;
     return metadata;
 }
