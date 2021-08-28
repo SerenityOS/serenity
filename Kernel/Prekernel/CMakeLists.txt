@@ -1,6 +1,6 @@
 set(SOURCES
-    boot.S
-    multiboot.S
+    Arch/x86/boot.S
+    Arch/x86/multiboot.S
     init.cpp
     UBSanitizer.cpp
     ../MiniStdLib.cpp
