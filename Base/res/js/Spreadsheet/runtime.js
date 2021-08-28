@@ -109,27 +109,11 @@ function range(start, end, columnStep, rowStep) {
     return cells;
 }
 
-// FIXME: Remove this and use String.split() eventually
-function split(str, sep) {
-    const parts = [];
-    let splitIndex = -1;
-    for (;;) {
-        splitIndex = str.indexOf(sep);
-        if (splitIndex == -1) {
-            if (str.length) parts.push(str);
-            break;
-        }
-        parts.push(str.substring(0, splitIndex));
-        str = str.slice(splitIndex + sep.length);
-    }
-    return parts;
-}
-
 function R(fmt, ...args) {
     if (args.length !== 0) throw new TypeError("R`` format must be literal");
 
     fmt = fmt[0];
-    return range(...split(fmt, ":"));
+    return range(...fmt.split(":"));
 }
 
 function select(criteria, t, f) {
