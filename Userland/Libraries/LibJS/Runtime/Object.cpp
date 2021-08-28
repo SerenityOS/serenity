@@ -6,6 +6,7 @@
  */
 
 #include <AK/String.h>
+#include <AK/TemporaryChange.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
@@ -1050,6 +1051,18 @@ void Object::define_direct_accessor(PropertyName const& property_name, FunctionO
         if (setter)
             accessor->set_setter(setter);
     }
+}
+
+void Object::define_direct_property_without_transition(PropertyName const& property_name, Value value, PropertyAttributes attributes)
+{
+    TemporaryChange disable_transitions(m_transitions_enabled, false);
+    define_direct_property(property_name, value, attributes);
+}
+
+void Object::define_direct_accessor_without_transition(PropertyName const& property_name, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes)
+{
+    TemporaryChange disable_transitions(m_transitions_enabled, false);
+    define_direct_accessor(property_name, getter, setter, attributes);
 }
 
 void Object::ensure_shape_is_unique()
