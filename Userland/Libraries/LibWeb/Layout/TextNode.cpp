@@ -196,7 +196,7 @@ void TextNode::compute_text_for_rendering(bool collapse, bool previous_is_empty_
     m_text_for_rendering = builder.to_string();
 }
 
-void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, LayoutMode layout_mode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks)
+void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, LayoutMode layout_mode, bool do_collapse, bool do_wrap_lines, bool do_respect_linebreaks)
 {
     auto& containing_block = context.containing_block();
 
@@ -207,7 +207,7 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
     float available_width = context.available_width_at_line(line_boxes.size() - 1) - line_boxes.last().width();
 
     compute_text_for_rendering(do_collapse, line_boxes.last().is_empty_or_ends_in_whitespace());
-    ChunkIterator iterator(m_text_for_rendering, layout_mode, do_wrap_lines, do_wrap_breaks);
+    ChunkIterator iterator(m_text_for_rendering, layout_mode, do_wrap_lines, do_respect_linebreaks);
 
     for (;;) {
         auto chunk_opt = iterator.next();
@@ -251,7 +251,7 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
             available_width = context.available_width_at_line(line_boxes.size() - 1);
         }
 
-        if (do_wrap_breaks && chunk.has_breaking_newline) {
+        if (do_respect_linebreaks && chunk.has_breaking_newline) {
             containing_block.add_line_box();
             available_width = context.available_width_at_line(line_boxes.size() - 1);
         }
@@ -262,27 +262,27 @@ void TextNode::split_into_lines(InlineFormattingContext& context, LayoutMode lay
 {
     bool do_collapse = true;
     bool do_wrap_lines = true;
-    bool do_wrap_breaks = false;
+    bool do_respect_linebreaks = false;
 
     if (computed_values().white_space() == CSS::WhiteSpace::Nowrap) {
         do_collapse = true;
         do_wrap_lines = false;
-        do_wrap_breaks = false;
+        do_respect_linebreaks = false;
     } else if (computed_values().white_space() == CSS::WhiteSpace::Pre) {
         do_collapse = false;
         do_wrap_lines = false;
-        do_wrap_breaks = true;
+        do_respect_linebreaks = true;
     } else if (computed_values().white_space() == CSS::WhiteSpace::PreLine) {
         do_collapse = true;
         do_wrap_lines = true;
-        do_wrap_breaks = true;
+        do_respect_linebreaks = true;
     } else if (computed_values().white_space() == CSS::WhiteSpace::PreWrap) {
         do_collapse = false;
         do_wrap_lines = true;
-        do_wrap_breaks = true;
+        do_respect_linebreaks = true;
     }
 
-    split_into_lines_by_rules(context, layout_mode, do_collapse, do_wrap_lines, do_wrap_breaks);
+    split_into_lines_by_rules(context, layout_mode, do_collapse, do_wrap_lines, do_respect_linebreaks);
 }
 
 bool TextNode::wants_mouse_events() const
@@ -317,10 +317,10 @@ void TextNode::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& positi
     verify_cast<Label>(*parent()).handle_mousemove_on_label({}, position, button);
 }
 
-TextNode::ChunkIterator::ChunkIterator(StringView const& text, LayoutMode layout_mode, bool wrap_lines, bool wrap_breaks)
+TextNode::ChunkIterator::ChunkIterator(StringView const& text, LayoutMode layout_mode, bool wrap_lines, bool respect_linebreaks)
     : m_layout_mode(layout_mode)
     , m_wrap_lines(wrap_lines)
-    , m_wrap_breaks(wrap_breaks)
+    , m_respect_linebreaks(respect_linebreaks)
     , m_utf8_view(text)
     , m_iterator(m_utf8_view.begin())
 {
@@ -365,7 +365,7 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
         //       can't output two chunks at once, we store this information as a
         //       flag to output the newline immediately at the earliest
         //       opportunity.
-        if (m_wrap_breaks && *m_iterator == '\n') {
+        if (m_respect_linebreaks && *m_iterator == '\n') {
             m_last_was_newline = true;
             if (auto result = try_commit_chunk(start_of_chunk, m_iterator, false); result.has_value()) {
                 return result.release_value();

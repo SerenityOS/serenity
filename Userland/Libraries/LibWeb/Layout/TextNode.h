@@ -37,7 +37,7 @@ public:
 
     class ChunkIterator {
     public:
-        ChunkIterator(StringView const& text, LayoutMode, bool wrap_lines, bool wrap_breaks);
+        ChunkIterator(StringView const& text, LayoutMode, bool wrap_lines, bool respect_linebreaks);
         Optional<Chunk> next();
 
     private:
@@ -45,7 +45,7 @@ public:
 
         const LayoutMode m_layout_mode;
         const bool m_wrap_lines;
-        const bool m_wrap_breaks;
+        const bool m_respect_linebreaks;
         bool m_last_was_space { false };
         bool m_last_was_newline { false };
         Utf8View m_utf8_view;
@@ -60,7 +60,7 @@ private:
     virtual void handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
     virtual void handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
     virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
-    void split_into_lines_by_rules(InlineFormattingContext&, LayoutMode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks);
+    void split_into_lines_by_rules(InlineFormattingContext&, LayoutMode, bool do_collapse, bool do_wrap_lines, bool do_respect_linebreaks);
     void paint_cursor_if_needed(PaintContext&, const LineBoxFragment&) const;
     void paint_text_decoration(Gfx::Painter&, LineBoxFragment const&) const;
 
