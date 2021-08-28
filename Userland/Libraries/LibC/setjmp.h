@@ -35,6 +35,9 @@ struct __jmp_buf {
     uint64_t rbp;
     uint64_t rsp;
     uint64_t rip;
+#elif __aarch64__
+    // FIXME: This is likely incorrect.
+    uint64_t regs[22];
 #else
 #    error
 #endif
@@ -49,6 +52,8 @@ typedef struct __jmp_buf sigjmp_buf[1];
 static_assert(sizeof(struct __jmp_buf) == 32, "struct __jmp_buf unsynchronized with i386/setjmp.S");
 #elif __x86_64__
 static_assert(sizeof(struct __jmp_buf) == 72, "struct __jmp_buf unsynchronized with x86_64/setjmp.S");
+#elif __aarch64__
+static_assert(sizeof(struct __jmp_buf) == 184, "struct __jmp_buf unsynchronized with aarch64/setjmp.S");
 #else
 #    error
 #endif
