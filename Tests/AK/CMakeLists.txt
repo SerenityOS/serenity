@@ -51,6 +51,7 @@ set(AK_TEST_SOURCES
     TestSourceLocation.cpp
     TestSpan.cpp
     TestStack.cpp
+    TestStdLibExtras.cpp
     TestString.cpp
     TestStringUtils.cpp
     TestStringView.cpp
