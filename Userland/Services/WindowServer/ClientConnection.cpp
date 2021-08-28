@@ -973,7 +973,8 @@ Messages::WindowServer::GetScreenBitmapResponse ClientConnection::get_screen_bit
         return bitmap.to_shareable_bitmap();
     }
     // TODO: Mixed scale setups at what scale? Lowest? Highest? Configurable?
-    if (auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, Screen::bounding_rect().size(), 1)) {
+    auto bitmap_size = rect.value_or(Screen::bounding_rect()).size();
+    if (auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, bitmap_size, 1)) {
         Gfx::Painter painter(*bitmap);
         Screen::for_each([&](auto& screen) {
             auto screen_rect = screen.rect();
