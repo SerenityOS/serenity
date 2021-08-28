@@ -5,6 +5,7 @@
  */
 
 #include <AK/AllOf.h>
+#include <AK/AnyOf.h>
 #include <AK/CharacterTypes.h>
 #include <AK/QuickSort.h>
 #include <AK/TypeCasts.h>
@@ -78,28 +79,40 @@ static Optional<Unicode::LocaleID> is_structurally_valid_language_tag(StringView
 // 6.2.3 CanonicalizeUnicodeLocaleId ( locale ), https://tc39.es/ecma402/#sec-canonicalizeunicodelocaleid
 static String canonicalize_unicode_locale_id(Unicode::LocaleID& locale)
 {
+    // Note: This implementation differs from the spec in how Step 3 is implemented. The spec assumes
+    // the input to this method is a string, and is written such that operations are performed on parts
+    // of that string. LibUnicode gives us the parsed locale in a structure, so we can mutate that
+    // structure directly. From a footnote in the spec:
+    //
+    // The third step of this algorithm ensures that a Unicode locale extension sequence in the
+    // returned language tag contains:
+    //     * only the first instance of any attribute duplicated in the input, and
+    //     * only the first keyword for a given key in the input.
+    for (auto& extension : locale.extensions) {
+        if (!extension.has<Unicode::LocaleExtension>())
+            continue;
+
+        auto& locale_extension = extension.get<Unicode::LocaleExtension>();
+
+        auto attributes = move(locale_extension.attributes);
+        for (auto& attribute : attributes) {
+            if (!locale_extension.attributes.contains_slow(attribute))
+                locale_extension.attributes.append(move(attribute));
+        }
+
+        auto keywords = move(locale_extension.keywords);
+        for (auto& keyword : keywords) {
+            if (!any_of(locale_extension.keywords, [&](auto const& k) { return k.key == keyword.key; }))
+                locale_extension.keywords.append(move(keyword));
+        }
+
+        break;
+    }
+
     // 1. Let localeId be the string locale after performing the algorithm to transform it to canonical syntax per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers.
     // 2. Let localeId be the string localeId after performing the algorithm to transform it to canonical form.
     auto locale_id = Unicode::canonicalize_unicode_locale_id(locale);
     VERIFY(locale_id.has_value());
-
-    // FIXME: Handle extensions.
-    // 3. If localeId contains a substring extension that is a Unicode locale extension sequence, then
-    //     a. Let components be ! UnicodeExtensionComponents(extension).
-    //     b. Let attributes be components.[[Attributes]].
-    //     c. Let keywords be components.[[Keywords]].
-    //     d. Let newExtension be "u".
-    //     e. For each element attr of attributes, do
-    //         i. Append "-" to newExtension.
-    //         ii. Append attr to newExtension.
-    //     f. For each Record { [[Key]], [[Value]] } keyword in keywords, do
-    //         i. Append "-" to newExtension.
-    //         ii. Append keyword.[[Key]] to newExtension.
-    //         iii. If keyword.[[Value]] is not the empty String, then
-    //             1. Append "-" to newExtension.
-    //             2. Append keyword.[[Value]] to newExtension.
-    //     g. Assert: newExtension is not equal to "u".
-    //     h. Let localeId be localeId with the substring corresponding to extension replaced by the string newExtension.
 
     // 4. Return localeId.
     return locale_id.release_value();
