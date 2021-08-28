@@ -5,20 +5,23 @@
  */
 
 #include "MailSettingsWindow.h"
+#include <LibConfig/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio rpath cpath wpath recvfd sendfd unix", nullptr) < 0) {
+    if (pledge("stdio rpath recvfd sendfd unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio rpath cpath wpath recvfd sendfd", nullptr) < 0) {
+    Config::pledge_domains("Mail");
+
+    if (pledge("stdio rpath recvfd sendfd", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
