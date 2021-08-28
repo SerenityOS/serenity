@@ -8,7 +8,7 @@
 #include <AK/Base64.h>
 #include <AK/GenericLexer.h>
 #include <Applications/Mail/MailWindowGML.h>
-#include <LibCore/ConfigFile.h>
+#include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
@@ -100,9 +100,7 @@ MailWidget::~MailWidget()
 
 bool MailWidget::connect_and_login()
 {
-    auto config = Core::ConfigFile::open_for_app("Mail");
-
-    auto server = config->read_entry("Connection", "Server", {});
+    auto server = Config::read_string("Mail", "Connection", "Server", {});
 
     if (server.is_empty()) {
         GUI::MessageBox::show_error(window(), "Mail has no servers configured. Refer to the Mail(1) man page for more information.");
@@ -110,16 +108,16 @@ bool MailWidget::connect_and_login()
     }
 
     // Assume TLS by default, which is on port 993.
-    auto port = config->read_num_entry("Connection", "Port", 993);
-    auto tls = config->read_bool_entry("Connection", "TLS", true);
+    auto port = Config::read_i32("Mail", "Connection", "Port", 993);
+    auto tls = Config::read_bool("Mail", "Connection", "TLS", true);
 
-    auto username = config->read_entry("User", "Username", {});
+    auto username = Config::read_string("Mail", "User", "Username", {});
     if (username.is_empty()) {
         GUI::MessageBox::show_error(window(), "Mail has no username configured. Refer to the Mail(1) man page for more information.");
         return false;
     }
 
-    auto password = config->read_entry("User", "Password", {});
+    auto password = Config::read_string("Mail", "User", "Password", {});
     while (password.is_empty()) {
         if (GUI::PasswordInputDialog::show(window(), password, "Login", server, username) != GUI::Dialog::ExecOK)
             return false;
