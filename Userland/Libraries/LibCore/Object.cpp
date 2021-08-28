@@ -250,15 +250,15 @@ void Object::set_event_filter(Function<bool(Core::Event&)> filter)
     m_event_filter = move(filter);
 }
 
-static HashMap<String, ObjectClassRegistration*>& object_classes()
+static HashMap<StringView, ObjectClassRegistration*>& object_classes()
 {
-    static HashMap<String, ObjectClassRegistration*>* map;
+    static HashMap<StringView, ObjectClassRegistration*>* map;
     if (!map)
-        map = new HashMap<String, ObjectClassRegistration*>;
+        map = new HashMap<StringView, ObjectClassRegistration*>;
     return *map;
 }
 
-ObjectClassRegistration::ObjectClassRegistration(const String& class_name, Function<NonnullRefPtr<Object>()> factory, ObjectClassRegistration* parent_class)
+ObjectClassRegistration::ObjectClassRegistration(StringView class_name, Function<NonnullRefPtr<Object>()> factory, ObjectClassRegistration* parent_class)
     : m_class_name(class_name)
     , m_factory(move(factory))
     , m_parent_class(parent_class)
@@ -286,7 +286,7 @@ void ObjectClassRegistration::for_each(Function<void(const ObjectClassRegistrati
     }
 }
 
-const ObjectClassRegistration* ObjectClassRegistration::find(const String& class_name)
+const ObjectClassRegistration* ObjectClassRegistration::find(StringView class_name)
 {
     return object_classes().get(class_name).value_or(nullptr);
 }
