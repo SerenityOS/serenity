@@ -318,6 +318,7 @@ void ImageEditor::set_active_tool(Tool* tool)
         m_active_tool->setup(*this);
         m_active_tool->on_tool_activation();
         m_active_cursor = m_active_tool->cursor();
+        set_override_cursor(m_active_cursor);
     }
 }
 
