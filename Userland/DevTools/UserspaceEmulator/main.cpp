@@ -110,7 +110,7 @@ int main(int argc, char** argv, char** env)
     rc = emulator.exec();
 
     if (dump_profile)
-        emulator.profile_stream().write_or_error(R"(]})"sv.bytes());
+        emulator.profile_stream().write_or_error(R"(], "strings": []})"sv.bytes());
 
     return rc;
 }
