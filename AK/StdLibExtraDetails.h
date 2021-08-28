@@ -502,6 +502,9 @@ inline constexpr bool IsTriviallyAssignable = __is_trivially_assignable(T, U);
 template<typename T>
 inline constexpr bool IsDestructible = requires { declval<T>().~T(); };
 
+template<typename Derived, typename Base>
+inline constexpr bool IsDerivedFrom = IsBaseOf<Base, Derived> && IsConvertible<Derived, Base>;
+
 template<typename T>
 #if defined(__clang__)
 inline constexpr bool IsTriviallyDestructible = __is_trivially_destructible(T);

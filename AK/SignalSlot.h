@@ -296,7 +296,7 @@ public:
 };
 
 template<typename Key, template <typename...> typename SigType, typename... Args>
-requires IsBaseOf<SignalBase, SigType<Args...>>
+requires IsDerivedFrom<SigType<Args...>, SignalBase>
 class SignalSetBase
 {
 public:
@@ -368,7 +368,7 @@ template<typename Key, typename... Args> using SignalSet = SignalSetBase<Key, Si
 template<typename Key, typename... Args> using SignalExSet = SignalSetBase<Key, SignalEx, Args...>;
 
 template<template <typename...> typename SignalType, typename... Args>
-requires IsBaseOf<SignalBase, SignalType<Args...>>
+requires IsDerivedFrom<SignalType<Args...>, SignalBase>
 class BridgedSignalBase : public SignalType<Args...>
 {
 public:
