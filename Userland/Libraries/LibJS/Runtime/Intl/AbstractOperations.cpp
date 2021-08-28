@@ -18,6 +18,20 @@ namespace JS::Intl {
 // 6.2.2 IsStructurallyValidLanguageTag ( locale ), https://tc39.es/ecma402/#sec-isstructurallyvalidlanguagetag
 static Optional<Unicode::LocaleID> is_structurally_valid_language_tag(StringView locale)
 {
+    auto contains_duplicate_variant = [](Vector<StringView>& variants) {
+        if (variants.is_empty())
+            return false;
+
+        quick_sort(variants);
+
+        for (size_t i = 0; i < variants.size() - 1; ++i) {
+            if (variants[i] == variants[i + 1])
+                return true;
+        }
+
+        return false;
+    };
+
     // IsStructurallyValidLanguageTag returns true if all of the following conditions hold, false otherwise:
 
     // locale can be generated from the EBNF grammar for unicode_locale_id in Unicode Technical Standard #35 LDML § 3.2 Unicode Locale Identifier;
@@ -31,22 +45,32 @@ static Optional<Unicode::LocaleID> is_structurally_valid_language_tag(StringView
         return {};
 
     // the unicode_language_id within locale contains no duplicate unicode_variant_subtag subtags; and
-    if (auto& variants = locale_id->language_id.variants; !variants.is_empty()) {
-        quick_sort(variants);
+    if (contains_duplicate_variant(locale_id->language_id.variants))
+        return {};
 
-        for (size_t i = 0; i < variants.size() - 1; ++i) {
-            if (variants[i] == variants[i + 1])
+    // if locale contains an extensions* component, that component
+    Vector<char> unique_keys;
+    for (auto& extension : locale_id->extensions) {
+        // does not contain any other_extensions components with duplicate [alphanum-[tTuUxX]] subtags,
+        // contains at most one unicode_locale_extensions component,
+        // contains at most one transformed_extensions component, and
+        char key = extension.visit(
+            [](Unicode::LocaleExtension const&) { return 'u'; },
+            [](Unicode::TransformedExtension const&) { return 't'; },
+            [](Unicode::OtherExtension const& ext) { return static_cast<char>(to_ascii_lowercase(ext.key)); });
+
+        if (unique_keys.contains_slow(key))
+            return {};
+        unique_keys.append(key);
+
+        // if a transformed_extensions component that contains a tlang component is present, then
+        // the tlang component contains no duplicate unicode_variant_subtag subtags.
+        if (auto* transformed = extension.get_pointer<Unicode::TransformedExtension>()) {
+            auto& language = transformed->language;
+            if (language.has_value() && contains_duplicate_variant(language->variants))
                 return {};
         }
     }
-
-    // FIXME: Handle extensions.
-    // if locale contains an extensions* component, that component
-    //     does not contain any other_extensions components with duplicate [alphanum-[tTuUxX]] subtags,
-    //     contains at most one unicode_locale_extensions component,
-    //     contains at most one transformed_extensions component, and
-    //     if a transformed_extensions component that contains a tlang component is present, then
-    //         the tlang component contains no duplicate unicode_variant_subtag subtags.
 
     return locale_id;
 }
