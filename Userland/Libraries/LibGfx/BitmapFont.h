@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/CharacterTypes.h>
 #include <AK/MappedFile.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
@@ -45,7 +46,13 @@ public:
     Glyph glyph(u32 code_point) const override;
     bool contains_glyph(u32 code_point) const override { return code_point < (u32)glyph_count() && m_glyph_widths[code_point] > 0; }
 
-    u8 glyph_width(size_t ch) const override { return m_fixed_width ? m_glyph_width : m_glyph_widths[ch]; }
+    u8 glyph_width(size_t ch) const override
+    {
+        if (is_ascii(ch) && !is_ascii_printable(ch))
+            return 0;
+
+        return m_fixed_width ? m_glyph_width : m_glyph_widths[ch];
+    }
     ALWAYS_INLINE int glyph_or_emoji_width(u32 code_point) const override
     {
         if (m_fixed_width)
