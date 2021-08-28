@@ -23,7 +23,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto app_icon = GUI::Icon::default_icon("app-mail-settings");
+    auto app_icon = GUI::Icon::default_icon("app-mail");
 
     auto window = MailSettingsWindow::construct();
     window->set_title("Mail Settings");
