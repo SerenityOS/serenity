@@ -91,10 +91,10 @@ public:
     virtual KResult setsockopt(int level, int option, Userspace<const void*>, socklen_t);
     virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>);
 
-    pid_t origin_pid() const { return m_origin.pid; }
+    ProcessID origin_pid() const { return m_origin.pid; }
     UserID origin_uid() const { return m_origin.uid; }
     GroupID origin_gid() const { return m_origin.gid; }
-    pid_t acceptor_pid() const { return m_acceptor.pid; }
+    ProcessID acceptor_pid() const { return m_acceptor.pid; }
     UserID acceptor_uid() const { return m_acceptor.uid; }
     GroupID acceptor_gid() const { return m_acceptor.gid; }
     const RefPtr<NetworkAdapter> bound_interface() const { return m_bound_interface; }
