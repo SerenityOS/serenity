@@ -132,8 +132,13 @@ void GlobalObject::initialize_global_object()
     m_new_ordinary_function_prototype_object_shape->set_prototype_without_transition(m_object_prototype);
     m_new_ordinary_function_prototype_object_shape->add_property_without_transition(vm.names.constructor, Attribute::Writable | Attribute::Configurable);
 
+    // Normally Heap::allocate() takes care of this, but these are allocated via allocate_without_global_object().
+
     static_cast<FunctionPrototype*>(m_function_prototype)->initialize(*this);
+    m_function_prototype->set_initialized(Badge<GlobalObject> {});
+
     static_cast<ObjectPrototype*>(m_object_prototype)->initialize(*this);
+    m_object_prototype->set_initialized(Badge<GlobalObject> {});
 
     auto success = Object::internal_set_prototype_of(m_object_prototype);
     VERIFY(success);
@@ -265,6 +270,8 @@ void GlobalObject::initialize_global_object()
     m_array_prototype_values_function = &m_array_prototype->get_without_side_effects(vm.names.values).as_function();
     m_eval_function = &get_without_side_effects(vm.names.eval).as_function();
     m_temporal_time_zone_prototype_get_offset_nanoseconds_for_function = &m_temporal_time_zone_prototype->get_without_side_effects(vm.names.getOffsetNanosecondsFor).as_function();
+
+    set_initialized(Badge<GlobalObject> {});
 }
 
 GlobalObject::~GlobalObject()
