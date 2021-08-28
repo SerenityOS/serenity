@@ -26,7 +26,7 @@ RefPtr<FIFO> FIFO::try_create(uid_t uid)
 
 KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction(FIFO::Direction direction)
 {
-    auto description = FileDescription::create(*this);
+    auto description = FileDescription::try_create(*this);
     if (!description.is_error()) {
         attach(direction);
         description.value()->set_fifo_direction({}, direction);

@@ -182,7 +182,7 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
     if (!boot_device_description) {
         PANIC("StorageManagement: Couldn't find a suitable device to boot from");
     }
-    auto e2fs = Ext2FS::create(FileDescription::create(boot_device_description.release_nonnull()).value());
+    auto e2fs = Ext2FS::create(FileDescription::try_create(boot_device_description.release_nonnull()).value());
     if (auto result = e2fs->initialize(); result.is_error()) {
         PANIC("StorageManagement: Couldn't open root filesystem: {}", result);
     }

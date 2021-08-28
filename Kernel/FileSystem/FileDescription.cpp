@@ -24,7 +24,7 @@
 
 namespace Kernel {
 
-KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(Custody& custody)
+KResultOr<NonnullRefPtr<FileDescription>> FileDescription::try_create(Custody& custody)
 {
     auto inode_file = InodeFile::create(custody.inode());
     if (inode_file.is_error())
@@ -43,7 +43,7 @@ KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(Custody& custo
     return description.release_nonnull();
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(File& file)
+KResultOr<NonnullRefPtr<FileDescription>> FileDescription::try_create(File& file)
 {
     auto description = adopt_ref_if_nonnull(new (nothrow) FileDescription(file));
     if (!description)

@@ -30,7 +30,7 @@ bool File::unref() const
 
 KResultOr<NonnullRefPtr<FileDescription>> File::open(int options)
 {
-    auto description = FileDescription::create(*this);
+    auto description = FileDescription::try_create(*this);
     if (!description.is_error()) {
         description.value()->set_rw_mode(options);
         description.value()->set_file_flags(options);

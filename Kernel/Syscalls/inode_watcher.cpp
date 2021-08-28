@@ -27,7 +27,7 @@ KResultOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
     if (watcher_or_error.is_error())
         return watcher_or_error.error();
 
-    auto description_or_error = FileDescription::create(*watcher_or_error.value());
+    auto description_or_error = FileDescription::try_create(*watcher_or_error.value());
     if (description_or_error.is_error())
         return description_or_error.error();
 

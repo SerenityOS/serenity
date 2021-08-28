@@ -45,7 +45,7 @@ KResultOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
     auto result = Socket::create(domain, type, protocol);
     if (result.is_error())
         return result.error();
-    auto description_result = FileDescription::create(*result.value());
+    auto description_result = FileDescription::try_create(*result.value());
     if (description_result.is_error())
         return description_result.error();
     setup_socket_fd(socket_fd.fd, description_result.value(), type);
@@ -133,7 +133,7 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
             return EFAULT;
     }
 
-    auto accepted_socket_description_result = FileDescription::create(*accepted_socket);
+    auto accepted_socket_description_result = FileDescription::try_create(*accepted_socket);
     if (accepted_socket_description_result.is_error())
         return accepted_socket_description_result.error();
 
