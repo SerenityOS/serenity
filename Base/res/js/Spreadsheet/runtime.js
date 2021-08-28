@@ -1,3 +1,5 @@
+"use strict";
+
 // FIXME: Figure out a way to document non-function entities too.
 class Position {
     constructor(column, row, sheet) {
