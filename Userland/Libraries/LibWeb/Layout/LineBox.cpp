@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Utf8View.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/LineBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <ctype.h>
 
 namespace Web::Layout {
 
@@ -40,16 +40,20 @@ void LineBox::trim_trailing_whitespace()
     if (m_fragments.is_empty())
         return;
 
-    auto last_text = m_fragments.last().text();
+    auto& last_fragment = m_fragments.last();
+    auto last_text = last_fragment.text();
     if (last_text.is_null())
         return;
-    auto& last_fragment = m_fragments.last();
 
-    int space_width = last_fragment.layout_node().font().glyph_width(' ');
-    while (last_fragment.length() && isspace(last_text[last_fragment.length() - 1])) {
+    while (last_fragment.length()) {
+        auto last_character = last_text[last_fragment.length() - 1];
+        if (!is_ascii_space(last_character))
+            break;
+
+        int last_character_width = last_fragment.layout_node().font().glyph_width(last_character);
         last_fragment.m_length -= 1;
-        last_fragment.set_width(last_fragment.width() - space_width);
-        m_width -= space_width;
+        last_fragment.set_width(last_fragment.width() - last_character_width);
+        m_width -= last_character_width;
     }
 }
 
