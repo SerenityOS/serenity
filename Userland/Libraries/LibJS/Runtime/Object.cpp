@@ -943,16 +943,21 @@ void Object::storage_set(PropertyName const& property_name, ValueAndAttributes c
         return;
     }
 
-    // NOTE: We disable transitions during initialize(), this makes building common runtime objects significantly faster.
-    //       Transitions are primarily interesting when scripts add properties to objects.
-    if (!m_transitions_enabled && !m_shape->is_unique()) {
-        m_shape->add_property_without_transition(property_name, attributes);
-        m_storage.resize(m_shape->property_count());
-        m_storage[m_shape->property_count() - 1] = value;
+    auto property_name_string_or_symbol = property_name.to_string_or_symbol();
+
+    // NOTE: We don't do transitions or check for attribute changes during object initialization,
+    // which makes building common runtime objects significantly faster. Transitions are primarily
+    // interesting when scripts add properties to objects.
+    if (!m_initialized) {
+        if (m_shape->is_unique())
+            m_shape->add_property_to_unique_shape(property_name_string_or_symbol, attributes);
+        else
+            m_shape->add_property_without_transition(property_name_string_or_symbol, attributes);
+
+        m_storage.append(value);
         return;
     }
 
-    auto property_name_string_or_symbol = property_name.to_string_or_symbol();
     auto metadata = shape().lookup(property_name_string_or_symbol);
 
     if (!metadata.has_value()) {
@@ -962,27 +967,24 @@ void Object::storage_set(PropertyName const& property_name, ValueAndAttributes c
             ensure_shape_is_unique();
         }
 
-        if (m_shape->is_unique()) {
+        if (m_shape->is_unique())
             m_shape->add_property_to_unique_shape(property_name_string_or_symbol, attributes);
-            m_storage.resize(m_shape->property_count());
-        } else if (m_transitions_enabled) {
+        else if (!m_transitions_enabled)
+            m_shape->add_property_without_transition(property_name_string_or_symbol, attributes);
+        else
             set_shape(*m_shape->create_put_transition(property_name_string_or_symbol, attributes));
-        } else {
-            m_shape->add_property_without_transition(property_name, attributes);
-            m_storage.resize(m_shape->property_count());
-        }
-        metadata = shape().lookup(property_name_string_or_symbol);
-        VERIFY(metadata.has_value());
+
+        m_storage.append(value);
+        return;
     }
 
     if (attributes != metadata->attributes) {
-        if (m_shape->is_unique()) {
+        if (m_shape->is_unique())
             m_shape->reconfigure_property_in_unique_shape(property_name_string_or_symbol, attributes);
-        } else {
+        else if (!m_transitions_enabled)
+            VERIFY_NOT_REACHED(); // We currently don't have a way of doing this, and it's not used anywhere either.
+        else
             set_shape(*m_shape->create_configure_transition(property_name_string_or_symbol, attributes));
-        }
-        metadata = shape().lookup(property_name_string_or_symbol);
-        VERIFY(metadata.has_value());
     }
 
     m_storage[metadata->offset] = value;
@@ -1003,12 +1005,6 @@ void Object::storage_delete(PropertyName const& property_name)
 
     shape().remove_property_from_unique_shape(property_name.to_string_or_symbol(), metadata->offset);
     m_storage.remove(metadata->offset);
-}
-
-void Object::set_shape(Shape& new_shape)
-{
-    m_storage.resize(new_shape.property_count());
-    m_shape = &new_shape;
 }
 
 void Object::define_native_accessor(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attribute)

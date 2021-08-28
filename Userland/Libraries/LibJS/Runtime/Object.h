@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <LibJS/Forward.h>
@@ -160,6 +161,9 @@ public:
     void enable_transitions() { m_transitions_enabled = true; }
     void disable_transitions() { m_transitions_enabled = false; }
 
+    void set_initialized(Badge<Heap>) { m_initialized = true; }
+    void set_initialized(Badge<GlobalObject>) { m_initialized = true; }
+
     template<typename T>
     bool fast_is() const = delete;
 
@@ -176,12 +180,13 @@ protected:
     bool m_has_parameter_map { false };
 
 private:
-    void set_shape(Shape&);
+    void set_shape(Shape& shape) { m_shape = &shape; }
 
     Object* prototype() { return shape().prototype(); }
     Object const* prototype() const { return shape().prototype(); }
 
     bool m_transitions_enabled { true };
+    bool m_initialized { false };
     Shape* m_shape { nullptr };
     Vector<Value> m_storage;
     IndexedProperties m_indexed_properties;

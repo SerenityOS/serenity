@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/HashTable.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Noncopyable.h>
@@ -49,8 +50,10 @@ public:
         if constexpr (is_object)
             static_cast<Object*>(cell)->disable_transitions();
         cell->initialize(global_object);
-        if constexpr (is_object)
+        if constexpr (is_object) {
             static_cast<Object*>(cell)->enable_transitions();
+            static_cast<Object*>(cell)->set_initialized(Badge<Heap> {});
+        }
         return cell;
     }
 
