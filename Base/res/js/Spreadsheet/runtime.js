@@ -82,21 +82,21 @@ function range(start, end, columnStep, rowStep) {
     columnStep = integer(columnStep ?? 1);
     rowStep = integer(rowStep ?? 1);
     if (!(start instanceof Position)) {
-        start = parse_cell_name(start) ?? { column: "A", row: 0 };
+        start = thisSheet.parse_cell_name(start) ?? { column: "A", row: 0 };
     }
     if (!(end instanceof Position)) {
-        end = parse_cell_name(end) ?? start;
+        end = thisSheet.parse_cell_name(end) ?? start;
     }
 
     const cells = [];
 
-    const start_column_index = column_index(start.column);
-    const end_column_index = column_index(end.column);
+    const start_column_index = thisSheet.column_index(start.column);
+    const end_column_index = thisSheet.column_index(end.column);
     const start_column = start_column_index > end_column_index ? end.column : start.column;
     const distance = Math.abs(start_column_index - end_column_index);
 
     for (let col = 0; col <= distance; col += columnStep) {
-        const column = column_arithmetic(start_column, col);
+        const column = thisSheet.column_arithmetic(start_column, col);
         for (
             let row = Math.min(start.row, end.row);
             row <= Math.max(start.row, end.row);
@@ -272,7 +272,7 @@ function column() {
 }
 
 function here() {
-    const position = current_cell_position();
+    const position = thisSheet.current_cell_position();
     return new Position(position.column, position.row, thisSheet);
 }
 
