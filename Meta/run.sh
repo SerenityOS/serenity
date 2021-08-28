@@ -185,29 +185,41 @@ if [ -z "$SERENITY_ETHERNET_DEVICE_TYPE" ]; then
   SERENITY_ETHERNET_DEVICE_TYPE="e1000"
 fi
 
+if [ -z "$SERENITY_MACHINE" ]; then
+    if [ "$SERENITY_ARCH" = "aarch64" ]; then
+        SERENITY_MACHINE="-M raspi3"
+    else
+        SERENITY_MACHINE="
+        -m $SERENITY_RAM_SIZE
+        -smp $SERENITY_CPUS
+        -display $SERENITY_QEMU_DISPLAY_BACKEND
+        -device $SERENITY_QEMU_DISPLAY_DEVICE
+        -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk
+        -device virtio-serial,max_ports=2
+        -device virtconsole,chardev=stdout
+        -device isa-debugcon,chardev=stdout
+        -device virtio-rng-pci
+        $SERENITY_AUDIO_BACKEND
+        $SERENITY_AUDIO_HW
+        -device sb16,audiodev=snd0
+        -device pci-bridge,chassis_nr=1,id=bridge1 -device $SERENITY_ETHERNET_DEVICE_TYPE,bus=bridge1
+        -device i82801b11-bridge,bus=bridge1,id=bridge2 -device sdhci-pci,bus=bridge2
+        -device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
+        -device ich9-ahci,bus=bridge3
+        "
+    fi
+fi
+
+
+
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
--m $SERENITY_RAM_SIZE
+$SERENITY_MACHINE
 -cpu $SERENITY_QEMU_CPU
 -d guest_errors
--smp $SERENITY_CPUS
--display $SERENITY_QEMU_DISPLAY_BACKEND
--device $SERENITY_QEMU_DISPLAY_DEVICE
--drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk
 -usb
 $SERENITY_SPICE_SERVER_CHARDEV
--device virtio-serial,max_ports=2
 -chardev stdio,id=stdout,mux=on
--device virtconsole,chardev=stdout
--device isa-debugcon,chardev=stdout
--device virtio-rng-pci
-$SERENITY_AUDIO_BACKEND
-$SERENITY_AUDIO_HW
--device sb16,audiodev=snd0
--device pci-bridge,chassis_nr=1,id=bridge1 -device $SERENITY_ETHERNET_DEVICE_TYPE,bus=bridge1
--device i82801b11-bridge,bus=bridge1,id=bridge2 -device sdhci-pci,bus=bridge2
--device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
--device ich9-ahci,bus=bridge3
 "
 
 if [ "$SERENITY_ARCH" != "aarch64" ]; then
