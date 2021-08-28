@@ -1023,15 +1023,15 @@ void Object::define_native_accessor(PropertyName const& property_name, Function<
     if (getter) {
         auto name = String::formatted("get {}", formatted_property_name);
         getter_function = NativeFunction::create(global_object(), name, move(getter));
-        getter_function->define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-        getter_function->define_direct_property(vm.names.name, js_string(vm, name), Attribute::Configurable);
+        getter_function->define_direct_property_without_transition(vm.names.length, Value(0), Attribute::Configurable);
+        getter_function->define_direct_property_without_transition(vm.names.name, js_string(vm, name), Attribute::Configurable);
     }
     FunctionObject* setter_function = nullptr;
     if (setter) {
         auto name = String::formatted("set {}", formatted_property_name);
         setter_function = NativeFunction::create(global_object(), name, move(setter));
-        setter_function->define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-        setter_function->define_direct_property(vm.names.name, js_string(vm, name), Attribute::Configurable);
+        setter_function->define_direct_property_without_transition(vm.names.length, Value(1), Attribute::Configurable);
+        setter_function->define_direct_property_without_transition(vm.names.name, js_string(vm, name), Attribute::Configurable);
     }
     return define_direct_accessor(property_name, getter_function, setter_function, attribute);
 }
@@ -1096,8 +1096,8 @@ void Object::define_native_function(PropertyName const& property_name, Function<
         function_name = String::formatted("[{}]", property_name.as_symbol()->description());
     }
     auto* function = NativeFunction::create(global_object(), function_name, move(native_function));
-    function->define_direct_property(vm.names.length, Value(length), Attribute::Configurable);
-    function->define_direct_property(vm.names.name, js_string(vm, function_name), Attribute::Configurable);
+    function->define_direct_property_without_transition(vm.names.length, Value(length), Attribute::Configurable);
+    function->define_direct_property_without_transition(vm.names.name, js_string(vm, function_name), Attribute::Configurable);
     define_direct_property(property_name, function, attribute);
 }
 
