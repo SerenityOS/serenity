@@ -29,8 +29,9 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    auto value = Config::read_string(domain, group, key);
-    outln("{}", value);
-
+    auto value_or_error = Config::Client::the().read_string_value(domain, group, key);
+    if (!value_or_error.has_value())
+        return 1;
+    outln("{}", value_or_error.value());
     return 0;
 }
