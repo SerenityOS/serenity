@@ -99,6 +99,8 @@ constexpr T ceil_div(T a, U b)
 template<typename T, typename U>
 inline void swap(T& a, U& b)
 {
+    if (&a == &b)
+        return;
     U tmp = move((U&)a);
     a = (T &&) move(b);
     b = move(tmp);
