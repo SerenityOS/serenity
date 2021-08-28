@@ -54,7 +54,7 @@ if [ "$USE_CLANG_TOOLCHAIN" = "1" ]; then
     $CP "$TOOLCHAIN_DIR"/lib/clang/"$LLVM_VERSION"/lib/serenity/* mnt/usr/lib/clang/"$LLVM_VERSION"/lib/serenity
     $CP "$TOOLCHAIN_DIR"/lib/libunwind* mnt/usr/lib
     $CP "$TOOLCHAIN_DIR"/lib/libc++* mnt/usr/lib
-else
+elif [ "$SERENITY_ARCH" != "aarch64" ]; then
     $CP "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/libgcc_s.so mnt/usr/lib
 fi
 
