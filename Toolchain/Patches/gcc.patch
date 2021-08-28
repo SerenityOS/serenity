@@ -1,6 +1,7 @@
-diff -Naur gcc-11.2.0/config.sub gcc-11.2.0.serenity/config.sub
---- gcc-11.2.0/config.sub	2021-07-28 08:55:06.620278039 +0200
-+++ gcc-11.2.0.serenity/config.sub	2021-07-28 18:28:53.251904345 +0200
+diff --git a/config.sub b/config.sub
+index 63c1f1c8b..a82d7fd08 100755
+--- a/config.sub
++++ b/config.sub
 @@ -2,7 +2,7 @@
  # Configuration validation subroutine script.
  #   Copyright 1992-2021 Free Software Foundation, Inc.
@@ -10,7 +11,7 @@ diff -Naur gcc-11.2.0/config.sub gcc-11.2.0.serenity/config.sub
  
  # This file is free software; you can redistribute it and/or modify it
  # under the terms of the GNU General Public License as published by
-@@ -1725,7 +1725,7 @@
+@@ -1725,7 +1725,7 @@ case $os in
  	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
  	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
  	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
@@ -19,10 +20,11 @@ diff -Naur gcc-11.2.0/config.sub gcc-11.2.0.serenity/config.sub
  		;;
  	# This one is extra strict with allowed versions
  	sco3.2v2 | sco3.2v[4-9]* | sco5v6*)
-diff -Naur gcc-11.2.0/fixincludes/mkfixinc.sh gcc-11.2.0.serenity/fixincludes/mkfixinc.sh
---- gcc-11.2.0/fixincludes/mkfixinc.sh	2021-07-28 08:55:06.644278372 +0200
-+++ gcc-11.2.0.serenity/fixincludes/mkfixinc.sh	2021-07-28 18:28:53.251904345 +0200
-@@ -11,6 +11,7 @@
+diff --git a/fixincludes/mkfixinc.sh b/fixincludes/mkfixinc.sh
+index df90720b7..a45cdd0de 100755
+--- a/fixincludes/mkfixinc.sh
++++ b/fixincludes/mkfixinc.sh
+@@ -11,6 +11,7 @@ target=fixinc.sh
  
  # Check for special fix rules for particular targets
  case $machine in
@@ -30,10 +32,11 @@ diff -Naur gcc-11.2.0/fixincludes/mkfixinc.sh gcc-11.2.0.serenity/fixincludes/mk
      i?86-*-cygwin* | \
      i?86-*-mingw32* | \
      x86_64-*-mingw32* | \
-diff -Naur gcc-11.2.0/gcc/common.opt gcc-11.2.0.serenity/gcc/common.opt
---- gcc-11.2.0/gcc/common.opt	2021-07-28 08:55:06.996283283 +0200
-+++ gcc-11.2.0.serenity/gcc/common.opt	2021-07-28 18:28:53.285238207 +0200
-@@ -3490,4 +3490,8 @@
+diff --git a/gcc/common.opt b/gcc/common.opt
+index a75b44ee4..6fab7c3ca 100644
+--- a/gcc/common.opt
++++ b/gcc/common.opt
+@@ -3490,4 +3490,8 @@ fipa-ra
  Common Var(flag_ipa_ra) Optimization
  Use caller save register across calls if possible.
  
@@ -42,9 +45,44 @@ diff -Naur gcc-11.2.0/gcc/common.opt gcc-11.2.0.serenity/gcc/common.opt
 +-arch <name>	Generate output for architecture <name>.
 +
  ; This comment is to ensure we retain the blank line above.
-diff -Naur gcc-11.2.0/gcc/config/arm/serenity-elf.h gcc-11.2.0.serenity/gcc/config/arm/serenity-elf.h
---- gcc-11.2.0/gcc/config/arm/serenity-elf.h	1970-01-01 01:00:00.000000000 +0100
-+++ gcc-11.2.0.serenity/gcc/config/arm/serenity-elf.h	2021-07-28 18:28:53.251904345 +0200
+diff --git a/gcc/config.gcc b/gcc/config.gcc
+index 357b0bed0..c6c23044d 100644
+--- a/gcc/config.gcc
++++ b/gcc/config.gcc
+@@ -686,6 +686,12 @@ x86_cpus="generic intel"
+ 
+ # Common parts for widely ported systems.
+ case ${target} in
++*-*-serenity*)
++  gas=yes
++  gnu_ld=yes
++  default_use_cxa_atexit=yes
++  extra_options="${extra_options} serenity.opt"
++  ;;
+ *-*-darwin*)
+   tmake_file="t-darwin "
+   tm_file="${tm_file} darwin.h"
+@@ -1084,6 +1090,15 @@ case ${target} in
+ esac
+ 
+ case ${target} in
++i[34567]86-*-serenity*)
++    tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h glibc-stdint.h i386/i386elf.h serenity.h"
++    ;;
++x86_64-*-serenity*)
++    tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h glibc-stdint.h i386/i386elf.h i386/x86-64.h serenity.h"
++    ;;
++arm-*-serenity*)
++    tm_file="dbxelf.h elfos.h arm/elf.h arm/aout.h glibc-stdint.h arm/serenity-elf.h ${tm_file} serenity.h"
++    ;;
+ aarch64*-*-elf | aarch64*-*-fuchsia* | aarch64*-*-rtems*)
+ 	tm_file="${tm_file} dbxelf.h elfos.h newlib-stdint.h"
+ 	tm_file="${tm_file} aarch64/aarch64-elf.h aarch64/aarch64-errata.h aarch64/aarch64-elf-raw.h"
+diff --git a/gcc/config/arm/serenity-elf.h b/gcc/config/arm/serenity-elf.h
+new file mode 100644
+index 000000000..24b29c3da
+--- /dev/null
++++ b/gcc/config/arm/serenity-elf.h
 @@ -0,0 +1,65 @@
 +/* Definitions of target machine for GNU compiler, NetBSD/arm ELF version.
 +   Copyright (C) 2002-2018 Free Software Foundation, Inc.
@@ -111,9 +149,10 @@ diff -Naur gcc-11.2.0/gcc/config/arm/serenity-elf.h gcc-11.2.0.serenity/gcc/conf
 +
 +#undef PTRDIFF_TYPE
 +#define PTRDIFF_TYPE "long int"
-diff -Naur gcc-11.2.0/gcc/config/host-darwin.c gcc-11.2.0.serenity/gcc/config/host-darwin.c
---- gcc-11.2.0/gcc/config/host-darwin.c	2021-07-28 08:55:07.060284175 +0200
-+++ gcc-11.2.0.serenity/gcc/config/host-darwin.c	2021-07-28 18:28:53.285238207 +0200
+diff --git a/gcc/config/host-darwin.c b/gcc/config/host-darwin.c
+index 14a01fe71..3f8e44288 100644
+--- a/gcc/config/host-darwin.c
++++ b/gcc/config/host-darwin.c
 @@ -22,6 +22,10 @@
  #include "coretypes.h"
  #include "diagnostic-core.h"
@@ -125,9 +164,11 @@ diff -Naur gcc-11.2.0/gcc/config/host-darwin.c gcc-11.2.0.serenity/gcc/config/ho
  
  /* Yes, this is really supposed to work.  */
  /* This allows for a pagesize of 16384, which we have on Darwin20, but should
-diff -Naur gcc-11.2.0/gcc/config/serenity.h gcc-11.2.0.serenity/gcc/config/serenity.h
---- gcc-11.2.0/gcc/config/serenity.h	1970-01-01 01:00:00.000000000 +0100
-+++ gcc-11.2.0.serenity/gcc/config/serenity.h	2021-07-28 18:28:53.251904345 +0200
+diff --git a/gcc/config/serenity.h b/gcc/config/serenity.h
+new file mode 100644
+index 000000000..d57aacca9
+--- /dev/null
++++ b/gcc/config/serenity.h
 @@ -0,0 +1,44 @@
 +/* Useful if you wish to make target-specific GCC changes. */
 +#undef TARGET_SERENITY
@@ -173,9 +214,11 @@ diff -Naur gcc-11.2.0/gcc/config/serenity.h gcc-11.2.0.serenity/gcc/config/seren
 +    builtin_assert ("system=unix");   \
 +    builtin_assert ("system=posix");   \
 +  } while(0);
-diff -Naur gcc-11.2.0/gcc/config/serenity.opt gcc-11.2.0.serenity/gcc/config/serenity.opt
---- gcc-11.2.0/gcc/config/serenity.opt	1970-01-01 01:00:00.000000000 +0100
-+++ gcc-11.2.0.serenity/gcc/config/serenity.opt	2021-07-28 18:28:53.251904345 +0200
+diff --git a/gcc/config/serenity.opt b/gcc/config/serenity.opt
+new file mode 100644
+index 000000000..6ce2af2d7
+--- /dev/null
++++ b/gcc/config/serenity.opt
 @@ -0,0 +1,32 @@
 +; SerenityOS options.
 +
@@ -209,42 +252,11 @@ diff -Naur gcc-11.2.0/gcc/config/serenity.opt gcc-11.2.0.serenity/gcc/config/ser
 +Driver
 +
 +; This comment is to ensure we retain the blank line above.
-diff -Naur gcc-11.2.0/gcc/config.gcc gcc-11.2.0.serenity/gcc/config.gcc
---- gcc-11.2.0/gcc/config.gcc	2021-07-28 08:55:07.000283339 +0200
-+++ gcc-11.2.0.serenity/gcc/config.gcc	2021-07-28 18:28:53.251904345 +0200
-@@ -686,6 +686,12 @@
- 
- # Common parts for widely ported systems.
- case ${target} in
-+*-*-serenity*)
-+  gas=yes
-+  gnu_ld=yes
-+  default_use_cxa_atexit=yes
-+  extra_options="${extra_options} serenity.opt"
-+  ;;
- *-*-darwin*)
-   tmake_file="t-darwin "
-   tm_file="${tm_file} darwin.h"
-@@ -1084,6 +1090,15 @@
- esac
- 
- case ${target} in
-+i[34567]86-*-serenity*)
-+    tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h glibc-stdint.h i386/i386elf.h serenity.h"
-+    ;;
-+x86_64-*-serenity*)
-+    tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h glibc-stdint.h i386/i386elf.h i386/x86-64.h serenity.h"
-+    ;;
-+arm-*-serenity*)
-+    tm_file="dbxelf.h elfos.h arm/elf.h arm/aout.h glibc-stdint.h arm/serenity-elf.h ${tm_file} serenity.h"
-+    ;;
- aarch64*-*-elf | aarch64*-*-fuchsia* | aarch64*-*-rtems*)
- 	tm_file="${tm_file} dbxelf.h elfos.h newlib-stdint.h"
- 	tm_file="${tm_file} aarch64/aarch64-elf.h aarch64/aarch64-errata.h aarch64/aarch64-elf-raw.h"
-diff -Naur gcc-11.2.0/gcc/configure gcc-11.2.0.serenity/gcc/configure
---- gcc-11.2.0/gcc/configure	2021-07-28 08:55:07.172285739 +0200
-+++ gcc-11.2.0.serenity/gcc/configure	2021-07-28 18:28:53.255237729 +0200
-@@ -30992,6 +30992,9 @@
+diff --git a/gcc/configure b/gcc/configure
+index 9b28369e3..6821ed4ba 100755
+--- a/gcc/configure
++++ b/gcc/configure
+@@ -30992,6 +30992,9 @@ case "$target" in
    *-linux-musl*)
      gcc_cv_target_dl_iterate_phdr=yes
      ;;
@@ -254,30 +266,11 @@ diff -Naur gcc-11.2.0/gcc/configure gcc-11.2.0.serenity/gcc/configure
  esac
  
  if test x$gcc_cv_target_dl_iterate_phdr = xyes; then
-diff -Naur gcc-11.2.0/libgcc/config/t-slibgcc gcc-11.2.0.serenity/libgcc/config/t-slibgcc
---- gcc-11.2.0/libgcc/config/t-slibgcc	2021-07-28 08:55:08.804308510 +0200
-+++ gcc-11.2.0.serenity/libgcc/config/t-slibgcc	2021-07-28 18:28:53.258571117 +0200
-@@ -26,7 +26,6 @@
- SHLIB_OBJS = @shlib_objs@
- SHLIB_DIR = @multilib_dir@
- SHLIB_SLIBDIR_QUAL = @shlib_slibdir_qual@
--SHLIB_LC = -lc
- SHLIB_MAKE_SOLINK = $(LN_S) $(SHLIB_SONAME) $(SHLIB_DIR)/$(SHLIB_SOLINK)
- SHLIB_INSTALL_SOLINK = $(LN_S) $(SHLIB_SONAME) \
- 	$(DESTDIR)$(slibdir)$(SHLIB_SLIBDIR_QUAL)/$(SHLIB_SOLINK)
-@@ -34,7 +33,7 @@
- SHLIB_LINK = $(CC) $(LIBGCC2_CFLAGS) -shared -nodefaultlibs \
- 	$(SHLIB_LDFLAGS) \
- 	-o $(SHLIB_DIR)/$(SHLIB_SONAME).tmp @multilib_flags@ \
--	$(SHLIB_OBJS) $(SHLIB_LC) && \
-+	$(SHLIB_OBJS) && \
- 	rm -f $(SHLIB_DIR)/$(SHLIB_SOLINK) && \
- 	if [ -f $(SHLIB_DIR)/$(SHLIB_SONAME) ]; then \
- 	  mv -f $(SHLIB_DIR)/$(SHLIB_SONAME) \
-diff -Naur gcc-11.2.0/libgcc/config.host gcc-11.2.0.serenity/libgcc/config.host
---- gcc-11.2.0/libgcc/config.host	2021-07-28 08:55:08.752307785 +0200
-+++ gcc-11.2.0.serenity/libgcc/config.host	2021-07-28 18:28:53.258571117 +0200
-@@ -1504,6 +1504,22 @@
+diff --git a/libgcc/config.host b/libgcc/config.host
+index 50f000622..dc20e672a 100644
+--- a/libgcc/config.host
++++ b/libgcc/config.host
+@@ -1504,6 +1504,22 @@ nvptx-*)
  	tmake_file="$tmake_file nvptx/t-nvptx"
  	extra_parts="crt0.o"
  	;;
@@ -300,26 +293,49 @@ diff -Naur gcc-11.2.0/libgcc/config.host gcc-11.2.0.serenity/libgcc/config.host
  *)
  	echo "*** Configuration ${host} not supported" 1>&2
  	exit 1
-diff -Naur gcc-11.2.0/libgcc/unwind-dw2-fde-dip.c gcc-11.2.0.serenity/libgcc/unwind-dw2-fde-dip.c
---- gcc-11.2.0/libgcc/unwind-dw2-fde-dip.c	2021-07-28 08:55:08.812308622 +0200
-+++ gcc-11.2.0.serenity/libgcc/unwind-dw2-fde-dip.c	2021-07-28 18:28:53.258571117 +0200
-@@ -59,6 +59,12 @@
+diff --git a/libgcc/config/t-slibgcc b/libgcc/config/t-slibgcc
+index c59b43b7b..31c6eb5ad 100644
+--- a/libgcc/config/t-slibgcc
++++ b/libgcc/config/t-slibgcc
+@@ -26,7 +26,6 @@ SHLIB_MAP = @shlib_map_file@
+ SHLIB_OBJS = @shlib_objs@
+ SHLIB_DIR = @multilib_dir@
+ SHLIB_SLIBDIR_QUAL = @shlib_slibdir_qual@
+-SHLIB_LC = -lc
+ SHLIB_MAKE_SOLINK = $(LN_S) $(SHLIB_SONAME) $(SHLIB_DIR)/$(SHLIB_SOLINK)
+ SHLIB_INSTALL_SOLINK = $(LN_S) $(SHLIB_SONAME) \
+ 	$(DESTDIR)$(slibdir)$(SHLIB_SLIBDIR_QUAL)/$(SHLIB_SOLINK)
+@@ -34,7 +33,7 @@ SHLIB_INSTALL_SOLINK = $(LN_S) $(SHLIB_SONAME) \
+ SHLIB_LINK = $(CC) $(LIBGCC2_CFLAGS) -shared -nodefaultlibs \
+ 	$(SHLIB_LDFLAGS) \
+ 	-o $(SHLIB_DIR)/$(SHLIB_SONAME).tmp @multilib_flags@ \
+-	$(SHLIB_OBJS) $(SHLIB_LC) && \
++	$(SHLIB_OBJS) && \
+ 	rm -f $(SHLIB_DIR)/$(SHLIB_SOLINK) && \
+ 	if [ -f $(SHLIB_DIR)/$(SHLIB_SONAME) ]; then \
+ 	  mv -f $(SHLIB_DIR)/$(SHLIB_SONAME) \
+diff --git a/libgcc/unwind-dw2-fde-dip.c b/libgcc/unwind-dw2-fde-dip.c
+index 5095b6830..d19942eee 100644
+--- a/libgcc/unwind-dw2-fde-dip.c
++++ b/libgcc/unwind-dw2-fde-dip.c
+@@ -57,6 +57,12 @@
+ # define USE_PT_GNU_EH_FRAME
+ #endif
  
- #if !defined(inhibit_libc) && defined(HAVE_LD_EH_FRAME_HDR) \
-     && defined(TARGET_DL_ITERATE_PHDR) \
++#if !defined(inhibit_libc) && defined(HAVE_LD_EH_FRAME_HDR) \
++    && defined(TARGET_DL_ITERATE_PHDR) \
 +    && defined(__serenity__)
 +# define USE_PT_GNU_EH_FRAME
 +#endif
 +
-+#if !defined(inhibit_libc) && defined(HAVE_LD_EH_FRAME_HDR) \
-+    && defined(TARGET_DL_ITERATE_PHDR) \
+ #if !defined(inhibit_libc) && defined(HAVE_LD_EH_FRAME_HDR) \
+     && defined(TARGET_DL_ITERATE_PHDR) \
      && defined(__linux__)
- # define USE_PT_GNU_EH_FRAME
- #endif
-diff -Naur gcc-11.2.0/libstdc++-v3/configure gcc-11.2.0.serenity/libstdc++-v3/configure
---- gcc-11.2.0/libstdc++-v3/configure	2021-07-28 08:55:09.228314429 +0200
-+++ gcc-11.2.0.serenity/libstdc++-v3/configure	2021-07-28 18:28:53.281904818 +0200
-@@ -4219,15 +4219,7 @@
+diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
+index 326a279c5..6b76901dc 100755
+--- a/libstdc++-v3/configure
++++ b/libstdc++-v3/configure
+@@ -4219,15 +4219,7 @@ printf ("hello world\n");
  }
  _ACEOF
  # FIXME: Cleanup?
@@ -336,7 +352,7 @@ diff -Naur gcc-11.2.0/libstdc++-v3/configure gcc-11.2.0.serenity/libstdc++-v3/co
  if test x$gcc_no_link = xyes; then
    # Setting cross_compile will disable run tests; it will
    # also disable AC_CHECK_FILE but that's generally
-@@ -29270,6 +29262,5986 @@
+@@ -29270,6 +29262,5986 @@ else
  
  # Base decisions on target environment.
  case "${host}" in
@@ -6323,10 +6339,11 @@ diff -Naur gcc-11.2.0/libstdc++-v3/configure gcc-11.2.0.serenity/libstdc++-v3/co
    arm*-*-symbianelf*)
      # This is a freestanding configuration; there is nothing to do here.
      ;;
-diff -Naur gcc-11.2.0/libstdc++-v3/crossconfig.m4 gcc-11.2.0.serenity/libstdc++-v3/crossconfig.m4
---- gcc-11.2.0/libstdc++-v3/crossconfig.m4	2021-07-28 08:55:09.228314429 +0200
-+++ gcc-11.2.0.serenity/libstdc++-v3/crossconfig.m4	2021-07-28 18:28:53.275238049 +0200
-@@ -5,6 +5,13 @@
+diff --git a/libstdc++-v3/crossconfig.m4 b/libstdc++-v3/crossconfig.m4
+index ff44d5ae0..2ca1a4262 100644
+--- a/libstdc++-v3/crossconfig.m4
++++ b/libstdc++-v3/crossconfig.m4
+@@ -5,6 +5,13 @@ dnl
  AC_DEFUN([GLIBCXX_CROSSCONFIG],[
  # Base decisions on target environment.
  case "${host}" in
