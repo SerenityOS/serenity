@@ -66,6 +66,23 @@ BoundFunction* FunctionObject::bind(Value bound_this_value, Vector<Value> argume
     return heap().allocate<BoundFunction>(global_object(), global_object(), target_function, bound_this_object, move(all_bound_arguments), computed_length, constructor_prototype);
 }
 
+void FunctionObject::add_field(StringOrSymbol property_key, FunctionObject* initializer)
+{
+    m_fields.empend(property_key, initializer);
+}
+
+// 7.3.31 DefineField ( receiver, fieldRecord ), https://tc39.es/ecma262/#sec-definefield
+void FunctionObject::InstanceField::define_field(VM& vm, Object& receiver) const
+{
+    Value init_value = js_undefined();
+    if (initializer) {
+        init_value = vm.call(*initializer, receiver.value_of());
+        if (vm.exception())
+            return;
+    }
+    receiver.create_data_property_or_throw(name, init_value);
+}
+
 void FunctionObject::visit_edges(Visitor& visitor)
 {
     Object::visit_edges(visitor);
@@ -75,6 +92,9 @@ void FunctionObject::visit_edges(Visitor& visitor)
 
     for (auto argument : m_bound_arguments)
         visitor.visit(argument);
+
+    for (auto& field : m_fields)
+        visitor.visit(field.initializer);
 }
 
 }

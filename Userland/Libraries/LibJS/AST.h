@@ -933,6 +933,30 @@ private:
     bool m_is_static;
 };
 
+class ClassField final : public ASTNode {
+public:
+    ClassField(SourceRange source_range, NonnullRefPtr<Expression> key, RefPtr<Expression> init, bool is_static)
+        : ASTNode(source_range)
+        , m_key(move(key))
+        , m_initializer(move(init))
+        , m_is_static(is_static)
+    {
+    }
+
+    Expression const& key() const { return *m_key; }
+    bool is_static() const { return m_is_static; }
+    RefPtr<Expression> const& initializer() const { return m_initializer; }
+    RefPtr<Expression>& initializer() { return m_initializer; }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    NonnullRefPtr<Expression> m_key;
+    RefPtr<Expression> m_initializer;
+    bool m_is_static;
+};
+
 class SuperExpression final : public Expression {
 public:
     explicit SuperExpression(SourceRange source_range)
@@ -948,12 +972,13 @@ public:
 
 class ClassExpression final : public Expression {
 public:
-    ClassExpression(SourceRange source_range, String name, RefPtr<FunctionExpression> constructor, RefPtr<Expression> super_class, NonnullRefPtrVector<ClassMethod> methods)
+    ClassExpression(SourceRange source_range, String name, RefPtr<FunctionExpression> constructor, RefPtr<Expression> super_class, NonnullRefPtrVector<ClassMethod> methods, NonnullRefPtrVector<ClassField> fields)
         : Expression(source_range)
         , m_name(move(name))
         , m_constructor(move(constructor))
         , m_super_class(move(super_class))
         , m_methods(move(methods))
+        , m_fields(move(fields))
     {
     }
 
@@ -968,6 +993,7 @@ private:
     RefPtr<FunctionExpression> m_constructor;
     RefPtr<Expression> m_super_class;
     NonnullRefPtrVector<ClassMethod> m_methods;
+    NonnullRefPtrVector<ClassField> m_fields;
 };
 
 class ClassDeclaration final : public Declaration {

@@ -643,6 +643,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
     consume(TokenType::Class);
 
     NonnullRefPtrVector<ClassMethod> methods;
+    NonnullRefPtrVector<ClassField> fields;
     RefPtr<Expression> super_class;
     RefPtr<FunctionExpression> constructor;
 
@@ -693,8 +694,8 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             is_generator = true;
         }
 
+        StringView name;
         if (match_property_key()) {
-            StringView name;
             if (!is_generator && m_state.current_token.original_value() == "static"sv) {
                 if (match(TokenType::Identifier)) {
                     consume();
@@ -707,12 +708,12 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             }
 
             if (match(TokenType::Identifier)) {
-                auto identifier_name = m_state.current_token.value();
+                auto identifier_name = m_state.current_token.original_value();
 
-                if (identifier_name == "get") {
+                if (identifier_name == "get"sv) {
                     method_kind = ClassMethod::Kind::Getter;
                     consume();
-                } else if (identifier_name == "set") {
+                } else if (identifier_name == "set"sv) {
                     method_kind = ClassMethod::Kind::Setter;
                     consume();
                 }
@@ -740,7 +741,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 //   It is a Syntax Error if PropName of MethodDefinition is "prototype".
                 if (is_static && name == "prototype"sv)
                     syntax_error("Classes may not have a static property named 'prototype'");
-            } else if (match(TokenType::ParenOpen) && (is_static || method_kind != ClassMethod::Kind::Method)) {
+            } else if ((match(TokenType::ParenOpen) || match(TokenType::Equals)) && (is_static || method_kind != ClassMethod::Kind::Method)) {
                 switch (method_kind) {
                 case ClassMethod::Kind::Method:
                     VERIFY(is_static);
@@ -762,7 +763,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             }
 
             // Constructor may be a StringLiteral or an Identifier.
-            if (!is_static && name == "constructor") {
+            if (!is_static && name == "constructor"sv) {
                 if (method_kind != ClassMethod::Kind::Method)
                     syntax_error("Class constructor may not be an accessor");
                 if (!constructor.is_null())
@@ -792,9 +793,29 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             } else {
                 syntax_error("No key for class method");
             }
-        } else {
+        } else if (is_generator) {
             expected("ParenOpen");
             consume();
+        } else if (property_key.is_null()) {
+            expected("property key");
+            consume();
+        } else {
+            if (name == "constructor"sv)
+                syntax_error("Class cannot have field named 'constructor'");
+
+            RefPtr<Expression> initializer;
+
+            if (match(TokenType::Equals)) {
+                consume();
+
+                TemporaryChange super_property_access_rollback(m_state.allow_super_property_lookup, true);
+                TemporaryChange field_initializer_rollback(m_state.in_class_field_initializer, true);
+                initializer = parse_expression(2);
+            }
+
+            fields.append(create_ast_node<ClassField>({ m_state.current_token.filename(), rule_start.position(), position() }, property_key.release_nonnull(), move(initializer), is_static));
+
+            consume_or_insert_semicolon();
         }
     }
 
@@ -821,7 +842,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
         }
     }
 
-    return create_ast_node<ClassExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(class_name), move(constructor), move(super_class), move(methods));
+    return create_ast_node<ClassExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(class_name), move(constructor), move(super_class), move(methods), move(fields));
 }
 
 Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
@@ -1535,6 +1556,7 @@ NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(Assignme
             parser.m_state.in_break_context = m_state.in_break_context;
             parser.m_state.in_continue_context = m_state.in_continue_context;
             parser.m_state.string_legacy_octal_escape_sequence_in_scope = m_state.string_legacy_octal_escape_sequence_in_scope;
+            parser.m_state.in_class_field_initializer = m_state.in_class_field_initializer;
 
             auto result = parser.parse_binding_pattern();
             if (parser.has_errors())
@@ -1577,6 +1599,8 @@ NonnullRefPtr<Identifier> Parser::parse_identifier()
 {
     auto identifier_start = position();
     auto token = consume_identifier();
+    if (m_state.in_class_field_initializer && token.value() == "arguments"sv)
+        syntax_error("'arguments' is not allowed in class field initializer");
     return create_ast_node<Identifier>(
         { m_state.current_token.filename(), identifier_start, position() },
         token.value());
@@ -1757,6 +1781,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     TemporaryChange super_constructor_call_rollback(m_state.allow_super_constructor_call, !!(parse_options & FunctionNodeParseOptions::AllowSuperConstructorCall));
     TemporaryChange break_context_rollback(m_state.in_break_context, false);
     TemporaryChange continue_context_rollback(m_state.in_continue_context, false);
+    TemporaryChange class_field_initializer_rollback(m_state.in_class_field_initializer, false);
 
     ScopePusher scope(*this, ScopePusher::Var, Parser::Scope::Function);
 

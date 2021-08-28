@@ -63,6 +63,17 @@ public:
     // This is for IsSimpleParameterList (static semantics)
     bool has_simple_parameter_list() const { return m_has_simple_parameter_list; }
 
+    // [[Fields]]
+    struct InstanceField {
+        StringOrSymbol name;
+        FunctionObject* initializer { nullptr };
+
+        void define_field(VM& vm, Object& receiver) const;
+    };
+
+    Vector<InstanceField> const& fields() const { return m_fields; }
+    void add_field(StringOrSymbol property_key, FunctionObject* initializer);
+
 protected:
     virtual void visit_edges(Visitor&) override;
 
@@ -79,6 +90,7 @@ private:
     ConstructorKind m_constructor_kind = ConstructorKind::Base;
     ThisMode m_this_mode { ThisMode::Global };
     bool m_has_simple_parameter_list { false };
+    Vector<InstanceField> m_fields;
 };
 
 }
