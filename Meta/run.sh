@@ -58,7 +58,9 @@ if [ -z "$SERENITY_QEMU_BIN" ]; then
             QEMU_BINARY_SUFFIX=".exe"
         fi
     fi
-    if [ "$SERENITY_ARCH" = "x86_64" ]; then
+    if [ "$SERENITY_ARCH" = "aarch64" ]; then
+        SERENITY_QEMU_BIN="${QEMU_BINARY_PREFIX}qemu-system-aarch64${QEMU_BINARY_SUFFIX}"
+    elif [ "$SERENITY_ARCH" = "x86_64" ]; then
         SERENITY_QEMU_BIN="${QEMU_BINARY_PREFIX}qemu-system-x86_64${QEMU_BINARY_SUFFIX}"
     else
         SERENITY_QEMU_BIN="${QEMU_BINARY_PREFIX}qemu-system-i386${QEMU_BINARY_SUFFIX}"
