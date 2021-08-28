@@ -25,6 +25,31 @@ int main(int argc, char** argv)
 
     Config::pledge_domains("Mail");
 
+    if (unveil("/res", "r") < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/etc", "r") < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal/webcontent", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal/lookup", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     auto window = GUI::Window::construct();
 
     auto app_icon = GUI::Icon::default_icon("app-mail");
