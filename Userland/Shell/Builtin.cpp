@@ -274,7 +274,10 @@ int Shell::builtin_cd(int argc, const char** argv)
     if (cd_history.is_empty() || cd_history.last() != real_path)
         cd_history.enqueue(real_path);
 
-    const char* path = real_path.characters();
+    auto path_relative_to_current_directory = LexicalPath::relative_path(real_path, cwd);
+    if (path_relative_to_current_directory.is_empty())
+        path_relative_to_current_directory = real_path;
+    const char* path = path_relative_to_current_directory.characters();
 
     int rc = chdir(path);
     if (rc < 0) {
@@ -286,7 +289,7 @@ int Shell::builtin_cd(int argc, const char** argv)
         return 1;
     }
     setenv("OLDPWD", cwd.characters(), 1);
-    cwd = real_path;
+    cwd = move(real_path);
     setenv("PWD", cwd.characters(), 1);
     return 0;
 }
