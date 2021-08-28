@@ -62,9 +62,7 @@ KResultOr<SocketPair> LocalSocket::create_connected_pair(int type)
     socket->m_address.sun_family = AF_LOCAL;
     memcpy(socket->m_address.sun_path, "[socketpair]", 13);
 
-    auto& process = Process::current();
-    socket->m_acceptor = { process.pid().value(), process.uid().value(), process.gid().value() };
-
+    socket->set_acceptor(Process::current());
     socket->set_connected(true);
     socket->set_connect_side_role(Role::Connected);
     socket->m_role = Role::Accepted;

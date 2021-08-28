@@ -137,6 +137,9 @@ protected:
         return error;
     }
 
+    void set_origin(Process const&);
+    void set_acceptor(Process const&);
+
 protected:
     ucred m_origin { 0, 0, 0 };
     ucred m_acceptor { 0, 0, 0 };

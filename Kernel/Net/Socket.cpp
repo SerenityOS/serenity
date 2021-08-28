@@ -38,8 +38,7 @@ Socket::Socket(int domain, int type, int protocol)
     , m_type(type)
     , m_protocol(protocol)
 {
-    auto& process = Process::current();
-    m_origin = { process.pid().value(), process.uid().value(), process.gid().value() };
+    set_origin(Process::current());
 }
 
 Socket::~Socket()
@@ -62,7 +61,7 @@ RefPtr<Socket> Socket::accept()
     auto client = m_pending.take_first();
     VERIFY(!client->is_connected());
     auto& process = Process::current();
-    client->m_acceptor = { process.pid().value(), process.uid().value(), process.gid().value() };
+    client->set_acceptor(process);
     client->m_connected = true;
     client->m_role = Role::Accepted;
     if (!m_pending.is_empty())
@@ -272,6 +271,16 @@ void Socket::set_connected(bool connected)
         return;
     m_connected = connected;
     evaluate_block_conditions();
+}
+
+void Socket::set_origin(Process const& process)
+{
+    m_origin = { process.pid().value(), process.uid().value(), process.gid().value() };
+}
+
+void Socket::set_acceptor(Process const& process)
+{
+    m_acceptor = { process.pid().value(), process.uid().value(), process.gid().value() };
 }
 
 }
