@@ -312,7 +312,7 @@ KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::open(StringView pat
         if (auto result = inode.set_mtime(kgettimeofday().to_truncated_seconds()); result.is_error())
             return result;
     }
-    auto description = FileDescription::create(custody);
+    auto description = FileDescription::try_create(custody);
     if (!description.is_error()) {
         description.value()->set_rw_mode(options);
         description.value()->set_file_flags(options);
@@ -379,7 +379,7 @@ KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::create(StringView p
     auto new_custody_or_error = Custody::try_create(&parent_custody, basename, inode_or_error.value(), parent_custody.mount_flags());
     if (new_custody_or_error.is_error())
         return new_custody_or_error.error();
-    auto description = FileDescription::create(*new_custody_or_error.release_value());
+    auto description = FileDescription::try_create(*new_custody_or_error.release_value());
     if (!description.is_error()) {
         description.value()->set_rw_mode(options);
         description.value()->set_file_flags(options);

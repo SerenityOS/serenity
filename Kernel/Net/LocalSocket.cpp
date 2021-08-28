@@ -55,7 +55,7 @@ KResultOr<SocketPair> LocalSocket::create_connected_pair(int type)
         return socket_or_error.error();
 
     auto socket = static_ptr_cast<LocalSocket>(socket_or_error.release_value());
-    auto description1_result = FileDescription::create(*socket);
+    auto description1_result = FileDescription::try_create(*socket);
     if (description1_result.is_error())
         return description1_result.error();
 
@@ -69,7 +69,7 @@ KResultOr<SocketPair> LocalSocket::create_connected_pair(int type)
     socket->set_connect_side_role(Role::Connected);
     socket->m_role = Role::Accepted;
 
-    auto description2_result = FileDescription::create(*socket);
+    auto description2_result = FileDescription::try_create(*socket);
     if (description2_result.is_error())
         return description2_result.error();
 

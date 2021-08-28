@@ -26,8 +26,8 @@ public:
 class FileDescription : public RefCounted<FileDescription> {
     MAKE_SLAB_ALLOCATED(FileDescription)
 public:
-    static KResultOr<NonnullRefPtr<FileDescription>> create(Custody&);
-    static KResultOr<NonnullRefPtr<FileDescription>> create(File&);
+    static KResultOr<NonnullRefPtr<FileDescription>> try_create(Custody&);
+    static KResultOr<NonnullRefPtr<FileDescription>> try_create(File&);
     ~FileDescription();
 
     Thread::FileBlocker::BlockFlags should_unblock(Thread::FileBlocker::BlockFlags) const;
