@@ -344,14 +344,21 @@ set(CRYPTO_SOURCES
     ../Userland/Libraries/LibCrypto/Hash/SHA2.cpp
 )
 
-set(SOURCES
-    ${KERNEL_SOURCES}
-    ${AK_SOURCES}
-    ${ELF_SOURCES}
-    ${VT_SOURCES}
-    ${KEYBOARD_SOURCES}
-    ${CRYPTO_SOURCES}
-)
+if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
+    set(SOURCES
+        ${KERNEL_SOURCES}
+        ${SOURCES}
+        ${AK_SOURCES}
+        ${ELF_SOURCES}
+        ${VT_SOURCES}
+        ${KEYBOARD_SOURCES}
+        ${CRYPTO_SOURCES}
+    )
+else()
+    set(SOURCES
+        Arch/aarch64/dummy.cpp
+    )
+endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -Wvla -Wnull-dereference")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -ffreestanding -fbuiltin")
@@ -450,7 +457,9 @@ if (USE_CLANG_TOOLCHAIN)
     add_link_options(LINKER:--build-id=none)
 endif()
 
-add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
+if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
+    add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
+endif()
 
 if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
     include_directories(/usr/local/include/c++/${GCC_VERSION}/)
@@ -491,13 +500,16 @@ if (ENABLE_KERNEL_LTO)
     set_property(TARGET Kernel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
-if (USE_CLANG_TOOLCHAIN)
-    target_link_libraries(Kernel kernel_heap clang_rt.builtins-${SERENITY_CLANG_ARCH})
-else()
-    target_link_libraries(Kernel kernel_heap gcc)
+if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
+    if (USE_CLANG_TOOLCHAIN)
+        target_link_libraries(Kernel kernel_heap clang_rt.builtins-${SERENITY_CLANG_ARCH})
+    else()
+        target_link_libraries(Kernel kernel_heap gcc)
+    endif()
+
+    add_dependencies(Kernel kernel_heap)
 endif()
 
-add_dependencies(Kernel kernel_heap)
 
 add_custom_command(
     TARGET Kernel POST_BUILD
