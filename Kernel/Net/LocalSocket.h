@@ -69,6 +69,8 @@ private:
             evaluate_block_conditions();
     }
 
+    KResult try_set_path(StringView);
+
     // An open socket file on the filesystem.
     RefPtr<FileDescription> m_file;
 
@@ -92,7 +94,7 @@ private:
 
     bool m_bound { false };
     bool m_accept_side_fd_open { false };
-    sockaddr_un m_address { 0, { 0 } };
+    OwnPtr<KString> m_path;
 
     NonnullOwnPtr<DoubleBuffer> m_for_client;
     NonnullOwnPtr<DoubleBuffer> m_for_server;
