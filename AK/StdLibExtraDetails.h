@@ -502,9 +502,6 @@ inline constexpr bool IsTriviallyAssignable = __is_trivially_assignable(T, U);
 template<typename T>
 inline constexpr bool IsDestructible = requires { declval<T>().~T(); };
 
-template<typename Derived, typename Base>
-inline constexpr bool IsDerivedFrom = IsBaseOf<Base, Derived> && IsConvertible<Derived, Base>;
-
 template<typename T>
 #if defined(__clang__)
 inline constexpr bool IsTriviallyDestructible = __is_trivially_destructible(T);
@@ -567,7 +564,6 @@ using AK::Detail::IsConvertible;
 using AK::Detail::IsCopyAssignable;
 using AK::Detail::IsCopyConstructible;
 using AK::Detail::IsDestructible;
-using AK::Detail::IsDerivedFrom;
 using AK::Detail::IsEnum;
 using AK::Detail::IsFloatingPoint;
 using AK::Detail::IsFunction;
