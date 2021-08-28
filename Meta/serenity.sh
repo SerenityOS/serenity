@@ -94,6 +94,10 @@ get_top_dir() {
 }
 
 is_valid_target() {
+    if [ "$TARGET" = "aarch64" ]; then
+        CMAKE_ARGS+=("-DSERENITY_ARCH=aarch64")
+        return 0
+    fi
     if [ "$TARGET" = "lagom" ]; then
         CMAKE_ARGS+=("-DBUILD_LAGOM=ON")
         return 0

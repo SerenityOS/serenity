@@ -1,8 +1,8 @@
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index 30087e3b..7658cf30 100644
+index 30087e3b..8b192b2e 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
-@@ -223,7 +223,24 @@ esac
+@@ -223,7 +223,29 @@ esac
  
  case "${targ}" in
  # START OF targmatch.h
@@ -23,6 +23,11 @@ index 30087e3b..7658cf30 100644
 +    targ_selvecs=
 +    targ64_selvecs=
 +    ;;
++  aarch64-*-serenity*)
++    targ_defvec=aarch64_elf64_le_vec
++    targ_selvecs=
++    want64=true
++    ;;
 +
    aarch64-*-darwin*)
      targ_defvec=aarch64_mach_o_vec
@@ -40,15 +45,16 @@ index 7384e919..aa02c3f6 100755
  	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
  	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \
 diff --git a/gas/configure.tgt b/gas/configure.tgt
-index 338892ad..0cac7829 100644
+index 338892ad..3c03ee8b 100644
 --- a/gas/configure.tgt
 +++ b/gas/configure.tgt
-@@ -123,6 +123,8 @@ esac
+@@ -123,6 +123,9 @@ esac
  generic_target=${cpu_type}-$vendor-$os
  # Note: This table is alpha-sorted, please try to keep it that way.
  case ${generic_target} in
 +  i386-*-serenity*)                     fmt=elf;;
 +  arm-*-serenity*)                      fmt=elf;;
++  aarch64-*-serenity*)                  fmt=elf;;
    aarch64*-*-elf*)			fmt=elf;;
    aarch64*-*-fuchsia*)			fmt=elf;;
    aarch64*-*-genode*)			fmt=elf;;
@@ -93,10 +99,10 @@ index ef2e99e0..657d24a2 100644
  	ei386pep.c \
  	emmo.c
 diff --git a/ld/configure.tgt b/ld/configure.tgt
-index 6205d7c9..390c10d7 100644
+index 6205d7c9..00d97c37 100644
 --- a/ld/configure.tgt
 +++ b/ld/configure.tgt
-@@ -43,6 +43,19 @@ targ64_extra_libpath=
+@@ -43,6 +43,23 @@ targ64_extra_libpath=
  # Please try to keep this table more or less in alphabetic order - it
  # makes it much easier to lookup a specific archictecture.
  case "${targ}" in
@@ -112,6 +118,10 @@ index 6205d7c9..390c10d7 100644
 +arm-*-serenity*)
 +			targ_emul=armelf_serenity
 +			targ_extra_emuls="armelf_serenity armelf"
++			;;
++aarch64-*-serenity*)
++			targ_emul=aarch64elf
++			targ_extra_emuls=
 +			;;
  aarch64_be-*-elf)	targ_emul=aarch64elfb
  			targ_extra_emuls="aarch64elf aarch64elf32 aarch64elf32b armelfb armelf"
@@ -129,6 +139,13 @@ index 00000000..517cd626
 +
 +unset STACK_ADDR
 +unset EMBEDDED
+diff --git a/ld/emulparams/elf_aarch64_serenity.sh b/ld/emulparams/elf_aarch64_serenity.sh
+new file mode 100644
+index 00000000..45a05bf4
+--- /dev/null
++++ b/ld/emulparams/elf_aarch64_serenity.sh
+@@ -0,0 +1 @@
++. ${srcdir}/emulparams/elf_aarch64.sh
 diff --git a/ld/emulparams/elf_i386_serenity.sh b/ld/emulparams/elf_i386_serenity.sh
 new file mode 100644
 index 00000000..342d5298

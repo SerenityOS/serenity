@@ -46,7 +46,7 @@ index a75b44ee4..6fab7c3ca 100644
 +
  ; This comment is to ensure we retain the blank line above.
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 357b0bed0..c6c23044d 100644
+index 357b0bed0..18d099584 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
 @@ -686,6 +686,12 @@ x86_cpus="generic intel"
@@ -62,7 +62,7 @@ index 357b0bed0..c6c23044d 100644
  *-*-darwin*)
    tmake_file="t-darwin "
    tm_file="${tm_file} darwin.h"
-@@ -1084,6 +1090,15 @@ case ${target} in
+@@ -1084,6 +1090,18 @@ case ${target} in
  esac
  
  case ${target} in
@@ -74,6 +74,9 @@ index 357b0bed0..c6c23044d 100644
 +    ;;
 +arm-*-serenity*)
 +    tm_file="dbxelf.h elfos.h arm/elf.h arm/aout.h glibc-stdint.h arm/serenity-elf.h ${tm_file} serenity.h"
++    ;;
++aarch64-*-serenity*)
++    tm_file="${tm_file} dbxelf.h elfos.h aarch64/aarch64-elf.h glibc-stdint.h serenity.h"
 +    ;;
  aarch64*-*-elf | aarch64*-*-fuchsia* | aarch64*-*-rtems*)
  	tm_file="${tm_file} dbxelf.h elfos.h newlib-stdint.h"
@@ -267,10 +270,10 @@ index 9b28369e3..6821ed4ba 100755
  
  if test x$gcc_cv_target_dl_iterate_phdr = xyes; then
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 50f000622..dc20e672a 100644
+index 50f000622..fa30ef089 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
-@@ -1504,6 +1504,22 @@ nvptx-*)
+@@ -1504,6 +1504,30 @@ nvptx-*)
  	tmake_file="$tmake_file nvptx/t-nvptx"
  	extra_parts="crt0.o"
  	;;
@@ -289,6 +292,14 @@ index 50f000622..dc20e672a 100644
 +	tm_file="$tm_file arm/bpabi-lib.h"
 +	unwind_header=config/arm/unwind-arm.h
 +	extra_parts="$extra_parts crti.o crtn.o"
++	;;
++aarch64-*-serenity*)
++	extra_parts="$extra_parts crti.o crtbegin.o crtend.o crtn.o"
++	extra_parts="$extra_parts crtfastmath.o"
++	tmake_file="$tmake_file ${cpu_type}/t-aarch64"
++	tmake_file="$tmake_file ${cpu_type}/t-lse t-slibgcc-libgcc"
++	tmake_file="$tmake_file ${cpu_type}/t-softfp t-softp t-crtfm"
++	md_unwind_header=aarch64/aarch64-unwind.h
 +	;;
  *)
  	echo "*** Configuration ${host} not supported" 1>&2
