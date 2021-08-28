@@ -45,6 +45,29 @@ describe("errors", () => {
             Intl.getCanonicalLocales([true]);
         }).toThrowWithMessage(TypeError, "true is neither an object nor a string");
     });
+
+    test("duplicate extension components", () => {
+        expect(() => {
+            Intl.getCanonicalLocales("en-u-aa-U-aa");
+        }).toThrowWithMessage(RangeError, "en-u-aa-U-aa is not a structurally valid language tag");
+
+        expect(() => {
+            Intl.getCanonicalLocales("en-t-aa-T-aa");
+        }).toThrowWithMessage(RangeError, "en-t-aa-T-aa is not a structurally valid language tag");
+
+        expect(() => {
+            Intl.getCanonicalLocales("en-z-aa-Z-aa");
+        }).toThrowWithMessage(RangeError, "en-z-aa-Z-aa is not a structurally valid language tag");
+    });
+
+    test("duplicate transformed extension variant subtags", () => {
+        expect(() => {
+            Intl.getCanonicalLocales("en-t-en-POSIX-POSIX");
+        }).toThrowWithMessage(
+            RangeError,
+            "en-t-en-POSIX-POSIX is not a structurally valid language tag"
+        );
+    });
 });
 
 describe("normal behavior", () => {
