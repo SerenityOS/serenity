@@ -23,7 +23,6 @@ private:
     bool m_tls { false };
     String m_email;
     Vector<String> m_common_ports;
-    RefPtr<Core::ConfigFile> m_config;
 
     RefPtr<GUI::TextBox> m_server_inputbox;
     RefPtr<GUI::ComboBox> m_port_combobox;
