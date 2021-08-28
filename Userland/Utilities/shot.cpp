@@ -131,17 +131,13 @@ int main(int argc, char** argv)
     if (screen >= 0)
         screen_index = (u32)screen;
     dbgln("getting screenshot...");
-    auto shared_bitmap = GUI::WindowServerConnection::the().get_screen_bitmap({}, screen_index);
+    auto shared_bitmap = GUI::WindowServerConnection::the().get_screen_bitmap(crop_region, screen_index);
     dbgln("got screenshot");
 
     RefPtr<Gfx::Bitmap> bitmap = shared_bitmap.bitmap();
     if (!bitmap) {
         warnln("Failed to grab screenshot");
         return 1;
-    }
-
-    if (select_region) {
-        bitmap = bitmap->cropped(crop_region);
     }
 
     if (output_to_clipboard) {
