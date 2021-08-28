@@ -110,7 +110,7 @@ private:
             obj.add("packets_out", socket.packets_out());
             obj.add("bytes_out", socket.bytes_out());
             if (Process::current().is_superuser() || Process::current().uid() == socket.origin_uid()) {
-                obj.add("origin_pid", socket.origin_pid());
+                obj.add("origin_pid", socket.origin_pid().value());
                 obj.add("origin_uid", socket.origin_uid().value());
                 obj.add("origin_gid", socket.origin_gid().value());
             }
@@ -132,10 +132,10 @@ private:
         LocalSocket::for_each([&array](auto& socket) {
             auto obj = array.add_object();
             obj.add("path", String(socket.socket_path()));
-            obj.add("origin_pid", socket.origin_pid());
+            obj.add("origin_pid", socket.origin_pid().value());
             obj.add("origin_uid", socket.origin_uid().value());
             obj.add("origin_gid", socket.origin_gid().value());
-            obj.add("acceptor_pid", socket.acceptor_pid());
+            obj.add("acceptor_pid", socket.acceptor_pid().value());
             obj.add("acceptor_uid", socket.acceptor_uid().value());
             obj.add("acceptor_gid", socket.acceptor_gid().value());
         });
@@ -160,7 +160,7 @@ private:
             obj.add("peer_address", socket.peer_address().to_string());
             obj.add("peer_port", socket.peer_port());
             if (Process::current().is_superuser() || Process::current().uid() == socket.origin_uid()) {
-                obj.add("origin_pid", socket.origin_pid());
+                obj.add("origin_pid", socket.origin_pid().value());
                 obj.add("origin_uid", socket.origin_uid().value());
                 obj.add("origin_gid", socket.origin_gid().value());
             }
