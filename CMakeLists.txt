@@ -338,8 +338,10 @@ serenity_component(
 
 add_subdirectory(AK)
 add_subdirectory(Kernel)
-add_subdirectory(Userland)
-add_subdirectory(Tests)
+if(NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
+    add_subdirectory(Userland)
+    add_subdirectory(Tests)
+endif()
 
 export_components("${CMAKE_BINARY_DIR}/components.ini")
 
