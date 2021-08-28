@@ -58,11 +58,11 @@ protected:
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual void flush_metadata() override;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, FileDescription*) override;
-    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, uid_t, gid_t) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;
     virtual KResult chmod(mode_t) override;
-    virtual KResult chown(uid_t, gid_t) override;
+    virtual KResult chown(UserID, GroupID) override;
     virtual KResult truncate(u64) override;
 };
 
@@ -80,13 +80,13 @@ private:
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
     virtual InodeMetadata metadata() const override;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, FileDescription*) override;
-    virtual KResult chown(uid_t, gid_t) override;
+    virtual KResult chown(UserID, GroupID) override;
 
     NonnullRefPtr<Device> m_attached_device;
     NonnullOwnPtr<KString> m_name;
 
-    uid_t m_uid { 0 };
-    gid_t m_gid { 0 };
+    UserID m_uid { 0 };
+    GroupID m_gid { 0 };
 };
 
 class DevFSLinkInode : public DevFSInode {
@@ -147,7 +147,7 @@ public:
 
 private:
     explicit DevFSRootDirectoryInode(DevFS&);
-    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, uid_t, gid_t) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual InodeMetadata metadata() const override;

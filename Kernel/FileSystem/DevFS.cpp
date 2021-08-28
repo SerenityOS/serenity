@@ -107,7 +107,7 @@ KResultOr<size_t> DevFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffe
     VERIFY_NOT_REACHED();
 }
 
-KResultOr<NonnullRefPtr<Inode>> DevFSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> DevFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     return EROFS;
 }
@@ -127,7 +127,7 @@ KResult DevFSInode::chmod(mode_t)
     return EPERM;
 }
 
-KResult DevFSInode::chown(uid_t, gid_t)
+KResult DevFSInode::chown(UserID, GroupID)
 {
     return EPERM;
 }
@@ -253,7 +253,7 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::lookup(StringView name)
     }
     return ENOENT;
 }
-KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView name, mode_t mode, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView name, mode_t mode, dev_t, UserID, GroupID)
 {
     MutexLocker locker(fs().m_lock);
 
@@ -325,7 +325,7 @@ DevFSDeviceInode::~DevFSDeviceInode()
 {
 }
 
-KResult DevFSDeviceInode::chown(uid_t uid, gid_t gid)
+KResult DevFSDeviceInode::chown(UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
     m_uid = uid;

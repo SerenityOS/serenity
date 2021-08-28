@@ -39,7 +39,7 @@ public:
     virtual String absolute_path(const FileDescription&) const override;
 
     virtual KResult truncate(u64) override;
-    virtual KResult chown(FileDescription&, uid_t, gid_t) override;
+    virtual KResult chown(FileDescription&, UserID, GroupID) override;
     virtual KResult chmod(FileDescription&, mode_t) override;
 
     virtual StringView class_name() const override { return "InodeFile"; }

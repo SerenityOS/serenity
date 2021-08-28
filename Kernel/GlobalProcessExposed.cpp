@@ -111,8 +111,8 @@ private:
             obj.add("bytes_out", socket.bytes_out());
             if (Process::current().is_superuser() || Process::current().uid() == socket.origin_uid()) {
                 obj.add("origin_pid", socket.origin_pid());
-                obj.add("origin_uid", socket.origin_uid());
-                obj.add("origin_gid", socket.origin_gid());
+                obj.add("origin_uid", socket.origin_uid().value());
+                obj.add("origin_gid", socket.origin_gid().value());
             }
         });
         array.finish();
@@ -133,11 +133,11 @@ private:
             auto obj = array.add_object();
             obj.add("path", String(socket.socket_path()));
             obj.add("origin_pid", socket.origin_pid());
-            obj.add("origin_uid", socket.origin_uid());
-            obj.add("origin_gid", socket.origin_gid());
+            obj.add("origin_uid", socket.origin_uid().value());
+            obj.add("origin_gid", socket.origin_gid().value());
             obj.add("acceptor_pid", socket.acceptor_pid());
-            obj.add("acceptor_uid", socket.acceptor_uid());
-            obj.add("acceptor_gid", socket.acceptor_gid());
+            obj.add("acceptor_uid", socket.acceptor_uid().value());
+            obj.add("acceptor_gid", socket.acceptor_gid().value());
         });
         array.finish();
         return true;
@@ -161,8 +161,8 @@ private:
             obj.add("peer_port", socket.peer_port());
             if (Process::current().is_superuser() || Process::current().uid() == socket.origin_uid()) {
                 obj.add("origin_pid", socket.origin_pid());
-                obj.add("origin_uid", socket.origin_uid());
-                obj.add("origin_gid", socket.origin_gid());
+                obj.add("origin_uid", socket.origin_uid().value());
+                obj.add("origin_gid", socket.origin_gid().value());
             }
         });
         array.finish();
@@ -456,8 +456,8 @@ private:
             process_object.add("pgid", process.tty() ? process.tty()->pgid().value() : 0);
             process_object.add("pgp", process.pgid().value());
             process_object.add("sid", process.sid().value());
-            process_object.add("uid", process.uid());
-            process_object.add("gid", process.gid());
+            process_object.add("uid", process.uid().value());
+            process_object.add("gid", process.gid().value());
             process_object.add("ppid", process.ppid().value());
             process_object.add("nfds", process.fds().open_count());
             process_object.add("name", process.name());

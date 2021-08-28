@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$seteuid(uid_t new_euid)
+KResultOr<FlatPtr> Process::sys$seteuid(UserID new_euid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
@@ -25,7 +25,7 @@ KResultOr<FlatPtr> Process::sys$seteuid(uid_t new_euid)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$setegid(gid_t new_egid)
+KResultOr<FlatPtr> Process::sys$setegid(GroupID new_egid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
@@ -41,7 +41,7 @@ KResultOr<FlatPtr> Process::sys$setegid(gid_t new_egid)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$setuid(uid_t new_uid)
+KResultOr<FlatPtr> Process::sys$setuid(UserID new_uid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
@@ -59,7 +59,7 @@ KResultOr<FlatPtr> Process::sys$setuid(uid_t new_uid)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$setgid(gid_t new_gid)
+KResultOr<FlatPtr> Process::sys$setgid(GroupID new_gid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
@@ -77,7 +77,7 @@ KResultOr<FlatPtr> Process::sys$setgid(gid_t new_gid)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$setreuid(uid_t new_ruid, uid_t new_euid)
+KResultOr<FlatPtr> Process::sys$setreuid(UserID new_ruid, UserID new_euid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
@@ -87,7 +87,7 @@ KResultOr<FlatPtr> Process::sys$setreuid(uid_t new_ruid, uid_t new_euid)
     if (new_euid == (uid_t)-1)
         new_euid = euid();
 
-    auto ok = [this](uid_t id) { return id == uid() || id == euid() || id == suid(); };
+    auto ok = [this](UserID id) { return id == uid() || id == euid() || id == suid(); };
     if (!ok(new_ruid) || !ok(new_euid))
         return EPERM;
 
@@ -103,7 +103,7 @@ KResultOr<FlatPtr> Process::sys$setreuid(uid_t new_ruid, uid_t new_euid)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$setresuid(uid_t new_ruid, uid_t new_euid, uid_t new_suid)
+KResultOr<FlatPtr> Process::sys$setresuid(UserID new_ruid, UserID new_euid, UserID new_suid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
@@ -115,7 +115,7 @@ KResultOr<FlatPtr> Process::sys$setresuid(uid_t new_ruid, uid_t new_euid, uid_t 
     if (new_suid == (uid_t)-1)
         new_suid = suid();
 
-    auto ok = [this](uid_t id) { return id == uid() || id == euid() || id == suid(); };
+    auto ok = [this](UserID id) { return id == uid() || id == euid() || id == suid(); };
     if ((!ok(new_ruid) || !ok(new_euid) || !ok(new_suid)) && !is_superuser())
         return EPERM;
 
@@ -129,7 +129,7 @@ KResultOr<FlatPtr> Process::sys$setresuid(uid_t new_ruid, uid_t new_euid, uid_t 
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$setresgid(gid_t new_rgid, gid_t new_egid, gid_t new_sgid)
+KResultOr<FlatPtr> Process::sys$setresgid(GroupID new_rgid, GroupID new_egid, GroupID new_sgid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
@@ -141,7 +141,7 @@ KResultOr<FlatPtr> Process::sys$setresgid(gid_t new_rgid, gid_t new_egid, gid_t 
     if (new_sgid == (gid_t)-1)
         new_sgid = sgid();
 
-    auto ok = [this](gid_t id) { return id == gid() || id == egid() || id == sgid(); };
+    auto ok = [this](GroupID id) { return id == gid() || id == egid() || id == sgid(); };
     if ((!ok(new_rgid) || !ok(new_egid) || !ok(new_sgid)) && !is_superuser())
         return EPERM;
 

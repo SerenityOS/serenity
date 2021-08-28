@@ -12,31 +12,31 @@ KResultOr<FlatPtr> Process::sys$getuid()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    return uid();
+    return uid().value();
 }
 
 KResultOr<FlatPtr> Process::sys$getgid()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    return gid();
+    return gid().value();
 }
 
 KResultOr<FlatPtr> Process::sys$geteuid()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    return euid();
+    return euid().value();
 }
 
 KResultOr<FlatPtr> Process::sys$getegid()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    return egid();
+    return egid().value();
 }
 
-KResultOr<FlatPtr> Process::sys$getresuid(Userspace<uid_t*> ruid, Userspace<uid_t*> euid, Userspace<uid_t*> suid)
+KResultOr<FlatPtr> Process::sys$getresuid(Userspace<UserID*> ruid, Userspace<UserID*> euid, Userspace<UserID*> suid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
@@ -45,7 +45,7 @@ KResultOr<FlatPtr> Process::sys$getresuid(Userspace<uid_t*> ruid, Userspace<uid_
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$getresgid(Userspace<gid_t*> rgid, Userspace<gid_t*> egid, Userspace<gid_t*> sgid)
+KResultOr<FlatPtr> Process::sys$getresgid(Userspace<GroupID*> rgid, Userspace<GroupID*> egid, Userspace<GroupID*> sgid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);

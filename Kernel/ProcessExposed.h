@@ -73,8 +73,8 @@ public:
     virtual size_t size() const { return 0; }
 
     virtual mode_t required_mode() const { return 0444; }
-    virtual uid_t owner_user() const { return 0; }
-    virtual gid_t owner_group() const { return 0; }
+    virtual UserID owner_user() const { return 0; }
+    virtual GroupID owner_group() const { return 0; }
     time_t modified_time() const { return TimeManagement::now().to_timeval().tv_sec; }
 
     virtual void prepare_for_deletion() { }

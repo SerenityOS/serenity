@@ -24,10 +24,10 @@ public:
         Writer
     };
 
-    static RefPtr<FIFO> try_create(uid_t);
+    static RefPtr<FIFO> try_create(UserID);
     virtual ~FIFO() override;
 
-    uid_t uid() const { return m_uid; }
+    UserID uid() const { return m_uid; }
 
     KResultOr<NonnullRefPtr<FileDescription>> open_direction(Direction);
     KResultOr<NonnullRefPtr<FileDescription>> open_direction_blocking(Direction);
@@ -49,13 +49,13 @@ private:
     virtual StringView class_name() const override { return "FIFO"; }
     virtual bool is_fifo() const override { return true; }
 
-    explicit FIFO(uid_t, NonnullOwnPtr<DoubleBuffer> buffer);
+    explicit FIFO(UserID, NonnullOwnPtr<DoubleBuffer> buffer);
 
     unsigned m_writers { 0 };
     unsigned m_readers { 0 };
     NonnullOwnPtr<DoubleBuffer> m_buffer;
 
-    uid_t m_uid { 0 };
+    UserID m_uid { 0 };
 
     int m_fifo_id { 0 };
 

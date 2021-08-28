@@ -565,7 +565,7 @@ KResultOr<size_t> ISO9660Inode::write_bytes(off_t, size_t, const UserOrKernelBuf
     return EROFS;
 }
 
-KResultOr<NonnullRefPtr<Inode>> ISO9660Inode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> ISO9660Inode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     return EROFS;
 }
@@ -585,7 +585,7 @@ KResult ISO9660Inode::chmod(mode_t)
     return EROFS;
 }
 
-KResult ISO9660Inode::chown(uid_t, gid_t)
+KResult ISO9660Inode::chown(UserID, GroupID)
 {
     return EROFS;
 }

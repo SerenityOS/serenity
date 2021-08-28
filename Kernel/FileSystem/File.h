@@ -95,7 +95,7 @@ public:
     virtual String absolute_path(const FileDescription&) const = 0;
 
     virtual KResult truncate(u64) { return EINVAL; }
-    virtual KResult chown(FileDescription&, uid_t, gid_t) { return EBADF; }
+    virtual KResult chown(FileDescription&, UserID, GroupID) { return EBADF; }
     virtual KResult chmod(FileDescription&, mode_t) { return EBADF; }
 
     virtual StringView class_name() const = 0;

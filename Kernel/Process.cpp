@@ -94,7 +94,7 @@ NonnullRefPtrVector<Process> Process::all_processes()
     return output;
 }
 
-bool Process::in_group(gid_t gid) const
+bool Process::in_group(GroupID gid) const
 {
     return this->gid() == gid || extra_gids().contains_slow(gid);
 }
@@ -143,7 +143,7 @@ void Process::register_new(Process& process)
     });
 }
 
-RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const String& path, uid_t uid, gid_t gid, ProcessID parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
+RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const String& path, UserID uid, GroupID gid, ProcessID parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
 {
     auto parts = path.split('/');
     if (arguments.is_empty()) {
@@ -192,7 +192,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
 
 RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
 {
-    auto process = Process::create(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true);
+    auto process = Process::create(first_thread, move(name), UserID(0), GroupID(0), ProcessID(0), true);
     if (!first_thread || !process)
         return {};
     first_thread->regs().set_ip((FlatPtr)entry);
@@ -225,7 +225,7 @@ void Process::unprotect_data()
     });
 }
 
-RefPtr<Process> Process::create(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+RefPtr<Process> Process::create(RefPtr<Thread>& first_thread, const String& name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
 {
     auto space = Memory::AddressSpace::try_create(fork_parent ? &fork_parent->address_space() : nullptr);
     if (!space)
@@ -239,7 +239,7 @@ RefPtr<Process> Process::create(RefPtr<Thread>& first_thread, const String& name
     return process;
 }
 
-Process::Process(const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty)
+Process::Process(const String& name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty)
     : m_name(move(name))
     , m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
@@ -521,7 +521,7 @@ siginfo_t Process::wait_info()
     siginfo_t siginfo {};
     siginfo.si_signo = SIGCHLD;
     siginfo.si_pid = pid().value();
-    siginfo.si_uid = uid();
+    siginfo.si_uid = uid().value();
 
     if (m_protected_values.termination_signal) {
         siginfo.si_status = m_protected_values.termination_signal;

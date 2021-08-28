@@ -83,7 +83,7 @@ KResult ProcFSInode::add_child(Inode&, const StringView&, mode_t)
     return EROFS;
 }
 
-KResultOr<NonnullRefPtr<Inode>> ProcFSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> ProcFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     return EROFS;
 }
@@ -98,7 +98,7 @@ KResult ProcFSInode::chmod(mode_t)
     return EPERM;
 }
 
-KResult ProcFSInode::chown(uid_t, gid_t)
+KResult ProcFSInode::chown(UserID, GroupID)
 {
     return EPERM;
 }

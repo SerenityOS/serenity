@@ -38,7 +38,7 @@ struct InodeMetadata {
     bool may_write(const Process&) const;
     bool may_execute(const Process&) const;
 
-    bool may_read(uid_t u, gid_t g, Span<const gid_t> eg) const
+    bool may_read(UserID u, GroupID g, Span<GroupID const> eg) const
     {
         if (u == 0)
             return true;
@@ -49,7 +49,7 @@ struct InodeMetadata {
         return mode & S_IROTH;
     }
 
-    bool may_write(uid_t u, gid_t g, Span<const gid_t> eg) const
+    bool may_write(UserID u, GroupID g, Span<GroupID const> eg) const
     {
         if (u == 0)
             return true;
@@ -60,7 +60,7 @@ struct InodeMetadata {
         return mode & S_IWOTH;
     }
 
-    bool may_execute(uid_t u, gid_t g, Span<const gid_t> eg) const
+    bool may_execute(UserID u, GroupID g, Span<GroupID const> eg) const
     {
         if (u == 0)
             return true;
@@ -91,8 +91,8 @@ struct InodeMetadata {
         buffer.st_ino = inode.index().value();
         buffer.st_mode = mode;
         buffer.st_nlink = link_count;
-        buffer.st_uid = uid;
-        buffer.st_gid = gid;
+        buffer.st_uid = uid.value();
+        buffer.st_gid = gid.value();
         buffer.st_dev = 0; // FIXME
         buffer.st_size = size;
         buffer.st_blksize = block_size;
@@ -109,8 +109,8 @@ struct InodeMetadata {
     InodeIdentifier inode;
     off_t size { 0 };
     mode_t mode { 0 };
-    uid_t uid { 0 };
-    gid_t gid { 0 };
+    UserID uid { 0 };
+    GroupID gid { 0 };
     nlink_t link_count { 0 };
     time_t atime { 0 };
     time_t ctime { 0 };

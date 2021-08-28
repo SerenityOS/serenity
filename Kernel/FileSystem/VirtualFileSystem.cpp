@@ -370,8 +370,8 @@ KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::create(StringView p
         return EROFS;
 
     dbgln_if(VFS_DEBUG, "VirtualFileSystem::create: '{}' in {}", basename, parent_inode.identifier());
-    uid_t uid = owner.has_value() ? owner.value().uid : current_process.euid();
-    gid_t gid = owner.has_value() ? owner.value().gid : current_process.egid();
+    auto uid = owner.has_value() ? owner.value().uid : current_process.euid();
+    auto gid = owner.has_value() ? owner.value().gid : current_process.egid();
     auto inode_or_error = parent_inode.create_child(basename, mode, 0, uid, gid);
     if (inode_or_error.is_error())
         return inode_or_error.error();
@@ -582,7 +582,7 @@ KResult VirtualFileSystem::rename(StringView old_path, StringView new_path, Cust
     return KSuccess;
 }
 
-KResult VirtualFileSystem::chown(Custody& custody, uid_t a_uid, gid_t a_gid)
+KResult VirtualFileSystem::chown(Custody& custody, UserID a_uid, GroupID a_gid)
 {
     auto& inode = custody.inode();
     auto metadata = inode.metadata();
@@ -591,8 +591,8 @@ KResult VirtualFileSystem::chown(Custody& custody, uid_t a_uid, gid_t a_gid)
     if (current_process.euid() != metadata.uid && !current_process.is_superuser())
         return EPERM;
 
-    uid_t new_uid = metadata.uid;
-    gid_t new_gid = metadata.gid;
+    UserID new_uid = metadata.uid;
+    GroupID new_gid = metadata.gid;
 
     if (a_uid != (uid_t)-1) {
         if (current_process.euid() != a_uid && !current_process.is_superuser())
@@ -619,7 +619,7 @@ KResult VirtualFileSystem::chown(Custody& custody, uid_t a_uid, gid_t a_gid)
     return inode.chown(new_uid, new_gid);
 }
 
-KResult VirtualFileSystem::chown(StringView path, uid_t a_uid, gid_t a_gid, Custody& base)
+KResult VirtualFileSystem::chown(StringView path, UserID a_uid, GroupID a_gid, Custody& base)
 {
     auto custody_or_error = resolve_path(path, base);
     if (custody_or_error.is_error())

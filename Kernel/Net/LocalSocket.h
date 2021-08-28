@@ -48,7 +48,7 @@ public:
     virtual KResultOr<size_t> recvfrom(FileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) override;
     virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
     virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override;
-    virtual KResult chown(FileDescription&, uid_t, gid_t) override;
+    virtual KResult chown(FileDescription&, UserID, GroupID) override;
     virtual KResult chmod(FileDescription&, mode_t) override;
 
 private:
@@ -72,8 +72,8 @@ private:
     // An open socket file on the filesystem.
     RefPtr<FileDescription> m_file;
 
-    uid_t m_prebind_uid { 0 };
-    gid_t m_prebind_gid { 0 };
+    UserID m_prebind_uid { 0 };
+    GroupID m_prebind_gid { 0 };
     mode_t m_prebind_mode { 0 };
 
     // A single LocalSocket is shared between two file descriptions

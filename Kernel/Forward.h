@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DistinctNumeric.h>
+#include <Kernel/API/POSIX/sys/types.h>
 
 namespace Kernel {
 
@@ -97,5 +98,8 @@ TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessID);
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ThreadID);
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, SessionID);
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessGroupID);
+
+TYPEDEF_DISTINCT_ORDERED_ID(uid_t, UserID);
+TYPEDEF_DISTINCT_ORDERED_ID(gid_t, GroupID);
 
 }

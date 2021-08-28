@@ -133,7 +133,7 @@ KResultOr<size_t> SysFSInode::write_bytes(off_t offset, size_t count, UserOrKern
     return m_associated_component->write_bytes(offset, count, buffer, fd);
 }
 
-KResultOr<NonnullRefPtr<Inode>> SysFSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> SysFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     return EROFS;
 }
@@ -153,7 +153,7 @@ KResult SysFSInode::chmod(mode_t)
     return EPERM;
 }
 
-KResult SysFSInode::chown(uid_t, gid_t)
+KResult SysFSInode::chown(UserID, GroupID)
 {
     return EPERM;
 }

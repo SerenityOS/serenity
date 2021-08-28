@@ -123,7 +123,7 @@ public:
 
     off_t offset() const { return m_current_offset; }
 
-    KResult chown(uid_t, gid_t);
+    KResult chown(UserID, GroupID);
 
     FileBlockerSet& blocker_set();
 

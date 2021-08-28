@@ -44,7 +44,7 @@ private:
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual void flush_metadata() override;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, FileDescription*) override;
-    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, uid_t, gid_t) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual KResult add_child(Inode& child, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;
     virtual KResult set_atime(time_t) override;
@@ -53,7 +53,7 @@ private:
     virtual KResult increment_link_count() override;
     virtual KResult decrement_link_count() override;
     virtual KResult chmod(mode_t) override;
-    virtual KResult chown(uid_t, gid_t) override;
+    virtual KResult chown(UserID, GroupID) override;
     virtual KResult truncate(u64) override;
     virtual KResultOr<int> get_block_address(int) override;
 
@@ -130,8 +130,8 @@ private:
     virtual StringView class_name() const override { return "Ext2FS"sv; }
     virtual Ext2FSInode& root_inode() override;
     RefPtr<Inode> get_inode(InodeIdentifier) const;
-    KResultOr<NonnullRefPtr<Inode>> create_inode(Ext2FSInode& parent_inode, const String& name, mode_t, dev_t, uid_t, gid_t);
-    KResult create_directory(Ext2FSInode& parent_inode, const String& name, mode_t, uid_t, gid_t);
+    KResultOr<NonnullRefPtr<Inode>> create_inode(Ext2FSInode& parent_inode, const String& name, mode_t, dev_t, UserID, GroupID);
+    KResult create_directory(Ext2FSInode& parent_inode, const String& name, mode_t, UserID, GroupID);
     virtual void flush_writes() override;
 
     BlockIndex first_block_index() const;

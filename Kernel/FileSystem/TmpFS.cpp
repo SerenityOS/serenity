@@ -249,7 +249,7 @@ KResult TmpFSInode::chmod(mode_t mode)
     return KSuccess;
 }
 
-KResult TmpFSInode::chown(uid_t uid, gid_t gid)
+KResult TmpFSInode::chown(UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
 
@@ -259,7 +259,7 @@ KResult TmpFSInode::chown(uid_t uid, gid_t gid)
     return KSuccess;
 }
 
-KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
+KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
 

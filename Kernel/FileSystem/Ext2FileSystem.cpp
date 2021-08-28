@@ -1176,7 +1176,7 @@ KResult Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries)
     return KSuccess;
 }
 
-KResultOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(StringView name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
+KResultOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
 {
     if (::is_directory(mode))
         return fs().create_directory(*this, name, mode, uid, gid);
@@ -1539,7 +1539,7 @@ KResult Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_stat
     return update_bitmap_block(bgd.bg_block_bitmap, bit_index, new_state, m_super_block.s_free_blocks_count, bgd.bg_free_blocks_count);
 }
 
-KResult Ext2FS::create_directory(Ext2FSInode& parent_inode, const String& name, mode_t mode, uid_t uid, gid_t gid)
+KResult Ext2FS::create_directory(Ext2FSInode& parent_inode, const String& name, mode_t mode, UserID uid, GroupID gid)
 {
     MutexLocker locker(m_lock);
     VERIFY(is_directory(mode));
@@ -1569,7 +1569,7 @@ KResult Ext2FS::create_directory(Ext2FSInode& parent_inode, const String& name, 
     return KSuccess;
 }
 
-KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
+KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, const String& name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
 {
     if (name.length() > EXT2_NAME_LEN)
         return ENAMETOOLONG;
@@ -1580,8 +1580,8 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, 
     ext2_inode e2inode {};
     auto now = kgettimeofday().to_truncated_seconds();
     e2inode.i_mode = mode;
-    e2inode.i_uid = uid;
-    e2inode.i_gid = gid;
+    e2inode.i_uid = uid.value();
+    e2inode.i_gid = gid.value();
     e2inode.i_size = 0;
     e2inode.i_atime = now;
     e2inode.i_ctime = now;
@@ -1740,13 +1740,13 @@ KResult Ext2FSInode::chmod(mode_t mode)
     return KSuccess;
 }
 
-KResult Ext2FSInode::chown(uid_t uid, gid_t gid)
+KResult Ext2FSInode::chown(UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
     if (m_raw_inode.i_uid == uid && m_raw_inode.i_gid == gid)
         return KSuccess;
-    m_raw_inode.i_uid = uid;
-    m_raw_inode.i_gid = gid;
+    m_raw_inode.i_uid = uid.value();
+    m_raw_inode.i_gid = gid.value();
     set_metadata_dirty(true);
     return KSuccess;
 }

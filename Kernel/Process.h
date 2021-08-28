@@ -93,13 +93,13 @@ class Process final
         ProcessID pid { 0 };
         ProcessID ppid { 0 };
         SessionID sid { 0 };
-        uid_t euid { 0 };
-        gid_t egid { 0 };
-        uid_t uid { 0 };
-        gid_t gid { 0 };
-        uid_t suid { 0 };
-        gid_t sgid { 0 };
-        Vector<gid_t> extra_gids;
+        UserID euid { 0 };
+        GroupID egid { 0 };
+        UserID uid { 0 };
+        GroupID gid { 0 };
+        UserID suid { 0 };
+        GroupID sgid { 0 };
+        Vector<GroupID> extra_gids;
         bool dumpable { false };
         Atomic<bool> has_promises { false };
         Atomic<u32> promises { 0 };
@@ -179,7 +179,7 @@ public:
     }
 
     static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes);
-    static RefPtr<Process> create_user_process(RefPtr<Thread>& first_thread, const String& path, uid_t, gid_t, ProcessID ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
+    static RefPtr<Process> create_user_process(RefPtr<Thread>& first_thread, const String& path, UserID, GroupID, ProcessID ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     static void register_new(Process&);
 
     bool unref() const;
@@ -213,13 +213,13 @@ public:
     bool is_session_leader() const { return sid().value() == pid().value(); }
     ProcessGroupID pgid() const { return m_pg ? m_pg->pgid() : 0; }
     bool is_group_leader() const { return pgid().value() == pid().value(); }
-    const Vector<gid_t>& extra_gids() const { return m_protected_values.extra_gids; }
-    uid_t euid() const { return m_protected_values.euid; }
-    gid_t egid() const { return m_protected_values.egid; }
-    uid_t uid() const { return m_protected_values.uid; }
-    gid_t gid() const { return m_protected_values.gid; }
-    uid_t suid() const { return m_protected_values.suid; }
-    gid_t sgid() const { return m_protected_values.sgid; }
+    Vector<GroupID> const& extra_gids() const { return m_protected_values.extra_gids; }
+    UserID euid() const { return m_protected_values.euid; }
+    GroupID egid() const { return m_protected_values.egid; }
+    UserID uid() const { return m_protected_values.uid; }
+    GroupID gid() const { return m_protected_values.gid; }
+    UserID suid() const { return m_protected_values.suid; }
+    GroupID sgid() const { return m_protected_values.sgid; }
     ProcessID ppid() const { return m_protected_values.ppid; }
 
     bool is_dumpable() const { return m_protected_values.dumpable; }
@@ -227,7 +227,7 @@ public:
 
     mode_t umask() const { return m_protected_values.umask; }
 
-    bool in_group(gid_t) const;
+    bool in_group(GroupID) const;
 
     // Breakable iteration functions
     template<IteratorFunction<Process&> Callback>
@@ -288,8 +288,8 @@ public:
     KResultOr<FlatPtr> sys$getegid();
     KResultOr<FlatPtr> sys$getpid();
     KResultOr<FlatPtr> sys$getppid();
-    KResultOr<FlatPtr> sys$getresuid(Userspace<uid_t*>, Userspace<uid_t*>, Userspace<uid_t*>);
-    KResultOr<FlatPtr> sys$getresgid(Userspace<gid_t*>, Userspace<gid_t*>, Userspace<gid_t*>);
+    KResultOr<FlatPtr> sys$getresuid(Userspace<UserID*>, Userspace<UserID*>, Userspace<UserID*>);
+    KResultOr<FlatPtr> sys$getresgid(Userspace<GroupID*>, Userspace<GroupID*>, Userspace<GroupID*>);
     KResultOr<FlatPtr> sys$umask(mode_t);
     KResultOr<FlatPtr> sys$open(Userspace<const Syscall::SC_open_params*>);
     KResultOr<FlatPtr> sys$close(int fd);
@@ -339,13 +339,13 @@ public:
     KResultOr<FlatPtr> sys$setgroups(size_t, Userspace<const gid_t*>);
     KResultOr<FlatPtr> sys$pipe(int pipefd[2], int flags);
     KResultOr<FlatPtr> sys$killpg(pid_t pgrp, int sig);
-    KResultOr<FlatPtr> sys$seteuid(uid_t);
-    KResultOr<FlatPtr> sys$setegid(gid_t);
-    KResultOr<FlatPtr> sys$setuid(uid_t);
-    KResultOr<FlatPtr> sys$setgid(gid_t);
-    KResultOr<FlatPtr> sys$setreuid(uid_t, uid_t);
-    KResultOr<FlatPtr> sys$setresuid(uid_t, uid_t, uid_t);
-    KResultOr<FlatPtr> sys$setresgid(gid_t, gid_t, gid_t);
+    KResultOr<FlatPtr> sys$seteuid(UserID);
+    KResultOr<FlatPtr> sys$setegid(GroupID);
+    KResultOr<FlatPtr> sys$setuid(UserID);
+    KResultOr<FlatPtr> sys$setgid(GroupID);
+    KResultOr<FlatPtr> sys$setreuid(UserID, UserID);
+    KResultOr<FlatPtr> sys$setresuid(UserID, UserID, UserID);
+    KResultOr<FlatPtr> sys$setresgid(GroupID, GroupID, GroupID);
     KResultOr<FlatPtr> sys$alarm(unsigned seconds);
     KResultOr<FlatPtr> sys$access(Userspace<const char*> pathname, size_t path_length, int mode);
     KResultOr<FlatPtr> sys$fcntl(int fd, int cmd, u32 extra_arg);
@@ -362,7 +362,7 @@ public:
     KResultOr<FlatPtr> sys$chmod(Userspace<const char*> pathname, size_t path_length, mode_t);
     KResultOr<FlatPtr> sys$fchmod(int fd, mode_t);
     KResultOr<FlatPtr> sys$chown(Userspace<const Syscall::SC_chown_params*>);
-    KResultOr<FlatPtr> sys$fchown(int fd, uid_t, gid_t);
+    KResultOr<FlatPtr> sys$fchown(int fd, UserID, GroupID);
     KResultOr<FlatPtr> sys$socket(int domain, int type, int protocol);
     KResultOr<FlatPtr> sys$bind(int sockfd, Userspace<const sockaddr*> addr, socklen_t);
     KResultOr<FlatPtr> sys$listen(int sockfd, int backlog);
@@ -518,8 +518,8 @@ private:
     bool add_thread(Thread&);
     bool remove_thread(Thread&);
 
-    Process(const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty);
-    static RefPtr<Process> create(RefPtr<Thread>& first_thread, const String& name, uid_t, gid_t, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    Process(const String& name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty);
+    static RefPtr<Process> create(RefPtr<Thread>& first_thread, const String& name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
     KResult attach_resources(NonnullOwnPtr<Memory::AddressSpace>&&, RefPtr<Thread>& first_thread, Process* fork_parent);
     static ProcessID allocate_pid();
 
@@ -726,9 +726,8 @@ public:
         virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
         virtual mode_t required_mode() const override { return 0555; }
 
-        virtual uid_t owner_user() const override;
-
-        virtual gid_t owner_group() const override;
+        virtual UserID owner_user() const override;
+        virtual GroupID owner_group() const override;
 
     private:
         ProcessProcFSTraits(WeakPtr<Process> process)
