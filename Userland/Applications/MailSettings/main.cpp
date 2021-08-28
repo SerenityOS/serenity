@@ -26,6 +26,16 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr)) {
+        perror("unveil");
+        return 1;
+    }
+
     auto app_icon = GUI::Icon::default_icon("app-mail");
 
     auto window = MailSettingsWindow::construct();
