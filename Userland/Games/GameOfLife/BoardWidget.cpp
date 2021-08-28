@@ -28,6 +28,8 @@ BoardWidget::BoardWidget(size_t rows, size_t columns)
 
     on_pattern_selection = [this](auto* pattern) {
         m_selected_pattern = pattern;
+        if (on_pattern_selection_state_change)
+            on_pattern_selection_state_change();
     };
 
     setup_patterns();
@@ -245,6 +247,8 @@ void BoardWidget::place_pattern(size_t row, size_t column)
         y_offset++;
     }
     m_selected_pattern = nullptr;
+    if (on_pattern_selection_state_change)
+        on_pattern_selection_state_change();
     if (m_pattern_preview_timer->is_active())
         m_pattern_preview_timer->stop();
 }
