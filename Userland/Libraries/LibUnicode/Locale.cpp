@@ -580,7 +580,11 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
             });
     }
 
-    // FIXME: Handle pu_extensions.
+    if (!locale_id.private_use_extensions.is_empty()) {
+        builder.append("-x"sv);
+        for (auto const& extension : locale_id.private_use_extensions)
+            append_sep_and_string(extension);
+    }
 
     return builder.build();
 }

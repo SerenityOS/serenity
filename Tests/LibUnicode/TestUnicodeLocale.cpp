@@ -323,8 +323,15 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("en-z-bbb-0-aaa"sv, "en-0-aaa-z-bbb"sv);
     test("EN-Z-BBB-0-AAA"sv, "en-0-aaa-z-bbb"sv);
 
+    test("en-x-aa"sv, "en-x-aa"sv);
+    test("EN-X-AA"sv, "en-x-aa"sv);
+    test("en-x-bbb-aa"sv, "en-x-bbb-aa"sv);
+    test("EN-X-BBB-AA"sv, "en-x-bbb-aa"sv);
+
     test("en-u-aa-t-en"sv, "en-t-en-u-aa"sv);
     test("EN-U-AA-T-EN"sv, "en-t-en-u-aa"sv);
     test("en-z-bbb-u-aa-t-en-0-aaa"sv, "en-0-aaa-t-en-u-aa-z-bbb"sv);
     test("EN-Z-BBB-U-AA-T-EN-0-AAA"sv, "en-0-aaa-t-en-u-aa-z-bbb"sv);
+    test("en-z-bbb-u-aa-t-en-0-aaa-x-ccc"sv, "en-0-aaa-t-en-u-aa-z-bbb-x-ccc"sv);
+    test("EN-Z-BBB-U-AA-T-EN-0-AAA-X-CCC"sv, "en-0-aaa-t-en-u-aa-z-bbb-x-ccc"sv);
 }
