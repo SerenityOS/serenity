@@ -125,10 +125,12 @@ fi
 [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max"
 [ -z "$SERENITY_CPUS" ] && SERENITY_CPUS="2"
 
-if [ -z "$SERENITY_SPICE" ] && "${SERENITY_QEMU_BIN}" -chardev help | grep -iq qemu-vdagent; then
-    SERENITY_SPICE_SERVER_CHARDEV="-chardev qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent"
-elif "${SERENITY_QEMU_BIN}" -chardev help | grep -iq spicevmc; then
-    SERENITY_SPICE_SERVER_CHARDEV="-chardev spicevmc,id=vdagent,name=vdagent"
+if [ "$SERENITY_ARCH" != "aarch64" ]; then
+    if [ -z "$SERENITY_SPICE" ] && "${SERENITY_QEMU_BIN}" -chardev help | grep -iq qemu-vdagent; then
+        SERENITY_SPICE_SERVER_CHARDEV="-chardev qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent"
+    elif "${SERENITY_QEMU_BIN}" -chardev help | grep -iq spicevmc; then
+        SERENITY_SPICE_SERVER_CHARDEV="-chardev spicevmc,id=vdagent,name=vdagent"
+    fi
 fi
 
 if [ "$(uname)" = "Darwin" ]; then
@@ -208,11 +210,13 @@ $SERENITY_AUDIO_HW
 -device ich9-ahci,bus=bridge3
 "
 
-if "${SERENITY_QEMU_BIN}" -chardev help | grep -iq spice; then
-    SERENITY_COMMON_QEMU_ARGS="$SERENITY_COMMON_QEMU_ARGS
-    -spice port=5930,agent-mouse=off,disable-ticketing=on
-    -device virtserialport,chardev=vdagent,nr=1
-    "
+if [ "$SERENITY_ARCH" != "aarch64" ]; then
+    if "${SERENITY_QEMU_BIN}" -chardev help | grep -iq spice; then
+        SERENITY_COMMON_QEMU_ARGS="$SERENITY_COMMON_QEMU_ARGS
+        -spice port=5930,agent-mouse=off,disable-ticketing=on
+        -device virtserialport,chardev=vdagent,nr=1
+        "
+    fi
 fi
 
 [ -z "$SERENITY_COMMON_QEMU_Q35_ARGS" ] && SERENITY_COMMON_QEMU_Q35_ARGS="
