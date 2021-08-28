@@ -349,12 +349,19 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
         -append "${SERENITY_KERNEL_CMDLINE}"
 else
     # Meta/run.sh: qemu with user networking
+    if [ "$SERENITY_ARCH" = "aarch64" ]; then
+        SERENITY_NETFLAGS=
+    else
+        SERENITY_NETFLAGS="
+        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23,hostfwd=tcp:127.0.0.1:8000-10.0.2.15:8000,hostfwd=tcp:127.0.0.1:2222-10.0.2.15:22 \
+        -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=breh \
+        "
+    fi
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
-        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23,hostfwd=tcp:127.0.0.1:8000-10.0.2.15:8000,hostfwd=tcp:127.0.0.1:2222-10.0.2.15:22 \
-        -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=breh \
+        $SERENITY_NETFLAGS \
         -kernel Kernel/Prekernel/Prekernel \
         -initrd Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
