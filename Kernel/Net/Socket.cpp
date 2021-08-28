@@ -20,8 +20,12 @@ namespace Kernel {
 KResultOr<NonnullRefPtr<Socket>> Socket::create(int domain, int type, int protocol)
 {
     switch (domain) {
-    case AF_LOCAL:
-        return LocalSocket::create(type & SOCK_TYPE_MASK);
+    case AF_LOCAL: {
+        auto socket_or_error = LocalSocket::try_create(type & SOCK_TYPE_MASK);
+        if (socket_or_error.is_error())
+            return socket_or_error.error();
+        return socket_or_error.release_value();
+    }
     case AF_INET:
         return IPv4Socket::create(type & SOCK_TYPE_MASK, protocol);
     default:
