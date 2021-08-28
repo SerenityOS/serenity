@@ -118,15 +118,6 @@ void BIOSSysFSDirectory::create_components()
     m_components.append(smbios_table);
 }
 
-size_t BIOSSysFSDirectory::dmi_entry_point_length() const
-{
-    return m_dmi_entry_point_length;
-}
-size_t BIOSSysFSDirectory::smbios_structure_table_length() const
-{
-    return m_smbios_structure_table_length;
-}
-
 UNMAP_AFTER_INIT void BIOSSysFSDirectory::initialize_dmi_exposer()
 {
     VERIFY(!(m_dmi_entry_point.is_null()));
@@ -136,12 +127,6 @@ UNMAP_AFTER_INIT void BIOSSysFSDirectory::initialize_dmi_exposer()
         set_dmi_32_bit_entry_initialization_values();
     }
     dbgln("BIOSSysFSDirectory: Data table @ {}", m_smbios_structure_table);
-}
-
-OwnPtr<KBuffer> BIOSSysFSDirectory::smbios_structure_table() const
-{
-    auto dmi_blob = Memory::map_typed<u8>(m_smbios_structure_table, m_smbios_structure_table_length);
-    return KBuffer::try_create_with_bytes(Span<u8> { dmi_blob.ptr(), m_smbios_structure_table_length });
 }
 
 UNMAP_AFTER_INIT BIOSSysFSDirectory::BIOSSysFSDirectory()
