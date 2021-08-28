@@ -58,7 +58,7 @@ public:
 
     NonnullRefPtr<Statement> parse_statement(AllowLabelledFunction allow_labelled_function = AllowLabelledFunction::No);
     NonnullRefPtr<BlockStatement> parse_block_statement();
-    NonnullRefPtr<BlockStatement> parse_block_statement(bool& is_strict, bool error_on_binding = false);
+    NonnullRefPtr<BlockStatement> parse_block_statement(bool& is_strict, bool function_with_non_simple_parameter_list = false);
     NonnullRefPtr<ReturnStatement> parse_return_statement();
     NonnullRefPtr<VariableDeclaration> parse_variable_declaration(bool for_loop_variable_declaration = false);
     NonnullRefPtr<Statement> parse_for_statement();
@@ -180,6 +180,8 @@ private:
     void discard_saved_state();
     Position position() const;
 
+    Token next_token();
+
     void check_identifier_name_for_assignment_validity(StringView, bool force_strict = false);
 
     bool try_parse_arrow_function_expression_failed_at_position(const Position&) const;
@@ -245,7 +247,7 @@ private:
 
         Vector<Vector<FunctionNode::Parameter>&> function_parameters;
 
-        HashTable<StringView> labels_in_scope;
+        HashMap<StringView, bool> labels_in_scope;
         bool strict_mode { false };
         bool allow_super_property_lookup { false };
         bool allow_super_constructor_call { false };
