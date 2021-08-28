@@ -63,7 +63,7 @@ KResultOr<SocketPair> LocalSocket::create_connected_pair(int type)
     memcpy(socket->m_address.sun_path, "[socketpair]", 13);
 
     auto& process = Process::current();
-    socket->m_acceptor = { process.pid().value(), process.uid(), process.gid() };
+    socket->m_acceptor = { process.pid().value(), process.uid().value(), process.gid().value() };
 
     socket->set_connected(true);
     socket->set_connect_side_role(Role::Connected);
@@ -456,7 +456,7 @@ KResult LocalSocket::chmod(FileDescription&, mode_t mode)
     return KSuccess;
 }
 
-KResult LocalSocket::chown(FileDescription&, uid_t uid, gid_t gid)
+KResult LocalSocket::chown(FileDescription&, UserID uid, GroupID gid)
 {
     if (m_file)
         return m_file->chown(uid, gid);

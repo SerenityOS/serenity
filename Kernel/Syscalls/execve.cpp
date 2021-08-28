@@ -40,7 +40,7 @@ struct LoadResult {
     WeakPtr<Memory::Region> stack_region;
 };
 
-static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, uid_t uid, uid_t euid, gid_t gid, gid_t egid, String executable_path, int main_program_fd);
+static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, String executable_path, int main_program_fd);
 
 static bool validate_stack_size(const Vector<String>& arguments, const Vector<String>& environment)
 {
@@ -693,7 +693,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     return KSuccess;
 }
 
-static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, uid_t uid, uid_t euid, gid_t gid, gid_t egid, String executable_path, int main_program_fd)
+static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, String executable_path, int main_program_fd)
 {
     Vector<ELF::AuxiliaryValue> auxv;
     // PHDR/EXECFD
@@ -703,10 +703,10 @@ static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, 
 
     auxv.append({ ELF::AuxiliaryValue::Entry, (void*)entry_eip });
     // NOTELF
-    auxv.append({ ELF::AuxiliaryValue::Uid, (long)uid });
-    auxv.append({ ELF::AuxiliaryValue::EUid, (long)euid });
-    auxv.append({ ELF::AuxiliaryValue::Gid, (long)gid });
-    auxv.append({ ELF::AuxiliaryValue::EGid, (long)egid });
+    auxv.append({ ELF::AuxiliaryValue::Uid, (long)uid.value() });
+    auxv.append({ ELF::AuxiliaryValue::EUid, (long)euid.value() });
+    auxv.append({ ELF::AuxiliaryValue::Gid, (long)gid.value() });
+    auxv.append({ ELF::AuxiliaryValue::EGid, (long)egid.value() });
 
     auxv.append({ ELF::AuxiliaryValue::Platform, Processor::platform_string() });
     // FIXME: This is platform specific

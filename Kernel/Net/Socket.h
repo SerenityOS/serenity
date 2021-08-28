@@ -92,11 +92,11 @@ public:
     virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>);
 
     pid_t origin_pid() const { return m_origin.pid; }
-    uid_t origin_uid() const { return m_origin.uid; }
-    gid_t origin_gid() const { return m_origin.gid; }
+    UserID origin_uid() const { return m_origin.uid; }
+    GroupID origin_gid() const { return m_origin.gid; }
     pid_t acceptor_pid() const { return m_acceptor.pid; }
-    uid_t acceptor_uid() const { return m_acceptor.uid; }
-    gid_t acceptor_gid() const { return m_acceptor.gid; }
+    UserID acceptor_uid() const { return m_acceptor.uid; }
+    GroupID acceptor_gid() const { return m_acceptor.gid; }
     const RefPtr<NetworkAdapter> bound_interface() const { return m_bound_interface; }
 
     Mutex& lock() { return m_lock; }

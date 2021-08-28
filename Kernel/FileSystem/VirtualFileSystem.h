@@ -29,8 +29,8 @@ namespace Kernel {
 #define O_UNLINK_INTERNAL (1 << 30)
 
 struct UidAndGid {
-    uid_t uid;
-    gid_t gid;
+    UserID uid;
+    GroupID gid;
 };
 
 class VirtualFileSystem {
@@ -57,8 +57,8 @@ public:
     KResult rmdir(StringView path, Custody& base);
     KResult chmod(StringView path, mode_t, Custody& base);
     KResult chmod(Custody&, mode_t);
-    KResult chown(StringView path, uid_t, gid_t, Custody& base);
-    KResult chown(Custody&, uid_t, gid_t);
+    KResult chown(StringView path, UserID, GroupID, Custody& base);
+    KResult chown(Custody&, UserID, GroupID);
     KResult access(StringView path, int mode, Custody& base);
     KResultOr<InodeMetadata> lookup_metadata(StringView path, Custody& base, int options = 0);
     KResult utime(StringView path, Custody& base, time_t atime, time_t mtime);

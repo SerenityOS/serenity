@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$fchown(int fd, uid_t uid, gid_t gid)
+KResultOr<FlatPtr> Process::sys$fchown(int fd, UserID uid, GroupID gid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(chown);

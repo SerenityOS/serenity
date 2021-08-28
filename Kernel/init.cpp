@@ -344,7 +344,7 @@ void init_stage2(void*)
     RefPtr<Thread> thread;
     auto userspace_init = kernel_command_line().userspace_init();
     auto init_args = kernel_command_line().userspace_init_args();
-    Process::create_user_process(thread, userspace_init, (uid_t)0, (gid_t)0, ProcessID(0), error, move(init_args), {}, tty0);
+    Process::create_user_process(thread, userspace_init, UserID(0), GroupID(0), ProcessID(0), error, move(init_args), {}, tty0);
     if (error != 0) {
         PANIC("init_stage2: Error spawning SystemServer: {}", error);
     }

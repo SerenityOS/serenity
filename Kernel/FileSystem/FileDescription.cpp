@@ -437,7 +437,7 @@ KResult FileDescription::chmod(mode_t mode)
     return m_file->chmod(*this, mode);
 }
 
-KResult FileDescription::chown(uid_t uid, gid_t gid)
+KResult FileDescription::chown(UserID uid, GroupID gid)
 {
     MutexLocker locker(m_lock);
     return m_file->chown(*this, uid, gid);

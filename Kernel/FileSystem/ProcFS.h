@@ -57,11 +57,11 @@ protected:
     virtual KResult attach(FileDescription& description) = 0;
     virtual void did_seek(FileDescription&, off_t) = 0;
     virtual void flush_metadata() override final;
-    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, uid_t, gid_t) override final;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override final;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) override final;
     virtual KResult remove_child(const StringView& name) override final;
     virtual KResult chmod(mode_t) override final;
-    virtual KResult chown(uid_t, gid_t) override final;
+    virtual KResult chown(UserID, GroupID) override final;
     virtual KResult truncate(u64) override final;
 };
 

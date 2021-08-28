@@ -16,7 +16,7 @@ namespace Kernel {
 
 static Atomic<int> s_next_fifo_id = 1;
 
-RefPtr<FIFO> FIFO::try_create(uid_t uid)
+RefPtr<FIFO> FIFO::try_create(UserID uid)
 {
     auto buffer = DoubleBuffer::try_create();
     if (buffer)
@@ -65,7 +65,7 @@ KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction_blocking(FIFO::Di
     return description;
 }
 
-FIFO::FIFO(uid_t uid, NonnullOwnPtr<DoubleBuffer> buffer)
+FIFO::FIFO(UserID uid, NonnullOwnPtr<DoubleBuffer> buffer)
     : m_buffer(move(buffer))
     , m_uid(uid)
 {

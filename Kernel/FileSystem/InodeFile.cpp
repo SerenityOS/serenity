@@ -127,7 +127,7 @@ KResult InodeFile::truncate(u64 size)
     return KSuccess;
 }
 
-KResult InodeFile::chown(FileDescription& description, uid_t uid, gid_t gid)
+KResult InodeFile::chown(FileDescription& description, UserID uid, GroupID gid)
 {
     VERIFY(description.inode() == m_inode);
     VERIFY(description.custody());

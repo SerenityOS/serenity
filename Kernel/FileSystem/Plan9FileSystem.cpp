@@ -934,7 +934,7 @@ KResultOr<NonnullRefPtr<Inode>> Plan9FSInode::lookup(StringView name)
     return Plan9FSInode::create(fs(), newfid);
 }
 
-KResultOr<NonnullRefPtr<Inode>> Plan9FSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> Plan9FSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     // TODO
     return ENOTIMPL;
@@ -958,7 +958,7 @@ KResult Plan9FSInode::chmod(mode_t)
     return ENOTIMPL;
 }
 
-KResult Plan9FSInode::chown(uid_t, gid_t)
+KResult Plan9FSInode::chown(UserID, GroupID)
 {
     // TODO
     return ENOTIMPL;

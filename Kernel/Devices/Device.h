@@ -34,8 +34,8 @@ public:
     virtual String absolute_path(const FileDescription&) const override;
     virtual String absolute_path() const;
 
-    uid_t uid() const { return m_uid; }
-    uid_t gid() const { return m_gid; }
+    UserID uid() const { return m_uid; }
+    GroupID gid() const { return m_gid; }
 
     virtual mode_t required_mode() const = 0;
     virtual String device_name() const = 0;
@@ -62,16 +62,16 @@ public:
 
 protected:
     Device(unsigned major, unsigned minor);
-    void set_uid(uid_t uid) { m_uid = uid; }
-    void set_gid(gid_t gid) { m_gid = gid; }
+    void set_uid(UserID uid) { m_uid = uid; }
+    void set_gid(GroupID gid) { m_gid = gid; }
 
     static HashMap<u32, Device*>& all_devices();
 
 private:
     unsigned m_major { 0 };
     unsigned m_minor { 0 };
-    uid_t m_uid { 0 };
-    gid_t m_gid { 0 };
+    UserID m_uid { 0 };
+    GroupID m_gid { 0 };
 
     Spinlock<u8> m_requests_lock;
     DoublyLinkedList<RefPtr<AsyncDeviceRequest>> m_requests;

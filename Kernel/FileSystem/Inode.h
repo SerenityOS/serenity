@@ -55,11 +55,11 @@ public:
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const = 0;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) = 0;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, FileDescription*) = 0;
-    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, uid_t, gid_t) = 0;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) = 0;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) = 0;
     virtual KResult remove_child(const StringView& name) = 0;
     virtual KResult chmod(mode_t) = 0;
-    virtual KResult chown(uid_t, gid_t) = 0;
+    virtual KResult chown(UserID, GroupID) = 0;
     virtual KResult truncate(u64) { return KSuccess; }
     virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const;
 

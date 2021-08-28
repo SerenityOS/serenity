@@ -160,7 +160,7 @@ KResult DevPtsFSInode::add_child(Inode&, const StringView&, mode_t)
     return EROFS;
 }
 
-KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     return EROFS;
 }
@@ -175,7 +175,7 @@ KResult DevPtsFSInode::chmod(mode_t)
     return EROFS;
 }
 
-KResult DevPtsFSInode::chown(uid_t, gid_t)
+KResult DevPtsFSInode::chown(UserID, GroupID)
 {
     return EROFS;
 }

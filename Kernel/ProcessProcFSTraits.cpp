@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-uid_t Process::ProcessProcFSTraits::owner_user() const
+UserID Process::ProcessProcFSTraits::owner_user() const
 {
     auto process = m_process.strong_ref();
     if (!process)
@@ -18,7 +18,7 @@ uid_t Process::ProcessProcFSTraits::owner_user() const
     return process->uid();
 }
 
-gid_t Process::ProcessProcFSTraits::owner_group() const
+GroupID Process::ProcessProcFSTraits::owner_group() const
 {
     auto process = m_process.strong_ref();
     if (!process)
