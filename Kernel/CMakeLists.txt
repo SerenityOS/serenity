@@ -516,7 +516,5 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/kernel.map" DESTINATION res)
 serenity_install_headers(Kernel)
 serenity_install_sources(Kernel)
 
-if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
-    add_subdirectory(Prekernel)
-endif()
+add_subdirectory(Prekernel)
 add_subdirectory(Modules)
