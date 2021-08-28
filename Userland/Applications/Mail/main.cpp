@@ -5,6 +5,7 @@
  */
 
 #include "MailWidget.h"
+#include <LibConfig/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -15,12 +16,14 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd rpath unix cpath wpath thread inet", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath unix inet", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
+
+    Config::pledge_domains("Mail");
 
     auto window = GUI::Window::construct();
 
