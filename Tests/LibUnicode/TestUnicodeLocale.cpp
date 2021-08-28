@@ -277,7 +277,7 @@ TEST_CASE(canonicalize_unicode_locale_id)
         VERIFY(locale_id.has_value());
 
         auto canonical_locale = Unicode::canonicalize_unicode_locale_id(*locale_id);
-        EXPECT_EQ(canonical_locale, expected_canonical_locale);
+        EXPECT_EQ(*canonical_locale, expected_canonical_locale);
     };
 
     test("aaa"sv, "aaa"sv);
@@ -287,4 +287,44 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("aaa-bBBB-cC"sv, "aaa-Bbbb-CC"sv);
     test("aaa-bbbb-cc-1234"sv, "aaa-Bbbb-CC-1234"sv);
     test("aaa-bbbb-cc-ABCDE"sv, "aaa-Bbbb-CC-abcde"sv);
+
+    test("en-u-aa"sv, "en-u-aa"sv);
+    test("EN-U-AA"sv, "en-u-aa"sv);
+    test("en-u-aa-bbb"sv, "en-u-aa-bbb"sv);
+    test("EN-U-AA-BBB"sv, "en-u-aa-bbb"sv);
+    test("en-u-aa-ccc-bbb"sv, "en-u-aa-ccc-bbb"sv);
+    test("EN-U-AA-CCC-BBB"sv, "en-u-aa-ccc-bbb"sv);
+    test("en-u-ddd-bbb-ccc"sv, "en-u-bbb-ccc-ddd"sv);
+    test("EN-U-DDD-BBB-CCC"sv, "en-u-bbb-ccc-ddd"sv);
+    test("en-u-2k-aaa-1k-bbb"sv, "en-u-1k-bbb-2k-aaa"sv);
+    test("EN-U-2K-AAA-1K-BBB"sv, "en-u-1k-bbb-2k-aaa"sv);
+    test("en-u-ccc-bbb-2k-aaa-1k-bbb"sv, "en-u-bbb-ccc-1k-bbb-2k-aaa"sv);
+    test("EN-U-CCC-BBB-2K-AAA-1K-BBB"sv, "en-u-bbb-ccc-1k-bbb-2k-aaa"sv);
+    test("en-u-1k-true"sv, "en-u-1k"sv);
+    test("EN-U-1K-TRUE"sv, "en-u-1k"sv);
+
+    test("en-t-en"sv, "en-t-en"sv);
+    test("EN-T-EN"sv, "en-t-en"sv);
+    test("en-latn-t-en-latn"sv, "en-Latn-t-en-latn"sv);
+    test("EN-LATN-T-EN-LATN"sv, "en-Latn-t-en-latn"sv);
+    test("en-us-t-en-us"sv, "en-US-t-en-us"sv);
+    test("EN-US-T-EN-US"sv, "en-US-t-en-us"sv);
+    test("en-latn-us-t-en-latn-us"sv, "en-Latn-US-t-en-latn-us"sv);
+    test("EN-LATN-US-T-EN-LATN-US"sv, "en-Latn-US-t-en-latn-us"sv);
+    test("en-t-en-k2-bbb-k1-aaa"sv, "en-t-en-k1-aaa-k2-bbb"sv);
+    test("EN-T-EN-K2-BBB-K1-AAA"sv, "en-t-en-k1-aaa-k2-bbb"sv);
+    test("en-t-k1-true"sv, "en-t-k1-true"sv);
+    test("EN-T-K1-TRUE"sv, "en-t-k1-true"sv);
+
+    test("en-0-aaa"sv, "en-0-aaa"sv);
+    test("EN-0-AAA"sv, "en-0-aaa"sv);
+    test("en-0-bbb-aaa"sv, "en-0-bbb-aaa"sv);
+    test("EN-0-BBB-AAA"sv, "en-0-bbb-aaa"sv);
+    test("en-z-bbb-0-aaa"sv, "en-0-aaa-z-bbb"sv);
+    test("EN-Z-BBB-0-AAA"sv, "en-0-aaa-z-bbb"sv);
+
+    test("en-u-aa-t-en"sv, "en-t-en-u-aa"sv);
+    test("EN-U-AA-T-EN"sv, "en-t-en-u-aa"sv);
+    test("en-z-bbb-u-aa-t-en-0-aaa"sv, "en-0-aaa-t-en-u-aa-z-bbb"sv);
+    test("EN-Z-BBB-U-AA-T-EN-0-AAA"sv, "en-0-aaa-t-en-u-aa-z-bbb"sv);
 }
