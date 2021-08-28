@@ -16,8 +16,9 @@ SCRIPT_DIR="$(dirname "${0}")"
 
 #SERENITY_PACKET_LOGGING_ARG="-object filter-dump,id=hue,netdev=breh,file=e1000.pcap"
 
+# FIXME: Enable for SERENITY_ARCH=aarch64 if on an aarch64 host?
 KVM_SUPPORT="0"
-[ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && KVM_SUPPORT="1"
+[ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && [ "$SERENITY_ARCH" != "aarch64" ] && KVM_SUPPORT="1"
 
 [ -z "$SERENITY_BOCHS_BIN" ] && SERENITY_BOCHS_BIN="bochs"
 
