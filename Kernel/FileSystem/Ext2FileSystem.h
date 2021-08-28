@@ -130,8 +130,8 @@ private:
     virtual StringView class_name() const override { return "Ext2FS"sv; }
     virtual Ext2FSInode& root_inode() override;
     RefPtr<Inode> get_inode(InodeIdentifier) const;
-    KResultOr<NonnullRefPtr<Inode>> create_inode(Ext2FSInode& parent_inode, const String& name, mode_t, dev_t, UserID, GroupID);
-    KResult create_directory(Ext2FSInode& parent_inode, const String& name, mode_t, UserID, GroupID);
+    KResultOr<NonnullRefPtr<Inode>> create_inode(Ext2FSInode& parent_inode, StringView name, mode_t, dev_t, UserID, GroupID);
+    KResult create_directory(Ext2FSInode& parent_inode, StringView name, mode_t, UserID, GroupID);
     virtual void flush_writes() override;
 
     BlockIndex first_block_index() const;

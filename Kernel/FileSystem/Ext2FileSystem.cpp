@@ -1539,7 +1539,7 @@ KResult Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_stat
     return update_bitmap_block(bgd.bg_block_bitmap, bit_index, new_state, m_super_block.s_free_blocks_count, bgd.bg_free_blocks_count);
 }
 
-KResult Ext2FS::create_directory(Ext2FSInode& parent_inode, const String& name, mode_t mode, UserID uid, GroupID gid)
+KResult Ext2FS::create_directory(Ext2FSInode& parent_inode, StringView name, mode_t mode, UserID uid, GroupID gid)
 {
     MutexLocker locker(m_lock);
     VERIFY(is_directory(mode));
@@ -1569,7 +1569,7 @@ KResult Ext2FS::create_directory(Ext2FSInode& parent_inode, const String& name, 
     return KSuccess;
 }
 
-KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, const String& name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
+KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
 {
     if (name.length() > EXT2_NAME_LEN)
         return ENAMETOOLONG;
