@@ -48,7 +48,7 @@ KResultOr<NonnullRefPtr<LocalSocket>> LocalSocket::try_create(int type)
     return ENOMEM;
 }
 
-KResultOr<SocketPair> LocalSocket::create_connected_pair(int type)
+KResultOr<SocketPair> LocalSocket::try_create_connected_pair(int type)
 {
     auto socket_or_error = LocalSocket::try_create(type);
     if (socket_or_error.is_error())
