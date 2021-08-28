@@ -567,6 +567,7 @@ using AK::Detail::IsConvertible;
 using AK::Detail::IsCopyAssignable;
 using AK::Detail::IsCopyConstructible;
 using AK::Detail::IsDestructible;
+using AK::Detail::IsDerivedFrom;
 using AK::Detail::IsEnum;
 using AK::Detail::IsFloatingPoint;
 using AK::Detail::IsFunction;
