@@ -155,7 +155,7 @@ void GlobalObject::initialize_global_object()
     // %GeneratorFunction.prototype.prototype% must be initialized separately as it has no
     // companion constructor
     m_generator_object_prototype = heap().allocate<GeneratorObjectPrototype>(*this, *this);
-    m_generator_object_prototype->define_direct_property(vm.names.constructor, m_generator_function_constructor, Attribute::Configurable);
+    m_generator_object_prototype->define_direct_property_without_transition(vm.names.constructor, m_generator_function_constructor, Attribute::Configurable);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     if (!m_##snake_name##_prototype)                                                     \
@@ -200,13 +200,13 @@ void GlobalObject::initialize_global_object()
         vm.throw_exception<TypeError>(global_object, ErrorType::RestrictedFunctionPropertiesAccess);
         return Value();
     });
-    m_throw_type_error_function->define_direct_property(vm.names.length, Value(0), 0);
-    m_throw_type_error_function->define_direct_property(vm.names.name, js_string(vm, ""), 0);
+    m_throw_type_error_function->define_direct_property_without_transition(vm.names.length, Value(0), 0);
+    m_throw_type_error_function->define_direct_property_without_transition(vm.names.name, js_string(vm, ""), 0);
     m_throw_type_error_function->internal_prevent_extensions();
 
     // 10.2.4 AddRestrictedFunctionProperties ( F, realm ), https://tc39.es/ecma262/#sec-addrestrictedfunctionproperties
-    m_function_prototype->define_direct_accessor(vm.names.caller, m_throw_type_error_function, m_throw_type_error_function, Attribute::Configurable);
-    m_function_prototype->define_direct_accessor(vm.names.arguments, m_throw_type_error_function, m_throw_type_error_function, Attribute::Configurable);
+    m_function_prototype->define_direct_accessor_without_transition(vm.names.caller, m_throw_type_error_function, m_throw_type_error_function, Attribute::Configurable);
+    m_function_prototype->define_direct_accessor_without_transition(vm.names.arguments, m_throw_type_error_function, m_throw_type_error_function, Attribute::Configurable);
 
     define_native_function(vm.names.encodeURI, encode_uri, 1, attr);
     define_native_function(vm.names.decodeURI, decode_uri, 1, attr);
@@ -265,7 +265,7 @@ void GlobalObject::initialize_global_object()
     // The generator constructor cannot be initialized with add_constructor as it has no global binding
     m_generator_function_constructor = heap().allocate<GeneratorFunctionConstructor>(*this, *this);
     // 27.3.3.1 GeneratorFunction.prototype.constructor, https://tc39.es/ecma262/#sec-generatorfunction.prototype.constructor
-    m_generator_function_prototype->define_direct_property(vm.names.constructor, m_generator_function_constructor, Attribute::Configurable);
+    m_generator_function_prototype->define_direct_property_without_transition(vm.names.constructor, m_generator_function_constructor, Attribute::Configurable);
 
     m_array_prototype_values_function = &m_array_prototype->get_without_side_effects(vm.names.values).as_function();
     m_eval_function = &get_without_side_effects(vm.names.eval).as_function();
