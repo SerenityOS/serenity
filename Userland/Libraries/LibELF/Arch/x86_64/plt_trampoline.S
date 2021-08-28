@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-    .align 4
-    .globl _plt_trampoline
-    .hidden _plt_trampoline
-    .type _plt_trampoline,@function
+.align 4
+.globl _plt_trampoline
+.hidden _plt_trampoline
+.type _plt_trampoline,@function
 _plt_trampoline: # (object, relocation_index)
      # save flags/registers (https://stackoverflow.com/questions/18024672/what-registers-are-preserved-through-a-linux-x86-64-function-call)
     pushfq

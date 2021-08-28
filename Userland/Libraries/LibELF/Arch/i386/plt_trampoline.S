@@ -33,26 +33,26 @@
  * _rtld_bind_start from libexec/ld.elf_so/arch/i386/rtld_start.S
  */
 
-.align	4
-	.globl	_plt_trampoline
-	.hidden	_plt_trampoline
-	.type	_plt_trampoline,@function
-_plt_trampoline:	# (obj, reloff)
-	pushf				# save registers
-	pushl	%eax
-	pushl	%ecx
-	pushl	%edx
+.align  4
+.globl  _plt_trampoline
+.hidden _plt_trampoline
+.type   _plt_trampoline,@function
+_plt_trampoline: # (obj, reloff)
+    pushf                        # save registers
+    pushl   %eax
+    pushl   %ecx
+    pushl   %edx
 
-	pushl	20(%esp)		 # Copy of reloff
-	pushl	20(%esp)		 # Copy of obj
-	call	_fixup_plt_entry@PLT # Call the binder
-	addl	$8,%esp			 # pop binder args
-	movl	%eax,20(%esp)	 # Store function to be called in obj
+    pushl   20(%esp)             # Copy of reloff
+    pushl   20(%esp)             # Copy of obj
+    call    _fixup_plt_entry@PLT # Call the binder
+    addl    $8,%esp              # pop binder args
+    movl    %eax,20(%esp)        # Store function to be called in obj
 
-	popl	%edx
-	popl	%ecx
-	popl	%eax
-	popf
+    popl    %edx
+    popl    %ecx
+    popl    %eax
+    popf
 
-	leal	4(%esp),%esp		# Discard reloff, do not change eflags
-	ret
+    leal    4(%esp),%esp         # Discard reloff, do not change eflags
+    ret
