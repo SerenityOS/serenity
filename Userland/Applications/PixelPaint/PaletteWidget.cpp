@@ -68,19 +68,19 @@ PaletteWidget::PaletteWidget()
     set_frame_thickness(0);
     set_fill_with_background_color(true);
 
-    set_fixed_height(33);
+    set_fixed_height(35);
 
     m_secondary_color_widget = add<GUI::Frame>();
-    m_secondary_color_widget->set_relative_rect({ 0, 2, 60, 31 });
+    m_secondary_color_widget->set_relative_rect({ 0, 2, 60, 33 });
     m_secondary_color_widget->set_fill_with_background_color(true);
 
     m_primary_color_widget = add<GUI::Frame>();
-    auto rect = Gfx::IntRect(0, 0, 38, 15).centered_within(m_secondary_color_widget->relative_rect());
+    auto rect = Gfx::IntRect(0, 0, 35, 17).centered_within(m_secondary_color_widget->relative_rect());
     m_primary_color_widget->set_relative_rect(rect);
     m_primary_color_widget->set_fill_with_background_color(true);
 
     m_color_container = add<GUI::Widget>();
-    m_color_container->set_relative_rect(m_secondary_color_widget->relative_rect().right() + 2, 2, 500, 32);
+    m_color_container->set_relative_rect(m_secondary_color_widget->relative_rect().right() + 2, 2, 500, 33);
     m_color_container->set_layout<GUI::VerticalBoxLayout>();
     m_color_container->layout()->set_spacing(1);
 
@@ -160,6 +160,7 @@ void PaletteWidget::display_color_list(Vector<Color> const& colors)
     auto add_color_widget = [&](GUI::Widget& container, Color color) {
         auto& color_widget = container.add<ColorWidget>(color, *this);
         color_widget.set_fill_with_background_color(true);
+        color_widget.set_fixed_size(16, 16);
         auto pal = color_widget.palette();
         pal.set_color(ColorRole::Background, color);
         color_widget.set_palette(pal);
