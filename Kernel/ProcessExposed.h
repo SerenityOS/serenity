@@ -70,7 +70,6 @@ public:
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
     virtual KResultOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView) { VERIFY_NOT_REACHED(); };
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, FileDescription*) { return KResult(EROFS); }
-    virtual size_t size() const { return 0; }
 
     virtual mode_t required_mode() const { return 0444; }
     virtual UserID owner_user() const { return 0; }

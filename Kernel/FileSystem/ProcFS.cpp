@@ -163,7 +163,7 @@ InodeMetadata ProcFSGlobalInode::metadata() const
     metadata.mode = S_IFREG | m_associated_component->required_mode();
     metadata.uid = m_associated_component->owner_user();
     metadata.gid = m_associated_component->owner_group();
-    metadata.size = m_associated_component->size();
+    metadata.size = 0;
     metadata.mtime = m_associated_component->modified_time();
     return metadata;
 }

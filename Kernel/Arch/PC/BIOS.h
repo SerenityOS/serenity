@@ -70,7 +70,6 @@ protected:
 class DMIEntryPointExposedBlob : public BIOSSysFSComponent {
 public:
     static NonnullRefPtr<DMIEntryPointExposedBlob> create(PhysicalAddress dmi_entry_point, size_t blob_size);
-    virtual size_t size() const override { return m_dmi_entry_point_length; }
 
 private:
     DMIEntryPointExposedBlob(PhysicalAddress dmi_entry_point, size_t blob_size);
@@ -82,7 +81,6 @@ private:
 class SMBIOSExposedTable : public BIOSSysFSComponent {
 public:
     static NonnullRefPtr<SMBIOSExposedTable> create(PhysicalAddress, size_t blob_size);
-    virtual size_t size() const override { return m_smbios_structure_table_length; }
 
 private:
     SMBIOSExposedTable(PhysicalAddress dmi_entry_point, size_t blob_size);
