@@ -110,9 +110,14 @@ int main(int argc, char** argv)
         }
 
         processes.remove_all_matching([&](auto& a) { return selected_pids.find(a.pid) == selected_pids.end(); });
-    }
 
-    quick_sort(processes, [](auto& a, auto& b) { return a.pid < b.pid; });
+        auto processes_sort_predicate = [&selected_pids](auto& a, auto& b) {
+            return selected_pids.find_first_index(a.pid).value() < selected_pids.find_first_index(b.pid).value();
+        };
+        quick_sort(processes, processes_sort_predicate);
+    } else {
+        quick_sort(processes, [](auto& a, auto& b) { return a.pid < b.pid; });
+    }
 
     Vector<Vector<String>> rows;
     rows.ensure_capacity(1 + processes.size());
