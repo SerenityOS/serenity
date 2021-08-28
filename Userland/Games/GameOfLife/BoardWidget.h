@@ -66,6 +66,7 @@ public:
 
     Function<void()> on_running_state_change;
     Function<void()> on_stall;
+    Function<void()> on_pattern_selection_state_change;
     Function<void(Board*, size_t row, size_t column)> on_cell_toggled;
 
 private:

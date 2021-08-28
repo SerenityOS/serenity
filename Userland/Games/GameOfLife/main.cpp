@@ -127,9 +127,9 @@ int main(int argc, char** argv)
     main_toolbar.add_action(randomize_cells_action);
 
     auto rotate_pattern_action = GUI::Action::create("&Rotate pattern", { 0, Key_R }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/redo.png"), [&](auto&) {
-        if (board_widget.selected_pattern() != nullptr)
-            board_widget.selected_pattern()->rotate_clockwise();
+        board_widget.selected_pattern()->rotate_clockwise();
     });
+    rotate_pattern_action->set_enabled(false);
     main_toolbar.add_action(rotate_pattern_action);
 
     auto& game_menu = window->add_menu("&Game");
@@ -178,6 +178,10 @@ int main(int argc, char** argv)
 
     board_widget.on_cell_toggled = [&](auto, auto, auto) {
         statusbar.set_text(click_tip);
+    };
+
+    board_widget.on_pattern_selection_state_change = [&] {
+        rotate_pattern_action->set_enabled(board_widget.selected_pattern() != nullptr);
     };
 
     window->resize(500, 420);
