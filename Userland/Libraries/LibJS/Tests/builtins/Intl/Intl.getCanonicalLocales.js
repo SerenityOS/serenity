@@ -96,4 +96,16 @@ describe("normal behavior", () => {
         expect(Intl.getCanonicalLocales(true)).toEqual([]);
         expect(Intl.getCanonicalLocales(123)).toEqual([]);
     });
+
+    test("duplicate Unicode locale extension attributes", () => {
+        expect(Intl.getCanonicalLocales("en-us-u-aaa-aaa")).toEqual(["en-US-u-aaa"]);
+        expect(Intl.getCanonicalLocales("en-us-u-aaa-bbb-aaa")).toEqual(["en-US-u-aaa-bbb"]);
+    });
+
+    test("duplicate Unicode locale extension keywords", () => {
+        expect(Intl.getCanonicalLocales("en-us-u-1k-aaa-1k-bbb")).toEqual(["en-US-u-1k-aaa"]);
+        expect(Intl.getCanonicalLocales("en-us-u-1k-aaa-2k-ccc-1k-bbb")).toEqual([
+            "en-US-u-1k-aaa-2k-ccc",
+        ]);
+    });
 });
