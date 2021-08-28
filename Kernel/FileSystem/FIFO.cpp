@@ -120,7 +120,7 @@ KResultOr<size_t> FIFO::read(FileDescription& fd, u64, UserOrKernelBuffer& buffe
     if (m_buffer->is_empty()) {
         if (!m_writers)
             return 0;
-        if (m_writers && !fd.is_blocking())
+        if (!fd.is_blocking())
             return EAGAIN;
     }
     return m_buffer->read(buffer, size);
