@@ -16,4 +16,4 @@ set(SOURCES
 )
 
 serenity_app(Mail ICON app-mail)
-target_link_libraries(Mail LibCore LibDesktop LibGfx LibGUI LibIMAP LibWeb)
+target_link_libraries(Mail LibConfig LibCore LibDesktop LibGfx LibGUI LibIMAP LibWeb)
