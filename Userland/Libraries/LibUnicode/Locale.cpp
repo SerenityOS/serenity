@@ -518,7 +518,69 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
     for (auto const& variant : locale_id.language_id.variants)
         append_sep_and_string(variant);
 
-    // FIXME: Handle extensions and pu_extensions.
+    quick_sort(locale_id.extensions, [](auto const& left, auto const& right) {
+        auto key = [](auto const& extension) {
+            return extension.visit(
+                [](LocaleExtension const&) { return 'u'; },
+                [](TransformedExtension const&) { return 't'; },
+                [](OtherExtension const& ext) { return static_cast<char>(to_ascii_lowercase(ext.key)); });
+        };
+
+        return key(left) < key(right);
+    });
+
+    auto append_key_value_list = [&](auto const& key, auto const& values, bool remove_true_values) {
+        append_sep_and_string(key);
+
+        for (auto const& type : values) {
+            // Note: The spec says to remove "true" type and tfield values but that is believed to be a bug in the spec
+            // because, for tvalues, that would result in invalid syntax:
+            //     https://unicode-org.atlassian.net/browse/CLDR-14318
+            // This has also been noted by test262:
+            //     https://github.com/tc39/test262/blob/18bb955771669541c56c28748603f6afdb2e25ff/test/intl402/Intl/getCanonicalLocales/transformed-ext-canonical.js
+            if (remove_true_values && type.equals_ignoring_case("true"sv))
+                continue;
+            append_sep_and_string(type);
+        }
+    };
+
+    for (auto& extension : locale_id.extensions) {
+        extension.visit(
+            [&](LocaleExtension& ext) {
+                quick_sort(ext.attributes);
+                quick_sort(ext.keywords, [](auto const& a, auto const& b) { return a.key < b.key; });
+                builder.append("-u"sv);
+
+                for (auto const& attribute : ext.attributes)
+                    append_sep_and_string(attribute);
+                for (auto const& keyword : ext.keywords)
+                    append_key_value_list(keyword.key, keyword.types, true);
+            },
+            [&](TransformedExtension& ext) {
+                quick_sort(ext.fields, [](auto const& a, auto const& b) { return a.key < b.key; });
+                builder.append("-t"sv);
+
+                if (ext.language.has_value()) {
+                    append_sep_and_string(ext.language->language);
+                    append_sep_and_string(ext.language->script);
+                    append_sep_and_string(ext.language->region);
+
+                    quick_sort(ext.language->variants);
+                    for (auto const& variant : ext.language->variants)
+                        append_sep_and_string(variant);
+                }
+
+                for (auto const& field : ext.fields)
+                    append_key_value_list(field.key, field.values, false);
+            },
+            [&](OtherExtension& ext) {
+                builder.appendff("-{:c}", to_ascii_lowercase(ext.key));
+                for (auto const& value : ext.values)
+                    append_sep_and_string(value);
+            });
+    }
+
+    // FIXME: Handle pu_extensions.
 
     return builder.build();
 }
