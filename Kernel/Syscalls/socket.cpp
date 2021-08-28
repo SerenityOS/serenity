@@ -406,7 +406,7 @@ KResultOr<FlatPtr> Process::sys$socketpair(Userspace<const Syscall::SC_socketpai
     if (params.protocol != 0 && params.protocol != PF_LOCAL)
         return EINVAL;
 
-    auto result = LocalSocket::create_connected_pair(params.type & SOCK_TYPE_MASK);
+    auto result = LocalSocket::try_create_connected_pair(params.type & SOCK_TYPE_MASK);
     if (result.is_error())
         return result.error();
     auto pair = result.value();
