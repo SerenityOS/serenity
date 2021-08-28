@@ -204,7 +204,7 @@ DynamicObject::Relocation DynamicObject::RelocationSection::relocation_at_offset
 
 DynamicObject::Symbol DynamicObject::symbol(unsigned index) const
 {
-    auto symbol_section = Section(*this, m_symbol_table_offset, (m_symbol_count * m_size_of_symbol_table_entry), m_size_of_symbol_table_entry, "DT_SYMTAB");
+    auto symbol_section = Section(*this, m_symbol_table_offset, (m_symbol_count * m_size_of_symbol_table_entry), m_size_of_symbol_table_entry, "DT_SYMTAB"sv);
     auto symbol_entry = (ElfW(Sym)*)symbol_section.address().offset(index * symbol_section.entry_size()).as_ptr();
     return Symbol(*this, index, *symbol_entry);
 }
@@ -267,7 +267,7 @@ auto DynamicObject::HashSection::lookup_sysv_symbol(const StringView& name, u32 
 
     for (u32 i = buckets[hash_value % num_buckets]; i; i = chains[i]) {
         auto symbol = m_dynamic.symbol(i);
-        if (name == symbol.name()) {
+        if (name == symbol.raw_name()) {
             dbgln_if(DYNAMIC_LOAD_DEBUG, "Returning SYSV dynamic symbol with index {} for {}: {}", i, symbol.name(), symbol.address().as_ptr());
             return symbol;
         }
@@ -308,9 +308,12 @@ auto DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name, u32 h
 
     for (hash1 &= ~1;; ++current_sym) {
         hash2 = *(current_chain++);
-        auto symbol = m_dynamic.symbol(current_sym);
-        if ((hash1 == (hash2 & ~1)) && name == symbol.raw_name())
-            return symbol;
+        if (hash1 == (hash2 & ~1)) {
+            auto symbol = m_dynamic.symbol(current_sym);
+            if (name == symbol.raw_name())
+                return symbol;
+        }
+
         if (hash2 & 1)
             break;
     }
