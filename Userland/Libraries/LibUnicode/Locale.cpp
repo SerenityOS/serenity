@@ -485,27 +485,38 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
     // https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers
     StringBuilder builder;
 
+    enum class Case {
+        Upper,
+        Lower,
+        Title,
+    };
+
+    auto append_sep_and_string = [&](Optional<StringView> const& string, Case case_ = Case::Lower) {
+        if (!string.has_value())
+            return;
+        switch (case_) {
+        case Case::Upper:
+            builder.appendff("-{}", string->to_uppercase_string());
+            break;
+        case Case::Lower:
+            builder.appendff("-{}", string->to_lowercase_string());
+            break;
+        case Case::Title:
+            builder.appendff("-{}", string->to_titlecase_string());
+            break;
+        }
+    };
+
     if (!locale_id.language_id.language.has_value())
         return {};
 
     builder.append(locale_id.language_id.language->to_lowercase_string());
-
-    if (locale_id.language_id.script.has_value()) {
-        builder.append('-');
-        builder.append(locale_id.language_id.script->to_titlecase_string());
-    }
-
-    if (locale_id.language_id.region.has_value()) {
-        builder.append('-');
-        builder.append(locale_id.language_id.region->to_uppercase_string());
-    }
+    append_sep_and_string(locale_id.language_id.script, Case::Title);
+    append_sep_and_string(locale_id.language_id.region, Case::Upper);
 
     quick_sort(locale_id.language_id.variants);
-
-    for (auto const& variant : locale_id.language_id.variants) {
-        builder.append('-');
-        builder.append(variant.to_lowercase_string());
-    }
+    for (auto const& variant : locale_id.language_id.variants)
+        append_sep_and_string(variant);
 
     // FIXME: Handle extensions and pu_extensions.
 
