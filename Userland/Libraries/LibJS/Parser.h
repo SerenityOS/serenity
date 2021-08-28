@@ -258,6 +258,7 @@ private:
         bool in_break_context { false };
         bool in_continue_context { false };
         bool string_legacy_octal_escape_sequence_in_scope { false };
+        bool in_class_field_initializer { false };
 
         ParserState(Lexer, Program::Type);
     };
