@@ -476,7 +476,7 @@ void Emulator::emit_profile_sample(AK::OutputStream& output)
     gettimeofday(&tv, nullptr);
     builder.appendff(R"~(, {{"type": "sample", "pid": {}, "tid": {}, "timestamp": {}, "lost_samples": 0, "stack": [)~", getpid(), gettid(), tv.tv_sec * 1000 + tv.tv_usec / 1000);
     builder.join(',', raw_backtrace());
-    builder.append("]}");
+    builder.append("]}\n");
     output.write_or_error(builder.string_view().bytes());
 }
 
@@ -486,6 +486,7 @@ void Emulator::emit_profile_event(AK::OutputStream& output, StringView event_nam
     timeval tv {};
     gettimeofday(&tv, nullptr);
     builder.appendff(R"~(, {{"type": "{}", "pid": {}, "tid": {}, "timestamp": {}, "lost_samples": 0, "stack": [], {}}})~", event_name, getpid(), gettid(), tv.tv_sec * 1000 + tv.tv_usec / 1000, contents);
+    builder.append('\n');
     output.write_or_error(builder.string_view().bytes());
 }
 
