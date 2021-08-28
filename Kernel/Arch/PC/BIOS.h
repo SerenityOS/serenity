@@ -99,11 +99,6 @@ public:
     void create_components();
 
 private:
-    OwnPtr<KBuffer> dmi_entry_point() const;
-    OwnPtr<KBuffer> smbios_structure_table() const;
-    size_t dmi_entry_point_length() const;
-    size_t smbios_structure_table_length() const;
-
     BIOSSysFSDirectory();
 
     void set_dmi_64_bit_entry_initialization_values();
