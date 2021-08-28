@@ -60,7 +60,7 @@ echo Using $UI_LIB based UI
 
 pushd "$DIR/Build/qemu"
     "$DIR"/Tarballs/$QEMU_VERSION/configure --prefix="$PREFIX" \
-                                            --target-list=i386-softmmu,x86_64-softmmu \
+                                            --target-list=aarch64-softmmu,i386-softmmu,x86_64-softmmu \
                                             --enable-$UI_LIB || exit 1
     make -j "$MAKEJOBS" || exit 1
     make install || exit 1
