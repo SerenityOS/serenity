@@ -457,6 +457,16 @@ static void append_bound_and_passed_arguments(MarkedValueList& arguments, Vector
     }
 }
 
+// 7.3.32 InitializeInstanceElements ( O, constructor ), https://tc39.es/ecma262/#sec-initializeinstanceelements
+void VM::initialize_instance_elements(Object& object, FunctionObject& constructor)
+{
+    for (auto& field : constructor.fields()) {
+        field.define_field(*this, object);
+        if (exception())
+            return;
+    }
+}
+
 Value VM::construct(FunctionObject& function, FunctionObject& new_target, Optional<MarkedValueList> arguments)
 {
     auto& global_object = function.global_object();
@@ -494,6 +504,14 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
 
     // If we are a Derived constructor, |this| has not been constructed before super is called.
     callee_context.this_value = this_argument;
+
+    if (function.constructor_kind() == FunctionObject::ConstructorKind::Base) {
+        VERIFY(this_argument.is_object());
+        initialize_instance_elements(this_argument.as_object(), function);
+        if (exception())
+            return {};
+    }
+
     auto result = function.construct(new_target);
 
     pop_execution_context();

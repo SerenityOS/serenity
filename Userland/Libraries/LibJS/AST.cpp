@@ -310,7 +310,8 @@ Value SuperCall::execute(Interpreter& interpreter, GlobalObject& global_object) 
     [[maybe_unused]] auto& f = this_er.function_object();
 
     // 11. Perform ? InitializeInstanceElements(result, F).
-    // FIXME: This is missing here.
+    VERIFY(result.is_object());
+    vm.initialize_instance_elements(result.as_object(), f);
 
     // 12. Return result.
     return result;
@@ -867,6 +868,12 @@ Value ClassMethod::execute(Interpreter& interpreter, GlobalObject& global_object
     return m_function->execute(interpreter, global_object);
 }
 
+Value ClassField::execute(Interpreter& interpreter, GlobalObject&) const
+{
+    InterpreterNodeScope node_scope { interpreter, *this };
+    return {};
+}
+
 Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
@@ -923,7 +930,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAnObject, "Class prototype");
         return {};
     }
-    for (const auto& method : m_methods) {
+    for (auto const& method : m_methods) {
         auto method_value = method.execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
@@ -958,6 +965,40 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         }
         if (interpreter.exception())
             return {};
+    }
+
+    for (auto& field : m_fields) {
+        auto key = field.key().execute(interpreter, global_object);
+        if (interpreter.exception())
+            return {};
+
+        auto property_key = key.to_property_key(global_object);
+        if (interpreter.exception())
+            return {};
+
+        FunctionObject* initializer = nullptr;
+        if (field.initializer()) {
+            auto copy_initializer = field.initializer();
+            auto body = create_ast_node<ExpressionStatement>(field.initializer()->source_range(), copy_initializer.release_nonnull());
+            // FIXME: A potential optimization is not creating the functions here since these are never directly accessible.
+            initializer = OrdinaryFunctionObject::create(interpreter.global_object(), property_key.to_display_string(), *body, {}, 0, interpreter.lexical_environment(), FunctionKind::Regular, false);
+            initializer->set_home_object(field.is_static() ? class_constructor : &class_prototype.as_object());
+        }
+
+        if (field.is_static()) {
+            Value field_value = js_undefined();
+            if (initializer) {
+                field_value = interpreter.vm().call(*initializer, class_constructor_value);
+                if (interpreter.exception())
+                    return {};
+            }
+
+            class_constructor->create_data_property_or_throw(property_key, field_value);
+            if (interpreter.exception())
+                return {};
+        } else {
+            class_constructor->add_field(property_key, initializer);
+        }
     }
 
     return class_constructor;
@@ -1186,6 +1227,11 @@ void ClassExpression::dump(int indent) const
     outln("(Methods)");
     for (auto& method : m_methods)
         method.dump(indent + 1);
+
+    print_indent(indent);
+    outln("(Fields)");
+    for (auto& field : m_fields)
+        field.dump(indent + 1);
 }
 
 void ClassMethod::dump(int indent) const
@@ -1217,6 +1263,23 @@ void ClassMethod::dump(int indent) const
     print_indent(indent);
     outln("(Function)");
     m_function->dump(indent + 1);
+}
+
+void ClassField::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    print_indent(indent);
+    outln("(Key)");
+    m_key->dump(indent + 1);
+
+    print_indent(indent);
+    outln("Static: {}", m_is_static);
+
+    if (m_initializer) {
+        print_indent(indent);
+        outln("(Initializer)");
+        m_initializer->dump(indent + 1);
+    }
 }
 
 void StringLiteral::dump(int indent) const
