@@ -34,7 +34,7 @@ void LocalSocket::for_each(Function<void(const LocalSocket&)> callback)
     });
 }
 
-KResultOr<NonnullRefPtr<Socket>> LocalSocket::create(int type)
+KResultOr<NonnullRefPtr<LocalSocket>> LocalSocket::try_create(int type)
 {
     auto client_buffer = DoubleBuffer::try_create();
     if (!client_buffer)
@@ -50,11 +50,11 @@ KResultOr<NonnullRefPtr<Socket>> LocalSocket::create(int type)
 
 KResultOr<SocketPair> LocalSocket::create_connected_pair(int type)
 {
-    auto socket_or_error = LocalSocket::create(type);
+    auto socket_or_error = LocalSocket::try_create(type);
     if (socket_or_error.is_error())
         return socket_or_error.error();
 
-    auto socket = static_ptr_cast<LocalSocket>(socket_or_error.release_value());
+    auto socket = socket_or_error.release_value();
     auto description1_result = FileDescription::try_create(*socket);
     if (description1_result.is_error())
         return description1_result.error();

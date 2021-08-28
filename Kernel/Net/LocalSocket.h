@@ -22,7 +22,7 @@ struct SocketPair {
 class LocalSocket final : public Socket {
 
 public:
-    static KResultOr<NonnullRefPtr<Socket>> create(int type);
+    static KResultOr<NonnullRefPtr<LocalSocket>> try_create(int type);
     static KResultOr<SocketPair> create_connected_pair(int type);
     virtual ~LocalSocket() override;
 
