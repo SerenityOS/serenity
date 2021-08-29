@@ -16,27 +16,14 @@
 
 int main(int argc, char* argv[])
 {
-    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    ensure_pledge("stdio recvfd sendfd rpath unix", nullptr);
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    ensure_pledge("stdio recvfd sendfd rpath", nullptr);
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    ensure_unveil("/res", "r");
+    ensure_unveil(nullptr, nullptr);
 
     auto app_icon = GUI::Icon::default_icon("edit-copy");
 

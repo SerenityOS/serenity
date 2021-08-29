@@ -14,20 +14,14 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    ensure_pledge("stdio recvfd sendfd rpath unix", nullptr);
 
     auto app = GUI::Application::construct(argc, argv);
 
     // We need to obtain the WM connection here as well before the pledge shortening.
     GUI::WindowManagerServerConnection::the();
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    ensure_pledge("stdio recvfd sendfd rpath", nullptr);
 
     auto window = DesktopStatusWindow::construct();
     window->set_title("DesktopPicker");

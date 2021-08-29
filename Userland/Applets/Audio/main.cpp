@@ -201,10 +201,7 @@ private:
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd rpath wpath cpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    ensure_pledge("stdio recvfd sendfd rpath wpath cpath unix", nullptr);
 
     auto app = GUI::Application::construct(argc, argv);
     Config::pledge_domains({ "Audio", "AudioApplet" });
@@ -226,17 +223,10 @@ int main(int argc, char** argv)
         window->resize(44, 16);
     }
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
+    ensure_unveil("/res", "r");
+    ensure_unveil(nullptr, nullptr);
 
-    unveil(nullptr, nullptr);
-
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    ensure_pledge("stdio recvfd sendfd rpath", nullptr);
 
     return app->exec();
 }

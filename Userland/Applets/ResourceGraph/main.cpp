@@ -186,17 +186,11 @@ private:
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd proc exec rpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    ensure_pledge("stdio recvfd sendfd proc exec rpath unix", nullptr);
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd proc exec rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    ensure_pledge("stdio recvfd sendfd proc exec rpath", nullptr);
 
     const char* cpu = nullptr;
     const char* memory = nullptr;
@@ -238,32 +232,13 @@ int main(int argc, char** argv)
     if (memory)
         create_applet(GraphType::Memory, memory);
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
+    ensure_unveil("/res", "r");
     // FIXME: This is required by Core::ProcessStatisticsReader.
     //        It would be good if we didn't depend on that.
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/proc/all", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/proc/memstat", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin/SystemMonitor", "x") < 0) {
-        perror("unveil");
-        return 1;
-    }
+    ensure_unveil("/etc/passwd", "r");
+    ensure_unveil("/proc/all", "r");
+    ensure_unveil("/proc/memstat", "r");
+    ensure_unveil("/bin/SystemMonitor", "x");
 
     unveil(nullptr, nullptr);
 

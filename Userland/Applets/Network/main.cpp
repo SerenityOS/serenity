@@ -158,37 +158,15 @@ private:
 
 int main(int argc, char* argv[])
 {
-    if (pledge("stdio recvfd sendfd rpath unix proc exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    ensure_pledge("stdio recvfd sendfd rpath unix proc exec", nullptr);
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/notify", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/proc/net/adapters", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin/SystemMonitor", "x") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    ensure_unveil("/res", "r");
+    ensure_unveil("/tmp/portal/notify", "rw");
+    ensure_unveil("/proc/net/adapters", "r");
+    ensure_unveil("/bin/SystemMonitor", "x");
+    ensure_unveil(nullptr, nullptr);
 
     bool display_notifications = false;
     const char* name = nullptr;
