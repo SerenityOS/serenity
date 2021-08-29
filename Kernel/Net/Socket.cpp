@@ -63,7 +63,7 @@ RefPtr<Socket> Socket::accept()
     auto& process = Process::current();
     client->set_acceptor(process);
     client->m_connected = true;
-    client->m_role = Role::Accepted;
+    client->set_role(Role::Accepted);
     if (!m_pending.is_empty())
         evaluate_block_conditions();
     return client;

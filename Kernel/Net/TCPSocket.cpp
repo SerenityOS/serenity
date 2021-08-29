@@ -39,7 +39,7 @@ void TCPSocket::set_state(State new_state)
     m_state = new_state;
 
     if (new_state == State::Established && m_direction == Direction::Outgoing) {
-        m_role = Role::Connected;
+        set_role(Role::Connected);
         [[maybe_unused]] auto rc = set_so_error(KSuccess);
     }
 
@@ -416,7 +416,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     if (auto result = send_tcp_packet(TCPFlags::SYN); result.is_error())
         return result;
     m_state = State::SynSent;
-    m_role = Role::Connecting;
+    set_role(Role::Connecting);
     m_direction = Direction::Outgoing;
 
     evaluate_block_conditions();
@@ -429,7 +429,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
         locker.lock();
         VERIFY(setup_state() == SetupState::Completed);
         if (has_error()) { // TODO: check unblock_flags
-            m_role = Role::None;
+            set_role(Role::None);
             if (error() == TCPSocket::Error::RetransmitTimeout)
                 return set_so_error(ETIMEDOUT);
             else

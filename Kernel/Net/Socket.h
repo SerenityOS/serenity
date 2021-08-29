@@ -140,6 +140,8 @@ protected:
     void set_origin(Process const&);
     void set_acceptor(Process const&);
 
+    void set_role(Role role) { m_role = role; }
+
 protected:
     ucred m_origin { 0, 0, 0 };
     ucred m_acceptor { 0, 0, 0 };

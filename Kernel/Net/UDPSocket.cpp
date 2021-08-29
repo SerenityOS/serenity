@@ -100,7 +100,7 @@ KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_
 
 KResult UDPSocket::protocol_connect(FileDescription&, ShouldBlock)
 {
-    m_role = Role::Connected;
+    set_role(Role::Connected);
     set_connected(true);
     return KSuccess;
 }

@@ -66,7 +66,7 @@ KResultOr<SocketPair> LocalSocket::try_create_connected_pair(int type)
     socket->set_acceptor(Process::current());
     socket->set_connected(true);
     socket->set_connect_side_role(Role::Connected);
-    socket->m_role = Role::Accepted;
+    socket->set_role(Role::Accepted);
 
     auto description2_result = FileDescription::try_create(*socket);
     if (description2_result.is_error())
@@ -243,7 +243,7 @@ KResult LocalSocket::listen(size_t backlog)
         return set_so_error(EOPNOTSUPP);
     set_backlog(backlog);
     auto previous_role = m_role;
-    m_role = Role::Listener;
+    set_role(Role::Listener);
     set_connect_side_role(Role::Listener, previous_role != m_role);
 
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) listening with backlog={}", this, backlog);
