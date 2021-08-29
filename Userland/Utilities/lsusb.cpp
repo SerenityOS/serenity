@@ -53,7 +53,6 @@ int main(int argc, char** argv)
         auto full_path = LexicalPath(usb_devices.next_full_path());
 
         auto proc_usb_device = Core::File::construct(full_path.string());
-        auto bus_id = proc_usb_device->filename().split('/').last();
         if (!proc_usb_device->open(Core::OpenMode::ReadOnly)) {
             warnln("Failed to open {}: {}", proc_usb_device->name(), proc_usb_device->error_string());
             continue;
@@ -63,9 +62,10 @@ int main(int argc, char** argv)
         auto json = JsonValue::from_string(contents);
         VERIFY(json.has_value());
 
-        json.value().as_array().for_each([bus_id, usb_db](auto& value) {
+        json.value().as_array().for_each([usb_db](auto& value) {
             auto& device_descriptor = value.as_object();
 
+            auto device_address = device_descriptor.get("device_address").to_u32();
             auto vendor_id = device_descriptor.get("vendor_id").to_u32();
             auto product_id = device_descriptor.get("product_id").to_u32();
 
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
             if (device_string.is_empty())
                 device_string = "Unknown Device";
 
-            outln("Device {}: ID {:04x}:{:04x} {} {}", bus_id, vendor_id, product_id, vendor_string, device_string);
+            outln("Device {}: ID {:04x}:{:04x} {} {}", device_address, vendor_id, product_id, vendor_string, device_string);
         });
     }
 
