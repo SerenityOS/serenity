@@ -32,6 +32,6 @@ int main(int argc, char** argv)
     unveil(nullptr, nullptr);
 
     auto app_icon = GUI::Icon::default_icon("ladyball");
-    GUI::AboutDialog::show("SerenityOS", app_icon.bitmap_for_size(32), nullptr, app_icon.bitmap_for_size(16));
+    GUI::AboutDialog::show("SerenityOS", app_icon.bitmap_for_size(32), nullptr, app_icon.bitmap_for_size(16), Core::Version::read_long_version_string());
     return app->exec();
 }
