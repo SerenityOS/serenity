@@ -62,6 +62,25 @@ ALWAYS_INLINE u16 get_gs()
 }
 #endif
 
+template<typename T>
+ALWAYS_INLINE T read_gs_value(FlatPtr offset)
+{
+    T val;
+    asm volatile(
+        "mov %%gs:%a[off], %[val]"
+        : [val] "=r"(val)
+        : [off] "ir"(offset));
+    return val;
+}
+
+template<typename T>
+ALWAYS_INLINE void write_gs_value(FlatPtr offset, T val)
+{
+    asm volatile(
+        "mov %[val], %%gs:%a[off]" ::[off] "ir"(offset), [val] "r"(val)
+        : "memory");
+}
+
 ALWAYS_INLINE FlatPtr read_gs_ptr(FlatPtr offset)
 {
     FlatPtr val;
