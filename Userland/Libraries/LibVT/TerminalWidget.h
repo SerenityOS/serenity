@@ -218,6 +218,7 @@ private:
     Core::ElapsedTimer m_triple_click_timer;
 
     Gfx::IntPoint m_left_mousedown_position;
+    VT::Position m_left_mousedown_position_buffer;
 };
 
 }
