@@ -25,7 +25,6 @@ struct ProcessorMessageEntry;
 
 enum class ProcessorSpecificDataID {
     MemoryManager,
-    Scheduler,
     __Count,
 };
 
@@ -138,6 +137,7 @@ class Processor {
 
     bool m_invoke_scheduler_async;
     bool m_scheduler_initialized;
+    bool m_in_scheduler { true };
     Atomic<bool> m_halt_requested;
 
     DeferredCallEntry* m_pending_deferred_calls; // in reverse order
@@ -342,6 +342,16 @@ public:
     ALWAYS_INLINE static void enter_critical()
     {
         write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), in_critical() + 1);
+    }
+
+    ALWAYS_INLINE static bool current_in_scheduler()
+    {
+        return read_gs_value<decltype(m_in_scheduler)>(__builtin_offsetof(Processor, m_in_scheduler));
+    }
+
+    ALWAYS_INLINE static void set_current_in_scheduler(bool value)
+    {
+        write_gs_value<decltype(m_in_scheduler)>(__builtin_offsetof(Processor, m_in_scheduler), value);
     }
 
 private:
