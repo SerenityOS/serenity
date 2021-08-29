@@ -783,8 +783,9 @@ void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left) {
         m_left_mousedown_position = event.position();
+        m_left_mousedown_position_buffer = buffer_position_at(m_left_mousedown_position);
 
-        auto attribute = m_terminal.attribute_at(buffer_position_at(event.position()));
+        auto attribute = m_terminal.attribute_at(m_left_mousedown_position_buffer);
         if (!(event.modifiers() & Mod_Shift) && !attribute.href.is_empty()) {
             m_active_href = attribute.href;
             m_active_href_id = attribute.href_id;
@@ -798,10 +799,9 @@ void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
             int start_column = 0;
             int end_column = m_terminal.columns() - 1;
 
-            auto position = buffer_position_at(event.position());
-            m_selection.set({ position.row(), start_column }, { position.row(), end_column });
+            m_selection.set({ m_left_mousedown_position_buffer.row(), start_column }, { m_left_mousedown_position_buffer.row(), end_column });
         } else {
-            m_selection.set(buffer_position_at(event.position()), {});
+            m_selection.set(m_left_mousedown_position_buffer, {});
         }
         if (m_alt_key_held)
             m_rectangle_selection = true;
