@@ -29,6 +29,7 @@ KResultOr<size_t> SysFSUSBDeviceInformation::read_bytes(off_t offset, size_t cou
     JsonArraySerializer array { builder };
 
     auto obj = array.add_object();
+    obj.add("device_address", m_device->address());
     obj.add("usb_spec_compliance_bcd", m_device->device_descriptor().usb_spec_compliance_bcd);
     obj.add("device_class", m_device->device_descriptor().device_class);
     obj.add("device_sub_class", m_device->device_descriptor().device_sub_class);
