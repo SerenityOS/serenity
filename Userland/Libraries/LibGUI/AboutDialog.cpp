@@ -5,7 +5,6 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibCore/Version.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -17,10 +16,11 @@
 
 namespace GUI {
 
-AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window* parent_window)
+AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window* parent_window, const StringView& version)
     : Dialog(parent_window)
     , m_name(name)
     , m_icon(icon)
+    , m_version_string(version)
 {
     resize(413, 204);
     set_title(String::formatted("About {}", m_name));
@@ -70,7 +70,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     // If we are displaying a dialog for an application, insert 'SerenityOS' below the application name
     if (m_name != "SerenityOS")
         make_label("SerenityOS");
-    make_label(version_string());
+    make_label(m_version_string);
     make_label("Copyright \xC2\xA9 the SerenityOS developers, 2018-2021");
 
     right_container.layout()->add_spacer();
@@ -88,11 +88,6 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
 
 AboutDialog::~AboutDialog()
 {
-}
-
-String AboutDialog::version_string() const
-{
-    return Core::Version::SERENITY_VERSION;
 }
 
 }
