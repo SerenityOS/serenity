@@ -43,6 +43,8 @@ public:
 
     void current_test_case_did_fail() { m_current_test_case_passed = false; }
 
+    void set_suite_setup(Function<void()> setup) { m_setup = move(setup); }
+
 private:
     static TestSuite* s_global;
     NonnullRefPtrVector<TestCase> m_cases;
@@ -50,6 +52,7 @@ private:
     u64 m_benchtime = 0;
     String m_suite_name;
     bool m_current_test_case_passed = true;
+    Function<void()> m_setup;
 };
 
 }

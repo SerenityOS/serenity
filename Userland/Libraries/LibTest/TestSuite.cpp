@@ -7,6 +7,7 @@
 
 #include <LibTest/Macros.h> // intentionally first -- we redefine VERIFY and friends in here
 
+#include <AK/Function.h>
 #include <LibCore/ArgsParser.h>
 #include <LibTest/TestSuite.h>
 #include <stdlib.h>
@@ -49,6 +50,12 @@ void add_test_case_to_suite(const NonnullRefPtr<TestCase>& test_case)
     TestSuite::the().add_case(test_case);
 }
 
+// Declared in TestCase.h
+void set_suite_setup_function(Function<void()> setup)
+{
+    TestSuite::the().set_suite_setup(move(setup));
+}
+
 int TestSuite::main(const String& suite_name, int argc, char** argv)
 {
     m_suite_name = suite_name;
@@ -65,6 +72,9 @@ int TestSuite::main(const String& suite_name, int argc, char** argv)
     args_parser.add_option(do_list_cases, "List available test cases.", "list", 0);
     args_parser.add_positional_argument(search_string, "Only run matching cases.", "pattern", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
+
+    if (m_setup)
+        m_setup();
 
     const auto& matching_tests = find_cases(search_string, !do_benchmarks_only, !do_tests_only);
 

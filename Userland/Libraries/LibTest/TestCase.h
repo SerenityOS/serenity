@@ -39,8 +39,16 @@ private:
 
 // Helper to hide implementation of TestSuite from users
 void add_test_case_to_suite(const NonnullRefPtr<TestCase>& test_case);
-
+void set_suite_setup_function(Function<void()> setup);
 }
+
+#define TEST_SETUP                                                  \
+    static void __setup();                                          \
+    struct __setup_type {                                           \
+        __setup_type() { Test::set_suite_setup_function(__setup); } \
+    };                                                              \
+    static struct __setup_type __setup_type;                        \
+    static void __setup()
 
 #define __TESTCASE_FUNC(x) __test_##x
 #define __TESTCASE_TYPE(x) __TestCase_##x
