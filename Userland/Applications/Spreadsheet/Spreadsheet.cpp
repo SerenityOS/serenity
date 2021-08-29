@@ -416,6 +416,11 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
                     meta.length = value.to_i32();
                 if (auto value = meta_obj.get("format"); value.is_string())
                     meta.format = value.as_string();
+                if (auto value = meta_obj.get("alignment"); value.is_string()) {
+                    auto alignment = Gfx::text_alignment_from_string(value.as_string());
+                    if (alignment.has_value())
+                        meta.alignment = alignment.value();
+                }
                 read_format(meta.static_format, meta_obj);
 
                 cell->set_type_metadata(move(meta));
@@ -535,9 +540,7 @@ JsonObject Sheet::to_json() const
         JsonObject metadata_object;
         metadata_object.set("length", meta.length);
         metadata_object.set("format", meta.format);
-#if 0
-        metadata_object.set("alignment", alignment_to_string(meta.alignment));
-#endif
+        metadata_object.set("alignment", Gfx::to_string(meta.alignment));
         save_format(meta.static_format, metadata_object);
 
         data.set("type_metadata", move(metadata_object));
