@@ -12,7 +12,7 @@ namespace Markdown {
 
 String HorizontalRule::render_to_html() const
 {
-    return "<hr>\n";
+    return "<hr />\n";
 }
 
 String HorizontalRule::render_for_terminal(size_t view_width) const

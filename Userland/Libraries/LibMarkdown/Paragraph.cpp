@@ -16,9 +16,9 @@ String Paragraph::render_to_html() const
     bool first = true;
     for (auto& line : m_lines) {
         if (!first)
-            builder.append(' ');
+            builder.append('\n');
         first = false;
-        builder.append(line.text().render_to_html());
+        builder.append(line.text().render_to_html().trim(" \t"));
     }
     builder.append("</p>\n");
     return builder.build();

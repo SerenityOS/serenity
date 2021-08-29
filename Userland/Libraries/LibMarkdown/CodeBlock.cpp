@@ -36,7 +36,7 @@ String CodeBlock::render_to_html() const
     if (style.strong)
         builder.append("<b>");
     if (style.emph)
-        builder.append("<i>");
+        builder.append("<em>");
 
     if (style_language.is_empty())
         builder.append("<code>");
@@ -48,10 +48,10 @@ String CodeBlock::render_to_html() const
     else
         builder.append(escape_html_entities(m_code));
 
-    builder.append("</code>");
+    builder.append("\n</code>");
 
     if (style.emph)
-        builder.append("</i>");
+        builder.append("</em>");
     if (style.strong)
         builder.append("</b>");
 

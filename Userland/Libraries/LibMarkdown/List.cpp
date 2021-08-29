@@ -14,7 +14,7 @@ String List::render_to_html() const
     StringBuilder builder;
 
     const char* tag = m_is_ordered ? "ol" : "ul";
-    builder.appendff("<{}>", tag);
+    builder.appendff("<{}>\n", tag);
 
     for (auto& item : m_items) {
         builder.append("<li>");
