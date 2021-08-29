@@ -2,27 +2,22 @@
     fill_with_background_color: true
 
     layout: @GUI::VerticalBoxLayout {
-        margins: [10, 10, 10, 10]
+        margins: [10]
     }
 
     @GUI::GroupBox {
-        title: "Theme"
+        title: "Available Cursor Themes"
 
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 2, 16, 16]
+            margins: [16, 8, 8]
+            spacing: 4
         }
 
         @GUI::Widget {
-            fixed_height: 50
+            shrink_to_fit: true
 
             layout: @GUI::HorizontalBoxLayout {
-                spacing: 10
-                margins: [8, 16, 0, 8]
-            }
-
-            @GUI::Label {
-                text: "Select Theme: "
-                text_alignment: "CenterRight"
+                spacing: 8
             }
 
             @GUI::ComboBox {
@@ -33,7 +28,6 @@
 
         @GUI::TableView {
             name: "cursors_tableview"
-            font_size: 12
         }
     }
 }
