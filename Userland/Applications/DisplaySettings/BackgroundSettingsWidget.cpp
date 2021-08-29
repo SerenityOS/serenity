@@ -22,6 +22,9 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 
+// Including this after to avoid LibIPC errors
+#include <LibConfig/Client.h>
+
 namespace DisplaySettings {
 
 BackgroundSettingsWidget::BackgroundSettingsWidget()
@@ -86,9 +89,8 @@ void BackgroundSettingsWidget::create_frame()
 void BackgroundSettingsWidget::load_current_settings()
 {
     auto ws_config = Core::ConfigFile::open("/etc/WindowServer.ini");
-    auto wm_config = Core::ConfigFile::open_for_app("WindowManager");
 
-    auto selected_wallpaper = wm_config->read_entry("Background", "Wallpaper", "");
+    auto selected_wallpaper = Config::read_string("WindowManager", "Background", "Wallpaper", "");
     if (!selected_wallpaper.is_empty()) {
         auto index = static_cast<GUI::FileSystemModel*>(m_wallpaper_view->model())->index(selected_wallpaper, m_wallpaper_view->model_column());
         m_wallpaper_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
@@ -118,8 +120,7 @@ void BackgroundSettingsWidget::load_current_settings()
 
 void BackgroundSettingsWidget::apply_settings()
 {
-    auto wm_config = Core::ConfigFile::open_for_app("WindowManager", Core::ConfigFile::AllowWriting::Yes);
-    wm_config->write_entry("Background", "Wallpaper", m_monitor_widget->wallpaper());
+    Config::write_string("WindowManager", "Background", "Wallpaper", m_monitor_widget->wallpaper());
 
     if (!m_monitor_widget->wallpaper().is_empty()) {
         GUI::Desktop::the().set_wallpaper(m_monitor_widget->wallpaper());
