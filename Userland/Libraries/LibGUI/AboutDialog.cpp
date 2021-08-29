@@ -5,7 +5,7 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibCore/ConfigFile.h>
+#include <LibCore/Version.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -92,15 +92,7 @@ AboutDialog::~AboutDialog()
 
 String AboutDialog::version_string() const
 {
-    auto version_config = Core::ConfigFile::open("/res/version.ini");
-    auto major_version = version_config->read_entry("Version", "Major", "0");
-    auto minor_version = version_config->read_entry("Version", "Minor", "0");
-
-    StringBuilder builder;
-    builder.appendff("Version {}.{}", major_version, minor_version);
-    if (auto git_version = version_config->read_entry("Version", "Git", ""); git_version != "")
-        builder.appendff(".g{}", git_version);
-    return builder.to_string();
+    return Core::Version::SERENITY_VERSION;
 }
 
 }
