@@ -13,6 +13,8 @@
 namespace Threading {
 
 class Mutex {
+    friend class ConditionVariable;
+
 public:
     Mutex()
     {
