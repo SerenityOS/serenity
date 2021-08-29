@@ -9,6 +9,7 @@
 #include "DesktopSettingsWidget.h"
 #include "FontSettingsWidget.h"
 #include "MonitorSettingsWidget.h"
+#include <LibConfig/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -28,6 +29,7 @@ int main(int argc, char** argv)
     }
 
     auto app = GUI::Application::construct(argc, argv);
+    Config::pledge_domains("WindowManager");
 
     if (pledge("stdio thread recvfd sendfd rpath cpath wpath", nullptr) < 0) {
         perror("pledge");
