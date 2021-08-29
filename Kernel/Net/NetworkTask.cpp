@@ -298,7 +298,7 @@ void handle_udp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
 
 void send_delayed_tcp_ack(RefPtr<TCPSocket> socket)
 {
-    VERIFY(socket->lock().is_locked());
+    VERIFY(socket->mutex().is_locked());
     if (!socket->should_delay_next_ack()) {
         [[maybe_unused]] auto result = socket->send_ack();
         return;
@@ -311,7 +311,7 @@ void flush_delayed_tcp_acks()
 {
     Vector<RefPtr<TCPSocket>, 32> remaining_sockets;
     for (auto& socket : *delayed_ack_sockets) {
-        MutexLocker locker(socket->lock());
+        MutexLocker locker(socket->mutex());
         if (socket->should_delay_next_ack()) {
             remaining_sockets.append(socket);
             continue;
@@ -418,7 +418,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
         return;
     }
 
-    MutexLocker locker(socket->lock());
+    MutexLocker locker(socket->mutex());
 
     VERIFY(socket->type() == SOCK_STREAM);
     VERIFY(socket->local_port() == tcp_packet.destination_port());
@@ -448,7 +448,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
                 dmesgln("handle_tcp: couldn't create client socket");
                 return;
             }
-            MutexLocker locker(client->lock());
+            MutexLocker locker(client->mutex());
             dbgln_if(TCP_DEBUG, "handle_tcp: created new client socket with tuple {}", client->tuple().to_string());
             client->set_sequence_number(1000);
             client->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
@@ -648,7 +648,7 @@ void retransmit_tcp_packets()
     });
 
     for (auto& socket : sockets) {
-        MutexLocker socket_locker(socket.lock());
+        MutexLocker socket_locker(socket.mutex());
         socket.retransmit_packets();
     }
 }

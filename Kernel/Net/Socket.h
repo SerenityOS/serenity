@@ -99,7 +99,7 @@ public:
     GroupID acceptor_gid() const { return m_acceptor.gid; }
     const RefPtr<NetworkAdapter> bound_interface() const { return m_bound_interface; }
 
-    Mutex& lock() { return m_lock; }
+    Mutex& mutex() { return m_mutex; }
 
     // ^File
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override final;
@@ -149,7 +149,7 @@ protected:
 private:
     virtual bool is_socket() const final { return true; }
 
-    Mutex m_lock { "Socket" };
+    Mutex m_mutex { "Socket"sv };
 
     int m_domain { 0 };
     int m_type { 0 };
@@ -180,7 +180,7 @@ public:
         : m_socket(move(socket))
     {
         if (m_socket)
-            m_socket->lock().lock();
+            m_socket->mutex().lock();
     }
 
     SocketHandle(SocketHandle&& other)
@@ -191,7 +191,7 @@ public:
     ~SocketHandle()
     {
         if (m_socket)
-            m_socket->lock().unlock();
+            m_socket->mutex().unlock();
     }
 
     SocketHandle(const SocketHandle&) = delete;

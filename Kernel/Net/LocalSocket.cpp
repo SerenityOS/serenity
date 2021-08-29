@@ -238,7 +238,7 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
 
 KResult LocalSocket::listen(size_t backlog)
 {
-    MutexLocker locker(lock());
+    MutexLocker locker(mutex());
     if (type() != SOCK_STREAM)
         return set_so_error(EOPNOTSUPP);
     set_backlog(backlog);
@@ -505,7 +505,7 @@ NonnullRefPtrVector<FileDescription>& LocalSocket::sendfd_queue_for(const FileDe
 
 KResult LocalSocket::sendfd(const FileDescription& socket_description, FileDescription& passing_description)
 {
-    MutexLocker locker(lock());
+    MutexLocker locker(mutex());
     auto role = this->role(socket_description);
     if (role != Role::Connected && role != Role::Accepted)
         return set_so_error(EINVAL);
@@ -520,7 +520,7 @@ KResult LocalSocket::sendfd(const FileDescription& socket_description, FileDescr
 
 KResultOr<NonnullRefPtr<FileDescription>> LocalSocket::recvfd(const FileDescription& socket_description)
 {
-    MutexLocker locker(lock());
+    MutexLocker locker(mutex());
     auto role = this->role(socket_description);
     if (role != Role::Connected && role != Role::Accepted)
         return set_so_error(EINVAL);

@@ -398,7 +398,7 @@ KResult TCPSocket::protocol_listen(bool did_allocate_port)
 
 KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock should_block)
 {
-    MutexLocker locker(lock());
+    MutexLocker locker(mutex());
 
     auto routing_decision = route_to(peer_address(), local_address());
     if (routing_decision.is_zero())
@@ -497,7 +497,7 @@ void TCPSocket::shut_down_for_writing()
 
 KResult TCPSocket::close()
 {
-    MutexLocker socket_locker(lock());
+    MutexLocker locker(mutex());
     auto result = IPv4Socket::close();
     if (state() == State::CloseWait) {
         dbgln_if(TCP_SOCKET_DEBUG, " Sending FIN from CloseWait and moving into LastAck");
