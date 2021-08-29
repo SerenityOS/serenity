@@ -162,7 +162,7 @@ Thread::FutexBlocker::~FutexBlocker()
 
 void Thread::FutexBlocker::finish_requeue(FutexQueue& futex_queue)
 {
-    VERIFY(m_lock.is_locked_by_current_thread());
+    VERIFY(m_lock.is_locked_by_current_processor());
     set_blocker_set_raw_locked(&futex_queue);
     // We can now release the lock
     m_lock.unlock(m_relock_flags);

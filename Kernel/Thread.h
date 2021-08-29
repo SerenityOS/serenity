@@ -193,7 +193,7 @@ public:
     StringView name() const
     {
         // NOTE: Whoever is calling this needs to be holding our lock while reading the name.
-        VERIFY(m_lock.is_locked_by_current_thread());
+        VERIFY(m_lock.is_locked_by_current_processor());
         return m_name ? m_name->view() : StringView {};
     }
 
@@ -839,7 +839,7 @@ public:
         VERIFY(!Processor::current_in_irq());
         VERIFY(this == Thread::current());
         ScopedCritical critical;
-        VERIFY(!Memory::s_mm_lock.is_locked_by_current_thread());
+        VERIFY(!Memory::s_mm_lock.is_locked_by_current_processor());
 
         SpinlockLocker block_lock(m_block_lock);
         // We need to hold m_block_lock so that nobody can unblock a blocker as soon
@@ -878,8 +878,8 @@ public:
             // threads to die. In that case
             timer_was_added = TimerQueue::the().add_timer_without_id(*m_block_timer, block_timeout.clock_id(), block_timeout.absolute_time(), [&]() {
                 VERIFY(!Processor::current_in_irq());
-                VERIFY(!g_scheduler_lock.is_locked_by_current_thread());
-                VERIFY(!m_block_lock.is_locked_by_current_thread());
+                VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
+                VERIFY(!m_block_lock.is_locked_by_current_processor());
                 // NOTE: this may execute on the same or any other processor!
                 SpinlockLocker scheduler_lock(g_scheduler_lock);
                 SpinlockLocker block_lock(m_block_lock);
@@ -907,7 +907,7 @@ public:
         auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
         for (;;) {
             // Yield to the scheduler, and wait for us to resume unblocked.
-            VERIFY(!g_scheduler_lock.is_locked_by_current_thread());
+            VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
             VERIFY(Processor::in_critical());
             yield_without_releasing_big_lock();
             VERIFY(Processor::in_critical());
