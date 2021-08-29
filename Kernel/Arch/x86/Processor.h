@@ -119,8 +119,8 @@ class Processor {
     u32 m_gdt_length;
 
     u32 m_cpu;
-    FlatPtr m_in_irq {};
-    volatile u32 m_in_critical {};
+    FlatPtr m_in_irq;
+    volatile u32 m_in_critical;
     static Atomic<u32> s_idle_cpu_mask;
 
     TSS m_tss;
@@ -137,7 +137,7 @@ class Processor {
 
     bool m_invoke_scheduler_async;
     bool m_scheduler_initialized;
-    bool m_in_scheduler { true };
+    bool m_in_scheduler;
     Atomic<bool> m_halt_requested;
 
     DeferredCallEntry* m_pending_deferred_calls; // in reverse order
