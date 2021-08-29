@@ -31,6 +31,7 @@ set(SOURCES
     Timer.cpp
     UDPServer.cpp
     UDPSocket.cpp
+    Version.cpp
 )
 
 serenity_lib(LibCore core)
