@@ -98,15 +98,19 @@ is_valid_target() {
         CMAKE_ARGS+=("-DSERENITY_ARCH=aarch64")
         return 0
     fi
-    if [ "$TARGET" = "lagom" ]; then
-        CMAKE_ARGS+=("-DBUILD_LAGOM=ON")
+    if [ "$TARGET" = "i686" ]; then
+        CMAKE_ARGS+=("-DSERENITY_ARCH=i686")
         return 0
     fi
     if [ "$TARGET" = "x86_64" ]; then
         CMAKE_ARGS+=("-DSERENITY_ARCH=x86_64")
         return 0
     fi
-    [[ "$TARGET" =~ ^(i686|x86_64|lagom)$ ]] || return 1
+    if [ "$TARGET" = "lagom" ]; then
+        CMAKE_ARGS+=("-DBUILD_LAGOM=ON")
+        return 0
+    fi
+    return 1
 }
 
 create_build_dir() {
