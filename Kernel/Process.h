@@ -978,10 +978,10 @@ inline ProcessID Thread::pid() const
 }
 
 #define VERIFY_PROCESS_BIG_LOCK_ACQUIRED(process) \
-    VERIFY(process->big_lock().own_lock());
+    VERIFY(process->big_lock().is_locked_by_current_thread());
 
 #define VERIFY_NO_PROCESS_BIG_LOCK(process) \
-    VERIFY(!process->big_lock().own_lock());
+    VERIFY(!process->big_lock().is_locked_by_current_thread());
 
 inline static KResultOr<NonnullOwnPtr<KString>> try_copy_kstring_from_user(const Kernel::Syscall::StringArgument& string)
 {

@@ -463,7 +463,7 @@ extern "C" void handle_interrupt(TrapFrame*) __attribute__((used));
 
 extern "C" UNMAP_AFTER_INIT void pre_init_finished(void)
 {
-    VERIFY(g_scheduler_lock.own_lock());
+    VERIFY(g_scheduler_lock.is_locked_by_current_thread());
 
     // Because init_finished() will wait on the other APs, we need
     // to release the scheduler lock so that the other APs can also get
