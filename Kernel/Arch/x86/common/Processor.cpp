@@ -305,6 +305,7 @@ UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
 
     m_invoke_scheduler_async = false;
     m_scheduler_initialized = false;
+    m_in_scheduler = true;
 
     m_message_queue = nullptr;
     m_idle_thread = nullptr;
