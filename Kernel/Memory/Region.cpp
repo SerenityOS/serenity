@@ -174,7 +174,7 @@ void Region::set_should_cow(size_t page_index, bool cow)
 
 bool Region::map_individual_page_impl(size_t page_index)
 {
-    VERIFY(m_page_directory->get_lock().is_locked_by_current_thread());
+    VERIFY(m_page_directory->get_lock().is_locked_by_current_processor());
     auto page_vaddr = vaddr_from_page_index(page_index);
 
     bool user_allowed = page_vaddr.get() >= 0x00800000 && is_user_address(page_vaddr);
@@ -253,7 +253,7 @@ void Region::unmap(ShouldDeallocateVirtualRange deallocate_range)
 void Region::set_page_directory(PageDirectory& page_directory)
 {
     VERIFY(!m_page_directory || m_page_directory == &page_directory);
-    VERIFY(s_mm_lock.is_locked_by_current_thread());
+    VERIFY(s_mm_lock.is_locked_by_current_processor());
     m_page_directory = page_directory;
 }
 
@@ -394,8 +394,8 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(vmobject().is_inode());
-    VERIFY(!s_mm_lock.is_locked_by_current_thread());
-    VERIFY(!g_scheduler_lock.is_locked_by_current_thread());
+    VERIFY(!s_mm_lock.is_locked_by_current_processor());
+    VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
 
     auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject());
 

@@ -922,7 +922,7 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
         // We need to enter the scheduler lock before changing the state
         // and it will be released after the context switch into that
         // thread. We should also still be in our critical section
-        VERIFY(!g_scheduler_lock.is_locked_by_current_thread());
+        VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
         VERIFY(Processor::in_critical() == 1);
         g_scheduler_lock.lock();
         current_thread->set_state(Thread::State::Running);
