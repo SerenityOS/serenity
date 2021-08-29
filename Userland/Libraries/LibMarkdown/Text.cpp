@@ -44,7 +44,7 @@ String Text::render_to_html() const
             bool Style::*flag;
         };
         TagAndFlag tags_and_flags[] = {
-            { "i", &Style::emph },
+            { "em", &Style::emph },
             { "b", &Style::strong },
             { "code", &Style::code }
         };
