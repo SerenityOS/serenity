@@ -777,6 +777,14 @@ int pledge(const char* promises, const char* execpromises)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+void ensure_pledge(const char* promises, const char* execpromises)
+{
+    if (pledge(promises, execpromises) < 0) {
+        perror("pledge");
+        exit(1);
+    }
+}
+
 int unveil(const char* path, const char* permissions)
 {
     Syscall::SC_unveil_params params {
@@ -785,6 +793,14 @@ int unveil(const char* path, const char* permissions)
     };
     int rc = syscall(SC_unveil, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+void ensure_unveil(const char* path, const char* permissions)
+{
+    if (unveil(path, permissions) < 0) {
+        perror("unveil");
+        exit(1);
+    }
 }
 
 char* getpass(const char* prompt)

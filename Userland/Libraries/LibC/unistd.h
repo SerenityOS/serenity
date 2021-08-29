@@ -113,7 +113,9 @@ int reboot();
 int mount(int source_fd, const char* target, const char* fs_type, int flags);
 int umount(const char* mountpoint);
 int pledge(const char* promises, const char* execpromises);
+void ensure_pledge(const char* promises, const char* execpromises);
 int unveil(const char* path, const char* permissions);
+void ensure_unveil(const char* path, const char* permissions);
 char* getpass(const char* prompt);
 int pause();
 
