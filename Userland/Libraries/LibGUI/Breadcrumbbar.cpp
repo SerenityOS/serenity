@@ -99,11 +99,18 @@ void Breadcrumbbar::append_segment(String text, Gfx::Bitmap const* icon, String 
     auto button_text_width = button.font().width(text);
     auto icon_width = icon ? icon->width() : 0;
     auto icon_padding = icon ? 4 : 0;
-    button.set_fixed_size(button_text_width + icon_width + icon_padding + 16, 16 + 8);
 
-    Segment segment { icon, text, data, button.make_weak_ptr<GUI::Button>() };
+    const int max_button_width = 100;
+
+    auto button_width = min(button_text_width + icon_width + icon_padding + 16, max_button_width);
+    auto shrunken_width = icon_width + icon_padding + (icon ? 4 : 16);
+
+    button.set_fixed_size(button_width, 16 + 8);
+
+    Segment segment { icon, text, data, button_width, shrunken_width, button.make_weak_ptr<GUI::Button>() };
 
     m_segments.append(move(segment));
+    relayout();
 }
 
 void Breadcrumbbar::remove_end_segments(size_t start_segment_index)
@@ -136,12 +143,35 @@ void Breadcrumbbar::set_selected_segment(Optional<size_t> index)
     auto& segment = m_segments[index.value()];
     VERIFY(segment.button);
     segment.button->set_checked(true);
+    relayout();
 }
 
 void Breadcrumbbar::doubleclick_event(MouseEvent& event)
 {
     if (on_doubleclick)
         on_doubleclick(event);
+}
+
+void Breadcrumbbar::resize_event(ResizeEvent&)
+{
+    relayout();
+}
+
+void Breadcrumbbar::relayout()
+{
+    auto remaining_width = 0;
+
+    for (auto& segment : m_segments)
+        remaining_width += segment.width;
+
+    for (auto& segment : m_segments) {
+        if (remaining_width > width() && !segment.button->is_checked()) {
+            segment.button->set_fixed_width(segment.shrunken_width);
+            remaining_width -= (segment.width - segment.shrunken_width);
+            continue;
+        }
+        segment.button->set_fixed_width(segment.width);
+    }
 }
 
 }

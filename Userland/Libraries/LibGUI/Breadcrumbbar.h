@@ -19,6 +19,7 @@ public:
     void clear_segments();
     void append_segment(String text, Gfx::Bitmap const* icon = nullptr, String data = {}, String tooltip = {});
     void remove_end_segments(size_t segment_index);
+    void relayout();
 
     size_t segment_count() const { return m_segments.size(); }
     String segment_data(size_t index) const { return m_segments[index].data; }
@@ -35,10 +36,14 @@ public:
 private:
     Breadcrumbbar();
 
+    virtual void resize_event(ResizeEvent&) override;
+
     struct Segment {
         RefPtr<const Gfx::Bitmap> icon;
         String text;
         String data;
+        int width { 0 };
+        int shrunken_width { 0 };
         WeakPtr<GUI::Button> button;
     };
 
