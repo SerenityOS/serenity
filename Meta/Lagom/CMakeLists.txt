@@ -518,6 +518,14 @@ if (BUILD_LAGOM)
         )
         set_tests_properties(JS PROPERTIES ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT})
 
+        # Markdown
+        include(${SERENITY_PROJECT_ROOT}/Meta/CMake/commonmark_spec.cmake)
+        file(GLOB LIBMARKDOWN_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibMarkdown/*.cpp")
+        foreach(source ${LIBMARKDOWN_TEST_SOURCES})
+            lagom_test(${source} LIBS LagomMarkdown)
+        endforeach()
+        set_tests_properties(TestCommonmark PROPERTIES DISABLED YES)
+
         # test-wasm
         add_executable(test-wasm_lagom
             ../../Tests/LibWasm/test-wasm.cpp
