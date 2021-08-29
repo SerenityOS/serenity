@@ -141,7 +141,7 @@ KResult IPv4Socket::listen(size_t backlog)
         return result.error_or_port.error();
 
     set_backlog(backlog);
-    m_role = Role::Listener;
+    set_role(Role::Listener);
     evaluate_block_conditions();
 
     dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}) listening with backlog={}", this, backlog);
