@@ -5,10 +5,12 @@
  */
 
 #include <AK/Badge.h>
-#include <LibCore/ConfigFile.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <string.h>
+
+// Including this after to avoid LibIPC errors
+#include <LibConfig/Client.h>
 
 namespace GUI {
 
@@ -59,10 +61,8 @@ bool Desktop::set_wallpaper(const StringView& path, bool save_config)
     auto ret_val = WindowServerConnection::the().wait_for_specific_message<Messages::WindowClient::SetWallpaperFinished>()->success();
 
     if (ret_val && save_config) {
-        RefPtr<Core::ConfigFile> config = Core::ConfigFile::open_for_app("WindowManager", Core::ConfigFile::AllowWriting::Yes);
-        dbgln("Saving wallpaper path '{}' to config file at {}", path, config->filename());
-        config->write_entry("Background", "Wallpaper", path);
-        config->sync();
+        dbgln("Saving wallpaper path '{}' to ConfigServer", path);
+        Config::write_string("WindowManager", "Background", "Wallpaper", path);
     }
 
     return ret_val;
