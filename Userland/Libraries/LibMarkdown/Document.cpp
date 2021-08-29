@@ -28,13 +28,22 @@ String Document::render_to_html() const
     builder.append("</head>\n");
     builder.append("<body>\n");
 
+    builder.append(render_to_inline_html());
+
+    builder.append("</body>\n");
+    builder.append("</html>\n");
+    return builder.build();
+}
+
+String Document::render_to_inline_html() const
+{
+    StringBuilder builder;
+
     for (auto& block : m_blocks) {
         auto s = block.render_to_html();
         builder.append(s);
     }
 
-    builder.append("</body>\n");
-    builder.append("</html>\n");
     return builder.build();
 }
 
