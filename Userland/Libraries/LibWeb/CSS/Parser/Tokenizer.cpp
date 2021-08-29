@@ -192,9 +192,43 @@ Tokenizer::Tokenizer(const StringView& input, const String& encoding)
     auto* decoder = TextCodec::decoder_for(encoding);
     VERIFY(decoder);
 
-    // FIXME: preprocess the stream
+    StringBuilder builder(input.length());
+
+    // Preprocess the stream, by doing the following:
+    // - Replace \r, \f and \r\n with \n
+    // - replace \0 and anything between U+D800 to U+DFFF with the replacement
+    //   character.
     // https://www.w3.org/TR/css-syntax-3/#input-preprocessing
-    m_decoded_input = decoder->to_utf8(input);
+    bool last_was_carriage_return = false;
+    decoder->process(input, [&builder, &last_was_carriage_return](u32 code_point) {
+        if (code_point == '\r') {
+            if (last_was_carriage_return) {
+                builder.append('\n');
+            } else {
+                last_was_carriage_return = true;
+            }
+        } else {
+            if (last_was_carriage_return) {
+                builder.append('\n');
+            }
+
+            if (code_point == '\n') {
+                if (!last_was_carriage_return) {
+                    builder.append('\n');
+                }
+            } else if (code_point == '\f') {
+                builder.append('\n');
+            } else if (code_point >= 0xD800 && code_point <= 0xDFFF) {
+                builder.append_code_point(REPLACEMENT_CHARACTER);
+            } else {
+                builder.append_code_point(code_point);
+            }
+
+            last_was_carriage_return = false;
+        }
+    });
+
+    m_decoded_input = builder.to_string();
     m_utf8_view = Utf8View(m_decoded_input);
     m_utf8_iterator = m_utf8_view.begin();
 }
