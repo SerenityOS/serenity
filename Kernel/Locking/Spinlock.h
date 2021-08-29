@@ -100,7 +100,7 @@ public:
         return m_lock.load(AK::memory_order_relaxed) != 0;
     }
 
-    [[nodiscard]] ALWAYS_INLINE bool own_lock() const
+    [[nodiscard]] ALWAYS_INLINE bool is_locked_by_current_thread() const
     {
         return m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current());
     }

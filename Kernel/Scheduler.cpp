@@ -163,7 +163,7 @@ bool Scheduler::dequeue_runnable_thread(Thread& thread, bool check_affinity)
 
 void Scheduler::enqueue_runnable_thread(Thread& thread)
 {
-    VERIFY(g_scheduler_lock.own_lock());
+    VERIFY(g_scheduler_lock.is_locked_by_current_thread());
     if (thread.is_idle_thread())
         return;
     auto priority = thread_priority_to_priority_index(thread.priority());
@@ -266,7 +266,7 @@ bool Scheduler::yield()
 
 bool Scheduler::context_switch(Thread* thread)
 {
-    if (Memory::s_mm_lock.own_lock()) {
+    if (Memory::s_mm_lock.is_locked_by_current_thread()) {
         PANIC("In context switch while holding Memory::s_mm_lock");
     }
 
@@ -320,7 +320,7 @@ bool Scheduler::context_switch(Thread* thread)
 
 void Scheduler::enter_current(Thread& prev_thread, bool is_first)
 {
-    VERIFY(g_scheduler_lock.own_lock());
+    VERIFY(g_scheduler_lock.is_locked_by_current_thread());
 
     // We already recorded the scheduled time when entering the trap, so this merely accounts for the kernel time since then
     auto scheduler_time = Scheduler::current_time();
@@ -362,7 +362,7 @@ void Scheduler::prepare_after_exec()
 {
     // This is called after exec() when doing a context "switch" into
     // the new process. This is called from Processor::assume_context
-    VERIFY(g_scheduler_lock.own_lock());
+    VERIFY(g_scheduler_lock.is_locked_by_current_thread());
 
     VERIFY(!Processor::current_in_scheduler());
     Processor::set_current_in_scheduler(true);
@@ -372,7 +372,7 @@ void Scheduler::prepare_for_idle_loop()
 {
     // This is called when the CPU finished setting up the idle loop
     // and is about to run it. We need to acquire he scheduler lock
-    VERIFY(!g_scheduler_lock.own_lock());
+    VERIFY(!g_scheduler_lock.is_locked_by_current_thread());
     g_scheduler_lock.lock();
 
     VERIFY(!Processor::current_in_scheduler());

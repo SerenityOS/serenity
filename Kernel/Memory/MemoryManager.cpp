@@ -508,8 +508,8 @@ PhysicalAddress MemoryManager::get_physical_address(PhysicalPage const& physical
 PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.own_lock());
-    VERIFY(page_directory.get_lock().own_lock());
+    VERIFY(s_mm_lock.is_locked_by_current_thread());
+    VERIFY(page_directory.get_lock().is_locked_by_current_thread());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x1ff;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
@@ -525,8 +525,8 @@ PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress
 PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.own_lock());
-    VERIFY(page_directory.get_lock().own_lock());
+    VERIFY(s_mm_lock.is_locked_by_current_thread());
+    VERIFY(page_directory.get_lock().is_locked_by_current_thread());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x1ff;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
@@ -567,8 +567,8 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
 void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress vaddr, bool is_last_release)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.own_lock());
-    VERIFY(page_directory.get_lock().own_lock());
+    VERIFY(s_mm_lock.is_locked_by_current_thread());
+    VERIFY(page_directory.get_lock().is_locked_by_current_thread());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x1ff;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
@@ -622,7 +622,7 @@ Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
 
 Region* MemoryManager::find_user_region_from_vaddr_no_lock(AddressSpace& space, VirtualAddress vaddr)
 {
-    VERIFY(space.get_lock().own_lock());
+    VERIFY(space.get_lock().is_locked_by_current_thread());
     return space.find_region_containing({ vaddr, 1 });
 }
 
@@ -953,7 +953,7 @@ void MemoryManager::flush_tlb(PageDirectory const* page_directory, VirtualAddres
 
 PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t pdpt_index)
 {
-    VERIFY(s_mm_lock.own_lock());
+    VERIFY(s_mm_lock.is_locked_by_current_thread());
     auto& mm_data = get_data();
     auto& pte = boot_pd_kernel_pt1023[(KERNEL_QUICKMAP_PD - KERNEL_PT1024_BASE) / PAGE_SIZE];
     auto pd_paddr = directory.m_directory_pages[pdpt_index]->paddr();
@@ -979,7 +979,7 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
 
 PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 {
-    VERIFY(s_mm_lock.own_lock());
+    VERIFY(s_mm_lock.is_locked_by_current_thread());
     auto& mm_data = get_data();
     auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[(KERNEL_QUICKMAP_PT - KERNEL_PT1024_BASE) / PAGE_SIZE];
     if (pte.physical_page_base() != pt_paddr.get()) {
@@ -1005,7 +1005,7 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 u8* MemoryManager::quickmap_page(PhysicalAddress const& physical_address)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.own_lock());
+    VERIFY(s_mm_lock.is_locked_by_current_thread());
     auto& mm_data = get_data();
     mm_data.m_quickmap_prev_flags = mm_data.m_quickmap_in_use.lock();
 
@@ -1026,7 +1026,7 @@ u8* MemoryManager::quickmap_page(PhysicalAddress const& physical_address)
 void MemoryManager::unquickmap_page()
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.own_lock());
+    VERIFY(s_mm_lock.is_locked_by_current_thread());
     auto& mm_data = get_data();
     VERIFY(mm_data.m_quickmap_in_use.is_locked());
     VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
@@ -1039,7 +1039,7 @@ void MemoryManager::unquickmap_page()
 
 bool MemoryManager::validate_user_stack_no_lock(AddressSpace& space, VirtualAddress vaddr) const
 {
-    VERIFY(space.get_lock().own_lock());
+    VERIFY(space.get_lock().is_locked_by_current_thread());
 
     if (!is_user_address(vaddr))
         return false;

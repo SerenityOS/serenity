@@ -42,7 +42,7 @@ public:
         SpinlockLocker lock(m_lock);
         return m_mode != Mode::Unlocked;
     }
-    [[nodiscard]] bool own_lock() const
+    [[nodiscard]] bool is_locked_by_current_thread() const
     {
         SpinlockLocker lock(m_lock);
         if (m_mode == Mode::Exclusive)
