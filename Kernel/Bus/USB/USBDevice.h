@@ -45,6 +45,10 @@ public:
     USBController& controller() { return *m_controller; }
     USBController const& controller() const { return *m_controller; }
 
+    // Fetch a descriptor from the remote device
+    template<typename T>
+    KResultOr<T> get_descriptor(size_t index);
+
 protected:
     Device(NonnullRefPtr<USBController> controller, u8 address, u8 port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe);
 

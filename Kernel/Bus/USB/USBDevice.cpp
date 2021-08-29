@@ -65,6 +65,44 @@ Device::~Device()
 {
 }
 
+template<>
+KResultOr<USBConfigurationDescriptor> Device::get_descriptor(size_t index)
+{
+    USBConfigurationDescriptor config_descriptor;
+
+    // Make sure we're not attempting to get an non-existent descriptor from
+    // the device.
+    VERIFY(index < m_device_descriptor.num_configurations);
+
+    dbgln_if(USB_DEBUG, "Attempting to get Device Configuration Descriptor....");
+
+    auto transfer_length_or_error = m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_CONFIGURATION << 8) | index, 0, sizeof(USBConfigurationDescriptor), &config_descriptor);
+    if (transfer_length_or_error.is_error())
+        return transfer_length_or_error.error();
+
+    auto transfer_size = transfer_length_or_error.release_value();
+    if (transfer_size < sizeof(USBConfigurationDescriptor)) {
+        dbgln("Invalid length received when getting Configuration Descriptor! Expected {}, got {}", sizeof(USBConfigurationDescriptor), transfer_size);
+        return EIO;
+    }
+
+    dbgln_if(USB_DEBUG, "Done!");
+    VERIFY(config_descriptor.descriptor_header.descriptor_type == DESCRIPTOR_TYPE_CONFIGURATION);
+    if constexpr (USB_DEBUG) {
+        dbgln("Configuration Descriptor:");
+        dbgln("\tDescriptor Length: {}", config_descriptor.descriptor_header.length);
+        dbgln("\tDescriptor Type: {}", config_descriptor.descriptor_header.descriptor_type);
+        dbgln("\tTotal length: {}", config_descriptor.total_length);
+        dbgln("\tNumber of interfaces: {}", config_descriptor.number_of_interfaces);
+        dbgln("\tConfiguration Value: {}", config_descriptor.configuration_value);
+        dbgln("\tConfiguration String Descriptor Index: {}", config_descriptor.configuration_string_descriptor_index);
+        dbgln("\tAttributes bitmap: {}", config_descriptor.attributes_bitmap);
+        dbgln("\tMaximum Current (mA): {}", config_descriptor.max_power_in_ma);
+    }
+
+    return config_descriptor;
+}
+
 KResult Device::enumerate_device()
 {
     USBDeviceDescriptor dev_descriptor {};
