@@ -50,7 +50,7 @@ sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qe
 
 There is also documentation for installing the build prerequisites for some less commonly used systems:
 
-* [Other Linux distributions and *NIX systems](BuildInstructionsOther.md)
+* [Other Linux distributions and \*NIX systems](BuildInstructionsOther.md)
 * [macOS](BuildInstructionsMacOS.md)
 
 ## Build
