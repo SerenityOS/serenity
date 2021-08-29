@@ -26,7 +26,7 @@ class Mutex {
 public:
     using Mode = LockMode;
 
-    Mutex(const char* name = nullptr)
+    Mutex(StringView name = {})
         : m_name(name)
     {
     }
@@ -52,19 +52,19 @@ public:
         return false;
     }
 
-    [[nodiscard]] const char* name() const { return m_name; }
+    [[nodiscard]] StringView name() const { return m_name; }
 
-    static const char* mode_to_string(Mode mode)
+    static StringView mode_to_string(Mode mode)
     {
         switch (mode) {
         case Mode::Unlocked:
-            return "unlocked";
+            return "unlocked"sv;
         case Mode::Exclusive:
-            return "exclusive";
+            return "exclusive"sv;
         case Mode::Shared:
-            return "shared";
+            return "shared"sv;
         default:
-            return "invalid";
+            return "invalid"sv;
         }
     }
 
@@ -80,7 +80,7 @@ private:
     void block(Thread&, Mode, SpinlockLocker<Spinlock<u8>>&, u32);
     void unblock_waiters(Mode);
 
-    const char* m_name { nullptr };
+    StringView m_name;
     Mode m_mode { Mode::Unlocked };
 
     // When locked exclusively, only the thread already holding the lock can
