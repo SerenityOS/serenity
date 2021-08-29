@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibCore/Version.h>
 #include <LibGUI/Dialog.h>
 
 namespace GUI {
@@ -15,19 +16,19 @@ class AboutDialog final : public Dialog {
 public:
     virtual ~AboutDialog() override;
 
-    static void show(const StringView& name, const Gfx::Bitmap* icon = nullptr, Window* parent_window = nullptr, const Gfx::Bitmap* window_icon = nullptr)
+    static void show(const StringView& name, const Gfx::Bitmap* icon = nullptr, Window* parent_window = nullptr, const Gfx::Bitmap* window_icon = nullptr, const StringView& version = Core::Version::SERENITY_VERSION)
     {
-        auto dialog = AboutDialog::construct(name, icon, parent_window);
+        auto dialog = AboutDialog::construct(name, icon, parent_window, version);
         if (window_icon)
             dialog->set_icon(window_icon);
         dialog->exec();
     }
 
 private:
-    AboutDialog(const StringView& name, const Gfx::Bitmap* icon = nullptr, Window* parent_window = nullptr);
-    String version_string() const;
+    AboutDialog(const StringView& name, const Gfx::Bitmap* icon = nullptr, Window* parent_window = nullptr, const StringView& version = Core::Version::SERENITY_VERSION);
 
     String m_name;
     RefPtr<Gfx::Bitmap> m_icon;
+    String m_version_string;
 };
 }
