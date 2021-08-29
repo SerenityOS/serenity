@@ -61,6 +61,8 @@ protected:
     u16 m_product_id { 0 };                  // This device's product ID assigned by the USB group
     USBDeviceDescriptor m_device_descriptor; // Device Descriptor obtained from USB Device
 
+    Vector<USBConfigurationDescriptor> m_configurations; // List of configuration descriptors on this device
+
     NonnullRefPtr<USBController> m_controller;
     NonnullOwnPtr<Pipe> m_default_pipe; // Default communication pipe (endpoint0) used during enumeration
 

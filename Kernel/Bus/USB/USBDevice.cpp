@@ -178,6 +178,19 @@ KResult Device::enumerate_device()
     dbgln_if(USB_DEBUG, "USB Device: Set address to {}", m_address);
 
     memcpy(&m_device_descriptor, &dev_descriptor, sizeof(USBDeviceDescriptor));
+
+    // Get all configuration descriptors
+    for (auto configuration = 0; configuration < m_device_descriptor.num_configurations; configuration++) {
+        auto configuration_descriptor_or_error = get_descriptor<USBConfigurationDescriptor>(configuration);
+
+        if (configuration_descriptor_or_error.is_error()) {
+            dbgln("USBD: Failed to get configuration descriptor {} for device address {}", configuration, m_address);
+            return configuration_descriptor_or_error.error();
+        }
+
+        m_configurations.append(configuration_descriptor_or_error.release_value());
+    }
+
     return KSuccess;
 }
 
