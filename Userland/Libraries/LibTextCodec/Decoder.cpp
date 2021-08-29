@@ -192,31 +192,48 @@ Optional<String> get_standardized_encoding(const String& encoding)
     return {};
 }
 
+String Decoder::to_utf8(const StringView& input)
+{
+    StringBuilder builder(input.length());
+    process(input, [&builder](u32 c) { builder.append_code_point(c); });
+    return builder.to_string();
+}
+
+void UTF8Decoder::process(const StringView& input, Function<void(u32)> on_code_point)
+{
+    for (auto c : input) {
+        on_code_point(c);
+    }
+}
+
 String UTF8Decoder::to_utf8(const StringView& input)
 {
     return input;
 }
 
-String UTF16BEDecoder::to_utf8(const StringView& input)
+void UTF16BEDecoder::process(const StringView& input, Function<void(u32)> on_code_point)
 {
-    StringBuilder builder(input.length() / 2);
     size_t utf16_length = input.length() - (input.length() % 2);
     for (size_t i = 0; i < utf16_length; i += 2) {
         u16 code_point = (input[i] << 8) | input[i + 1];
-        builder.append_code_point(code_point);
+        on_code_point(code_point);
     }
+}
+
+String UTF16BEDecoder::to_utf8(const StringView& input)
+{
+    StringBuilder builder(input.length() / 2);
+    process(input, [&builder](u32 c) { builder.append_code_point(c); });
     return builder.to_string();
 }
 
-String Latin1Decoder::to_utf8(const StringView& input)
+void Latin1Decoder::process(const StringView& input, Function<void(u32)> on_code_point)
 {
-    StringBuilder builder(input.length());
     for (size_t i = 0; i < input.length(); ++i) {
         u8 ch = input[i];
         // Latin1 is the same as the first 256 Unicode code_points, so no mapping is needed, just utf-8 encoding.
-        builder.append_code_point(ch);
+        on_code_point(ch);
     }
-    return builder.to_string();
 }
 
 namespace {
@@ -298,17 +315,14 @@ u32 convert_latin2_to_utf8(u8 in)
 }
 }
 
-String Latin2Decoder::to_utf8(const StringView& input)
+void Latin2Decoder::process(const StringView& input, Function<void(u32)> on_code_point)
 {
-    StringBuilder builder(input.length());
     for (auto c : input) {
-        builder.append_code_point(convert_latin2_to_utf8(c));
+        on_code_point(convert_latin2_to_utf8(c));
     }
-
-    return builder.to_string();
 }
 
-String HebrewDecoder::to_utf8(const StringView& input)
+void HebrewDecoder::process(const StringView& input, Function<void(u32)> on_code_point)
 {
     static constexpr Array<u32, 128> translation_table = {
         0x20AC, 0xFFFD, 0x201A, 0x192, 0x201E, 0x2026, 0x2020, 0x2021, 0x2C6, 0x2030, 0xFFFD, 0x2039, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
@@ -320,18 +334,16 @@ String HebrewDecoder::to_utf8(const StringView& input)
         0x5D0, 0x5D1, 0x5D2, 0x5D3, 0x5D4, 0x5D5, 0x5D6, 0x5D7, 0x5D8, 0x5D9, 0x5DA, 0x5DB, 0x5DC, 0x5DD, 0x5DE, 0x5DF,
         0x5E0, 0x5E1, 0x5E2, 0x5E3, 0x5E4, 0x5E5, 0x5E6, 0x5E7, 0x5E8, 0x5E9, 0x5EA, 0xFFFD, 0xFFFD, 0x200E, 0x200F, 0xFFFD
     };
-    StringBuilder builder(input.length());
     for (unsigned char ch : input) {
         if (ch < 0x80) { // Superset of ASCII
-            builder.append(ch);
+            on_code_point(ch);
         } else {
-            builder.append_code_point(translation_table[ch - 0x80]);
+            on_code_point(translation_table[ch - 0x80]);
         }
     }
-    return builder.to_string();
 }
 
-String CyrillicDecoder::to_utf8(const StringView& input)
+void CyrillicDecoder::process(const StringView& input, Function<void(u32)> on_code_point)
 {
     static constexpr Array<u32, 128> translation_table = {
         0x402, 0x403, 0x201A, 0x453, 0x201E, 0x2026, 0x2020, 0x2021, 0x20AC, 0x2030, 0x409, 0x2039, 0x40A, 0x40C, 0x40B, 0x40F,
@@ -343,18 +355,16 @@ String CyrillicDecoder::to_utf8(const StringView& input)
         0x430, 0x431, 0x432, 0x433, 0x434, 0x435, 0x436, 0x437, 0x438, 0x439, 0x43A, 0x43B, 0x43C, 0x43D, 0x43E, 0x43F,
         0x440, 0x441, 0x442, 0x443, 0x444, 0x445, 0x446, 0x447, 0x448, 0x449, 0x44A, 0x44B, 0x44C, 0x44D, 0x44E, 0x44F
     };
-    StringBuilder builder(input.length());
     for (unsigned char ch : input) {
         if (ch < 0x80) { // Superset of ASCII
-            builder.append(ch);
+            on_code_point(ch);
         } else {
-            builder.append_code_point(translation_table[ch - 0x80]);
+            on_code_point(translation_table[ch - 0x80]);
         }
     }
-    return builder.to_string();
 }
 
-String Latin9Decoder::to_utf8(const StringView& input)
+void Latin9Decoder::process(const StringView& input, Function<void(u32)> on_code_point)
 {
     auto convert_latin9_to_utf8 = [](u8 ch) -> u32 {
         // Latin9 is the same as the first 256 Unicode code points, except for 8 characters.
@@ -380,14 +390,12 @@ String Latin9Decoder::to_utf8(const StringView& input)
         }
     };
 
-    StringBuilder builder(input.length());
     for (auto ch : input) {
-        builder.append_code_point(convert_latin9_to_utf8(ch));
+        on_code_point(convert_latin9_to_utf8(ch));
     }
-    return builder.to_string();
 }
 
-String TurkishDecoder::to_utf8(const StringView& input)
+void TurkishDecoder::process(const StringView& input, Function<void(u32)> on_code_point)
 {
     auto convert_turkish_to_utf8 = [](u8 ch) -> u32 {
         // Turkish (aka ISO-8859-9, Windows-1254) is the same as the first 256 Unicode code points, except for 6 characters.
@@ -409,11 +417,9 @@ String TurkishDecoder::to_utf8(const StringView& input)
         }
     };
 
-    StringBuilder builder(input.length());
     for (auto ch : input) {
-        builder.append_code_point(convert_turkish_to_utf8(ch));
+        on_code_point(convert_turkish_to_utf8(ch));
     }
-    return builder.to_string();
 }
 
 }
