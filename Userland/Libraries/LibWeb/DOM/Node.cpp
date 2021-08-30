@@ -524,7 +524,6 @@ void Node::set_needs_style_update(bool value)
 
     if (m_needs_style_update) {
         for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
-            //dbgln("{}", ancestor->node_name());
             ancestor->m_child_needs_style_update = true;
         }
         document().schedule_style_update();
