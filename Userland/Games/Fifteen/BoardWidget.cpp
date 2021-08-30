@@ -110,5 +110,13 @@ void BoardWidget::ensure_puzzle_is_solvable()
         }
     }
 
-    if (parity & 1) swap((*m_cells)[0], (*m_cells)[1]);
+    if ((nr_of_cells & 1 && parity & 1) || (!(nr_of_cells & 1) && !(parity & 1)))
+        swap((*m_cells)[0], (*m_cells)[1]);
+}
+
+void BoardWidget::set_cell_size(int cell_size)
+{
+    m_cell_size = cell_size;
+
+    on_cell_size_changed(cell_size);
 }

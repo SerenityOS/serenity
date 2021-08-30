@@ -10,8 +10,8 @@ CellWidget::CellWidget(BoardWidget *board, int real_index) :
 {
     set_font(Gfx::FontDatabase::default_font().bold_variant());
 
-    position_cell();
     resize_cell();
+    position_cell();
 
     cons = m_board->on_cell_color_changed += [this](auto &&new_cell_color) {
         background_color_for_cell = new_cell_color;
@@ -24,8 +24,8 @@ CellWidget::CellWidget(BoardWidget *board, int real_index) :
     };
 
     cons = m_board->on_cell_size_changed += [this](auto &&) {
-        position_cell();
         resize_cell();
+        position_cell();
     };
 }
 

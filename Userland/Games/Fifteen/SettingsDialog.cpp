@@ -34,11 +34,12 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, int columns, int rows, int c
         auto& name_label = name_box.add<GUI::Label>("Columns:");
         name_label.set_text_alignment(Gfx::TextAlignment::CenterRight);
 
-        auto& columns_spinbox = name_box.add<GUI::SpinBox>();
-        columns_spinbox.set_min(3);
-        columns_spinbox.set_value(m_columns);
-        columns_spinbox.on_change = [this, &columns_spinbox] (auto &&) {
-            m_columns = columns_spinbox.value();
+        auto& spinbox = name_box.add<GUI::SpinBox>();
+        spinbox.set_min(3);
+        spinbox.set_max(256);
+        spinbox.set_value(m_columns);
+        spinbox.on_change = [this, ctl = &spinbox] (auto &&) {
+            m_columns = ctl->value();
         };
     }
 
@@ -51,11 +52,12 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, int columns, int rows, int c
         auto& name_label = name_box.add<GUI::Label>("Rows:   ");
         name_label.set_text_alignment(Gfx::TextAlignment::CenterRight);
 
-        auto& rows_spinbox = name_box.add<GUI::SpinBox>();
-        rows_spinbox.set_min(3);
-        rows_spinbox.set_value(m_rows);
-        rows_spinbox.on_change = [this, &rows_spinbox] (auto &&) {
-            m_rows = rows_spinbox.value();
+        auto& spinbox = name_box.add<GUI::SpinBox>();
+        spinbox.set_min(3);
+        spinbox.set_max(256);
+        spinbox.set_value(m_rows);
+        spinbox.on_change = [this, ctl = &spinbox] (auto &&) {
+            m_rows = ctl->value();
         };
     }
 
@@ -69,11 +71,12 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, int columns, int rows, int c
         auto& name_label = name_box.add<GUI::Label>("Cell size:   ");
         name_label.set_text_alignment(Gfx::TextAlignment::CenterRight);
 
-        auto& rows_spinbox = name_box.add<GUI::SpinBox>();
-        rows_spinbox.set_min(16);
-        rows_spinbox.set_value(m_cell_size);
-        rows_spinbox.on_change = [this, &rows_spinbox] (auto &&) {
-            m_rows = rows_spinbox.value();
+        auto& spinbox = name_box.add<GUI::SpinBox>();
+        spinbox.set_min(16);
+        spinbox.set_max(256);
+        spinbox.set_value(m_cell_size);
+        spinbox.on_change = [this, ctl = &spinbox] (auto &&) {
+            m_cell_size = ctl->value();
         };
     }
 

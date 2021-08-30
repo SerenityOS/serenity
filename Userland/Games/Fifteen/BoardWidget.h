@@ -28,6 +28,7 @@ public:
     int rows() const { return m_rows; }
     int columns() const { return m_columns; }
     int cell_size() const { return m_cell_size; }
+    void set_cell_size(int cell_size);
     Gfx::Color get_background_color_for_cell() const { return background_color_for_cell; }
     Gfx::Color get_text_color_for_cell() const { return text_color_for_cell; }
 
