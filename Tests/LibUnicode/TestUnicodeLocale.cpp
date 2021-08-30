@@ -302,6 +302,10 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("EN-U-CCC-BBB-2K-AAA-1K-BBB"sv, "en-u-bbb-ccc-1k-bbb-2k-aaa"sv);
     test("en-u-1k-true"sv, "en-u-1k"sv);
     test("EN-U-1K-TRUE"sv, "en-u-1k"sv);
+    test("en-u-kb-yes"sv, "en-u-kb"sv);
+    test("EN-U-KB-YES"sv, "en-u-kb"sv);
+    test("en-u-ka-yes"sv, "en-u-ka-yes"sv);
+    test("EN-U-KA-YES"sv, "en-u-ka-yes"sv);
 
     test("en-t-en"sv, "en-t-en"sv);
     test("EN-T-EN"sv, "en-t-en"sv);
@@ -315,6 +319,8 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("EN-T-EN-K2-BBB-K1-AAA"sv, "en-t-en-k1-aaa-k2-bbb"sv);
     test("en-t-k1-true"sv, "en-t-k1-true"sv);
     test("EN-T-K1-TRUE"sv, "en-t-k1-true"sv);
+    test("en-t-k1-yes"sv, "en-t-k1-yes"sv);
+    test("EN-T-K1-YES"sv, "en-t-k1-yes"sv);
 
     test("en-0-aaa"sv, "en-0-aaa"sv);
     test("EN-0-AAA"sv, "en-0-aaa"sv);

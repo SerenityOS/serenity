@@ -480,6 +480,17 @@ Optional<LocaleID> parse_unicode_locale_id(StringView locale)
     return locale_id;
 }
 
+static void perform_hard_coded_key_value_substitutions(String& key, String& value)
+{
+    // FIXME: In the XML export of CLDR, there are some aliases defined in the following file:
+    // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/collation.xml
+    //
+    // There doesn't seem to be a counterpart in the JSON export. Since there aren't many such
+    // aliases, until an XML parser is implemented, those aliases are implemented here.
+    if (key.is_one_of("kb"sv, "kc"sv, "kh"sv, "kk"sv, "kn"sv) && (value == "yes"sv))
+        value = "true"sv;
+}
+
 static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
 {
     auto canonicalize_language = [](LanguageID& language_id, bool force_lowercase) {
@@ -542,6 +553,7 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
 
         for (auto& value : raw_values) {
             value = value.to_lowercase();
+            perform_hard_coded_key_value_substitutions(key, value);
 
             // Note: The spec says to remove "true" type and tfield values but that is believed to be a bug in the spec
             // because, for tvalues, that would result in invalid syntax:
