@@ -35,7 +35,8 @@ public:
     template<typename... Parameters>
     void appendff(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
-        vformat(*this, fmtstr.view(), VariadicFormatParams { parameters... });
+        VariadicFormatParams variadic_format_params { parameters... };
+        vformat(*this, fmtstr.view(), variadic_format_params);
     }
 
     [[nodiscard]] String build() const;

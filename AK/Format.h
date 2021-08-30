@@ -466,16 +466,24 @@ struct Formatter<std::nullptr_t> : Formatter<FlatPtr> {
     }
 };
 
-void vformat(StringBuilder&, StringView fmtstr, TypeErasedFormatParams);
+void vformat(StringBuilder&, StringView fmtstr, TypeErasedFormatParams&);
 
 #ifndef KERNEL
-void vout(FILE*, StringView fmtstr, TypeErasedFormatParams, bool newline = false);
+void vout(FILE*, StringView fmtstr, TypeErasedFormatParams&, bool newline = false);
 
 template<typename... Parameters>
-void out(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { vout(file, fmtstr.view(), VariadicFormatParams { parameters... }); }
+void out(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+{
+    VariadicFormatParams variadic_format_params { parameters... };
+    vout(file, fmtstr.view(), variadic_format_params);
+}
 
 template<typename... Parameters>
-void outln(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { vout(file, fmtstr.view(), VariadicFormatParams { parameters... }, true); }
+void outln(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+{
+    VariadicFormatParams variadic_format_params { parameters... };
+    vout(file, fmtstr.view(), variadic_format_params, true);
+}
 
 inline void outln(FILE* file) { fputc('\n', file); }
 
@@ -512,12 +520,13 @@ inline void warnln() { outln(stderr); }
 
 #endif
 
-void vdbgln(StringView fmtstr, TypeErasedFormatParams);
+void vdbgln(StringView fmtstr, TypeErasedFormatParams&);
 
 template<typename... Parameters>
 void dbgln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
 {
-    vdbgln(fmtstr.view(), VariadicFormatParams { parameters... });
+    VariadicFormatParams variadic_format_params { parameters... };
+    vdbgln(fmtstr.view(), variadic_format_params);
 }
 
 inline void dbgln() { dbgln(""); }
@@ -525,22 +534,24 @@ inline void dbgln() { dbgln(""); }
 void set_debug_enabled(bool);
 
 #ifdef KERNEL
-void vdmesgln(StringView fmtstr, TypeErasedFormatParams);
+void vdmesgln(StringView fmtstr, TypeErasedFormatParams&);
 
 template<typename... Parameters>
 void dmesgln(CheckedFormatString<Parameters...>&& fmt, const Parameters&... parameters)
 {
-    vdmesgln(fmt.view(), VariadicFormatParams { parameters... });
+    VariadicFormatParams variadic_format_params { parameters... };
+    vdmesgln(fmt.view(), variadic_format_params);
 }
 
-void v_critical_dmesgln(StringView fmtstr, TypeErasedFormatParams);
+void v_critical_dmesgln(StringView fmtstr, TypeErasedFormatParams&);
 
 // be very careful to not cause any allocations here, since we could be in
 // a very unstable situation
 template<typename... Parameters>
 void critical_dmesgln(CheckedFormatString<Parameters...>&& fmt, const Parameters&... parameters)
 {
-    v_critical_dmesgln(fmt.view(), VariadicFormatParams { parameters... });
+    VariadicFormatParams variadic_format_params { parameters... };
+    v_critical_dmesgln(fmt.view(), variadic_format_params);
 }
 #endif
 
@@ -584,9 +595,10 @@ struct Formatter<FormatString> : Formatter<String> {
     template<typename... Parameters>
     void format(FormatBuilder& builder, StringView fmtstr, const Parameters&... parameters)
     {
-        vformat(builder, fmtstr, VariadicFormatParams { parameters... });
+        VariadicFormatParams variadic_format_params { parameters... };
+        vformat(builder, fmtstr, variadic_format_params);
     }
-    void vformat(FormatBuilder& builder, StringView fmtstr, TypeErasedFormatParams params);
+    void vformat(FormatBuilder& builder, StringView fmtstr, TypeErasedFormatParams& params);
 };
 
 } // namespace AK

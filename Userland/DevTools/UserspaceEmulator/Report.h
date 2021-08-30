@@ -13,8 +13,10 @@ extern bool g_report_to_debug;
 template<typename... Ts>
 void reportln(const StringView& format, Ts... args)
 {
-    if (g_report_to_debug)
-        AK::vdbgln(format, AK::VariadicFormatParams { args... });
-    else
+    if (g_report_to_debug) {
+        AK::VariadicFormatParams variadic_format_params { args... };
+        AK::vdbgln(format, variadic_format_params);
+    } else {
         warnln(format, args...);
+    }
 }
