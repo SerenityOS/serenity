@@ -379,6 +379,38 @@ Optional<String> temporal_date_to_string(GlobalObject& global_object, PlainDate&
     return String::formatted("{}-{}-{}{}", year, month, day, calendar);
 }
 
+// 3.5.9 AddISODate ( year, month, day, years, months, weeks, days, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-addisodate
+Optional<ISODate> add_iso_date(GlobalObject& global_object, i32 year, u8 month, u8 day, double years, double months, double weeks, double days, String const& overflow)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: year, month, day, years, months, weeks, and days are integers.
+    VERIFY(years == trunc(years) && months == trunc(months) && weeks == trunc(weeks) && days == trunc(days));
+
+    // 2. Assert: overflow is either "constrain" or "reject".
+    VERIFY(overflow == "constrain"sv || overflow == "reject"sv);
+
+    // 3. Let intermediate be ! BalanceISOYearMonth(year + years, month + months).
+    auto intermediate_year_month = balance_iso_year_month(year + years, month + months);
+
+    // 4. Let intermediate be ? RegulateISODate(intermediate.[[Year]], intermediate.[[Month]], day, overflow).
+    auto intermediate_date = regulate_iso_date(global_object, intermediate_year_month.year, intermediate_year_month.month, day, overflow);
+    if (vm.exception())
+        return {};
+
+    // 5. Set days to days + 7 × weeks.
+    days += 7 * weeks;
+
+    // 6. Let d be intermediate.[[Day]] + days.
+    auto d = intermediate_date->day + days;
+
+    // 7. Let intermediate be ! BalanceISODate(intermediate.[[Year]], intermediate.[[Month]], d).
+    auto intermediate = balance_iso_date(intermediate_date->year, intermediate_date->month, d);
+
+    // 8. Return ? RegulateISODate(intermediate.[[Year]], intermediate.[[Month]], intermediate.[[Day]], overflow).
+    return regulate_iso_date(global_object, intermediate.year, intermediate.month, intermediate.day, overflow);
+}
+
 // 3.5.10 CompareISODate ( y1, m1, d1, y2, m2, d2 ), https://tc39.es/proposal-temporal/#sec-temporal-compareisodate
 i8 compare_iso_date(i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2)
 {

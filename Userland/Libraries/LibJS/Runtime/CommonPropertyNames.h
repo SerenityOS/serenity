@@ -107,6 +107,7 @@ namespace JS {
     P(count)                                 \
     P(countReset)                            \
     P(create)                                \
+    P(dateAdd)                               \
     P(dateFromFields)                        \
     P(day)                                   \
     P(dayOfWeek)                             \

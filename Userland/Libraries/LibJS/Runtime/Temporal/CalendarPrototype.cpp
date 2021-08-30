@@ -10,6 +10,7 @@
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/CalendarPrototype.h>
+#include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainMonthDay.h>
@@ -38,6 +39,7 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.dateFromFields, date_from_fields, 2, attr);
     define_native_function(vm.names.yearMonthFromFields, year_month_from_fields, 2, attr);
     define_native_function(vm.names.monthDayFromFields, month_day_from_fields, 2, attr);
+    define_native_function(vm.names.dateAdd, date_add, 3, attr);
     define_native_function(vm.names.year, year, 1, attr);
     define_native_function(vm.names.month, month, 1, attr);
     define_native_function(vm.names.monthCode, month_code, 1, attr);
@@ -181,6 +183,48 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
 
     // 7. Return ? CreateTemporalMonthDay(result.[[Month]], result.[[Day]], calendar, result.[[ReferenceISOYear]]).
     return create_temporal_month_day(global_object, result->month, result->day, *calendar, result->reference_iso_year);
+}
+
+// 12.4.7 Temporal.Calendar.prototype.dateAdd ( date, duration, options ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dateadd
+// NOTE: This is the minimum dateAdd implementation for engines without ECMA-402.
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
+{
+    // 1. Let calendar be the this value.
+    // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
+    auto* calendar = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Assert: calendar.[[Identifier]] is "iso8601".
+    VERIFY(calendar->identifier() == "iso8601"sv);
+
+    // 4. Set date to ? ToTemporalDate(date).
+    auto* date = to_temporal_date(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 5. Set duration to ? ToTemporalDuration(duration).
+    auto* duration = to_temporal_duration(global_object, vm.argument(1));
+    if (vm.exception())
+        return {};
+
+    // 6. Set options to ? GetOptionsObject(options).
+    auto* options = get_options_object(global_object, vm.argument(2));
+    if (vm.exception())
+        return {};
+
+    // 7. Let overflow be ? ToTemporalOverflow(options).
+    auto overflow = to_temporal_overflow(global_object, *options);
+    if (vm.exception())
+        return {};
+
+    // 8. Let result be ? AddISODate(date.[[ISOYear]], date.[[ISOMonth]], date.[[ISODay]], duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], overflow).
+    auto result = add_iso_date(global_object, date->iso_year(), date->iso_month(), date->iso_day(), duration->years(), duration->months(), duration->weeks(), duration->days(), *overflow);
+    if (vm.exception())
+        return {};
+
+    // 9. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
+    return create_temporal_date(global_object, result->year, result->month, result->day, *calendar);
 }
 
 // 12.4.9 Temporal.Calendar.prototype.year ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.year
