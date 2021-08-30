@@ -286,18 +286,14 @@ void Window::set_minimum_size(const Gfx::IntSize& size)
 
 void Window::center_on_screen()
 {
-    auto window_rect = rect();
-    window_rect.center_within(Desktop::the().rect());
-    set_rect(window_rect);
+    set_rect(rect().centered_within(Desktop::the().rect()));
 }
 
 void Window::center_within(const Window& other)
 {
     if (this == &other)
         return;
-    auto window_rect = rect();
-    window_rect.center_within(other.rect());
-    set_rect(window_rect);
+    set_rect(rect().centered_within(other.rect()));
 }
 
 void Window::set_window_type(WindowType window_type)

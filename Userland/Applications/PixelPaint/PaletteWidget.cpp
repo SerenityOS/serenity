@@ -75,8 +75,7 @@ PaletteWidget::PaletteWidget()
     m_secondary_color_widget->set_fill_with_background_color(true);
 
     m_primary_color_widget = add<GUI::Frame>();
-    Gfx::IntRect rect { 0, 0, 38, 15 };
-    rect.center_within(m_secondary_color_widget->relative_rect());
+    auto rect = Gfx::IntRect(0, 0, 38, 15).centered_within(m_secondary_color_widget->relative_rect());
     m_primary_color_widget->set_relative_rect(rect);
     m_primary_color_widget->set_fill_with_background_color(true);
 

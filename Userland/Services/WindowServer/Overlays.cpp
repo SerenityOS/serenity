@@ -237,8 +237,7 @@ void WindowGeometryOverlay::update_rect()
         }
         m_label_rect = Gfx::IntRect { 0, 0, wm.font().width(m_label) + 16, wm.font().glyph_height() + 10 };
 
-        auto rect = calculate_frame_rect(m_label_rect);
-        rect.center_within(window->frame().rect());
+        auto rect = calculate_frame_rect(m_label_rect).centered_within(window->frame().rect());
         auto desktop_rect = wm.desktop_rect(ScreenInput::the().cursor_location_screen());
         if (rect.left() < desktop_rect.left())
             rect.set_left(desktop_rect.left());
@@ -314,8 +313,7 @@ RefPtr<Gfx::Bitmap> DndOverlay::create_bitmap(int scale_factor)
 void WindowStackSwitchOverlay::render_overlay_bitmap(Gfx::Painter& painter)
 {
     // We should come up with a more elegant way to get the content rectangle
-    Gfx::IntRect content_rect({}, m_content_size);
-    content_rect.center_within({ {}, rect().size() });
+    auto content_rect = Gfx::IntRect({}, m_content_size).centered_within({ {}, rect().size() });
     auto active_color = WindowManager::the().palette().active_window_border1();
     auto inactive_color = WindowManager::the().palette().inactive_window_border1();
     for (int y = 0; y < m_rows; y++) {
@@ -342,9 +340,7 @@ WindowStackSwitchOverlay::WindowStackSwitchOverlay(Screen& screen, WindowStack& 
         m_columns * (default_screen_rect_width + default_screen_rect_padding) - default_screen_rect_padding,
         m_rows * (default_screen_rect_height + default_screen_rect_padding) - default_screen_rect_padding,
     };
-    auto rect = calculate_frame_rect(Gfx::IntRect({}, m_content_size).inflated(2 * default_screen_rect_margin, 2 * default_screen_rect_margin));
-    rect.center_within(screen.rect());
-    set_rect(rect);
+    set_rect(calculate_frame_rect(Gfx::IntRect({}, m_content_size).inflated(2 * default_screen_rect_margin, 2 * default_screen_rect_margin)).centered_within(screen.rect()));
 }
 
 }

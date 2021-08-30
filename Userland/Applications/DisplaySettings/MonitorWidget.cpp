@@ -126,8 +126,7 @@ void MonitorWidget::redraw_desktop_if_needed()
     auto scaled_bitmap = m_wallpaper_bitmap->scaled(sw, sh);
 
     if (m_desktop_wallpaper_mode == "center") {
-        Gfx::IntRect centered_rect { {}, scaled_size };
-        centered_rect.center_within(m_desktop_bitmap->rect());
+        auto centered_rect = Gfx::IntRect({}, scaled_size).centered_within(m_desktop_bitmap->rect());
         painter.blit(centered_rect.location(), *scaled_bitmap, scaled_bitmap->rect());
     } else if (m_desktop_wallpaper_mode == "tile") {
         painter.draw_tiled_bitmap(m_desktop_bitmap->rect(), *scaled_bitmap);

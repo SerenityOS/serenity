@@ -137,15 +137,13 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
 
         for (auto& button : buttons) {
             Gfx::StylePainter::paint_button(painter, button.rect, m_preview_palette, Gfx::ButtonStyle::Normal, false);
-            auto bitmap_rect = button.bitmap->rect();
-            bitmap_rect.center_within(button.rect);
+            auto bitmap_rect = button.bitmap->rect().centered_within(button.rect);
             painter.blit(bitmap_rect.location(), *button.bitmap, button.bitmap->rect());
         }
     };
 
-    Gfx::IntRect active_rect { 0, 0, 320, 240 };
-    active_rect.center_within(frame_inner_rect());
-    Gfx::IntRect inactive_rect = active_rect.translated(-20, -20);
+    auto active_rect = Gfx::IntRect(0, 0, 320, 240).centered_within(frame_inner_rect());
+    auto inactive_rect = active_rect.translated(-20, -20);
 
     paint_window("Inactive window", inactive_rect, Gfx::WindowTheme::WindowState::Inactive, *m_active_window_icon);
     paint_window("Active window", active_rect, Gfx::WindowTheme::WindowState::Active, *m_inactive_window_icon);
@@ -153,9 +151,7 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
 
 void PreviewWidget::resize_event(GUI::ResizeEvent&)
 {
-    Gfx::IntRect gallery_rect { 0, 0, 320, 240 };
-    gallery_rect.center_within(rect());
-    m_gallery->set_relative_rect(gallery_rect);
+    m_gallery->set_relative_rect(Gfx::IntRect(0, 0, 320, 240).centered_within(rect()));
 }
 
 }

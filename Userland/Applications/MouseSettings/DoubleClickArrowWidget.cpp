@@ -35,9 +35,7 @@ void DoubleClickArrowWidget::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    auto bottom_arrow_rect = m_arrow_bitmap->rect();
-    bottom_arrow_rect.center_within(rect());
-    bottom_arrow_rect.translate_by(0, m_arrow_bitmap->height() / 2);
+    auto bottom_arrow_rect = m_arrow_bitmap->rect().centered_within(rect()).translated(0, m_arrow_bitmap->height() / 2);
 
     painter.blit_filtered(bottom_arrow_rect.location(), *m_arrow_bitmap, m_arrow_bitmap->rect(), [&](Color color) {
         return m_inverted ? color.inverted() : color;
