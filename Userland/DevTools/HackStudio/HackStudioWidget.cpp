@@ -793,32 +793,29 @@ void HackStudioWidget::initialize_debugger()
             }
             dbgln("Debugger stopped at source position: {}:{}", source_position.value().file_path, source_position.value().line_number);
 
-            Core::EventLoop::main().post_event(
-                *window(),
-                make<Core::DeferredInvocationEvent>(
-                    [this, source_position, &regs](auto&) {
-                        m_current_editor_in_execution = get_editor_of_file(source_position.value().file_path);
-                        if (m_current_editor_in_execution)
-                            m_current_editor_in_execution->editor().set_execution_position(source_position.value().line_number - 1);
-                        m_debug_info_widget->update_state(*Debugger::the().session(), regs);
-                        m_debug_info_widget->set_debug_actions_enabled(true);
-                        m_disassembly_widget->update_state(*Debugger::the().session(), regs);
-                        HackStudioWidget::reveal_action_tab(*m_debug_info_widget);
-                    }));
+            deferred_invoke([this, source_position, &regs] {
+                m_current_editor_in_execution = get_editor_of_file(source_position.value().file_path);
+                if (m_current_editor_in_execution)
+                    m_current_editor_in_execution->editor().set_execution_position(source_position.value().line_number - 1);
+                m_debug_info_widget->update_state(*Debugger::the().session(), regs);
+                m_debug_info_widget->set_debug_actions_enabled(true);
+                m_disassembly_widget->update_state(*Debugger::the().session(), regs);
+                HackStudioWidget::reveal_action_tab(*m_debug_info_widget);
+            });
             Core::EventLoop::wake();
 
             return Debugger::HasControlPassedToUser::Yes;
         },
         [this]() {
-            Core::EventLoop::main().post_event(*window(), make<Core::DeferredInvocationEvent>([this](auto&) {
+            deferred_invoke([this] {
                 m_debug_info_widget->set_debug_actions_enabled(false);
                 if (m_current_editor_in_execution)
                     m_current_editor_in_execution->editor().clear_execution_position();
-            }));
+            });
             Core::EventLoop::wake();
         },
         [this]() {
-            Core::EventLoop::main().post_event(*window(), make<Core::DeferredInvocationEvent>([this](auto&) {
+            deferred_invoke([this] {
                 m_debug_info_widget->set_debug_actions_enabled(false);
                 if (m_current_editor_in_execution)
                     m_current_editor_in_execution->editor().clear_execution_position();
@@ -834,7 +831,7 @@ void HackStudioWidget::initialize_debugger()
 
                 HackStudioWidget::hide_action_tabs();
                 GUI::MessageBox::show(window(), "Program Exited", "Debugger", GUI::MessageBox::Type::Information);
-            }));
+            });
             Core::EventLoop::wake();
         });
 }

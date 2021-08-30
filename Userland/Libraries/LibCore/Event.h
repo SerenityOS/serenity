@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
+#include <LibCore/DeferredInvocationContext.h>
 #include <LibCore/Forward.h>
 
 namespace Core {
@@ -50,14 +51,16 @@ class DeferredInvocationEvent : public Event {
     friend class EventLoop;
 
 public:
-    DeferredInvocationEvent(Function<void(Object&)> invokee)
+    DeferredInvocationEvent(NonnullRefPtr<DeferredInvocationContext> context, Function<void()> invokee)
         : Event(Event::Type::DeferredInvoke)
+        , m_context(move(context))
         , m_invokee(move(invokee))
     {
     }
 
 private:
-    Function<void(Object&)> m_invokee;
+    NonnullRefPtr<DeferredInvocationContext> m_context;
+    Function<void()> m_invokee;
 };
 
 class TimerEvent final : public Event {
