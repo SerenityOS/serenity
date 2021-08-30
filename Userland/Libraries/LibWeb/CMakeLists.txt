@@ -281,11 +281,17 @@ function(libweb_js_wrapper class)
         )
     endforeach()
     add_custom_target(generate_${basename}Wrapper.h DEPENDS Bindings/${basename}Wrapper.h)
+    add_dependencies(all_generated generate_${basename}Wrapper.h)
     add_custom_target(generate_${basename}Wrapper.cpp DEPENDS Bindings/${basename}Wrapper.cpp)
+    add_dependencies(all_generated generate_${basename}Wrapper.cpp)
     add_custom_target(generate_${basename}Constructor.h DEPENDS Bindings/${basename}Constructor.h)
+    add_dependencies(all_generated generate_${basename}Constructor.h)
     add_custom_target(generate_${basename}Constructor.cpp DEPENDS Bindings/${basename}Constructor.cpp)
+    add_dependencies(all_generated generate_${basename}Constructor.cpp)
     add_custom_target(generate_${basename}Prototype.h DEPENDS Bindings/${basename}Prototype.h)
+    add_dependencies(all_generated generate_${basename}Prototype.h)
     add_custom_target(generate_${basename}Prototype.cpp DEPENDS Bindings/${basename}Prototype.cpp)
+    add_dependencies(all_generated generate_${basename}Prototype.cpp)
 endfunction()
 
 libweb_js_wrapper(CSS/CSSStyleDeclaration)
@@ -411,6 +417,7 @@ add_custom_command(
     MAIN_DEPENDENCY CSS/Properties.json
 )
 add_custom_target(generate_PropertyID.h DEPENDS CSS/PropertyID.h)
+add_dependencies(all_generated generate_PropertyID.h)
 
 add_custom_command(
     OUTPUT CSS/PropertyID.cpp
@@ -423,6 +430,7 @@ add_custom_command(
     MAIN_DEPENDENCY CSS/Properties.json
 )
 add_custom_target(generate_PropertyID.cpp DEPENDS CSS/PropertyID.cpp)
+add_dependencies(all_generated generate_PropertyID.cpp)
 
 add_custom_command(
     OUTPUT CSS/ValueID.h
@@ -435,6 +443,7 @@ add_custom_command(
     MAIN_DEPENDENCY CSS/Identifiers.json
 )
 add_custom_target(generate_ValueID.h DEPENDS CSS/ValueID.h)
+add_dependencies(all_generated generate_ValueID.h)
 
 add_custom_command(
     OUTPUT CSS/ValueID.cpp
@@ -447,6 +456,7 @@ add_custom_command(
     MAIN_DEPENDENCY CSS/Identifiers.json
 )
 add_custom_target(generate_ValueID.cpp DEPENDS CSS/ValueID.cpp)
+add_dependencies(all_generated generate_ValueID.cpp)
 
 add_custom_command(
     OUTPUT CSS/DefaultStyleSheetSource.cpp
@@ -459,6 +469,7 @@ add_custom_command(
     MAIN_DEPENDENCY CSS/Default.css
 )
 add_custom_target(generate_DefaultStyleSheetSource.cpp DEPENDS CSS/DefaultStyleSheetSource.cpp)
+add_dependencies(all_generated generate_DefaultStyleSheetSource.cpp)
 
 add_custom_command(
     OUTPUT CSS/QuirksModeStyleSheetSource.cpp
@@ -471,5 +482,6 @@ add_custom_command(
     MAIN_DEPENDENCY CSS/Default.css
 )
 add_custom_target(generate_QuirksModeStyleSheetSource.cpp DEPENDS CSS/QuirksModeStyleSheetSource.cpp)
+add_dependencies(all_generated generate_QuirksModeStyleSheetSource.cpp)
 
 add_subdirectory(DumpLayoutTree)

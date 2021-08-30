@@ -227,6 +227,12 @@ if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
 endif()
 
 if (BUILD_LAGOM)
+
+    if (NOT TARGET all_generated)
+        # Meta target to run all code-gen steps in the build.
+        add_custom_target(all_generated)
+    endif()
+
     # Lagom Libraries
 
     # Archive
