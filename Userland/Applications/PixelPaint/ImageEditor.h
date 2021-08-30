@@ -132,6 +132,8 @@ private:
     Gfx::FloatPoint m_pan_origin;
     Gfx::FloatPoint m_saved_pan_origin;
     Gfx::IntPoint m_click_position;
+    bool m_space_down { false };
+    bool m_middle_mouse_down { false };
 
     Gfx::StandardCursor m_active_cursor { Gfx::StandardCursor::None };
 
