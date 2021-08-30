@@ -43,7 +43,7 @@ double parse_time_zone_offset_string(GlobalObject&, String const&);
 String format_time_zone_offset_string(double offset_nanoseconds);
 Object* to_temporal_time_zone(GlobalObject&, Value temporal_time_zone_like);
 double get_offset_nanoseconds_for(GlobalObject&, Value time_zone, Instant&);
-Optional<String> builtin_time_zone_get_offset_string_for(GlobalObject&, Object& time_zone, Instant&);
+Optional<String> builtin_time_zone_get_offset_string_for(GlobalObject&, Value time_zone, Instant&);
 PlainDateTime* builtin_time_zone_get_plain_date_time_for(GlobalObject&, Value time_zone, Instant&, Object& calendar);
 
 bool is_valid_time_zone_numeric_utc_offset_syntax(String const&);

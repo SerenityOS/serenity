@@ -700,7 +700,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_getter)
     auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds());
 
     // 4. Return ? BuiltinTimeZoneGetOffsetStringFor(zonedDateTime.[[TimeZone]], instant).
-    auto offset_string = builtin_time_zone_get_offset_string_for(global_object, zoned_date_time->time_zone(), *instant);
+    auto offset_string = builtin_time_zone_get_offset_string_for(global_object, &zoned_date_time->time_zone(), *instant);
     if (vm.exception())
         return {};
     return js_string(vm, move(*offset_string));
@@ -955,7 +955,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::get_iso_fields)
         return {};
 
     // 8. Let offset be ? BuiltinTimeZoneGetOffsetStringFor(timeZone, instant).
-    auto maybe_offset = builtin_time_zone_get_offset_string_for(global_object, time_zone, *instant);
+    auto maybe_offset = builtin_time_zone_get_offset_string_for(global_object, &time_zone, *instant);
     if (vm.exception())
         return {};
     auto offset = move(*maybe_offset);

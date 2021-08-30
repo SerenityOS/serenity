@@ -27,6 +27,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(subtract);
     JS_DECLARE_NATIVE_FUNCTION(round);
     JS_DECLARE_NATIVE_FUNCTION(equals);
+    JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
 };
 

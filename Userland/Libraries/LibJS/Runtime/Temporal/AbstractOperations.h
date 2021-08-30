@@ -9,6 +9,7 @@
 
 #include <AK/Forward.h>
 #include <AK/String.h>
+#include <AK/Variant.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
@@ -69,14 +70,24 @@ struct TemporalTimeZone {
     Optional<String> name;
 };
 
+struct SecondsStringPrecision {
+    Variant<String, u8> precision;
+    String unit;
+    u32 increment;
+};
+
 MarkedValueList iterable_to_list_of_type(GlobalObject&, Value items, Vector<OptionType> const& element_types);
 Object* get_options_object(GlobalObject&, Value options);
 Value get_option(GlobalObject&, Object& options, PropertyName const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback);
+template<typename NumberType>
+Optional<Variant<String, NumberType>> get_string_or_number_option(GlobalObject&, Object& options, PropertyName const& property, Vector<StringView> const& string_values, NumberType minimum, NumberType maximum, Value fallback);
 Optional<String> to_temporal_overflow(GlobalObject&, Object& normalized_options);
 Optional<String> to_temporal_rounding_mode(GlobalObject&, Object& normalized_options, String const& fallback);
 Optional<String> to_show_calendar_option(GlobalObject&, Object& normalized_options);
 u64 to_temporal_rounding_increment(GlobalObject&, Object& normalized_options, Optional<double> dividend, bool inclusive);
+Optional<SecondsStringPrecision> to_seconds_string_precision(GlobalObject&, Object& normalized_options);
 Optional<String> to_smallest_temporal_unit(GlobalObject&, Object& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback);
+String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<String, u8> const& precision);
 double constrain_to_range(double x, double minimum, double maximum);
 BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, String const& rounding_mode);
 Optional<ISODateTime> parse_iso_date_time(GlobalObject&, String const& iso_string);
