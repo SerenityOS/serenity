@@ -106,7 +106,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
 
     if (url.protocol() == "about") {
         dbgln_if(SPAM_DEBUG, "Loading about: URL {}", url);
-        deferred_invoke([success_callback = move(success_callback)](auto&) {
+        deferred_invoke([success_callback = move(success_callback)] {
             success_callback(String::empty().to_byte_buffer(), {}, {});
         });
         return;
@@ -124,7 +124,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
         else
             data = url.data_payload().to_byte_buffer();
 
-        deferred_invoke([data = move(data), success_callback = move(success_callback)](auto&) {
+        deferred_invoke([data = move(data), success_callback = move(success_callback)] {
             success_callback(data, {}, {});
         });
         return;
@@ -141,7 +141,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
         }
 
         auto data = f->read_all();
-        deferred_invoke([data = move(data), success_callback = move(success_callback)](auto&) {
+        deferred_invoke([data = move(data), success_callback = move(success_callback)] {
             success_callback(data, {}, {});
         });
         return;
@@ -171,7 +171,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
                     error_callback("HTTP load failed", {});
                 return;
             }
-            deferred_invoke([protocol_request](auto&) {
+            deferred_invoke([protocol_request] {
                 // Clear circular reference of `protocol_request` captured by copy
                 const_cast<Protocol::Request&>(*protocol_request).on_buffered_request_finish = nullptr;
             });

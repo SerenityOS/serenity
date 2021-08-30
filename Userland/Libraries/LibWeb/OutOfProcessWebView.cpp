@@ -64,7 +64,7 @@ void OutOfProcessWebView::create_client()
 
     m_client_state.client = WebContentClient::construct(*this);
     m_client_state.client->on_web_content_process_crash = [this] {
-        deferred_invoke([this](auto&) {
+        deferred_invoke([this] {
             handle_web_content_process_crash();
         });
     };

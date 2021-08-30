@@ -28,7 +28,7 @@ WMClientConnection::~WMClientConnection()
 
 void WMClientConnection::die()
 {
-    deferred_invoke([this](auto&) {
+    deferred_invoke([this] {
         s_connections.remove(client_id());
     });
 }

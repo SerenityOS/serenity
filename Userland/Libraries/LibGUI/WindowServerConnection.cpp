@@ -357,7 +357,7 @@ void WindowServerConnection::display_link_notification()
         return;
 
     m_display_link_notification_pending = true;
-    deferred_invoke([this](auto&) {
+    deferred_invoke([this] {
         DisplayLink::notify({});
         m_display_link_notification_pending = false;
     });

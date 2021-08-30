@@ -97,7 +97,7 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
         auto packet = build_hello();
         write_packet(packet);
 
-        deferred_invoke([&](auto&) {
+        deferred_invoke([&] {
             m_handshake_timeout_timer = Core::Timer::create_single_shot(
                 m_max_wait_time_for_handshake_in_seconds * 1000, [&] {
                     auto timeout_diff = Core::DateTime::now().timestamp() - m_context.handshake_initiation_timestamp;
@@ -141,7 +141,7 @@ void TLSv12::read_from_socket()
     auto notify_client_for_app_data = [&] {
         if (m_context.application_buffer.size() > 0) {
             if (!did_schedule_read) {
-                deferred_invoke([&](auto&) { read_from_socket(); });
+                deferred_invoke([&] { read_from_socket(); });
                 did_schedule_read = true;
             }
             if (on_tls_ready_to_read)

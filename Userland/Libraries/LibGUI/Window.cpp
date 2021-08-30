@@ -679,7 +679,7 @@ void Window::update(const Gfx::IntRect& a_rect)
     }
 
     if (m_pending_paint_event_rects.is_empty()) {
-        deferred_invoke([this](auto&) {
+        deferred_invoke([this] {
             auto rects = move(m_pending_paint_event_rects);
             if (rects.is_empty())
                 return;
@@ -1010,7 +1010,7 @@ void Window::schedule_relayout()
     if (m_layout_pending)
         return;
     m_layout_pending = true;
-    deferred_invoke([this](auto&) {
+    deferred_invoke([this] {
         if (main_widget())
             main_widget()->do_layout();
         update();

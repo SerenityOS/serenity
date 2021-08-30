@@ -25,15 +25,15 @@ void GeminiJob::start()
     };
     m_socket->on_tls_error = [this](TLS::AlertDescription error) {
         if (error == TLS::AlertDescription::HandshakeFailure) {
-            deferred_invoke([this](auto&) {
+            deferred_invoke([this] {
                 return did_fail(Core::NetworkJob::Error::ProtocolFailed);
             });
         } else if (error == TLS::AlertDescription::DecryptError) {
-            deferred_invoke([this](auto&) {
+            deferred_invoke([this] {
                 return did_fail(Core::NetworkJob::Error::ConnectionFailed);
             });
         } else {
-            deferred_invoke([this](auto&) {
+            deferred_invoke([this] {
                 return did_fail(Core::NetworkJob::Error::TransmissionFailed);
             });
         }
@@ -47,7 +47,7 @@ void GeminiJob::start()
     };
     bool success = ((TLS::TLSv12&)*m_socket).connect(m_request.url().host(), m_request.url().port());
     if (!success) {
-        deferred_invoke([this](auto&) {
+        deferred_invoke([this] {
             return did_fail(Core::NetworkJob::Error::ConnectionFailed);
         });
     }

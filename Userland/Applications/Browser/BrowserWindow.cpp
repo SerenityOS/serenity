@@ -434,7 +434,7 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
     };
 
     new_tab.on_tab_close_request = [this](auto& tab) {
-        m_tab_widget->deferred_invoke([this, &tab](auto&) {
+        m_tab_widget->deferred_invoke([this, &tab] {
             m_tab_widget->remove_tab(tab);
             m_tab_widget->set_bar_visible(!is_fullscreen() && m_tab_widget->children().size() > 1);
             if (m_tab_widget->children().is_empty())
@@ -443,7 +443,7 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
     };
 
     new_tab.on_tab_close_other_request = [this](auto& tab) {
-        m_tab_widget->deferred_invoke([this, &tab](auto&) {
+        m_tab_widget->deferred_invoke([this, &tab] {
             m_tab_widget->remove_all_tabs_except(tab);
             VERIFY(m_tab_widget->children().size() == 1);
             m_tab_widget->set_bar_visible(false);

@@ -110,7 +110,7 @@ ComboBox::ComboBox()
     };
 
     m_list_view->on_activation = [this](auto& index) {
-        deferred_invoke([this, index](auto&) {
+        deferred_invoke([this, index] {
             selection_updated(index);
             if (on_change)
                 on_change(m_editor->text(), index);

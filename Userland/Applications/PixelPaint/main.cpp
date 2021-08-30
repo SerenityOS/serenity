@@ -729,7 +729,7 @@ int main(int argc, char** argv)
             layer_properties_widget.set_layer(nullptr);
         }
 
-        tab_widget.deferred_invoke([&](auto&) {
+        tab_widget.deferred_invoke([&] {
             tab_widget.remove_tab(image_editor);
         });
     };
