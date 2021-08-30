@@ -22,6 +22,7 @@ public:
     int get_current_index() const { return m_current_index; }
     bool is_in_place() const;
     void position_cell();
+    void fire_on_cell_move_request();
 
     AK::Signal<int> on_cell_move_request;
 
@@ -31,7 +32,6 @@ private:
     explicit CellWidget(BoardWidget *board, int real_index);
 
     virtual void paint_event(GUI::PaintEvent&) override;
-    virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
 
     void resize_cell();

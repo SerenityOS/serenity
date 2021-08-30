@@ -21,6 +21,7 @@ public:
     AK::Signal<Color> on_cell_color_changed, on_cell_text_color_changed;
     AK::Signal<i32> on_cell_size_changed;
     AK::Signal<i32, i32> on_solved;
+    AK::Signal<> on_cell_moved;
 
     virtual ~BoardWidget() override;
 
@@ -34,6 +35,8 @@ public:
 
 private:
     explicit BoardWidget(int rows, int columns, int cell_size, Gfx::Color cell_color, Gfx::Color cell_text_color);
+
+    virtual void keydown_event(GUI::KeyEvent&) override;
 
     void shuffle_cells();
     void fix_parity();

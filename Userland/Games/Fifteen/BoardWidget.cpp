@@ -1,3 +1,4 @@
+#include <Kernel/API/KeyCode.h>
 #include <AK/StdLibExtras.h>
 #include <LibConfig/Client.h>
 #include "Utilities.h"
@@ -12,6 +13,39 @@ BoardWidget::BoardWidget(int rows, int columns, int cell_size, Gfx::Color cell_c
 
 BoardWidget::~BoardWidget()
 {
+}
+
+void BoardWidget::keydown_event(GUI::KeyEvent &event)
+{
+    CellWidget *cell { nullptr };
+
+    switch (event.key())
+    {
+    case KeyCode::Key_Left:
+        if (int(m_empty_cell_index % m_columns) < m_columns - 1)
+            cell = (*m_cells)[m_empty_cell_index + 1];
+        break;
+
+    case KeyCode::Key_Up:
+        if (int(m_empty_cell_index / m_rows) < m_rows - 1)
+            cell = (*m_cells)[m_empty_cell_index + m_rows];
+        break;
+
+    case KeyCode::Key_Right:
+        if (int(m_empty_cell_index % m_columns) > 0)
+            cell = (*m_cells)[m_empty_cell_index - 1];
+        break;
+
+    case KeyCode::Key_Down:
+        if (int(m_empty_cell_index) / m_rows > 0)
+            cell = (*m_cells)[m_empty_cell_index - m_rows];
+        break;
+
+    default: break;
+    }
+
+    if (cell != nullptr)
+        cell->fire_on_cell_move_request();
 }
 
 void BoardWidget::generate_cells()
@@ -37,6 +71,8 @@ void BoardWidget::generate_cells()
 
             (*m_cells)[current_cell_index]->set_current_index(current_cell_index);
             (*m_cells)[current_cell_index]->position_cell();
+
+            on_cell_moved();
 
             if (m_empty_cell_index == last_index && AK::all_of(m_cells->begin(), m_cells->end() - 1, [](auto &&cell) { return cell->is_in_place(); })) {
                 // solved

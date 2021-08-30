@@ -1,12 +1,15 @@
 #include "CellWidget.h"
 #include "BoardWidget.h"
 #include <LibGUI/Painter.h>
+#include <LibGfx/FontDatabase.h>
 
 CellWidget::CellWidget(BoardWidget *board, int real_index) :
     m_board { board },
     background_color_for_cell { m_board->get_background_color_for_cell() }, text_color_for_cell { m_board->get_text_color_for_cell() },
     m_real_index { real_index }, m_current_index { real_index }
 {
+    set_font(Gfx::FontDatabase::default_font().bold_variant());
+
     position_cell();
     resize_cell();
 
@@ -39,14 +42,14 @@ void CellWidget::paint_event(GUI::PaintEvent &event)
     painter.draw_rect(rect(), Gfx::Color::NamedColor::Black, true);
 }
 
-void CellWidget::keydown_event(GUI::KeyEvent&)
+void CellWidget::fire_on_cell_move_request()
 {
-
+    on_cell_move_request(m_current_index);
 }
 
 void CellWidget::mousedown_event(GUI::MouseEvent&)
 {
-    on_cell_move_request(m_current_index);
+    fire_on_cell_move_request();
 }
 
 void CellWidget::set_current_index(int current_index)
