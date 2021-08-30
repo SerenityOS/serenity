@@ -8,9 +8,11 @@
 
 #include <AK/Forward.h>
 #include <AK/HashTable.h>
+#include <AK/Random.h>
 
 namespace AK {
 
+// This class manages a pool of random ID's in the range 1..INT32_MAX
 class IDAllocator {
 
 public:
@@ -19,18 +21,16 @@ public:
 
     int allocate()
     {
-        int r = rand();
-        for (int i = 0; i < 100000; ++i) {
-            int allocated_id = r + i;
-            // Make sure we never vend ID 0, as some code may interpret that as "no ID"
-            if (allocated_id == 0)
-                ++allocated_id;
-            if (!m_allocated_ids.contains(allocated_id)) {
-                m_allocated_ids.set(allocated_id);
-                return allocated_id;
-            }
+        VERIFY(m_allocated_ids.size() < (INT32_MAX - 2));
+        int id = 0;
+        for (;;) {
+            id = static_cast<int>(get_random_uniform(NumericLimits<int>::max()));
+            if (id == 0)
+                continue;
+            if (m_allocated_ids.set(id) == AK::HashSetResult::InsertedNewEntry)
+                break;
         }
-        VERIFY_NOT_REACHED();
+        return id;
     }
 
     void deallocate(int id)
