@@ -495,7 +495,7 @@ void Thread::finalize()
     VERIFY(Thread::current() != this);
 
 #if LOCK_DEBUG
-    VERIFY(!m_lock.is_locked_by_current_thread());
+    VERIFY(!m_lock.is_locked_by_current_processor());
     if (lock_count() > 0) {
         dbgln("Thread {} leaking {} Locks!", *this, lock_count());
         SpinlockLocker list_lock(m_holding_locks_lock);
