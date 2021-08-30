@@ -251,16 +251,27 @@ static Optional<String> best_available_locale(StringView const& locale)
     }
 }
 
+struct MatcherResult {
+    String locale;
+    Vector<Unicode::Extension> extensions {};
+};
+
 // 9.2.3 LookupMatcher ( availableLocales, requestedLocales ), https://tc39.es/ecma402/#sec-lookupmatcher
-static LocaleResult lookup_matcher(Vector<String> const& requested_locales)
+static MatcherResult lookup_matcher(Vector<String> const& requested_locales)
 {
     // 1. Let result be a new Record.
-    LocaleResult result {};
+    MatcherResult result {};
 
     // 2. For each element locale of requestedLocales, do
     for (auto const& locale : requested_locales) {
+        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        VERIFY(locale_id.has_value());
+
+        auto extensions = move(locale_id->extensions);
+        locale_id->private_use_extensions.clear();
+
         // a. Let noExtensionsLocale be the String value that is locale with any Unicode locale extension sequences removed.
-        auto const& no_extensions_locale = locale; // FIXME: Handle extensions.
+        auto no_extensions_locale = JS::Intl::canonicalize_unicode_locale_id(*locale_id);
 
         // b. Let availableLocale be BestAvailableLocale(availableLocales, noExtensionsLocale).
         auto available_locale = best_available_locale(no_extensions_locale);
@@ -270,10 +281,12 @@ static LocaleResult lookup_matcher(Vector<String> const& requested_locales)
             // i. Set result.[[locale]] to availableLocale.
             result.locale = available_locale.release_value();
 
-            // FIXME: Handle extensions.
             // ii. If locale and noExtensionsLocale are not the same String value, then
-            //     1. Let extension be the String value consisting of the substring of the Unicode locale extension sequence within locale.
-            //     2. Set result.[[extension]] to extension.
+            if (locale != no_extensions_locale) {
+                // 1. Let extension be the String value consisting of the substring of the Unicode locale extension sequence within locale.
+                // 2. Set result.[[extension]] to extension.
+                result.extensions = move(extensions);
+            }
 
             // iii. Return result.
             return result;
@@ -289,7 +302,7 @@ static LocaleResult lookup_matcher(Vector<String> const& requested_locales)
 }
 
 // 9.2.4 BestFitMatcher ( availableLocales, requestedLocales ), https://tc39.es/ecma402/#sec-bestfitmatcher
-static LocaleResult best_fit_matcher(Vector<String> const& requested_locales)
+static MatcherResult best_fit_matcher(Vector<String> const& requested_locales)
 {
     // The algorithm is implementation dependent, but should produce results that a typical user of the requested locales would
     // perceive as at least as good as those produced by the LookupMatcher abstract operation.
@@ -301,23 +314,30 @@ LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptio
 {
     // 1. Let matcher be options.[[localeMatcher]].
     auto const& matcher = options.locale_matcher;
-    LocaleResult result;
+    MatcherResult matcher_result;
 
     // 2. If matcher is "lookup", then
     if (matcher.is_string() && (matcher.as_string().string() == "lookup"sv)) {
         // a. Let r be LookupMatcher(availableLocales, requestedLocales).
-        result = lookup_matcher(requested_locales);
+        matcher_result = lookup_matcher(requested_locales);
     }
     // 3. Else,
     else {
         // a. Let r be BestFitMatcher(availableLocales, requestedLocales).
-        result = best_fit_matcher(requested_locales);
+        matcher_result = best_fit_matcher(requested_locales);
     }
+
     // 4. Let foundLocale be r.[[locale]].
+    auto found_locale = move(matcher_result.locale);
+
     // 5. Let result be a new Record.
+    LocaleResult result {};
+
     // 6. Set result.[[dataLocale]] to foundLocale.
 
-    // FIXME: Handle extensions.
+    // FIXME: Currently, the only caller to this method has an empty [[RelevantExtensionKeys]] internal slot,
+    //        so this block isn't testable. When a caller has a non-empty slot, implement the below steps.
+    //
     // 7. If r has an [[extension]] field, then
     //     a. Let components be ! UnicodeExtensionComponents(r.[[extension]]).
     //     b. Let keywords be components.[[Keywords]].
@@ -357,7 +377,9 @@ LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptio
     //     k. Append supportedExtensionAddition to supportedExtension.
     // 10. If the number of elements in supportedExtension is greater than 2, then
     //     a. Let foundLocale be InsertUnicodeExtensionAndCanonicalize(foundLocale, supportedExtension).
+
     // 11. Set result.[[locale]] to foundLocale.
+    result.locale = move(found_locale);
 
     // 12. Return result.
     return result;

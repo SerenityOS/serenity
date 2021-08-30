@@ -28,4 +28,15 @@ describe("correct behavior", () => {
             fallback: "code",
         });
     });
+
+    test("locales with extensions", () => {
+        const en = new Intl.DisplayNames("en-t-en", { type: "language" });
+        expect(en.resolvedOptions().locale).toBe("en");
+
+        const es419 = new Intl.DisplayNames("es-419-u-1k-aaa", { type: "language" });
+        expect(es419.resolvedOptions().locale).toBe("es-419");
+
+        const zhHant = new Intl.DisplayNames(["zh-Hant-x-aaa"], { type: "language" });
+        expect(zhHant.resolvedOptions().locale).toBe("zh-Hant");
+    });
 });
