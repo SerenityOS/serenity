@@ -334,4 +334,40 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("EN-Z-BBB-U-AA-T-EN-0-AAA"sv, "en-0-aaa-t-en-u-aa-z-bbb"sv);
     test("en-z-bbb-u-aa-t-en-0-aaa-x-ccc"sv, "en-0-aaa-t-en-u-aa-z-bbb-x-ccc"sv);
     test("EN-Z-BBB-U-AA-T-EN-0-AAA-X-CCC"sv, "en-0-aaa-t-en-u-aa-z-bbb-x-ccc"sv);
+
+    // Language subtag aliases.
+    test("sh"sv, "sr-Latn"sv);
+    test("SH"sv, "sr-Latn"sv);
+    test("sh-cyrl"sv, "sr-Cyrl"sv);
+    test("SH-CYRL"sv, "sr-Cyrl"sv);
+    test("cnr"sv, "sr-ME"sv);
+    test("CNR"sv, "sr-ME"sv);
+    test("cnr-ba"sv, "sr-BA"sv);
+    test("CNR-BA"sv, "sr-BA"sv);
+
+    // Territory subtag aliases.
+    test("ru-su"sv, "ru-RU"sv);
+    test("RU-SU"sv, "ru-RU"sv);
+    test("ru-810"sv, "ru-RU"sv);
+    test("RU-810"sv, "ru-RU"sv);
+    test("en-su"sv, "en-RU"sv);
+    test("EN-SU"sv, "en-RU"sv);
+    test("en-810"sv, "en-RU"sv);
+    test("EN-810"sv, "en-RU"sv);
+
+    // Script subtag aliases.
+    test("en-qaai"sv, "en-Zinh"sv);
+    test("EN-QAAI"sv, "en-Zinh"sv);
+
+    // Variant subtag aliases.
+    test("en-polytoni"sv, "en-polyton"sv);
+    test("EN-POLYTONI"sv, "en-polyton"sv);
+
+    // Subdivision subtag aliases.
+    test("en-u-sd-cn11"sv, "en-u-sd-cnbj"sv);
+    test("EN-U-SD-CN11"sv, "en-u-sd-cnbj"sv);
+    test("en-u-rg-cn12"sv, "en-u-rg-cntj"sv);
+    test("EN-U-RG-CN12"sv, "en-u-rg-cntj"sv);
+    test("en-u-aa-cn11"sv, "en-u-aa-cn11"sv);
+    test("EN-U-AA-CN11"sv, "en-u-aa-cn11"sv);
 }
