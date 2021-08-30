@@ -7,13 +7,13 @@
 #include "Field.h"
 #include <AK/HashTable.h>
 #include <AK/Queue.h>
+#include <AK/Random.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
-#include <time.h>
 
 class SquareButton final : public GUI::Button {
     C_OBJECT(SquareButton);
@@ -111,7 +111,6 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
     , m_time_label(time_label)
     , m_on_size_changed(move(on_size_changed))
 {
-    srand(time(nullptr));
     m_timer = add<Core::Timer>();
     m_timer->on_timeout = [this] {
         ++m_time_elapsed;
@@ -216,7 +215,7 @@ void Field::reset()
 
     HashTable<int> mines;
     while (mines.size() != m_mine_count) {
-        int location = rand() % (rows() * columns());
+        int location = get_random_uniform(rows() * columns());
         if (!mines.contains(location))
             mines.set(location);
     }
