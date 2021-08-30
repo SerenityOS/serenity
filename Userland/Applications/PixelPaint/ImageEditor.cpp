@@ -239,8 +239,18 @@ void ImageEditor::mouseup_event(GUI::MouseEvent& event)
 
 void ImageEditor::mousewheel_event(GUI::MouseEvent& event)
 {
-    auto scale_delta = -event.wheel_delta() * 0.1f;
-    scale_centered_on_position(event.position(), scale_delta);
+    if (event.modifiers() == Mod_None) {
+        auto translate_delta = event.wheel_delta() * 5;
+        m_pan_origin.translate_by(0, translate_delta / m_scale);
+        relayout();
+    } else if (event.modifiers() == Mod_Shift) {
+        auto translate_delta = event.wheel_delta() * 5;
+        m_pan_origin.translate_by(translate_delta / m_scale, 0);
+        relayout();
+    } else if (event.modifiers() == Mod_Ctrl) {
+        auto scale_delta = -event.wheel_delta() * 0.1f;
+        scale_centered_on_position(event.position(), scale_delta);
+    }
 }
 
 void ImageEditor::context_menu_event(GUI::ContextMenuEvent& event)
