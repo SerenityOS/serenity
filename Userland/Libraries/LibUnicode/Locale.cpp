@@ -482,13 +482,16 @@ Optional<LocaleID> parse_unicode_locale_id(StringView locale)
 
 static void perform_hard_coded_key_value_substitutions(String& key, String& value)
 {
-    // FIXME: In the XML export of CLDR, there are some aliases defined in the following file:
+    // FIXME: In the XML export of CLDR, there are some aliases defined in the following files:
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/collation.xml
+    // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/transform.xml
     //
     // There doesn't seem to be a counterpart in the JSON export. Since there aren't many such
     // aliases, until an XML parser is implemented, those aliases are implemented here.
     if (key.is_one_of("kb"sv, "kc"sv, "kh"sv, "kk"sv, "kn"sv) && (value == "yes"sv))
         value = "true"sv;
+    else if ((key == "m0"sv) && (value == "names"sv))
+        value = "prprname"sv;
 }
 
 static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
