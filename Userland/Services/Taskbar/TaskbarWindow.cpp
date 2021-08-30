@@ -173,8 +173,7 @@ void TaskbarWindow::update_applet_area()
     if (!main_widget())
         return;
     main_widget()->do_layout();
-    Gfx::IntRect new_rect { {}, m_applet_area_size };
-    new_rect.center_within(m_applet_area_container->screen_relative_rect());
+    auto new_rect = Gfx::IntRect({}, m_applet_area_size).centered_within(m_applet_area_container->screen_relative_rect());
     GUI::WindowManagerServerConnection::the().async_set_applet_area_position(new_rect.location());
 }
 

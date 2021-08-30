@@ -433,8 +433,7 @@ void IconView::did_change_cursor_index(const ModelIndex& old_index, const ModelI
 void IconView::get_item_rects(int item_index, ItemData& item_data, const Gfx::Font& font) const
 {
     auto item_rect = this->item_rect(item_index);
-    item_data.icon_rect = { 0, 0, 32, 32 };
-    item_data.icon_rect.center_within(item_rect);
+    item_data.icon_rect = Gfx::IntRect(0, 0, 32, 32).centered_within(item_rect);
     item_data.icon_offset_y = -font.glyph_height() - 6;
     item_data.icon_rect.translate_by(0, item_data.icon_offset_y);
 
