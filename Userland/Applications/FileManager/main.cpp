@@ -556,7 +556,6 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
     auto directory_context_menu = GUI::Menu::construct("Directory View Directory");
     auto directory_view_context_menu = GUI::Menu::construct("Directory View");
     auto tree_view_directory_context_menu = GUI::Menu::construct("Tree View Directory");
-    auto tree_view_context_menu = GUI::Menu::construct("Tree View");
 
     auto open_parent_directory_action = GUI::Action::create("Open &Parent Directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-parent-directory.png"), [&](GUI::Action const&) {
         directory_view.open_parent_directory();
