@@ -75,4 +75,10 @@ Optional<StringView> get_locale_territory_mapping(StringView locale, StringView 
 Optional<StringView> get_locale_script_mapping(StringView locale, StringView script);
 Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency);
 
+Optional<StringView> resolve_language_alias(StringView language);
+Optional<StringView> resolve_territory_alias(StringView territory);
+Optional<StringView> resolve_script_tag_alias(StringView script_tag);
+Optional<StringView> resolve_variant_alias(StringView variant);
+Optional<StringView> resolve_subdivision_alias(StringView subdivision);
+
 }
