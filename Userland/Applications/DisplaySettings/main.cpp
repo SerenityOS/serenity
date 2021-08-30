@@ -31,11 +31,6 @@ int main(int argc, char** argv)
     auto app = GUI::Application::construct(argc, argv);
     Config::pledge_domains("WindowManager");
 
-    if (pledge("stdio thread recvfd sendfd rpath cpath wpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
     auto app_icon = GUI::Icon::default_icon("app-display-settings");
 
     auto window = GUI::Window::construct();
