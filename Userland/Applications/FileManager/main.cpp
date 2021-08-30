@@ -1032,15 +1032,15 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
 
     tree_view_directory_context_menu->add_action(open_in_new_window_action);
     tree_view_directory_context_menu->add_action(open_in_new_terminal_action);
+    tree_view_directory_context_menu->add_separator();
+    tree_view_directory_context_menu->add_action(mkdir_action);
+    tree_view_directory_context_menu->add_action(touch_action);
     tree_view_directory_context_menu->add_action(cut_action);
     tree_view_directory_context_menu->add_action(copy_action);
     tree_view_directory_context_menu->add_action(paste_action);
     tree_view_directory_context_menu->add_action(tree_view_delete_action);
     tree_view_directory_context_menu->add_separator();
     tree_view_directory_context_menu->add_action(properties_action);
-    tree_view_directory_context_menu->add_separator();
-    tree_view_directory_context_menu->add_action(mkdir_action);
-    tree_view_directory_context_menu->add_action(touch_action);
 
     RefPtr<GUI::Menu> file_context_menu;
     NonnullRefPtrVector<LauncherHandler> current_file_handlers;
