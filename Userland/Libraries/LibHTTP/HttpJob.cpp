@@ -22,13 +22,13 @@ void HttpJob::start()
     };
     m_socket->on_error = [this] {
         dbgln_if(CHTTPJOB_DEBUG, "HttpJob: on_error callback");
-        deferred_invoke([this](auto&) {
+        deferred_invoke([this] {
             did_fail(Core::NetworkJob::Error::ConnectionFailed);
         });
     };
     bool success = m_socket->connect(m_request.url().host(), m_request.url().port());
     if (!success) {
-        deferred_invoke([this](auto&) {
+        deferred_invoke([this] {
             return did_fail(Core::NetworkJob::Error::ConnectionFailed);
         });
     }

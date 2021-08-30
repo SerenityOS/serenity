@@ -41,7 +41,7 @@ void TLSv12::write_packet(ByteBuffer& packet)
     if (m_context.connection_status > ConnectionStatus::Disconnected) {
         if (!m_has_scheduled_write_flush) {
             dbgln_if(TLS_DEBUG, "Scheduling write of {}", m_context.tls_buffer.size());
-            deferred_invoke([this](auto&) { write_into_socket(); });
+            deferred_invoke([this] { write_into_socket(); });
             m_has_scheduled_write_flush = true;
         } else {
             // multiple packet are available, let's flush some out

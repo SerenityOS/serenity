@@ -60,7 +60,7 @@ void SQLStatement::execute()
         return;
     }
 
-    deferred_invoke([&](Object&) {
+    deferred_invoke([&] {
         auto maybe_error = parse();
         if (maybe_error.has_value()) {
             report_error(maybe_error.value());
@@ -107,7 +107,7 @@ void SQLStatement::next()
     if (m_index < m_result->results().size()) {
         auto& tuple = m_result->results()[m_index++];
         client_connection->async_next_result(statement_id(), tuple.to_string_vector());
-        deferred_invoke([&](Object&) {
+        deferred_invoke([&] {
             next();
         });
     } else {

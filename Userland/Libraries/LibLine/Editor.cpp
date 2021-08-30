@@ -607,7 +607,7 @@ void Editor::resized()
         if (set_origin(false)) {
             handle_resize_event(false);
         } else {
-            deferred_invoke([this](auto&) { handle_resize_event(true); });
+            deferred_invoke([this] { handle_resize_event(true); });
             m_has_origin_reset_scheduled = true;
         }
     }
@@ -618,7 +618,7 @@ void Editor::handle_resize_event(bool reset_origin)
     m_has_origin_reset_scheduled = false;
     if (reset_origin && !set_origin(false)) {
         m_has_origin_reset_scheduled = true;
-        return deferred_invoke([this](auto&) { handle_resize_event(true); });
+        return deferred_invoke([this] { handle_resize_event(true); });
     }
 
     set_origin(m_origin_row, 1);
@@ -722,7 +722,7 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
 
     m_notifier->on_ready_to_read = [&] { try_update_once(); };
     if (!m_incomplete_data.is_empty())
-        deferred_invoke([&](auto&) { try_update_once(); });
+        deferred_invoke([&] { try_update_once(); });
 
     if (loop.exec() == Retry)
         return get_line(prompt);
@@ -1166,7 +1166,7 @@ void Editor::handle_read_event()
     }
 
     if (!m_incomplete_data.is_empty() && !m_finish)
-        deferred_invoke([&](auto&) { try_update_once(); });
+        deferred_invoke([&] { try_update_once(); });
 }
 
 void Editor::cleanup_suggestions()

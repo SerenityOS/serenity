@@ -36,10 +36,7 @@ Client::Client(NonnullRefPtr<Core::TCPSocket> socket, Core::Object* parent)
 
 void Client::die()
 {
-    deferred_invoke([this](auto& object) {
-        NonnullRefPtr protector { object };
-        remove_from_parent();
-    });
+    deferred_invoke([this] { remove_from_parent(); });
 }
 
 void Client::start()

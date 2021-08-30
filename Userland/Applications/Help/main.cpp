@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
         auto url = URL::create_with_file_protocol(path);
         page_view.load_html(html, url);
 
-        app->deferred_invoke([&, path](auto&) {
+        app->deferred_invoke([&, path] {
             auto tree_view_index = model->index_from_path(path);
             if (tree_view_index.has_value()) {
                 tree_view.expand_tree(tree_view_index.value().parent());

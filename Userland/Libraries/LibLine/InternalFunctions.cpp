@@ -265,7 +265,7 @@ void Editor::enter_search()
             search_editor.finish();
             m_reset_buffer_on_search_end = true;
             search_editor.end_search();
-            search_editor.deferred_invoke([&search_editor](auto&) { search_editor.really_quit_event_loop(); });
+            search_editor.deferred_invoke([&search_editor] { search_editor.really_quit_event_loop(); });
             return false;
         });
 

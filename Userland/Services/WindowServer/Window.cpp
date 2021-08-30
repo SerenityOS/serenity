@@ -764,7 +764,7 @@ void Window::request_update(const Gfx::IntRect& rect, bool ignore_occlusion)
     if (rect.is_empty())
         return;
     if (m_pending_paint_rects.is_empty()) {
-        deferred_invoke([this, ignore_occlusion](auto&) {
+        deferred_invoke([this, ignore_occlusion] {
             client()->post_paint_message(*this, ignore_occlusion);
         });
     }

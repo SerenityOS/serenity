@@ -118,7 +118,7 @@ void Job::on_socket_connected()
 
         bool success = write(raw_request);
         if (!success)
-            deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
+            deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
     });
     register_on_ready_to_read([&] {
         if (is_cancelled())
@@ -137,17 +137,17 @@ void Job::on_socket_connected()
             auto line = read_line(PAGE_SIZE);
             if (line.is_null()) {
                 warnln("Job: Expected HTTP status");
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
+                return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
             }
             auto parts = line.split_view(' ');
             if (parts.size() < 3) {
                 warnln("Job: Expected 3-part HTTP status, got '{}'", line);
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
+                return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             auto code = parts[1].to_uint();
             if (!code.has_value()) {
                 warnln("Job: Expected numeric HTTP status");
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
+                return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             m_code = code.value();
             m_state = State::InHeaders;
@@ -186,7 +186,7 @@ void Job::on_socket_connected()
                     return finish_up();
                 }
                 warnln("Job: Expected HTTP header with key/value");
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
+                return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             auto name = parts[0];
             if (line.length() < name.length() + 2) {
@@ -197,7 +197,7 @@ void Job::on_socket_connected()
                     return finish_up();
                 }
                 warnln("Job: Malformed HTTP header: '{}' ({})", line, line.length());
-                return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
+                return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             auto value = line.substring(name.length() + 2, line.length() - name.length() - 2);
             m_headers.set(name, value);
@@ -238,7 +238,7 @@ void Job::on_socket_connected()
                         auto size = strtoul(size_string.characters(), &endptr, 16);
                         if (*endptr) {
                             // invalid number
-                            deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
+                            deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
                             return IterationDecision::Break;
                         }
                         if (size == 0) {
@@ -287,7 +287,7 @@ void Job::on_socket_connected()
                 }
 
                 if (should_fail_on_empty_payload()) {
-                    deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
+                    deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
                     return IterationDecision::Break;
                 }
             }
@@ -330,7 +330,7 @@ void Job::on_socket_connected()
                     content_length = length.value();
             }
 
-            deferred_invoke([this, content_length](auto&) { did_progress(content_length, m_received_size); });
+            deferred_invoke([this, content_length] { did_progress(content_length, m_received_size); });
 
             if (content_length.has_value()) {
                 auto length = content_length.value();
@@ -397,7 +397,7 @@ void Job::finish_up()
 
     m_has_scheduled_finish = true;
     auto response = HttpResponse::create(m_code, move(m_headers));
-    deferred_invoke([this, response = move(response)](auto&) {
+    deferred_invoke([this, response = move(response)] {
         did_finish(response);
     });
 }
