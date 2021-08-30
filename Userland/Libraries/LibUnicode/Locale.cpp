@@ -640,4 +640,49 @@ Optional<StringView> get_locale_currency_mapping([[maybe_unused]] StringView loc
 #endif
 }
 
+Optional<StringView> resolve_language_alias(StringView language)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::resolve_language_alias(language);
+#else
+    return language;
+#endif
+}
+
+Optional<StringView> resolve_territory_alias(StringView territory)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::resolve_territory_alias(territory);
+#else
+    return territory;
+#endif
+}
+
+Optional<StringView> resolve_script_tag_alias(StringView script_tag)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::resolve_script_tag_alias(script_tag);
+#else
+    return script_tag;
+#endif
+}
+
+Optional<StringView> resolve_variant_alias(StringView variant)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::resolve_variant_alias(variant);
+#else
+    return variant;
+#endif
+}
+
+Optional<StringView> resolve_subdivision_alias(StringView subdivision)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::resolve_subdivision_alias(subdivision);
+#else
+    return subdivision;
+#endif
+}
+
 }

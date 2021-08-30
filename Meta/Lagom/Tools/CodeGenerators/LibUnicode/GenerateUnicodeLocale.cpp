@@ -37,6 +37,11 @@ struct UnicodeLocaleData {
     Vector<String> scripts;
     Vector<String> variants;
     Vector<String> currencies;
+    HashMap<String, String> language_aliases;
+    HashMap<String, String> territory_aliases;
+    HashMap<String, String> script_aliases;
+    HashMap<String, String> variant_aliases;
+    HashMap<String, String> subdivision_aliases;
 };
 
 static void write_to_file_if_different(Core::File& file, StringView contents)
@@ -49,6 +54,36 @@ static void write_to_file_if_different(Core::File& file, StringView contents)
     VERIFY(file.seek(0));
     VERIFY(file.truncate(0));
     VERIFY(file.write(contents));
+}
+
+static void parse_core_aliases(String core_supplemental_path, UnicodeLocaleData& locale_data)
+{
+    LexicalPath core_aliases_path(move(core_supplemental_path));
+    core_aliases_path = core_aliases_path.append("aliases.json"sv);
+    VERIFY(Core::File::exists(core_aliases_path.string()));
+
+    auto core_aliases_file_or_error = Core::File::open(core_aliases_path.string(), Core::OpenMode::ReadOnly);
+    VERIFY(!core_aliases_file_or_error.is_error());
+
+    auto core_aliases = JsonParser(core_aliases_file_or_error.value()->read_all()).parse();
+    VERIFY(core_aliases.has_value());
+
+    auto const& supplemental_object = core_aliases->as_object().get("supplemental"sv);
+    auto const& metadata_object = supplemental_object.as_object().get("metadata"sv);
+    auto const& alias_object = metadata_object.as_object().get("alias"sv);
+
+    auto append_aliases = [](auto& alias_object, auto& alias_map) {
+        alias_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+            auto alias = value.as_object().get("_replacement"sv).as_string();
+            alias_map.set(key, move(alias));
+        });
+    };
+
+    append_aliases(alias_object.as_object().get("languageAlias"sv), locale_data.language_aliases);
+    append_aliases(alias_object.as_object().get("territoryAlias"sv), locale_data.territory_aliases);
+    append_aliases(alias_object.as_object().get("scriptAlias"sv), locale_data.script_aliases);
+    append_aliases(alias_object.as_object().get("variantAlias"sv), locale_data.variant_aliases);
+    append_aliases(alias_object.as_object().get("subdivisionAlias"sv), locale_data.subdivision_aliases);
 }
 
 static void parse_identity(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
@@ -195,10 +230,16 @@ static Core::DirIterator path_to_dir_iterator(String path)
     return iterator;
 }
 
-static void parse_all_locales(String locale_names_path, String numbers_path, UnicodeLocaleData& locale_data)
+static void parse_all_locales(String core_path, String locale_names_path, String numbers_path, UnicodeLocaleData& locale_data)
 {
     auto locale_names_iterator = path_to_dir_iterator(move(locale_names_path));
     auto numbers_iterator = path_to_dir_iterator(move(numbers_path));
+
+    LexicalPath core_supplemental_path(move(core_path));
+    core_supplemental_path = core_supplemental_path.append("supplemental"sv);
+    VERIFY(Core::File::is_directory(core_supplemental_path.string()));
+
+    parse_core_aliases(core_supplemental_path.string(), locale_data);
 
     while (locale_names_iterator.has_next()) {
         auto locale_path = locale_names_iterator.next_full_path();
@@ -286,15 +327,21 @@ Optional<Locale> locale_from_string(StringView const& locale);
 
 Optional<StringView> get_locale_language_mapping(StringView locale, StringView language);
 Optional<Language> language_from_string(StringView const& language);
+Optional<StringView> resolve_language_alias(StringView const& language);
 
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
 Optional<Territory> territory_from_string(StringView const& territory);
+Optional<StringView> resolve_territory_alias(StringView const& territory);
 
 Optional<StringView> get_locale_script_tag_mapping(StringView locale, StringView script_tag);
 Optional<ScriptTag> script_tag_from_string(StringView const& script_tag);
+Optional<StringView> resolve_script_tag_alias(StringView const& script_tag);
 
 Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency);
 Optional<Currency> currency_from_string(StringView const& currency);
+
+Optional<StringView> resolve_variant_alias(StringView const& variant);
+Optional<StringView> resolve_subdivision_alias(StringView const& subdivision);
 
 }
 
@@ -460,19 +507,51 @@ Optional<@enum_title@> @enum_snake@_from_string(StringView const& @enum_snake@)
 )~~~");
     };
 
+    auto append_alias_search = [&](StringView enum_snake, HashMap<String, String> const& aliases) {
+        generator.set("enum_snake", enum_snake);
+
+        generator.append(R"~~~(
+Optional<StringView> resolve_@enum_snake@_alias(StringView const& @enum_snake@)
+{
+    static HashMap<StringView, StringView> @enum_snake@_aliases { {)~~~");
+
+        for (auto const& alias : aliases) {
+            generator.set("key"sv, alias.key);
+            generator.set("alias"sv, alias.value);
+
+            generator.append(R"~~~(
+        { "@key@"sv, "@alias@"sv },)~~~");
+        }
+
+        generator.append(R"~~~(
+    } };
+
+    if (auto alias = @enum_snake@_aliases.get(@enum_snake@); alias.has_value())
+        return alias.value();
+    return {};
+}
+)~~~");
+    };
+
     append_from_string("Locale"sv, "locale"sv, locale_data.locales.keys());
 
     append_mapping_search("Language"sv, "language"sv, "s_languages"sv);
     append_from_string("Language"sv, "language"sv, locale_data.languages);
+    append_alias_search("language"sv, locale_data.language_aliases);
 
     append_mapping_search("Territory"sv, "territory"sv, "s_territories"sv);
     append_from_string("Territory"sv, "territory"sv, locale_data.territories);
+    append_alias_search("territory"sv, locale_data.territory_aliases);
 
     append_mapping_search("ScriptTag"sv, "script_tag"sv, "s_scripts"sv);
     append_from_string("ScriptTag"sv, "script_tag"sv, locale_data.scripts);
+    append_alias_search("script_tag"sv, locale_data.script_aliases);
 
     append_mapping_search("Currency"sv, "currency"sv, "s_currencies"sv);
     append_from_string("Currency"sv, "currency"sv, locale_data.currencies);
+
+    append_alias_search("variant"sv, locale_data.variant_aliases);
+    append_alias_search("subdivision"sv, locale_data.subdivision_aliases);
 
     generator.append(R"~~~(
 }
@@ -519,7 +598,7 @@ int main(int argc, char** argv)
     auto generated_implementation_file = open_file(generated_implementation_path, "-c/--generated-implementation-path", Core::OpenMode::ReadWrite);
 
     UnicodeLocaleData locale_data;
-    parse_all_locales(locale_names_path, numbers_path, locale_data);
+    parse_all_locales(core_path, locale_names_path, numbers_path, locale_data);
 
     generate_unicode_locale_header(generated_header_file, locale_data);
     generate_unicode_locale_implementation(generated_implementation_file, locale_data);
