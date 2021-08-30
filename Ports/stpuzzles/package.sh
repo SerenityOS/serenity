@@ -4,7 +4,7 @@ useconfigure=true
 version=git
 workdir=stpuzzles-main
 configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_SOURCE_DIR/Toolchain/CMake/CMakeToolchain.txt"
-files="https://github.com/SerenityOS/stpuzzles/archive/refs/heads/main.zip stpuzzles.zip"
+files="https://github.com/SerenityPorts/stpuzzles/archive/refs/heads/main.zip stpuzzles.zip"
 
 configure() {
     run cmake $configopts -DCMAKE_CXX_FLAGS="-std=c++2a -O2"
