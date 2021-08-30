@@ -11,6 +11,7 @@
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/InstantPrototype.h>
+#include <LibJS/Runtime/Temporal/TimeZone.h>
 
 namespace JS::Temporal {
 
@@ -39,6 +40,7 @@ void InstantPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.subtract, subtract, 1, attr);
     define_native_function(vm.names.round, round, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
@@ -278,6 +280,59 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::equals)
 
     // 5. Return true.
     return Value(true);
+}
+
+// 8.3.13 Temporal.Instant.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tostring
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
+{
+    // 1. Let instant be the this value.
+    // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
+    auto* instant = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Set options to ? GetOptionsObject(options).
+    auto* options = get_options_object(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 4. Let timeZone be ? Get(options, "timeZone").
+    auto time_zone = options->get(vm.names.timeZone);
+    if (vm.exception())
+        return {};
+
+    // 5. If timeZone is not undefined, then
+    if (!time_zone.is_undefined()) {
+        // a. Set timeZone to ? ToTemporalTimeZone(timeZone).
+        time_zone = to_temporal_time_zone(global_object, time_zone);
+        if (vm.exception())
+            return {};
+    }
+
+    // 6. Let precision be ? ToSecondsStringPrecision(options).
+    auto precision = to_seconds_string_precision(global_object, *options);
+    if (vm.exception())
+        return {};
+
+    // 7. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    auto rounding_mode = to_temporal_rounding_mode(global_object, *options, "trunc"sv);
+    if (vm.exception())
+        return {};
+
+    // 8. Let roundedNs be ? RoundTemporalInstant(instant.[[Nanoseconds]], precision.[[Increment]], precision.[[Unit]], roundingMode).
+    auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), precision->increment, precision->unit, *rounding_mode);
+    if (vm.exception())
+        return {};
+
+    // 9. Let roundedInstant be ! CreateTemporalInstant(roundedNs).
+    auto* rounded_instant = create_temporal_instant(global_object, *rounded_ns);
+
+    // 10. Return ? TemporalInstantToString(roundedInstant, timeZone, precision.[[Precision]]).
+    auto string = temporal_instant_to_string(global_object, *rounded_instant, time_zone, precision->precision);
+    if (vm.exception())
+        return {};
+
+    return js_string(vm, *string);
 }
 
 // 8.3.16 Temporal.Instant.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.valueof

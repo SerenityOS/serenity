@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Optional.h>
+#include <AK/Variant.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -41,5 +42,6 @@ BigInt* parse_temporal_instant(GlobalObject&, String const& iso_string);
 i32 compare_epoch_nanoseconds(BigInt const&, BigInt const&);
 BigInt* add_instant(GlobalObject&, BigInt const& epoch_nanoseconds, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 BigInt* round_temporal_instant(GlobalObject&, BigInt const& nanoseconds, u64 increment, String const& unit, String const& rounding_mode);
+Optional<String> temporal_instant_to_string(GlobalObject&, Instant&, Value time_zone, Variant<String, u8> const& precision);
 
 }

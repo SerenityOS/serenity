@@ -302,6 +302,34 @@ PlainDateTime* create_temporal_date_time(GlobalObject& global_object, i32 iso_ye
     return object;
 }
 
+// 5.5.7 TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar, precision, showCalendar ), , https://tc39.es/proposal-temporal/#sec-temporal-temporaldatetimetostring
+Optional<String> temporal_date_time_to_string(GlobalObject& global_object, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Value calendar, Variant<String, u8> const& precision, StringView show_calendar)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
+
+    // 2. Let year be ! PadISOYear(isoYear).
+    // 3. Let month be isoMonth formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 4. Let day be isoDay formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 5. Let hour be hour formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 6. Let minute be minute formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+
+    // 7. Let seconds be ! FormatSecondsStringPart(second, millisecond, microsecond, nanosecond, precision).
+    auto seconds = format_seconds_string_part(second, millisecond, microsecond, nanosecond, precision);
+
+    // 8. Let calendarID be ? ToString(calendar).
+    auto calendar_id = calendar.to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    // 9. Let calendarString be ! FormatCalendarAnnotation(calendarID, showCalendar).
+    auto calendar_string = format_calendar_annotation(calendar_id, show_calendar);
+
+    // 10. Return the string-concatenation of year, the code unit 0x002D (HYPHEN-MINUS), month, the code unit 0x002D (HYPHEN-MINUS), day, 0x0054 (LATIN CAPITAL LETTER T), hour, the code unit 0x003A (COLON), minute, seconds, and calendarString.
+    return String::formatted("{}-{:02}-{:02}T{:02}:{:02}{}{}", pad_iso_year(iso_year), iso_month, iso_day, hour, minute, seconds, calendar_string);
+}
+
 // 5.5.8 CompareISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, d2, h2, min2, s2, ms2, mus2, ns2 ),https://tc39.es/proposal-temporal/#sec-temporal-compareisodatetime
 i8 compare_iso_date_time(i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, i32 year2, u8 month2, u8 day2, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2)
 {

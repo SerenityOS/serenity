@@ -98,7 +98,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_string_for)
         return {};
 
     // 4. Return ? BuiltinTimeZoneGetOffsetStringFor(timeZone, instant).
-    auto offset_string = builtin_time_zone_get_offset_string_for(global_object, *time_zone, *instant);
+    auto offset_string = builtin_time_zone_get_offset_string_for(global_object, time_zone, *instant);
     if (vm.exception())
         return {};
     return js_string(vm, move(*offset_string));

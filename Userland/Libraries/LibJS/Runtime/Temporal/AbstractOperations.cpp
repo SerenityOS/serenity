@@ -7,6 +7,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/DateTimeLexer.h>
+#include <AK/Variant.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
@@ -168,6 +169,44 @@ Value get_option(GlobalObject& global_object, Object& options, PropertyName cons
     return value;
 }
 
+// 13.4 GetStringOrNumberOption ( options, property, stringValues, minimum, maximum, fallback ), https://tc39.es/proposal-temporal/#sec-getstringornumberoption
+template<typename NumberType>
+Optional<Variant<String, NumberType>> get_string_or_number_option(GlobalObject& global_object, Object& options, PropertyName const& property, Vector<StringView> const& string_values, NumberType minimum, NumberType maximum, Value fallback)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(options) is Object.
+
+    // 2. Let value be ? GetOption(options, property, « Number, String », empty, fallback).
+    auto value = get_option(global_object, options, property, { OptionType::Number, OptionType::String }, {}, fallback);
+    if (vm.exception())
+        return {};
+
+    // 3. If Type(value) is Number, then
+    if (value.is_number()) {
+        // a. If value < minimum or value > maximum, throw a RangeError exception.
+        if (value.as_double() < minimum || value.as_double() > maximum) {
+            vm.template throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_double(), property.as_string());
+            return {};
+        }
+
+        // b. Return floor(ℝ(value)).
+        return floor(value.as_double());
+    }
+
+    // 4. Assert: Type(value) is String.
+    VERIFY(value.is_string());
+
+    // 5. If stringValues does not contain value, throw a RangeError exception.
+    if (!string_values.contains_slow(value.as_string().string())) {
+        vm.template throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_string().string(), property.as_string());
+        return {};
+    }
+
+    // 6. Return value.
+    return value.as_string().string();
+}
+
 // 13.6 ToTemporalOverflow ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloverflow
 Optional<String> to_temporal_overflow(GlobalObject& global_object, Object& normalized_options)
 {
@@ -264,6 +303,88 @@ u64 to_temporal_rounding_increment(GlobalObject& global_object, Object& normaliz
     return floored_increment;
 }
 
+// 13.16 ToSecondsStringPrecision ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-tosecondsstringprecision
+Optional<SecondsStringPrecision> to_seconds_string_precision(GlobalObject& global_object, Object& normalized_options)
+{
+    auto& vm = global_object.vm();
+
+    // Let smallestUnit be ? ToSmallestTemporalUnit(normalizedOptions, « "year", "month", "week", "day", "hour" », undefined).
+    auto smallest_unit = to_smallest_temporal_unit(global_object, normalized_options, { "year"sv, "month"sv, "week"sv, "day"sv, "hour"sv }, {});
+    if (vm.exception())
+        return {};
+
+    // 2. If smallestUnit is "minute", then
+    if (smallest_unit == "minute"sv) {
+        // a. Return the Record { [[Precision]]: "minute", [[Unit]]: "minute", [[Increment]]: 1 }.
+        return SecondsStringPrecision { .precision = String { "minute"sv }, .unit = "minute"sv, .increment = 1 };
+    }
+
+    // 3. If smallestUnit is "second", then
+    if (smallest_unit == "second"sv) {
+        // a. Return the Record { [[Precision]]: 0, [[Unit]]: "second", [[Increment]]: 1 }.
+        return SecondsStringPrecision { .precision = 0, .unit = "second"sv, .increment = 1 };
+    }
+
+    // 4. If smallestUnit is "millisecond", then
+    if (smallest_unit == "millisecond"sv) {
+        // a. Return the Record { [[Precision]]: 3, [[Unit]]: "millisecond", [[Increment]]: 1 }.
+        return SecondsStringPrecision { .precision = 3, .unit = "millisecond"sv, .increment = 1 };
+    }
+
+    // 5. If smallestUnit is "microsecond", then
+    if (smallest_unit == "microsecond"sv) {
+        // a. Return the Record { [[Precision]]: 6, [[Unit]]: "microsecond", [[Increment]]: 1 }.
+        return SecondsStringPrecision { .precision = 6, .unit = "microsecond"sv, .increment = 1 };
+    }
+
+    // 6. If smallestUnit is "nanosecond", then
+    if (smallest_unit == "nanosecond"sv) {
+        // a. Return the Record { [[Precision]]: 9, [[Unit]]: "nanosecond", [[Increment]]: 1 }.
+        return SecondsStringPrecision { .precision = 9, .unit = "nanosecond"sv, .increment = 1 };
+    }
+
+    // 7. Assert: smallestUnit is undefined.
+    VERIFY(!smallest_unit.has_value());
+
+    // 8. Let digits be ? GetStringOrNumberOption(normalizedOptions, "fractionalSecondDigits", « "auto" », 0, 9, "auto").
+    auto digits_variant = get_string_or_number_option<u8>(global_object, normalized_options, vm.names.fractionalSecondDigits, { "auto"sv }, 0, 9, js_string(vm, "auto"sv));
+    if (vm.exception())
+        return {};
+
+    // 9. If digits is "auto", then
+    if (digits_variant->has<String>()) {
+        VERIFY(digits_variant->get<String>() == "auto"sv);
+        // a. Return the Record { [[Precision]]: "auto", [[Unit]]: "nanosecond", [[Increment]]: 1 }.
+        return SecondsStringPrecision { .precision = String { "auto"sv }, .unit = "nanosecond"sv, .increment = 1 };
+    }
+
+    auto digits = digits_variant->get<u8>();
+
+    // 10. If digits is 0, then
+    if (digits == 0) {
+        // a. Return the Record { [[Precision]]: 0, [[Unit]]: "second", [[Increment]]: 1 }.
+        return SecondsStringPrecision { .precision = 0, .unit = "second"sv, .increment = 1 };
+    }
+
+    // 11. If digits is 1, 2, or 3, then
+    if (digits == 1 || digits == 2 || digits == 3) {
+        // a. Return the Record { [[Precision]]: digits, [[Unit]]: "millisecond", [[Increment]]: 10^(3 − digits) }.
+        return SecondsStringPrecision { .precision = digits, .unit = "millisecond"sv, .increment = (u32)pow(10, 3 - digits) };
+    }
+
+    // 12. If digits is 4, 5, or 6, then
+    if (digits == 4 || digits == 5 || digits == 6) {
+        // a. Return the Record { [[Precision]]: digits, [[Unit]]: "microsecond", [[Increment]]: 10^(6 − digits) }.
+        return SecondsStringPrecision { .precision = digits, .unit = "microsecond"sv, .increment = (u32)pow(10, 6 - digits) };
+    }
+
+    // 13. Assert: digits is 7, 8, or 9.
+    VERIFY(digits == 7 || digits == 8 || digits == 9);
+
+    // 14. Return the Record { [[Precision]]: digits, [[Unit]]: "nanosecond", [[Increment]]: 10^(9 − digits) }.
+    return SecondsStringPrecision { .precision = digits, .unit = "nanosecond"sv, .increment = (u32)pow(10, 9 - digits) };
+}
+
 // https://tc39.es/proposal-temporal/#table-temporal-singular-and-plural-units
 static HashMap<StringView, StringView> plural_to_singular_units = {
     { "years"sv, "year"sv },
@@ -311,6 +432,56 @@ Optional<String> to_smallest_temporal_unit(GlobalObject& global_object, Object& 
 
     // 5. Return smallestUnit.
     return smallest_unit;
+}
+
+// 13.27 FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-formatsecondsstringpart
+String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<String, u8> const& precision)
+{
+    // 1. Assert: second, millisecond, microsecond and nanosecond are integers.
+
+    // Non-standard sanity check
+    if (precision.has<String>())
+        VERIFY(precision.get<String>().is_one_of("minute"sv, "auto"sv));
+
+    // 2. If precision is "minute", return "".
+    if (precision.has<String>() && precision.get<String>() == "minute"sv)
+        return String::empty();
+
+    // 3. Let secondsString be the string-concatenation of the code unit 0x003A (COLON) and second formatted as a two-digit decimal number, padded to the left with zeroes if necessary.
+    auto seconds_string = String::formatted(":{:02}", second);
+
+    // 4. Let fraction be millisecond × 10^6 + microsecond × 10^3 + nanosecond.
+    u32 fraction = millisecond * 1'000'000 + microsecond * 1'000 + nanosecond;
+
+    String fraction_string;
+
+    // 5. If precision is "auto", then
+    if (precision.has<String>() && precision.get<String>() == "auto"sv) {
+        // a. If fraction is 0, return secondsString.
+        if (fraction == 0)
+            return seconds_string;
+
+        // b. Set fraction to fraction formatted as a nine-digit decimal number, padded to the left with zeroes if necessary.
+        fraction_string = String::formatted("{:09}", fraction);
+
+        // c. Set fraction to the longest possible substring of fraction starting at position 0 and not ending with the code unit 0x0030 (DIGIT ZERO).
+        fraction_string = fraction_string.trim("0"sv, TrimMode::Right);
+    }
+    // 6. Else,
+    else {
+        // a. If precision is 0, return secondsString.
+        if (precision.get<u8>() == 0)
+            return seconds_string;
+
+        // b. Set fraction to fraction formatted as a nine-digit decimal number, padded to the left with zeroes if necessary.
+        fraction_string = String::formatted("{:09}", fraction);
+
+        // c. Set fraction to the substring of fraction from 0 to precision.
+        fraction_string = fraction_string.substring(0, precision.get<u8>());
+    }
+
+    // 7. Return the string-concatenation of secondsString, the code unit 0x002E (FULL STOP), and fraction.
+    return String::formatted("{}.{}", seconds_string, fraction_string);
 }
 
 // 13.29 ConstrainToRange ( x, minimum, maximum ), https://tc39.es/proposal-temporal/#sec-temporal-constraintorange

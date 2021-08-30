@@ -5,10 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Variant.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
+#include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/InstantConstructor.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
@@ -231,6 +233,58 @@ BigInt* round_temporal_instant(GlobalObject& global_object, BigInt const& nanose
 
     // 8. Return ! RoundNumberToIncrement(ℝ(ns), incrementNs, roundingMode).
     return round_number_to_increment(global_object, nanoseconds, increment_nanoseconds, rounding_mode);
+}
+
+// 8.5.9 TemporalInstantToString ( instant, timeZone, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporalinstanttostring
+Optional<String> temporal_instant_to_string(GlobalObject& global_object, Instant& instant, Value time_zone, Variant<String, u8> const& precision)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(instant) is Object.
+    // 2. Assert: instant has an [[InitializedTemporalInstant]] internal slot.
+
+    // 3. Let outputTimeZone be timeZone.
+    auto output_time_zone = time_zone;
+
+    // 4. If outputTimeZone is undefined, then
+    if (output_time_zone.is_undefined()) {
+        // a. Set outputTimeZone to ? CreateTemporalTimeZone("UTC").
+        output_time_zone = create_temporal_time_zone(global_object, "UTC"sv);
+        // TODO: Can this really throw...?
+        if (vm.exception())
+            return {};
+    }
+
+    // 5. Let isoCalendar be ! GetISO8601Calendar().
+    auto* iso_calendar = get_iso8601_calendar(global_object);
+
+    // 6. Let dateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(outputTimeZone, instant, isoCalendar).
+    auto* date_time = builtin_time_zone_get_plain_date_time_for(global_object, output_time_zone, instant, *iso_calendar);
+    if (vm.exception())
+        return {};
+
+    // 7. Let dateTimeString be ? TemporalDateTimeToString(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], undefined, precision, "never").
+    auto date_time_string = temporal_date_time_to_string(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), js_undefined(), precision, "never"sv);
+    if (vm.exception())
+        return {};
+
+    Optional<String> time_zone_string;
+
+    // 8. If timeZone is undefined, then
+    if (time_zone.is_undefined()) {
+        // a. Let timeZoneString be "Z".
+        time_zone_string = "Z"sv;
+    }
+    // 9. Else,
+    else {
+        // a. Let timeZoneString be ? BuiltinTimeZoneGetOffsetStringFor(timeZone, instant).
+        time_zone_string = builtin_time_zone_get_offset_string_for(global_object, time_zone, instant);
+        if (vm.exception())
+            return {};
+    }
+
+    // 10. Return the string-concatenation of dateTimeString and timeZoneString.
+    return String::formatted("{}{}", *date_time_string, *time_zone_string);
 }
 
 }
