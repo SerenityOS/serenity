@@ -13,6 +13,7 @@ namespace Gfx {
 
 enum class ButtonStyle {
     Normal,
+    ThickCap,
     Coolbar,
     Tray,
 };

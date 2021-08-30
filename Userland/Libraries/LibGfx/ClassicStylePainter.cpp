@@ -92,7 +92,7 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, const IntRect& rect
     }
 }
 
-static void paint_button_new(Painter& painter, const IntRect& a_rect, const Palette& palette, bool pressed, bool checked, bool hovered, bool enabled, bool focused)
+static void paint_button_new(Painter& painter, IntRect const& a_rect, Palette const& palette, ButtonStyle style, bool pressed, bool checked, bool hovered, bool enabled, bool focused)
 {
     Color button_color = palette.button();
     Color highlight_color = palette.threed_highlight();
@@ -146,8 +146,13 @@ static void paint_button_new(Painter& painter, const IntRect& a_rect, const Pale
         painter.fill_rect({ 0, 0, rect.width(), rect.height() }, button_color);
 
         // Top highlight
-        painter.draw_line({ 0, 0 }, { rect.width() - 2, 0 }, highlight_color);
-        painter.draw_line({ 0, 0 }, { 0, rect.height() - 2 }, highlight_color);
+        if (style == ButtonStyle::Normal) {
+            painter.draw_line({ 0, 0 }, { rect.width() - 2, 0 }, highlight_color);
+            painter.draw_line({ 0, 0 }, { 0, rect.height() - 2 }, highlight_color);
+        } else if (style == ButtonStyle::ThickCap) {
+            painter.draw_line({ 1, 1 }, { rect.width() - 2, 1 }, highlight_color);
+            painter.draw_line({ 1, 1 }, { 1, rect.height() - 2 }, highlight_color);
+        }
 
         // Outer shadow
         painter.draw_line({ 0, rect.height() - 1 }, { rect.width() - 1, rect.height() - 1 }, shadow_color2);
@@ -161,8 +166,8 @@ static void paint_button_new(Painter& painter, const IntRect& a_rect, const Pale
 
 void ClassicStylePainter::paint_button(Painter& painter, const IntRect& rect, const Palette& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled, bool focused)
 {
-    if (button_style == ButtonStyle::Normal)
-        return paint_button_new(painter, rect, palette, pressed, checked, hovered, enabled, focused);
+    if (button_style == ButtonStyle::Normal || button_style == ButtonStyle::ThickCap)
+        return paint_button_new(painter, rect, palette, button_style, pressed, checked, hovered, enabled, focused);
 
     if (button_style == ButtonStyle::Coolbar && !enabled)
         return;
