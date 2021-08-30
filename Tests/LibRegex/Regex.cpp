@@ -660,6 +660,7 @@ TEST_CASE(ECMA262_match)
         { "[\\0]"sv, "\0"sv, true, ECMAScriptFlags::BrowserExtended },
         { "[\\0]"sv, "\0"sv, true, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::BrowserExtended) },
         { "[\\01]"sv, "\1"sv, true, ECMAScriptFlags::BrowserExtended },
+        { "(\0|a)"sv, "a"sv, true }, // #9686, Should allow null bytes in pattern
     };
     // clang-format on
 

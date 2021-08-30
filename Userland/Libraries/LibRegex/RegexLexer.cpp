@@ -109,7 +109,7 @@ Token Lexer::next()
         }
     };
 
-    while (m_index <= m_input.length()) {
+    while (m_index < m_input.length()) {
         auto ch = peek();
         if (ch == '(')
             return emit_token(TokenType::LeftParen);
@@ -174,9 +174,6 @@ Token Lexer::next()
                 return commit_token(TokenType::EscapeSequence);
             }
         }
-
-        if (ch == '\0')
-            break;
 
         return emit_token(TokenType::Char);
     }
