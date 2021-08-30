@@ -166,6 +166,7 @@ private:
     constexpr static size_t number_of_addressable_capture_groups = 9;
     size_t m_capture_group_minimum_lengths[number_of_addressable_capture_groups] { 0 };
     bool m_capture_group_seen[number_of_addressable_capture_groups] { false };
+    size_t m_current_capture_group_depth { 0 };
 };
 
 class PosixExtendedParser final : public AbstractPosixParser {
