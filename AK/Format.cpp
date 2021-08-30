@@ -500,7 +500,7 @@ void FormatBuilder::put_hexdump(ReadonlyBytes bytes, size_t width, char fill)
         put_char_view(bytes.size());
 }
 
-void vformat(StringBuilder& builder, StringView fmtstr, TypeErasedFormatParams params)
+void vformat(StringBuilder& builder, StringView fmtstr, TypeErasedFormatParams& params)
 {
     FormatBuilder fmtbuilder { builder };
     FormatParser parser { fmtstr };
@@ -608,7 +608,7 @@ void Formatter<StringView>::format(FormatBuilder& builder, StringView value)
         builder.put_string(value, m_align, m_width.value(), m_precision.value(), m_fill);
 }
 
-void Formatter<FormatString>::vformat(FormatBuilder& builder, StringView fmtstr, TypeErasedFormatParams params)
+void Formatter<FormatString>::vformat(FormatBuilder& builder, StringView fmtstr, TypeErasedFormatParams& params)
 {
     return Formatter<String>::format(builder, String::vformatted(fmtstr, params));
 }
@@ -754,7 +754,7 @@ void Formatter<float>::format(FormatBuilder& builder, float value)
 #endif
 
 #ifndef KERNEL
-void vout(FILE* file, StringView fmtstr, TypeErasedFormatParams params, bool newline)
+void vout(FILE* file, StringView fmtstr, TypeErasedFormatParams& params, bool newline)
 {
     StringBuilder builder;
     vformat(builder, fmtstr, params);
@@ -778,7 +778,7 @@ void set_debug_enabled(bool value)
     is_debug_enabled = value;
 }
 
-void vdbgln(StringView fmtstr, TypeErasedFormatParams params)
+void vdbgln(StringView fmtstr, TypeErasedFormatParams& params)
 {
     if (!is_debug_enabled)
         return;
@@ -817,7 +817,7 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams params)
 }
 
 #ifdef KERNEL
-void vdmesgln(StringView fmtstr, TypeErasedFormatParams params)
+void vdmesgln(StringView fmtstr, TypeErasedFormatParams& params)
 {
     StringBuilder builder;
 
@@ -837,7 +837,7 @@ void vdmesgln(StringView fmtstr, TypeErasedFormatParams params)
     kernelputstr(string.characters_without_null_termination(), string.length());
 }
 
-void v_critical_dmesgln(StringView fmtstr, TypeErasedFormatParams params)
+void v_critical_dmesgln(StringView fmtstr, TypeErasedFormatParams& params)
 {
     // FIXME: Try to avoid memory allocations further to prevent faulting
     // at OOM conditions.
