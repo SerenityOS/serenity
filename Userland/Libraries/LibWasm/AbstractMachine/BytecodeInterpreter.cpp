@@ -824,7 +824,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::f32_trunc.value():
         return unary_operation<float, float, Operators::Truncate>(configuration);
     case Instructions::f32_nearest.value():
-        return unary_operation<float, float, Operators::Round>(configuration);
+        return unary_operation<float, float, Operators::NearbyIntegral>(configuration);
     case Instructions::f32_sqrt.value():
         return unary_operation<float, float, Operators::SquareRoot>(configuration);
     case Instructions::f32_add.value():
@@ -852,7 +852,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::f64_trunc.value():
         return unary_operation<double, double, Operators::Truncate>(configuration);
     case Instructions::f64_nearest.value():
-        return unary_operation<double, double, Operators::Round>(configuration);
+        return unary_operation<double, double, Operators::NearbyIntegral>(configuration);
     case Instructions::f64_sqrt.value():
         return unary_operation<double, double, Operators::SquareRoot>(configuration);
     case Instructions::f64_add.value():
