@@ -583,6 +583,8 @@ void Window::leave_event(Core::Event&)
 
 void Window::handle_entered_event(Core::Event& event)
 {
+    if (m_automatic_cursor_tracking_widget)
+        set_hovered_widget(m_automatic_cursor_tracking_widget);
     enter_event(event);
 }
 
