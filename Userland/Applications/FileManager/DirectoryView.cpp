@@ -290,6 +290,9 @@ void DirectoryView::setup_table_view()
     m_table_view->set_model(m_sorting_model);
     m_table_view->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
 
+    m_table_view->set_column_visible(GUI::FileSystemModel::Column::Inode, false);
+    m_table_view->set_column_visible(GUI::FileSystemModel::Column::SymlinkTarget, false);
+
     m_table_view->on_activation = [&](auto& index) {
         handle_activation(index);
     };
