@@ -1091,7 +1091,10 @@ ParseResult<Locals> Locals::parse(InputStream& stream)
     size_t count;
     if (!LEB128::read_unsigned(stream, count))
         return with_eof_check(stream, ParseError::InvalidSize);
-    // TODO: Disallow too many entries.
+
+    if (count > Constants::max_allowed_function_locals_per_type)
+        return with_eof_check(stream, ParseError::HugeAllocationRequested);
+
     auto type = ValueType::parse(stream);
     if (type.is_error())
         return type.error();
