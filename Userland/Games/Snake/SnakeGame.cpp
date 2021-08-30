@@ -6,13 +6,12 @@
  */
 
 #include "SnakeGame.h"
+#include <AK/Random.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
-#include <stdlib.h>
-#include <time.h>
 
 SnakeGame::SnakeGame()
 {
@@ -21,7 +20,6 @@ SnakeGame::SnakeGame()
     m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/eggplant.png"));
     m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/cauliflower.png"));
     m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/tomato.png"));
-    srand(time(nullptr));
     reset();
 
     m_high_score = Config::read_i32("Snake", "Snake", "HighScore", 0);
@@ -63,13 +61,13 @@ void SnakeGame::spawn_fruit()
 {
     Coordinate coord;
     for (;;) {
-        coord.row = rand() % m_rows;
-        coord.column = rand() % m_columns;
+        coord.row = get_random_uniform(m_rows);
+        coord.column = get_random_uniform(m_columns);
         if (is_available(coord))
             break;
     }
     m_fruit = coord;
-    m_fruit_type = rand() % m_fruit_bitmaps.size();
+    m_fruit_type = get_random_uniform(m_fruit_bitmaps.size());
 }
 
 Gfx::IntRect SnakeGame::score_rect() const
