@@ -368,6 +368,20 @@ int run_in_desktop_mode()
         }
     });
 
+    auto open_terminal_action = GUI::Action::create("Open in &Terminal", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
+        auto paths = directory_view.selected_file_paths();
+        if (paths.is_empty()) {
+            spawn_terminal(directory_view.path());
+            return;
+        }
+
+        for (auto& path : paths) {
+            if (Core::File::is_directory(path)) {
+                spawn_terminal(path);
+            }
+        }
+    });
+
     auto display_properties_action = GUI::Action::create("&Display Settings", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png"), [&](GUI::Action const&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/bin/DisplaySettings"));
     });
@@ -384,6 +398,7 @@ int run_in_desktop_mode()
     auto desktop_context_menu = GUI::Menu::construct("Directory View Directory");
 
     desktop_context_menu->add_action(file_manager_action);
+    desktop_context_menu->add_action(open_terminal_action);
     desktop_context_menu->add_separator();
     desktop_context_menu->add_action(cut_action);
     desktop_context_menu->add_action(copy_action);
