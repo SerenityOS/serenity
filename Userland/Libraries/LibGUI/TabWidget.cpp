@@ -105,7 +105,7 @@ void TabWidget::set_active_widget(Widget* widget)
         if (active_widget_had_focus)
             m_active_widget->set_focus(true);
         m_active_widget->set_visible(true);
-        deferred_invoke([this](auto&) {
+        deferred_invoke([this] {
             if (on_change)
                 on_change(*m_active_widget);
         });
@@ -396,7 +396,7 @@ void TabWidget::mousedown_event(MouseEvent& event)
             set_active_widget(m_tabs[i].widget);
         } else if (event.button() == MouseButton::Middle) {
             auto* widget = m_tabs[i].widget;
-            deferred_invoke([this, widget](auto&) {
+            deferred_invoke([this, widget] {
                 if (on_middle_click && widget)
                     on_middle_click(*widget);
             });
@@ -417,7 +417,7 @@ void TabWidget::mouseup_event(MouseEvent& event)
 
     if (close_button_rect.contains(event.position())) {
         auto* widget = m_tabs[m_pressed_close_button_index.value()].widget;
-        deferred_invoke([this, widget](auto&) {
+        deferred_invoke([this, widget] {
             if (on_tab_close_click && widget)
                 on_tab_close_click(*widget);
         });
@@ -573,7 +573,7 @@ void TabWidget::context_menu_event(ContextMenuEvent& context_menu_event)
         if (!button_rect.contains(context_menu_event.position()))
             continue;
         auto* widget = m_tabs[i].widget;
-        deferred_invoke([this, widget, context_menu_event](auto&) {
+        deferred_invoke([this, widget, context_menu_event] {
             if (on_context_menu_request && widget)
                 on_context_menu_request(*widget, context_menu_event);
         });

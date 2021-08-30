@@ -958,7 +958,7 @@ void Shell::run_tail(const AST::Command& invoking_command, const AST::NodeWithAc
 void Shell::run_tail(RefPtr<Job> job)
 {
     if (auto cmd = job->command_ptr()) {
-        deferred_invoke([=, this](auto&) {
+        deferred_invoke([=, this] {
             for (auto& next_in_chain : cmd->next_chain) {
                 run_tail(*cmd, next_in_chain, job->exit_code());
             }

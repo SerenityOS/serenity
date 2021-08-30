@@ -500,7 +500,7 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
     m_fixed_width_checkbox->set_checked(m_edited_font->is_fixed_width());
 
     m_glyph_map_widget->set_selected_glyph('A');
-    deferred_invoke([this](auto&) {
+    deferred_invoke([this] {
         m_glyph_map_widget->set_focus(true);
         m_glyph_map_widget->scroll_to_glyph(m_glyph_map_widget->selected_glyph());
         window()->set_modified(false);

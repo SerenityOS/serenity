@@ -196,7 +196,7 @@ protected:
             }
             if (nread == 0) {
                 if (bytes.is_empty()) {
-                    deferred_invoke([this](auto&) { shutdown(); });
+                    deferred_invoke([this] { shutdown(); });
                     return false;
                 }
                 break;
@@ -241,7 +241,7 @@ protected:
         }
 
         if (!m_unprocessed_messages.is_empty()) {
-            deferred_invoke([this](auto&) {
+            deferred_invoke([this] {
                 handle_messages();
             });
         }

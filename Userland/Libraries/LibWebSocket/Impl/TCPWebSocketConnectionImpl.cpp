@@ -36,7 +36,7 @@ void TCPWebSocketConnectionImpl::connect(ConnectionInfo const& connection)
     };
     bool success = m_socket->connect(connection.url().host(), connection.url().port());
     if (!success) {
-        deferred_invoke([this](auto&) {
+        deferred_invoke([this] {
             on_connection_error();
         });
     }

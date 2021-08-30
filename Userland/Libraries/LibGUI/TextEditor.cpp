@@ -1469,7 +1469,7 @@ void TextEditor::did_change()
     m_needs_rehighlight = true;
     if (!m_has_pending_change_notification) {
         m_has_pending_change_notification = true;
-        deferred_invoke([this](auto&) {
+        deferred_invoke([this] {
             m_has_pending_change_notification = false;
             if (on_change)
                 on_change();
