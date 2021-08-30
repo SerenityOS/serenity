@@ -339,17 +339,34 @@ public:
         new_bytecode.insert_bytecode_repetition_n(bytecode_to_repeat, minimum, repetition_mark_id);
 
         if (maximum.has_value()) {
+            // (REPEAT REGEXP MIN)
+            // LABEL _MAX_LOOP        |
+            // FORK END               |
+            // REGEXP                 |
+            // REPEAT _MAX_LOOP MAX-1 | if max > min
+            // REGEXP                 |
+            // FORK END               |
+            // LABEL END              |
             auto jump_kind = static_cast<ByteCodeValueType>(greedy ? OpCodeId::ForkStay : OpCodeId::ForkJump);
             if (maximum.value() > minimum) {
-                auto diff = maximum.value() - minimum;
                 new_bytecode.empend(jump_kind);
-                new_bytecode.empend(diff * (bytecode_to_repeat.size() + 2)); // Jump to the _END label
-
-                for (T i = 0; i < diff; ++i) {
+                new_bytecode.empend((ByteCodeValueType)0); // Placeholder for the jump target.
+                auto pre_loop_fork_jump_index = new_bytecode.size();
+                auto repetitions = maximum.value() - minimum;
+                dbgln("max {}, min {}, reps {}", *maximum, minimum, repetitions);
+                if (repetitions > 1) {
                     new_bytecode.extend(bytecode_to_repeat);
-                    new_bytecode.empend(jump_kind);
-                    new_bytecode.empend((diff - i - 1) * (bytecode_to_repeat.size() + 2)); // Jump to the _END label
+                    new_bytecode.empend((ByteCodeValueType)OpCodeId::Repeat);
+                    new_bytecode.empend(bytecode_to_repeat.size() + 2);
+                    new_bytecode.empend(static_cast<ByteCodeValueType>(repetitions - 1));
+                    new_bytecode.empend(repetition_mark_id);
                 }
+                new_bytecode.extend(bytecode_to_repeat);
+                new_bytecode.empend(jump_kind);
+                new_bytecode.empend((ByteCodeValueType)0); // Placeholder for the jump target.
+                auto post_loop_fork_jump_index = new_bytecode.size();
+                new_bytecode[pre_loop_fork_jump_index - 1] = (ByteCodeValueType)(new_bytecode.size() - pre_loop_fork_jump_index);
+                new_bytecode[post_loop_fork_jump_index - 1] = (ByteCodeValueType)(new_bytecode.size() - post_loop_fork_jump_index);
             }
         } else {
             // no maximum value set, repeat finding if possible
