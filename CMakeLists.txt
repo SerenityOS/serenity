@@ -45,6 +45,9 @@ option(BUILD_LAGOM "Build parts of the system targeting the host OS for fuzzing/
 option(ENABLE_KERNEL_LTO "Build the kernel with link-time optimization" OFF)
 option(USE_CLANG_TOOLCHAIN "Build the kernel with the experimental Clang toolchain" OFF)
 
+# Meta target to run all code-gen steps in the build.
+add_custom_target(all_generated)
+
 add_custom_target(run
     COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_ARCH=${SERENITY_ARCH}" "${SerenityOS_SOURCE_DIR}/Meta/run.sh"
     USES_TERMINAL
