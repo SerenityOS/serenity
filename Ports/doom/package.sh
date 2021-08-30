@@ -2,7 +2,7 @@
 port=doom
 workdir=SerenityDOOM-master
 version=git
-files="https://github.com/SerenityOS/SerenityDOOM/archive/master.tar.gz doom-git.tar.gz"
+files="https://github.com/SerenityPorts/SerenityDOOM/archive/master.tar.gz doom-git.tar.gz"
 makeopts="-C doomgeneric/"
 installopts="-C doomgeneric/"
 launcher_name=Doom
