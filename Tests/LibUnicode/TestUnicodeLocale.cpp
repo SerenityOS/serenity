@@ -75,7 +75,7 @@ TEST_CASE(parse_unicode_locale_id)
         auto locale_id = Unicode::parse_unicode_locale_id(locale);
         EXPECT(!locale_id.has_value());
     };
-    auto pass = [](StringView locale, Optional<StringView> expected_language, Optional<StringView> expected_script, Optional<StringView> expected_region, Vector<StringView> expected_variants) {
+    auto pass = [](StringView locale, Optional<StringView> expected_language, Optional<StringView> expected_script, Optional<StringView> expected_region, Vector<String> expected_variants) {
         auto locale_id = Unicode::parse_unicode_locale_id(locale);
         VERIFY(locale_id.has_value());
 
@@ -252,7 +252,7 @@ TEST_CASE(parse_unicode_locale_id_with_private_use_extension)
         auto locale_id = Unicode::parse_unicode_locale_id(locale);
         EXPECT(!locale_id.has_value());
     };
-    auto pass = [](StringView locale, Vector<StringView> const& expected_extension) {
+    auto pass = [](StringView locale, Vector<String> const& expected_extension) {
         auto locale_id = Unicode::parse_unicode_locale_id(locale);
         VERIFY(locale_id.has_value());
         EXPECT_EQ(locale_id->private_use_extensions, expected_extension);

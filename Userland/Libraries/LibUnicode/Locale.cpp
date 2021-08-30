@@ -400,7 +400,7 @@ static Optional<Extension> parse_extension(GenericLexer& lexer)
     return {};
 }
 
-static Vector<StringView> parse_private_use_extensions(GenericLexer& lexer)
+static Vector<String> parse_private_use_extensions(GenericLexer& lexer)
 {
     // https://unicode.org/reports/tr35/#pu_extensions
     //
@@ -411,8 +411,8 @@ static Vector<StringView> parse_private_use_extensions(GenericLexer& lexer)
     if (!header.has_value())
         return {};
 
-    auto parse_values = [&]() -> Vector<StringView> {
-        Vector<StringView> extensions;
+    auto parse_values = [&]() -> Vector<String> {
+        Vector<String> extensions;
 
         while (true) {
             auto segment = consume_next_segment(lexer);
@@ -491,18 +491,18 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
         Title,
     };
 
-    auto append_sep_and_string = [&](Optional<StringView> const& string, Case case_ = Case::Lower) {
+    auto append_sep_and_string = [&](Optional<String> const& string, Case case_ = Case::Lower) {
         if (!string.has_value())
             return;
         switch (case_) {
         case Case::Upper:
-            builder.appendff("-{}", string->to_uppercase_string());
+            builder.appendff("-{}", string->to_uppercase());
             break;
         case Case::Lower:
-            builder.appendff("-{}", string->to_lowercase_string());
+            builder.appendff("-{}", string->to_lowercase());
             break;
         case Case::Title:
-            builder.appendff("-{}", string->to_titlecase_string());
+            builder.appendff("-{}", string->to_titlecase());
             break;
         }
     };
@@ -510,7 +510,7 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
     if (!locale_id.language_id.language.has_value())
         return {};
 
-    builder.append(locale_id.language_id.language->to_lowercase_string());
+    builder.append(locale_id.language_id.language->to_lowercase());
     append_sep_and_string(locale_id.language_id.script, Case::Title);
     append_sep_and_string(locale_id.language_id.region, Case::Upper);
 
