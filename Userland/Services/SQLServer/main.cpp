@@ -18,16 +18,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         return 1;
     }
 
-    struct stat statbuf;
-    if (stat("/home/anon/sql", &statbuf) != 0) {
-        if (errno != ENOENT) {
-            perror("stat");
-            return 1;
-        }
-        if (mkdir("/home/anon/sql", 0700) != 0) {
-            perror("mkdir");
-            return 1;
-        }
+    if (mkdir("/home/anon/sql", 0700) < 0 && errno != EEXIST) {
+        perror("mkdir");
+        return 1;
     }
 
     if (unveil("/home/anon/sql", "rwc") < 0) {
