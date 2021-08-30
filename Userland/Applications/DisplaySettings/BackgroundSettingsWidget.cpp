@@ -9,9 +9,11 @@
 #include <AK/StringBuilder.h>
 #include <Applications/DisplaySettings/BackgroundSettingsGML.h>
 #include <LibCore/ConfigFile.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/FilePicker.h>
@@ -60,6 +62,23 @@ void BackgroundSettingsWidget::create_frame()
         }
 
         m_monitor_widget->set_wallpaper(path);
+    };
+
+    m_context_menu = GUI::Menu::construct();
+    m_show_in_file_manager_action = GUI::Action::create("Show in File Manager", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"), [this](GUI::Action const&) {
+        LexicalPath path { m_monitor_widget->wallpaper() };
+        Desktop::Launcher::open(URL::create_with_file_protocol(path.dirname(), path.basename()));
+    });
+    m_context_menu->add_action(*m_show_in_file_manager_action);
+
+    m_context_menu->add_separator();
+    m_copy_action = GUI::CommonActions::make_copy_action([this](auto&) { GUI::Clipboard::the().set_plain_text(m_monitor_widget->wallpaper()); }, this);
+    m_context_menu->add_action(*m_copy_action);
+
+    m_wallpaper_view->on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
+        if (index.is_valid()) {
+            m_context_menu->popup(event.screen_position(), m_show_in_file_manager_action);
+        }
     };
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("wallpaper_open_button");
