@@ -164,6 +164,7 @@ namespace JS {
     P(fontcolor)                             \
     P(fontsize)                              \
     P(forEach)                               \
+    P(fractionalSecondDigits)                \
     P(freeze)                                \
     P(from)                                  \
     P(fromCharCode)                          \
