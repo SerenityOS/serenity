@@ -42,6 +42,7 @@ void InstantPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(vm.names.toJSON, to_json, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
@@ -339,6 +340,23 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
 // 8.3.14 Temporal.Instant.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tolocalestring
 // NOTE: This is the minimum toLocaleString implementation for engines without ECMA-402.
 JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_locale_string)
+{
+    // 1. Let instant be the this value.
+    // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
+    auto* instant = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return ? TemporalInstantToString(instant, undefined, "auto").
+    auto string = temporal_instant_to_string(global_object, *instant, js_undefined(), String { "auto"sv });
+    if (vm.exception())
+        return {};
+
+    return js_string(vm, *string);
+}
+
+// 8.3.15 Temporal.Instant.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tojson
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_json)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
