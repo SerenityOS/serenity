@@ -11,6 +11,7 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/RadioButton.h>
 
 namespace DisplaySettings {
@@ -35,6 +36,9 @@ private:
     RefPtr<GUI::IconView> m_wallpaper_view;
     RefPtr<GUI::ComboBox> m_mode_combo;
     RefPtr<GUI::ColorInput> m_color_input;
+    RefPtr<GUI::Menu> m_context_menu;
+    RefPtr<GUI::Action> m_show_in_file_manager_action;
+    RefPtr<GUI::Action> m_copy_action;
 };
 
 }
