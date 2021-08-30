@@ -480,43 +480,94 @@ Optional<LocaleID> parse_unicode_locale_id(StringView locale)
     return locale_id;
 }
 
-Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
+static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
 {
-    // https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers
-    StringBuilder builder;
+    auto canonicalize_language = [](LanguageID& language_id, bool force_lowercase) {
+        language_id.language = language_id.language->to_lowercase();
+        if (language_id.script.has_value())
+            language_id.script = language_id.script->to_titlecase();
+        if (language_id.region.has_value())
+            language_id.region = language_id.region->to_uppercase();
+        for (auto& variant : language_id.variants)
+            variant = variant.to_lowercase();
 
-    enum class Case {
-        Upper,
-        Lower,
-        Title,
-    };
+        if (auto alias = resolve_language_alias(*language_id.language); alias.has_value()) {
+            auto language_alias = parse_unicode_language_id(*alias);
+            VERIFY(language_alias.has_value());
 
-    auto append_sep_and_string = [&](Optional<String> const& string, Case case_ = Case::Lower) {
-        if (!string.has_value())
-            return;
-        switch (case_) {
-        case Case::Upper:
-            builder.appendff("-{}", string->to_uppercase());
-            break;
-        case Case::Lower:
-            builder.appendff("-{}", string->to_lowercase());
-            break;
-        case Case::Title:
-            builder.appendff("-{}", string->to_titlecase());
-            break;
+            language_id.language = move(language_alias->language);
+            if (!language_id.script.has_value() && language_alias->script.has_value())
+                language_id.script = move(language_alias->script);
+            if (!language_id.region.has_value() && language_alias->region.has_value())
+                language_id.region = move(language_alias->region);
+            if (language_id.variants.is_empty() && !language_alias->variants.is_empty())
+                language_id.variants = move(language_alias->variants);
+        }
+
+        if (language_id.script.has_value()) {
+            if (auto alias = resolve_script_tag_alias(*language_id.script); alias.has_value())
+                language_id.script = move(*alias);
+        }
+
+        if (language_id.region.has_value()) {
+            if (auto alias = resolve_territory_alias(*language_id.region); alias.has_value()) {
+                auto aliases = alias->split_view(' ');
+
+                // FIXME: Territory subtag aliases should also consult the CLDR likelySubtags.json file.
+                //        For now, implement the spec's recommendation of using just the first alias.
+                language_id.region = aliases[0].to_string();
+            }
+        }
+
+        quick_sort(language_id.variants);
+
+        for (auto& variant : language_id.variants) {
+            variant = variant.to_lowercase();
+            if (auto alias = resolve_variant_alias(variant); alias.has_value())
+                variant = move(*alias);
+        }
+
+        if (force_lowercase) {
+            if (language_id.script.has_value())
+                language_id.script = language_id.script->to_lowercase();
+            if (language_id.region.has_value())
+                language_id.region = language_id.region->to_lowercase();
         }
     };
 
-    if (!locale_id.language_id.language.has_value())
-        return {};
+    auto canonicalize_key_value_list = [&](auto& key, auto& values, bool remove_true_values) {
+        key = key.to_lowercase();
 
-    builder.append(locale_id.language_id.language->to_lowercase());
-    append_sep_and_string(locale_id.language_id.script, Case::Title);
-    append_sep_and_string(locale_id.language_id.region, Case::Upper);
+        auto raw_values = move(values);
 
-    quick_sort(locale_id.language_id.variants);
-    for (auto const& variant : locale_id.language_id.variants)
-        append_sep_and_string(variant);
+        for (auto& value : raw_values) {
+            value = value.to_lowercase();
+
+            // Note: The spec says to remove "true" type and tfield values but that is believed to be a bug in the spec
+            // because, for tvalues, that would result in invalid syntax:
+            //     https://unicode-org.atlassian.net/browse/CLDR-14318
+            // This has also been noted by test262:
+            //     https://github.com/tc39/test262/blob/18bb955771669541c56c28748603f6afdb2e25ff/test/intl402/Intl/getCanonicalLocales/transformed-ext-canonical.js
+            if (remove_true_values && (value == "true"sv))
+                continue;
+
+            if (key.is_one_of("sd"sv, "rg"sv)) {
+                if (auto alias = resolve_subdivision_alias(value); alias.has_value()) {
+                    auto aliases = alias->split_view(' ');
+
+                    // FIXME: Subdivision subtags do not appear in the CLDR likelySubtags.json file.
+                    //        Implement the spec's recommendation of using just the first alias for now,
+                    //        but we should determine if there's anything else needed here.
+                    values.append(aliases[0].to_string());
+                    continue;
+                }
+            }
+
+            values.append(move(value));
+        }
+    };
+
+    canonicalize_language(locale_id.language_id, false);
 
     quick_sort(locale_id.extensions, [](auto const& left, auto const& right) {
         auto key = [](auto const& extension) {
@@ -529,51 +580,91 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
         return key(left) < key(right);
     });
 
-    auto append_key_value_list = [&](auto const& key, auto const& values, bool remove_true_values) {
-        append_sep_and_string(key);
-
-        for (auto const& type : values) {
-            // Note: The spec says to remove "true" type and tfield values but that is believed to be a bug in the spec
-            // because, for tvalues, that would result in invalid syntax:
-            //     https://unicode-org.atlassian.net/browse/CLDR-14318
-            // This has also been noted by test262:
-            //     https://github.com/tc39/test262/blob/18bb955771669541c56c28748603f6afdb2e25ff/test/intl402/Intl/getCanonicalLocales/transformed-ext-canonical.js
-            if (remove_true_values && type.equals_ignoring_case("true"sv))
-                continue;
-            append_sep_and_string(type);
-        }
-    };
-
     for (auto& extension : locale_id.extensions) {
         extension.visit(
             [&](LocaleExtension& ext) {
                 quick_sort(ext.attributes);
                 quick_sort(ext.keywords, [](auto const& a, auto const& b) { return a.key < b.key; });
+
+                for (auto& attribute : ext.attributes)
+                    attribute = attribute.to_lowercase();
+                for (auto& keyword : ext.keywords)
+                    canonicalize_key_value_list(keyword.key, keyword.types, true);
+            },
+            [&](TransformedExtension& ext) {
+                if (ext.language.has_value())
+                    canonicalize_language(*ext.language, true);
+
+                quick_sort(ext.fields, [](auto const& a, auto const& b) { return a.key < b.key; });
+
+                for (auto& field : ext.fields)
+                    canonicalize_key_value_list(field.key, field.values, false);
+            },
+            [&](OtherExtension& ext) {
+                ext.key = static_cast<char>(to_ascii_lowercase(ext.key));
+                for (auto& value : ext.values)
+                    value = value.to_lowercase();
+            });
+    }
+
+    for (auto& extension : locale_id.private_use_extensions)
+        extension = extension.to_lowercase();
+}
+
+Optional<String> canonicalize_unicode_locale_id(LocaleID& locale_id)
+{
+    // https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers
+    StringBuilder builder;
+
+    auto append_sep_and_string = [&](Optional<String> const& string) {
+        if (!string.has_value())
+            return;
+        builder.appendff("-{}", *string);
+    };
+
+    if (!locale_id.language_id.language.has_value())
+        return {};
+
+    transform_unicode_locale_id_to_canonical_syntax(locale_id);
+
+    builder.append(locale_id.language_id.language->to_lowercase());
+    append_sep_and_string(locale_id.language_id.script);
+    append_sep_and_string(locale_id.language_id.region);
+    for (auto const& variant : locale_id.language_id.variants)
+        append_sep_and_string(variant);
+
+    auto append_key_value_list = [&](auto const& key, auto& values) {
+        append_sep_and_string(key);
+
+        for (auto& value : values)
+            append_sep_and_string(value);
+    };
+
+    for (auto const& extension : locale_id.extensions) {
+        extension.visit(
+            [&](LocaleExtension const& ext) {
                 builder.append("-u"sv);
 
                 for (auto const& attribute : ext.attributes)
                     append_sep_and_string(attribute);
                 for (auto const& keyword : ext.keywords)
-                    append_key_value_list(keyword.key, keyword.types, true);
+                    append_key_value_list(keyword.key, keyword.types);
             },
-            [&](TransformedExtension& ext) {
-                quick_sort(ext.fields, [](auto const& a, auto const& b) { return a.key < b.key; });
+            [&](TransformedExtension const& ext) {
                 builder.append("-t"sv);
 
                 if (ext.language.has_value()) {
                     append_sep_and_string(ext.language->language);
                     append_sep_and_string(ext.language->script);
                     append_sep_and_string(ext.language->region);
-
-                    quick_sort(ext.language->variants);
                     for (auto const& variant : ext.language->variants)
                         append_sep_and_string(variant);
                 }
 
                 for (auto const& field : ext.fields)
-                    append_key_value_list(field.key, field.values, false);
+                    append_key_value_list(field.key, field.values);
             },
-            [&](OtherExtension& ext) {
+            [&](OtherExtension const& ext) {
                 builder.appendff("-{:c}", to_ascii_lowercase(ext.key));
                 for (auto const& value : ext.values)
                     append_sep_and_string(value);
