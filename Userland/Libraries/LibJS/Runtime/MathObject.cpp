@@ -96,11 +96,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::abs)
 // 21.3.2.27 Math.random ( ), https://tc39.es/ecma262/#sec-math.random
 JS_DEFINE_NATIVE_FUNCTION(MathObject::random)
 {
-#ifdef __serenity__
     double r = (double)get_random<u32>() / (double)UINT32_MAX;
-#else
-    double r = (double)rand() / (double)RAND_MAX;
-#endif
     return Value(r);
 }
 
