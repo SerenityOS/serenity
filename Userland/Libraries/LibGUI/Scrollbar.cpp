@@ -178,8 +178,8 @@ void Scrollbar::paint_event(PaintEvent& event)
     bool decrement_pressed = (m_pressed_component == Component::DecrementButton) && (m_pressed_component == m_hovered_component);
     bool increment_pressed = (m_pressed_component == Component::IncrementButton) && (m_pressed_component == m_hovered_component);
 
-    Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::Normal, decrement_pressed, hovered_component_for_painting == Component::DecrementButton);
-    Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::Normal, increment_pressed, hovered_component_for_painting == Component::IncrementButton);
+    Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::ThickCap, decrement_pressed, hovered_component_for_painting == Component::DecrementButton);
+    Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::ThickCap, increment_pressed, hovered_component_for_painting == Component::IncrementButton);
 
     if (length(orientation()) > default_button_size()) {
         auto decrement_location = decrement_button_rect().location().translated(3, 3);
@@ -198,7 +198,7 @@ void Scrollbar::paint_event(PaintEvent& event)
     }
 
     if (has_scrubber())
-        Gfx::StylePainter::paint_button(painter, scrubber_rect(), palette(), Gfx::ButtonStyle::Normal, false, hovered_component_for_painting == Component::Scrubber || m_pressed_component == Component::Scrubber);
+        Gfx::StylePainter::paint_button(painter, scrubber_rect(), palette(), Gfx::ButtonStyle::ThickCap, false, hovered_component_for_painting == Component::Scrubber || m_pressed_component == Component::Scrubber);
 }
 
 void Scrollbar::on_automatic_scrolling_timer_fired()
