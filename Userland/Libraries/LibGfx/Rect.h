@@ -641,6 +641,14 @@ public:
         center_vertically_within(other);
     }
 
+    [[nodiscard]] Rect centered_within(Rect const& other) const
+    {
+        Rect rect { *this };
+        rect.center_horizontally_within(other);
+        rect.center_vertically_within(other);
+        return rect;
+    }
+
     void center_horizontally_within(Rect<T> const& other)
     {
         set_x(other.center().x() - width() / 2);
