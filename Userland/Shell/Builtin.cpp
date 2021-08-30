@@ -663,54 +663,23 @@ int Shell::builtin_popd(int argc, const char** argv)
     }
 
     bool should_not_switch = false;
-    String path = directory_stack.take_last();
-
     Core::ArgsParser parser;
     parser.add_option(should_not_switch, "Do not switch dirs", "no-switch", 'n');
 
     if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
-    bool should_switch = !should_not_switch;
+    auto popped_path = directory_stack.take_last();
 
-    // When no arguments are given, popd removes the top directory from the stack and performs a cd to the new top directory.
-    if (argc == 1) {
-        int rc = chdir(path.characters());
-        if (rc < 0) {
-            warnln("chdir({}) failed: {}", path, strerror(errno));
-            return 1;
-        }
-
-        cwd = path;
+    if (should_not_switch)
         return 0;
-    }
 
-    LexicalPath lexical_path(path.characters());
-
-    const char* real_path = lexical_path.string().characters();
-
-    struct stat st;
-    int rc = stat(real_path, &st);
-    if (rc < 0) {
-        warnln("stat({}) failed: {}", real_path, strerror(errno));
+    auto new_path = LexicalPath::canonicalized_path(popped_path);
+    if (chdir(new_path.characters()) < 0) {
+        warnln("chdir({}) failed: {}", new_path, strerror(errno));
         return 1;
     }
-
-    if (!S_ISDIR(st.st_mode)) {
-        warnln("Not a directory: {}", real_path);
-        return 1;
-    }
-
-    if (should_switch) {
-        int rc = chdir(real_path);
-        if (rc < 0) {
-            warnln("chdir({}) failed: {}", real_path, strerror(errno));
-            return 1;
-        }
-
-        cwd = lexical_path.string();
-    }
-
+    cwd = new_path;
     return 0;
 }
 
