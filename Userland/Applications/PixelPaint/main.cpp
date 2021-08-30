@@ -112,6 +112,13 @@ int main(int argc, char** argv)
         return verify_cast<PixelPaint::ImageEditor>(tab_widget.active_widget());
     };
 
+    window->on_active_window_change = [current_image_editor](bool is_active_window) {
+        if (!is_active_window) {
+            if (auto* editor = current_image_editor())
+                editor->window_did_lose_focus();
+        }
+    };
+
     Function<PixelPaint::ImageEditor&(NonnullRefPtr<PixelPaint::Image>)> create_new_editor;
 
     auto& layer_list_widget = *main_widget.find_descendant_of_type_named<PixelPaint::LayerListWidget>("layer_list_widget");

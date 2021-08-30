@@ -89,6 +89,8 @@ public:
     void set_guide_visibility(bool show_guides);
     Function<void(bool)> on_set_guide_visibility;
 
+    void window_did_lose_focus();
+
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);
 

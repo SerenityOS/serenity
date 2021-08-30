@@ -501,4 +501,13 @@ void ImageEditor::image_select_layer(Layer* layer)
 {
     set_active_layer(layer);
 }
+
+void ImageEditor::window_did_lose_focus()
+{
+    m_middle_mouse_down = false;
+    m_space_down = false;
+    m_active_cursor = m_active_tool ? m_active_tool->cursor() : Gfx::StandardCursor::None;
+    set_override_cursor(m_active_cursor);
+}
+
 }
