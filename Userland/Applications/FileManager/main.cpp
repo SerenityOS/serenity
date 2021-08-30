@@ -486,7 +486,7 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
     tree_view.set_model(directories_model);
     tree_view.set_column_visible(GUI::FileSystemModel::Column::Icon, false);
     tree_view.set_column_visible(GUI::FileSystemModel::Column::Size, false);
-    tree_view.set_column_visible(GUI::FileSystemModel::Column::Owner, false);
+    tree_view.set_column_visible(GUI::FileSystemModel::Column::User, false);
     tree_view.set_column_visible(GUI::FileSystemModel::Column::Group, false);
     tree_view.set_column_visible(GUI::FileSystemModel::Column::Permissions, false);
     tree_view.set_column_visible(GUI::FileSystemModel::Column::ModificationTime, false);

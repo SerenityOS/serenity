@@ -487,7 +487,7 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
         case Column::Inode:
             return Gfx::TextAlignment::CenterRight;
         case Column::Name:
-        case Column::Owner:
+        case Column::User:
         case Column::Group:
         case Column::ModificationTime:
         case Column::Permissions:
@@ -522,7 +522,7 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
             return index.row();
         case Column::Size:
             return (int)node.size;
-        case Column::Owner:
+        case Column::User:
             return name_for_uid(node.uid);
         case Column::Group:
             return name_for_gid(node.gid);
@@ -546,7 +546,7 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
             return node.name;
         case Column::Size:
             return human_readable_size(node.size);
-        case Column::Owner:
+        case Column::User:
             return name_for_uid(node.uid);
         case Column::Group:
             return name_for_gid(node.gid);
@@ -682,8 +682,8 @@ String FileSystemModel::column_name(int column) const
         return "Name";
     case Column::Size:
         return "Size";
-    case Column::Owner:
-        return "Owner";
+    case Column::User:
+        return "User";
     case Column::Group:
         return "Group";
     case Column::Permissions:

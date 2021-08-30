@@ -33,7 +33,7 @@ public:
         Icon = 0,
         Name,
         Size,
-        Owner,
+        User,
         Group,
         Permissions,
         ModificationTime,
