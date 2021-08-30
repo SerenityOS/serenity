@@ -1,6 +1,7 @@
 add_subdirectory(2048)
 add_subdirectory(Breakout)
 add_subdirectory(Chess)
+add_subdirectory(Fifteen)
 add_subdirectory(FlappyBug)
 add_subdirectory(GameOfLife)
 add_subdirectory(Hearts)
