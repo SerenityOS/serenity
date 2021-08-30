@@ -271,14 +271,14 @@ struct Truncate {
 
     static StringView name() { return "truncate"; }
 };
-struct Round {
+struct NearbyIntegral {
     template<typename Lhs>
     auto operator()(Lhs lhs) const
     {
         if constexpr (IsSame<Lhs, float>)
-            return roundf(lhs);
+            return nearbyintf(lhs);
         else if constexpr (IsSame<Lhs, double>)
-            return round(lhs);
+            return nearbyint(lhs);
         else
             VERIFY_NOT_REACHED();
     }
