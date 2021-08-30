@@ -129,7 +129,6 @@ public:
 
     void dump_tree(int indent = 0);
 
-    void deferred_invoke(Function<void(Object&)>);
     void deferred_invoke(Function<void()>);
 
     void save_to(JsonObject&);
