@@ -92,14 +92,14 @@ void BoardWidget::shuffle_cells()
     auto nr_of_cells { int((*m_cells).size()) - 1 };
 
     shuffle(m_cells->data(), nr_of_cells);
-    fix_parity();
+    ensure_puzzle_is_solvable();
 
     for (auto idx { 0 }; idx < nr_of_cells; ++idx) {
         (*m_cells)[idx]->set_current_index(idx);
     }
 }
 
-void BoardWidget::fix_parity()
+void BoardWidget::ensure_puzzle_is_solvable()
 {
     int parity { 0 };
     auto nr_of_cells { int((*m_cells).size()) - 1 };

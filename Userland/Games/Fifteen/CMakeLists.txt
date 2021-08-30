@@ -8,6 +8,7 @@ set(SOURCES
     main.cpp
     BoardWidget.cpp
     CellWidget.cpp
+    SettingsDialog.cpp
 )
 
 serenity_app(Fifteen ICON app-fifteen)

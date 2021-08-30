@@ -39,7 +39,7 @@ private:
     virtual void keydown_event(GUI::KeyEvent&) override;
 
     void shuffle_cells();
-    void fix_parity();
+    void ensure_puzzle_is_solvable();
 
     Color background_color_for_cell;
     Color text_color_for_cell;

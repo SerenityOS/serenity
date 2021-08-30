@@ -1,12 +1,14 @@
 #include <LibConfig/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/MessageBox.h>
 #include "Utilities.h"
 #include "BoardWidget.h"
+#include "SettingsDialog.h"
 
 int main (int argc, char **argv)
 {
@@ -42,6 +44,7 @@ int main (int argc, char **argv)
     main_widget.set_layout<GUI::VerticalBoxLayout>();
     main_widget.set_fill_with_background_color(true);
 
+    auto& game_menu = window->add_menu("&Game");
     auto move_count { 0 };
     auto& board_view = main_widget.add<BoardWidget>(rows, columns, cell_size, cell_color, cell_text_color);
     board_view.set_focus(true);
@@ -59,6 +62,22 @@ int main (int argc, char **argv)
 
     statusbar.set_text(0, "Moves:");
     statusbar.set_text(1, "0");
+
+    game_menu.add_action(GUI::Action::create("&Settings", { Mod_None, Key_F9 }, [&](auto&) {
+            
+            auto settings_dialog = SettingsDialog::construct(window, rows, columns, cell_size);
+
+            if (settings_dialog->exec() || settings_dialog->result() != GUI::Dialog::ExecOK)
+                return;
+
+            // ------------------------------------------------------------
+
+    }));
+
+    game_menu.add_separator();
+    game_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the()->quit();
+    }));
 
     window->resize(columns * cell_size, rows * cell_size + statusbar.max_height() + 3);
     window->show();
