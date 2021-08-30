@@ -392,6 +392,11 @@ int run_in_desktop_mode()
                 desktop_context_menu->popup(event.screen_position());
             } else {
                 file_context_menu = GUI::Menu::construct("Directory View File");
+
+                bool added_open_menu_items = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
+                if (added_open_menu_items)
+                    file_context_menu->add_separator();
+
                 file_context_menu->add_action(cut_action);
                 file_context_menu->add_action(copy_action);
                 file_context_menu->add_action(paste_action);
@@ -403,10 +408,6 @@ int run_in_desktop_mode()
                     file_context_menu->add_action(unzip_archive_action);
                     file_context_menu->add_separator();
                 }
-
-                bool added_open_menu_items = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
-                if (added_open_menu_items)
-                    file_context_menu->add_separator();
 
                 file_context_menu->add_action(properties_action);
                 file_context_menu->popup(event.screen_position(), file_context_menu_action_default_action);
@@ -1055,6 +1056,11 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
                 directory_context_menu->popup(event.screen_position());
             } else {
                 file_context_menu = GUI::Menu::construct("Directory View File");
+
+                bool added_launch_file_handlers = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
+                if (added_launch_file_handlers)
+                    file_context_menu->add_separator();
+
                 file_context_menu->add_action(cut_action);
                 file_context_menu->add_action(copy_action);
                 file_context_menu->add_action(paste_action);
@@ -1067,10 +1073,6 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
                     file_context_menu->add_action(unzip_archive_action);
                     file_context_menu->add_separator();
                 }
-
-                bool added_launch_file_handlers = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
-                if (added_launch_file_handlers)
-                    file_context_menu->add_separator();
 
                 file_context_menu->add_action(properties_action);
                 file_context_menu->popup(event.screen_position(), file_context_menu_action_default_action);
