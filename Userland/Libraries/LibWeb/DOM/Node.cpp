@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/IDAllocator.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Runtime/FunctionObject.h>
@@ -30,10 +31,33 @@
 
 namespace Web::DOM {
 
+static IDAllocator s_node_id_allocator;
+static HashMap<i32, Node*> s_node_directory;
+
+static i32 allocate_node_id(Node* node)
+{
+    i32 id = s_node_id_allocator.allocate();
+    s_node_directory.set(id, node);
+    return id;
+}
+
+static void deallocate_node_id(i32 node_id)
+{
+    if (!s_node_directory.remove(node_id))
+        VERIFY_NOT_REACHED();
+    s_node_id_allocator.deallocate(node_id);
+}
+
+Node* Node::from_id(i32 node_id)
+{
+    return s_node_directory.get(node_id).value_or(nullptr);
+}
+
 Node::Node(Document& document, NodeType type)
     : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(document))
     , m_document(&document)
     , m_type(type)
+    , m_id(allocate_node_id(this))
 {
     if (!is_document())
         m_document->ref_from_node({});
@@ -47,6 +71,8 @@ Node::~Node()
 
     if (!is_document())
         m_document->unref_from_node({});
+
+    deallocate_node_id(m_id);
 }
 
 const HTML::HTMLAnchorElement* Node::enclosing_link_element() const
@@ -477,6 +503,7 @@ void Node::set_document(Badge<Document>, Document& document)
 {
     if (m_document == &document)
         return;
+
     document.ref_from_node({});
     m_document->unref_from_node({});
     m_document = &document;

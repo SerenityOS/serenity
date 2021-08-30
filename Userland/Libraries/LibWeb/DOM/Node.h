@@ -179,6 +179,9 @@ public:
     bool is_shadow_including_ancestor_of(Node const&) const;
     bool is_shadow_including_inclusive_ancestor_of(Node const&) const;
 
+    i32 id() const { return m_id; }
+    static Node* from_id(i32 node_id);
+
 protected:
     Node(Document&, NodeType);
 
@@ -187,6 +190,8 @@ protected:
     NodeType m_type { NodeType::INVALID };
     bool m_needs_style_update { false };
     bool m_child_needs_style_update { false };
+
+    i32 m_id;
 };
 
 }
