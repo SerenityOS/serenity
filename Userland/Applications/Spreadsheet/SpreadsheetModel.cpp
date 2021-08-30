@@ -146,7 +146,7 @@ void SheetModel::set_data(const GUI::ModelIndex& index, const GUI::Variant& valu
 
     auto& cell = m_sheet->ensure({ (size_t)index.column(), (size_t)index.row() });
     cell.set_data(value.to_string());
-    invalidate();
+    did_update(UpdateFlag::DontInvalidateIndices);
 }
 
 void SheetModel::update()
