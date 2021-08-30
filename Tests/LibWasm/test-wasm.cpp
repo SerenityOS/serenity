@@ -104,6 +104,11 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
     }
     auto& array = static_cast<JS::Uint8Array&>(*object);
     InputMemoryStream stream { array.data() };
+    ScopeGuard handle_stream_error {
+        [&] {
+            stream.handle_any_error();
+        }
+    };
     auto result = Wasm::Module::parse(stream);
     if (result.is_error()) {
         vm.throw_exception<JS::SyntaxError>(global_object, Wasm::parse_error_to_string(result.error()));
