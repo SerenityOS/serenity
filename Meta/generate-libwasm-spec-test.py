@@ -97,6 +97,38 @@ def generate_binary_source(chunks):
 named_modules = {}
 named_modules_inverse = {}
 registered_modules = {}
+module_output_path: str
+
+
+def generate_module(ast):
+    # (module ...)
+    name = None
+    mode = 'ast'  # binary, quote
+    start_index = 1
+    if len(ast) > 1:
+        if isinstance(ast[1], tuple) and isinstance(ast[1][0], str) and ast[1][0].startswith('$'):
+            name = ast[1][0]
+            if len(ast) > 2:
+                if isinstance(ast[2], tuple) and ast[2][0] in ('binary', 'quote'):
+                    mode = ast[2][0]
+                    start_index = 3
+                else:
+                    start_index = 2
+        elif isinstance(ast[1][0], str):
+            mode = ast[1][0]
+            start_index = 2
+
+    result = {
+        'ast': lambda: ('parse', generate_module_source_for_compilation(ast)),
+        'binary': lambda: ('literal', generate_binary_source(ast[start_index:])),
+        # FIXME: Make this work when we have a WAT parser
+        'quote': lambda: ('literal', ast[start_index]),
+    }[mode]()
+
+    return {
+        'module': result,
+        'name': name
+    }
 
 
 def generate(ast):
@@ -107,35 +139,29 @@ def generate(ast):
     tests = []
     for entry in ast:
         if len(entry) > 0 and entry[0] == ('module',):
-            name = None
-            mode = 'ast'  # binary, quote
-            start_index = 1
-            if len(entry) > 1:
-                if isinstance(entry[1], tuple) and isinstance(entry[1][0], str) and entry[1][0].startswith('$'):
-                    name = entry[1][0]
-                    if len(entry) > 2:
-                        if isinstance(entry[2], tuple) and entry[2][0] in ('binary', 'quote'):
-                            mode = entry[2][0]
-                            start_index = 3
-                        else:
-                            start_index = 2
-                elif isinstance(entry[1][0], str):
-                    mode = entry[1][0]
-                    start_index = 2
-
+            gen = generate_module(entry)
+            module, name = gen['module'], gen['name']
             tests.append({
-                "module": {
-                    'ast': lambda: ('parse', generate_module_source_for_compilation(entry)),
-                    'binary': lambda: ('literal', generate_binary_source(entry[start_index:])),
-                    # FIXME: Make this work when we have a WAT parser
-                    'quote': lambda: ('literal', entry[start_index]),
-                }[mode](),
+                "module": module,
                 "tests": []
             })
 
             if name is not None:
                 named_modules[name] = len(tests) - 1
                 named_modules_inverse[len(tests) - 1] = (name, None)
+        elif entry[0] == ('assert_unlinkable',):
+            # (assert_unlinkable module message)
+            if len(entry) < 2 or not isinstance(entry[1], list) or entry[1][0] != ('module',):
+                print(f"Invalid argument to assert_unlinkable: {entry[1]}", file=stderr)
+                continue
+            result = generate_module(entry[1])
+            tests.append({
+                'module': None,
+                'tests': [{
+                    "kind": "unlinkable",
+                    "module": result['module'],
+                }]
+            })
         elif len(entry) in [2, 3] and entry[0][0].startswith('assert_'):
             if entry[1][0] == ('invoke',):
                 arg, name, module = 0, None, None
@@ -293,7 +319,7 @@ def genarg(spec):
 all_names_in_main = {}
 
 
-def genresult(ident, entry):
+def genresult(ident, entry, index):
     expectation = f'expect().fail("Unknown result structure " + {json.dumps(entry)})'
     if "function" in entry:
         tmodule = 'module'
@@ -320,7 +346,16 @@ def genresult(ident, entry):
         return expectation
 
     if entry['kind'] == 'unlinkable':
-        return
+        name = f'mod-{ident}-{index}.wasm'
+        outpath = path.join(module_output_path, name)
+        if not compile_wasm_source(entry['module'], outpath):
+            return 'throw new Error("Module compilation failed");'
+        return (
+            f'    expect(() => {{\n'
+            f'        let content = readBinaryWasmFile("Fixtures/SpecTests/{name}");\n'
+            f'        parseWebAssemblyModule(content, globalImportObject);\n'
+            f'    }}).toThrow(TypeError, "Linking failed");'
+        )
 
     if entry['kind'] == 'testgen_fail':
         return f'throw Exception("Test Generator Failure: " + {json.dumps(entry["reason"])});\n    '
@@ -328,9 +363,20 @@ def genresult(ident, entry):
     return f'throw Exception("(Test Generator) Unknown test kind {entry["kind"]}");\n    '
 
 
+raw_test_number = 0
+
+
 def gentest(entry, main_name):
+    global raw_test_number
     isfunction = 'function' in entry
-    name = json.dumps((entry["function"] if isfunction else entry["get"])["name"])[1:-1]
+    name: str
+    isempty = False
+    if isfunction or 'get' in entry:
+        name = json.dumps((entry["function"] if isfunction else entry["get"])["name"])[1:-1]
+    else:
+        isempty = True
+        name = str(f"_inline_test_{raw_test_number}")
+        raw_test_number += 1
     if type(name) != str:
         print("Unsupported test case (call to", name, ")", file=stderr)
         return '\n    '
@@ -339,15 +385,19 @@ def gentest(entry, main_name):
     all_names_in_main[name] = count + 1
     test_name = f'execution of {main_name}: {name} (instance {count})'
     tmodule = 'module'
-    key = "function" if "function" in entry else "get"
-    if entry[key]['module'] is not None:
-        tmodule = f'namedModules[{json.dumps(named_modules_inverse[entry[key]["module"]][0])}]'
+    if not isempty:
+        key = "function" if "function" in entry else "get"
+        if entry[key]['module'] is not None:
+            tmodule = f'namedModules[{json.dumps(named_modules_inverse[entry[key]["module"]][0])}]'
     source = (
-        f'test({json.dumps(test_name)}, () => {{\n'
-        f'let {ident} = {tmodule}.getExport({json.dumps(name)});\n        '
-        f'expect({ident}).not.toBeUndefined();\n        '
-        f'{genresult(ident, entry)}'
-        '});\n\n    '
+            f'test({json.dumps(test_name)}, () => {{\n' +
+            (
+                f'let {ident} = {tmodule}.getExport({json.dumps(name)});\n        '
+                f'expect({ident}).not.toBeUndefined();\n        '
+                if not isempty else ''
+            ) +
+            f'{genresult(ident, entry, count)}'
+            '});\n\n    '
     )
     return source
 
@@ -373,7 +423,24 @@ def nth(a, x, y=None):
     return a[x]
 
 
+def compile_wasm_source(mod, outpath):
+    if not mod:
+        return True
+    if mod[0] == 'literal':
+        with open(outpath, 'wb+') as f:
+            f.write(mod[1])
+            return True
+    elif mod[0] == 'parse':
+        with NamedTemporaryFile("w+") as temp:
+            temp.write(mod[1])
+            temp.flush()
+            rc = call(["wat2wasm", temp.name, "-o", outpath])
+            return rc == 0
+    return False
+
+
 def main():
+    global module_output_path
     with open(argv[1]) as f:
         sexp = f.read()
     name = argv[2]
@@ -385,21 +452,12 @@ def main():
         testname = f'{name}_{index}'
         outpath = path.join(module_output_path, f'{testname}.wasm')
         mod = description["module"]
-        if mod[0] == 'literal':
-            with open('outpath', 'wb+') as f:
-                f.write(mod[1])
-        elif mod[0] == 'parse':
-            with NamedTemporaryFile("w+") as temp:
-                temp.write(mod[1])
-                temp.flush()
-                rc = call(["wat2wasm", temp.name, "-o", outpath])
-                if rc != 0:
-                    print("Failed to compile", name, "module index", index, "skipping that test", file=stderr)
-                    continue
-
+        if not compile_wasm_source(mod, outpath):
+            print("Failed to compile", name, "module index", index, "skipping that test", file=stderr)
+            continue
         sep = ""
         print(f'''describe({json.dumps(testname)}, () => {{
-{gen_parse_module(testname, index)}
+{gen_parse_module(testname, index) if mod else ''}
 {sep.join(gentest(x, testname) for x in description["tests"])}
 }});
 ''')
