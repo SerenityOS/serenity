@@ -17,25 +17,25 @@ namespace Unicode {
 
 struct LanguageID {
     bool is_root { false };
-    Optional<StringView> language {};
-    Optional<StringView> script {};
-    Optional<StringView> region {};
-    Vector<StringView> variants {};
+    Optional<String> language {};
+    Optional<String> script {};
+    Optional<String> region {};
+    Vector<String> variants {};
 };
 
 struct Keyword {
-    StringView key {};
-    Vector<StringView> types {};
+    String key {};
+    Vector<String> types {};
 };
 
 struct LocaleExtension {
-    Vector<StringView> attributes {};
+    Vector<String> attributes {};
     Vector<Keyword> keywords {};
 };
 
 struct TransformedField {
-    StringView key;
-    Vector<StringView> values {};
+    String key;
+    Vector<String> values {};
 };
 
 struct TransformedExtension {
@@ -45,7 +45,7 @@ struct TransformedExtension {
 
 struct OtherExtension {
     char key {};
-    Vector<StringView> values {};
+    Vector<String> values {};
 };
 
 using Extension = Variant<LocaleExtension, TransformedExtension, OtherExtension>;
@@ -53,7 +53,7 @@ using Extension = Variant<LocaleExtension, TransformedExtension, OtherExtension>
 struct LocaleID {
     LanguageID language_id {};
     Vector<Extension> extensions {};
-    Vector<StringView> private_use_extensions {};
+    Vector<String> private_use_extensions {};
 };
 
 // Note: These methods only verify that the provided strings match the EBNF grammar of the

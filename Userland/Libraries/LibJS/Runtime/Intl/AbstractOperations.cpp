@@ -19,7 +19,7 @@ namespace JS::Intl {
 // 6.2.2 IsStructurallyValidLanguageTag ( locale ), https://tc39.es/ecma402/#sec-isstructurallyvalidlanguagetag
 static Optional<Unicode::LocaleID> is_structurally_valid_language_tag(StringView locale)
 {
-    auto contains_duplicate_variant = [](Vector<StringView>& variants) {
+    auto contains_duplicate_variant = [](auto& variants) {
         if (variants.is_empty())
             return false;
 
