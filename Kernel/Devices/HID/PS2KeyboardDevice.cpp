@@ -53,13 +53,12 @@ void PS2KeyboardDevice::irq_handle_byte_read(u8 byte)
         update_modifier(Mod_Super, pressed);
         break;
     case 0x2a:
+        m_left_shift_pressed = pressed;
+        update_modifier(Mod_Shift, m_left_shift_pressed || m_right_shift_pressed);
+        break;
     case 0x36:
-        if (m_both_shift_keys_pressed)
-            m_both_shift_keys_pressed = false;
-        else if ((m_modifiers & Mod_Shift) != 0 && pressed)
-            m_both_shift_keys_pressed = true;
-        else
-            update_modifier(Mod_Shift, pressed);
+        m_right_shift_pressed = pressed;
+        update_modifier(Mod_Shift, m_left_shift_pressed || m_right_shift_pressed);
         break;
     }
     switch (ch) {

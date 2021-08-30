@@ -61,7 +61,8 @@ protected:
     bool m_caps_lock_on { false };
     bool m_num_lock_on { false };
     bool m_has_e0_prefix { false };
-    bool m_both_shift_keys_pressed { false };
+    bool m_left_shift_pressed { false };
+    bool m_right_shift_pressed { false };
 
     void key_state_changed(u8 raw, bool pressed);
 };
