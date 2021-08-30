@@ -162,11 +162,6 @@ void Object::dump_tree(int indent)
     });
 }
 
-void Object::deferred_invoke(Function<void(Object&)> invokee)
-{
-    deferred_invoke([invokee = move(invokee), this] { invokee(*this); });
-}
-
 void Object::deferred_invoke(Function<void()> invokee)
 {
     Core::deferred_invoke([invokee = move(invokee), strong_this = NonnullRefPtr(*this)] { invokee(); });
