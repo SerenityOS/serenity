@@ -355,8 +355,17 @@ int run_in_desktop_mode()
 
     auto desktop_view_context_menu = GUI::Menu::construct("Directory View");
 
-    auto file_manager_action = GUI::Action::create("Show in File &Manager", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"), [&](GUI::Action const&) {
-        Desktop::Launcher::open(URL::create_with_file_protocol(directory_view.path()));
+    auto file_manager_action = GUI::Action::create("Open in File &Manager", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"), [&](auto&) {
+        auto paths = directory_view.selected_file_paths();
+        if (paths.is_empty()) {
+            Desktop::Launcher::open(URL::create_with_file_protocol(directory_view.path()));
+            return;
+        }
+
+        for (auto& path : paths) {
+            if (Core::File::is_directory(path))
+                Desktop::Launcher::open(URL::create_with_file_protocol(path));
+        }
     });
 
     auto display_properties_action = GUI::Action::create("&Display Settings", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png"), [&](GUI::Action const&) {
@@ -368,11 +377,14 @@ int run_in_desktop_mode()
     desktop_view_context_menu->add_action(paste_action);
     desktop_view_context_menu->add_separator();
     desktop_view_context_menu->add_action(file_manager_action);
-    desktop_view_context_menu->add_action(directory_view.open_terminal_action());
+    desktop_view_context_menu->add_action(open_terminal_action);
     desktop_view_context_menu->add_separator();
     desktop_view_context_menu->add_action(display_properties_action);
 
     auto desktop_context_menu = GUI::Menu::construct("Directory View Directory");
+
+    desktop_context_menu->add_action(file_manager_action);
+    desktop_context_menu->add_separator();
     desktop_context_menu->add_action(cut_action);
     desktop_context_menu->add_action(copy_action);
     desktop_context_menu->add_action(paste_action);
@@ -389,7 +401,7 @@ int run_in_desktop_mode()
         if (index.is_valid()) {
             auto& node = directory_view.node(index);
             if (node.is_directory()) {
-                desktop_context_menu->popup(event.screen_position());
+                desktop_context_menu->popup(event.screen_position(), file_manager_action);
             } else {
                 file_context_menu = GUI::Menu::construct("Directory View File");
 
@@ -1010,8 +1022,14 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
             || !directory_view.current_view().selection().is_empty());
     };
 
+    auto directory_open_action = GUI::Action::create("Open", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
+        directory_view.open(directory_view.selected_file_paths().first());
+    });
+
+    directory_context_menu->add_action(directory_open_action);
     directory_context_menu->add_action(open_in_new_window_action);
     directory_context_menu->add_action(open_in_new_terminal_action);
+    directory_context_menu->add_separator();
     directory_context_menu->add_action(cut_action);
     directory_context_menu->add_action(copy_action);
     directory_context_menu->add_action(folder_specific_paste_action);
@@ -1053,7 +1071,7 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
             if (node.is_directory()) {
                 auto should_get_enabled = access(node.full_path().characters(), W_OK) == 0 && GUI::Clipboard::the().mime_type() == "text/uri-list";
                 folder_specific_paste_action->set_enabled(should_get_enabled);
-                directory_context_menu->popup(event.screen_position());
+                directory_context_menu->popup(event.screen_position(), directory_open_action);
             } else {
                 file_context_menu = GUI::Menu::construct("Directory View File");
 
