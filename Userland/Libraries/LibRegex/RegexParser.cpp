@@ -12,6 +12,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Utf16View.h>
 #include <LibUnicode/CharacterTypes.h>
 
@@ -460,6 +461,11 @@ bool PosixBasicParser::parse_nonduplicating_re(ByteCode& bytecode, size_t& match
 {
     // nondupl_RE : one_char_or_coll_elem_RE | Back_open_paren RE_expression Back_close_paren | BACKREF
     if (try_skip("\\(")) {
+        TemporaryChange change { m_current_capture_group_depth, m_current_capture_group_depth + 1 };
+        // Max number of addressable capture groups is 10, let's just be lenient
+        // and accept 20; anything past that is probably a silly pattern anyway.
+        if (m_current_capture_group_depth > 20)
+            return set_error(Error::InvalidPattern);
         ByteCode capture_bytecode;
         size_t capture_length_minimum = 0;
         auto capture_group_index = ++m_parser_state.capture_groups_count;
