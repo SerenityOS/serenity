@@ -245,7 +245,10 @@ def genarg(spec):
                     return str(struct.unpack('>i', struct.pack('>Q', int(x, 16))[4:])[0])
 
                 # cast back to i64 to get the correct sign
-                return str(struct.unpack('>q', struct.pack('>Q', int(x, 16)))[0])
+                return str(struct.unpack('>q', struct.pack('>Q', int(x, 16)))[0]) + 'n'
+            if spec['type'] == 'i64':
+                # Make a bigint instead, since `double' cannot fit all i64 values.
+                return x + 'n'
             return x
 
         if x == 'nan':
@@ -304,8 +307,8 @@ def genresult(ident, entry):
 
     if entry['kind'] == 'return':
         return (
-            f'let {ident}_result = {expectation};\n    ' +
-            (f'expect({ident}_result).toBe({genarg(entry["result"])})\n    ' if entry["result"] is not None else '')
+                f'let {ident}_result = {expectation};\n    ' +
+                (f'expect({ident}_result).toBe({genarg(entry["result"])})\n    ' if entry["result"] is not None else '')
         )
 
     if entry['kind'] == 'trap':
