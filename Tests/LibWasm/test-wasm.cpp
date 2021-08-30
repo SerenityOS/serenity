@@ -184,6 +184,8 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
             if (auto v = value.get_pointer<Wasm::GlobalAddress>()) {
                 return m_machine.store().get(*v)->value().value().visit(
                     [&](const auto& value) -> JS::Value { return JS::Value(static_cast<double>(value)); },
+                    [&](i32 value) { return JS::Value(static_cast<double>(value)); },
+                    [&](i64 value) -> JS::Value { return JS::js_bigint(vm, Crypto::SignedBigInteger::create_from(value)); },
                     [&](const Wasm::Reference& reference) -> JS::Value {
                         return reference.ref().visit(
                             [&](const Wasm::Reference::Null&) -> JS::Value { return JS::js_null(); },
@@ -224,25 +226,33 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
     }
     size_t index = 1;
     for (auto& param : type->parameters()) {
-        auto value = vm.argument(index++).to_double(global_object);
+        auto argument = vm.argument(index++);
+        double double_value = 0;
+        if (!argument.is_bigint())
+            double_value = argument.to_double(global_object);
         switch (param.kind()) {
         case Wasm::ValueType::Kind::I32:
-            arguments.append(Wasm::Value(param, static_cast<u64>(value)));
+            arguments.append(Wasm::Value(param, static_cast<u64>(double_value)));
             break;
         case Wasm::ValueType::Kind::I64:
-            arguments.append(Wasm::Value(param, static_cast<u64>(value)));
+            if (argument.is_bigint()) {
+                auto value = argument.to_bigint_int64(global_object);
+                arguments.append(Wasm::Value(param, bit_cast<u64>(value)));
+            } else {
+                arguments.append(Wasm::Value(param, static_cast<u64>(double_value)));
+            }
             break;
         case Wasm::ValueType::Kind::F32:
-            arguments.append(Wasm::Value(static_cast<float>(value)));
+            arguments.append(Wasm::Value(static_cast<float>(double_value)));
             break;
         case Wasm::ValueType::Kind::F64:
-            arguments.append(Wasm::Value(static_cast<double>(value)));
+            arguments.append(Wasm::Value(static_cast<double>(double_value)));
             break;
         case Wasm::ValueType::Kind::FunctionReference:
-            arguments.append(Wasm::Value(Wasm::Reference { Wasm::Reference::Func { static_cast<u64>(value) } }));
+            arguments.append(Wasm::Value(Wasm::Reference { Wasm::Reference::Func { static_cast<u64>(double_value) } }));
             break;
         case Wasm::ValueType::Kind::ExternReference:
-            arguments.append(Wasm::Value(Wasm::Reference { Wasm::Reference::Func { static_cast<u64>(value) } }));
+            arguments.append(Wasm::Value(Wasm::Reference { Wasm::Reference::Func { static_cast<u64>(double_value) } }));
             break;
         case Wasm::ValueType::Kind::NullFunctionReference:
             arguments.append(Wasm::Value(Wasm::Reference { Wasm::Reference::Null { Wasm::ValueType(Wasm::ValueType::Kind::FunctionReference) } }));
@@ -265,6 +275,8 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
     JS::Value return_value;
     result.values().first().value().visit(
         [&](const auto& value) { return_value = JS::Value(static_cast<double>(value)); },
+        [&](i32 value) { return_value = JS::Value(static_cast<double>(value)); },
+        [&](i64 value) { return_value = JS::Value(JS::js_bigint(vm, Crypto::SignedBigInteger::create_from(value))); },
         [&](const Wasm::Reference& reference) {
             reference.ref().visit(
                 [&](const Wasm::Reference::Null&) { return_value = JS::js_null(); },
