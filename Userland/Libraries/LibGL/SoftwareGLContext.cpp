@@ -1819,6 +1819,17 @@ void SoftwareGLContext::gl_polygon_mode(GLenum face, GLenum mode)
     m_rasterizer.set_options(options);
 }
 
+void SoftwareGLContext::gl_polygon_offset(GLfloat factor, GLfloat units)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_polygon_offset, factor, units);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    auto rasterizer_options = m_rasterizer.options();
+    rasterizer_options.depth_offset_factor = factor;
+    rasterizer_options.depth_offset_constant = units;
+    m_rasterizer.set_options(rasterizer_options);
+}
+
 void SoftwareGLContext::gl_fogfv(GLenum pname, GLfloat* params)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);

@@ -269,6 +269,9 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
                         z = options.depth_min + (options.depth_max - options.depth_min) * (z + 1) / 2;
 
+                        // FIXME: Also apply depth_offset_factor which depends on the depth gradient
+                        z += options.depth_offset_constant * NumericLimits<float>::epsilon();
+
                         bool pass = false;
                         switch (options.depth_func) {
                         case GL_ALWAYS:

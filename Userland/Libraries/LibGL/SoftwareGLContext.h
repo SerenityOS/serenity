@@ -89,6 +89,7 @@ public:
     virtual void gl_depth_range(GLdouble min, GLdouble max) override;
     virtual void gl_depth_func(GLenum func) override;
     virtual void gl_polygon_mode(GLenum face, GLenum mode) override;
+    virtual void gl_polygon_offset(GLfloat factor, GLfloat units) override;
     virtual void gl_fogfv(GLenum pname, GLfloat* params) override;
     virtual void gl_fogf(GLenum pname, GLfloat param) override;
     virtual void gl_fogi(GLenum pname, GLint param) override;
@@ -227,7 +228,8 @@ private:
             decltype(&SoftwareGLContext::gl_depth_mask),
             decltype(&SoftwareGLContext::gl_draw_arrays),
             decltype(&SoftwareGLContext::gl_draw_elements),
-            decltype(&SoftwareGLContext::gl_depth_range)>;
+            decltype(&SoftwareGLContext::gl_depth_range),
+            decltype(&SoftwareGLContext::gl_polygon_offset)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;

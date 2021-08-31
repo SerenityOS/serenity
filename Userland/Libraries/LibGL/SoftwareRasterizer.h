@@ -45,6 +45,8 @@ struct RasterizerOptions {
     GLfloat fog_start { 0.0f };
     GLfloat fog_end { 1.0f };
     GLenum draw_buffer { GL_BACK };
+    GLfloat depth_offset_factor { 0 };
+    GLfloat depth_offset_constant { 0 };
 };
 
 class SoftwareRasterizer final {
