@@ -32,6 +32,7 @@ PropertiesWindow::PropertiesWindow(String const& path, bool disable_rename, Wind
 
     auto& main_widget = set_main_widget<GUI::Widget>();
     main_widget.set_layout<GUI::VerticalBoxLayout>();
+    main_widget.layout()->set_spacing(6);
     main_widget.layout()->set_margins(4);
     main_widget.set_fill_with_background_color(true);
 
