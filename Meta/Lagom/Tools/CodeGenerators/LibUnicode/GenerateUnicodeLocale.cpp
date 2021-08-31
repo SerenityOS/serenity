@@ -42,6 +42,7 @@ struct UnicodeLocaleData {
     HashMap<String, String> script_aliases;
     HashMap<String, String> variant_aliases;
     HashMap<String, String> subdivision_aliases;
+    HashMap<String, String> complex_mappings;
 };
 
 static void write_to_file_if_different(Core::File& file, StringView contents)
@@ -72,10 +73,14 @@ static void parse_core_aliases(String core_supplemental_path, UnicodeLocaleData&
     auto const& metadata_object = supplemental_object.as_object().get("metadata"sv);
     auto const& alias_object = metadata_object.as_object().get("alias"sv);
 
-    auto append_aliases = [](auto& alias_object, auto& alias_map) {
+    auto append_aliases = [&](auto& alias_object, auto& alias_map) {
         alias_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
             auto alias = value.as_object().get("_replacement"sv).as_string();
-            alias_map.set(key, move(alias));
+
+            if (key.contains('-'))
+                locale_data.complex_mappings.set(key, move(alias));
+            else
+                alias_map.set(key, move(alias));
         });
     };
 
@@ -343,6 +348,8 @@ Optional<Currency> currency_from_string(StringView const& currency);
 Optional<StringView> resolve_variant_alias(StringView const& variant);
 Optional<StringView> resolve_subdivision_alias(StringView const& subdivision);
 
+void resolve_complex_language_aliases(Unicode::LanguageID& language_id);
+
 }
 
 }
@@ -362,6 +369,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
 #include <AK/Array.h>
 #include <AK/HashMap.h>
 #include <AK/Span.h>
+#include <LibUnicode/Locale.h>
 #include <LibUnicode/UnicodeLocale.h>
 
 namespace Unicode {
@@ -449,6 +457,54 @@ static constexpr Array<Span<StringView const>, @size@> @name@ { {
     append_mapping("s_currencies"sv, "s_currencies_{}", locale_data.currencies, [](auto const& value) { return value.currencies; });
 
     generator.append(R"~~~(
+struct LanguageMapping {
+    Unicode::LanguageID key;
+    Unicode::LanguageID alias;
+};
+)~~~");
+
+    auto append_complex_mapping = [&](StringView name, auto const& mappings) {
+        generator.set("name"sv, name);
+        generator.append(R"~~~(
+static auto const& ensure_@name@_map()
+{
+    static Vector<LanguageMapping> @name@_map;
+
+    auto append_mapping = [&](StringView key, StringView alias) {
+        if (auto key_value = Unicode::parse_unicode_language_id(key); key_value.has_value()) {
+            if (auto alias_value = Unicode::parse_unicode_language_id(alias); alias_value.has_value())
+                @name@_map.append({ key_value.release_value(), alias_value.release_value() });
+        }
+    };
+)~~~");
+
+        auto keys = mappings.keys();
+        quick_sort(keys, [](auto const& lhs, auto const& rhs) {
+            // Sort the keys such that "und" language tags are at the end, as those are less specific.
+            if (lhs.starts_with("und"sv) && !rhs.starts_with("und"sv))
+                return false;
+            if (!lhs.starts_with("und"sv) && rhs.starts_with("und"sv))
+                return true;
+            return lhs < rhs;
+        });
+
+        for (auto const& key : keys) {
+            generator.set("key"sv, key);
+            generator.set("alias"sv, mappings.get(key).value());
+            generator.append(R"~~~(
+    append_mapping("@key@"sv, "@alias@"sv);)~~~");
+        }
+
+        generator.append(R"~~~(
+
+    return @name@_map;
+}
+)~~~");
+    };
+
+    append_complex_mapping("complex_alias"sv, locale_data.complex_mappings);
+
+    generator.append(R"~~~(
 namespace Detail {
 )~~~");
 
@@ -513,14 +569,24 @@ Optional<@enum_title@> @enum_snake@_from_string(StringView const& @enum_snake@)
         generator.append(R"~~~(
 Optional<StringView> resolve_@enum_snake@_alias(StringView const& @enum_snake@)
 {
-    static HashMap<StringView, StringView> @enum_snake@_aliases { {)~~~");
+    static HashMap<StringView, StringView> @enum_snake@_aliases { {
+        )~~~");
+
+        constexpr size_t max_values_per_row = 10;
+        size_t values_in_current_row = 0;
 
         for (auto const& alias : aliases) {
+            if (values_in_current_row++ > 0)
+                generator.append(" ");
+
             generator.set("key"sv, alias.key);
             generator.set("alias"sv, alias.value);
+            generator.append("{ \"@key@\"sv, \"@alias@\"sv },");
 
-            generator.append(R"~~~(
-        { "@key@"sv, "@alias@"sv },)~~~");
+            if (values_in_current_row == max_values_per_row) {
+                generator.append("\n        ");
+                values_in_current_row = 0;
+            }
         }
 
         generator.append(R"~~~(
@@ -554,6 +620,35 @@ Optional<StringView> resolve_@enum_snake@_alias(StringView const& @enum_snake@)
     append_alias_search("subdivision"sv, locale_data.subdivision_aliases);
 
     generator.append(R"~~~(
+void resolve_complex_language_aliases(Unicode::LanguageID& language_id)
+{
+    static auto const& complex_alias_map = ensure_complex_alias_map();
+
+    for (auto const& map : complex_alias_map) {
+        if ((map.key.language != language_id.language) && (map.key.language != "und"sv))
+            continue;
+        if (map.key.script.has_value() && (map.key.script != language_id.script))
+            continue;
+        if (map.key.region.has_value() && (map.key.region != language_id.region))
+            continue;
+        if (!map.key.variants.is_empty() && (map.key.variants != language_id.variants))
+            continue;
+
+        auto alias = map.alias;
+        if (alias.language == "und"sv)
+            alias.language = move(language_id.language);
+        if (!map.key.script.has_value() && !alias.script.has_value())
+            alias.script = move(language_id.script);
+        if (!map.key.region.has_value() && !alias.region.has_value())
+            alias.region = move(language_id.region);
+        if (map.key.variants.is_empty() && alias.variants.is_empty())
+            alias.variants = move(language_id.variants);
+
+        language_id = move(alias);
+        break;
+    }
+}
+
 }
 
 }
