@@ -140,6 +140,11 @@ void glPolygonMode(GLenum face, GLenum mode)
     g_gl_context->gl_polygon_mode(face, mode);
 }
 
+void glPolygonOffset(GLfloat factor, GLfloat units)
+{
+    g_gl_context->gl_polygon_offset(factor, units);
+}
+
 void glPixelStorei(GLenum pname, GLint param)
 {
     g_gl_context->gl_pixel_store(pname, param);
