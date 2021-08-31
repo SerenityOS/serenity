@@ -1,6 +1,6 @@
 describe("correct behavior", () => {
-    test("length is 2", () => {
-        expect(Temporal.Calendar.prototype.dateFromFields).toHaveLength(2);
+    test("length is 1", () => {
+        expect(Temporal.Calendar.prototype.dateFromFields).toHaveLength(1);
     });
 
     test("basic functionality", () => {
