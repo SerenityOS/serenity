@@ -85,6 +85,11 @@ void glReadBuffer(GLenum mode)
     g_gl_context->gl_read_buffer(mode);
 }
 
+void glDrawBuffer(GLenum buffer)
+{
+    g_gl_context->gl_draw_buffer(buffer);
+}
+
 void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels)
 {
     g_gl_context->gl_read_pixels(x, y, width, height, format, type, pixels);
