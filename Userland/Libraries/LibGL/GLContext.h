@@ -56,6 +56,7 @@ public:
     virtual void gl_alpha_func(GLenum func, GLclampf ref) = 0;
     virtual void gl_hint(GLenum target, GLenum mode) = 0;
     virtual void gl_read_buffer(GLenum mode) = 0;
+    virtual void gl_draw_buffer(GLenum buffer) = 0;
     virtual void gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels) = 0;
     virtual void gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data) = 0;
     virtual void gl_tex_parameter(GLenum target, GLenum pname, GLfloat param) = 0;

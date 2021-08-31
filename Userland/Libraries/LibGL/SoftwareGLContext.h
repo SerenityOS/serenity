@@ -66,6 +66,7 @@ public:
     virtual void gl_alpha_func(GLenum func, GLclampf ref) override;
     virtual void gl_hint(GLenum target, GLenum mode) override;
     virtual void gl_read_buffer(GLenum mode) override;
+    virtual void gl_draw_buffer(GLenum buffer) override;
     virtual void gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels) override;
     virtual void gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data) override;
     virtual void gl_tex_parameter(GLenum target, GLenum pname, GLfloat param) override;
@@ -152,6 +153,7 @@ private:
     GLclampf m_alpha_test_ref_value = 0;
 
     GLenum m_current_read_buffer = GL_BACK;
+    GLenum m_current_draw_buffer = GL_BACK;
 
     // Client side arrays
     bool m_client_side_vertex_array_enabled = false;
