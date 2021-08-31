@@ -52,6 +52,7 @@ private:
     RefPtr<GUI::Button> m_show_desktop_button;
 
     RefPtr<Desktop::AppFile> m_assistant_app_file;
+    RefPtr<Desktop::AppFile> m_screenshot_app_file;
 
     unsigned m_current_virtual_desktop_row { 0 };
     unsigned m_current_virtual_desktop_column { 0 };

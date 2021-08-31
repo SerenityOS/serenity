@@ -33,6 +33,7 @@ private:
     virtual void applet_area_size_changed(i32, Gfx::IntSize const&) override;
     virtual void super_key_pressed(i32) override;
     virtual void super_space_key_pressed(i32) override;
+    virtual void super_s_key_pressed(i32) override;
     virtual void virtual_desktop_changed(i32, u32, u32) override;
 };
 

@@ -97,6 +97,8 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
 
     auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, "Assistant.af");
     m_assistant_app_file = Desktop::AppFile::open(af_path);
+    af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, "Screenshot.af");
+    m_screenshot_app_file = Desktop::AppFile::open(af_path);
 }
 
 TaskbarWindow::~TaskbarWindow()
@@ -379,6 +381,11 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     case GUI::Event::WM_SuperSpaceKeyPressed: {
         if (!m_assistant_app_file->spawn())
             warnln("failed to spawn 'Assistant' when requested via Super+Space");
+        break;
+    }
+    case GUI::Event::WM_SuperSKeyPressed: {
+        if (!m_screenshot_app_file->spawn())
+            warnln("failed to spawn 'Screenshot' when requested via Super+S");
         break;
     }
     case GUI::Event::WM_VirtualDesktopChanged: {
