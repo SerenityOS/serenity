@@ -316,6 +316,10 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("EN-U-MS-IMPERIAL"sv, "en-u-ms-uksystem"sv);
     test("en-u-ma-imperial"sv, "en-u-ma-imperial"sv);
     test("EN-U-MA-IMPERIAL"sv, "en-u-ma-imperial"sv);
+    test("en-u-tz-hongkong"sv, "en-u-tz-hkhkg"sv);
+    test("EN-U-TZ-HONGKONG"sv, "en-u-tz-hkhkg"sv);
+    test("en-u-ta-hongkong"sv, "en-u-ta-hongkong"sv);
+    test("EN-U-TA-HONGKONG"sv, "en-u-ta-hongkong"sv);
 
     test("en-t-en"sv, "en-t-en"sv);
     test("EN-T-EN"sv, "en-t-en"sv);
@@ -339,6 +343,8 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("EN-T-K1-PRIMARY"sv, "en-t-k1-primary"sv);
     test("en-t-k1-imperial"sv, "en-t-k1-imperial"sv);
     test("EN-T-K1-IMPERIAL"sv, "en-t-k1-imperial"sv);
+    test("en-t-k1-hongkong"sv, "en-t-k1-hongkong"sv);
+    test("EN-T-K1-HONGKONG"sv, "en-t-k1-hongkong"sv);
 
     test("en-0-aaa"sv, "en-0-aaa"sv);
     test("EN-0-AAA"sv, "en-0-aaa"sv);
