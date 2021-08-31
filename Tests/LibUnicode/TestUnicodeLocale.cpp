@@ -410,4 +410,20 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("EN-U-RG-CN12"sv, "en-u-rg-cntj"sv);
     test("en-u-aa-cn11"sv, "en-u-aa-cn11"sv);
     test("EN-U-AA-CN11"sv, "en-u-aa-cn11"sv);
+
+    // Complex aliases.
+    test("en-lojban"sv, "en"sv);
+    test("EN-LOJBAN"sv, "en"sv);
+    test("art-lojban"sv, "jbo"sv);
+    test("ART-LOJBAN"sv, "jbo"sv);
+    test("cel-gaulish"sv, "xtg"sv);
+    test("CEL-GAULISH"sv, "xtg"sv);
+    test("zh-guoyu"sv, "zh"sv);
+    test("ZH-GUOYU"sv, "zh"sv);
+    test("zh-hakka"sv, "hak"sv);
+    test("ZH-HAKKA"sv, "hak"sv);
+    test("zh-xiang"sv, "hsn"sv);
+    test("ZH-XIANG"sv, "hsn"sv);
+    test("ja-latn-hepburn-heploc"sv, "ja-Latn-alalc97"sv);
+    test("JA-LATN-HEPBURN-HEPLOC"sv, "ja-Latn-alalc97"sv);
 }

@@ -568,6 +568,10 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
         for (auto& variant : language_id.variants)
             variant = variant.to_lowercase();
 
+#if ENABLE_UNICODE_DATA
+        Detail::resolve_complex_language_aliases(language_id);
+#endif
+
         if (auto alias = resolve_language_alias(*language_id.language); alias.has_value()) {
             auto language_alias = parse_unicode_language_id(*alias);
             VERIFY(language_alias.has_value());
