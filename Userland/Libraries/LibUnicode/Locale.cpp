@@ -483,6 +483,7 @@ Optional<LocaleID> parse_unicode_locale_id(StringView locale)
 static void perform_hard_coded_key_value_substitutions(String& key, String& value)
 {
     // FIXME: In the XML export of CLDR, there are some aliases defined in the following files:
+    // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/calendar.xml
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/collation.xml
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/measure.xml
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/timezone.xml
@@ -490,7 +491,9 @@ static void perform_hard_coded_key_value_substitutions(String& key, String& valu
     //
     // There doesn't seem to be a counterpart in the JSON export. Since there aren't many such
     // aliases, until an XML parser is implemented, those aliases are implemented here.
-    if (key.is_one_of("kb"sv, "kc"sv, "kh"sv, "kk"sv, "kn"sv) && (value == "yes"sv)) {
+    if ((key == "ca"sv) && (value == "islamicc"sv)) {
+        value = "islamic-civil"sv;
+    } else if (key.is_one_of("kb"sv, "kc"sv, "kh"sv, "kk"sv, "kn"sv) && (value == "yes"sv)) {
         value = "true"sv;
     } else if (key == "ks"sv) {
         if (value == "primary"sv)
@@ -538,6 +541,20 @@ static void perform_hard_coded_key_value_substitutions(String& key, String& valu
         else if (value == "zulu"sv) value = "utc"sv;
         // clang-format on
     }
+}
+
+static void perform_hard_coded_key_multi_value_substitutions(String const& key, Vector<String>& values)
+{
+    // Similar to perform_hard_coded_key_value_substitutions, some aliases depend on multiple
+    // variants being present in the original locale. Those are canonicalized separately here.
+    // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/calendar.xml
+    if ((key != "ca"sv) || (values.size() != 3))
+        return;
+
+    static Vector<String> ethiopic_amete_alem { "ethiopic"sv, "amete"sv, "alem"sv };
+
+    if (values == ethiopic_amete_alem)
+        values = { "ethioaa"sv };
 }
 
 static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
@@ -626,6 +643,8 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
 
             values.append(move(value));
         }
+
+        perform_hard_coded_key_multi_value_substitutions(key, values);
     };
 
     canonicalize_language(locale_id.language_id, false);
@@ -644,22 +663,22 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
     for (auto& extension : locale_id.extensions) {
         extension.visit(
             [&](LocaleExtension& ext) {
-                quick_sort(ext.attributes);
-                quick_sort(ext.keywords, [](auto const& a, auto const& b) { return a.key < b.key; });
-
                 for (auto& attribute : ext.attributes)
                     attribute = attribute.to_lowercase();
                 for (auto& keyword : ext.keywords)
                     canonicalize_key_value_list(keyword.key, keyword.types, true);
+
+                quick_sort(ext.attributes);
+                quick_sort(ext.keywords, [](auto const& a, auto const& b) { return a.key < b.key; });
             },
             [&](TransformedExtension& ext) {
                 if (ext.language.has_value())
                     canonicalize_language(*ext.language, true);
 
-                quick_sort(ext.fields, [](auto const& a, auto const& b) { return a.key < b.key; });
-
                 for (auto& field : ext.fields)
                     canonicalize_key_value_list(field.key, field.values, false);
+
+                quick_sort(ext.fields, [](auto const& a, auto const& b) { return a.key < b.key; });
             },
             [&](OtherExtension& ext) {
                 ext.key = static_cast<char>(to_ascii_lowercase(ext.key));

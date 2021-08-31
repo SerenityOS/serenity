@@ -320,6 +320,14 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("EN-U-TZ-HONGKONG"sv, "en-u-tz-hkhkg"sv);
     test("en-u-ta-hongkong"sv, "en-u-ta-hongkong"sv);
     test("EN-U-TA-HONGKONG"sv, "en-u-ta-hongkong"sv);
+    test("en-u-ca-ethiopic-amete-alem"sv, "en-u-ca-ethioaa"sv);
+    test("EN-U-CA-ETHIOPIC-AMETE-ALEM"sv, "en-u-ca-ethioaa"sv);
+    test("en-u-ca-alem-ethiopic-amete"sv, "en-u-ca-alem-ethiopic-amete"sv);
+    test("EN-U-CA-ALEM-ETHIOPIC-AMETE"sv, "en-u-ca-alem-ethiopic-amete"sv);
+    test("en-u-ca-ethiopic-amete-xxx-alem"sv, "en-u-ca-ethiopic-amete-xxx-alem"sv);
+    test("EN-U-CA-ETHIOPIC-AMETE-XXX-ALEM"sv, "en-u-ca-ethiopic-amete-xxx-alem"sv);
+    test("en-u-cb-ethiopic-amete-alem"sv, "en-u-cb-ethiopic-amete-alem"sv);
+    test("EN-U-CB-ETHIOPIC-AMETE-ALEM"sv, "en-u-cb-ethiopic-amete-alem"sv);
 
     test("en-t-en"sv, "en-t-en"sv);
     test("EN-T-EN"sv, "en-t-en"sv);
@@ -345,6 +353,8 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("EN-T-K1-IMPERIAL"sv, "en-t-k1-imperial"sv);
     test("en-t-k1-hongkong"sv, "en-t-k1-hongkong"sv);
     test("EN-T-K1-HONGKONG"sv, "en-t-k1-hongkong"sv);
+    test("en-t-k1-ethiopic-amete-alem"sv, "en-t-k1-ethiopic-amete-alem"sv);
+    test("EN-T-K1-ETHIOPIC-AMETE-ALEM"sv, "en-t-k1-ethiopic-amete-alem"sv);
 
     test("en-0-aaa"sv, "en-0-aaa"sv);
     test("EN-0-AAA"sv, "en-0-aaa"sv);
