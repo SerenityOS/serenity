@@ -446,8 +446,9 @@ bool PosixBasicParser::parse_simple_re(ByteCode& bytecode, size_t& match_length_
         if (min_limit > s_maximum_repetition_count || (max_limit.has_value() && *max_limit > s_maximum_repetition_count))
             return set_error(Error::InvalidBraceContent);
 
-        auto repetition_mark_id = m_parser_state.repetition_mark_count++;
-        ByteCode::transform_bytecode_repetition_min_max(simple_re_bytecode, min_limit, max_limit, repetition_mark_id, true);
+        auto min_repetition_mark_id = m_parser_state.repetition_mark_count++;
+        auto max_repetition_mark_id = m_parser_state.repetition_mark_count++;
+        ByteCode::transform_bytecode_repetition_min_max(simple_re_bytecode, min_limit, max_limit, min_repetition_mark_id, max_repetition_mark_id, true);
         match_length_minimum += re_match_length_minimum * min_limit;
     } else {
         match_length_minimum += re_match_length_minimum;
@@ -620,8 +621,9 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
             maybe_maximum = value.value();
         }
 
-        auto repetition_mark_id = m_parser_state.repetition_mark_count++;
-        ByteCode::transform_bytecode_repetition_min_max(bytecode_to_repeat, minimum, maybe_maximum, repetition_mark_id);
+        auto min_repetition_mark_id = m_parser_state.repetition_mark_count++;
+        auto max_repetition_mark_id = m_parser_state.repetition_mark_count++;
+        ByteCode::transform_bytecode_repetition_min_max(bytecode_to_repeat, minimum, maybe_maximum, min_repetition_mark_id, max_repetition_mark_id);
 
         consume(TokenType::RightCurly, Error::MismatchingBrace);
         return !has_error();
@@ -1219,8 +1221,9 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
         match_length_minimum = 0;
         break;
     case Repetition::Explicit: {
-        auto repetition_mark_id = m_parser_state.repetition_mark_count++;
-        ByteCode::transform_bytecode_repetition_min_max(stack, repeat_min.value(), repeat_max, repetition_mark_id, !ungreedy);
+        auto min_repetition_mark_id = m_parser_state.repetition_mark_count++;
+        auto max_repetition_mark_id = m_parser_state.repetition_mark_count++;
+        ByteCode::transform_bytecode_repetition_min_max(stack, repeat_min.value(), repeat_max, min_repetition_mark_id, max_repetition_mark_id, !ungreedy);
         match_length_minimum *= repeat_min.value();
         break;
     }
