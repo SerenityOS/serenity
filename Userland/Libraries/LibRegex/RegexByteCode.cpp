@@ -189,6 +189,9 @@ void ByteCode::ensure_opcodes_initialized()
         case OpCodeId::Repeat:
             s_opcodes[i] = make<OpCode_Repeat>();
             break;
+        case OpCodeId::ResetRepeat:
+            s_opcodes[i] = make<OpCode_ResetRepeat>();
+            break;
         }
     }
     s_opcodes_initialized = true;
@@ -880,6 +883,15 @@ ALWAYS_INLINE ExecutionResult OpCode_Repeat::execute(MatchInput const&, MatchSta
         ++repetition_mark;
     }
 
+    return ExecutionResult::Continue;
+}
+
+ALWAYS_INLINE ExecutionResult OpCode_ResetRepeat::execute(MatchInput const&, MatchState& state) const
+{
+    if (id() >= state.repetition_marks.size())
+        state.repetition_marks.resize(id() + 1);
+
+    state.repetition_marks.at(id()) = 0;
     return ExecutionResult::Continue;
 }
 
