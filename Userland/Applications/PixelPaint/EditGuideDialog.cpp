@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "CreateNewGuideDialog.h"
-#include <Applications/PixelPaint/CreateNewGuideDialogGML.h>
+#include "EditGuideDialog.h"
+#include <Applications/PixelPaint/EditGuideDialogGML.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/TextBox.h>
@@ -13,7 +13,7 @@
 
 namespace PixelPaint {
 
-CreateNewGuideDialog::CreateNewGuideDialog(GUI::Window* parent_window)
+EditGuideDialog::EditGuideDialog(GUI::Window* parent_window)
     : Dialog(parent_window)
 {
     set_title("Create new Guide");
@@ -22,7 +22,7 @@ CreateNewGuideDialog::CreateNewGuideDialog(GUI::Window* parent_window)
     set_resizable(false);
 
     auto& main_widget = set_main_widget<GUI::Widget>();
-    if (!main_widget.load_from_gml(create_new_guide_dialog_gml))
+    if (!main_widget.load_from_gml(edit_guide_dialog_gml))
         VERIFY_NOT_REACHED();
 
     auto horizontal_radio = main_widget.find_descendant_of_type_named<GUI::RadioButton>("orientation_horizontal_radio");

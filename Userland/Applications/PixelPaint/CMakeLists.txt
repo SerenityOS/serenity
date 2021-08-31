@@ -6,15 +6,15 @@ serenity_component(
 )
 
 compile_gml(PixelPaintWindow.gml PixelPaintWindowGML.h pixel_paint_window_gml)
-compile_gml(CreateNewGuideDialog.gml CreateNewGuideDialogGML.h create_new_guide_dialog_gml)
+compile_gml(EditGuideDialog.gml EditGuideDialogGML.h edit_guide_dialog_gml)
 
 set(SOURCES
     BrushTool.cpp
     BucketTool.cpp
-    CreateNewGuideDialog.cpp
-    CreateNewGuideDialogGML.h
     CreateNewImageDialog.cpp
     CreateNewLayerDialog.cpp
+    EditGuideDialog.cpp
+    EditGuideDialogGML.h
     EllipseTool.cpp
     EraseTool.cpp
     GuideTool.cpp

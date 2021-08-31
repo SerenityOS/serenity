@@ -7,19 +7,20 @@
 #pragma once
 
 #include "Guide.h"
+#include "ImageEditor.h"
 #include <LibGUI/Dialog.h>
 
 namespace PixelPaint {
 
-class CreateNewGuideDialog final : public GUI::Dialog {
-    C_OBJECT(CreateNewGuideDialog);
+class EditGuideDialog final : public GUI::Dialog {
+    C_OBJECT(EditGuideDialog);
 
 public:
     String const offset() const { return m_offset; }
     Guide::Orientation orientation() const { return m_orientation; }
 
 private:
-    CreateNewGuideDialog(GUI::Window* parent_window);
+    EditGuideDialog(GUI::Window* parent_window);
 
     String m_offset;
     Guide::Orientation m_orientation;
