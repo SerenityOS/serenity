@@ -218,6 +218,13 @@ void TabWidget::paint_event(PaintEvent& event)
         auto icon_rect_difference = icon_rect.top() - text_rect.top();
         text_rect.set_top(text_rect.top() + icon_rect_difference);
         text_rect.set_height(text_rect.height() - icon_rect_difference);
+
+        // ...unless our leftover height after text drawing is uneven, in which
+        // case we want to bias towards the bottom when the tab position is at
+        // the top.
+        if ((text_rect.height() - font().glyph_height()) % 2 != 0 && m_tab_position == TabPosition::Top) {
+            text_rect.set_top(text_rect.top() + 1);
+        }
     };
 
     for (size_t i = 0; i < m_tabs.size(); ++i) {
