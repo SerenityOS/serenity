@@ -1455,6 +1455,8 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
         VERIFY_NOT_REACHED();
     }
 
+    bounding_rect.intersect(rect);
+
     for (size_t i = 0; i < lines.size(); ++i) {
         auto& line = lines[i];
 
