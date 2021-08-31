@@ -62,4 +62,26 @@ EditGuideDialog::EditGuideDialog(GUI::Window* parent_window)
     };
 }
 
+Optional<float> EditGuideDialog::offset_as_pixel(const ImageEditor& editor)
+{
+    float offset = 0;
+    if (m_offset.ends_with('%')) {
+        auto percentage = m_offset.substring_view(0, m_offset.length() - 1).to_int();
+        if (!percentage.has_value())
+            return {};
+
+        if (orientation() == PixelPaint::Guide::Orientation::Horizontal)
+            offset = editor.image().size().height() * ((double)percentage.value() / 100.0);
+        else if (orientation() == PixelPaint::Guide::Orientation::Vertical)
+            offset = editor.image().size().width() * ((double)percentage.value() / 100.0);
+    } else {
+        auto parsed_int = m_offset.to_int();
+        if (!parsed_int.has_value())
+            return {};
+        offset = parsed_int.value();
+    }
+
+    return offset;
+}
+
 }
