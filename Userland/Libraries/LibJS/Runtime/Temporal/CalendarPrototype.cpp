@@ -36,10 +36,10 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.id, id_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.dateFromFields, date_from_fields, 2, attr);
-    define_native_function(vm.names.yearMonthFromFields, year_month_from_fields, 2, attr);
-    define_native_function(vm.names.monthDayFromFields, month_day_from_fields, 2, attr);
-    define_native_function(vm.names.dateAdd, date_add, 3, attr);
+    define_native_function(vm.names.dateFromFields, date_from_fields, 1, attr);
+    define_native_function(vm.names.yearMonthFromFields, year_month_from_fields, 1, attr);
+    define_native_function(vm.names.monthDayFromFields, month_day_from_fields, 1, attr);
+    define_native_function(vm.names.dateAdd, date_add, 2, attr);
     define_native_function(vm.names.year, year, 1, attr);
     define_native_function(vm.names.month, month, 1, attr);
     define_native_function(vm.names.monthCode, month_code, 1, attr);
@@ -83,7 +83,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::id_getter)
     return js_string(vm, calendar.to_string(global_object));
 }
 
-// 12.4.4 Temporal.Calendar.prototype.dateFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.datefromfields
+// 12.4.4 Temporal.Calendar.prototype.dateFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.datefromfields
 // NOTE: This is the minimum dateFromFields implementation for engines without ECMA-402.
 JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
 {
@@ -117,7 +117,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
     return create_temporal_date(global_object, result->year, result->month, result->day, *calendar);
 }
 
-// 12.4.5 Temporal.Calendar.prototype.yearMonthFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.yearmonthfromfields
+// 12.4.5 Temporal.Calendar.prototype.yearMonthFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.yearmonthfromfields
 // NOTE: This is the minimum yearMonthFromFields implementation for engines without ECMA-402.
 JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
 {
@@ -151,7 +151,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
     return create_temporal_year_month(global_object, result->year, result->month, *calendar, result->reference_iso_day);
 }
 
-// 12.4.6 Temporal.Calendar.prototype.monthDayFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.monthdayfromfields
+// 12.4.6 Temporal.Calendar.prototype.monthDayFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.monthdayfromfields
 // NOTE: This is the minimum monthDayFromFields implementation for engines without ECMA-402.
 JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
 {
@@ -185,7 +185,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
     return create_temporal_month_day(global_object, result->month, result->day, *calendar, result->reference_iso_year);
 }
 
-// 12.4.7 Temporal.Calendar.prototype.dateAdd ( date, duration, options ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dateadd
+// 12.4.7 Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dateadd
 // NOTE: This is the minimum dateAdd implementation for engines without ECMA-402.
 JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
 {

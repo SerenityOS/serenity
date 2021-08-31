@@ -1,6 +1,6 @@
 describe("correct behavior", () => {
-    test("length is 3", () => {
-        expect(Temporal.Calendar.prototype.dateAdd).toHaveLength(3);
+    test("length is 2", () => {
+        expect(Temporal.Calendar.prototype.dateAdd).toHaveLength(2);
     });
 
     test("basic functionality", () => {
