@@ -43,6 +43,8 @@ struct UnicodeLocaleData {
     HashMap<String, String> variant_aliases;
     HashMap<String, String> subdivision_aliases;
     HashMap<String, String> complex_mappings;
+    HashMap<String, String> likely_subtags;
+    Vector<String> likely_territory_subtags;
 };
 
 static void write_to_file_if_different(Core::File& file, StringView contents)
@@ -73,9 +75,12 @@ static void parse_core_aliases(String core_supplemental_path, UnicodeLocaleData&
     auto const& metadata_object = supplemental_object.as_object().get("metadata"sv);
     auto const& alias_object = metadata_object.as_object().get("alias"sv);
 
-    auto append_aliases = [&](auto& alias_object, auto& alias_map) {
+    auto append_aliases = [&](auto& alias_object, auto& alias_map, Vector<String>* likely_subtags_list = nullptr) {
         alias_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
             auto alias = value.as_object().get("_replacement"sv).as_string();
+
+            if (auto aliases = alias.split(' '); likely_subtags_list && (aliases.size() > 1))
+                likely_subtags_list->extend(move(aliases));
 
             if (key.contains('-'))
                 locale_data.complex_mappings.set(key, move(alias));
@@ -85,10 +90,44 @@ static void parse_core_aliases(String core_supplemental_path, UnicodeLocaleData&
     };
 
     append_aliases(alias_object.as_object().get("languageAlias"sv), locale_data.language_aliases);
-    append_aliases(alias_object.as_object().get("territoryAlias"sv), locale_data.territory_aliases);
+    append_aliases(alias_object.as_object().get("territoryAlias"sv), locale_data.territory_aliases, &locale_data.likely_territory_subtags);
     append_aliases(alias_object.as_object().get("scriptAlias"sv), locale_data.script_aliases);
     append_aliases(alias_object.as_object().get("variantAlias"sv), locale_data.variant_aliases);
     append_aliases(alias_object.as_object().get("subdivisionAlias"sv), locale_data.subdivision_aliases);
+}
+
+static void parse_likely_subtags(String core_supplemental_path, UnicodeLocaleData& locale_data)
+{
+    LexicalPath likely_subtags_path(move(core_supplemental_path));
+    likely_subtags_path = likely_subtags_path.append("likelySubtags.json"sv);
+    VERIFY(Core::File::exists(likely_subtags_path.string()));
+
+    auto likely_subtags_file_or_error = Core::File::open(likely_subtags_path.string(), Core::OpenMode::ReadOnly);
+    VERIFY(!likely_subtags_file_or_error.is_error());
+
+    auto likely_subtags = JsonParser(likely_subtags_file_or_error.value()->read_all()).parse();
+    VERIFY(likely_subtags.has_value());
+
+    auto const& supplemental_object = likely_subtags->as_object().get("supplemental"sv);
+    auto const& likely_subtags_object = supplemental_object.as_object().get("likelySubtags"sv);
+
+    likely_subtags_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+        auto likely_subtag = value.as_string();
+
+        auto regions = likely_subtag.split('-');
+        VERIFY(regions.size() == 3);
+
+        // Unicode TR35 has the following footnote in section 3.2.1 Canonical Unicode Locale Identifiers
+        //
+        //     Formally, replacement of multiple territories uses Section 4.3 Likely Subtags. However, there are a small
+        //     number of cases of multiple territories, so the mappings can be precomputed. This results in a faster
+        //     lookup with a very small subset of the likely subtags data.
+        //
+        // Since the likely subtags data is quite large, and resolving likely territory subtags is our only use case for
+        // this data, we only generate likely subtags that contain one of the above multiple territories.
+        if (locale_data.likely_territory_subtags.contains_slow(regions[2]))
+            locale_data.likely_subtags.set(key, move(likely_subtag));
+    });
 }
 
 static void parse_identity(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
@@ -245,6 +284,7 @@ static void parse_all_locales(String core_path, String locale_names_path, String
     VERIFY(Core::File::is_directory(core_supplemental_path.string()));
 
     parse_core_aliases(core_supplemental_path.string(), locale_data);
+    parse_likely_subtags(core_supplemental_path.string(), locale_data);
 
     while (locale_names_iterator.has_next()) {
         auto locale_path = locale_names_iterator.next_full_path();
@@ -349,6 +389,7 @@ Optional<StringView> resolve_variant_alias(StringView const& variant);
 Optional<StringView> resolve_subdivision_alias(StringView const& subdivision);
 
 void resolve_complex_language_aliases(Unicode::LanguageID& language_id);
+Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& language_id);
 
 }
 
@@ -503,8 +544,90 @@ static auto const& ensure_@name@_map()
     };
 
     append_complex_mapping("complex_alias"sv, locale_data.complex_mappings);
+    append_complex_mapping("likely_subtags"sv, locale_data.likely_subtags);
 
     generator.append(R"~~~(
+static Unicode::LanguageID const* resolve_likely_subtag(Unicode::LanguageID const& language_id)
+{
+    // https://unicode.org/reports/tr35/#Likely_Subtags
+    static auto const& likely_subtags_map = ensure_likely_subtags_map();
+
+    enum class State {
+        LanguageScriptRegion,
+        LanguageRegion,
+        LanguageScript,
+        Language,
+        UndScript,
+        Done,
+    };
+
+    auto state = State::LanguageScriptRegion;
+
+    while (state != State::Done) {
+        Unicode::LanguageID search_key;
+
+        switch (state) {
+        case State::LanguageScriptRegion:
+            state = State::LanguageRegion;
+            if (!language_id.script.has_value() || !language_id.region.has_value())
+                continue;
+
+            search_key.language = language_id.language;
+            search_key.script = language_id.script;
+            search_key.region = language_id.region;
+            break;
+
+        case State::LanguageRegion:
+            state = State::LanguageScript;
+            if (!language_id.region.has_value())
+                continue;
+
+            search_key.language = language_id.language;
+            search_key.region = language_id.region;
+            break;
+
+        case State::LanguageScript:
+            state = State::Language;
+            if (!language_id.script.has_value())
+                continue;
+
+            search_key.language = language_id.language;
+            search_key.script = language_id.script;
+            break;
+
+        case State::Language:
+            state = State::UndScript;
+            search_key.language = language_id.language;
+            break;
+
+        case State::UndScript:
+            state = State::Done;
+            if (!language_id.script.has_value())
+                continue;
+
+            search_key.language = "und"sv;
+            search_key.script = language_id.script;
+            break;
+
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        for (auto const& map : likely_subtags_map) {
+            if (map.key.language != search_key.language)
+                continue;
+            if (map.key.script != search_key.script)
+                continue;
+            if (map.key.region != search_key.region)
+                continue;
+
+            return &map.alias;
+        }
+    }
+
+    return nullptr;
+}
+
 namespace Detail {
 )~~~");
 
@@ -647,6 +770,13 @@ void resolve_complex_language_aliases(Unicode::LanguageID& language_id)
         language_id = move(alias);
         break;
     }
+}
+
+Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& language_id)
+{
+    if (auto const* likely_subtag = resolve_likely_subtag(language_id); likely_subtag != nullptr)
+        return likely_subtag->region;
+    return {};
 }
 
 }
