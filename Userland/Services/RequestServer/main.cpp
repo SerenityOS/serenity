@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/OwnPtr.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
@@ -38,9 +39,9 @@ int main(int, char**)
         return 1;
     }
 
-    [[maybe_unused]] auto gemini = new RequestServer::GeminiProtocol;
-    [[maybe_unused]] auto http = new RequestServer::HttpProtocol;
-    [[maybe_unused]] auto https = new RequestServer::HttpsProtocol;
+    [[maybe_unused]] auto gemini = make<RequestServer::GeminiProtocol>();
+    [[maybe_unused]] auto http = make<RequestServer::HttpProtocol>();
+    [[maybe_unused]] auto https = make<RequestServer::HttpsProtocol>();
 
     auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
     VERIFY(socket);
