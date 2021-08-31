@@ -14,6 +14,7 @@ namespace PixelPaint {
 class Guide : public RefCounted<Guide> {
 public:
     enum class Orientation {
+        Unset,
         Vertical,
         Horizontal,
     };
@@ -33,6 +34,7 @@ public:
     float offset() const { return m_offset; }
 
     void set_offset(float offset) { m_offset = offset; }
+    void set_orientation(Orientation orientation) { m_orientation = orientation; }
 
 private:
     Orientation m_orientation;
