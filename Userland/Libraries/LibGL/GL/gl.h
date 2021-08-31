@@ -25,6 +25,7 @@ extern "C" {
 // OpenGL related `defines`
 #define GL_TRUE 1
 #define GL_FALSE 0
+#define GL_NONE 0
 
 // Matrix Modes
 #define GL_MODELVIEW 0x0050
@@ -352,6 +353,7 @@ GLAPI void glShadeModel(GLenum mode);
 GLAPI void glAlphaFunc(GLenum func, GLclampf ref);
 GLAPI void glHint(GLenum target, GLenum mode);
 GLAPI void glReadBuffer(GLenum mode);
+GLAPI void glDrawBuffer(GLenum buffer);
 GLAPI void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels);
 GLAPI void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data);
 GLAPI void glTexCoord2f(GLfloat s, GLfloat t);

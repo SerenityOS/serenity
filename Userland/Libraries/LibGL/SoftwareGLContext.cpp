@@ -960,6 +960,46 @@ void SoftwareGLContext::gl_read_buffer(GLenum mode)
     m_current_read_buffer = mode;
 }
 
+void SoftwareGLContext::gl_draw_buffer(GLenum buffer)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_buffer, buffer);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: Also allow aux buffers GL_AUX0 through GL_AUX3 here
+    // plus any aux buffer between 0 and GL_AUX_BUFFERS
+    RETURN_WITH_ERROR_IF(buffer != GL_NONE
+            && buffer != GL_FRONT_LEFT
+            && buffer != GL_FRONT_RIGHT
+            && buffer != GL_BACK_LEFT
+            && buffer != GL_BACK_RIGHT
+            && buffer != GL_FRONT
+            && buffer != GL_BACK
+            && buffer != GL_LEFT
+            && buffer != GL_RIGHT,
+        GL_INVALID_ENUM);
+
+    // FIXME: We do not currently have aux buffers, so make it an invalid
+    // operation to select anything but front or back buffers. Also we do
+    // not allow selecting the stereoscopic RIGHT buffers since we do not
+    // have them configured.
+    RETURN_WITH_ERROR_IF(buffer != GL_NONE
+            && buffer != GL_FRONT_LEFT
+            && buffer != GL_FRONT
+            && buffer != GL_BACK_LEFT
+            && buffer != GL_BACK
+            && buffer != GL_FRONT
+            && buffer != GL_BACK
+            && buffer != GL_LEFT,
+        GL_INVALID_OPERATION);
+
+    m_current_draw_buffer = buffer;
+
+    auto rasterizer_options = m_rasterizer.options();
+    rasterizer_options.draw_buffer = m_current_draw_buffer;
+    m_rasterizer.set_options(rasterizer_options);
+}
+
 void SoftwareGLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
