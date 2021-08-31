@@ -485,6 +485,7 @@ static void perform_hard_coded_key_value_substitutions(String& key, String& valu
     // FIXME: In the XML export of CLDR, there are some aliases defined in the following files:
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/collation.xml
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/measure.xml
+    // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/timezone.xml
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/transform.xml
     //
     // There doesn't seem to be a counterpart in the JSON export. Since there aren't many such
@@ -502,6 +503,40 @@ static void perform_hard_coded_key_value_substitutions(String& key, String& valu
         value = "prprname"sv;
     } else if ((key == "ms"sv) && (value == "imperial"sv)) {
         value = "uksystem"sv;
+    } else if (key == "tz"sv) {
+        // Formatter disabled because this block is easier to read / check against timezone.xml as one-liners.
+        // clang-format off
+        if (value == "aqams"sv) value = "nzakl"sv;
+        else if (value == "cnckg"sv) value = "cnsha"sv;
+        else if (value == "cnhrb"sv) value = "cnsha"sv;
+        else if (value == "cnkhg"sv) value = "cnurc"sv;
+        else if (value == "cuba"sv) value = "cuhav"sv;
+        else if (value == "egypt"sv) value = "egcai"sv;
+        else if (value == "eire"sv) value = "iedub"sv;
+        else if (value == "est"sv) value = "utcw05"sv;
+        else if (value == "gmt0"sv) value = "gmt"sv;
+        else if (value == "hongkong"sv) value = "hkhkg"sv;
+        else if (value == "hst"sv) value = "utcw10"sv;
+        else if (value == "iceland"sv) value = "isrey"sv;
+        else if (value == "iran"sv) value = "irthr"sv;
+        else if (value == "israel"sv) value = "jeruslm"sv;
+        else if (value == "jamaica"sv) value = "jmkin"sv;
+        else if (value == "japan"sv) value = "jptyo"sv;
+        else if (value == "kwajalein"sv) value = "mhkwa"sv;
+        else if (value == "libya"sv) value = "lytip"sv;
+        else if (value == "mst"sv) value = "utcw07"sv;
+        else if (value == "navajo"sv) value = "usden"sv;
+        else if (value == "poland"sv) value = "plwaw"sv;
+        else if (value == "portugal"sv) value = "ptlis"sv;
+        else if (value == "prc"sv) value = "cnsha"sv;
+        else if (value == "roc"sv) value = "twtpe"sv;
+        else if (value == "rok"sv) value = "krsel"sv;
+        else if (value == "singapore"sv) value = "sgsin"sv;
+        else if (value == "turkey"sv) value = "trist"sv;
+        else if (value == "uct"sv) value = "utc"sv;
+        else if (value == "usnavajo"sv) value = "usden"sv;
+        else if (value == "zulu"sv) value = "utc"sv;
+        // clang-format on
     }
 }
 
