@@ -308,6 +308,10 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("EN-U-KA-YES"sv, "en-u-ka-yes"sv);
     test("en-u-1k-names"sv, "en-u-1k-names"sv);
     test("EN-U-1K-NAMES"sv, "en-u-1k-names"sv);
+    test("en-u-ks-primary"sv, "en-u-ks-level1"sv);
+    test("EN-U-KS-PRIMARY"sv, "en-u-ks-level1"sv);
+    test("en-u-ka-primary"sv, "en-u-ka-primary"sv);
+    test("EN-U-KA-PRIMARY"sv, "en-u-ka-primary"sv);
 
     test("en-t-en"sv, "en-t-en"sv);
     test("EN-T-EN"sv, "en-t-en"sv);
@@ -327,6 +331,8 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("EN-T-M0-NAMES"sv, "en-t-m0-prprname"sv);
     test("en-t-k1-names"sv, "en-t-k1-names"sv);
     test("EN-T-K1-NAMES"sv, "en-t-k1-names"sv);
+    test("en-t-k1-primary"sv, "en-t-k1-primary"sv);
+    test("EN-T-K1-PRIMARY"sv, "en-t-k1-primary"sv);
 
     test("en-0-aaa"sv, "en-0-aaa"sv);
     test("EN-0-AAA"sv, "en-0-aaa"sv);

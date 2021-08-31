@@ -488,10 +488,18 @@ static void perform_hard_coded_key_value_substitutions(String& key, String& valu
     //
     // There doesn't seem to be a counterpart in the JSON export. Since there aren't many such
     // aliases, until an XML parser is implemented, those aliases are implemented here.
-    if (key.is_one_of("kb"sv, "kc"sv, "kh"sv, "kk"sv, "kn"sv) && (value == "yes"sv))
+    if (key.is_one_of("kb"sv, "kc"sv, "kh"sv, "kk"sv, "kn"sv) && (value == "yes"sv)) {
         value = "true"sv;
-    else if ((key == "m0"sv) && (value == "names"sv))
+    } else if (key == "ks"sv) {
+        if (value == "primary"sv)
+            value = "level1"sv;
+        else if (value == "tertiary"sv)
+            value = "level3"sv;
+        // Note: There are also aliases for "secondary", "quaternary", "quarternary", and "identical",
+        // but those are semantically incorrect values (they are too long), so they can be skipped.
+    } else if ((key == "m0"sv) && (value == "names"sv)) {
         value = "prprname"sv;
+    }
 }
 
 static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
