@@ -30,6 +30,13 @@ describe("errors", () => {
         }).toThrowWithMessage(TypeError, "Not a Temporal.Instant");
     });
 
+    test("missing options object", () => {
+        expect(() => {
+            const instant = new Temporal.Instant(1n);
+            instant.round();
+        }).toThrowWithMessage(TypeError, "Required options object is missing or undefined");
+    });
+
     test("invalid rounding mode", () => {
         expect(() => {
             const instant = new Temporal.Instant(1n);
