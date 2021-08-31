@@ -13,8 +13,10 @@
 
 namespace PixelPaint {
 
-EditGuideDialog::EditGuideDialog(GUI::Window* parent_window)
+EditGuideDialog::EditGuideDialog(GUI::Window* parent_window, String const& offset, Guide::Orientation orientation)
     : Dialog(parent_window)
+    , m_offset(offset)
+    , m_orientation(orientation)
 {
     set_title("Create new Guide");
     set_icon(parent_window->icon());
@@ -35,6 +37,17 @@ EditGuideDialog::EditGuideDialog(GUI::Window* parent_window)
     VERIFY(offset_text_box);
     VERIFY(vertical_radio);
     VERIFY(cancel_button);
+
+    if (orientation == Guide::Orientation::Vertical) {
+        vertical_radio->set_checked(true);
+        m_is_vertical_checked = true;
+    } else if (orientation == Guide::Orientation::Horizontal) {
+        horizontal_radio->set_checked(true);
+        m_is_horizontal_checked = true;
+    }
+
+    if (!offset.is_empty())
+        offset_text_box->set_text(offset);
 
     horizontal_radio->on_checked = [this](bool checked) { m_is_horizontal_checked = checked; };
     vertical_radio->on_checked = [this](bool checked) { m_is_vertical_checked = checked; };
