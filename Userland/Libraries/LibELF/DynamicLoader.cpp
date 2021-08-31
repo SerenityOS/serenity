@@ -260,6 +260,8 @@ void DynamicLoader::load_program_headers()
             VERIFY(!tls_region.has_value());
             tls_region = region;
         } else if (region.is_load()) {
+            if (region.size_in_memory() == 0)
+                return;
             load_regions.append(region);
             if (region.is_executable()) {
                 text_regions.append(region);
