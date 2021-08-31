@@ -242,6 +242,15 @@ T* Object::find_descendant_of_type_named(String const& name) requires IsBaseOf<O
     return found_child;
 }
 
+#define REGISTER_FLOAT_PROPERTY(property_name, getter, setter) \
+    register_property(                                         \
+        property_name,                                         \
+        [this] { return this->getter(); },                     \
+        [this](auto& value) {                                  \
+            this->setter(value.template to_number<float>());   \
+            return true;                                       \
+        });
+
 #define REGISTER_INT_PROPERTY(property_name, getter, setter) \
     register_property(                                       \
         property_name,                                       \
@@ -250,6 +259,12 @@ T* Object::find_descendant_of_type_named(String const& name) requires IsBaseOf<O
             this->setter(value.template to_number<int>());   \
             return true;                                     \
         });
+
+#define REGISTER_READONLY_INT_PROPERTY(property_name, getter) \
+    register_property(                                        \
+        property_name,                                        \
+        [this] { return this->getter(); },                    \
+        {});
 
 #define REGISTER_BOOL_PROPERTY(property_name, getter, setter) \
     register_property(                                        \
