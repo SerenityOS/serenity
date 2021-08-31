@@ -351,8 +351,8 @@ Optional<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject& global_o
             return {};
         }
 
-        // d. Set value to ? ToIntegerOrInfinity(value).
-        auto value_number = value.to_integer_or_infinity(global_object);
+        // d. Set value to ? ToIntegerThrowOnInfinity(value).
+        auto value_number = to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite);
         if (vm.exception())
             return {};
 
