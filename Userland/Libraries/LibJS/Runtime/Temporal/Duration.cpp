@@ -95,35 +95,38 @@ TemporalDuration to_temporal_duration_record(GlobalObject& global_object, Object
         if (vm.exception())
             return {};
 
-        // c. If val is not undefined, then
-        if (!value.is_undefined()) {
+        // c. If val is undefined, then
+        if (value.is_undefined()) {
+            // i. Set result's internal slot whose name is the Internal Slot value of the current row to 0.
+            result.*internal_slot = 0;
+        }
+        // d. Else,
+        else {
             // i. Set any to true.
             any = true;
+
+            // ii. Let val be ? ToNumber(val).
+            value = value.to_number(global_object);
+            if (vm.exception())
+                return {};
+
+            // iii. If val is NaN, +∞ or -∞, then
+            if (value.is_nan() || value.is_infinity()) {
+                // 1. Throw a RangeError exception.
+                vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects());
+                return {};
+            }
+
+            // iv. If floor(val) ≠ val, then
+            if (floor(value.as_double()) != value.as_double()) {
+                // 1. Throw a RangeError exception.
+                vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects());
+                return {};
+            }
+
+            // v. Set result's internal slot whose name is the Internal Slot value of the current row to val.
+            result.*internal_slot = value.as_double();
         }
-
-        // TODO: This is not in the spec but it seems to be implied, and is also what the polyfill does.
-        //       I think the steps d, e, and f should be conditional based on c - otherwise we call ToNumber(undefined),
-        //       get NaN and immediately fail the floor(val) ≠ val check, making the `any` flag pointless. See:
-        //       - https://github.com/tc39/proposal-temporal/blob/4b4dbd427d4b0468a3b064ca7082f25b209923bc/polyfill/lib/ecmascript.mjs#L556-L607
-        //       - https://github.com/tc39/proposal-temporal/blob/4b4dbd427d4b0468a3b064ca7082f25b209923bc/polyfill/lib/ecmascript.mjs#L876-L893
-        else {
-            continue;
-        }
-
-        // d. Let val be ? ToNumber(val).
-        value = value.to_number(global_object);
-        if (vm.exception())
-            return {};
-
-        // e. If floor(val) ≠ val, then
-        if (floor(value.as_double()) != value.as_double()) {
-            // i. Throw a RangeError exception.
-            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects());
-            return {};
-        }
-
-        // f. Set result's internal slot whose name is the Internal Slot value of the current row to val.
-        result.*internal_slot = value.as_double();
     }
 
     // 6. If any is false, then
