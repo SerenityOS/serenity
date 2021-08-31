@@ -231,23 +231,6 @@ void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
     }
 }
 
-Result<void, String> Image::write_to_fd_and_close(int fd) const
-{
-    StringBuilder builder;
-    JsonObjectSerializer json(builder);
-    serialize_as_json(json);
-    json.finish();
-
-    auto file = Core::File::construct();
-    file->open(fd, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate, Core::File::ShouldCloseFileDescriptor::Yes);
-    if (file->has_error())
-        return String { file->error_string() };
-
-    if (!file->write(builder.string_view()))
-        return String { file->error_string() };
-    return {};
-}
-
 Result<void, String> Image::write_to_file(const String& file_path) const
 {
     StringBuilder builder;
