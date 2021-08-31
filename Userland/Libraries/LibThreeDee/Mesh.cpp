@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Mathieu Gaillard <gaillard.mathieu.39@gmail.com>
+ * Copyright (c) 2021, Conrad Pankoff <deoxxa@fknsrs.biz>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,8 +10,9 @@
 #include <LibGfx/Color.h>
 #include <LibGfx/Vector3.h>
 #include <LibGfx/Vector4.h>
+#include <LibThreeDee/Mesh.h>
 
-#include "Mesh.h"
+namespace ThreeDee {
 
 const Color colors[] {
     Color::Red,
@@ -98,4 +100,6 @@ void Mesh::draw(float uv_scale)
 
         glEnd();
     }
+}
+
 }

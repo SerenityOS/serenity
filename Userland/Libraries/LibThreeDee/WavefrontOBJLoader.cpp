@@ -1,21 +1,22 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Mathieu Gaillard <gaillard.mathieu.39@gmail.com>
+ * Copyright (c) 2021, Conrad Pankoff <deoxxa@fknsrs.biz>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "WavefrontOBJLoader.h"
 #include <LibCore/File.h>
+#include <LibThreeDee/WavefrontOBJLoader.h>
 #include <stdlib.h>
+
+namespace ThreeDee {
 
 RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
 {
     Vector<Vertex> vertices;
     Vector<TexCoord> tex_coords;
     Vector<Triangle> triangles;
-
-    dbgln("Wavefront: Loading {}...", file.name());
 
     // Start reading file line by line
     for (auto line = file.line_begin(); !line.at_end(); ++line) {
@@ -96,6 +97,7 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
         return nullptr;
     }
 
-    dbgln("Wavefront: Done.");
     return adopt_ref(*new Mesh(vertices, tex_coords, triangles));
+}
+
 }

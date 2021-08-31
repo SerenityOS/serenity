@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Mathieu Gaillard <gaillard.mathieu.39@gmail.com>
+ * Copyright (c) 2021, Conrad Pankoff <deoxxa@fknsrs.biz>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,8 +10,11 @@
 
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
+#include <LibThreeDee/TexCoord.h>
+#include <LibThreeDee/Triangle.h>
+#include <LibThreeDee/Vertex.h>
 
-#include "Common.h"
+namespace ThreeDee {
 
 class Mesh : public RefCounted<Mesh> {
 public:
@@ -31,3 +35,5 @@ private:
     Vector<TexCoord> m_tex_coords;
     Vector<Triangle> m_triangle_list;
 };
+
+}
