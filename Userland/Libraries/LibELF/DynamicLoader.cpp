@@ -246,8 +246,8 @@ void DynamicLoader::do_lazy_relocations()
 void DynamicLoader::load_program_headers()
 {
     Vector<ProgramHeaderRegion> load_regions;
-    Vector<ProgramHeaderRegion> text_regions;
-    Vector<ProgramHeaderRegion> data_regions;
+    Vector<ProgramHeaderRegion> map_regions;
+    Vector<ProgramHeaderRegion> copy_regions;
     Optional<ProgramHeaderRegion> tls_region;
     Optional<ProgramHeaderRegion> relro_region;
 
@@ -263,10 +263,10 @@ void DynamicLoader::load_program_headers()
             if (region.size_in_memory() == 0)
                 return;
             load_regions.append(region);
-            if (region.is_executable()) {
-                text_regions.append(region);
+            if (region.is_writable()) {
+                copy_regions.append(region);
             } else {
-                data_regions.append(region);
+                map_regions.append(region);
             }
         } else if (region.is_dynamic()) {
             dynamic_region_desired_vaddr = region.desired_load_address();
@@ -276,15 +276,15 @@ void DynamicLoader::load_program_headers()
         }
     });
 
-    VERIFY(!text_regions.is_empty() || !data_regions.is_empty());
+    VERIFY(!map_regions.is_empty() || !copy_regions.is_empty());
 
     auto compare_load_address = [](ProgramHeaderRegion& a, ProgramHeaderRegion& b) {
         return a.desired_load_address().as_ptr() < b.desired_load_address().as_ptr();
     };
 
     quick_sort(load_regions, compare_load_address);
-    quick_sort(text_regions, compare_load_address);
-    quick_sort(data_regions, compare_load_address);
+    quick_sort(map_regions, compare_load_address);
+    quick_sort(copy_regions, compare_load_address);
 
     // Process regions in order: .text, .data, .tls
     void* requested_load_address = m_elf_image.is_dynamic() ? nullptr : load_regions.first().desired_load_address().as_ptr();
@@ -294,9 +294,6 @@ void DynamicLoader::load_program_headers()
         reservation_mmap_flags |= MAP_RANDOMIZED;
     else
         reservation_mmap_flags |= MAP_FIXED;
-
-    for (auto& text_region : text_regions)
-        VERIFY(!text_region.is_writable());
 
     // First, we make a dummy reservation mapping, in order to allocate enough VM
     // to hold all regions contiguously in the address space.
@@ -320,27 +317,28 @@ void DynamicLoader::load_program_headers()
         VERIFY_NOT_REACHED();
     }
 
-    for (auto& text_region : text_regions) {
-        FlatPtr ph_text_desired_base = text_region.desired_load_address().get();
-        FlatPtr ph_text_base = text_region.desired_load_address().page_base().get();
-        FlatPtr ph_text_end = ph_text_base + round_up_to_power_of_two(text_region.size_in_memory() + text_region.desired_load_address().get() - ph_text_base, PAGE_SIZE);
+    for (auto& region : map_regions) {
+        FlatPtr ph_desired_base = region.desired_load_address().get();
+        FlatPtr ph_base = region.desired_load_address().page_base().get();
+        FlatPtr ph_end = ph_base + round_up_to_power_of_two(region.size_in_memory() + region.desired_load_address().get() - ph_base, PAGE_SIZE);
 
         // Now we can map the text segment at the reserved address.
-        auto* text_segment_begin = (u8*)mmap_with_name(
-            (u8*)reservation + ph_text_base - ph_load_base,
-            ph_text_desired_base - ph_text_base + text_region.size_in_image(),
+        auto* segment_base = (u8*)mmap_with_name(
+            (u8*)reservation + ph_base - ph_load_base,
+            ph_desired_base - ph_base + region.size_in_image(),
             PROT_READ,
             MAP_FILE | MAP_SHARED | MAP_FIXED,
             m_image_fd,
-            VirtualAddress { text_region.offset() }.page_base().get(),
+            VirtualAddress { region.offset() }.page_base().get(),
             String::formatted("{}: .text", m_filename).characters());
 
-        if (text_segment_begin == MAP_FAILED) {
-            perror("mmap text");
+        if (segment_base == MAP_FAILED) {
+            perror("mmap non-writable");
             VERIFY_NOT_REACHED();
         }
 
-        m_text_segments.append({ VirtualAddress { (FlatPtr)text_segment_begin }, ph_text_end - ph_text_base });
+        if (region.is_executable())
+            m_text_segments.append({ VirtualAddress { segment_base }, ph_end - ph_base });
     }
 
     VERIFY(requested_load_address == nullptr || requested_load_address == reservation);
@@ -355,9 +353,9 @@ void DynamicLoader::load_program_headers()
     else
         m_dynamic_section_address = dynamic_region_desired_vaddr;
 
-    for (auto& data_region : data_regions) {
-        FlatPtr ph_data_base = data_region.desired_load_address().page_base().get();
-        FlatPtr ph_data_end = ph_data_base + round_up_to_power_of_two(data_region.size_in_memory() + data_region.desired_load_address().get() - ph_data_base, PAGE_SIZE);
+    for (auto& region : copy_regions) {
+        FlatPtr ph_data_base = region.desired_load_address().page_base().get();
+        FlatPtr ph_data_end = ph_data_base + round_up_to_power_of_two(region.size_in_memory() + region.desired_load_address().get() - ph_data_base, PAGE_SIZE);
 
         auto* data_segment_address = (u8*)reservation + ph_data_base - ph_load_base;
         size_t data_segment_size = ph_data_end - ph_data_base;
@@ -373,19 +371,19 @@ void DynamicLoader::load_program_headers()
             String::formatted("{}: .data", m_filename).characters());
 
         if (MAP_FAILED == data_segment) {
-            perror("mmap data");
+            perror("mmap writable");
             VERIFY_NOT_REACHED();
         }
 
         VirtualAddress data_segment_start;
         if (m_elf_image.is_dynamic())
-            data_segment_start = VirtualAddress { (u8*)reservation + data_region.desired_load_address().get() };
+            data_segment_start = VirtualAddress { (u8*)reservation + region.desired_load_address().get() };
         else
-            data_segment_start = data_region.desired_load_address();
+            data_segment_start = region.desired_load_address();
 
-        VERIFY(data_segment_start.as_ptr() + data_region.size_in_memory() <= data_segment + data_segment_size);
+        VERIFY(data_segment_start.as_ptr() + region.size_in_memory() <= data_segment + data_segment_size);
 
-        memcpy(data_segment_start.as_ptr(), (u8*)m_file_data + data_region.offset(), data_region.size_in_image());
+        memcpy(data_segment_start.as_ptr(), (u8*)m_file_data + region.offset(), region.size_in_image());
     }
 
     // FIXME: Initialize the values in the TLS section. Currently, it is zeroed.
