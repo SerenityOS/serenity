@@ -642,6 +642,16 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     // Check if there is actually a texture bound
     RETURN_WITH_ERROR_IF(target == GL_TEXTURE_2D && m_active_texture_unit->currently_bound_target() != GL_TEXTURE_2D, GL_INVALID_OPERATION);
 
+    // Internal format can also be a number between 1 and 4. Symbolic formats were only added with EXT_texture, promoted to core in OpenGL 1.1
+    if (internal_format == 1)
+        internal_format = GL_ALPHA;
+    else if (internal_format == 2)
+        internal_format = GL_LUMINANCE_ALPHA;
+    else if (internal_format == 3)
+        internal_format = GL_RGB;
+    else if (internal_format == 4)
+        internal_format = GL_RGBA;
+
     // We only support symbolic constants for now
     RETURN_WITH_ERROR_IF(!(internal_format == GL_RGB || internal_format == GL_RGBA), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(type != GL_UNSIGNED_BYTE, GL_INVALID_VALUE);
