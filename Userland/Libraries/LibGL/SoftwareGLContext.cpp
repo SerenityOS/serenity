@@ -657,7 +657,9 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     RETURN_WITH_ERROR_IF(type != GL_UNSIGNED_BYTE, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
-    RETURN_WITH_ERROR_IF((width & 2) != 0 || (height & 2) != 0, GL_INVALID_VALUE);
+    // Check if width and height are a power of 2
+    RETURN_WITH_ERROR_IF((width & (width - 1)) != 0, GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF((height & (height - 1)) != 0, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(border < 0 || border > 1, GL_INVALID_VALUE);
 
     m_active_texture_unit->bound_texture_2d()->upload_texture_data(target, level, internal_format, width, height, border, format, type, data, m_unpack_row_length);
