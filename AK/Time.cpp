@@ -204,7 +204,6 @@ Time Time::operator+(const Time& other) const
             /* If *both* are INT64_MAX, then adding them will overflow in any case. */
             return Time::max();
         }
-        extra_secs = 0;
     }
 
     Checked<i64> new_secs { this_secs };
