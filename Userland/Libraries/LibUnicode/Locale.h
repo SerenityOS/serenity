@@ -81,4 +81,6 @@ Optional<StringView> resolve_script_tag_alias(StringView script_tag);
 Optional<StringView> resolve_variant_alias(StringView variant);
 Optional<StringView> resolve_subdivision_alias(StringView subdivision);
 
+String resolve_most_likely_territory(LanguageID const& language_id, StringView territory_alias);
+
 }
