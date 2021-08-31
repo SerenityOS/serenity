@@ -297,7 +297,7 @@ bool LocalSocket::has_attached_peer(const FileDescription& description) const
         return m_connect_side_fd != nullptr;
     if (role == Role::Connected)
         return m_accept_side_fd_open;
-    VERIFY_NOT_REACHED();
+    return false;
 }
 
 bool LocalSocket::can_write(const FileDescription& description, size_t) const
