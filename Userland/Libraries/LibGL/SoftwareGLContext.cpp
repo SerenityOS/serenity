@@ -1418,6 +1418,12 @@ void SoftwareGLContext::gl_get_integerv(GLenum pname, GLint* data)
     case GL_BLEND_DST_ALPHA:
         *data = m_blend_destination_factor;
         break;
+    case GL_MAX_TEXTURE_UNITS:
+        *data = m_texture_units.size();
+        break;
+    case GL_MAX_TEXTURE_SIZE:
+        *data = 4096;
+        break;
     default:
         // According to the Khronos docs, we always return GL_INVALID_ENUM if we encounter a non-accepted value
         // for `pname`
