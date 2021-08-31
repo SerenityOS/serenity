@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
+ * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -113,6 +114,18 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_file(Cor
         return String { "Not a valid PP file"sv };
 
     auto& json = json_or_error.value().as_object();
+    auto image_or_error = try_create_from_pixel_paint_json(json);
+
+    if (image_or_error.is_error())
+        return image_or_error.release_error();
+
+    auto image = image_or_error.release_value();
+    image->set_path(file_path);
+    return image;
+}
+
+Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_json(JsonObject const& json)
+{
     auto image = try_create_with_size({ json.get("width").to_i32(), json.get("height").to_i32() });
     if (!image)
         return String { "Image memory allocation failed" };
@@ -147,7 +160,6 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_file(Cor
         layer->set_selected(layer_object.get("selected").as_bool());
     }
 
-    image->set_path(file_path);
     return image.release_nonnull();
 }
 
@@ -197,10 +209,8 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_path(String const& f
     return image.release_nonnull();
 }
 
-Result<void, String> Image::write_to_fd_and_close(int fd) const
+void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
 {
-    StringBuilder builder;
-    JsonObjectSerializer json(builder);
     json.add("width", m_size.width());
     json.add("height", m_size.height());
     {
@@ -219,6 +229,13 @@ Result<void, String> Image::write_to_fd_and_close(int fd) const
             json_layer.add("bitmap", encode_base64(bmp_dumber.dump(layer.bitmap())));
         }
     }
+}
+
+Result<void, String> Image::write_to_fd_and_close(int fd) const
+{
+    StringBuilder builder;
+    JsonObjectSerializer json(builder);
+    serialize_as_json(json);
     json.finish();
 
     auto file = Core::File::construct();
@@ -235,24 +252,7 @@ Result<void, String> Image::write_to_file(const String& file_path) const
 {
     StringBuilder builder;
     JsonObjectSerializer json(builder);
-    json.add("width", m_size.width());
-    json.add("height", m_size.height());
-    {
-        auto json_layers = json.add_array("layers");
-        for (const auto& layer : m_layers) {
-            Gfx::BMPWriter bmp_dumber;
-            auto json_layer = json_layers.add_object();
-            json_layer.add("width", layer.size().width());
-            json_layer.add("height", layer.size().height());
-            json_layer.add("name", layer.name());
-            json_layer.add("locationx", layer.location().x());
-            json_layer.add("locationy", layer.location().y());
-            json_layer.add("opacity_percent", layer.opacity_percent());
-            json_layer.add("visible", layer.is_visible());
-            json_layer.add("selected", layer.is_selected());
-            json_layer.add("bitmap", encode_base64(bmp_dumber.dump(layer.bitmap())));
-        }
-    }
+    serialize_as_json(json);
     json.finish();
 
     auto file_or_error = Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
