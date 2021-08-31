@@ -35,14 +35,17 @@ public:
 
     virtual bool is_texture_2d() const override { return true; }
 
-    void upload_texture_data(GLenum target, GLint lod, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels, size_t pixels_per_row);
-    void replace_sub_texture_data(GLint lod, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* data);
+    void upload_texture_data(GLuint lod, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels, size_t pixels_per_row);
+    void replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels, size_t pixels_per_row);
 
     MipMap const& mipmap(unsigned lod) const;
 
     GLenum internal_format() const { return m_internal_format; }
     Sampler2D const& sampler() const { return m_sampler; }
     Sampler2D& sampler() { return m_sampler; }
+
+    int width_at_lod(unsigned level) const { return (level >= m_mipmaps.size()) ? 0 : max(1, m_mipmaps.at(level).width() >> level); }
+    int height_at_lod(unsigned level) const { return (level >= m_mipmaps.size()) ? 0 : max(1, m_mipmaps.at(level).height() >> level); }
 
 private:
     template<typename TCallback>
