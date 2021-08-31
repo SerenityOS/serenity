@@ -102,6 +102,12 @@ static void advance_string_position(MatchState& state, RegexStringView const& vi
     }
 }
 
+static void advance_string_position(MatchState& state, RegexStringView const&, RegexStringView const& advance_by)
+{
+    state.string_position += advance_by.length();
+    state.string_position_in_code_units += advance_by.length_in_code_units();
+}
+
 static void reverse_string_position(MatchState& state, RegexStringView const& view, size_t amount)
 {
     VERIFY(state.string_position >= amount);
@@ -606,7 +612,7 @@ ALWAYS_INLINE bool OpCode_Compare::compare_string(MatchInput const& input, Match
         equals = subject.equals(str);
 
     if (equals)
-        state.string_position += str.length();
+        advance_string_position(state, input.view, str);
 
     return equals;
 }
