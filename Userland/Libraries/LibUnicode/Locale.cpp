@@ -484,6 +484,7 @@ static void perform_hard_coded_key_value_substitutions(String& key, String& valu
 {
     // FIXME: In the XML export of CLDR, there are some aliases defined in the following files:
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/collation.xml
+    // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/measure.xml
     // https://github.com/unicode-org/cldr-staging/blob/master/production/common/bcp47/transform.xml
     //
     // There doesn't seem to be a counterpart in the JSON export. Since there aren't many such
@@ -499,6 +500,8 @@ static void perform_hard_coded_key_value_substitutions(String& key, String& valu
         // but those are semantically incorrect values (they are too long), so they can be skipped.
     } else if ((key == "m0"sv) && (value == "names"sv)) {
         value = "prprname"sv;
+    } else if ((key == "ms"sv) && (value == "imperial"sv)) {
+        value = "uksystem"sv;
     }
 }
 
