@@ -37,8 +37,11 @@ struct LEB128 {
 
             ValueType masked_byte = byte & ~(1 << 7);
             const bool shift_too_large_for_result = (num_bytes * 7 > sizeof(ValueType) * 8) && (masked_byte != 0);
+            if (shift_too_large_for_result)
+                return false;
+
             const bool shift_too_large_for_byte = ((masked_byte << (num_bytes * 7)) >> (num_bytes * 7)) != masked_byte;
-            if (shift_too_large_for_result || shift_too_large_for_byte)
+            if (shift_too_large_for_byte)
                 return false;
 
             result = (result) | (masked_byte << (num_bytes * 7));
@@ -81,9 +84,11 @@ struct LEB128 {
             // note: 64 bit assumptions!
             u64 masked_byte = byte & ~(1 << 7);
             const bool shift_too_large_for_result = (num_bytes * 7 >= 64) && (masked_byte != ((temp < 0) ? 0x7Fu : 0u));
-            const bool shift_too_large_for_byte = (num_bytes * 7) == 63 && masked_byte != 0x00 && masked_byte != 0x7Fu;
+            if (shift_too_large_for_result)
+                return false;
 
-            if (shift_too_large_for_result || shift_too_large_for_byte)
+            const bool shift_too_large_for_byte = (num_bytes * 7) == 63 && masked_byte != 0x00 && masked_byte != 0x7Fu;
+            if (shift_too_large_for_byte)
                 return false;
 
             temp = (temp) | (masked_byte << (num_bytes * 7));
