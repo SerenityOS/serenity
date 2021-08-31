@@ -5,6 +5,7 @@
  */
 
 #include "GuideTool.h"
+#include "EditGuideDialog.h"
 #include "ImageEditor.h"
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -141,6 +142,24 @@ void GuideTool::on_context_menu(Layer*, GUI::ContextMenuEvent& event)
 
     if (!m_context_menu) {
         m_context_menu = GUI::Menu::construct();
+        m_context_menu->add_action(GUI::Action::create(
+            "Set &Offset", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/gear.png"), [this](auto&) {
+                if (!m_context_menu_guide)
+                    return;
+                auto dialog = EditGuideDialog::construct(
+                    editor()->window(),
+                    String::formatted("{}", m_context_menu_guide->offset()),
+                    m_context_menu_guide->orientation());
+                if (dialog->exec() != GUI::Dialog::ExecOK)
+                    return;
+                auto offset = dialog->offset_as_pixel(*editor());
+                if (!offset.has_value())
+                    return;
+                m_context_menu_guide->set_offset(offset.release_value());
+                m_context_menu_guide->set_orientation(dialog->orientation());
+                editor()->layers_did_change();
+            },
+            editor()));
         m_context_menu->add_action(GUI::Action::create(
             "&Delete Guide", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png"), [this](auto&) {
                 if (!m_context_menu_guide)
