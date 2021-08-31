@@ -155,6 +155,11 @@ if(CCACHE_PROGRAM)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
 endif()
 
+# FIXME: With cmake 3.18, we can change unzip/untar steps to use
+#        file(ARCHIVE_EXTRACT) instead
+find_program(UNZIP unzip REQUIRED)
+find_program(TAR tar REQUIRED)
+
 unset(CMAKE_SYSROOT)
 set(CMAKE_STAGING_PREFIX ${CMAKE_BINARY_DIR}/Root)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/Root)
