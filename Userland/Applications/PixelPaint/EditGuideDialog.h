@@ -22,7 +22,7 @@ public:
     Optional<float> offset_as_pixel(ImageEditor const&);
 
 private:
-    EditGuideDialog(GUI::Window* parent_window);
+    EditGuideDialog(GUI::Window* parent_window, String const& offset = {}, Guide::Orientation orientation = Guide::Orientation::Unset);
 
     String m_offset;
     Guide::Orientation m_orientation;
