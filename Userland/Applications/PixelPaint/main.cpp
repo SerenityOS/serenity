@@ -372,28 +372,13 @@ int main(int argc, char** argv)
     auto add_guide_action = GUI::Action::create(
         "Add Guide", [&](auto&) {
             auto dialog = PixelPaint::EditGuideDialog::construct(window);
-            if (dialog->exec() == GUI::Dialog::ExecOK) {
-                if (auto* editor = current_image_editor()) {
-                    auto specified_offset = dialog->offset();
-                    float offset = 0;
-                    if (specified_offset.ends_with('%')) {
-                        auto percentage = specified_offset.substring_view(0, specified_offset.length() - 1).to_int();
-                        if (!percentage.has_value())
-                            return;
-                        if (dialog->orientation() == PixelPaint::Guide::Orientation::Horizontal)
-                            offset = editor->image().size().height() * ((double)percentage.value() / 100.0);
-                        else if (dialog->orientation() == PixelPaint::Guide::Orientation::Vertical)
-                            offset = editor->image().size().width() * ((double)percentage.value() / 100.0);
-                        else
-                            VERIFY_NOT_REACHED();
-                    } else {
-                        auto parsed_int = dialog->offset().to_int();
-                        if (!parsed_int.has_value())
-                            return;
-                        offset = parsed_int.value();
-                    }
-                    editor->add_guide(PixelPaint::Guide::construct(dialog->orientation(), offset));
-                }
+            if (dialog->exec() != GUI::Dialog::ExecOK)
+                return;
+            if (auto* editor = current_image_editor()) {
+                auto offset = dialog->offset_as_pixel(*editor);
+                if (!offset.has_value())
+                    return;
+                editor->add_guide(PixelPaint::Guide::construct(dialog->orientation(), offset.value()));
             }
         },
         window);

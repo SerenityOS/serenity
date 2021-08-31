@@ -19,6 +19,8 @@ public:
     String const offset() const { return m_offset; }
     Guide::Orientation orientation() const { return m_orientation; }
 
+    Optional<float> offset_as_pixel(ImageEditor const&);
+
 private:
     EditGuideDialog(GUI::Window* parent_window);
 
