@@ -69,6 +69,7 @@ public:
     virtual void gl_draw_buffer(GLenum buffer) override;
     virtual void gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels) override;
     virtual void gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data) override;
+    virtual void gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* data) override;
     virtual void gl_tex_parameter(GLenum target, GLenum pname, GLfloat param) override;
     virtual void gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q) override;
     virtual void gl_tex_env(GLenum target, GLenum pname, GLfloat param) override;
