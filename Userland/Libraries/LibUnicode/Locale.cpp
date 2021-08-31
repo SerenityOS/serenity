@@ -860,4 +860,19 @@ Optional<StringView> resolve_subdivision_alias(StringView subdivision)
 #endif
 }
 
+String resolve_most_likely_territory([[maybe_unused]] LanguageID const& language_id, StringView territory_alias)
+{
+    auto aliases = territory_alias.split_view(' ');
+
+#if ENABLE_UNICODE_DATA
+    if (aliases.size() > 1) {
+        auto territory = Detail::resolve_most_likely_territory(language_id);
+        if (territory.has_value() && aliases.contains_slow(*territory))
+            return territory.release_value();
+    }
+#endif
+
+    return aliases[0].to_string();
+}
+
 }
