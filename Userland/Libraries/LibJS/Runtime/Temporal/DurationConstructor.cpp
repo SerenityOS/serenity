@@ -6,6 +6,7 @@
 
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/DurationConstructor.h>
 
@@ -49,53 +50,53 @@ Value DurationConstructor::construct(FunctionObject& new_target)
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    // 2. Let y be ? ToIntegerOrInfinity(years).
-    auto y = vm.argument(0).to_integer_or_infinity(global_object);
+    // 2. Let y be ? ToIntegerThrowOnInfinity(years).
+    auto y = to_integer_throw_on_infinity(global_object, vm.argument(0), ErrorType::TemporalInvalidDuration);
     if (vm.exception())
         return {};
 
-    // 3. Let mo be ? ToIntegerOrInfinity(months).
-    auto mo = vm.argument(1).to_integer_or_infinity(global_object);
+    // 3. Let mo be ? ToIntegerThrowOnInfinity(months).
+    auto mo = to_integer_throw_on_infinity(global_object, vm.argument(1), ErrorType::TemporalInvalidDuration);
     if (vm.exception())
         return {};
 
-    // 4. Let w be ? ToIntegerOrInfinity(weeks).
-    auto w = vm.argument(2).to_integer_or_infinity(global_object);
+    // 4. Let w be ? ToIntegerThrowOnInfinity(weeks).
+    auto w = to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidDuration);
     if (vm.exception())
         return {};
 
-    // 5. Let d be ? ToIntegerOrInfinity(days).
-    auto d = vm.argument(3).to_integer_or_infinity(global_object);
+    // 5. Let d be ? ToIntegerThrowOnInfinity(days).
+    auto d = to_integer_throw_on_infinity(global_object, vm.argument(3), ErrorType::TemporalInvalidDuration);
     if (vm.exception())
         return {};
 
-    // 6. Let h be ? ToIntegerOrInfinity(hours).
-    auto h = vm.argument(4).to_integer_or_infinity(global_object);
+    // 6. Let h be ? ToIntegerThrowOnInfinity(hours).
+    auto h = to_integer_throw_on_infinity(global_object, vm.argument(4), ErrorType::TemporalInvalidDuration);
     if (vm.exception())
         return {};
 
-    // 7. Let m be ? ToIntegerOrInfinity(minutes).
-    auto m = vm.argument(5).to_integer_or_infinity(global_object);
+    // 7. Let m be ? ToIntegerThrowOnInfinity(minutes).
+    auto m = to_integer_throw_on_infinity(global_object, vm.argument(5), ErrorType::TemporalInvalidDuration);
     if (vm.exception())
         return {};
 
-    // 8. Let s be ? ToIntegerOrInfinity(seconds).
-    auto s = vm.argument(6).to_integer_or_infinity(global_object);
+    // 8. Let s be ? ToIntegerThrowOnInfinity(seconds).
+    auto s = to_integer_throw_on_infinity(global_object, vm.argument(6), ErrorType::TemporalInvalidDuration);
     if (vm.exception())
         return {};
 
-    // 9. Let ms be ? ToIntegerOrInfinity(milliseconds).
-    auto ms = vm.argument(7).to_integer_or_infinity(global_object);
+    // 9. Let ms be ? ToIntegerThrowOnInfinity(milliseconds).
+    auto ms = to_integer_throw_on_infinity(global_object, vm.argument(7), ErrorType::TemporalInvalidDuration);
     if (vm.exception())
         return {};
 
-    // 10. Let mis be ? ToIntegerOrInfinity(microseconds).
-    auto mis = vm.argument(8).to_integer_or_infinity(global_object);
+    // 10. Let mis be ? ToIntegerThrowOnInfinity(microseconds).
+    auto mis = to_integer_throw_on_infinity(global_object, vm.argument(8), ErrorType::TemporalInvalidDuration);
     if (vm.exception())
         return {};
 
-    // 11. Let ns be ? ToIntegerOrInfinity(nanoseconds).
-    auto ns = vm.argument(9).to_integer_or_infinity(global_object);
+    // 11. Let ns be ? ToIntegerThrowOnInfinity(nanoseconds).
+    auto ns = to_integer_throw_on_infinity(global_object, vm.argument(9), ErrorType::TemporalInvalidDuration);
     if (vm.exception())
         return {};
 
