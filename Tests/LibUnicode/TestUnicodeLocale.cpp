@@ -394,6 +394,14 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("EN-SU"sv, "en-RU"sv);
     test("en-810"sv, "en-RU"sv);
     test("EN-810"sv, "en-RU"sv);
+    test("hy-su"sv, "hy-AM"sv);
+    test("HY-SU"sv, "hy-AM"sv);
+    test("hy-810"sv, "hy-AM"sv);
+    test("HY-810"sv, "hy-AM"sv);
+    test("und-Armn-su"sv, "und-Armn-AM"sv);
+    test("UND-ARMN-SU"sv, "und-Armn-AM"sv);
+    test("und-Armn-810"sv, "und-Armn-AM"sv);
+    test("UND-ARMN-810"sv, "und-Armn-AM"sv);
 
     // Script subtag aliases.
     test("en-qaai"sv, "en-Zinh"sv);

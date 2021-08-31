@@ -591,13 +591,8 @@ static void transform_unicode_locale_id_to_canonical_syntax(LocaleID& locale_id)
         }
 
         if (language_id.region.has_value()) {
-            if (auto alias = resolve_territory_alias(*language_id.region); alias.has_value()) {
-                auto aliases = alias->split_view(' ');
-
-                // FIXME: Territory subtag aliases should also consult the CLDR likelySubtags.json file.
-                //        For now, implement the spec's recommendation of using just the first alias.
-                language_id.region = aliases[0].to_string();
-            }
+            if (auto alias = resolve_territory_alias(*language_id.region); alias.has_value())
+                language_id.region = resolve_most_likely_territory(language_id, *alias);
         }
 
         quick_sort(language_id.variants);
