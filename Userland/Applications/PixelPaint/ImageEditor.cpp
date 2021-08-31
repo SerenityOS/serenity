@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -475,6 +476,17 @@ Result<void, String> ImageEditor::save_project_to_fd_and_close(int fd) const
     StringBuilder builder;
     JsonObjectSerializer json(builder);
     m_image->serialize_as_json(json);
+    auto json_guides = json.add_array("guides");
+    for (const auto& guide : m_guides) {
+        auto json_guide = json_guides.add_object();
+        json_guide.add("offset"sv, (double)guide.offset());
+        if (guide.orientation() == Guide::Orientation::Vertical)
+            json_guide.add("orientation", "vertical");
+        else if (guide.orientation() == Guide::Orientation::Horizontal)
+            json_guide.add("orientation", "horizontal");
+        json_guide.finish();
+    }
+    json_guides.finish();
     json.finish();
 
     auto file = Core::File::construct();
