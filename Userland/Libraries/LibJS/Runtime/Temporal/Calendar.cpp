@@ -137,12 +137,12 @@ double calendar_year(GlobalObject& global_object, Object& calendar, Object& date
 
     // 3. If result is undefined, throw a RangeError exception.
     if (result.is_undefined()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string());
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.undefined.as_string());
         return {};
     }
 
-    // 4. Return ? ToIntegerOrInfinity(result).
-    return result.to_integer_or_infinity(global_object);
+    // 4. Return ? ToIntegerThrowOnInfinity(result).
+    return to_integer_throw_on_infinity(global_object, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.Infinity.as_string());
 }
 
 // 12.1.10 CalendarMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonth
@@ -158,12 +158,12 @@ double calendar_month(GlobalObject& global_object, Object& calendar, Object& dat
 
     // 3. If result is undefined, throw a RangeError exception.
     if (result.is_undefined()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.month.as_string());
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.month.as_string(), vm.names.undefined.as_string());
         return {};
     }
 
-    // 4. Return ? ToPositiveIntegerOrInfinity(result).
-    return to_positive_integer_or_infinity(global_object, result);
+    // 4. Return ? ToPositiveInteger(result).
+    return to_positive_integer(global_object, result);
 }
 
 // 12.1.11 CalendarMonthCode ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthcode
@@ -179,7 +179,7 @@ String calendar_month_code(GlobalObject& global_object, Object& calendar, Object
 
     // 3. If result is undefined, throw a RangeError exception.
     if (result.is_undefined()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.monthCode.as_string());
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.monthCode.as_string(), vm.names.undefined.as_string());
         return {};
     }
 
@@ -200,12 +200,12 @@ double calendar_day(GlobalObject& global_object, Object& calendar, Object& date_
 
     // 3. If result is undefined, throw a RangeError exception.
     if (result.is_undefined()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.day.as_string());
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.day.as_string(), vm.names.undefined.as_string());
         return {};
     }
 
-    // 4. Return ? ToPositiveIntegerOrInfinity(result).
-    return to_positive_integer_or_infinity(global_object, result);
+    // 4. Return ? ToPositiveInteger(result).
+    return to_positive_integer(global_object, result);
 }
 
 // 12.1.13 CalendarDayOfWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofweek
@@ -324,12 +324,11 @@ Value calendar_era_year(GlobalObject& global_object, Object& calendar, Object& d
     if (vm.exception())
         return {};
 
-    // 3. If result is not undefined, set result to ? ToIntegerOrInfinity(result).
+    // 3. If result is not undefined, set result to ? ToIntegerThrowOnInfinity(result).
     if (!result.is_undefined()) {
-        auto result_number = result.to_integer_or_infinity(global_object);
+        result = Value(to_integer_throw_on_infinity(global_object, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.eraYear.as_string(), "Infinity"sv));
         if (vm.exception())
             return {};
-        result = Value(result_number);
     }
 
     // 4. Return result.

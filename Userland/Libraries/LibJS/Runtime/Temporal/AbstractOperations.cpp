@@ -872,31 +872,24 @@ Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_
     return TemporalTimeZone { .z = false, .offset = offset, .name = name };
 }
 
-// 13.46 ToPositiveIntegerOrInfinity ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveintegerorinfinity
-double to_positive_integer_or_infinity(GlobalObject& global_object, Value argument)
+// 13.46 ToPositiveInteger ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveinteger
+double to_positive_integer(GlobalObject& global_object, Value argument)
 {
     auto& vm = global_object.vm();
 
-    // 1. Let integer be ? ToIntegerOrInfinity(argument).
-    auto integer = argument.to_integer_or_infinity(global_object);
+    // 1. Let integer be ? ToIntegerThrowOnInfinity(argument).
+    auto integer = to_integer_throw_on_infinity(global_object, argument, ErrorType::TemporalPropertyMustBePositiveInteger);
     if (vm.exception())
         return {};
 
-    // 2. If integer is -∞𝔽, then
-    if (Value(integer).is_negative_infinity()) {
-        // a. Throw a RangeError exception.
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalPropertyMustBePositiveInteger);
-        return {};
-    }
-
-    // 3. If integer ≤ 0, then
+    // 2. If integer ≤ 0, then
     if (integer <= 0) {
         // a. Throw a RangeError exception.
         vm.throw_exception<RangeError>(global_object, ErrorType::TemporalPropertyMustBePositiveInteger);
         return {};
     }
 
-    // 4. Return integer.
+    // 3. Return integer.
     return integer;
 }
 
@@ -939,11 +932,11 @@ Object* prepare_temporal_fields(GlobalObject& global_object, Object& fields, Vec
             // 1. Let Conversion represent the abstract operation named by the Conversion value of the same row.
             // 2. Set value to ? Conversion(value).
             if (property.is_one_of("year", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond", "eraYear")) {
-                value = Value(value.to_integer_or_infinity(global_object));
+                value = Value(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite));
                 if (vm.exception())
                     return {};
             } else if (property.is_one_of("month", "day")) {
-                value = Value(to_positive_integer_or_infinity(global_object, value));
+                value = Value(to_positive_integer(global_object, value));
                 if (vm.exception())
                     return {};
             } else if (property.is_one_of("monthCode", "offset", "era")) {

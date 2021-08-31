@@ -173,7 +173,7 @@
     M(StringRepeatCountMustBe, "repeat count must be a {} number")                                                                      \
     M(TemporalAmbiguousMonthOfPlainMonthDay, "Accessing month of PlainMonthDay is ambiguous, use monthCode instead")                    \
     M(TemporalInvalidCalendar, "Invalid calendar")                                                                                      \
-    M(TemporalInvalidCalendarFunctionResult, "Invalid calendar, {}() function returned undefined")                                      \
+    M(TemporalInvalidCalendarFunctionResult, "Invalid calendar, {}() function returned {}")                                             \
     M(TemporalInvalidCalendarIdentifier, "Invalid calendar identifier '{}'")                                                            \
     M(TemporalInvalidDuration, "Invalid duration")                                                                                      \
     M(TemporalInvalidDurationLikeObject, "Invalid duration-like object")                                                                \
@@ -192,6 +192,7 @@
     M(TemporalInvalidTimeZoneName, "Invalid time zone name")                                                                            \
     M(TemporalMissingOptionsObject, "Required options object is missing or undefined")                                                  \
     M(TemporalMissingRequiredProperty, "Required property {} is missing or undefined")                                                  \
+    M(TemporalPropertyMustBeFinite, "Property must not be Infinity")                                                                    \
     M(TemporalPropertyMustBePositiveInteger, "Property must be a positive integer")                                                     \
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \
     M(ThisIsAlreadyInitialized, "|this| is already initialized")                                                                        \
