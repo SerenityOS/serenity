@@ -191,17 +191,24 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
     if (vm.exception())
         return {};
 
-    // 3. Set options to ? GetOptionsObject(options).
+    // 3. If options is undefined, then
+    if (vm.argument(0).is_undefined()) {
+        // a. Throw a TypeError exception.
+        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingOptionsObject);
+        return {};
+    }
+
+    // 4. Set options to ? GetOptionsObject(options).
     auto* options = get_options_object(global_object, vm.argument(0));
     if (vm.exception())
         return {};
 
-    // 4. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », undefined).
+    // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », undefined).
     auto smallest_unit_value = to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, {});
     if (vm.exception())
         return {};
 
-    // 5. If smallestUnit is undefined, throw a RangeError exception.
+    // 6. If smallestUnit is undefined, throw a RangeError exception.
     if (!smallest_unit_value.has_value()) {
         vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.undefined.as_string(), "smallestUnit");
         return {};
@@ -209,38 +216,38 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
     // At this point smallest_unit_value can only be a string
     auto& smallest_unit = *smallest_unit_value;
 
-    // 6. Let roundingMode be ? ToTemporalRoundingMode(options, "halfExpand").
+    // 7. Let roundingMode be ? ToTemporalRoundingMode(options, "halfExpand").
     auto rounding_mode = to_temporal_rounding_mode(global_object, *options, "halfExpand");
     if (vm.exception())
         return {};
 
     double maximum;
-    // 7. If smallestUnit is "hour", then
+    // 8. If smallestUnit is "hour", then
     if (smallest_unit == "hour"sv) {
         // a. Let maximum be 24.
         maximum = 24;
     }
-    // 8. Else if smallestUnit is "minute", then
+    // 9. Else if smallestUnit is "minute", then
     else if (smallest_unit == "minute"sv) {
         // a. Let maximum be 1440.
         maximum = 1440;
     }
-    // 9. Else if smallestUnit is "second", then
+    // 10. Else if smallestUnit is "second", then
     else if (smallest_unit == "second"sv) {
         // a. Let maximum be 86400.
         maximum = 86400;
     }
-    // 10. Else if smallestUnit is "millisecond", then
+    // 11. Else if smallestUnit is "millisecond", then
     else if (smallest_unit == "millisecond"sv) {
         // a. Let maximum be 8.64 × 10^7.
         maximum = 86400000;
     }
-    // 11. Else if smallestUnit is "microsecond", then
+    // 12. Else if smallestUnit is "microsecond", then
     else if (smallest_unit == "microsecond"sv) {
         // a. Let maximum be 8.64 × 10^10.
         maximum = 86400000000;
     }
-    // 12. Else,
+    // 13. Else,
     else {
         // a. Assert: smallestUnit is "nanosecond".
         VERIFY(smallest_unit == "nanosecond"sv);
@@ -248,17 +255,17 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
         maximum = 86400000000000;
     }
 
-    // 13. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, true).
+    // 14. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, true).
     auto rounding_increment = to_temporal_rounding_increment(global_object, *options, maximum, true);
     if (vm.exception())
         return {};
 
-    // 14. Let roundedNs be ? RoundTemporalInstant(instant.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
+    // 15. Let roundedNs be ? RoundTemporalInstant(instant.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
     auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), rounding_increment, smallest_unit, *rounding_mode);
     if (vm.exception())
         return {};
 
-    // 15. Return ! CreateTemporalInstant(roundedNs).
+    // 16. Return ! CreateTemporalInstant(roundedNs).
     return create_temporal_instant(global_object, *rounded_ns);
 }
 

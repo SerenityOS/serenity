@@ -190,6 +190,7 @@
     M(TemporalInvalidPlainYearMonth, "Invalid plain year month")                                                                        \
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
     M(TemporalInvalidTimeZoneName, "Invalid time zone name")                                                                            \
+    M(TemporalMissingOptionsObject, "Required options object is missing or undefined")                                                  \
     M(TemporalMissingRequiredProperty, "Required property {} is missing or undefined")                                                  \
     M(TemporalPropertyMustBePositiveInteger, "Property must be a positive integer")                                                     \
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \
