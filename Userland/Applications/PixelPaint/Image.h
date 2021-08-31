@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
+ * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 #pragma once
 
 #include <AK/HashTable.h>
+#include <AK/JsonObjectSerializer.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
@@ -47,6 +49,7 @@ public:
     static Result<NonnullRefPtr<Image>, String> try_create_from_fd_and_close(int fd, String const& file_path);
     static Result<NonnullRefPtr<Image>, String> try_create_from_path(String const& file_path);
     static RefPtr<Image> try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap>);
+    static Result<NonnullRefPtr<Image>, String> try_create_from_pixel_paint_json(JsonObject const&);
 
     // This generates a new Bitmap with the final image (all layers composed according to their attributes.)
     RefPtr<Gfx::Bitmap> try_compose_bitmap(Gfx::BitmapFormat format) const;
@@ -63,6 +66,8 @@ public:
     void restore_snapshot(Image const&);
 
     void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect) const;
+
+    void serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const;
     Result<void, String> write_to_fd_and_close(int fd) const;
     Result<void, String> write_to_file(String const& file_path) const;
     Result<void, String> export_bmp_to_fd_and_close(int fd, bool preserve_alpha_channel);
