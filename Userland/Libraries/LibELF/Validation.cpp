@@ -230,12 +230,6 @@ bool validate_program_headers(const ElfW(Ehdr) & elf_header, size_t file_size, c
             return false;
         }
 
-        if (program_header.p_memsz <= 0 && (program_header.p_type == PT_TLS || program_header.p_type == PT_LOAD)) {
-            if (verbose)
-                dbgln("Program header ({}) has invalid size in memory ({})", header_index, program_header.p_memsz);
-            return false;
-        }
-
         if (elf_header.e_type != ET_CORE) {
             if (program_header.p_type == PT_LOAD && program_header.p_align == 0) {
                 if (verbose)
