@@ -338,6 +338,9 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
         if (program_header.type() != PT_LOAD)
             return IterationDecision::Continue;
 
+        if (program_header.size_in_memory() == 0)
+            return IterationDecision::Continue;
+
         if (program_header.is_writable()) {
             // Writable section: create a copy in memory.
             VERIFY(program_header.size_in_memory());
