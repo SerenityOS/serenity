@@ -84,6 +84,8 @@ public:
     Gfx::FloatPoint image_position_to_editor_position(Gfx::IntPoint const&) const;
     Gfx::FloatPoint editor_position_to_image_position(Gfx::IntPoint const&) const;
 
+    Result<void, String> save_project_to_fd_and_close(int fd) const;
+
     NonnullRefPtrVector<Guide> const& guides() const { return m_guides; }
     bool guide_visibility() { return m_show_guides; }
     void set_guide_visibility(bool show_guides);

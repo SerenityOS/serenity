@@ -187,7 +187,7 @@ int main(int argc, char** argv)
         auto save_result = FileSystemAccessClient::Client::the().save_file(window->window_id(), "untitled", "pp");
         if (save_result.error != 0)
             return;
-        auto result = editor->image().write_to_fd_and_close(*save_result.fd);
+        auto result = editor->save_project_to_fd_and_close(*save_result.fd);
         if (result.is_error()) {
             GUI::MessageBox::show_error(window, String::formatted("Could not save {}: {}", *save_result.chosen_file, result.error()));
             return;
