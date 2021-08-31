@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "CreateNewGuideDialog.h"
 #include "CreateNewImageDialog.h"
 #include "CreateNewLayerDialog.h"
+#include "EditGuideDialog.h"
 #include "FilterParams.h"
 #include "Guide.h"
 #include "Image.h"
@@ -371,7 +371,7 @@ int main(int argc, char** argv)
 
     auto add_guide_action = GUI::Action::create(
         "Add Guide", [&](auto&) {
-            auto dialog = PixelPaint::CreateNewGuideDialog::construct(window);
+            auto dialog = PixelPaint::EditGuideDialog::construct(window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
                 if (auto* editor = current_image_editor()) {
                     auto specified_offset = dialog->offset();
