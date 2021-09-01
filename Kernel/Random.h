@@ -35,7 +35,7 @@ public:
     {
     }
 
-    bool get_random_bytes(u8* buffer, size_t n)
+    bool get_random_bytes(Bytes buffer)
     {
         SpinlockLocker lock(m_lock);
         if (!is_ready())
@@ -47,13 +47,12 @@ public:
         VERIFY(is_seeded());
 
         // FIXME: More than 2^20 bytes cannot be generated without refreshing the key.
-        VERIFY(n < (1 << 20));
+        VERIFY(buffer.size() < (1 << 20));
 
         typename CipherType::CTRMode cipher(m_key, KeySize, Crypto::Cipher::Intent::Encryption);
 
-        Bytes buffer_span { buffer, n };
         auto counter_span = m_counter.bytes();
-        cipher.key_stream(buffer_span, counter_span, &counter_span);
+        cipher.key_stream(buffer, counter_span, &counter_span);
 
         // Extract a new key from the prng stream.
         Bytes key_span = m_key.bytes();
@@ -173,14 +172,15 @@ private:
 // NOTE: These API's are primarily about expressing intent/needs in the calling code.
 //       The only difference is that get_fast_random is guaranteed not to block.
 
-void get_fast_random_bytes(u8*, size_t);
-bool get_good_random_bytes(u8*, size_t, bool allow_wait = true, bool fallback_to_fast = true);
+void get_fast_random_bytes(Bytes);
+bool get_good_random_bytes(Bytes bytes, bool allow_wait = true, bool fallback_to_fast = true);
 
 template<typename T>
 inline T get_fast_random()
 {
     T value;
-    get_fast_random_bytes(reinterpret_cast<u8*>(&value), sizeof(T));
+    Bytes bytes { reinterpret_cast<u8*>(&value), sizeof(T) };
+    get_fast_random_bytes(bytes);
     return value;
 }
 
@@ -188,7 +188,8 @@ template<typename T>
 inline T get_good_random()
 {
     T value;
-    get_good_random_bytes(reinterpret_cast<u8*>(&value), sizeof(T));
+    Bytes bytes { reinterpret_cast<u8*>(&value), sizeof(T) };
+    get_good_random_bytes(bytes);
     return value;
 }
 

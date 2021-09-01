@@ -87,7 +87,7 @@ void KernelRng::wake_if_ready()
 
 size_t EntropySource::next_source { static_cast<size_t>(EntropySource::Static::MaxHardcodedSourceIndex) };
 
-static void do_get_fast_random_bytes(u8* buffer, size_t buffer_size)
+static void do_get_fast_random_bytes(Bytes buffer)
 {
 
     union {
@@ -95,7 +95,7 @@ static void do_get_fast_random_bytes(u8* buffer, size_t buffer_size)
         u32 value;
     } u;
     size_t offset = 4;
-    for (size_t i = 0; i < buffer_size; ++i) {
+    for (size_t i = 0; i < buffer.size(); ++i) {
         if (offset >= 4) {
             auto current_next = s_next_random_value.load();
             for (;;) {
@@ -111,7 +111,7 @@ static void do_get_fast_random_bytes(u8* buffer, size_t buffer_size)
     }
 }
 
-bool get_good_random_bytes(u8* buffer, size_t buffer_size, bool allow_wait, bool fallback_to_fast)
+bool get_good_random_bytes(Bytes buffer, bool allow_wait, bool fallback_to_fast)
 {
     bool result = false;
     auto& kernel_rng = KernelRng::the();
@@ -127,7 +127,7 @@ bool get_good_random_bytes(u8* buffer, size_t buffer_size, bool allow_wait, bool
         for (;;) {
             {
                 MutexLocker locker(KernelRng::the().lock());
-                if (kernel_rng.resource().get_random_bytes(buffer, buffer_size)) {
+                if (kernel_rng.resource().get_random_bytes(buffer)) {
                     result = true;
                     break;
                 }
@@ -136,11 +136,11 @@ bool get_good_random_bytes(u8* buffer, size_t buffer_size, bool allow_wait, bool
         }
     } else {
         // We can't wait/block here, or we are not allowed to block/wait
-        if (kernel_rng.resource().get_random_bytes(buffer, buffer_size)) {
+        if (kernel_rng.resource().get_random_bytes(buffer)) {
             result = true;
         } else if (fallback_to_fast) {
             // If interrupts are disabled
-            do_get_fast_random_bytes(buffer, buffer_size);
+            do_get_fast_random_bytes(buffer);
             result = true;
         }
     }
@@ -152,11 +152,11 @@ bool get_good_random_bytes(u8* buffer, size_t buffer_size, bool allow_wait, bool
     return result;
 }
 
-void get_fast_random_bytes(u8* buffer, size_t buffer_size)
+void get_fast_random_bytes(Bytes buffer)
 {
     // Try to get good randomness, but don't block if we can't right now
     // and allow falling back to fast randomness
-    auto result = get_good_random_bytes(buffer, buffer_size, false, true);
+    auto result = get_good_random_bytes(buffer, false, true);
     VERIFY(result);
 }
 
