@@ -117,6 +117,13 @@ void InspectorWidget::set_dom_json(String json)
     }
 }
 
+void InspectorWidget::clear_dom_json()
+{
+    m_dom_json.clear();
+    m_dom_tree_view->set_model(nullptr);
+    clear_style_json();
+}
+
 void InspectorWidget::set_dom_node_properties_json(i32 node_id, String specified_values_json, String computed_values_json)
 {
     if (node_id != m_inspected_node_id) {

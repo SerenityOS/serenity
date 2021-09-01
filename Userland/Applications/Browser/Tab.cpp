@@ -175,6 +175,14 @@ Tab::Tab(BrowserWindow& window)
 
         update_actions();
         update_bookmark_button(url.to_string());
+
+        if (m_dom_inspector_widget)
+            m_dom_inspector_widget->clear_dom_json();
+    };
+
+    hooks().on_load_finish = [this](auto&) {
+        if (m_dom_inspector_widget)
+            m_web_content_view->inspect_dom_tree();
     };
 
     hooks().on_link_click = [this](auto& url, auto& target, unsigned modifiers) {
@@ -478,8 +486,8 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
         };
         m_dom_inspector_widget = window->set_main_widget<InspectorWidget>();
         m_dom_inspector_widget->set_web_view(*m_web_content_view);
+        m_web_content_view->inspect_dom_tree();
     }
-    m_web_content_view->inspect_dom_tree();
 
     if (inspector_target == InspectorTarget::HoveredElement) {
         Optional<i32> hovered_node = m_web_content_view->get_hovered_node_id();
