@@ -178,11 +178,19 @@ Tab::Tab(BrowserWindow& window)
 
         if (m_dom_inspector_widget)
             m_dom_inspector_widget->clear_dom_json();
+
+        if (m_console_widget)
+            m_console_widget->clear_output();
     };
 
     hooks().on_load_finish = [this](auto&) {
         if (m_dom_inspector_widget)
             m_web_content_view->inspect_dom_tree();
+
+        // FIXME: This is called after the page has finished loading, which means any log messages
+        //        that happen *while* it is loading (such as inline <script>s) will be lost.
+        if (m_console_widget)
+            m_web_content_view->js_console_initialize();
     };
 
     hooks().on_link_click = [this](auto& url, auto& target, unsigned modifiers) {
@@ -512,10 +520,8 @@ void Tab::show_console_window()
         m_console_widget->on_js_input = [this](String const& js_source) {
             m_web_content_view->js_console_input(js_source);
         };
+        m_web_content_view->js_console_initialize();
     }
-
-    m_console_widget->clear_output();
-    m_web_content_view->js_console_initialize();
 
     auto* window = m_console_widget->window();
     window->show();
