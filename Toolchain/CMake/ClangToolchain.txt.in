@@ -24,7 +24,7 @@ set(CMAKE_LINKER ${TOOLCHAIN_PATH}/ld.lld)
 set(CMAKE_RANLIB ${TOOLCHAIN_PATH}/llvm-ranlib)
 set(CMAKE_STRIP ${TOOLCHAIN_PATH}/llvm-strip)
 set(CMAKE_AR ${TOOLCHAIN_PATH}/llvm-ar)
-set(CMAKE_CXXFILT ${TOOLCHAIN_PATH}/llvm-cxxfilt)
+set(SERENITY_CXXFILT ${TOOLCHAIN_PATH}/llvm-cxxfilt)
 # FIXME: Persuade LLVM maintainers to add `--update-section` to llvm-objcopy, as it's required for the kernel symbol map.
 set(CMAKE_OBJCOPY ${TOOLCHAIN_ROOT}/binutils/bin/@SERENITY_ARCH@-pc-serenity-objcopy)
 
