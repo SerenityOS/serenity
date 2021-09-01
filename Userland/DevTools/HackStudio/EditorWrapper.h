@@ -42,7 +42,6 @@ public:
     void set_debug_mode(bool);
     void set_filename(const String&);
     const String& filename() const { return m_filename; }
-    bool document_dirty() const { return m_document_dirty; }
 
     Optional<LexicalPath> const& project_root() const { return m_project_root; }
     void set_project_root(LexicalPath const& project_root);
@@ -64,7 +63,6 @@ private:
     String m_filename;
     RefPtr<GUI::Label> m_filename_label;
     RefPtr<Editor> m_editor;
-    bool m_document_dirty { false };
 
     Optional<LexicalPath> m_project_root;
     RefPtr<GitRepo> m_git_repo;
