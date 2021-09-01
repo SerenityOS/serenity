@@ -75,6 +75,7 @@ ComboBox::ComboBox()
     };
 
     m_open_button = add<Button>();
+    m_open_button->set_button_style(Gfx::ButtonStyle::ThickCap);
     m_open_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png"));
     m_open_button->set_focus_policy(GUI::FocusPolicy::NoFocus);
     m_open_button->on_click = [this](auto) {
