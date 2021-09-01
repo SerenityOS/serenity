@@ -21,7 +21,7 @@ class FlameGraphView final : public GUI::Widget
     C_OBJECT(FlameGraphView);
 
 public:
-    virtual ~FlameGraphView() override;
+    virtual ~FlameGraphView() override = default;
 
     Function<void()> on_hover_change;
 
