@@ -24,7 +24,7 @@ KResultOr<FlatPtr> Process::sys$getrandom(Userspace<void*> buffer, size_t buffer
     if (!data_buffer.has_value())
         return EFAULT;
     auto result = data_buffer.value().write_buffered<1024>(buffer_size, [&](u8* buffer, size_t buffer_bytes) {
-        get_good_random_bytes(buffer, buffer_bytes);
+        get_good_random_bytes({ buffer, buffer_bytes });
         return buffer_bytes;
     });
     if (result.is_error())
