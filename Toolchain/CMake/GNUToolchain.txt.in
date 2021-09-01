@@ -22,7 +22,7 @@ set(CMAKE_RANLIB ${TOOLCHAIN_PREFIX}gcc-ranlib)
 set(CMAKE_STRIP ${TOOLCHAIN_PREFIX}strip)
 set(CMAKE_AR ${TOOLCHAIN_PREFIX}gcc-ar)
 set(CMAKE_OBJCOPY ${TOOLCHAIN_PREFIX}objcopy)
-set(CMAKE_CXXFILT ${TOOLCHAIN_PREFIX}c++filt)
+set(SERENITY_CXXFILT ${TOOLCHAIN_PREFIX}c++filt)
 
 set(CMAKE_EXE_LINKER_FLAGS_INIT "-Wl,--hash-style=gnu,-z,relro,-z,now,-z,noexecstack,-z,max-page-size=0x1000,-z,separate-code")
 
