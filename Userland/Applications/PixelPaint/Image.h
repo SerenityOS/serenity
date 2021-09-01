@@ -103,6 +103,8 @@ public:
     void rotate(Gfx::RotationDirection direction);
     void crop(Gfx::IntRect const& rect);
 
+    Color color_at(Gfx::IntPoint const& point) const;
+
 private:
     explicit Image(Gfx::IntSize const&);
 

@@ -532,4 +532,19 @@ void Image::crop(Gfx::IntRect const& cropped_rect)
     did_change_rect(cropped_rect);
 }
 
+Color Image::color_at(Gfx::IntPoint const& point) const
+{
+    Color color;
+    for (auto& layer : m_layers) {
+        if (!layer.is_visible() || !layer.rect().contains(point))
+            continue;
+
+        auto layer_color = layer.bitmap().get_pixel(point);
+        float layer_opacity = layer.opacity_percent() / 100.0f;
+        layer_color.set_alpha((u8)(layer_color.alpha() * layer_opacity));
+        color = color.blend(layer_color);
+    }
+    return color;
+}
+
 }

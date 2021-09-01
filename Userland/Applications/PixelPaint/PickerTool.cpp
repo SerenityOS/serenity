@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,8 @@
 #include "PickerTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/CheckBox.h>
 
 namespace PixelPaint {
 
@@ -20,17 +23,41 @@ PickerTool::~PickerTool()
 
 void PickerTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
-    if (!layer)
+    auto& position = event.layer_event().position();
+
+    Color color;
+    if (m_sample_all_layers) {
+        color = m_editor->image().color_at(position);
+    } else {
+        if (!layer || !layer->rect().contains(position))
+            return;
+        color = layer->bitmap().get_pixel(position);
+    }
+
+    // We picked a transparent pixel, do nothing.
+    if (!color.alpha())
         return;
 
-    auto& layer_event = event.layer_event();
-    if (!layer->rect().contains(layer_event.position()))
-        return;
-    auto color = layer->bitmap().get_pixel(layer_event.position());
-    if (layer_event.button() == GUI::MouseButton::Left)
+    if (event.layer_event().button() == GUI::MouseButton::Left)
         m_editor->set_primary_color(color);
-    else if (layer_event.button() == GUI::MouseButton::Right)
+    else if (event.layer_event().button() == GUI::MouseButton::Right)
         m_editor->set_secondary_color(color);
+}
+
+GUI::Widget* PickerTool::get_properties_widget()
+{
+    if (!m_properties_widget) {
+        m_properties_widget = GUI::Widget::construct();
+        m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+
+        auto& sample_checkbox = m_properties_widget->add<GUI::CheckBox>("Sample all layers");
+        sample_checkbox.set_checked(m_sample_all_layers);
+        sample_checkbox.on_checked = [&](bool value) {
+            m_sample_all_layers = value;
+        };
+    }
+
+    return m_properties_widget.ptr();
 }
 
 }
