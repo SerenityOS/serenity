@@ -107,23 +107,6 @@ static bool test_single(const Testcase& testcase)
 // Drop the NUL terminator added by the C++ compiler.
 #define LITERAL(x) x, (sizeof(x) - 1)
 
-//static Testcase TESTCASES[] = {
-//    // Golden path:
-
-//    // Hitting the border:
-
-//    // Too long:
-//    { LITERAL("Hello World!\0"), LITERAL("Hello Friend!"), LITERAL("Hello Friend\0") },
-//    { LITERAL("Hello World!\0"), LITERAL("This source is just *way* too long!"), LITERAL("This source \0") },
-//    { LITERAL("x"), LITERAL("This source is just *way* too long!"), LITERAL("\0") },
-//    // Other special cases:
-//    { LITERAL(""), LITERAL(""), LITERAL("") },
-//    { LITERAL(""), LITERAL("Empty test"), LITERAL("") },
-//    { LITERAL("x"), LITERAL(""), LITERAL("\0") },
-//    { LITERAL("xx"), LITERAL(""), LITERAL("\0x") },
-//    { LITERAL("xxx"), LITERAL(""), LITERAL("\0xx") },
-//};
-
 TEST_CASE(golden_path)
 {
     EXPECT(test_single({ LITERAL("Hello World!\0\0\0"), LITERAL("Hello Friend!"), LITERAL("Hello Friend!\0\0") }));

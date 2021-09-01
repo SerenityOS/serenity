@@ -4,12 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibTest/TestCase.h>
+
 #include <AK/Types.h>
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 struct TestCase {
     const u8* haystack;
@@ -32,20 +30,15 @@ const static TestCase g_test_cases[] = {
     { (const u8[64]) { 0, 1, 1, 2 }, 64u, (const u8[33]) { 1, 1 }, 2u, 1 },
 };
 
-int main()
+TEST_CASE(memmem_search)
 {
-    bool failed = false;
     size_t i = 0;
     for (const auto& test_case : g_test_cases) {
         auto expected = test_case.matching_offset >= 0 ? test_case.haystack + test_case.matching_offset : nullptr;
         auto result = memmem(test_case.haystack, test_case.haystack_length, test_case.needle, test_case.needle_length);
         if (result != expected) {
-            failed = true;
-            fprintf(stderr, "Test %zu FAILED! expected %p, got %p\n", i, expected, result);
+            FAIL(String::formatted("Test {} FAILED! expected {:p}, got {:p}", i, expected, result));
         }
         ++i;
     }
-
-    printf(failed ? "FAIL\n" : "PASS\n");
-    return failed ? 1 : 0;
 }
