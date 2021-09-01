@@ -19,6 +19,7 @@ public:
 
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual GUI::Widget* get_properties_widget() override;
+    virtual Gfx::StandardCursor cursor() override { return Gfx::StandardCursor::Zoom; }
 
 private:
     RefPtr<GUI::Widget> m_properties_widget;
