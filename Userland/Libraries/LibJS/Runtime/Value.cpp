@@ -1212,11 +1212,36 @@ Value mod(GlobalObject& global_object, Value lhs, Value rhs)
     if (vm.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
+        // 6.1.6.1.6 Number::remainder ( n, d ), https://tc39.es/ecma262/#sec-numeric-types-number-remainder
+
+        // 1. If n is NaN or d is NaN, return NaN.
         if (lhs_numeric.is_nan() || rhs_numeric.is_nan())
             return js_nan();
+
+        // 2. If n is +∞𝔽 or n is -∞𝔽, return NaN.
+        if (lhs_numeric.is_positive_infinity() || lhs_numeric.is_negative_infinity())
+            return js_nan();
+
+        // 3. If d is +∞𝔽 or d is -∞𝔽, return n.
+        if (rhs_numeric.is_positive_infinity() || rhs_numeric.is_negative_infinity())
+            return lhs_numeric;
+
+        // 4. If d is +0𝔽 or d is -0𝔽, return NaN.
+        if (rhs_numeric.is_positive_zero() || rhs_numeric.is_negative_zero())
+            return js_nan();
+
+        // 5. If n is +0𝔽 or n is -0𝔽, return n.
+        if (lhs_numeric.is_positive_zero() || lhs_numeric.is_negative_zero())
+            return lhs_numeric;
+
+        // 6. Assert: n and d are finite and non-zero.
+
         auto index = lhs_numeric.as_double();
         auto period = rhs_numeric.as_double();
         auto trunc = (double)(i32)(index / period);
+
+        // 7. Let r be ℝ(n) - (ℝ(d) × q) where q is an integer that is negative if and only if n and d have opposite sign, and whose magnitude is as large as possible without exceeding the magnitude of ℝ(n) / ℝ(d).
+        // 8. Return 𝔽(r).
         return Value(index - trunc * period);
     }
     if (both_bigint(lhs_numeric, rhs_numeric)) {
