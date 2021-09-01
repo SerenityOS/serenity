@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibTest/TestCase.h>
+
 #include <AK/Array.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -233,13 +235,11 @@ static void do_one_test(const TestSuite& test)
     else
         printf("    overall FAIL\n");
 
-    g_any_failed = g_any_failed || !overall;
+    VERIFY(overall);
 }
 
-int main()
+TEST_CASE(scanf)
 {
     for (auto& test : test_suites)
         do_one_test(test);
-
-    return g_any_failed ? 1 : 0;
 }

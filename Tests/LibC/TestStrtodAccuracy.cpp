@@ -4,13 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <assert.h>
-#include <signal.h>
-#include <stdio.h>
+#include <LibTest/TestCase.h>
+
+#include <AK/Format.h>
+#include <AK/String.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <unistd.h>
 
 static constexpr char TEXT_ERROR[] = "\x1b[01;35m";
 static constexpr char TEXT_WRONG[] = "\x1b[01;31m";
@@ -291,7 +290,7 @@ static bool is_strtod_close(strtod_fn_t strtod_fn, const char* test_string, cons
     bool error_cns = !actual_consume_possible;
     bool wrong_cns = !error_cns && (actual_consume != expect_consume);
 
-    printf(" %s%s%s(%s%2u%s)",
+    out(" {}{}{}({}{:2}{})",
         ofby1_hex ? TEXT_OFBY1 : wrong_hex ? TEXT_WRONG
                                            : "",
         actual_hex,
@@ -315,8 +314,8 @@ static long long hex_to_ll(const char* hex)
         } else if ('a' <= ch && ch <= 'f') {
             digit = ch - 'a' + 10;
         } else {
-            printf("\n!!! Encountered char %02x at %d.\n", ch, i);
-            assert(false);
+            FAIL(String::formatted("\n!!! Encountered char {:02x} at {}", ch, i));
+            return result;
         }
         result <<= 4;
         result += digit;
@@ -324,10 +323,10 @@ static long long hex_to_ll(const char* hex)
     return result;
 }
 
-int main()
+TEST_CASE(strtod_accuracy)
 {
-    printf("Running %zu testcases...\n", NUM_TESTCASES);
-    printf("%3s(%-5s): %16s(%2s) %16s(%2s) %16s(%2s) %16s(%2s) – %s\n", "num", "name", "correct", "cs", "builtin", "cs", "old_strtod", "cs", "new_strtod", "cs", "teststring");
+    outln("Running {} testcases...", NUM_TESTCASES);
+    outln("{:3}({:-5}): {:16}({:2}) {:16}({:2}) - {}", "num", "name", "correct", "cs", "strtod", "cs", "teststring");
 
     int successes = 0;
     int fails = 0;
@@ -336,13 +335,12 @@ int main()
         if (tc.should_consume == -1) {
             tc.should_consume = strlen(tc.test_string);
         }
-        printf("%3zu(%-5s):", i, tc.test_name);
-        printf(" %s(%2d)", tc.hex, tc.should_consume);
+        out("{:3}({:-5}): {}({:2})", i, tc.test_name, tc.hex, tc.should_consume);
         long long expect_ll = hex_to_ll(tc.hex);
 
         bool success = false;
         success = is_strtod_close(strtod, tc.test_string, tc.hex, tc.should_consume, expect_ll);
-        printf(" from %s\n", tc.test_string);
+        outln(" from {}", tc.test_string);
 
         if (success) {
             successes += 1;
@@ -350,12 +348,10 @@ int main()
             fails += 1;
         }
     }
-    printf("Out of %zu tests, saw %d successes and %d fails.\n", NUM_TESTCASES, successes, fails);
+    outln("Out of {} tests, saw {} successes and {} fails.", NUM_TESTCASES, successes, fails);
     if (fails != 0) {
-        printf("FAIL\n");
-        return 1;
+        FAIL(String::formatted("{} strtod tests failed", fails));
     }
 
-    printf("PASS (with leniency up to %lld ULP from the exact solution.\n", LENIENCY);
-    return 0;
+    outln("PASS (with leniency up to {} ULP from the exact solution)", LENIENCY);
 }
