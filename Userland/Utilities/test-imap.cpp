@@ -48,7 +48,7 @@ int main(int argc, char** argv)
 
     Core::EventLoop loop;
     auto client = IMAP::Client(host, port, tls);
-    client.connect().value()->await();
+    client.connect()->await();
 
     auto response = client.login(username, password)->await().release_value();
     outln("[LOGIN] Login response: {}", response.response_text());

@@ -125,11 +125,11 @@ bool MailWidget::connect_and_login()
 
     m_imap_client = make<IMAP::Client>(server, port, tls);
     auto connection_promise = m_imap_client->connect();
-    if (!connection_promise.has_value()) {
+    if (!connection_promise) {
         GUI::MessageBox::show_error(window(), String::formatted("Failed to connect to '{}:{}' over {}.", server, port, tls ? "TLS" : "Plaintext"));
         return false;
     }
-    connection_promise.value()->await();
+    connection_promise->await();
 
     auto response = m_imap_client->login(username, password)->await().release_value();
 

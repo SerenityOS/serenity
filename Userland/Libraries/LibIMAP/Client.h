@@ -21,7 +21,7 @@ class Client {
 public:
     Client(StringView host, unsigned port, bool start_with_tls);
 
-    Optional<RefPtr<Promise<Empty>>> connect();
+    RefPtr<Promise<Empty>> connect();
     RefPtr<Promise<Optional<Response>>> send_command(Command&&);
     RefPtr<Promise<Optional<Response>>> send_simple_command(CommandType);
     void send_raw(StringView data);
