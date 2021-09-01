@@ -211,22 +211,7 @@ void BrowserWindow::build_menus()
 
     auto js_console_action = GUI::Action::create(
         "Open &JS Console", { Mod_Ctrl, Key_I }, [this](auto&) {
-            auto& tab = active_tab();
-            if (!tab.m_console_window) {
-                tab.m_console_window = GUI::Window::construct(this);
-                tab.m_console_window->resize(500, 300);
-                tab.m_console_window->set_title("JS Console");
-                tab.m_console_window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-javascript.png"));
-                tab.m_console_window->set_main_widget<ConsoleWidget>();
-            }
-            auto* console_widget = static_cast<ConsoleWidget*>(tab.m_console_window->main_widget());
-            console_widget->on_js_input = [&tab](const String& js_source) {
-                tab.m_web_content_view->js_console_input(js_source);
-            };
-            console_widget->clear_output();
-            tab.m_web_content_view->js_console_initialize();
-            tab.m_console_window->show();
-            tab.m_console_window->move_to_front();
+            active_tab().show_console_window();
         },
         this);
     js_console_action->set_status_tip("Open JavaScript console for this page");
