@@ -72,7 +72,7 @@ RefPtr<Inode> TmpFS::get_inode(InodeIdentifier identifier) const
     return it->value;
 }
 
-TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata metadata, InodeIdentifier parent)
+TmpFSInode::TmpFSInode(TmpFS& fs, const InodeMetadata& metadata, InodeIdentifier parent)
     : Inode(fs, fs.next_inode_index())
     , m_metadata(metadata)
     , m_parent(parent)
@@ -84,7 +84,7 @@ TmpFSInode::~TmpFSInode()
 {
 }
 
-RefPtr<TmpFSInode> TmpFSInode::create(TmpFS& fs, InodeMetadata metadata, InodeIdentifier parent)
+RefPtr<TmpFSInode> TmpFSInode::create(TmpFS& fs, const InodeMetadata& metadata, InodeIdentifier parent)
 {
     auto inode = adopt_ref_if_nonnull(new (nothrow) TmpFSInode(fs, metadata, parent));
     if (inode)
