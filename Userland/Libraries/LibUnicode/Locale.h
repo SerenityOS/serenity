@@ -16,6 +16,8 @@
 namespace Unicode {
 
 struct LanguageID {
+    String to_string() const;
+
     bool is_root { false };
     Optional<String> language {};
     Optional<String> script {};
@@ -51,6 +53,19 @@ struct OtherExtension {
 using Extension = Variant<LocaleExtension, TransformedExtension, OtherExtension>;
 
 struct LocaleID {
+    String to_string() const;
+
+    template<typename ExtensionType>
+    void remove_extension_type()
+    {
+        auto tmp_extensions = move(extensions);
+
+        for (auto& extension : tmp_extensions) {
+            if (!extension.has<ExtensionType>())
+                extensions.append(move(extension));
+        }
+    }
+
     LanguageID language_id {};
     Vector<Extension> extensions {};
     Vector<String> private_use_extensions {};

@@ -886,4 +886,77 @@ String resolve_most_likely_territory([[maybe_unused]] LanguageID const& language
     return aliases[0].to_string();
 }
 
+String LanguageID::to_string() const
+{
+    StringBuilder builder;
+
+    auto append_segment = [&](Optional<String> const& segment) {
+        if (!segment.has_value())
+            return;
+        if (!builder.is_empty())
+            builder.append('-');
+        builder.append(*segment);
+    };
+
+    append_segment(language);
+    append_segment(script);
+    append_segment(region);
+    for (auto const& variant : variants)
+        append_segment(variant);
+
+    return builder.build();
+}
+
+String LocaleID::to_string() const
+{
+    StringBuilder builder;
+
+    auto append_segment = [&](Optional<String> const& segment) {
+        if (!segment.has_value())
+            return;
+        if (!builder.is_empty())
+            builder.append('-');
+        builder.append(*segment);
+    };
+
+    auto append_key_value_list = [&](auto const& key, auto const& values) {
+        append_segment(key);
+        for (auto const& value : values)
+            append_segment(value);
+    };
+
+    append_segment(language_id.to_string());
+
+    for (auto const& extension : extensions) {
+        extension.visit(
+            [&](LocaleExtension const& ext) {
+                builder.append("-u"sv);
+                for (auto const& attribute : ext.attributes)
+                    append_segment(attribute);
+                for (auto const& keyword : ext.keywords)
+                    append_key_value_list(keyword.key, keyword.types);
+            },
+            [&](TransformedExtension const& ext) {
+                builder.append("-t"sv);
+                if (ext.language.has_value())
+                    append_segment(ext.language->to_string());
+                for (auto const& field : ext.fields)
+                    append_key_value_list(field.key, field.values);
+            },
+            [&](OtherExtension const& ext) {
+                builder.appendff("-{}", ext.key);
+                for (auto const& value : ext.values)
+                    append_segment(value);
+            });
+    }
+
+    if (!private_use_extensions.is_empty()) {
+        builder.append("-x"sv);
+        for (auto const& extension : private_use_extensions)
+            append_segment(extension);
+    }
+
+    return builder.build();
+}
+
 }
