@@ -26,7 +26,7 @@ static Optional<Unicode::LocaleID> is_structurally_valid_language_tag(StringView
         quick_sort(variants);
 
         for (size_t i = 0; i < variants.size() - 1; ++i) {
-            if (variants[i] == variants[i + 1])
+            if (variants[i].equals_ignoring_case(variants[i + 1]))
                 return true;
         }
 
