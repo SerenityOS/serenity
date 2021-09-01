@@ -151,6 +151,7 @@ public:
     Cursor const& drag_cursor() const { return *m_drag_cursor; }
     Cursor const& wait_cursor() const { return *m_wait_cursor; }
     Cursor const& eyedropper_cursor() const { return *m_eyedropper_cursor; }
+    Cursor const& zoom_cursor() const { return *m_zoom_cursor; }
 
     Gfx::Font const& font() const;
     Gfx::Font const& window_title_font() const;
@@ -366,6 +367,7 @@ private:
     RefPtr<Cursor> m_wait_cursor;
     RefPtr<Cursor> m_crosshair_cursor;
     RefPtr<Cursor> m_eyedropper_cursor;
+    RefPtr<Cursor> m_zoom_cursor;
 
     RefPtr<MultiScaleBitmaps> m_overlay_rect_shadow;
 

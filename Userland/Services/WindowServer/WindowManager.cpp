@@ -2081,6 +2081,7 @@ void WindowManager::apply_cursor_theme(const String& theme_name)
     reload_cursor(m_wait_cursor, "Wait");
     reload_cursor(m_crosshair_cursor, "Crosshair");
     reload_cursor(m_eyedropper_cursor, "Eyedropper");
+    reload_cursor(m_zoom_cursor, "Zoom");
 
     Compositor::the().invalidate_cursor();
     m_config->write_entry("Mouse", "CursorTheme", theme_name);
