@@ -42,13 +42,8 @@ EditorWrapper::EditorWrapper()
         open_file(path);
     };
 
-    m_editor->on_change = [this] {
-        if (this->on_change)
-            this->on_change();
-        bool was_dirty = m_document_dirty;
-        m_document_dirty = true;
-        if (!was_dirty)
-            update_title();
+    m_editor->on_modified_change = [this](bool) {
+        update_title();
     };
 }
 
@@ -91,8 +86,6 @@ void EditorWrapper::set_filename(const String& filename)
 void EditorWrapper::save()
 {
     editor().write_to_file(filename());
-    m_document_dirty = false;
-    update_title();
     update_diff();
     editor().update();
 }
@@ -128,7 +121,7 @@ void EditorWrapper::update_title()
     else
         title.append(m_filename);
 
-    if (m_document_dirty)
+    if (editor().document().is_modified())
         title.append(" (*)");
     m_filename_label->set_text(title.to_string());
 }
