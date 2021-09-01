@@ -721,7 +721,7 @@ static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, 
     auxv.append({ ELF::AuxiliaryValue::Secure, ((uid != euid) || (gid != egid)) ? 1 : 0 });
 
     char random_bytes[16] {};
-    get_fast_random_bytes((u8*)random_bytes, sizeof(random_bytes));
+    get_fast_random_bytes({ (u8*)random_bytes, sizeof(random_bytes) });
 
     auxv.append({ ELF::AuxiliaryValue::Random, String(random_bytes, sizeof(random_bytes)) });
 
