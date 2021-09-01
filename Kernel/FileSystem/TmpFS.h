@@ -70,8 +70,8 @@ public:
     virtual void one_ref_left() override;
 
 private:
-    TmpFSInode(TmpFS& fs, InodeMetadata metadata, InodeIdentifier parent);
-    static RefPtr<TmpFSInode> create(TmpFS&, InodeMetadata metadata, InodeIdentifier parent);
+    TmpFSInode(TmpFS& fs, const InodeMetadata& metadata, InodeIdentifier parent);
+    static RefPtr<TmpFSInode> create(TmpFS&, const InodeMetadata& metadata, InodeIdentifier parent);
     static RefPtr<TmpFSInode> create_root(TmpFS&);
     void notify_watchers();
 
