@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Peter Elliott <pelliott@ualberta.ca>
+ * Copyright (c) 2020, Peter Elliott <pelliott@serenityos.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause

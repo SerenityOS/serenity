@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Peter Elliott <pelliott@ualberta.ca>
+ * Copyright (c) 2020, Peter Elliott <pelliott@serenityos.org>
  * Copyright (c) 2021, Emanuele Torre <torreemanuele6@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
