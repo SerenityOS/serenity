@@ -768,28 +768,18 @@ Token Lexer::next()
         }
     }
 
-    if (identifier.has_value()) {
-        m_current_token = Token(
-            token_type,
-            token_message,
-            m_source.substring_view(trivia_start - 1, value_start - trivia_start),
-            m_source.substring_view(value_start - 1, m_position - value_start),
-            identifier.release_value(),
-            m_filename,
-            value_start_line_number,
-            value_start_column_number,
-            m_position);
-    } else {
-        m_current_token = Token(
-            token_type,
-            token_message,
-            m_source.substring_view(trivia_start - 1, value_start - trivia_start),
-            m_source.substring_view(value_start - 1, m_position - value_start),
-            m_filename,
-            value_start_line_number,
-            value_start_column_number,
-            m_position);
-    }
+    m_current_token = Token(
+        token_type,
+        token_message,
+        m_source.substring_view(trivia_start - 1, value_start - trivia_start),
+        m_source.substring_view(value_start - 1, m_position - value_start),
+        m_filename,
+        value_start_line_number,
+        value_start_column_number,
+        m_position);
+
+    if (identifier.has_value())
+        m_current_token.set_identifier_value(identifier.release_value());
 
     if constexpr (LEXER_DEBUG) {
         dbgln("------------------------------");
