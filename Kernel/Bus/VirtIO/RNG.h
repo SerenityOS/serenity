@@ -21,7 +21,7 @@ class RNG final
 public:
     static NonnullRefPtr<RNG> must_create(PCI::Address address);
     virtual StringView purpose() const override { return class_name(); }
-    virtual ~RNG() override;
+    virtual ~RNG() override = default;
 
 private:
     virtual StringView class_name() const override { return "VirtIOConsole"; }

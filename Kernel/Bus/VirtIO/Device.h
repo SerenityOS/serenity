@@ -88,7 +88,7 @@ class Device
     : public PCI::Device
     , public IRQHandler {
 public:
-    virtual ~Device() override;
+    virtual ~Device() override = default;
 
 protected:
     virtual StringView class_name() const = 0;
