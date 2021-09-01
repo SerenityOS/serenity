@@ -338,22 +338,22 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, c
     PseudoHeader pseudo_header { source, destination, 0, (u8)IPv4Protocol::TCP, packet.header_size() + payload_size };
 
     u32 checksum = 0;
-    auto* w = (const NetworkOrdered<u16>*)&pseudo_header;
+    auto raw_pseudo_header = bit_cast<u16*>(&pseudo_header);
     for (size_t i = 0; i < sizeof(pseudo_header) / sizeof(u16); ++i) {
-        checksum += w[i];
+        checksum += AK::convert_between_host_and_network_endian(raw_pseudo_header[i]);
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
-    w = (const NetworkOrdered<u16>*)&packet;
+    auto raw_packet = bit_cast<u16*>(&packet);
     for (size_t i = 0; i < packet.header_size() / sizeof(u16); ++i) {
-        checksum += w[i];
+        checksum += AK::convert_between_host_and_network_endian(raw_packet[i]);
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
     VERIFY(packet.data_offset() * 4 == packet.header_size());
-    w = (const NetworkOrdered<u16>*)packet.payload();
+    auto raw_payload = bit_cast<u16*>(packet.payload());
     for (size_t i = 0; i < payload_size / sizeof(u16); ++i) {
-        checksum += w[i];
+        checksum += AK::convert_between_host_and_network_endian(raw_payload[i]);
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
