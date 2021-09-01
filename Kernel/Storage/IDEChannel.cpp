@@ -478,10 +478,10 @@ bool IDEChannel::ata_do_read_sector()
     dbgln_if(PATA_DEBUG, "IDEChannel::ata_do_read_sector");
     auto& request = *m_current_request;
     auto out_buffer = request.buffer().offset(m_current_request_block_index * 512);
-    auto result = request.write_to_buffer_buffered<512>(out_buffer, 512, [&](u8* buffer, size_t buffer_bytes) {
-        for (size_t i = 0; i < buffer_bytes; i += sizeof(u16))
-            *(u16*)&buffer[i] = IO::in16(m_io_group.io_base().offset(ATA_REG_DATA).get());
-        return buffer_bytes;
+    auto result = request.write_to_buffer_buffered<512>(out_buffer, 512, [&](Bytes bytes) {
+        for (size_t i = 0; i < bytes.size(); i += sizeof(u16))
+            *(u16*)bytes.offset_pointer(i) = IO::in16(m_io_group.io_base().offset(ATA_REG_DATA).get());
+        return bytes.size();
     });
     if (result.is_error()) {
         // TODO: Do we need to abort the PATA read if this wasn't the last block?
@@ -520,10 +520,10 @@ void IDEChannel::ata_do_write_sector()
 
     auto in_buffer = request.buffer().offset(m_current_request_block_index * 512);
     dbgln_if(PATA_DEBUG, "IDEChannel: Writing 512 bytes (part {}) (status={:#02x})...", m_current_request_block_index, status);
-    auto result = request.read_from_buffer_buffered<512>(in_buffer, 512, [&](u8 const* buffer, size_t buffer_bytes) {
-        for (size_t i = 0; i < buffer_bytes; i += sizeof(u16))
-            IO::out16(m_io_group.io_base().offset(ATA_REG_DATA).get(), *(const u16*)&buffer[i]);
-        return buffer_bytes;
+    auto result = request.read_from_buffer_buffered<512>(in_buffer, 512, [&](ReadonlyBytes readonly_bytes) {
+        for (size_t i = 0; i < readonly_bytes.size(); i += sizeof(u16))
+            IO::out16(m_io_group.io_base().offset(ATA_REG_DATA).get(), *(const u16*)readonly_bytes.offset(i));
+        return readonly_bytes.size();
     });
     if (result.is_error())
         complete_current_request(AsyncDeviceRequest::MemoryFault);

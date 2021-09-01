@@ -63,10 +63,10 @@ KResultOr<size_t> SerialDevice::read(FileDescription&, u64, UserOrKernelBuffer& 
     if (!(get_line_status() & DataReady))
         return 0;
 
-    return buffer.write_buffered<128>(size, [&](u8* data, size_t data_size) {
-        for (size_t i = 0; i < data_size; i++)
-            data[i] = m_base_addr.in<u8>();
-        return data_size;
+    return buffer.write_buffered<128>(size, [&](Bytes bytes) {
+        for (auto& byte : bytes)
+            byte = m_base_addr.in<u8>();
+        return bytes.size();
     });
 }
 
@@ -84,10 +84,10 @@ KResultOr<size_t> SerialDevice::write(FileDescription& description, u64, const U
     if (!can_write(description, size))
         return EAGAIN;
 
-    return buffer.read_buffered<128>(size, [&](u8 const* data, size_t data_size) {
-        for (size_t i = 0; i < data_size; i++)
-            put_char(data[i]);
-        return data_size;
+    return buffer.read_buffered<128>(size, [&](ReadonlyBytes bytes) {
+        for (const auto& byte : bytes)
+            put_char(byte);
+        return bytes.size();
     });
 }
 
