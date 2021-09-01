@@ -1271,7 +1271,7 @@ NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal(bool is_tagged)
             auto token = consume();
             expressions.append(parse_string_literal(token, true));
             if (is_tagged)
-                raw_strings.append(create_ast_node<StringLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, token.value()));
+                raw_strings.append(create_ast_node<StringLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, token.raw_template_value()));
         } else if (match(TokenType::TemplateLiteralExprStart)) {
             consume(TokenType::TemplateLiteralExprStart);
             if (match(TokenType::TemplateLiteralExprEnd)) {

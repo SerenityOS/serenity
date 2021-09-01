@@ -237,6 +237,7 @@ public:
         LegacyOctalEscapeSequence,
     };
     String string_value(StringValueStatus& status) const;
+    String raw_template_value() const;
 
     bool is_identifier_name() const;
     bool trivia_contains_line_terminator() const;
