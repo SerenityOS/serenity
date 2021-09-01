@@ -12,7 +12,6 @@
 #include <AK/Variant.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/Object.h>
-#include <utility>
 
 namespace IMAP {
 enum class CommandType {
@@ -474,7 +473,7 @@ public:
 
     template<typename T>
     explicit SearchKey(T&& t)
-        : data(std::forward<T>(t))
+        : data(forward<T>(t))
     {
     }
 
