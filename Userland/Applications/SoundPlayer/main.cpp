@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,7 @@
 #include "SoundPlayerWidgetAdvancedView.h"
 #include <LibAudio/ClientConnection.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Menu.h>
@@ -101,49 +103,27 @@ int main(int argc, char** argv)
     playback_menu.add_action(move(loop));
 
     auto& visualization_menu = window->add_menu("&Visualization");
-    Vector<NonnullRefPtr<GUI::Action>> visualization_checkmarks;
-    GUI::Action* checked_vis = nullptr;
-    auto uncheck_all_but = [&](GUI::Action& one) {for (auto& a : visualization_checkmarks) if (a != &one) a->set_checked(false); };
+    GUI::ActionGroup visualization_actions;
+    visualization_actions.set_exclusive(true);
 
-    auto bars = GUI::Action::create_checkable("&Bars", [&](auto& action) {
-        uncheck_all_but(action);
-        if (checked_vis == &action) {
-            action.set_checked(true);
-            return;
-        }
-        checked_vis = &action;
+    auto bars = GUI::Action::create_checkable("&Bars", [&](auto&) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_visualization<BarsVisualizationWidget>();
     });
     bars->set_checked(true);
-
     visualization_menu.add_action(bars);
-    visualization_checkmarks.append(bars);
+    visualization_actions.add_action(bars);
 
-    auto samples = GUI::Action::create_checkable("&Samples", [&](auto& action) {
-        uncheck_all_but(action);
-        if (checked_vis == &action) {
-            action.set_checked(true);
-            return;
-        }
-        checked_vis = &action;
+    auto samples = GUI::Action::create_checkable("&Samples", [&](auto&) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_visualization<SampleWidget>();
     });
-
     visualization_menu.add_action(samples);
-    visualization_checkmarks.append(samples);
+    visualization_actions.add_action(samples);
 
-    auto none = GUI::Action::create_checkable("&None", [&](auto& action) {
-        uncheck_all_but(action);
-        if (checked_vis == &action) {
-            action.set_checked(true);
-            return;
-        }
-        checked_vis = &action;
+    auto none = GUI::Action::create_checkable("&None", [&](auto&) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_visualization<NoVisualizationWidget>();
     });
-
     visualization_menu.add_action(none);
-    visualization_checkmarks.append(none);
+    visualization_actions.add_action(none);
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Sound Player", app_icon, window));
