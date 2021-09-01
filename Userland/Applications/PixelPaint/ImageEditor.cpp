@@ -19,6 +19,7 @@ namespace PixelPaint {
 
 ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     : m_image(move(image))
+    , m_prev_image_undo_command(nullptr)
     , m_undo_stack(make<GUI::UndoStack>())
     , m_selection(*this)
 {
@@ -35,7 +36,8 @@ ImageEditor::~ImageEditor()
 
 void ImageEditor::did_complete_action()
 {
-    m_undo_stack->push(make<ImageUndoCommand>(*m_image));
+    if (m_prev_image_undo_command.ptr())
+        m_undo_stack->push(m_prev_image_undo_command.release_nonnull());
 }
 
 bool ImageEditor::undo()
@@ -193,6 +195,8 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
             set_active_layer(other_layer);
         }
     }
+
+    m_prev_image_undo_command = make<ImageUndoCommand>(*m_image);
 
     auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
     auto image_event = event_with_pan_and_scale_applied(event);

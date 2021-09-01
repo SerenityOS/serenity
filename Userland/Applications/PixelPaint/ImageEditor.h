@@ -116,6 +116,7 @@ private:
     void relayout();
 
     NonnullRefPtr<Image> m_image;
+    OwnPtr<ImageUndoCommand> m_prev_image_undo_command;
     RefPtr<Layer> m_active_layer;
     OwnPtr<GUI::UndoStack> m_undo_stack;
 
