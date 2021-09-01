@@ -62,6 +62,7 @@ bool is_unicode_language_subtag(StringView);
 bool is_unicode_script_subtag(StringView);
 bool is_unicode_region_subtag(StringView);
 bool is_unicode_variant_subtag(StringView);
+bool is_type_identifier(StringView);
 
 Optional<LanguageID> parse_unicode_language_id(StringView);
 Optional<LocaleID> parse_unicode_locale_id(StringView);
