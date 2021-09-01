@@ -445,7 +445,7 @@ Value canonical_code_for_display_names(GlobalObject& global_object, DisplayNames
     if (type == DisplayNames::Type::Language) {
         // a. If code does not match the unicode_language_id production, throw a RangeError exception.
         if (!Unicode::parse_unicode_language_id(code).has_value()) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::IntlInvalidCode, code, "language"sv);
+            vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, code, "language"sv);
             return {};
         }
 
@@ -466,7 +466,7 @@ Value canonical_code_for_display_names(GlobalObject& global_object, DisplayNames
     if (type == DisplayNames::Type::Region) {
         // a. If code does not match the unicode_region_subtag production, throw a RangeError exception.
         if (!Unicode::is_unicode_region_subtag(code)) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::IntlInvalidCode, code, "region"sv);
+            vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, code, "region"sv);
             return {};
         }
 
@@ -479,7 +479,7 @@ Value canonical_code_for_display_names(GlobalObject& global_object, DisplayNames
     if (type == DisplayNames::Type::Script) {
         // a. If code does not match the unicode_script_subtag production, throw a RangeError exception.
         if (!Unicode::is_unicode_script_subtag(code)) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::IntlInvalidCode, code, "script"sv);
+            vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, code, "script"sv);
             return {};
         }
 
@@ -493,7 +493,7 @@ Value canonical_code_for_display_names(GlobalObject& global_object, DisplayNames
 
     // 5. If ! IsWellFormedCurrencyCode(code) is false, throw a RangeError exception.
     if (!is_well_formed_currency_code(code)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::IntlInvalidCode, code, "currency"sv);
+        vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, code, "currency"sv);
         return {};
     }
 
