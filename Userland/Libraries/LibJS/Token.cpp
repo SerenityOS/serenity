@@ -106,6 +106,16 @@ String Token::string_value(StringValueStatus& status) const
     while (!lexer.is_eof()) {
         // No escape, consume one char and continue
         if (!lexer.next_is('\\')) {
+
+            if (is_template && lexer.next_is('\r')) {
+                lexer.ignore();
+                if (lexer.next_is('\n'))
+                    lexer.ignore();
+
+                builder.append('\n');
+                continue;
+            }
+
             builder.append(lexer.consume());
             continue;
         }
@@ -132,6 +142,8 @@ String Token::string_value(StringValueStatus& status) const
 
         // Line continuation
         if (lexer.next_is('\n') || lexer.next_is('\r')) {
+            if (lexer.next_is("\r\n"))
+                lexer.ignore();
             lexer.ignore();
             continue;
         }
@@ -190,6 +202,15 @@ String Token::string_value(StringValueStatus& status) const
         builder.append(lexer.consume_escaped_character('\\', "b\bf\fn\nr\rt\tv\v"));
     }
     return builder.to_string();
+}
+
+// 12.8.6.2 Static Semantics: TRV, https://tc39.es/ecma262/multipage/ecmascript-language-lexical-grammar.html#sec-static-semantics-trv
+String Token::raw_template_value() const
+{
+    String base = value().to_string();
+    base.replace("\r\n", "\n", true);
+    base.replace("\r", "\n", true);
+    return base;
 }
 
 bool Token::bool_value() const
