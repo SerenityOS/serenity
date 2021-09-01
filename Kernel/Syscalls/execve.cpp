@@ -628,8 +628,11 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
         // Make sure we release the ptrace lock here or the tracer will block forever.
         ptrace_locker.unlock();
         Thread::current()->send_urgent_signal_to_self(SIGSTOP);
+    } else {
+        // Unlock regardless before disabling interrupts.
+        // Ensure we always unlock after checking ptrace status to avoid TOCTOU ptrace issues
+        ptrace_locker.unlock();
     }
-    ptrace_locker.unlock(); // unlock before disabling interrupts as well
 
     // We enter a critical section here because we don't want to get interrupted between do_exec()
     // and Processor::assume_context() or the next context switch.
