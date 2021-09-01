@@ -16,6 +16,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Breadcrumbbar.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -339,14 +340,21 @@ int main(int argc, char* argv[])
         treemapwidget.set_viewpoint(index);
     };
     treemapwidget.on_path_change = [&]() {
+        StringBuilder builder;
+
         breadcrumbbar.clear_segments();
         for (size_t k = 0; k < treemapwidget.path_size(); k++) {
             if (k == 0) {
-                breadcrumbbar.append_segment("/");
-            } else {
-                const SpaceAnalyzer::TreeMapNode* node = treemapwidget.path_node(k);
-                breadcrumbbar.append_segment(node->name());
+                breadcrumbbar.append_segment("/", GUI::FileIconProvider::icon_for_path("/").bitmap_for_size(16), "/", "/");
+                continue;
             }
+
+            const SpaceAnalyzer::TreeMapNode* node = treemapwidget.path_node(k);
+
+            builder.append("/");
+            builder.append(node->name());
+
+            breadcrumbbar.append_segment(node->name(), GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
         }
         breadcrumbbar.set_selected_segment(treemapwidget.viewpoint());
     };
