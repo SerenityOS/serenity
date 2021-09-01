@@ -289,8 +289,6 @@ MainWidget::MainWidget()
             GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
             return;
         }
-        // FIXME: It would be cool if this would propagate from GUI::TextDocument somehow.
-        window()->set_modified(false);
 
         set_path(*response.chosen_file);
         dbgln("Wrote document to {}", *response.chosen_file);
@@ -310,11 +308,6 @@ MainWidget::MainWidget()
 
             if (!m_editor->write_to_file_and_close(fd)) {
                 GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
-            } else {
-                // FIXME: It would be cool if this would propagate from GUI::TextDocument somehow.
-                window()->set_modified(false);
-
-                update_title();
             }
             return;
         }
