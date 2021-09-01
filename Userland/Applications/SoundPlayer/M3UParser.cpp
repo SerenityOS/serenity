@@ -7,6 +7,7 @@
 #include "M3UParser.h"
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
+#include <AK/ScopeGuard.h>
 #include <AK/Utf8View.h>
 
 M3UParser::M3UParser()
@@ -19,6 +20,7 @@ NonnullOwnPtr<M3UParser> M3UParser::from_file(const String path)
     VERIFY(!path.is_null() && !path.is_empty() && !path.is_whitespace());
     parser->m_use_utf8 = path.ends_with(".m3u8", AK::CaseSensitivity::CaseInsensitive);
     FILE* file = fopen(path.characters(), "r");
+    ScopeGuard file_guard = [&] { fclose(file); };
     VERIFY(file != nullptr);
     fseek(file, 0, SEEK_END);
     size_t file_size = ftell(file);
