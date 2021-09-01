@@ -114,6 +114,22 @@ static Optional<StringView> consume_next_segment(GenericLexer& lexer, bool with_
     return segment;
 }
 
+bool is_type_identifier(StringView identifier)
+{
+    // type = alphanum{3,8} (sep alphanum{3,8})*
+    GenericLexer lexer { identifier };
+
+    while (true) {
+        auto type = consume_next_segment(lexer, lexer.tell() > 0);
+        if (!type.has_value())
+            break;
+        if (!is_single_type(*type))
+            return false;
+    }
+
+    return lexer.is_eof() && (lexer.tell() > 0);
+}
+
 static Optional<LanguageID> parse_unicode_language_id(GenericLexer& lexer)
 {
     // https://unicode.org/reports/tr35/#Unicode_language_identifier

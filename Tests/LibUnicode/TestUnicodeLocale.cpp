@@ -69,6 +69,24 @@ TEST_CASE(is_unicode_variant_subtag)
     EXPECT(!Unicode::is_unicode_variant_subtag("a234"sv));
 }
 
+TEST_CASE(is_type_identifier)
+{
+    EXPECT(Unicode::is_type_identifier("aaaa"sv));
+    EXPECT(Unicode::is_type_identifier("aaaa-bbbb"sv));
+    EXPECT(Unicode::is_type_identifier("aaaa-bbbb-cccc"sv));
+
+    EXPECT(Unicode::is_type_identifier("1aaa"sv));
+    EXPECT(Unicode::is_type_identifier("12aa"sv));
+    EXPECT(Unicode::is_type_identifier("123a"sv));
+    EXPECT(Unicode::is_type_identifier("1234"sv));
+
+    EXPECT(!Unicode::is_type_identifier(""sv));
+    EXPECT(!Unicode::is_type_identifier("a"sv));
+    EXPECT(!Unicode::is_type_identifier("aa"sv));
+    EXPECT(!Unicode::is_type_identifier("aaaaaaaaa"sv));
+    EXPECT(!Unicode::is_type_identifier("aaaa-"sv));
+}
+
 TEST_CASE(parse_unicode_locale_id)
 {
     auto fail = [](StringView locale) {
