@@ -1008,7 +1008,7 @@ int main(int argc, char** argv)
             JS::Lexer lexer(line);
             bool indenters_starting_line = true;
             for (JS::Token token = lexer.next(); token.type() != JS::TokenType::Eof; token = lexer.next()) {
-                auto length = token.value().length();
+                auto length = Utf8View { token.value() }.length();
                 auto start = token.line_column() - 1;
                 auto end = start + length;
                 if (indenters_starting_line) {
@@ -1021,13 +1021,13 @@ int main(int argc, char** argv)
 
                 switch (token.category()) {
                 case JS::TokenCategory::Invalid:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Red), Line::Style::Underline });
+                    stylize({ start, end, Line::Span::CodepointOriented }, { Line::Style::Foreground(Line::Style::XtermColor::Red), Line::Style::Underline });
                     break;
                 case JS::TokenCategory::Number:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Magenta) });
+                    stylize({ start, end, Line::Span::CodepointOriented }, { Line::Style::Foreground(Line::Style::XtermColor::Magenta) });
                     break;
                 case JS::TokenCategory::String:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Green), Line::Style::Bold });
+                    stylize({ start, end, Line::Span::CodepointOriented }, { Line::Style::Foreground(Line::Style::XtermColor::Green), Line::Style::Bold });
                     break;
                 case JS::TokenCategory::Punctuation:
                     break;
@@ -1037,18 +1037,18 @@ int main(int argc, char** argv)
                     switch (token.type()) {
                     case JS::TokenType::BoolLiteral:
                     case JS::TokenType::NullLiteral:
-                        stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow), Line::Style::Bold });
+                        stylize({ start, end, Line::Span::CodepointOriented }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow), Line::Style::Bold });
                         break;
                     default:
-                        stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Blue), Line::Style::Bold });
+                        stylize({ start, end, Line::Span::CodepointOriented }, { Line::Style::Foreground(Line::Style::XtermColor::Blue), Line::Style::Bold });
                         break;
                     }
                     break;
                 case JS::TokenCategory::ControlKeyword:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan), Line::Style::Italic });
+                    stylize({ start, end, Line::Span::CodepointOriented }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan), Line::Style::Italic });
                     break;
                 case JS::TokenCategory::Identifier:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::White), Line::Style::Bold });
+                    stylize({ start, end, Line::Span::CodepointOriented }, { Line::Style::Foreground(Line::Style::XtermColor::White), Line::Style::Bold });
                     break;
                 default:
                     break;
