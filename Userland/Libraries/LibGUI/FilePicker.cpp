@@ -27,6 +27,7 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <string.h>
+#include <unistd.h>
 
 namespace GUI {
 
@@ -291,6 +292,13 @@ void FilePicker::on_file_return()
 
 void FilePicker::set_path(const String& path)
 {
+    if (access(path.characters(), R_OK | X_OK) == -1) {
+        GUI::MessageBox::show(this, String::formatted("Could not open '{}':\n{}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+        for (auto location_button : m_common_location_buttons)
+            location_button.button.set_checked(m_model->root_path() == location_button.path);
+        return;
+    }
+
     auto new_path = LexicalPath(path).string();
     m_location_textbox->set_icon(FileIconProvider::icon_for_path(new_path).bitmap_for_size(16));
     m_model->set_root_path(new_path);
