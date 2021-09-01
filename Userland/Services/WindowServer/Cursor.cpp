@@ -111,6 +111,8 @@ RefPtr<Cursor> Cursor::create(Gfx::StandardCursor standard_cursor)
         return WindowManager::the().disallowed_cursor();
     case Gfx::StandardCursor::Eyedropper:
         return WindowManager::the().eyedropper_cursor();
+    case Gfx::StandardCursor::Zoom:
+        return WindowManager::the().zoom_cursor();
     default:
         VERIFY_NOT_REACHED();
     }
