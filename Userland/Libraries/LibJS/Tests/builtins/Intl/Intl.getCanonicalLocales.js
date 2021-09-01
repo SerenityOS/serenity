@@ -19,6 +19,13 @@ describe("errors", () => {
 
     test("duplicate variant subtags", () => {
         expect(() => {
+            Intl.getCanonicalLocales("en-posix-POSIX");
+        }).toThrowWithMessage(
+            RangeError,
+            "en-posix-POSIX is not a structurally valid language tag"
+        );
+
+        expect(() => {
             Intl.getCanonicalLocales("en-POSIX-POSIX");
         }).toThrowWithMessage(
             RangeError,
