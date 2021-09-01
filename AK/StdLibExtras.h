@@ -22,7 +22,20 @@ constexpr auto round_up_to_power_of_two(T value, U power_of_two) requires(IsInte
 // clang-format off
 namespace std {
 
-// NOTE: This is in the "std" namespace since some compiler features rely on it.
+// NOTE: These are in the "std" namespace since some compilers and static analyzers rely on it.
+
+template<typename T>
+constexpr T&& forward(AK::Detail::RemoveReference<T>& param)
+{
+    return static_cast<T&&>(param);
+}
+
+template<typename T>
+constexpr T&& forward(AK::Detail::RemoveReference<T>&& param) noexcept
+{
+    static_assert(!IsLvalueReference<T>, "Can't forward an rvalue as an lvalue.");
+    return static_cast<T&&>(param);
+}
 
 template<typename T>
 constexpr T&& move(T& arg)
@@ -33,6 +46,7 @@ constexpr T&& move(T& arg)
 }
 // clang-format on
 
+using std::forward;
 using std::move;
 
 namespace AK::Detail {
@@ -43,19 +57,6 @@ struct _RawPtr {
 }
 
 namespace AK {
-
-template<class T>
-constexpr T&& forward(RemoveReference<T>& param)
-{
-    return static_cast<T&&>(param);
-}
-
-template<class T>
-constexpr T&& forward(RemoveReference<T>&& param) noexcept
-{
-    static_assert(!IsLvalueReference<T>, "Can't forward an rvalue as an lvalue.");
-    return static_cast<T&&>(param);
-}
 
 template<typename T, typename SizeType = decltype(sizeof(T)), SizeType N>
 constexpr SizeType array_size(T (&)[N])
@@ -158,7 +159,6 @@ using AK::array_size;
 using AK::ceil_div;
 using AK::clamp;
 using AK::exchange;
-using AK::forward;
 using AK::is_constant_evaluated;
 using AK::max;
 using AK::min;
