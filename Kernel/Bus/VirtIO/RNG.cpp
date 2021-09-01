@@ -33,10 +33,6 @@ UNMAP_AFTER_INIT RNG::RNG(PCI::Address address)
     }
 }
 
-RNG::~RNG()
-{
-}
-
 bool RNG::handle_device_config_change()
 {
     VERIFY_NOT_REACHED(); // Device has no config
