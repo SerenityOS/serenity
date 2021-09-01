@@ -21,7 +21,7 @@ Client::Client(StringView host, unsigned int port, bool start_with_tls)
     }
 }
 
-Optional<RefPtr<Promise<Empty>>> Client::connect()
+RefPtr<Promise<Empty>> Client::connect()
 {
     bool success;
     if (m_tls) {
@@ -31,7 +31,7 @@ Optional<RefPtr<Promise<Empty>>> Client::connect()
     }
     if (!success)
         return {};
-    m_connect_pending = new Promise<bool> {};
+    m_connect_pending = Promise<bool>::construct();
     return m_connect_pending;
 }
 
