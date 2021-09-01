@@ -80,6 +80,7 @@ private:
     }
 
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
@@ -117,6 +118,14 @@ void GLContextWidget::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.draw_scaled_bitmap(frame_inner_rect(), *m_bitmap, m_bitmap->rect());
 }
+
+void GLContextWidget::resize_event(GUI::ResizeEvent& event)
+{
+    GUI::Frame::resize_event(event);
+
+    if (m_stats)
+        m_stats->set_x(width() - m_stats->width());
+};
 
 void GLContextWidget::mousemove_event(GUI::MouseEvent& event)
 {
@@ -259,7 +268,7 @@ int main(int argc, char** argv)
     time.set_visible(false);
     time.set_foreground_role(ColorRole::HoverHighlight);
     time.set_relative_rect({ 0, 8, 86, 10 });
-    time.move_by({ window->width() - time.width(), 0 });
+    time.set_x(widget.width() - time.width());
     widget.set_stat_label(time);
 
     auto& file_menu = window->add_menu("&File");
