@@ -1,7 +1,7 @@
 # SerenityOS Tips
 # Did you know...
 Pressing Ctrl+Alt+Space at an insertion caret pops up the emoji picker.
-Holding Super while scrolling the mouse wheel over a window adjusts its transparency.
+Middle clicking a window's maximize button extends its vertical height.
 Browser has built-in ad blocking. Filter content by adding new domains to ~/.config/BrowserContentFiltering.txt
 Default file and protocol associations can be changed in ~/.config/LaunchServer.ini
 Text Editor has multiple viewing modes; edit and preview HTML and Markdown in real time.
@@ -21,4 +21,4 @@ Custom keymaps can be created and edited with $ KeyboardMapper
 Supplying # profile with a PID of -1 as root enables systemwide profiling.
 Holding Ctrl accelerates mouse wheel interaction with sliders and spin boxes.
 Selected files can be renamed by pressing F2.
-
+Assistant can help you quickly find files and applications by pressing Super+Space.
