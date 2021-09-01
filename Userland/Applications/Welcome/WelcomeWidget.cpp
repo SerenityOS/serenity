@@ -5,6 +5,7 @@
  */
 
 #include "WelcomeWidget.h"
+#include <AK/Random.h>
 #include <Applications/Welcome/WelcomeWindowGML.h>
 #include <LibCore/File.h>
 #include <LibCore/Process.h>
@@ -17,7 +18,6 @@
 #include <LibMarkdown/Document.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <serenity.h>
-#include <time.h>
 
 WelcomeWidget::WelcomeWidget()
 {
@@ -68,7 +68,6 @@ WelcomeWidget::WelcomeWidget()
 
     open_and_parse_readme_file();
     open_and_parse_tips_file();
-    srand(time(nullptr));
     set_random_tip();
 }
 
@@ -116,12 +115,8 @@ void WelcomeWidget::set_random_tip()
     if (m_tips.is_empty())
         return;
 
-    size_t n;
-    do
-        n = rand();
-    while (n >= m_tips.size());
-    m_initial_tip_index = n;
-    m_tip_label->set_text(m_tips[n]);
+    m_initial_tip_index = get_random_uniform(m_tips.size());
+    m_tip_label->set_text(m_tips[m_initial_tip_index]);
 }
 
 void WelcomeWidget::paint_event(GUI::PaintEvent& event)
