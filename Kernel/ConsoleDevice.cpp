@@ -58,10 +58,10 @@ Kernel::KResultOr<size_t> ConsoleDevice::write(FileDescription&, u64, const Kern
     if (!size)
         return 0;
 
-    return data.read_buffered<256>(size, [&](u8 const* bytes, size_t bytes_count) {
-        for (size_t i = 0; i < bytes_count; i++)
-            put_char((char)bytes[i]);
-        return bytes_count;
+    return data.read_buffered<256>(size, [&](ReadonlyBytes readonly_bytes) {
+        for (const auto& byte : readonly_bytes)
+            put_char(byte);
+        return readonly_bytes.size();
     });
 }
 

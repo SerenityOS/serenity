@@ -52,9 +52,9 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
         size = m_input_buffer.size();
 
     bool need_evaluate_block_conditions = false;
-    auto result = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
+    auto result = buffer.write_buffered<512>(size, [&](Bytes data) {
         size_t bytes_written = 0;
-        for (; bytes_written < data_size; ++bytes_written) {
+        for (; bytes_written < data.size(); ++bytes_written) {
             auto bit_index = m_input_buffer.head_index();
             bool is_special_character = m_special_character_bitmask[bit_index / 8] & (1 << (bit_index % 8));
             if (in_canonical_mode() && is_special_character) {
@@ -88,11 +88,11 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
     }
 
     constexpr size_t num_chars = 256;
-    return buffer.read_buffered<num_chars>(size, [&](u8 const* data, size_t buffer_bytes) -> KResultOr<size_t> {
+    return buffer.read_buffered<num_chars>(size, [&](ReadonlyBytes bytes) -> KResultOr<size_t> {
         u8 modified_data[num_chars * 2];
         size_t modified_data_size = 0;
-        for (size_t i = 0; i < buffer_bytes; ++i) {
-            process_output(data[i], [&modified_data, &modified_data_size](u8 out_ch) {
+        for (const auto& byte : bytes) {
+            process_output(byte, [&modified_data, &modified_data_size](u8 out_ch) {
                 modified_data[modified_data_size++] = out_ch;
             });
         }
@@ -101,14 +101,14 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
             return bytes_written_or_error;
         auto bytes_written = bytes_written_or_error.value();
         if (bytes_written == modified_data_size)
-            return buffer_bytes;
+            return bytes.size();
 
         // Degenerate case where we converted some newlines and encountered a partial write
 
         // Calculate where in the input buffer the last character would have been
         size_t pos_data = 0;
         for (size_t pos_modified_data = 0; pos_modified_data < bytes_written; ++pos_data) {
-            if (data[pos_data] == '\n')
+            if (bytes[pos_data] == '\n')
                 pos_modified_data += 2;
             else
                 pos_modified_data += 1;
