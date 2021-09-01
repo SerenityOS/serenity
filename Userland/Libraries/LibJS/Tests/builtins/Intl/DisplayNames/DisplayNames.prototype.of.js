@@ -2,25 +2,25 @@ describe("errors", () => {
     test("invalid language", () => {
         expect(() => {
             new Intl.DisplayNames("en", { type: "language" }).of("hello!");
-        }).toThrowWithMessage(RangeError, "'hello!' is not a valid value for option type language");
+        }).toThrowWithMessage(RangeError, "hello! is not a valid value for option language");
     });
 
     test("invalid region", () => {
         expect(() => {
             new Intl.DisplayNames("en", { type: "region" }).of("hello!");
-        }).toThrowWithMessage(RangeError, "'hello!' is not a valid value for option type region");
+        }).toThrowWithMessage(RangeError, "hello! is not a valid value for option region");
     });
 
     test("invalid script", () => {
         expect(() => {
             new Intl.DisplayNames("en", { type: "script" }).of("hello!");
-        }).toThrowWithMessage(RangeError, "'hello!' is not a valid value for option type script");
+        }).toThrowWithMessage(RangeError, "hello! is not a valid value for option script");
     });
 
     test("invalid currency", () => {
         expect(() => {
             new Intl.DisplayNames("en", { type: "currency" }).of("hello!");
-        }).toThrowWithMessage(RangeError, "'hello!' is not a valid value for option type currency");
+        }).toThrowWithMessage(RangeError, "hello! is not a valid value for option currency");
     });
 });
 
