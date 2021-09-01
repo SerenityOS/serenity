@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS Developers
+ * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
