@@ -265,12 +265,13 @@ public:
         return String((const char*)buffer.data(), buffer.size(), should_chomp);
     }
 
-    [[nodiscard]] static String vformatted(StringView fmtstr, TypeErasedFormatParams);
+    [[nodiscard]] static String vformatted(StringView fmtstr, TypeErasedFormatParams&);
 
     template<typename... Parameters>
     [[nodiscard]] static String formatted(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
     {
-        return vformatted(fmtstr.view(), VariadicFormatParams { parameters... });
+        VariadicFormatParams variadic_format_parameters { parameters... };
+        return vformatted(fmtstr.view(), variadic_format_parameters);
     }
 
     template<typename T>
