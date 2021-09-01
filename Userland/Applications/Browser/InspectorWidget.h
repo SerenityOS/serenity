@@ -19,6 +19,7 @@ public:
 
     void set_web_view(NonnullRefPtr<Web::OutOfProcessWebView> web_view) { m_web_view = web_view; }
     void set_dom_json(String);
+    void clear_dom_json();
     void set_dom_node_properties_json(i32 node_id, String specified_values_json, String computed_values_json);
 
     void set_inspected_node(i32 node_id);
