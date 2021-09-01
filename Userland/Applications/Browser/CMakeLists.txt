@@ -11,7 +11,6 @@ compile_gml(Tab.gml TabGML.h tab_gml)
 
 set(SOURCES
     BookmarksBarWidget.cpp
-    BrowserConsoleClient.cpp
     BrowserWindow.cpp
     BrowserWindowGML.h
     ConsoleWidget.cpp
