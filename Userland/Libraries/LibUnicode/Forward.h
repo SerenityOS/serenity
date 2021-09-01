@@ -19,8 +19,14 @@ enum class Script : u8;
 enum class Territory : u8;
 enum class WordBreakProperty : u8;
 
+struct Keyword;
 struct LanguageID;
+struct LocaleExtension;
+struct LocaleID;
+struct OtherExtension;
 struct SpecialCasing;
+struct TransformedExtension;
+struct TransformedField;
 struct UnicodeData;
 
 }
