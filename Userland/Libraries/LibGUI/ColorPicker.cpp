@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/ColorPicker.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/GlobalColorSelect.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SpinBox.h>
@@ -247,7 +249,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     preview_container.set_layout<VerticalBoxLayout>();
     preview_container.layout()->set_margins(2);
     preview_container.layout()->set_spacing(0);
-    preview_container.set_fixed_height(128);
+    preview_container.set_fixed_height(100);
 
     // Current color
     preview_container.add<ColorPreview>(m_color);
@@ -340,6 +342,18 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     make_spinbox(Green, m_color.green());
     make_spinbox(Blue, m_color.blue());
     make_spinbox(Alpha, m_color.alpha());
+
+       
+
+    auto &select_button = vertical_container.add<GUI::Button>("Select on screen");
+    select_button.on_click = [this](auto) {
+        auto m_global_selector = GlobalColorSelect::construct();
+        m_global_selector->on_color_changed = [this](auto &color) {
+            m_color = color;
+            update_color_widgets();
+        }; 
+        m_global_selector->begin_selecting();
+    };
 }
 
 void ColorPicker::update_color_widgets()
