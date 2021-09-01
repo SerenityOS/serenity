@@ -1253,7 +1253,7 @@ HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(const 
 
     if (result == GUI::MessageBox::ExecYes) {
         for (auto& editor_wrapper : m_all_editor_wrappers) {
-            if (editor_wrapper.document_dirty()) {
+            if (editor_wrapper.editor().document().is_modified()) {
                 editor_wrapper.save();
             }
         }
@@ -1264,12 +1264,9 @@ HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(const 
 
 bool HackStudioWidget::any_document_is_dirty() const
 {
-    for (auto& editor_wrapper : m_all_editor_wrappers) {
-        if (editor_wrapper.document_dirty()) {
-            return true;
-        }
-    }
-    return false;
+    return any_of(m_all_editor_wrappers, [](auto& editor_wrapper) {
+        return editor_wrapper.editor().document().is_modified();
+    });
 }
 
 void HackStudioWidget::update_gml_preview()
