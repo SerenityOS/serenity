@@ -4,10 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibTest/TestCase.h>
+
 #include <AK/QuickSort.h>
+#include <AK/Random.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 const size_t NUM_RUNS = 100;
@@ -39,13 +41,13 @@ static int calc_payload_for_pos(size_t pos)
 static void shuffle_vec(Vector<SortableObject>& test_objects)
 {
     for (size_t i = 0; i < test_objects.size() * 3; ++i) {
-        auto i1 = rand() % test_objects.size();
-        auto i2 = rand() % test_objects.size();
+        auto i1 = get_random_uniform(test_objects.size());
+        auto i2 = get_random_uniform(test_objects.size());
         swap(test_objects[i1], test_objects[i2]);
     }
 }
 
-int main()
+TEST_CASE(quick_sort)
 {
     // Generate vector of SortableObjects in sorted order, with payloads determined by their sorted positions
     Vector<SortableObject> test_objects;
@@ -61,8 +63,7 @@ int main()
             const auto& key1 = test_objects[i].m_key;
             const auto& key2 = test_objects[i + 1].m_key;
             if (key1 > key2) {
-                printf("\x1b[01;35mTests failed: saw key %d before key %d\n", key1, key2);
-                return 1;
+                FAIL(String::formatted("saw key {} before key {}\n", key1, key2));
             }
         }
         // Check that the object's payloads have not been corrupted
@@ -70,11 +71,8 @@ int main()
             const auto expected = calc_payload_for_pos(i);
             const auto payload = test_objects[i].m_payload;
             if (payload != expected) {
-                printf("\x1b[01;35mTests failed: expected payload %d for pos %u, got payload %d\n", expected, i, payload);
-                return 1;
+                FAIL(String::formatted("Expected payload {} for pos {}, got payload {}", expected, i, payload));
             }
         }
     }
-    printf("PASS\n");
-    return 0;
 }
