@@ -24,7 +24,7 @@ Vector<Gfx::Color> s_colors;
 
 static Vector<Gfx::Color> const& get_colors()
 {
-    if (s_colors.size() == 0) {
+    if (s_colors.is_empty()) {
         // Start with a nice orange, then make shades of it
         Gfx::Color midpoint(255, 94, 19);
         s_colors.extend(midpoint.shades(3, 0.5f));
@@ -115,7 +115,7 @@ void FlameGraphView::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    for (auto& bar : m_bars) {
+    for (const auto& bar : m_bars) {
         auto label_index = bar.index.sibling_at_column(m_text_column);
         String label = "All";
         if (label_index.is_valid()) {
@@ -152,7 +152,7 @@ void FlameGraphView::layout_bars()
 {
     m_bars.clear();
 
-    // Explicit copy here so the layout can multate
+    // Explicit copy here so the layout can mutate
     Vector<GUI::ModelIndex> selected = m_selected_indexes;
     GUI::ModelIndex null_index;
     layout_children(null_index, 0, 0, this->width(), selected);
