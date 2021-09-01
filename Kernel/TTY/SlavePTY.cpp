@@ -67,10 +67,10 @@ void SlavePTY::echo(u8 ch)
 
 void SlavePTY::on_master_write(const UserOrKernelBuffer& buffer, size_t size)
 {
-    auto result = buffer.read_buffered<128>(size, [&](u8 const* data, size_t data_size) {
-        for (size_t i = 0; i < data_size; ++i)
-            emit(data[i], false);
-        return data_size;
+    auto result = buffer.read_buffered<128>(size, [&](ReadonlyBytes data) {
+        for (const auto& byte : data)
+            emit(byte, false);
+        return data.size();
     });
     if (!result.is_error())
         evaluate_block_conditions();

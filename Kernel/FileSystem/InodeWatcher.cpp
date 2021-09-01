@@ -48,23 +48,23 @@ KResultOr<size_t> InodeWatcher::read(FileDescription&, u64, UserOrKernelBuffer& 
     if (buffer_size < bytes_to_write)
         return EINVAL;
 
-    auto result = buffer.write_buffered<MAXIMUM_EVENT_SIZE>(bytes_to_write, [&](u8* data, size_t data_bytes) {
+    auto result = buffer.write_buffered<MAXIMUM_EVENT_SIZE>(bytes_to_write, [&](Bytes bytes) {
         size_t offset = 0;
 
-        memcpy(data + offset, &event.wd, sizeof(InodeWatcherEvent::watch_descriptor));
+        memcpy(bytes.offset(offset), &event.wd, sizeof(InodeWatcherEvent::watch_descriptor));
         offset += sizeof(InodeWatcherEvent::watch_descriptor);
-        memcpy(data + offset, &event.type, sizeof(InodeWatcherEvent::type));
+        memcpy(bytes.offset(offset), &event.type, sizeof(InodeWatcherEvent::type));
         offset += sizeof(InodeWatcherEvent::type);
 
         if (!event.path.is_null()) {
-            memcpy(data + offset, &name_length, sizeof(InodeWatcherEvent::name_length));
+            memcpy(bytes.offset(offset), &name_length, sizeof(InodeWatcherEvent::name_length));
             offset += sizeof(InodeWatcherEvent::name_length);
-            memcpy(data + offset, event.path.characters(), name_length);
+            memcpy(bytes.offset(offset), event.path.characters(), name_length);
         } else {
-            memset(data + offset, 0, sizeof(InodeWatcherEvent::name_length));
+            memset(bytes.offset(offset), 0, sizeof(InodeWatcherEvent::name_length));
         }
 
-        return data_bytes;
+        return bytes.size();
     });
     evaluate_block_conditions();
     return result;

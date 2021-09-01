@@ -31,9 +31,9 @@ bool RandomDevice::can_read(const FileDescription&, size_t) const
 
 KResultOr<size_t> RandomDevice::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
-    return buffer.write_buffered<256>(size, [&](u8* data, size_t data_size) {
-        get_good_random_bytes({ data, data_size });
-        return data_size;
+    return buffer.write_buffered<256>(size, [&](Bytes bytes) {
+        get_good_random_bytes(bytes);
+        return bytes.size();
     });
 }
 

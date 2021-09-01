@@ -292,9 +292,9 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, u64, UserOrKernelBuffer
 
         lock.unlock();
 
-        auto result = buffer.write_buffered<sizeof(Event)>(sizeof(Event), [&](u8* data, size_t data_bytes) {
-            memcpy(data, &event, sizeof(Event));
-            return data_bytes;
+        auto result = buffer.write_buffered<sizeof(Event)>(sizeof(Event), [&](Bytes bytes) {
+            memcpy(bytes.data(), &event, sizeof(Event));
+            return bytes.size();
         });
         if (result.is_error())
             return result.error();

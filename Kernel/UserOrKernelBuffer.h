@@ -89,7 +89,8 @@ public:
             return EFAULT;
         if (is_kernel_buffer()) {
             // We're transferring directly to a kernel buffer, bypass
-            return f(m_buffer + offset, len);
+            Bytes bytes { m_buffer + offset, len };
+            return f(bytes);
         }
 
         // The purpose of using a buffer on the stack is that we can
@@ -98,7 +99,8 @@ public:
         size_t nwritten = 0;
         while (nwritten < len) {
             auto to_copy = min(sizeof(buffer), len - nwritten);
-            KResultOr<size_t> copied_or_error = f(buffer, to_copy);
+            Bytes bytes { buffer, to_copy };
+            KResultOr<size_t> copied_or_error = f(bytes);
             if (copied_or_error.is_error())
                 return copied_or_error.error();
             auto copied = copied_or_error.value();
@@ -124,7 +126,7 @@ public:
             return EFAULT;
         if (is_kernel_buffer()) {
             // We're transferring directly from a kernel buffer, bypass
-            return f(m_buffer + offset, len);
+            return f({ m_buffer + offset, len });
         }
 
         // The purpose of using a buffer on the stack is that we can
@@ -135,7 +137,8 @@ public:
             auto to_copy = min(sizeof(buffer), len - nread);
             if (!read(buffer, nread, to_copy))
                 return EFAULT;
-            KResultOr<size_t> copied_or_error = f(buffer, to_copy);
+            ReadonlyBytes read_only_bytes { buffer, to_copy };
+            KResultOr<size_t> copied_or_error = f(read_only_bytes);
             if (copied_or_error.is_error())
                 return copied_or_error.error();
             auto copied = copied_or_error.value();
