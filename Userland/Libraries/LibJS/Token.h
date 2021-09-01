@@ -193,19 +193,6 @@ public:
     {
     }
 
-    Token(TokenType type, String message, StringView trivia, StringView original_value, FlyString value, StringView filename, size_t line_number, size_t line_column, size_t offset)
-        : m_type(type)
-        , m_message(message)
-        , m_trivia(trivia)
-        , m_original_value(original_value)
-        , m_value(move(value))
-        , m_filename(filename)
-        , m_line_number(line_number)
-        , m_line_column(line_column)
-        , m_offset(offset)
-    {
-    }
-
     TokenType type() const { return m_type; }
     TokenCategory category() const;
     static TokenCategory category(TokenType);
@@ -238,6 +225,11 @@ public:
     };
     String string_value(StringValueStatus& status) const;
     String raw_template_value() const;
+
+    void set_identifier_value(FlyString value)
+    {
+        m_value = move(value);
+    }
 
     bool is_identifier_name() const;
     bool trivia_contains_line_terminator() const;
