@@ -27,6 +27,7 @@ set(SOURCES
     Property.cpp
     SecretString.cpp
     Socket.cpp
+    Stream.cpp
     StandardPaths.cpp
     System.cpp
     TCPServer.cpp
