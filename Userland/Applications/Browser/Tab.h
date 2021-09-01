@@ -23,6 +23,7 @@ namespace Browser {
 
 class BrowserWindow;
 class InspectorWidget;
+class ConsoleWidget;
 
 class Tab final : public GUI::Widget {
     C_OBJECT(Tab);
@@ -66,6 +67,8 @@ public:
     };
     void show_inspector_window(InspectorTarget);
 
+    void show_console_window();
+
     const String& title() const { return m_title; }
     const Gfx::Bitmap* icon() const { return m_icon; }
 
@@ -91,7 +94,7 @@ private:
     RefPtr<GUI::UrlBox> m_location_box;
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<InspectorWidget> m_dom_inspector_widget;
-    RefPtr<GUI::Window> m_console_window;
+    RefPtr<ConsoleWidget> m_console_widget;
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::ToolbarContainer> m_toolbar_container;
 

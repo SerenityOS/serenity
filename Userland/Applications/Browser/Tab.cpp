@@ -294,10 +294,8 @@ Tab::Tab(BrowserWindow& window)
     };
 
     hooks().on_js_console_output = [this](auto& method, auto& line) {
-        if (m_console_window) {
-            auto* console_widget = static_cast<ConsoleWidget*>(m_console_window->main_widget());
-            console_widget->handle_js_console_output(method, line);
-        }
+        if (m_console_widget)
+            m_console_widget->handle_js_console_output(method, line);
     };
 
     auto focus_location_box_action = GUI::Action::create(
@@ -499,6 +497,27 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
     }
 
     auto* window = m_dom_inspector_widget->window();
+    window->show();
+    window->move_to_front();
+}
+
+void Tab::show_console_window()
+{
+    if (!m_console_widget) {
+        auto console_window = GUI::Window::construct(&window());
+        console_window->resize(500, 300);
+        console_window->set_title("JS Console");
+        console_window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-javascript.png"));
+        m_console_widget = console_window->set_main_widget<ConsoleWidget>();
+        m_console_widget->on_js_input = [this](String const& js_source) {
+            m_web_content_view->js_console_input(js_source);
+        };
+    }
+
+    m_console_widget->clear_output();
+    m_web_content_view->js_console_initialize();
+
+    auto* window = m_console_widget->window();
     window->show();
     window->move_to_front();
 }
