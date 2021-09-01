@@ -515,7 +515,7 @@ InputStream& operator>>(InputStream& stream, String& string)
     }
 }
 
-String String::vformatted(StringView fmtstr, TypeErasedFormatParams params)
+String String::vformatted(StringView fmtstr, TypeErasedFormatParams& params)
 {
     StringBuilder builder;
     vformat(builder, fmtstr, params);
