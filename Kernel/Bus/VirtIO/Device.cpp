@@ -116,10 +116,6 @@ UNMAP_AFTER_INIT VirtIO::Device::Device(PCI::Address address)
     set_status_bit(DEVICE_STATUS_DRIVER);
 }
 
-Device::~Device()
-{
-}
-
 auto Device::mapping_for_bar(u8 bar) -> MappedMMIO&
 {
     VERIFY(m_use_mmio);
