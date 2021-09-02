@@ -53,7 +53,7 @@ private:
     Optional<String> m_collation;        // [[Collation]]
     Optional<String> m_hour_cycle;       // [[HourCycle]]
     Optional<String> m_numbering_system; // [[NumberingSystem]]
-    bool m_numeric;                      // [[Numeric]]
+    bool m_numeric { false };            // [[Numeric]]
 };
 
 }
