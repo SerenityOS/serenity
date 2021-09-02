@@ -544,6 +544,12 @@ void Image::did_change(Gfx::IntRect const& a_modified_rect)
         client->image_did_change(modified_rect);
 }
 
+void Image::did_change_rect()
+{
+    for (auto* client : m_clients)
+        client->image_did_change_rect(rect());
+}
+
 ImageUndoCommand::ImageUndoCommand(Image& image)
     : m_snapshot(image.take_snapshot())
     , m_image(image)
@@ -583,6 +589,19 @@ void Image::flip(Gfx::Orientation orientation)
     }
 
     did_change();
+}
+
+void Image::rotate(Gfx::RotationDirection direction)
+{
+    for (auto& layer : m_layers) {
+        auto rotated = layer.bitmap().rotated(direction);
+        VERIFY(rotated);
+        layer.set_bitmap(*rotated);
+        layer.did_modify_bitmap(rect());
+    }
+
+    m_size = { m_size.height(), m_size.width() };
+    did_change_rect();
 }
 
 }
