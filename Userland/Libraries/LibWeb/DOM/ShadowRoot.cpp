@@ -16,11 +16,12 @@ ShadowRoot::ShadowRoot(Document& document, Element& host)
     set_host(host);
 }
 
+// https://dom.spec.whatwg.org/#ref-for-get-the-parent%E2%91%A6
 EventTarget* ShadowRoot::get_parent(const Event& event)
 {
     if (!event.composed()) {
         auto& events_first_invocation_target = verify_cast<Node>(*event.path().first().invocation_target);
-        if (events_first_invocation_target.root() == this)
+        if (&events_first_invocation_target.root() == this)
             return nullptr;
     }
 

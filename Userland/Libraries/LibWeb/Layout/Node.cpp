@@ -72,7 +72,7 @@ bool Node::establishes_stacking_context() const
 {
     if (!has_style())
         return false;
-    if (dom_node() == document().root())
+    if (dom_node() == &document().root())
         return true;
     auto position = computed_values().position();
     if (position == CSS::Position::Absolute || position == CSS::Position::Relative || position == CSS::Position::Fixed || position == CSS::Position::Sticky)

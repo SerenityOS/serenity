@@ -113,14 +113,14 @@ public:
 
     String child_text_content() const;
 
-    Node* root();
-    const Node* root() const
+    Node& root();
+    const Node& root() const
     {
         return const_cast<Node*>(this)->root();
     }
 
-    Node* shadow_including_root();
-    const Node* shadow_including_root() const
+    Node& shadow_including_root();
+    const Node& shadow_including_root() const
     {
         return const_cast<Node*>(this)->shadow_including_root();
     }

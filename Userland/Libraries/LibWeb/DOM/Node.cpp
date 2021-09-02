@@ -157,25 +157,28 @@ String Node::child_text_content() const
     return builder.build();
 }
 
-Node* Node::root()
+// https://dom.spec.whatwg.org/#concept-tree-root
+Node& Node::root()
 {
     Node* root = this;
     while (root->parent())
         root = root->parent();
-    return root;
+    return *root;
 }
 
-Node* Node::shadow_including_root()
+// https://dom.spec.whatwg.org/#concept-shadow-including-root
+Node& Node::shadow_including_root()
 {
-    auto node_root = root();
+    auto& node_root = root();
     if (is<ShadowRoot>(node_root))
-        return verify_cast<ShadowRoot>(node_root)->host()->shadow_including_root();
+        return verify_cast<ShadowRoot>(node_root).host()->shadow_including_root();
     return node_root;
 }
 
+// https://dom.spec.whatwg.org/#connected
 bool Node::is_connected() const
 {
-    return shadow_including_root() && shadow_including_root()->is_document();
+    return shadow_including_root().is_document();
 }
 
 Element* Node::parent_element()
@@ -608,7 +611,7 @@ u16 Node::compare_document_position(RefPtr<Node> other)
     // FIXME: Once LibWeb supports attribute nodes fix to follow the specification.
     VERIFY(node1->type() != NodeType::ATTRIBUTE_NODE && node2->type() != NodeType::ATTRIBUTE_NODE);
 
-    if ((node1 == nullptr || node2 == nullptr) || (node1->root() != node2->root()))
+    if ((node1 == nullptr || node2 == nullptr) || (&node1->root() != &node2->root()))
         return DOCUMENT_POSITION_DISCONNECTED | DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC | (node1 > node2 ? DOCUMENT_POSITION_PRECEDING : DOCUMENT_POSITION_FOLLOWING);
 
     if (node1->is_ancestor_of(*node2))
@@ -626,7 +629,7 @@ u16 Node::compare_document_position(RefPtr<Node> other)
 // https://dom.spec.whatwg.org/#concept-tree-host-including-inclusive-ancestor
 bool Node::is_host_including_inclusive_ancestor_of(const Node& other) const
 {
-    return is_inclusive_ancestor_of(other) || (is<DocumentFragment>(other.root()) && verify_cast<DocumentFragment>(other.root())->host() && is_inclusive_ancestor_of(*verify_cast<DocumentFragment>(other.root())->host().ptr()));
+    return is_inclusive_ancestor_of(other) || (is<DocumentFragment>(other.root()) && verify_cast<DocumentFragment>(other.root()).host() && is_inclusive_ancestor_of(*verify_cast<DocumentFragment>(other.root()).host().ptr()));
 }
 
 // https://dom.spec.whatwg.org/#dom-node-ownerdocument
@@ -691,10 +694,10 @@ bool Node::is_shadow_including_descendant_of(Node const& other) const
     if (!is<ShadowRoot>(root()))
         return false;
 
-    auto shadow_root = verify_cast<ShadowRoot>(root());
+    auto& shadow_root = verify_cast<ShadowRoot>(root());
 
     // NOTE: While host is nullable because of inheriting from DocumentFragment, shadow roots always have a host.
-    return shadow_root->host()->is_shadow_including_inclusive_descendant_of(other);
+    return shadow_root.host()->is_shadow_including_inclusive_descendant_of(other);
 }
 
 // https://dom.spec.whatwg.org/#concept-shadow-including-inclusive-descendant
