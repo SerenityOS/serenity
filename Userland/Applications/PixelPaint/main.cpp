@@ -424,6 +424,22 @@ int main(int argc, char** argv)
             editor->image().flip(Gfx::Orientation::Horizontal);
         },
         window));
+    image_menu.add_action(GUI::Action::create(
+        "Rotate &Left", [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+            editor->image().rotate(Gfx::RotationDirection::CounterClockwise);
+        },
+        window));
+    image_menu.add_action(GUI::Action::create(
+        "Rotate &Right", [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+            editor->image().rotate(Gfx::RotationDirection::Clockwise);
+        },
+        window));
 
     auto& layer_menu = window->add_menu("&Layer");
     layer_menu.add_action(GUI::Action::create(

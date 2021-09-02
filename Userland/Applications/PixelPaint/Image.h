@@ -16,6 +16,7 @@
 #include <LibCore/File.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Forward.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
@@ -32,6 +33,7 @@ public:
     virtual void image_did_modify_layer_bitmap(size_t) { }
     virtual void image_did_modify_layer_stack() { }
     virtual void image_did_change(Gfx::IntRect const&) { }
+    virtual void image_did_change_rect(Gfx::IntRect const&) { }
     virtual void image_select_layer(Layer*) { }
     virtual void image_did_change_title(String const&) { }
 
@@ -91,6 +93,7 @@ public:
     void set_title(String);
 
     void flip(Gfx::Orientation orientation);
+    void rotate(Gfx::RotationDirection direction);
 
 private:
     explicit Image(Gfx::IntSize const&);
@@ -100,6 +103,7 @@ private:
     static Result<NonnullRefPtr<Image>, String> try_create_from_pixel_paint_file(Core::File& file, String const& file_path);
 
     void did_change(Gfx::IntRect const& modified_rect = {});
+    void did_change_rect();
     void did_modify_layer_stack();
 
     String m_path;
