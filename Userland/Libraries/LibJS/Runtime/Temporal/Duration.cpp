@@ -110,21 +110,14 @@ TemporalDuration to_temporal_duration_record(GlobalObject& global_object, Object
             if (vm.exception())
                 return {};
 
-            // iii. If val is NaN, +∞ or -∞, then
-            if (value.is_nan() || value.is_infinity()) {
+            // iii. If ! IsIntegralNumber(val) is false, then
+            if (!value.is_integral_number()) {
                 // 1. Throw a RangeError exception.
                 vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects());
                 return {};
             }
 
-            // iv. If floor(val) ≠ val, then
-            if (floor(value.as_double()) != value.as_double()) {
-                // 1. Throw a RangeError exception.
-                vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects());
-                return {};
-            }
-
-            // v. Set result's internal slot whose name is the Internal Slot value of the current row to val.
+            // iv. Set result's internal slot whose name is the Internal Slot value of the current row to val.
             result.*internal_slot = value.as_double();
         }
     }
