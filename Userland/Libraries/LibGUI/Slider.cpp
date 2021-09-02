@@ -93,9 +93,9 @@ void Slider::mousedown_event(MouseEvent& event)
         if (jump_to_cursor()) {
             float normalized_mouse_offset = 0.0f;
             if (orientation() == Orientation::Vertical) {
-                normalized_mouse_offset = static_cast<float>(mouse_offset) / static_cast<float>(height());
+                normalized_mouse_offset = static_cast<float>(mouse_offset - track_margin()) / static_cast<float>(inner_rect().height());
             } else {
-                normalized_mouse_offset = static_cast<float>(mouse_offset) / static_cast<float>(width());
+                normalized_mouse_offset = static_cast<float>(mouse_offset - track_margin()) / static_cast<float>(inner_rect().width());
             }
 
             int new_value = static_cast<int>(min() + ((max() - min()) * normalized_mouse_offset));
