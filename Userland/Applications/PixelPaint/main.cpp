@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -405,6 +406,24 @@ int main(int argc, char** argv)
             tool_menu.add_action(*tool.action());
         return IterationDecision::Continue;
     });
+
+    auto& image_menu = window->add_menu("&Image");
+    image_menu.add_action(GUI::Action::create(
+        "Flip &Vertically", [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+            editor->image().flip(Gfx::Orientation::Vertical);
+        },
+        window));
+    image_menu.add_action(GUI::Action::create(
+        "Flip &Horizontally", [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+            editor->image().flip(Gfx::Orientation::Horizontal);
+        },
+        window));
 
     auto& layer_menu = window->add_menu("&Layer");
     layer_menu.add_action(GUI::Action::create(

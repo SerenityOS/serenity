@@ -91,6 +91,8 @@ public:
     String const& title() const { return m_title; }
     void set_title(String);
 
+    void flip(Gfx::Orientation orientation);
+
 private:
     explicit Image(Gfx::IntSize const&);
 
