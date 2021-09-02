@@ -174,6 +174,11 @@ public:
     // Used for dumping the DOM Tree
     void serialize_tree_as_json(JsonObjectSerializer<StringBuilder>&) const;
 
+    bool is_shadow_including_descendant_of(Node const&) const;
+    bool is_shadow_including_inclusive_descendant_of(Node const&) const;
+    bool is_shadow_including_ancestor_of(Node const&) const;
+    bool is_shadow_including_inclusive_ancestor_of(Node const&) const;
+
 protected:
     Node(Document&, NodeType);
 
