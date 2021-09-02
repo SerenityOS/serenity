@@ -52,6 +52,7 @@ void LocalePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.collation, collation, {}, Attribute::Configurable);
     define_native_accessor(vm.names.hourCycle, hour_cycle, {}, Attribute::Configurable);
     define_native_accessor(vm.names.numberingSystem, numbering_system, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.numeric, numeric, {}, Attribute::Configurable);
 }
 
 // 14.3.5 Intl.Locale.prototype.toString ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.toString
@@ -108,5 +109,18 @@ JS_DEFINE_NATIVE_GETTER(LocalePrototype::base_name)
     }
 JS_ENUMERATE_LOCALE_KEYWORD_PROPERTIES
 #undef __JS_ENUMERATE
+
+// 14.3.11 get Intl.Locale.prototype.numeric, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.numeric
+JS_DEFINE_NATIVE_GETTER(LocalePrototype::numeric)
+{
+    // 1. Let loc be the this value.
+    // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
+    auto* locale_object = typed_this(global_object);
+    if (!locale_object)
+        return {};
+
+    // 3. Return loc.[[Numeric]].
+    return Value(locale_object->numeric());
+}
 
 }
