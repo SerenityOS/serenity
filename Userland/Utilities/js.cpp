@@ -30,6 +30,7 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/DisplayNames.h>
+#include <LibJS/Runtime/Intl/Locale.h>
 #include <LibJS/Runtime/Map.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberObject.h>
@@ -518,6 +519,36 @@ static void print_intl_display_names(JS::Object const& object, HashTable<JS::Obj
     print_value(js_string(object.vm(), display_names.fallback_string()), seen_objects);
 }
 
+static void print_intl_locale(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& locale = static_cast<JS::Intl::Locale const&>(object);
+    print_type("Intl.Locale");
+    out("\n  locale: ");
+    print_value(js_string(object.vm(), locale.locale()), seen_objects);
+    if (locale.has_calendar()) {
+        out("\n  calendar: ");
+        print_value(js_string(object.vm(), locale.calendar()), seen_objects);
+    }
+    if (locale.has_case_first()) {
+        out("\n  caseFirst: ");
+        print_value(js_string(object.vm(), locale.case_first()), seen_objects);
+    }
+    if (locale.has_collation()) {
+        out("\n  collation: ");
+        print_value(js_string(object.vm(), locale.collation()), seen_objects);
+    }
+    if (locale.has_hour_cycle()) {
+        out("\n  hourCycle: ");
+        print_value(js_string(object.vm(), locale.hour_cycle()), seen_objects);
+    }
+    if (locale.has_numbering_system()) {
+        out("\n  numberingSystem: ");
+        print_value(js_string(object.vm(), locale.numbering_system()), seen_objects);
+    }
+    out("\n  numeric: ");
+    print_value(JS::Value(locale.numeric()), seen_objects);
+}
+
 static void print_primitive_wrapper_object(FlyString const& name, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     // BooleanObject, NumberObject, StringObject
@@ -593,6 +624,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_temporal_zoned_date_time(object, seen_objects);
         if (is<JS::Intl::DisplayNames>(object))
             return print_intl_display_names(object, seen_objects);
+        if (is<JS::Intl::Locale>(object))
+            return print_intl_locale(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
