@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,7 +22,7 @@ class HexEditorWidget final : public GUI::Widget {
     C_OBJECT(HexEditorWidget)
 public:
     virtual ~HexEditorWidget() override;
-    void open_file(const String& path);
+    void open_file(int fd, String const& path);
     void initialize_menubar(GUI::Window&);
     bool request_close();
 
