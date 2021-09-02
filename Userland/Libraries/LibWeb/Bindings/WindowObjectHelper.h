@@ -8,6 +8,10 @@
 
 // FIXME: Find a way to generate all of this
 
+#include <LibWeb/Bindings/AbortControllerConstructor.h>
+#include <LibWeb/Bindings/AbortControllerPrototype.h>
+#include <LibWeb/Bindings/AbortSignalConstructor.h>
+#include <LibWeb/Bindings/AbortSignalPrototype.h>
 #include <LibWeb/Bindings/CSSStyleSheetConstructor.h>
 #include <LibWeb/Bindings/CSSStyleSheetPrototype.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DConstructor.h>
@@ -239,6 +243,8 @@
 
 #define ADD_WINDOW_OBJECT_INTERFACES                       \
     auto& vm = this->vm();                                 \
+    ADD_WINDOW_OBJECT_INTERFACE(AbortController)           \
+    ADD_WINDOW_OBJECT_INTERFACE(AbortSignal)               \
     ADD_WINDOW_OBJECT_INTERFACE(CanvasRenderingContext2D)  \
     ADD_WINDOW_OBJECT_INTERFACE(CharacterData)             \
     ADD_WINDOW_OBJECT_INTERFACE(CloseEvent)                \

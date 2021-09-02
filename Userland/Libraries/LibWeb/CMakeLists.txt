@@ -38,6 +38,8 @@ set(SOURCES
     CSS/ValueID.cpp
     CSS/ValueID.h
     Cookie/ParsedCookie.cpp
+    DOM/AbortController.cpp
+    DOM/AbortSignal.cpp
     DOM/CharacterData.cpp
     DOM/CharacterData.idl
     DOM/Comment.cpp
@@ -299,6 +301,8 @@ libweb_js_wrapper(CSS/CSSStyleSheet)
 libweb_js_wrapper(CSS/Screen)
 libweb_js_wrapper(CSS/StyleSheet)
 libweb_js_wrapper(CSS/StyleSheetList)
+libweb_js_wrapper(DOM/AbortController)
+libweb_js_wrapper(DOM/AbortSignal)
 libweb_js_wrapper(DOM/CharacterData)
 libweb_js_wrapper(DOM/Comment)
 libweb_js_wrapper(DOM/Document)
