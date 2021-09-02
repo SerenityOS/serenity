@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,6 +28,16 @@ LayerListWidget::~LayerListWidget()
         m_image->remove_client(*this);
 }
 
+size_t LayerListWidget::to_gadget_index(size_t layer_index) const
+{
+    return m_image->layer_count() - layer_index - 1;
+}
+
+size_t LayerListWidget::to_layer_index(size_t gadget_index) const
+{
+    return m_image->layer_count() - gadget_index - 1;
+}
+
 void LayerListWidget::set_image(Image* image)
 {
     if (m_image == image)
@@ -44,8 +55,8 @@ void LayerListWidget::rebuild_gadgets()
 {
     m_gadgets.clear();
     if (m_image) {
-        for (size_t layer_index = 0; layer_index < m_image->layer_count(); ++layer_index) {
-            m_gadgets.append({ layer_index, {}, false, {} });
+        for (int layer_index = m_image->layer_count() - 1; layer_index >= 0; --layer_index) {
+            m_gadgets.append({ static_cast<size_t>(layer_index), {}, false, {} });
         }
     }
     relayout_gadgets();
@@ -140,15 +151,16 @@ void LayerListWidget::mousedown_event(GUI::MouseEvent& event)
 
     Gfx::IntPoint translated_event_point = { 0, vertical_scrollbar().value() + event.y() };
 
-    auto gadget_index = gadget_at(translated_event_point);
-    if (!gadget_index.has_value())
+    auto maybe_gadget_index = gadget_at(translated_event_point);
+    if (!maybe_gadget_index.has_value())
         return;
+    auto gadget_index = maybe_gadget_index.value();
 
     m_moving_gadget_index = gadget_index;
-    m_selected_layer_index = gadget_index.value();
+    m_selected_gadget_index = gadget_index;
     m_moving_event_origin = translated_event_point;
     auto& gadget = m_gadgets[m_moving_gadget_index.value()];
-    auto& layer = m_image->layer(gadget_index.value());
+    auto& layer = m_image->layer(to_layer_index(gadget_index));
     set_selected_layer(&layer);
     gadget.is_moving = true;
     gadget.movement_delta = {};
@@ -191,7 +203,10 @@ void LayerListWidget::mouseup_event(GUI::MouseEvent& event)
         new_index = m_image->layer_count() - 1;
 
     m_moving_gadget_index = {};
-    m_image->change_layer_index(old_index, new_index);
+
+    auto old_layer_index = to_layer_index(old_index);
+    auto new_layer_index = to_layer_index(new_index);
+    m_image->change_layer_index(old_layer_index, new_layer_index);
 }
 
 void LayerListWidget::context_menu_event(GUI::ContextMenuEvent& event)
@@ -200,8 +215,8 @@ void LayerListWidget::context_menu_event(GUI::ContextMenuEvent& event)
 
     auto gadget_index = gadget_at(translated_event_point);
     if (gadget_index.has_value()) {
-        auto& layer = m_image->layer(gadget_index.value());
-        m_selected_layer_index = gadget_index.value();
+        m_selected_gadget_index = gadget_index.value();
+        auto& layer = m_image->layer(to_layer_index(m_selected_gadget_index));
         set_selected_layer(&layer);
     }
 
@@ -215,8 +230,9 @@ void LayerListWidget::image_did_add_layer(size_t layer_index)
         m_gadgets[m_moving_gadget_index.value()].is_moving = false;
         m_moving_gadget_index = {};
     }
-    Gadget gadget { layer_index, {}, false, {} };
-    m_gadgets.insert(layer_index, gadget);
+    auto gadget_index = to_gadget_index(layer_index);
+    Gadget gadget { gadget_index, {}, false, {} };
+    m_gadgets.insert(gadget_index, gadget);
     relayout_gadgets();
 }
 
@@ -226,14 +242,16 @@ void LayerListWidget::image_did_remove_layer(size_t layer_index)
         m_gadgets[m_moving_gadget_index.value()].is_moving = false;
         m_moving_gadget_index = {};
     }
-    m_gadgets.remove(layer_index);
-    m_selected_layer_index = 0;
+    // No -1 here since a layer has already been removed.
+    auto gadget_index = m_image->layer_count() - layer_index;
+    m_gadgets.remove(gadget_index);
+    m_selected_gadget_index = to_gadget_index(0);
     relayout_gadgets();
 }
 
 void LayerListWidget::image_did_modify_layer_properties(size_t layer_index)
 {
-    update(m_gadgets[layer_index].rect);
+    update(m_gadgets[to_gadget_index(layer_index)].rect);
 }
 
 void LayerListWidget::image_did_modify_layer_bitmap(size_t layer_index)
@@ -241,7 +259,7 @@ void LayerListWidget::image_did_modify_layer_bitmap(size_t layer_index)
     Gfx::IntRect adjusted_rect;
     Gfx::IntRect thumbnail_rect;
     Gfx::IntRect text_rect;
-    get_gadget_rects(m_gadgets[layer_index], adjusted_rect, thumbnail_rect, text_rect);
+    get_gadget_rects(m_gadgets[to_gadget_index(layer_index)], adjusted_rect, thumbnail_rect, text_rect);
     update(thumbnail_rect);
 }
 
@@ -266,7 +284,7 @@ void LayerListWidget::select_bottom_layer()
 {
     if (!m_image || !m_image->layer_count())
         return;
-    m_selected_layer_index = 0;
+    m_selected_gadget_index = to_gadget_index(0);
     set_selected_layer(&m_image->layer(0));
 }
 
@@ -274,8 +292,8 @@ void LayerListWidget::select_top_layer()
 {
     if (!m_image || !m_image->layer_count())
         return;
-    m_selected_layer_index = m_image->layer_count() - 1;
-    set_selected_layer(&m_image->layer(m_image->layer_count() - 1));
+    m_selected_gadget_index = 0;
+    set_selected_layer(&m_image->layer(to_layer_index(0)));
 }
 
 void LayerListWidget::cycle_through_selection(int delta)
@@ -283,16 +301,17 @@ void LayerListWidget::cycle_through_selection(int delta)
     if (!m_image || !m_image->layer_count())
         return;
 
-    int selected_layer_index = static_cast<int>(m_selected_layer_index);
-    selected_layer_index += delta;
+    auto current_index = static_cast<int>(m_selected_gadget_index);
+    current_index += delta;
 
-    if (selected_layer_index < 0)
-        selected_layer_index = m_image->layer_count() - 1;
-    if (selected_layer_index > static_cast<int>(m_image->layer_count()) - 1)
-        selected_layer_index = 0;
+    if (current_index < 0)
+        current_index = m_gadgets.size() - 1;
+    if (current_index > static_cast<int>(m_gadgets.size()) - 1)
+        current_index = 0;
 
-    m_selected_layer_index = selected_layer_index;
-    set_selected_layer(&m_image->layer(m_selected_layer_index));
+    m_selected_gadget_index = current_index;
+    auto selected_layer_index = to_layer_index(m_selected_gadget_index);
+    set_selected_layer(&m_image->layer(selected_layer_index));
 }
 
 void LayerListWidget::relayout_gadgets()
@@ -327,8 +346,8 @@ void LayerListWidget::set_selected_layer(Layer* layer)
     for (size_t i = 0; i < m_image->layer_count(); ++i) {
         if (layer == &m_image->layer(i)) {
             m_image->layer(i).set_selected(true);
-            scroll_into_view(m_gadgets[i].rect, false, true);
-            m_selected_layer_index = i;
+            m_selected_gadget_index = to_gadget_index(i);
+            scroll_into_view(m_gadgets[m_selected_gadget_index].rect, false, true);
         } else {
             m_image->layer(i).set_selected(false);
         }
