@@ -473,9 +473,10 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget)
         window->set_title("DOM inspector");
         window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
         window->on_close = [&]() {
-            // FIXME: Clear inspected node for OOPWV
+            m_web_content_view->clear_inspected_dom_node();
         };
         m_dom_inspector_widget = window->set_main_widget<InspectorWidget>();
+        m_dom_inspector_widget->set_web_view(*m_web_content_view);
     }
 
     m_web_content_view->inspect_dom_tree();
