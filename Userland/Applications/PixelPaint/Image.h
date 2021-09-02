@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -88,6 +89,8 @@ public:
 
     String const& title() const { return m_title; }
     void set_title(String);
+
+    void flip(Gfx::Orientation orientation);
 
 private:
     explicit Image(Gfx::IntSize const&);

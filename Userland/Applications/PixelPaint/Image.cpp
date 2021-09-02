@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -553,6 +554,18 @@ void Image::set_path(String path)
 {
     m_path = move(path);
     set_title(LexicalPath::basename(m_path));
+}
+
+void Image::flip(Gfx::Orientation orientation)
+{
+    for (auto& layer : m_layers) {
+        auto flipped = layer.bitmap().flipped(orientation);
+        VERIFY(flipped);
+        layer.set_bitmap(*flipped);
+        layer.did_modify_bitmap(rect());
+    }
+
+    did_change();
 }
 
 }
