@@ -453,6 +453,12 @@ void ImageEditor::image_did_change(Gfx::IntRect const& modified_image_rect)
     update(m_editor_image_rect.intersected(enclosing_int_rect(image_rect_to_editor_rect(modified_image_rect))));
 }
 
+void ImageEditor::image_did_change_rect(Gfx::IntRect const& new_image_rect)
+{
+    m_editor_image_rect = enclosing_int_rect(image_rect_to_editor_rect(new_image_rect));
+    update(m_editor_image_rect);
+}
+
 void ImageEditor::image_did_change_title(String const& path)
 {
     if (on_image_title_change)

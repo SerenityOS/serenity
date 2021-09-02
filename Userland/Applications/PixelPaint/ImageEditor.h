@@ -106,6 +106,7 @@ private:
     virtual void leave_event(Core::Event&) override;
 
     virtual void image_did_change(Gfx::IntRect const&) override;
+    virtual void image_did_change_rect(Gfx::IntRect const&) override;
     virtual void image_select_layer(Layer*) override;
     virtual void image_did_change_title(String const&) override;
 
