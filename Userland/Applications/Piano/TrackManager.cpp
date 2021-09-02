@@ -94,3 +94,9 @@ void TrackManager::next_track()
     if (++m_current_track >= m_tracks.size())
         m_current_track = 0;
 }
+
+void TrackManager::previous_track()
+{
+    if ((int)--m_current_track < 0)
+        m_current_track = m_tracks.size() - 1;
+}

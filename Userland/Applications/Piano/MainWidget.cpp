@@ -69,6 +69,14 @@ void MainWidget::add_actions(GUI::Menu& menu)
 
         m_knobs_widget->update_knobs();
     }));
+
+    menu.add_action(GUI::Action::create("&Previous Track", { Mod_Ctrl, Key_P }, [&](auto&) {
+        turn_off_pressed_keys();
+        m_track_manager.previous_track();
+        turn_on_pressed_keys();
+
+        m_knobs_widget->update_knobs();
+    }));
 }
 
 // FIXME: There are some unnecessary calls to update() throughout this program,
