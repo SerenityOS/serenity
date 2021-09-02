@@ -316,7 +316,8 @@ void LayerListWidget::cycle_through_selection(int delta)
 
 void LayerListWidget::relayout_gadgets()
 {
-    int y = 0;
+    auto total_gadget_height = static_cast<int>(m_gadgets.size()) * vertical_step + 6;
+    int y = max(0, height() - total_gadget_height);
 
     Optional<size_t> hole_index;
     if (is_moving_gadget())
@@ -333,7 +334,6 @@ void LayerListWidget::relayout_gadgets()
         ++index;
     }
 
-    auto total_gadget_height = static_cast<int>(m_gadgets.size()) * vertical_step;
     set_content_size({ widget_inner_rect().width(), total_gadget_height });
     vertical_scrollbar().set_range(0, max(total_gadget_height - height(), 0));
     update();
