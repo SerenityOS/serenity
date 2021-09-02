@@ -685,7 +685,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::era)
         return js_undefined();
     }
 
-    // 5. Let era be the result of implementation-defined processing of temporalDateLike and the value of calendar.[[Identifier]].
+    // 5. Let era be the result of implementation-defined processing of temporalDateLike and calendar.[[Identifier]].
     // 6. Return era.
 
     // NOTE: No support for non-iso8601 calendars yet.
@@ -717,7 +717,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::era_year)
         return js_undefined();
     }
 
-    // 5. Let eraYear be the result of implementation-defined processing of temporalDateLike and the value of calendar.[[Identifier]].
+    // 5. Let eraYear be the result of implementation-defined processing of temporalDateLike and calendar.[[Identifier]].
     // 6. Return 𝔽(eraYear).
 
     // NOTE: No support for non-iso8601 calendars yet.
