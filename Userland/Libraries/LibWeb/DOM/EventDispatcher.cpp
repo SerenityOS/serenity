@@ -35,15 +35,15 @@ static EventTarget* retarget(EventTarget* left, EventTarget* right)
             return left;
 
         auto* left_node = verify_cast<Node>(left);
-        auto* left_root = left_node->root();
+        auto& left_root = left_node->root();
         if (!is<ShadowRoot>(left_root))
             return left;
 
-        if (is<Node>(right) && left_root->is_shadow_including_inclusive_ancestor_of(verify_cast<Node>(*right)))
+        if (is<Node>(right) && left_root.is_shadow_including_inclusive_ancestor_of(verify_cast<Node>(*right)))
             return left;
 
-        auto* left_shadow_root = verify_cast<ShadowRoot>(left_root);
-        left = left_shadow_root->host();
+        auto& left_shadow_root = verify_cast<ShadowRoot>(left_root);
+        left = left_shadow_root.host();
     }
 }
 
