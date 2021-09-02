@@ -18,6 +18,9 @@ InstructionDescriptor s_table16[256];
 InstructionDescriptor s_table32[256];
 InstructionDescriptor s_0f_table16[256];
 InstructionDescriptor s_0f_table32[256];
+InstructionDescriptor s_sse_table_np[256];
+InstructionDescriptor s_sse_table_66[256];
+InstructionDescriptor s_sse_table_f3[256];
 
 static bool opcode_has_register_index(u8 op)
 {
@@ -62,6 +65,13 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
     case OP_RM16_reg16_imm8:
     case OP_RM32_reg32_imm8:
     case OP_mm1_imm8:
+    case OP_mm1_mm2m64_imm8:
+    case OP_reg_mm1_imm8:
+    case OP_mm1_r32m16_imm8:
+    case OP_xmm1_xmm2m32_imm8:
+    case OP_xmm1_xmm2m128_imm8:
+    case OP_reg_xmm1_imm8:
+    case OP_xmm1_r32m16_imm8:
         d.imm1_bytes = 1;
         break;
     case OP_reg16_RM16_imm16:
@@ -146,6 +156,23 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
     case OP_mm1_mm2m64:
     case OP_mm1_mm2m32:
     case OP_mm1m64_mm2:
+    case OP_reg_mm1:
+    case __SSE:
+    case OP_xmm1_xmm2m32:
+    case OP_xmm1_xmm2m64:
+    case OP_xmm1_xmm2m128:
+    case OP_xmm1m32_xmm2:
+    case OP_xmm1m64_xmm2:
+    case OP_xmm1m128_xmm2:
+    case OP_reg_xmm1:
+    case OP_xmm1_rm32:
+    case OP_xmm1_m64:
+    case OP_m64_xmm2:
+    case OP_rm8_xmm2m32:
+    case OP_xmm1_mm2m64:
+    case OP_mm1m64_xmm2:
+    case OP_mm1_xmm2m64:
+    case OP_r32_xmm2m32:
     case __EndFormatsWithRMByte:
     case OP_CS:
     case OP_DS:
@@ -278,6 +305,36 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
 {
     for (int i = 0; i < 8; ++i)
         build_slash_rm(op, slash, 0xc0 | (slash << 3) | i, mnemonic, format, impl);
+}
+
+static void build_sse_np(u8 op, const char* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+{
+    if (s_0f_table32[op].format == InvalidFormat) {
+        build_0f(op, mnemonic, format, impl, lock_prefix_allowed);
+        build(s_sse_table_np, op, mnemonic, format, impl, lock_prefix_allowed);
+        return;
+    }
+    if (s_0f_table32[op].format != __SSE)
+        build_0f(op, "__SSE_temp", __SSE, nullptr, lock_prefix_allowed);
+
+    VERIFY(s_0f_table32[op].format == __SSE);
+    build(s_sse_table_np, op, mnemonic, format, impl, lock_prefix_allowed);
+}
+
+static void build_sse_66(u8 op, const char* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+{
+    if (s_0f_table32[op].format != __SSE)
+        build_0f(op, "__SSE_temp", __SSE, nullptr, lock_prefix_allowed);
+    VERIFY(s_0f_table32[op].format == __SSE);
+    build(s_sse_table_66, op, mnemonic, format, impl, lock_prefix_allowed);
+}
+
+static void build_sse_f3(u8 op, const char* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+{
+    if (s_0f_table32[op].format != __SSE)
+        build_0f(op, "__SSE_temp", __SSE, nullptr, lock_prefix_allowed);
+    VERIFY(s_0f_table32[op].format == __SSE);
+    build(s_sse_table_f3, op, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 [[gnu::constructor]] static void build_opcode_tables()
@@ -766,6 +823,16 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
     build_0f_slash(0x01, 6, "LMSW", OP_RM16, &Interpreter::LMSW_RM16);
     build_0f_slash(0x01, 7, "INVLPG", OP_RM32, &Interpreter::INVLPG);
 
+    build_0f_slash(0x18, 0, "PREFETCHTNTA", OP_RM8, &Interpreter::PREFETCHTNTA);
+    build_0f_slash(0x18, 1, "PREFETCHT0", OP_RM8, &Interpreter::PREFETCHT0);
+    build_0f_slash(0x18, 2, "PREFETCHT1", OP_RM8, &Interpreter::PREFETCHT1);
+    build_0f_slash(0x18, 3, "PREFETCHT2", OP_RM8, &Interpreter::PREFETCHT2);
+
+    // FIXME: Techinically NoPrefix (sse_np_slash?)
+    build_0f_slash(0xAE, 2, "LDMXCSR", OP_RM32, &Interpreter::LDMXCSR);
+    build_0f_slash(0xAE, 3, "STMXCSR", OP_RM32, &Interpreter::STMXCSR);
+    // FIXME: SFENCE: NP 0F AE F8
+
     build_0f_slash(0xBA, 4, "BT", OP_RM16_imm8, &Interpreter::BT_RM16_imm8, OP_RM32_imm8, &Interpreter::BT_RM32_imm8, LockPrefixAllowed);
     build_0f_slash(0xBA, 5, "BTS", OP_RM16_imm8, &Interpreter::BTS_RM16_imm8, OP_RM32_imm8, &Interpreter::BTS_RM32_imm8, LockPrefixAllowed);
     build_0f_slash(0xBA, 6, "BTR", OP_RM16_imm8, &Interpreter::BTR_RM16_imm8, OP_RM32_imm8, &Interpreter::BTR_RM32_imm8, LockPrefixAllowed);
@@ -777,10 +844,34 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
     build_0f(0x09, "WBINVD", OP, &Interpreter::WBINVD);
     build_0f(0x0B, "UD2", OP, &Interpreter::UD2);
 
+    build_sse_np(0x10, "MOVUPS", OP_xmm1_xmm2m128, &Interpreter::MOVUPS_xmm1_xmm2m128);
+    build_sse_f3(0x10, "MOVSS", OP_xmm1_xmm2m32, &Interpreter::MOVSS_xmm1_xmm2m32);
+    build_sse_np(0x11, "MOVUPS", OP_xmm1m128_xmm2, &Interpreter::MOVUPS_xmm1m128_xmm2);
+    build_sse_f3(0x11, "MOVSS", OP_xmm1m32_xmm2, &Interpreter::MOVSS_xmm1m32_xmm2);
+    build_sse_np(0x12, "MOVLPS", OP_xmm1_xmm2m64, &Interpreter::MOVLPS_xmm1_xmm2m64); // FIXME: This mnemonic is MOVHLPS when providing xmm2
+    build_sse_np(0x13, "MOVLPS", OP_m64_xmm2, &Interpreter::MOVLPS_m64_xmm2);
+    build_sse_np(0x15, "UNPCKLS", OP_xmm1_xmm2m128, &Interpreter::UNPCKLPS_xmm1_xmm2m128);
+    build_sse_np(0x15, "UNPCKHS", OP_xmm1_xmm2m128, &Interpreter::UNPCKHPS_xmm1_xmm2m128);
+    build_sse_np(0x16, "MOVHPS", OP_xmm1_xmm2m64, &Interpreter::MOVHPS_xmm1_xmm2m64); // FIXME: This mnemonic is MOVLHPS when providing xmm2
+    build_sse_np(0x17, "MOVHPS", OP_m64_xmm2, &Interpreter::MOVHPS_m64_xmm2);
+
     build_0f(0x20, "MOV", OP_reg32_CR, &Interpreter::MOV_reg32_CR);
     build_0f(0x21, "MOV", OP_reg32_DR, &Interpreter::MOV_reg32_DR);
     build_0f(0x22, "MOV", OP_CR_reg32, &Interpreter::MOV_CR_reg32);
     build_0f(0x23, "MOV", OP_DR_reg32, &Interpreter::MOV_DR_reg32);
+
+    build_sse_np(0x28, "MOVAPS", OP_xmm1_xmm2m128, &Interpreter::MOVAPS_xmm1_xmm2m128);
+    build_sse_np(0x29, "MOVAPS", OP_xmm1m128_xmm2, &Interpreter::MOVAPS_xmm1m128_xmm2);
+
+    build_sse_np(0x2A, "CVTPI2PS", OP_xmm1_mm2m64, &Interpreter::CVTPI2PS_xmm1_mm2m64);
+    build_sse_f3(0x2A, "CVTSI2SS", OP_xmm1_rm32, &Interpreter::CVTSI2SS_xmm1_rm32);
+    build_sse_np(0x2B, "MOVNTPS", OP_xmm1m128_xmm2, &Interpreter::MOVNTPS_xmm1m128_xmm2);
+    build_sse_np(0x2C, "CVTTPS2PI", OP_mm1_xmm2m64, &Interpreter::CVTTPS2PI_mm1_xmm2m64);
+    build_sse_f3(0x2C, "CVTTSS2SI", OP_r32_xmm2m32, &Interpreter::CVTTPS2PI_r32_xmm2m32);
+    build_sse_np(0x2D, "CVTPS2PI", OP_mm1_xmm2m64, &Interpreter::CVTPS2PI_xmm1_mm2m64);
+    build_sse_f3(0x2D, "CVTSS2SI", OP_r32_xmm2m32, &Interpreter::CVTSS2SI_xmm1_rm32);
+    build_sse_np(0x2E, "UCOMISS", OP_xmm1_xmm2m32, &Interpreter::UCOMISS_xmm1_xmm2m32);
+    build_sse_np(0x2F, "COMISS", OP_xmm1_xmm2m32, &Interpreter::COMISS_xmm1_xmm2m32);
 
     build_0f(0x31, "RDTSC", OP, &Interpreter::RDTSC);
 
@@ -801,6 +892,32 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
     build_0f(0x4E, "CMOVNG", OP_reg16_RM16, &Interpreter::CMOVcc_reg16_RM16, OP_reg32_RM32, &Interpreter::CMOVcc_reg32_RM32);
     build_0f(0x4F, "CMOVG", OP_reg16_RM16, &Interpreter::CMOVcc_reg16_RM16, OP_reg32_RM32, &Interpreter::CMOVcc_reg32_RM32);
 
+    build_sse_np(0x50, "MOVMSKPS", OP_reg_xmm1, &Interpreter::MOVMSKPS_reg_xmm);
+    build_sse_np(0x51, "SQRTPS", OP_xmm1_xmm2m128, &Interpreter::SQRTPS_xmm1_xmm2m128);
+    build_sse_f3(0x51, "SQRTSS", OP_xmm1_xmm2m32, &Interpreter::SQRTSS_xmm1_xmm2m32);
+    build_sse_np(0x52, "RSQRTPS", OP_xmm1_xmm2m128, &Interpreter::RSQRTPS_xmm1_xmm2m128);
+    build_sse_f3(0x52, "RSQRTSS", OP_xmm1_xmm2m32, &Interpreter::RSQRTSS_xmm1_xmm2m32);
+    build_sse_np(0x53, "RCPPS", OP_xmm1_xmm2m128, &Interpreter::RCPPS_xmm1_xmm2m128);
+    build_sse_f3(0x53, "RCPSS", OP_xmm1_xmm2m32, &Interpreter::RCPSS_xmm1_xmm2m32);
+    build_sse_np(0x54, "ANDPS", OP_xmm1_xmm2m128, &Interpreter::ANDPS_xmm1_xmm2m128);
+    build_sse_np(0x55, "ANDNPS", OP_xmm1_xmm2m128, &Interpreter::ANDNPS_xmm1_xmm2m128);
+    build_sse_np(0x56, "ORPS", OP_xmm1_xmm2m128, &Interpreter::ORPS_xmm1_xmm2m128);
+    build_sse_np(0x57, "XORPS", OP_xmm1_xmm2m128, &Interpreter::XORPS_xmm1_xmm2m128);
+
+    build_sse_np(0x58, "ADDPS", OP_xmm1_xmm2m128, &Interpreter::ADDPS_xmm1_xmm2m128);
+    build_sse_f3(0x58, "ADDSS", OP_xmm1_xmm2m32, &Interpreter::ADDSS_xmm1_xmm2m32);
+    build_sse_np(0x59, "MULPS", OP_xmm1_xmm2m128, &Interpreter::MULPS_xmm1_xmm2m128);
+    build_sse_f3(0x59, "MULSS", OP_xmm1_xmm2m32, &Interpreter::MULSS_xmm1_xmm2m32);
+
+    build_sse_np(0x5C, "SUBPS", OP_xmm1_xmm2m128, &Interpreter::SUBPS_xmm1_xmm2m128);
+    build_sse_f3(0x5C, "SUBSS", OP_xmm1_xmm2m32, &Interpreter::SUBSS_xmm1_xmm2m32);
+    build_sse_np(0x5D, "MINPS", OP_xmm1_xmm2m128, &Interpreter::MINPS_xmm1_xmm2m128);
+    build_sse_f3(0x5D, "MINSS", OP_xmm1_xmm2m32, &Interpreter::MINSS_xmm1_xmm2m32);
+    build_sse_np(0x5E, "DIVPS", OP_xmm1_xmm2m128, &Interpreter::DIVPS_xmm1_xmm2m128);
+    build_sse_f3(0x5E, "DIVSS", OP_xmm1_xmm2m32, &Interpreter::DIVSS_xmm1_xmm2m32);
+    build_sse_np(0x5F, "MAXPS", OP_xmm1_xmm2m128, &Interpreter::MAXPS_xmm1_xmm2m128);
+    build_sse_f3(0x5F, "MAXSS", OP_xmm1_xmm2m32, &Interpreter::MAXSS_xmm1_xmm2m32);
+
     build_0f(0x60, "PUNPCKLBW", OP_mm1_mm2m32, &Interpreter::PUNPCKLBW_mm1_mm2m32);
     build_0f(0x61, "PUNPCKLWD", OP_mm1_mm2m32, &Interpreter::PUNPCKLWD_mm1_mm2m32);
     build_0f(0x62, "PUNPCKLDQ", OP_mm1_mm2m32, &Interpreter::PUNPCKLDQ_mm1_mm2m32);
@@ -816,6 +933,7 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
     build_0f(0x6E, "MOVD", OP_mm1_rm32, &Interpreter::MOVD_mm1_rm32);
     build_0f(0x6F, "MOVQ", OP_mm1_mm2m64, &Interpreter::MOVQ_mm1_mm2m64);
 
+    build_sse_np(0x70, "PSHUFW", OP_mm1_mm2m64_imm8, &Interpreter::PSHUFW_mm1_mm2m64_imm8);
     build_0f_slash(0x71, 2, "PSRLW", OP_mm1_imm8, &Interpreter::PSRLW_mm1_mm2m64);
     build_0f_slash(0x71, 4, "PSRAW", OP_mm1_imm8, &Interpreter::PSRAW_mm1_imm8);
     build_0f_slash(0x71, 6, "PSLLW", OP_mm1_imm8, &Interpreter::PSLLD_mm1_imm8);
@@ -896,6 +1014,14 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
     build_0f(0xBF, "0xBF", OP, nullptr, "MOVSX", OP_reg32_RM16, &Interpreter::MOVSX_reg32_RM16);
     build_0f(0xC0, "XADD", OP_RM8_reg8, &Interpreter::XADD_RM8_reg8, LockPrefixAllowed);
     build_0f(0xC1, "XADD", OP_RM16_reg16, &Interpreter::XADD_RM16_reg16, OP_RM32_reg32, &Interpreter::XADD_RM32_reg32, LockPrefixAllowed);
+    build_sse_np(0xC2, "CMPPS", OP_xmm1_xmm2m128_imm8, &Interpreter::CMPPS_xmm1_xmm2m128_imm8);
+    build_sse_f3(0xC2, "CMPSS", OP_xmm1_xmm2m32_imm8, &Interpreter::CMPSS_xmm1_xmm2m32_imm8);
+
+    build_sse_np(0xC5, "PINSRW", OP_mm1_r32m16_imm8, &Interpreter::PINSRW_mm1_r32m16_imm8);
+    build_sse_66(0xC5, "PINSRW", OP_xmm1_r32m16_imm8, &Interpreter::PINSRW_xmm1_r32m16_imm8);
+    build_sse_np(0xC5, "PEXTRW", OP_reg_mm1_imm8, &Interpreter::PEXTRW_reg_mm1_imm8);
+    build_sse_66(0xC5, "PEXTRW", OP_reg_xmm1_imm8, &Interpreter::PEXTRW_reg_xmm1_imm8);
+    build_sse_np(0xC6, "SHUFPS", OP_xmm1_xmm2m128_imm8, &Interpreter::SHUFPS_xmm1_xmm2m128_imm8);
 
     for (u8 i = 0xc8; i <= 0xcf; ++i)
         build_0f(i, "BSWAP", OP_reg32, &Interpreter::BSWAP_reg32);
@@ -904,14 +1030,35 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
     build_0f(0xD2, "PSRLD", OP_mm1_mm2m64, &Interpreter::PSRLD_mm1_mm2m64);
     build_0f(0xD3, "PSRLQ", OP_mm1_mm2m64, &Interpreter::PSRLQ_mm1_mm2m64);
     build_0f(0xD5, "PMULLW", OP_mm1_mm2m64, &Interpreter::PMULLW_mm1_mm2m64);
+
+    build_sse_np(0xD7, "PMOVMSKB", OP_reg_mm1, &Interpreter::PMOVMSKB_reg_mm1);
+    build_sse_66(0xD7, "PMOVMSKB", OP_reg_xmm1, &Interpreter::PMOVMSKB_reg_xmm1);
+
     build_0f(0xDB, "PAND", OP_mm1_mm2m64, &Interpreter::PAND_mm1_mm2m64);
     build_0f(0xD8, "PSUBUSB", OP_mm1_mm2m64, &Interpreter::PSUBUSB_mm1_mm2m64);
     build_0f(0xD9, "PSUBUSW", OP_mm1_mm2m64, &Interpreter::PSUBUSW_mm1_mm2m64);
+
+    build_sse_np(0xDA, "PMINUB", OP_mm1_mm2m64, &Interpreter::PMINUB_mm1_mm2m64);
+    build_sse_66(0xDA, "PMINUB", OP_xmm1_xmm2m128, &Interpreter::PMINUB_xmm1_xmm2m128);
+
     build_0f(0xDC, "PADDUSB", OP_mm1_mm2m64, &Interpreter::PADDUSB_mm1_mm2m64);
     build_0f(0xDD, "PADDUSW", OP_mm1_mm2m64, &Interpreter::PADDUSW_mm1_mm2m64);
+    build_sse_np(0xDE, "PMAXUB", OP_mm1_mm2m64, &Interpreter::PMAXUB_mm1_mm2m64);
+    build_sse_66(0xDE, "PMAXUB", OP_xmm1_xmm2m128, &Interpreter::PMAXUB_xmm1_xmm2m128);
     build_0f(0xDF, "PANDN", OP_mm1_mm2m64, &Interpreter::PANDN_mm1_mm2m64);
 
+    build_sse_np(0xE0, "PAVGB", OP_mm1_mm2m64, &Interpreter::PAVGB_mm1_mm2m64);
+    build_sse_66(0xE0, "PAVGB", OP_xmm1_xmm2m128, &Interpreter::PAVGB_xmm1_xmm2m128);
+    build_sse_np(0xE3, "PAVGW", OP_mm1_mm2m64, &Interpreter::PAVGW_mm1_mm2m64);
+    build_sse_66(0xE3, "PAVGW", OP_xmm1_xmm2m128, &Interpreter::PAVGW_xmm1_xmm2m128);
+    build_sse_np(0xE4, "PMULHUW ", OP_mm1_mm2m64, &Interpreter::PMULHUW_mm1_mm2m64);
+    build_sse_66(0xE4, "PMULHUW ", OP_xmm1_xmm2m64, &Interpreter::PMULHUW_xmm1_xmm2m64);
     build_0f(0xE5, "PMULHW", OP_mm1_mm2m64, &Interpreter::PMULHW_mm1_mm2m64);
+
+    build_sse_np(0xE7, "MOVNTQ", OP_mm1m64_mm2, &Interpreter::MOVNTQ_m64_mm1);
+
+    build_sse_np(0xEA, "PMINSB", OP_mm1_mm2m64, &Interpreter::PMINSB_mm1_mm2m64);
+    build_sse_66(0xEA, "PMINSB", OP_xmm1_xmm2m128, &Interpreter::PMINSB_xmm1_xmm2m128);
     build_0f(0xEB, "POR", OP_mm1_mm2m64, &Interpreter::POR_mm1_mm2m64);
     build_0f(0xE1, "PSRAW", OP_mm1_mm2m64, &Interpreter::PSRAW_mm1_mm2m64);
     build_0f(0xE2, "PSRAD", OP_mm1_mm2m64, &Interpreter::PSRAD_mm1_mm2m64);
@@ -919,12 +1066,17 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
     build_0f(0xE9, "PSUBSW", OP_mm1_mm2m64, &Interpreter::PSUBSW_mm1_mm2m64);
     build_0f(0xEC, "PADDSB", OP_mm1_mm2m64, &Interpreter::PADDSB_mm1_mm2m64);
     build_0f(0xED, "PADDSW", OP_mm1_mm2m64, &Interpreter::PADDSW_mm1_mm2m64);
+    build_sse_np(0xEE, "PMAXSB", OP_mm1_mm2m64, &Interpreter::PMAXSB_mm1_mm2m64);
+    build_sse_66(0xEE, "PMAXSB", OP_xmm1_xmm2m128, &Interpreter::PMAXSB_xmm1_xmm2m128);
     build_0f(0xEF, "PXOR", OP_mm1_mm2m64, &Interpreter::PXOR_mm1_mm2m64);
 
     build_0f(0xF1, "PSLLW", OP_mm1_mm2m64, &Interpreter::PSLLW_mm1_mm2m64);
     build_0f(0xF2, "PSLLD", OP_mm1_mm2m64, &Interpreter::PSLLD_mm1_mm2m64);
     build_0f(0xF3, "PSLLQ", OP_mm1_mm2m64, &Interpreter::PSLLQ_mm1_mm2m64);
     build_0f(0xF5, "PMADDWD", OP_mm1_mm2m64, &Interpreter::PMADDWD_mm1_mm2m64);
+    build_sse_np(0xF6, "PSADBW", OP_mm1_mm2m64, &Interpreter::PSADBB_mm1_mm2m64);
+    build_sse_66(0xF6, "PSADBW", OP_xmm1_xmm2m128, &Interpreter::PSADBB_xmm1_xmm2m128);
+    build_sse_np(0xF7, "MASKMOVQ", OP_mm1_mm2m64, &Interpreter::MASKMOVQ_mm1_mm2m64);
     build_0f(0xF8, "PSUBB", OP_mm1_mm2m64, &Interpreter::PSUBB_mm1_mm2m64);
     build_0f(0xF9, "PSUBW", OP_mm1_mm2m64, &Interpreter::PSUBW_mm1_mm2m64);
     build_0f(0xFA, "PSUBD", OP_mm1_mm2m64, &Interpreter::PSUBD_mm1_mm2m64);
@@ -940,6 +1092,7 @@ static const char* register_name(RegisterIndex32);
 static const char* register_name(FpuRegisterIndex);
 static const char* register_name(SegmentRegister);
 static const char* register_name(MMXRegisterIndex);
+static const char* register_name(XMMRegisterIndex);
 
 const char* Instruction::reg8_name() const
 {
@@ -1025,6 +1178,12 @@ String MemoryOrRegisterReference::to_string_mm(const Instruction& insn) const
 {
     if (is_register())
         return register_name(static_cast<MMXRegisterIndex>(m_register_index));
+    return String::formatted("[{}]", to_string(insn));
+}
+String MemoryOrRegisterReference::to_string_xmm(const Instruction& insn) const
+{
+    if (is_register())
+        return register_name(static_cast<XMMRegisterIndex>(m_register_index));
     return String::formatted("[{}]", to_string(insn));
 }
 
@@ -1296,6 +1455,8 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
     auto append_rm8 = [&] { builder.append(m_modrm.to_string_o8(*this)); };
     auto append_rm16 = [&] { builder.append(m_modrm.to_string_o16(*this)); };
     auto append_rm32 = [&] { builder.append(m_modrm.to_string_o32(*this)); };
+    // FIXME: Registers in long-mode
+    auto append_rm64 = [&] { builder.append(m_modrm.to_string_o32(*this)); };
     auto append_fpu_reg = [&] { builder.append(m_modrm.to_string_fpu_reg()); };
     auto append_fpu_mem = [&] { builder.append(m_modrm.to_string_fpu_mem(*this)); };
     auto append_fpu_ax16 = [&] { builder.append(m_modrm.to_string_fpu_ax16()); };
@@ -1324,6 +1485,10 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
     auto append_mm = [&] { builder.appendff("mm{}", register_index()); };
     auto append_mmrm32 = [&] { builder.append(m_modrm.to_string_mm(*this)); };
     auto append_mmrm64 = [&] { builder.append(m_modrm.to_string_mm(*this)); };
+    auto append_xmm = [&] { builder.appendff("mm{}", register_index()); };
+    auto append_xmmrm32 = [&] { builder.append(m_modrm.to_string_xmm(*this)); };
+    auto append_xmmrm64 = [&] { builder.append(m_modrm.to_string_xmm(*this)); };
+    auto append_xmmrm128 = [&] { builder.append(m_modrm.to_string_xmm(*this)); };
 
     auto append = [&](auto& content) { builder.append(content); };
     auto append_moff = [&] {
@@ -1876,6 +2041,160 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
         append(", ");
         append_mm();
         break;
+    case OP_mm1_mm2m64_imm8:
+        append_mnemonic_space();
+        append_mm();
+        append(", ");
+        append_mmrm64();
+        append(", ");
+        append_imm8();
+        break;
+    case OP_reg_mm1:
+        append_mnemonic_space();
+        append_rm32();
+        append(", ");
+        append_mm();
+        break;
+    case OP_reg_mm1_imm8:
+        append_mnemonic_space();
+        append_reg32();
+        append(", ");
+        append_mmrm64();
+        append(", ");
+        append_imm8();
+        break;
+    case OP_mm1_r32m16_imm8:
+        append_mnemonic_space();
+        append_mm();
+        append_rm32(); // FIXME: r32m16
+        append(", ");
+        append_imm8();
+        break;
+    case __SSE:
+        break;
+    case OP_xmm1_xmm2m32:
+        append_mnemonic_space();
+        append_xmm();
+        append(", ");
+        append_xmmrm32();
+        break;
+    case OP_xmm1_xmm2m64:
+        append_mnemonic_space();
+        append_xmm();
+        append(", ");
+        append_xmmrm64();
+        break;
+    case OP_xmm1_xmm2m128:
+        append_mnemonic_space();
+        append_xmm();
+        append(", ");
+        append_xmmrm128();
+        break;
+    case OP_xmm1_xmm2m32_imm8:
+        append_mnemonic_space();
+        append_xmm();
+        append(", ");
+        append_xmmrm32();
+        append(", ");
+        append_imm8();
+        break;
+    case OP_xmm1_xmm2m128_imm8:
+        append_mnemonic_space();
+        append_xmm();
+        append(", ");
+        append_xmmrm32();
+        append(", ");
+        append_imm8();
+        break;
+    case OP_xmm1m32_xmm2:
+        append_mnemonic_space();
+        append_xmmrm32();
+        append(", ");
+        append_xmm();
+        break;
+    case OP_xmm1m64_xmm2:
+        append_mnemonic_space();
+        append_xmmrm64();
+        append(", ");
+        append_xmm();
+        break;
+    case OP_xmm1m128_xmm2:
+        append_mnemonic_space();
+        append_xmmrm128();
+        append(", ");
+        append_xmm();
+        break;
+    case OP_reg_xmm1:
+        append_mnemonic_space();
+        append_reg32();
+        append(", ");
+        append_xmmrm128(); // second entry in the rm byte
+        break;
+    case OP_reg_xmm1_imm8:
+        append_mnemonic_space();
+        append_reg32();
+        append(", ");
+        append_xmmrm128(); // second entry in the rm byte
+        append(", ");
+        append_imm8();
+        break;
+    case OP_xmm1_rm32:
+        append_mnemonic_space();
+        append_xmm();
+        append(", ");
+        append_rm32(); // second entry in the rm byte
+        break;
+    case OP_xmm1_m64:
+        append_mnemonic_space();
+        append_xmm();
+        append(", ");
+        append_rm64(); // second entry in the rm byte
+        break;
+
+    case OP_m64_xmm2:
+        append_mnemonic_space();
+        append_rm64(); // second entry in the rm byte
+        append(", ");
+        append_xmm();
+        break;
+    case OP_rm8_xmm2m32:
+        append_mnemonic_space();
+        append_rm8();
+        append(", ");
+        append_xmmrm32();
+        break;
+    case OP_xmm1_mm2m64:
+        append_mnemonic_space();
+        append_xmm();
+        append(", ");
+        append_mmrm64();
+        break;
+    case OP_mm1m64_xmm2:
+        append_mnemonic_space();
+        append_mmrm64();
+        append(", ");
+        append_xmm();
+        break;
+    case OP_mm1_xmm2m64:
+        append_mnemonic_space();
+        append_mm();
+        append(", ");
+        append_xmmrm64();
+        break;
+    case OP_r32_xmm2m32:
+        append_mnemonic_space();
+        append_reg32();
+        append(", ");
+        append_xmmrm32();
+        break;
+    case OP_xmm1_r32m16_imm8:
+        append_mnemonic_space();
+        append_xmm();
+        append(", ");
+        append_rm32(); // FIXME: r32m16
+        append(", ");
+        append_imm8();
+        break;
     case InstructionPrefix:
         append_mnemonic();
         break;
@@ -1929,6 +2248,12 @@ const char* register_name(FpuRegisterIndex register_index)
 const char* register_name(MMXRegisterIndex register_index)
 {
     static constexpr const char* names[] = { "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7" };
+    return names[register_index & 7];
+}
+
+const char* register_name(XMMRegisterIndex register_index)
+{
+    static constexpr const char* names[] = { "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7" };
     return names[register_index & 7];
 }
 

@@ -107,8 +107,35 @@ enum InstructionFormat {
     OP_rm32_mm2,
     OP_mm1_mm2m64,
     OP_mm1_mm2m32,
+    OP_mm1_mm2m64_imm8,
     OP_mm1_imm8,
     OP_mm1m64_mm2,
+    OP_reg_mm1,
+    OP_reg_mm1_imm8,
+    OP_mm1_r32m16_imm8,
+
+    // SSE instructions mutate on some prefixes, so we have to mark them
+    // for further parsing
+    __SSE,
+    OP_xmm1_xmm2m32,
+    OP_xmm1_xmm2m64,
+    OP_xmm1_xmm2m128,
+    OP_xmm1_xmm2m32_imm8,
+    OP_xmm1_xmm2m128_imm8,
+    OP_xmm1m32_xmm2,
+    OP_xmm1m64_xmm2,
+    OP_xmm1m128_xmm2,
+    OP_reg_xmm1,
+    OP_reg_xmm1_imm8,
+    OP_xmm1_rm32,
+    OP_xmm1_m64,
+    OP_m64_xmm2,
+    OP_rm8_xmm2m32,
+    OP_xmm1_mm2m64,
+    OP_mm1m64_xmm2,
+    OP_mm1_xmm2m64,
+    OP_r32_xmm2m32,
+    OP_xmm1_r32m16_imm8,
     __EndFormatsWithRMByte,
 
     OP_reg32_imm32,
@@ -199,6 +226,9 @@ extern InstructionDescriptor s_table16[256];
 extern InstructionDescriptor s_table32[256];
 extern InstructionDescriptor s_0f_table16[256];
 extern InstructionDescriptor s_0f_table32[256];
+extern InstructionDescriptor s_sse_table_np[256];
+extern InstructionDescriptor s_sse_table_66[256];
+extern InstructionDescriptor s_sse_table_f3[256];
 
 struct Prefix {
     enum Op {
@@ -275,6 +305,17 @@ enum MMXRegisterIndex {
     RegisterMM5,
     RegisterMM6,
     RegisterMM7
+};
+
+enum XMMRegisterIndex {
+    RegisterXMM0 = 0,
+    RegisterXMM1,
+    RegisterXMM2,
+    RegisterXMM3,
+    RegisterXMM4,
+    RegisterXMM5,
+    RegisterXMM6,
+    RegisterXMM7
 };
 
 class LogicalAddress {
@@ -367,6 +408,7 @@ public:
     String to_string_fpu64(const Instruction&) const;
     String to_string_fpu80(const Instruction&) const;
     String to_string_mm(const Instruction&) const;
+    String to_string_xmm(const Instruction&) const;
 
     bool is_register() const { return m_register_index != 0x7f; }
 
@@ -848,6 +890,18 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         m_descriptor = m_o32 ? &s_0f_table32[m_sub_op] : &s_0f_table16[m_sub_op];
     } else {
         m_descriptor = m_o32 ? &s_table32[m_op] : &s_table16[m_op];
+    }
+
+    if (m_descriptor->format == __SSE) {
+        if (m_rep_prefix == 0xF3) {
+            m_descriptor = &s_sse_table_f3[m_sub_op];
+        } else if (m_has_operand_size_override_prefix) {
+            // This was unset while parsing the prefix initially
+            m_o32 = true;
+            m_descriptor = &s_sse_table_66[m_sub_op];
+        } else {
+            m_descriptor = &s_sse_table_np[m_sub_op];
+        }
     }
 
     if (m_descriptor->has_rm) {
