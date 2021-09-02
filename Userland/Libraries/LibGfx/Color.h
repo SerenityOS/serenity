@@ -221,9 +221,14 @@ public:
             alpha() * other.alpha() / 255);
     }
 
+    constexpr u8 luminosity() const
+    {
+        return (red() * 0.2126f + green() * 0.7152f + blue() * 0.0722f);
+    }
+
     constexpr Color to_grayscale() const
     {
-        int gray = (red() + green() + blue()) / 3;
+        auto gray = luminosity();
         return Color(gray, gray, gray, alpha());
     }
 
