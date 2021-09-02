@@ -118,6 +118,9 @@ private:
 
     NonnullRefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;
+
+    RefPtr<Image> m_image_snapshot;
+    OwnPtr<ImageUndoCommand> m_image_undo_command;
     OwnPtr<GUI::UndoStack> m_undo_stack;
 
     NonnullRefPtrVector<Guide> m_guides;

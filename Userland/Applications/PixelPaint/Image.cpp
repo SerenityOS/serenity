@@ -550,20 +550,45 @@ void Image::did_change_rect()
         client->image_did_change_rect(rect());
 }
 
-ImageUndoCommand::ImageUndoCommand(Image& image)
-    : m_snapshot(image.take_snapshot())
+ImageUndoCommand::ImageUndoCommand(Image& image, RefPtr<Image>& image_snapshot)
+    : m_snapshot_before(nullptr)
+    , m_snapshot_after(nullptr)
     , m_image(image)
+    , m_image_snapshot(image_snapshot)
+{
+}
+
+ImageUndoCommand::ImageUndoCommand(Image& image, RefPtr<Image>& image_snapshot, RefPtr<Image>& snapshot_before, RefPtr<Image>& snapshot_after)
+    : m_snapshot_before(snapshot_before)
+    , m_snapshot_after(snapshot_after)
+    , m_image(image)
+    , m_image_snapshot(image_snapshot)
 {
 }
 
 void ImageUndoCommand::undo()
 {
-    m_image.restore_snapshot(*m_snapshot);
+    if (m_snapshot_before.ptr()) {
+        m_image.restore_snapshot(*m_snapshot_before);
+        m_image_snapshot = m_snapshot_before;
+    }
 }
 
 void ImageUndoCommand::redo()
 {
-    undo();
+    if (m_snapshot_after.ptr()) {
+        m_image.restore_snapshot(*m_snapshot_after);
+        m_image_snapshot = m_snapshot_after;
+    }
+}
+
+
+void ImageUndoCommand::set_snapshot_before(RefPtr<Image>& snapshot_before) {
+    m_snapshot_before = snapshot_before;
+}
+
+void ImageUndoCommand::set_snapshot_after(RefPtr<Image>& snapshot_after) {
+    m_snapshot_after = snapshot_after;
 }
 
 void Image::set_title(String title)

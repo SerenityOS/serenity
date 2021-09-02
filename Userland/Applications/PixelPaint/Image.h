@@ -118,14 +118,20 @@ private:
 
 class ImageUndoCommand : public GUI::Command {
 public:
-    ImageUndoCommand(Image& image);
+    ImageUndoCommand(Image& image, RefPtr<Image>& image_snapshot);
+    ImageUndoCommand(Image& image, RefPtr<Image>& image_snapshot, RefPtr<Image>& snapshot_before, RefPtr<Image>& snapshot_after);
 
     virtual void undo() override;
     virtual void redo() override;
 
+    void set_snapshot_before(RefPtr<Image>& snapshot_before);
+    void set_snapshot_after(RefPtr<Image>& snapshot_after);
+
 private:
-    RefPtr<Image> m_snapshot;
+    RefPtr<Image> m_snapshot_before;
+    RefPtr<Image> m_snapshot_after;
     Image& m_image;
+    RefPtr<Image>& m_image_snapshot;
 };
 
 }

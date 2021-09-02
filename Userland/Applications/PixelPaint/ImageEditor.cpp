@@ -19,12 +19,13 @@ namespace PixelPaint {
 
 ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     : m_image(move(image))
+    , m_image_undo_command(nullptr)
     , m_undo_stack(make<GUI::UndoStack>())
     , m_selection(*this)
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
     m_undo_stack = make<GUI::UndoStack>();
-    m_undo_stack->push(make<ImageUndoCommand>(*m_image));
+    m_image_snapshot = m_image->take_snapshot();
     m_image->add_client(*this);
 }
 
@@ -35,7 +36,10 @@ ImageEditor::~ImageEditor()
 
 void ImageEditor::did_complete_action()
 {
-    m_undo_stack->push(make<ImageUndoCommand>(*m_image));
+    m_image_snapshot = m_image->take_snapshot();
+    m_image_undo_command->set_snapshot_after(m_image_snapshot);
+    if (m_image_undo_command.ptr())
+        m_undo_stack->push(m_image_undo_command.release_nonnull());
 }
 
 bool ImageEditor::undo()
@@ -193,6 +197,9 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
             set_active_layer(other_layer);
         }
     }
+
+    m_image_undo_command = make<ImageUndoCommand>(*m_image, m_image_snapshot);
+    m_image_undo_command->set_snapshot_before(m_image_snapshot);
 
     auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
     auto image_event = event_with_pan_and_scale_applied(event);
