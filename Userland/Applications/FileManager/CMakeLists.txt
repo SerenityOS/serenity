@@ -12,6 +12,7 @@ compile_gml(PropertiesWindowGeneralTab.gml PropertiesWindowGeneralTabGML.h prope
 set(SOURCES
     DesktopWidget.cpp
     DirectoryView.cpp
+    DirectoryTreeView.cpp
     FileManagerWindowGML.h
     FileOperationProgress.gml
     FileOperationProgressWidget.cpp
