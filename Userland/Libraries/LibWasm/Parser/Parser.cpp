@@ -54,7 +54,7 @@ static auto parse_vector(InputStream& stream)
                     return ParseResult<Vector<T>> { with_eof_check(stream, ParseError::ExpectedSize) };
                 entries.append(value);
             } else if constexpr (IsSame<T, u8>) {
-                if (count > 64 * KiB)
+                if (count > Constants::max_allowed_vector_size)
                     return ParseResult<Vector<T>> { ParseError::HugeAllocationRequested };
                 entries.resize(count);
                 if (!stream.read_or_error({ entries.data(), entries.size() }))
