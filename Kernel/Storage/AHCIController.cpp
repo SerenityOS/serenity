@@ -75,7 +75,8 @@ volatile AHCI::PortRegisters& AHCIController::port(size_t port_number) const
 
 volatile AHCI::HBA& AHCIController::hba() const
 {
-    return static_cast<volatile AHCI::HBA&>(*(volatile AHCI::HBA*)(m_hba_region->vaddr().as_ptr()));
+    // See default_hba_region for the reason this offset is here.
+    return static_cast<volatile AHCI::HBA&>(*(volatile AHCI::HBA*)(m_hba_region->vaddr().as_ptr() + m_hba_offset));
 }
 
 AHCIController::AHCIController(PCI::Address address)
@@ -124,9 +125,17 @@ AHCI::HBADefinedCapabilities AHCIController::capabilities() const
     };
 }
 
-NonnullOwnPtr<Memory::Region> AHCIController::default_hba_region() const
+NonnullOwnPtr<Memory::Region> AHCIController::default_hba_region()
 {
-    auto region = MM.allocate_kernel_region(PhysicalAddress(PCI::get_BAR5(pci_address())).page_base(), Memory::page_round_up(sizeof(AHCI::HBA)), "AHCI HBA", Memory::Region::Access::ReadWrite);
+    // The HBA address is not guaranteed to be page aligned. However, we must provide MM a page aligned physical address.
+    // We work around this by giving it a page aligned physical address, but adding the difference between the unaligned physical address and the aligned physical address to the virtual memory pointer returned by MM.
+    auto unaligned_bar5 = PhysicalAddress(PCI::get_BAR5(pci_address()));
+    auto page_aligned_bar5 = unaligned_bar5.page_base();
+    m_hba_offset = unaligned_bar5.get() - page_aligned_bar5.get();
+
+    dbgln_if(AHCI_DEBUG, "{}: AHCI: unaligned_bar5={}, page_aligned_bar5={}, m_hba_offset={}", pci_address(), unaligned_bar5, page_aligned_bar5, m_hba_offset);
+
+    auto region = MM.allocate_kernel_region(page_aligned_bar5, Memory::page_round_up(PCI::get_BAR_space_size(pci_address(), 5) + m_hba_offset), "AHCI HBA", Memory::Region::Access::ReadWrite);
     return region.release_nonnull();
 }
 
