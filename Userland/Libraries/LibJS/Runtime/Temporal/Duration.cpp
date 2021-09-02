@@ -214,13 +214,20 @@ PartialDuration to_partial_duration(GlobalObject& global_object, Value temporal_
             // i. Set any to true.
             any = true;
 
-            // ii. Set value to ? ToIntegerOrInfinity(value).
-            auto value_number = value.to_integer_or_infinity(global_object);
+            // ii. Set value to ? ToNumber(value).
+            value = value.to_number(global_object);
             if (vm.exception())
                 return {};
 
-            // iii. Set result's internal slot whose name is the Internal Slot value of the current row to value.
-            result.*internal_slot = value_number;
+            // iii. If ! IsIntegralNumber(value) is false, then
+            if (!value.is_integral_number()) {
+                // 1. Throw a RangeError exception.
+                vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects());
+                return {};
+            }
+
+            // iv. Set result's internal slot whose name is the Internal Slot value of the current row to value.
+            result.*internal_slot = value.as_double();
         }
     }
 

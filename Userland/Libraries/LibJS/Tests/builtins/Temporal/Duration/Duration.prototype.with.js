@@ -79,9 +79,14 @@ describe("errors", () => {
 
     test("invalid duration value", () => {
         for (const property of DURATION_PROPERTIES) {
-            expect(() => {
-                new Temporal.Duration().with({ [property]: Infinity });
-            }).toThrowWithMessage(RangeError, "Invalid duration");
+            for (const value of [1.23, NaN, Infinity]) {
+                expect(() => {
+                    new Temporal.Duration().with({ [property]: value });
+                }).toThrowWithMessage(
+                    RangeError,
+                    `Invalid value for duration property '${property}': must be an integer, got ${value}`
+                );
+            }
         }
     });
 });
