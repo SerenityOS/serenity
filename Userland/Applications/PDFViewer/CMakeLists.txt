@@ -13,4 +13,4 @@ set(SOURCES
     )
 
 serenity_app(PDFViewer ICON app-pdf-viewer)
-target_link_libraries(PDFViewer LibGUI LibPDF)
+target_link_libraries(PDFViewer LibGUI LibPDF LibFileSystemAccessClient)
