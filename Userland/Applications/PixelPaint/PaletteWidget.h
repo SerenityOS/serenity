@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Felix Rauch <noreply@felixrau.ch>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,6 +15,7 @@
 namespace PixelPaint {
 
 class ImageEditor;
+class SelectedColorWidget;
 
 class PaletteWidget final : public GUI::Frame {
     C_OBJECT(PaletteWidget);
@@ -41,8 +43,8 @@ private:
     explicit PaletteWidget();
 
     ImageEditor* m_editor { nullptr };
-    RefPtr<GUI::Frame> m_primary_color_widget;
-    RefPtr<GUI::Frame> m_secondary_color_widget;
+    RefPtr<SelectedColorWidget> m_primary_color_widget;
+    RefPtr<SelectedColorWidget> m_secondary_color_widget;
     RefPtr<GUI::Widget> m_color_container;
 };
 

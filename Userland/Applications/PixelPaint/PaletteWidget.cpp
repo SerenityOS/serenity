@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Felix Rauch <noreply@felixrau.ch>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -61,6 +62,34 @@ private:
     Color m_color;
 };
 
+class SelectedColorWidget : public GUI::Frame {
+    C_OBJECT(SelectedColorWidget);
+
+public:
+    virtual ~SelectedColorWidget() override { }
+
+    virtual void mousedown_event(GUI::MouseEvent& event) override
+    {
+        if (event.button() != GUI::MouseButton::Left || !on_color_change)
+            return;
+
+        auto dialog = GUI::ColorPicker::construct(m_color, window());
+        if (dialog->exec() == GUI::Dialog::ExecOK)
+            on_color_change(dialog->color());
+    }
+
+    void set_background_color(Color const& color)
+    {
+        auto pal = palette();
+        pal.set_color(ColorRole::Background, color);
+        set_palette(pal);
+        update();
+    }
+
+    Function<void(Color const&)> on_color_change;
+    Color m_color = Color::White;
+};
+
 PaletteWidget::PaletteWidget()
 {
     set_frame_shape(Gfx::FrameShape::Panel);
@@ -70,11 +99,17 @@ PaletteWidget::PaletteWidget()
 
     set_fixed_height(35);
 
-    m_secondary_color_widget = add<GUI::Frame>();
+    m_secondary_color_widget = add<SelectedColorWidget>();
+    m_secondary_color_widget->on_color_change = [&](auto& color) {
+        set_secondary_color(color);
+    };
     m_secondary_color_widget->set_relative_rect({ 0, 2, 60, 33 });
     m_secondary_color_widget->set_fill_with_background_color(true);
 
-    m_primary_color_widget = add<GUI::Frame>();
+    m_primary_color_widget = add<SelectedColorWidget>();
+    m_primary_color_widget->on_color_change = [&](auto& color) {
+        set_primary_color(color);
+    };
     auto rect = Gfx::IntRect(0, 0, 35, 17).centered_within(m_secondary_color_widget->relative_rect());
     m_primary_color_widget->set_relative_rect(rect);
     m_primary_color_widget->set_fill_with_background_color(true);
@@ -127,19 +162,13 @@ PaletteWidget::~PaletteWidget()
 void PaletteWidget::set_primary_color(Color color)
 {
     m_editor->set_primary_color(color);
-    auto pal = m_primary_color_widget->palette();
-    pal.set_color(ColorRole::Background, color);
-    m_primary_color_widget->set_palette(pal);
-    m_primary_color_widget->update();
+    m_primary_color_widget->set_background_color(color);
 }
 
 void PaletteWidget::set_secondary_color(Color color)
 {
     m_editor->set_secondary_color(color);
-    auto pal = m_secondary_color_widget->palette();
-    pal.set_color(ColorRole::Background, color);
-    m_secondary_color_widget->set_palette(pal);
-    m_secondary_color_widget->update();
+    m_secondary_color_widget->set_background_color(color);
 }
 
 void PaletteWidget::display_color_list(Vector<Color> const& colors)
