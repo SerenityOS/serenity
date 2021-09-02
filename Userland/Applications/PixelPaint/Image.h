@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -74,6 +75,7 @@ public:
     void select_layer(Layer*);
     void flatten_all_layers();
     void merge_visible_layers();
+    void merge_active_layer_down(Layer& layer);
 
     void add_client(ImageClient&);
     void remove_client(ImageClient&);
