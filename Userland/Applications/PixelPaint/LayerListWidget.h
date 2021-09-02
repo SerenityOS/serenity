@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -62,13 +63,16 @@ private:
 
     Optional<size_t> gadget_at(Gfx::IntPoint const&);
 
+    size_t to_layer_index(size_t gadget_index) const;
+    size_t to_gadget_index(size_t layer_index) const;
+
     Vector<Gadget> m_gadgets;
     RefPtr<Image> m_image;
 
     Optional<size_t> m_moving_gadget_index;
     Gfx::IntPoint m_moving_event_origin;
 
-    size_t m_selected_layer_index { 0 };
+    size_t m_selected_gadget_index { 0 };
 };
 
 }
