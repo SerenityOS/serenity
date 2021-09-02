@@ -14,6 +14,7 @@
 #include <Applications/HexEditor/HexEditorWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/File.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -84,10 +85,13 @@ HexEditorWidget::HexEditorWidget()
     });
 
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window());
+        auto response = FileSystemAccessClient::Client::the().open_file(window()->window_id());
 
-        if (!open_path.has_value())
+        if (response.error != 0) {
+            if (response.error != -1)
+                GUI::MessageBox::show_error(window(), String::formatted("Opening \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
             return;
+        }
 
         if (m_document_dirty) {
             auto save_document_first_result = GUI::MessageBox::show(window(), "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
@@ -97,38 +101,47 @@ HexEditorWidget::HexEditorWidget()
                 return;
         }
 
-        open_file(open_path.value());
+        open_file(*response.fd, *response.chosen_file);
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
-        if (!m_path.is_empty()) {
-            if (!m_editor->write_to_file(m_path)) {
-                GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
-            } else {
-                m_document_dirty = false;
-                update_title();
-            }
+        if (m_path.is_empty())
+            return m_save_as_action->activate();
+
+        auto response = FileSystemAccessClient::Client::the().request_file(window()->window_id(), m_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+
+        if (response.error != 0) {
+            if (response.error != -1)
+                GUI::MessageBox::show_error(window(), String::formatted("Unable to save file: {}", strerror(response.error)));
             return;
         }
 
-        m_save_as_action->activate();
+        if (!m_editor->write_to_file(*response.fd)) {
+            GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
+        } else {
+            m_document_dirty = false;
+            update_title();
+        }
+        return;
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), m_name.is_null() ? "Untitled" : m_name, m_extension.is_null() ? "bin" : m_extension);
-        if (!save_path.has_value()) {
-            dbgln("GUI::FilePicker: Cancel button clicked");
+        auto response = FileSystemAccessClient::Client::the().save_file(window()->window_id(), m_name, m_extension);
+
+        if (response.error != 0) {
+            if (response.error != -1)
+                GUI::MessageBox::show_error(window(), String::formatted("Saving \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
             return;
         }
 
-        if (!m_editor->write_to_file(save_path.value())) {
+        if (!m_editor->write_to_file(*response.fd)) {
             GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
             return;
         }
 
         m_document_dirty = false;
-        set_path(save_path.value());
-        dbgln("Wrote document to {}", save_path.value());
+        set_path(*response.chosen_file);
+        dbgln("Wrote document to {}", *response.chosen_file);
     });
 
     m_find_action = GUI::Action::create("&Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"), [&](const GUI::Action&) {
@@ -334,11 +347,23 @@ void HexEditorWidget::update_title()
     window()->set_title(builder.to_string());
 }
 
-void HexEditorWidget::open_file(const String& path)
+void HexEditorWidget::open_file(int fd, String const& path)
 {
-    auto file = Core::File::construct(path);
-    if (!file->open(Core::OpenMode::ReadOnly)) {
+    VERIFY(path.starts_with("/"sv));
+    auto file = Core::File::construct();
+
+    if (!file->open(fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes) && file->error() != ENOENT) {
         GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+        return;
+    }
+
+    if (file->is_device()) {
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open device files", path), "Error", GUI::MessageBox::Type::Error);
+        return;
+    }
+
+    if (file->is_directory()) {
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open directories", path), "Error", GUI::MessageBox::Type::Error);
         return;
     }
 
@@ -377,6 +402,13 @@ void HexEditorWidget::drop_event(GUI::DropEvent& event)
         if (urls.is_empty())
             return;
         window()->move_to_front();
-        open_file(urls.first().path());
+
+        // TODO: A drop event should be considered user consent for opening a file
+        auto file_response = FileSystemAccessClient::Client::the().request_file(window()->window_id(), urls.first().path(), Core::OpenMode::ReadOnly);
+
+        if (file_response.error != 0)
+            return;
+
+        open_file(*file_response.fd, urls.first().path());
     }
 }

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,10 +8,12 @@
 #include "HexEditor.h"
 #include "SearchResultsModel.h"
 #include <AK/Debug.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Scrollbar.h>
 #include <LibGUI/TextEditor.h>
@@ -91,6 +94,13 @@ bool HexEditor::write_to_file(const String& path)
         return false;
     }
 
+    return write_to_file(fd);
+}
+
+bool HexEditor::write_to_file(int fd)
+{
+    ScopeGuard fd_guard = [fd] { close(fd); };
+
     int rc = ftruncate(fd, m_buffer.size());
     if (rc < 0) {
         perror("ftruncate");
@@ -109,7 +119,6 @@ bool HexEditor::write_to_file(const String& path)
         update();
     }
 
-    close(fd);
     return true;
 }
 
