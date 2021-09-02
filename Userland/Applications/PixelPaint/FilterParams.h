@@ -17,6 +17,7 @@
 #include <LibGfx/Filters/BoxBlurFilter.h>
 #include <LibGfx/Filters/GenericConvolutionFilter.h>
 #include <LibGfx/Filters/GrayscaleFilter.h>
+#include <LibGfx/Filters/InvertFilter.h>
 #include <LibGfx/Filters/LaplacianFilter.h>
 #include <LibGfx/Filters/SharpenFilter.h>
 #include <LibGfx/Filters/SpatialGaussianBlurFilter.h>

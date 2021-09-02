@@ -724,6 +724,16 @@ int main(int argc, char** argv)
             editor->did_complete_action();
         }
     }));
+    color_filters_menu.add_action(GUI::Action::create("Invert", [&](auto&) {
+        auto* editor = current_image_editor();
+        if (!editor)
+            return;
+        if (auto* layer = editor->active_layer()) {
+            Gfx::InvertFilter filter;
+            filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect());
+            editor->did_complete_action();
+        }
+    }));
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Pixel Paint", app_icon, window));
