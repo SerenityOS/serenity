@@ -30,6 +30,7 @@ private:
     JS_DECLARE_NATIVE_GETTER(numeric);
     JS_DECLARE_NATIVE_GETTER(language);
     JS_DECLARE_NATIVE_GETTER(script);
+    JS_DECLARE_NATIVE_GETTER(region);
 };
 
 }
