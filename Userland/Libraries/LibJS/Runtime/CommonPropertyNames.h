@@ -84,6 +84,7 @@ namespace JS {
     P(call)                                  \
     P(callee)                                \
     P(caller)                                \
+    P(caseFirst)                             \
     P(cause)                                 \
     P(cbrt)                                  \
     P(ceil)                                  \
@@ -93,6 +94,7 @@ namespace JS {
     P(clear)                                 \
     P(clz32)                                 \
     P(codePointAt)                           \
+    P(collation)                             \
     P(compareExchange)                       \
     P(compile)                               \
     P(concat)                                \
@@ -224,6 +226,7 @@ namespace JS {
     P(hasOwn)                                \
     P(hasOwnProperty)                        \
     P(hour)                                  \
+    P(hourCycle)                             \
     P(hours)                                 \
     P(hypot)                                 \
     P(id)                                    \
@@ -262,6 +265,7 @@ namespace JS {
     P(join)                                  \
     P(keyFor)                                \
     P(keys)                                  \
+    P(language)                              \
     P(lastIndex)                             \
     P(lastIndexOf)                           \
     P(length)                                \
@@ -297,6 +301,8 @@ namespace JS {
     P(negated)                               \
     P(next)                                  \
     P(now)                                   \
+    P(numberingSystem)                       \
+    P(numeric)                               \
     P(of)                                    \
     P(offset)                                \
     P(offsetNanoseconds)                     \
@@ -325,6 +331,7 @@ namespace JS {
     P(reason)                                \
     P(reduce)                                \
     P(reduceRight)                           \
+    P(region)                                \
     P(reject)                                \
     P(repeat)                                \
     P(resolve)                               \
@@ -335,6 +342,7 @@ namespace JS {
     P(round)                                 \
     P(roundingIncrement)                     \
     P(roundingMode)                          \
+    P(script)                                \
     P(seal)                                  \
     P(second)                                \
     P(seconds)                               \
