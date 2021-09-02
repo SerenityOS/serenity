@@ -44,7 +44,7 @@ KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> proce
         return ENOMEM;
     kernel_stack_region->set_stack(true);
 
-    auto block_timer = AK::try_create<Timer>();
+    auto block_timer = try_make_ref_counted<Timer>();
     if (!block_timer)
         return ENOMEM;
 

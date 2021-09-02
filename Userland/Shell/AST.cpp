@@ -286,7 +286,7 @@ void Node::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Nonnul
 
     auto list = value->resolve_as_list(shell);
     for (auto& element : list) {
-        if (callback(create<StringValue>(move(element))) == IterationDecision::Break)
+        if (callback(make_ref_counted<StringValue>(move(element))) == IterationDecision::Break)
             break;
     }
 }
@@ -390,7 +390,7 @@ RefPtr<Value> And::run(RefPtr<Shell> shell)
 {
     auto commands = m_left->to_lazy_evaluated_commands(shell);
     commands.last().next_chain.append(NodeWithAction { *m_right, NodeWithAction::And });
-    return create<CommandSequenceValue>(move(commands));
+    return make_ref_counted<CommandSequenceValue>(move(commands));
 }
 
 void And::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -444,7 +444,7 @@ RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
 
     for (auto& element : m_list) {
         if (!result) {
-            result = create<ListValue>({ element->run(shell)->resolve_without_cast(shell) });
+            result = make_ref_counted<ListValue>({ element->run(shell)->resolve_without_cast(shell) });
             continue;
         }
         auto element_value = element->run(shell)->resolve_without_cast(shell);
@@ -455,9 +455,9 @@ RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
             if (joined_commands.size() == 1) {
                 auto& command = joined_commands[0];
                 command.position = position();
-                result = create<CommandValue>(command);
+                result = make_ref_counted<CommandValue>(command);
             } else {
-                result = create<CommandSequenceValue>(move(joined_commands));
+                result = make_ref_counted<CommandSequenceValue>(move(joined_commands));
             }
         } else {
             NonnullRefPtrVector<Value> values;
@@ -466,16 +466,16 @@ RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
                 values.extend(static_cast<ListValue*>(result.ptr())->values());
             } else {
                 for (auto& result : result->resolve_as_list(shell))
-                    values.append(create<StringValue>(result));
+                    values.append(make_ref_counted<StringValue>(result));
             }
 
             values.append(element_value);
 
-            result = create<ListValue>(move(values));
+            result = make_ref_counted<ListValue>(move(values));
         }
     }
     if (!result)
-        return create<ListValue>({});
+        return make_ref_counted<ListValue>({});
 
     return result;
 }
@@ -554,7 +554,7 @@ RefPtr<Value> Background::run(RefPtr<Shell> shell)
     for (auto& command : commands)
         command.should_wait = false;
 
-    return create<CommandSequenceValue>(move(commands));
+    return make_ref_counted<CommandSequenceValue>(move(commands));
 }
 
 void Background::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -587,7 +587,7 @@ void BarewordLiteral::dump(int level) const
 
 RefPtr<Value> BarewordLiteral::run(RefPtr<Shell>)
 {
-    return create<StringValue>(m_text);
+    return make_ref_counted<StringValue>(m_text);
 }
 
 void BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -651,7 +651,7 @@ RefPtr<Value> BraceExpansion::run(RefPtr<Shell> shell)
             values.append(value.release_nonnull());
     }
 
-    return create<ListValue>(move(values));
+    return make_ref_counted<ListValue>(move(values));
 }
 
 HitTestResult BraceExpansion::hit_test_position(size_t offset) const
@@ -708,7 +708,7 @@ RefPtr<Value> CastToCommand::run(RefPtr<Shell> shell)
         return value;
 
     auto argv = value->resolve_as_list(shell);
-    return create<CommandValue>(move(argv), position());
+    return make_ref_counted<CommandValue>(move(argv), position());
 }
 
 void CastToCommand::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -768,7 +768,7 @@ void CastToList::dump(int level) const
 RefPtr<Value> CastToList::run(RefPtr<Shell> shell)
 {
     if (!m_inner)
-        return create<ListValue>({});
+        return make_ref_counted<ListValue>({});
 
     auto inner_value = m_inner->run(shell)->resolve_without_cast(shell);
 
@@ -778,9 +778,9 @@ RefPtr<Value> CastToList::run(RefPtr<Shell> shell)
     auto values = inner_value->resolve_as_list(shell);
     NonnullRefPtrVector<Value> cast_values;
     for (auto& value : values)
-        cast_values.append(create<StringValue>(value));
+        cast_values.append(make_ref_counted<StringValue>(value));
 
-    return create<ListValue>(cast_values);
+    return make_ref_counted<ListValue>(cast_values);
 }
 
 void CastToList::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback)
@@ -831,7 +831,7 @@ RefPtr<Value> CloseFdRedirection::run(RefPtr<Shell>)
     Command command;
     command.position = position();
     command.redirections.append(adopt_ref(*new CloseRedirection(m_fd)));
-    return create<CommandValue>(move(command));
+    return make_ref_counted<CommandValue>(move(command));
 }
 
 void CloseFdRedirection::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
@@ -858,7 +858,7 @@ void CommandLiteral::dump(int level) const
 
 RefPtr<Value> CommandLiteral::run(RefPtr<Shell>)
 {
-    return create<CommandValue>(m_command);
+    return make_ref_counted<CommandValue>(m_command);
 }
 
 CommandLiteral::CommandLiteral(Position position, Command command)
@@ -879,7 +879,7 @@ void Comment::dump(int level) const
 
 RefPtr<Value> Comment::run(RefPtr<Shell>)
 {
-    return create<ListValue>({});
+    return make_ref_counted<ListValue>({});
 }
 
 void Comment::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
@@ -911,7 +911,7 @@ RefPtr<Value> ContinuationControl::run(RefPtr<Shell> shell)
         shell->raise_error(Shell::ShellError::InternalControlFlowContinue, {}, position());
     else
         VERIFY_NOT_REACHED();
-    return create<ListValue>({});
+    return make_ref_counted<ListValue>({});
 }
 
 void ContinuationControl::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
@@ -932,7 +932,7 @@ RefPtr<Value> DoubleQuotedString::run(RefPtr<Shell> shell)
 
     builder.join("", values);
 
-    return create<StringValue>(builder.to_string());
+    return make_ref_counted<StringValue>(builder.to_string());
 }
 
 void DoubleQuotedString::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -977,12 +977,12 @@ RefPtr<Value> DynamicEvaluate::run(RefPtr<Shell> shell)
     if (result->is_string()) {
         auto name_part = result->resolve_as_list(shell);
         VERIFY(name_part.size() == 1);
-        return create<SimpleVariableValue>(name_part[0]);
+        return make_ref_counted<SimpleVariableValue>(name_part[0]);
     }
 
     // If it's anything else, we're just gonna cast it to a list.
     auto list = result->resolve_as_list(shell);
-    return create<CommandValue>(move(list), position());
+    return make_ref_counted<CommandValue>(move(list), position());
 }
 
 void DynamicEvaluate::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1019,7 +1019,7 @@ RefPtr<Value> Fd2FdRedirection::run(RefPtr<Shell>)
     Command command;
     command.position = position();
     command.redirections.append(FdRedirection::create(m_new_fd, m_old_fd, Rewiring::Close::None));
-    return create<CommandValue>(move(command));
+    return make_ref_counted<CommandValue>(move(command));
 }
 
 void Fd2FdRedirection::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
@@ -1061,7 +1061,7 @@ RefPtr<Value> FunctionDeclaration::run(RefPtr<Shell> shell)
 
     shell->define_function(m_name.name, move(args), m_block);
 
-    return create<ListValue>({});
+    return make_ref_counted<ListValue>({});
 }
 
 void FunctionDeclaration::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1147,7 +1147,7 @@ void ForLoop::dump(int level) const
 RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
 {
     if (!m_block)
-        return create<ListValue>({});
+        return make_ref_counted<ListValue>({});
 
     size_t consecutive_interruptions = 0;
     auto run = [&](auto& block_value) {
@@ -1197,7 +1197,7 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
                 shell->set_local_variable(variable_name, value, true);
 
                 if (index_name.has_value())
-                    shell->set_local_variable(index_name.value(), create<AST::StringValue>(String::number(i)), true);
+                    shell->set_local_variable(index_name.value(), make_ref_counted<AST::StringValue>(String::number(i)), true);
 
                 ++i;
 
@@ -1217,7 +1217,7 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
         }
     }
 
-    return create<ListValue>({});
+    return make_ref_counted<ListValue>({});
 }
 
 void ForLoop::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1286,7 +1286,7 @@ void Glob::dump(int level) const
 
 RefPtr<Value> Glob::run(RefPtr<Shell>)
 {
-    return create<GlobValue>(m_text, position());
+    return make_ref_counted<GlobValue>(m_text, position());
 }
 
 void Glob::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata metadata)
@@ -1342,7 +1342,7 @@ RefPtr<Value> Heredoc::run(RefPtr<Shell> shell)
         builder.append('\n');
     }
 
-    return create<StringValue>(builder.to_string());
+    return make_ref_counted<StringValue>(builder.to_string());
 }
 
 void Heredoc::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1425,12 +1425,12 @@ void HistoryEvent::dump(int level) const
 RefPtr<Value> HistoryEvent::run(RefPtr<Shell> shell)
 {
     if (!shell)
-        return create<AST::ListValue>({});
+        return make_ref_counted<AST::ListValue>({});
 
     auto editor = shell->editor();
     if (!editor) {
         shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "No history available!", position());
-        return create<AST::ListValue>({});
+        return make_ref_counted<AST::ListValue>({});
     }
     auto& history = editor->history();
 
@@ -1450,14 +1450,14 @@ RefPtr<Value> HistoryEvent::run(RefPtr<Shell> shell)
     case HistorySelector::EventKind::IndexFromStart:
         if (m_selector.event.index >= history.size()) {
             shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History event index out of bounds", m_selector.event.text_position);
-            return create<AST::ListValue>({});
+            return make_ref_counted<AST::ListValue>({});
         }
         resolved_history = history[m_selector.event.index].entry;
         break;
     case HistorySelector::EventKind::IndexFromEnd:
         if (m_selector.event.index >= history.size()) {
             shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History event index out of bounds", m_selector.event.text_position);
-            return create<AST::ListValue>({});
+            return make_ref_counted<AST::ListValue>({});
         }
         resolved_history = history[history.size() - m_selector.event.index - 1].entry;
         break;
@@ -1465,7 +1465,7 @@ RefPtr<Value> HistoryEvent::run(RefPtr<Shell> shell)
         auto it = find_reverse(history.begin(), history.end(), [&](auto& entry) { return entry.entry.contains(m_selector.event.text); });
         if (it.is_end()) {
             shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History event did not match any entry", m_selector.event.text_position);
-            return create<AST::ListValue>({});
+            return make_ref_counted<AST::ListValue>({});
         }
         resolved_history = it->entry;
         break;
@@ -1474,7 +1474,7 @@ RefPtr<Value> HistoryEvent::run(RefPtr<Shell> shell)
         auto it = find_reverse(history.begin(), history.end(), [&](auto& entry) { return entry.entry.starts_with(m_selector.event.text); });
         if (it.is_end()) {
             shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History event did not match any entry", m_selector.event.text_position);
-            return create<AST::ListValue>({});
+            return make_ref_counted<AST::ListValue>({});
         }
         resolved_history = it->entry;
         break;
@@ -1491,23 +1491,23 @@ RefPtr<Value> HistoryEvent::run(RefPtr<Shell> shell)
         auto end_index = m_selector.word_selector_range.end->resolve(nodes.size());
         if (start_index >= nodes.size()) {
             shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History word index out of bounds", m_selector.word_selector_range.start.position);
-            return create<AST::ListValue>({});
+            return make_ref_counted<AST::ListValue>({});
         }
         if (end_index >= nodes.size()) {
             shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History word index out of bounds", m_selector.word_selector_range.end->position);
-            return create<AST::ListValue>({});
+            return make_ref_counted<AST::ListValue>({});
         }
 
         decltype(nodes) resolved_nodes;
         resolved_nodes.append(nodes.data() + start_index, end_index - start_index + 1);
-        NonnullRefPtr<AST::Node> list = create<AST::ListConcatenate>(position(), move(resolved_nodes));
+        NonnullRefPtr<AST::Node> list = make_ref_counted<AST::ListConcatenate>(position(), move(resolved_nodes));
         return list->run(shell);
     }
 
     auto index = m_selector.word_selector_range.start.resolve(nodes.size());
     if (index >= nodes.size()) {
         shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History word index out of bounds", m_selector.word_selector_range.start.position);
-        return create<AST::ListValue>({});
+        return make_ref_counted<AST::ListValue>({});
     }
     return nodes[index].run(shell);
 }
@@ -1583,7 +1583,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                     VERIFY(rc);
 
                     if (shell->options.inline_exec_keep_empty_segments)
-                        if (callback(create<StringValue>("")) == IterationDecision::Break) {
+                        if (callback(make_ref_counted<StringValue>("")) == IterationDecision::Break) {
                             loop.quit(Break);
                             notifier->set_enabled(false);
                             return Break;
@@ -1594,7 +1594,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                     VERIFY(rc);
 
                     auto str = StringView(entry.data(), entry.size() - ifs.length());
-                    if (callback(create<StringValue>(str)) == IterationDecision::Break) {
+                    if (callback(make_ref_counted<StringValue>(str)) == IterationDecision::Break) {
                         loop.quit(Break);
                         notifier->set_enabled(false);
                         return Break;
@@ -1678,7 +1678,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                 auto entry = ByteBuffer::create_uninitialized(stream.size());
                 auto rc = stream.read_or_error(entry);
                 VERIFY(rc);
-                callback(create<StringValue>(String::copy(entry)));
+                callback(make_ref_counted<StringValue>(String::copy(entry)));
             }
         }
 
@@ -1688,7 +1688,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
     auto jobs = shell->run_commands(commands);
 
     if (!jobs.is_empty())
-        callback(create<JobValue>(&jobs.last()));
+        callback(make_ref_counted<JobValue>(&jobs.last()));
 }
 
 RefPtr<Value> Execute::run(RefPtr<Shell> shell)
@@ -1705,7 +1705,7 @@ RefPtr<Value> Execute::run(RefPtr<Shell> shell)
     if (values.size() == 1 && values.first().is_job())
         return values.first();
 
-    return create<ListValue>(move(values));
+    return make_ref_counted<ListValue>(move(values));
 }
 
 void Execute::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1789,7 +1789,7 @@ RefPtr<Value> IfCond::run(RefPtr<Shell> shell)
             return m_false_branch->run(shell);
     }
 
-    return create<ListValue>({});
+    return make_ref_counted<ListValue>({});
 }
 
 void IfCond::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1839,7 +1839,7 @@ IfCond::IfCond(Position position, Optional<Position> else_position, NonnullRefPt
     else if (m_false_branch && m_false_branch->is_syntax_error())
         set_is_syntax_error(m_false_branch->syntax_error_node());
 
-    m_condition = create<AST::Execute>(m_condition->position(), m_condition);
+    m_condition = make_ref_counted<AST::Execute>(m_condition->position(), m_condition);
 
     if (m_true_branch) {
         auto true_branch = m_true_branch.release_nonnull();
@@ -1878,7 +1878,7 @@ RefPtr<Value> ImmediateExpression::run(RefPtr<Shell> shell)
     if (node)
         return node->run(shell);
 
-    return create<ListValue>({});
+    return make_ref_counted<ListValue>({});
 }
 
 void ImmediateExpression::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1963,7 +1963,7 @@ RefPtr<Value> Join::run(RefPtr<Shell> shell)
     auto left = m_left->to_lazy_evaluated_commands(shell);
     auto right = m_right->to_lazy_evaluated_commands(shell);
 
-    return create<CommandSequenceValue>(join_commands(move(left), move(right)));
+    return make_ref_counted<CommandSequenceValue>(join_commands(move(left), move(right)));
 }
 
 void Join::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -2091,20 +2091,20 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
                         size_t i = 0;
                         for (auto& name : entry.match_names.value()) {
                             if (spans.size() > i)
-                                shell->set_local_variable(name, create<AST::StringValue>(spans[i]), true);
+                                shell->set_local_variable(name, make_ref_counted<AST::StringValue>(spans[i]), true);
                             ++i;
                         }
                     }
                     return entry.body->run(shell);
                 } else {
-                    return create<AST::ListValue>({});
+                    return make_ref_counted<AST::ListValue>({});
                 }
             }
         }
     }
 
     shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Non-exhaustive match rules!", position());
-    return create<AST::ListValue>({});
+    return make_ref_counted<AST::ListValue>({});
 }
 
 void MatchExpr::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -2186,7 +2186,7 @@ RefPtr<Value> Or::run(RefPtr<Shell> shell)
 {
     auto commands = m_left->to_lazy_evaluated_commands(shell);
     commands.last().next_chain.empend(*m_right, NodeWithAction::Or);
-    return create<CommandSequenceValue>(move(commands));
+    return make_ref_counted<CommandSequenceValue>(move(commands));
 }
 
 void Or::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -2270,7 +2270,7 @@ RefPtr<Value> Pipe::run(RefPtr<Shell> shell)
     if (first_in_right.pipeline) {
         last_in_left.pipeline = first_in_right.pipeline;
     } else {
-        auto pipeline = create<Pipeline>();
+        auto pipeline = make_ref_counted<Pipeline>();
         last_in_left.pipeline = pipeline;
         first_in_right.pipeline = pipeline;
     }
@@ -2281,7 +2281,7 @@ RefPtr<Value> Pipe::run(RefPtr<Shell> shell)
     commands.append(first_in_right);
     commands.extend(right);
 
-    return create<CommandSequenceValue>(move(commands));
+    return make_ref_counted<CommandSequenceValue>(move(commands));
 }
 
 void Pipe::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -2402,12 +2402,12 @@ RefPtr<Value> Range::run(RefPtr<Shell> shell)
                     for (u32 code_point = start_code_point; code_point != end_code_point; code_point += step) {
                         builder.clear();
                         builder.append_code_point(code_point);
-                        values.append(create<StringValue>(builder.to_string()));
+                        values.append(make_ref_counted<StringValue>(builder.to_string()));
                     }
                     // Append the ending code point too, most shells treat this as inclusive.
                     builder.clear();
                     builder.append_code_point(end_code_point);
-                    values.append(create<StringValue>(builder.to_string()));
+                    values.append(make_ref_counted<StringValue>(builder.to_string()));
                 } else {
                     // Could be two numbers?
                     auto start_int = start_str.to_int();
@@ -2417,9 +2417,9 @@ RefPtr<Value> Range::run(RefPtr<Shell> shell)
                         auto end = end_int.value();
                         auto step = start > end ? -1 : 1;
                         for (int value = start; value != end; value += step)
-                            values.append(create<StringValue>(String::number(value)));
+                            values.append(make_ref_counted<StringValue>(String::number(value)));
                         // Append the range end too, most shells treat this as inclusive.
-                        values.append(create<StringValue>(String::number(end)));
+                        values.append(make_ref_counted<StringValue>(String::number(end)));
                     } else {
                         goto yield_start_end;
                     }
@@ -2428,8 +2428,8 @@ RefPtr<Value> Range::run(RefPtr<Shell> shell)
             yield_start_end:;
                 shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, String::formatted("Cannot interpolate between '{}' and '{}'!", start_str, end_str), position);
                 // We can't really interpolate between the two, so just yield both.
-                values.append(create<StringValue>(move(start_str)));
-                values.append(create<StringValue>(move(end_str)));
+                values.append(make_ref_counted<StringValue>(move(start_str)));
+                values.append(make_ref_counted<StringValue>(move(end_str)));
             }
 
             return values;
@@ -2442,9 +2442,9 @@ RefPtr<Value> Range::run(RefPtr<Shell> shell)
     auto start_value = m_start->run(shell);
     auto end_value = m_end->run(shell);
     if (!start_value || !end_value)
-        return create<ListValue>({});
+        return make_ref_counted<ListValue>({});
 
-    return create<ListValue>(interpolate(*start_value, *end_value, shell));
+    return make_ref_counted<ListValue>(interpolate(*start_value, *end_value, shell));
 }
 
 void Range::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -2503,7 +2503,7 @@ RefPtr<Value> ReadRedirection::run(RefPtr<Shell> shell)
     builder.join(" ", path_segments);
 
     command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::Read));
-    return create<CommandValue>(move(command));
+    return make_ref_counted<CommandValue>(move(command));
 }
 
 ReadRedirection::ReadRedirection(Position position, int fd, NonnullRefPtr<Node> path)
@@ -2530,7 +2530,7 @@ RefPtr<Value> ReadWriteRedirection::run(RefPtr<Shell> shell)
     builder.join(" ", path_segments);
 
     command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::ReadWrite));
-    return create<CommandValue>(move(command));
+    return make_ref_counted<CommandValue>(move(command));
 }
 
 ReadWriteRedirection::ReadWriteRedirection(Position position, int fd, NonnullRefPtr<Node> path)
@@ -2569,7 +2569,7 @@ RefPtr<Value> Sequence::run(RefPtr<Shell> shell)
         }
     }
 
-    return create<CommandSequenceValue>(move(all_commands));
+    return make_ref_counted<CommandSequenceValue>(move(all_commands));
 }
 
 void Sequence::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -2619,9 +2619,9 @@ void Subshell::dump(int level) const
 RefPtr<Value> Subshell::run(RefPtr<Shell> shell)
 {
     if (!m_block)
-        return create<ListValue>({});
+        return make_ref_counted<ListValue>({});
 
-    return create<AST::CommandSequenceValue>(m_block->to_lazy_evaluated_commands(shell));
+    return make_ref_counted<AST::CommandSequenceValue>(m_block->to_lazy_evaluated_commands(shell));
 }
 
 void Subshell::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -2704,7 +2704,7 @@ void SimpleVariable::dump(int level) const
 
 RefPtr<Value> SimpleVariable::run(RefPtr<Shell>)
 {
-    NonnullRefPtr<Value> value = create<SimpleVariableValue>(m_name);
+    NonnullRefPtr<Value> value = make_ref_counted<SimpleVariableValue>(m_name);
     if (m_slice)
         value = value->with_slices(*m_slice);
     return value;
@@ -2769,7 +2769,7 @@ void SpecialVariable::dump(int level) const
 
 RefPtr<Value> SpecialVariable::run(RefPtr<Shell>)
 {
-    NonnullRefPtr<Value> value = create<SpecialVariableValue>(m_name);
+    NonnullRefPtr<Value> value = make_ref_counted<SpecialVariableValue>(m_name);
     if (m_slice)
         value = value->with_slices(*m_slice);
     return value;
@@ -2829,12 +2829,12 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
         builder.append(left[0]);
         builder.append(right[0]);
 
-        return create<StringValue>(builder.to_string());
+        return make_ref_counted<StringValue>(builder.to_string());
     }
 
     // Otherwise, treat them as lists and create a list product.
     if (left.is_empty() || right.is_empty())
-        return create<ListValue>({});
+        return make_ref_counted<ListValue>({});
 
     Vector<String> result;
     result.ensure_capacity(left.size() * right.size());
@@ -2849,7 +2849,7 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
         }
     }
 
-    return create<ListValue>(move(result));
+    return make_ref_counted<ListValue>(move(result));
 }
 
 void Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -2940,7 +2940,7 @@ void StringLiteral::dump(int level) const
 
 RefPtr<Value> StringLiteral::run(RefPtr<Shell>)
 {
-    return create<StringValue>(m_text);
+    return make_ref_counted<StringValue>(m_text);
 }
 
 void StringLiteral::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata metadata)
@@ -2980,7 +2980,7 @@ RefPtr<Value> StringPartCompose::run(RefPtr<Shell> shell)
     builder.join(" ", left);
     builder.join(" ", right);
 
-    return create<StringValue>(builder.to_string());
+    return make_ref_counted<StringValue>(builder.to_string());
 }
 
 void StringPartCompose::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -3024,7 +3024,7 @@ void SyntaxError::dump(int level) const
 RefPtr<Value> SyntaxError::run(RefPtr<Shell> shell)
 {
     shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, m_syntax_error_text, position());
-    return create<StringValue>("");
+    return make_ref_counted<StringValue>("");
 }
 
 void SyntaxError::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
@@ -3076,7 +3076,7 @@ void Tilde::dump(int level) const
 
 RefPtr<Value> Tilde::run(RefPtr<Shell>)
 {
-    return create<TildeValue>(m_username);
+    return make_ref_counted<TildeValue>(m_username);
 }
 
 void Tilde::highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata)
@@ -3141,7 +3141,7 @@ RefPtr<Value> WriteAppendRedirection::run(RefPtr<Shell> shell)
     builder.join(" ", path_segments);
 
     command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::WriteAppend));
-    return create<CommandValue>(move(command));
+    return make_ref_counted<CommandValue>(move(command));
 }
 
 WriteAppendRedirection::WriteAppendRedirection(Position position, int fd, NonnullRefPtr<Node> path)
@@ -3168,7 +3168,7 @@ RefPtr<Value> WriteRedirection::run(RefPtr<Shell> shell)
     builder.join(" ", path_segments);
 
     command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::Write));
-    return create<CommandValue>(move(command));
+    return make_ref_counted<CommandValue>(move(command));
 }
 
 WriteRedirection::WriteRedirection(Position position, int fd, NonnullRefPtr<Node> path)
@@ -3200,7 +3200,7 @@ RefPtr<Value> VariableDeclarations::run(RefPtr<Shell> shell)
         shell->set_local_variable(name, value.release_nonnull());
     }
 
-    return create<ListValue>({});
+    return make_ref_counted<ListValue>({});
 }
 
 void VariableDeclarations::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -3297,7 +3297,7 @@ NonnullRefPtr<Value> ListValue::resolve_without_cast(RefPtr<Shell> shell)
     for (auto& value : m_contained_values)
         values.append(value.resolve_without_cast(shell));
 
-    NonnullRefPtr<Value> value = create<ListValue>(move(values));
+    NonnullRefPtr<Value> value = make_ref_counted<ListValue>(move(values));
     if (!m_slices.is_empty())
         value = value->with_slices(m_slices);
     return value;
@@ -3357,7 +3357,7 @@ Vector<String> StringValue::resolve_as_list(RefPtr<Shell> shell)
 NonnullRefPtr<Value> StringValue::resolve_without_cast(RefPtr<Shell> shell)
 {
     if (is_list())
-        return create<AST::ListValue>(resolve_as_list(shell)); // No need to reapply the slices.
+        return make_ref_counted<AST::ListValue>(resolve_as_list(shell)); // No need to reapply the slices.
 
     return *this;
 }

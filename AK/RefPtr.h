@@ -484,14 +484,14 @@ inline RefPtr<T> adopt_ref_if_nonnull(T* object)
 }
 
 template<typename T, class... Args>
-requires(IsConstructible<T, Args...>) inline RefPtr<T> try_create(Args&&... args)
+requires(IsConstructible<T, Args...>) inline RefPtr<T> try_make_ref_counted(Args&&... args)
 {
     return adopt_ref_if_nonnull(new (nothrow) T(forward<Args>(args)...));
 }
 
 // FIXME: Remove once P0960R3 is available in Clang.
 template<typename T, class... Args>
-inline RefPtr<T> try_create(Args&&... args)
+inline RefPtr<T> try_make_ref_counted(Args&&... args)
 {
     return adopt_ref_if_nonnull(new (nothrow) T { forward<Args>(args)... });
 }
@@ -512,7 +512,7 @@ inline Kernel::KResultOr<NonnullRefPtr<T>> adopt_nonnull_ref_or_enomem(T* object
 using AK::adopt_ref_if_nonnull;
 using AK::RefPtr;
 using AK::static_ptr_cast;
-using AK::try_create;
+using AK::try_make_ref_counted;
 
 #ifdef KERNEL
 using AK::adopt_nonnull_ref_or_enomem;

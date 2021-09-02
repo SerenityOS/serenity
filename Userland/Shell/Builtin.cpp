@@ -868,7 +868,7 @@ int Shell::builtin_source(int argc, const char** argv)
     } };
 
     if (!args.is_empty())
-        set_local_variable("ARGV", AST::create<AST::ListValue>(move(string_argv)));
+        set_local_variable("ARGV", AST::make_ref_counted<AST::ListValue>(move(string_argv)));
 
     if (!run_file(file_to_source, true))
         return 126;

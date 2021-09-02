@@ -48,7 +48,7 @@ KResultOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
     // one would keep the one it still has. This ensures that the original
     // one and this one, as well as the clone have sufficient resources
     // to cow all pages as needed
-    auto new_shared_committed_cow_pages = try_create<SharedCommittedCowPages>(committed_pages.release_value());
+    auto new_shared_committed_cow_pages = try_make_ref_counted<SharedCommittedCowPages>(committed_pages.release_value());
 
     if (!new_shared_committed_cow_pages)
         return ENOMEM;

@@ -707,7 +707,7 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
     auto& name_ident = tokens.next_token();
     VERIFY(name_ident.is(Token::Type::AtKeyword));
 
-    NonnullRefPtr<StyleRule> rule = create<StyleRule>(StyleRule::Type::At);
+    auto rule = make_ref_counted<StyleRule>(StyleRule::Type::At);
     rule->m_name = ((Token)name_ident).at_keyword();
 
     for (;;) {
@@ -744,7 +744,7 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parser::consume_a_qualified_rule");
 
-    NonnullRefPtr<StyleRule> rule = create<StyleRule>(StyleRule::Type::Qualified);
+    auto rule = make_ref_counted<StyleRule>(StyleRule::Type::Qualified);
 
     for (;;) {
         auto& token = tokens.next_token();
@@ -810,7 +810,7 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tok
 
     auto ending_token = ((Token)tokens.current_token()).mirror_variant();
 
-    NonnullRefPtr<StyleBlockRule> block = create<StyleBlockRule>();
+    auto block = make_ref_counted<StyleBlockRule>();
     block->m_token = tokens.current_token();
 
     for (;;) {
@@ -843,7 +843,7 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& toke
 
     auto name_ident = tokens.current_token();
     VERIFY(name_ident.is(Token::Type::Function));
-    NonnullRefPtr<StyleFunctionRule> function = create<StyleFunctionRule>(((Token)name_ident).m_value.to_string());
+    auto function = make_ref_counted<StyleFunctionRule>(((Token)name_ident).m_value.to_string());
 
     for (;;) {
         auto& token = tokens.next_token();

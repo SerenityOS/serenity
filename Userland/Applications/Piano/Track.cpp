@@ -15,8 +15,8 @@
 
 Track::Track(const u32& time)
     : m_time(time)
-    , m_temporary_transport(create<LibDSP::Transport>(120, 4))
-    , m_delay(create<LibDSP::Effects::Delay>(m_temporary_transport))
+    , m_temporary_transport(make_ref_counted<LibDSP::Transport>(120, 4))
+    , m_delay(make_ref_counted<LibDSP::Effects::Delay>(m_temporary_transport))
 {
     set_volume(volume_max);
     set_sustain_impl(1000);

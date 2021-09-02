@@ -17,7 +17,7 @@ RefPtr<Transfer> Transfer::try_create(Pipe& pipe, u16 len)
     if (!data_buffer)
         return {};
 
-    return AK::try_create<Transfer>(pipe, len, data_buffer.release_nonnull());
+    return try_make_ref_counted<Transfer>(pipe, len, data_buffer.release_nonnull());
 }
 
 Transfer::Transfer(Pipe& pipe, u16 len, NonnullOwnPtr<Memory::Region> data_buffer)

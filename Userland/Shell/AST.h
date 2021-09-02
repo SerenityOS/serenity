@@ -20,10 +20,10 @@
 
 namespace Shell::AST {
 
-using AK::create;
+using AK::make_ref_counted;
 
 template<typename T>
-static inline NonnullRefPtr<T> create(std::initializer_list<NonnullRefPtr<Value>> arg)
+static inline NonnullRefPtr<T> make_ref_counted(std::initializer_list<NonnullRefPtr<Value>> arg)
 {
     return adopt_ref(*new T(arg));
 }
@@ -243,7 +243,7 @@ class CommandValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return create<CommandValue>(m_command)->set_slices(m_slices); }
+    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<CommandValue>(m_command)->set_slices(m_slices); }
     virtual ~CommandValue();
     virtual bool is_command() const override { return true; }
     CommandValue(Command command)
@@ -264,7 +264,7 @@ class CommandSequenceValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return create<CommandSequenceValue>(m_contained_values)->set_slices(m_slices); }
+    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<CommandSequenceValue>(m_contained_values)->set_slices(m_slices); }
     virtual ~CommandSequenceValue();
     virtual bool is_command() const override { return true; }
     CommandSequenceValue(Vector<Command> commands)
@@ -280,7 +280,7 @@ class JobValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override { VERIFY_NOT_REACHED(); }
     virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override { VERIFY_NOT_REACHED(); }
-    virtual NonnullRefPtr<Value> clone() const override { return create<JobValue>(m_job)->set_slices(m_slices); }
+    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<JobValue>(m_job)->set_slices(m_slices); }
     virtual ~JobValue();
     virtual bool is_job() const override { return true; }
     JobValue(RefPtr<Job> job)
@@ -298,7 +298,7 @@ class ListValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return create<ListValue>(m_contained_values)->set_slices(m_slices); }
+    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<ListValue>(m_contained_values)->set_slices(m_slices); }
     virtual ~ListValue();
     virtual bool is_list() const override { return true; }
     virtual bool is_list_without_resolution() const override { return true; }
@@ -322,7 +322,7 @@ private:
 class StringValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return create<StringValue>(m_string, m_split, m_keep_empty)->set_slices(m_slices); }
+    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<StringValue>(m_string, m_split, m_keep_empty)->set_slices(m_slices); }
     virtual ~StringValue();
     virtual bool is_string() const override { return m_split.is_null(); }
     virtual bool is_list() const override { return !m_split.is_null(); }
@@ -343,7 +343,7 @@ private:
 class GlobValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return create<GlobValue>(m_glob, m_generation_position)->set_slices(m_slices); }
+    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<GlobValue>(m_glob, m_generation_position)->set_slices(m_slices); }
     virtual ~GlobValue();
     virtual bool is_glob() const override { return true; }
     GlobValue(String glob, Position position)
@@ -361,7 +361,7 @@ class SimpleVariableValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return create<SimpleVariableValue>(m_name)->set_slices(m_slices); }
+    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<SimpleVariableValue>(m_name)->set_slices(m_slices); }
     virtual ~SimpleVariableValue();
     SimpleVariableValue(String name)
         : m_name(move(name))
@@ -375,7 +375,7 @@ private:
 class SpecialVariableValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return create<SpecialVariableValue>(m_name)->set_slices(m_slices); }
+    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<SpecialVariableValue>(m_name)->set_slices(m_slices); }
     virtual ~SpecialVariableValue();
     SpecialVariableValue(char name)
         : m_name(name)
@@ -389,7 +389,7 @@ private:
 class TildeValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return create<TildeValue>(m_username)->set_slices(m_slices); }
+    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<TildeValue>(m_username)->set_slices(m_slices); }
     virtual ~TildeValue();
     virtual bool is_string() const override { return true; }
     TildeValue(String name)

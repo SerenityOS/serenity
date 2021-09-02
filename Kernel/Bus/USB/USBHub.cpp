@@ -19,7 +19,7 @@ KResultOr<NonnullRefPtr<Hub>> Hub::try_create_root_hub(NonnullRefPtr<USBControll
     if (pipe_or_error.is_error())
         return pipe_or_error.error();
 
-    auto hub = AK::try_create<Hub>(controller, device_speed, pipe_or_error.release_value());
+    auto hub = try_make_ref_counted<Hub>(controller, device_speed, pipe_or_error.release_value());
     if (!hub)
         return ENOMEM;
 
@@ -34,7 +34,7 @@ KResultOr<NonnullRefPtr<Hub>> Hub::try_create_from_device(Device const& device)
     if (pipe_or_error.is_error())
         return pipe_or_error.error();
 
-    auto hub = AK::try_create<Hub>(device, pipe_or_error.release_value());
+    auto hub = try_make_ref_counted<Hub>(device, pipe_or_error.release_value());
     if (!hub)
         return ENOMEM;
 
