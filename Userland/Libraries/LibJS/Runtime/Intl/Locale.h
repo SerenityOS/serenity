@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibUnicode/Forward.h>
 
 namespace JS::Intl {
 
@@ -17,7 +18,10 @@ class Locale final : public Object {
     JS_OBJECT(Locale, Object);
 
 public:
+    static Locale* create(GlobalObject&, Unicode::LocaleID const&);
+
     Locale(Object& prototype);
+    Locale(Unicode::LocaleID const&, Object& prototype);
     virtual ~Locale() override = default;
 
     String const& locale() const { return m_locale; }
