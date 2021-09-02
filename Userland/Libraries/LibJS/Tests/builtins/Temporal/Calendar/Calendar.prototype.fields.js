@@ -5,7 +5,18 @@ describe("correct behavior", () => {
 
     test("basic functionality", () => {
         const calendar = new Temporal.Calendar("iso8601");
-        const array = ["foo", "bar", "baz"];
+        const array = [
+            "year",
+            "month",
+            "monthCode",
+            "day",
+            "hour",
+            "minute",
+            "second",
+            "millisecond",
+            "microsecond",
+            "nanosecond",
+        ];
         const fields = calendar.fields(array);
         expect(fields).toEqual(array);
         expect(fields).not.toBe(array);
@@ -24,7 +35,21 @@ describe("errors", () => {
         for (const value of [123, null, undefined, true, {}]) {
             expect(() => {
                 calendar.fields([value]);
-            }).toThrowWithMessage(TypeError, "FIXME: Add a string for this error.");
+            }).toThrowWithMessage(TypeError, `Invalid calendar field ${value}, expected a string`);
         }
+    });
+
+    test("iterator values must be valid field names", () => {
+        const calendar = new Temporal.Calendar("iso8601");
+        expect(() => {
+            calendar.fields(["foo"]);
+        }).toThrowWithMessage(RangeError, "Invalid calendar field 'foo'");
+    });
+
+    test("iterator values must not contain duplicates", () => {
+        const calendar = new Temporal.Calendar("iso8601");
+        expect(() => {
+            calendar.fields(["year", "month", "year", "month"]);
+        }).toThrowWithMessage(RangeError, "Duplicate calendar field 'year'");
     });
 });

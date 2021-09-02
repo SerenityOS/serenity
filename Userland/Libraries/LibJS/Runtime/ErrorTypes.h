@@ -173,7 +173,10 @@
     M(StringRawCannotConvert, "Cannot convert property 'raw' to object from {}")                                                        \
     M(StringRepeatCountMustBe, "repeat count must be a {} number")                                                                      \
     M(TemporalAmbiguousMonthOfPlainMonthDay, "Accessing month of PlainMonthDay is ambiguous, use monthCode instead")                    \
+    M(TemporalDuplicateCalendarField, "Duplicate calendar field '{}'")                                                                  \
     M(TemporalInvalidCalendar, "Invalid calendar")                                                                                      \
+    M(TemporalInvalidCalendarFieldName, "Invalid calendar field '{}'")                                                                  \
+    M(TemporalInvalidCalendarFieldValue, "Invalid calendar field {}, expected a string")                                                \
     M(TemporalInvalidCalendarFunctionResult, "Invalid calendar, {}() function returned {}")                                             \
     M(TemporalInvalidCalendarIdentifier, "Invalid calendar identifier '{}'")                                                            \
     M(TemporalInvalidDuration, "Invalid duration")                                                                                      \
