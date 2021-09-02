@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -481,6 +482,23 @@ void Image::merge_visible_layers()
             index++;
         }
     }
+}
+
+void Image::merge_active_layer_down(Layer& layer)
+{
+    if (m_layers.size() < 2)
+        return;
+    int layer_index = this->index_of(layer);
+    if (layer_index == 0) {
+        dbgln("Cannot merge layer down: layer is already at the bottom");
+        return; // FIXME: Notify user of error properly.
+    }
+
+    auto& layer_below = m_layers.at(layer_index - 1);
+    GUI::Painter painter(layer_below.bitmap());
+    painter.draw_scaled_bitmap(rect(), layer.bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
+    remove_layer(layer);
+    select_layer(&layer_below);
 }
 
 void Image::select_layer(Layer* layer)

@@ -541,6 +541,19 @@ int main(int argc, char** argv)
         },
         window));
 
+    layer_menu.add_action(GUI::Action::create(
+        "M&erge Active Layer Down", { Mod_Ctrl, Key_E }, [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+            auto active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+            editor->image().merge_active_layer_down(*active_layer);
+            editor->did_complete_action();
+        },
+        window));
+
     auto& filter_menu = window->add_menu("&Filter");
     auto& spatial_filters_menu = filter_menu.add_submenu("&Spatial");
 
