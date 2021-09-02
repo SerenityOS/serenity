@@ -71,6 +71,7 @@ namespace JS {
     P(atan)                                  \
     P(atan2)                                 \
     P(atanh)                                 \
+    P(baseName)                              \
     P(big)                                   \
     P(bind)                                  \
     P(blank)                                 \

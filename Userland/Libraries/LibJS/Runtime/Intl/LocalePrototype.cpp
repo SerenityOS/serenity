@@ -8,6 +8,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/Locale.h>
 #include <LibJS/Runtime/Intl/LocalePrototype.h>
+#include <LibUnicode/Locale.h>
 
 namespace JS::Intl {
 
@@ -44,6 +45,8 @@ void LocalePrototype::initialize(GlobalObject& global_object)
 
     // 14.3.2 Intl.Locale.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.Locale.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.Locale"), Attribute::Configurable);
+
+    define_native_accessor(vm.names.baseName, base_name, {}, Attribute::Configurable);
 }
 
 // 14.3.5 Intl.Locale.prototype.toString ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.toString
@@ -57,6 +60,23 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::to_string)
 
     // 3. Return loc.[[Locale]].
     return js_string(vm, locale_object->locale());
+}
+
+// 14.3.6 get Intl.Locale.prototype.baseName, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.baseName
+JS_DEFINE_NATIVE_GETTER(LocalePrototype::base_name)
+{
+    // 1. Let loc be the this value.
+    // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
+    auto* locale_object = typed_this(global_object);
+    if (!locale_object)
+        return {};
+
+    // 3. Let locale be loc.[[Locale]].
+    auto locale = Unicode::parse_unicode_locale_id(locale_object->locale());
+    VERIFY(locale.has_value());
+
+    // 4. Return the substring of locale corresponding to the unicode_language_id production.
+    return js_string(vm, locale->language_id.to_string());
 }
 
 }
