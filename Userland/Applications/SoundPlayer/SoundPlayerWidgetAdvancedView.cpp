@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Cesar Torres <shortanemoia@protonmail.com>
+ * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -234,6 +235,14 @@ void SoundPlayerWidgetAdvancedView::drop_event(GUI::DropEvent& event)
         window()->move_to_front();
         open_file(urls.first().path());
     }
+}
+
+void SoundPlayerWidgetAdvancedView::keydown_event(GUI::KeyEvent& event)
+{
+    if (event.key() == Key_Space)
+        m_play_button->click();
+
+    GUI::Widget::keydown_event(event);
 }
 
 SoundPlayerWidgetAdvancedView::~SoundPlayerWidgetAdvancedView()
