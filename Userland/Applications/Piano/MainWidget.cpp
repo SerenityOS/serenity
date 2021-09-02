@@ -60,6 +60,7 @@ void MainWidget::add_actions(GUI::Menu& menu)
 {
     menu.add_action(GUI::Action::create("&Add Track", { Mod_Ctrl, Key_T }, [&](auto&) {
         m_track_manager.add_track();
+        m_track_manager.last_track();
     }));
 
     menu.add_action(GUI::Action::create("&Next Track", { Mod_Ctrl, Key_N }, [&](auto&) {

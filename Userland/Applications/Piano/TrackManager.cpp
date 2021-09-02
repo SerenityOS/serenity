@@ -89,6 +89,11 @@ void TrackManager::add_track()
     m_tracks.append(make<Track>(m_time));
 }
 
+void TrackManager::last_track()
+{
+    m_current_track = m_tracks.size() - 1;
+}
+
 void TrackManager::next_track()
 {
     if (++m_current_track >= m_tracks.size())
