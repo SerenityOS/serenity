@@ -573,4 +573,16 @@ void Image::set_path(String path)
     set_title(LexicalPath::basename(m_path));
 }
 
+void Image::flip(Gfx::Orientation orientation)
+{
+    for (auto& layer : m_layers) {
+        auto flipped = layer.bitmap().flipped(orientation);
+        VERIFY(flipped);
+        layer.set_bitmap(*flipped);
+        layer.did_modify_bitmap(rect());
+    }
+
+    did_change();
+}
+
 }
