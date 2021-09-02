@@ -655,4 +655,37 @@ bool Node::contains(RefPtr<Node> other) const
     return other && other->is_inclusive_descendant_of(*this);
 }
 
+// https://dom.spec.whatwg.org/#concept-shadow-including-descendant
+bool Node::is_shadow_including_descendant_of(Node const& other) const
+{
+    if (is_descendant_of(other))
+        return true;
+
+    if (!is<ShadowRoot>(root()))
+        return false;
+
+    auto shadow_root = verify_cast<ShadowRoot>(root());
+
+    // NOTE: While host is nullable because of inheriting from DocumentFragment, shadow roots always have a host.
+    return shadow_root->host()->is_shadow_including_inclusive_descendant_of(other);
+}
+
+// https://dom.spec.whatwg.org/#concept-shadow-including-inclusive-descendant
+bool Node::is_shadow_including_inclusive_descendant_of(Node const& other) const
+{
+    return &other == this || is_shadow_including_descendant_of(other);
+}
+
+// https://dom.spec.whatwg.org/#concept-shadow-including-ancestor
+bool Node::is_shadow_including_ancestor_of(Node const& other) const
+{
+    return other.is_shadow_including_descendant_of(*this);
+}
+
+// https://dom.spec.whatwg.org/#concept-shadow-including-inclusive-ancestor
+bool Node::is_shadow_including_inclusive_ancestor_of(Node const& other) const
+{
+    return other.is_shadow_including_inclusive_descendant_of(*this);
+}
+
 }
