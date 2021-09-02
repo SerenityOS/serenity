@@ -55,6 +55,7 @@ void LocalePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.numeric, numeric, {}, Attribute::Configurable);
     define_native_accessor(vm.names.language, language, {}, Attribute::Configurable);
     define_native_accessor(vm.names.script, script, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.region, region, {}, Attribute::Configurable);
 }
 
 // 14.3.5 Intl.Locale.prototype.toString ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.toString
@@ -165,6 +166,29 @@ JS_DEFINE_NATIVE_GETTER(LocalePrototype::script)
 
     // 6. Return the substring of locale corresponding to the unicode_script_subtag production of the unicode_language_id.
     return js_string(vm, *locale->language_id.script);
+}
+
+// 14.3.15 get Intl.Locale.prototype.region, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.region
+JS_DEFINE_NATIVE_GETTER(LocalePrototype::region)
+{
+    // 1. Let loc be the this value.
+    // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
+    auto* locale_object = typed_this(global_object);
+    if (!locale_object)
+        return {};
+
+    // 3. Let locale be loc.[[Locale]].
+    auto locale = Unicode::parse_unicode_locale_id(locale_object->locale());
+
+    // 4. Assert: locale matches the unicode_locale_id production.
+    VERIFY(locale.has_value());
+
+    // 5. If the unicode_language_id production of locale does not contain the ["-" unicode_region_subtag] sequence, return undefined.
+    if (!locale->language_id.region.has_value())
+        return js_undefined();
+
+    // 6. Return the substring of locale corresponding to the unicode_region_subtag production of the unicode_language_id.
+    return js_string(vm, *locale->language_id.region);
 }
 
 }
