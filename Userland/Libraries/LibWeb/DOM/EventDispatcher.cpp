@@ -202,7 +202,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
             }
 
             if (is<Window>(parent)
-                || (is<Node>(parent) && verify_cast<Node>(*target).is_shadow_including_inclusive_ancestor_of(verify_cast<Node>(*parent)))) {
+                || (is<Node>(parent) && verify_cast<Node>(*target).root().is_shadow_including_inclusive_ancestor_of(verify_cast<Node>(*parent)))) {
                 if (is_activation_event && event->bubbles() && !activation_target && parent->activation_behaviour)
                     activation_target = parent;
 
