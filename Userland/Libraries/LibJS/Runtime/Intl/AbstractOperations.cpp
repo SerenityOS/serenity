@@ -17,7 +17,7 @@
 namespace JS::Intl {
 
 // 6.2.2 IsStructurallyValidLanguageTag ( locale ), https://tc39.es/ecma402/#sec-isstructurallyvalidlanguagetag
-static Optional<Unicode::LocaleID> is_structurally_valid_language_tag(StringView locale)
+Optional<Unicode::LocaleID> is_structurally_valid_language_tag(StringView locale)
 {
     auto contains_duplicate_variant = [](auto& variants) {
         if (variants.is_empty())
@@ -77,7 +77,7 @@ static Optional<Unicode::LocaleID> is_structurally_valid_language_tag(StringView
 }
 
 // 6.2.3 CanonicalizeUnicodeLocaleId ( locale ), https://tc39.es/ecma402/#sec-canonicalizeunicodelocaleid
-static String canonicalize_unicode_locale_id(Unicode::LocaleID& locale)
+String canonicalize_unicode_locale_id(Unicode::LocaleID& locale)
 {
     // Note: This implementation differs from the spec in how Step 3 is implemented. The spec assumes
     // the input to this method is a string, and is written such that operations are performed on parts
@@ -309,6 +309,17 @@ static MatcherResult best_fit_matcher(Vector<String> const& requested_locales)
     return lookup_matcher(requested_locales);
 }
 
+// 9.2.6 InsertUnicodeExtensionAndCanonicalize ( locale, extension ), https://tc39.es/ecma402/#sec-insert-unicode-extension-and-canonicalize
+String insert_unicode_extension_and_canonicalize(Unicode::LocaleID locale, Unicode::LocaleExtension extension)
+{
+    // Note: This implementation differs from the spec in how the extension is inserted. The spec assumes
+    // the input to this method is a string, and is written such that operations are performed on parts
+    // of that string. LibUnicode gives us the parsed locale in a structure, so we can mutate that
+    // structure directly.
+    locale.extensions.append(move(extension));
+    return JS::Intl::canonicalize_unicode_locale_id(locale);
+}
+
 // 9.2.7 ResolveLocale ( availableLocales, requestedLocales, options, relevantExtensionKeys, localeData ), https://tc39.es/ecma402/#sec-resolvelocale
 LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptions const& options, [[maybe_unused]] Vector<StringView> relevant_extension_keys)
 {
@@ -383,6 +394,19 @@ LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptio
 
     // 12. Return result.
     return result;
+}
+
+// 9.2.12 CoerceOptionsToObject ( options ), https://tc39.es/ecma402/#sec-coerceoptionstoobject
+Object* coerce_options_to_object(GlobalObject& global_object, Value options)
+{
+    // 1. If options is undefined, then
+    if (options.is_undefined()) {
+        // a. Return ! OrdinaryObjectCreate(null).
+        return Object::create(global_object, nullptr);
+    }
+
+    // 2. Return ? ToObject(options).
+    return options.to_object(global_object);
 }
 
 // 9.2.13 GetOption ( options, property, type, values, fallback ), https://tc39.es/ecma402/#sec-getoption
