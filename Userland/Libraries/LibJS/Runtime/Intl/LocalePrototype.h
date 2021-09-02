@@ -28,6 +28,7 @@ private:
     JS_DECLARE_NATIVE_GETTER(hour_cycle);
     JS_DECLARE_NATIVE_GETTER(numbering_system);
     JS_DECLARE_NATIVE_GETTER(numeric);
+    JS_DECLARE_NATIVE_GETTER(language);
 };
 
 }

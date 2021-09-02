@@ -53,6 +53,7 @@ void LocalePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.hourCycle, hour_cycle, {}, Attribute::Configurable);
     define_native_accessor(vm.names.numberingSystem, numbering_system, {}, Attribute::Configurable);
     define_native_accessor(vm.names.numeric, numeric, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.language, language, {}, Attribute::Configurable);
 }
 
 // 14.3.5 Intl.Locale.prototype.toString ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.toString
@@ -121,6 +122,25 @@ JS_DEFINE_NATIVE_GETTER(LocalePrototype::numeric)
 
     // 3. Return loc.[[Numeric]].
     return Value(locale_object->numeric());
+}
+
+// 14.3.13 get Intl.Locale.prototype.language, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.language
+JS_DEFINE_NATIVE_GETTER(LocalePrototype::language)
+{
+    // 1. Let loc be the this value.
+    // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
+    auto* locale_object = typed_this(global_object);
+    if (!locale_object)
+        return {};
+
+    // 3. Let locale be loc.[[Locale]].
+    auto locale = Unicode::parse_unicode_locale_id(locale_object->locale());
+
+    // 4. Assert: locale matches the unicode_locale_id production.
+    VERIFY(locale.has_value());
+
+    // 5. Return the substring of locale corresponding to the unicode_language_subtag production of the unicode_language_id.
+    return js_string(vm, *locale->language_id.language);
 }
 
 }
