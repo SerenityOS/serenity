@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "PDFViewerWidget.h"
 #include <LibCore/File.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FilePicker.h>
@@ -39,9 +41,15 @@ void PDFViewerWidget::initialize_menubar(GUI::Window& window)
 {
     auto& file_menu = window.add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath(&window);
-        if (open_path.has_value())
-            open_file(open_path.value());
+        auto response = FileSystemAccessClient::Client::the().open_file(window.window_id());
+
+        if (response.error != 0) {
+            if (response.error != -1)
+                GUI::MessageBox::show_error(&window, String::formatted("Opening \"{}\" failed: {}", *response.chosen_file, strerror(response.error)));
+            return;
+        }
+
+        open_file(*response.fd, *response.chosen_file);
     }));
     file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
@@ -103,16 +111,16 @@ void PDFViewerWidget::create_toolbar()
     m_total_page_label = toolbar.add<GUI::Label>();
 }
 
-void PDFViewerWidget::open_file(const String& path)
+void PDFViewerWidget::open_file(int fd, String const& path)
 {
-    window()->set_title(String::formatted("{} - PDF Viewer", path));
-    auto file_result = Core::File::open(path, Core::OpenMode::ReadOnly);
-    if (file_result.is_error()) {
-        GUI::MessageBox::show_error(nullptr, String::formatted("Couldn't open file: {}", path));
+    auto file = Core::File::construct();
+    if (!file->open(fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes) && file->error() != ENOENT) {
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
         return;
     }
+    window()->set_title(String::formatted("{} - PDF Viewer", path));
 
-    m_buffer = file_result.value()->read_all();
+    m_buffer = file->read_all();
     auto document = PDF::Document::create(m_buffer);
     if (!document) {
         GUI::MessageBox::show_error(nullptr, String::formatted("Couldn't load PDF: {}", path));
