@@ -19,8 +19,10 @@
 #include <LibAudio/Buffer.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
+#include <LibThreading/ConditionVariable.h>
 #include <LibThreading/Mutex.h>
 #include <LibThreading/Thread.h>
+#include <sys/types.h>
 
 namespace AudioServer {
 
@@ -125,9 +127,8 @@ private:
     void request_setting_sync();
 
     Vector<NonnullRefPtr<ClientAudioStream>> m_pending_mixing;
-    Atomic<bool> m_added_queue { false };
-    pthread_mutex_t m_pending_mutex;
-    pthread_cond_t m_pending_cond;
+    Threading::Mutex m_pending_mutex;
+    Threading::ConditionVariable m_mixing_necessary { m_pending_mutex };
 
     RefPtr<Core::File> m_device;
 

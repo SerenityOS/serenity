@@ -6,6 +6,7 @@
  */
 
 #include "Mixer.h"
+#include "AK/Format.h"
 #include <AK/Array.h>
 #include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
@@ -36,9 +37,6 @@ Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config)
         return;
     }
 
-    pthread_mutex_init(&m_pending_mutex, nullptr);
-    pthread_cond_init(&m_pending_cond, nullptr);
-
     m_muted = m_config->read_bool_entry("Master", "Mute", false);
     m_main_volume = static_cast<double>(m_config->read_num_entry("Master", "Volume", 100)) / 100.0;
 
@@ -52,11 +50,14 @@ Mixer::~Mixer()
 NonnullRefPtr<ClientAudioStream> Mixer::create_queue(ClientConnection& client)
 {
     auto queue = adopt_ref(*new ClientAudioStream(client));
-    pthread_mutex_lock(&m_pending_mutex);
+    m_pending_mutex.lock();
+
     m_pending_mixing.append(*queue);
-    m_added_queue = true;
-    pthread_cond_signal(&m_pending_cond);
-    pthread_mutex_unlock(&m_pending_mutex);
+
+    m_pending_mutex.unlock();
+    // Signal the mixer thread to start back up, in case nobody was connected before.
+    m_mixing_necessary.signal();
+
     return queue;
 }
 
@@ -65,13 +66,14 @@ void Mixer::mix()
     decltype(m_pending_mixing) active_mix_queues;
 
     for (;;) {
-        if (active_mix_queues.is_empty() || m_added_queue) {
-            pthread_mutex_lock(&m_pending_mutex);
-            pthread_cond_wait(&m_pending_cond, &m_pending_mutex);
+        m_pending_mutex.lock();
+        // While we have nothing to mix, wait on the condition.
+        m_mixing_necessary.wait_while([this, &active_mix_queues]() { return m_pending_mixing.is_empty() && active_mix_queues.is_empty(); });
+        if (!m_pending_mixing.is_empty()) {
             active_mix_queues.extend(move(m_pending_mixing));
-            pthread_mutex_unlock(&m_pending_mutex);
-            m_added_queue = false;
+            m_pending_mixing.clear();
         }
+        m_pending_mutex.unlock();
 
         active_mix_queues.remove_all_matching([&](auto& entry) { return !entry->client(); });
 
