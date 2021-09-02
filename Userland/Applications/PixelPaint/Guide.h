@@ -27,7 +27,7 @@ public:
 
     static NonnullRefPtr<Guide> construct(Orientation orientation, float offset)
     {
-        return create<Guide>(orientation, offset);
+        return make_ref_counted<Guide>(orientation, offset);
     };
 
     Orientation orientation() const { return m_orientation; }

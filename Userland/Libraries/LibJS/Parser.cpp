@@ -44,7 +44,7 @@ public:
         if (m_mask & Let)
             m_parser.m_state.let_scopes.append(NonnullRefPtrVector<VariableDeclaration>());
 
-        m_parser.m_state.current_scope = create<Parser::Scope>(scope_type, m_parser.m_state.current_scope);
+        m_parser.m_state.current_scope = make_ref_counted<Parser::Scope>(scope_type, m_parser.m_state.current_scope);
     }
 
     ~ScopePusher()

@@ -22,7 +22,7 @@ KResultOr<NonnullRefPtr<Device>> Device::try_create(USBController const& control
     if (pipe_or_error.is_error())
         return pipe_or_error.error();
 
-    auto device = AK::try_create<Device>(controller, port, speed, pipe_or_error.release_value());
+    auto device = try_make_ref_counted<Device>(controller, port, speed, pipe_or_error.release_value());
     if (!device)
         return ENOMEM;
 

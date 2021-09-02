@@ -64,9 +64,9 @@ void GuideTool::on_mousedown(Layer*, MouseEvent& event)
 
     RefPtr<Guide> new_guide;
     if (image_event.position().x() < 0 || image_event.position().x() > editor()->image().size().width()) {
-        new_guide = Guide::construct(Guide::Orientation::Vertical, image_event.position().x());
+        new_guide = make_ref_counted<Guide>(Guide::Orientation::Vertical, image_event.position().x());
     } else if (image_event.position().y() < 0 || image_event.position().y() > editor()->image().size().height()) {
-        new_guide = Guide::construct(Guide::Orientation::Horizontal, image_event.position().y());
+        new_guide = make_ref_counted<Guide>(Guide::Orientation::Horizontal, image_event.position().y());
     }
 
     if (new_guide) {
