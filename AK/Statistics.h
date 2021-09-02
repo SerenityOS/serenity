@@ -29,6 +29,28 @@ public:
     T const sum() const { return m_sum; }
     float average() const { return (float)sum() / size(); }
 
+    T const min()
+    {
+        T min_v = m_values[0];
+        for (T number : values()) {
+            if (number < min_v) {
+                min_v = number;
+            }
+        }
+        return min_v;
+    }
+
+    T const max()
+    {
+        T max_v = m_values[0];
+        for (T number : values()) {
+            if (number > max_v) {
+                max_v = number;
+            }
+        }
+        return max_v;
+    }
+
     // FIXME: Implement a better algorithm
     T const median()
     {
