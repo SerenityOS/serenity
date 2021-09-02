@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
+#include <LibJS/Runtime/Intl/Locale.h>
 #include <LibUnicode/Locale.h>
 
 namespace JS::Intl {
@@ -150,8 +151,7 @@ Vector<String> canonicalize_locale_list(GlobalObject& global_object, Value local
 
     Object* object = nullptr;
     // 3. If Type(locales) is String or Type(locales) is Object and locales has an [[InitializedLocale]] internal slot, then
-    // FIXME: When we have an Intl.Locale object, handle it it here.
-    if (locales.is_string()) {
+    if (locales.is_string() || (locales.is_object() && is<Locale>(locales.as_object()))) {
         // a. Let O be CreateArrayFromList(« locales »).
         object = Array::create_from(global_object, { locales });
     }
@@ -195,14 +195,20 @@ Vector<String> canonicalize_locale_list(GlobalObject& global_object, Value local
                 return {};
             }
 
+            String tag;
+
             // iii. If Type(kValue) is Object and kValue has an [[InitializedLocale]] internal slot, then
-            //     1. Let tag be kValue.[[Locale]].
+            if (key_value.is_object() && is<Locale>(key_value.as_object())) {
+                // 1. Let tag be kValue.[[Locale]].
+                tag = static_cast<Locale const&>(key_value.as_object()).locale();
+            }
             // iv. Else,
-            //     1. Let tag be ? ToString(kValue).
-            // FIXME: When we have an Intl.Locale object, handle it it here.
-            auto tag = key_value.to_string(global_object);
-            if (vm.exception())
-                return {};
+            else {
+                // 1. Let tag be ? ToString(kValue).
+                tag = key_value.to_string(global_object);
+                if (vm.exception())
+                    return {};
+            }
 
             // v. If IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
             auto locale_id = is_structurally_valid_language_tag(tag);

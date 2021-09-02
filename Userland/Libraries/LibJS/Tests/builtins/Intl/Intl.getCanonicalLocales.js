@@ -115,4 +115,12 @@ describe("normal behavior", () => {
             "en-US-u-1k-aaa-2k-ccc",
         ]);
     });
+
+    test("canonicalize locale objects", () => {
+        const en = new Intl.Locale("en", { script: "Latn" });
+        expect(Intl.getCanonicalLocales(en)).toEqual(["en-Latn"]);
+
+        const es = new Intl.Locale("es", { region: "419" });
+        expect(Intl.getCanonicalLocales([en, es])).toEqual(["en-Latn", "es-419"]);
+    });
 });
