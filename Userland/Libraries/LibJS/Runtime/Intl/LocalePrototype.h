@@ -22,6 +22,11 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(to_string);
 
     JS_DECLARE_NATIVE_GETTER(base_name);
+    JS_DECLARE_NATIVE_GETTER(calendar);
+    JS_DECLARE_NATIVE_GETTER(case_first);
+    JS_DECLARE_NATIVE_GETTER(collation);
+    JS_DECLARE_NATIVE_GETTER(hour_cycle);
+    JS_DECLARE_NATIVE_GETTER(numbering_system);
 };
 
 }
