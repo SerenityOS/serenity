@@ -28,9 +28,8 @@ namespace Web::DOM {
 
 // FIXME: This shouldn't be here, as retargeting is not only used by the event dispatcher.
 //        When moving this function, it needs to be generalized. https://dom.spec.whatwg.org/#retarget
-static EventTarget* retarget(EventTarget* left, [[maybe_unused]] EventTarget* right)
+static EventTarget* retarget(EventTarget* left, EventTarget* right)
 {
-    // FIXME
     for (;;) {
         if (!is<Node>(left))
             return left;
@@ -40,7 +39,8 @@ static EventTarget* retarget(EventTarget* left, [[maybe_unused]] EventTarget* ri
         if (!is<ShadowRoot>(left_root))
             return left;
 
-        // FIXME: If right is a node and left’s root is a shadow-including inclusive ancestor of right, return left.
+        if (is<Node>(right) && left_root->is_shadow_including_inclusive_ancestor_of(verify_cast<Node>(*right)))
+            return left;
 
         auto* left_shadow_root = verify_cast<ShadowRoot>(left_root);
         left = left_shadow_root->host();
@@ -201,8 +201,8 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
                 touch_targets.append(retarget(touch_target, parent));
             }
 
-            // FIXME: or parent is a node and target’s root is a shadow-including inclusive ancestor of parent, then:
-            if (is<Window>(parent)) {
+            if (is<Window>(parent)
+                || (is<Node>(parent) && verify_cast<Node>(*target).is_shadow_including_inclusive_ancestor_of(verify_cast<Node>(*parent)))) {
                 if (is_activation_event && event->bubbles() && !activation_target && parent->activation_behaviour)
                     activation_target = parent;
 
