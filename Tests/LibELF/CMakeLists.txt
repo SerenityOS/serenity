@@ -1,5 +1,7 @@
-file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")
+set(TEST_SOURCES
+    test-elf.cpp
+)
 
-foreach(CMD_SRC ${CMD_SOURCES})
-    serenity_test(${CMD_SRC} LibELF)
+foreach(source IN LISTS TEST_SOURCES)
+    serenity_test("${source}"  LibELF)
 endforeach()

@@ -1,4 +1,7 @@
-file(GLOB TEST_SOURCES CONFIGURE_DEPENDS "*.cpp")
-foreach(source ${TEST_SOURCES})
-    serenity_test(${source} LibThreading LIBS LibThreading LibPthread)
+set(TEST_SOURCES
+    TestThread.cpp
+)
+
+foreach(source IN LISTS TEST_SOURCES)
+    serenity_test("${source}" LibThreading LIBS LibThreading LibPthread)
 endforeach()

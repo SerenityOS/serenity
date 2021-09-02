@@ -1,9 +1,12 @@
-file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")
+set(TEST_SOURCES
+    test-run-ls.cpp
+    ue-write-oob.cpp
+)
 
 # FIXME: These tests do not use LibTest
-foreach(CMD_SRC ${CMD_SOURCES})
-    get_filename_component(CMD_NAME ${CMD_SRC} NAME_WE)
-    add_executable(${CMD_NAME} ${CMD_SRC})
-    target_link_libraries(${CMD_NAME} LibCore)
-    install(TARGETS ${CMD_NAME} RUNTIME DESTINATION usr/Tests/UserEmulator)
+foreach(source IN LISTS TEST_SOURCES)
+    get_filename_component(test_name "${source}" NAME_WE)
+    add_executable("${test_name}" "${source}")
+    target_link_libraries("${test_name}" LibCore)
+    install(TARGETS "${test_name}" RUNTIME DESTINATION usr/Tests/UserEmulator)
 endforeach()

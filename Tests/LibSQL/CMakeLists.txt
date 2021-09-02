@@ -1,5 +1,13 @@
-file(GLOB TEST_SOURCES CONFIGURE_DEPENDS "*.cpp")
+set(TEST_SOURCES
+    TestSqlBtreeIndex.cpp
+    TestSqlDatabase.cpp
+    TestSqlExpressionParser.cpp
+    TestSqlHashIndex.cpp
+    TestSqlStatementExecution.cpp
+    TestSqlStatementParser.cpp
+    TestSqlValueAndTuple.cpp
+)
 
-foreach(source ${TEST_SOURCES})
-    serenity_test(${source} LibSQL LIBS LibSQL LibIPC)
+foreach(source IN LISTS TEST_SOURCES)
+    serenity_test("${source}" LibSQL LIBS LibSQL LibIPC)
 endforeach()

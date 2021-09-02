@@ -70,6 +70,6 @@ set(AK_TEST_SOURCES
     TestWeakPtr.cpp
 )
 
-foreach(source ${AK_TEST_SOURCES})
-    serenity_test(${source} AK)
+foreach(source IN LISTS AK_TEST_SOURCES)
+    serenity_test("${source}" AK)
 endforeach()

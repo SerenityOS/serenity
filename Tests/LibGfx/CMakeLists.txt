@@ -1,5 +1,9 @@
-file(GLOB TEST_SOURCES  CONFIGURE_DEPENDS "*.cpp")
+set(TEST_SOURCES
+    BenchmarkGfxPainter.cpp
+    TestFontHandling.cpp
+    TestImageDecoder.cpp
+)
 
-foreach(source ${TEST_SOURCES})
-    serenity_test(${source} LibGfx LIBS LibGUI)
+foreach(source IN LISTS TEST_SOURCES)
+    serenity_test("${source}" LibGfx LIBS LibGUI)
 endforeach()
