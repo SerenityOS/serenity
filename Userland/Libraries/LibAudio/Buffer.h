@@ -78,7 +78,7 @@ struct Frame {
         return *this;
     }
 
-    ALWAYS_INLINE Frame log_multiplied(double const volume_change)
+    ALWAYS_INLINE Frame log_multiplied(double const volume_change) const
     {
         Frame new_frame { left, right };
         new_frame.log_multiply(volume_change);
