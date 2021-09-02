@@ -1,0 +1,8 @@
+[Exposed=(Window,Worker)]
+interface AbortSignal : EventTarget {
+    // FIXME: [NewObject] static AbortSignal abort();
+
+    readonly attribute boolean aborted;
+
+    // FIXME: attribute EventHandler onabort;
+};
