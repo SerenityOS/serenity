@@ -281,6 +281,7 @@ namespace JS {
     P(log10)                                 \
     P(map)                                   \
     P(max)                                   \
+    P(maximize)                              \
     P(mergeFields)                           \
     P(message)                               \
     P(microsecond)                           \

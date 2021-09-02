@@ -41,6 +41,7 @@ void LocalePrototype::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.maximize, maximize, 0, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
 
     // 14.3.2 Intl.Locale.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.Locale.prototype-@@tostringtag
@@ -56,6 +57,26 @@ void LocalePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.language, language, {}, Attribute::Configurable);
     define_native_accessor(vm.names.script, script, {}, Attribute::Configurable);
     define_native_accessor(vm.names.region, region, {}, Attribute::Configurable);
+}
+
+// 14.3.3 Intl.Locale.prototype.maximize ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.maximize
+JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::maximize)
+{
+    // 1. Let loc be the this value.
+    // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
+    auto* locale_object = typed_this(global_object);
+    if (!locale_object)
+        return {};
+
+    auto locale = Unicode::parse_unicode_locale_id(locale_object->locale());
+    VERIFY(locale.has_value());
+
+    // 3. Let maximal be the result of the Add Likely Subtags algorithm applied to loc.[[Locale]]. If an error is signaled, set maximal to loc.[[Locale]].
+    if (auto maximal = Unicode::add_likely_subtags(locale->language_id); maximal.has_value())
+        locale->language_id = maximal.release_value();
+
+    // 4. Return ! Construct(%Locale%, maximal).
+    return Locale::create(global_object, *locale);
 }
 
 // 14.3.5 Intl.Locale.prototype.toString ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.toString
