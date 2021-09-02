@@ -20,9 +20,9 @@ void delete_paths(Vector<String> const& paths, bool should_confirm, GUI::Window*
 {
     String message;
     if (paths.size() == 1) {
-        message = String::formatted("Really delete {}?", LexicalPath::basename(paths[0]));
+        message = String::formatted("Are you sure you want to delete {}?", LexicalPath::basename(paths[0]));
     } else {
-        message = String::formatted("Really delete {} files?", paths.size());
+        message = String::formatted("Are you sure you want to delete {} files?", paths.size());
     }
 
     if (should_confirm) {
