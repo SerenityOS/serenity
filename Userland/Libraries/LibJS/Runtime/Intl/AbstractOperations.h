@@ -12,6 +12,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Intl/DisplayNames.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibUnicode/Forward.h>
 
 namespace JS::Intl {
 
@@ -25,8 +26,12 @@ struct LocaleResult {
     String locale;
 };
 
+Optional<Unicode::LocaleID> is_structurally_valid_language_tag(StringView locale);
+String canonicalize_unicode_locale_id(Unicode::LocaleID& locale);
 Vector<String> canonicalize_locale_list(GlobalObject&, Value locales);
+Object* coerce_options_to_object(GlobalObject& global_object, Value options);
 Value get_option(GlobalObject& global_object, Value options, PropertyName const& property, Value::Type type, Vector<StringView> const& values, Fallback fallback);
+String insert_unicode_extension_and_canonicalize(Unicode::LocaleID locale_id, Unicode::LocaleExtension extension);
 LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptions const& options, Vector<StringView> relevant_extension_keys);
 Value canonical_code_for_display_names(GlobalObject&, DisplayNames::Type type, StringView code);
 
