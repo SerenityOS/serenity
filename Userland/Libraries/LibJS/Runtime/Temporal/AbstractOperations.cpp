@@ -674,10 +674,20 @@ Optional<TemporalInstant> parse_temporal_instant_string(GlobalObject& global_obj
     if (vm.exception())
         return {};
 
-    // 5. Assert: timeZoneResult.[[OffsetString]] is not undefined.
-    VERIFY(time_zone_result->offset.has_value());
+    // 5. Let offsetString be timeZoneResult.[[OffsetString]].
+    auto offset_string = time_zone_result->offset;
 
-    // 6. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[TimeZoneOffsetString]]: timeZoneResult.[[OffsetString]] }.
+    // 6. If timeZoneResult.[[Z]] is true, then
+    if (time_zone_result->z) {
+        // a. Set offsetString to "+00:00".
+        offset_string = "+00:00"sv;
+    }
+
+    // 7. Assert: offsetString is not undefined.
+    VERIFY(offset_string.has_value());
+
+    // TODO: This is supposed to use `offset_string`, see https://github.com/tc39/proposal-temporal/pull/1799
+    // 8. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[TimeZoneOffsetString]]: timeZoneResult.[[OffsetString]] }.
     return TemporalInstant { .year = result->year, .month = result->month, .day = result->day, .hour = result->hour, .minute = result->minute, .second = result->second, .millisecond = result->millisecond, .microsecond = result->microsecond, .nanosecond = result->nanosecond, .time_zone_offset = move(time_zone_result->offset) };
 }
 
@@ -800,8 +810,8 @@ Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_
 
     // 4. If z is not undefined, then
     if (z_part.has_value()) {
-        // a. Return the Record { [[Z]]: "Z", [[OffsetString]]: "+00:00", [[Name]]: undefined }.
-        return TemporalTimeZone { .z = true, .offset = "+00:00", .name = {} };
+        // a. Return the Record { [[Z]]: true, [[OffsetString]]: undefined, [[Name]]: name }.
+        return TemporalTimeZone { .z = true, .offset = {}, .name = name_part.has_value() ? String { *name_part } : Optional<String> {} };
     }
 
     Optional<String> offset;
@@ -868,7 +878,7 @@ Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_
         name = canonicalize_time_zone_name(*name_part);
     }
 
-    // 8. Return the Record { [[Z]]: undefined, [[OffsetString]]: offsetString, [[Name]]: name }.
+    // 8. Return the Record { [[Z]]: false, [[OffsetString]]: offsetString, [[Name]]: name }.
     return TemporalTimeZone { .z = false, .offset = offset, .name = name };
 }
 
