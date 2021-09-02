@@ -47,6 +47,11 @@ void LocalePrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.Locale"), Attribute::Configurable);
 
     define_native_accessor(vm.names.baseName, base_name, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.calendar, calendar, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.caseFirst, case_first, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.collation, collation, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.hourCycle, hour_cycle, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.numberingSystem, numbering_system, {}, Attribute::Configurable);
 }
 
 // 14.3.5 Intl.Locale.prototype.toString ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.toString
@@ -78,5 +83,30 @@ JS_DEFINE_NATIVE_GETTER(LocalePrototype::base_name)
     // 4. Return the substring of locale corresponding to the unicode_language_id production.
     return js_string(vm, locale->language_id.to_string());
 }
+
+#define JS_ENUMERATE_LOCALE_KEYWORD_PROPERTIES \
+    __JS_ENUMERATE(calendar)                   \
+    __JS_ENUMERATE(case_first)                 \
+    __JS_ENUMERATE(collation)                  \
+    __JS_ENUMERATE(hour_cycle)                 \
+    __JS_ENUMERATE(numbering_system)
+
+// 14.3.7 get Intl.Locale.prototype.calendar, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.calendar
+// 14.3.8 get Intl.Locale.prototype.caseFirst, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.caseFirst
+// 14.3.9 get Intl.Locale.prototype.collation, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.collation
+// 14.3.10 get Intl.Locale.prototype.hourCycle, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.hourCycle
+// 14.3.12 get Intl.Locale.prototype.numberingSystem, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.numberingSystem
+#define __JS_ENUMERATE(keyword)                          \
+    JS_DEFINE_NATIVE_GETTER(LocalePrototype::keyword)    \
+    {                                                    \
+        auto* locale_object = typed_this(global_object); \
+        if (!locale_object)                              \
+            return {};                                   \
+        if (!locale_object->has_##keyword())             \
+            return js_undefined();                       \
+        return js_string(vm, locale_object->keyword());  \
+    }
+JS_ENUMERATE_LOCALE_KEYWORD_PROPERTIES
+#undef __JS_ENUMERATE
 
 }
