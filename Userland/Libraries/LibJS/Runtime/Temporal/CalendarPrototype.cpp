@@ -7,6 +7,7 @@
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/CalendarPrototype.h>
@@ -546,12 +547,66 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
 
-    // 4. Let fieldNames be ? IterableToListOfType(fields, « String »).
-    auto field_names = iterable_to_list_of_type(global_object, fields, { OptionType::String });
+    // 4. Let iteratorRecord be ? Getiterator(fields, sync).
+    auto* iterator_record = get_iterator(global_object, fields, IteratorHint::Sync);
     if (vm.exception())
         return {};
 
-    // 5. Return ! CreateArrayFromList(fieldNames).
+    // 5. Let fieldNames be a new empty List.
+    auto field_names = MarkedValueList { vm.heap() };
+
+    // 6. Let next be true.
+    // 7. Repeat, while next is not false,
+    while (true) {
+        // a. Set next to ? IteratorStep(iteratorRecord).
+        auto* next = iterator_step(global_object, *iterator_record);
+        if (vm.exception())
+            return {};
+
+        // b. If next is not false, then
+        if (!next)
+            break;
+
+        // i. Let nextValue be ? IteratorValue(next).
+        auto next_value = iterator_value(global_object, *next);
+        if (vm.exception())
+            return {};
+
+        // ii. If Type(nextValue) is not String, then
+        if (!next_value.is_string()) {
+            // 1. Let completion be ThrowCompletion(a newly created TypeError object).
+            vm.throw_exception<TypeError>(global_object, ErrorType::TemporalInvalidCalendarFieldValue, next_value.to_string_without_side_effects());
+
+            // 2. Return ? IteratorClose(iteratorRecord, completion).
+            iterator_close(*iterator_record);
+            return {};
+        }
+
+        // iii. If fieldNames contains nextValue, then
+        if (field_names.contains_slow(next_value)) {
+            // 1. Let completion be ThrowCompletion(a newly created RangeError object).
+            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalDuplicateCalendarField, next_value.as_string().string());
+
+            // 2. Return ? IteratorClose(iteratorRecord, completion).
+            iterator_close(*iterator_record);
+            return {};
+        }
+
+        // iv. If nextValue is not one of "year", "month", "monthCode", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond", then
+        if (!next_value.as_string().string().is_one_of("year"sv, "month"sv, "monthCode"sv, "day"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
+            // 1. Let completion be ThrowCompletion(a newly created RangeError object).
+            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFieldName, next_value.as_string().string());
+
+            // 2. Return ? IteratorClose(iteratorRecord, completion).
+            iterator_close(*iterator_record);
+            return {};
+        }
+
+        // v. Append nextValue to the end of the List fieldNames.
+        field_names.append(next_value);
+    }
+
+    // 8. Return ! CreateArrayFromList(fieldNames).
     return Array::create_from(global_object, field_names);
 }
 
