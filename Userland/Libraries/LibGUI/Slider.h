@@ -25,6 +25,7 @@ public:
     KnobSizeMode knob_size_mode() const { return m_knob_size_mode; }
 
     int track_size() const { return 2; }
+    int track_margin() const { return 10; }
     int knob_fixed_primary_size() const { return 8; }
     int knob_secondary_size() const { return 20; }
 
@@ -34,8 +35,8 @@ public:
     Gfx::IntRect inner_rect() const
     {
         if (orientation() == Orientation::Horizontal)
-            return rect().shrunken(20, 0);
-        return rect().shrunken(0, 20);
+            return rect().shrunken(track_margin() * 2, 0);
+        return rect().shrunken(0, track_margin() * 2);
     }
 
 protected:
