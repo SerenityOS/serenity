@@ -850,12 +850,12 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
         auto drag_operation = GUI::DragOperation::construct();
         drag_operation->set_text(m_active_href);
         drag_operation->set_data("text/uri-list", m_active_href);
-        drag_operation->exec();
 
         m_active_href = {};
         m_active_href_id = {};
         m_hovered_href = {};
         m_hovered_href_id = {};
+        drag_operation->exec();
         update();
         return;
     }
