@@ -448,6 +448,8 @@ Optional<StringView> resolve_variant_alias(StringView const& variant);
 Optional<StringView> resolve_subdivision_alias(StringView const& subdivision);
 
 void resolve_complex_language_aliases(Unicode::LanguageID& language_id);
+
+Optional<Unicode::LanguageID> add_likely_subtags(Unicode::LanguageID const& language_id);
 Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& language_id);
 
 }
@@ -671,7 +673,7 @@ static constexpr Array<LanguageMapping, @size@> s_@name@ { {
     append_complex_mapping("likely_subtags"sv, locale_data.likely_subtags);
 
     generator.append(R"~~~(
-static CanonicalLanguageID const* resolve_likely_subtag(Unicode::LanguageID const& language_id)
+static LanguageMapping const* resolve_likely_subtag(Unicode::LanguageID const& language_id)
 {
     // https://unicode.org/reports/tr35/#Likely_Subtags
     enum class State {
@@ -743,7 +745,7 @@ static CanonicalLanguageID const* resolve_likely_subtag(Unicode::LanguageID cons
             if (map.key.region != search_key.region)
                 continue;
 
-            return &map.alias;
+            return &map;
         }
     }
 
@@ -893,10 +895,31 @@ void resolve_complex_language_aliases(Unicode::LanguageID& language_id)
     }
 }
 
+Optional<Unicode::LanguageID> add_likely_subtags(Unicode::LanguageID const& language_id)
+{
+    // https://www.unicode.org/reports/tr35/#Likely_Subtags
+    auto const* likely_subtag = resolve_likely_subtag(language_id);
+    if (likely_subtag == nullptr)
+        return {};
+
+    auto maximized = language_id;
+    auto const& key = likely_subtag->key;
+    auto const& alias = likely_subtag->alias;
+
+    if (maximized.language == "und"sv)
+        maximized.language = alias.language;
+    if (!maximized.script.has_value() || (!key.script.is_empty() && !alias.script.is_empty()))
+        maximized.script = alias.script;
+    if (!maximized.region.has_value() || (!key.region.is_empty() && !alias.region.is_empty()))
+        maximized.region = alias.region;
+
+    return maximized;
+}
+
 Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& language_id)
 {
     if (auto const* likely_subtag = resolve_likely_subtag(language_id); likely_subtag != nullptr)
-        return likely_subtag->region;
+        return likely_subtag->alias.region;
     return {};
 }
 
