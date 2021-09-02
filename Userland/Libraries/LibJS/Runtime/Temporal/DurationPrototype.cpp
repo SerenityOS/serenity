@@ -310,8 +310,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::negated)
     if (vm.exception())
         return {};
 
-    // 3. Return ! CreateTemporalDuration(−duration.[[Years]], −duration.[[Months]], −duration.[[Weeks]], −duration.[[Days]], −duration.[[Hours]], −duration.[[Minutes]], −duration.[[Seconds]], −duration.[[Milliseconds]], −duration.[[Microseconds]], −duration.[[Nanoseconds]]).
-    return create_temporal_duration(global_object, -duration->years(), -duration->months(), -duration->weeks(), -duration->days(), -duration->hours(), -duration->minutes(), -duration->seconds(), -duration->milliseconds(), -duration->microseconds(), -duration->nanoseconds());
+    // 3. Return ! CreateNegatedTemporalDuration(duration).
+    return create_negated_temporal_duration(global_object, *duration);
 }
 
 // 7.3.17 Temporal.Duration.prototype.abs ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.abs
