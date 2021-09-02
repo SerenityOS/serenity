@@ -922,8 +922,8 @@ int Shell::builtin_time(int argc, const char** argv)
         warnln("Timing report:");
         warnln("==============");
         warnln("Command:         {}", String::join(' ', args));
-        warnln("Average time:    {:.2} ms (median: {}, stddev: {:.2})", iteration_times.average(), iteration_times.median(), iteration_times.standard_deviation());
-        warnln("Excluding first: {:.2} ms (median: {}, stddev: {:.2})", iteration_times_excluding_first.average(), iteration_times_excluding_first.median(), iteration_times_excluding_first.standard_deviation());
+        warnln("Average time:    {:.2} ms (median: {}, stddev: {:.2}, min: {}, max:{})", iteration_times.average(), iteration_times.median(), iteration_times.standard_deviation(), iteration_times.min(), iteration_times.max());
+        warnln("Excluding first: {:.2} ms (median: {}, stddev: {:.2}, min: {}, max:{})", iteration_times_excluding_first.average(), iteration_times_excluding_first.median(), iteration_times_excluding_first.standard_deviation(), iteration_times_excluding_first.min(), iteration_times_excluding_first.max());
     }
 
     return exit_code;
