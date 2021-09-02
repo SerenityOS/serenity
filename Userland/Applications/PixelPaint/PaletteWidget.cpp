@@ -39,7 +39,7 @@ public:
 
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.modifiers() & KeyModifier::Mod_Ctrl && event.button() == GUI::MouseButton::Left) {
+        if (event.modifiers() & KeyModifier::Mod_Ctrl) {
             auto dialog = GUI::ColorPicker::construct(m_color, window());
             if (dialog->exec() == GUI::Dialog::ExecOK) {
                 m_color = dialog->color();
@@ -48,7 +48,6 @@ public:
                 set_palette(pal);
                 update();
             }
-            return;
         }
 
         if (event.button() == GUI::MouseButton::Left)
