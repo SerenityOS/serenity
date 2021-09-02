@@ -39,9 +39,8 @@ Signal Delay::process_impl(Signal const& input_signal)
 
     Sample const& in = input_signal.get<Sample>();
     Sample out;
-    // FIXME: Once we have log scaling, change these to use it instead
-    out += in.scaled(static_cast<double>(m_dry_gain));
-    out += m_delay_buffer[m_delay_index].scaled(m_delay_decay);
+    out += in.log_multiplied(static_cast<double>(m_dry_gain));
+    out += m_delay_buffer[m_delay_index].log_multiplied(m_delay_decay);
 
     // This is also convenient for disabling the delay effect by setting the buffer size to 0
     if (m_delay_buffer.size() >= 1)
