@@ -1,6 +1,8 @@
-file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")
+set(TEST_SOURCES
+    test-math.cpp
+)
 add_compile_options(-fno-builtin)
 
-foreach(CMD_SRC ${CMD_SOURCES})
-    serenity_test(${CMD_SRC} LibM)
+foreach(source IN LISTS TEST_SOURCES)
+    serenity_test("${source}" LibM)
 endforeach()

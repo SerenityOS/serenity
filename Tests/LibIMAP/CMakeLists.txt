@@ -1,5 +1,7 @@
-file(GLOB TEST_SOURCES CONFIGURE_DEPENDS "*.cpp")
+set(TEST_SOURCES
+    TestQuotedPrintable.cpp
+)
 
-foreach(source ${TEST_SOURCES})
-    serenity_test(${source} LibIMAP LIBS LibIMAP)
+foreach(source IN LISTS TEST_SOURCES)
+    serenity_test("${source}" LibIMAP LIBS LibIMAP)
 endforeach()

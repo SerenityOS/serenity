@@ -1,5 +1,8 @@
-file(GLOB TEST_SOURCES CONFIGURE_DEPENDS "*.cpp")
+set(TEST_SOURCES
+    TestUnicodeCharacterTypes.cpp
+    TestUnicodeLocale.cpp
+)
 
-foreach(source ${TEST_SOURCES})
-    serenity_test(${source} LibUnicode LIBS LibUnicode)
+foreach(source IN LISTS TEST_SOURCES)
+    serenity_test("${source}" LibUnicode LIBS LibUnicode)
 endforeach()

@@ -1,5 +1,8 @@
-file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")
+set(TEST_SOURCES
+    test-cpp-parser.cpp
+    test-cpp-preprocessor.cpp
+)
 
-foreach(CMD_SRC ${CMD_SOURCES})
-    serenity_test(${CMD_SRC} LibCpp LIBS LibCpp)
+foreach(source IN LISTS TEST_SOURCES)
+    serenity_test("${source}" LibCpp LIBS LibCpp)
 endforeach()

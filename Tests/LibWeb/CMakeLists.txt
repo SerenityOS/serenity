@@ -1,10 +1,9 @@
-set(
-    TEST_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/TestHTMLTokenizer.cpp
+set(TEST_SOURCES
+    TestHTMLTokenizer.cpp
 )
 
-foreach(source ${TEST_SOURCES})
-    serenity_test(${source} LibWeb LIBS LibWeb)
+foreach(source IN LISTS TEST_SOURCES)
+    serenity_test("${source}" LibWeb LIBS LibWeb)
 endforeach()
 
 serenity_testjs_test(test-web.cpp test-web LIBS LibWeb)

@@ -1,5 +1,9 @@
-file(GLOB TEST_SOURCES CONFIGURE_DEPENDS "*.cpp")
+set(TEST_SOURCES
+    Benchmark.cpp
+    Regex.cpp
+    RegexLibC.cpp
+)
 
-foreach(source ${TEST_SOURCES})
-    serenity_test(${source} LibRegex LIBS LibRegex)
+foreach(source IN LISTS TEST_SOURCES)
+    serenity_test("${source}" LibRegex LIBS LibRegex)
 endforeach()
