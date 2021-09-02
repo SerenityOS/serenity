@@ -834,6 +834,15 @@ Optional<StringView> resolve_subdivision_alias(StringView subdivision)
 #endif
 }
 
+Optional<LanguageID> add_likely_subtags([[maybe_unused]] LanguageID const& language_id)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::add_likely_subtags(language_id);
+#else
+    return {};
+#endif
+}
+
 String resolve_most_likely_territory([[maybe_unused]] LanguageID const& language_id, StringView territory_alias)
 {
     auto aliases = territory_alias.split_view(' ');
