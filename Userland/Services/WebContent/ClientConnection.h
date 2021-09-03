@@ -9,6 +9,7 @@
 #include <AK/HashMap.h>
 #include <LibIPC/ClientConnection.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Forward.h>
 #include <WebContent/Forward.h>
@@ -72,6 +73,7 @@ private:
 
     WeakPtr<JS::Interpreter> m_interpreter;
     OwnPtr<WebContentConsoleClient> m_console_client;
+    JS::Handle<JS::GlobalObject> m_console_global_object;
 };
 
 }

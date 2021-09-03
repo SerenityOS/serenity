@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Brandon Scott <xeon.productions@gmail.com>
  * Copyright (c) 2020, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,9 +10,21 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibJS/Parser.h>
-#include <LibWeb/Bindings/DOMExceptionWrapper.h>
+#include <LibWeb/Bindings/WindowObject.h>
+#include <WebContent/ConsoleGlobalObject.h>
 
 namespace WebContent {
+
+WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, WeakPtr<JS::Interpreter> interpreter, ClientConnection& client)
+    : ConsoleClient(console)
+    , m_client(client)
+    , m_interpreter(interpreter)
+{
+    JS::DeferGC defer_gc(m_interpreter->heap());
+    auto console_global_object = m_interpreter->heap().allocate_without_global_object<ConsoleGlobalObject>(static_cast<Web::Bindings::WindowObject&>(m_interpreter->global_object()));
+    console_global_object->initialize_global_object();
+    m_console_global_object = JS::make_handle(console_global_object);
+}
 
 void WebContentConsoleClient::handle_input(const String& js_source)
 {
@@ -24,9 +37,9 @@ void WebContentConsoleClient::handle_input(const String& js_source)
         auto hint = error.source_location_hint(js_source);
         if (!hint.is_empty())
             output_html.append(String::formatted("<pre>{}</pre>", escape_html_entities(hint)));
-        m_interpreter->vm().throw_exception<JS::SyntaxError>(m_interpreter->global_object(), error.to_string());
+        m_interpreter->vm().throw_exception<JS::SyntaxError>(*m_console_global_object.cell(), error.to_string());
     } else {
-        m_interpreter->run(m_interpreter->global_object(), *program);
+        m_interpreter->run(*m_console_global_object.cell(), *program);
     }
 
     if (m_interpreter->exception()) {

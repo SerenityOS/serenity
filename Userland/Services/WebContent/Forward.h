@@ -9,6 +9,7 @@
 namespace WebContent {
 
 class ClientConnection;
+class ConsoleGlobalObject;
 class PageHost;
 class WebContentConsoleClient;
 
