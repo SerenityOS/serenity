@@ -206,6 +206,7 @@ GUI::Widget* GuideTool::get_properties_widget()
         snapping_slider.on_change = [&](int value) {
             m_snap_size = value;
         };
+        set_primary_slider(&snapping_slider);
     }
 
     return m_properties_widget.ptr();

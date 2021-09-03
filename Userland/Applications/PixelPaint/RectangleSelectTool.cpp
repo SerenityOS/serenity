@@ -110,6 +110,7 @@ void RectangleSelectTool::on_mouseup(Layer*, MouseEvent& event)
 
 void RectangleSelectTool::on_keydown(GUI::KeyEvent& key_event)
 {
+    Tool::on_keydown(key_event);
     if (key_event.key() == KeyCode::Key_Space)
         m_moving_mode = MovingMode::MovingOrigin;
     else if (key_event.key() == KeyCode::Key_Control)
@@ -164,6 +165,7 @@ GUI::Widget* RectangleSelectTool::get_properties_widget()
     feather_slider.on_change = [&](int value) {
         m_edge_feathering = (float)value / (float)feather_slider_max;
     };
+    set_primary_slider(&feather_slider);
 
     auto& mode_container = m_properties_widget->add<GUI::Widget>();
     mode_container.set_fixed_height(20);

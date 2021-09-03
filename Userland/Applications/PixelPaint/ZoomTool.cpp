@@ -51,6 +51,7 @@ GUI::Widget* ZoomTool::get_properties_widget()
         sensitivity_slider.on_change = [&](int value) {
             m_sensitivity = (double)value / 100.0;
         };
+        set_primary_slider(&sensitivity_slider);
     }
 
     return m_properties_widget.ptr();
