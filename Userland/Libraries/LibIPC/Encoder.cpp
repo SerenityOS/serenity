@@ -106,18 +106,18 @@ Encoder& Encoder::operator<<(float value)
     return *this << u.as_u32;
 }
 
-Encoder& Encoder::operator<<(const char* value)
+Encoder& Encoder::operator<<(char const* value)
 {
     return *this << StringView(value);
 }
 
-Encoder& Encoder::operator<<(const StringView& value)
+Encoder& Encoder::operator<<(StringView const& value)
 {
-    m_buffer.data.append((const u8*)value.characters_without_null_termination(), value.length());
+    m_buffer.data.append((u8 const*)value.characters_without_null_termination(), value.length());
     return *this;
 }
 
-Encoder& Encoder::operator<<(const String& value)
+Encoder& Encoder::operator<<(String const& value)
 {
     if (value.is_null())
         return *this << (i32)-1;
@@ -125,19 +125,19 @@ Encoder& Encoder::operator<<(const String& value)
     return *this << value.view();
 }
 
-Encoder& Encoder::operator<<(const ByteBuffer& value)
+Encoder& Encoder::operator<<(ByteBuffer const& value)
 {
     *this << static_cast<i32>(value.size());
     m_buffer.data.append(value.data(), value.size());
     return *this;
 }
 
-Encoder& Encoder::operator<<(const URL& value)
+Encoder& Encoder::operator<<(URL const& value)
 {
     return *this << value.to_string();
 }
 
-Encoder& Encoder::operator<<(const Dictionary& dictionary)
+Encoder& Encoder::operator<<(Dictionary const& dictionary)
 {
     *this << (u64)dictionary.size();
     dictionary.for_each_entry([this](auto& key, auto& value) {
@@ -146,7 +146,7 @@ Encoder& Encoder::operator<<(const Dictionary& dictionary)
     return *this;
 }
 
-Encoder& Encoder::operator<<(const File& file)
+Encoder& Encoder::operator<<(File const& file)
 {
     int fd = file.fd();
     if (fd != -1) {
@@ -161,7 +161,7 @@ Encoder& Encoder::operator<<(const File& file)
     return *this;
 }
 
-bool encode(Encoder& encoder, const Core::AnonymousBuffer& buffer)
+bool encode(Encoder& encoder, Core::AnonymousBuffer const& buffer)
 {
     encoder << buffer.is_valid();
     if (buffer.is_valid()) {
@@ -171,7 +171,7 @@ bool encode(Encoder& encoder, const Core::AnonymousBuffer& buffer)
     return true;
 }
 
-bool encode(Encoder& encoder, const Core::DateTime& datetime)
+bool encode(Encoder& encoder, Core::DateTime const& datetime)
 {
     encoder << static_cast<i64>(datetime.timestamp());
     return true;

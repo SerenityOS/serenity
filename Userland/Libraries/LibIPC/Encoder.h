@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -37,15 +37,15 @@ public:
     Encoder& operator<<(i32);
     Encoder& operator<<(i64);
     Encoder& operator<<(float);
-    Encoder& operator<<(const char*);
-    Encoder& operator<<(const StringView&);
-    Encoder& operator<<(const String&);
-    Encoder& operator<<(const ByteBuffer&);
-    Encoder& operator<<(const URL&);
-    Encoder& operator<<(const Dictionary&);
-    Encoder& operator<<(const File&);
+    Encoder& operator<<(char const*);
+    Encoder& operator<<(StringView const&);
+    Encoder& operator<<(String const&);
+    Encoder& operator<<(ByteBuffer const&);
+    Encoder& operator<<(URL const&);
+    Encoder& operator<<(Dictionary const&);
+    Encoder& operator<<(File const&);
     template<typename K, typename V>
-    Encoder& operator<<(const HashMap<K, V>& hashmap)
+    Encoder& operator<<(HashMap<K, V> const& hashmap)
     {
         *this << (u32)hashmap.size();
         for (auto it : hashmap) {
@@ -56,7 +56,7 @@ public:
     }
 
     template<typename T>
-    Encoder& operator<<(const Vector<T>& vector)
+    Encoder& operator<<(Vector<T> const& vector)
     {
         *this << (u64)vector.size();
         for (auto& value : vector)
@@ -72,14 +72,14 @@ public:
     }
 
     template<typename T>
-    Encoder& operator<<(const T& value)
+    Encoder& operator<<(T const& value)
     {
         encode(value);
         return *this;
     }
 
     template<typename T>
-    Encoder& operator<<(const Optional<T>& optional)
+    Encoder& operator<<(Optional<T> const& optional)
     {
         *this << optional.has_value();
         if (optional.has_value())
@@ -88,7 +88,7 @@ public:
     }
 
     template<typename T>
-    void encode(const T& value)
+    void encode(T const& value)
     {
         IPC::encode(*this, value);
     }
