@@ -101,12 +101,13 @@ public:
 
     void flip(Gfx::Orientation orientation);
     void rotate(Gfx::RotationDirection direction);
+    void crop(Gfx::IntRect const& rect);
 
 private:
     explicit Image(Gfx::IntSize const&);
 
     void did_change(Gfx::IntRect const& modified_rect = {});
-    void did_change_rect();
+    void did_change_rect(Gfx::IntRect const& modified_rect = {});
     void did_modify_layer_stack();
 
     String m_path;

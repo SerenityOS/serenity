@@ -375,6 +375,17 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 return;
             editor->image().rotate(Gfx::RotationDirection::Clockwise);
         }));
+    image_menu.add_separator();
+    image_menu.add_action(GUI::Action::create(
+        "&Crop To Selection", [&](auto&) {
+            auto* editor = current_image_editor();
+            // FIXME: disable this action if there is no selection
+            if (!editor || editor->selection().is_empty())
+                return;
+            auto crop_rect = editor->selection().bounding_rect();
+            editor->image().crop(crop_rect);
+            editor->selection().clear();
+        }));
 
     auto& layer_menu = window.add_menu("&Layer");
     layer_menu.add_action(GUI::Action::create(
