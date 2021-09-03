@@ -439,6 +439,7 @@ int main(int argc, char** argv)
             editor->image().flip(Gfx::Orientation::Horizontal);
         },
         window));
+    image_menu.add_separator();
     image_menu.add_action(GUI::Action::create(
         "Rotate &Left", [&](auto&) {
             auto* editor = current_image_editor();
