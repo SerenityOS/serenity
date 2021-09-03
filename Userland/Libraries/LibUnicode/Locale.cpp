@@ -5,7 +5,6 @@
  */
 
 #include <AK/AllOf.h>
-#include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
@@ -16,42 +15,6 @@
 #endif
 
 namespace Unicode {
-
-bool is_unicode_language_subtag(StringView subtag)
-{
-    // unicode_language_subtag = alpha{2,3} | alpha{5,8}
-    if ((subtag.length() < 2) || (subtag.length() == 4) || (subtag.length() > 8))
-        return false;
-    return all_of(subtag, is_ascii_alpha);
-}
-
-bool is_unicode_script_subtag(StringView subtag)
-{
-    // unicode_script_subtag = alpha{4}
-    if (subtag.length() != 4)
-        return false;
-    return all_of(subtag, is_ascii_alpha);
-}
-
-bool is_unicode_region_subtag(StringView subtag)
-{
-    // unicode_region_subtag = (alpha{2} | digit{3})
-    if (subtag.length() == 2)
-        return all_of(subtag, is_ascii_alpha);
-    if (subtag.length() == 3)
-        return all_of(subtag, is_ascii_digit);
-    return false;
-}
-
-bool is_unicode_variant_subtag(StringView subtag)
-{
-    // unicode_variant_subtag = (alphanum{5,8} | digit alphanum{3})
-    if ((subtag.length() >= 5) && (subtag.length() <= 8))
-        return all_of(subtag, is_ascii_alphanumeric);
-    if (subtag.length() == 4)
-        return is_ascii_digit(subtag[0]) && all_of(subtag.substring_view(1), is_ascii_alphanumeric);
-    return false;
-}
 
 static bool is_key(StringView key)
 {
