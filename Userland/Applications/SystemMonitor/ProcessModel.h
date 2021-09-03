@@ -60,6 +60,8 @@ public:
     virtual int column_count(const GUI::ModelIndex&) const override;
     virtual String column_name(int column) const override;
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
+    virtual bool is_searchable() const override { return true; }
+    virtual Vector<GUI::ModelIndex, 1> matches(const StringView&, unsigned = MatchesFlag::AllMatching, const GUI::ModelIndex& = GUI::ModelIndex()) override;
     virtual bool is_column_sortable(int column_index) const override { return column_index != Column::Icon; }
     void update();
 

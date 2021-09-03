@@ -313,6 +313,24 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     return {};
 }
 
+Vector<GUI::ModelIndex, 1> ProcessModel::matches(const StringView& searching, unsigned flags, const GUI::ModelIndex&)
+{
+    Vector<GUI::ModelIndex, 1> found_indices;
+
+    for (auto& thread : m_threads) {
+        if (string_matches(thread.value->current_state.name, searching, flags)) {
+            auto maybe_tid_index = m_tids.find_first_index(thread.key);
+            if (!maybe_tid_index.has_value())
+                continue;
+            found_indices.append(create_index(maybe_tid_index.value(), Column::Name));
+            if (flags & FirstMatchOnly)
+                break;
+        }
+    }
+
+    return found_indices;
+}
+
 void ProcessModel::update()
 {
     auto previous_tid_count = m_tids.size();
