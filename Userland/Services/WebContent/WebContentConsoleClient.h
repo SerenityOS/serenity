@@ -17,12 +17,7 @@ namespace WebContent {
 
 class WebContentConsoleClient final : public JS::ConsoleClient {
 public:
-    WebContentConsoleClient(JS::Console& console, WeakPtr<JS::Interpreter> interpreter, ClientConnection& client)
-        : ConsoleClient(console)
-        , m_client(client)
-        , m_interpreter(interpreter)
-    {
-    }
+    WebContentConsoleClient(JS::Console&, WeakPtr<JS::Interpreter>, ClientConnection&);
 
     void handle_input(const String& js_source);
 
@@ -40,6 +35,8 @@ private:
 
     ClientConnection& m_client;
     WeakPtr<JS::Interpreter> m_interpreter;
+    JS::Handle<ConsoleGlobalObject> m_console_global_object;
+
     void clear_output();
     void print_html(const String& line);
 };
