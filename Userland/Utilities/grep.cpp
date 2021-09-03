@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     bool colored_output = isatty(STDOUT_FILENO);
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(recursive, "Recursively scan files starting in working directory", "recursive", 'r');
+    args_parser.add_option(recursive, "Recursively scan files", "recursive", 'r');
     args_parser.add_option(use_ere, "Extended regular expressions", "extended-regexp", 'E');
     args_parser.add_option(pattern, "Pattern", "regexp", 'e', "Pattern");
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
@@ -114,6 +114,8 @@ int main(int argc, char** argv)
     if (pattern == nullptr && files.size())
         pattern = files.take_first();
 
+    auto user_has_specified_files = !files.is_empty();
+
     PosixOptions options {};
     if (case_insensitive)
         options |= PosixFlags::Insensitive;
@@ -168,12 +170,12 @@ int main(int argc, char** argv)
             return true;
         };
 
-        auto add_directory = [&handle_file](String base, Optional<String> recursive, auto handle_directory) -> void {
+        auto add_directory = [&handle_file, user_has_specified_files](String base, Optional<String> recursive, auto handle_directory) -> void {
             Core::DirIterator it(recursive.value_or(base), Core::DirIterator::Flags::SkipDots);
             while (it.has_next()) {
                 auto path = it.next_full_path();
                 if (!Core::File::is_directory(path)) {
-                    auto key = path.substring_view(base.length() + 1, path.length() - base.length() - 1);
+                    auto key = user_has_specified_files ? path.view() : path.substring_view(base.length() + 1, path.length() - base.length() - 1);
                     handle_file(key, true);
                 } else {
                     handle_directory(base, path, handle_directory);
@@ -204,7 +206,13 @@ int main(int argc, char** argv)
             }
         } else {
             if (recursive) {
-                add_directory(".", {}, add_directory);
+                if (user_has_specified_files) {
+                    for (auto& filename : files) {
+                        add_directory(filename, {}, add_directory);
+                    }
+                } else {
+                    add_directory(".", {}, add_directory);
+                }
 
             } else {
                 bool print_filename { files.size() > 1 };
