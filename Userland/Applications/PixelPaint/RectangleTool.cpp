@@ -14,6 +14,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/RadioButton.h>
+#include <LibGUI/ValueSlider.h>
 #include <LibGfx/Rect.h>
 
 namespace PixelPaint {
@@ -41,7 +42,7 @@ void RectangleTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start
         painter.fill_rect(rect, m_editor->color_for(m_drawing_button));
         break;
     case FillMode::Outline:
-        painter.draw_rect(rect, m_editor->color_for(m_drawing_button));
+        painter.draw_rect_with_thickness(rect, m_editor->color_for(m_drawing_button), m_thickness);
         break;
     case FillMode::Gradient:
         painter.fill_rect_with_gradient(rect, m_editor->primary_color(), m_editor->secondary_color());
@@ -123,6 +124,22 @@ GUI::Widget* RectangleTool::get_properties_widget()
     if (!m_properties_widget) {
         m_properties_widget = GUI::Widget::construct();
         m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+
+        auto& thickness_container = m_properties_widget->add<GUI::Widget>();
+        thickness_container.set_fixed_height(20);
+        thickness_container.set_layout<GUI::HorizontalBoxLayout>();
+
+        auto& thickness_label = thickness_container.add<GUI::Label>("Thickness:");
+        thickness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        thickness_label.set_fixed_size(80, 20);
+
+        auto& thickness_slider = thickness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        thickness_slider.set_range(1, 10);
+        thickness_slider.set_value(m_thickness);
+
+        thickness_slider.on_change = [&](int value) {
+            m_thickness = value;
+        };
 
         auto& mode_container = m_properties_widget->add<GUI::Widget>();
         mode_container.set_fixed_height(70);
