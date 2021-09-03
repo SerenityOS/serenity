@@ -4,10 +4,6 @@ on:
   schedule:
     - cron: '0 0 * * *'
 
-  # Run if this file is changed in a pull request (to get immediate feedback).
-  pull_request:
-    paths: [".github/workflows/sonar-cloud-static-analysis.yml"]
-
 jobs:
   build:
     name: Static Analysis
