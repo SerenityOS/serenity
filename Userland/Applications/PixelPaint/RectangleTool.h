@@ -46,6 +46,7 @@ private:
     Gfx::IntPoint m_rectangle_end_position;
     FillMode m_fill_mode { FillMode::Outline };
     DrawMode m_draw_mode { DrawMode::FromCorner };
+    int m_thickness { 1 };
 };
 
 }
