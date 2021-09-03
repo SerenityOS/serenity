@@ -24,23 +24,6 @@
 
 namespace PixelPaint {
 
-static RefPtr<Gfx::Bitmap> try_decode_bitmap(ByteBuffer const& bitmap_data)
-{
-    // Spawn a new ImageDecoder service process and connect to it.
-    auto client = ImageDecoderClient::Client::construct();
-
-    // FIXME: Find a way to avoid the memory copying here.
-    auto decoded_image_or_error = client->decode_image(bitmap_data);
-    if (!decoded_image_or_error.has_value())
-        return nullptr;
-
-    // FIXME: Support multi-frame images?
-    auto decoded_image = decoded_image_or_error.release_value();
-    if (decoded_image.frames.is_empty())
-        return nullptr;
-    return move(decoded_image.frames[0].bitmap);
-}
-
 RefPtr<Image> Image::try_create_with_size(Gfx::IntSize const& size)
 {
     if (size.is_empty())
@@ -72,6 +55,23 @@ void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect) con
     }
 }
 
+RefPtr<Gfx::Bitmap> Image::try_decode_bitmap(ByteBuffer const& bitmap_data)
+{
+    // Spawn a new ImageDecoder service process and connect to it.
+    auto client = ImageDecoderClient::Client::construct();
+
+    // FIXME: Find a way to avoid the memory copying here.
+    auto decoded_image_or_error = client->decode_image(bitmap_data);
+    if (!decoded_image_or_error.has_value())
+        return nullptr;
+
+    // FIXME: Support multi-frame images?
+    auto decoded_image = decoded_image_or_error.release_value();
+    if (decoded_image.frames.is_empty())
+        return nullptr;
+    return move(decoded_image.frames[0].bitmap);
+}
+
 RefPtr<Image> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
 {
     auto image = try_create_with_size({ bitmap->width(), bitmap->height() });
@@ -83,44 +83,6 @@ RefPtr<Image> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
         return nullptr;
 
     image->add_layer(layer.release_nonnull());
-    return image;
-}
-
-Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_fd(int fd, String const& file_path)
-{
-    auto file = Core::File::construct();
-    file->open(fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::No);
-    if (file->has_error())
-        return String { file->error_string() };
-
-    return try_create_from_pixel_paint_file(file, file_path);
-}
-
-Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_path(String const& file_path)
-{
-    auto file_or_error = Core::File::open(file_path, Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error())
-        return String { file_or_error.error().string() };
-
-    return try_create_from_pixel_paint_file(*file_or_error.value(), file_path);
-}
-
-Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_file(Core::File& file, String const& file_path)
-{
-    auto contents = file.read_all();
-
-    auto json_or_error = JsonValue::from_string(contents);
-    if (!json_or_error.has_value())
-        return String { "Not a valid PP file"sv };
-
-    auto& json = json_or_error.value().as_object();
-    auto image_or_error = try_create_from_pixel_paint_json(json);
-
-    if (image_or_error.is_error())
-        return image_or_error.release_error();
-
-    auto image = image_or_error.release_value();
-    image->set_path(file_path);
     return image;
 }
 
@@ -160,52 +122,6 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_json(Jso
         layer->set_selected(layer_object.get("selected").as_bool());
     }
 
-    return image.release_nonnull();
-}
-
-Result<NonnullRefPtr<Image>, String> Image::try_create_from_fd_and_close(int fd, String const& file_path)
-{
-    auto image_or_error = try_create_from_pixel_paint_fd(fd, file_path);
-    if (!image_or_error.is_error()) {
-        close(fd);
-        return image_or_error.release_value();
-    }
-
-    auto file_or_error = MappedFile::map_from_fd_and_close(fd, file_path);
-    if (file_or_error.is_error())
-        return String::formatted("Unable to mmap file {}", file_or_error.error().string());
-
-    auto& mapped_file = *file_or_error.value();
-    // FIXME: Find a way to avoid the memory copy here.
-    auto bitmap = try_decode_bitmap(ByteBuffer::copy(mapped_file.bytes()));
-    if (!bitmap)
-        return String { "Unable to decode image"sv };
-    auto image = Image::try_create_from_bitmap(bitmap.release_nonnull());
-    if (!image)
-        return String { "Unable to allocate Image"sv };
-    image->set_path(file_path);
-    return image.release_nonnull();
-}
-
-Result<NonnullRefPtr<Image>, String> Image::try_create_from_path(String const& file_path)
-{
-    auto image_or_error = try_create_from_pixel_paint_path(file_path);
-    if (!image_or_error.is_error())
-        return image_or_error.release_value();
-
-    auto file_or_error = MappedFile::map(file_path);
-    if (file_or_error.is_error())
-        return String { "Unable to mmap file"sv };
-
-    auto& mapped_file = *file_or_error.value();
-    // FIXME: Find a way to avoid the memory copy here.
-    auto bitmap = try_decode_bitmap(ByteBuffer::copy(mapped_file.bytes()));
-    if (!bitmap)
-        return String { "Unable to decode image"sv };
-    auto image = Image::try_create_from_bitmap(bitmap.release_nonnull());
-    if (!image)
-        return String { "Unable to allocate Image"sv };
-    image->set_path(file_path);
     return image.release_nonnull();
 }
 

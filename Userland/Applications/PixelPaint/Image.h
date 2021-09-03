@@ -46,10 +46,10 @@ protected:
 class Image : public RefCounted<Image> {
 public:
     static RefPtr<Image> try_create_with_size(Gfx::IntSize const&);
-    static Result<NonnullRefPtr<Image>, String> try_create_from_fd_and_close(int fd, String const& file_path);
-    static Result<NonnullRefPtr<Image>, String> try_create_from_path(String const& file_path);
-    static RefPtr<Image> try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap>);
     static Result<NonnullRefPtr<Image>, String> try_create_from_pixel_paint_json(JsonObject const&);
+    static RefPtr<Image> try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap>);
+
+    static RefPtr<Gfx::Bitmap> try_decode_bitmap(const ByteBuffer& bitmap_data);
 
     // This generates a new Bitmap with the final image (all layers composed according to their attributes.)
     RefPtr<Gfx::Bitmap> try_compose_bitmap(Gfx::BitmapFormat format) const;
@@ -102,10 +102,6 @@ public:
 
 private:
     explicit Image(Gfx::IntSize const&);
-
-    static Result<NonnullRefPtr<Image>, String> try_create_from_pixel_paint_fd(int fd, String const& file_path);
-    static Result<NonnullRefPtr<Image>, String> try_create_from_pixel_paint_path(String const& file_path);
-    static Result<NonnullRefPtr<Image>, String> try_create_from_pixel_paint_file(Core::File& file, String const& file_path);
 
     void did_change(Gfx::IntRect const& modified_rect = {});
     void did_change_rect();

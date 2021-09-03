@@ -16,6 +16,7 @@
 #include "LayerListWidget.h"
 #include "LayerPropertiesWidget.h"
 #include "PaletteWidget.h"
+#include "ProjectLoader.h"
 #include "Tool.h"
 #include "ToolPropertiesWidget.h"
 #include "ToolboxWidget.h"
@@ -114,6 +115,7 @@ int main(int argc, char** argv)
     };
 
     Function<PixelPaint::ImageEditor&(NonnullRefPtr<PixelPaint::Image>)> create_new_editor;
+    PixelPaint::ProjectLoader loader;
 
     auto& layer_list_widget = *main_widget.find_descendant_of_type_named<PixelPaint::LayerListWidget>("layer_list_widget");
     layer_list_widget.on_layer_select = [&](auto* layer) {
@@ -151,23 +153,25 @@ int main(int argc, char** argv)
         window);
 
     auto open_image_file = [&](auto& path) {
-        auto image_or_error = PixelPaint::Image::try_create_from_path(path);
-        if (image_or_error.is_error()) {
+        auto try_load = loader.try_load_from_path(path);
+        if (try_load.is_error()) {
             GUI::MessageBox::show_error(window, String::formatted("Unable to open file: {}", path));
             return;
         }
-        auto& image = *image_or_error.value();
+        auto& image = *loader.release_image();
         create_new_editor(image);
         layer_list_widget.set_image(&image);
     };
 
     auto open_image_fd = [&](int fd, auto& path) {
-        auto image_or_error = PixelPaint::Image::try_create_from_fd_and_close(fd, path);
-        if (image_or_error.is_error()) {
-            GUI::MessageBox::show_error(window, String::formatted("Unable to open file: {}, {}", path, image_or_error.error()));
+        auto try_load = loader.try_load_from_fd_and_close(fd, path);
+
+        if (try_load.is_error()) {
+            GUI::MessageBox::show_error(window, String::formatted("Unable to open file: {}, {}", path, try_load.error()));
             return;
         }
-        auto& image = *image_or_error.value();
+
+        auto& image = *loader.release_image();
         create_new_editor(image);
         layer_list_widget.set_image(&image);
     };

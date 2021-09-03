@@ -30,6 +30,7 @@ set(SOURCES
     PenTool.cpp
     PickerTool.cpp
     PixelPaintWindowGML.h
+    ProjectLoader.cpp
     RectangleTool.cpp
     RectangleSelectTool.cpp
     Mask.cpp
