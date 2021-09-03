@@ -12,7 +12,7 @@ LLVM_ARCH=
 [ "$ARCH" = "i686" ] && LLVM_ARCH="i386" || LLVM_ARCH="$ARCH"
 LLVM_TARGET="$LLVM_ARCH-pc-serenity"
 PREFIX="$DIR/Local/clang/$ARCH"
-BUILD="$DIR/../Build/$ARCH"
+BUILD="$DIR/../Build/clang/$ARCH"
 SYSROOT="$BUILD/Root"
 
 MD5SUM="md5sum"
