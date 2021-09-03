@@ -34,6 +34,27 @@ TEST_CASE(move_optional)
     EXPECT_EQ(x.has_value(), false);
 }
 
+TEST_CASE(optional_rvalue_ref_qualified_getters)
+{
+    struct DontCopyMe {
+        DontCopyMe() { }
+        ~DontCopyMe() = default;
+        DontCopyMe(DontCopyMe&&) = default;
+        DontCopyMe& operator=(DontCopyMe&&) = default;
+        DontCopyMe(DontCopyMe const&) = delete;
+        DontCopyMe& operator=(DontCopyMe const&) = delete;
+
+        int x { 13 };
+    };
+
+    auto make_an_optional = []() -> Optional<DontCopyMe> {
+        return DontCopyMe {};
+    };
+
+    EXPECT_EQ(make_an_optional().value().x, 13);
+    EXPECT_EQ(make_an_optional().value_or(DontCopyMe {}).x, 13);
+}
+
 TEST_CASE(optional_leak_1)
 {
     struct Structure {
