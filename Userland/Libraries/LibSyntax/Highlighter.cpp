@@ -91,11 +91,8 @@ void Highlighter::highlight_matching_token_pair()
             }
         }
 
-        auto right_of_end = span.range.end();
-        right_of_end.set_column(right_of_end.column() + 1);
-
         for (auto& pair : pairs) {
-            if (token_types_equal(token_type, pair.close) && right_of_end == m_client->get_cursor()) {
+            if (token_types_equal(token_type, pair.close) && span.range.end() == m_client->get_cursor()) {
                 auto buddy = find_span_of_type(i, pair.open, pair.close, Direction::Backward);
                 if (buddy.has_value())
                     make_buddies(i, buddy.value());
