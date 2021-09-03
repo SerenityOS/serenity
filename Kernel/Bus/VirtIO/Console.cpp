@@ -53,7 +53,7 @@ UNMAP_AFTER_INIT Console::Console(PCI::Address address)
             if (is_feature_accepted(VIRTIO_CONSOLE_F_MULTIPORT))
                 setup_multiport();
             else
-                m_ports.append(new VirtIO::ConsolePort(0u, *this));
+                m_ports.append(make_ref_counted<VirtIO::ConsolePort>(0u, *this));
         }
     }
 }
@@ -150,7 +150,7 @@ void Console::process_control_message(ControlMessage message)
             return;
         }
 
-        m_ports.at(id) = new VirtIO::ConsolePort(id, *this);
+        m_ports.at(id) = make_ref_counted<VirtIO::ConsolePort>(id, *this);
         ControlMessage ready_event {
             .id = static_cast<u32>(id),
             .event = (u16)ControlEvent::PortReady,
