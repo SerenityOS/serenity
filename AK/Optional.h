@@ -22,13 +22,13 @@ public:
     ALWAYS_INLINE Optional() = default;
 
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
-    Optional(const Optional& other) requires(!IsCopyConstructible<T>) = delete;
-    Optional(const Optional& other) = default;
+    Optional(Optional const& other) requires(!IsCopyConstructible<T>) = delete;
+    Optional(Optional const& other) = default;
 
     Optional(Optional&& other) requires(!IsMoveConstructible<T>) = delete;
 
-    Optional& operator=(const Optional&) requires(!IsCopyConstructible<T> || !IsDestructible<T>) = delete;
-    Optional& operator=(const Optional&) = default;
+    Optional& operator=(Optional const&) requires(!IsCopyConstructible<T> || !IsDestructible<T>) = delete;
+    Optional& operator=(Optional const&) = default;
 
     Optional& operator=(Optional&& other) requires(!IsMoveConstructible<T> || !IsDestructible<T>) = delete;
 
@@ -36,7 +36,7 @@ public:
     ~Optional() = default;
 #endif
 
-    ALWAYS_INLINE Optional(const Optional& other)
+    ALWAYS_INLINE Optional(Optional const& other)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
         requires(!IsTriviallyCopyConstructible<T>)
 #endif
@@ -62,7 +62,7 @@ public:
         new (&m_storage) T(forward<U>(value));
     }
 
-    ALWAYS_INLINE Optional& operator=(const Optional& other)
+    ALWAYS_INLINE Optional& operator=(Optional const& other)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
         requires(!IsTriviallyCopyConstructible<T> || !IsTriviallyDestructible<T>)
 #endif
@@ -90,7 +90,7 @@ public:
     }
 
     template<typename O>
-    ALWAYS_INLINE bool operator==(const Optional<O>& other) const
+    ALWAYS_INLINE bool operator==(Optional<O> const& other) const
     {
         return has_value() == other.has_value() && (!has_value() || value() == other.value());
     }
@@ -133,10 +133,10 @@ public:
         return *__builtin_launder(reinterpret_cast<T*>(&m_storage));
     }
 
-    [[nodiscard]] ALWAYS_INLINE const T& value() const
+    [[nodiscard]] ALWAYS_INLINE T const& value() const
     {
         VERIFY(m_has_value);
-        return *__builtin_launder(reinterpret_cast<const T*>(&m_storage));
+        return *__builtin_launder(reinterpret_cast<T const*>(&m_storage));
     }
 
     [[nodiscard]] T release_value()
@@ -148,17 +148,17 @@ public:
         return released_value;
     }
 
-    [[nodiscard]] ALWAYS_INLINE T value_or(const T& fallback) const
+    [[nodiscard]] ALWAYS_INLINE T value_or(T const& fallback) const
     {
         if (m_has_value)
             return value();
         return fallback;
     }
 
-    ALWAYS_INLINE const T& operator*() const { return value(); }
+    ALWAYS_INLINE T const& operator*() const { return value(); }
     ALWAYS_INLINE T& operator*() { return value(); }
 
-    ALWAYS_INLINE const T* operator->() const { return &value(); }
+    ALWAYS_INLINE T const* operator->() const { return &value(); }
     ALWAYS_INLINE T* operator->() { return &value(); }
 
 private:
