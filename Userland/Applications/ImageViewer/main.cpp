@@ -128,7 +128,7 @@ int main(int argc, char** argv)
                 return;
 
             auto msgbox_result = GUI::MessageBox::show(window,
-                String::formatted("Really delete {}?", path),
+                String::formatted("Are you sure you want to delete {}?", path),
                 "Confirm deletion",
                 GUI::MessageBox::Type::Warning,
                 GUI::MessageBox::InputType::OKCancel);
