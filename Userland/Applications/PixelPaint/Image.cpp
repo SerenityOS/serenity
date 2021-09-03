@@ -8,6 +8,7 @@
 
 #include "Image.h"
 #include "Layer.h"
+#include "Selection.h"
 #include <AK/Base64.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
@@ -171,6 +172,20 @@ RefPtr<Gfx::Bitmap> Image::try_compose_bitmap(Gfx::BitmapFormat format) const
     GUI::Painter painter(*bitmap);
     paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
     return bitmap;
+}
+
+RefPtr<Gfx::Bitmap> Image::try_copy_bitmap(Selection const& selection) const
+{
+    if (selection.is_empty())
+        return {};
+    auto selection_rect = selection.bounding_rect();
+
+    // FIXME: Add a way to only compose a certain part of the image
+    auto full_bitmap = try_compose_bitmap(Gfx::BitmapFormat::BGRA8888);
+    if (!full_bitmap)
+        return {};
+
+    return full_bitmap->cropped(selection_rect);
 }
 
 Result<void, String> Image::export_bmp_to_fd_and_close(int fd, bool preserve_alpha_channel)
