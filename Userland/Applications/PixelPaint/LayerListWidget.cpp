@@ -277,7 +277,9 @@ size_t LayerListWidget::hole_index_during_move() const
     VERIFY(is_moving_gadget());
     auto& moving_gadget = m_gadgets[m_moving_gadget_index.value()];
     int center_y_of_moving_gadget = moving_gadget.rect.translated(0, moving_gadget.movement_delta.y()).center().y();
-    return center_y_of_moving_gadget / vertical_step;
+
+    int top_of_gadgets = max(0, height() - m_total_gadget_height);
+    return (center_y_of_moving_gadget - top_of_gadgets) / vertical_step;
 }
 
 void LayerListWidget::select_bottom_layer()
@@ -316,8 +318,8 @@ void LayerListWidget::cycle_through_selection(int delta)
 
 void LayerListWidget::relayout_gadgets()
 {
-    auto total_gadget_height = static_cast<int>(m_gadgets.size()) * vertical_step + 6;
-    int y = max(0, height() - total_gadget_height);
+    m_total_gadget_height = static_cast<int>(m_gadgets.size()) * vertical_step + 6;
+    int y = max(0, height() - m_total_gadget_height);
 
     Optional<size_t> hole_index;
     if (is_moving_gadget())
@@ -334,8 +336,8 @@ void LayerListWidget::relayout_gadgets()
         ++index;
     }
 
-    set_content_size({ widget_inner_rect().width(), total_gadget_height });
-    vertical_scrollbar().set_range(0, max(total_gadget_height - height(), 0));
+    set_content_size({ widget_inner_rect().width(), m_total_gadget_height });
+    vertical_scrollbar().set_range(0, max(m_total_gadget_height - height(), 0));
     update();
 }
 
