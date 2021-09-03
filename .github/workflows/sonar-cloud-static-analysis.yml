@@ -27,15 +27,6 @@ jobs:
         with:
           java-version: 11
 
-        # The sonar cache appears to be about ~450 MB
-      - name: Cache SonarCloud packages and analysis
-        uses: actions/cache@v2
-        id: sonarcloud-cache
-        with:
-          path: ~/.sonar
-          key: ${{ runner.os }}-sonar-${{ env.SONAR_SCANNER_VERSION }}
-          restore-keys: ${{ runner.os }}-sonar-${{ env.SONAR_SCANNER_VERSION }}
-
       - name: Download and set up sonar-scanner
         env:
           SONAR_SCANNER_DOWNLOAD_URL: https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${{ env.SONAR_SCANNER_VERSION }}-linux.zip
