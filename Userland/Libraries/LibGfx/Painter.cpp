@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -583,6 +584,21 @@ void Painter::draw_rect(const IntRect& a_rect, Color color, bool rough)
                     set_physical_pixel_with_draw_op(bits[rect.right() * scale + i], color);
         }
     }
+}
+
+void Painter::draw_rect_with_thickness(const IntRect& rect, Color color, int thickness)
+{
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
+
+    IntPoint p1 = rect.location();
+    IntPoint p2 = { rect.location().x() + rect.width(), rect.location().y() };
+    IntPoint p3 = { rect.location().x() + rect.width(), rect.location().y() + rect.height() };
+    IntPoint p4 = { rect.location().x(), rect.location().y() + rect.height() };
+
+    draw_line(p1, p2, color, thickness);
+    draw_line(p2, p3, color, thickness);
+    draw_line(p3, p4, color, thickness);
+    draw_line(p4, p1, color, thickness);
 }
 
 void Painter::draw_bitmap(const IntPoint& p, const CharacterBitmap& bitmap, Color color)
