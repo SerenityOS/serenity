@@ -1,0 +1,96 @@
+name: Coverity Static Analysis
+
+on:
+  push:
+    branches: master
+
+env:
+  COVERITY_SCAN_PROJECT_NAME: 'SerenityOS%2Fserenity'
+  COVERITY_SCAN_TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+  COVERITY_SCAN_NOTIFICATION_EMAIL: 'bgianf@serenity.org'
+  #COVERITY_UNSUPPORTED_COMPILER_INVOCATION: 1
+
+jobs:
+  build:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: "Install Ubuntu dependencies"
+      # These packages are already part of the ubuntu-20.04 image:
+      # cmake clang-format-11 gcc-10 g++-10 libstdc++-10-dev libgmp-dev npm shellcheck
+      # Packages below aren't.
+      #
+      # We add the canonical-server/server-backports PPA to get updated QEMU releases without having to manage
+      #    yet another cache in github actions
+      run: |
+        sudo add-apt-repository ppa:canonical-server/server-backports
+        sudo apt-get update
+        sudo apt-get install libmpfr-dev libmpc-dev ninja-build unzip
+
+    - name: Check versions
+      run: set +e; g++ --version; g++-10 --version; ninja --version;
+
+    - name: Prepare useful stamps
+      id: stamps
+      shell: cmake -P {0}
+      run: |
+        string(TIMESTAMP current_date "%Y_%m_%d_%H_%M_%S" UTC)
+        # Output everything twice to make it visible both in the logs
+        # *and* as actual output variable, in this order.
+        message("  set-output name=time::${current_date}")
+        message("::set-output name=time::${current_date}")
+        message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*[!llvm].patch', 'Toolchain/BuildIt.sh') }}")
+        message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*[!llvm].patch', 'Toolchain/BuildIt.sh') }}")
+
+    - name: Toolchain cache
+      # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+      uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+      env:
+        # This job should always read the cache, never populate it.
+        CACHE_SKIP_SAVE: false
+
+      with:
+        path: ${{ github.workspace }}/Toolchain/Cache/
+        # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
+        # This is wrong, and causes more Toolchain rebuilds than necessary.
+        # However, we want to avoid false cache hits at all costs.
+        key: ${{ runner.os }}-toolchain-i686-${{ steps.stamps.outputs.libc_headers }}
+
+    - name: Restore or regenerate Toolchain
+      run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
+
+    - name: Create build directory
+      run: |
+        mkdir -p ${{ github.workspace }}/Build
+        mkdir -p ${{ github.workspace }}/Build/UCD
+        mkdir -p ${{ github.workspace }}/Build/CLDR
+
+    - name: Create build environment
+      working-directory: ${{ github.workspace }}/Build
+      run: cmake .. -GNinja -DSERENITY_ARCH=i686 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+
+    - name: Download Coverity Build Tool
+      run: |
+        wget -q https://scan.coverity.com/download/cxx/linux64 --post-data "token=$COVERITY_SCAN_TOKEN&project=$COVERITY_SCAN_PROJECT_NAME" -O cov-analysis-linux64.tar.gz
+        mkdir cov-analysis-linux64
+        tar xzf cov-analysis-linux64.tar.gz --strip 1 -C cov-analysis-linux64
+
+    - name: Build with cov-build
+      working-directory: ${{ github.workspace }}/Build
+      run: |
+        export PATH=`pwd`/cov-analysis-linux64/bin:$PATH
+        cov-build --dir cov-int 'ninja install'
+
+    - name: Submit the result to Coverity Scan
+      run: |
+        tar czvf serenityos.tgz cov-int
+        curl \
+          --form project=SerenityOS/serenity \
+          --form token=$COVERITY_SCAN_TOKEN \
+          --form email=$COVERITY_SCAN_NOTIFICATION_EMAIL \
+          --form file=@serenityos.tgz \
+          --form version=$GITHUB_SHA \
+          --form description="GithubActionCI $GITHUB_ACTION" \
+            https://scan.coverity.com/builds?project=$COVERITY_SCAN_PROJECT_NAME
