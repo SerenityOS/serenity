@@ -710,20 +710,20 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
     memory_graph.set_stack_values(true);
     memory_graph.set_value_format(0, {
                                          .graph_color_role = ColorRole::SyntaxComment,
-                                         .text_formatter = [](int value) {
-                                             return String::formatted("Committed: {} KiB", value);
+                                         .text_formatter = [](int bytes) {
+                                             return String::formatted("Committed: {}", human_readable_size(bytes));
                                          },
                                      });
     memory_graph.set_value_format(1, {
                                          .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
-                                         .text_formatter = [](int value) {
-                                             return String::formatted("Allocated: {} KiB", value);
+                                         .text_formatter = [](int bytes) {
+                                             return String::formatted("Allocated: {}", human_readable_size(bytes));
                                          },
                                      });
     memory_graph.set_value_format(2, {
                                          .graph_color_role = ColorRole::SyntaxPreprocessorValue,
-                                         .text_formatter = [](int value) {
-                                             return String::formatted("Kernel heap: {} KiB", value);
+                                         .text_formatter = [](int bytes) {
+                                             return String::formatted("Kernel heap: {}", human_readable_size(bytes));
                                          },
                                      });
 
