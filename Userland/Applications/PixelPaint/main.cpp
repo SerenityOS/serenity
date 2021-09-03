@@ -765,6 +765,32 @@ int main(int argc, char** argv)
         if (image->layer_count())
             image_editor.set_active_layer(&image->layer(0));
 
+        if (!loader.is_raw_image()) {
+            loader.json_metadata().for_each([&](JsonValue const& value) {
+                if (!value.is_object())
+                    return;
+                auto& json_object = value.as_object();
+                auto orientation_value = json_object.get("orientation"sv);
+                if (!orientation_value.is_string())
+                    return;
+
+                auto offset_value = json_object.get("offset"sv);
+                if (!offset_value.is_number())
+                    return;
+
+                auto orientation_string = orientation_value.as_string();
+                PixelPaint::Guide::Orientation orientation;
+                if (orientation_string == "horizontal"sv)
+                    orientation = PixelPaint::Guide::Orientation::Horizontal;
+                else if (orientation_string == "vertical"sv)
+                    orientation = PixelPaint::Guide::Orientation::Vertical;
+                else
+                    return;
+
+                image_editor.add_guide(PixelPaint::Guide::construct(orientation, offset_value.to_number<float>()));
+            });
+        }
+
         tab_widget.set_active_widget(&image_editor);
         image_editor.set_focus(true);
         return image_editor;
