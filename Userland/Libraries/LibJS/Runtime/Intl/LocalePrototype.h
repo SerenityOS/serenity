@@ -20,6 +20,7 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(maximize);
+    JS_DECLARE_NATIVE_FUNCTION(minimize);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
 
     JS_DECLARE_NATIVE_GETTER(base_name);

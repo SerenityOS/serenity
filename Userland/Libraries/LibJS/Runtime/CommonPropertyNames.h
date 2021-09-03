@@ -289,6 +289,7 @@ namespace JS {
     P(millisecond)                           \
     P(milliseconds)                          \
     P(min)                                   \
+    P(minimize)                              \
     P(minute)                                \
     P(minutes)                               \
     P(month)                                 \
