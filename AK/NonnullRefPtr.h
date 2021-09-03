@@ -58,7 +58,7 @@ public:
         const_cast<T&>(object).ref();
     }
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(const U& object)
+    ALWAYS_INLINE NonnullRefPtr(const U& object) requires(IsConvertible<U*, T*>)
         : m_bits((FlatPtr) static_cast<const T*>(&object))
     {
         VERIFY(!(m_bits & 1));
@@ -75,7 +75,7 @@ public:
         VERIFY(!(m_bits & 1));
     }
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U>&& other)
+    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
         : m_bits((FlatPtr)&other.leak_ref())
     {
         VERIFY(!(m_bits & 1));
@@ -86,7 +86,7 @@ public:
         VERIFY(!(m_bits & 1));
     }
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr<U>& other)
+    ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr<U>& other) requires(IsConvertible<U*, T*>)
         : m_bits((FlatPtr)other.add_ref())
     {
         VERIFY(!(m_bits & 1));
@@ -119,7 +119,7 @@ public:
     }
 
     template<typename U>
-    NonnullRefPtr& operator=(const NonnullRefPtr<U>& other)
+    NonnullRefPtr& operator=(const NonnullRefPtr<U>& other) requires(IsConvertible<U*, T*>)
     {
         assign(other.add_ref());
         return *this;
@@ -133,7 +133,7 @@ public:
     }
 
     template<typename U>
-    NonnullRefPtr& operator=(NonnullRefPtr<U>&& other)
+    NonnullRefPtr& operator=(NonnullRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
     {
         assign(&other.leak_ref());
         return *this;
@@ -213,7 +213,7 @@ public:
     }
 
     template<typename U>
-    void swap(NonnullRefPtr<U>& other)
+    void swap(NonnullRefPtr<U>& other) requires(IsConvertible<U*, T*>)
     {
         // NOTE: swap is not atomic!
         U* other_ptr = other.exchange(nullptr);
@@ -327,7 +327,7 @@ struct Formatter<NonnullRefPtr<T>> : Formatter<const T*> {
 };
 
 template<typename T, typename U>
-inline void swap(NonnullRefPtr<T>& a, NonnullRefPtr<U>& b)
+inline void swap(NonnullRefPtr<T>& a, NonnullRefPtr<U>& b) requires(IsConvertible<U*, T*>)
 {
     a.swap(b);
 }

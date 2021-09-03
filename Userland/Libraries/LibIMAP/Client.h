@@ -69,7 +69,7 @@ private:
     // Not yet sent
     Vector<Command> m_command_queue {};
 
-    RefPtr<Promise<bool>> m_connect_pending {};
+    RefPtr<Promise<Empty>> m_connect_pending {};
 
     ByteBuffer m_buffer;
     Parser m_parser;

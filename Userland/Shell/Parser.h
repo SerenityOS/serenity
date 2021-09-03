@@ -85,7 +85,7 @@ private:
     RefPtr<AST::Node> parse_string_inner(StringEndCondition);
     RefPtr<AST::Node> parse_variable();
     RefPtr<AST::Node> parse_variable_ref();
-    RefPtr<AST::Node> parse_slice();
+    RefPtr<AST::Slice> parse_slice();
     RefPtr<AST::Node> parse_evaluate();
     RefPtr<AST::Node> parse_history_designator();
     RefPtr<AST::Node> parse_comment();

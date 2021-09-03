@@ -146,7 +146,7 @@ Value Document::resolve(Value const& value)
     auto obj = value.as_object();
 
     if (obj->is_indirect_value())
-        return static_cast<NonnullRefPtr<IndirectValue>>(obj)->value();
+        return static_ptr_cast<IndirectValue>(obj)->value();
 
     return obj;
 }

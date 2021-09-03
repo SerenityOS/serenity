@@ -154,18 +154,18 @@ public:
     {
     }
     template<typename U>
-    ALWAYS_INLINE RefPtr(const NonnullRefPtr<U>& other)
+    ALWAYS_INLINE RefPtr(const NonnullRefPtr<U>& other) requires(IsConvertible<U*, T*>)
         : m_bits(PtrTraits::as_bits(const_cast<U*>(other.add_ref())))
     {
     }
     template<typename U>
-    ALWAYS_INLINE RefPtr(NonnullRefPtr<U>&& other)
+    ALWAYS_INLINE RefPtr(NonnullRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
         : m_bits(PtrTraits::as_bits(&other.leak_ref()))
     {
         VERIFY(!is_null());
     }
     template<typename U, typename P = RefPtrTraits<U>>
-    RefPtr(RefPtr<U, P>&& other)
+    RefPtr(RefPtr<U, P>&& other) requires(IsConvertible<U*, T*>)
         : m_bits(PtrTraits::template convert_from<U, P>(other.leak_ref_raw()))
     {
     }
@@ -174,7 +174,7 @@ public:
     {
     }
     template<typename U, typename P = RefPtrTraits<U>>
-    RefPtr(const RefPtr<U, P>& other)
+    RefPtr(const RefPtr<U, P>& other) requires(IsConvertible<U*, T*>)
         : m_bits(other.add_ref_raw())
     {
     }
@@ -203,7 +203,7 @@ public:
     }
 
     template<typename U, typename P = RefPtrTraits<U>>
-    void swap(RefPtr<U, P>& other)
+    void swap(RefPtr<U, P>& other) requires(IsConvertible<U*, T*>)
     {
         // NOTE: swap is not atomic!
         FlatPtr other_bits = P::exchange(other.m_bits, P::default_null_value);
@@ -219,14 +219,14 @@ public:
     }
 
     template<typename U, typename P = RefPtrTraits<U>>
-    ALWAYS_INLINE RefPtr& operator=(RefPtr<U, P>&& other)
+    ALWAYS_INLINE RefPtr& operator=(RefPtr<U, P>&& other) requires(IsConvertible<U*, T*>)
     {
         assign_raw(PtrTraits::template convert_from<U, P>(other.leak_ref_raw()));
         return *this;
     }
 
     template<typename U>
-    ALWAYS_INLINE RefPtr& operator=(NonnullRefPtr<U>&& other)
+    ALWAYS_INLINE RefPtr& operator=(NonnullRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
     {
         assign_raw(PtrTraits::as_bits(&other.leak_ref()));
         return *this;
@@ -239,7 +239,7 @@ public:
     }
 
     template<typename U>
-    ALWAYS_INLINE RefPtr& operator=(const NonnullRefPtr<U>& other)
+    ALWAYS_INLINE RefPtr& operator=(const NonnullRefPtr<U>& other) requires(IsConvertible<U*, T*>)
     {
         assign_raw(PtrTraits::as_bits(other.add_ref()));
         return *this;
@@ -253,7 +253,7 @@ public:
     }
 
     template<typename U>
-    ALWAYS_INLINE RefPtr& operator=(const RefPtr<U>& other)
+    ALWAYS_INLINE RefPtr& operator=(const RefPtr<U>& other) requires(IsConvertible<U*, T*>)
     {
         assign_raw(other.add_ref_raw());
         return *this;
@@ -470,7 +470,7 @@ inline RefPtr<T> static_ptr_cast(const RefPtr<U>& ptr)
 }
 
 template<typename T, typename PtrTraitsT, typename U, typename PtrTraitsU>
-inline void swap(RefPtr<T, PtrTraitsT>& a, RefPtr<U, PtrTraitsU>& b)
+inline void swap(RefPtr<T, PtrTraitsT>& a, RefPtr<U, PtrTraitsU>& b) requires(IsConvertible<U*, T*>)
 {
     a.swap(b);
 }
