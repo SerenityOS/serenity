@@ -28,7 +28,7 @@ public:
 
     virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
 
-    bool unblock(bool from_add_blocker, const IPv4Address& ip_addr, const MACAddress& addr)
+    bool unblock(bool from_add_blocker, IPv4Address const& ip_addr, MACAddress const& addr)
     {
         if (m_ip_addr != ip_addr)
             return false;
@@ -46,17 +46,17 @@ public:
         return true;
     }
 
-    const IPv4Address& ip_addr() const { return m_ip_addr; }
+    IPv4Address const& ip_addr() const { return m_ip_addr; }
 
 private:
-    const IPv4Address m_ip_addr;
+    IPv4Address const m_ip_addr;
     Optional<MACAddress>& m_addr;
     bool m_did_unblock { false };
 };
 
 class ARPTableBlockerSet final : public Thread::BlockerSet {
 public:
-    void unblock(const IPv4Address& ip_addr, const MACAddress& addr)
+    void unblock(IPv4Address const& ip_addr, MACAddress const& addr)
     {
         BlockerSet::unblock_all_blockers_whose_conditions_are_met([&](auto& b, void*, bool&) {
             VERIFY(b.blocker_type() == Thread::Blocker::Type::Routing);
@@ -70,7 +70,7 @@ protected:
     {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Routing);
         auto& blocker = static_cast<ARPTableBlocker&>(b);
-        auto val = arp_table().with_shared([&](const auto& table) -> auto {
+        auto val = arp_table().with_shared([&](auto const& table) -> auto {
             return table.get(blocker.ip_addr());
         });
         if (!val.has_value())
@@ -94,7 +94,7 @@ bool ARPTableBlocker::setup_blocker()
 
 void ARPTableBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
 {
-    auto addr = arp_table().with_shared([&](const auto& table) -> auto {
+    auto addr = arp_table().with_shared([&](auto const& table) -> auto {
         return table.get(ip_addr());
     });
 
@@ -110,7 +110,7 @@ MutexProtected<HashMap<IPv4Address, MACAddress>>& arp_table()
     return *s_arp_table;
 }
 
-void update_arp_table(const IPv4Address& ip_addr, const MACAddress& addr, UpdateArp update)
+void update_arp_table(IPv4Address const& ip_addr, MACAddress const& addr, UpdateArp update)
 {
     arp_table().with_exclusive([&](auto& table) {
         if (update == UpdateArp::Set)
@@ -121,7 +121,7 @@ void update_arp_table(const IPv4Address& ip_addr, const MACAddress& addr, Update
     s_arp_table_blocker_set->unblock(ip_addr, addr);
 
     if constexpr (ARP_DEBUG) {
-        arp_table().with_shared([&](const auto& table) {
+        arp_table().with_shared([&](auto const& table) {
             dmesgln("ARP table ({} entries):", table.size());
             for (auto& it : table)
                 dmesgln("{} :: {}", it.value.to_string(), it.key.to_string());
@@ -139,7 +139,7 @@ static MACAddress multicast_ethernet_address(IPv4Address const& address)
     return MACAddress { 0x01, 0x00, 0x5e, (u8)(address[1] & 0x7f), address[2], address[3] };
 }
 
-RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, const RefPtr<NetworkAdapter> through)
+RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, RefPtr<NetworkAdapter> const through)
 {
     auto matches = [&](auto& adapter) {
         if (!through)
@@ -147,7 +147,7 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
 
         return through == adapter;
     };
-    auto if_matches = [&](auto& adapter, const auto& mac) -> RoutingDecision {
+    auto if_matches = [&](auto& adapter, auto const& mac) -> RoutingDecision {
         if (!matches(adapter))
             return { nullptr, {} };
         return { adapter, mac };
@@ -232,7 +232,7 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
         return { adapter, multicast_ethernet_address(target) };
 
     {
-        auto addr = arp_table().with_shared([&](const auto& table) -> auto {
+        auto addr = arp_table().with_shared([&](auto const& table) -> auto {
             return table.get(next_hop_ip);
         });
         if (addr.has_value()) {
