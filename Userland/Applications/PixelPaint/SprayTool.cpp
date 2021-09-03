@@ -116,6 +116,7 @@ GUI::Widget* SprayTool::get_properties_widget()
         size_slider.on_change = [&](int value) {
             m_thickness = value;
         };
+        set_primary_slider(&size_slider);
 
         auto& density_container = m_properties_widget->add<GUI::Widget>();
         density_container.set_fixed_height(20);
@@ -132,6 +133,7 @@ GUI::Widget* SprayTool::get_properties_widget()
         density_slider.on_change = [&](int value) {
             m_density = value;
         };
+        set_secondary_slider(&density_slider);
     }
 
     return m_properties_widget.ptr();

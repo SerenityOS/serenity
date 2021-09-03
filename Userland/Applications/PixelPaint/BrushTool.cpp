@@ -141,6 +141,7 @@ GUI::Widget* BrushTool::get_properties_widget()
         size_slider.on_change = [&](int value) {
             m_size = value;
         };
+        set_primary_slider(&size_slider);
 
         auto& hardness_container = m_properties_widget->add<GUI::Widget>();
         hardness_container.set_fixed_height(20);
@@ -157,6 +158,7 @@ GUI::Widget* BrushTool::get_properties_widget()
         hardness_slider.on_change = [&](int value) {
             m_hardness = value;
         };
+        set_secondary_slider(&hardness_slider);
     }
 
     return m_properties_widget.ptr();

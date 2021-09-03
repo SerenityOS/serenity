@@ -106,6 +106,7 @@ void EllipseTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 
 void EllipseTool::on_keydown(GUI::KeyEvent& event)
 {
+    Tool::on_keydown(event);
     if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
         m_drawing_button = GUI::MouseButton::None;
         m_editor->update();
@@ -134,6 +135,7 @@ GUI::Widget* EllipseTool::get_properties_widget()
         thickness_slider.on_change = [&](int value) {
             m_thickness = value;
         };
+        set_primary_slider(&thickness_slider);
 
         auto& mode_container = m_properties_widget->add<GUI::Widget>();
         mode_container.set_fixed_height(46);

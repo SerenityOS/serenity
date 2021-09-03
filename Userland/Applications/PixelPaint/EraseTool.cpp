@@ -102,6 +102,7 @@ GUI::Widget* EraseTool::get_properties_widget()
         thickness_slider.on_change = [&](int value) {
             m_thickness = value;
         };
+        set_primary_slider(&thickness_slider);
 
         auto& checkbox_container = m_properties_widget->add<GUI::Widget>();
         checkbox_container.set_fixed_height(20);

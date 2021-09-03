@@ -96,6 +96,7 @@ GUI::Widget* PenTool::get_properties_widget()
         thickness_slider.on_change = [&](int value) {
             m_thickness = value;
         };
+        set_primary_slider(&thickness_slider);
     }
 
     return m_properties_widget.ptr();

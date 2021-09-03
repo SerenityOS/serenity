@@ -109,6 +109,7 @@ GUI::Widget* BucketTool::get_properties_widget()
         threshold_slider.on_change = [&](int value) {
             m_threshold = value;
         };
+        set_primary_slider(&threshold_slider);
     }
 
     return m_properties_widget.ptr();
