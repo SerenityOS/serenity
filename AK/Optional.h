@@ -127,16 +127,21 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE bool has_value() const { return m_has_value; }
 
-    [[nodiscard]] ALWAYS_INLINE T& value()
+    [[nodiscard]] ALWAYS_INLINE T& value() &
     {
         VERIFY(m_has_value);
         return *__builtin_launder(reinterpret_cast<T*>(&m_storage));
     }
 
-    [[nodiscard]] ALWAYS_INLINE T const& value() const
+    [[nodiscard]] ALWAYS_INLINE T const& value() const&
     {
         VERIFY(m_has_value);
         return *__builtin_launder(reinterpret_cast<T const*>(&m_storage));
+    }
+
+    [[nodiscard]] ALWAYS_INLINE T value() &&
+    {
+        return release_value();
     }
 
     [[nodiscard]] T release_value()
@@ -148,11 +153,18 @@ public:
         return released_value;
     }
 
-    [[nodiscard]] ALWAYS_INLINE T value_or(T const& fallback) const
+    [[nodiscard]] ALWAYS_INLINE T value_or(T const& fallback) const&
     {
         if (m_has_value)
             return value();
         return fallback;
+    }
+
+    [[nodiscard]] ALWAYS_INLINE T value_or(T&& fallback) &&
+    {
+        if (m_has_value)
+            return move(value());
+        return move(fallback);
     }
 
     ALWAYS_INLINE T const& operator*() const { return value(); }
