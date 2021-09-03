@@ -205,12 +205,12 @@ NonnullRefPtr<Insert> Parser::parse_insert_statement(RefPtr<CommonTableExpressio
 
     if (consume_if(TokenType::Values)) {
         parse_comma_separated_list(false, [&]() {
-            if (auto chained_expression = parse_chained_expression(); chained_expression.has_value()) {
-                auto chained_expr = dynamic_cast<ChainedExpression*>(chained_expression->ptr());
+            if (auto chained_expression = parse_chained_expression()) {
+                auto chained_expr = dynamic_cast<ChainedExpression*>(chained_expression.ptr());
                 if ((column_names.size() > 0) && (chained_expr->expressions().size() != column_names.size())) {
                     syntax_error("Number of expressions does not match number of columns");
                 } else {
-                    chained_expressions.append(move(chained_expression.value()));
+                    chained_expressions.append(chained_expression.release_nonnull());
                 }
             } else {
                 expected("Chained expression");
@@ -398,26 +398,26 @@ NonnullRefPtr<Expression> Parser::parse_expression()
 
 NonnullRefPtr<Expression> Parser::parse_primary_expression()
 {
-    if (auto expression = parse_literal_value_expression(); expression.has_value())
-        return move(expression.value());
+    if (auto expression = parse_literal_value_expression())
+        return expression.release_nonnull();
 
-    if (auto expression = parse_column_name_expression(); expression.has_value())
-        return move(expression.value());
+    if (auto expression = parse_column_name_expression())
+        return expression.release_nonnull();
 
-    if (auto expression = parse_unary_operator_expression(); expression.has_value())
-        return move(expression.value());
+    if (auto expression = parse_unary_operator_expression())
+        return expression.release_nonnull();
 
-    if (auto expression = parse_chained_expression(); expression.has_value())
-        return move(expression.value());
+    if (auto expression = parse_chained_expression())
+        return expression.release_nonnull();
 
-    if (auto expression = parse_cast_expression(); expression.has_value())
-        return move(expression.value());
+    if (auto expression = parse_cast_expression())
+        return expression.release_nonnull();
 
-    if (auto expression = parse_case_expression(); expression.has_value())
-        return move(expression.value());
+    if (auto expression = parse_case_expression())
+        return expression.release_nonnull();
 
-    if (auto expression = parse_exists_expression(false); expression.has_value())
-        return move(expression.value());
+    if (auto expression = parse_exists_expression(false))
+        return expression.release_nonnull();
 
     expected("Primary Expression");
     consume();
@@ -427,30 +427,30 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
 
 NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expression> primary)
 {
-    if (auto expression = parse_binary_operator_expression(primary); expression.has_value())
-        return move(expression.value());
+    if (auto expression = parse_binary_operator_expression(primary))
+        return expression.release_nonnull();
 
-    if (auto expression = parse_collate_expression(primary); expression.has_value())
-        return move(expression.value());
+    if (auto expression = parse_collate_expression(primary))
+        return expression.release_nonnull();
 
-    if (auto expression = parse_is_expression(primary); expression.has_value())
-        return move(expression.value());
+    if (auto expression = parse_is_expression(primary))
+        return expression.release_nonnull();
 
     bool invert_expression = false;
     if (consume_if(TokenType::Not))
         invert_expression = true;
 
-    if (auto expression = parse_match_expression(primary, invert_expression); expression.has_value())
-        return move(expression.value());
+    if (auto expression = parse_match_expression(primary, invert_expression))
+        return expression.release_nonnull();
 
-    if (auto expression = parse_null_expression(primary, invert_expression); expression.has_value())
-        return move(expression.value());
+    if (auto expression = parse_null_expression(primary, invert_expression))
+        return expression.release_nonnull();
 
-    if (auto expression = parse_between_expression(primary, invert_expression); expression.has_value())
-        return move(expression.value());
+    if (auto expression = parse_between_expression(primary, invert_expression))
+        return expression.release_nonnull();
 
-    if (auto expression = parse_in_expression(primary, invert_expression); expression.has_value())
-        return move(expression.value());
+    if (auto expression = parse_in_expression(primary, invert_expression))
+        return expression.release_nonnull();
 
     expected("Secondary Expression");
     consume();
@@ -493,7 +493,7 @@ bool Parser::match_secondary_expression() const
         || match(TokenType::In);
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_literal_value_expression()
+RefPtr<Expression> Parser::parse_literal_value_expression()
 {
     if (match(TokenType::NumericLiteral)) {
         auto value = consume().double_value();
@@ -515,7 +515,7 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_literal_value_expression()
     return {};
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_column_name_expression(String with_parsed_identifier, bool with_parsed_period)
+RefPtr<Expression> Parser::parse_column_name_expression(String with_parsed_identifier, bool with_parsed_period)
 {
     if (with_parsed_identifier.is_null() && !match(TokenType::Identifier))
         return {};
@@ -548,7 +548,7 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_column_name_expression(String 
     return create_ast_node<ColumnNameExpression>(move(schema_name), move(table_name), move(column_name));
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_unary_operator_expression()
+RefPtr<Expression> Parser::parse_unary_operator_expression()
 {
     if (consume_if(TokenType::Minus))
         return create_ast_node<UnaryOperatorExpression>(UnaryOperator::Minus, parse_expression());
@@ -569,7 +569,7 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_unary_operator_expression()
     return {};
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_binary_operator_expression(NonnullRefPtr<Expression> lhs)
+RefPtr<Expression> Parser::parse_binary_operator_expression(NonnullRefPtr<Expression> lhs)
 {
     if (consume_if(TokenType::DoublePipe))
         return create_ast_node<BinaryOperatorExpression>(BinaryOperator::Concatenate, move(lhs), parse_expression());
@@ -628,7 +628,7 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_binary_operator_expression(Non
     return {};
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_chained_expression()
+RefPtr<Expression> Parser::parse_chained_expression()
 {
     if (!consume_if(TokenType::ParenOpen))
         return {};
@@ -643,7 +643,7 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_chained_expression()
     return create_ast_node<ChainedExpression>(move(expressions));
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_cast_expression()
+RefPtr<Expression> Parser::parse_cast_expression()
 {
     if (!match(TokenType::Cast))
         return {};
@@ -658,7 +658,7 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_cast_expression()
     return create_ast_node<CastExpression>(move(expression), move(type_name));
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_case_expression()
+RefPtr<Expression> Parser::parse_case_expression()
 {
     if (!match(TokenType::Case))
         return {};
@@ -692,7 +692,7 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_case_expression()
     return create_ast_node<CaseExpression>(move(case_expression), move(when_then_clauses), move(else_expression));
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_exists_expression(bool invert_expression, TokenType opening_token)
+RefPtr<Expression> Parser::parse_exists_expression(bool invert_expression, TokenType opening_token)
 {
     VERIFY((opening_token == TokenType::Exists) || (opening_token == TokenType::Select));
 
@@ -707,7 +707,7 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_exists_expression(bool invert_
     return create_ast_node<ExistsExpression>(move(select_statement), invert_expression);
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_collate_expression(NonnullRefPtr<Expression> expression)
+RefPtr<Expression> Parser::parse_collate_expression(NonnullRefPtr<Expression> expression)
 {
     if (!match(TokenType::Collate))
         return {};
@@ -718,7 +718,7 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_collate_expression(NonnullRefP
     return create_ast_node<CollateExpression>(move(expression), move(collation_name));
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_is_expression(NonnullRefPtr<Expression> expression)
+RefPtr<Expression> Parser::parse_is_expression(NonnullRefPtr<Expression> expression)
 {
     if (!match(TokenType::Is))
         return {};
@@ -735,7 +735,7 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_is_expression(NonnullRefPtr<Ex
     return create_ast_node<IsExpression>(move(expression), move(rhs), invert_expression);
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_match_expression(NonnullRefPtr<Expression> lhs, bool invert_expression)
+RefPtr<Expression> Parser::parse_match_expression(NonnullRefPtr<Expression> lhs, bool invert_expression)
 {
     auto parse_escape = [this]() {
         RefPtr<Expression> escape;
@@ -759,7 +759,7 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_match_expression(NonnullRefPtr
     return {};
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_null_expression(NonnullRefPtr<Expression> expression, bool invert_expression)
+RefPtr<Expression> Parser::parse_null_expression(NonnullRefPtr<Expression> expression, bool invert_expression)
 {
     if (!match(TokenType::Isnull) && !match(TokenType::Notnull) && !(invert_expression && match(TokenType::Null)))
         return {};
@@ -770,7 +770,7 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_null_expression(NonnullRefPtr<
     return create_ast_node<NullExpression>(move(expression), invert_expression);
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_between_expression(NonnullRefPtr<Expression> expression, bool invert_expression)
+RefPtr<Expression> Parser::parse_between_expression(NonnullRefPtr<Expression> expression, bool invert_expression)
 {
     if (!match(TokenType::Between))
         return {};
@@ -792,7 +792,7 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_between_expression(NonnullRefP
     return create_ast_node<BetweenExpression>(move(expression), binary_expression.lhs(), binary_expression.rhs(), invert_expression);
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_in_expression(NonnullRefPtr<Expression> expression, bool invert_expression)
+RefPtr<Expression> Parser::parse_in_expression(NonnullRefPtr<Expression> expression, bool invert_expression)
 {
     if (!match(TokenType::In))
         return {};
