@@ -42,6 +42,7 @@ public:
     void fill_rect_with_rounded_corners(const IntRect&, Color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius);
     void fill_ellipse(const IntRect&, Color);
     void draw_rect(const IntRect&, Color, bool rough = false);
+    void draw_rect_with_thickness(const IntRect&, Color, int thickness);
     void draw_focus_rect(const IntRect&, Color);
     void draw_bitmap(const IntPoint&, const CharacterBitmap&, Color = Color());
     void draw_bitmap(const IntPoint&, const GlyphBitmap&, Color = Color());
