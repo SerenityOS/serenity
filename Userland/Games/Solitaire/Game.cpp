@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
- * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
