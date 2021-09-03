@@ -7,6 +7,7 @@
 #include "MemoryStatsWidget.h"
 #include "GraphWidget.h"
 #include <AK/JsonObject.h>
+#include <AK/NumberFormat.h>
 #include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
@@ -61,9 +62,14 @@ MemoryStatsWidget::~MemoryStatsWidget()
 {
 }
 
-static inline u64 page_count_to_kb(u64 kb)
+static inline u64 page_count_to_bytes(u64 count)
 {
-    return (kb * 4096) / 1024;
+    return count * 4096;
+}
+
+static inline u64 page_count_to_kb(u64 count)
+{
+    return page_count_to_bytes(count) / 1024;
 }
 
 static inline u64 bytes_to_kb(u64 bytes)
@@ -102,14 +108,14 @@ void MemoryStatsWidget::refresh()
     size_t physical_pages_in_use = user_physical_allocated + super_physical_alloc;
     size_t total_userphysical_and_swappable_pages = user_physical_allocated + user_physical_committed + user_physical_uncommitted;
 
-    m_kmalloc_space_label->set_text(String::formatted("{}K/{}K", bytes_to_kb(kmalloc_allocated), bytes_to_kb(kmalloc_bytes_total)));
-    m_user_physical_pages_label->set_text(String::formatted("{}K/{}K", page_count_to_kb(physical_pages_in_use), page_count_to_kb(physical_pages_total)));
-    m_user_physical_pages_committed_label->set_text(String::formatted("{}K", page_count_to_kb(user_physical_committed)));
-    m_supervisor_physical_pages_label->set_text(String::formatted("{}K/{}K", page_count_to_kb(super_physical_alloc), page_count_to_kb(supervisor_pages_total)));
+    m_kmalloc_space_label->set_text(String::formatted("{}/{}", human_readable_size(kmalloc_allocated), human_readable_size(kmalloc_bytes_total)));
+    m_user_physical_pages_label->set_text(String::formatted("{}/{}", human_readable_size(page_count_to_bytes(physical_pages_in_use)), human_readable_size(page_count_to_bytes(physical_pages_total))));
+    m_user_physical_pages_committed_label->set_text(String::formatted("{}", human_readable_size(page_count_to_bytes(user_physical_committed))));
+    m_supervisor_physical_pages_label->set_text(String::formatted("{}/{}", human_readable_size(page_count_to_bytes(super_physical_alloc)), human_readable_size(page_count_to_bytes(supervisor_pages_total))));
     m_kmalloc_count_label->set_text(String::formatted("{}", kmalloc_call_count));
     m_kfree_count_label->set_text(String::formatted("{}", kfree_call_count));
     m_kmalloc_difference_label->set_text(String::formatted("{:+}", kmalloc_call_count - kfree_call_count));
 
-    m_graph.set_max(page_count_to_kb(total_userphysical_and_swappable_pages) + bytes_to_kb(kmalloc_bytes_total));
-    m_graph.add_value({ (int)page_count_to_kb(user_physical_committed), (int)page_count_to_kb(user_physical_allocated), (int)bytes_to_kb(kmalloc_bytes_total) });
+    m_graph.set_max(page_count_to_bytes(total_userphysical_and_swappable_pages) + kmalloc_bytes_total);
+    m_graph.add_value({ (int)page_count_to_bytes(user_physical_committed), (int)page_count_to_bytes(user_physical_allocated), (int)kmalloc_bytes_total });
 }
