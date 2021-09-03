@@ -32,6 +32,12 @@ public:
 
     virtual void inserted() override;
 
+    // https://html.spec.whatwg.org/multipage/scripting.html#dom-script-supports
+    static bool supports(String const& type)
+    {
+        return type.is_one_of("classic", "module");
+    }
+
 private:
     void prepare_script();
     void script_became_ready();
