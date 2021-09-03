@@ -12,6 +12,7 @@ jobs:
       # Latest scanner version is tracked on: https://sonarcloud.io/documentation/analysis/scan/sonarscanner/
       SONAR_SCANNER_VERSION: 4.6.1.2450
       SONAR_SERVER_URL: "https://sonarcloud.io"
+      SONAR_ANALYSIS_ARCH: i686
     steps:
       - uses: actions/checkout@v2
         with:
@@ -82,17 +83,17 @@ jobs:
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         env:
           # This job should always read the cache, never populate it.
-          CACHE_SKIP_SAVE: false
+          CACHE_SKIP_SAVE: true
 
         with:
           path: ${{ github.workspace }}/Toolchain/Cache/
           # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
           # This is wrong, and causes more Toolchain rebuilds than necessary.
           # However, we want to avoid false cache hits at all costs.
-          key: ${{ runner.os }}-toolchain-i686-${{ steps.stamps.outputs.libc_headers }}
+          key: ${{ runner.os }}-toolchain-${{ env.SONAR_ANALYSIS_ARCH }}-${{ steps.stamps.outputs.libc_headers }}
 
       - name: Restore or regenerate Toolchain
-        run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
+        run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ env.SONAR_ANALYSIS_ARCH }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
 
       - name: Create build directory
         run: |
