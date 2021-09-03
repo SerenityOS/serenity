@@ -18,6 +18,7 @@ namespace Unicode {
 
 struct LanguageID {
     String to_string() const;
+    bool operator==(LanguageID const&) const = default;
 
     bool is_root { false };
     Optional<String> language {};
@@ -131,6 +132,7 @@ Optional<StringView> resolve_variant_alias(StringView variant);
 Optional<StringView> resolve_subdivision_alias(StringView subdivision);
 
 Optional<LanguageID> add_likely_subtags(LanguageID const& language_id);
+Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id);
 String resolve_most_likely_territory(LanguageID const& language_id, StringView territory_alias);
 
 }
