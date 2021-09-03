@@ -118,10 +118,11 @@ void PlaybackManager::next_buffer()
 
     if (audio_server_remaining_samples < m_device_samples_per_buffer) {
         m_current_buffer = m_loader->get_more_samples(m_source_buffer_size_bytes);
-        VERIFY(m_resampler.has_value());
-        m_resampler->reset();
-        m_current_buffer = Audio::resample_buffer(m_resampler.value(), *m_current_buffer);
-        if (m_current_buffer)
+        if (m_current_buffer) {
+            VERIFY(m_resampler.has_value());
+            m_resampler->reset();
+            m_current_buffer = Audio::resample_buffer(m_resampler.value(), *m_current_buffer);
             m_connection->enqueue(*m_current_buffer);
+        }
     }
 }
