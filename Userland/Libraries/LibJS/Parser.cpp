@@ -1606,7 +1606,7 @@ NonnullRefPtr<Identifier> Parser::parse_identifier()
         token.value());
 }
 
-NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expression> lhs)
+NonnullRefPtr<Expression> Parser::parse_call_expression(NonnullRefPtr<Expression> lhs)
 {
     auto rule_start = push_start();
     if (!m_state.allow_super_constructor_call && is<SuperExpression>(*lhs))

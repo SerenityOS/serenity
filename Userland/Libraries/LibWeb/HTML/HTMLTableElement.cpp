@@ -72,7 +72,7 @@ NonnullRefPtr<HTMLTableCaptionElement> HTMLTableElement::create_caption()
 
     auto caption = DOM::create_element(document(), TagNames::caption, Namespace::HTML);
     pre_insert(caption, first_child());
-    return caption;
+    return static_ptr_cast<HTMLTableCaptionElement>(caption);
 }
 
 void HTMLTableElement::delete_caption()
@@ -159,7 +159,7 @@ NonnullRefPtr<HTMLTableSectionElement> HTMLTableElement::create_t_head()
 
     pre_insert(thead, child_to_append_after);
 
-    return thead;
+    return static_ptr_cast<HTMLTableSectionElement>(thead);
 }
 
 void HTMLTableElement::delete_t_head()
@@ -209,7 +209,7 @@ NonnullRefPtr<HTMLTableSectionElement> HTMLTableElement::create_t_foot()
 
     auto tfoot = DOM::create_element(document(), TagNames::tfoot, Namespace::HTML);
     append_child(tfoot);
-    return tfoot;
+    return static_ptr_cast<HTMLTableSectionElement>(tfoot);
 }
 
 void HTMLTableElement::delete_t_foot()
@@ -248,7 +248,7 @@ NonnullRefPtr<HTMLTableSectionElement> HTMLTableElement::create_t_body()
 
     pre_insert(tbody, child_to_append_after);
 
-    return tbody;
+    return static_ptr_cast<HTMLTableSectionElement>(tbody);
 }
 
 NonnullRefPtr<DOM::HTMLCollection> HTMLTableElement::rows()
@@ -287,7 +287,7 @@ DOM::ExceptionOr<NonnullRefPtr<HTMLTableRowElement>> HTMLTableElement::insert_ro
     if (index < -1 || index >= (long)rows_length) {
         return DOM::IndexSizeError::create("Index is negative or greater than the number of rows");
     }
-    auto tr = static_cast<NonnullRefPtr<HTMLTableRowElement>>(DOM::create_element(document(), TagNames::tr, Namespace::HTML));
+    auto tr = static_ptr_cast<HTMLTableRowElement>(DOM::create_element(document(), TagNames::tr, Namespace::HTML));
     if (rows_length == 0 && !has_child_of_type<HTMLTableRowElement>()) {
         auto tbody = DOM::create_element(document(), TagNames::tbody, Namespace::HTML);
         tbody->append_child(tr);

@@ -166,7 +166,7 @@ void TreeBuilder::remove_irrelevant_boxes(NodeWithStyle& root)
 {
     // The following boxes are discarded as if they were display:none:
 
-    NonnullRefPtrVector<Box> to_remove;
+    NonnullRefPtrVector<Node> to_remove;
 
     // Children of a table-column.
     for_each_in_tree_with_display<CSS::Display::TableColumn>(root, [&](Box& table_column) {

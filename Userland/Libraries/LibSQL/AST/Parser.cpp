@@ -210,7 +210,7 @@ NonnullRefPtr<Insert> Parser::parse_insert_statement(RefPtr<CommonTableExpressio
                 if ((column_names.size() > 0) && (chained_expr->expressions().size() != column_names.size())) {
                     syntax_error("Number of expressions does not match number of columns");
                 } else {
-                    chained_expressions.append(chained_expression.release_nonnull());
+                    chained_expressions.append(static_ptr_cast<ChainedExpression>(chained_expression.release_nonnull()));
                 }
             } else {
                 expected("Chained expression");

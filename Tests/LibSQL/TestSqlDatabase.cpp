@@ -16,7 +16,7 @@
 #include <LibTest/TestCase.h>
 
 NonnullRefPtr<SQL::SchemaDef> setup_schema(SQL::Database&);
-NonnullRefPtr<SQL::SchemaDef> setup_table(SQL::Database&);
+NonnullRefPtr<SQL::TableDef> setup_table(SQL::Database&);
 void insert_into_table(SQL::Database&, int);
 void verify_table_contents(SQL::Database&, int);
 void insert_and_verify(int);
@@ -28,7 +28,7 @@ NonnullRefPtr<SQL::SchemaDef> setup_schema(SQL::Database& db)
     return schema;
 }
 
-NonnullRefPtr<SQL::SchemaDef> setup_table(SQL::Database& db)
+NonnullRefPtr<SQL::TableDef> setup_table(SQL::Database& db)
 {
     auto schema = setup_schema(db);
     auto table = SQL::TableDef::construct(schema, "TestTable");

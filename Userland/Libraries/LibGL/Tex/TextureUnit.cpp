@@ -13,7 +13,7 @@ void TextureUnit::bind_texture_to_target(GLenum texture_target, const RefPtr<Tex
 {
     switch (texture_target) {
     case GL_TEXTURE_2D:
-        m_texture_target_2d = texture;
+        m_texture_target_2d = static_ptr_cast<Texture2D>(texture);
         m_currently_bound_texture = texture;
         m_currently_bound_target = GL_TEXTURE_2D;
         break;

@@ -85,7 +85,7 @@ public:
     NonnullRefPtr<StringLiteral> parse_string_literal(const Token& token, bool in_template_literal = false);
     NonnullRefPtr<TemplateLiteral> parse_template_literal(bool is_tagged);
     NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right);
-    NonnullRefPtr<CallExpression> parse_call_expression(NonnullRefPtr<Expression>);
+    NonnullRefPtr<Expression> parse_call_expression(NonnullRefPtr<Expression>);
     NonnullRefPtr<NewExpression> parse_new_expression();
     NonnullRefPtr<ClassDeclaration> parse_class_declaration();
     NonnullRefPtr<ClassExpression> parse_class_expression(bool expect_class_name);

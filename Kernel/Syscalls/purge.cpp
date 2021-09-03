@@ -27,7 +27,7 @@ KResultOr<FlatPtr> Process::sys$purge(int mode)
                 if (vmobject.is_anonymous()) {
                     // In the event that the append fails, only attempt to continue
                     // the purge if we have already appended something successfully.
-                    if (!vmobjects.try_append(vmobject) && vmobjects.is_empty()) {
+                    if (!vmobjects.try_append(static_cast<Memory::AnonymousVMObject&>(vmobject)) && vmobjects.is_empty()) {
                         result = ENOMEM;
                         return IterationDecision::Break;
                     }

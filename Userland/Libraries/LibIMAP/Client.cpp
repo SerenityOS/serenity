@@ -31,7 +31,7 @@ RefPtr<Promise<Empty>> Client::connect()
     }
     if (!success)
         return {};
-    m_connect_pending = Promise<bool>::construct();
+    m_connect_pending = Promise<Empty>::construct();
     return m_connect_pending;
 }
 
