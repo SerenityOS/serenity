@@ -34,8 +34,13 @@ public:
     virtual bool internal_delete(JS::PropertyName const& name) override;
     virtual JS::MarkedValueList internal_own_property_keys() const override;
 
+    virtual void initialize_global_object() override;
+
 private:
     virtual void visit_edges(Visitor&) override;
+
+    // Because $0 is not a nice C++ function name
+    JS_DECLARE_NATIVE_GETTER(inspected_node_getter);
 
     Web::Bindings::WindowObject* m_window_object;
 };
