@@ -130,7 +130,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
     // Note: If no other VGA adapter is attached as m_vga_adapter, we should attach it then.
     if (!m_vga_adapter && PCI::is_io_space_enabled(address) && adapter->type() == GraphicsDevice::Type::VGACompatible) {
         dbgln("Graphics adapter @ {} is operating in VGA mode", address);
-        m_vga_adapter = adapter;
+        m_vga_adapter = static_ptr_cast<VGACompatibleAdapter>(adapter);
     }
     return true;
 }

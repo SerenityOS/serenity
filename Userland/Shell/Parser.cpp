@@ -1431,7 +1431,7 @@ RefPtr<AST::Node> Parser::parse_variable_ref()
     return create<AST::SimpleVariable>(move(name)); // Variable Simple
 }
 
-RefPtr<AST::Node> Parser::parse_slice()
+RefPtr<AST::Slice> Parser::parse_slice()
 {
     auto rule_start = push_start();
     if (!next_is("["))

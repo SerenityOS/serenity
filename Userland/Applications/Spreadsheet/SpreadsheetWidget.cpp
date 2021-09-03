@@ -220,7 +220,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
     };
 
     m_tab_widget->on_context_menu_request = [&](auto& widget, auto& event) {
-        m_tab_context_menu_sheet_view = widget;
+        m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
         m_tab_context_menu->popup(event.screen_position());
     };
 }

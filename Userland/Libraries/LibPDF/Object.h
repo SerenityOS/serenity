@@ -248,7 +248,7 @@ template<IsObject To, IsObject From>
 #    undef ENUMERATE_TYPES
 #endif
 
-    return static_cast<NonnullRefPtr<To>>(obj);
+    return static_ptr_cast<To>(obj);
 }
 
 }

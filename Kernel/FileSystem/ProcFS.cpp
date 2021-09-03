@@ -55,7 +55,7 @@ KResult ProcFS::initialize()
     auto root_inode = ProcFSComponentRegistry::the().root_directory().to_inode(*this);
     if (root_inode.is_error())
         return root_inode.error();
-    m_root_inode = static_cast<NonnullRefPtr<ProcFSDirectoryInode>>(root_inode.release_value());
+    m_root_inode = static_ptr_cast<ProcFSDirectoryInode>(root_inode.release_value());
 
     return KSuccess;
 }
