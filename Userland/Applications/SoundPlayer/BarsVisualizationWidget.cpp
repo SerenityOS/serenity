@@ -41,10 +41,9 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
     for (double& d : groups)
         d = 0.;
 
-    int bins_per_group = ceil_div((m_sample_count - 1) / 2, group_count) * freq_bin;
-
+    int bins_per_group = ceil_div((m_sample_count - 1) / 2, group_count);
     for (int i = 1; i < m_sample_count / 2; i++) {
-        groups[(i * freq_bin) / bins_per_group] += AK::fabs(m_sample_buffer.data()[i].real());
+        groups[i / bins_per_group] += AK::fabs(m_sample_buffer.data()[i].real());
     }
     for (int i = 0; i < group_count; i++)
         groups[i] /= max * freq_bin / (m_adjust_frequencies ? (clamp(AK::pow(AK::E<double>, (double)i / group_count * 3.) - 1.75, 1., 15.)) : 1.);
