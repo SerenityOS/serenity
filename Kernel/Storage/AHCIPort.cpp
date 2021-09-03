@@ -74,7 +74,6 @@ void AHCIPort::handle_interrupt()
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::PRC) && m_interrupt_status.is_set(AHCI::PortInterruptFlag::PC)) {
         clear_sata_error_register();
         if ((m_port_registers.ssts & 0xf) != 3) {
-            m_connected_device->prepare_for_unplug();
             g_ahci_work->queue([this]() {
                 m_connected_device->before_removing();
                 m_connected_device.clear();

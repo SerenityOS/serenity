@@ -182,6 +182,15 @@ KResultOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const U
     return pos + remaining;
 }
 
+void StorageDevice::before_removing()
+{
+    for (auto& partition : m_partitions) {
+        partition.before_removing();
+    }
+    m_partitions.clear();
+    Device::before_removing();
+}
+
 bool StorageDevice::can_write() const
 {
     return true;

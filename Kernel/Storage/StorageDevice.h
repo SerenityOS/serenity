@@ -42,7 +42,7 @@ public:
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
     virtual bool can_write() const override;
 
-    virtual void prepare_for_unplug() { m_partitions.clear(); }
+    virtual void before_removing() override;
 
     NonnullRefPtrVector<DiskPartition> partitions() const { return m_partitions; }
 
