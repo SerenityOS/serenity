@@ -646,7 +646,7 @@ void MemoryManager::validate_syscall_preconditions(AddressSpace& space, Register
     {
         VirtualAddress userspace_sp = VirtualAddress { regs.userspace_sp() };
         if (!MM.validate_user_stack_no_lock(space, userspace_sp)) {
-            dbgln("Invalid stack pointer: {:p}", userspace_sp);
+            dbgln("Invalid stack pointer: {}", userspace_sp);
             unlock_and_handle_crash("Bad stack on syscall entry", SIGSTKFLT);
         }
     }
