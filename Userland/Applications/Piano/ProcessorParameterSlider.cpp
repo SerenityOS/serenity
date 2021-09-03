@@ -15,6 +15,7 @@ ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, LibD
     set_value(m_parameter.value().raw());
     set_step((m_parameter.min_value() - m_parameter.max_value()).raw() / 128);
     set_tooltip(m_parameter.name());
+    m_value_label->set_text(String::formatted("{:.2f}", static_cast<double>(m_parameter)));
 
     on_change = [this](auto value) {
         LibDSP::ParameterFixedPoint real_value;
