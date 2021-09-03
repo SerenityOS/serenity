@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Mohsan Ali <mohsan0073@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -60,42 +61,52 @@ void ViewWidget::rotate(Gfx::RotationDirection rotation_direction)
     resize_window();
 }
 
+bool ViewWidget::is_next_available() const
+{
+    if (m_current_index.has_value())
+        return m_current_index.value() + 1 < m_files_in_same_dir.size();
+    return false;
+}
+
+bool ViewWidget::is_previous_available() const
+{
+    if (m_current_index.has_value())
+        return m_current_index.value() > 0;
+    return false;
+}
+
+Vector<String> ViewWidget::load_files_from_directory(const String& path) const
+{
+    Vector<String> files_in_directory;
+
+    auto current_dir = LexicalPath(path).parent().string();
+    Core::DirIterator iterator(current_dir, Core::DirIterator::Flags::SkipDots);
+    while (iterator.has_next()) {
+        String file = iterator.next_full_path();
+        if (!Gfx::Bitmap::is_path_a_supported_image_format(file))
+            continue;
+        files_in_directory.append(file);
+    }
+    return files_in_directory;
+}
+
+void ViewWidget::set_path(const String& path)
+{
+    m_path = path;
+    m_files_in_same_dir = load_files_from_directory(path);
+    m_current_index = m_files_in_same_dir.find_first_index(path);
+}
+
 void ViewWidget::navigate(Directions direction)
 {
-    if (m_path == nullptr)
-        return;
-
-    auto current_dir = LexicalPath(m_path).parent().string();
-
-    if (m_files_in_same_dir.is_empty()) {
-        Core::DirIterator iterator(current_dir, Core::DirIterator::Flags::SkipDots);
-        while (iterator.has_next()) {
-            String file = iterator.next_full_path();
-            if (!Gfx::Bitmap::is_path_a_supported_image_format(file))
-                continue;
-            m_files_in_same_dir.append(file);
-        }
-    }
-
-    auto current_index = m_files_in_same_dir.find_first_index(m_path);
-    if (!current_index.has_value()) {
+    if (!m_current_index.has_value()) {
         return;
     }
 
-    size_t index = current_index.value();
+    auto index = m_current_index.value();
     if (direction == Directions::Back) {
-        if (index == 0) {
-            GUI::MessageBox::show(window(), "This is the first file.", "Cannot open image", GUI::MessageBox::Type::Error);
-            return;
-        }
-
         index--;
     } else if (direction == Directions::Forward) {
-        if (index == m_files_in_same_dir.size() - 1) {
-            GUI::MessageBox::show(window(), "This is the last file.", "Cannot open image", GUI::MessageBox::Type::Error);
-            return;
-        }
-
         index++;
     } else if (direction == Directions::First) {
         index = 0;
@@ -103,6 +114,7 @@ void ViewWidget::navigate(Directions direction)
         index = m_files_in_same_dir.size() - 1;
     }
 
+    m_current_index = index;
     this->load_from_file(m_files_in_same_dir.at(index));
 }
 

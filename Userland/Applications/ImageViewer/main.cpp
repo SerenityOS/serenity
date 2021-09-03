@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mohsan Ali <mohsan0073@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -77,6 +78,9 @@ int main(int argc, char** argv)
     auto& main_toolbar = toolbar_container.add<GUI::Toolbar>();
 
     auto& widget = root_widget.add<ViewWidget>();
+    if (path) {
+        widget.set_path(path);
+    }
     widget.on_scale_change = [&](int scale) {
         if (!widget.bitmap()) {
             window->set_title("Image Viewer");
@@ -100,7 +104,10 @@ int main(int argc, char** argv)
             return;
 
         window->move_to_front();
-        widget.load_from_file(urls.first().path());
+
+        auto path = urls.first().path();
+        widget.set_path(path);
+        widget.load_from_file(path);
 
         for (size_t i = 1; i < urls.size(); ++i) {
             Desktop::Launcher::open(URL::create_with_file_protocol(urls[i].path().characters()), "/bin/ImageViewer");
@@ -117,6 +124,7 @@ int main(int argc, char** argv)
         [&](auto&) {
             auto path = GUI::FilePicker::get_open_filepath(window, "Open Image");
             if (path.has_value()) {
+                widget.set_path(path.value());
                 widget.load_from_file(path.value());
             }
         });
@@ -231,19 +239,22 @@ int main(int argc, char** argv)
         if (widget.bitmap())
             GUI::Clipboard::the().set_bitmap(*widget.bitmap());
     });
-
     widget.on_image_change = [&](const Gfx::Bitmap* bitmap) {
         bool should_enable_image_actions = (bitmap != nullptr);
+        bool should_enable_forward_actions = (widget.is_next_available() && should_enable_image_actions);
+        bool should_enable_backward_actions = (widget.is_previous_available() && should_enable_image_actions);
         delete_action->set_enabled(should_enable_image_actions);
         rotate_left_action->set_enabled(should_enable_image_actions);
         rotate_right_action->set_enabled(should_enable_image_actions);
         vertical_flip_action->set_enabled(should_enable_image_actions);
         horizontal_flip_action->set_enabled(should_enable_image_actions);
         desktop_wallpaper_action->set_enabled(should_enable_image_actions);
-        go_first_action->set_enabled(should_enable_image_actions);
-        go_back_action->set_enabled(should_enable_image_actions);
-        go_forward_action->set_enabled(should_enable_image_actions);
-        go_last_action->set_enabled(should_enable_image_actions);
+
+        go_first_action->set_enabled(should_enable_backward_actions);
+        go_back_action->set_enabled(should_enable_backward_actions);
+        go_forward_action->set_enabled(should_enable_forward_actions);
+        go_last_action->set_enabled(should_enable_forward_actions);
+
         zoom_in_action->set_enabled(should_enable_image_actions);
         reset_zoom_action->set_enabled(should_enable_image_actions);
         zoom_out_action->set_enabled(should_enable_image_actions);

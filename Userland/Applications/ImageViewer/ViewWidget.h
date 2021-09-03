@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Mohsan Ali <mohsan0073@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -34,7 +35,11 @@ public:
     int toolbar_height() { return m_toolbar_height; }
     bool scaled_for_first_image() { return m_scaled_for_first_image; }
     void set_scaled_for_first_image(bool val) { m_scaled_for_first_image = val; }
+    void set_path(const String& path);
     void resize_window();
+
+    bool is_next_available() const;
+    bool is_previous_available() const;
 
     void clear();
     void flip(Gfx::Orientation);
@@ -59,10 +64,10 @@ private:
     virtual void drop_event(GUI::DropEvent&) override;
 
     void set_bitmap(const Gfx::Bitmap* bitmap);
-
     void relayout();
     void reset_view();
     void animate();
+    Vector<String> load_files_from_directory(const String& path) const;
 
     String m_path;
     RefPtr<Gfx::Bitmap> m_bitmap;
@@ -80,6 +85,7 @@ private:
     Gfx::IntPoint m_click_position;
     Gfx::FloatPoint m_saved_pan_origin;
     Vector<String> m_files_in_same_dir;
+    Optional<size_t> m_current_index;
 };
 
 }
