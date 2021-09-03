@@ -6,8 +6,9 @@ ARG0=$0
 print_help() {
     NAME=$(basename "$ARG0")
     cat <<EOF
-Usage: $NAME COMMAND [TARGET] [ARGS...]
+Usage: $NAME COMMAND [TARGET] [TOOLCHAIN] [ARGS...]
   Supported TARGETs: aarch64, i686, x86_64, lagom. Defaults to SERENITY_ARCH, or i686 if not set.
+  Supported TOOLCHAINs: gcc, clang. Defaults to gcc if not set.
   Supported COMMANDs:
     build:      Compiles the target binaries, [ARGS...] are passed through to ninja
     install:    Installs the target binary
@@ -86,8 +87,22 @@ if [ -n "$1" ]; then
 else
     TARGET="${SERENITY_ARCH:-"i686"}"
 fi
+
+case "$1" in
+    gcc|clang)
+        TOOLCHAIN_TYPE="$1"; shift
+        ;;
+    *)
+        TOOLCHAIN_TYPE="gcc"
+        ;;
+esac
+
 CMD_ARGS=( "$@" )
 CMAKE_ARGS=()
+
+if [ "$TOOLCHAIN_TYPE" = "clang" ]; then
+    CMAKE_ARGS+=("-DUSE_CLANG_TOOLCHAIN=1")
+fi
 
 get_top_dir() {
     git rev-parse --show-toplevel
@@ -154,10 +169,15 @@ cmd_with_target() {
         SERENITY_SOURCE_DIR="$(get_top_dir)"
         export SERENITY_SOURCE_DIR
     fi
-    BUILD_DIR="$SERENITY_SOURCE_DIR/Build/$TARGET"
+    local TARGET_TOOLCHAIN=""
+    if [[ "$TOOLCHAIN_TYPE" != "gcc" && "$TARGET" != "lagom" ]]; then
+        # Only append the toolchain if it's not gcc
+        TARGET_TOOLCHAIN="$TOOLCHAIN_TYPE"
+    fi
+    BUILD_DIR="$SERENITY_SOURCE_DIR/Build/$TARGET$TARGET_TOOLCHAIN"
     if [ "$TARGET" != "lagom" ]; then
         export SERENITY_ARCH="$TARGET"
-        TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR/Toolchain/Build/$TARGET"
+        TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR/Toolchain/Local/$TARGET_TOOLCHAIN/$TARGET"
     fi
 }
 
@@ -184,7 +204,12 @@ delete_target() {
 }
 
 build_toolchain() {
-    ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ARCH="$TARGET" ./BuildIt.sh )
+    echo "build_toolchain: $TOOLCHAIN_DIR"
+    if [ "$TOOLCHAIN_TYPE" = "clang" ]; then
+        ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ARCH="$TARGET" ./BuildClang.sh )
+    else
+        ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ARCH="$TARGET" ./BuildIt.sh )
+    fi
 }
 
 ensure_toolchain() {
