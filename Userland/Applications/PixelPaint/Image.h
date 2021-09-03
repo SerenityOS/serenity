@@ -26,6 +26,7 @@
 namespace PixelPaint {
 
 class Layer;
+class Selection;
 
 class ImageClient {
 public:
@@ -53,6 +54,7 @@ public:
 
     // This generates a new Bitmap with the final image (all layers composed according to their attributes.)
     RefPtr<Gfx::Bitmap> try_compose_bitmap(Gfx::BitmapFormat format) const;
+    RefPtr<Gfx::Bitmap> try_copy_bitmap(Selection const&) const;
 
     size_t layer_count() const { return m_layers.size(); }
     Layer const& layer(size_t index) const { return m_layers.at(index); }

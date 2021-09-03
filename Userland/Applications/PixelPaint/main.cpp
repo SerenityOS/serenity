@@ -256,6 +256,20 @@ int main(int argc, char** argv)
         }
         GUI::Clipboard::the().set_bitmap(*bitmap);
     });
+    auto copy_merged_action = GUI::Action::create(
+        "Copy &Merged", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"),
+        [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+            auto bitmap = editor->image().try_copy_bitmap(editor->selection());
+            if (!bitmap) {
+                dbgln("try_copy_bitmap() from Image failed");
+                return;
+            }
+            GUI::Clipboard::the().set_bitmap(*bitmap);
+        },
+        window);
 
     auto paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
         auto* editor = current_image_editor();
@@ -277,6 +291,7 @@ int main(int argc, char** argv)
     paste_action->set_enabled(GUI::Clipboard::the().mime_type() == "image/x-serenityos");
 
     edit_menu.add_action(copy_action);
+    edit_menu.add_action(copy_merged_action);
     edit_menu.add_action(paste_action);
 
     auto undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
