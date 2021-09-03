@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Base64.h>
-#include <AK/Random.h>
-#include <AK/String.h>
+#include <YAK/Base64.h>
+#include <YAK/Random.h>
+#include <YAK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <crypt.h>
 #include <ctype.h>

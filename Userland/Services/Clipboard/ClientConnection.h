@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
+#include <YAK/HashMap.h>
 #include <Clipboard/ClipboardClientEndpoint.h>
 #include <Clipboard/ClipboardServerEndpoint.h>
 #include <LibIPC/ClientConnection.h>

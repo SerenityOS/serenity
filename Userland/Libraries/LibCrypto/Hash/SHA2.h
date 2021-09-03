@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 #include <LibCrypto/Hash/HashFunction.h>
 
 namespace Crypto {

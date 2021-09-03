@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/Span.h>
-#include <AK/StdLibExtras.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Span.h>
+#include <YAK/StdLibExtras.h>
 #include <LibCrypto/Cipher/Cipher.h>
 
 namespace Crypto {

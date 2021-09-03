@@ -7,13 +7,13 @@
 #include "ClientConnection.h"
 #include "DNSPacket.h"
 #include "LookupServer.h"
-#include <AK/IPv4Address.h>
+#include <YAK/IPv4Address.h>
 
 namespace LookupServer {
 
 static HashMap<int, RefPtr<ClientConnection>> s_connections;
 
-ClientConnection::ClientConnection(AK::NonnullRefPtr<Core::LocalSocket> socket, int client_id)
+ClientConnection::ClientConnection(YAK::NonnullRefPtr<Core::LocalSocket> socket, int client_id)
     : IPC::ClientConnection<LookupClientEndpoint, LookupServerEndpoint>(*this, move(socket), client_id)
 {
     s_connections.set(client_id, *this);

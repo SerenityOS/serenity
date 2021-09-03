@@ -9,12 +9,12 @@
 
 #pragma once
 
-#include <AK/Format.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/QuickSort.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Format.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonValue.h>
+#include <YAK/QuickSort.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <LibTest/Results.h>
 #include <fcntl.h>

@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/Optional.h>
-#include <AK/OwnPtr.h>
-#include <AK/Vector.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/Optional.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Vector.h>
 #include <LibDebug/Dwarf/DIE.h>
 #include <LibDebug/Dwarf/DwarfInfo.h>
 #include <LibDebug/Dwarf/LineProgram.h>
@@ -20,8 +20,8 @@
 namespace Debug {
 
 class DebugInfo {
-    AK_MAKE_NONCOPYABLE(DebugInfo);
-    AK_MAKE_NONMOVABLE(DebugInfo);
+    YAK_MAKE_NONCOPYABLE(DebugInfo);
+    YAK_MAKE_NONMOVABLE(DebugInfo);
 
 public:
     explicit DebugInfo(ELF::Image const&, String source_root = {}, FlatPtr base_address = 0);

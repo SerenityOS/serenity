@@ -6,19 +6,19 @@
 
 #pragma once
 
-#include <AK/Concepts.h>
-#include <AK/EnumBits.h>
-#include <AK/HashMap.h>
-#include <AK/IntrusiveList.h>
-#include <AK/Optional.h>
-#include <AK/OwnPtr.h>
-#include <AK/String.h>
-#include <AK/TemporaryChange.h>
-#include <AK/Time.h>
-#include <AK/Variant.h>
-#include <AK/Vector.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
+#include <YAK/Concepts.h>
+#include <YAK/EnumBits.h>
+#include <YAK/HashMap.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/Optional.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/String.h>
+#include <YAK/TemporaryChange.h>
+#include <YAK/Time.h>
+#include <YAK/Variant.h>
+#include <YAK/Vector.h>
+#include <YAK/WeakPtr.h>
+#include <YAK/Weakable.h>
 #include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Debug.h>
@@ -148,8 +148,8 @@ struct ThreadRegisters {
 class Thread
     : public ListedRefCounted<Thread>
     , public Weakable<Thread> {
-    AK_MAKE_NONCOPYABLE(Thread);
-    AK_MAKE_NONMOVABLE(Thread);
+    YAK_MAKE_NONCOPYABLE(Thread);
+    YAK_MAKE_NONMOVABLE(Thread);
 
     friend class Mutex;
     friend class Process;
@@ -279,8 +279,8 @@ public:
     class BlockerSet;
 
     class Blocker {
-        AK_MAKE_NONMOVABLE(Blocker);
-        AK_MAKE_NONCOPYABLE(Blocker);
+        YAK_MAKE_NONMOVABLE(Blocker);
+        YAK_MAKE_NONCOPYABLE(Blocker);
 
     public:
         enum class Type {
@@ -401,8 +401,8 @@ public:
     };
 
     class BlockerSet {
-        AK_MAKE_NONCOPYABLE(BlockerSet);
-        AK_MAKE_NONMOVABLE(BlockerSet);
+        YAK_MAKE_NONCOPYABLE(BlockerSet);
+        YAK_MAKE_NONMOVABLE(BlockerSet);
 
     public:
         BlockerSet() = default;
@@ -793,8 +793,8 @@ public:
         return m_in_block;
     }
 
-    u32 cpu() const { return m_cpu.load(AK::MemoryOrder::memory_order_consume); }
-    void set_cpu(u32 cpu) { m_cpu.store(cpu, AK::MemoryOrder::memory_order_release); }
+    u32 cpu() const { return m_cpu.load(YAK::MemoryOrder::memory_order_consume); }
+    void set_cpu(u32 cpu) { m_cpu.store(cpu, YAK::MemoryOrder::memory_order_release); }
     u32 affinity() const { return m_cpu_affinity; }
     void set_affinity(u32 affinity) { m_cpu_affinity = affinity; }
 
@@ -857,7 +857,7 @@ public:
         SpinlockLocker scheduler_lock(g_scheduler_lock);
         // Relaxed semantics are fine for timeout_unblocked because we
         // synchronize on the spin locks already.
-        Atomic<bool, AK::MemoryOrder::memory_order_relaxed> timeout_unblocked(false);
+        Atomic<bool, YAK::MemoryOrder::memory_order_relaxed> timeout_unblocked(false);
         bool timer_was_added = false;
 
         switch (state()) {
@@ -1020,7 +1020,7 @@ public:
     DispatchSignalResult try_dispatch_one_pending_signal(u8 signal);
     DispatchSignalResult dispatch_signal(u8 signal);
     void check_dispatch_pending_signal();
-    [[nodiscard]] bool has_unmasked_pending_signals() const { return m_have_any_unmasked_pending_signals.load(AK::memory_order_consume); }
+    [[nodiscard]] bool has_unmasked_pending_signals() const { return m_have_any_unmasked_pending_signals.load(YAK::memory_order_consume); }
     [[nodiscard]] bool should_ignore_signal(u8 signal) const;
     [[nodiscard]] bool has_signal_handler(u8 signal) const;
     u32 pending_signals() const;
@@ -1092,7 +1092,7 @@ public:
         // as the thread may not be in Running state but switching out.
         // m_is_active is set to false once the context switch is
         // complete and the thread is not executing on any processor.
-        if (m_is_active.load(AK::memory_order_acquire))
+        if (m_is_active.load(YAK::memory_order_acquire))
             return false;
         // We can't finalize until the thread is either detached or
         // a join has started. We can't make m_is_joinable atomic
@@ -1141,7 +1141,7 @@ public:
     void holding_lock(Mutex& lock, int refs_delta, LockLocation const& location)
     {
         VERIFY(refs_delta != 0);
-        m_holding_locks.fetch_add(refs_delta, AK::MemoryOrder::memory_order_relaxed);
+        m_holding_locks.fetch_add(refs_delta, YAK::MemoryOrder::memory_order_relaxed);
         SpinlockLocker list_lock(m_holding_locks_lock);
         if (refs_delta > 0) {
             bool have_existing = false;
@@ -1174,7 +1174,7 @@ public:
     }
     u32 lock_count() const
     {
-        return m_holding_locks.load(AK::MemoryOrder::memory_order_relaxed);
+        return m_holding_locks.load(YAK::MemoryOrder::memory_order_relaxed);
     }
 #endif
 
@@ -1188,12 +1188,12 @@ public:
 
     ALWAYS_INLINE u32 enter_profiler()
     {
-        return m_nested_profiler_calls.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
+        return m_nested_profiler_calls.fetch_add(1, YAK::MemoryOrder::memory_order_acq_rel);
     }
 
     ALWAYS_INLINE u32 leave_profiler()
     {
-        return m_nested_profiler_calls.fetch_sub(1, AK::MemoryOrder::memory_order_acquire);
+        return m_nested_profiler_calls.fetch_sub(1, YAK::MemoryOrder::memory_order_acquire);
     }
 
     bool is_profiling_suppressed() const { return m_is_profiling_suppressed; }
@@ -1216,7 +1216,7 @@ private:
             SpinlockLocker lock(m_lock);
             VERIFY(!m_thread_did_exit);
             m_thread_did_exit = true;
-            m_exit_value.store(exit_value, AK::MemoryOrder::memory_order_release);
+            m_exit_value.store(exit_value, YAK::MemoryOrder::memory_order_release);
             do_unblock_joiner();
         }
         void thread_finalizing()
@@ -1227,7 +1227,7 @@ private:
         void* exit_value() const
         {
             VERIFY(m_thread_did_exit);
-            return m_exit_value.load(AK::MemoryOrder::memory_order_acquire);
+            return m_exit_value.load(YAK::MemoryOrder::memory_order_acquire);
         }
 
         void try_unblock(JoinBlocker& blocker)
@@ -1312,7 +1312,7 @@ private:
 #endif
 
     JoinBlockerSet m_join_blocker_set;
-    Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_is_active { false };
+    Atomic<bool, YAK::MemoryOrder::memory_order_relaxed> m_is_active { false };
     bool m_is_joinable { true };
     bool m_handling_page_fault { false };
     PreviousMode m_previous_mode { PreviousMode::KernelMode }; // We always start out in kernel mode
@@ -1423,6 +1423,6 @@ inline IterationDecision Thread::for_each_in_state(State state, Callback callbac
 }
 
 template<>
-struct AK::Formatter<Kernel::Thread> : AK::Formatter<FormatString> {
+struct YAK::Formatter<Kernel::Thread> : YAK::Formatter<FormatString> {
     void format(FormatBuilder&, const Kernel::Thread&);
 };

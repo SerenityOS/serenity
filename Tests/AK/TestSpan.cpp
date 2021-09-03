@@ -6,9 +6,9 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Checked.h>
-#include <AK/Span.h>
-#include <AK/StdLibExtras.h>
+#include <YAK/Checked.h>
+#include <YAK/Span.h>
+#include <YAK/StdLibExtras.h>
 #include <string.h>
 
 TEST_CASE(constexpr_default_constructor_is_empty)

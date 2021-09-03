@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Forward.h>
-#include <AK/String.h>
-#include <AK/Utf32View.h>
-#include <AK/Utf8View.h>
+#include <YAK/Forward.h>
+#include <YAK/String.h>
+#include <YAK/Utf32View.h>
+#include <YAK/Utf8View.h>
 #include <LibLine/Style.h>
 #include <stdlib.h>
 

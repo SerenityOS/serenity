@@ -10,9 +10,9 @@
 #include "SoftCPU.h"
 #include "ValueWithShadow.h"
 
-#include <AK/BitCast.h>
-#include <AK/NumericLimits.h>
-#include <AK/UFixedBigInt.h>
+#include <YAK/BitCast.h>
+#include <YAK/NumericLimits.h>
+#include <YAK/UFixedBigInt.h>
 
 #include <unistd.h>
 

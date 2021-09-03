@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/EnumBits.h>
-#include <AK/IntrusiveList.h>
-#include <AK/Weakable.h>
+#include <YAK/EnumBits.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/Weakable.h>
 #include <Kernel/Arch/x86/PageFault.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Heap/SlabAllocator.h>

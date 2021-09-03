@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Platform.h>
+#include <YAK/Platform.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/Debug.h>

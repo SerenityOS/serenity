@@ -391,7 +391,7 @@ Layer* ImageEditor::layer_at_editor_position(Gfx::IntPoint const& editor_positio
 
 void ImageEditor::clamped_scale(float scale_delta)
 {
-    m_scale *= AK::exp2(scale_delta);
+    m_scale *= YAK::exp2(scale_delta);
     if (m_scale < 0.1f)
         m_scale = 0.1f;
     if (m_scale > 100.0f)

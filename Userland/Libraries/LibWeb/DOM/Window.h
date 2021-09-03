@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/IDAllocator.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
+#include <YAK/Badge.h>
+#include <YAK/IDAllocator.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/CSS/Screen.h>

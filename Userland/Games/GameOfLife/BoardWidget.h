@@ -10,10 +10,10 @@
 
 #include "Board.h"
 #include "Pattern.h"
-#include <AK/Function.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/Optional.h>
-#include <AK/RefPtr.h>
+#include <YAK/Function.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/Optional.h>
+#include <YAK/RefPtr.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Widget.h>

@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/RefPtr.h>
-#include <AK/Result.h>
-#include <AK/Vector.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Result.h>
+#include <YAK/Vector.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>

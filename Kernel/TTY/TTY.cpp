@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ScopeGuard.h>
-#include <AK/StringView.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/StringView.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Process.h>

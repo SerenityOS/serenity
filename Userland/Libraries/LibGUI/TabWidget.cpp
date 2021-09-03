@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonValue.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/TabWidget.h>

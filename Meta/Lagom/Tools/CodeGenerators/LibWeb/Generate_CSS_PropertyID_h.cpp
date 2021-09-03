@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/JsonObject.h>
-#include <AK/SourceGenerator.h>
-#include <AK/StringBuilder.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/JsonObject.h>
+#include <YAK/SourceGenerator.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/File.h>
 #include <ctype.h>
 
@@ -45,8 +45,8 @@ int main(int argc, char** argv)
     generator.append(R"~~~(
 #pragma once
 
-#include <AK/StringView.h>
-#include <AK/Traits.h>
+#include <YAK/StringView.h>
+#include <YAK/Traits.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::CSS {
@@ -78,12 +78,12 @@ RefPtr<StyleValue> property_initial_value(PropertyID);
 
 } // namespace Web::CSS
 
-namespace AK {
+namespace YAK {
 template<>
 struct Traits<Web::CSS::PropertyID> : public GenericTraits<Web::CSS::PropertyID> {
     static unsigned hash(Web::CSS::PropertyID property_id) { return int_hash((unsigned)property_id); }
 };
-} // namespace AK
+} // namespace YAK
 )~~~");
 
     outln("{}", generator.as_string_view());

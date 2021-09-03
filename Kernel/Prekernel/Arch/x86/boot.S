@@ -1,4 +1,4 @@
-#include <AK/Platform.h>
+#include <YAK/Platform.h>
 #include <Kernel/Prekernel/Prekernel.h>
 
 .code32

@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/HashTable.h>
-#include <AK/String.h>
+#include <YAK/HashTable.h>
+#include <YAK/String.h>
 
 TEST_CASE(construct)
 {
@@ -55,9 +55,9 @@ TEST_CASE(populate)
 TEST_CASE(range_loop)
 {
     HashTable<String> strings;
-    EXPECT_EQ(strings.set("One"), AK::HashSetResult::InsertedNewEntry);
-    EXPECT_EQ(strings.set("Two"), AK::HashSetResult::InsertedNewEntry);
-    EXPECT_EQ(strings.set("Three"), AK::HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(strings.set("One"), YAK::HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(strings.set("Two"), YAK::HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(strings.set("Three"), YAK::HashSetResult::InsertedNewEntry);
 
     int loop_counter = 0;
     for (auto& it : strings) {
@@ -70,9 +70,9 @@ TEST_CASE(range_loop)
 TEST_CASE(table_remove)
 {
     HashTable<String> strings;
-    EXPECT_EQ(strings.set("One"), AK::HashSetResult::InsertedNewEntry);
-    EXPECT_EQ(strings.set("Two"), AK::HashSetResult::InsertedNewEntry);
-    EXPECT_EQ(strings.set("Three"), AK::HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(strings.set("One"), YAK::HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(strings.set("Two"), YAK::HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(strings.set("Three"), YAK::HashSetResult::InsertedNewEntry);
 
     EXPECT_EQ(strings.remove("One"), true);
     EXPECT_EQ(strings.size(), 2u);
@@ -88,8 +88,8 @@ TEST_CASE(case_insensitive)
 {
     HashTable<String, CaseInsensitiveStringTraits> casetable;
     EXPECT_EQ(String("nickserv").to_lowercase(), String("NickServ").to_lowercase());
-    EXPECT_EQ(casetable.set("nickserv"), AK::HashSetResult::InsertedNewEntry);
-    EXPECT_EQ(casetable.set("NickServ"), AK::HashSetResult::ReplacedExistingEntry);
+    EXPECT_EQ(casetable.set("nickserv"), YAK::HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(casetable.set("NickServ"), YAK::HashSetResult::ReplacedExistingEntry);
     EXPECT_EQ(casetable.size(), 1u);
 }
 
@@ -97,7 +97,7 @@ TEST_CASE(many_strings)
 {
     HashTable<String> strings;
     for (int i = 0; i < 999; ++i) {
-        EXPECT_EQ(strings.set(String::number(i)), AK::HashSetResult::InsertedNewEntry);
+        EXPECT_EQ(strings.set(String::number(i)), YAK::HashSetResult::InsertedNewEntry);
     }
     EXPECT_EQ(strings.size(), 999u);
     for (int i = 0; i < 999; ++i) {
@@ -114,10 +114,10 @@ TEST_CASE(many_collisions)
 
     HashTable<String, StringCollisionTraits> strings;
     for (int i = 0; i < 999; ++i) {
-        EXPECT_EQ(strings.set(String::number(i)), AK::HashSetResult::InsertedNewEntry);
+        EXPECT_EQ(strings.set(String::number(i)), YAK::HashSetResult::InsertedNewEntry);
     }
 
-    EXPECT_EQ(strings.set("foo"), AK::HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(strings.set("foo"), YAK::HashSetResult::InsertedNewEntry);
     EXPECT_EQ(strings.size(), 1000u);
 
     for (int i = 0; i < 999; ++i) {
@@ -137,16 +137,16 @@ TEST_CASE(space_reuse)
     HashTable<String, StringCollisionTraits> strings;
 
     // Add a few items to allow it to do initial resizing.
-    EXPECT_EQ(strings.set("0"), AK::HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(strings.set("0"), YAK::HashSetResult::InsertedNewEntry);
     for (int i = 1; i < 5; ++i) {
-        EXPECT_EQ(strings.set(String::number(i)), AK::HashSetResult::InsertedNewEntry);
+        EXPECT_EQ(strings.set(String::number(i)), YAK::HashSetResult::InsertedNewEntry);
         EXPECT_EQ(strings.remove(String::number(i - 1)), true);
     }
 
     auto capacity = strings.capacity();
 
     for (int i = 5; i < 999; ++i) {
-        EXPECT_EQ(strings.set(String::number(i)), AK::HashSetResult::InsertedNewEntry);
+        EXPECT_EQ(strings.set(String::number(i)), YAK::HashSetResult::InsertedNewEntry);
         EXPECT_EQ(strings.remove(String::number(i - 1)), true);
     }
 

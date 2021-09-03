@@ -9,8 +9,8 @@
 #include "../AutoCompleteResponse.h"
 #include "CodeComprehensionEngine.h"
 #include "FileDB.h"
-#include <AK/HashMap.h>
-#include <AK/LexicalPath.h>
+#include <YAK/HashMap.h>
+#include <YAK/LexicalPath.h>
 #include <LibIPC/ClientConnection.h>
 
 #include <Userland/DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>

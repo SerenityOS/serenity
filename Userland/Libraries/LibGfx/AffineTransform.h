@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Format.h>
-#include <AK/Forward.h>
+#include <YAK/Format.h>
+#include <YAK/Forward.h>
 #include <LibGfx/Forward.h>
 
 namespace Gfx {
@@ -69,7 +69,7 @@ private:
 }
 
 template<>
-struct AK::Formatter<Gfx::AffineTransform> : Formatter<FormatString> {
+struct YAK::Formatter<Gfx::AffineTransform> : Formatter<FormatString> {
     void format(FormatBuilder& builder, Gfx::AffineTransform value)
     {
         return Formatter<FormatString>::format(builder, "[{} {} {} {} {} {}]", value.a(), value.b(), value.c(), value.d(), value.e(), value.f());

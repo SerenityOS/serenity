@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <YAK/FlyString.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/Value.h>
@@ -154,7 +154,7 @@ private:
 }
 
 template<>
-struct AK::Traits<JS::StringOrSymbol> : public GenericTraits<JS::StringOrSymbol> {
+struct YAK::Traits<JS::StringOrSymbol> : public GenericTraits<JS::StringOrSymbol> {
     static unsigned hash(JS::StringOrSymbol const& key)
     {
         return key.hash();

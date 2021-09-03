@@ -208,7 +208,7 @@ void Action::set_checked(bool checked)
 
 void Action::set_group(Badge<ActionGroup>, ActionGroup* group)
 {
-    m_action_group = AK::try_make_weak_ptr(group);
+    m_action_group = YAK::try_make_weak_ptr(group);
 }
 
 void Action::set_icon(const Gfx::Bitmap* icon)

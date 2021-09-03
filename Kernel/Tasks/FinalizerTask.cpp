@@ -16,7 +16,7 @@ static void finalizer_task(void*)
     for (;;) {
         g_finalizer_wait_queue->wait_forever("FinalizerTask");
 
-        if (g_finalizer_has_work.exchange(false, AK::MemoryOrder::memory_order_acq_rel) == true)
+        if (g_finalizer_has_work.exchange(false, YAK::MemoryOrder::memory_order_acq_rel) == true)
             Thread::finalize_dying_threads();
     }
 };

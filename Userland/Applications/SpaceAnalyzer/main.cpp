@@ -5,10 +5,10 @@
  */
 
 #include "TreeMapWidget.h"
-#include <AK/LexicalPath.h>
-#include <AK/Queue.h>
-#include <AK/QuickSort.h>
-#include <AK/URL.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/Queue.h>
+#include <YAK/QuickSort.h>
+#include <YAK/URL.h>
 #include <Applications/SpaceAnalyzer/SpaceAnalyzerGML.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>

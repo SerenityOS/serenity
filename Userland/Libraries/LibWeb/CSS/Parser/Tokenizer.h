@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/Optional.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <AK/Types.h>
-#include <AK/Utf8View.h>
+#include <YAK/Optional.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
+#include <YAK/Types.h>
+#include <YAK/Utf8View.h>
 #include <LibWeb/CSS/Parser/Token.h>
 #include <LibWeb/Forward.h>
 
@@ -100,7 +100,7 @@ private:
 
     String m_decoded_input;
     Utf8View m_utf8_view;
-    AK::Utf8CodePointIterator m_utf8_iterator;
-    AK::Utf8CodePointIterator m_prev_utf8_iterator;
+    YAK::Utf8CodePointIterator m_utf8_iterator;
+    YAK::Utf8CodePointIterator m_prev_utf8_iterator;
 };
 }

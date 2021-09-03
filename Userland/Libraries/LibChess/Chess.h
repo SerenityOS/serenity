@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/IterationDecision.h>
-#include <AK/Optional.h>
-#include <AK/StringView.h>
-#include <AK/Traits.h>
-#include <AK/Vector.h>
+#include <YAK/HashMap.h>
+#include <YAK/IterationDecision.h>
+#include <YAK/Optional.h>
+#include <YAK/StringView.h>
+#include <YAK/Traits.h>
+#include <YAK/Vector.h>
 
 namespace Chess {
 
@@ -277,7 +277,7 @@ void Board::generate_moves(Callback callback, Color color) const
 }
 
 template<>
-struct AK::Traits<Chess::Piece> : public GenericTraits<Chess::Piece> {
+struct YAK::Traits<Chess::Piece> : public GenericTraits<Chess::Piece> {
     static unsigned hash(Chess::Piece const& piece)
     {
         return pair_int_hash(static_cast<u32>(piece.color), static_cast<u32>(piece.type));
@@ -285,7 +285,7 @@ struct AK::Traits<Chess::Piece> : public GenericTraits<Chess::Piece> {
 };
 
 template<>
-struct AK::Traits<Chess::Board> : public GenericTraits<Chess::Board> {
+struct YAK::Traits<Chess::Board> : public GenericTraits<Chess::Board> {
     static unsigned hash(Chess::Board const& chess)
     {
         unsigned hash = 0;

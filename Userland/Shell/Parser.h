@@ -7,11 +7,11 @@
 #pragma once
 
 #include "AST.h"
-#include <AK/Function.h>
-#include <AK/RefPtr.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/Vector.h>
+#include <YAK/Function.h>
+#include <YAK/RefPtr.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Vector.h>
 
 namespace Shell {
 

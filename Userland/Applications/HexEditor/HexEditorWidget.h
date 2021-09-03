@@ -7,8 +7,8 @@
 #pragma once
 
 #include "HexEditor.h"
-#include <AK/Function.h>
-#include <AK/LexicalPath.h>
+#include <YAK/Function.h>
+#include <YAK/LexicalPath.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/TextEditor.h>

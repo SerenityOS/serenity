@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/BitmapView.h>
-#include <AK/HashMap.h>
+#include <YAK/BitmapView.h>
+#include <YAK/HashMap.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/ext2_fs.h>

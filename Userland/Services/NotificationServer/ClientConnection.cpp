@@ -6,7 +6,7 @@
 
 #include "ClientConnection.h"
 #include "NotificationWindow.h"
-#include <AK/HashMap.h>
+#include <YAK/HashMap.h>
 #include <NotificationServer/NotificationClientEndpoint.h>
 
 namespace NotificationServer {

@@ -7,10 +7,10 @@
 #pragma once
 
 #include "EventSerialNumber.h"
-#include <AK/HashMap.h>
-#include <AK/MappedFile.h>
-#include <AK/OwnPtr.h>
-#include <AK/Vector.h>
+#include <YAK/HashMap.h>
+#include <YAK/MappedFile.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Vector.h>
 #include <LibELF/Image.h>
 
 namespace Profiler {

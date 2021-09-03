@@ -5,9 +5,9 @@
  */
 
 #include "UCIEndpoint.h"
-#include <AK/ByteBuffer.h>
-#include <AK/Debug.h>
-#include <AK/String.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Debug.h>
+#include <YAK/String.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 

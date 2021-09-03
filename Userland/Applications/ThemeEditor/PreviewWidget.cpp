@@ -5,7 +5,7 @@
  */
 
 #include "PreviewWidget.h"
-#include <AK/StringView.h>
+#include <YAK/StringView.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>

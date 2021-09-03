@@ -6,10 +6,10 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/QuickSort.h>
-#include <AK/Random.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/QuickSort.h>
+#include <YAK/Random.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <stdlib.h>
 
 const size_t NUM_RUNS = 100;

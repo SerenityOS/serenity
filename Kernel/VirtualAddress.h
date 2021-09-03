@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Format.h>
-#include <AK/Types.h>
+#include <YAK/Format.h>
+#include <YAK/Types.h>
 
 class VirtualAddress {
 public:
@@ -52,9 +52,9 @@ inline VirtualAddress operator-(const VirtualAddress& a, const VirtualAddress& b
 }
 
 template<>
-struct AK::Formatter<VirtualAddress> : AK::Formatter<FormatString> {
+struct YAK::Formatter<VirtualAddress> : YAK::Formatter<FormatString> {
     void format(FormatBuilder& builder, const VirtualAddress& value)
     {
-        return AK::Formatter<FormatString>::format(builder, "V{}", value.as_ptr());
+        return YAK::Formatter<FormatString>::format(builder, "V{}", value.as_ptr());
     }
 };

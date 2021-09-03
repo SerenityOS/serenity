@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Atomic.h>
+#include <YAK/Atomic.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
 
 namespace Kernel::VirtIO {
@@ -55,8 +55,8 @@ void Queue::disable_interrupts()
 
 bool Queue::new_data_available() const
 {
-    const auto index = AK::atomic_load(&m_device->index, AK::MemoryOrder::memory_order_relaxed);
-    const auto used_tail = AK::atomic_load(&m_used_tail, AK::MemoryOrder::memory_order_relaxed);
+    const auto index = YAK::atomic_load(&m_device->index, YAK::MemoryOrder::memory_order_relaxed);
+    const auto used_tail = YAK::atomic_load(&m_used_tail, YAK::MemoryOrder::memory_order_relaxed);
     return index != used_tail;
 }
 
@@ -107,7 +107,7 @@ void Queue::reclaim_buffer_chain(u16 chain_start_index, u16 chain_end_index, siz
 
 bool Queue::has_free_slots() const
 {
-    const auto free_buffers = AK::atomic_load(&m_free_buffers, AK::MemoryOrder::memory_order_relaxed);
+    const auto free_buffers = YAK::atomic_load(&m_free_buffers, YAK::MemoryOrder::memory_order_relaxed);
     return free_buffers > 0;
 }
 

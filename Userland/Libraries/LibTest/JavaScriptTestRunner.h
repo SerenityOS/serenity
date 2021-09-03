@@ -9,13 +9,13 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/LexicalPath.h>
-#include <AK/QuickSort.h>
-#include <AK/Result.h>
-#include <AK/Tuple.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonValue.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/QuickSort.h>
+#include <YAK/Result.h>
+#include <YAK/Tuple.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -106,7 +106,7 @@ template<typename... Args>
 static consteval size_t __testjs_count(Args...) { return sizeof...(Args); }
 
 template<auto... Values>
-static consteval size_t __testjs_last() { return (AK::Detail::IntegralConstant<size_t, Values> {}, ...).value; }
+static consteval size_t __testjs_last() { return (YAK::Detail::IntegralConstant<size_t, Values> {}, ...).value; }
 
 static constexpr auto TOP_LEVEL_TEST_NAME = "__$$TOP_LEVEL$$__";
 extern RefPtr<JS::VM> g_vm;
@@ -147,7 +147,7 @@ enum class RunFileHookResult {
     SkipFile,
 };
 
-using IntermediateRunFileResult = AK::Result<JSFileResult, RunFileHookResult>;
+using IntermediateRunFileResult = YAK::Result<JSFileResult, RunFileHookResult>;
 extern IntermediateRunFileResult (*g_run_file)(const String&, JS::Interpreter&);
 
 class TestRunner : public ::Test::TestRunner {
@@ -194,7 +194,7 @@ inline void TestRunnerGlobalObject::initialize_global_object()
     }
 }
 
-inline AK::Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_path, JS::Program::Type program_type = JS::Program::Type::Script)
+inline YAK::Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_path, JS::Program::Type program_type = JS::Program::Type::Script)
 {
     auto file = Core::File::construct(file_path);
     auto result = file->open(Core::OpenMode::ReadOnly);
@@ -212,10 +212,10 @@ inline AK::Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const Stri
 
     if (parser.has_errors()) {
         auto error = parser.errors()[0];
-        return AK::Result<NonnullRefPtr<JS::Program>, ParserError>(ParserError { error, error.source_location_hint(test_file_string) });
+        return YAK::Result<NonnullRefPtr<JS::Program>, ParserError>(ParserError { error, error.source_location_hint(test_file_string) });
     }
 
-    return AK::Result<NonnullRefPtr<JS::Program>, ParserError>(program);
+    return YAK::Result<NonnullRefPtr<JS::Program>, ParserError>(program);
 }
 
 inline Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)

@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/CircularDuplexStream.h>
+#include <YAK/CircularDuplexStream.h>
 
 TEST_CASE(works_like_a_queue)
 {

@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
-#include <AK/Platform.h>
-#include <AK/StringBuilder.h>
-#include <AK/Types.h>
-#include <AK/Utf8View.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Platform.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Types.h>
+#include <YAK/Utf8View.h>
 #include <LibUnicode/CharacterTypes.h>
 
 #if ENABLE_UNICODE_DATA
@@ -98,7 +98,7 @@ u32 to_unicode_lowercase(u32 code_point)
         return unicode_data->simple_lowercase_mapping;
     return code_point;
 #else
-    return AK::to_ascii_lowercase(code_point);
+    return YAK::to_ascii_lowercase(code_point);
 #endif
 }
 
@@ -110,7 +110,7 @@ u32 to_unicode_uppercase(u32 code_point)
         return unicode_data->simple_uppercase_mapping;
     return code_point;
 #else
-    return AK::to_ascii_uppercase(code_point);
+    return YAK::to_ascii_uppercase(code_point);
 #endif
 }
 

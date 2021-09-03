@@ -5,8 +5,8 @@
  */
 
 #include "PropertiesWindow.h"
-#include <AK/LexicalPath.h>
-#include <AK/NumberFormat.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/NumberFormat.h>
 #include <Applications/FileManager/DirectoryView.h>
 #include <Applications/FileManager/PropertiesWindowGeneralTabGML.h>
 #include <LibDesktop/Launcher.h>

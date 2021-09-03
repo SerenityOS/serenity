@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/JsonObject.h>
+#include <YAK/JsonObject.h>
 #include <LibGUI/Model.h>
 #include <LibWeb/CSS/StyleProperties.h>
 

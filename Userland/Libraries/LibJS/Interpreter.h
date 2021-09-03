@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/HashMap.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
-#include <AK/Weakable.h>
+#include <YAK/FlyString.h>
+#include <YAK/HashMap.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
+#include <YAK/Weakable.h>
 #include <LibJS/AST.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/DeferGC.h>

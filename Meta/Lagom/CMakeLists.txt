@@ -94,8 +94,8 @@ set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
 # FIXME: This is a hack, because the lagom stuff can be built individually or
 #        in combination with the system, we generate two Debug.h files. One in
-#        Build/AK/Debug.h and the other in Build/Meta/Lagom/AK/Debug.h.
-configure_file(../../AK/Debug.h.in AK/Debug.h @ONLY)
+#        Build/YAK/Debug.h and the other in Build/Meta/Lagom/YAK/Debug.h.
+configure_file(../../YAK/Debug.h.in YAK/Debug.h @ONLY)
 configure_file(../../Kernel/Debug.h.in Kernel/Debug.h @ONLY)
 
 include_directories(../../)
@@ -144,9 +144,9 @@ if (CMAKE_SOURCE_DIR MATCHES ".*/Lagom")
         COMPONENT Lagom_Development
     )
 
-    # Manually install AK
+    # Manually install YAK
     install(
-        DIRECTORY "${SERENITY_PROJECT_ROOT}/AK"
+        DIRECTORY "${SERENITY_PROJECT_ROOT}/YAK"
         COMPONENT Lagom_Development
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN "*.h"
@@ -208,12 +208,12 @@ function(lagom_test source)
     )
 endfunction()
 
-# AK/Core
-# Note: AK is included in LagomCore for the host build instead of LibC per the target build
-file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
+# YAK/Core
+# Note: YAK is included in LagomCore for the host build instead of LibC per the target build
+file(GLOB YAK_SOURCES CONFIGURE_DEPENDS "../../YAK/*.cpp")
 file(GLOB LIBCORE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCore/*.cpp")
 lagom_lib(Core core
-    SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES}
+    SOURCES ${YAK_SOURCES} ${LIBCORE_SOURCES}
     LIBS Threads::Threads
 )
 if (NOT APPLE)
@@ -454,12 +454,12 @@ if (BUILD_LAGOM)
         )
 
         # LibTest tests from Tests/
-        # AK
-        file(GLOB AK_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/AK/*.cpp")
-        foreach(source ${AK_TEST_SOURCES})
+        # YAK
+        file(GLOB YAK_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/YAK/*.cpp")
+        foreach(source ${YAK_TEST_SOURCES})
             lagom_test(${source})
         endforeach()
-        set_tests_properties(TestJSON PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/AK)
+        set_tests_properties(TestJSON PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/YAK)
 
         # Core
         lagom_test(../../Tests/LibCore/TestLibCoreIODevice.cpp)

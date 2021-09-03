@@ -5,7 +5,7 @@
  */
 
 #include "Game.h"
-#include <AK/Random.h>
+#include <YAK/Random.h>
 
 namespace Pong {
 

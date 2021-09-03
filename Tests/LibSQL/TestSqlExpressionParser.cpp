@@ -7,12 +7,12 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/HashMap.h>
-#include <AK/Result.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
-#include <AK/TypeCasts.h>
+#include <YAK/HashMap.h>
+#include <YAK/Result.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/StringView.h>
+#include <YAK/TypeCasts.h>
 #include <LibSQL/AST/Lexer.h>
 #include <LibSQL/AST/Parser.h>
 
@@ -31,7 +31,7 @@ public:
     }
 };
 
-using ParseResult = AK::Result<NonnullRefPtr<SQL::AST::Expression>, String>;
+using ParseResult = YAK::Result<NonnullRefPtr<SQL::AST::Expression>, String>;
 
 ParseResult parse(StringView sql)
 {

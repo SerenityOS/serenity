@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
+#include <YAK/Function.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Lexer.h>

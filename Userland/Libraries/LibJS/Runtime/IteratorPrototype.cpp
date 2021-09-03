@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
+#include <YAK/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorPrototype.h>
 

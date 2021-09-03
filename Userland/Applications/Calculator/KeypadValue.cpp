@@ -5,8 +5,8 @@
  */
 
 #include "KeypadValue.h"
-#include <AK/Math.h>
-#include <AK/String.h>
+#include <YAK/Math.h>
+#include <YAK/String.h>
 
 KeypadValue::KeypadValue(i64 value, u8 decimal_places)
     : m_value(value)
@@ -85,7 +85,7 @@ ALWAYS_INLINE T KeypadValue::operator_helper(KeypadValue const& lhs, KeypadValue
     KeypadValue const& more_decimal_places = (lhs.m_decimal_places < rhs.m_decimal_places) ? rhs : lhs;
 
     i64 more_decimal_places_equalized = more_decimal_places.m_value;
-    i64 less_decimal_places_equalized = (i64)AK::pow(10.0, (double)(more_decimal_places.m_decimal_places - less_decimal_places.m_decimal_places)) * less_decimal_places.m_value;
+    i64 less_decimal_places_equalized = (i64)YAK::pow(10.0, (double)(more_decimal_places.m_decimal_places - less_decimal_places.m_decimal_places)) * less_decimal_places.m_value;
 
     bool lhs_is_less = (lhs.m_decimal_places < rhs.m_decimal_places);
 
@@ -102,12 +102,12 @@ KeypadValue::KeypadValue(double d)
         d = -d;
     }
     i8 current_pow = 0;
-    while (AK::pow(10.0, (double)current_pow) <= d)
+    while (YAK::pow(10.0, (double)current_pow) <= d)
         current_pow += 1;
     current_pow -= 1;
     while (d != 0) {
         m_value *= 10;
-        m_value += (u64)(d / AK::pow(10.0, (double)current_pow)) % 10;
+        m_value += (u64)(d / YAK::pow(10.0, (double)current_pow)) % 10;
         if (current_pow < 0)
             m_decimal_places += 1;
         current_pow -= 1;
@@ -119,6 +119,6 @@ KeypadValue::KeypadValue(double d)
 
 KeypadValue::operator double()
 {
-    double res = (double)m_value / AK::pow(10.0, (double)m_decimal_places);
+    double res = (double)m_value / YAK::pow(10.0, (double)m_decimal_places);
     return res;
 }

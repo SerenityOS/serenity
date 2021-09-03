@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/Optional.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <AK/Vector.h>
+#include <YAK/FlyString.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/Optional.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
+#include <YAK/Vector.h>
 #include <LibCpp/Token.h>
 
 namespace Cpp {

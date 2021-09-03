@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/QuickSort.h>
-#include <AK/StdLibExtras.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/QuickSort.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

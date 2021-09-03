@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Span.h>
-#include <AK/Types.h>
+#include <YAK/Span.h>
+#include <YAK/Types.h>
 #include <LibCrypto/Checksum/ChecksumFunction.h>
 
 namespace Crypto::Checksum {

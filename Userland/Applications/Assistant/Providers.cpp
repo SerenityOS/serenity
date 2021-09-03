@@ -6,8 +6,8 @@
 
 #include "Providers.h"
 #include "FuzzyMatch.h"
-#include <AK/LexicalPath.h>
-#include <AK/URL.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/URL.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>

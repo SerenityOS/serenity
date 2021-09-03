@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/LexicalPath.h>
+#include <YAK/Function.h>
+#include <YAK/LexicalPath.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>

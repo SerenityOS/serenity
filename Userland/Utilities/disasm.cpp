@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/MappedFile.h>
-#include <AK/OwnPtr.h>
-#include <AK/QuickSort.h>
-#include <AK/Vector.h>
+#include <YAK/Debug.h>
+#include <YAK/MappedFile.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/QuickSort.h>
+#include <YAK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibELF/Image.h>
 #include <LibX86/Disassembler.h>

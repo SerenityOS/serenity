@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ScopeGuard.h>
-#include <AK/Singleton.h>
-#include <AK/StringBuilder.h>
-#include <AK/Time.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/Singleton.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Time.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Debug.h>
@@ -638,7 +638,7 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
     }
 
     m_pending_signals |= 1 << (signal - 1);
-    m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, AK::memory_order_release);
+    m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, YAK::memory_order_release);
 
     if (m_state == Stopped) {
         SpinlockLocker lock(m_lock);
@@ -658,7 +658,7 @@ u32 Thread::update_signal_mask(u32 signal_mask)
     SpinlockLocker lock(g_scheduler_lock);
     auto previous_signal_mask = m_signal_mask;
     m_signal_mask = signal_mask;
-    m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, AK::memory_order_release);
+    m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, YAK::memory_order_release);
     return previous_signal_mask;
 }
 
@@ -676,7 +676,7 @@ u32 Thread::signal_mask_block(sigset_t signal_set, bool block)
         m_signal_mask &= ~signal_set;
     else
         m_signal_mask |= signal_set;
-    m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, AK::memory_order_release);
+    m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, YAK::memory_order_release);
     return previous_signal_mask;
 }
 
@@ -685,7 +685,7 @@ void Thread::clear_signals()
     SpinlockLocker lock(g_scheduler_lock);
     m_signal_mask = 0;
     m_pending_signals = 0;
-    m_have_any_unmasked_pending_signals.store(false, AK::memory_order_release);
+    m_have_any_unmasked_pending_signals.store(false, YAK::memory_order_release);
     m_signal_action_data.fill({});
 }
 
@@ -857,7 +857,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
     // Mark this signal as handled.
     m_pending_signals &= ~(1 << (signal - 1));
-    m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
+    m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, YAK::memory_order_release);
 
     auto& process = this->process();
     auto tracer = process.tracer();
@@ -924,7 +924,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         new_signal_mask |= 1 << (signal - 1);
 
     m_signal_mask |= new_signal_mask;
-    m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
+    m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, YAK::memory_order_release);
 
     auto setup_stack = [&](RegisterState& state) {
         FlatPtr stack = state.userspace_sp();
@@ -1241,9 +1241,9 @@ bool Thread::should_be_stopped() const
 
 }
 
-void AK::Formatter<Kernel::Thread>::format(FormatBuilder& builder, const Kernel::Thread& value)
+void YAK::Formatter<Kernel::Thread>::format(FormatBuilder& builder, const Kernel::Thread& value)
 {
-    return AK::Formatter<FormatString>::format(
+    return YAK::Formatter<FormatString>::format(
         builder,
         "{}({}:{})", value.process().name(), value.pid().value(), value.tid().value());
 }

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 

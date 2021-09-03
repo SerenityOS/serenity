@@ -6,8 +6,8 @@
 
 #include "Player.h"
 #include "Helpers.h"
-#include <AK/Debug.h>
-#include <AK/QuickSort.h>
+#include <YAK/Debug.h>
+#include <YAK/QuickSort.h>
 
 namespace Hearts {
 

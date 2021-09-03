@@ -7,7 +7,7 @@
 
 #include "FileUtils.h"
 #include "FileOperationProgressWidget.h"
-#include <AK/LexicalPath.h>
+#include <YAK/LexicalPath.h>
 #include <LibCore/File.h>
 #include <LibGUI/MessageBox.h>
 #include <unistd.h>

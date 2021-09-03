@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/OwnPtr.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/OwnPtr.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/IO.h>

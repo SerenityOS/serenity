@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/PrintfImplementation.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/PrintfImplementation.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Types.h>
 #include <stdio.h>
 #include <unistd.h>
 

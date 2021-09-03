@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/Optional.h>
-#include <AK/RefPtr.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <AK/Vector.h>
+#include <YAK/Optional.h>
+#include <YAK/RefPtr.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
+#include <YAK/Vector.h>
 
 // Extended M3U fields (de facto standard)
 struct M3UExtendedInfo {

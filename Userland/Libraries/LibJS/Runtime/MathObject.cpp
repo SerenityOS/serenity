@@ -6,8 +6,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
-#include <AK/Random.h>
+#include <YAK/Function.h>
+#include <YAK/Random.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MathObject.h>
 #include <math.h>

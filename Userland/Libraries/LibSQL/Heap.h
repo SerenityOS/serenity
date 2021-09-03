@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Debug.h>
-#include <AK/HashMap.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Debug.h>
+#include <YAK/HashMap.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <LibCore/File.h>
 #include <LibCore/Object.h>
 

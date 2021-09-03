@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/HashTable.h>
-#include <AK/String.h>
+#include <YAK/HashTable.h>
+#include <YAK/String.h>
 #include <LibJS/Forward.h>
 
 namespace JS {

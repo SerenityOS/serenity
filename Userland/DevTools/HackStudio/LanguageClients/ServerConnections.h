@@ -7,7 +7,7 @@
 #pragma once
 
 #include "../LanguageClient.h"
-#include <AK/LexicalPath.h>
+#include <YAK/LexicalPath.h>
 #include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
 #include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
 #include <LibIPC/ServerConnection.h>

@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/AllOf.h>
-#include <AK/CharacterTypes.h>
-#include <AK/Format.h>
-#include <AK/HashMap.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonParser.h>
-#include <AK/JsonValue.h>
-#include <AK/LexicalPath.h>
-#include <AK/QuickSort.h>
-#include <AK/SourceGenerator.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/AllOf.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Format.h>
+#include <YAK/HashMap.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonParser.h>
+#include <YAK/JsonValue.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/QuickSort.h>
+#include <YAK/SourceGenerator.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -349,9 +349,9 @@ enum class @name@ : @underlying@ {)~~~");
     generator.append(R"~~~(
 #pragma once
 
-#include <AK/Optional.h>
-#include <AK/StringView.h>
-#include <AK/Types.h>
+#include <YAK/Optional.h>
+#include <YAK/StringView.h>
+#include <YAK/Types.h>
 #include <LibUnicode/Forward.h>
 
 namespace Unicode {
@@ -407,9 +407,9 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
     generator.set("territories_size", String::number(locale_data.territories.size()));
 
     generator.append(R"~~~(
-#include <AK/Array.h>
-#include <AK/HashMap.h>
-#include <AK/Span.h>
+#include <YAK/Array.h>
+#include <YAK/HashMap.h>
+#include <YAK/Span.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/UnicodeLocale.h>
 

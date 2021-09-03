@@ -12,7 +12,7 @@ cd "$script_path/.." || exit 1
 #  */
 GOOD_LICENSE_HEADER_PATTERN=$'^/\*\n( \* Copyright \(c\) [0-9]{4}(-[0-9]{4})?, .*\n)+ \*\n \* SPDX-License-Identifier: BSD-2-Clause\n \*/\n\n'
 BAD_LICENSE_HEADER_ERRORS=()
-LICENSE_HEADER_CHECK_EXCLUDES=(AK/Checked.h AK/Function.h Userland/Libraries/LibC/elf.h Userland/DevTools/HackStudio/LanguageServers/Cpp/Tests/* Userland/Libraries/LibCpp/Tests/parser/* Userland/Libraries/LibCpp/Tests/preprocessor/*)
+LICENSE_HEADER_CHECK_EXCLUDES=(YAK/Checked.h YAK/Function.h Userland/Libraries/LibC/elf.h Userland/DevTools/HackStudio/LanguageServers/Cpp/Tests/* Userland/Libraries/LibCpp/Tests/parser/* Userland/Libraries/LibCpp/Tests/preprocessor/*)
 
 # We check that "#pragma once" is present
 PRAGMA_ONCE_PATTERN='#pragma once'

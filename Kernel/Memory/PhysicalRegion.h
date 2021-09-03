@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
+#include <YAK/OwnPtr.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/PhysicalZone.h>
 
 namespace Kernel::Memory {
 
 class PhysicalRegion {
-    AK_MAKE_ETERNAL;
-    AK_MAKE_NONCOPYABLE(PhysicalRegion);
-    AK_MAKE_NONMOVABLE(PhysicalRegion);
+    YAK_MAKE_ETERNAL;
+    YAK_MAKE_NONCOPYABLE(PhysicalRegion);
+    YAK_MAKE_NONMOVABLE(PhysicalRegion);
 
 public:
     static OwnPtr<PhysicalRegion> try_create(PhysicalAddress lower, PhysicalAddress upper)

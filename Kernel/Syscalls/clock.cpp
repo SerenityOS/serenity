@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Time.h>
+#include <YAK/Time.h>
 #include <Kernel/Process.h>
 #include <Kernel/Time/TimeManagement.h>
 
@@ -127,7 +127,7 @@ KResultOr<FlatPtr> Process::sys$adjtime(Userspace<const timeval*> user_delta, Us
         if (!delta.has_value())
             return EFAULT;
 
-        // FIXME: Should use AK::Time internally
+        // FIXME: Should use YAK::Time internally
         TimeManagement::the().set_remaining_epoch_time_adjustment(delta->to_timespec());
     }
 

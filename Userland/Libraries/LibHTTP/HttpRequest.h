@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/Optional.h>
-#include <AK/String.h>
-#include <AK/URL.h>
-#include <AK/Vector.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Optional.h>
+#include <YAK/String.h>
+#include <YAK/URL.h>
+#include <YAK/Vector.h>
 #include <LibCore/Forward.h>
 
 namespace HTTP {

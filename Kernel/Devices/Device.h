@@ -14,9 +14,9 @@
 // There are two main subclasses:
 //   - BlockDevice (random access)
 //   - CharacterDevice (sequential)
-#include <AK/DoublyLinkedList.h>
-#include <AK/Function.h>
-#include <AK/HashMap.h>
+#include <YAK/DoublyLinkedList.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
 #include <Kernel/Devices/AsyncDeviceRequest.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/Locking/Mutex.h>

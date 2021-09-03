@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Atomic.h>
+#include <YAK/Atomic.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Thread.h>
 

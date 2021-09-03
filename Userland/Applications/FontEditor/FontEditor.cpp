@@ -8,8 +8,8 @@
 #include "GlyphEditorWidget.h"
 #include "GlyphMapWidget.h"
 #include "NewFontDialog.h"
-#include <AK/StringBuilder.h>
-#include <AK/UnicodeUtils.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/UnicodeUtils.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -134,8 +134,8 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         StringBuilder builder;
         builder.appendff("U+{:04X} (", glyph);
 
-        if (AK::UnicodeUtils::is_unicode_control_code_point(glyph)) {
-            builder.append(AK::UnicodeUtils::get_unicode_control_code_point_alias(glyph).value());
+        if (YAK::UnicodeUtils::is_unicode_control_code_point(glyph)) {
+            builder.append(YAK::UnicodeUtils::get_unicode_control_code_point_alias(glyph).value());
         } else if (Gfx::get_char_bidi_class(glyph) == Gfx::BidirectionalClass::STRONG_RTL) {
             // FIXME: This is a necessary hack, as RTL text will mess up the painting of the statusbar text.
             // For now, replace RTL glyphs with U+FFFD, the replacement character.

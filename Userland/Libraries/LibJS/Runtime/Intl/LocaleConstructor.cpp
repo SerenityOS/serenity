@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Optional.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Optional.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>

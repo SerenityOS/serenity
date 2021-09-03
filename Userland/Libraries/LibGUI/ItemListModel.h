@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/Vector.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/Vector.h>
 #include <LibGUI/Model.h>
 
 namespace GUI {

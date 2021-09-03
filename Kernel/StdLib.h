@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Checked.h>
-#include <AK/Forward.h>
-#include <AK/Time.h>
-#include <AK/Userspace.h>
+#include <YAK/Checked.h>
+#include <YAK/Forward.h>
+#include <YAK/Time.h>
+#include <YAK/Userspace.h>
 #include <Kernel/KResult.h>
 #include <Kernel/KString.h>
 #include <Kernel/UnixTypes.h>

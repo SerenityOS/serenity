@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 
 namespace IO {
 
@@ -142,7 +142,7 @@ private:
 };
 
 template<>
-struct AK::Formatter<IOAddress> : AK::Formatter<FormatString> {
+struct YAK::Formatter<IOAddress> : YAK::Formatter<FormatString> {
     void format(FormatBuilder& builder, IOAddress value)
     {
         return Formatter<FormatString>::format(builder, "IO {:x}", value.get());

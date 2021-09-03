@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/SourceLocation.h>
-#include <AK/Utf32View.h>
+#include <YAK/Debug.h>
+#include <YAK/SourceLocation.h>
+#include <YAK/Utf32View.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>

@@ -9,7 +9,7 @@
 #include "Selection.h"
 #include "Tool.h"
 
-#include <AK/Vector.h>
+#include <YAK/Vector.h>
 #include <LibGUI/Widget.h>
 
 namespace PixelPaint {

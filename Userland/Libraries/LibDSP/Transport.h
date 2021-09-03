@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Music.h"
-#include <AK/Types.h>
+#include <YAK/Types.h>
 #include <LibCore/Object.h>
 
 namespace LibDSP {

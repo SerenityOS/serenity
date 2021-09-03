@@ -7,14 +7,14 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
-#include <AK/StdLibExtras.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/StdLibExtras.h>
 #include <unistd.h>
 
 namespace IPC {
 
 class File {
-    AK_MAKE_NONCOPYABLE(File);
+    YAK_MAKE_NONCOPYABLE(File);
 
 public:
     // Must have a default constructor, because LibIPC

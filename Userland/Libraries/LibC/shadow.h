@@ -6,7 +6,7 @@
 
 #pragma once
 
-#ifndef AK_OS_MACOS
+#ifndef YAK_OS_MACOS
 #    include <bits/FILE.h>
 #endif
 #include <sys/cdefs.h>
@@ -26,7 +26,7 @@ struct spwd {
     unsigned long int sp_flag;
 };
 
-#ifndef AK_OS_MACOS
+#ifndef YAK_OS_MACOS
 struct spwd* getspent();
 void setspent();
 void endspent();

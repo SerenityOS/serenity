@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
-#include <AK/Utf32View.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Utf32View.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>

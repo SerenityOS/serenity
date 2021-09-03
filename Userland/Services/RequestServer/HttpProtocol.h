@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
-#include <AK/String.h>
-#include <AK/URL.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/HashMap.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/String.h>
+#include <YAK/URL.h>
 #include <LibHTTP/HttpJob.h>
 #include <RequestServer/ClientConnection.h>
 #include <RequestServer/HttpRequest.h>

@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/RefCounted.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::ACPI {

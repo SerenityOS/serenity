@@ -16,32 +16,32 @@ def handler_class_for_type(type, re=re.compile('^([^<]+)(<.*>)?$')):
 
     klass = match.group(1)
 
-    if klass == 'AK::Atomic':
-        return AKAtomic
-    elif klass == 'AK::DistinctNumeric':
-        return AKDistinctNumeric
-    elif klass == 'AK::HashMap':
-        return AKHashMapPrettyPrinter
-    elif klass == 'AK::RefCounted':
-        return AKRefCounted
-    elif klass == 'AK::RefPtr':
-        return AKRefPtr
-    elif klass == 'AK::OwnPtr':
-        return AKOwnPtr
-    elif klass == 'AK::NonnullRefPtr':
-        return AKRefPtr
-    elif klass == 'AK::SinglyLinkedList':
-        return AKSinglyLinkedList
-    elif klass == 'AK::String':
-        return AKString
-    elif klass == 'AK::StringView':
-        return AKStringView
-    elif klass == 'AK::StringImpl':
-        return AKStringImpl
-    elif klass == 'AK::Variant':
-        return AKVariant
-    elif klass == 'AK::Vector':
-        return AKVector
+    if klass == 'YAK::Atomic':
+        return YAKAtomic
+    elif klass == 'YAK::DistinctNumeric':
+        return YAKDistinctNumeric
+    elif klass == 'YAK::HashMap':
+        return YAKHashMapPrettyPrinter
+    elif klass == 'YAK::RefCounted':
+        return YAKRefCounted
+    elif klass == 'YAK::RefPtr':
+        return YAKRefPtr
+    elif klass == 'YAK::OwnPtr':
+        return YAKOwnPtr
+    elif klass == 'YAK::NonnullRefPtr':
+        return YAKRefPtr
+    elif klass == 'YAK::SinglyLinkedList':
+        return YAKSinglyLinkedList
+    elif klass == 'YAK::String':
+        return YAKString
+    elif klass == 'YAK::StringView':
+        return YAKStringView
+    elif klass == 'YAK::StringImpl':
+        return YAKStringImpl
+    elif klass == 'YAK::Variant':
+        return YAKVariant
+    elif klass == 'YAK::Vector':
+        return YAKVector
     elif klass == 'VirtualAddress':
         return VirtualAddress
     else:
@@ -54,7 +54,7 @@ class UnhandledType:
         return type.name
 
 
-class AKAtomic:
+class YAKAtomic:
     def __init__(self, val):
         self.val = val
 
@@ -64,10 +64,10 @@ class AKAtomic:
     @classmethod
     def prettyprint_type(cls, type):
         contained_type = type.template_argument(0)
-        return f'AK::Atomic<{handler_class_for_type(contained_type).prettyprint_type(contained_type)}>'
+        return f'YAK::Atomic<{handler_class_for_type(contained_type).prettyprint_type(contained_type)}>'
 
 
-class AKDistinctNumeric:
+class YAKDistinctNumeric:
     def __init__(self, val):
         self.val = val
 
@@ -84,10 +84,10 @@ class AKDistinctNumeric:
             return qualified_name
         # If the tag is malformed, just print DistinctNumeric<T>
         contained_type = type.template_argument(0)
-        return f'AK::DistinctNumeric<{handler_class_for_type(contained_type).prettyprint_type(contained_type)}>'
+        return f'YAK::DistinctNumeric<{handler_class_for_type(contained_type).prettyprint_type(contained_type)}>'
 
 
-class AKRefCounted:
+class YAKRefCounted:
     def __init__(self, val):
         self.val = val
 
@@ -97,10 +97,10 @@ class AKRefCounted:
     @classmethod
     def prettyprint_type(cls, type):
         contained_type = type.template_argument(0)
-        return f'AK::RefCounted<{handler_class_for_type(contained_type).prettyprint_type(contained_type)}>'
+        return f'YAK::RefCounted<{handler_class_for_type(contained_type).prettyprint_type(contained_type)}>'
 
 
-class AKString:
+class YAKString:
     def __init__(self, val):
         self.val = val
 
@@ -108,15 +108,15 @@ class AKString:
         if int(self.val["m_impl"]["m_bits"]["m_value"]) == 0:
             return '""'
         else:
-            impl = AKRefPtr(self.val["m_impl"]).get_pointee().dereference()
-            return AKStringImpl(impl).to_string()
+            impl = YAKRefPtr(self.val["m_impl"]).get_pointee().dereference()
+            return YAKStringImpl(impl).to_string()
 
     @classmethod
     def prettyprint_type(cls, type):
-        return 'AK::String'
+        return 'YAK::String'
 
 
-class AKStringView:
+class YAKStringView:
     def __init__(self, val):
         self.val = val
 
@@ -130,7 +130,7 @@ class AKStringView:
 
     @classmethod
     def prettyprint_type(cls, type):
-        return 'AK::StringView'
+        return 'YAK::StringView'
 
 
 def get_field_unalloced(val, member, type):
@@ -140,7 +140,7 @@ def get_field_unalloced(val, member, type):
     return gdb.parse_and_eval(f"*({type}*)(({val.type.name}*){int(val.address)})->{member}")
 
 
-class AKStringImpl:
+class YAKStringImpl:
     def __init__(self, val):
         self.val = val
 
@@ -153,15 +153,15 @@ class AKStringImpl:
 
     @classmethod
     def prettyprint_type(cls, type):
-        return 'AK::StringImpl'
+        return 'YAK::StringImpl'
 
 
-class AKOwnPtr:
+class YAKOwnPtr:
     def __init__(self, val):
         self.val = val
 
     def to_string(self):
-        return AKOwnPtr.prettyprint_type(self.val.type)
+        return YAKOwnPtr.prettyprint_type(self.val.type)
 
     def children(self):
         return [('*', self.val["m_ptr"])]
@@ -169,15 +169,15 @@ class AKOwnPtr:
     @classmethod
     def prettyprint_type(cls, type):
         contained_type = type.template_argument(0)
-        return f'AK::OwnPtr<{handler_class_for_type(contained_type).prettyprint_type(contained_type)}>'
+        return f'YAK::OwnPtr<{handler_class_for_type(contained_type).prettyprint_type(contained_type)}>'
 
 
-class AKRefPtr:
+class YAKRefPtr:
     def __init__(self, val):
         self.val = val
 
     def to_string(self):
-        return AKRefPtr.prettyprint_type(self.val.type)
+        return YAKRefPtr.prettyprint_type(self.val.type)
 
     def get_pointee(self):
         inner_type = self.val.type.template_argument(0)
@@ -190,17 +190,17 @@ class AKRefPtr:
     @classmethod
     def prettyprint_type(cls, type):
         contained_type = type.template_argument(0)
-        return f'AK::RefPtr<{handler_class_for_type(contained_type).prettyprint_type(contained_type)}>'
+        return f'YAK::RefPtr<{handler_class_for_type(contained_type).prettyprint_type(contained_type)}>'
 
 
-class AKVariant:
+class YAKVariant:
     def __init__(self, val):
         self.val = val
         self.index = int(self.val["m_index"])
         self.contained_types = self.resolve_types(self.val.type)
 
     def to_string(self):
-        return AKVariant.prettyprint_type(self.val.type)
+        return YAKVariant.prettyprint_type(self.val.type)
 
     def children(self):
         data = self.val["m_data"]
@@ -223,16 +223,16 @@ class AKVariant:
 
     @classmethod
     def prettyprint_type(cls, ty):
-        names = ", ".join(handler_class_for_type(t).prettyprint_type(t) for t in AKVariant.resolve_types(ty))
-        return f'AK::Variant<{names}>'
+        names = ", ".join(handler_class_for_type(t).prettyprint_type(t) for t in YAKVariant.resolve_types(ty))
+        return f'YAK::Variant<{names}>'
 
 
-class AKVector:
+class YAKVector:
     def __init__(self, val):
         self.val = val
 
     def to_string(self):
-        return f'{AKVector.prettyprint_type(self.val.type)} of len {int(self.val["m_size"])}'
+        return f'{YAKVector.prettyprint_type(self.val.type)} of len {int(self.val["m_size"])}'
 
     def children(self):
         vec_len = int(self.val["m_size"])
@@ -254,10 +254,10 @@ class AKVector:
     @classmethod
     def prettyprint_type(cls, type):
         template_type = type.template_argument(0)
-        return f'AK::Vector<{handler_class_for_type(template_type).prettyprint_type(template_type)}>'
+        return f'YAK::Vector<{handler_class_for_type(template_type).prettyprint_type(template_type)}>'
 
 
-class AKHashMapPrettyPrinter:
+class YAKHashMapPrettyPrinter:
     def __init__(self, val):
         self.val = val
 
@@ -273,10 +273,10 @@ class AKHashMapPrettyPrinter:
     @staticmethod
     def _iter_hashmap(val, cb):
         table = val["m_table"]
-        AKHashMapPrettyPrinter._iter_hashtable(table, lambda entry: cb(entry["key"], entry["value"]))
+        YAKHashMapPrettyPrinter._iter_hashtable(table, lambda entry: cb(entry["key"], entry["value"]))
 
     def to_string(self):
-        return AKHashMapPrettyPrinter.prettyprint_type(self.val.type)
+        return YAKHashMapPrettyPrinter.prettyprint_type(self.val.type)
 
     def children(self):
         elements = []
@@ -285,22 +285,22 @@ class AKHashMapPrettyPrinter:
             nonlocal elements
             elements.append((f"[{key}]", value))
 
-        AKHashMapPrettyPrinter._iter_hashmap(self.val, cb)
+        YAKHashMapPrettyPrinter._iter_hashmap(self.val, cb)
         return elements
 
     @classmethod
     def prettyprint_type(cls, type):
         template_types = list(type.template_argument(i) for i in (0, 1))
         key, value = list(handler_class_for_type(t).prettyprint_type(t) for t in template_types)
-        return f'AK::HashMap<{key}, {value}>'
+        return f'YAK::HashMap<{key}, {value}>'
 
 
-class AKSinglyLinkedList:
+class YAKSinglyLinkedList:
     def __init__(self, val):
         self.val = val
 
     def to_string(self):
-        return AKSinglyLinkedList.prettyprint_type(self.val.type)
+        return YAKSinglyLinkedList.prettyprint_type(self.val.type)
 
     def children(self):
         elements = []
@@ -315,7 +315,7 @@ class AKSinglyLinkedList:
     @classmethod
     def prettyprint_type(cls, type):
         template_type = type.template_argument(0)
-        return f'AK::SinglyLinkedList<{handler_class_for_type(template_type).prettyprint_type(template_type)}>'
+        return f'YAK::SinglyLinkedList<{handler_class_for_type(template_type).prettyprint_type(template_type)}>'
 
 
 class VirtualAddress:
@@ -365,7 +365,7 @@ class FindThreadCmd(gdb.Command):
             if int(key["m_value"]) == tid:
                 thread = value
 
-        AKHashMapPrettyPrinter._iter_hashmap(threads, cb)
+        YAKHashMapPrettyPrinter._iter_hashmap(threads, cb)
         return thread
 
     def complete(self, text, word):

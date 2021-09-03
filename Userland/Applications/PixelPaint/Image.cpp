@@ -7,13 +7,13 @@
 
 #include "Image.h"
 #include "Layer.h"
-#include <AK/Base64.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonObjectSerializer.h>
-#include <AK/JsonValue.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Base64.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonObjectSerializer.h>
+#include <YAK/JsonValue.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MappedFile.h>
+#include <YAK/StringBuilder.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>

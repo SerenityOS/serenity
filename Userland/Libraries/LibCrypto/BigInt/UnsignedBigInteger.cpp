@@ -5,9 +5,9 @@
  */
 
 #include "UnsignedBigInteger.h"
-#include <AK/CharacterTypes.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringHash.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/StringHash.h>
 #include <LibCrypto/BigInt/Algorithms/UnsignedBigIntegerAlgorithms.h>
 
 namespace Crypto {
@@ -344,7 +344,7 @@ bool UnsignedBigInteger::operator>=(UnsignedBigInteger const& other) const
 
 }
 
-void AK::Formatter<Crypto::UnsignedBigInteger>::format(FormatBuilder& fmtbuilder, const Crypto::UnsignedBigInteger& value)
+void YAK::Formatter<Crypto::UnsignedBigInteger>::format(FormatBuilder& fmtbuilder, const Crypto::UnsignedBigInteger& value)
 {
     if (value.is_invalid())
         return Formatter<StringView>::format(fmtbuilder, "invalid");

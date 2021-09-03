@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/HashFunctions.h>
-#include <AK/Types.h>
+#include <YAK/HashFunctions.h>
+#include <YAK/Types.h>
 
 TEST_CASE(int_hash)
 {

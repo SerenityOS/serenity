@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Stack.h>
+#include <YAK/Stack.h>
 #include <LibGL/GL/gl.h>
 
 namespace GL {

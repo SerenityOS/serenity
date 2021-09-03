@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/MappedFile.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
+#include <YAK/HashMap.h>
+#include <YAK/MappedFile.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
 
 namespace USBDB {
 

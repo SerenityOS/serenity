@@ -8,9 +8,9 @@
 #include "Game.h"
 #include "Helpers.h"
 #include "ScoreCard.h"
-#include <AK/Debug.h>
-#include <AK/QuickSort.h>
-#include <AK/Random.h>
+#include <YAK/Debug.h>
+#include <YAK/QuickSort.h>
+#include <YAK/Random.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Dialog.h>

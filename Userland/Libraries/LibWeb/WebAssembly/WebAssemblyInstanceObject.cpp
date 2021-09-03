@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ScopeGuard.h>
+#include <YAK/ScopeGuard.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/BigInt.h>

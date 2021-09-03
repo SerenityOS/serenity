@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/Types.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/Types.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/Storage/Partition/DiskPartition.h>
 #include <Kernel/Storage/StorageController.h>
@@ -18,7 +18,7 @@ namespace Kernel {
 
 class PartitionTable;
 class StorageManagement {
-    AK_MAKE_ETERNAL;
+    YAK_MAKE_ETERNAL;
 
 public:
     StorageManagement(String boot_argument, bool force_pio);

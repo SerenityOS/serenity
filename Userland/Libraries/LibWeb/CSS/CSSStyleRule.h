@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/NonnullRefPtrVector.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/Selector.h>
@@ -16,8 +16,8 @@
 namespace Web::CSS {
 
 class CSSStyleRule : public CSSRule {
-    AK_MAKE_NONCOPYABLE(CSSStyleRule);
-    AK_MAKE_NONMOVABLE(CSSStyleRule);
+    YAK_MAKE_NONCOPYABLE(CSSStyleRule);
+    YAK_MAKE_NONMOVABLE(CSSStyleRule);
 
 public:
     static NonnullRefPtr<CSSStyleRule> create(NonnullRefPtrVector<Selector>&& selectors, NonnullRefPtr<CSSStyleDeclaration>&& declaration)

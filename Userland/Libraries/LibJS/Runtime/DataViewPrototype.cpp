@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Checked.h>
-#include <AK/TypeCasts.h>
+#include <YAK/Checked.h>
+#include <YAK/TypeCasts.h>
 #include <LibJS/Runtime/DataViewPrototype.h>
 
 namespace JS {

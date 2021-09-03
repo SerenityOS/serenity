@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Atomic.h>
-#include <AK/Concepts.h>
-#include <AK/Vector.h>
+#include <YAK/Atomic.h>
+#include <YAK/Concepts.h>
+#include <YAK/Vector.h>
 
 #include <Kernel/Arch/x86/DescriptorTable.h>
 

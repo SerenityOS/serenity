@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
+#include <YAK/ByteBuffer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/Notifier.h>

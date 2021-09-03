@@ -7,9 +7,9 @@
 #pragma once
 
 #include "WindowStack.h"
-#include <AK/HashMap.h>
-#include <AK/HashTable.h>
-#include <AK/WeakPtr.h>
+#include <YAK/HashMap.h>
+#include <YAK/HashTable.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibGfx/Color.h>

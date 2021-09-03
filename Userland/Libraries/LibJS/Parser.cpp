@@ -6,12 +6,12 @@
  */
 
 #include "Parser.h"
-#include <AK/Array.h>
-#include <AK/CharacterTypes.h>
-#include <AK/HashTable.h>
-#include <AK/ScopeGuard.h>
-#include <AK/StdLibExtras.h>
-#include <AK/TemporaryChange.h>
+#include <YAK/Array.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/HashTable.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/TemporaryChange.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibRegex/Regex.h>
 
@@ -431,7 +431,7 @@ NonnullRefPtr<Statement> Parser::parse_statement(AllowLabelledFunction allow_lab
     }
 }
 
-static constexpr AK::Array<StringView, 9> strict_reserved_words = { "implements", "interface", "let", "package", "private", "protected", "public", "static", "yield" };
+static constexpr YAK::Array<StringView, 9> strict_reserved_words = { "implements", "interface", "let", "package", "private", "protected", "public", "static", "yield" };
 
 static bool is_strict_reserved_word(StringView str)
 {
@@ -1965,7 +1965,7 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
     return parameters;
 }
 
-static constexpr AK::Array<StringView, 36> s_reserved_words = { "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for", "function", "if", "import", "in", "instanceof", "new", "null", "return", "super", "switch", "this", "throw", "true", "try", "typeof", "var", "void", "while", "with" };
+static constexpr YAK::Array<StringView, 36> s_reserved_words = { "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for", "function", "if", "import", "in", "instanceof", "new", "null", "return", "super", "switch", "this", "throw", "true", "try", "typeof", "var", "void", "while", "with" };
 
 RefPtr<BindingPattern> Parser::parse_binding_pattern(bool strict_checks)
 {

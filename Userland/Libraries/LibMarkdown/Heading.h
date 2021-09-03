@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
-#include <AK/StringView.h>
-#include <AK/Vector.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/StringView.h>
+#include <YAK/Vector.h>
 #include <LibMarkdown/Block.h>
 #include <LibMarkdown/Text.h>
 

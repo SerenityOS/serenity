@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/HashMap.h>
-#include <AK/Noncopyable.h>
-#include <AK/Random.h>
-#include <AK/StdLibExtras.h>
-#include <AK/Types.h>
-#include <AK/Utf8View.h>
+#include <YAK/Assertions.h>
+#include <YAK/HashMap.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/Random.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/Types.h>
+#include <YAK/Utf8View.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibPthread/pthread.h>
 #include <alloca.h>
@@ -69,7 +69,7 @@ enum DigitConsumeDecision {
 
 template<typename T, T min_value, T max_value>
 class NumParser {
-    AK_MAKE_NONMOVABLE(NumParser);
+    YAK_MAKE_NONMOVABLE(NumParser);
 
 public:
     NumParser(Sign sign, int base)
@@ -1128,7 +1128,7 @@ void arc4random_buf(void* buffer, size_t buffer_size)
 
 uint32_t arc4random_uniform(uint32_t max_bounds)
 {
-    return AK::get_random_uniform(max_bounds);
+    return YAK::get_random_uniform(max_bounds);
 }
 
 char* realpath(const char* pathname, char* buffer)

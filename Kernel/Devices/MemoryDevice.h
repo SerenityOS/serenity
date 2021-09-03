@@ -6,15 +6,15 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 
 class MemoryDevice final : public CharacterDevice {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     static NonnullRefPtr<MemoryDevice> must_create();
     ~MemoryDevice();

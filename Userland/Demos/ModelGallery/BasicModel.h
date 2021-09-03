@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/Vector.h>
+#include <YAK/Function.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/Vector.h>
 #include <LibGUI/Model.h>
 
 class BasicModel final : public GUI::Model {

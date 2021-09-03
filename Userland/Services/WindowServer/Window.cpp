@@ -13,9 +13,9 @@
 #include "EventLoop.h"
 #include "Screen.h"
 #include "WindowManager.h"
-#include <AK/Badge.h>
-#include <AK/CharacterTypes.h>
-#include <AK/Debug.h>
+#include <YAK/Badge.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Debug.h>
 
 namespace WindowServer {
 

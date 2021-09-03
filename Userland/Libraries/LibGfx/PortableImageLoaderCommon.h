@@ -7,16 +7,16 @@
 
 #pragma once
 
-#include <AK/Array.h>
-#include <AK/Debug.h>
-#include <AK/Endian.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
-#include <AK/ScopeGuard.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/Array.h>
+#include <YAK/Debug.h>
+#include <YAK/Endian.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MappedFile.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/ImageDecoder.h>

@@ -7,9 +7,9 @@
 #pragma once
 
 #include "DwarfTypes.h"
-#include <AK/HashMap.h>
-#include <AK/Optional.h>
-#include <AK/Types.h>
+#include <YAK/HashMap.h>
+#include <YAK/Optional.h>
+#include <YAK/Types.h>
 
 namespace Debug::Dwarf {
 

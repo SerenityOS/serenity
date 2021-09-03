@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/Debug.h>
-#include <AK/FlyString.h>
-#include <AK/Format.h>
-#include <AK/HashMap.h>
-#include <AK/RefCounted.h>
-#include <AK/SourceLocation.h>
+#include <YAK/Debug.h>
+#include <YAK/FlyString.h>
+#include <YAK/Format.h>
+#include <YAK/HashMap.h>
+#include <YAK/RefCounted.h>
+#include <YAK/SourceLocation.h>
 #include <LibPDF/Forward.h>
 #include <LibPDF/Value.h>
 
@@ -253,7 +253,7 @@ template<IsObject To, IsObject From>
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<PDF::IsObject T>
 struct Formatter<T> : Formatter<StringView> {

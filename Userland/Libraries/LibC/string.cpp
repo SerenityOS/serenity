@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
-#include <AK/MemMem.h>
-#include <AK/Platform.h>
-#include <AK/StdLibExtras.h>
-#include <AK/Types.h>
+#include <YAK/Format.h>
+#include <YAK/MemMem.h>
+#include <YAK/Platform.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/Types.h>
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -166,7 +166,7 @@ void* memmove(void* dest, const void* src, size_t n)
 
 const void* memmem(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
 {
-    return AK::memmem(haystack, haystack_length, needle, needle_length);
+    return YAK::memmem(haystack, haystack_length, needle, needle_length);
 }
 
 char* strcpy(char* dest, const char* src)

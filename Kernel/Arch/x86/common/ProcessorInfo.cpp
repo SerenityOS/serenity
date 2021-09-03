@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringBuilder.h>
-#include <AK/Types.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Types.h>
 #include <Kernel/Arch/x86/CPUID.h>
 #include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>

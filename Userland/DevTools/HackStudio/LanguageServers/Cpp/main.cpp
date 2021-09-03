@@ -6,7 +6,7 @@
 
 #include "ClientConnection.h"
 #include "Tests.h"
-#include <AK/LexicalPath.h>
+#include <YAK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>

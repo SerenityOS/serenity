@@ -5,13 +5,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/UBSanitizer.h>
+#include <YAK/UBSanitizer.h>
 #include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/KSyms.h>
 
-using namespace AK::UBSanitizer;
+using namespace YAK::UBSanitizer;
 
-bool AK::UBSanitizer::g_ubsan_is_deadly { true };
+bool YAK::UBSanitizer::g_ubsan_is_deadly { true };
 
 extern "C" {
 

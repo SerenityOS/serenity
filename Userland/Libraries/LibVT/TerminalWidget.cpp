@@ -5,13 +5,13 @@
  */
 
 #include "TerminalWidget.h"
-#include <AK/LexicalPath.h>
-#include <AK/StdLibExtras.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/TemporaryChange.h>
-#include <AK/Utf32View.h>
-#include <AK/Utf8View.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/TemporaryChange.h>
+#include <YAK/Utf32View.h>
+#include <YAK/Utf8View.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/MimeData.h>

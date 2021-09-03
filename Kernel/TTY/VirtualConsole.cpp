@@ -6,8 +6,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StdLibExtras.h>
-#include <AK/String.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/String.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Graphics/GraphicsManagement.h>

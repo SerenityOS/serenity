@@ -7,10 +7,10 @@
 #pragma once
 
 #ifndef KERNEL
-#    include <AK/OSError.h>
-#    include <AK/Result.h>
+#    include <YAK/OSError.h>
+#    include <YAK/Result.h>
 #endif
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibKeyboard/CharacterMapData.h>
 

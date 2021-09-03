@@ -7,10 +7,10 @@
 #pragma once
 
 #include "Forward.h"
-#include <AK/Forward.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Forward.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <LibCore/ElapsedTimer.h>
 
 namespace Shell {

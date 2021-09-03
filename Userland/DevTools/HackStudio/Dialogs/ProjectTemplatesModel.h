@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/NonnullPtrVector.h>
-#include <AK/RefPtr.h>
-#include <AK/WeakPtr.h>
+#include <YAK/NonnullPtrVector.h>
+#include <YAK/RefPtr.h>
+#include <YAK/WeakPtr.h>
 #include <DevTools/HackStudio/ProjectTemplate.h>
 #include <LibCore/FileWatcher.h>
 #include <LibGUI/Model.h>

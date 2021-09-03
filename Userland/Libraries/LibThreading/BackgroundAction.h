@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/Optional.h>
-#include <AK/Queue.h>
+#include <YAK/Function.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/Optional.h>
+#include <YAK/Queue.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>

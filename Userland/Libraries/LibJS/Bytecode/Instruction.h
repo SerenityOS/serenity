@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Forward.h>
+#include <YAK/Forward.h>
 #include <LibJS/Forward.h>
 
 #define ENUMERATE_BYTECODE_OPS(O)    \

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Platform.h>
-#include <AK/Vector.h>
+#include <YAK/Platform.h>
+#include <YAK/Vector.h>
 #include <LibJS/Heap/BlockAllocator.h>
 #include <LibJS/Heap/HeapBlock.h>
 #include <sys/mman.h>

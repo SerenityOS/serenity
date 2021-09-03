@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Definitions.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
@@ -48,7 +48,7 @@ enum RegisterIndex {
 
 class IntelNativeGraphicsAdapter final
     : public VGACompatibleAdapter {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     struct PLLSettings {
         bool is_valid() const { return (n != 0 && m1 != 0 && m2 != 0 && p1 != 0 && p2 != 0); }

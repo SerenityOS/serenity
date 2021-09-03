@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/HashMap.h>
-#include <AK/NumberFormat.h>
-#include <AK/QuickSort.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/URL.h>
-#include <AK/Utf8View.h>
-#include <AK/Vector.h>
+#include <YAK/Assertions.h>
+#include <YAK/HashMap.h>
+#include <YAK/NumberFormat.h>
+#include <YAK/QuickSort.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/URL.h>
+#include <YAK/Utf8View.h>
+#include <YAK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>

@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/OwnPtr.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/OwnPtr.h>
 #include <Kernel/Forward.h>
 
 namespace Kernel {

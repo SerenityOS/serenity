@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/SourceGenerator.h>
+#include <YAK/SourceGenerator.h>
 
 TEST_CASE(wrap_builder)
 {

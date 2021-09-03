@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/Function.h>
-#include <AK/HashTable.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
-#include <AK/String.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
+#include <YAK/Badge.h>
+#include <YAK/Function.h>
+#include <YAK/HashTable.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/RefCounted.h>
+#include <YAK/String.h>
+#include <YAK/WeakPtr.h>
+#include <YAK/Weakable.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Shortcut.h>

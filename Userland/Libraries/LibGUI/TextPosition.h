@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <YAK/String.h>
 
 namespace GUI {
 
@@ -39,7 +39,7 @@ private:
 }
 
 template<>
-struct AK::Formatter<GUI::TextPosition> : AK::Formatter<FormatString> {
+struct YAK::Formatter<GUI::TextPosition> : YAK::Formatter<FormatString> {
     void format(FormatBuilder& builder, const GUI::TextPosition& value)
     {
         if (value.is_valid())

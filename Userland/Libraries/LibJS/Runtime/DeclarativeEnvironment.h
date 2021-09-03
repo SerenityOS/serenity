@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/HashMap.h>
+#include <YAK/FlyString.h>
+#include <YAK/HashMap.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/Value.h>
 

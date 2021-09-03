@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include <AK/DistinctNumeric.h>
-#include <AK/Function.h>
-#include <AK/Result.h>
-#include <AK/String.h>
+#include <YAK/DistinctNumeric.h>
+#include <YAK/Function.h>
+#include <YAK/Result.h>
+#include <YAK/String.h>
 #include <LibCore/Object.h>
 #include <pthread.h>
 

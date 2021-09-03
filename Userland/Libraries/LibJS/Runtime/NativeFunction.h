@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Function.h>
+#include <YAK/Function.h>
 #include <LibJS/Runtime/FunctionObject.h>
 
 namespace JS {

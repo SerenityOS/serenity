@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/OwnPtr.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/Types.h>
+#include <YAK/Function.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Types.h>
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/IOAPIC.h>

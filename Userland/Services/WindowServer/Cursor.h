@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
+#include <YAK/HashMap.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CursorParams.h>
 #include <LibGfx/StandardCursor.h>

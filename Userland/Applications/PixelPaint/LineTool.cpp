@@ -7,7 +7,7 @@
 #include "LineTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
-#include <AK/Math.h>
+#include <YAK/Math.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
@@ -19,15 +19,15 @@ namespace PixelPaint {
 
 static Gfx::IntPoint constrain_line_angle(Gfx::IntPoint const& start_pos, Gfx::IntPoint const& end_pos, float angle_increment)
 {
-    float current_angle = AK::atan2<float>(end_pos.y() - start_pos.y(), end_pos.x() - start_pos.x()) + float { M_PI * 2 };
+    float current_angle = YAK::atan2<float>(end_pos.y() - start_pos.y(), end_pos.x() - start_pos.x()) + float { M_PI * 2 };
 
     float constrained_angle = ((int)((current_angle + angle_increment / 2) / angle_increment)) * angle_increment;
 
     auto diff = end_pos - start_pos;
-    float line_length = AK::hypot<float>(diff.x(), diff.y());
+    float line_length = YAK::hypot<float>(diff.x(), diff.y());
 
-    return { start_pos.x() + (int)(AK::cos(constrained_angle) * line_length),
-        start_pos.y() + (int)(AK::sin(constrained_angle) * line_length) };
+    return { start_pos.x() + (int)(YAK::cos(constrained_angle) * line_length),
+        start_pos.y() + (int)(YAK::sin(constrained_angle) * line_length) };
 }
 
 LineTool::LineTool()

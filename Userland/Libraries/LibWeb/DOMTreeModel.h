@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/JsonObject.h>
+#include <YAK/HashMap.h>
+#include <YAK/JsonObject.h>
 #include <LibGUI/Model.h>
 #include <LibWeb/Forward.h>
 

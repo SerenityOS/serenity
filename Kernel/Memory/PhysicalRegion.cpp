@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/RefPtr.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/RefPtr.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PhysicalRegion.h>

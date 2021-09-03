@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/Optional.h>
+#include <YAK/Optional.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS::Temporal {
@@ -71,7 +71,7 @@ struct TemporalTimeLikeProperty {
 template<typename StructT, typename ValueT>
 auto temporal_time_like_properties = [](VM& vm) {
     using PropertyT = TemporalTimeLikeProperty<StructT, ValueT>;
-    return AK::Array {
+    return YAK::Array {
         PropertyT { &StructT::hour, vm.names.hour },
         PropertyT { &StructT::microsecond, vm.names.microsecond },
         PropertyT { &StructT::millisecond, vm.names.millisecond },

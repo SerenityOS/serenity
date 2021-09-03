@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/ByteBuffer.h>
-#include <AK/ScopeGuard.h>
-#include <AK/String.h>
-#include <AK/Variant.h>
+#include <YAK/Badge.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/String.h>
+#include <YAK/Variant.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Serializer.h>
 #include <LibSQL/TupleDescriptor.h>

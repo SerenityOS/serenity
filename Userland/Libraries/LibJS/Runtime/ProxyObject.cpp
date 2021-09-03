@@ -807,7 +807,7 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
         }
         auto property_key = value.to_property_key(global_object);
         VERIFY(!vm.exception());
-        unique_keys.set(property_key, AK::HashSetExistingEntryBehavior::Keep);
+        unique_keys.set(property_key, YAK::HashSetExistingEntryBehavior::Keep);
     });
 
     // 9. If trapResult contains any duplicate entries, throw a TypeError exception.

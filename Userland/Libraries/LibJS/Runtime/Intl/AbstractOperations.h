@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/Variant.h>
-#include <AK/Vector.h>
+#include <YAK/String.h>
+#include <YAK/Variant.h>
+#include <YAK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Intl/DisplayNames.h>
 #include <LibJS/Runtime/Value.h>

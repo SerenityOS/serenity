@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Array.h>
-#include <AK/Debug.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
-#include <AK/Math.h>
-#include <AK/Memory.h>
-#include <AK/MemoryStream.h>
-#include <AK/NonnullOwnPtrVector.h>
+#include <YAK/Array.h>
+#include <YAK/Debug.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MappedFile.h>
+#include <YAK/Math.h>
+#include <YAK/Memory.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/NonnullOwnPtrVector.h>
 #include <LibGfx/GIFLoader.h>
 #include <string.h>
 
@@ -136,7 +136,7 @@ public:
         : m_lzw_bytes(lzw_bytes)
         , m_code_size(min_code_size)
         , m_original_code_size(min_code_size)
-        , m_table_capacity(AK::exp2<u32>(min_code_size))
+        , m_table_capacity(YAK::exp2<u32>(min_code_size))
     {
         init_code_table();
     }
@@ -160,7 +160,7 @@ public:
         m_code_table.clear();
         m_code_table.extend(m_original_code_table);
         m_code_size = m_original_code_size;
-        m_table_capacity = AK::exp2<u32>(m_code_size);
+        m_table_capacity = YAK::exp2<u32>(m_code_size);
         m_output.clear();
     }
 
@@ -561,7 +561,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
             image.interlaced = (packed_fields & 0x40) != 0;
 
             if (!image.use_global_color_map) {
-                size_t local_color_table_size = AK::exp2<size_t>((packed_fields & 7) + 1);
+                size_t local_color_table_size = YAK::exp2<size_t>((packed_fields & 7) + 1);
 
                 for (size_t i = 0; i < local_color_table_size; ++i) {
                     u8 r = 0;

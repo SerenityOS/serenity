@@ -6,7 +6,7 @@
 
 #include "GameSizeDialog.h"
 #include "Game.h"
-#include <AK/Math.h>
+#include <YAK/Math.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
@@ -16,7 +16,7 @@
 GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t target, bool evil_ai)
     : GUI::Dialog(parent)
     , m_board_size(board_size)
-    , m_target_tile_power(AK::log2(target))
+    , m_target_tile_power(YAK::log2(target))
     , m_evil_ai(evil_ai)
 {
     set_rect({ 0, 0, 250, 150 });

@@ -5,10 +5,10 @@
  */
 
 #include "RegexByteCode.h"
-#include "AK/StringBuilder.h"
+#include "YAK/StringBuilder.h"
 #include "RegexDebug.h"
-#include <AK/CharacterTypes.h>
-#include <AK/Debug.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Debug.h>
 #include <LibUnicode/CharacterTypes.h>
 
 namespace regex {

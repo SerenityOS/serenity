@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/LexicalPath.h>
-#include <AK/SourceGenerator.h>
+#include <YAK/Debug.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/SourceGenerator.h>
 #include <LibGemini/Document.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibMarkdown/Document.h>

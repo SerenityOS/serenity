@@ -7,20 +7,20 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/Function.h>
-#include <AK/OwnPtr.h>
-#include <AK/String.h>
-#include <AK/Types.h>
-#include <AK/Variant.h>
-#include <AK/Vector.h>
+#include <YAK/FlyString.h>
+#include <YAK/Function.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
+#include <YAK/Variant.h>
+#include <YAK/Vector.h>
 
 namespace Web::HTML {
 
 class HTMLTokenizer;
 
 class HTMLToken {
-    AK_MAKE_NONCOPYABLE(HTMLToken);
+    YAK_MAKE_NONCOPYABLE(HTMLToken);
 
 public:
     enum class Type : u8 {

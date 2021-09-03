@@ -5,8 +5,8 @@
  */
 
 #include "Format.h"
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 
 namespace Diff {
 String generate_only_additions(const String& text)

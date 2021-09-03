@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/JsonObject.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/JsonObject.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 
 namespace Inspector {
 

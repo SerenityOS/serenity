@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Format.h>
-#include <AK/Function.h>
-#include <AK/Tuple.h>
-#include <AK/Variant.h>
+#include <YAK/Format.h>
+#include <YAK/Function.h>
+#include <YAK/Tuple.h>
+#include <YAK/Variant.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/Object.h>
 
@@ -192,7 +192,7 @@ struct Envelope {
 class BodyStructure;
 
 struct BodyExtension {
-    AK::Variant<Optional<String>, unsigned, Vector<OwnPtr<BodyExtension>>> data;
+    YAK::Variant<Optional<String>, unsigned, Vector<OwnPtr<BodyExtension>>> data;
 };
 
 struct MultiPartBodyStructureData {
@@ -238,10 +238,10 @@ public:
     {
     }
 
-    AK::Variant<BodyStructureData, MultiPartBodyStructureData> const& data() const { return m_data; }
+    YAK::Variant<BodyStructureData, MultiPartBodyStructureData> const& data() const { return m_data; }
 
 private:
-    AK::Variant<BodyStructureData, MultiPartBodyStructureData> m_data;
+    YAK::Variant<BodyStructureData, MultiPartBodyStructureData> m_data;
 };
 
 // Set -1 for '*' i.e highest possible value.

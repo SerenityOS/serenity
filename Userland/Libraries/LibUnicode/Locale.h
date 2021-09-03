@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/Optional.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <AK/Variant.h>
-#include <AK/Vector.h>
+#include <YAK/Optional.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
+#include <YAK/Variant.h>
+#include <YAK/Vector.h>
 #include <LibUnicode/Forward.h>
 
 namespace Unicode {

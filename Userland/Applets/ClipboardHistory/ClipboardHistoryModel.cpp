@@ -5,8 +5,8 @@
  */
 
 #include "ClipboardHistoryModel.h"
-#include <AK/NumberFormat.h>
-#include <AK/StringBuilder.h>
+#include <YAK/NumberFormat.h>
+#include <YAK/StringBuilder.h>
 
 NonnullRefPtr<ClipboardHistoryModel> ClipboardHistoryModel::create()
 {
@@ -91,7 +91,7 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
     case Column::Type:
         return data_and_type.mime_type;
     case Column::Size:
-        return AK::human_readable_size(data_and_type.data.size());
+        return YAK::human_readable_size(data_and_type.data.size());
     default:
         VERIFY_NOT_REACHED();
     }

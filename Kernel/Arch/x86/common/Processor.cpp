@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
-#include <AK/StdLibExtras.h>
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/Format.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Memory/ProcessPagingScope.h>
@@ -315,9 +315,9 @@ UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
     m_halt_requested = false;
     if (cpu == 0) {
         s_smp_enabled = false;
-        g_total_processors.store(1u, AK::MemoryOrder::memory_order_release);
+        g_total_processors.store(1u, YAK::MemoryOrder::memory_order_release);
     } else {
-        g_total_processors.fetch_add(1u, AK::MemoryOrder::memory_order_acq_rel);
+        g_total_processors.fetch_add(1u, YAK::MemoryOrder::memory_order_acq_rel);
     }
 
     deferred_call_pool_init();
@@ -697,7 +697,7 @@ void Processor::smp_return_to_pool(ProcessorMessage& msg)
     ProcessorMessage* next = nullptr;
     for (;;) {
         msg.next = next;
-        if (s_message_pool.compare_exchange_strong(next, &msg, AK::MemoryOrder::memory_order_acq_rel))
+        if (s_message_pool.compare_exchange_strong(next, &msg, YAK::MemoryOrder::memory_order_acq_rel))
             break;
         Processor::pause();
     }
@@ -709,7 +709,7 @@ ProcessorMessage& Processor::smp_get_from_pool()
 
     // The assumption is that messages are never removed from the pool!
     for (;;) {
-        msg = s_message_pool.load(AK::MemoryOrder::memory_order_consume);
+        msg = s_message_pool.load(YAK::MemoryOrder::memory_order_consume);
         if (!msg) {
             if (!Processor::current().smp_process_pending_messages()) {
                 Processor::pause();
@@ -721,7 +721,7 @@ ProcessorMessage& Processor::smp_get_from_pool()
         // this because the expected value "msg" and pool would
         // no longer match, and the compare_exchange will fail. But accessing
         // "msg->next" is always safe here.
-        if (s_message_pool.compare_exchange_strong(msg, msg->next, AK::MemoryOrder::memory_order_acq_rel)) {
+        if (s_message_pool.compare_exchange_strong(msg, msg->next, YAK::MemoryOrder::memory_order_acq_rel)) {
             // We successfully "popped" this available message
             break;
         }
@@ -750,7 +750,7 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
     auto& apic = APIC::the();
     while (did_wake_count < wake_count) {
         // Try to get a set of idle CPUs and flip them to busy
-        u32 idle_mask = s_idle_cpu_mask.load(AK::MemoryOrder::memory_order_relaxed) & ~(1u << current_id);
+        u32 idle_mask = s_idle_cpu_mask.load(YAK::MemoryOrder::memory_order_relaxed) & ~(1u << current_id);
         u32 idle_count = __builtin_popcountl(idle_mask);
         if (idle_count == 0)
             break; // No (more) idle processor available
@@ -762,7 +762,7 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
             found_mask |= 1u << cpu;
         }
 
-        idle_mask = s_idle_cpu_mask.fetch_and(~found_mask, AK::MemoryOrder::memory_order_acq_rel) & found_mask;
+        idle_mask = s_idle_cpu_mask.fetch_and(~found_mask, YAK::MemoryOrder::memory_order_acq_rel) & found_mask;
         if (idle_mask == 0)
             continue; // All of them were flipped to busy, try again
         idle_count = __builtin_popcountl(idle_mask);
@@ -796,7 +796,7 @@ UNMAP_AFTER_INIT void Processor::smp_enable()
             msg_entries[msg_entry_i + k].msg = &msg;
     }
 
-    s_message_pool.store(&msgs[0], AK::MemoryOrder::memory_order_release);
+    s_message_pool.store(&msgs[0], YAK::MemoryOrder::memory_order_release);
 
     // Start sending IPI messages
     s_smp_enabled = true;
@@ -820,7 +820,7 @@ bool Processor::smp_process_pending_messages()
     bool did_process = false;
     enter_critical();
 
-    if (auto pending_msgs = m_message_queue.exchange(nullptr, AK::MemoryOrder::memory_order_acq_rel)) {
+    if (auto pending_msgs = m_message_queue.exchange(nullptr, YAK::MemoryOrder::memory_order_acq_rel)) {
         // We pulled the stack of pending messages in LIFO order, so we need to reverse the list first
         auto reverse_list =
             [](ProcessorMessageEntry* list) -> ProcessorMessageEntry* {
@@ -863,7 +863,7 @@ bool Processor::smp_process_pending_messages()
             }
 
             bool is_async = msg->async; // Need to cache this value *before* dropping the ref count!
-            auto prev_refs = msg->refs.fetch_sub(1u, AK::MemoryOrder::memory_order_acq_rel);
+            auto prev_refs = msg->refs.fetch_sub(1u, YAK::MemoryOrder::memory_order_acq_rel);
             VERIFY(prev_refs != 0);
             if (prev_refs == 1) {
                 // All processors handled this. If this is an async message,
@@ -874,11 +874,11 @@ bool Processor::smp_process_pending_messages()
                 }
             }
 
-            if (m_halt_requested.load(AK::MemoryOrder::memory_order_relaxed))
+            if (m_halt_requested.load(YAK::MemoryOrder::memory_order_relaxed))
                 halt_this();
         }
         did_process = true;
-    } else if (m_halt_requested.load(AK::MemoryOrder::memory_order_relaxed)) {
+    } else if (m_halt_requested.load(YAK::MemoryOrder::memory_order_relaxed)) {
         halt_this();
     }
 
@@ -896,7 +896,7 @@ bool Processor::smp_enqueue_message(ProcessorMessage& msg)
     ProcessorMessageEntry* next = nullptr;
     for (;;) {
         msg_entry.next = next;
-        if (m_message_queue.compare_exchange_strong(next, &msg_entry, AK::MemoryOrder::memory_order_acq_rel))
+        if (m_message_queue.compare_exchange_strong(next, &msg_entry, YAK::MemoryOrder::memory_order_acq_rel))
             break;
         Processor::pause();
     }
@@ -912,7 +912,7 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg)
 
     dbgln_if(SMP_DEBUG, "SMP[{}]: Broadcast message {} to cpus: {} processor: {}", current_processor.id(), VirtualAddress(&msg), count(), VirtualAddress(&current_processor));
 
-    msg.refs.store(count() - 1, AK::MemoryOrder::memory_order_release);
+    msg.refs.store(count() - 1, YAK::MemoryOrder::memory_order_release);
     VERIFY(msg.refs > 0);
     bool need_broadcast = false;
     for_each(
@@ -934,7 +934,7 @@ void Processor::smp_broadcast_wait_sync(ProcessorMessage& msg)
     VERIFY(!msg.async);
     // If synchronous then we must cleanup and return the message back
     // to the pool. Otherwise, the last processor to complete it will return it
-    while (msg.refs.load(AK::MemoryOrder::memory_order_consume) != 0) {
+    while (msg.refs.load(YAK::MemoryOrder::memory_order_consume) != 0) {
         Processor::pause();
 
         // We need to process any messages that may have been sent to
@@ -956,7 +956,7 @@ void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
 
     dbgln_if(SMP_DEBUG, "SMP[{}]: Send message {} to cpu #{} processor: {}", current_processor.id(), VirtualAddress(&msg), cpu, VirtualAddress(&target_processor));
 
-    msg.refs.store(1u, AK::MemoryOrder::memory_order_release);
+    msg.refs.store(1u, YAK::MemoryOrder::memory_order_release);
     if (target_processor->smp_enqueue_message(msg)) {
         APIC::the().send_ipi(cpu);
     }
@@ -964,7 +964,7 @@ void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
     if (!async) {
         // If synchronous then we must cleanup and return the message back
         // to the pool. Otherwise, the last processor to complete it will return it
-        while (msg.refs.load(AK::MemoryOrder::memory_order_consume) != 0) {
+        while (msg.refs.load(YAK::MemoryOrder::memory_order_consume) != 0) {
             Processor::pause();
 
             // We need to process any messages that may have been sent to
@@ -1007,7 +1007,7 @@ void Processor::smp_broadcast_halt()
     // by being out of memory and we might not be able to get a message
     for_each(
         [&](Processor& proc) {
-            proc.m_halt_requested.store(true, AK::MemoryOrder::memory_order_release);
+            proc.m_halt_requested.store(true, YAK::MemoryOrder::memory_order_release);
         });
 
     // Now trigger an IPI on all other APs

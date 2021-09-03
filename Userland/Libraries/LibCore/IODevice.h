@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/EnumBits.h>
-#include <AK/Forward.h>
+#include <YAK/EnumBits.h>
+#include <YAK/Forward.h>
 #include <LibCore/Object.h>
 
 namespace Core {
@@ -15,7 +15,7 @@ namespace Core {
 // This is not necessarily a valid iterator in all contexts,
 // if we had concepts, this would be InputIterator, not Copyable, Movable.
 class LineIterator {
-    AK_MAKE_NONCOPYABLE(LineIterator);
+    YAK_MAKE_NONCOPYABLE(LineIterator);
 
 public:
     explicit LineIterator(IODevice&, bool is_end = false);

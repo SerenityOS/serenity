@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Memory.h>
+#include <YAK/Memory.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/HID/PS2MouseDevice.h>
 #include <Kernel/Devices/VMWareBackdoor.h>

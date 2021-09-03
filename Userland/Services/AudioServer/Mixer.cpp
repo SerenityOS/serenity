@@ -6,9 +6,9 @@
  */
 
 #include "Mixer.h"
-#include <AK/Array.h>
-#include <AK/MemoryStream.h>
-#include <AK/NumericLimits.h>
+#include <YAK/Array.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/NumericLimits.h>
 #include <AudioServer/ClientConnection.h>
 #include <AudioServer/Mixer.h>
 #include <LibCore/ConfigFile.h>

@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/Function.h>
-#include <AK/Noncopyable.h>
-#include <AK/Vector.h>
+#include <YAK/FlyString.h>
+#include <YAK/Function.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
@@ -17,8 +17,8 @@
 namespace Web::DOM {
 
 class EventTarget {
-    AK_MAKE_NONCOPYABLE(EventTarget);
-    AK_MAKE_NONMOVABLE(EventTarget);
+    YAK_MAKE_NONCOPYABLE(EventTarget);
+    YAK_MAKE_NONMOVABLE(EventTarget);
 
 public:
     virtual ~EventTarget();

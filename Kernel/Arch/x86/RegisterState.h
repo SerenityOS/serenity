@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Types.h>
+#include <YAK/Types.h>
 #include <LibC/sys/arch/i386/regs.h>
 
 #include <Kernel/Arch/x86/ASM_wrapper.h>

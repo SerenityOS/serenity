@@ -67,7 +67,7 @@ private:
 }
 
 template<>
-struct AK::Formatter<GUI::TextRange> : AK::Formatter<FormatString> {
+struct YAK::Formatter<GUI::TextRange> : YAK::Formatter<FormatString> {
     void format(FormatBuilder& builder, const GUI::TextRange& value)
     {
         if (value.is_valid())

@@ -6,7 +6,7 @@
  */
 
 #include "StylePropertiesModel.h"
-#include <AK/QuickSort.h>
+#include <YAK/QuickSort.h>
 
 namespace Web {
 

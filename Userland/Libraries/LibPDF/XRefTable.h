@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Format.h>
+#include <YAK/Format.h>
 
 namespace PDF {
 
@@ -87,14 +87,14 @@ public:
     }
 
 private:
-    friend struct AK::Formatter<PDF::XRefTable>;
+    friend struct YAK::Formatter<PDF::XRefTable>;
 
     Vector<XRefEntry> m_entries;
 };
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<PDF::XRefEntry> : Formatter<StringView> {

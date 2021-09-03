@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Concepts.h>
-#include <AK/StdLibExtras.h>
+#include <YAK/Concepts.h>
+#include <YAK/StdLibExtras.h>
 #include <LibIPC/Forward.h>
 #include <LibIPC/Message.h>
 
@@ -67,7 +67,7 @@ public:
     template<Enum T>
     Encoder& operator<<(T const& enum_value)
     {
-        *this << AK::to_underlying(enum_value);
+        *this << YAK::to_underlying(enum_value);
         return *this;
     }
 

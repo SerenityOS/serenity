@@ -64,7 +64,7 @@ set(LIBC_SOURCES
     wctype.cpp
 )
 
-file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../../AK/*.cpp")
+file(GLOB YAK_SOURCES CONFIGURE_DEPENDS "../../../YAK/*.cpp")
 file(GLOB ELF_SOURCES CONFIGURE_DEPENDS "../LibELF/*.cpp")
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
@@ -117,7 +117,7 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:ssp> ${CMAKE_INSTALL_PREFIX}/usr/lib/ssp.o
 )
 
-set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${ASM_SOURCES})
+set(SOURCES ${LIBC_SOURCES} ${YAK_SOURCES} ${ELF_SOURCES} ${ASM_SOURCES})
 
 if (NOT USE_CLANG_TOOLCHAIN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++")

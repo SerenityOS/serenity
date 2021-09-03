@@ -7,17 +7,17 @@
 
 #pragma once
 
-#include <AK/BinarySearch.h>
-#include <AK/ByteBuffer.h>
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
-#include <AK/Result.h>
-#include <AK/String.h>
-#include <AK/Traits.h>
-#include <AK/Utf32View.h>
-#include <AK/Utf8View.h>
-#include <AK/Vector.h>
+#include <YAK/BinarySearch.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Result.h>
+#include <YAK/String.h>
+#include <YAK/Traits.h>
+#include <YAK/Utf32View.h>
+#include <YAK/Utf8View.h>
+#include <YAK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>

@@ -5,7 +5,7 @@
  */
 
 #include "DiffViewer.h"
-#include <AK/Debug.h>
+#include <YAK/Debug.h>
 #include <LibDiff/Hunks.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/Painter.h>

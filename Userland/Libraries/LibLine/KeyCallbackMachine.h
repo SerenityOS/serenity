@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 
 namespace Line {
 
@@ -69,7 +69,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Traits<Line::Key> : public GenericTraits<Line::Key> {

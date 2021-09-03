@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/URL.h>
+#include <YAK/URL.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/FileStream.h>
 #include <LibGUI/ImageWidget.h>

@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Variant.h>
+#include <YAK/Variant.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>

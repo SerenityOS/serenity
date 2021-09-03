@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/LexicalPath.h>
+#include <YAK/LexicalPath.h>
 #include <LibGUI/ListView.h>
 #include <LibGfx/Bitmap.h>
 

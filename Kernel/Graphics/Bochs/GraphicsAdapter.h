@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
@@ -22,7 +22,7 @@ struct BochsDisplayMMIORegisters;
 
 class BochsGraphicsAdapter final : public GraphicsDevice
     , public PCI::Device {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
     friend class GraphicsManagement;
 
 public:

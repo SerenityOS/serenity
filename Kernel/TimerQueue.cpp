@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
-#include <AK/Time.h>
+#include <YAK/Singleton.h>
+#include <YAK/Time.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Time/TimeManagement.h>

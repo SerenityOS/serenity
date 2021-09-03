@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/Vector.h>
+#include <YAK/FlyString.h>
+#include <YAK/Vector.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/SourceRange.h>

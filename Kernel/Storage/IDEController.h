@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/Types.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Types.h>
 #include <Kernel/Storage/IDEChannel.h>
 #include <Kernel/Storage/StorageController.h>
 #include <Kernel/Storage/StorageDevice.h>
@@ -19,7 +19,7 @@ class AsyncBlockDeviceRequest;
 
 class IDEController final : public StorageController
     , public PCI::Device {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     static NonnullRefPtr<IDEController> initialize(PCI::Address address, bool force_pio);
     virtual ~IDEController() override;

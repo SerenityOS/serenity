@@ -7,9 +7,9 @@
 #pragma once
 
 #include "BreakpointCallback.h"
-#include <AK/Function.h>
-#include <AK/LexicalPath.h>
-#include <AK/Vector.h>
+#include <YAK/Function.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/Vector.h>
 #include <LibDebug/DebugSession.h>
 #include <LibThreading/Mutex.h>
 #include <LibThreading/Thread.h>

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Traits.h>
+#include <YAK/Traits.h>
 
 class WindowIdentifier {
 public:
@@ -35,7 +35,7 @@ private:
     int m_window_id { -1 };
 };
 
-namespace AK {
+namespace YAK {
 template<>
 struct Traits<WindowIdentifier> : public GenericTraits<WindowIdentifier> {
     static unsigned hash(const WindowIdentifier& w) { return pair_int_hash(w.client_id(), w.window_id()); }

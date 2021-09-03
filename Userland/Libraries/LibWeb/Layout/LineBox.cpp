@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
-#include <AK/Utf8View.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Utf8View.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/LineBox.h>
 #include <LibWeb/Layout/Node.h>

@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <AK/Result.h>
-#include <AK/Vector.h>
+#include <YAK/Result.h>
+#include <YAK/Vector.h>
 #include <LibGUI/Frame.h>
 
 namespace PixelPaint {

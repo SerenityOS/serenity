@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Badge.h>
-#include <AK/JsonObject.h>
+#include <YAK/Badge.h>
+#include <YAK/JsonObject.h>
 #include <LibGUI/Layout.h>
 #include <LibGUI/Widget.h>
 

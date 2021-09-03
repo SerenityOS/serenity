@@ -5,9 +5,9 @@
  */
 
 #include "Client.h"
-#include <AK/HashMap.h>
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/HashMap.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/TCPServer.h>

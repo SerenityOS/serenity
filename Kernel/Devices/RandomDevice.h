@@ -11,7 +11,7 @@
 namespace Kernel {
 
 class RandomDevice final : public CharacterDevice {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     static NonnullRefPtr<RandomDevice> must_create();
     virtual ~RandomDevice() override;

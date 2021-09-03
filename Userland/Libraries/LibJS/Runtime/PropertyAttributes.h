@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AK/Format.h>
-#include <AK/Types.h>
+#include <YAK/Format.h>
+#include <YAK/Types.h>
 
 namespace JS {
 
@@ -69,7 +69,7 @@ PropertyAttributes const default_attributes = Attribute::Configurable | Attribut
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<JS::PropertyAttributes> : Formatter<StringView> {

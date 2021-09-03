@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtr.h>
+#include <YAK/NonnullOwnPtr.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/Value.h>
 

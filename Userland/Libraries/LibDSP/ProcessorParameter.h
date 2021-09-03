@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include "AK/Forward.h"
+#include "YAK/Forward.h"
 #include "LibGUI/Label.h"
 #include "Music.h"
-#include <AK/FixedPoint.h>
-#include <AK/Format.h>
-#include <AK/Types.h>
+#include <YAK/FixedPoint.h>
+#include <YAK/Format.h>
+#include <YAK/Types.h>
 #include <LibCore/Object.h>
 
 namespace LibDSP {
@@ -121,7 +121,7 @@ private:
 
 }
 template<>
-struct AK::Formatter<LibDSP::ProcessorRangeParameter> : AK::StandardFormatter {
+struct YAK::Formatter<LibDSP::ProcessorRangeParameter> : YAK::StandardFormatter {
 
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)

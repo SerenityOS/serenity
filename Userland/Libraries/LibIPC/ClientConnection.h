@@ -60,5 +60,5 @@ private:
 }
 
 template<typename ClientEndpoint, typename ServerEndpoint>
-struct AK::Formatter<IPC::ClientConnection<ClientEndpoint, ServerEndpoint>> : Formatter<Core::Object> {
+struct YAK::Formatter<IPC::ClientConnection<ClientEndpoint, ServerEndpoint>> : Formatter<Core::Object> {
 };

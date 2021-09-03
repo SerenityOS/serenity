@@ -7,8 +7,8 @@
 #pragma once
 
 #include "Report.h"
-#include <AK/Concepts.h>
-#include <AK/SIMD.h>
+#include <YAK/Concepts.h>
+#include <YAK/SIMD.h>
 #include <LibX86/Instruction.h>
 #include <LibX86/Interpreter.h>
 
@@ -16,7 +16,7 @@
 #include <string.h>
 
 namespace UserspaceEmulator {
-using namespace AK::SIMD;
+using namespace YAK::SIMD;
 class Emulator;
 class SoftCPU;
 

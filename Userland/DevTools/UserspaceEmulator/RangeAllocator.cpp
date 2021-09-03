@@ -5,9 +5,9 @@
  */
 
 #include "RangeAllocator.h"
-#include <AK/BinarySearch.h>
-#include <AK/Checked.h>
-#include <AK/Random.h>
+#include <YAK/BinarySearch.h>
+#include <YAK/Checked.h>
+#include <YAK/Random.h>
 
 #define VM_GUARD_PAGES
 #define PAGE_MASK ((FlatPtr)0xfffff000u)

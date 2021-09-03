@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ScopeGuard.h>
-#include <AK/TemporaryChange.h>
-#include <AK/WeakPtr.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/TemporaryChange.h>
+#include <YAK/WeakPtr.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -446,7 +446,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
         load_base_address,
         elf_image.entry().offset(load_offset).get(),
         executable_size,
-        AK::try_make_weak_ptr(master_tls_region),
+        YAK::try_make_weak_ptr(master_tls_region),
         master_tls_size,
         master_tls_alignment,
         stack_region.make_weak_ptr()

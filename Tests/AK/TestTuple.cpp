@@ -6,7 +6,7 @@
 
 #include <LibTest/TestSuite.h>
 
-#include <AK/Tuple.h>
+#include <YAK/Tuple.h>
 
 TEST_CASE(basic)
 {
@@ -52,7 +52,7 @@ TEST_CASE(basic)
 TEST_CASE(no_copy)
 {
     struct NoCopy {
-        AK_MAKE_NONCOPYABLE(NoCopy);
+        YAK_MAKE_NONCOPYABLE(NoCopy);
 
     public:
         NoCopy(NoCopy&&) = default;

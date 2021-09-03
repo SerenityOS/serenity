@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <AK/Demangle.h>
-#include <AK/HashMap.h>
-#include <AK/MappedFile.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/Optional.h>
-#include <AK/OwnPtr.h>
-#include <AK/String.h>
+#include <YAK/Demangle.h>
+#include <YAK/HashMap.h>
+#include <YAK/MappedFile.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/Optional.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/String.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibDebug/DebugInfo.h>
 #include <signal.h>

@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <AK/CircularQueue.h>
-#include <AK/Vector.h>
+#include <YAK/CircularQueue.h>
+#include <YAK/Vector.h>
 #include <Kernel/Devices/CharacterDevice.h>
 
 namespace Kernel {
 
 class ConsoleDevice final : public CharacterDevice {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     static ConsoleDevice& the();
     static void initialize();

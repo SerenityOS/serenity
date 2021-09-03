@@ -5,8 +5,8 @@
  */
 
 #include "ClipboardServerConnection.h"
-#include <AK/ByteBuffer.h>
-#include <AK/Vector.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Vector.h>
 #include <LibCore/Notifier.h>
 
 #pragma once

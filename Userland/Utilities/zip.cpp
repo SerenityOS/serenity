@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
+#include <YAK/LexicalPath.h>
 #include <LibArchive/Zip.h>
 #include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>

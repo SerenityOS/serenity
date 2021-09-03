@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/String.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/String.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Forward.h>
 

@@ -10,14 +10,14 @@
 
 #include "Music.h"
 #include "Track.h"
-#include <AK/Array.h>
-#include <AK/Noncopyable.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/Vector.h>
+#include <YAK/Array.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/Vector.h>
 
 class TrackManager {
-    AK_MAKE_NONCOPYABLE(TrackManager);
-    AK_MAKE_NONMOVABLE(TrackManager);
+    YAK_MAKE_NONCOPYABLE(TrackManager);
+    YAK_MAKE_NONMOVABLE(TrackManager);
 
 public:
     TrackManager();

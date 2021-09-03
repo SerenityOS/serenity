@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/StringBuilder.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonValue.h>
+#include <YAK/StringBuilder.h>
 #include <LibGUI/GMLFormatter.h>
 #include <LibGUI/GMLParser.h>
 
@@ -43,7 +43,7 @@ static String format_gml_object(const JsonObject& node, size_t indentation = 0, 
         builder.append(property.key);
         builder.append(": ");
         if (property.value.is_array()) {
-            // custom array serialization as AK's doesn't pretty-print
+            // custom array serialization as YAK's doesn't pretty-print
             // objects and arrays (we only care about arrays (for now))
             builder.append("[");
             auto first = true;

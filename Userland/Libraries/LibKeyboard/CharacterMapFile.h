@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/JsonObject.h>
+#include <YAK/JsonObject.h>
 #include <LibKeyboard/CharacterMapData.h>
 
 namespace Keyboard {

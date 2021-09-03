@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Optional.h>
+#include <YAK/Optional.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -43,7 +43,7 @@ public:
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<JS::PropertyDescriptor> : Formatter<StringView> {

@@ -6,9 +6,9 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/ByteBuffer.h>
-#include <AK/Random.h>
-#include <AK/StringBuilder.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Random.h>
+#include <YAK/StringBuilder.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>

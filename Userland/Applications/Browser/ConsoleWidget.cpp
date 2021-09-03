@@ -6,7 +6,7 @@
  */
 
 #include "ConsoleWidget.h"
-#include <AK/StringBuilder.h>
+#include <YAK/StringBuilder.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/TextBox.h>

@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Debug.h>
-#include <AK/Iterator.h>
-#include <AK/Vector.h>
+#include <YAK/Assertions.h>
+#include <YAK/Debug.h>
+#include <YAK/Iterator.h>
+#include <YAK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,7 +26,7 @@ using ArgIter = Arguments::Iterator;
 static FlatPtr parse_from(ArgIter&);
 
 template<>
-struct AK::Formatter<Syscall::Function> : Formatter<StringView> {
+struct YAK::Formatter<Syscall::Function> : Formatter<StringView> {
     void format(FormatBuilder& builder, Syscall::Function function)
     {
         return Formatter<StringView>::format(builder, to_string(function));

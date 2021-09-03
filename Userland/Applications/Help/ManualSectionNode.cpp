@@ -6,9 +6,9 @@
 
 #include "ManualSectionNode.h"
 #include "ManualPageNode.h"
-#include <AK/LexicalPath.h>
-#include <AK/QuickSort.h>
-#include <AK/String.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/QuickSort.h>
+#include <YAK/String.h>
 #include <LibCore/DirIterator.h>
 
 String ManualSectionNode::path() const

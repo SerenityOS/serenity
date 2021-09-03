@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include <AK/Forward.h>
-#include <AK/Noncopyable.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
+#include <YAK/Forward.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/SystemTheme.h>
 
 namespace Gfx {
 
 class PaletteImpl : public RefCounted<PaletteImpl> {
-    AK_MAKE_NONCOPYABLE(PaletteImpl);
-    AK_MAKE_NONMOVABLE(PaletteImpl);
+    YAK_MAKE_NONCOPYABLE(PaletteImpl);
+    YAK_MAKE_NONMOVABLE(PaletteImpl);
 
 public:
     ~PaletteImpl();

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/StringView.h>
+#include <YAK/StringView.h>
 #include <LibGfx/Point.h>
 
 namespace Gfx {

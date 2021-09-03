@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/HashTable.h>
-#include <AK/OwnPtr.h>
-#include <AK/Result.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/HashTable.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Result.h>
 #include <LibWasm/Types.h>
 
 namespace Wasm {
@@ -273,7 +273,7 @@ private:
 
 class HostFunction {
 public:
-    explicit HostFunction(AK::Function<Result(Configuration&, Vector<Value>&)> function, FunctionType const& type)
+    explicit HostFunction(YAK::Function<Result(Configuration&, Vector<Value>&)> function, FunctionType const& type)
         : m_function(move(function))
         , m_type(type)
     {
@@ -283,7 +283,7 @@ public:
     auto& type() const { return m_type; }
 
 private:
-    AK::Function<Result(Configuration&, Vector<Value>&)> m_function;
+    YAK::Function<Result(Configuration&, Vector<Value>&)> m_function;
     FunctionType m_type;
 };
 
@@ -465,7 +465,7 @@ private:
     Vector<EntryType, 1024> m_data;
 };
 
-using InstantiationResult = AK::Result<NonnullOwnPtr<ModuleInstance>, InstantiationError>;
+using InstantiationResult = YAK::Result<NonnullOwnPtr<ModuleInstance>, InstantiationError>;
 
 class AbstractMachine {
 public:
@@ -513,7 +513,7 @@ public:
         return m_unresolved_imports;
     }
 
-    AK::Result<Vector<ExternValue>, LinkError> finish();
+    YAK::Result<Vector<ExternValue>, LinkError> finish();
 
 private:
     void populate();
@@ -528,7 +528,7 @@ private:
 }
 
 template<>
-struct AK::Traits<Wasm::Linker::Name> : public AK::GenericTraits<Wasm::Linker::Name> {
+struct YAK::Traits<Wasm::Linker::Name> : public YAK::GenericTraits<Wasm::Linker::Name> {
     static constexpr bool is_trivial() { return false; }
     static unsigned hash(Wasm::Linker::Name const& entry) { return pair_int_hash(entry.module.hash(), entry.name.hash()); }
     static bool equals(Wasm::Linker::Name const& a, Wasm::Linker::Name const& b) { return a.name == b.name && a.module == b.module; }

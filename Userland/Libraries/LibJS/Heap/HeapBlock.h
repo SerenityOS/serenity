@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/IntrusiveList.h>
-#include <AK/Platform.h>
-#include <AK/Types.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/Platform.h>
+#include <YAK/Types.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
 
@@ -19,8 +19,8 @@
 namespace JS {
 
 class HeapBlock {
-    AK_MAKE_NONCOPYABLE(HeapBlock);
-    AK_MAKE_NONMOVABLE(HeapBlock);
+    YAK_MAKE_NONCOPYABLE(HeapBlock);
+    YAK_MAKE_NONMOVABLE(HeapBlock);
 
 public:
     static constexpr size_t block_size = 16 * KiB;

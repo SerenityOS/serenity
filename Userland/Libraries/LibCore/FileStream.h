@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Buffered.h>
-#include <AK/ByteBuffer.h>
-#include <AK/Stream.h>
+#include <YAK/Buffered.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Stream.h>
 #include <LibCore/File.h>
 
 namespace Core {

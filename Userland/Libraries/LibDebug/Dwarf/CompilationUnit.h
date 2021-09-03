@@ -9,8 +9,8 @@
 #include "AbbreviationsMap.h"
 #include "DIE.h"
 #include "LineProgram.h"
-#include <AK/Noncopyable.h>
-#include <AK/Types.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/Types.h>
 
 namespace Debug::Dwarf {
 
@@ -19,8 +19,8 @@ class DIE;
 class LineProgram;
 
 class CompilationUnit {
-    AK_MAKE_NONCOPYABLE(CompilationUnit);
-    AK_MAKE_NONMOVABLE(CompilationUnit);
+    YAK_MAKE_NONCOPYABLE(CompilationUnit);
+    YAK_MAKE_NONMOVABLE(CompilationUnit);
 
 public:
     CompilationUnit(DwarfInfo const& dwarf_info, u32 offset, CompilationUnitHeader const&, NonnullOwnPtr<LineProgram>&& line_program);

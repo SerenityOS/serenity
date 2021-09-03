@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Types.h>
 #include <Kernel/Locking/Lockable.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/StdLib.h>
@@ -111,7 +111,7 @@ private:
 };
 
 class KernelRng : public Lockable<FortunaPRNG<Crypto::Cipher::AESCipher, Crypto::Hash::SHA256, 256>> {
-    AK_MAKE_ETERNAL;
+    YAK_MAKE_ETERNAL;
 
 public:
     KernelRng();

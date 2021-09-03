@@ -7,14 +7,14 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/MemoryStream.h>
-#include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/Stream.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <AK/WeakPtr.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Stream.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
+#include <YAK/WeakPtr.h>
 #include <LibAudio/Buffer.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/File.h>
@@ -63,8 +63,8 @@ private:
 
     bool valid { false };
     RefPtr<Core::File> m_file;
-    OwnPtr<AK::InputStream> m_stream;
-    AK::InputMemoryStream* m_memory_stream;
+    OwnPtr<YAK::InputStream> m_stream;
+    YAK::InputMemoryStream* m_memory_stream;
     String m_error_string;
 
     u32 m_sample_rate { 0 };

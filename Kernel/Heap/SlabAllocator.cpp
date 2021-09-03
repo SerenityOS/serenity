@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Memory.h>
+#include <YAK/Assertions.h>
+#include <YAK/Memory.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Memory/Region.h>
@@ -44,7 +44,7 @@ public:
             // We want to avoid being swapped out in the middle of this
             ScopedCritical critical;
             FreeSlab* next_free;
-            free_slab = m_freelist.load(AK::memory_order_consume);
+            free_slab = m_freelist.load(YAK::memory_order_consume);
             do {
                 if (!free_slab)
                     return kmalloc(slab_size());
@@ -53,7 +53,7 @@ public:
                 // in that case compare_exchange_strong would fail and we would
                 // try again.
                 next_free = free_slab->next;
-            } while (!m_freelist.compare_exchange_strong(free_slab, next_free, AK::memory_order_acq_rel));
+            } while (!m_freelist.compare_exchange_strong(free_slab, next_free, YAK::memory_order_acq_rel));
 
             m_num_allocated++;
         }
@@ -79,10 +79,10 @@ public:
 
         // We want to avoid being swapped out in the middle of this
         ScopedCritical critical;
-        FreeSlab* next_free = m_freelist.load(AK::memory_order_consume);
+        FreeSlab* next_free = m_freelist.load(YAK::memory_order_consume);
         do {
             free_slab->next = next_free;
-        } while (!m_freelist.compare_exchange_strong(next_free, free_slab, AK::memory_order_acq_rel));
+        } while (!m_freelist.compare_exchange_strong(next_free, free_slab, YAK::memory_order_acq_rel));
 
         m_num_allocated--;
     }
@@ -97,7 +97,7 @@ private:
     };
 
     Atomic<FreeSlab*> m_freelist { nullptr };
-    Atomic<size_t, AK::MemoryOrder::memory_order_relaxed> m_num_allocated;
+    Atomic<size_t, YAK::MemoryOrder::memory_order_relaxed> m_num_allocated;
     size_t m_slab_count;
     void* m_base { nullptr };
     void* m_end { nullptr };

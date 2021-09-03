@@ -7,14 +7,14 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/HashMap.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/String.h>
-#include <AK/Variant.h>
-#include <AK/Vector.h>
+#include <YAK/FlyString.h>
+#include <YAK/HashMap.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefPtr.h>
+#include <YAK/String.h>
+#include <YAK/Variant.h>
+#include <YAK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Value.h>

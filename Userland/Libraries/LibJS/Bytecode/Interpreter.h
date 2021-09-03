@@ -70,7 +70,7 @@ public:
 private:
     RegisterWindow& registers() { return m_register_windows.last(); }
 
-    static AK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> s_optimization_pipelines;
+    static YAK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> s_optimization_pipelines;
 
     VM& m_vm;
     GlobalObject& m_global_object;

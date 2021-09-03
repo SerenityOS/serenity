@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ScopeGuard.h>
+#include <YAK/ScopeGuard.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>

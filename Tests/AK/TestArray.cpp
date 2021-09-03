@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Array.h>
+#include <YAK/Array.h>
 
 static constexpr int constexpr_sum(const Span<const int> span)
 {

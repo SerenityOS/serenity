@@ -9,9 +9,9 @@
 
 #include "DNSAnswer.h"
 #include "DNSQuestion.h"
-#include <AK/Optional.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/Optional.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 
 namespace LookupServer {
 

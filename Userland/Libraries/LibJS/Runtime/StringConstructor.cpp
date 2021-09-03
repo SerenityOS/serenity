@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringBuilder.h>
-#include <AK/Utf16View.h>
-#include <AK/Utf32View.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Utf16View.h>
+#include <YAK/Utf32View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
@@ -159,7 +159,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
             return {};
         }
 
-        AK::code_point_to_utf16(string, static_cast<u32>(code_point));
+        YAK::code_point_to_utf16(string, static_cast<u32>(code_point));
     }
 
     return js_string(vm, Utf16String(move(string)));

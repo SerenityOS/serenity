@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
+#include <YAK/HashMap.h>
 #include <ImageDecoder/Forward.h>
 #include <ImageDecoder/ImageDecoderClientEndpoint.h>
 #include <ImageDecoder/ImageDecoderServerEndpoint.h>

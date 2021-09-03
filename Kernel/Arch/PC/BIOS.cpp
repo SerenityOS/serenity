@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringView.h>
+#include <YAK/StringView.h>
 #include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/KBufferBuilder.h>

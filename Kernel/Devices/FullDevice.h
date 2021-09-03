@@ -11,7 +11,7 @@
 namespace Kernel {
 
 class FullDevice final : public CharacterDevice {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     static NonnullRefPtr<FullDevice> must_create();
     virtual ~FullDevice() override;

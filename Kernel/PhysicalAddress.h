@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Format.h>
-#include <AK/Types.h>
+#include <YAK/Format.h>
+#include <YAK/Types.h>
 
 typedef u64 PhysicalPtr;
 typedef u64 PhysicalSize;
@@ -54,12 +54,12 @@ private:
 };
 
 template<>
-struct AK::Formatter<PhysicalAddress> : AK::Formatter<FormatString> {
+struct YAK::Formatter<PhysicalAddress> : YAK::Formatter<FormatString> {
     void format(FormatBuilder& builder, PhysicalAddress value)
     {
         if constexpr (sizeof(PhysicalPtr) == sizeof(u64))
-            return AK::Formatter<FormatString>::format(builder, "P{:016x}", value.get());
+            return YAK::Formatter<FormatString>::format(builder, "P{:016x}", value.get());
         else
-            return AK::Formatter<FormatString>::format(builder, "P{}", value.as_ptr());
+            return YAK::Formatter<FormatString>::format(builder, "P{}", value.as_ptr());
     }
 };

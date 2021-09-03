@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Function.h>
+#include <YAK/Function.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/Loader/Resource.h>
 

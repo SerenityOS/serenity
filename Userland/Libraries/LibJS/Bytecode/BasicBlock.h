@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/String.h>
+#include <YAK/Badge.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/String.h>
 #include <LibJS/Forward.h>
 
 namespace JS::Bytecode {
@@ -44,7 +44,7 @@ struct UnwindInfo {
 };
 
 class BasicBlock {
-    AK_MAKE_NONCOPYABLE(BasicBlock);
+    YAK_MAKE_NONCOPYABLE(BasicBlock);
 
 public:
     static NonnullOwnPtr<BasicBlock> create(String name, size_t size = 4 * KiB);

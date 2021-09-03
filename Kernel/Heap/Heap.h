@@ -6,17 +6,17 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
-#include <AK/ScopeGuard.h>
-#include <AK/TemporaryChange.h>
-#include <AK/Vector.h>
-#include <AK/kmalloc.h>
+#include <YAK/Bitmap.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/TemporaryChange.h>
+#include <YAK/Vector.h>
+#include <YAK/kmalloc.h>
 
 namespace Kernel {
 
 template<size_t CHUNK_SIZE, unsigned HEAP_SCRUB_BYTE_ALLOC = 0, unsigned HEAP_SCRUB_BYTE_FREE = 0>
 class Heap {
-    AK_MAKE_NONCOPYABLE(Heap);
+    YAK_MAKE_NONCOPYABLE(Heap);
 
     struct AllocationHeader {
         size_t allocation_size_in_chunks;
@@ -172,8 +172,8 @@ struct DefaultExpandHeap {
 
 template<size_t CHUNK_SIZE, unsigned HEAP_SCRUB_BYTE_ALLOC = 0, unsigned HEAP_SCRUB_BYTE_FREE = 0, typename ExpandHeap = DefaultExpandHeap>
 class ExpandableHeap {
-    AK_MAKE_NONCOPYABLE(ExpandableHeap);
-    AK_MAKE_NONMOVABLE(ExpandableHeap);
+    YAK_MAKE_NONCOPYABLE(ExpandableHeap);
+    YAK_MAKE_NONMOVABLE(ExpandableHeap);
 
 public:
     typedef ExpandHeap ExpandHeapType;

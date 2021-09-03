@@ -6,7 +6,7 @@
 
 #include "BarsVisualizationWidget.h"
 #include "AudioAlgorithms.h"
-#include <AK/Math.h>
+#include <YAK/Math.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -26,7 +26,7 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
         return;
 
     fft(m_sample_buffer, false);
-    double max = AK::sqrt(m_sample_count * 2.);
+    double max = YAK::sqrt(m_sample_count * 2.);
 
     double freq_bin = m_samplerate / m_sample_count;
 
@@ -44,10 +44,10 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
     int bins_per_group = ceil_div((m_sample_count - 1) / 2, group_count) * freq_bin;
 
     for (int i = 1; i < m_sample_count / 2; i++) {
-        groups[(i * freq_bin) / bins_per_group] += AK::fabs(m_sample_buffer.data()[i].real());
+        groups[(i * freq_bin) / bins_per_group] += YAK::fabs(m_sample_buffer.data()[i].real());
     }
     for (int i = 0; i < group_count; i++)
-        groups[i] /= max * freq_bin / (m_adjust_frequencies ? (clamp(AK::pow(AK::E<double>, (double)i / group_count * 3.) - 1.75, 1., 15.)) : 1.);
+        groups[i] /= max * freq_bin / (m_adjust_frequencies ? (clamp(YAK::pow(YAK::E<double>, (double)i / group_count * 3.) - 1.75, 1., 15.)) : 1.);
 
     const int horizontal_margin = 30;
     const int top_vertical_margin = 15;
@@ -56,7 +56,7 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
     int max_height = frame_inner_rect().height() - top_vertical_margin;
     int current_xpos = horizontal_margin;
     for (int g = 0; g < group_count; g++) {
-        m_gfx_falling_bars[g] = AK::min(clamp(max_height - (int)(groups[g] * max_height * 0.8), 0, max_height), m_gfx_falling_bars[g]);
+        m_gfx_falling_bars[g] = YAK::min(clamp(max_height - (int)(groups[g] * max_height * 0.8), 0, max_height), m_gfx_falling_bars[g]);
         painter.fill_rect(Gfx::Rect(current_xpos, max_height - (int)(groups[g] * max_height * 0.8), pixel_per_group_width, (int)(groups[g] * max_height * 0.8)), Gfx::Color::from_rgb(0x95d437));
         painter.fill_rect(Gfx::Rect(current_xpos, m_gfx_falling_bars[g], pixel_per_group_width, 2), Gfx::Color::White);
         current_xpos += pixel_per_group_width + pixels_inbetween_groups;
@@ -104,7 +104,7 @@ void BarsVisualizationWidget::set_buffer(RefPtr<Audio::Buffer> buffer, int sampl
     m_sample_count = round_previous_power_of_2(samples_to_use);
     m_sample_buffer.resize(m_sample_count);
     for (int i = 0; i < m_sample_count; i++) {
-        m_sample_buffer.data()[i] = (AK::fabs(buffer->samples()[i].left) + AK::fabs(buffer->samples()[i].right)) / 2.;
+        m_sample_buffer.data()[i] = (YAK::fabs(buffer->samples()[i].left) + YAK::fabs(buffer->samples()[i].right)) / 2.;
     }
 
     update();

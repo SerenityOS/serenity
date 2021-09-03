@@ -11,9 +11,9 @@
 #include "Forward.h"
 #include "JSIntegration.h"
 #include "Position.h"
-#include <AK/String.h>
-#include <AK/Types.h>
-#include <AK/WeakPtr.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
+#include <YAK/WeakPtr.h>
 
 namespace Spreadsheet {
 

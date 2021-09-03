@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
-#include <AK/Hex.h>
-#include <AK/Platform.h>
-#include <AK/Utf8View.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Hex.h>
+#include <YAK/Platform.h>
+#include <YAK/Utf8View.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Interpreter.h>

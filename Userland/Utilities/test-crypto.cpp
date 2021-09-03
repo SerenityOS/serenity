@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Random.h>
+#include <YAK/Random.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>

@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/Function.h>
-#include <AK/IntrusiveList.h>
-#include <AK/MACAddress.h>
-#include <AK/Types.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Function.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/MACAddress.h>
+#include <YAK/Types.h>
+#include <YAK/WeakPtr.h>
+#include <YAK/Weakable.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Net/ARP.h>
@@ -25,7 +25,7 @@ namespace Kernel {
 
 class NetworkAdapter;
 
-using NetworkByteBuffer = AK::Detail::ByteBuffer<1500>;
+using NetworkByteBuffer = YAK::Detail::ByteBuffer<1500>;
 
 struct PacketWithTimestamp : public RefCounted<PacketWithTimestamp> {
     PacketWithTimestamp(NonnullOwnPtr<KBuffer> buffer, Time timestamp)

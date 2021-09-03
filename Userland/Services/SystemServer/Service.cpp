@@ -5,11 +5,11 @@
  */
 
 #include "Service.h"
-#include <AK/Debug.h>
-#include <AK/HashMap.h>
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Debug.h>
+#include <YAK/HashMap.h>
+#include <YAK/JsonArray.h>
+#include <YAK/JsonObject.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/Socket.h>

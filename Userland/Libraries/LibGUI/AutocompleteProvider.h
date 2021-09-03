@@ -14,8 +14,8 @@
 namespace GUI {
 
 class AutocompleteProvider {
-    AK_MAKE_NONCOPYABLE(AutocompleteProvider);
-    AK_MAKE_NONMOVABLE(AutocompleteProvider);
+    YAK_MAKE_NONCOPYABLE(AutocompleteProvider);
+    YAK_MAKE_NONMOVABLE(AutocompleteProvider);
 
 public:
     virtual ~AutocompleteProvider() { }

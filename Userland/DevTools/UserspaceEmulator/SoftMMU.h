@@ -8,10 +8,10 @@
 
 #include "Region.h"
 #include "ValueWithShadow.h"
-#include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/OwnPtr.h>
-#include <AK/Types.h>
+#include <YAK/HashMap.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Types.h>
 #include <LibX86/Instruction.h>
 
 namespace UserspaceEmulator {

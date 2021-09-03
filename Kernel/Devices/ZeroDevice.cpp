@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Memory.h>
+#include <YAK/Memory.h>
 #include <Kernel/Devices/ZeroDevice.h>
 #include <Kernel/Sections.h>
 

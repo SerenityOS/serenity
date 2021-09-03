@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include <AK/IntrusiveList.h>
-#include <AK/Noncopyable.h>
-#include <AK/Vector.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
 class MarkedValueList : public Vector<Value, 32> {
-    AK_MAKE_NONCOPYABLE(MarkedValueList);
+    YAK_MAKE_NONCOPYABLE(MarkedValueList);
 
 public:
     explicit MarkedValueList(Heap&);

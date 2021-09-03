@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Random.h>
-#include <AK/ScopeGuard.h>
+#include <YAK/Debug.h>
+#include <YAK/Random.h>
+#include <YAK/ScopeGuard.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/ASN1/PEM.h>

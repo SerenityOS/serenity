@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/Span.h>
+#include <YAK/Function.h>
+#include <YAK/Span.h>
 #include <LibCore/IODevice.h>
 #include <LibCore/SocketAddress.h>
 
@@ -70,5 +70,5 @@ private:
 }
 
 template<>
-struct AK::Formatter<Core::Socket> : Formatter<Core::Object> {
+struct YAK::Formatter<Core::Socket> : Formatter<Core::Object> {
 };

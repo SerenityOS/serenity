@@ -80,7 +80,7 @@ Value PlainYearMonthConstructor::construct(FunctionObject& new_target)
     // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
     // This does not change the exposed behaviour as the call to CreateTemporalYearMonth will immediately check that these values are valid
     // ISO values (for years: -273975 - 273975, for months: 1 - 12, for days: 1 - 31) all of which are subsets of this check.
-    if (!AK::is_within_range<i32>(y) || !AK::is_within_range<u8>(m) || !AK::is_within_range<u8>(ref)) {
+    if (!YAK::is_within_range<i32>(y) || !YAK::is_within_range<u8>(m) || !YAK::is_within_range<u8>(ref)) {
         vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
         return {};
     }

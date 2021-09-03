@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/MappedFile.h>
-#include <AK/NumberFormat.h>
+#include <YAK/Assertions.h>
+#include <YAK/MappedFile.h>
+#include <YAK/NumberFormat.h>
 #include <LibArchive/Zip.h>
 #include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>

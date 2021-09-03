@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/CircularQueue.h>
-#include <AK/NonnullRefPtrVector.h>
+#include <YAK/CircularQueue.h>
+#include <YAK/NonnullRefPtrVector.h>
 #include <LibGUI/Frame.h>
 
 class SnakeGame : public GUI::Frame {

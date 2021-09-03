@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Function.h>
-#include <AK/String.h>
+#include <YAK/Assertions.h>
+#include <YAK/Function.h>
+#include <YAK/String.h>
 #include <Kernel/IO.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Object.h>

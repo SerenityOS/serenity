@@ -5,9 +5,9 @@
  */
 
 #include "ProjectTemplate.h"
-#include <AK/LexicalPath.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>

@@ -7,10 +7,10 @@
 #include "AST.h"
 #include "Shell.h"
 #include "Shell/Formatter.h"
-#include <AK/LexicalPath.h>
-#include <AK/ScopeGuard.h>
-#include <AK/Statistics.h>
-#include <AK/String.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/Statistics.h>
+#include <YAK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -899,7 +899,7 @@ int Shell::builtin_time(int argc, const char** argv)
 
     auto commands = expand_aliases({ move(command) });
 
-    AK::Statistics iteration_times;
+    YAK::Statistics iteration_times;
 
     int exit_code = 1;
     for (int i = 0; i < number_of_iterations; ++i) {
@@ -915,7 +915,7 @@ int Shell::builtin_time(int argc, const char** argv)
     if (number_of_iterations == 1) {
         warnln("Time: {} ms", iteration_times.values().first());
     } else {
-        AK::Statistics iteration_times_excluding_first;
+        YAK::Statistics iteration_times_excluding_first;
         for (size_t i = 1; i < iteration_times.size(); i++)
             iteration_times_excluding_first.add(iteration_times.values()[i]);
 

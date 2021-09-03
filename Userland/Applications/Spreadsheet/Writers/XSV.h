@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <AK/GenericLexer.h>
-#include <AK/OwnPtr.h>
-#include <AK/Stream.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Stream.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 
 namespace Writer {
 

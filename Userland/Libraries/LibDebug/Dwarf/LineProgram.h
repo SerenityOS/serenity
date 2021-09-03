@@ -7,9 +7,9 @@
 #pragma once
 
 #include "DwarfInfo.h"
-#include <AK/FlyString.h>
-#include <AK/MemoryStream.h>
-#include <AK/Vector.h>
+#include <YAK/FlyString.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/Vector.h>
 
 namespace Debug::Dwarf {
 
@@ -102,8 +102,8 @@ inline InputStream& operator>>(InputStream& stream, LineProgramUnitHeader32& hea
 }
 
 class LineProgram {
-    AK_MAKE_NONCOPYABLE(LineProgram);
-    AK_MAKE_NONMOVABLE(LineProgram);
+    YAK_MAKE_NONCOPYABLE(LineProgram);
+    YAK_MAKE_NONMOVABLE(LineProgram);
 
 public:
     explicit LineProgram(DwarfInfo& dwarf_info, InputMemoryStream& stream);

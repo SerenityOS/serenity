@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/IntrusiveList.h>
-#include <AK/Types.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/Types.h>
 #include <Kernel/Arch/x86/RegisterState.h>
 
 namespace Kernel {
@@ -60,7 +60,7 @@ protected:
     void disable_remap() { m_disable_remap = true; }
 
 private:
-    Atomic<u32, AK::MemoryOrder::memory_order_relaxed> m_invoking_count { 0 };
+    Atomic<u32, YAK::MemoryOrder::memory_order_relaxed> m_invoking_count { 0 };
     u8 m_interrupt_number { 0 };
     bool m_disable_remap { false };
     bool m_registered { false };

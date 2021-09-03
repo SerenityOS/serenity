@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/StringView.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefPtr.h>
+#include <YAK/StringView.h>
 
 #include "Database.h"
 
@@ -161,16 +161,16 @@ int Database::init()
             if (line[0] != '\t') {
                 commit_vendor();
                 current_vendor = make<Vendor>();
-                current_vendor->id = AK::StringUtils::convert_to_uint_from_hex<u16>(line.substring_view(0, 4)).value_or(0);
+                current_vendor->id = YAK::StringUtils::convert_to_uint_from_hex<u16>(line.substring_view(0, 4)).value_or(0);
                 current_vendor->name = line.substring_view(6, line.length() - 6);
             } else if (line[0] == '\t' && line[1] != '\t') {
                 commit_device();
                 current_device = make<Device>();
-                current_device->id = AK::StringUtils::convert_to_uint_from_hex<u16>((line.substring_view(1, 4))).value_or(0);
+                current_device->id = YAK::StringUtils::convert_to_uint_from_hex<u16>((line.substring_view(1, 4))).value_or(0);
                 current_device->name = line.substring_view(7, line.length() - 7);
             } else if (line[0] == '\t' && line[1] == '\t') {
                 auto interface = make<Interface>();
-                interface->interface = AK::StringUtils::convert_to_uint_from_hex<u16>((line.substring_view(2, 4))).value_or(0);
+                interface->interface = YAK::StringUtils::convert_to_uint_from_hex<u16>((line.substring_view(2, 4))).value_or(0);
                 interface->name = line.substring_view(7, line.length() - 7);
                 current_device->interfaces.set(interface->interface, move(interface));
             }
@@ -179,16 +179,16 @@ int Database::init()
             if (line[0] != '\t') {
                 commit_class();
                 current_class = make<Class>();
-                current_class->id = AK::StringUtils::convert_to_uint_from_hex<u16>((line.substring_view(2, 2))).value_or(0);
+                current_class->id = YAK::StringUtils::convert_to_uint_from_hex<u16>((line.substring_view(2, 2))).value_or(0);
                 current_class->name = line.substring_view(6, line.length() - 6);
             } else if (line[0] == '\t' && line[1] != '\t') {
                 commit_subclass();
                 current_subclass = make<Subclass>();
-                current_subclass->id = AK::StringUtils::convert_to_uint_from_hex<u16>((line.substring_view(1, 2))).value_or(0);
+                current_subclass->id = YAK::StringUtils::convert_to_uint_from_hex<u16>((line.substring_view(1, 2))).value_or(0);
                 current_subclass->name = line.substring_view(5, line.length() - 5);
             } else if (line[0] == '\t' && line[1] == '\t') {
                 auto protocol = make<Protocol>();
-                protocol->id = AK::StringUtils::convert_to_uint_from_hex<u16>((line.substring_view(2, 2))).value_or(0);
+                protocol->id = YAK::StringUtils::convert_to_uint_from_hex<u16>((line.substring_view(2, 2))).value_or(0);
                 protocol->name = line.substring_view(6, line.length() - 6);
                 current_subclass->protocols.set(protocol->id, move(protocol));
             }

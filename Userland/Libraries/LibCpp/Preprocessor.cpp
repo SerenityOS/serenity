@@ -5,9 +5,9 @@
  */
 
 #include "Preprocessor.h"
-#include <AK/Assertions.h>
-#include <AK/GenericLexer.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Assertions.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/StringBuilder.h>
 #include <LibCpp/Lexer.h>
 #include <ctype.h>
 
@@ -347,7 +347,7 @@ Optional<Preprocessor::Definition> Preprocessor::create_definition(StringView li
 
 String Preprocessor::remove_escaped_newlines(StringView const& value)
 {
-    AK::StringBuilder processed_value;
+    YAK::StringBuilder processed_value;
     GenericLexer lexer { value };
     while (!lexer.is_eof()) {
         processed_value.append(lexer.consume_until("\\\n"));

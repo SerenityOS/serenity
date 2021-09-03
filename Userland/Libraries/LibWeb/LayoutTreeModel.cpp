@@ -5,7 +5,7 @@
  */
 
 #include "LayoutTreeModel.h"
-#include <AK/StringBuilder.h>
+#include <YAK/StringBuilder.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>

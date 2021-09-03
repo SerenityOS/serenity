@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/IntrusiveList.h>
-#include <AK/Types.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/Types.h>
 
 #define MAGIC_PAGE_HEADER 0x42657274     // 'Bert'
 #define MAGIC_BIGALLOC_HEADER 0x42697267 // 'Birg'

@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/JsonPath.h>
-#include <AK/JsonValue.h>
-#include <AK/NonnullOwnPtrVector.h>
+#include <YAK/JsonPath.h>
+#include <YAK/JsonValue.h>
+#include <YAK/NonnullOwnPtrVector.h>
 #include <LibGUI/Model.h>
 
 namespace Inspector {

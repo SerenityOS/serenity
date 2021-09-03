@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/Optional.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/HashMap.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/Optional.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>

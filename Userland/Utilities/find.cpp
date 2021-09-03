@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/CheckedFormatString.h>
-#include <AK/LexicalPath.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/OwnPtr.h>
-#include <AK/Vector.h>
+#include <YAK/Assertions.h>
+#include <YAK/CheckedFormatString.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Vector.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>

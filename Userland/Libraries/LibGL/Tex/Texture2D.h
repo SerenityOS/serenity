@@ -9,9 +9,9 @@
 
 #include "Texture.h"
 
-#include <AK/Array.h>
-#include <AK/RefCounted.h>
-#include <AK/Vector.h>
+#include <YAK/Array.h>
+#include <YAK/RefCounted.h>
+#include <YAK/Vector.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/Tex/MipMap.h>
 #include <LibGL/Tex/Sampler2D.h>

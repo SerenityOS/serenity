@@ -6,8 +6,8 @@
  */
 
 #include "DOMTreeModel.h"
-#include <AK/JsonObject.h>
-#include <AK/StringBuilder.h>
+#include <YAK/JsonObject.h>
+#include <YAK/StringBuilder.h>
 #include <ctype.h>
 
 namespace Web {

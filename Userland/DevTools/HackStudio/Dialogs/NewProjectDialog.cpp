@@ -9,8 +9,8 @@
 #include <DevTools/HackStudio/Dialogs/NewProjectDialogGML.h>
 #include <DevTools/HackStudio/ProjectTemplate.h>
 
-#include <AK/LexicalPath.h>
-#include <AK/String.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/String.h>
 #include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>

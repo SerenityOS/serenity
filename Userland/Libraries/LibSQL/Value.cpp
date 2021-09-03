@@ -748,7 +748,7 @@ u32 ContainerValueImpl::hash() const
     u32 ret = 0u;
     for (auto& value : value()) {
         Value v(value);
-        // This is an extension of the pair_int_hash function from AK/HashFunctions.h:
+        // This is an extension of the pair_int_hash function from YAK/HashFunctions.h:
         if (!ret)
             ret = v.hash();
         else

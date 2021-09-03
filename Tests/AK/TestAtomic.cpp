@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Atomic.h>
+#include <YAK/Atomic.h>
 
 TEST_CASE(construct_empty)
 {

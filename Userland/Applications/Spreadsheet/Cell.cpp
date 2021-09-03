@@ -6,8 +6,8 @@
 
 #include "Cell.h"
 #include "Spreadsheet.h"
-#include <AK/StringBuilder.h>
-#include <AK/TemporaryChange.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/TemporaryChange.h>
 
 namespace Spreadsheet {
 

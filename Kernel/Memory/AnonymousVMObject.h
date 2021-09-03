@@ -62,7 +62,7 @@ private:
 
     // AnonymousVMObject shares committed COW pages with cloned children (happens on fork)
     class SharedCommittedCowPages : public RefCounted<SharedCommittedCowPages> {
-        AK_MAKE_NONCOPYABLE(SharedCommittedCowPages);
+        YAK_MAKE_NONCOPYABLE(SharedCommittedCowPages);
 
     public:
         SharedCommittedCowPages() = delete;

@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
-#include <AK/QuickSort.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/Vector.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/QuickSort.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <errno.h>

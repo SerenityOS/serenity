@@ -8,17 +8,17 @@
 
 #include "RegexOptions.h"
 
-#include <AK/FlyString.h>
-#include <AK/HashMap.h>
-#include <AK/MemMem.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
-#include <AK/Utf16View.h>
-#include <AK/Utf32View.h>
-#include <AK/Utf8View.h>
-#include <AK/Variant.h>
-#include <AK/Vector.h>
+#include <YAK/FlyString.h>
+#include <YAK/HashMap.h>
+#include <YAK/MemMem.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/StringView.h>
+#include <YAK/Utf16View.h>
+#include <YAK/Utf32View.h>
+#include <YAK/Utf8View.h>
+#include <YAK/Variant.h>
+#include <YAK/Vector.h>
 
 namespace regex {
 
@@ -150,7 +150,7 @@ public:
                 return RegexStringView { Utf32View { data.data(), data.size() } };
             },
             [&](Utf16View) {
-                optional_utf16_storage = AK::utf32_to_utf16(Utf32View { data.data(), data.size() });
+                optional_utf16_storage = YAK::utf32_to_utf16(Utf32View { data.data(), data.size() });
                 return RegexStringView { Utf16View { optional_utf16_storage } };
             });
 
@@ -172,7 +172,7 @@ public:
                 Vector<RegexStringView> views;
                 u32 newline = '\n';
                 while (!view.is_empty()) {
-                    auto position = AK::memmem_optional(view.code_points(), view.length() * sizeof(u32), &newline, sizeof(u32));
+                    auto position = YAK::memmem_optional(view.code_points(), view.length() * sizeof(u32), &newline, sizeof(u32));
                     if (!position.has_value())
                         break;
                     auto offset = position.value() / sizeof(u32);
@@ -187,7 +187,7 @@ public:
                 Vector<RegexStringView> views;
                 u16 newline = '\n';
                 while (!view.is_empty()) {
-                    auto position = AK::memmem_optional(view.data(), view.length_in_code_units() * sizeof(u16), &newline, sizeof(u16));
+                    auto position = YAK::memmem_optional(view.data(), view.length_in_code_units() * sizeof(u16), &newline, sizeof(u16));
                     if (!position.has_value())
                         break;
                     auto offset = position.value() / sizeof(u16);
@@ -529,7 +529,7 @@ struct MatchState {
 using regex::RegexStringView;
 
 template<>
-struct AK::Formatter<regex::RegexStringView> : Formatter<StringView> {
+struct YAK::Formatter<regex::RegexStringView> : Formatter<StringView> {
     void format(FormatBuilder& builder, regex::RegexStringView const& value)
     {
         auto string = value.to_string();

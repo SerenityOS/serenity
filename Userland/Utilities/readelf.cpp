@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MappedFile.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
+#include <YAK/MappedFile.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibELF/DynamicLoader.h>

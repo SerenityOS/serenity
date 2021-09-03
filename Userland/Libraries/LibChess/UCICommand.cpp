@@ -5,7 +5,7 @@
  */
 
 #include "UCICommand.h"
-#include <AK/StringBuilder.h>
+#include <YAK/StringBuilder.h>
 
 namespace Chess::UCI {
 

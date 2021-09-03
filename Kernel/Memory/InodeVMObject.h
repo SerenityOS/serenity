@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
+#include <YAK/Bitmap.h>
 #include <Kernel/Memory/VMObject.h>
 #include <Kernel/UnixTypes.h>
 

@@ -6,9 +6,9 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Array.h>
-#include <AK/MemoryStream.h>
-#include <AK/Random.h>
+#include <YAK/Array.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/Random.h>
 #include <LibCompress/Deflate.h>
 #include <cstring>
 

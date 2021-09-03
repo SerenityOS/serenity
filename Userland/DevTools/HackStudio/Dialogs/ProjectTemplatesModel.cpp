@@ -7,8 +7,8 @@
 
 #include "ProjectTemplatesModel.h"
 
-#include <AK/LexicalPath.h>
-#include <AK/QuickSort.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/QuickSort.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/Variant.h>
 #include <LibGfx/TextAlignment.h>

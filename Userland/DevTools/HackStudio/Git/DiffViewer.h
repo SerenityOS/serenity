@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <LibDiff/Hunks.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 

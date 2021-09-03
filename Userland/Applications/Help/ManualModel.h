@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/Optional.h>
-#include <AK/Result.h>
-#include <AK/String.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/Optional.h>
+#include <YAK/Result.h>
+#include <YAK/String.h>
 #include <LibGUI/Model.h>
 
 class ManualModel final : public GUI::Model {

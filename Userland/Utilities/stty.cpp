@@ -6,13 +6,13 @@
 
 #define __USE_MISC
 #define TTYDEFCHARS
-#include <AK/Array.h>
-#include <AK/Optional.h>
-#include <AK/Result.h>
-#include <AK/ScopeGuard.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <AK/Vector.h>
+#include <YAK/Array.h>
+#include <YAK/Optional.h>
+#include <YAK/Result.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
+#include <YAK/Vector.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <getopt.h>

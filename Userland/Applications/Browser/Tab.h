@@ -7,7 +7,7 @@
 #pragma once
 
 #include "History.h"
-#include <AK/URL.h>
+#include <YAK/URL.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/ShareableBitmap.h>

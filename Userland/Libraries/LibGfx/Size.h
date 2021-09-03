@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Format.h>
+#include <YAK/Format.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Point.h>
 #include <LibIPC/Forward.h>
@@ -174,7 +174,7 @@ using FloatSize = Size<float>;
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<typename T>
 struct Formatter<Gfx::Size<T>> : Formatter<StringView> {

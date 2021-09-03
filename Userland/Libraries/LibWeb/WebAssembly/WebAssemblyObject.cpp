@@ -9,7 +9,7 @@
 #include "WebAssemblyModuleConstructor.h"
 #include "WebAssemblyModuleObject.h"
 #include "WebAssemblyModulePrototype.h"
-#include <AK/ScopeGuard.h>
+#include <YAK/ScopeGuard.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/BigInt.h>

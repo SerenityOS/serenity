@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <LibGUI/Icon.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>

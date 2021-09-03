@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
+#include <YAK/JsonArray.h>
+#include <YAK/JsonObject.h>
 #include <LibGUI/Model.h>
 
 namespace GUI {

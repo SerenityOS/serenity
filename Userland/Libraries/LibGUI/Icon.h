@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
+#include <YAK/HashMap.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/RefCounted.h>
 #include <LibGfx/Bitmap.h>
 
 namespace GUI {

@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
-#include <AK/Format.h>
-#include <AK/Forward.h>
-#include <AK/SIMD.h>
-#include <AK/StdLibExtras.h>
+#include <YAK/Assertions.h>
+#include <YAK/Format.h>
+#include <YAK/Forward.h>
+#include <YAK/SIMD.h>
+#include <YAK/StdLibExtras.h>
 #include <LibIPC/Forward.h>
 #include <math.h>
 
@@ -177,7 +177,7 @@ public:
             return *this;
 
 #ifdef __SSE__
-        using AK::SIMD::i32x4;
+        using YAK::SIMD::i32x4;
 
         const i32x4 color = {
             red(),
@@ -298,8 +298,8 @@ public:
         double r = static_cast<double>(red()) / 255.0;
         double g = static_cast<double>(green()) / 255.0;
         double b = static_cast<double>(blue()) / 255.0;
-        double max = AK::max(AK::max(r, g), b);
-        double min = AK::min(AK::min(r, g), b);
+        double max = YAK::max(YAK::max(r, g), b);
+        double min = YAK::min(YAK::min(r, g), b);
         double chroma = max - min;
 
         if (!chroma)
@@ -495,7 +495,7 @@ constexpr Color::Color(NamedColor named)
 
 using Gfx::Color;
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<Gfx::Color> : public Formatter<StringView> {

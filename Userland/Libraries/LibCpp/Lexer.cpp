@@ -5,11 +5,11 @@
  */
 
 #include "Lexer.h"
-#include <AK/CharacterTypes.h>
-#include <AK/Function.h>
-#include <AK/HashTable.h>
-#include <AK/StdLibExtras.h>
-#include <AK/String.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Function.h>
+#include <YAK/HashTable.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/String.h>
 
 namespace Cpp {
 
@@ -527,7 +527,7 @@ void Lexer::lex_impl(Function<void(Token)> callback)
         if (ch == '#') {
             begin_token();
             consume();
-            while (AK::is_ascii_space(peek()))
+            while (YAK::is_ascii_space(peek()))
                 consume();
 
             size_t directive_start = m_index;

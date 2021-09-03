@@ -5,8 +5,8 @@
  */
 
 #include "Parser.h"
-#include <AK/ScopeGuard.h>
-#include <AK/TypeCasts.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/TypeCasts.h>
 
 namespace SQL::AST {
 

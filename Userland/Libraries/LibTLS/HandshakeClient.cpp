@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Random.h>
+#include <YAK/Debug.h>
+#include <YAK/Random.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
@@ -186,7 +186,7 @@ void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
         dbgln("Server mode not supported");
         return;
     } else {
-        *(u16*)random_bytes = AK::convert_between_host_and_network_endian((u16)Version::V12);
+        *(u16*)random_bytes = YAK::convert_between_host_and_network_endian((u16)Version::V12);
     }
 
     m_context.premaster_key = ByteBuffer::copy(random_bytes, bytes);

@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <AK/Weakable.h>
+#include <YAK/RefCounted.h>
+#include <YAK/Weakable.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/AbortSignal.h>

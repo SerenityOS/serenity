@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Math.h>
-#include <AK/String.h>
+#include <YAK/Math.h>
+#include <YAK/String.h>
 
 namespace Gfx {
 template<typename T>
@@ -105,7 +105,7 @@ public:
 
     constexpr T length() const
     {
-        return AK::hypot(m_x, m_y);
+        return YAK::hypot(m_x, m_y);
     }
 
     String to_string() const
@@ -123,7 +123,7 @@ typedef Vector2<double> DoubleVector2;
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<typename T>
 struct Formatter<Gfx::Vector2<T>> : Formatter<StringView> {

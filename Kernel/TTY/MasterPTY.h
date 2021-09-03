@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Badge.h>
+#include <YAK/Badge.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/DoubleBuffer.h>
 

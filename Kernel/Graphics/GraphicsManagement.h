@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtr.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/Types.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
@@ -27,7 +27,7 @@ class GraphicsManagement {
     friend class IntelNativeGraphicsAdapter;
     friend class VGACompatibleAdapter;
     friend class Graphics::VirtIOGPU::GraphicsAdapter;
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 
 public:
     static GraphicsManagement& the();

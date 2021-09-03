@@ -7,7 +7,7 @@
 #include "Tests.h"
 #include "../FileDB.h"
 #include "CppComprehensionEngine.h"
-#include <AK/LexicalPath.h>
+#include <YAK/LexicalPath.h>
 #include <LibCore/File.h>
 
 using namespace LanguageServers;

@@ -6,8 +6,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/IDAllocator.h>
-#include <AK/StringBuilder.h>
+#include <YAK/IDAllocator.h>
+#include <YAK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/EventWrapper.h>

@@ -8,7 +8,7 @@
 #include "AttributeValue.h"
 #include "CompilationUnit.h"
 
-#include <AK/MemoryStream.h>
+#include <YAK/MemoryStream.h>
 #include <LibDebug/DebugInfo.h>
 
 namespace Debug::Dwarf {

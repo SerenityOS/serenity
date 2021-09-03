@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Format.h>
+#include <YAK/Format.h>
 
 namespace PDF {
 
@@ -187,7 +187,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<PDF::Value> : Formatter<StringView> {

@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
-#include <AK/Result.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Result.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>
 
 namespace Kernel {

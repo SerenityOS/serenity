@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/GenericLexer.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/Queue.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonValue.h>
+#include <YAK/Queue.h>
 #include <LibGUI/GMLLexer.h>
 #include <LibGUI/GMLParser.h>
 

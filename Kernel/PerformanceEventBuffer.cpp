@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/JsonArraySerializer.h>
-#include <AK/JsonObjectSerializer.h>
-#include <AK/ScopeGuard.h>
+#include <YAK/JsonArraySerializer.h>
+#include <YAK/JsonObjectSerializer.h>
+#include <YAK/ScopeGuard.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/KBufferBuilder.h>

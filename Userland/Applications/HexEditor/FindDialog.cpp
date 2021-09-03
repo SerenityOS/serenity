@@ -5,9 +5,9 @@
  */
 
 #include "FindDialog.h"
-#include <AK/Hex.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Hex.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <Applications/HexEditor/FindDialogGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>

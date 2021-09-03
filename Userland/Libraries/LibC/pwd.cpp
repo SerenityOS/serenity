@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
-#include <AK/TemporaryChange.h>
-#include <AK/Vector.h>
+#include <YAK/String.h>
+#include <YAK/TemporaryChange.h>
+#include <YAK/Vector.h>
 #include <errno.h>
 #include <pwd.h>
 #include <stdio.h>

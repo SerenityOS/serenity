@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/ByteBuffer.h>
-#include <AK/RefCounted.h>
+#include <YAK/Badge.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/RefCounted.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeMetadata.h>

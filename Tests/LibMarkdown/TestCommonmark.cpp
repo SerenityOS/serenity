@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonParser.h>
-#include <AK/String.h>
+#include <YAK/JsonArray.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonParser.h>
+#include <YAK/String.h>
 #include <LibCore/File.h>
 #include <LibMarkdown/Document.h>
 #include <LibTest/TestCase.h>
@@ -21,7 +21,7 @@ TEST_SETUP
         VERIFY(file->open(Core::OpenMode::ReadOnly));
     }
 
-    String test_data(file->read_all(), AK::ShouldChomp::NoChomp);
+    String test_data(file->read_all(), YAK::ShouldChomp::NoChomp);
 
     auto tests = JsonParser(test_data).parse().value().as_array();
     for (size_t i = 0; i < tests.size(); ++i) {

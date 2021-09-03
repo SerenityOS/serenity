@@ -11,9 +11,9 @@
 #include "EditorWrapper.h"
 #include "HackStudio.h"
 #include "Language.h"
-#include <AK/ByteBuffer.h>
-#include <AK/Debug.h>
-#include <AK/LexicalPath.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Debug.h>
+#include <YAK/LexicalPath.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCpp/SyntaxHighlighter.h>

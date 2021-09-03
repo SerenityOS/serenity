@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
-#include <AK/IntrusiveList.h>
+#include <YAK/Bitmap.h>
+#include <YAK/IntrusiveList.h>
 
 namespace Kernel::Memory {
 
@@ -17,9 +17,9 @@ namespace Kernel::Memory {
 // The allocator uses a buddy block scheme internally.
 
 class PhysicalZone {
-    AK_MAKE_ETERNAL;
-    AK_MAKE_NONCOPYABLE(PhysicalZone);
-    AK_MAKE_NONMOVABLE(PhysicalZone);
+    YAK_MAKE_ETERNAL;
+    YAK_MAKE_NONCOPYABLE(PhysicalZone);
+    YAK_MAKE_NONMOVABLE(PhysicalZone);
 
 public:
     static constexpr size_t ZONE_CHUNK_SIZE = PAGE_SIZE / 2;

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/URL.h>
+#include <YAK/URL.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/InputBox.h>

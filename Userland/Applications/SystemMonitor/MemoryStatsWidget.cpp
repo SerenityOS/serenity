@@ -6,7 +6,7 @@
 
 #include "MemoryStatsWidget.h"
 #include "GraphWidget.h"
-#include <AK/JsonObject.h>
+#include <YAK/JsonObject.h>
 #include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>

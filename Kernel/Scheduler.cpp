@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ScopeGuard.h>
-#include <AK/Singleton.h>
-#include <AK/Time.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/Singleton.h>
+#include <YAK/Time.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Panic.h>
@@ -412,7 +412,7 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
     RefPtr<Thread> idle_thread;
     g_finalizer_wait_queue = new WaitQueue;
 
-    g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
+    g_finalizer_has_work.store(false, YAK::MemoryOrder::memory_order_release);
     s_colonel_process = Process::create_kernel_process(idle_thread, "colonel", idle_loop, nullptr, 1, Process::RegisterProcess::No).leak_ref();
     VERIFY(s_colonel_process);
     VERIFY(idle_thread);
@@ -515,7 +515,7 @@ void Scheduler::invoke_async()
 
 void Scheduler::notify_finalizer()
 {
-    if (g_finalizer_has_work.exchange(true, AK::MemoryOrder::memory_order_acq_rel) == false)
+    if (g_finalizer_has_work.exchange(true, YAK::MemoryOrder::memory_order_acq_rel) == false)
         g_finalizer_wait_queue->wake_all();
 }
 

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Base64.h>
-#include <AK/Debug.h>
-#include <AK/Random.h>
+#include <YAK/Base64.h>
+#include <YAK/Debug.h>
+#include <YAK/Random.h>
 #include <LibCrypto/Hash/HashManager.h>
 #include <LibWebSocket/Impl/TCPWebSocketConnectionImpl.h>
 #include <LibWebSocket/Impl/TLSv12WebSocketConnectionImpl.h>

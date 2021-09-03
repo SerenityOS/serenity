@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Array.h>
-#include <AK/Concepts.h>
-#include <AK/Function.h>
-#include <AK/Types.h>
+#include <YAK/Array.h>
+#include <YAK/Concepts.h>
+#include <YAK/Function.h>
+#include <YAK/Types.h>
 
 #include <Kernel/Arch/x86/ASM_wrapper.h>
 #include <Kernel/Arch/x86/CPUID.h>
@@ -109,8 +109,8 @@ using ProcessorContainer = Array<Processor*, 8>;
 class Processor {
     friend class ProcessorInfo;
 
-    AK_MAKE_NONCOPYABLE(Processor);
-    AK_MAKE_NONMOVABLE(Processor);
+    YAK_MAKE_NONCOPYABLE(Processor);
+    YAK_MAKE_NONMOVABLE(Processor);
 
     Processor* m_self;
 
@@ -182,12 +182,12 @@ public:
 
     void idle_begin()
     {
-        s_idle_cpu_mask.fetch_or(1u << m_cpu, AK::MemoryOrder::memory_order_relaxed);
+        s_idle_cpu_mask.fetch_or(1u << m_cpu, YAK::MemoryOrder::memory_order_relaxed);
     }
 
     void idle_end()
     {
-        s_idle_cpu_mask.fetch_and(~(1u << m_cpu), AK::MemoryOrder::memory_order_relaxed);
+        s_idle_cpu_mask.fetch_and(~(1u << m_cpu), YAK::MemoryOrder::memory_order_relaxed);
     }
 
     static u32 count()

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/NonnullRefPtrVector.h>
+#include <YAK/Assertions.h>
+#include <YAK/NonnullRefPtrVector.h>
 #include <LibThreading/Thread.h>
 #include <errno.h>
 #include <pthread.h>
@@ -134,8 +134,8 @@ static void test_semaphore_nonbinary()
     sem_t semaphore;
     sem_init(&semaphore, 0, num);
 
-    Atomic<u32, AK::memory_order_relaxed> value = 0;
-    Atomic<bool, AK::memory_order_relaxed> seen_more_than_two = false;
+    Atomic<u32, YAK::memory_order_relaxed> value = 0;
+    Atomic<bool, YAK::memory_order_relaxed> seen_more_than_two = false;
 
     for (size_t i = 0; i < threads_count; i++) {
         threads.append(Threading::Thread::construct([&] {

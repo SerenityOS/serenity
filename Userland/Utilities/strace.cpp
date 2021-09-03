@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/Types.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>

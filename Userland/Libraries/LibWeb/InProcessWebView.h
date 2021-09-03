@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/URL.h>
+#include <YAK/URL.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Desktop.h>
 #include <LibWeb/DOM/Document.h>

@@ -7,9 +7,9 @@
 #include "Emulator.h"
 #include "MmapRegion.h"
 #include "SimpleRegion.h"
-#include <AK/Debug.h>
-#include <AK/FileStream.h>
-#include <AK/Format.h>
+#include <YAK/Debug.h>
+#include <YAK/FileStream.h>
+#include <YAK/Format.h>
 #include <fcntl.h>
 #include <sched.h>
 #include <serenity.h>

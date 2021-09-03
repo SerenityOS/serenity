@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteReader.h>
-#include <AK/Debug.h>
-#include <AK/MemoryStream.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/ByteReader.h>
+#include <YAK/Debug.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <LibCrypto/Authentication/GHash.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
@@ -16,13 +16,13 @@ namespace {
 
 static u32 to_u32(const u8* b)
 {
-    return AK::convert_between_host_and_big_endian(ByteReader::load32(b));
+    return YAK::convert_between_host_and_big_endian(ByteReader::load32(b));
 }
 
 static void to_u8s(u8* b, const u32* w)
 {
     for (auto i = 0; i < 4; ++i) {
-        ByteReader::store(b + i * 4, AK::convert_between_host_and_big_endian(w[i]));
+        ByteReader::store(b + i * 4, YAK::convert_between_host_and_big_endian(w[i]));
     }
 }
 

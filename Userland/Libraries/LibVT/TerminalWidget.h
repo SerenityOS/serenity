@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Timer.h>

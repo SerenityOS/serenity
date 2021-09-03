@@ -6,9 +6,9 @@
 
 #include "ShutdownDialog.h"
 #include "TaskbarWindow.h"
-#include <AK/Debug.h>
-#include <AK/LexicalPath.h>
-#include <AK/QuickSort.h>
+#include <YAK/Debug.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/QuickSort.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>

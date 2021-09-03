@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Types.h>
+#include <YAK/Types.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Prekernel/Prekernel.h>

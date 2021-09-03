@@ -8,9 +8,9 @@
 #include "DNSPacket.h"
 #include "DNSName.h"
 #include "DNSPacketHeader.h"
-#include <AK/Debug.h>
-#include <AK/MemoryStream.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Debug.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/StringBuilder.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
 

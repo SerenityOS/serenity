@@ -7,13 +7,13 @@
 
 #pragma once
 
-#include <AK/EnumBits.h>
-#include <AK/Function.h>
-#include <AK/Noncopyable.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
-#include <AK/Result.h>
-#include <AK/String.h>
+#include <YAK/EnumBits.h>
+#include <YAK/Function.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/RefCounted.h>
+#include <YAK/Result.h>
+#include <YAK/String.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/API/InodeWatcherFlags.h>
 #include <LibCore/Notifier.h>
@@ -55,7 +55,7 @@ protected:
 };
 
 class BlockingFileWatcher final : public FileWatcherBase {
-    AK_MAKE_NONCOPYABLE(BlockingFileWatcher);
+    YAK_MAKE_NONCOPYABLE(BlockingFileWatcher);
 
 public:
     explicit BlockingFileWatcher(InodeWatcherFlags = InodeWatcherFlags::None);
@@ -66,7 +66,7 @@ public:
 
 class FileWatcher final : public FileWatcherBase
     , public RefCounted<FileWatcher> {
-    AK_MAKE_NONCOPYABLE(FileWatcher);
+    YAK_MAKE_NONCOPYABLE(FileWatcher);
 
 public:
     static Result<NonnullRefPtr<FileWatcher>, String> create(InodeWatcherFlags = InodeWatcherFlags::None);
@@ -82,7 +82,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<Core::FileWatcherEvent> : Formatter<FormatString> {

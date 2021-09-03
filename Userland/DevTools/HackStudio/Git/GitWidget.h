@@ -8,7 +8,7 @@
 
 #include "GitFilesView.h"
 #include "GitRepo.h"
-#include <AK/Function.h>
+#include <YAK/Function.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Widget.h>
 

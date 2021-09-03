@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
-#include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/URL.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefPtr.h>
+#include <YAK/URL.h>
+#include <YAK/WeakPtr.h>
+#include <YAK/Weakable.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Palette.h>
@@ -23,8 +23,8 @@ namespace Web {
 class PageClient;
 
 class Page : public Weakable<Page> {
-    AK_MAKE_NONCOPYABLE(Page);
-    AK_MAKE_NONMOVABLE(Page);
+    YAK_MAKE_NONCOPYABLE(Page);
+    YAK_MAKE_NONMOVABLE(Page);
 
 public:
     explicit Page(PageClient&);

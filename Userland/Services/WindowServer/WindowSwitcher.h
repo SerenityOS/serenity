@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Vector.h>
-#include <AK/WeakPtr.h>
+#include <YAK/Vector.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>

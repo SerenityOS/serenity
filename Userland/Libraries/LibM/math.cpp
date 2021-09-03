@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ExtraMathConstants.h>
-#include <AK/Math.h>
-#include <AK/Platform.h>
-#include <AK/StdLibExtras.h>
+#include <YAK/ExtraMathConstants.h>
+#include <YAK/Math.h>
+#include <YAK/Platform.h>
+#include <YAK/StdLibExtras.h>
 #include <LibC/assert.h>
 #include <fenv.h>
 #include <math.h>
@@ -346,59 +346,59 @@ long double nanl(const char* s) NOEXCEPT
     return __builtin_nanl(s);
 }
 
-#define MAKE_AK_BACKED1(name)                     \
+#define MAKE_YAK_BACKED1(name)                     \
     long double name##l(long double arg) NOEXCEPT \
     {                                             \
-        return AK::name<long double>(arg);        \
+        return YAK::name<long double>(arg);        \
     }                                             \
     double name(double arg) NOEXCEPT              \
     {                                             \
-        return AK::name<double>(arg);             \
+        return YAK::name<double>(arg);             \
     }                                             \
     float name##f(float arg) NOEXCEPT             \
     {                                             \
-        return AK::name<float>(arg);              \
+        return YAK::name<float>(arg);              \
     }
-#define MAKE_AK_BACKED2(name)                                        \
+#define MAKE_YAK_BACKED2(name)                                        \
     long double name##l(long double arg1, long double arg2) NOEXCEPT \
     {                                                                \
-        return AK::name<long double>(arg1, arg2);                    \
+        return YAK::name<long double>(arg1, arg2);                    \
     }                                                                \
     double name(double arg1, double arg2) NOEXCEPT                   \
     {                                                                \
-        return AK::name<double>(arg1, arg2);                         \
+        return YAK::name<double>(arg1, arg2);                         \
     }                                                                \
     float name##f(float arg1, float arg2) NOEXCEPT                   \
     {                                                                \
-        return AK::name<float>(arg1, arg2);                          \
+        return YAK::name<float>(arg1, arg2);                          \
     }
 
-MAKE_AK_BACKED1(sin);
-MAKE_AK_BACKED1(cos);
-MAKE_AK_BACKED1(tan);
-MAKE_AK_BACKED1(asin);
-MAKE_AK_BACKED1(acos);
-MAKE_AK_BACKED1(atan);
-MAKE_AK_BACKED1(sinh);
-MAKE_AK_BACKED1(cosh);
-MAKE_AK_BACKED1(tanh);
-MAKE_AK_BACKED1(asinh);
-MAKE_AK_BACKED1(acosh);
-MAKE_AK_BACKED1(atanh);
-MAKE_AK_BACKED1(sqrt);
-MAKE_AK_BACKED1(cbrt);
-MAKE_AK_BACKED1(log);
-MAKE_AK_BACKED1(log2);
-MAKE_AK_BACKED1(log10);
-MAKE_AK_BACKED1(exp);
-MAKE_AK_BACKED1(exp2);
-MAKE_AK_BACKED1(fabs);
+MAKE_YAK_BACKED1(sin);
+MAKE_YAK_BACKED1(cos);
+MAKE_YAK_BACKED1(tan);
+MAKE_YAK_BACKED1(asin);
+MAKE_YAK_BACKED1(acos);
+MAKE_YAK_BACKED1(atan);
+MAKE_YAK_BACKED1(sinh);
+MAKE_YAK_BACKED1(cosh);
+MAKE_YAK_BACKED1(tanh);
+MAKE_YAK_BACKED1(asinh);
+MAKE_YAK_BACKED1(acosh);
+MAKE_YAK_BACKED1(atanh);
+MAKE_YAK_BACKED1(sqrt);
+MAKE_YAK_BACKED1(cbrt);
+MAKE_YAK_BACKED1(log);
+MAKE_YAK_BACKED1(log2);
+MAKE_YAK_BACKED1(log10);
+MAKE_YAK_BACKED1(exp);
+MAKE_YAK_BACKED1(exp2);
+MAKE_YAK_BACKED1(fabs);
 
-MAKE_AK_BACKED2(atan2);
-MAKE_AK_BACKED2(hypot);
-MAKE_AK_BACKED2(fmod);
-MAKE_AK_BACKED2(pow);
-MAKE_AK_BACKED2(remainder);
+MAKE_YAK_BACKED2(atan2);
+MAKE_YAK_BACKED2(hypot);
+MAKE_YAK_BACKED2(fmod);
+MAKE_YAK_BACKED2(pow);
+MAKE_YAK_BACKED2(remainder);
 
 long double truncl(long double x) NOEXCEPT
 {

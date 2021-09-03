@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/QuickSort.h>
+#include <YAK/QuickSort.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/FontPicker.h>
 #include <LibGUI/FontPickerDialogGML.h>

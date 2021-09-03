@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <errno.h>
 #include <sys/stat.h>

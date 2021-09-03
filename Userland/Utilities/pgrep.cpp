@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/QuickSort.h>
-#include <AK/Vector.h>
+#include <YAK/QuickSort.h>
+#include <YAK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibRegex/Regex.h>

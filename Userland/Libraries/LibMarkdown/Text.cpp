@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/ScopeGuard.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Debug.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/StringBuilder.h>
 #include <LibMarkdown/Text.h>
 #include <string.h>
 

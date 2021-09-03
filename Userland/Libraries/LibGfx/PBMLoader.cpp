@@ -7,10 +7,10 @@
 #include "PBMLoader.h"
 #include "PortableImageLoaderCommon.h"
 #include "Streamer.h"
-#include <AK/Endian.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Endian.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MappedFile.h>
+#include <YAK/StringBuilder.h>
 #include <string.h>
 
 namespace Gfx {

@@ -44,7 +44,7 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
 
     // temporarily replace the timer callbacks
     const size_t ticks_in_100ms = calibration_source.ticks_per_second() / 10;
-    Atomic<size_t, AK::memory_order_relaxed> calibration_ticks = 0;
+    Atomic<size_t, YAK::memory_order_relaxed> calibration_ticks = 0;
 #ifdef APIC_TIMER_MEASURE_CPU_CLOCK
     volatile u64 start_tsc = 0, end_tsc = 0;
 #endif

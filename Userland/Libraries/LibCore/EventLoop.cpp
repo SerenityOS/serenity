@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Badge.h>
-#include <AK/Debug.h>
-#include <AK/Format.h>
-#include <AK/IDAllocator.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/NeverDestroyed.h>
-#include <AK/Singleton.h>
-#include <AK/TemporaryChange.h>
-#include <AK/Time.h>
+#include <YAK/Badge.h>
+#include <YAK/Debug.h>
+#include <YAK/Format.h>
+#include <YAK/IDAllocator.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonValue.h>
+#include <YAK/NeverDestroyed.h>
+#include <YAK/Singleton.h>
+#include <YAK/TemporaryChange.h>
+#include <YAK/Time.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
@@ -68,8 +68,8 @@ bool EventLoop::has_been_instantiated()
 }
 
 class SignalHandlers : public RefCounted<SignalHandlers> {
-    AK_MAKE_NONCOPYABLE(SignalHandlers);
-    AK_MAKE_NONMOVABLE(SignalHandlers);
+    YAK_MAKE_NONCOPYABLE(SignalHandlers);
+    YAK_MAKE_NONMOVABLE(SignalHandlers);
 
 public:
     SignalHandlers(int signo, void (*handle_signal)(int));
@@ -444,7 +444,7 @@ void SignalHandlers::dispatch()
         for (auto& handler : m_handlers_pending) {
             if (handler.value) {
                 auto result = m_handlers.set(handler.key, move(handler.value));
-                VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+                VERIFY(result == YAK::HashSetResult::InsertedNewEntry);
             } else {
                 m_handlers.remove(handler.key);
             }

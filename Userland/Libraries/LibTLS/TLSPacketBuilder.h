@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/ByteReader.h>
-#include <AK/Endian.h>
-#include <AK/Types.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/ByteReader.h>
+#include <YAK/Endian.h>
+#include <YAK/Types.h>
 
 namespace TLS {
 
@@ -39,12 +39,12 @@ public:
         m_packet_data = ByteBuffer::create_uninitialized(size_hint + 16);
         m_current_length = 5;
         m_packet_data[0] = (u8)type;
-        ByteReader::store(m_packet_data.offset_pointer(1), AK::convert_between_host_and_network_endian((u16)version));
+        ByteReader::store(m_packet_data.offset_pointer(1), YAK::convert_between_host_and_network_endian((u16)version));
     }
 
     inline void append(u16 value)
     {
-        value = AK::convert_between_host_and_network_endian(value);
+        value = YAK::convert_between_host_and_network_endian(value);
         append((const u8*)&value, sizeof(value));
     }
     inline void append(u8 value)

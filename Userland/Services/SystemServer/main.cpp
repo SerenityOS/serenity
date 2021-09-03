@@ -5,9 +5,9 @@
  */
 
 #include "Service.h"
-#include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
-#include <AK/Debug.h>
+#include <YAK/Assertions.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Debug.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>

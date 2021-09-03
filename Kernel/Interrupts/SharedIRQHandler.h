@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/Types.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Types.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/IRQController.h>
 

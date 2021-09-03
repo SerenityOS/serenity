@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Span.h>
+#include <YAK/Span.h>
 #include <LibCore/Object.h>
 #include <LibWebSocket/ConnectionInfo.h>
 #include <LibWebSocket/Impl/AbstractWebSocketImpl.h>

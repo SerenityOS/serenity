@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <YAK/FlyString.h>
 #include <LibGfx/Color.h>
 #include <LibPDF/Object.h>
 #include <LibPDF/Value.h>

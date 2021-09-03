@@ -7,12 +7,12 @@
 
 #pragma once
 
-#include "AK/Forward.h"
+#include "YAK/Forward.h"
 #include "LibGfx/Forward.h"
-#include <AK/String.h>
-#include <AK/Utf32View.h>
-#include <AK/Utf8View.h>
-#include <AK/Vector.h>
+#include <YAK/String.h>
+#include <YAK/Utf32View.h>
+#include <YAK/Utf8View.h>
+#include <YAK/Vector.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/TextElision.h>

@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/FileStream.h>
-#include <AK/GenericLexer.h>
-#include <AK/LexicalPath.h>
-#include <AK/NumberFormat.h>
-#include <AK/URL.h>
+#include <YAK/FileStream.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/NumberFormat.h>
+#include <YAK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>

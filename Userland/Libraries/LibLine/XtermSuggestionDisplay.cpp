@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/BinarySearch.h>
-#include <AK/FileStream.h>
-#include <AK/Function.h>
-#include <AK/StringBuilder.h>
+#include <YAK/BinarySearch.h>
+#include <YAK/FileStream.h>
+#include <YAK/Function.h>
+#include <YAK/StringBuilder.h>
 #include <LibLine/SuggestionDisplay.h>
 #include <LibLine/VT.h>
 #include <stdio.h>

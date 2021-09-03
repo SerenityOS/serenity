@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ExtraMathConstants.h>
-#include <AK/OwnPtr.h>
+#include <YAK/ExtraMathConstants.h>
+#include <YAK/OwnPtr.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>

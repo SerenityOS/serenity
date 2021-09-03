@@ -7,14 +7,14 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
-#include <AK/BitCast.h>
-#include <AK/Format.h>
-#include <AK/Forward.h>
-#include <AK/Function.h>
-#include <AK/Result.h>
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/BitCast.h>
+#include <YAK/Format.h>
+#include <YAK/Forward.h>
+#include <YAK/Function.h>
+#include <YAK/Result.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/PrimitiveString.h>
@@ -402,7 +402,7 @@ struct ValueTraits : public Traits<Value> {
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<JS::Value> : Formatter<StringView> {

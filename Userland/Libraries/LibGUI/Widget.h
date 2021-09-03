@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/EnumBits.h>
-#include <AK/JsonObject.h>
-#include <AK/String.h>
+#include <YAK/EnumBits.h>
+#include <YAK/JsonObject.h>
+#include <YAK/String.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Forward.h>
@@ -391,5 +391,5 @@ inline const Widget* Widget::parent_widget() const
 }
 
 template<>
-struct AK::Formatter<GUI::Widget> : AK::Formatter<Core::Object> {
+struct YAK::Formatter<GUI::Widget> : YAK::Formatter<Core::Object> {
 };

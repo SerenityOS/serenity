@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MappedFile.h>
+#include <YAK/MappedFile.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/FileStream.h>
@@ -48,7 +48,7 @@ int main(int argc, char** argv)
         }
         auto file = file_or_error.value();
 
-        AK::Optional<ByteBuffer> output_bytes;
+        YAK::Optional<ByteBuffer> output_bytes;
         if (decompress) {
             output_bytes = Compress::GzipDecompressor::decompress_all(file->bytes());
         } else {

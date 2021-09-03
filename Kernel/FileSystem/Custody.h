@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/IntrusiveList.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/String.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
+#include <YAK/String.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/KResult.h>

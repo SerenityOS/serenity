@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
-#include <AK/NumericLimits.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/NumericLimits.h>
+#include <YAK/Types.h>
 
 namespace Profiler {
 

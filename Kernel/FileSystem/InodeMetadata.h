@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Span.h>
+#include <YAK/Span.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>

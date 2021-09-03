@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
+#include <YAK/Noncopyable.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/TextDocument.h>
 
@@ -18,8 +18,8 @@ enum CursorWidth {
 };
 
 class EditingEngine {
-    AK_MAKE_NONCOPYABLE(EditingEngine);
-    AK_MAKE_NONMOVABLE(EditingEngine);
+    YAK_MAKE_NONCOPYABLE(EditingEngine);
+    YAK_MAKE_NONMOVABLE(EditingEngine);
 
 public:
     virtual ~EditingEngine();

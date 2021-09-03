@@ -6,9 +6,9 @@
  */
 
 #include "ViewWidget.h"
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
-#include <AK/StringBuilder.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MappedFile.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>

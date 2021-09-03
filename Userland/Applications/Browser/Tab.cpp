@@ -13,8 +13,8 @@
 #include "ConsoleWidget.h"
 #include "DownloadWidget.h"
 #include "InspectorWidget.h"
-#include <AK/StringBuilder.h>
-#include <AK/URL.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/URL.h>
 #include <Applications/Browser/TabGML.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>

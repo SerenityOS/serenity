@@ -15,7 +15,7 @@ class RamdiskController;
 
 class RamdiskDevice final : public StorageDevice {
     friend class RamdiskController;
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     static NonnullRefPtr<RamdiskDevice> create(const RamdiskController&, NonnullOwnPtr<Memory::Region>&& region, int major, int minor);
     RamdiskDevice(const RamdiskController&, NonnullOwnPtr<Memory::Region>&&, int major, int minor);

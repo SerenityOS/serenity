@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Endian.h>
-#include <AK/Types.h>
+#include <YAK/Endian.h>
+#include <YAK/Types.h>
 #include <LibCrypto/Hash/SHA1.h>
 
 namespace Crypto {
@@ -20,7 +20,7 @@ inline void SHA1::transform(const u8* data)
 {
     u32 blocks[80];
     for (size_t i = 0; i < 16; ++i)
-        blocks[i] = AK::convert_between_host_and_network_endian(((const u32*)data)[i]);
+        blocks[i] = YAK::convert_between_host_and_network_endian(((const u32*)data)[i]);
 
     // w[i] = (w[i-3] xor w[i-8] xor w[i-14] xor w[i-16]) leftrotate 1
     for (size_t i = 16; i < Rounds; ++i)

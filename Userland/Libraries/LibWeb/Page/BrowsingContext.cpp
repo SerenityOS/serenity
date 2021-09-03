@@ -317,7 +317,7 @@ void BrowsingContext::select_all()
 void BrowsingContext::register_viewport_client(ViewportClient& client)
 {
     auto result = m_viewport_clients.set(&client);
-    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+    VERIFY(result == YAK::HashSetResult::InsertedNewEntry);
 }
 
 void BrowsingContext::unregister_viewport_client(ViewportClient& client)

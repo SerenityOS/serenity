@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/JsonValue.h>
+#include <YAK/Function.h>
+#include <YAK/JsonValue.h>
 
 namespace Core {
 
 class Property {
-    AK_MAKE_NONCOPYABLE(Property);
+    YAK_MAKE_NONCOPYABLE(Property);
 
 public:
     Property(String name, Function<JsonValue()> getter, Function<bool(const JsonValue&)> setter = nullptr);

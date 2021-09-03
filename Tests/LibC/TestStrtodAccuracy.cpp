@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Format.h>
-#include <AK/String.h>
+#include <YAK/Format.h>
+#include <YAK/String.h>
 #include <stdlib.h>
 #include <string.h>
 

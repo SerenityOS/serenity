@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/IPv4Address.h>
-#include <AK/Types.h>
+#include <YAK/IPv4Address.h>
+#include <YAK/Types.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/TCPServer.h>
 #include <LibCore/TCPSocket.h>
@@ -80,7 +80,7 @@ RefPtr<TCPSocket> TCPServer::accept()
     VERIFY(m_listening);
     sockaddr_in in;
     socklen_t in_size = sizeof(in);
-#ifndef AK_OS_MACOS
+#ifndef YAK_OS_MACOS
     int accepted_fd = ::accept4(m_fd, (sockaddr*)&in, &in_size, SOCK_NONBLOCK | SOCK_CLOEXEC);
 #else
     int accepted_fd = ::accept(m_fd, (sockaddr*)&in, &in_size);
@@ -91,7 +91,7 @@ RefPtr<TCPSocket> TCPServer::accept()
         return nullptr;
     }
 
-#ifdef AK_OS_MACOS
+#ifdef YAK_OS_MACOS
     int option = 1;
     (void)ioctl(m_fd, FIONBIO, &option);
     (void)fcntl(accepted_fd, F_SETFD, FD_CLOEXEC);

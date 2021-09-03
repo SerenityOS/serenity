@@ -7,9 +7,9 @@
 #pragma once
 
 #include "MailboxTreeModel.h"
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/RefCounted.h>
-#include <AK/String.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/RefCounted.h>
+#include <YAK/String.h>
 #include <LibIMAP/Objects.h>
 
 class BaseNode : public RefCounted<BaseNode> {

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Op.h>
 #include <sys/mman.h>

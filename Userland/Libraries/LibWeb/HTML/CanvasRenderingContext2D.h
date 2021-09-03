@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
+#include <YAK/RefCounted.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
@@ -21,8 +21,8 @@ class CanvasRenderingContext2D
     : public RefCounted<CanvasRenderingContext2D>
     , public Bindings::Wrappable {
 
-    AK_MAKE_NONCOPYABLE(CanvasRenderingContext2D);
-    AK_MAKE_NONMOVABLE(CanvasRenderingContext2D);
+    YAK_MAKE_NONCOPYABLE(CanvasRenderingContext2D);
+    YAK_MAKE_NONMOVABLE(CanvasRenderingContext2D);
 
 public:
     using WrapperType = Bindings::CanvasRenderingContext2DWrapper;

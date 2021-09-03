@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/IPv4Address.h>
+#include <YAK/IPv4Address.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
+#include <YAK/RefCounted.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/Bindings/Wrappable.h>
 

@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/CharacterTypes.h>
-#include <AK/MappedFile.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/MappedFile.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Size.h>
 

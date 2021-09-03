@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
-#include <AK/String.h>
+#include <YAK/Assertions.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibMarkdown/Document.h>

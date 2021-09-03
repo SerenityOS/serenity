@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Memory.h>
-#include <AK/Singleton.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/Memory.h>
+#include <YAK/Singleton.h>
+#include <YAK/Types.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Arch/x86/MSR.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
@@ -369,12 +369,12 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
     }
 
     // Now wait until the ap_cpu_init_pending variable dropped to 0, which means all APs are initialized and no longer need these special mappings
-    if (m_apic_ap_count.load(AK::MemoryOrder::memory_order_consume) != aps_to_enable) {
+    if (m_apic_ap_count.load(YAK::MemoryOrder::memory_order_consume) != aps_to_enable) {
         dbgln_if(APIC_DEBUG, "APIC: Waiting for {} AP(s) to finish initialization...", aps_to_enable);
         do {
             // Wait a little bit
             IO::delay(200);
-        } while (m_apic_ap_count.load(AK::MemoryOrder::memory_order_consume) != aps_to_enable);
+        } while (m_apic_ap_count.load(YAK::MemoryOrder::memory_order_consume) != aps_to_enable);
     }
 
     dbgln_if(APIC_DEBUG, "APIC: {} processors are initialized and running", m_processor_enabled_cnt);
@@ -400,7 +400,7 @@ UNMAP_AFTER_INIT void APIC::boot_aps()
 
     // Now trigger all APs to continue execution (need to do this after
     // the regions have been freed so that we don't trigger IPIs
-    m_apic_ap_continue.store(1, AK::MemoryOrder::memory_order_release);
+    m_apic_ap_continue.store(1, YAK::MemoryOrder::memory_order_release);
 }
 
 UNMAP_AFTER_INIT void APIC::enable(u32 cpu)
@@ -462,13 +462,13 @@ UNMAP_AFTER_INIT void APIC::init_finished(u32 cpu)
     VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
 
     // Notify the BSP that we are done initializing. It will unmap the startup data at P8000
-    m_apic_ap_count.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
+    m_apic_ap_count.fetch_add(1, YAK::MemoryOrder::memory_order_acq_rel);
     dbgln_if(APIC_DEBUG, "APIC: CPU #{} initialized, waiting for all others", cpu);
 
     // The reason we're making all APs wait until the BSP signals them is that
     // we don't want APs to trigger IPIs (e.g. through MM) while the BSP
     // is unable to process them
-    while (!m_apic_ap_continue.load(AK::MemoryOrder::memory_order_consume)) {
+    while (!m_apic_ap_continue.load(YAK::MemoryOrder::memory_order_consume)) {
         IO::delay(200);
     }
 

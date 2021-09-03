@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/IntrusiveList.h>
+#include <YAK/IntrusiveList.h>
 #include <Kernel/Forward.h>
 
 namespace Kernel {
@@ -14,8 +14,8 @@ namespace Kernel {
 extern WorkQueue* g_io_work;
 
 class WorkQueue {
-    AK_MAKE_NONCOPYABLE(WorkQueue);
-    AK_MAKE_NONMOVABLE(WorkQueue);
+    YAK_MAKE_NONCOPYABLE(WorkQueue);
+    YAK_MAKE_NONMOVABLE(WorkQueue);
 
 public:
     static void initialize();

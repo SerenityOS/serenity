@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Types.h>
+#include <YAK/Types.h>
 
 // Note: These need to be kept in sync with Kernel/Devices/KCOVInstance.h
 typedef volatile u64 kcov_pc_t;

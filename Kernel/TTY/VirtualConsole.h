@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/ConsoleDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
@@ -48,7 +48,7 @@ private:
 class VirtualConsole final : public TTY
     , public KeyboardClient
     , public VT::TerminalClient {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
     friend class ConsoleManagement;
     friend class ConsoleImpl;
     friend class VT::Terminal;

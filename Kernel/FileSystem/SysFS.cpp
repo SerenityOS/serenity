@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
-#include <AK/StringView.h>
+#include <YAK/Singleton.h>
+#include <YAK/StringView.h>
 #include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/Sections.h>
 

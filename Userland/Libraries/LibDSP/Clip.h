@@ -7,8 +7,8 @@
 #pragma once
 
 #include "Music.h"
-#include <AK/SinglyLinkedList.h>
-#include <AK/Types.h>
+#include <YAK/SinglyLinkedList.h>
+#include <YAK/Types.h>
 #include <LibCore/Object.h>
 
 namespace LibDSP {

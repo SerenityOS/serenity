@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/PrintfImplementation.h>
-#include <AK/StringView.h>
-#include <AK/Types.h>
+#include <YAK/PrintfImplementation.h>
+#include <YAK/StringView.h>
+#include <YAK/Types.h>
 #include <Kernel/ConsoleDevice.h>
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Graphics/GraphicsManagement.h>

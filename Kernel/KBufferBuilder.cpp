@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StdLibExtras.h>
+#include <YAK/StdLibExtras.h>
 #include <Kernel/KBufferBuilder.h>
 
 namespace Kernel {

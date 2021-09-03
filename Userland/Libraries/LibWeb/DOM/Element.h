@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/String.h>
+#include <YAK/FlyString.h>
+#include <YAK/String.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Attribute.h>

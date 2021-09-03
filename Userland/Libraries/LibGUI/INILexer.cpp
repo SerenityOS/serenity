@@ -5,8 +5,8 @@
  */
 
 #include "INILexer.h"
-#include <AK/CharacterTypes.h>
-#include <AK/Vector.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Vector.h>
 
 namespace GUI {
 

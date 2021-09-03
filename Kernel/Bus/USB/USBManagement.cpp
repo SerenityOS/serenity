@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
+#include <YAK/Singleton.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/USB/SysFSUSB.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>

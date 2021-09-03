@@ -13,14 +13,14 @@ namespace Kernel {
 
 template<typename T>
 class MutexProtected {
-    AK_MAKE_NONCOPYABLE(MutexProtected);
-    AK_MAKE_NONMOVABLE(MutexProtected);
+    YAK_MAKE_NONCOPYABLE(MutexProtected);
+    YAK_MAKE_NONMOVABLE(MutexProtected);
 
 private:
     template<typename U, LockMode lock_mode>
     class Locked {
-        AK_MAKE_NONCOPYABLE(Locked);
-        AK_MAKE_NONMOVABLE(Locked);
+        YAK_MAKE_NONCOPYABLE(Locked);
+        YAK_MAKE_NONMOVABLE(Locked);
 
     public:
         Locked(U& value, Mutex& mutex, LockLocation const& location)

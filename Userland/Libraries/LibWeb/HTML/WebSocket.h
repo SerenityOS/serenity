@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/RefCounted.h>
-#include <AK/URL.h>
-#include <AK/Weakable.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/RefCounted.h>
+#include <YAK/URL.h>
+#include <YAK/Weakable.h>
 #include <LibCore/Object.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>

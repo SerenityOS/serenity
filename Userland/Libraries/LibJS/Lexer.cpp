@@ -6,11 +6,11 @@
  */
 
 #include "Lexer.h"
-#include <AK/CharacterTypes.h>
-#include <AK/Debug.h>
-#include <AK/GenericLexer.h>
-#include <AK/HashMap.h>
-#include <AK/Utf8View.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Debug.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/HashMap.h>
+#include <YAK/Utf8View.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <stdio.h>
 

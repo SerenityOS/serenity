@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/BigIntConstructor.h>
 #include <LibJS/Runtime/BigIntObject.h>

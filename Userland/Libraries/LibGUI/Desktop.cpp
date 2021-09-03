@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Badge.h>
+#include <YAK/Badge.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <string.h>

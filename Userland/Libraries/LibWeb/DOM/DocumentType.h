@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <YAK/FlyString.h>
 #include <LibWeb/DOM/Node.h>
 
 namespace Web::DOM {

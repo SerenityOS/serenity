@@ -6,8 +6,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Concepts.h>
-#include <AK/String.h>
+#include <YAK/Concepts.h>
+#include <YAK/String.h>
 #include <LibCrypto/Checksum/CRC32.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGWriter.h>
@@ -104,14 +104,14 @@ void PNGChunk::add(T* data, size_t size)
 template<typename T>
 void PNGChunk::add_as_little_endian(T data)
 {
-    auto data_out = AK::convert_between_host_and_little_endian(data);
+    auto data_out = YAK::convert_between_host_and_little_endian(data);
     add(data_out);
 }
 
 template<typename T>
 void PNGChunk::add_as_big_endian(T data)
 {
-    auto data_out = AK::convert_between_host_and_big_endian(data);
+    auto data_out = YAK::convert_between_host_and_big_endian(data);
     add(data_out);
 }
 

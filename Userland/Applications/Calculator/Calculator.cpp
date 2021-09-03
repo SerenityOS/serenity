@@ -6,8 +6,8 @@
 
 #include "Calculator.h"
 #include "KeypadValue.h"
-#include <AK/Assertions.h>
-#include <AK/Math.h>
+#include <YAK/Assertions.h>
+#include <YAK/Math.h>
 
 Calculator::Calculator()
 {
@@ -38,7 +38,7 @@ KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argumen
             m_has_error = true;
             return argument;
         }
-        res = KeypadValue { AK::sqrt((double)argument) };
+        res = KeypadValue { YAK::sqrt((double)argument) };
         clear_operation();
         break;
     case Operation::Inverse:

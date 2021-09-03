@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
+#include <YAK/RefCounted.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Random.h>

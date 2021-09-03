@@ -7,9 +7,9 @@
 
 #include "WavLoader.h"
 #include "Buffer.h"
-#include <AK/Debug.h>
-#include <AK/NumericLimits.h>
-#include <AK/OwnPtr.h>
+#include <YAK/Debug.h>
+#include <YAK/NumericLimits.h>
+#include <YAK/OwnPtr.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
 
@@ -93,7 +93,7 @@ void WavLoaderPlugin::seek(const int sample_index)
 
     size_t sample_offset = m_byte_offset_of_data_samples + (sample_index * m_num_channels * (pcm_bits_per_sample(m_sample_format) / 8));
 
-    // AK::InputStream does not define seek, hence the special-cases for file and stream.
+    // YAK::InputStream does not define seek, hence the special-cases for file and stream.
     if (m_file) {
         m_file->seek(sample_offset);
     } else {

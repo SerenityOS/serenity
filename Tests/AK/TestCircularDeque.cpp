@@ -6,9 +6,9 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/CircularDeque.h>
-#include <AK/StdLibExtras.h>
-#include <AK/String.h>
+#include <YAK/CircularDeque.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/String.h>
 
 TEST_CASE(enqueue_begin)
 {

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
+#include <YAK/Assertions.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>

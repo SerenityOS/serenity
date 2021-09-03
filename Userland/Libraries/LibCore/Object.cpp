@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Badge.h>
-#include <AK/JsonObject.h>
+#include <YAK/Assertions.h>
+#include <YAK/Badge.h>
+#include <YAK/JsonObject.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>

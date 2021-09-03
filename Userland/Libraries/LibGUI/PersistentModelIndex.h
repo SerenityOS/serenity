@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <AK/WeakPtr.h>
+#include <YAK/RefCounted.h>
+#include <YAK/WeakPtr.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/ModelIndex.h>
 
@@ -18,7 +18,7 @@ namespace GUI {
 class PersistentHandle : public Weakable<PersistentHandle> {
     friend Model;
     friend PersistentModelIndex;
-    friend AK::Traits<GUI::PersistentModelIndex>;
+    friend YAK::Traits<GUI::PersistentModelIndex>;
 
     PersistentHandle(ModelIndex const& index)
         : m_index(index)
@@ -62,14 +62,14 @@ public:
     bool operator!=(ModelIndex const&) const;
 
 private:
-    friend AK::Traits<GUI::PersistentModelIndex>;
+    friend YAK::Traits<GUI::PersistentModelIndex>;
 
     WeakPtr<PersistentHandle> m_handle;
 };
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<GUI::PersistentModelIndex> : Formatter<FormatString> {

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/Time.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Time.h>
 #include <Kernel/API/TimePage.h>
 #include <assert.h>
 #include <errno.h>
@@ -394,9 +394,9 @@ int clock_gettime(clockid_t clock_id, struct timespec* ts)
         if (auto* kernel_time_page = get_kernel_time_page()) {
             u32 update_iteration;
             do {
-                update_iteration = AK::atomic_load(&kernel_time_page->update1, AK::memory_order_acquire);
+                update_iteration = YAK::atomic_load(&kernel_time_page->update1, YAK::memory_order_acquire);
                 *ts = kernel_time_page->clocks[clock_id];
-            } while (update_iteration != AK::atomic_load(&kernel_time_page->update2, AK::memory_order_acquire));
+            } while (update_iteration != YAK::atomic_load(&kernel_time_page->update2, YAK::memory_order_acquire));
             return 0;
         }
     }

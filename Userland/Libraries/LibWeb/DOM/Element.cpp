@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/AnyOf.h>
-#include <AK/StringBuilder.h>
+#include <YAK/AnyOf.h>
+#include <YAK/StringBuilder.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleInvalidator.h>

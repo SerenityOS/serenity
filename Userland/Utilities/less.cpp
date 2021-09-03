@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
-#include <AK/LexicalPath.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/Utf8View.h>
-#include <AK/Vector.h>
+#include <YAK/Format.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Utf8View.h>
+#include <YAK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <ctype.h>
 #include <fcntl.h>

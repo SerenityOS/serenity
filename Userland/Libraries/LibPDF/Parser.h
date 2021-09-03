@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
+#include <YAK/NonnullRefPtrVector.h>
 #include <LibPDF/Command.h>
 #include <LibPDF/Object.h>
 #include <LibPDF/Reader.h>
@@ -82,9 +82,9 @@ private:
         u32 page_content_stream_length_number { 0 };
     };
 
-    friend struct AK::Formatter<LinearizationDictionary>;
-    friend struct AK::Formatter<PageOffsetHintTable>;
-    friend struct AK::Formatter<PageOffsetHintTableEntry>;
+    friend struct YAK::Formatter<LinearizationDictionary>;
+    friend struct YAK::Formatter<PageOffsetHintTable>;
+    friend struct YAK::Formatter<PageOffsetHintTableEntry>;
 
     explicit Parser(ReadonlyBytes const&);
 

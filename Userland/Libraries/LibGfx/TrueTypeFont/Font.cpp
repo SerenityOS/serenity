@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Checked.h>
-#include <AK/MappedFile.h>
-#include <AK/Utf32View.h>
-#include <AK/Utf8View.h>
+#include <YAK/Checked.h>
+#include <YAK/MappedFile.h>
+#include <YAK/Utf32View.h>
+#include <YAK/Utf8View.h>
 #include <LibCore/File.h>
 #include <LibGfx/TrueTypeFont/Cmap.h>
 #include <LibGfx/TrueTypeFont/Font.h>

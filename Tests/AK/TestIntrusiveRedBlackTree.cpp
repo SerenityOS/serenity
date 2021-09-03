@@ -6,9 +6,9 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/IntrusiveRedBlackTree.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/Random.h>
+#include <YAK/IntrusiveRedBlackTree.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/Random.h>
 
 class IntrusiveTest {
 public:

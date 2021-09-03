@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MemoryStream.h>
-#include <AK/URL.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/DateTime.h>
 #include <LibIPC/Decoder.h>

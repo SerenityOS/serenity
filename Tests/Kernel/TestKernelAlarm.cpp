@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Atomic.h>
-#include <AK/Time.h>
+#include <YAK/Atomic.h>
+#include <YAK/Time.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibTest/TestCase.h>
 #include <signal.h>

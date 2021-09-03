@@ -9,7 +9,7 @@
 #include "CookieJar.h"
 #include "Tab.h"
 #include "WindowActions.h"
-#include <AK/StringBuilder.h>
+#include <YAK/StringBuilder.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>

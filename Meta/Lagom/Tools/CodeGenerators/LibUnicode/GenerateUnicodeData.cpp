@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/AllOf.h>
-#include <AK/Array.h>
-#include <AK/CharacterTypes.h>
-#include <AK/Find.h>
-#include <AK/HashMap.h>
-#include <AK/Optional.h>
-#include <AK/QuickSort.h>
-#include <AK/SourceGenerator.h>
-#include <AK/String.h>
-#include <AK/StringUtils.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/AllOf.h>
+#include <YAK/Array.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Find.h>
+#include <YAK/HashMap.h>
+#include <YAK/Optional.h>
+#include <YAK/QuickSort.h>
+#include <YAK/SourceGenerator.h>
+#include <YAK/String.h>
+#include <YAK/StringUtils.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 
@@ -142,7 +142,7 @@ static Vector<u32> parse_code_point_list(StringView const& list)
 
     auto segments = list.split_view(' ');
     for (auto const& code_point : segments)
-        code_points.append(AK::StringUtils::convert_to_uint_from_hex<u32>(code_point).value());
+        code_points.append(YAK::StringUtils::convert_to_uint_from_hex<u32>(code_point).value());
 
     return code_points;
 }
@@ -155,11 +155,11 @@ static CodePointRange parse_code_point_range(StringView const& list)
         auto segments = list.split_view(".."sv);
         VERIFY(segments.size() == 2);
 
-        auto begin = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
-        auto end = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[1]).value();
+        auto begin = YAK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
+        auto end = YAK::StringUtils::convert_to_uint_from_hex<u32>(segments[1]).value();
         code_point_range = { begin, end };
     } else {
-        auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(list).value();
+        auto code_point = YAK::StringUtils::convert_to_uint_from_hex<u32>(list).value();
         code_point_range = { code_point, code_point };
     }
 
@@ -181,7 +181,7 @@ static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
 
         SpecialCasing casing {};
         casing.index = static_cast<u32>(unicode_data.special_casing.size());
-        casing.code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
+        casing.code_point = YAK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
         casing.lowercase_mapping = parse_code_point_list(segments[1]);
         casing.titlecase_mapping = parse_code_point_list(segments[2]);
         casing.uppercase_mapping = parse_code_point_list(segments[3]);
@@ -382,20 +382,20 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
         VERIFY(segments.size() == 15);
 
         CodePointData data {};
-        data.code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
+        data.code_point = YAK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
         data.name = move(segments[1]);
-        data.canonical_combining_class = AK::StringUtils::convert_to_uint<u8>(segments[3]).value();
+        data.canonical_combining_class = YAK::StringUtils::convert_to_uint<u8>(segments[3]).value();
         data.bidi_class = move(segments[4]);
         data.decomposition_type = move(segments[5]);
-        data.numeric_value_decimal = AK::StringUtils::convert_to_int<i8>(segments[6]);
-        data.numeric_value_digit = AK::StringUtils::convert_to_int<i8>(segments[7]);
-        data.numeric_value_numeric = AK::StringUtils::convert_to_int<i8>(segments[8]);
+        data.numeric_value_decimal = YAK::StringUtils::convert_to_int<i8>(segments[6]);
+        data.numeric_value_digit = YAK::StringUtils::convert_to_int<i8>(segments[7]);
+        data.numeric_value_numeric = YAK::StringUtils::convert_to_int<i8>(segments[8]);
         data.bidi_mirrored = segments[9] == "Y"sv;
         data.unicode_1_name = move(segments[10]);
         data.iso_comment = move(segments[11]);
-        data.simple_uppercase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[12]);
-        data.simple_lowercase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[13]);
-        data.simple_titlecase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[14]);
+        data.simple_uppercase_mapping = YAK::StringUtils::convert_to_uint_from_hex<u32>(segments[12]);
+        data.simple_lowercase_mapping = YAK::StringUtils::convert_to_uint_from_hex<u32>(segments[13]);
+        data.simple_titlecase_mapping = YAK::StringUtils::convert_to_uint_from_hex<u32>(segments[14]);
 
         if (!assigned_code_point_range_start.has_value())
             assigned_code_point_range_start = data.code_point;
@@ -482,8 +482,8 @@ enum class @name@ : @underlying@ {)~~~");
     generator.append(R"~~~(
 #pragma once
 
-#include <AK/Optional.h>
-#include <AK/Types.h>
+#include <YAK/Optional.h>
+#include <YAK/Types.h>
 #include <LibUnicode/Forward.h>
 #include <LibUnicode/UnicodeLocale.h>
 
@@ -577,12 +577,12 @@ static void generate_unicode_data_implementation(Core::File& file, UnicodeData c
     generator.set("code_point_data_size", String::number(unicode_data.code_point_data.size()));
 
     generator.append(R"~~~(
-#include <AK/Array.h>
-#include <AK/BinarySearch.h>
-#include <AK/CharacterTypes.h>
-#include <AK/HashMap.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
+#include <YAK/Array.h>
+#include <YAK/BinarySearch.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/HashMap.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
 #include <LibUnicode/UnicodeData.h>
 
 namespace Unicode {

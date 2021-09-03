@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/NonnullOwnPtr.h>
+#include <YAK/Assertions.h>
+#include <YAK/NonnullOwnPtr.h>
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/Devices/KCOVInstance.h>
 #include <Kernel/FileSystem/FileDescription.h>

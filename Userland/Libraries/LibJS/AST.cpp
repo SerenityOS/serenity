@@ -5,12 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Demangle.h>
-#include <AK/HashMap.h>
-#include <AK/HashTable.h>
-#include <AK/ScopeGuard.h>
-#include <AK/StringBuilder.h>
-#include <AK/TemporaryChange.h>
+#include <YAK/Demangle.h>
+#include <YAK/HashMap.h>
+#include <YAK/HashTable.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/TemporaryChange.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
@@ -35,8 +35,8 @@
 namespace JS {
 
 class InterpreterNodeScope {
-    AK_MAKE_NONCOPYABLE(InterpreterNodeScope);
-    AK_MAKE_NONMOVABLE(InterpreterNodeScope);
+    YAK_MAKE_NONCOPYABLE(InterpreterNodeScope);
+    YAK_MAKE_NONMOVABLE(InterpreterNodeScope);
 
 public:
     InterpreterNodeScope(Interpreter& interpreter, ASTNode const& node)

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Weakable.h>
+#include <YAK/Weakable.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibJS/Runtime/GlobalObject.h>
 

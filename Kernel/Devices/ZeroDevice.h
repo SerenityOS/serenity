@@ -11,7 +11,7 @@
 namespace Kernel {
 
 class ZeroDevice final : public CharacterDevice {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     static NonnullRefPtr<ZeroDevice> must_create();
     virtual ~ZeroDevice() override;

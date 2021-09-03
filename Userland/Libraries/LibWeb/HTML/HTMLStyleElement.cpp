@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringBuilder.h>
+#include <YAK/StringBuilder.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>

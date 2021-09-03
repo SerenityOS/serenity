@@ -175,7 +175,7 @@ Optional<ISODate> regulate_iso_date(GlobalObject& global_object, double year, do
         // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
         // This does not change the exposed behaviour as the call to IsValidISODate will immediately check that these values are valid ISO
         // values (for years: -273975 - 273975, for months: 1 - 12, for days: 1 - 31) all of which are subsets of this check.
-        if (!AK::is_within_range<i32>(year) || !AK::is_within_range<u8>(month) || !AK::is_within_range<u8>(day)) {
+        if (!YAK::is_within_range<i32>(year) || !YAK::is_within_range<u8>(month) || !YAK::is_within_range<u8>(day)) {
             vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
             return {};
         }
@@ -195,7 +195,7 @@ Optional<ISODate> regulate_iso_date(GlobalObject& global_object, double year, do
         // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat this double as normal integer from this point onwards. This
         // does not change the exposed behaviour as the parent's call to CreateTemporalDate will immediately check that this value is a valid
         // ISO value for years: -273975 - 273975, which is a subset of this check.
-        if (!AK::is_within_range<i32>(year)) {
+        if (!YAK::is_within_range<i32>(year)) {
             vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
             return {};
         }

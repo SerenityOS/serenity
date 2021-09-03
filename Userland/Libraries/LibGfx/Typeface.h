@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/RefCounted.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Function.h>
+#include <YAK/RefCounted.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <LibGfx/BitmapFont.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/TrueTypeFont/Font.h>

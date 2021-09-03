@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/JsonObjectSerializer.h>
-#include <AK/RefPtr.h>
-#include <AK/String.h>
-#include <AK/TypeCasts.h>
-#include <AK/Vector.h>
+#include <YAK/Badge.h>
+#include <YAK/JsonObjectSerializer.h>
+#include <YAK/RefPtr.h>
+#include <YAK/String.h>
+#include <YAK/TypeCasts.h>
+#include <YAK/Vector.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>

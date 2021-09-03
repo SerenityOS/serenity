@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
+#include <YAK/Singleton.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
@@ -70,7 +70,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
             *did_create = true;
             auto futex_queue = adopt_ref(*new FutexQueue);
             auto result = queues->set(user_address, futex_queue);
-            VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+            VERIFY(result == YAK::HashSetResult::InsertedNewEntry);
             return futex_queue;
         }
         return {};
@@ -114,7 +114,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
                 dbgln_if(FUTEX_DEBUG, "futex wait: EAGAIN. user value: {:p} @ {:p} != val: {}", user_value.value(), params.userspace_address, params.val);
                 return EAGAIN;
             }
-            atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
+            atomic_thread_fence(YAK::MemoryOrder::memory_order_acquire);
 
             SpinlockLocker locker(m_futex_lock);
             did_create = false;
@@ -146,7 +146,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
             return EFAULT;
         if (val3.has_value() && val3.value() != user_value.value())
             return EAGAIN;
-        atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
+        atomic_thread_fence(YAK::MemoryOrder::memory_order_acquire);
 
         int woken_or_requeued = 0;
         SpinlockLocker locker(m_futex_lock);
@@ -185,7 +185,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
             op_arg = 1 << op_arg;
             op &= FUTEX_OP_ARG_SHIFT;
         }
-        atomic_thread_fence(AK::MemoryOrder::memory_order_release);
+        atomic_thread_fence(YAK::MemoryOrder::memory_order_release);
         switch (op) {
         case FUTEX_OP_SET:
             oldval = user_atomic_exchange_relaxed(params.userspace_address2, op_arg);
@@ -207,7 +207,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
         }
         if (!oldval.has_value())
             return EFAULT;
-        atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
+        atomic_thread_fence(YAK::MemoryOrder::memory_order_acquire);
         int result = do_wake(user_address, params.val, {});
         if (params.val2 > 0) {
             bool compare_result;

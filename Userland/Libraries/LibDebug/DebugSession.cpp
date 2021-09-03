@@ -5,11 +5,11 @@
  */
 
 #include "DebugSession.h"
-#include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/LexicalPath.h>
-#include <AK/Optional.h>
-#include <AK/Platform.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonValue.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/Optional.h>
+#include <YAK/Platform.h>
 #include <LibCore/File.h>
 #include <LibRegex/Regex.h>
 #include <stdlib.h>

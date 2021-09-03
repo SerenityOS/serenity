@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <LibGfx/BMPLoader.h>
 #include <LibGfx/GIFLoader.h>
 #include <LibGfx/ICOLoader.h>

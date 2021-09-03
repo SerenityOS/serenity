@@ -5,8 +5,8 @@
  */
 
 #include "MailWidget.h"
-#include <AK/Base64.h>
-#include <AK/GenericLexer.h>
+#include <YAK/Base64.h>
+#include <YAK/GenericLexer.h>
 #include <Applications/Mail/MailWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>

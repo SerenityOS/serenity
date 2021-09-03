@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/AllOf.h>
-#include <AK/Array.h>
+#include <YAK/AllOf.h>
+#include <YAK/Array.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>
 

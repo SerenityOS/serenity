@@ -6,8 +6,8 @@
 
 #include <cstring>
 
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 #include <LibSQL/Serializer.h>
 #include <LibSQL/Tuple.h>
 #include <LibSQL/TupleDescriptor.h>
@@ -238,7 +238,7 @@ u32 Tuple::hash() const
 {
     u32 ret = 0u;
     for (auto& value : m_data) {
-        // This is an extension of the pair_int_hash function from AK/HashFunctions.h:
+        // This is an extension of the pair_int_hash function from YAK/HashFunctions.h:
         if (!ret)
             ret = value.hash();
         else

@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
-#include <AK/Types.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Types.h>
 #include <Kernel/Bus/USB/USBPipe.h>
 
 namespace Kernel::USB {

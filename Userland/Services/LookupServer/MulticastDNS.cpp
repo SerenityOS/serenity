@@ -6,11 +6,11 @@
 
 #include "MulticastDNS.h"
 #include "DNSPacket.h"
-#include <AK/IPv4Address.h>
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/String.h>
+#include <YAK/IPv4Address.h>
+#include <YAK/JsonArray.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonValue.h>
+#include <YAK/String.h>
 #include <LibCore/File.h>
 #include <limits.h>
 #include <poll.h>

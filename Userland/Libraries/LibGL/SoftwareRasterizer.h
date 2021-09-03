@@ -11,8 +11,8 @@
 #include "GLStruct.h"
 #include "Tex/Texture2D.h"
 #include "Tex/TextureUnit.h"
-#include <AK/Array.h>
-#include <AK/OwnPtr.h>
+#include <YAK/Array.h>
+#include <YAK/OwnPtr.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Vector4.h>
 

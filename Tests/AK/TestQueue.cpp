@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Queue.h>
-#include <AK/String.h>
+#include <YAK/Queue.h>
+#include <YAK/String.h>
 
 TEST_CASE(construct)
 {

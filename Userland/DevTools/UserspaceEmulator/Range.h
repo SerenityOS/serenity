@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Types.h>
+#include <YAK/Types.h>
 #include <Kernel/VirtualAddress.h>
 
 namespace UserspaceEmulator {
@@ -67,7 +67,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 template<>
 struct Traits<UserspaceEmulator::Range> : public GenericTraits<UserspaceEmulator::Range> {
     static constexpr bool is_trivial() { return true; }

@@ -6,17 +6,17 @@
 
 #pragma once
 
-#include <AK/Concepts.h>
-#include <AK/HashMap.h>
-#include <AK/IntrusiveList.h>
-#include <AK/IntrusiveListRelaxedConst.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/OwnPtr.h>
-#include <AK/String.h>
-#include <AK/Userspace.h>
-#include <AK/Variant.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
+#include <YAK/Concepts.h>
+#include <YAK/HashMap.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/IntrusiveListRelaxedConst.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/String.h>
+#include <YAK/Userspace.h>
+#include <YAK/Variant.h>
+#include <YAK/WeakPtr.h>
+#include <YAK/Weakable.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/AtomicEdgeAction.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -85,7 +85,7 @@ typedef HashMap<FlatPtr, RefPtr<FutexQueue>> FutexQueues;
 struct LoadResult;
 
 class Process final
-    : public AK::RefCountedBase
+    : public YAK::RefCountedBase
     , public Weakable<Process> {
 
     class ProtectedValues {
@@ -113,8 +113,8 @@ class Process final
     };
 
 public:
-    AK_MAKE_NONCOPYABLE(Process);
-    AK_MAKE_NONMOVABLE(Process);
+    YAK_MAKE_NONCOPYABLE(Process);
+    YAK_MAKE_NONMOVABLE(Process);
 
     MAKE_ALIGNED_ALLOCATED(Process, PAGE_SIZE);
 
@@ -195,8 +195,8 @@ public:
     bool should_generate_coredump() const { return m_should_generate_coredump; }
     void set_should_generate_coredump(bool b) { m_should_generate_coredump = b; }
 
-    bool is_dying() const { return m_state.load(AK::MemoryOrder::memory_order_acquire) != State::Running; }
-    bool is_dead() const { return m_state.load(AK::MemoryOrder::memory_order_acquire) == State::Dead; }
+    bool is_dying() const { return m_state.load(YAK::MemoryOrder::memory_order_acquire) != State::Running; }
+    bool is_dead() const { return m_state.load(YAK::MemoryOrder::memory_order_acquire) == State::Dead; }
 
     bool is_stopped() const { return m_is_stopped; }
     bool set_stopped(bool stopped) { return m_is_stopped.exchange(stopped); }
@@ -454,7 +454,7 @@ public:
 
     u16 thread_count() const
     {
-        return m_protected_values.thread_count.load(AK::MemoryOrder::memory_order_relaxed);
+        return m_protected_values.thread_count.load(YAK::MemoryOrder::memory_order_relaxed);
     }
 
     Mutex& big_lock() { return m_big_lock; }
@@ -629,7 +629,7 @@ public:
 
     class ScopedDescriptionAllocation;
     class FileDescriptions {
-        AK_MAKE_NONCOPYABLE(FileDescriptions);
+        YAK_MAKE_NONCOPYABLE(FileDescriptions);
         friend class Process;
 
     public:
@@ -684,7 +684,7 @@ public:
     };
 
     class ScopedDescriptionAllocation {
-        AK_MAKE_NONCOPYABLE(ScopedDescriptionAllocation);
+        YAK_MAKE_NONCOPYABLE(ScopedDescriptionAllocation);
 
     public:
         ScopedDescriptionAllocation() = default;
@@ -754,7 +754,7 @@ private:
     const bool m_is_kernel_process;
     Atomic<State> m_state { State::Running };
     bool m_profiling { false };
-    Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_is_stopped { false };
+    Atomic<bool, YAK::MemoryOrder::memory_order_relaxed> m_is_stopped { false };
     bool m_should_generate_coredump { false };
 
     RefPtr<Custody> m_executable;
@@ -990,9 +990,9 @@ inline static KResultOr<NonnullOwnPtr<KString>> try_copy_kstring_from_user(const
 }
 
 template<>
-struct AK::Formatter<Kernel::Process> : AK::Formatter<String> {
+struct YAK::Formatter<Kernel::Process> : YAK::Formatter<String> {
     void format(FormatBuilder& builder, const Kernel::Process& value)
     {
-        return AK::Formatter<String>::format(builder, String::formatted("{}({})", value.name(), value.pid().value()));
+        return YAK::Formatter<String>::format(builder, String::formatted("{}({})", value.name(), value.pid().value()));
     }
 };

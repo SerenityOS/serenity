@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Assertions.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/JsonArray.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonValue.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <stdio.h>

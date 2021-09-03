@@ -6,15 +6,15 @@
 
 #pragma once
 
-#include <AK/Forward.h>
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/Noncopyable.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/Time.h>
-#include <AK/Vector.h>
-#include <AK/WeakPtr.h>
+#include <YAK/Forward.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/Time.h>
+#include <YAK/Vector.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/DeferredInvocationContext.h>
 #include <LibCore/Event.h>
 #include <LibCore/Forward.h>
@@ -92,7 +92,7 @@ private:
     static void handle_signal(int);
 
     struct QueuedEvent {
-        AK_MAKE_NONCOPYABLE(QueuedEvent);
+        YAK_MAKE_NONCOPYABLE(QueuedEvent);
 
     public:
         QueuedEvent(Object& receiver, NonnullOwnPtr<Event>);

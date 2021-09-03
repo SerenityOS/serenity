@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Types.h>
-#include <AK/Variant.h>
-#include <AK/Vector.h>
+#include <YAK/Types.h>
+#include <YAK/Variant.h>
+#include <YAK/Vector.h>
 #include <LibAudio/Buffer.h>
 
 namespace LibDSP {

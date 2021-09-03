@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/BinarySearch.h>
-#include <AK/Debug.h>
-#include <AK/Demangle.h>
-#include <AK/Memory.h>
-#include <AK/QuickSort.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
+#include <YAK/BinarySearch.h>
+#include <YAK/Debug.h>
+#include <YAK/Demangle.h>
+#include <YAK/Memory.h>
+#include <YAK/QuickSort.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/StringView.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
 #include <limits.h>

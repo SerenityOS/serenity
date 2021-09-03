@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringBuilder.h>
-#include <AK/Vector.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <stdio.h>

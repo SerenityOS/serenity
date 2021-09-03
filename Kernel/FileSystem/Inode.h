@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/HashTable.h>
-#include <AK/IntrusiveList.h>
-#include <AK/String.h>
-#include <AK/WeakPtr.h>
+#include <YAK/Function.h>
+#include <YAK/HashTable.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/String.h>
+#include <YAK/WeakPtr.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>

@@ -5,8 +5,8 @@
  */
 
 #include "ProcessModel.h"
-#include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonValue.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibGUI/FileIconProvider.h>

@@ -6,7 +6,7 @@
 
 #include <unistd.h>
 
-#include <AK/ScopeGuard.h>
+#include <YAK/ScopeGuard.h>
 #include <LibSQL/AST/Parser.h>
 #include <LibSQL/Database.h>
 #include <LibSQL/Row.h>

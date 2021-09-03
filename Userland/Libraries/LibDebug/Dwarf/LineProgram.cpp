@@ -5,10 +5,10 @@
  */
 
 #include "LineProgram.h"
-#include <AK/Debug.h>
-#include <AK/Function.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Debug.h>
+#include <YAK/Function.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 
 namespace Debug::Dwarf {
 

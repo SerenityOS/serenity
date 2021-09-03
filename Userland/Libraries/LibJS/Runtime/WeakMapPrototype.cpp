@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/HashTable.h>
-#include <AK/TypeCasts.h>
+#include <YAK/HashTable.h>
+#include <YAK/TypeCasts.h>
 #include <LibJS/Runtime/WeakMapPrototype.h>
 
 namespace JS {

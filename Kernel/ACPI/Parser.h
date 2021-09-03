@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Types.h>
+#include <YAK/Types.h>
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/FileSystem/SysFSComponent.h>

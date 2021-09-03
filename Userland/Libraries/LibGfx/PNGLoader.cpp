@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Endian.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
+#include <YAK/Debug.h>
+#include <YAK/Endian.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MappedFile.h>
 #include <LibCompress/Zlib.h>
 #include <LibGfx/PNGLoader.h>
 #include <fcntl.h>

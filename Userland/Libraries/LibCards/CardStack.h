@@ -7,9 +7,9 @@
 #pragma once
 
 #include "Card.h"
-#include <AK/Format.h>
-#include <AK/RefCounted.h>
-#include <AK/Vector.h>
+#include <YAK/Format.h>
+#include <YAK/RefCounted.h>
+#include <YAK/Vector.h>
 
 namespace Cards {
 
@@ -97,7 +97,7 @@ private:
 }
 
 template<>
-struct AK::Formatter<Cards::CardStack> : Formatter<FormatString> {
+struct YAK::Formatter<Cards::CardStack> : Formatter<FormatString> {
     void format(FormatBuilder& builder, const Cards::CardStack& stack)
     {
         StringView type;

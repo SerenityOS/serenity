@@ -85,7 +85,7 @@ private:
     GPU& m_gpu;
     const ScanoutID m_scanout;
     Buffer* m_current_buffer { nullptr };
-    Atomic<int, AK::memory_order_relaxed> m_last_set_buffer_index { 0 };
+    Atomic<int, YAK::memory_order_relaxed> m_last_set_buffer_index { 0 };
     Buffer m_main_buffer;
     Buffer m_back_buffer;
     OwnPtr<Memory::Region> m_framebuffer;

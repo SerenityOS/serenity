@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/IntrusiveList.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/OwnPtr.h>
-#include <AK/RefCounted.h>
-#include <AK/Time.h>
+#include <YAK/Function.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefCounted.h>
+#include <YAK/Time.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
@@ -60,16 +60,16 @@ private:
         return m_id == rhs.m_id;
     }
 
-    void clear_cancelled() { return m_cancelled.store(false, AK::memory_order_release); }
-    bool set_cancelled() { return m_cancelled.exchange(true, AK::memory_order_acq_rel); }
+    void clear_cancelled() { return m_cancelled.store(false, YAK::memory_order_release); }
+    bool set_cancelled() { return m_cancelled.exchange(true, YAK::memory_order_acq_rel); }
 
-    bool is_in_use() { return m_in_use.load(AK::memory_order_acquire); };
-    void set_in_use() { m_in_use.store(true, AK::memory_order_release); }
-    void clear_in_use() { return m_in_use.store(false, AK::memory_order_release); }
+    bool is_in_use() { return m_in_use.load(YAK::memory_order_acquire); };
+    void set_in_use() { m_in_use.store(true, YAK::memory_order_release); }
+    void clear_in_use() { return m_in_use.store(false, YAK::memory_order_release); }
 
-    bool is_callback_finished() const { return m_callback_finished.load(AK::memory_order_acquire); }
-    void clear_callback_finished() { m_callback_finished.store(false, AK::memory_order_release); }
-    void set_callback_finished() { m_callback_finished.store(true, AK::memory_order_release); }
+    bool is_callback_finished() const { return m_callback_finished.load(YAK::memory_order_acquire); }
+    void clear_callback_finished() { m_callback_finished.store(false, YAK::memory_order_release); }
+    void set_callback_finished() { m_callback_finished.store(true, YAK::memory_order_release); }
 
     Time now(bool) const;
 

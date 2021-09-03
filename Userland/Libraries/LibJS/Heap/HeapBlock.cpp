@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/Platform.h>
+#include <YAK/Assertions.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/Platform.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/HeapBlock.h>
 #include <stdio.h>

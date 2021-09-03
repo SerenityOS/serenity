@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
+#include <YAK/Bitmap.h>
 #include <Kernel/Memory/InodeVMObject.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel::Memory {
 
 class SharedInodeVMObject final : public InodeVMObject {
-    AK_MAKE_NONMOVABLE(SharedInodeVMObject);
+    YAK_MAKE_NONMOVABLE(SharedInodeVMObject);
 
 public:
     static RefPtr<SharedInodeVMObject> try_create_with_inode(Inode&);

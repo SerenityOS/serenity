@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Function.h>
-#include <AK/GenericLexer.h>
-#include <AK/HashMap.h>
-#include <AK/SourceGenerator.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Debug.h>
+#include <YAK/Function.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/HashMap.h>
+#include <YAK/SourceGenerator.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/File.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -269,10 +269,10 @@ int main(int argc, char** argv)
         }
     }
 
-    generator.append(R"~~~(#include <AK/MemoryStream.h>
-#include <AK/OwnPtr.h>
-#include <AK/Result.h>
-#include <AK/Utf8View.h>
+    generator.append(R"~~~(#include <YAK/MemoryStream.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Result.h>
+#include <YAK/Utf8View.h>
 #include <LibIPC/Connection.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>

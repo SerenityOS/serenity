@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
-#include <AK/NumberFormat.h>
-#include <AK/QuickSort.h>
-#include <AK/StringBuilder.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/NumberFormat.h>
+#include <YAK/QuickSort.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>

@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/String.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/Function.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <Kernel/Debug.h>
 
 namespace Kernel {
@@ -261,7 +261,7 @@ class Device;
 }
 
 template<>
-struct AK::Formatter<Kernel::PCI::Address> : Formatter<FormatString> {
+struct YAK::Formatter<Kernel::PCI::Address> : Formatter<FormatString> {
     void format(FormatBuilder& builder, Kernel::PCI::Address value)
     {
         return Formatter<FormatString>::format(
@@ -271,7 +271,7 @@ struct AK::Formatter<Kernel::PCI::Address> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Formatter<Kernel::PCI::ID> : Formatter<FormatString> {
+struct YAK::Formatter<Kernel::PCI::ID> : Formatter<FormatString> {
     void format(FormatBuilder& builder, Kernel::PCI::ID value)
     {
         return Formatter<FormatString>::format(

@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
-#include <AK/String.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/String.h>
 
-namespace AK {
+namespace YAK {
 class BufferStream;
 }
 

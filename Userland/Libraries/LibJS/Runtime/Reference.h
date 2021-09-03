@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Value.h>

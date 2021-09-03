@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Forward.h>
-#include <AK/Function.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
+#include <YAK/Forward.h>
+#include <YAK/Function.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/RefCounted.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibGfx/Forward.h>
 

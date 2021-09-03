@@ -6,7 +6,7 @@
 
 #include "SpiceAgent.h"
 #include "ClipboardServerConnection.h"
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <LibC/memory.h>
 #include <LibC/unistd.h>
 #include <LibGfx/BMPLoader.h>

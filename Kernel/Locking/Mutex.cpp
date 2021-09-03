@@ -231,7 +231,7 @@ void Mutex::unblock_waiters(Mode previous_mode)
         for (auto& thread : m_blocked_threads_list_shared) {
             auto requested_locks = thread.unblock_from_lock(*this);
             auto set_result = m_shared_holders.set(&thread, requested_locks);
-            VERIFY(set_result == AK::HashSetResult::InsertedNewEntry);
+            VERIFY(set_result == YAK::HashSetResult::InsertedNewEntry);
             m_times_locked += requested_locks;
         }
         return true;
@@ -398,7 +398,7 @@ void Mutex::restore_lock(Mode mode, u32 lock_count, [[maybe_unused]] LockLocatio
                 m_times_locked += lock_count;
                 auto set_result = m_shared_holders.set(current_thread, lock_count);
                 // There may be other shared lock holders already, but we should not have an entry yet
-                VERIFY(set_result == AK::HashSetResult::InsertedNewEntry);
+                VERIFY(set_result == YAK::HashSetResult::InsertedNewEntry);
             } else if (m_mode == Mode::Shared) {
                 m_times_locked += lock_count;
                 if (auto it = m_shared_holders.find(current_thread); it != m_shared_holders.end()) {
@@ -406,7 +406,7 @@ void Mutex::restore_lock(Mode mode, u32 lock_count, [[maybe_unused]] LockLocatio
                 } else {
                     auto set_result = m_shared_holders.set(current_thread, lock_count);
                     // There may be other shared lock holders already, but we should not have an entry yet
-                    VERIFY(set_result == AK::HashSetResult::InsertedNewEntry);
+                    VERIFY(set_result == YAK::HashSetResult::InsertedNewEntry);
                 }
             } else {
                 VERIFY(m_mode == Mode::Exclusive);

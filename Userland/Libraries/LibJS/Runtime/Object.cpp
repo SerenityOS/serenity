@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
-#include <AK/TemporaryChange.h>
+#include <YAK/String.h>
+#include <YAK/TemporaryChange.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
@@ -1188,7 +1188,7 @@ Value Object::ordinary_to_primitive(Value::PreferredType preferred_type) const
 
     auto& vm = this->vm();
 
-    AK::Array<PropertyName, 2> method_names;
+    YAK::Array<PropertyName, 2> method_names;
     if (preferred_type == Value::PreferredType::String)
         method_names = { vm.names.toString, vm.names.valueOf };
     else

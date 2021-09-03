@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/BitStream.h>
-#include <AK/MemoryStream.h>
-#include <AK/ScopeGuard.h>
-#include <AK/TypeCasts.h>
+#include <YAK/BitStream.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/TypeCasts.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/Filter.h>
@@ -406,13 +406,13 @@ Optional<Parser::PageOffsetHintTable> Parser::parse_page_offset_hint_table(Reado
     auto read_u32 = [&] {
         u32 data = reinterpret_cast<const u32*>(hint_stream_bytes.data() + offset)[0];
         offset += 4;
-        return AK::convert_between_host_and_big_endian(data);
+        return YAK::convert_between_host_and_big_endian(data);
     };
 
     auto read_u16 = [&] {
         u16 data = reinterpret_cast<const u16*>(hint_stream_bytes.data() + offset)[0];
         offset += 2;
-        return AK::convert_between_host_and_big_endian(data);
+        return YAK::convert_between_host_and_big_endian(data);
     };
 
     PageOffsetHintTable hint_table {
@@ -1169,7 +1169,7 @@ bool Parser::consume(char ch)
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<PDF::Parser::LinearizationDictionary> : Formatter<StringView> {

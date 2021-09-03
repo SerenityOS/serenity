@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/URL.h>
-#include <AK/Vector.h>
+#include <YAK/URL.h>
+#include <YAK/Vector.h>
 #include <LibCore/Object.h>
 #include <LibCore/TCPSocket.h>
 #include <LibTLS/TLSv12.h>

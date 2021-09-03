@@ -11,7 +11,7 @@
 
 namespace Kernel {
 class KCOVDevice final : public BlockDevice {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 
 public:
     static HashMap<ProcessID, KCOVInstance*>* proc_instance;

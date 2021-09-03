@@ -8,17 +8,17 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtr.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <AK/URL.h>
-#include <AK/Variant.h>
-#include <AK/Vector.h>
-#include <AK/WeakPtr.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
+#include <YAK/URL.h>
+#include <YAK/Variant.h>
+#include <YAK/Vector.h>
+#include <YAK/WeakPtr.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
 #include <LibWeb/CSS/Length.h>

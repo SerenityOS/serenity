@@ -9,10 +9,10 @@
 #include "Buffer.h"
 #include "FlacTypes.h"
 #include "Loader.h"
-#include <AK/BitStream.h>
-#include <AK/Stream.h>
-#include <AK/Types.h>
-#include <AK/Variant.h>
+#include <YAK/BitStream.h>
+#include <YAK/Stream.h>
+#include <YAK/Types.h>
+#include <YAK/Variant.h>
 #include <LibCore/FileStream.h>
 
 namespace Audio {

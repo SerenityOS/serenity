@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Utf8View.h>
+#include <YAK/Utf8View.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {

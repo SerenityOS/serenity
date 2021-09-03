@@ -6,15 +6,15 @@
 
 #pragma once
 
-#include <AK/Forward.h>
-#include <AK/HashMap.h>
-#include <AK/IntrusiveList.h>
-#include <AK/Noncopyable.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/OwnPtr.h>
-#include <AK/String.h>
-#include <AK/TypeCasts.h>
-#include <AK/Weakable.h>
+#include <YAK/Forward.h>
+#include <YAK/HashMap.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/String.h>
+#include <YAK/TypeCasts.h>
+#include <YAK/Weakable.h>
 #include <LibCore/Forward.h>
 #include <LibCore/Property.h>
 
@@ -28,8 +28,8 @@ namespace Core {
     }
 
 class ObjectClassRegistration {
-    AK_MAKE_NONCOPYABLE(ObjectClassRegistration);
-    AK_MAKE_NONMOVABLE(ObjectClassRegistration);
+    YAK_MAKE_NONCOPYABLE(ObjectClassRegistration);
+    YAK_MAKE_NONMOVABLE(ObjectClassRegistration);
 
 public:
     ObjectClassRegistration(StringView class_name, Function<NonnullRefPtr<Object>()> factory, ObjectClassRegistration* parent_class = nullptr);
@@ -77,8 +77,8 @@ class Object
     , public Weakable<Object> {
     // NOTE: No C_OBJECT macro for Core::Object itself.
 
-    AK_MAKE_NONCOPYABLE(Object);
-    AK_MAKE_NONMOVABLE(Object);
+    YAK_MAKE_NONCOPYABLE(Object);
+    YAK_MAKE_NONMOVABLE(Object);
 
     IntrusiveListNode<Object> m_all_objects_list_node;
 
@@ -193,10 +193,10 @@ private:
 }
 
 template<>
-struct AK::Formatter<Core::Object> : AK::Formatter<FormatString> {
+struct YAK::Formatter<Core::Object> : YAK::Formatter<FormatString> {
     void format(FormatBuilder& builder, const Core::Object& value)
     {
-        return AK::Formatter<FormatString>::format(builder, "{}({})", value.class_name(), &value);
+        return YAK::Formatter<FormatString>::format(builder, "{}({})", value.class_name(), &value);
     }
 };
 

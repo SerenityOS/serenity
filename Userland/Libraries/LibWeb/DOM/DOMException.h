@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
+#include <YAK/FlyString.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/RefCounted.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
 

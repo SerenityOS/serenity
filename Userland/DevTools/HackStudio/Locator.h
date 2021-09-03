@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
+#include <YAK/HashMap.h>
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/Widget.h>
 

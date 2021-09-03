@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Math.h>
+#include <YAK/Math.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -12,9 +12,9 @@
 #include <LibJS/Runtime/NumberObject.h>
 
 #ifdef __clang__
-#    define EPSILON_VALUE AK::exp2(-52.)
-#    define MAX_SAFE_INTEGER_VALUE AK::exp2(53.) - 1
-#    define MIN_SAFE_INTEGER_VALUE -(AK::exp2(53.) - 1)
+#    define EPSILON_VALUE YAK::exp2(-52.)
+#    define MAX_SAFE_INTEGER_VALUE YAK::exp2(53.) - 1
+#    define MIN_SAFE_INTEGER_VALUE -(YAK::exp2(53.) - 1)
 #else
 constexpr const double EPSILON_VALUE { __builtin_exp2(-52) };
 constexpr const double MAX_SAFE_INTEGER_VALUE { __builtin_exp2(53) - 1 };

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Atomic.h>
-#include <AK/Checked.h>
+#include <YAK/Atomic.h>
+#include <YAK/Checked.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Debug.h>

@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Atomic.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/Atomic.h>
+#include <YAK/Types.h>
 #include <errno.h>
 #include <semaphore.h>
 #include <serenity.h>
@@ -57,14 +57,14 @@ int sem_destroy(sem_t*)
 
 int sem_getvalue(sem_t* sem, int* sval)
 {
-    u32 value = AK::atomic_load(&sem->value, AK::memory_order_relaxed);
+    u32 value = YAK::atomic_load(&sem->value, YAK::memory_order_relaxed);
     *sval = value & ~POST_WAKES;
     return 0;
 }
 
 int sem_post(sem_t* sem)
 {
-    u32 value = AK::atomic_fetch_add(&sem->value, 1u, AK::memory_order_release);
+    u32 value = YAK::atomic_fetch_add(&sem->value, 1u, YAK::memory_order_release);
     // Fast path: no need to wake.
     if (!(value & POST_WAKES)) [[likely]]
         return 0;
@@ -72,7 +72,7 @@ int sem_post(sem_t* sem)
     // Pass the responsibility for waking more threads if more slots become
     // available later to sem_wait() in the thread we're about to wake, as
     // opposed to further sem_post() calls that free up those slots.
-    value = AK::atomic_fetch_and(&sem->value, ~POST_WAKES, AK::memory_order_relaxed);
+    value = YAK::atomic_fetch_and(&sem->value, ~POST_WAKES, YAK::memory_order_relaxed);
     // Check if another sem_post() call has handled it already.
     if (!(value & POST_WAKES)) [[likely]]
         return 0;
@@ -83,13 +83,13 @@ int sem_post(sem_t* sem)
 
 int sem_trywait(sem_t* sem)
 {
-    u32 value = AK::atomic_load(&sem->value, AK::memory_order_relaxed);
+    u32 value = YAK::atomic_load(&sem->value, YAK::memory_order_relaxed);
     u32 count = value & ~POST_WAKES;
     if (count == 0)
         return EAGAIN;
     // Decrement the count without touching the flag.
     u32 desired = (count - 1) | (value & POST_WAKES);
-    bool exchanged = AK::atomic_compare_exchange_strong(&sem->value, value, desired, AK::memory_order_acquire);
+    bool exchanged = YAK::atomic_compare_exchange_strong(&sem->value, value, desired, YAK::memory_order_acquire);
     if (exchanged) [[likely]]
         return 0;
     else
@@ -103,7 +103,7 @@ int sem_wait(sem_t* sem)
 
 int sem_timedwait(sem_t* sem, const struct timespec* abstime)
 {
-    u32 value = AK::atomic_load(&sem->value, AK::memory_order_relaxed);
+    u32 value = YAK::atomic_load(&sem->value, YAK::memory_order_relaxed);
     bool responsible_for_waking = false;
 
     while (true) {
@@ -126,7 +126,7 @@ int sem_timedwait(sem_t* sem, const struct timespec* abstime)
             }
             // Now, try to commit this.
             u32 desired = (count - 1) | whether_post_wakes;
-            bool exchanged = AK::atomic_compare_exchange_strong(&sem->value, value, desired, AK::memory_order_acquire);
+            bool exchanged = YAK::atomic_compare_exchange_strong(&sem->value, value, desired, YAK::memory_order_acquire);
             if (!exchanged) [[unlikely]]
                 // Re-evaluate.
                 continue;
@@ -140,7 +140,7 @@ int sem_timedwait(sem_t* sem, const struct timespec* abstime)
         // commit to sleeping yet, though, as setting the flag may fail and
         // cause us to reevaluate what we're doing.
         if (value == 0) {
-            bool exchanged = AK::atomic_compare_exchange_strong(&sem->value, value, POST_WAKES, AK::memory_order_relaxed);
+            bool exchanged = YAK::atomic_compare_exchange_strong(&sem->value, value, POST_WAKES, YAK::memory_order_relaxed);
             if (!exchanged) [[unlikely]]
                 // Re-evaluate.
                 continue;

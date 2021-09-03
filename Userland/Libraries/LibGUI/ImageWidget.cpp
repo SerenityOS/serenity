@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MappedFile.h>
+#include <YAK/MappedFile.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>

@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/Debug.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
-#include <AK/MemoryStream.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/Types.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Debug.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MappedFile.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/Types.h>
 #include <LibGfx/ICOLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <string.h>

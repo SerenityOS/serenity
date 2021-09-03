@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/HashTable.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/StringBuilder.h>
+#include <YAK/HashTable.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/SourceRange.h>
@@ -188,8 +188,8 @@ private:
     void set_try_parse_arrow_function_expression_failed_at_position(const Position&, bool);
 
     struct RulePosition {
-        AK_MAKE_NONCOPYABLE(RulePosition);
-        AK_MAKE_NONMOVABLE(RulePosition);
+        YAK_MAKE_NONCOPYABLE(RulePosition);
+        YAK_MAKE_NONMOVABLE(RulePosition);
 
     public:
         RulePosition(Parser& parser, Position position)

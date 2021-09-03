@@ -7,16 +7,16 @@
 #pragma once
 
 #include "ProjectFile.h"
-#include <AK/LexicalPath.h>
-#include <AK/Noncopyable.h>
-#include <AK/OwnPtr.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/OwnPtr.h>
 #include <LibGUI/FileSystemModel.h>
 
 namespace HackStudio {
 
 class Project {
-    AK_MAKE_NONCOPYABLE(Project);
-    AK_MAKE_NONMOVABLE(Project);
+    YAK_MAKE_NONCOPYABLE(Project);
+    YAK_MAKE_NONMOVABLE(Project);
 
 public:
     static OwnPtr<Project> open_with_root_path(const String& root_path);

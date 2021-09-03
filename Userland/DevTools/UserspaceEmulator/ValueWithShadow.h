@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Format.h>
-#include <AK/Platform.h>
-#include <AK/UFixedBigInt.h>
+#include <YAK/Format.h>
+#include <YAK/Platform.h>
+#include <YAK/UFixedBigInt.h>
 #include <string.h>
 
 namespace UserspaceEmulator {
@@ -171,7 +171,7 @@ inline void ValueAndShadowReference<T>::operator=(const ValueWithShadow<T>& othe
 }
 
 template<typename T>
-struct AK::Formatter<UserspaceEmulator::ValueWithShadow<T>> : AK::Formatter<T> {
+struct YAK::Formatter<UserspaceEmulator::ValueWithShadow<T>> : YAK::Formatter<T> {
     void format(FormatBuilder& builder, UserspaceEmulator::ValueWithShadow<T> value)
     {
         return Formatter<T>::format(builder, value.value());

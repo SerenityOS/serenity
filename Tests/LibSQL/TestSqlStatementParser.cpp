@@ -7,18 +7,18 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Optional.h>
-#include <AK/Result.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <AK/TypeCasts.h>
-#include <AK/Vector.h>
+#include <YAK/Optional.h>
+#include <YAK/Result.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
+#include <YAK/TypeCasts.h>
+#include <YAK/Vector.h>
 #include <LibSQL/AST/Lexer.h>
 #include <LibSQL/AST/Parser.h>
 
 namespace {
 
-using ParseResult = AK::Result<NonnullRefPtr<SQL::AST::Statement>, String>;
+using ParseResult = YAK::Result<NonnullRefPtr<SQL::AST::Statement>, String>;
 
 ParseResult parse(StringView sql)
 {

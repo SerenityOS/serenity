@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
-#include <AK/Concepts.h>
-#include <AK/RefCounted.h>
-#include <AK/String.h>
+#include <YAK/Assertions.h>
+#include <YAK/Concepts.h>
+#include <YAK/RefCounted.h>
+#include <YAK/String.h>
 #include <Kernel/VirtualAddress.h>
 #include <LibC/elf.h>
 #include <LibC/link.h>

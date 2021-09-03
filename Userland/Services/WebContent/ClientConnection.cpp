@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/JsonObject.h>
+#include <YAK/Debug.h>
+#include <YAK/JsonObject.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/SystemTheme.h>

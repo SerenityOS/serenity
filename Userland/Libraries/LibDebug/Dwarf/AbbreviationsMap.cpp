@@ -7,7 +7,7 @@
 #include "AbbreviationsMap.h"
 #include "DwarfInfo.h"
 
-#include <AK/MemoryStream.h>
+#include <YAK/MemoryStream.h>
 
 namespace Debug::Dwarf {
 

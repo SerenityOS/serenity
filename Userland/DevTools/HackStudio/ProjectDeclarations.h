@@ -6,17 +6,17 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/Noncopyable.h>
-#include <AK/String.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/String.h>
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/Icon.h>
 
 namespace HackStudio {
 
 class ProjectDeclarations {
-    AK_MAKE_NONCOPYABLE(ProjectDeclarations);
+    YAK_MAKE_NONCOPYABLE(ProjectDeclarations);
 
 public:
     static ProjectDeclarations& the();

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Span.h>
+#include <YAK/Span.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
 namespace Crypto {

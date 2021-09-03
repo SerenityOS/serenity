@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/JsonObjectSerializer.h>
-#include <AK/UBSanitizer.h>
+#include <YAK/JsonObjectSerializer.h>
+#include <YAK/UBSanitizer.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
@@ -268,12 +268,12 @@ public:
     virtual bool value() const override
     {
         MutexLocker locker(m_lock);
-        return AK::UBSanitizer::g_ubsan_is_deadly;
+        return YAK::UBSanitizer::g_ubsan_is_deadly;
     }
     virtual void set_value(bool new_value) override
     {
         MutexLocker locker(m_lock);
-        AK::UBSanitizer::g_ubsan_is_deadly = new_value;
+        YAK::UBSanitizer::g_ubsan_is_deadly = new_value;
     }
 
 private:

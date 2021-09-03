@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
+#include <YAK/ByteBuffer.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/UDPSocket.h>
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
                 return 1;
             }
 
-            auto bytes = AK::ByteBuffer::copy(buf, nread);
+            auto bytes = YAK::ByteBuffer::copy(buf, nread);
             socket->send(bytes.span());
         }
     }

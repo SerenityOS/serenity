@@ -10,9 +10,9 @@
 #include "CodeDocument.h"
 #include "Debugger/BreakpointCallback.h"
 #include "LanguageClient.h"
-#include <AK/Assertions.h>
-#include <AK/Optional.h>
-#include <AK/OwnPtr.h>
+#include <YAK/Assertions.h>
+#include <YAK/Optional.h>
+#include <YAK/OwnPtr.h>
 #include <LibGUI/TextEditor.h>
 #include <LibWeb/Forward.h>
 

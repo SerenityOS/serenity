@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
-#include <AK/LexicalPath.h>
-#include <AK/NumberFormat.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Assertions.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/NumberFormat.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>

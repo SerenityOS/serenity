@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
-#include <AK/Weakable.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/RefCounted.h>
+#include <YAK/Weakable.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
 namespace Web::DOM {

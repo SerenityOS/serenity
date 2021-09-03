@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/AllOf.h>
+#include <YAK/AllOf.h>
 #include <Kernel/Storage/Partition/DiskPartitionMetadata.h>
 
 namespace Kernel {

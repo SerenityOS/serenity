@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Array.h>
+#include <YAK/Array.h>
 #include <LibGfx/TextDirection.h>
 
 namespace Gfx {

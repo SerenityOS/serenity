@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Atomic.h>
-#include <AK/Debug.h>
-#include <AK/Format.h>
-#include <AK/StdLibExtras.h>
+#include <YAK/Assertions.h>
+#include <YAK/Atomic.h>
+#include <YAK/Debug.h>
+#include <YAK/Format.h>
+#include <YAK/StdLibExtras.h>
 #include <Kernel/API/Syscall.h>
 #include <LibSystem/syscall.h>
 #include <bits/pthread_integration.h>
@@ -515,7 +515,7 @@ int pthread_setcanceltype(int type, int* oldtype)
 constexpr static pid_t spinlock_unlock_sentinel = 0;
 int pthread_spin_destroy(pthread_spinlock_t* lock)
 {
-    auto current = AK::atomic_load(&lock->m_lock);
+    auto current = YAK::atomic_load(&lock->m_lock);
 
     if (current != spinlock_unlock_sentinel)
         return EBUSY;
@@ -533,12 +533,12 @@ int pthread_spin_lock(pthread_spinlock_t* lock)
 {
     const auto desired = gettid();
     while (true) {
-        auto current = AK::atomic_load(&lock->m_lock);
+        auto current = YAK::atomic_load(&lock->m_lock);
 
         if (current == desired)
             return EDEADLK;
 
-        if (AK::atomic_compare_exchange_strong(&lock->m_lock, current, desired, AK::MemoryOrder::memory_order_acquire))
+        if (YAK::atomic_compare_exchange_strong(&lock->m_lock, current, desired, YAK::MemoryOrder::memory_order_acquire))
             break;
     }
 
@@ -552,7 +552,7 @@ int pthread_spin_trylock(pthread_spinlock_t* lock)
     auto current = spinlock_unlock_sentinel;
     auto desired = gettid();
 
-    if (AK::atomic_compare_exchange_strong(&lock->m_lock, current, desired, AK::MemoryOrder::memory_order_acquire)) {
+    if (YAK::atomic_compare_exchange_strong(&lock->m_lock, current, desired, YAK::MemoryOrder::memory_order_acquire)) {
         return 0;
     } else {
         return EBUSY;
@@ -561,12 +561,12 @@ int pthread_spin_trylock(pthread_spinlock_t* lock)
 
 int pthread_spin_unlock(pthread_spinlock_t* lock)
 {
-    auto current = AK::atomic_load(&lock->m_lock);
+    auto current = YAK::atomic_load(&lock->m_lock);
 
     if (gettid() != current)
         return EPERM;
 
-    AK::atomic_store(&lock->m_lock, spinlock_unlock_sentinel);
+    YAK::atomic_store(&lock->m_lock, spinlock_unlock_sentinel);
     return 0;
 }
 
@@ -609,7 +609,7 @@ int pthread_rwlock_init(pthread_rwlock_t* __restrict lockp, const pthread_rwlock
 // Note that this function does not care about the top 32 bits at all.
 static int rwlock_rdlock_maybe_timed(u32* lockp, const struct timespec* timeout = nullptr, bool only_once = false, int value_if_timeout = -1, int value_if_okay = -2)
 {
-    auto current = AK::atomic_load(lockp);
+    auto current = YAK::atomic_load(lockp);
     for (; !only_once;) {
         // First, see if this is locked for writing
         // if it's not, try to add to the counter.
@@ -619,7 +619,7 @@ static int rwlock_rdlock_maybe_timed(u32* lockp, const struct timespec* timeout 
             if (!(current & writer_intent_mask) || count > 1) {
                 ++count;
                 auto desired = (current << 16) | count;
-                auto did_exchange = AK::atomic_compare_exchange_strong(lockp, current, desired, AK::MemoryOrder::memory_order_acquire);
+                auto did_exchange = YAK::atomic_compare_exchange_strong(lockp, current, desired, YAK::MemoryOrder::memory_order_acquire);
                 if (!did_exchange)
                     continue; // tough luck, try again.
                 return value_if_okay;
@@ -629,7 +629,7 @@ static int rwlock_rdlock_maybe_timed(u32* lockp, const struct timespec* timeout 
         // If no one else is waiting for the read wake bit, set it.
         if (!(current & reader_wake_mask)) {
             auto desired = current | reader_wake_mask;
-            auto did_exchange = AK::atomic_compare_exchange_strong(lockp, current, desired, AK::MemoryOrder::memory_order_acquire);
+            auto did_exchange = YAK::atomic_compare_exchange_strong(lockp, current, desired, YAK::MemoryOrder::memory_order_acquire);
             if (!did_exchange)
                 continue; // Something interesting happened!
 
@@ -648,7 +648,7 @@ static int rwlock_rdlock_maybe_timed(u32* lockp, const struct timespec* timeout 
         }
         errno = 0;
         // Reload the 'current' value
-        current = AK::atomic_load(lockp);
+        current = YAK::atomic_load(lockp);
     }
     return value_if_timeout;
 }
@@ -656,7 +656,7 @@ static int rwlock_rdlock_maybe_timed(u32* lockp, const struct timespec* timeout 
 static int rwlock_wrlock_maybe_timed(pthread_rwlock_t* lockval_p, const struct timespec* timeout = nullptr, bool only_once = false, int value_if_timeout = -1, int value_if_okay = -2)
 {
     u32* lockp = reinterpret_cast<u32*>(lockval_p);
-    auto current = AK::atomic_load(lockp);
+    auto current = YAK::atomic_load(lockp);
     for (; !only_once;) {
         // First, see if this is locked for writing, and if there are any readers.
         // if not, lock it.
@@ -664,12 +664,12 @@ static int rwlock_wrlock_maybe_timed(pthread_rwlock_t* lockval_p, const struct t
         if (!(current & writer_locked_mask) && ((u16)current) == 0) {
             if (!(current & writer_intent_mask)) {
                 auto desired = current | writer_locked_mask | writer_intent_mask;
-                auto did_exchange = AK::atomic_compare_exchange_strong(lockp, current, desired, AK::MemoryOrder::memory_order_acquire);
+                auto did_exchange = YAK::atomic_compare_exchange_strong(lockp, current, desired, YAK::MemoryOrder::memory_order_acquire);
                 if (!did_exchange)
                     continue;
 
                 // Now that we've locked the value, it's safe to set our thread ID.
-                AK::atomic_store(reinterpret_cast<i32*>(lockval_p) + 1, pthread_self());
+                YAK::atomic_store(reinterpret_cast<i32*>(lockval_p) + 1, pthread_self());
                 return value_if_okay;
             }
         }
@@ -677,7 +677,7 @@ static int rwlock_wrlock_maybe_timed(pthread_rwlock_t* lockval_p, const struct t
         // That didn't work, if no one else is waiting for the write bit, set it.
         if (!(current & writer_wake_mask)) {
             auto desired = current | writer_wake_mask | writer_intent_mask;
-            auto did_exchange = AK::atomic_compare_exchange_strong(lockp, current, desired, AK::MemoryOrder::memory_order_acquire);
+            auto did_exchange = YAK::atomic_compare_exchange_strong(lockp, current, desired, YAK::MemoryOrder::memory_order_acquire);
             if (!did_exchange)
                 continue; // Something interesting happened!
 
@@ -696,7 +696,7 @@ static int rwlock_wrlock_maybe_timed(pthread_rwlock_t* lockval_p, const struct t
         }
         errno = 0;
         // Reload the 'current' value
-        current = AK::atomic_load(lockp);
+        current = YAK::atomic_load(lockp);
     }
 
     return value_if_timeout;
@@ -754,17 +754,17 @@ int pthread_rwlock_unlock(pthread_rwlock_t* lockval_p)
 
     // This is a weird API, we don't really know whether we're unlocking write or read...
     auto lockp = reinterpret_cast<u32*>(lockval_p);
-    auto current = AK::atomic_load(lockp, AK::MemoryOrder::memory_order_relaxed);
+    auto current = YAK::atomic_load(lockp, YAK::MemoryOrder::memory_order_relaxed);
     if (current & writer_locked_mask) {
         // If this lock is locked for writing, its owner better be us!
-        auto owner_id = AK::atomic_load(reinterpret_cast<i32*>(lockval_p) + 1);
+        auto owner_id = YAK::atomic_load(reinterpret_cast<i32*>(lockval_p) + 1);
         auto my_id = pthread_self();
         if (owner_id != my_id)
             return EINVAL; // you don't own this lock, silly.
 
         // Now just unlock it.
         auto desired = current & ~(writer_locked_mask | writer_intent_mask);
-        AK::atomic_store(lockp, desired, AK::MemoryOrder::memory_order_release);
+        YAK::atomic_store(lockp, desired, YAK::MemoryOrder::memory_order_release);
         // Then wake both readers and writers, if any.
         auto rc = futex(lockp, FUTEX_WAKE_BITSET, current, nullptr, nullptr, (current & writer_wake_mask) | reader_wake_mask);
         if (rc < 0)
@@ -780,7 +780,7 @@ int pthread_rwlock_unlock(pthread_rwlock_t* lockval_p)
         }
         --count;
         auto desired = (current << 16) | count;
-        auto did_exchange = AK::atomic_compare_exchange_strong(lockp, current, desired, AK::MemoryOrder::memory_order_release);
+        auto did_exchange = YAK::atomic_compare_exchange_strong(lockp, current, desired, YAK::MemoryOrder::memory_order_release);
         if (!did_exchange)
             continue; // tough luck, try again.
     }

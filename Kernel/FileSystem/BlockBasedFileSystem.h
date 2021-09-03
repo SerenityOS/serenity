@@ -50,9 +50,9 @@ private:
 }
 
 template<>
-struct AK::Formatter<Kernel::BlockBasedFileSystem::BlockIndex> : AK::Formatter<FormatString> {
+struct YAK::Formatter<Kernel::BlockBasedFileSystem::BlockIndex> : YAK::Formatter<FormatString> {
     void format(FormatBuilder& builder, Kernel::BlockBasedFileSystem::BlockIndex value)
     {
-        return AK::Formatter<FormatString>::format(builder, "{}", value.value());
+        return YAK::Formatter<FormatString>::format(builder, "{}", value.value());
     }
 };

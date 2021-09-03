@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/HashMap.h>
-#include <AK/IDAllocator.h>
+#include <YAK/Debug.h>
+#include <YAK/HashMap.h>
+#include <YAK/IDAllocator.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Menu.h>

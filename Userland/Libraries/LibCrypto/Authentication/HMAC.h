@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/StringView.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 
 constexpr static auto IPAD = 0x36;
 constexpr static auto OPAD = 0x5c;

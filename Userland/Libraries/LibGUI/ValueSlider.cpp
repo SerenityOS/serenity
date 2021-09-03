@@ -32,7 +32,7 @@ ValueSlider::ValueSlider(Gfx::Orientation orientation, String suffix)
 
     m_textbox->on_change = [&]() {
         String value = m_textbox->text();
-        if (value.ends_with(m_suffix, AK::CaseSensitivity::CaseInsensitive))
+        if (value.ends_with(m_suffix, YAK::CaseSensitivity::CaseInsensitive))
             value = value.substring_view(0, value.length() - m_suffix.length());
         auto integer_value = value.to_int();
         if (integer_value.has_value())

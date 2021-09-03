@@ -8,13 +8,13 @@
 
 #include "Job.h"
 #include "Parser.h"
-#include <AK/CircularQueue.h>
-#include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/CircularQueue.h>
+#include <YAK/HashMap.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 #include <LibLine/Editor.h>

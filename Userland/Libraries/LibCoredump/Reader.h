@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/MappedFile.h>
-#include <AK/Noncopyable.h>
-#include <AK/OwnPtr.h>
+#include <YAK/HashMap.h>
+#include <YAK/MappedFile.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/OwnPtr.h>
 #include <LibELF/Core.h>
 #include <LibELF/Image.h>
 
 namespace Coredump {
 
 class Reader {
-    AK_MAKE_NONCOPYABLE(Reader);
-    AK_MAKE_NONMOVABLE(Reader);
+    YAK_MAKE_NONCOPYABLE(Reader);
+    YAK_MAKE_NONMOVABLE(Reader);
 
 public:
     static OwnPtr<Reader> create(const String&);

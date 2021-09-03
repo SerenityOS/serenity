@@ -5,8 +5,8 @@
  */
 
 #include "DHCPv4Client.h"
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
+#include <YAK/JsonArray.h>
+#include <YAK/JsonObject.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <stdio.h>

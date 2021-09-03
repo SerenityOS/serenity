@@ -7,7 +7,7 @@
 #include "ClassViewWidget.h"
 #include "HackStudio.h"
 #include "ProjectDeclarations.h"
-#include <AK/StdLibExtras.h>
+#include <YAK/StdLibExtras.h>
 #include <LibGUI/BoxLayout.h>
 #include <string.h>
 

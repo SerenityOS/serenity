@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/QuickSort.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/QuickSort.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +34,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         }
         if (buflen == -1)
             break;
-        lines.append({ buffer, AK::ShouldChomp::Chomp });
+        lines.append({ buffer, YAK::ShouldChomp::Chomp });
     }
 
     quick_sort(lines, [](auto& a, auto& b) {

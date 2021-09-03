@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Array.h>
-#include <AK/Format.h>
+#include <YAK/Array.h>
+#include <YAK/Format.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
@@ -81,7 +81,7 @@ private:
 }
 
 template<>
-struct AK::Formatter<Cards::Card> : Formatter<FormatString> {
+struct YAK::Formatter<Cards::Card> : Formatter<FormatString> {
     void format(FormatBuilder& builder, const Cards::Card& card)
     {
         StringView type;

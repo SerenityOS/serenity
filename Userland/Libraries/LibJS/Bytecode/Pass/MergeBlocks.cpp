@@ -88,7 +88,7 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
     };
 
     for (auto& entry : blocks_to_replace) {
-        AK::Array candidates { entry.key };
+        YAK::Array candidates { entry.key };
         (void)replace_blocks(candidates, *entry.value);
     }
 

@@ -13,11 +13,11 @@
 #include "Tex/NameAllocator.h"
 #include "Tex/Texture.h"
 #include "Tex/TextureUnit.h"
-#include <AK/HashMap.h>
-#include <AK/RefPtr.h>
-#include <AK/Tuple.h>
-#include <AK/Variant.h>
-#include <AK/Vector.h>
+#include <YAK/HashMap.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Tuple.h>
+#include <YAK/Variant.h>
+#include <YAK/Vector.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Vector3.h>

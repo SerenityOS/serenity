@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/AnyOf.h>
-#include <AK/Array.h>
+#include <YAK/AnyOf.h>
+#include <YAK/Array.h>
 
 TEST_CASE(should_determine_if_predicate_applies_to_any_element_in_container)
 {

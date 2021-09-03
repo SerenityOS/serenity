@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/String.h>
+#include <YAK/Function.h>
+#include <YAK/String.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 

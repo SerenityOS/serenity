@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
+#include <YAK/CharacterTypes.h>
 #include <LibIMAP/QuotedPrintable.h>
 #include <LibTest/TestCase.h>
 
@@ -26,7 +26,7 @@ TEST_CASE(test_decode)
     decode_equal("=68=65=6C=6C=6F=20=\r\n=77=6F=72=6C=64", "hello world");
 
     // Doesn't mistake hex sequences without a preceding '=' as an escape sequence.
-    decode_equal("4A=4B=4C4D", "4AKL4D");
+    decode_equal("4A=4B=4C4D", "4YAKL4D");
 
     // Allows lowercase escape sequences.
     decode_equal("=4a=4b=4c=4d=4e=4f", "JKLMNO");

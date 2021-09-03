@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/TypeCasts.h>
+#include <YAK/TypeCasts.h>
 #include <LibWeb/UIEvents/UIEvent.h>
 
 namespace Web::UIEvents {

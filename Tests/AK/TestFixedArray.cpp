@@ -6,8 +6,8 @@
 
 #include <LibTest/TestSuite.h>
 
-#include <AK/FixedArray.h>
-#include <AK/String.h>
+#include <YAK/FixedArray.h>
+#include <YAK/String.h>
 
 TEST_CASE(construct)
 {

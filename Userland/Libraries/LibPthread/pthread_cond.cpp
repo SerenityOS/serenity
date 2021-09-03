@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Atomic.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/Atomic.h>
+#include <YAK/Types.h>
 #include <errno.h>
 #include <pthread.h>
 #include <serenity.h>
@@ -66,14 +66,14 @@ int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, const s
 {
     // Save the mutex this condition variable is associated with. We don't (yet)
     // support changing this mutex once set.
-    pthread_mutex_t* old_mutex = AK::atomic_exchange(&cond->mutex, mutex, AK::memory_order_relaxed);
+    pthread_mutex_t* old_mutex = YAK::atomic_exchange(&cond->mutex, mutex, YAK::memory_order_relaxed);
     if (old_mutex && old_mutex != mutex)
         TODO();
 
     // Fetch the current value, and record that we're about to wait. Fetching
     // the current value has to be done while we hold the mutex, because the
     // value might change as soon as we unlock it.
-    u32 value = AK::atomic_fetch_or(&cond->value, NEED_TO_WAKE_ONE | NEED_TO_WAKE_ALL, AK::memory_order_release) | NEED_TO_WAKE_ONE | NEED_TO_WAKE_ALL;
+    u32 value = YAK::atomic_fetch_or(&cond->value, NEED_TO_WAKE_ONE | NEED_TO_WAKE_ALL, YAK::memory_order_release) | NEED_TO_WAKE_ONE | NEED_TO_WAKE_ALL;
     pthread_mutex_unlock(mutex);
     int rc = futex_wait(&cond->value, value, abstime, cond->clockid);
     if (rc < 0 && errno != EAGAIN)
@@ -88,7 +88,7 @@ int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, const s
 int pthread_cond_signal(pthread_cond_t* cond)
 {
     // Increment the generation.
-    u32 value = AK::atomic_fetch_add(&cond->value, INCREMENT, AK::memory_order_relaxed);
+    u32 value = YAK::atomic_fetch_add(&cond->value, INCREMENT, YAK::memory_order_relaxed);
     // Fast path: nobody's waiting (or at least, nobody has to be woken).
     if (!(value & NEED_TO_WAKE_ONE)) [[likely]]
         return 0;
@@ -100,7 +100,7 @@ int pthread_cond_signal(pthread_cond_t* cond)
     // wake someone up and seeing there was nobody waiting; but that would race
     // with somebody else setting the flag. Therefore, we do it like this:
     // attempt to clear the flag first...
-    value = AK::atomic_fetch_and(&cond->value, ~NEED_TO_WAKE_ONE, AK::memory_order_relaxed);
+    value = YAK::atomic_fetch_and(&cond->value, ~NEED_TO_WAKE_ONE, YAK::memory_order_relaxed);
     // ...check if it was already cleared by someone else...
     if (!(value & NEED_TO_WAKE_ONE)) [[likely]]
         return 0;
@@ -109,7 +109,7 @@ int pthread_cond_signal(pthread_cond_t* cond)
     VERIFY(rc >= 0);
     // ...and if we have woken someone, put the flag back.
     if (rc > 0)
-        AK::atomic_fetch_or(&cond->value, NEED_TO_WAKE_ONE, AK::memory_order_relaxed);
+        YAK::atomic_fetch_or(&cond->value, NEED_TO_WAKE_ONE, YAK::memory_order_relaxed);
 
     return 0;
 }
@@ -117,14 +117,14 @@ int pthread_cond_signal(pthread_cond_t* cond)
 int pthread_cond_broadcast(pthread_cond_t* cond)
 {
     // Increment the generation.
-    u32 value = AK::atomic_fetch_add(&cond->value, INCREMENT, AK::memory_order_relaxed);
+    u32 value = YAK::atomic_fetch_add(&cond->value, INCREMENT, YAK::memory_order_relaxed);
     // Fast path: nobody's waiting (or at least, nobody has to be woken).
     if (!(value & NEED_TO_WAKE_ALL)) [[likely]]
         return 0;
 
-    AK::atomic_fetch_and(&cond->value, ~(NEED_TO_WAKE_ONE | NEED_TO_WAKE_ALL), AK::memory_order_acquire);
+    YAK::atomic_fetch_and(&cond->value, ~(NEED_TO_WAKE_ONE | NEED_TO_WAKE_ALL), YAK::memory_order_acquire);
 
-    pthread_mutex_t* mutex = AK::atomic_load(&cond->mutex, AK::memory_order_relaxed);
+    pthread_mutex_t* mutex = YAK::atomic_load(&cond->mutex, YAK::memory_order_relaxed);
     VERIFY(mutex);
 
     int rc = futex(&cond->value, FUTEX_REQUEUE, 1, nullptr, &mutex->lock, INT_MAX);

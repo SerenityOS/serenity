@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/Checked.h>
-#include <AK/CircularQueue.h>
-#include <AK/HashMap.h>
-#include <AK/NonnullOwnPtr.h>
+#include <YAK/Badge.h>
+#include <YAK/Checked.h>
+#include <YAK/CircularQueue.h>
+#include <YAK/HashMap.h>
+#include <YAK/NonnullOwnPtr.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/Forward.h>

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
+#include <YAK/HashMap.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Value.h>

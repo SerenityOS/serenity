@@ -7,8 +7,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Optional.h>
-#include <AK/String.h>
+#include <YAK/Optional.h>
+#include <YAK/String.h>
 
 TEST_CASE(basic_optional)
 {
@@ -100,7 +100,7 @@ TEST_CASE(comparison_with_numeric_types)
 
 TEST_CASE(test_copy_ctor_and_dtor_called)
 {
-#ifdef AK_HAVE_CONDITIONALLY_TRIVIAL
+#ifdef YAK_HAVE_CONDITIONALLY_TRIVIAL
     static_assert(IsTriviallyDestructible<Optional<u8>>);
     static_assert(IsTriviallyCopyable<Optional<u8>>);
     static_assert(IsTriviallyCopyConstructible<Optional<u8>>);
@@ -182,7 +182,7 @@ TEST_CASE(test_copy_ctor_and_dtor_called)
     Optional<MoveChecker> move2 = move(move1);
     EXPECT(was_moved);
 
-#ifdef AK_HAVE_CONDITIONALLY_TRIVIAL
+#ifdef YAK_HAVE_CONDITIONALLY_TRIVIAL
     struct NonDestructible {
         ~NonDestructible() = delete;
     };

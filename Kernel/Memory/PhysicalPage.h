@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
+#include <YAK/NonnullRefPtr.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::Memory {
@@ -17,8 +17,8 @@ enum class MayReturnToFreeList : bool {
 };
 
 class PhysicalPage {
-    AK_MAKE_NONCOPYABLE(PhysicalPage);
-    AK_MAKE_NONMOVABLE(PhysicalPage);
+    YAK_MAKE_NONCOPYABLE(PhysicalPage);
+    YAK_MAKE_NONMOVABLE(PhysicalPage);
 
     friend class MemoryManager;
 
@@ -27,18 +27,18 @@ public:
 
     void ref()
     {
-        m_ref_count.fetch_add(1, AK::memory_order_acq_rel);
+        m_ref_count.fetch_add(1, YAK::memory_order_acq_rel);
     }
 
     void unref()
     {
-        if (m_ref_count.fetch_sub(1, AK::memory_order_acq_rel) == 1)
+        if (m_ref_count.fetch_sub(1, YAK::memory_order_acq_rel) == 1)
             free_this();
     }
 
     static NonnullRefPtr<PhysicalPage> create(PhysicalAddress, MayReturnToFreeList may_return_to_freelist = MayReturnToFreeList::Yes);
 
-    u32 ref_count() const { return m_ref_count.load(AK::memory_order_consume); }
+    u32 ref_count() const { return m_ref_count.load(YAK::memory_order_consume); }
 
     bool is_shared_zero_page() const;
     bool is_lazy_committed_page() const;

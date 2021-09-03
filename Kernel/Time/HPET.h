@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/OwnPtr.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/PhysicalAddress.h>
 

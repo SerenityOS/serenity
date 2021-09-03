@@ -14,8 +14,8 @@ namespace WebContent {
 class ClientConnection;
 
 class PageHost final : public Web::PageClient {
-    AK_MAKE_NONCOPYABLE(PageHost);
-    AK_MAKE_NONMOVABLE(PageHost);
+    YAK_MAKE_NONCOPYABLE(PageHost);
+    YAK_MAKE_NONMOVABLE(PageHost);
 
 public:
     static NonnullOwnPtr<PageHost> create(ClientConnection& client) { return adopt_own(*new PageHost(client)); }

@@ -6,7 +6,7 @@
 
 #include "Game.h"
 #include "LevelSelectDialog.h"
-#include <AK/Random.h>
+#include <YAK/Random.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>

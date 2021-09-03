@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Checked.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Checked.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>

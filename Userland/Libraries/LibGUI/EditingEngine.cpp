@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
+#include <YAK/CharacterTypes.h>
 #include <LibGUI/EditingEngine.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/TextEditor.h>

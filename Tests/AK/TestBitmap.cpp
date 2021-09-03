@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Bitmap.h>
+#include <YAK/Bitmap.h>
 
 TEST_CASE(construct_empty)
 {

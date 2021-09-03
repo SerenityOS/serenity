@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AK/Forward.h>
-#include <AK/String.h>
+#include <YAK/Forward.h>
+#include <YAK/String.h>
 
 namespace LookupServer {
 
@@ -25,7 +25,7 @@ public:
 
     bool operator==(const DNSName& other) const { return Traits::equals(*this, other); }
 
-    class Traits : public AK::Traits<DNSName> {
+    class Traits : public YAK::Traits<DNSName> {
     public:
         static unsigned hash(const DNSName& name);
         static bool equals(const DNSName&, const DNSName&);
@@ -40,7 +40,7 @@ OutputStream& operator<<(OutputStream& stream, const DNSName&);
 }
 
 template<>
-struct AK::Formatter<LookupServer::DNSName> : Formatter<StringView> {
+struct YAK::Formatter<LookupServer::DNSName> : Formatter<StringView> {
     void format(FormatBuilder& builder, const LookupServer::DNSName& value)
     {
         return Formatter<StringView>::format(builder, value.as_string());

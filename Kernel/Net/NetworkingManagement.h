@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/Types.h>
+#include <YAK/Function.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Memory/Region.h>
 
@@ -19,7 +19,7 @@ namespace Kernel {
 class NetworkAdapter;
 class NetworkingManagement {
     friend class NetworkAdapter;
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 
 public:
     static NetworkingManagement& the();

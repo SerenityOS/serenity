@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
-#include <AK/String.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MappedFile.h>
+#include <YAK/String.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>

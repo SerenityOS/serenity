@@ -6,10 +6,10 @@
  */
 
 #include "Buffer.h"
-#include <AK/Atomic.h>
-#include <AK/Debug.h>
-#include <AK/StdLibExtras.h>
-#include <AK/String.h>
+#include <YAK/Atomic.h>
+#include <YAK/Debug.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/String.h>
 
 namespace Audio {
 

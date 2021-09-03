@@ -7,12 +7,12 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/RefCounted.h>
-#include <AK/StackInfo.h>
-#include <AK/Variant.h>
+#include <YAK/FlyString.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/RefCounted.h>
+#include <YAK/StackInfo.h>
+#include <YAK/Variant.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/CommonPropertyNames.h>
 #include <LibJS/Runtime/Error.h>

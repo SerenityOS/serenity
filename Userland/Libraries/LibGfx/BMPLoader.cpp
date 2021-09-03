@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Function.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
+#include <YAK/Debug.h>
+#include <YAK/Function.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MappedFile.h>
 #include <LibGfx/BMPLoader.h>
 
 namespace Gfx {
@@ -71,7 +71,7 @@ struct Endpoint {
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<typename T>
 struct Formatter<Gfx::Endpoint<T>> : Formatter<StringView> {

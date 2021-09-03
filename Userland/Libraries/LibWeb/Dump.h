@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/Forward.h>
+#include <YAK/Forward.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {

@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/BinarySearch.h>
-#include <AK/Span.h>
+#include <YAK/BinarySearch.h>
+#include <YAK/Span.h>
 #include <cstring>
 #include <new>
 

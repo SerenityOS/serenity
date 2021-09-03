@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
+#include <YAK/Singleton.h>
 #include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
@@ -17,7 +17,7 @@
 namespace Kernel {
 
 static Singleton<KernelRng> s_the;
-static Atomic<u32, AK::MemoryOrder::memory_order_relaxed> s_next_random_value = 1;
+static Atomic<u32, YAK::MemoryOrder::memory_order_relaxed> s_next_random_value = 1;
 
 KernelRng& KernelRng::the()
 {

@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Checked.h>
-#include <AK/String.h>
+#include <YAK/Assertions.h>
+#include <YAK/Checked.h>
+#include <YAK/String.h>
 #include <LibC/elf.h>
 #include <LibELF/Validation.h>
 #include <limits.h>

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Memory.h>
-#include <AK/StringView.h>
+#include <YAK/Assertions.h>
+#include <YAK/Memory.h>
+#include <YAK/StringView.h>
 #include <Kernel/BootInfo.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/FileSystem/Inode.h>
@@ -480,7 +480,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         auto& physical_page_entry = m_physical_page_entries[physical_page_index];
         auto physical_page = adopt_ref(*new (&physical_page_entry.allocated.physical_page) PhysicalPage(MayReturnToFreeList::No));
         auto result = kernel_page_tables.set(virtual_page_array_current_page & ~0x1fffff, move(physical_page));
-        VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+        VERIFY(result == YAK::HashSetResult::InsertedNewEntry);
 
         virtual_page_array_current_page += (PAGE_SIZE / sizeof(PageTableEntry)) * PAGE_SIZE;
     }
@@ -558,7 +558,7 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
         // This allows us to release the page table entry when no longer needed
         auto result = page_directory.m_page_tables.set(vaddr.get() & ~(FlatPtr)0x1fffff, page_table.release_nonnull());
         // If you're hitting this VERIFY on x86_64 chances are a 64-bit pointer was truncated somewhere
-        VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+        VERIFY(result == YAK::HashSetResult::InsertedNewEntry);
     }
 
     return &quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()))[page_table_index];

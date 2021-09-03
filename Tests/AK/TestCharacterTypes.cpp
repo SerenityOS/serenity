@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/CharacterTypes.h>
+#include <YAK/CharacterTypes.h>
 #include <ctype.h>
 
 #define ASCII 0x80

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Badge.h>
+#include <YAK/Badge.h>
 #include <LibCore/Socket.h>
 
 namespace Core {

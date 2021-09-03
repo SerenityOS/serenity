@@ -6,9 +6,9 @@
 
 #define _BSD_SOURCE
 #define _DEFAULT_SOURCE
-#include <AK/Assertions.h>
-#include <AK/Endian.h>
-#include <AK/Random.h>
+#include <YAK/Assertions.h>
+#include <YAK/Endian.h>
+#include <YAK/Random.h>
 #include <LibCore/ArgsParser.h>
 #include <arpa/inet.h>
 #include <inttypes.h>

@@ -6,9 +6,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
-#include <AK/StringBuilder.h>
-#include <AK/Utf8View.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Utf8View.h>
 #include <LibCore/Timer.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>

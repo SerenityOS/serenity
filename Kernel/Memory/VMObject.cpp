@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
+#include <YAK/Singleton.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/VMObject.h>
 

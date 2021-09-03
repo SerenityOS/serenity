@@ -1,0 +1,2 @@
+serenity_install_headers(YAK)
+serenity_install_sources(YAK)

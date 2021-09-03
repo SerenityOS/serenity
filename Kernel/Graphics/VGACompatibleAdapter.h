@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
@@ -18,7 +18,7 @@ namespace Kernel {
 
 class VGACompatibleAdapter : public GraphicsDevice
     , public PCI::Device {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     static NonnullRefPtr<VGACompatibleAdapter> initialize_with_preset_resolution(PCI::Address, PhysicalAddress, size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch);
     static NonnullRefPtr<VGACompatibleAdapter> initialize(PCI::Address);

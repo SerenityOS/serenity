@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Array.h>
+#include <YAK/Array.h>
 
 namespace Compress {
 

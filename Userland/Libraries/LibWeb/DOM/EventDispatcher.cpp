@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/TypeCasts.h>
+#include <YAK/Assertions.h>
+#include <YAK/TypeCasts.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/EventTargetWrapper.h>
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>

@@ -6,14 +6,14 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Noncopyable.h>
-#include <AK/QuickSort.h>
-#include <AK/StdLibExtras.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/QuickSort.h>
+#include <YAK/StdLibExtras.h>
 
 TEST_CASE(sorts_without_copy)
 {
     struct NoCopy {
-        AK_MAKE_NONCOPYABLE(NoCopy);
+        YAK_MAKE_NONCOPYABLE(NoCopy);
 
     public:
         NoCopy() = default;
@@ -39,7 +39,7 @@ TEST_CASE(sorts_without_copy)
     for (size_t i = 0; i < 64; ++i)
         array[i].value = (64 - i) % 32 + 32;
 
-    AK::single_pivot_quick_sort(array.begin(), array.end(), [](auto& a, auto& b) { return a.value < b.value; });
+    YAK::single_pivot_quick_sort(array.begin(), array.end(), [](auto& a, auto& b) { return a.value < b.value; });
 
     for (size_t i = 0; i < 63; ++i)
         EXPECT(array[i].value <= array[i + 1].value);
@@ -88,7 +88,7 @@ TEST_CASE(maximum_stack_depth)
 
     int max_depth = 0;
     DepthMeasurer measurer(max_depth);
-    AK::single_pivot_quick_sort(data, data + size, measurer);
+    YAK::single_pivot_quick_sort(data, data + size, measurer);
 
     EXPECT(max_depth <= 64);
 

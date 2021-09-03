@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/Span.h>
-#include <AK/String.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Span.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 
 namespace Crypto {
 
@@ -123,7 +123,7 @@ struct UnsignedDivisionResult {
 }
 
 template<>
-struct AK::Formatter<Crypto::UnsignedBigInteger> : Formatter<StringView> {
+struct YAK::Formatter<Crypto::UnsignedBigInteger> : Formatter<StringView> {
     void format(FormatBuilder&, const Crypto::UnsignedBigInteger&);
 };
 

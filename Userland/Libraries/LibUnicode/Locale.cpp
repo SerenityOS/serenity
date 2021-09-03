@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/AllOf.h>
-#include <AK/CharacterTypes.h>
-#include <AK/GenericLexer.h>
-#include <AK/QuickSort.h>
-#include <AK/StringBuilder.h>
+#include <YAK/AllOf.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/QuickSort.h>
+#include <YAK/StringBuilder.h>
 #include <LibUnicode/Locale.h>
 
 #if ENABLE_UNICODE_DATA

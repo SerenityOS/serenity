@@ -8,18 +8,18 @@
 #include "SoftwareGLContext.h"
 #include "GLStruct.h"
 #include "SoftwareRasterizer.h"
-#include <AK/Assertions.h>
-#include <AK/Debug.h>
-#include <AK/Format.h>
-#include <AK/QuickSort.h>
-#include <AK/TemporaryChange.h>
-#include <AK/Variant.h>
-#include <AK/Vector.h>
+#include <YAK/Assertions.h>
+#include <YAK/Debug.h>
+#include <YAK/Format.h>
+#include <YAK/QuickSort.h>
+#include <YAK/TemporaryChange.h>
+#include <YAK/Variant.h>
+#include <YAK/Vector.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector4.h>
 
-using AK::dbgln;
+using YAK::dbgln;
 
 namespace GL {
 

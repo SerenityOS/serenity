@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibVT/EscapeSequenceParser.h>
 #include <LibVT/Position.h>

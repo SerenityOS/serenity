@@ -6,11 +6,11 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/HashMap.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/HashMap.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonValue.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 
 TEST_CASE(load_form)
 {

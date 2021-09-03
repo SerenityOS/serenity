@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/Queue.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
-#include <AK/Types.h>
-#include <AK/Utf8View.h>
+#include <YAK/Queue.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/StringView.h>
+#include <YAK/Types.h>
+#include <YAK/Utf8View.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/Parser/HTMLToken.h>
 

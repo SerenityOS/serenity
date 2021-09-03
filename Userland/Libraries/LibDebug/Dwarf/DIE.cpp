@@ -7,8 +7,8 @@
 #include "DIE.h"
 #include "CompilationUnit.h"
 #include "DwarfInfo.h"
-#include <AK/ByteBuffer.h>
-#include <AK/MemoryStream.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/MemoryStream.h>
 
 namespace Debug::Dwarf {
 

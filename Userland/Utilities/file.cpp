@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MappedFile.h>
-#include <AK/Vector.h>
+#include <YAK/MappedFile.h>
+#include <YAK/Vector.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/FileStream.h>

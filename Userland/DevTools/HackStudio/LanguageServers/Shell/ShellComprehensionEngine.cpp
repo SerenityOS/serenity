@@ -5,8 +5,8 @@
  */
 
 #include "ShellComprehensionEngine.h"
-#include <AK/Assertions.h>
-#include <AK/HashTable.h>
+#include <YAK/Assertions.h>
+#include <YAK/HashTable.h>
 #include <LibRegex/Regex.h>
 #include <Userland/DevTools/HackStudio/LanguageServers/ClientConnection.h>
 

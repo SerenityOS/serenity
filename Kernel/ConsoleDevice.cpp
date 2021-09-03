@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
+#include <YAK/Singleton.h>
 #include <Kernel/ConsoleDevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/Locking/Spinlock.h>

@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/Noncopyable.h>
-#include <AK/RefCounted.h>
-#include <AK/StringView.h>
+#include <YAK/HashMap.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/RefCounted.h>
+#include <YAK/StringView.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Size.h>
@@ -42,7 +42,7 @@ struct ScaledGlyphMetrics {
 };
 
 class Font : public RefCounted<Font> {
-    AK_MAKE_NONCOPYABLE(Font);
+    YAK_MAKE_NONCOPYABLE(Font);
 
 public:
     static Result<NonnullRefPtr<Font>, String> try_load_from_file(String path, unsigned index = 0);

@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
-#include <AK/Endian.h>
-#include <AK/HashMap.h>
-#include <AK/IPv4Address.h>
-#include <AK/MACAddress.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
-#include <AK/Traits.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Endian.h>
+#include <YAK/HashMap.h>
+#include <YAK/IPv4Address.h>
+#include <YAK/MACAddress.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/StringView.h>
+#include <YAK/Traits.h>
+#include <YAK/Types.h>
 #include <string.h>
 
 enum class DHCPv4Flags : u16 {
@@ -107,7 +107,7 @@ enum class DHCPMessageType : u8 {
 };
 
 template<>
-struct AK::Traits<DHCPOption> : public GenericTraits<DHCPOption> {
+struct YAK::Traits<DHCPOption> : public GenericTraits<DHCPOption> {
     static constexpr bool is_trivial() { return true; }
     static unsigned hash(DHCPOption u) { return int_hash((u8)u); }
 };

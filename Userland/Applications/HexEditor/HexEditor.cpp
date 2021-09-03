@@ -6,8 +6,8 @@
 
 #include "HexEditor.h"
 #include "SearchResultsModel.h"
-#include <AK/Debug.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Debug.h>
+#include <YAK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Menu.h>

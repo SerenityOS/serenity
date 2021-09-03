@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/Concepts.h>
-#include <AK/HashTable.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/String.h>
+#include <YAK/Concepts.h>
+#include <YAK/HashTable.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/String.h>
 #include <Kernel/Arch/x86/PageFault.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Forward.h>
@@ -107,7 +107,7 @@ extern RecursiveSpinlock s_mm_lock;
 // You can allocate pages from it via `take_one()`
 // It will uncommit any (unallocated) remaining pages when destroyed.
 class CommittedPhysicalPageSet {
-    AK_MAKE_NONCOPYABLE(CommittedPhysicalPageSet);
+    YAK_MAKE_NONCOPYABLE(CommittedPhysicalPageSet);
 
 public:
     CommittedPhysicalPageSet(Badge<MemoryManager>, size_t page_count)
@@ -135,7 +135,7 @@ private:
 };
 
 class MemoryManager {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
     friend class PageDirectory;
     friend class AnonymousVMObject;
     friend class Region;

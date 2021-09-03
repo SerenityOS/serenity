@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/EnumBits.h>
-#include <AK/HashMap.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/RecursionDecision.h>
-#include <AK/StringView.h>
-#include <AK/Types.h>
+#include <YAK/EnumBits.h>
+#include <YAK/HashMap.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/RecursionDecision.h>
+#include <YAK/StringView.h>
+#include <YAK/Types.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/KBuffer.h>

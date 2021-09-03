@@ -9,18 +9,18 @@
 #include "Forward.h"
 #include "Job.h"
 #include "NodeVisitor.h"
-#include <AK/Format.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/String.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/Format.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <LibLine/Editor.h>
 
 namespace Shell::AST {
 
-using AK::make_ref_counted;
+using YAK::make_ref_counted;
 
 template<typename T>
 static inline NonnullRefPtr<T> make_ref_counted(std::initializer_list<NonnullRefPtr<Value>> arg)
@@ -402,8 +402,8 @@ private:
 };
 
 class Node : public RefCounted<Node> {
-    AK_MAKE_NONCOPYABLE(Node);
-    AK_MAKE_NONMOVABLE(Node);
+    YAK_MAKE_NONCOPYABLE(Node);
+    YAK_MAKE_NONMOVABLE(Node);
 
 public:
     virtual void dump(int level) const = 0;
@@ -1502,7 +1502,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<Shell::AST::Command> : StandardFormatter {

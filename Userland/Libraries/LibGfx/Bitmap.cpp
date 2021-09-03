@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Checked.h>
-#include <AK/LexicalPath.h>
-#include <AK/Memory.h>
-#include <AK/MemoryStream.h>
-#include <AK/Optional.h>
-#include <AK/ScopeGuard.h>
-#include <AK/String.h>
+#include <YAK/Checked.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/Memory.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/Optional.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/String.h>
 #include <LibGfx/BMPLoader.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/DDSLoader.h>

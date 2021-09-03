@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
+#include <YAK/Singleton.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Graphics/Bochs/GraphicsAdapter.h>

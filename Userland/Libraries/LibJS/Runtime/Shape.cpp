@@ -211,7 +211,7 @@ void Shape::add_property_without_transition(StringOrSymbol const& property_name,
 {
     VERIFY(property_name.is_valid());
     ensure_property_table();
-    if (m_property_table->set(property_name, { m_property_count, attributes }) == AK::HashSetResult::InsertedNewEntry)
+    if (m_property_table->set(property_name, { m_property_count, attributes }) == YAK::HashSetResult::InsertedNewEntry)
         ++m_property_count;
 }
 

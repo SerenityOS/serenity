@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
-#include <AK/LexicalPath.h>
-#include <AK/QuickSort.h>
-#include <AK/Result.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <AK/Vector.h>
+#include <YAK/Format.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/QuickSort.h>
+#include <YAK/Result.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
+#include <YAK/Vector.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <spawn.h>

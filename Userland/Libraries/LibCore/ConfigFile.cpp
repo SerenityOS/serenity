@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringBuilder.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>

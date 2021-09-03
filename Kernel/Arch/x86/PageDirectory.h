@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/Types.h>
+#include <YAK/Badge.h>
+#include <YAK/Types.h>
 #include <Kernel/Forward.h>
 #include <Kernel/PhysicalAddress.h>
 

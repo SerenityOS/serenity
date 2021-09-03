@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/HashMap.h>
-#include <AK/TemporaryChange.h>
+#include <YAK/HashMap.h>
+#include <YAK/TemporaryChange.h>
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWasm/Printer/Printer.h>
 

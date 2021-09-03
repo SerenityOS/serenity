@@ -7,7 +7,7 @@
 #include "LibRegex/RegexMatcher.h"
 #include <LibTest/TestCase.h> // import first, to prevent warning of VERIFY* redefinition
 
-#include <AK/StringBuilder.h>
+#include <YAK/StringBuilder.h>
 #include <LibRegex/Regex.h>
 #include <LibRegex/RegexDebug.h>
 #include <stdio.h>
@@ -709,7 +709,7 @@ TEST_CASE(ECMA262_unicode_match)
     for (auto& test : tests) {
         Regex<ECMA262> re(test.pattern, (ECMAScriptFlags)regex::AllFlags::Global | test.options);
 
-        auto subject = AK::utf8_to_utf16(test.subject);
+        auto subject = YAK::utf8_to_utf16(test.subject);
         Utf16View view { subject };
 
         if constexpr (REGEX_DEBUG) {
@@ -784,7 +784,7 @@ TEST_CASE(ECMA262_property_match)
     for (auto& test : tests) {
         Regex<ECMA262> re(test.pattern, (ECMAScriptFlags)regex::AllFlags::Global | regex::ECMAScriptFlags::BrowserExtended | test.options);
 
-        auto subject = AK::utf8_to_utf16(test.subject);
+        auto subject = YAK::utf8_to_utf16(test.subject);
         Utf16View view { subject };
 
         if constexpr (REGEX_DEBUG) {

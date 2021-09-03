@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/GenericLexer.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/OwnPtr.h>
-#include <AK/Queue.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
+#include <YAK/Assertions.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Queue.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
 #include <LibRegex/Regex.h>
 #include <stdio.h>
 #include <unistd.h>

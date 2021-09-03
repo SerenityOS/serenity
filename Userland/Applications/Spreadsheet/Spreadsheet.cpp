@@ -7,15 +7,15 @@
 #include "Spreadsheet.h"
 #include "JSIntegration.h"
 #include "Workbook.h"
-#include <AK/ByteBuffer.h>
-#include <AK/Debug.h>
-#include <AK/GenericLexer.h>
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonParser.h>
-#include <AK/ScopeGuard.h>
-#include <AK/TemporaryChange.h>
-#include <AK/URL.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Debug.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/JsonArray.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonParser.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/TemporaryChange.h>
+#include <YAK/URL.h>
 #include <LibCore/File.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/FunctionObject.h>
@@ -99,7 +99,7 @@ static Optional<size_t> convert_from_string(StringView str, unsigned base = 26, 
         // NOTE: Refer to the note in `String::bijective_base_from()'.
         if (i == 0 && len > 1)
             ++digit_value;
-        value += digit_value * AK::pow<float>(base, len - 1 - i);
+        value += digit_value * YAK::pow<float>(base, len - 1 - i);
     }
 
     return value;

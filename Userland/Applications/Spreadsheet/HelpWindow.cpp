@@ -6,7 +6,7 @@
 
 #include "HelpWindow.h"
 #include "SpreadsheetWidget.h"
-#include <AK/LexicalPath.h>
+#include <YAK/LexicalPath.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/ListView.h>

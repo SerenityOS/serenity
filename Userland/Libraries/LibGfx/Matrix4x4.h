@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Math.h>
+#include <YAK/Math.h>
 #include <LibGfx/Matrix.h>
 #include <LibGfx/Vector3.h>
 #include <LibGfx/Vector4.h>
@@ -70,8 +70,8 @@ constexpr static Matrix4x4<T> scale_matrix(const Vector3<T>& s)
 template<typename T>
 constexpr static Matrix4x4<T> rotation_matrix(const Vector3<T>& axis, T angle)
 {
-    T c = AK::cos(angle);
-    T s = AK::sin(angle);
+    T c = YAK::cos(angle);
+    T s = YAK::sin(angle);
     T t = 1 - c;
     T x = axis.x();
     T y = axis.y();

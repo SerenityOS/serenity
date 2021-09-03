@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/MACAddress.h>
-#include <AK/Types.h>
+#include <YAK/MACAddress.h>
+#include <YAK/Types.h>
 
 TEST_CASE(should_default_construct)
 {

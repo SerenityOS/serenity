@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/GenericLexer.h>
-#include <AK/Optional.h>
-#include <AK/String.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/Optional.h>
+#include <YAK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <ctype.h>
 #include <stdio.h>

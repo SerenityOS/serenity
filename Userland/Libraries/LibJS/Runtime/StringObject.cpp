@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Utf16View.h>
+#include <YAK/Utf16View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>

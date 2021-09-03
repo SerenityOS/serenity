@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/HashMap.h>
-#include <AK/Singleton.h>
+#include <YAK/HashMap.h>
+#include <YAK/Singleton.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/LoopbackAdapter.h>

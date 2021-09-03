@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
-#include <AK/OwnPtr.h>
-#include <AK/Platform.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Assertions.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Platform.h>
+#include <YAK/StringBuilder.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibDebug/DebugInfo.h>

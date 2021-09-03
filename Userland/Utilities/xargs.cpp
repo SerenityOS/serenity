@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
-#include <AK/StdLibExtras.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Function.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <errno.h>
 #include <fcntl.h>

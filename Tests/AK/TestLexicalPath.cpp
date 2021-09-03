@@ -7,8 +7,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/LexicalPath.h>
-#include <AK/String.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/String.h>
 
 TEST_CASE(relative_path)
 {

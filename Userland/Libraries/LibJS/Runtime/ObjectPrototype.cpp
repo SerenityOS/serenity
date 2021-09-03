@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
-#include <AK/String.h>
+#include <YAK/Function.h>
+#include <YAK/String.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/BooleanObject.h>

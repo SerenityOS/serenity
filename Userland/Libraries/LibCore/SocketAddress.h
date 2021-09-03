@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/IPv4Address.h>
+#include <YAK/IPv4Address.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <string.h>
@@ -93,7 +93,7 @@ private:
 }
 
 template<>
-struct AK::Formatter<Core::SocketAddress> : Formatter<String> {
+struct YAK::Formatter<Core::SocketAddress> : Formatter<String> {
     void format(FormatBuilder& builder, const Core::SocketAddress& value)
     {
         return Formatter<String>::format(builder, value.to_string());

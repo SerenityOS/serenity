@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringView.h>
-#include <AK/URL.h>
+#include <YAK/StringView.h>
+#include <YAK/URL.h>
 #include <LibGemini/Document.h>
 #include <stddef.h>
 #include <stdint.h>

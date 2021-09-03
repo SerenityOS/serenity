@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/OwnPtr.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Size.h>
 

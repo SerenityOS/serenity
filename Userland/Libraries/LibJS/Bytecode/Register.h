@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Format.h>
+#include <YAK/Format.h>
 
 namespace JS::Bytecode {
 
@@ -41,11 +41,11 @@ private:
 }
 
 template<>
-struct AK::Formatter<JS::Bytecode::Register> : AK::Formatter<FormatString> {
+struct YAK::Formatter<JS::Bytecode::Register> : YAK::Formatter<FormatString> {
     void format(FormatBuilder& builder, JS::Bytecode::Register const& value)
     {
         if (value.index() == JS::Bytecode::Register::accumulator_index)
-            return AK::Formatter<FormatString>::format(builder, "acc");
-        return AK::Formatter<FormatString>::format(builder, "${}", value.index());
+            return YAK::Formatter<FormatString>::format(builder, "acc");
+        return YAK::Formatter<FormatString>::format(builder, "${}", value.index());
     }
 };

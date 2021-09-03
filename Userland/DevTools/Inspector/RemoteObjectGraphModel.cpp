@@ -7,7 +7,7 @@
 #include "RemoteObjectGraphModel.h"
 #include "RemoteObject.h"
 #include "RemoteProcess.h"
-#include <AK/JsonValue.h>
+#include <YAK/JsonValue.h>
 #include <LibGUI/Application.h>
 #include <stdio.h>
 

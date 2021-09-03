@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/AllOf.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/Utf8View.h>
+#include <YAK/AllOf.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Utf8View.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibJS/Runtime/Accessor.h>
@@ -176,7 +176,7 @@ static String double_to_string(double d)
         else
             builder.append('-');
 
-        builder.append(String::number(AK::abs(exponent - 1)));
+        builder.append(String::number(YAK::abs(exponent - 1)));
         return builder.to_string();
     }
 
@@ -190,7 +190,7 @@ static String double_to_string(double d)
     else
         builder.append('-');
 
-    builder.append(String::number(AK::abs(exponent - 1)));
+    builder.append(String::number(YAK::abs(exponent - 1)));
     return builder.to_string();
 }
 

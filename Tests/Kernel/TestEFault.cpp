@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Format.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/Format.h>
+#include <YAK/Types.h>
 #include <LibTest/TestCase.h>
 #include <errno.h>
 #include <fcntl.h>

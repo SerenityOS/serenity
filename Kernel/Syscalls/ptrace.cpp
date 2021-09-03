@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ScopeGuard.h>
+#include <YAK/ScopeGuard.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PrivateInodeVMObject.h>
 #include <Kernel/Memory/ProcessPagingScope.h>

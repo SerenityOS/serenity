@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MemoryStream.h>
+#include <YAK/MemoryStream.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>

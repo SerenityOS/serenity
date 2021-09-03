@@ -8,11 +8,11 @@
 
 #include "MmapRegion.h"
 #include "SoftMMU.h"
-#include <AK/Badge.h>
-#include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/Badge.h>
+#include <YAK/HashMap.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 
 namespace UserspaceEmulator {
 

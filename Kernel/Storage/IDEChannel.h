@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
+#include <YAK/RefPtr.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
@@ -37,7 +37,7 @@ class IDEChannel : public RefCounted<IDEChannel>
     , public IRQHandler {
     friend class IDEController;
     friend class PATADiskDevice;
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     enum class ChannelType : u8 {
         Primary,

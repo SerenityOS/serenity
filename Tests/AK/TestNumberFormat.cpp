@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/NumberFormat.h>
+#include <YAK/NumberFormat.h>
 
 /*
  * These tests are mostly meant as a rough sanity-check, to see whether

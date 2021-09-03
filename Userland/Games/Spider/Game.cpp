@@ -5,7 +5,7 @@
  */
 
 #include "Game.h"
-#include <AK/Random.h>
+#include <YAK/Random.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 

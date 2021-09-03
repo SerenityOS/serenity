@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/GenericLexer.h>
+#include <YAK/GenericLexer.h>
 #include <LibCrypto/ASN1/ASN1.h>
 
 namespace Crypto::ASN1 {

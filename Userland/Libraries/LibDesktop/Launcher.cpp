@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/JsonObject.h>
-#include <AK/URL.h>
+#include <YAK/JsonObject.h>
+#include <YAK/URL.h>
 #include <LaunchServer/LaunchClientEndpoint.h>
 #include <LaunchServer/LaunchServerEndpoint.h>
 #include <LibDesktop/Launcher.h>

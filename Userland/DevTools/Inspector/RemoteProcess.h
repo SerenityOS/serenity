@@ -7,7 +7,7 @@
 #pragma once
 
 #include "InspectorServerClient.h"
-#include <AK/NonnullOwnPtrVector.h>
+#include <YAK/NonnullOwnPtrVector.h>
 #include <LibCore/LocalSocket.h>
 
 namespace Inspector {

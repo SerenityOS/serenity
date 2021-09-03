@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Span.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/Span.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <LibCompress/Deflate.h>
 #include <LibCompress/Zlib.h>
 

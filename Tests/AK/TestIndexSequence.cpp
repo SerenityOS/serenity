@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/StdLibExtras.h>
-#include <AK/TypeList.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/TypeList.h>
 
 template<typename F, typename... Args>
 F for_each_argument(F f, Args&&... args)

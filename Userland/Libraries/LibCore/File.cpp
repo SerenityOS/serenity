@@ -7,8 +7,8 @@
 #ifdef __serenity__
 #    include <serenity.h>
 #endif
-#include <AK/LexicalPath.h>
-#include <AK/ScopeGuard.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/ScopeGuard.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <errno.h>

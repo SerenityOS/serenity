@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/Time.h>
-#include <AK/Types.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Time.h>
+#include <YAK/Types.h>
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/KResult.h>
@@ -29,7 +29,7 @@ enum class TimePrecision {
 };
 
 class TimeManagement {
-    AK_MAKE_ETERNAL;
+    YAK_MAKE_ETERNAL;
 
 public:
     TimeManagement();
@@ -64,10 +64,10 @@ public:
     u64 uptime_ms() const;
     static Time now();
 
-    // FIXME: Should use AK::Time internally
+    // FIXME: Should use YAK::Time internally
     // FIXME: Also, most likely broken, because it does not check m_update[12] for in-progress updates.
     timespec remaining_epoch_time_adjustment() const { return m_remaining_epoch_time_adjustment; }
-    // FIXME: Should use AK::Time internally
+    // FIXME: Should use YAK::Time internally
     // FIXME: Also, most likely broken, because it does not check m_update[12] for in-progress updates.
     void set_remaining_epoch_time_adjustment(const timespec& adjustment) { m_remaining_epoch_time_adjustment = adjustment; }
 
@@ -93,7 +93,7 @@ private:
     Atomic<u32> m_update1 { 0 };
     u32 m_ticks_this_second { 0 };
     u64 m_seconds_since_boot { 0 };
-    // FIXME: Should use AK::Time internally
+    // FIXME: Should use YAK::Time internally
     timespec m_epoch_time { 0, 0 };
     timespec m_remaining_epoch_time_adjustment { 0, 0 };
     Atomic<u32> m_update2 { 0 };

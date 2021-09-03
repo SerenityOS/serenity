@@ -7,8 +7,8 @@
 #pragma once
 
 #include "GitRepo.h"
-#include <AK/LexicalPath.h>
-#include <AK/NonnullRefPtr.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/NonnullRefPtr.h>
 #include <LibGUI/Model.h>
 
 namespace HackStudio {

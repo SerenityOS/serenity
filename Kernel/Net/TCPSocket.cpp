@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
-#include <AK/Time.h>
+#include <YAK/Singleton.h>
+#include <YAK/Time.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -340,20 +340,20 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, c
     u32 checksum = 0;
     auto raw_pseudo_header = bit_cast<u16*>(&pseudo_header);
     for (size_t i = 0; i < sizeof(pseudo_header) / sizeof(u16); ++i) {
-        checksum += AK::convert_between_host_and_network_endian(raw_pseudo_header[i]);
+        checksum += YAK::convert_between_host_and_network_endian(raw_pseudo_header[i]);
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
     auto raw_packet = bit_cast<u16*>(&packet);
     for (size_t i = 0; i < packet.header_size() / sizeof(u16); ++i) {
-        checksum += AK::convert_between_host_and_network_endian(raw_packet[i]);
+        checksum += YAK::convert_between_host_and_network_endian(raw_packet[i]);
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
     VERIFY(packet.data_offset() * 4 == packet.header_size());
     auto raw_payload = bit_cast<u16*>(packet.payload());
     for (size_t i = 0; i < payload_size / sizeof(u16); ++i) {
-        checksum += AK::convert_between_host_and_network_endian(raw_payload[i]);
+        checksum += YAK::convert_between_host_and_network_endian(raw_payload[i]);
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }

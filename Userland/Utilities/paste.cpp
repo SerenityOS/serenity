@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
-#include <AK/String.h>
+#include <YAK/Format.h>
+#include <YAK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>

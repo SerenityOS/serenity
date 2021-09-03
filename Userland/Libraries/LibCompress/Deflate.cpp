@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Array.h>
-#include <AK/Assertions.h>
-#include <AK/BinaryHeap.h>
-#include <AK/BinarySearch.h>
-#include <AK/MemoryStream.h>
+#include <YAK/Array.h>
+#include <YAK/Assertions.h>
+#include <YAK/BinaryHeap.h>
+#include <YAK/BinarySearch.h>
+#include <YAK/MemoryStream.h>
 #include <string.h>
 
 #include <LibCompress/Deflate.h>

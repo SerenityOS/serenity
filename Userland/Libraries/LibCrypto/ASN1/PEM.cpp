@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Base64.h>
-#include <AK/GenericLexer.h>
+#include <YAK/Base64.h>
+#include <YAK/GenericLexer.h>
 #include <LibCrypto/ASN1/PEM.h>
 
 namespace Crypto {

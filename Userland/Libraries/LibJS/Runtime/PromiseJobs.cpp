@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
+#include <YAK/Debug.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/JobCallback.h>
 #include <LibJS/Runtime/Promise.h>

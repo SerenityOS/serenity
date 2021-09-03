@@ -12,8 +12,8 @@
 #include "ProbabilityTables.h"
 #include "SyntaxElementCounter.h"
 #include "TreeParser.h"
-#include <AK/ByteBuffer.h>
-#include <AK/OwnPtr.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/OwnPtr.h>
 
 namespace Video::VP9 {
 

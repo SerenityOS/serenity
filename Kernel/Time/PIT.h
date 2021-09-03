@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/Types.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/Types.h>
 #include <Kernel/Time/HardwareTimer.h>
 
 namespace Kernel {

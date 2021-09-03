@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringBuilder.h>
-#include <AK/TypeCasts.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/TypeCasts.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>

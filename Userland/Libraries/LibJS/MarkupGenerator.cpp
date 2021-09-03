@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/HashTable.h>
-#include <AK/StringBuilder.h>
-#include <AK/TypeCasts.h>
+#include <YAK/HashTable.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/TypeCasts.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibJS/Runtime/Array.h>

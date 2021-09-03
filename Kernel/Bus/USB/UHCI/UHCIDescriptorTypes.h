@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
-#include <AK/Ptr32.h>
-#include <AK/Types.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Ptr32.h>
+#include <YAK/Types.h>
 #include <Kernel/Bus/USB/USBTransfer.h>
 
 namespace Kernel::USB {
@@ -183,7 +183,7 @@ struct alignas(16) TransferDescriptor final {
             (active()) ? "ACTIVE " : "");
     }
 
-    // FIXME: For the love of God, use AK SMART POINTERS PLEASE!!
+    // FIXME: For the love of God, use YAK SMART POINTERS PLEASE!!
     TransferDescriptor* next_td() { return m_next_td; }
     const TransferDescriptor* next_td() const { return m_next_td; }
     void set_next_td(TransferDescriptor* td) { m_next_td = td; }
@@ -272,7 +272,7 @@ struct alignas(16) QueueHead {
     void set_in_use(bool in_use) { m_in_use = in_use; }
     void set_link_ptr(u32 val) { m_link_ptr = val; }
 
-    // FIXME: For the love of God, use AK SMART POINTERS PLEASE!!
+    // FIXME: For the love of God, use YAK SMART POINTERS PLEASE!!
     QueueHead* next_qh() { return m_next_qh; }
     const QueueHead* next_qh() const { return m_next_qh; }
     void set_next_qh(QueueHead* qh) { m_next_qh = qh; }

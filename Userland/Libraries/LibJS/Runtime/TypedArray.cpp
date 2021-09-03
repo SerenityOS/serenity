@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Checked.h>
+#include <YAK/Checked.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/GlobalObject.h>

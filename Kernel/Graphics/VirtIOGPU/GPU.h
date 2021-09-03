@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/BinaryBufferWriter.h>
-#include <AK/DistinctNumeric.h>
+#include <YAK/BinaryBufferWriter.h>
+#include <YAK/DistinctNumeric.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
 #include <Kernel/Devices/BlockDevice.h>
@@ -94,7 +94,7 @@ private:
     ResourceID allocate_resource_id();
 
     PhysicalAddress start_of_scratch_space() const { return m_scratch_space->physical_page(0)->paddr(); }
-    AK::BinaryBufferWriter create_scratchspace_writer()
+    YAK::BinaryBufferWriter create_scratchspace_writer()
     {
         return { Bytes(m_scratch_space->vaddr().as_ptr(), m_scratch_space->size()) };
     }

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ScopeGuard.h>
+#include <YAK/ScopeGuard.h>
 #include <Kernel/API/FB.h>
 #include <Services/WindowServer/ScreenLayout.h>
 #include <errno.h>

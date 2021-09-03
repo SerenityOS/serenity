@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Format.h>
+#include <YAK/Format.h>
 
 extern bool g_report_to_debug;
 
@@ -14,8 +14,8 @@ template<typename... Ts>
 void reportln(const StringView& format, Ts... args)
 {
     if (g_report_to_debug) {
-        AK::VariadicFormatParams variadic_format_params { args... };
-        AK::vdbgln(format, variadic_format_params);
+        YAK::VariadicFormatParams variadic_format_params { args... };
+        YAK::vdbgln(format, variadic_format_params);
     } else {
         warnln(format, args...);
     }

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
+#include <YAK/Debug.h>
 #include <LibCpp/Lexer.h>
 #include <LibCpp/SyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>

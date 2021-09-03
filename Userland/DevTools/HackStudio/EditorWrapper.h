@@ -9,9 +9,9 @@
 #include "Debugger/BreakpointCallback.h"
 #include "Git/GitRepo.h"
 #include "LanguageClient.h"
-#include <AK/Function.h>
-#include <AK/RefPtr.h>
-#include <AK/Vector.h>
+#include <YAK/Function.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Vector.h>
 #include <LibDiff/Hunks.h>
 #include <LibGUI/Widget.h>
 #include <string.h>

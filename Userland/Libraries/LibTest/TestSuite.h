@@ -9,10 +9,10 @@
 
 #include <LibTest/Macros.h> // intentionally first -- we redefine VERIFY and friends in here
 
-#include <AK/Format.h>
-#include <AK/Function.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/String.h>
+#include <YAK/Format.h>
+#include <YAK/Function.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/String.h>
 #include <LibTest/TestCase.h>
 
 namespace Test {

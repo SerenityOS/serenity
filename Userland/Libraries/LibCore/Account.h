@@ -6,19 +6,19 @@
 
 #pragma once
 
-#include <AK/Result.h>
-#include <AK/String.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/Result.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <pwd.h>
-#ifndef AK_OS_BSD_GENERIC
+#ifndef YAK_OS_BSD_GENERIC
 #    include <shadow.h>
 #endif
 #include <sys/types.h>
 
 namespace Core {
 
-#ifdef AK_OS_BSD_GENERIC
+#ifdef YAK_OS_BSD_GENERIC
 struct spwd {
     char* sp_namp;
     char* sp_pwdp;
@@ -72,7 +72,7 @@ private:
     Account(const passwd& pwd, const spwd& spwd, Vector<gid_t> extra_gids);
 
     String generate_passwd_file() const;
-#ifndef AK_OS_BSD_GENERIC
+#ifndef YAK_OS_BSD_GENERIC
     String generate_shadow_file() const;
 #endif
 

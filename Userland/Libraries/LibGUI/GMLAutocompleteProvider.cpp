@@ -6,7 +6,7 @@
 
 #include "GMLAutocompleteProvider.h"
 #include "GMLLexer.h"
-#include <AK/QuickSort.h>
+#include <YAK/QuickSort.h>
 
 namespace GUI {
 

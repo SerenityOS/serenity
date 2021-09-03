@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/HashMap.h>
-#include <AK/String.h>
+#include <YAK/HashMap.h>
+#include <YAK/String.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Emoji.h>
 

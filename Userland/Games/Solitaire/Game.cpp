@@ -6,8 +6,8 @@
  */
 
 #include "Game.h"
-#include <AK/Debug.h>
-#include <AK/Random.h>
+#include <YAK/Debug.h>
+#include <YAK/Random.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 

@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Helpers.h"
-#include <AK/QuickSort.h>
+#include <YAK/QuickSort.h>
 #include <LibCards/Card.h>
 
 using Cards::Card;
@@ -26,7 +26,7 @@ struct CardWithIndex {
 };
 
 struct Player {
-    AK_MAKE_NONMOVABLE(Player);
+    YAK_MAKE_NONMOVABLE(Player);
 
 public:
     Player()
@@ -62,7 +62,7 @@ public:
 }
 
 template<>
-struct AK::Formatter<Hearts::Player> : Formatter<FormatString> {
+struct YAK::Formatter<Hearts::Player> : Formatter<FormatString> {
     void format(FormatBuilder& builder, Hearts::Player const& player)
     {
         builder.put_string(player.name);

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
+#include <YAK/ByteBuffer.h>
 #include <LibCore/IODevice.h>
 #include <errno.h>
 #include <stdio.h>

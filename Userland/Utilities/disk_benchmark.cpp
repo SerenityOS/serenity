@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/ScopeGuard.h>
-#include <AK/String.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <LibCore/ElapsedTimer.h>
 #include <fcntl.h>
 #include <getopt.h>

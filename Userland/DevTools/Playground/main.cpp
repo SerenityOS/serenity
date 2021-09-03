@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/URL.h>
+#include <YAK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibDesktop/Launcher.h>

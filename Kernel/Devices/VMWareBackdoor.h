@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Optional.h>
-#include <AK/Types.h>
-#include <AK/kmalloc.h>
+#include <YAK/Optional.h>
+#include <YAK/Types.h>
+#include <YAK/kmalloc.h>
 #include <Kernel/API/MousePacket.h>
 
 namespace Kernel {
@@ -40,7 +40,7 @@ struct VMWareCommand {
 };
 
 class VMWareBackdoor {
-    AK_MAKE_ETERNAL;
+    YAK_MAKE_ETERNAL;
 
 public:
     VMWareBackdoor();

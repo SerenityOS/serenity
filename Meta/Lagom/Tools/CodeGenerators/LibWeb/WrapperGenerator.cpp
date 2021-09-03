@@ -5,14 +5,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/Debug.h>
-#include <AK/GenericLexer.h>
-#include <AK/HashMap.h>
-#include <AK/LexicalPath.h>
-#include <AK/OwnPtr.h>
-#include <AK/SourceGenerator.h>
-#include <AK/StringBuilder.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Debug.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/HashMap.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/SourceGenerator.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <ctype.h>
@@ -870,7 +870,7 @@ void generate_implementation(IDL::Interface const& interface)
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
     generator.append(R"~~~(
-#include <AK/FlyString.h>
+#include <YAK/FlyString.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
@@ -1215,7 +1215,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
     generator.append(R"~~~(
-#include <AK/Function.h>
+#include <YAK/Function.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>

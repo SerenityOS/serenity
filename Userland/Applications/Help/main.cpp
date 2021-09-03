@@ -7,7 +7,7 @@
 
 #include "History.h"
 #include "ManualModel.h"
-#include <AK/URL.h>
+#include <YAK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibDesktop/Launcher.h>

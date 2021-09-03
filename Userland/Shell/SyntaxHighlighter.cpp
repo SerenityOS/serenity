@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/QuickSort.h>
-#include <AK/ScopedValueRollback.h>
-#include <AK/TemporaryChange.h>
+#include <YAK/QuickSort.h>
+#include <YAK/ScopedValueRollback.h>
+#include <YAK/TemporaryChange.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>

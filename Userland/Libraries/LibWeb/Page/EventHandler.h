@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Forward.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/WeakPtr.h>
+#include <YAK/Forward.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/WeakPtr.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Forward.h>

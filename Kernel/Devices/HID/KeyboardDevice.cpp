@@ -6,8 +6,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/Types.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/VirtualConsole.h>

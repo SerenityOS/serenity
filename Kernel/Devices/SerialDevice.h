@@ -12,7 +12,7 @@
 namespace Kernel {
 
 class SerialDevice final : public CharacterDevice {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     static NonnullRefPtr<SerialDevice> must_create(size_t com_number);
 

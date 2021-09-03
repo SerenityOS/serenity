@@ -48,28 +48,28 @@ private:
     bool m_up, m_down, m_left, m_right, m_sleeping = false;
     bool m_roaming { true };
 
-    AK::NonnullRefPtr<Gfx::Bitmap> m_alert = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/alert.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_erun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun1.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_erun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun2.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_nerun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun1.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_nerun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun2.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_nrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun1.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_nrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun2.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_nwrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nwrun1.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_nwrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nwrun2.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_serun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/serun1.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_serun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/serun2.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_sleep1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/sleep1.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_sleep2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/sleep2.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_srun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/srun1.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_srun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/srun2.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_still = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/still.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_swrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/swrun1.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_swrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/swrun2.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_wrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun1.png");
-    AK::NonnullRefPtr<Gfx::Bitmap> m_wrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun2.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_alert = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/alert.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_erun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun1.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_erun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun2.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_nerun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun1.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_nerun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun2.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_nrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun1.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_nrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun2.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_nwrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nwrun1.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_nwrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nwrun2.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_serun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/serun1.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_serun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/serun2.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_sleep1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/sleep1.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_sleep2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/sleep2.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_srun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/srun1.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_srun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/srun2.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_still = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/still.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_swrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/swrun1.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_swrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/swrun2.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_wrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun1.png");
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_wrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun2.png");
 
-    AK::NonnullRefPtr<Gfx::Bitmap> m_curr_bmp = m_alert;
+    YAK::NonnullRefPtr<Gfx::Bitmap> m_curr_bmp = m_alert;
     CatDog()
         : m_temp_pos { 0, 0 }
     {

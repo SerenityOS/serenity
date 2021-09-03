@@ -5,7 +5,7 @@
  */
 
 #include "GlyphEditorWidget.h"
-#include <AK/StringBuilder.h>
+#include <YAK/StringBuilder.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/BitmapFont.h>

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
-#include <AK/String.h>
-#include <AK/WeakPtr.h>
+#include <YAK/Function.h>
+#include <YAK/String.h>
+#include <YAK/WeakPtr.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Icon.h>
@@ -17,7 +17,7 @@ namespace CommonActions {
 
 NonnullRefPtr<Action> make_about_action(const String& app_name, const Icon& app_icon, Window* parent)
 {
-    auto weak_parent = AK::try_make_weak_ptr<Window>(parent);
+    auto weak_parent = YAK::try_make_weak_ptr<Window>(parent);
     auto action = Action::create(String::formatted("&About {}", app_name), app_icon.bitmap_for_size(16), [=](auto&) {
         AboutDialog::show(app_name, app_icon.bitmap_for_size(32), weak_parent.ptr());
     });

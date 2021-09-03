@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Format.h>
-#include <AK/Math.h>
-#include <AK/StdLibExtras.h>
+#include <YAK/Format.h>
+#include <YAK/Math.h>
+#include <YAK/StdLibExtras.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>
@@ -216,19 +216,19 @@ public:
     // Returns pixels moved from other in either direction
     [[nodiscard]] T pixels_moved(Point<T> const& other) const
     {
-        return max(AK::abs(dx_relative_to(other)), AK::abs(dy_relative_to(other)));
+        return max(YAK::abs(dx_relative_to(other)), YAK::abs(dy_relative_to(other)));
     }
 
     [[nodiscard]] float distance_from(Point<T> const& other) const
     {
         if (*this == other)
             return 0;
-        return AK::hypot<float>(m_x - other.m_x, m_y - other.m_y);
+        return YAK::hypot<float>(m_x - other.m_x, m_y - other.m_y);
     }
 
     [[nodiscard]] Point absolute_relative_distance_to(Point const& other) const
     {
-        return { AK::abs(dx_relative_to(other)), AK::abs(dy_relative_to(other)) };
+        return { YAK::abs(dx_relative_to(other)), YAK::abs(dy_relative_to(other)) };
     }
 
     template<typename U>
@@ -249,7 +249,7 @@ using FloatPoint = Point<float>;
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<typename T>
 struct Formatter<Gfx::Point<T>> : Formatter<StringView> {

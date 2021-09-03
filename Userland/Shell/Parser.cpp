@@ -6,11 +6,11 @@
 
 #include "Parser.h"
 #include "Shell.h"
-#include <AK/AllOf.h>
-#include <AK/GenericLexer.h>
-#include <AK/ScopeGuard.h>
-#include <AK/ScopedValueRollback.h>
-#include <AK/TemporaryChange.h>
+#include <YAK/AllOf.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/ScopedValueRollback.h>
+#include <YAK/TemporaryChange.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -1325,7 +1325,7 @@ RefPtr<AST::Node> Parser::parse_string_inner(StringEndCondition condition)
                     break;
                 size_t counter = 8;
                 auto chars = consume_while([&](auto) { return counter-- > 0; });
-                if (auto number = AK::StringUtils::convert_to_uint_from_hex(chars); number.has_value())
+                if (auto number = YAK::StringUtils::convert_to_uint_from_hex(chars); number.has_value())
                     builder.append(Utf32View { &number.value(), 1 });
                 else
                     builder.append(chars);

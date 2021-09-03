@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
+#include <YAK/Singleton.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/Routing.h>

@@ -7,8 +7,8 @@
 #pragma once
 
 #include "Certificate.h"
-#include <AK/IPv4Address.h>
-#include <AK/WeakPtr.h>
+#include <YAK/IPv4Address.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Socket.h>
 #include <LibCore/TCPSocket.h>

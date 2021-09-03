@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Debugger.h"
-#include <AK/NonnullOwnPtr.h>
+#include <YAK/NonnullOwnPtr.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>

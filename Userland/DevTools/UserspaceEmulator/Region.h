@@ -8,9 +8,9 @@
 
 #include "Range.h"
 #include "ValueWithShadow.h"
-#include <AK/TypeCasts.h>
-#include <AK/Types.h>
-#include <AK/UFixedBigInt.h>
+#include <YAK/TypeCasts.h>
+#include <YAK/Types.h>
+#include <YAK/UFixedBigInt.h>
 
 namespace UserspaceEmulator {
 

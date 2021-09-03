@@ -5,7 +5,7 @@
  */
 
 #include "FuzzyMatch.h"
-#include <AK/CharacterTypes.h>
+#include <YAK/CharacterTypes.h>
 #include <string.h>
 
 namespace Assistant {

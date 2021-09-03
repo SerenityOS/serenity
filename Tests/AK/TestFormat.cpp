@@ -6,9 +6,9 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/Vector.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Vector.h>
 
 TEST_CASE(is_integral_works_properly)
 {
@@ -199,7 +199,7 @@ struct A {
 struct B {
 };
 template<>
-struct AK::Formatter<B> : Formatter<StringView> {
+struct YAK::Formatter<B> : Formatter<StringView> {
     void format(FormatBuilder& builder, B)
     {
         Formatter<StringView>::format(builder, "B");
@@ -277,10 +277,10 @@ struct C {
     int i;
 };
 template<>
-struct AK::Formatter<C> : AK::Formatter<FormatString> {
+struct YAK::Formatter<C> : YAK::Formatter<FormatString> {
     void format(FormatBuilder& builder, C c)
     {
-        return AK::Formatter<FormatString>::format(builder, "C(i={})", c.i);
+        return YAK::Formatter<FormatString>::format(builder, "C(i={})", c.i);
     }
 };
 
@@ -294,7 +294,7 @@ TEST_CASE(long_long_regression)
     EXPECT_EQ(String::formatted("{}", 0x0123456789abcdefLL), "81985529216486895");
 
     StringBuilder builder;
-    AK::FormatBuilder fmtbuilder { builder };
+    YAK::FormatBuilder fmtbuilder { builder };
     fmtbuilder.put_i64(0x0123456789abcdefLL);
 
     EXPECT_EQ(builder.string_view(), "81985529216486895");

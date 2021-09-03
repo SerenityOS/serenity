@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/Optional.h>
-#include <AK/OwnPtr.h>
-#include <AK/WeakPtr.h>
+#include <YAK/Badge.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/Optional.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>

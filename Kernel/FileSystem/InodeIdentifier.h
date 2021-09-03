@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/DistinctNumeric.h>
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/DistinctNumeric.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 
 namespace Kernel {
 
@@ -55,17 +55,17 @@ private:
 }
 
 template<>
-struct AK::Formatter<Kernel::InodeIdentifier> : AK::Formatter<FormatString> {
+struct YAK::Formatter<Kernel::InodeIdentifier> : YAK::Formatter<FormatString> {
     void format(FormatBuilder& builder, Kernel::InodeIdentifier value)
     {
-        return AK::Formatter<FormatString>::format(builder, "{}:{}", value.fsid(), value.index());
+        return YAK::Formatter<FormatString>::format(builder, "{}:{}", value.fsid(), value.index());
     }
 };
 
 template<>
-struct AK::Formatter<Kernel::InodeIndex> : AK::Formatter<FormatString> {
+struct YAK::Formatter<Kernel::InodeIndex> : YAK::Formatter<FormatString> {
     void format(FormatBuilder& builder, Kernel::InodeIndex value)
     {
-        return AK::Formatter<FormatString>::format(builder, "{}", value.value());
+        return YAK::Formatter<FormatString>::format(builder, "{}", value.value());
     }
 };

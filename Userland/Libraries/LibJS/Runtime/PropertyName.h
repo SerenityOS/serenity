@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <YAK/FlyString.h>
 #include <LibJS/Runtime/StringOrSymbol.h>
 
 namespace JS {
@@ -222,7 +222,7 @@ struct PropertyNameTraits : public Traits<PropertyName> {
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<JS::PropertyName> : Formatter<StringView> {

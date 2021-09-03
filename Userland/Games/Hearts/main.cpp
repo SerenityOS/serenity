@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 
     String player_name = Config::read_string("Hearts", "", "player_name", "Gunnar");
 
-    game.on_status_change = [&](const AK::StringView& status) {
+    game.on_status_change = [&](const YAK::StringView& status) {
         statusbar.set_override_text(status);
     };
 

@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/Function.h>
-#include <AK/Noncopyable.h>
+#include <YAK/FlyString.h>
+#include <YAK/Function.h>
+#include <YAK/Noncopyable.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/Forward.h>
 
@@ -28,8 +28,8 @@ namespace Web::DOM {
 class HTMLCollection
     : public RefCounted<HTMLCollection>
     , public Bindings::Wrappable {
-    AK_MAKE_NONCOPYABLE(HTMLCollection);
-    AK_MAKE_NONMOVABLE(HTMLCollection);
+    YAK_MAKE_NONCOPYABLE(HTMLCollection);
+    YAK_MAKE_NONMOVABLE(HTMLCollection);
 
 public:
     using WrapperType = Bindings::HTMLCollectionWrapper;

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/StackInfo.h>
+#include <YAK/StackInfo.h>
 #include <LibWasm/AbstractMachine/Configuration.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
 

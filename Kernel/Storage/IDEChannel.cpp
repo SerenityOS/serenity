@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/Singleton.h>
-#include <AK/StringView.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Singleton.h>
+#include <YAK/StringView.h>
 #include <Kernel/IO.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>

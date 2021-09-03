@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/Result.h>
-#include <AK/Vector.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Result.h>
+#include <YAK/Vector.h>
 #include <Kernel/Storage/Partition/DiskPartition.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>
 

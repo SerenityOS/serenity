@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/ExtraMathConstants.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Debug.h>
+#include <YAK/ExtraMathConstants.h>
+#include <YAK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/DOM/Document.h>

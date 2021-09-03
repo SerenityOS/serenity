@@ -5,8 +5,8 @@
  */
 
 #include "ClipboardServerConnection.h"
-#include <AK/ByteBuffer.h>
-#include <AK/Function.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Function.h>
 #include <LibGfx/Bitmap.h>
 
 // Copied from LibGUI/Clipboard.cpp

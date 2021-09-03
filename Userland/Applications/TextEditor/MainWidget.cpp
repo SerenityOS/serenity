@@ -5,9 +5,9 @@
  */
 
 #include "MainWidget.h"
-#include <AK/Optional.h>
-#include <AK/StringBuilder.h>
-#include <AK/URL.h>
+#include <YAK/Optional.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/URL.h>
 #include <Applications/TextEditor/TextEditorWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/File.h>

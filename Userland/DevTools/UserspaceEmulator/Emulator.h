@@ -12,9 +12,9 @@
 #include "Report.h"
 #include "SoftCPU.h"
 #include "SoftMMU.h"
-#include <AK/FileStream.h>
-#include <AK/MappedFile.h>
-#include <AK/Types.h>
+#include <YAK/FileStream.h>
+#include <YAK/MappedFile.h>
+#include <YAK/Types.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
@@ -121,8 +121,8 @@ private:
     void register_signal_handlers();
     void setup_signal_trampoline();
 
-    void emit_profile_sample(AK::OutputStream&);
-    void emit_profile_event(AK::OutputStream&, StringView event_name, String contents);
+    void emit_profile_sample(YAK::OutputStream&);
+    void emit_profile_event(YAK::OutputStream&, StringView event_name, String contents);
 
     int virt$emuctl(FlatPtr, FlatPtr, FlatPtr);
     int virt$fork();

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Assertions.h>
+#include <YAK/StringBuilder.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Progressbar.h>
 #include <LibGfx/Palette.h>

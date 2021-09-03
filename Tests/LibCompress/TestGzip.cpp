@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Array.h>
-#include <AK/Random.h>
+#include <YAK/Array.h>
+#include <YAK/Random.h>
 #include <LibCompress/Gzip.h>
 
 TEST_CASE(gzip_decompress_simple)

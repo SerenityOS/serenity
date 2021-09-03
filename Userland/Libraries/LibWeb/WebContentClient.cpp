@@ -6,7 +6,7 @@
 
 #include "WebContentClient.h"
 #include "OutOfProcessWebView.h"
-#include <AK/Debug.h>
+#include <YAK/Debug.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 
 namespace Web {

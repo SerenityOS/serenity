@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
-#include <AK/String.h>
-#include <AK/WeakPtr.h>
+#include <YAK/HashMap.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/String.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Forward.h>

@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Format.h>
-#include <AK/Traits.h>
+#include <YAK/Format.h>
+#include <YAK/Traits.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/ModelRole.h>
 
@@ -62,7 +62,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<GUI::ModelIndex> : Formatter<FormatString> {

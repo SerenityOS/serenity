@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/IPv4Address.h>
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
-#include <AK/NumberFormat.h>
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/IPv4Address.h>
+#include <YAK/JsonArray.h>
+#include <YAK/JsonObject.h>
+#include <YAK/NumberFormat.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <net/if.h>

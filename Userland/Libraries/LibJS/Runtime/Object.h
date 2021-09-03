@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/HashMap.h>
-#include <AK/String.h>
+#include <YAK/Badge.h>
+#include <YAK/HashMap.h>
+#include <YAK/String.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/IndexedProperties.h>

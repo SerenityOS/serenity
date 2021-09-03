@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 #include <LibRegex/Regex.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -17,7 +17,7 @@
 #    include <LibC/regex.h>
 #endif
 
-#include <AK/Variant.h>
+#include <YAK/Variant.h>
 
 struct internal_regex_t {
     u8 cflags;

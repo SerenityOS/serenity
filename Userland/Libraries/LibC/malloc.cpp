@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/ScopedValueRollback.h>
-#include <AK/Vector.h>
+#include <YAK/Debug.h>
+#include <YAK/ScopedValueRollback.h>
+#include <YAK/Vector.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <assert.h>
 #include <errno.h>
@@ -131,7 +131,7 @@ struct BigAllocator {
 // We can not rely on global constructors to initialize them,
 // because they must be initialized before other global constructors
 // are run. Similarly, we can not allow global destructors to destruct
-// them. We could have used AK::NeverDestoyed to prevent the latter,
+// them. We could have used YAK::NeverDestoyed to prevent the latter,
 // but it would have not helped with the former.
 alignas(Allocator) static u8 g_allocators_storage[sizeof(Allocator) * num_size_classes];
 alignas(BigAllocator) static u8 g_big_allocators_storage[sizeof(BigAllocator)];

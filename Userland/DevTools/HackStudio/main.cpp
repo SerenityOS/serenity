@@ -8,7 +8,7 @@
 #include "HackStudio.h"
 #include "HackStudioWidget.h"
 #include "Project.h"
-#include <AK/StringBuilder.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>

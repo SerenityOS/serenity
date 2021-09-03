@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
+#include <YAK/Assertions.h>
 #include <libgen.h>
 #include <string.h>
 

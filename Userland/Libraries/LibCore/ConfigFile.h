@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/HashMap.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <LibCore/File.h>
 #include <LibGfx/Color.h>
 

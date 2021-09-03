@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Checked.h>
-#include <AK/NumericLimits.h>
+#include <YAK/Checked.h>
+#include <YAK/NumericLimits.h>
 
 // These tests only check whether the usual operator semantics work.
 // TODO: Add tests about the actual `Check`ing itself!

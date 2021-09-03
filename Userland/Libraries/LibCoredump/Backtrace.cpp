@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
-#include <AK/Platform.h>
-#include <AK/StringBuilder.h>
-#include <AK/Types.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MappedFile.h>
+#include <YAK/Platform.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Types.h>
 #include <LibCore/File.h>
 #include <LibCoredump/Backtrace.h>
 #include <LibCoredump/Reader.h>

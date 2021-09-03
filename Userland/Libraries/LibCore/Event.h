@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/String.h>
-#include <AK/Types.h>
-#include <AK/WeakPtr.h>
+#include <YAK/Function.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/DeferredInvocationContext.h>
 #include <LibCore/Forward.h>
 

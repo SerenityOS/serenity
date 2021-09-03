@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/BitmapView.h>
-#include <AK/Result.h>
-#include <AK/Types.h>
+#include <YAK/BitmapView.h>
+#include <YAK/Result.h>
+#include <YAK/Types.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
@@ -205,6 +205,6 @@ void pretty_print(Decoder&, OutputStream&, int indent = 0);
 }
 
 template<>
-struct AK::Formatter<Crypto::ASN1::DecodeError> : Formatter<StringView> {
+struct YAK::Formatter<Crypto::ASN1::DecodeError> : Formatter<StringView> {
     void format(FormatBuilder&, Crypto::ASN1::DecodeError);
 };

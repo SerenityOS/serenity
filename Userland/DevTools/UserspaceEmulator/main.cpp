@@ -5,10 +5,10 @@
  */
 
 #include "Emulator.h"
-#include <AK/FileStream.h>
-#include <AK/Format.h>
-#include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
+#include <YAK/FileStream.h>
+#include <YAK/Format.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>

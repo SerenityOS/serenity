@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Format.h>
-#include <AK/GenericLexer.h>
-#include <AK/StdLibExtras.h>
+#include <YAK/Assertions.h>
+#include <YAK/Format.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/StdLibExtras.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>

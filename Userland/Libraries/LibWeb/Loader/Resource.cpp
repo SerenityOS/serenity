@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Function.h>
+#include <YAK/Debug.h>
+#include <YAK/Function.h>
 #include <LibCore/MimeData.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Loader/Resource.h>

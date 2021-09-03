@@ -8,8 +8,8 @@
 #include "HackStudio.h"
 #include "ProjectDeclarations.h"
 #include "ToDoEntries.h"
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <LibGUI/Notification.h>
 
 namespace HackStudio {

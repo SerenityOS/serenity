@@ -7,8 +7,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/JsonObjectSerializer.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/JsonObjectSerializer.h>
 #include <Kernel/Coredump.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>

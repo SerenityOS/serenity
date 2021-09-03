@@ -10,7 +10,7 @@
 
 namespace Kernel::Graphics::VirtIOGPU {
 
-constexpr static AK::Time refresh_interval = AK::Time::from_milliseconds(16);
+constexpr static YAK::Time refresh_interval = YAK::Time::from_milliseconds(16);
 
 void DirtyRect::union_rect(size_t x, size_t y, size_t width, size_t height)
 {

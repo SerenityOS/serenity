@@ -15,7 +15,7 @@ namespace Kernel::Graphics::VirtIOGPU {
 class GraphicsAdapter final
     : public GraphicsDevice
     , public PCI::Device {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 
 public:
     static NonnullRefPtr<GraphicsAdapter> initialize(PCI::Address);

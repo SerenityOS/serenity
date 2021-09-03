@@ -13,7 +13,7 @@
 #include "ProcessStateWidget.h"
 #include "ProcessUnveiledPathsWidget.h"
 #include "ThreadStackWidget.h"
-#include <AK/NumberFormat.h>
+#include <YAK/NumberFormat.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>

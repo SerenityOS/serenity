@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/CircularQueue.h>
-#include <AK/DoublyLinkedList.h>
-#include <AK/Types.h>
+#include <YAK/CircularQueue.h>
+#include <YAK/DoublyLinkedList.h>
+#include <YAK/Types.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/Devices/HID/I8042Controller.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>

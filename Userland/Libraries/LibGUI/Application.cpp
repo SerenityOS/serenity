@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/NeverDestroyed.h>
+#include <YAK/NeverDestroyed.h>
 #include <LibCore/EventLoop.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>

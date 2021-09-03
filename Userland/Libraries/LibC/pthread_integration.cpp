@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Atomic.h>
-#include <AK/NeverDestroyed.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/Atomic.h>
+#include <YAK/NeverDestroyed.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <bits/pthread_integration.h>
 #include <errno.h>
 #include <sched.h>
@@ -111,15 +111,15 @@ int pthread_mutex_init(pthread_mutex_t*, const pthread_mutexattr_t*) __attribute
 int __pthread_mutex_trylock(pthread_mutex_t* mutex)
 {
     u32 expected = MUTEX_UNLOCKED;
-    bool exchanged = AK::atomic_compare_exchange_strong(&mutex->lock, expected, MUTEX_LOCKED_NO_NEED_TO_WAKE, AK::memory_order_acquire);
+    bool exchanged = YAK::atomic_compare_exchange_strong(&mutex->lock, expected, MUTEX_LOCKED_NO_NEED_TO_WAKE, YAK::memory_order_acquire);
 
     if (exchanged) [[likely]] {
         if (mutex->type == __PTHREAD_MUTEX_RECURSIVE)
-            AK::atomic_store(&mutex->owner, __pthread_self(), AK::memory_order_relaxed);
+            YAK::atomic_store(&mutex->owner, __pthread_self(), YAK::memory_order_relaxed);
         mutex->level = 0;
         return 0;
     } else if (mutex->type == __PTHREAD_MUTEX_RECURSIVE) {
-        pthread_t owner = AK::atomic_load(&mutex->owner, AK::memory_order_relaxed);
+        pthread_t owner = YAK::atomic_load(&mutex->owner, YAK::memory_order_relaxed);
         if (owner == __pthread_self()) {
             // We already own the mutex!
             mutex->level++;
@@ -135,14 +135,14 @@ int __pthread_mutex_lock(pthread_mutex_t* mutex)
 {
     // Fast path: attempt to claim the mutex without waiting.
     u32 value = MUTEX_UNLOCKED;
-    bool exchanged = AK::atomic_compare_exchange_strong(&mutex->lock, value, MUTEX_LOCKED_NO_NEED_TO_WAKE, AK::memory_order_acquire);
+    bool exchanged = YAK::atomic_compare_exchange_strong(&mutex->lock, value, MUTEX_LOCKED_NO_NEED_TO_WAKE, YAK::memory_order_acquire);
     if (exchanged) [[likely]] {
         if (mutex->type == __PTHREAD_MUTEX_RECURSIVE)
-            AK::atomic_store(&mutex->owner, __pthread_self(), AK::memory_order_relaxed);
+            YAK::atomic_store(&mutex->owner, __pthread_self(), YAK::memory_order_relaxed);
         mutex->level = 0;
         return 0;
     } else if (mutex->type == __PTHREAD_MUTEX_RECURSIVE) {
-        pthread_t owner = AK::atomic_load(&mutex->owner, AK::memory_order_relaxed);
+        pthread_t owner = YAK::atomic_load(&mutex->owner, YAK::memory_order_relaxed);
         if (owner == __pthread_self()) {
             // We already own the mutex!
             mutex->level++;
@@ -153,15 +153,15 @@ int __pthread_mutex_lock(pthread_mutex_t* mutex)
     // Slow path: wait, record the fact that we're going to wait, and always
     // remember to wake the next thread up once we release the mutex.
     if (value != MUTEX_LOCKED_NEED_TO_WAKE)
-        value = AK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, AK::memory_order_acquire);
+        value = YAK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, YAK::memory_order_acquire);
 
     while (value != MUTEX_UNLOCKED) {
         futex_wait(&mutex->lock, value, nullptr, 0);
-        value = AK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, AK::memory_order_acquire);
+        value = YAK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, YAK::memory_order_acquire);
     }
 
     if (mutex->type == __PTHREAD_MUTEX_RECURSIVE)
-        AK::atomic_store(&mutex->owner, __pthread_self(), AK::memory_order_relaxed);
+        YAK::atomic_store(&mutex->owner, __pthread_self(), YAK::memory_order_relaxed);
     mutex->level = 0;
     return 0;
 }
@@ -173,14 +173,14 @@ int __pthread_mutex_lock_pessimistic_np(pthread_mutex_t* mutex)
     // Same as pthread_mutex_lock(), but always set MUTEX_LOCKED_NEED_TO_WAKE,
     // and also don't bother checking for already owning the mutex recursively,
     // because we know we don't. Used in the condition variable implementation.
-    u32 value = AK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, AK::memory_order_acquire);
+    u32 value = YAK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, YAK::memory_order_acquire);
     while (value != MUTEX_UNLOCKED) {
         futex_wait(&mutex->lock, value, nullptr, 0);
-        value = AK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, AK::memory_order_acquire);
+        value = YAK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, YAK::memory_order_acquire);
     }
 
     if (mutex->type == __PTHREAD_MUTEX_RECURSIVE)
-        AK::atomic_store(&mutex->owner, __pthread_self(), AK::memory_order_relaxed);
+        YAK::atomic_store(&mutex->owner, __pthread_self(), YAK::memory_order_relaxed);
     mutex->level = 0;
     return 0;
 }
@@ -193,9 +193,9 @@ int __pthread_mutex_unlock(pthread_mutex_t* mutex)
     }
 
     if (mutex->type == __PTHREAD_MUTEX_RECURSIVE)
-        AK::atomic_store(&mutex->owner, 0, AK::memory_order_relaxed);
+        YAK::atomic_store(&mutex->owner, 0, YAK::memory_order_relaxed);
 
-    u32 value = AK::atomic_exchange(&mutex->lock, MUTEX_UNLOCKED, AK::memory_order_release);
+    u32 value = YAK::atomic_exchange(&mutex->lock, MUTEX_UNLOCKED, YAK::memory_order_release);
     if (value == MUTEX_LOCKED_NEED_TO_WAKE) [[unlikely]] {
         int rc = futex_wake(&mutex->lock, 1);
         VERIFY(rc >= 0);

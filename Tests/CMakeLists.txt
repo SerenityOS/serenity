@@ -1,4 +1,4 @@
-add_subdirectory(AK)
+add_subdirectory(YAK)
 add_subdirectory(Kernel)
 add_subdirectory(LibC)
 add_subdirectory(LibCompress)

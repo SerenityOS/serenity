@@ -7,8 +7,8 @@
 
 #include <LibCompress/Gzip.h>
 
-#include <AK/MemoryStream.h>
-#include <AK/String.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/String.h>
 #include <LibCore/DateTime.h>
 
 namespace Compress {

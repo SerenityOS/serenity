@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Bitmap.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/FileSystem/SysFS.h>
 

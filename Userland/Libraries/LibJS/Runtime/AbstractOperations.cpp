@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
-#include <AK/Function.h>
-#include <AK/Optional.h>
-#include <AK/TemporaryChange.h>
-#include <AK/Utf16View.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Function.h>
+#include <YAK/Optional.h>
+#include <YAK/TemporaryChange.h>
+#include <YAK/Utf16View.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>

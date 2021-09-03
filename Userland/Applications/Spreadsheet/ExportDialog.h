@@ -7,8 +7,8 @@
 #pragma once
 
 #include "Writers/XSV.h"
-#include <AK/Result.h>
-#include <AK/StringView.h>
+#include <YAK/Result.h>
+#include <YAK/StringView.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Wizards/WizardPage.h>
 

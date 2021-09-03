@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Queue.h>
+#include <YAK/Queue.h>
 #include <LibThreading/BackgroundAction.h>
 #include <LibThreading/Mutex.h>
 #include <LibThreading/Thread.h>

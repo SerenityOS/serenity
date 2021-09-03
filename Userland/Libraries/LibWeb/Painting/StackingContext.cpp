@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/QuickSort.h>
-#include <AK/StringBuilder.h>
+#include <YAK/QuickSort.h>
+#include <YAK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>

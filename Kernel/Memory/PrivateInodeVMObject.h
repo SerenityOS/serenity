@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
+#include <YAK/Bitmap.h>
 #include <Kernel/Memory/InodeVMObject.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel::Memory {
 
 class PrivateInodeVMObject final : public InodeVMObject {
-    AK_MAKE_NONMOVABLE(PrivateInodeVMObject);
+    YAK_MAKE_NONMOVABLE(PrivateInodeVMObject);
 
 public:
     virtual ~PrivateInodeVMObject() override;

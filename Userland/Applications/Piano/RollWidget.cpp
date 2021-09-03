@@ -8,7 +8,7 @@
 
 #include "RollWidget.h"
 #include "TrackManager.h"
-#include <AK/Math.h>
+#include <YAK/Math.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Scrollbar.h>
 #include <LibGfx/Font.h>
@@ -47,7 +47,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
     if (m_num_notes < time_signature_notes)
         m_num_notes = time_signature_notes;
     else
-        m_num_notes = time_signature_notes * AK::exp2(AK::log2(m_num_notes / time_signature_notes));
+        m_num_notes = time_signature_notes * YAK::exp2(YAK::log2(m_num_notes / time_signature_notes));
     m_note_width = static_cast<double>(m_roll_width) / m_num_notes;
 
     // This calculates the minimum number of rows needed. We account for a
@@ -62,9 +62,9 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
     int key_pattern_index = (notes_per_octave - 1) - (note_offset % notes_per_octave);
 
     int x_offset = horizontal_scrollbar().value();
-    int horizontal_note_offset_remainder = static_cast<int>(AK::fmod((double)x_offset, m_note_width));
+    int horizontal_note_offset_remainder = static_cast<int>(YAK::fmod((double)x_offset, m_note_width));
     int horizontal_paint_area = widget_inner_rect().width() + horizontal_note_offset_remainder;
-    if (AK::fmod((double)horizontal_paint_area, m_note_width) != 0.)
+    if (YAK::fmod((double)horizontal_paint_area, m_note_width) != 0.)
         horizontal_paint_area += m_note_width;
     int horizontal_notes_to_paint = horizontal_paint_area / m_note_width;
 

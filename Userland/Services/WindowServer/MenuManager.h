@@ -9,8 +9,8 @@
 #include "Menu.h"
 #include "Menubar.h"
 #include "Window.h"
-#include <AK/HashMap.h>
-#include <AK/StringBuilder.h>
+#include <YAK/HashMap.h>
+#include <YAK/StringBuilder.h>
 
 namespace WindowServer {
 

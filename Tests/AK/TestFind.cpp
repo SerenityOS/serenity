@@ -6,16 +6,16 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Array.h>
-#include <AK/Find.h>
+#include <YAK/Array.h>
+#include <YAK/Find.h>
 
 TEST_CASE(should_return_end_if_not_in_container)
 {
     constexpr Array<int, 10> a {};
 
-    static_assert(a.end() == AK::find(a.begin(), a.end(), 1));
+    static_assert(a.end() == YAK::find(a.begin(), a.end(), 1));
 
-    EXPECT(a.end() == AK::find(a.begin(), a.end(), 1));
+    EXPECT(a.end() == YAK::find(a.begin(), a.end(), 1));
 }
 
 TEST_CASE(should_return_iterator_to_first_matching_value_in_container)
@@ -24,9 +24,9 @@ TEST_CASE(should_return_iterator_to_first_matching_value_in_container)
 
     constexpr auto expected = a.begin() + 4;
 
-    static_assert(expected == AK::find(a.begin(), a.end(), 0));
+    static_assert(expected == YAK::find(a.begin(), a.end(), 0));
 
-    EXPECT(expected == AK::find(a.begin(), a.end(), 0));
+    EXPECT(expected == YAK::find(a.begin(), a.end(), 0));
 }
 
 TEST_CASE(should_return_iterator_to_first_predicate_matching_value_in_container)
@@ -35,19 +35,19 @@ TEST_CASE(should_return_iterator_to_first_predicate_matching_value_in_container)
 
     constexpr auto expected = a.begin() + 4;
 
-    static_assert(expected == AK::find_if(a.begin(), a.end(), [](auto v) { return v == 0; }));
+    static_assert(expected == YAK::find_if(a.begin(), a.end(), [](auto v) { return v == 0; }));
 
-    EXPECT(expected == AK::find_if(a.begin(), a.end(), [](auto v) { return v == 0; }));
+    EXPECT(expected == YAK::find_if(a.begin(), a.end(), [](auto v) { return v == 0; }));
 
     auto find_me = 8;
-    EXPECT(find_me == *AK::find_if(a.begin(), a.end(), [&](auto v) { return v == find_me; }));
+    EXPECT(find_me == *YAK::find_if(a.begin(), a.end(), [&](auto v) { return v == find_me; }));
 }
 
 TEST_CASE(should_return_index_to_first_predicate_matching_value_in_container)
 {
     static constexpr Array<int, 10> a { 1, 2, 3, 4, 0, 6, 7, 8, 0, 0 };
 
-    static_assert(4 == AK::find_index(a.begin(), a.end(), 0));
+    static_assert(4 == YAK::find_index(a.begin(), a.end(), 0));
 
-    EXPECT(4 == AK::find_index(a.begin(), a.end(), 0));
+    EXPECT(4 == YAK::find_index(a.begin(), a.end(), 0));
 }

@@ -6,10 +6,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Optional.h>
-#include <AK/QuickSort.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Debug.h>
+#include <YAK/Optional.h>
+#include <YAK/QuickSort.h>
+#include <YAK/StringBuilder.h>
 #include <LibDl/dlfcn.h>
 #include <LibDl/dlfcn_integration.h>
 #include <LibELF/DynamicLinker.h>
@@ -163,7 +163,7 @@ bool DynamicLoader::load_stage_2(unsigned flags)
         for (auto& text_segment : m_text_segments) {
             VERIFY(text_segment.address().get() != 0);
 
-#ifndef AK_OS_MACOS
+#ifndef YAK_OS_MACOS
             // Remap this text region as private.
             if (mremap(text_segment.address().as_ptr(), text_segment.size(), text_segment.size(), MAP_PRIVATE) == MAP_FAILED) {
                 perror("mremap .text: MAP_PRIVATE");

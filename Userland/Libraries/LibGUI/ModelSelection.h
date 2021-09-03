@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/HashTable.h>
-#include <AK/Noncopyable.h>
-#include <AK/TemporaryChange.h>
-#include <AK/Vector.h>
+#include <YAK/Badge.h>
+#include <YAK/HashTable.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/TemporaryChange.h>
+#include <YAK/Vector.h>
 #include <LibGUI/ModelIndex.h>
 
 namespace GUI {
 
 class ModelSelection {
-    AK_MAKE_NONCOPYABLE(ModelSelection);
-    AK_MAKE_NONMOVABLE(ModelSelection);
+    YAK_MAKE_NONCOPYABLE(ModelSelection);
+    YAK_MAKE_NONMOVABLE(ModelSelection);
 
 public:
     ModelSelection(AbstractView& view)

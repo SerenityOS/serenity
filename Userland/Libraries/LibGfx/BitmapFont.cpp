@@ -6,8 +6,8 @@
 
 #include "BitmapFont.h"
 #include "Emoji.h"
-#include <AK/Utf32View.h>
-#include <AK/Utf8View.h>
+#include <YAK/Utf32View.h>
+#include <YAK/Utf8View.h>
 #include <LibCore/FileStream.h>
 #include <LibGfx/FontDatabase.h>
 

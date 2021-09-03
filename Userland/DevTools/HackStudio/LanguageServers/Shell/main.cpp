@@ -5,7 +5,7 @@
  */
 
 #include "ClientConnection.h"
-#include <AK/LexicalPath.h>
+#include <YAK/LexicalPath.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/LocalServer.h>

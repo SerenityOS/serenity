@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
-#include <AK/StringBuilder.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/BlockBox.h>

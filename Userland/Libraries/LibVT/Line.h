@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <LibVT/Attribute.h>
 #include <LibVT/Position.h>
 #include <LibVT/XtermColors.h>
@@ -16,8 +16,8 @@
 namespace VT {
 
 class Line {
-    AK_MAKE_NONCOPYABLE(Line);
-    AK_MAKE_NONMOVABLE(Line);
+    YAK_MAKE_NONCOPYABLE(Line);
+    YAK_MAKE_NONMOVABLE(Line);
 
 public:
     explicit Line(size_t length);

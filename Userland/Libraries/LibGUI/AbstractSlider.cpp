@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/StdLibExtras.h>
+#include <YAK/Assertions.h>
+#include <YAK/StdLibExtras.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Slider.h>
 #include <LibGfx/Palette.h>
@@ -39,7 +39,7 @@ void AbstractSlider::set_orientation(Orientation value)
 
 void AbstractSlider::set_page_step(int page_step)
 {
-    m_page_step = AK::max(0, page_step);
+    m_page_step = YAK::max(0, page_step);
 }
 
 void AbstractSlider::set_range(int min, int max)

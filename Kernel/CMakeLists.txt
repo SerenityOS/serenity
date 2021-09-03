@@ -306,20 +306,20 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
     )
 endif()
 
-set(AK_SOURCES
-    ../AK/FlyString.cpp
-    ../AK/GenericLexer.cpp
-    ../AK/Hex.cpp
-    ../AK/String.cpp
-    ../AK/StringBuilder.cpp
-    ../AK/StringImpl.cpp
-    ../AK/StringUtils.cpp
-    ../AK/StringView.cpp
-    ../AK/Time.cpp
-    ../AK/Format.cpp
-    ../AK/UUID.cpp
-    ../AK/Utf8View.cpp
-    ../AK/Utf16View.cpp
+set(YAK_SOURCES
+    ../YAK/FlyString.cpp
+    ../YAK/GenericLexer.cpp
+    ../YAK/Hex.cpp
+    ../YAK/String.cpp
+    ../YAK/StringBuilder.cpp
+    ../YAK/StringImpl.cpp
+    ../YAK/StringUtils.cpp
+    ../YAK/StringView.cpp
+    ../YAK/Time.cpp
+    ../YAK/Format.cpp
+    ../YAK/UUID.cpp
+    ../YAK/Utf8View.cpp
+    ../YAK/Utf16View.cpp
 )
 
 set(ELF_SOURCES
@@ -348,7 +348,7 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     set(SOURCES
         ${KERNEL_SOURCES}
         ${SOURCES}
-        ${AK_SOURCES}
+        ${YAK_SOURCES}
         ${ELF_SOURCES}
         ${VT_SOURCES}
         ${KEYBOARD_SOURCES}
@@ -414,8 +414,8 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
     set(KCOV_EXCLUDED_SOURCES
         # Make sure we don't instrument any code called from __sanitizer_cov_trace_pc
         # otherwise we'll end up with recursive calls to that function.
-        ../AK/Format.cpp
-        ../AK/StringBuilder.cpp
+        ../YAK/Format.cpp
+        ../YAK/StringBuilder.cpp
         ../Kernel/Arch/x86/${KERNEL_ARCH}/Processor.cpp
         ../Kernel/Devices/KCOVDevice.cpp
         ../Kernel/Devices/KCOVInstance.cpp

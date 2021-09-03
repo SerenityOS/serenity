@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Atomic.h>
-#include <AK/Optional.h>
-#include <AK/Types.h>
+#include <YAK/Atomic.h>
+#include <YAK/Optional.h>
+#include <YAK/Types.h>
 
 #pragma once
 
@@ -37,7 +37,7 @@ struct RegisterState;
             return expected; // exchanged
 
         // This is only so that we don't saturate the bus...
-        AK::atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
+        YAK::atomic_thread_fence(YAK::MemoryOrder::memory_order_acquire);
     }
 }
 
@@ -55,7 +55,7 @@ struct RegisterState;
             return expected; // exchanged
 
         // This is only so that we don't saturate the bus...
-        AK::atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
+        YAK::atomic_thread_fence(YAK::MemoryOrder::memory_order_acquire);
     }
 }
 
@@ -73,7 +73,7 @@ struct RegisterState;
             return expected; // exchanged
 
         // This is only so that we don't saturate the bus...
-        AK::atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
+        YAK::atomic_thread_fence(YAK::MemoryOrder::memory_order_acquire);
     }
 }
 
@@ -91,7 +91,7 @@ struct RegisterState;
             return expected; // exchanged
 
         // This is only so that we don't saturate the bus...
-        AK::atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
+        YAK::atomic_thread_fence(YAK::MemoryOrder::memory_order_acquire);
     }
 }
 

@@ -6,17 +6,17 @@
 
 #pragma once
 
-#include <AK/DistinctNumeric.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/DistinctNumeric.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 
 namespace JS::Bytecode {
 
 TYPEDEF_DISTINCT_NUMERIC_GENERAL(size_t, false, true, false, false, false, false, StringTableIndex);
 
 class StringTable {
-    AK_MAKE_NONMOVABLE(StringTable);
-    AK_MAKE_NONCOPYABLE(StringTable);
+    YAK_MAKE_NONMOVABLE(StringTable);
+    YAK_MAKE_NONCOPYABLE(StringTable);
 
 public:
     StringTable() = default;

@@ -7,7 +7,7 @@
 #include "BucketTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
-#include <AK/Queue.h>
+#include <YAK/Queue.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>

@@ -11,10 +11,10 @@
 #include "RegexLexer.h"
 #include "RegexOptions.h"
 
-#include <AK/Forward.h>
-#include <AK/StringBuilder.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/Forward.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <LibUnicode/Forward.h>
 
 namespace regex {

@@ -277,7 +277,7 @@ void Client::send_next_command()
 {
     auto command = m_command_queue.take_first();
     ByteBuffer buffer;
-    auto tag = AK::String::formatted("A{} ", m_current_command);
+    auto tag = YAK::String::formatted("A{} ", m_current_command);
     buffer += tag.to_byte_buffer();
     auto command_type = command_byte_buffer(command.type);
     buffer.append(command_type.data(), command_type.size());

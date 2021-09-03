@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StdLibExtras.h>
+#include <YAK/StdLibExtras.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Slider.h>
 #include <LibGfx/Palette.h>

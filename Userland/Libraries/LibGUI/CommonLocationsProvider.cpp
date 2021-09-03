@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/JsonArray.h>
+#include <YAK/JsonObject.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/CommonLocationsProvider.h>

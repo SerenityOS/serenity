@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/String.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/String.h>
 
 namespace Crypto {
 namespace PK {

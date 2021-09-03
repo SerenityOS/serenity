@@ -6,9 +6,9 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/String.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
+#include <YAK/String.h>
+#include <YAK/WeakPtr.h>
+#include <YAK/Weakable.h>
 
 #ifdef __clang__
 #    pragma clang diagnostic push

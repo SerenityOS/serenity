@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/RefCounted.h>
 
 namespace PixelPaint {
 

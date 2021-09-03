@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Function.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <DevTools/HackStudio/AutoCompleteResponse.h>
 #include <DevTools/HackStudio/LanguageServers/CodeComprehensionEngine.h>
 #include <DevTools/HackStudio/LanguageServers/FileDB.h>
@@ -180,7 +180,7 @@ void CppComprehensionEngine::for_each_included_document_recursive(const Document
 }
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Traits<LanguageServers::Cpp::CppComprehensionEngine::SymbolName> : public GenericTraits<LanguageServers::Cpp::CppComprehensionEngine::SymbolName> {

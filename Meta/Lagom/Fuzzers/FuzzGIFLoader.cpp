@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Format.h>
-#include <AK/String.h>
+#include <YAK/Debug.h>
+#include <YAK/Format.h>
+#include <YAK/String.h>
 #include <LibGfx/GIFLoader.h>
 #include <stddef.h>
 #include <stdint.h>

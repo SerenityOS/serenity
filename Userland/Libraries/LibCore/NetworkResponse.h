@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/RefCounted.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/RefCounted.h>
 
 namespace Core {
 

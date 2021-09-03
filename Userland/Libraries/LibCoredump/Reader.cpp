@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonValue.h>
 #include <LibCompress/Gzip.h>
 #include <LibCoredump/Reader.h>
 #include <signal_numbers.h>

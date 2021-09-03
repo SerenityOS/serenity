@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Format.h>
+#include <YAK/Format.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Point.h>
@@ -686,7 +686,7 @@ using FloatRect = Rect<float>;
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<typename T>
 struct Formatter<Gfx::Rect<T>> : Formatter<StringView> {

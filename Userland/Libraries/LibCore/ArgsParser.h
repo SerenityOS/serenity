@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Function.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <stdio.h>
 
 namespace Core {

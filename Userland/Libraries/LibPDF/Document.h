@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Format.h>
-#include <AK/HashMap.h>
-#include <AK/RefCounted.h>
+#include <YAK/Format.h>
+#include <YAK/HashMap.h>
+#include <YAK/RefCounted.h>
 #include <LibGfx/Color.h>
 #include <LibPDF/Object.h>
 #include <LibPDF/Parser.h>
@@ -139,7 +139,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<PDF::Rectangle> : Formatter<StringView> {

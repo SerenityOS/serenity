@@ -6,15 +6,15 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/Types.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/Types.h>
 #include <Kernel/TTY/VirtualConsole.h>
 
 namespace Kernel {
 
 class ConsoleManagement {
-    AK_MAKE_ETERNAL;
+    YAK_MAKE_ETERNAL;
     friend class VirtualConsole;
 
 public:

@@ -6,7 +6,7 @@
  */
 
 #include "Lexer.h"
-#include <AK/Debug.h>
+#include <YAK/Debug.h>
 #include <ctype.h>
 
 namespace SQL::AST {

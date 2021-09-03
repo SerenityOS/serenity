@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
+#include <YAK/HashMap.h>
 #include <InspectorServer/InspectorClientEndpoint.h>
 #include <InspectorServer/InspectorServerEndpoint.h>
 #include <LibIPC/ClientConnection.h>

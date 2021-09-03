@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Format.h>
+#include <YAK/Format.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 
 namespace JS::Bytecode {
@@ -27,9 +27,9 @@ private:
 }
 
 template<>
-struct AK::Formatter<JS::Bytecode::Label> : AK::Formatter<FormatString> {
+struct YAK::Formatter<JS::Bytecode::Label> : YAK::Formatter<FormatString> {
     void format(FormatBuilder& builder, JS::Bytecode::Label const& value)
     {
-        return AK::Formatter<FormatString>::format(builder, "@{}", value.block().name());
+        return YAK::Formatter<FormatString>::format(builder, "@{}", value.block().name());
     }
 };

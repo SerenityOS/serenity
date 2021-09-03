@@ -6,17 +6,17 @@
  */
 
 #include "Editor.h"
-#include <AK/CharacterTypes.h>
-#include <AK/Debug.h>
-#include <AK/FileStream.h>
-#include <AK/GenericLexer.h>
-#include <AK/JsonObject.h>
-#include <AK/MemoryStream.h>
-#include <AK/ScopeGuard.h>
-#include <AK/ScopedValueRollback.h>
-#include <AK/StringBuilder.h>
-#include <AK/Utf32View.h>
-#include <AK/Utf8View.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Debug.h>
+#include <YAK/FileStream.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/JsonObject.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/ScopedValueRollback.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Utf32View.h>
+#include <YAK/Utf8View.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>

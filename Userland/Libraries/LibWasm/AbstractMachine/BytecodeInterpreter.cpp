@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
+#include <YAK/Debug.h>
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWasm/AbstractMachine/BytecodeInterpreter.h>
 #include <LibWasm/AbstractMachine/Configuration.h>
@@ -163,7 +163,7 @@ void BytecodeInterpreter::binary_numeric_operation(Configuration& configuration)
     TRAP_IF_NOT(rhs.has_value());
     PushType result;
     auto call_result = Operator {}(lhs.value(), rhs.value());
-    if constexpr (IsSpecializationOf<decltype(call_result), AK::Result>) {
+    if constexpr (IsSpecializationOf<decltype(call_result), YAK::Result>) {
         if (call_result.is_error()) {
             trap_if_not(false, call_result.error());
             return;
@@ -187,7 +187,7 @@ void BytecodeInterpreter::unary_operation(Configuration& configuration)
     TRAP_IF_NOT(value.has_value());
     auto call_result = Operator {}(*value);
     PushType result;
-    if constexpr (IsSpecializationOf<decltype(call_result), AK::Result>) {
+    if constexpr (IsSpecializationOf<decltype(call_result), YAK::Result>) {
         if (call_result.is_error()) {
             trap_if_not(false, call_result.error());
             return;

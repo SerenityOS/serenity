@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <Kernel/KBuffer.h>
 #include <stdarg.h>
 
@@ -32,7 +32,7 @@ public:
     {
         // FIXME: This really not ideal, but vformat expects StringBuilder.
         StringBuilder builder;
-        AK::VariadicFormatParams variadic_format_params { parameters... };
+        YAK::VariadicFormatParams variadic_format_params { parameters... };
         vformat(builder, fmtstr.view(), variadic_format_params);
         append_bytes(builder.string_view().bytes());
     }

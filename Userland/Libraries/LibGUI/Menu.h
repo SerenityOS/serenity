@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/WeakPtr.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Event.h>

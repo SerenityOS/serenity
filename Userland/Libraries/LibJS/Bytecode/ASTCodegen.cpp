@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
+#include <YAK/Format.h>
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Instruction.h>

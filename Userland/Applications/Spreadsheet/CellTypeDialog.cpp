@@ -7,7 +7,7 @@
 #include "CellTypeDialog.h"
 #include "Cell.h"
 #include "Spreadsheet.h"
-#include <AK/StringBuilder.h>
+#include <YAK/StringBuilder.h>
 #include <Applications/Spreadsheet/CondFormattingGML.h>
 #include <Applications/Spreadsheet/CondFormattingViewGML.h>
 #include <LibGUI/BoxLayout.h>

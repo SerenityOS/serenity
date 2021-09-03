@@ -29,7 +29,7 @@ buffer while using the returned string.
 ## Examples
 
 ```c++
-#include <AK/LogStream.h>
+#include <YAK/LogStream.h>
 #include <libgen.h>
 
 int main()

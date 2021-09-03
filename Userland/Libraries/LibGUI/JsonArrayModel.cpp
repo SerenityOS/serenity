@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/JsonObject.h>
+#include <YAK/JsonObject.h>
 #include <LibCore/File.h>
 #include <LibGUI/JsonArrayModel.h>
 

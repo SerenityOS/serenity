@@ -6,7 +6,7 @@
  */
 
 #include "SnakeGame.h"
-#include <AK/Random.h>
+#include <YAK/Random.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>

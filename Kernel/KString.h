@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <AK/Format.h>
-#include <AK/OwnPtr.h>
+#include <YAK/Format.h>
+#include <YAK/OwnPtr.h>
 
 namespace Kernel {
 
 class KString {
-    AK_MAKE_NONCOPYABLE(KString);
-    AK_MAKE_NONMOVABLE(KString);
+    YAK_MAKE_NONCOPYABLE(KString);
+    YAK_MAKE_NONMOVABLE(KString);
 
 public:
     [[nodiscard]] static OwnPtr<KString> try_create_uninitialized(size_t, char*&);
@@ -42,7 +42,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<Kernel::KString> : Formatter<StringView> {

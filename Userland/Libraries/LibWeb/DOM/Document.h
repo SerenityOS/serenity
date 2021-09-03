@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/OwnPtr.h>
-#include <AK/String.h>
-#include <AK/URL.h>
-#include <AK/WeakPtr.h>
+#include <YAK/FlyString.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/String.h>
+#include <YAK/URL.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
 #include <LibWeb/Bindings/ScriptExecutionContext.h>

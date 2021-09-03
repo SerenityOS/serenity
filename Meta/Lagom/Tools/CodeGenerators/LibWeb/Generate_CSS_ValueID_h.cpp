@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/JsonObject.h>
-#include <AK/SourceGenerator.h>
-#include <AK/StringBuilder.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/JsonObject.h>
+#include <YAK/SourceGenerator.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/File.h>
 #include <ctype.h>
 
@@ -45,8 +45,8 @@ int main(int argc, char** argv)
     generator.append(R"~~~(
 #pragma once
 
-#include <AK/StringView.h>
-#include <AK/Traits.h>
+#include <YAK/StringView.h>
+#include <YAK/Traits.h>
 
 namespace Web::CSS {
 

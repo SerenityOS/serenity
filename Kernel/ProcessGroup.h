@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/IntrusiveList.h>
-#include <AK/RefCounted.h>
-#include <AK/Weakable.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/RefCounted.h>
+#include <YAK/Weakable.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/UnixTypes.h>
 
@@ -18,8 +18,8 @@ class ProcessGroup
     : public RefCounted<ProcessGroup>
     , public Weakable<ProcessGroup> {
 
-    AK_MAKE_NONMOVABLE(ProcessGroup);
-    AK_MAKE_NONCOPYABLE(ProcessGroup);
+    YAK_MAKE_NONMOVABLE(ProcessGroup);
+    YAK_MAKE_NONCOPYABLE(ProcessGroup);
 
 public:
     ~ProcessGroup();

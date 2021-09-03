@@ -5,7 +5,7 @@
  */
 
 #include "WelcomeWidget.h"
-#include <AK/Random.h>
+#include <YAK/Random.h>
 #include <Applications/Welcome/WelcomeWindowGML.h>
 #include <LibCore/File.h>
 #include <LibCore/Process.h>

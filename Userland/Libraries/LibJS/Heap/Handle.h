@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/IntrusiveList.h>
-#include <AK/Noncopyable.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
+#include <YAK/Badge.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
 #include <LibJS/Forward.h>
 
 namespace JS {
 
 class HandleImpl : public RefCounted<HandleImpl> {
-    AK_MAKE_NONCOPYABLE(HandleImpl);
-    AK_MAKE_NONMOVABLE(HandleImpl);
+    YAK_MAKE_NONCOPYABLE(HandleImpl);
+    YAK_MAKE_NONMOVABLE(HandleImpl);
 
 public:
     ~HandleImpl();

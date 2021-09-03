@@ -141,7 +141,7 @@ if (ENABLE_ALL_THE_DEBUG_MACROS)
     include("${SerenityOS_SOURCE_DIR}/Meta/CMake/all_the_debug_macros.cmake")
 endif(ENABLE_ALL_THE_DEBUG_MACROS)
 
-configure_file(AK/Debug.h.in AK/Debug.h @ONLY)
+configure_file(YAK/Debug.h.in YAK/Debug.h @ONLY)
 configure_file(Kernel/Debug.h.in Kernel/Debug.h @ONLY)
 
 include_directories(Userland/Libraries)
@@ -344,7 +344,7 @@ serenity_component(
     RECOMMENDED
 )
 
-add_subdirectory(AK)
+add_subdirectory(YAK)
 add_subdirectory(Kernel)
 if(NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     add_subdirectory(Userland)

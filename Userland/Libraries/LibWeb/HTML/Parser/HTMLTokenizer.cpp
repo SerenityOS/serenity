@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
-#include <AK/Debug.h>
-#include <AK/SourceLocation.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Debug.h>
+#include <YAK/SourceLocation.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/HTML/Parser/Entities.h>
 #include <LibWeb/HTML/Parser/HTMLToken.h>

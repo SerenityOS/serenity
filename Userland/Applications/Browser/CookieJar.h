@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/Optional.h>
-#include <AK/String.h>
-#include <AK/Traits.h>
+#include <YAK/HashMap.h>
+#include <YAK/Optional.h>
+#include <YAK/String.h>
+#include <YAK/Traits.h>
 #include <LibCore/DateTime.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Forward.h>
@@ -45,7 +45,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Traits<Browser::CookieStorageKey> : public GenericTraits<Browser::CookieStorageKey> {

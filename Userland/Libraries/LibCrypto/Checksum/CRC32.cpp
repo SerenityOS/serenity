@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Span.h>
-#include <AK/Types.h>
+#include <YAK/Span.h>
+#include <YAK/Types.h>
 #include <LibCrypto/Checksum/CRC32.h>
 
 namespace Crypto::Checksum {

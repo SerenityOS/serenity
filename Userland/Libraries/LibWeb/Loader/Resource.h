@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/HashMap.h>
-#include <AK/HashTable.h>
-#include <AK/Noncopyable.h>
-#include <AK/RefCounted.h>
-#include <AK/URL.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/HashMap.h>
+#include <YAK/HashTable.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/RefCounted.h>
+#include <YAK/URL.h>
+#include <YAK/WeakPtr.h>
+#include <YAK/Weakable.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -23,8 +23,8 @@ namespace Web {
 class ResourceClient;
 
 class Resource : public RefCounted<Resource> {
-    AK_MAKE_NONCOPYABLE(Resource);
-    AK_MAKE_NONMOVABLE(Resource);
+    YAK_MAKE_NONCOPYABLE(Resource);
+    YAK_MAKE_NONMOVABLE(Resource);
 
 public:
     enum class Type {

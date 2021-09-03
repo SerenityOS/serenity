@@ -7,13 +7,13 @@
 
 #include "RegexParser.h"
 #include "RegexDebug.h"
-#include <AK/CharacterTypes.h>
-#include <AK/GenericLexer.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringUtils.h>
-#include <AK/TemporaryChange.h>
-#include <AK/Utf16View.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/StringUtils.h>
+#include <YAK/TemporaryChange.h>
+#include <YAK/Utf16View.h>
 #include <LibUnicode/CharacterTypes.h>
 
 namespace regex {
@@ -1143,7 +1143,7 @@ StringView ECMA262Parser::read_digits_as_string(ReadDigitsInitialZeroState initi
         if (max_count > 0 && count >= max_count)
             break;
 
-        if (hex && !AK::StringUtils::convert_to_uint_from_hex(c).has_value())
+        if (hex && !YAK::StringUtils::convert_to_uint_from_hex(c).has_value())
             break;
         if (!hex && !c.to_uint().has_value())
             break;
@@ -1164,7 +1164,7 @@ Optional<unsigned> ECMA262Parser::read_digits(ECMA262Parser::ReadDigitsInitialZe
     if (str.is_empty())
         return {};
     if (hex)
-        return AK::StringUtils::convert_to_uint_from_hex(str);
+        return YAK::StringUtils::convert_to_uint_from_hex(str);
     return str.to_uint();
 }
 

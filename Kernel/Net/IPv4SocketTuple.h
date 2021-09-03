@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
+#include <YAK/HashMap.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Locking/Mutex.h>
@@ -48,7 +48,7 @@ private:
     u16 m_peer_port { 0 };
 };
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Traits<IPv4SocketTuple> : public GenericTraits<IPv4SocketTuple> {

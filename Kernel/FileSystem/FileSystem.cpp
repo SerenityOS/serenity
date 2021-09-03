@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/HashMap.h>
-#include <AK/Singleton.h>
-#include <AK/StringView.h>
+#include <YAK/HashMap.h>
+#include <YAK/Singleton.h>
+#include <YAK/StringView.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>

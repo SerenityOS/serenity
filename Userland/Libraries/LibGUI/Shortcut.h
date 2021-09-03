@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Traits.h>
+#include <YAK/Traits.h>
 #include <Kernel/API/KeyCode.h>
 
 namespace GUI {
@@ -43,7 +43,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Traits<GUI::Shortcut> : public GenericTraits<GUI::Shortcut> {

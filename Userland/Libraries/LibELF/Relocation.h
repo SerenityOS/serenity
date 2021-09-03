@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Concepts.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Concepts.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <Kernel/VirtualAddress.h>
 
 namespace ELF {

@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <LibJS/Heap/Cell.h>
 
 namespace JS {
 
 class Symbol final : public Cell {
-    AK_MAKE_NONCOPYABLE(Symbol);
-    AK_MAKE_NONMOVABLE(Symbol);
+    YAK_MAKE_NONCOPYABLE(Symbol);
+    YAK_MAKE_NONMOVABLE(Symbol);
 
 public:
     Symbol(Optional<String>, bool);

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Base64.h>
-#include <AK/Checked.h>
+#include <YAK/Base64.h>
+#include <YAK/Checked.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGWriter.h>
 #include <LibWeb/CSS/StyleResolver.h>

@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/Concepts.h>
-#include <AK/Forward.h>
-#include <AK/NumericLimits.h>
-#include <AK/StdLibExtras.h>
-#include <AK/String.h>
+#include <YAK/Concepts.h>
+#include <YAK/Forward.h>
+#include <YAK/NumericLimits.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/String.h>
 #include <LibIPC/Forward.h>
 #include <LibIPC/Message.h>
 

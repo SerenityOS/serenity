@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Weakable.h>
+#include <YAK/Weakable.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/Forward.h>

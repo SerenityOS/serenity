@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/Types.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Types.h>
 #include <Kernel/Storage/RamdiskController.h>
 
 namespace Kernel {

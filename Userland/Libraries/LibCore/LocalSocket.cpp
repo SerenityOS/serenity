@@ -55,7 +55,7 @@ LocalSocket::~LocalSocket()
 
 pid_t LocalSocket::peer_pid() const
 {
-#ifdef AK_OS_MACOS
+#ifdef YAK_OS_MACOS
     pid_t pid;
     socklen_t pid_size = sizeof(pid);
 

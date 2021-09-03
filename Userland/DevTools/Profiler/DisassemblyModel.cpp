@@ -6,7 +6,7 @@
 
 #include "DisassemblyModel.h"
 #include "Profile.h"
-#include <AK/MappedFile.h>
+#include <YAK/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/Image.h>
 #include <LibGUI/Painter.h>

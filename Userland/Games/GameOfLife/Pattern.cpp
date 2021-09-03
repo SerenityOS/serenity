@@ -5,9 +5,9 @@
  */
 
 #include "Pattern.h"
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/Vector.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Vector.h>
 #include <LibGUI/Action.h>
 #include <stdio.h>
 

@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include <AK/Format.h>
-#include <AK/Forward.h>
-#include <AK/Noncopyable.h>
+#include <YAK/Format.h>
+#include <YAK/Forward.h>
+#include <YAK/Noncopyable.h>
 #include <LibJS/Forward.h>
 
 namespace JS {
 
 class Cell {
-    AK_MAKE_NONCOPYABLE(Cell);
-    AK_MAKE_NONMOVABLE(Cell);
+    YAK_MAKE_NONCOPYABLE(Cell);
+    YAK_MAKE_NONMOVABLE(Cell);
 
 public:
     virtual void initialize(GlobalObject&) { }
@@ -65,7 +65,7 @@ private:
 }
 
 template<>
-struct AK::Formatter<JS::Cell> : AK::Formatter<FormatString> {
+struct YAK::Formatter<JS::Cell> : YAK::Formatter<FormatString> {
     void format(FormatBuilder& builder, const JS::Cell* cell)
     {
         if (!cell)

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DistinctNumeric.h>
+#include <YAK/DistinctNumeric.h>
 
 namespace Wasm {
 

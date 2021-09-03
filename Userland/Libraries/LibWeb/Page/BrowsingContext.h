@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/Noncopyable.h>
-#include <AK/RefPtr.h>
-#include <AK/WeakPtr.h>
+#include <YAK/Function.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/RefPtr.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>

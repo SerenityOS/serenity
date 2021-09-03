@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/RefCounted.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 
 namespace Kernel {
 

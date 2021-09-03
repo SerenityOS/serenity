@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
+#include <YAK/NonnullRefPtr.h>
 #include <Kernel/Forward.h>
 
 namespace Kernel {

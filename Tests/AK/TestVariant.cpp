@@ -6,8 +6,8 @@
 
 #include <LibTest/TestSuite.h>
 
-#include <AK/RefPtr.h>
-#include <AK/Variant.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Variant.h>
 
 namespace {
 
@@ -68,7 +68,7 @@ TEST_CASE(destructor)
 TEST_CASE(move_moves)
 {
     struct NoCopy {
-        AK_MAKE_NONCOPYABLE(NoCopy);
+        YAK_MAKE_NONCOPYABLE(NoCopy);
 
     public:
         NoCopy() = default;

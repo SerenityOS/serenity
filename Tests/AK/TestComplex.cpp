@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Complex.h>
+#include <YAK/Complex.h>
 
 TEST_CASE(Complex)
 {
@@ -15,7 +15,7 @@ TEST_CASE(Complex)
     EXPECT_APPROXIMATE(a.real(), b.real());
     EXPECT_APPROXIMATE(a.imag(), b.imag());
 
-#ifdef AKCOMPLEX_CAN_USE_MATH_H
+#ifdef YAKCOMPLEX_CAN_USE_MATH_H
     EXPECT_APPROXIMATE((complex_imag_unit<float> - complex_imag_unit<float>).magnitude(), 0);
     EXPECT_APPROXIMATE((complex_imag_unit<float> + complex_real_unit<float>).magnitude(), sqrt(2));
 
@@ -37,7 +37,7 @@ TEST_CASE(Complex)
 
     EXPECT_EQ(Complex(1., 10.) == (Complex<double>(1., 0.) + Complex(0., 10.)), true);
     EXPECT_EQ(Complex(1., 10.) != (Complex<double>(1., 1.) + Complex(0., 10.)), true);
-#ifdef AKCOMPLEX_CAN_USE_MATH_H
+#ifdef YAKCOMPLEX_CAN_USE_MATH_H
     EXPECT_EQ(approx_eq(Complex<int>(1), Complex<float>(1.0000004f)), true);
     EXPECT_APPROXIMATE(cexp(Complex<double>(0., 1.) * M_PI).real(), -1.);
 #endif

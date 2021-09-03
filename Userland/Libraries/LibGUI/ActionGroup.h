@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/HashTable.h>
-#include <AK/Weakable.h>
+#include <YAK/HashTable.h>
+#include <YAK/Weakable.h>
 #include <LibGUI/Forward.h>
 
 namespace GUI {

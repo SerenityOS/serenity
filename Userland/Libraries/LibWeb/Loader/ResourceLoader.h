@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/URL.h>
+#include <YAK/Function.h>
+#include <YAK/URL.h>
 #include <LibCore/Object.h>
 #include <LibWeb/Loader/Resource.h>
 

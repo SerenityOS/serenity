@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/ByteBuffer.h>
+#include <YAK/ByteBuffer.h>
 
 TEST_CASE(equality_operator)
 {
@@ -46,6 +46,6 @@ TEST_CASE(negative_operator_lt)
     ByteBuffer a = ByteBuffer::copy("Hello, world", 10);
     ByteBuffer b = ByteBuffer::copy("Hello, friend", 10);
     [[maybe_unused]] auto res = a < b;
-    // error: error: use of deleted function ‘bool AK::ByteBuffer::operator<(const AK::ByteBuffer&) const’
+    // error: error: use of deleted function ‘bool YAK::ByteBuffer::operator<(const YAK::ByteBuffer&) const’
 }
 #endif /* COMPILE_NEGATIVE_TESTS */

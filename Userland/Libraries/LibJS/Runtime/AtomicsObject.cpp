@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Atomic.h>
-#include <AK/ByteBuffer.h>
-#include <AK/Endian.h>
+#include <YAK/Atomic.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Endian.h>
 #include <LibJS/Runtime/AtomicsObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
@@ -140,7 +140,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::add)
     if (!typed_array)
         return {};
 
-    auto atomic_add = [](auto* storage, auto value) { return AK::atomic_fetch_add(storage, value); };
+    auto atomic_add = [](auto* storage, auto value) { return YAK::atomic_fetch_add(storage, value); };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
@@ -158,7 +158,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::and_)
     if (!typed_array)
         return {};
 
-    auto atomic_and = [](auto* storage, auto value) { return AK::atomic_fetch_and(storage, value); };
+    auto atomic_and = [](auto* storage, auto value) { return YAK::atomic_fetch_and(storage, value); };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
@@ -223,7 +223,7 @@ static Value atomic_compare_exchange_impl(GlobalObject& global_object, TypedArra
         auto* v = reinterpret_cast<U*>(block.span().slice(*indexed_position).data());
         auto* e = reinterpret_cast<U*>(expected_bytes.data());
         auto* r = reinterpret_cast<U*>(replacement_bytes.data());
-        (void)AK::atomic_compare_exchange_strong(v, *e, *r);
+        (void)YAK::atomic_compare_exchange_strong(v, *e, *r);
     }
 
     return raw_bytes_to_numeric<T>(global_object, raw_bytes_read, is_little_endian);
@@ -252,7 +252,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::exchange)
     if (!typed_array)
         return {};
 
-    auto atomic_exchange = [](auto* storage, auto value) { return AK::atomic_exchange(storage, value); };
+    auto atomic_exchange = [](auto* storage, auto value) { return YAK::atomic_exchange(storage, value); };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
@@ -271,13 +271,13 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::is_lock_free)
         return {};
 
     if (size == 1)
-        return Value(AK::atomic_is_lock_free<u8>());
+        return Value(YAK::atomic_is_lock_free<u8>());
     if (size == 2)
-        return Value(AK::atomic_is_lock_free<u16>());
+        return Value(YAK::atomic_is_lock_free<u16>());
     if (size == 4)
         return Value(true);
     if (size == 8)
-        return Value(AK::atomic_is_lock_free<u64>());
+        return Value(YAK::atomic_is_lock_free<u64>());
     return Value(false);
 }
 
@@ -311,7 +311,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::or_)
     if (!typed_array)
         return {};
 
-    auto atomic_or = [](auto* storage, auto value) { return AK::atomic_fetch_or(storage, value); };
+    auto atomic_or = [](auto* storage, auto value) { return YAK::atomic_fetch_or(storage, value); };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
@@ -365,7 +365,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::sub)
     if (!typed_array)
         return {};
 
-    auto atomic_sub = [](auto* storage, auto value) { return AK::atomic_fetch_sub(storage, value); };
+    auto atomic_sub = [](auto* storage, auto value) { return YAK::atomic_fetch_sub(storage, value); };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
@@ -383,7 +383,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::xor_)
     if (!typed_array)
         return {};
 
-    auto atomic_xor = [](auto* storage, auto value) { return AK::atomic_fetch_xor(storage, value); };
+    auto atomic_xor = [](auto* storage, auto value) { return YAK::atomic_fetch_xor(storage, value); };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \

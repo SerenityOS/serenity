@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/StringView.h>
-#include <AK/Vector.h>
+#include <YAK/StringView.h>
+#include <YAK/Vector.h>
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>

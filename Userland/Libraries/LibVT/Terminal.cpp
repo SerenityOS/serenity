@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Queue.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
-#include <AK/TemporaryChange.h>
+#include <YAK/Debug.h>
+#include <YAK/Queue.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/StringView.h>
+#include <YAK/TemporaryChange.h>
 #include <LibVT/Color.h>
 #include <LibVT/Terminal.h>
 #ifdef KERNEL

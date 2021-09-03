@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Endian.h>
-#include <AK/MACAddress.h>
+#include <YAK/Endian.h>
+#include <YAK/MACAddress.h>
 
 #pragma GCC diagnostic ignored "-Warray-bounds"
 

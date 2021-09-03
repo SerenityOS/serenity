@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Utf16String.h>
 

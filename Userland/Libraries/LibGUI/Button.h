@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Function.h>
+#include <YAK/Function.h>
 #include <LibGUI/AbstractButton.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/StylePainter.h>

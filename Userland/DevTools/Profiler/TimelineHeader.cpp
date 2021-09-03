@@ -7,7 +7,7 @@
 #include "TimelineHeader.h"
 #include "Process.h"
 #include "Profile.h"
-#include <AK/LexicalPath.h>
+#include <YAK/LexicalPath.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>

@@ -23,8 +23,8 @@
 #include "ProjectDeclarations.h"
 #include "TerminalWrapper.h"
 #include "ToDoEntries.h"
-#include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/StringBuilder.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Event.h>
@@ -853,7 +853,7 @@ RefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(const String& filenam
     String file_path = filename;
 
     // TODO: We can probably do a more specific condition here, something like
-    // "if (file.starts_with("../Libraries/") || file.starts_with("../AK/"))"
+    // "if (file.starts_with("../Libraries/") || file.starts_with("../YAK/"))"
     if (filename.starts_with("../")) {
         file_path = get_full_path_of_serenity_source(filename);
     }

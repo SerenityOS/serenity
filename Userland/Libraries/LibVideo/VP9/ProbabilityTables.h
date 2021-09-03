@@ -7,8 +7,8 @@
 #pragma once
 
 #include "Symbols.h"
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 
 namespace Video::VP9 {
 

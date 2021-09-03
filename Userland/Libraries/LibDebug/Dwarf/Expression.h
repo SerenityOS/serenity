@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "AK/ByteBuffer.h"
-#include "AK/Types.h"
+#include "YAK/ByteBuffer.h"
+#include "YAK/Types.h"
 
 struct PtraceRegisters;
 

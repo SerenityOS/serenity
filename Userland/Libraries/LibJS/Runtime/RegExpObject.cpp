@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
+#include <YAK/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/RegExpObject.h>
@@ -77,7 +77,7 @@ Result<regex::RegexOptions<ECMAScriptFlags>, String> regex_flags_from_string(Str
 
 String parse_regex_pattern(StringView pattern, bool unicode)
 {
-    auto utf16_pattern = AK::utf8_to_utf16(pattern);
+    auto utf16_pattern = YAK::utf8_to_utf16(pattern);
     Utf16View utf16_pattern_view { utf16_pattern };
     StringBuilder builder;
 

@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

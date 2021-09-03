@@ -6,10 +6,10 @@
  */
 
 #include "Token.h"
-#include <AK/Assertions.h>
-#include <AK/CharacterTypes.h>
-#include <AK/GenericLexer.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Assertions.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/StringBuilder.h>
 
 namespace JS {
 

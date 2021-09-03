@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/WeakPtr.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Heap.h>

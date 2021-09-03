@@ -9,7 +9,7 @@
 #include "DNSAnswer.h"
 #include "DNSName.h"
 #include "DNSPacket.h"
-#include <AK/IPv4Address.h>
+#include <YAK/IPv4Address.h>
 #include <LibCore/UDPServer.h>
 #include <netinet/in.h>
 

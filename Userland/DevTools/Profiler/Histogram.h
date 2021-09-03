@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Vector.h>
+#include <YAK/Vector.h>
 
 template<typename Timestamp = u64, typename Value = u16, size_t inline_capacity = 4096>
 class Histogram {

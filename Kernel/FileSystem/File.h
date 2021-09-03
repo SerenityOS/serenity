@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
-#include <AK/String.h>
-#include <AK/Types.h>
-#include <AK/Weakable.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/RefCounted.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
+#include <YAK/Weakable.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>

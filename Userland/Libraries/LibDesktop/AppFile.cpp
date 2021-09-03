@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
-#include <AK/Vector.h>
+#include <YAK/Function.h>
+#include <YAK/Vector.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Process.h>

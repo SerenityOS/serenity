@@ -9,12 +9,12 @@
 #include "MmapRegion.h"
 #include "SimpleRegion.h"
 #include "SoftCPU.h"
-#include <AK/Debug.h>
-#include <AK/FileStream.h>
-#include <AK/Format.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
-#include <AK/StringUtils.h>
+#include <YAK/Debug.h>
+#include <YAK/FileStream.h>
+#include <YAK/Format.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MappedFile.h>
+#include <YAK/StringUtils.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
@@ -321,7 +321,7 @@ void Emulator::handle_repl()
             m_steps_til_pause = 1;
             return;
         }
-        auto number = AK::StringUtils::convert_to_int<i64>(parts[1]);
+        auto number = YAK::StringUtils::convert_to_int<i64>(parts[1]);
         if (!number.has_value()) {
             outln("usage \"step [count]\"\n\tcount can't be less than 1");
             return;
@@ -341,7 +341,7 @@ void Emulator::handle_repl()
             did_receive_signal(SIGINT);
             return;
         } else if (parts.size() == 2) {
-            auto number = AK::StringUtils::convert_to_int<i32>(parts[1]);
+            auto number = YAK::StringUtils::convert_to_int<i32>(parts[1]);
             if (number.has_value()) {
                 did_receive_signal(number.value());
                 return;
@@ -467,7 +467,7 @@ void Emulator::dump_backtrace()
     dump_backtrace(raw_backtrace());
 }
 
-void Emulator::emit_profile_sample(AK::OutputStream& output)
+void Emulator::emit_profile_sample(YAK::OutputStream& output)
 {
     if (!is_in_region_of_interest())
         return;
@@ -480,7 +480,7 @@ void Emulator::emit_profile_sample(AK::OutputStream& output)
     output.write_or_error(builder.string_view().bytes());
 }
 
-void Emulator::emit_profile_event(AK::OutputStream& output, StringView event_name, String contents)
+void Emulator::emit_profile_event(YAK::OutputStream& output, StringView event_name, String contents)
 {
     StringBuilder builder;
     timeval tv {};

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
-#include <AK/StringView.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
 #include <LibIMAP/QuotedPrintable.h>
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)

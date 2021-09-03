@@ -5,8 +5,8 @@
  */
 
 #include "CharacterMapFile.h"
-#include <AK/ByteBuffer.h>
-#include <AK/Utf8View.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Utf8View.h>
 #include <LibCore/File.h>
 
 namespace Keyboard {

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
-#include <AK/GenericLexer.h>
-#include <AK/StringBuilder.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/StringBuilder.h>
 #include <LibIMAP/QuotedPrintable.h>
 
 namespace IMAP {

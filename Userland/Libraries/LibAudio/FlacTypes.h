@@ -7,9 +7,9 @@
 #pragma once
 
 #include "Buffer.h"
-#include <AK/ByteBuffer.h>
-#include <AK/Types.h>
-#include <AK/Variant.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Types.h>
+#include <YAK/Variant.h>
 
 namespace Audio {
 

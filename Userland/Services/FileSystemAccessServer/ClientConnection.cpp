@@ -8,7 +8,7 @@
 // clang-format off
 #include <LibGUI/WindowServerConnection.h>
 // clang-format on
-#include <AK/Debug.h>
+#include <YAK/Debug.h>
 #include <FileSystemAccessServer/ClientConnection.h>
 #include <LibCore/File.h>
 #include <LibCore/IODevice.h>

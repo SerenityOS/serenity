@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/Atomic.h>
-#include <AK/CircularQueue.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/RefPtr.h>
-#include <AK/Time.h>
-#include <AK/Types.h>
+#include <YAK/Atomic.h>
+#include <YAK/CircularQueue.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Time.h>
+#include <YAK/Types.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/API/MousePacket.h>
 #include <Kernel/KResult.h>
@@ -31,7 +31,7 @@ class KeyboardClient;
 class HIDManagement {
     friend class KeyboardDevice;
     friend class MouseDevice;
-    AK_MAKE_ETERNAL;
+    YAK_MAKE_ETERNAL;
 
 public:
     HIDManagement();

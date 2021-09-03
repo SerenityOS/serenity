@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/HashMap.h>
-#include <AK/URL.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/HashMap.h>
+#include <YAK/URL.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {
@@ -66,7 +66,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Traits<Web::LoadRequest> : public GenericTraits<Web::LoadRequest> {

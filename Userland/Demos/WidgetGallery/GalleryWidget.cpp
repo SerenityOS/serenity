@@ -7,7 +7,7 @@
 #include "GalleryWidget.h"
 #include "DemoWizardDialog.h"
 #include "GalleryModels.h"
-#include <AK/StringBuilder.h>
+#include <YAK/StringBuilder.h>
 #include <Demos/WidgetGallery/BasicsTabGML.h>
 #include <Demos/WidgetGallery/CursorsTabGML.h>
 #include <Demos/WidgetGallery/IconsTabGML.h>

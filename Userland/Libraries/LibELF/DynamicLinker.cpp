@@ -6,14 +6,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/Debug.h>
-#include <AK/HashMap.h>
-#include <AK/HashTable.h>
-#include <AK/LexicalPath.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/ScopeGuard.h>
-#include <AK/Vector.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Debug.h>
+#include <YAK/HashMap.h>
+#include <YAK/HashTable.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/Vector.h>
 #include <LibC/bits/pthread_integration.h>
 #include <LibC/link.h>
 #include <LibC/sys/mman.h>

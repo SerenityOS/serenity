@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
+#include <YAK/RefPtr.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Forward.h>
 
@@ -50,7 +50,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 template<>
 struct Formatter<Web::DOM::Position> : Formatter<StringView> {
     void format(FormatBuilder& builder, const Web::DOM::Position& value)

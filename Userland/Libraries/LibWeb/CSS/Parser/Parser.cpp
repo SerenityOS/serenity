@@ -7,10 +7,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
-#include <AK/Debug.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/SourceLocation.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Debug.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/SourceLocation.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>

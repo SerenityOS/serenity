@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Bitmap.h>
-#include <AK/ByteBuffer.h>
-#include <AK/Debug.h>
-#include <AK/HashMap.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
-#include <AK/Math.h>
-#include <AK/MemoryStream.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Bitmap.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Debug.h>
+#include <YAK/HashMap.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MappedFile.h>
+#include <YAK/Math.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/JPGLoader.h>
 
@@ -864,20 +864,20 @@ static void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macrobloc
 
 static void inverse_dct(const JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
 {
-    static const float m0 = 2.0 * AK::cos(1.0 / 16.0 * 2.0 * AK::Pi<double>);
-    static const float m1 = 2.0 * AK::cos(2.0 / 16.0 * 2.0 * AK::Pi<double>);
-    static const float m3 = 2.0 * AK::cos(2.0 / 16.0 * 2.0 * AK::Pi<double>);
-    static const float m5 = 2.0 * AK::cos(3.0 / 16.0 * 2.0 * AK::Pi<double>);
+    static const float m0 = 2.0 * YAK::cos(1.0 / 16.0 * 2.0 * YAK::Pi<double>);
+    static const float m1 = 2.0 * YAK::cos(2.0 / 16.0 * 2.0 * YAK::Pi<double>);
+    static const float m3 = 2.0 * YAK::cos(2.0 / 16.0 * 2.0 * YAK::Pi<double>);
+    static const float m5 = 2.0 * YAK::cos(3.0 / 16.0 * 2.0 * YAK::Pi<double>);
     static const float m2 = m0 - m5;
     static const float m4 = m0 + m5;
-    static const float s0 = AK::cos(0.0 / 16.0 * AK::Pi<double>) / sqrt(8);
-    static const float s1 = AK::cos(1.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static const float s2 = AK::cos(2.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static const float s3 = AK::cos(3.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static const float s4 = AK::cos(4.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static const float s5 = AK::cos(5.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static const float s6 = AK::cos(6.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static const float s7 = AK::cos(7.0 / 16.0 * AK::Pi<double>) / 2.0;
+    static const float s0 = YAK::cos(0.0 / 16.0 * YAK::Pi<double>) / sqrt(8);
+    static const float s1 = YAK::cos(1.0 / 16.0 * YAK::Pi<double>) / 2.0;
+    static const float s2 = YAK::cos(2.0 / 16.0 * YAK::Pi<double>) / 2.0;
+    static const float s3 = YAK::cos(3.0 / 16.0 * YAK::Pi<double>) / 2.0;
+    static const float s4 = YAK::cos(4.0 / 16.0 * YAK::Pi<double>) / 2.0;
+    static const float s5 = YAK::cos(5.0 / 16.0 * YAK::Pi<double>) / 2.0;
+    static const float s6 = YAK::cos(6.0 / 16.0 * YAK::Pi<double>) / 2.0;
+    static const float s7 = YAK::cos(7.0 / 16.0 * YAK::Pi<double>) / 2.0;
 
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {

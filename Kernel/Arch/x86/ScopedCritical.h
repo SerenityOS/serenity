@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <AK/Types.h>
+#include <YAK/Types.h>
 
 #include <Kernel/Arch/x86/Processor.h>
 
 namespace Kernel {
 
 class ScopedCritical {
-    AK_MAKE_NONCOPYABLE(ScopedCritical);
+    YAK_MAKE_NONCOPYABLE(ScopedCritical);
 
 public:
     ScopedCritical()

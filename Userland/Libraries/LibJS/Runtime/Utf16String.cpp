@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringView.h>
-#include <AK/Utf16View.h>
+#include <YAK/StringView.h>
+#include <YAK/Utf16View.h>
 #include <LibJS/Runtime/Utf16String.h>
 
 namespace JS {
@@ -34,7 +34,7 @@ NonnullRefPtr<Utf16StringImpl> Utf16StringImpl::create(Vector<u16> string)
 
 NonnullRefPtr<Utf16StringImpl> Utf16StringImpl::create(StringView const& string)
 {
-    return create(AK::utf8_to_utf16(string));
+    return create(YAK::utf8_to_utf16(string));
 }
 
 NonnullRefPtr<Utf16StringImpl> Utf16StringImpl::create(Utf16View const& view)

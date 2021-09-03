@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/AllOf.h>
-#include <AK/AnyOf.h>
-#include <AK/CharacterTypes.h>
-#include <AK/QuickSort.h>
-#include <AK/TypeCasts.h>
+#include <YAK/AllOf.h>
+#include <YAK/AnyOf.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/QuickSort.h>
+#include <YAK/TypeCasts.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>

@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Optional.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Assertions.h>
+#include <YAK/Optional.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibIPC/Decoder.h>
@@ -325,7 +325,7 @@ bool IPC::decode(IPC::Decoder& decoder, Color& color)
     return true;
 }
 
-void AK::Formatter<Gfx::Color>::format(FormatBuilder& builder, const Gfx::Color& value)
+void YAK::Formatter<Gfx::Color>::format(FormatBuilder& builder, const Gfx::Color& value)
 {
     Formatter<StringView>::format(builder, value.to_string());
 }

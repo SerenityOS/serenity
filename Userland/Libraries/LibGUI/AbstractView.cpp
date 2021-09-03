@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringBuilder.h>
-#include <AK/Utf8View.h>
-#include <AK/Vector.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Utf8View.h>
+#include <YAK/Vector.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/DragOperation.h>

@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/HashTable.h>
-#include <AK/IntrusiveList.h>
-#include <AK/Noncopyable.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/Badge.h>
+#include <YAK/HashTable.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/BlockAllocator.h>
@@ -25,8 +25,8 @@
 namespace JS {
 
 class Heap {
-    AK_MAKE_NONCOPYABLE(Heap);
-    AK_MAKE_NONMOVABLE(Heap);
+    YAK_MAKE_NONCOPYABLE(Heap);
+    YAK_MAKE_NONMOVABLE(Heap);
 
 public:
     explicit Heap(VM&);

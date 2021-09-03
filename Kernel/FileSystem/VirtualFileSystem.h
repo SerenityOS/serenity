@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/String.h>
+#include <YAK/Badge.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefPtr.h>
+#include <YAK/String.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
@@ -34,7 +34,7 @@ struct UidAndGid {
 };
 
 class VirtualFileSystem {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     static void initialize();
     static VirtualFileSystem& the();

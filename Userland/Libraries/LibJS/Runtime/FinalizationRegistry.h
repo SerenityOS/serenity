@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/SinglyLinkedList.h>
+#include <YAK/SinglyLinkedList.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>

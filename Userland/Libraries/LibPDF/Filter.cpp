@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Hex.h>
+#include <YAK/Hex.h>
 #include <LibCompress/Deflate.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Filter.h>
@@ -42,7 +42,7 @@ Optional<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes const& bytes)
     if (bytes.size() % 2 == 0)
         return decode_hex(bytes);
 
-    // FIXME: Integrate this padding into AK/Hex?
+    // FIXME: Integrate this padding into YAK/Hex?
 
     auto output = ByteBuffer::create_zeroed(bytes.size() / 2 + 1);
 

@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/String.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/String.h>
 #include <LibCore/AnonymousBuffer.h>
 
 namespace Clipboard {

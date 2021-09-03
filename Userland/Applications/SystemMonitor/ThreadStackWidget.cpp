@@ -5,7 +5,7 @@
  */
 
 #include "ThreadStackWidget.h"
-#include <AK/ByteBuffer.h>
+#include <YAK/ByteBuffer.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibSymbolication/Symbolication.h>

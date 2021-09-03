@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Types.h>
+#include <YAK/Types.h>
 #include <Kernel/ACPI/DynamicParser.h>
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>

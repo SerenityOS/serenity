@@ -7,8 +7,8 @@
 
 #include "SoftCPU.h"
 #include "Emulator.h"
-#include <AK/Assertions.h>
-#include <AK/Debug.h>
+#include <YAK/Assertions.h>
+#include <YAK/Debug.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>

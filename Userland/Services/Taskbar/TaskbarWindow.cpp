@@ -8,7 +8,7 @@
 #include "TaskbarWindow.h"
 #include "ClockWidget.h"
 #include "TaskbarButton.h"
-#include <AK/Debug.h>
+#include <YAK/Debug.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/BoxLayout.h>
@@ -255,8 +255,8 @@ void TaskbarWindow::event(Core::Event& event)
 
         auto& mouse_event = static_cast<GUI::MouseEvent&>(event);
         const int ADJUSTMENT = 4;
-        auto adjusted_x = AK::clamp(mouse_event.x(), ADJUSTMENT, width() - ADJUSTMENT);
-        auto adjusted_y = AK::min(mouse_event.y(), height() - ADJUSTMENT);
+        auto adjusted_x = YAK::clamp(mouse_event.x(), ADJUSTMENT, width() - ADJUSTMENT);
+        auto adjusted_y = YAK::min(mouse_event.y(), height() - ADJUSTMENT);
         Gfx::IntPoint adjusted_point = { adjusted_x, adjusted_y };
 
         if (adjusted_point != mouse_event.position()) {

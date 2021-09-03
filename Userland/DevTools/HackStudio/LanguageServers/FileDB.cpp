@@ -6,8 +6,8 @@
 
 #include "FileDB.h"
 
-#include <AK/LexicalPath.h>
-#include <AK/NonnullRefPtr.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/NonnullRefPtr.h>
 #include <LibCore/File.h>
 
 namespace LanguageServers {

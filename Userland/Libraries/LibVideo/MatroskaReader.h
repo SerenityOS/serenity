@@ -7,11 +7,11 @@
 #pragma once
 
 #include "MatroskaDocument.h"
-#include <AK/Debug.h>
-#include <AK/Math.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/Optional.h>
-#include <AK/OwnPtr.h>
+#include <YAK/Debug.h>
+#include <YAK/Math.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/Optional.h>
+#include <YAK/OwnPtr.h>
 
 namespace Video {
 
@@ -122,7 +122,7 @@ private:
                 u8 next_octet = read_octet();
                 result = (result << 8u) | next_octet;
             }
-            result -= AK::exp2<i64>(length * 7 - 1) - 1;
+            result -= YAK::exp2<i64>(length * 7 - 1) - 1;
             return result;
         }
 

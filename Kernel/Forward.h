@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DistinctNumeric.h>
+#include <YAK/DistinctNumeric.h>
 #include <Kernel/API/POSIX/sys/types.h>
 
 namespace Kernel {

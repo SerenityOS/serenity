@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Optional.h>
-#include <AK/Random.h>
-#include <AK/Vector.h>
+#include <YAK/Optional.h>
+#include <YAK/Random.h>
+#include <YAK/Vector.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>

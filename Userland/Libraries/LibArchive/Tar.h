@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/StringView.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
 #include <string.h>
 #include <sys/types.h>
 

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Demangle.h>
+#include <YAK/Demangle.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>

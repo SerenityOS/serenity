@@ -5,7 +5,7 @@
  */
 
 #include "TreeMapWidget.h"
-#include <AK/NumberFormat.h>
+#include <YAK/NumberFormat.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Font.h>

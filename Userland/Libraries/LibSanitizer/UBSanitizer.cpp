@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
-#include <AK/UBSanitizer.h>
+#include <YAK/Format.h>
+#include <YAK/UBSanitizer.h>
 
-using namespace AK::UBSanitizer;
+using namespace YAK::UBSanitizer;
 
 // FIXME: Parse option from UBSAN_OPTIONS: halt_on_error=0 or 1
-bool AK::UBSanitizer::g_ubsan_is_deadly { false };
+bool YAK::UBSanitizer::g_ubsan_is_deadly { false };
 
 #define WARNLN_AND_DBGLN(fmt, ...) \
     warnln(fmt, ##__VA_ARGS__);    \

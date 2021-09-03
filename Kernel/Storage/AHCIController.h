@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/Types.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Types.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/AHCI.h>
 #include <Kernel/Storage/StorageController.h>
@@ -23,7 +23,7 @@ class AHCIController final : public StorageController
     , public PCI::Device {
     friend class AHCIPortHandler;
     friend class AHCIPort;
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     UNMAP_AFTER_INIT static NonnullRefPtr<AHCIController> initialize(PCI::Address address);
     virtual ~AHCIController() override;

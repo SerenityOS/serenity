@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <AK/Debug.h>
-#include <AK/DistinctNumeric.h>
-#include <AK/MemoryStream.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/Result.h>
-#include <AK/String.h>
-#include <AK/Variant.h>
+#include <YAK/Debug.h>
+#include <YAK/DistinctNumeric.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/Result.h>
+#include <YAK/String.h>
+#include <YAK/Variant.h>
 #include <LibWasm/Constants.h>
 #include <LibWasm/Opcode.h>
 

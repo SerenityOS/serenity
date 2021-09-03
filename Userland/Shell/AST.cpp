@@ -6,12 +6,12 @@
 
 #include "AST.h"
 #include "Shell.h"
-#include <AK/MemoryStream.h>
-#include <AK/ScopeGuard.h>
-#include <AK/ScopedValueRollback.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/URL.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/ScopedValueRollback.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/URL.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <errno.h>
@@ -19,7 +19,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-void AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder, const Shell::AST::Command& value)
+void YAK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder, const Shell::AST::Command& value)
 {
     if (m_sign_mode != FormatBuilder::SignMode::Default)
         VERIFY_NOT_REACHED();
@@ -2050,7 +2050,7 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
             return false;
 
         for (size_t i = 0; i < pattern.size(); ++i) {
-            Vector<AK::MaskSpan> mask_spans;
+            Vector<YAK::MaskSpan> mask_spans;
             if (!list[i].matches(pattern[i], mask_spans))
                 return false;
             for (auto& span : mask_spans)

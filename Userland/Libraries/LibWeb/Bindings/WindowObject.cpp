@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Base64.h>
-#include <AK/String.h>
-#include <AK/Utf8View.h>
+#include <YAK/Base64.h>
+#include <YAK/String.h>
+#include <YAK/Utf8View.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/Shape.h>

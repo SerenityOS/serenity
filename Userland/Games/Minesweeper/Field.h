@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
+#include <YAK/Noncopyable.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Frame.h>
 #include <LibGfx/Palette.h>
@@ -16,7 +16,7 @@ class SquareButton;
 class SquareLabel;
 
 class Square {
-    AK_MAKE_NONCOPYABLE(Square);
+    YAK_MAKE_NONCOPYABLE(Square);
 
 public:
     Square();

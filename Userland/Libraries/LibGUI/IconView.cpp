@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Utf8View.h>
+#include <YAK/Utf8View.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/IconView.h>
 #include <LibGUI/Model.h>

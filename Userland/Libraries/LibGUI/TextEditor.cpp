@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
-#include <AK/Debug.h>
-#include <AK/ScopeGuard.h>
-#include <AK/StringBuilder.h>
-#include <AK/TemporaryChange.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/Debug.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/TemporaryChange.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/AutocompleteProvider.h>

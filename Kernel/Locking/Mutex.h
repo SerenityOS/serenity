@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
-#include <AK/Atomic.h>
-#include <AK/HashMap.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/Atomic.h>
+#include <YAK/HashMap.h>
+#include <YAK/Types.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/LockMode.h>
@@ -20,8 +20,8 @@ namespace Kernel {
 class Mutex {
     friend class Thread;
 
-    AK_MAKE_NONCOPYABLE(Mutex);
-    AK_MAKE_NONMOVABLE(Mutex);
+    YAK_MAKE_NONCOPYABLE(Mutex);
+    YAK_MAKE_NONMOVABLE(Mutex);
 
 public:
     using Mode = LockMode;
@@ -102,7 +102,7 @@ private:
 };
 
 class MutexLocker {
-    AK_MAKE_NONCOPYABLE(MutexLocker);
+    YAK_MAKE_NONCOPYABLE(MutexLocker);
 
 public:
     ALWAYS_INLINE explicit MutexLocker()

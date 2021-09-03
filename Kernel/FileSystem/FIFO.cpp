@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Atomic.h>
-#include <AK/StdLibExtras.h>
+#include <YAK/Atomic.h>
+#include <YAK/StdLibExtras.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Locking/Mutex.h>

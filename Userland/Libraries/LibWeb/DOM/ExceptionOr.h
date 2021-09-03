@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/Optional.h>
-#include <AK/RefPtr.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/Optional.h>
+#include <YAK/RefPtr.h>
 #include <LibWeb/DOM/DOMException.h>
 
 namespace Web::DOM {

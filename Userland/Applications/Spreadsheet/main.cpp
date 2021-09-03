@@ -7,7 +7,7 @@
 #include "HelpWindow.h"
 #include "Spreadsheet.h"
 #include "SpreadsheetWidget.h"
-#include <AK/ScopeGuard.h>
+#include <YAK/ScopeGuard.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>

@@ -6,15 +6,15 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Array.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <AK/Types.h>
-#include <AK/Utf16View.h>
+#include <YAK/Array.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
+#include <YAK/Types.h>
+#include <YAK/Utf16View.h>
 
 TEST_CASE(decode_ascii)
 {
-    auto string = AK::utf8_to_utf16("Hello World!11"sv);
+    auto string = YAK::utf8_to_utf16("Hello World!11"sv);
     Utf16View view { string };
 
     size_t valid_code_units = 0;
@@ -33,7 +33,7 @@ TEST_CASE(decode_ascii)
 
 TEST_CASE(decode_utf8)
 {
-    auto string = AK::utf8_to_utf16("Привет, мир! 😀 γειά σου κόσμος こんにちは世界"sv);
+    auto string = YAK::utf8_to_utf16("Привет, мир! 😀 γειά σου κόσμος こんにちは世界"sv);
     Utf16View view { string };
 
     size_t valid_code_units = 0;
@@ -54,7 +54,7 @@ TEST_CASE(encode_utf8)
 {
     {
         String utf8_string("Привет, мир! 😀 γειά σου κόσμος こんにちは世界");
-        auto string = AK::utf8_to_utf16(utf8_string);
+        auto string = YAK::utf8_to_utf16(utf8_string);
         Utf16View view { string };
         EXPECT_EQ(view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes), utf8_string);
         EXPECT_EQ(view.to_utf8(Utf16View::AllowInvalidCodeUnits::No), utf8_string);
@@ -91,7 +91,7 @@ TEST_CASE(decode_utf16)
 
 TEST_CASE(iterate_utf16)
 {
-    auto string = AK::utf8_to_utf16("Привет 😀"sv);
+    auto string = YAK::utf8_to_utf16("Привет 😀"sv);
     Utf16View view { string };
     auto iterator = view.begin();
 
@@ -263,7 +263,7 @@ TEST_CASE(decode_invalid_utf16)
 
 TEST_CASE(substring_view)
 {
-    auto string = AK::utf8_to_utf16("Привет 😀"sv);
+    auto string = YAK::utf8_to_utf16("Привет 😀"sv);
     {
         Utf16View view { string };
         view = view.substring_view(7, 2);

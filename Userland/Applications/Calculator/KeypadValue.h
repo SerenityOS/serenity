@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Math.h>
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/Math.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 
 class KeypadValue {
     friend class Keypad;

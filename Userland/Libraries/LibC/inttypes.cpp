@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/NumericLimits.h>
+#include <YAK/NumericLimits.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <stdlib.h>

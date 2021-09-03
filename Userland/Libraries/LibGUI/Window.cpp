@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/HashMap.h>
-#include <AK/IDAllocator.h>
-#include <AK/JsonObject.h>
-#include <AK/NeverDestroyed.h>
-#include <AK/ScopeGuard.h>
+#include <YAK/Debug.h>
+#include <YAK/HashMap.h>
+#include <YAK/IDAllocator.h>
+#include <YAK/JsonObject.h>
+#include <YAK/NeverDestroyed.h>
+#include <YAK/ScopeGuard.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
@@ -958,7 +958,7 @@ Vector<Widget&> Window::focusable_widgets(FocusSource source) const
 
         if (widget_accepts_focus) {
             auto& effective_focus_widget = widget.focus_proxy() ? *widget.focus_proxy() : widget;
-            if (seen_widgets.set(&effective_focus_widget) == AK::HashSetResult::InsertedNewEntry)
+            if (seen_widgets.set(&effective_focus_widget) == YAK::HashSetResult::InsertedNewEntry)
                 collected_widgets.append(effective_focus_widget);
         }
         widget.for_each_child_widget([&](auto& child) {

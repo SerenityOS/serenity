@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/FixedPoint.h>
+#include <YAK/FixedPoint.h>
 
 using Type = FixedPoint<4>;
 

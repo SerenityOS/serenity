@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Format.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Format.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 #include <LibPDF/Value.h>
 
 #define ENUMERATE_COMMANDS(V)                                                            \
@@ -161,7 +161,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<PDF::Command> : Formatter<StringView> {

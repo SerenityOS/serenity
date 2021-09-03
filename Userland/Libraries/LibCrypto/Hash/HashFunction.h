@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/StringView.h>
-#include <AK/Types.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/StringView.h>
+#include <YAK/Types.h>
 
 namespace Crypto {
 namespace Hash {

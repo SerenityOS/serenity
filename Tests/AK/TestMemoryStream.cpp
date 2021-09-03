@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Array.h>
-#include <AK/MemoryStream.h>
+#include <YAK/Array.h>
+#include <YAK/MemoryStream.h>
 
 TEST_CASE(read_an_integer)
 {

@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
-#include <AK/StdLibExtras.h>
-#include <AK/StringBuilder.h>
-#include <AK/Time.h>
-#include <AK/Types.h>
+#include <YAK/Singleton.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Time.h>
+#include <YAK/Types.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Coredump.h>
@@ -67,14 +67,14 @@ ProcessID Process::allocate_pid()
     // For example: Use an Atomic<u32>, mask the most significant bit,
     // retry if PID is already taken as a PID, taken as a TID,
     // takes as a PGID, taken as a SID, or zero.
-    return next_pid.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
+    return next_pid.fetch_add(1, YAK::MemoryOrder::memory_order_acq_rel);
 }
 
 UNMAP_AFTER_INIT void Process::initialize()
 {
     g_modules = new HashMap<String, OwnPtr<Module>>;
 
-    next_pid.store(0, AK::MemoryOrder::memory_order_release);
+    next_pid.store(0, YAK::MemoryOrder::memory_order_release);
 
     // Note: This is called before scheduling is initialized, and before APs are booted.
     //       So we can "safely" bypass the lock here.
@@ -634,7 +634,7 @@ void Process::finalize()
     m_arguments.clear();
     m_environment.clear();
 
-    m_state.store(State::Dead, AK::MemoryOrder::memory_order_release);
+    m_state.store(State::Dead, YAK::MemoryOrder::memory_order_release);
 
     {
         // FIXME: PID/TID BUG
@@ -677,7 +677,7 @@ void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal
 void Process::die()
 {
     auto expected = State::Running;
-    if (!m_state.compare_exchange_strong(expected, State::Dying, AK::memory_order_acquire)) {
+    if (!m_state.compare_exchange_strong(expected, State::Dying, YAK::memory_order_acquire)) {
         // It's possible that another thread calls this at almost the same time
         // as we can't always instantly kill other threads (they may be blocked)
         // So if we already were called then other threads should stop running
@@ -834,7 +834,7 @@ void Process::delete_perf_events_buffer()
 bool Process::remove_thread(Thread& thread)
 {
     ProtectedDataMutationScope scope { *this };
-    auto thread_cnt_before = m_protected_values.thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
+    auto thread_cnt_before = m_protected_values.thread_count.fetch_sub(1, YAK::MemoryOrder::memory_order_acq_rel);
     VERIFY(thread_cnt_before != 0);
     thread_list().with([&](auto& thread_list) {
         thread_list.remove(thread);
@@ -845,7 +845,7 @@ bool Process::remove_thread(Thread& thread)
 bool Process::add_thread(Thread& thread)
 {
     ProtectedDataMutationScope scope { *this };
-    bool is_first = m_protected_values.thread_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed) == 0;
+    bool is_first = m_protected_values.thread_count.fetch_add(1, YAK::MemoryOrder::memory_order_relaxed) == 0;
     thread_list().with([&](auto& thread_list) {
         thread_list.append(thread);
     });

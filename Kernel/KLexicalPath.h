@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/StringView.h>
+#include <YAK/StringView.h>
 #include <Kernel/KString.h>
 
 namespace Kernel::KLexicalPath {

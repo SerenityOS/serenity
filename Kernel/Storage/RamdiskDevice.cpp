@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Memory.h>
-#include <AK/StringView.h>
+#include <YAK/Memory.h>
+#include <YAK/StringView.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Storage/RamdiskController.h>
 #include <Kernel/Storage/RamdiskDevice.h>

@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <AK/RedBlackTree.h>
-#include <AK/Vector.h>
-#include <AK/WeakPtr.h>
+#include <YAK/RedBlackTree.h>
+#include <YAK/Vector.h>
+#include <YAK/WeakPtr.h>
 #include <Kernel/Memory/AllocationStrategy.h>
 #include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/UnixTypes.h>

@@ -5,7 +5,7 @@
  */
 
 #include "RunWindow.h"
-#include <AK/StringBuilder.h>
+#include <YAK/StringBuilder.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
 #include <unistd.h>

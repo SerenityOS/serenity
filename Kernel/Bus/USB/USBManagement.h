@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/NonnullRefPtrVector.h>
 #include <Kernel/Bus/USB/USBController.h>
 
 namespace Kernel::USB {
 
 class USBManagement {
-    AK_MAKE_ETERNAL;
+    YAK_MAKE_ETERNAL;
 
 public:
     USBManagement();

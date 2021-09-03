@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/HashMap.h>
-#include <AK/URL.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/HashMap.h>
+#include <YAK/URL.h>
 #include <LibCore/Object.h>
 
 namespace Core {

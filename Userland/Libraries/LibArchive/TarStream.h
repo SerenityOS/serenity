@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AK/Span.h>
-#include <AK/Stream.h>
+#include <YAK/Span.h>
+#include <YAK/Stream.h>
 #include <LibArchive/Tar.h>
 
 namespace Archive {

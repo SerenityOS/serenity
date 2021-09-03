@@ -6,8 +6,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
-#include <AK/GenericLexer.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/GenericLexer.h>
 #include <LibCore/DateTime.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>

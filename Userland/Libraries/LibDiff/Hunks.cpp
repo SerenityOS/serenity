@@ -5,7 +5,7 @@
  */
 
 #include "Hunks.h"
-#include <AK/Debug.h>
+#include <YAK/Debug.h>
 
 namespace Diff {
 Vector<Hunk> parse_hunks(const String& diff)

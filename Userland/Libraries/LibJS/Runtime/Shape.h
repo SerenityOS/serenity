@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
+#include <YAK/HashMap.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/WeakPtr.h>
+#include <YAK/Weakable.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/PropertyAttributes.h>
@@ -110,7 +110,7 @@ private:
 }
 
 template<>
-struct AK::Traits<JS::TransitionKey> : public GenericTraits<JS::TransitionKey> {
+struct YAK::Traits<JS::TransitionKey> : public GenericTraits<JS::TransitionKey> {
     static unsigned hash(const JS::TransitionKey& key)
     {
         return pair_int_hash(key.attributes.bits(), Traits<JS::StringOrSymbol>::hash(key.property_name));

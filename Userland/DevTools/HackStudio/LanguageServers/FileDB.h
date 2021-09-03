@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/String.h>
+#include <YAK/HashMap.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/String.h>
 #include <LibGUI/TextDocument.h>
 
 namespace LanguageServers {

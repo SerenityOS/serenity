@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/Noncopyable.h>
-#include <AK/String.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/String.h>
 #include <LibCpp/Parser.h>
 
 namespace HackStudio {
 
 class ToDoEntries {
-    AK_MAKE_NONCOPYABLE(ToDoEntries);
+    YAK_MAKE_NONCOPYABLE(ToDoEntries);
 
 public:
     static ToDoEntries& the();

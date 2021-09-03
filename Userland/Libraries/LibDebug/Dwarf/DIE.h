@@ -8,10 +8,10 @@
 
 #include "AttributeValue.h"
 #include "DwarfTypes.h"
-#include <AK/Function.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/Optional.h>
-#include <AK/Types.h>
+#include <YAK/Function.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/Optional.h>
+#include <YAK/Types.h>
 
 namespace Debug::Dwarf {
 

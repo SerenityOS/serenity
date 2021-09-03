@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/JsonObject.h>
-#include <AK/SourceGenerator.h>
-#include <AK/StringBuilder.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/JsonObject.h>
+#include <YAK/SourceGenerator.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/File.h>
 #include <ctype.h>
 
@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     SourceGenerator generator { builder };
 
     generator.append(R"~~~(
-#include <AK/Assertions.h>
+#include <YAK/Assertions.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleValue.h>

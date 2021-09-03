@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
+#include <YAK/RefCounted.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/Node.h>

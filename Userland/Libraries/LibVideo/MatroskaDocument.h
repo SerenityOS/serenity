@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/FlyString.h>
-#include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/OwnPtr.h>
-#include <AK/String.h>
-#include <AK/Utf8View.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/FlyString.h>
+#include <YAK/HashMap.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/String.h>
+#include <YAK/Utf8View.h>
 
 namespace Video {
 

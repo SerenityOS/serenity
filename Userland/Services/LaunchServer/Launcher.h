@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/HashTable.h>
-#include <AK/URL.h>
+#include <YAK/HashMap.h>
+#include <YAK/HashTable.h>
+#include <YAK/URL.h>
 #include <LibCore/ConfigFile.h>
 #include <LibDesktop/AppFile.h>
 

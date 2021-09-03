@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtr.h>
-#include <AK/NonnullRefPtr.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/NonnullRefPtr.h>
 #include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/Bus/USB/USBTransfer.h>
 #include <Kernel/KResult.h>

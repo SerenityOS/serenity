@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/String.h>
-#include <AK/URL.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/String.h>
+#include <YAK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/DateTime.h>
 #include <LibIPC/Dictionary.h>

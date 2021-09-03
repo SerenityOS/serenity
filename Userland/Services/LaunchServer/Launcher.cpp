@@ -5,12 +5,12 @@
  */
 
 #include "Launcher.h"
-#include <AK/Function.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonObjectSerializer.h>
-#include <AK/JsonValue.h>
-#include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Function.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonObjectSerializer.h>
+#include <YAK/JsonValue.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibDesktop/AppFile.h>

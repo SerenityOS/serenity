@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/RedBlackTree.h>
-#include <AK/Traits.h>
+#include <YAK/RedBlackTree.h>
+#include <YAK/Traits.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/VirtualRange.h>
 
@@ -40,7 +40,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 template<>
 struct Traits<Kernel::Memory::VirtualRange> : public GenericTraits<Kernel::Memory::VirtualRange> {
     static constexpr bool is_trivial() { return true; }

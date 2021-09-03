@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/CircularQueue.h>
+#include <YAK/CircularQueue.h>
 #include <Kernel/API/MousePacket.h>
 #include <Kernel/Devices/HID/I8042Controller.h>
 #include <Kernel/Devices/HID/MouseDevice.h>

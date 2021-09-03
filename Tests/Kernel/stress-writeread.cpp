@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Random.h>
+#include <YAK/Random.h>
 #include <LibCore/ArgsParser.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -13,10 +13,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-bool verify_block(int fd, int seed, off_t block, AK::ByteBuffer& buffer);
-bool write_block(int fd, int seed, off_t block, AK::ByteBuffer& buffer);
+bool verify_block(int fd, int seed, off_t block, YAK::ByteBuffer& buffer);
+bool write_block(int fd, int seed, off_t block, YAK::ByteBuffer& buffer);
 
-bool verify_block(int fd, int seed, off_t block, AK::ByteBuffer& buffer)
+bool verify_block(int fd, int seed, off_t block, YAK::ByteBuffer& buffer)
 {
     auto offset = block * buffer.size();
     auto rs = lseek(fd, offset, SEEK_SET);
@@ -39,7 +39,7 @@ bool verify_block(int fd, int seed, off_t block, AK::ByteBuffer& buffer)
     return true;
 }
 
-bool write_block(int fd, int seed, off_t block, AK::ByteBuffer& buffer)
+bool write_block(int fd, int seed, off_t block, YAK::ByteBuffer& buffer)
 {
     auto offset = block * buffer.size();
     auto rs = lseek(fd, offset, SEEK_SET);
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(target, "Target device/file path", "target");
     args_parser.parse(argc, argv);
 
-    auto buffer = AK::ByteBuffer::create_zeroed(block_size);
+    auto buffer = YAK::ByteBuffer::create_zeroed(block_size);
 
     int fd = open(target, O_CREAT | O_RDWR, 0666);
     if (fd < 0) {
@@ -117,7 +117,7 @@ int main(int argc, char** argv)
         for (int j = min_block_offset; j < min_block_offset + block_length; j++) {
             off_t block;
             if (random_mode)
-                while ((block = AK::get_random<off_t>()) < 0)
+                while ((block = YAK::get_random<off_t>()) < 0)
                     ;
             else
                 block = j;

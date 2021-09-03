@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Base64.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Base64.h>
+#include <YAK/StringBuilder.h>
 #include <LibHTTP/HttpJob.h>
 #include <LibHTTP/HttpRequest.h>
 
@@ -193,7 +193,7 @@ Optional<HttpRequest::Header> HttpRequest::get_http_basic_authentication_header(
 
 Optional<HttpRequest::BasicAuthenticationCredentials> HttpRequest::parse_http_basic_authentication_header(String const& value)
 {
-    if (!value.starts_with("Basic ", AK::CaseSensitivity::CaseInsensitive))
+    if (!value.starts_with("Basic ", YAK::CaseSensitivity::CaseInsensitive))
         return {};
     auto token = value.substring_view(6);
     if (token.is_empty())

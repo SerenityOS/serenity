@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/StringView.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
+#include <YAK/StringView.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
@@ -90,7 +90,7 @@ inline const FileSystem* InodeIdentifier::fs() const
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Traits<Kernel::InodeIdentifier> : public GenericTraits<Kernel::InodeIdentifier> {

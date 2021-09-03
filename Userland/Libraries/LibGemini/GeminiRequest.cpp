@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringBuilder.h>
-#include <AK/URL.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/URL.h>
 #include <LibGemini/GeminiJob.h>
 #include <LibGemini/GeminiRequest.h>
 

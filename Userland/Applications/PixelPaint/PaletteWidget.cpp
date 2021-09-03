@@ -8,8 +8,8 @@
 
 #include "PaletteWidget.h"
 #include "ImageEditor.h"
-#include <AK/Result.h>
-#include <AK/Vector.h>
+#include <YAK/Result.h>
+#include <YAK/Vector.h>
 #include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/ColorPicker.h>

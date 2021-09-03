@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Endian.h>
+#include <YAK/Debug.h>
+#include <YAK/Endian.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
@@ -46,7 +46,7 @@ void TLSv12::consume(ReadonlyBytes record)
     dbgln_if(TLS_DEBUG, "message buffer length {}", buffer_length);
 
     while (buffer_length >= 5) {
-        auto length = AK::convert_between_host_and_network_endian(ByteReader::load16(m_context.message_buffer.offset_pointer(index + size_offset))) + header_size;
+        auto length = YAK::convert_between_host_and_network_endian(ByteReader::load16(m_context.message_buffer.offset_pointer(index + size_offset))) + header_size;
         if (length > buffer_length) {
             dbgln_if(TLS_DEBUG, "Need more data: {} > {}", length, buffer_length);
             break;

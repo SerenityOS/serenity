@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
-#include <AK/Types.h>
-#include <AK/URL.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Types.h>
+#include <YAK/URL.h>
 #include <Applications/CrashReporter/CrashReporterWindowGML.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>

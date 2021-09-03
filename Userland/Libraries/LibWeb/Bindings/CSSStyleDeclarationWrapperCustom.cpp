@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ScopeGuard.h>
+#include <YAK/ScopeGuard.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Element.h>

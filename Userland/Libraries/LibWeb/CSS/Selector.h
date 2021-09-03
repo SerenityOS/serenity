@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/RefCounted.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/FlyString.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/RefCounted.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 
 namespace Web::CSS {
 

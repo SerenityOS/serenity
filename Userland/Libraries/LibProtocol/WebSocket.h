@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/ByteBuffer.h>
-#include <AK/Function.h>
-#include <AK/RefCounted.h>
-#include <AK/String.h>
-#include <AK/WeakPtr.h>
+#include <YAK/Badge.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Function.h>
+#include <YAK/RefCounted.h>
+#include <YAK/String.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/Notifier.h>
 #include <LibIPC/Forward.h>
 

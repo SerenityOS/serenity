@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/QuickSort.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/QuickSort.h>
 #include <LibCore/DirIterator.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>

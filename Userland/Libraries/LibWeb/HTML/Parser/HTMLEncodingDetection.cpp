@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
-#include <AK/GenericLexer.h>
-#include <AK/StringView.h>
-#include <AK/Utf8View.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/StringView.h>
+#include <YAK/Utf8View.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/HTML/Parser/HTMLEncodingDetection.h>
 #include <ctype.h>

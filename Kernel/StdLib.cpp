@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/MemMem.h>
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/MemMem.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -204,7 +204,7 @@ bool copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
 
 const void* memmem(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
 {
-    return AK::memmem(haystack, haystack_length, needle, needle_length);
+    return YAK::memmem(haystack, haystack_length, needle, needle_length);
 }
 
 [[nodiscard]] bool memset_user(void* dest_ptr, int c, size_t n)

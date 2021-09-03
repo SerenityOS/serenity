@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/StringView.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
+#include <YAK/StringView.h>
 #include <LibAudio/Buffer.h>
 #include <LibCore/File.h>
 

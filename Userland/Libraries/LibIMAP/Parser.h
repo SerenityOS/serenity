@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/Result.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Result.h>
 #include <LibIMAP/Objects.h>
 
 namespace IMAP {

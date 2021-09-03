@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
+#include <YAK/CharacterTypes.h>
 #include <LibIMAP/Parser.h>
 
 namespace IMAP {
@@ -349,16 +349,16 @@ Envelope Parser::parse_envelope()
     auto message_id = parse_nstring();
     consume(")");
     Envelope envelope = {
-        date.has_value() ? AK::Optional<String>(date.value()) : AK::Optional<String>(),
-        subject.has_value() ? AK::Optional<String>(subject.value()) : AK::Optional<String>(),
+        date.has_value() ? YAK::Optional<String>(date.value()) : YAK::Optional<String>(),
+        subject.has_value() ? YAK::Optional<String>(subject.value()) : YAK::Optional<String>(),
         from,
         sender,
         reply_to,
         to,
         cc,
         bcc,
-        in_reply_to.has_value() ? AK::Optional<String>(in_reply_to.value()) : AK::Optional<String>(),
-        message_id.has_value() ? AK::Optional<String>(message_id.value()) : AK::Optional<String>(),
+        in_reply_to.has_value() ? YAK::Optional<String>(in_reply_to.value()) : YAK::Optional<String>(),
+        message_id.has_value() ? YAK::Optional<String>(message_id.value()) : YAK::Optional<String>(),
     };
     return envelope;
 }
@@ -536,7 +536,7 @@ BodyStructure Parser::parse_one_part_body()
 }
 Vector<String> Parser::parse_langs()
 {
-    AK::Vector<String> langs;
+    YAK::Vector<String> langs;
     if (!try_consume("(")) {
         langs.append(parse_string());
     } else {
@@ -589,7 +589,7 @@ ListItem Parser::parse_list_item()
 
 void Parser::parse_capability_response()
 {
-    auto capability = AK::Vector<String>();
+    auto capability = YAK::Vector<String>();
     while (!try_consume("\r\n")) {
         consume(" ");
         auto x = String(parse_atom());
@@ -602,7 +602,7 @@ StringView Parser::parse_atom()
 {
     auto is_non_atom_char = [](u8 x) {
         auto non_atom_chars = { '(', ')', '{', ' ', '%', '*', '"', '\\', ']' };
-        return AK::find(non_atom_chars.begin(), non_atom_chars.end(), x) != non_atom_chars.end();
+        return YAK::find(non_atom_chars.begin(), non_atom_chars.end(), x) != non_atom_chars.end();
     };
 
     auto start = position;

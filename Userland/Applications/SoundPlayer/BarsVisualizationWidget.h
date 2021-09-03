@@ -7,7 +7,7 @@
 #pragma once
 
 #include "VisualizationBase.h"
-#include <AK/Complex.h>
+#include <YAK/Complex.h>
 #include <LibAudio/Buffer.h>
 #include <LibGUI/Frame.h>
 

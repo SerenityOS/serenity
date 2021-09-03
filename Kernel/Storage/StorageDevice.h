@@ -16,7 +16,7 @@ namespace Kernel {
 
 class StorageDevice : public BlockDevice {
     friend class StorageManagement;
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 
 public:
     virtual u64 max_addressable_block() const { return m_max_addressable_block; }

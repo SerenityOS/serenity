@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MemoryStream.h>
-#include <AK/Stream.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/Stream.h>
 #include <LibWasm/Types.h>
 #include <stddef.h>
 #include <stdint.h>

@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <AK/Platform.h>
+#include <YAK/Platform.h>
 
-#include <AK/NonnullOwnPtr.h>
+#include <YAK/NonnullOwnPtr.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/USB/UHCI/UHCIDescriptorPool.h>
 #include <Kernel/Bus/USB/UHCI/UHCIDescriptorTypes.h>

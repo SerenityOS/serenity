@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <AK/Variant.h>
+#include <YAK/FlyString.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
+#include <YAK/Variant.h>
 
 namespace JS {
 

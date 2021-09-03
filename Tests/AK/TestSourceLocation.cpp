@@ -7,8 +7,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/SourceLocation.h>
-#include <AK/StringView.h>
+#include <YAK/SourceLocation.h>
+#include <YAK/StringView.h>
 
 TEST_CASE(basic_scenario)
 {

@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtr.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/Result.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/Result.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <LibCore/Object.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Key.h>

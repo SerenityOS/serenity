@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/GenericLexer.h>
-#include <AK/Singleton.h>
-#include <AK/StringBuilder.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/Singleton.h>
+#include <YAK/StringBuilder.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>

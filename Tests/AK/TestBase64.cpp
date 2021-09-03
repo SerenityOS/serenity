@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Base64.h>
-#include <AK/String.h>
+#include <YAK/Base64.h>
+#include <YAK/String.h>
 #include <string.h>
 
 TEST_CASE(test_decode)

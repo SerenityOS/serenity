@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/Function.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileDescription.h>

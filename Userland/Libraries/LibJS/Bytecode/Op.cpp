@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/HashTable.h>
+#include <YAK/HashTable.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/Runtime/Array.h>

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/EventLoop.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>

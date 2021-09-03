@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/QuickSort.h>
-#include <AK/URL.h>
+#include <YAK/QuickSort.h>
+#include <YAK/URL.h>
 #include <Applications/Terminal/TerminalSettingsWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>

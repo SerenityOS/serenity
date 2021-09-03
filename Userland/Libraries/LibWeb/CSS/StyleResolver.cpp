@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/QuickSort.h>
+#include <YAK/QuickSort.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/SelectorEngine.h>

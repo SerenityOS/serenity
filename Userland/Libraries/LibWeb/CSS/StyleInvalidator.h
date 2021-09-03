@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
+#include <YAK/HashMap.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>

@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/Optional.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/HashMap.h>
+#include <YAK/Optional.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 
 namespace Kernel {
 
@@ -43,7 +43,7 @@ enum class AHCIResetMode {
 };
 
 class CommandLine {
-    AK_MAKE_ETERNAL;
+    YAK_MAKE_ETERNAL;
 
 public:
     static void early_initialize(const char* cmd_line);

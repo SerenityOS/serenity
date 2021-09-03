@@ -8,9 +8,9 @@
 #pragma once
 
 #include "Token.h"
-#include <AK/HashMap.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
+#include <YAK/HashMap.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
 
 namespace SQL::AST {
 

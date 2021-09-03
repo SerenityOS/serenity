@@ -5,18 +5,18 @@
  */
 
 #include "DHCPv4Client.h"
-#include <AK/Debug.h>
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonParser.h>
-#include <AK/Random.h>
+#include <YAK/Debug.h>
+#include <YAK/JsonArray.h>
+#include <YAK/JsonObject.h>
+#include <YAK/JsonParser.h>
+#include <YAK/Random.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
 #include <stdio.h>
 
 static u8 mac_part(const Vector<String>& parts, size_t index)
 {
-    auto result = AK::StringUtils::convert_to_uint_from_hex(parts.at(index));
+    auto result = YAK::StringUtils::convert_to_uint_from_hex(parts.at(index));
     VERIFY(result.has_value());
     return result.value();
 }
@@ -244,7 +244,7 @@ void DHCPv4Client::handle_ack(const DHCPv4Packet& packet, const ParsedDHCPv4Opti
     auto& interface = transaction->interface;
     auto new_ip = packet.yiaddr();
     interface.current_ip_address = new_ip;
-    auto lease_time = AK::convert_between_host_and_network_endian(options.get<u32>(DHCPOption::IPAddressLeaseTime).value_or(transaction->offered_lease_time));
+    auto lease_time = YAK::convert_between_host_and_network_endian(options.get<u32>(DHCPOption::IPAddressLeaseTime).value_or(transaction->offered_lease_time));
     // set a timer for the duration of the lease, we shall renew if needed
     Core::Timer::create_single_shot(
         lease_time * 1000,

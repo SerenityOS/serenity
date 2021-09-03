@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/BinaryHeap.h>
-#include <AK/String.h>
+#include <YAK/BinaryHeap.h>
+#include <YAK/String.h>
 
 TEST_CASE(construct)
 {

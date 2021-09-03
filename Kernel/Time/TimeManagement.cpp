@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
-#include <AK/StdLibExtras.h>
-#include <AK/Time.h>
+#include <YAK/Singleton.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/Time.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/CommandLine.h>
@@ -73,7 +73,7 @@ bool TimeManagement::is_system_timer(const HardwareTimerBase& timer) const
 void TimeManagement::set_epoch_time(Time ts)
 {
     InterruptDisabler disabler;
-    // FIXME: Should use AK::Time internally
+    // FIXME: Should use YAK::Time internally
     m_epoch_time = ts.to_timespec();
     m_remaining_epoch_time_adjustment = { 0, 0 };
 }
@@ -88,7 +88,7 @@ Time TimeManagement::monotonic_time(TimePrecision precision) const
 
     u32 update_iteration;
     do {
-        update_iteration = m_update1.load(AK::MemoryOrder::memory_order_acquire);
+        update_iteration = m_update1.load(YAK::MemoryOrder::memory_order_acquire);
         seconds = m_seconds_since_boot;
         ticks = m_ticks_this_second;
 
@@ -100,7 +100,7 @@ Time TimeManagement::monotonic_time(TimePrecision precision) const
             // because this may only be modified by the interrupt handler
             HPET::the().update_time(seconds, ticks, true);
         }
-    } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
+    } while (update_iteration != m_update2.load(YAK::MemoryOrder::memory_order_acquire));
 
     VERIFY(m_time_ticks_per_second > 0);
     VERIFY(ticks < m_time_ticks_per_second);
@@ -115,9 +115,9 @@ Time TimeManagement::epoch_time(TimePrecision) const
     timespec ts;
     u32 update_iteration;
     do {
-        update_iteration = m_update1.load(AK::MemoryOrder::memory_order_acquire);
+        update_iteration = m_update1.load(YAK::MemoryOrder::memory_order_acquire);
         ts = m_epoch_time;
-    } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
+    } while (update_iteration != m_update2.load(YAK::MemoryOrder::memory_order_acquire));
     return Time::from_timespec(ts);
 }
 
@@ -357,13 +357,13 @@ void TimeManagement::increment_time_since_boot_hpet()
     auto delta_ns = HPET::the().update_time(seconds_since_boot, ticks_this_second, false);
 
     // Now that we have a precise time, go update it as quickly as we can
-    u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
+    u32 update_iteration = m_update2.fetch_add(1, YAK::MemoryOrder::memory_order_acquire);
     m_seconds_since_boot = seconds_since_boot;
     m_ticks_this_second = ticks_this_second;
     // TODO: Apply m_remaining_epoch_time_adjustment
     timespec_add(m_epoch_time, { (time_t)(delta_ns / 1000000000), (long)(delta_ns % 1000000000) }, m_epoch_time);
 
-    m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+    m_update1.store(update_iteration + 1, YAK::MemoryOrder::memory_order_release);
 
     update_time_page();
 }
@@ -378,7 +378,7 @@ void TimeManagement::increment_time_since_boot()
     long NanosPerTick = 1'000'000'000 / m_time_keeper_timer->frequency();
     time_t MaxSlewNanos = NanosPerTick / 100;
 
-    u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
+    u32 update_iteration = m_update2.fetch_add(1, YAK::MemoryOrder::memory_order_acquire);
 
     // Clamp twice, to make sure intermediate fits into a long.
     long slew_nanos = clamp(clamp(m_remaining_epoch_time_adjustment.tv_sec, (time_t)-1, (time_t)1) * 1'000'000'000 + m_remaining_epoch_time_adjustment.tv_nsec, -MaxSlewNanos, MaxSlewNanos);
@@ -396,7 +396,7 @@ void TimeManagement::increment_time_since_boot()
         m_ticks_this_second = 0;
     }
 
-    m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+    m_update1.store(update_iteration + 1, YAK::MemoryOrder::memory_order_release);
 
     update_time_page();
 }
@@ -431,10 +431,10 @@ bool TimeManagement::disable_profile_timer()
 void TimeManagement::update_time_page()
 {
     auto* page = time_page();
-    u32 update_iteration = AK::atomic_fetch_add(&page->update2, 1u, AK::MemoryOrder::memory_order_acquire);
+    u32 update_iteration = YAK::atomic_fetch_add(&page->update2, 1u, YAK::MemoryOrder::memory_order_acquire);
     page->clocks[CLOCK_REALTIME_COARSE] = m_epoch_time;
     page->clocks[CLOCK_MONOTONIC_COARSE] = monotonic_time(TimePrecision::Coarse).to_timespec();
-    AK::atomic_store(&page->update1, update_iteration + 1u, AK::MemoryOrder::memory_order_release);
+    YAK::atomic_store(&page->update1, update_iteration + 1u, YAK::MemoryOrder::memory_order_release);
 }
 
 TimePage* TimeManagement::time_page()

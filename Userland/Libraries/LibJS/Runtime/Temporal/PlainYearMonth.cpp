@@ -47,7 +47,7 @@ Optional<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_object, doub
         // This does not change the exposed behaviour as the subsequent call to CreateTemporalYearMonth will check that its value is a valid ISO
         // values (for years: -273975 - 273975) which is a subset of this check.
         // If RegulateISOYearMonth is ever used outside ISOYearMonthFromFields, this may need to be changed.
-        if (!AK::is_within_range<i32>(year)) {
+        if (!YAK::is_within_range<i32>(year)) {
             vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
             return {};
         }
@@ -61,7 +61,7 @@ Optional<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_object, doub
         // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
         // This does not change the exposed behaviour as the call to IsValidISOMonth and subsequent call to CreateTemporalDateTime will check
         // that these values are valid ISO values (for years: -273975 - 273975, for months: 1 - 12) all of which are subsets of this check.
-        if (!AK::is_within_range<i32>(year) || !AK::is_within_range<u8>(month)) {
+        if (!YAK::is_within_range<i32>(year) || !YAK::is_within_range<u8>(month)) {
             vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
             return {};
         }

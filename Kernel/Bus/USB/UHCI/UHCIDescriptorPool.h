@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtr.h>
-#include <AK/OwnPtr.h>
-#include <AK/Stack.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Stack.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/StdLib.h>
@@ -16,7 +16,7 @@
 namespace Kernel::USB {
 
 // This pool is bound by PAGE_SIZE / sizeof(T). The underlying allocation for the pointers
-// is AK::Stack. As such, we never dynamically allocate any memory past the amount
+// is YAK::Stack. As such, we never dynamically allocate any memory past the amount
 // that can fit in a single page.
 template<typename T>
 class UHCIDescriptorPool {

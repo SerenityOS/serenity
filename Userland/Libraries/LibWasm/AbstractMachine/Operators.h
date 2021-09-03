@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/BitCast.h>
-#include <AK/Result.h>
-#include <AK/StringView.h>
-#include <AK/Types.h>
+#include <YAK/BitCast.h>
+#include <YAK/Result.h>
+#include <YAK/StringView.h>
+#include <YAK/Types.h>
 #include <limits.h>
 #include <math.h>
 
@@ -48,8 +48,8 @@ struct Divide {
             Checked value(lhs);
             value /= rhs;
             if (value.has_overflow())
-                return AK::Result<Lhs, StringView>("Integer division overflow"sv);
-            return AK::Result<Lhs, StringView>(value.value());
+                return YAK::Result<Lhs, StringView>("Integer division overflow"sv);
+            return YAK::Result<Lhs, StringView>(value.value());
         }
     }
 
@@ -60,12 +60,12 @@ struct Modulo {
     auto operator()(Lhs lhs, Rhs rhs) const
     {
         if (rhs == 0)
-            return AK::Result<Lhs, StringView>("Integer division overflow"sv);
+            return YAK::Result<Lhs, StringView>("Integer division overflow"sv);
         if constexpr (IsSigned<Lhs>) {
             if (rhs == -1)
-                return AK::Result<Lhs, StringView>(0); // Spec weirdness right here, signed division overflow is ignored.
+                return YAK::Result<Lhs, StringView>(0); // Spec weirdness right here, signed division overflow is ignored.
         }
-        return AK::Result<Lhs, StringView>(lhs % rhs);
+        return YAK::Result<Lhs, StringView>(lhs % rhs);
     }
 
     static StringView name() { return "%"; }
@@ -219,7 +219,7 @@ struct PopCount {
 };
 struct Absolute {
     template<typename Lhs>
-    auto operator()(Lhs lhs) const { return AK::abs(lhs); }
+    auto operator()(Lhs lhs) const { return YAK::abs(lhs); }
 
     static StringView name() { return "abs"; }
 };
@@ -314,7 +314,7 @@ struct Wrap {
 template<typename ResultT>
 struct CheckedTruncate {
     template<typename Lhs>
-    AK::Result<ResultT, StringView> operator()(Lhs lhs) const
+    YAK::Result<ResultT, StringView> operator()(Lhs lhs) const
     {
         if (isnan(lhs) || isinf(lhs)) // "undefined", let's just trap.
             return "Truncation undefined behaviour"sv;
@@ -330,7 +330,7 @@ struct CheckedTruncate {
         // FIXME: This function assumes that all values of ResultT are representable in Lhs
         //        the assumption comes from the fact that this was used exclusively by LibJS,
         //        which only considers values that are all representable in 'double'.
-        if (!AK::is_within_range<ResultT>(truncated))
+        if (!YAK::is_within_range<ResultT>(truncated))
             return "Truncation out of range"sv;
 
         return static_cast<ResultT>(truncated);

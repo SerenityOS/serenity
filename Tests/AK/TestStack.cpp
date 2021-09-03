@@ -6,11 +6,11 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Stack.h>
+#include <YAK/Stack.h>
 
 TEST_CASE(basic)
 {
-    AK::Stack<int, 3> stack;
+    YAK::Stack<int, 3> stack;
 
     EXPECT(stack.is_empty() == true);
     stack.push(2);
@@ -26,7 +26,7 @@ TEST_CASE(basic)
 
 TEST_CASE(complex_type)
 {
-    AK::Stack<String, 4> stack;
+    YAK::Stack<String, 4> stack;
 
     EXPECT_EQ(stack.is_empty(), true);
     EXPECT(stack.push("Well"));

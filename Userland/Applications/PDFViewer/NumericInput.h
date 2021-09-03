@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/NumericLimits.h>
+#include <YAK/NumericLimits.h>
 #include <LibGUI/TextBox.h>
 
 class NumericInput final : public GUI::TextBox {

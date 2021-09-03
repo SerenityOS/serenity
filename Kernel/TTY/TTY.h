@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/CircularDeque.h>
-#include <AK/WeakPtr.h>
+#include <YAK/CircularDeque.h>
+#include <YAK/WeakPtr.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/ProcessGroup.h>
@@ -87,7 +87,7 @@ private:
     void process_output(u8, Functor put_char);
 
     CircularDeque<u8, TTY_BUFFER_SIZE> m_input_buffer;
-    // FIXME: use something like AK::Bitmap but which takes a size template parameter
+    // FIXME: use something like YAK::Bitmap but which takes a size template parameter
     u8 m_special_character_bitmask[TTY_BUFFER_SIZE / 8];
 
     WeakPtr<Process> m_original_process_parent;

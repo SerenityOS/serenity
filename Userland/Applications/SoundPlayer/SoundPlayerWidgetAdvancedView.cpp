@@ -9,8 +9,8 @@
 #include "Common.h"
 #include "M3UParser.h"
 #include "PlaybackManager.h"
-#include <AK/LexicalPath.h>
-#include <AK/SIMD.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/SIMD.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -192,7 +192,7 @@ void SoundPlayerWidgetAdvancedView::open_file(StringView path)
         return;
     }
 
-    if (path.ends_with(".m3u", AK::CaseSensitivity::CaseInsensitive) || path.ends_with(".m3u8", AK::CaseSensitivity::CaseInsensitive)) {
+    if (path.ends_with(".m3u", YAK::CaseSensitivity::CaseInsensitive) || path.ends_with(".m3u8", YAK::CaseSensitivity::CaseInsensitive)) {
         read_playlist(path);
         return;
     }

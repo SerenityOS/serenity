@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/OwnPtr.h>
-#include <AK/Singleton.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Singleton.h>
 #include <Kernel/API/MousePacket.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/CommandLine.h>

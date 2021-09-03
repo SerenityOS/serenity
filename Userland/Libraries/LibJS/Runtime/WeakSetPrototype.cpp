@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/HashTable.h>
-#include <AK/TypeCasts.h>
+#include <YAK/HashTable.h>
+#include <YAK/TypeCasts.h>
 #include <LibJS/Runtime/WeakSetPrototype.h>
 
 namespace JS {
@@ -56,7 +56,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::add)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, value.to_string_without_side_effects());
         return {};
     }
-    weak_set->values().set(&value.as_object(), AK::HashSetExistingEntryBehavior::Keep);
+    weak_set->values().set(&value.as_object(), YAK::HashSetExistingEntryBehavior::Keep);
     return weak_set;
 }
 

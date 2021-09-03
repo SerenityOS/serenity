@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/QuickSort.h>
+#include <YAK/Assertions.h>
+#include <YAK/QuickSort.h>
 #include <stdlib.h>
 #include <sys/types.h>
 
@@ -25,7 +25,7 @@ private:
     size_t m_size;
 };
 
-namespace AK {
+namespace YAK {
 
 template<>
 inline void swap(const SizedObject& a, const SizedObject& b)
@@ -67,7 +67,7 @@ void qsort(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, cons
 
     SizedObjectSlice slice { bot, size };
 
-    AK::dual_pivot_quick_sort(slice, 0, nmemb - 1, [=](const SizedObject& a, const SizedObject& b) { return compar(a.data(), b.data()) < 0; });
+    YAK::dual_pivot_quick_sort(slice, 0, nmemb - 1, [=](const SizedObject& a, const SizedObject& b) { return compar(a.data(), b.data()) < 0; });
 }
 
 void qsort_r(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*, void*), void* arg)
@@ -78,5 +78,5 @@ void qsort_r(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, co
 
     SizedObjectSlice slice { bot, size };
 
-    AK::dual_pivot_quick_sort(slice, 0, nmemb - 1, [=](const SizedObject& a, const SizedObject& b) { return compar(a.data(), b.data(), arg) < 0; });
+    YAK::dual_pivot_quick_sort(slice, 0, nmemb - 1, [=](const SizedObject& a, const SizedObject& b) { return compar(a.data(), b.data(), arg) < 0; });
 }

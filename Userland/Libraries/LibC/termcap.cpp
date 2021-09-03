@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/HashMap.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <YAK/Debug.h>
+#include <YAK/HashMap.h>
+#include <YAK/String.h>
+#include <YAK/Vector.h>
 #include <assert.h>
 #include <string.h>
 #include <termcap.h>

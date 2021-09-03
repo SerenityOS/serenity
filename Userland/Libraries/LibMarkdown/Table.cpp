@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Debug.h>
+#include <YAK/StringBuilder.h>
 #include <LibMarkdown/Table.h>
 
 namespace Markdown {
@@ -22,14 +22,14 @@ String Table::render_for_terminal(size_t view_width) const
         auto string = text.render_for_terminal();
         if (alignment == Alignment::Center) {
             auto padding_length = (width - original_length) / 2;
-            // FIXME: We're using a StringView literal to bypass the compile-time AK::Format checking here, since it can't handle the "}}"
+            // FIXME: We're using a StringView literal to bypass the compile-time YAK::Format checking here, since it can't handle the "}}"
             builder.appendff("{:{1}}"sv, "", (int)padding_length);
             builder.append(string);
             builder.appendff("{:{1}}"sv, "", (int)padding_length);
             if ((width - original_length) % 2)
                 builder.append(' ');
         } else {
-            // FIXME: We're using StringView literals to bypass the compile-time AK::Format checking here, since it can't handle the "}}"
+            // FIXME: We're using StringView literals to bypass the compile-time YAK::Format checking here, since it can't handle the "}}"
             builder.appendff(alignment == Alignment::Left ? "{:<{1}}"sv : "{:>{1}}"sv, string, (int)(width + (string.length() - original_length)));
         }
     };

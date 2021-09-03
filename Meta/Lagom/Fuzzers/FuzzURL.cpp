@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/URL.h>
+#include <YAK/URL.h>
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {

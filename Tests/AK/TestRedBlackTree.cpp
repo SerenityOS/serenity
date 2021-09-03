@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Random.h>
-#include <AK/RedBlackTree.h>
+#include <YAK/Random.h>
+#include <YAK/RedBlackTree.h>
 
 TEST_CASE(construct)
 {

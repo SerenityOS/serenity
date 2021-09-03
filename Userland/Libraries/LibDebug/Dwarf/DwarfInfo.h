@@ -9,19 +9,19 @@
 #include "AttributeValue.h"
 #include "CompilationUnit.h"
 #include "DwarfTypes.h"
-#include <AK/ByteBuffer.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/RedBlackTree.h>
-#include <AK/RefCounted.h>
-#include <AK/String.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/RedBlackTree.h>
+#include <YAK/RefCounted.h>
+#include <YAK/String.h>
 #include <LibELF/Image.h>
 
 namespace Debug::Dwarf {
 
 class DwarfInfo {
-    AK_MAKE_NONCOPYABLE(DwarfInfo);
-    AK_MAKE_NONMOVABLE(DwarfInfo);
+    YAK_MAKE_NONCOPYABLE(DwarfInfo);
+    YAK_MAKE_NONMOVABLE(DwarfInfo);
 
 public:
     explicit DwarfInfo(ELF::Image const&);

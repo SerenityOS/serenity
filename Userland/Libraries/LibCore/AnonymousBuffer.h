@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/Types.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Types.h>
 #include <LibIPC/Forward.h>
 
 namespace Core {

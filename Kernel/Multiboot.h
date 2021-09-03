@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Types.h>
+#include <YAK/Types.h>
 
 struct multiboot_module_entry {
     u32 start;

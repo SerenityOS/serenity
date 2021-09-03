@@ -16,10 +16,10 @@
 // long-lived allocations, since they don't put all that weight and pressure on the
 // severely limited kmalloc heap.
 
-#include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
-#include <AK/Memory.h>
-#include <AK/StringView.h>
+#include <YAK/Assertions.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Memory.h>
+#include <YAK/StringView.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/Region.h>
 

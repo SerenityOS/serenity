@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/CircularQueue.h>
-#include <AK/String.h>
+#include <YAK/CircularQueue.h>
+#include <YAK/String.h>
 
 TEST_CASE(basic)
 {

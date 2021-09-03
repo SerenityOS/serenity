@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Atomic.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/Atomic.h>
+#include <YAK/Types.h>
 #include <pthread.h>
 #include <serenity.h>
 
@@ -27,7 +27,7 @@ int pthread_once(pthread_once_t* self, void (*callback)(void))
     // the other thread has done before writing the State::DONE.
     State state2 = State::INITIAL;
     bool have_exchanged = state.compare_exchange_strong(
-        state2, State::PERFORMING_NO_WAITERS, AK::memory_order_acquire);
+        state2, State::PERFORMING_NO_WAITERS, YAK::memory_order_acquire);
 
     if (have_exchanged) {
         // We observed State::INITIAL and we've changed it to
@@ -35,7 +35,7 @@ int pthread_once(pthread_once_t* self, void (*callback)(void))
         // operation.
         callback();
         // Now, record that we're done.
-        state2 = state.exchange(State::DONE, AK::memory_order_release);
+        state2 = state.exchange(State::DONE, YAK::memory_order_release);
         switch (state2) {
         case State::INITIAL:
         case State::DONE:
@@ -66,7 +66,7 @@ int pthread_once(pthread_once_t* self, void (*callback)(void))
             // waiting and the other thread should wake us up. We need acquire
             // ordering here for the same reason as above.
             have_exchanged = state.compare_exchange_strong(
-                state2, State::PERFORMING_WITH_WAITERS, AK::memory_order_acquire);
+                state2, State::PERFORMING_WITH_WAITERS, YAK::memory_order_acquire);
             if (!have_exchanged) {
                 // Something has changed already, reevaluate without waiting.
                 continue;
@@ -80,7 +80,7 @@ int pthread_once(pthread_once_t* self, void (*callback)(void))
             // or something, so we have to reevaluate. We need acquire ordering
             // here for the same reason as above. Hopefully we'll just see
             // State::DONE this time, but who knows.
-            state2 = state.load(AK::memory_order_acquire);
+            state2 = state.load(YAK::memory_order_acquire);
             continue;
         }
     }

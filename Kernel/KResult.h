@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
-#include <AK/Format.h>
-#include <AK/Platform.h>
-#include <AK/StdLibExtras.h>
+#include <YAK/Assertions.h>
+#include <YAK/Format.h>
+#include <YAK/Platform.h>
+#include <YAK/StdLibExtras.h>
 #include <LibC/errno_numbers.h>
 
 namespace Kernel {
@@ -172,11 +172,11 @@ private:
 }
 
 template<>
-struct AK::Formatter<Kernel::KResult> : Formatter<FormatString> {
+struct YAK::Formatter<Kernel::KResult> : Formatter<FormatString> {
     void format(FormatBuilder& builder, Kernel::KResult value)
     {
         if (value.is_error())
-            return AK::Formatter<FormatString>::format(builder, "KResult({})", value.error());
-        return AK::Formatter<FormatString>::format(builder, "KResult(success)");
+            return YAK::Formatter<FormatString>::format(builder, "KResult({})", value.error());
+        return YAK::Formatter<FormatString>::format(builder, "KResult(success)");
     }
 };

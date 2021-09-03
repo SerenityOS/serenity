@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/FlyString.h>
-#include <AK/StringBuilder.h>
+#include <YAK/FlyString.h>
+#include <YAK/StringBuilder.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Document.h>

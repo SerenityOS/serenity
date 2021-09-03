@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/HashMap.h>
-#include <AK/MemoryStream.h>
-#include <AK/StdLibExtras.h>
-#include <AK/StringView.h>
+#include <YAK/HashMap.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/StringView.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>

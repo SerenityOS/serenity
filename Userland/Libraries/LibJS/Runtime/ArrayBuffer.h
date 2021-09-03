@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/Function.h>
-#include <AK/Variant.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Function.h>
+#include <YAK/Variant.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 

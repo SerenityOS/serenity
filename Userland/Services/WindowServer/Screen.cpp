@@ -9,7 +9,7 @@
 #include "Event.h"
 #include "EventLoop.h"
 #include "WindowManager.h"
-#include <AK/Debug.h>
+#include <YAK/Debug.h>
 #include <Kernel/API/FB.h>
 #include <Kernel/API/MousePacket.h>
 #include <fcntl.h>
@@ -99,7 +99,7 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, String& error_msg)
         existing_screen.close_device();
     }
 
-    AK::ArmedScopeGuard rollback([&] {
+    YAK::ArmedScopeGuard rollback([&] {
         for (auto& screen : s_screens)
             screen.close_device();
         s_screens = move(screens_backup);

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/WeakPtr.h>
+#include <YAK/WeakPtr.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::HTML {

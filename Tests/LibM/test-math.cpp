@@ -125,7 +125,7 @@ union Extractor {
         return other.sign == sign && other.exponent == exponent && other.mantissa == mantissa;
     }
 };
-namespace AK {
+namespace YAK {
 template<>
 struct Formatter<Extractor> : StandardFormatter {
     void format(FormatBuilder& builder, const Extractor& value)

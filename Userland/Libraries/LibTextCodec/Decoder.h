@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Forward.h>
-#include <AK/Function.h>
+#include <YAK/Forward.h>
+#include <YAK/Function.h>
 
 namespace TextCodec {
 

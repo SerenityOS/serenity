@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/Hex.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/String.h>
-#include <AK/Utf8View.h>
-#include <AK/Vector.h>
+#include <YAK/Hex.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/String.h>
+#include <YAK/Utf8View.h>
+#include <YAK/Vector.h>
 #include <LibGUI/Model.h>
 
 struct Match {

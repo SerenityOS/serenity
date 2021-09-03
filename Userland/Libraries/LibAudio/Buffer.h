@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/MemoryStream.h>
-#include <AK/String.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <string.h>
 

@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/StringView.h>
-#include <AK/Types.h>
+#include <YAK/StringView.h>
+#include <YAK/Types.h>
 
 extern "C" {
 void dbgputch(char);

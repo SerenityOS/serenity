@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <AK/URL.h>
+#include <YAK/URL.h>
 #include <LibWeb/CSS/CSSRule.h>
 
 namespace Web::CSS {
 
 class CSSImportRule : public CSSRule {
-    AK_MAKE_NONCOPYABLE(CSSImportRule);
-    AK_MAKE_NONMOVABLE(CSSImportRule);
+    YAK_MAKE_NONCOPYABLE(CSSImportRule);
+    YAK_MAKE_NONMOVABLE(CSSImportRule);
 
 public:
     static NonnullRefPtr<CSSImportRule> create(URL url)

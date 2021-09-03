@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
-#include <AK/OwnPtr.h>
-#include <AK/RefCounted.h>
-#include <AK/String.h>
+#include <YAK/Assertions.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefCounted.h>
+#include <YAK/String.h>
 #include <LibC/elf.h>
 #include <LibDl/dlfcn_integration.h>
 #include <LibELF/DynamicObject.h>

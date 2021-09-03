@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/HashMap.h>
-#include <AK/String.h>
+#include <YAK/FlyString.h>
+#include <YAK/HashMap.h>
+#include <YAK/String.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Forward.h>
 
@@ -23,7 +23,7 @@ struct FontSelector {
     }
 };
 
-namespace AK {
+namespace YAK {
 template<>
 struct Traits<FontSelector> : public GenericTraits<FontSelector> {
     static unsigned hash(const FontSelector& key) { return pair_int_hash(pair_int_hash(key.family.hash(), key.weight), key.size); }

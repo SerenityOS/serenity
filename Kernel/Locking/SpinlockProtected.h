@@ -12,14 +12,14 @@ namespace Kernel {
 
 template<typename T>
 class SpinlockProtected {
-    AK_MAKE_NONCOPYABLE(SpinlockProtected);
-    AK_MAKE_NONMOVABLE(SpinlockProtected);
+    YAK_MAKE_NONCOPYABLE(SpinlockProtected);
+    YAK_MAKE_NONMOVABLE(SpinlockProtected);
 
 private:
     template<typename U>
     class Locked {
-        AK_MAKE_NONCOPYABLE(Locked);
-        AK_MAKE_NONMOVABLE(Locked);
+        YAK_MAKE_NONCOPYABLE(Locked);
+        YAK_MAKE_NONMOVABLE(Locked);
 
     public:
         Locked(U& value, RecursiveSpinlock& spinlock)

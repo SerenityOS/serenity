@@ -1,4 +1,4 @@
-set(AK_TEST_SOURCES
+set(YAK_TEST_SOURCES
     TestFixedPoint.cpp
     TestAllOf.cpp
     TestAnyOf.cpp
@@ -70,6 +70,6 @@ set(AK_TEST_SOURCES
     TestWeakPtr.cpp
 )
 
-foreach(source IN LISTS AK_TEST_SOURCES)
-    serenity_test("${source}" AK)
+foreach(source IN LISTS YAK_TEST_SOURCES)
+    serenity_test("${source}" YAK)
 endforeach()

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Forward.h>
+#include <YAK/Forward.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/Forward.h>
 

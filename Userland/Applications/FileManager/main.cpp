@@ -9,9 +9,9 @@
 #include "DirectoryView.h"
 #include "FileUtils.h"
 #include "PropertiesWindow.h"
-#include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
-#include <AK/URL.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/URL.h>
 #include <Applications/FileManager/FileManagerWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
@@ -431,7 +431,7 @@ int run_in_desktop_mode()
                 file_context_menu->add_action(directory_view.rename_action());
                 file_context_menu->add_separator();
 
-                if (node.full_path().ends_with(".zip", AK::CaseSensitivity::CaseInsensitive)) {
+                if (node.full_path().ends_with(".zip", YAK::CaseSensitivity::CaseInsensitive)) {
                     file_context_menu->add_action(unzip_archive_action);
                     file_context_menu->add_separator();
                 }
@@ -1101,7 +1101,7 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
                 file_context_menu->add_action(shortcut_action);
                 file_context_menu->add_separator();
 
-                if (node.full_path().ends_with(".zip", AK::CaseSensitivity::CaseInsensitive)) {
+                if (node.full_path().ends_with(".zip", YAK::CaseSensitivity::CaseInsensitive)) {
                     file_context_menu->add_action(unzip_archive_action);
                     file_context_menu->add_separator();
                 }

@@ -5,8 +5,8 @@
  */
 
 #include "DisassemblyModel.h"
-#include <AK/MappedFile.h>
-#include <AK/StringBuilder.h>
+#include <YAK/MappedFile.h>
+#include <YAK/StringBuilder.h>
 #include <LibDebug/DebugSession.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>

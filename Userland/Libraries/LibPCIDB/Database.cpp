@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/StringView.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefPtr.h>
+#include <YAK/StringView.h>
 
 #include "Database.h"
 

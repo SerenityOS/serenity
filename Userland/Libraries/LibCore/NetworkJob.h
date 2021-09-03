@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/Stream.h>
+#include <YAK/Function.h>
+#include <YAK/Stream.h>
 #include <LibCore/Object.h>
 
 namespace Core {
@@ -63,5 +63,5 @@ const char* to_string(NetworkJob::Error);
 }
 
 template<>
-struct AK::Formatter<Core::NetworkJob> : Formatter<Core::Object> {
+struct YAK::Formatter<Core::NetworkJob> : Formatter<Core::Object> {
 };

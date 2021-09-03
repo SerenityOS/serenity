@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/IntrusiveList.h>
-#include <AK/NonnullRefPtr.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/NonnullRefPtr.h>
 #include <Kernel/Memory/ProcessPagingScope.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
@@ -21,8 +21,8 @@ class Device;
 extern WorkQueue* g_io_work;
 
 class AsyncDeviceRequest : public RefCounted<AsyncDeviceRequest> {
-    AK_MAKE_NONCOPYABLE(AsyncDeviceRequest);
-    AK_MAKE_NONMOVABLE(AsyncDeviceRequest);
+    YAK_MAKE_NONCOPYABLE(AsyncDeviceRequest);
+    YAK_MAKE_NONMOVABLE(AsyncDeviceRequest);
 
 public:
     enum [[nodiscard]] RequestResult {

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringBuilder.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Event.h>

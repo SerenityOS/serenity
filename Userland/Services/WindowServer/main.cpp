@@ -79,7 +79,7 @@ int main(int, char**)
 
     // First check which screens are explicitly configured
     {
-        AK::HashTable<String> fb_devices_configured;
+        YAK::HashTable<String> fb_devices_configured;
         WindowServer::ScreenLayout screen_layout;
         String error_msg;
 

@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
-#include <AK/DateTimeLexer.h>
-#include <AK/Variant.h>
+#include <YAK/CharacterTypes.h>
+#include <YAK/DateTimeLexer.h>
+#include <YAK/Variant.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>

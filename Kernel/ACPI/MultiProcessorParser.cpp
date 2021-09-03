@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringView.h>
+#include <YAK/StringView.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/Debug.h>

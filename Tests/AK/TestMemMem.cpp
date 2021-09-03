@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/MemMem.h>
+#include <YAK/MemMem.h>
 
 TEST_CASE(bitap)
 {
@@ -16,10 +16,10 @@ TEST_CASE(bitap)
     Array<u8, 4> needle_2 { 3, 4, 5, 0 };
     Array<u8, 4> needle_3 { 3, 4, 5, 6 };
 
-    auto result_0 = AK::memmem(haystack.data(), haystack.size(), needle_0.data(), needle_0.size());
-    auto result_1 = AK::memmem(haystack.data(), haystack.size(), needle_1.data(), needle_1.size());
-    auto result_2 = AK::memmem(haystack.data(), haystack.size(), needle_2.data(), needle_2.size());
-    auto result_3 = AK::memmem(haystack.data(), haystack.size(), needle_3.data(), needle_3.size());
+    auto result_0 = YAK::memmem(haystack.data(), haystack.size(), needle_0.data(), needle_0.size());
+    auto result_1 = YAK::memmem(haystack.data(), haystack.size(), needle_1.data(), needle_1.size());
+    auto result_2 = YAK::memmem(haystack.data(), haystack.size(), needle_2.data(), needle_2.size());
+    auto result_3 = YAK::memmem(haystack.data(), haystack.size(), needle_3.data(), needle_3.size());
 
     EXPECT_EQ(result_0, &haystack[3]);
     EXPECT_EQ(result_1, &haystack[2]);
@@ -36,10 +36,10 @@ TEST_CASE(kmp_one_chunk)
     Array<u8, 4> needle_2 { 3, 4, 5, 0 };
     Array<u8, 4> needle_3 { 3, 4, 5, 6 };
 
-    auto result_0 = AK::memmem(haystack_arr.begin(), haystack_arr.end(), needle_0);
-    auto result_1 = AK::memmem(haystack_arr.begin(), haystack_arr.end(), needle_1);
-    auto result_2 = AK::memmem(haystack_arr.begin(), haystack_arr.end(), needle_2);
-    auto result_3 = AK::memmem(haystack_arr.begin(), haystack_arr.end(), needle_3);
+    auto result_0 = YAK::memmem(haystack_arr.begin(), haystack_arr.end(), needle_0);
+    auto result_1 = YAK::memmem(haystack_arr.begin(), haystack_arr.end(), needle_1);
+    auto result_2 = YAK::memmem(haystack_arr.begin(), haystack_arr.end(), needle_2);
+    auto result_3 = YAK::memmem(haystack_arr.begin(), haystack_arr.end(), needle_3);
 
     EXPECT_EQ(result_0.value_or(9), 3u);
     EXPECT_EQ(result_1.value_or(9), 2u);
@@ -56,10 +56,10 @@ TEST_CASE(kmp_two_chunks)
     Array<u8, 4> needle_2 { 3, 4, 5, 0 };
     Array<u8, 4> needle_3 { 3, 4, 5, 6 };
 
-    auto result_0 = AK::memmem(haystack.begin(), haystack.end(), needle_0);
-    auto result_1 = AK::memmem(haystack.begin(), haystack.end(), needle_1);
-    auto result_2 = AK::memmem(haystack.begin(), haystack.end(), needle_2);
-    auto result_3 = AK::memmem(haystack.begin(), haystack.end(), needle_3);
+    auto result_0 = YAK::memmem(haystack.begin(), haystack.end(), needle_0);
+    auto result_1 = YAK::memmem(haystack.begin(), haystack.end(), needle_1);
+    auto result_2 = YAK::memmem(haystack.begin(), haystack.end(), needle_2);
+    auto result_3 = YAK::memmem(haystack.begin(), haystack.end(), needle_3);
 
     EXPECT_EQ(result_0.value_or(9), 3u);
     EXPECT_EQ(result_1.value_or(9), 2u);

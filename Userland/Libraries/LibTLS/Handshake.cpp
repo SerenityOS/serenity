@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Endian.h>
-#include <AK/Random.h>
+#include <YAK/Debug.h>
+#include <YAK/Endian.h>
+#include <YAK/Random.h>
 
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>

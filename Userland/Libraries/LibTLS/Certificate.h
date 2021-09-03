@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/Forward.h>
-#include <AK/Optional.h>
-#include <AK/Singleton.h>
-#include <AK/Types.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Forward.h>
+#include <YAK/Optional.h>
+#include <YAK/Singleton.h>
+#include <YAK/Types.h>
 #include <LibCore/DateTime.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/PK/RSA.h>

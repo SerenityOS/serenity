@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefPtr.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>

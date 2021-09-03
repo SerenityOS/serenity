@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/FixedArray.h>
-#include <AK/IntrusiveList.h>
-#include <AK/RefPtr.h>
-#include <AK/Weakable.h>
+#include <YAK/FixedArray.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Weakable.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/ListedRefCounted.h>
 #include <Kernel/Locking/Mutex.h>

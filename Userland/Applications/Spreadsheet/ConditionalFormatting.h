@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Forward.h"
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGfx/Color.h>
 

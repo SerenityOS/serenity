@@ -6,8 +6,8 @@
 
 #include "ImportDialog.h"
 #include "Spreadsheet.h"
-#include <AK/JsonParser.h>
-#include <AK/LexicalPath.h>
+#include <YAK/JsonParser.h>
+#include <YAK/LexicalPath.h>
 #include <Applications/Spreadsheet/CSVImportGML.h>
 #include <Applications/Spreadsheet/FormatSelectionPageGML.h>
 #include <LibCore/File.h>

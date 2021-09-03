@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
+#include <YAK/HashMap.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/VirtualRangeAllocator.h>

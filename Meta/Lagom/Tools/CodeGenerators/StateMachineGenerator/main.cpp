@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/GenericLexer.h>
-#include <AK/HashTable.h>
-#include <AK/OwnPtr.h>
-#include <AK/SourceGenerator.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/Types.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/HashTable.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/SourceGenerator.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <ctype.h>
@@ -302,9 +302,9 @@ void output_header(const StateMachine& machine, SourceGenerator& generator)
     generator.append(R"~~~(
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/Platform.h>
-#include <AK/Types.h>
+#include <YAK/Function.h>
+#include <YAK/Platform.h>
+#include <YAK/Types.h>
                      )~~~");
     if (machine.namespaces.has_value()) {
         generator.set("namespace", machine.namespaces.value());

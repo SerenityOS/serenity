@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
-#include <AK/StringView.h>
+#include <YAK/Format.h>
+#include <YAK/StringView.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>

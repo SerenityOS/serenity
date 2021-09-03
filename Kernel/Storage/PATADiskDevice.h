@@ -20,7 +20,7 @@ class IDEController;
 class IDEChannel;
 class PATADiskDevice final : public StorageDevice {
     friend class IDEController;
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     // Type of drive this IDEDiskDevice is on the ATA channel.
     //

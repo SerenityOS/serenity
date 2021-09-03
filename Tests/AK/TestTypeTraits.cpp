@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/StdLibExtras.h>
-#include <AK/TypeList.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/TypeList.h>
 
 #define STATIC_EXPECT_EQ(lhs, rhs) \
     static_assert(IsSame<lhs, rhs>, "");

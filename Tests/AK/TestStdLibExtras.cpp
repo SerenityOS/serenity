@@ -6,11 +6,11 @@
 
 #include <LibTest/TestSuite.h>
 
-#include <AK/Optional.h>
-#include <AK/StdLibExtras.h>
-#include <AK/StringView.h>
-#include <AK/Variant.h>
-#include <AK/Vector.h>
+#include <YAK/Optional.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/StringView.h>
+#include <YAK/Variant.h>
+#include <YAK/Vector.h>
 
 TEST_CASE(swap)
 {

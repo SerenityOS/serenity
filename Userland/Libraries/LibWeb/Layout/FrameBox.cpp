@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
+#include <YAK/Debug.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/FrameBox.h>

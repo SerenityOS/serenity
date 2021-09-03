@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/Noncopyable.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/Noncopyable.h>
 #include <LibJS/Forward.h>
 
 namespace JS {
@@ -16,8 +16,8 @@ namespace JS {
 class ConsoleClient;
 
 class Console {
-    AK_MAKE_NONCOPYABLE(Console);
-    AK_MAKE_NONMOVABLE(Console);
+    YAK_MAKE_NONCOPYABLE(Console);
+    YAK_MAKE_NONMOVABLE(Console);
 
 public:
     explicit Console(GlobalObject&);

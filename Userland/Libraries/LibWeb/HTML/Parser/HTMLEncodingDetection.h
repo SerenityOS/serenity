@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Optional.h>
-#include <AK/String.h>
+#include <YAK/Optional.h>
+#include <YAK/String.h>
 #include <LibWeb/DOM/Attribute.h>
 
 namespace Web::HTML {

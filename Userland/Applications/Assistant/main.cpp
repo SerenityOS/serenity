@@ -5,8 +5,8 @@
  */
 
 #include "Providers.h"
-#include <AK/QuickSort.h>
-#include <AK/String.h>
+#include <YAK/QuickSort.h>
+#include <YAK/String.h>
 #include <LibCore/LockFile.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>

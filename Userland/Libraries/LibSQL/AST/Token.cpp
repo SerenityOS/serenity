@@ -5,8 +5,8 @@
  */
 
 #include "Token.h"
-#include <AK/Assertions.h>
-#include <AK/String.h>
+#include <YAK/Assertions.h>
+#include <YAK/String.h>
 #include <stdlib.h>
 
 namespace SQL::AST {

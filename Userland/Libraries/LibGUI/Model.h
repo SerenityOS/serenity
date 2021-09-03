@@ -7,13 +7,13 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/HashTable.h>
-#include <AK/RefCounted.h>
-#include <AK/String.h>
-#include <AK/WeakPtr.h>
+#include <YAK/Badge.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/HashTable.h>
+#include <YAK/RefCounted.h>
+#include <YAK/String.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/ModelIndex.h>

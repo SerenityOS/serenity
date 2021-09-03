@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
+#include <YAK/HashMap.h>
+#include <YAK/RefCounted.h>
+#include <YAK/RefPtr.h>
 #include <LibGfx/Bitmap.h>
 
 namespace WindowServer {

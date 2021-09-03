@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Badge.h>
-#include <AK/ByteBuffer.h>
-#include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
-#include <AK/String.h>
-#include <AK/URL.h>
+#include <YAK/Badge.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/HashMap.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/String.h>
+#include <YAK/URL.h>
 #include <RequestServer/ClientConnection.h>
 #include <RequestServer/HttpCommon.h>
 #include <RequestServer/HttpsProtocol.h>

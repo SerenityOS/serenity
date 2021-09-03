@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/OwnPtr.h>
-#include <AK/String.h>
-#include <AK/WeakPtr.h>
+#include <YAK/Function.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/String.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGUI/FocusSource.h>
 #include <LibGUI/Forward.h>
@@ -287,5 +287,5 @@ private:
 }
 
 template<>
-struct AK::Formatter<GUI::Window> : Formatter<Core::Object> {
+struct YAK::Formatter<GUI::Window> : Formatter<Core::Object> {
 };

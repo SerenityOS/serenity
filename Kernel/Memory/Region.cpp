@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Memory.h>
-#include <AK/StringView.h>
+#include <YAK/Memory.h>
+#include <YAK/StringView.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Memory/AnonymousVMObject.h>

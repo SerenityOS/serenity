@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <AK/String.h>
+#include <YAK/FlyString.h>
+#include <YAK/String.h>
 #include <LibWeb/DOM/CharacterData.h>
 
 namespace Web::DOM {

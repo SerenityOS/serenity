@@ -75,7 +75,7 @@ void DeclarativeEnvironment::create_mutable_binding(GlobalObject&, FlyString con
             .can_be_deleted = can_be_deleted,
             .initialized = false,
         });
-    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+    VERIFY(result == YAK::HashSetResult::InsertedNewEntry);
 }
 
 // 9.1.1.1.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-createimmutablebinding-n-s
@@ -89,7 +89,7 @@ void DeclarativeEnvironment::create_immutable_binding(GlobalObject&, FlyString c
             .can_be_deleted = false,
             .initialized = false,
         });
-    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+    VERIFY(result == YAK::HashSetResult::InsertedNewEntry);
 }
 
 // 9.1.1.1.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v

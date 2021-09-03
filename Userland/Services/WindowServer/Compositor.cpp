@@ -13,9 +13,9 @@
 #include "Screen.h"
 #include "Window.h"
 #include "WindowManager.h"
-#include <AK/Debug.h>
-#include <AK/Memory.h>
-#include <AK/ScopeGuard.h>
+#include <YAK/Debug.h>
+#include <YAK/Memory.h>
+#include <YAK/ScopeGuard.h>
 #include <LibCore/Timer.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
@@ -1287,7 +1287,7 @@ void Compositor::recompute_occlusions()
                     auto affected_transparency = transparent_covering.intersected(w2.transparency_rects());
                     if (!affected_transparency.is_empty()) {
                         auto result = affected_transparency_rects.set(&w2, move(affected_transparency));
-                        VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+                        VERIFY(result == YAK::HashSetResult::InsertedNewEntry);
                     }
                     return IterationDecision::Continue;
                 });
@@ -1382,7 +1382,7 @@ void Compositor::recompute_occlusions()
                         auto affected_transparency = transparent_underneath.intersected(transparency_rects2);
                         if (!affected_transparency.is_empty()) {
                             auto result = affected_transparency_rects.set(&w2, move(affected_transparency));
-                            VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+                            VERIFY(result == YAK::HashSetResult::InsertedNewEntry);
                         }
                         return IterationDecision::Continue;
                     });
@@ -1440,7 +1440,7 @@ void Compositor::register_animation(Badge<Animation>, Animation& animation)
 {
     bool was_empty = m_animations.is_empty();
     auto result = m_animations.set(&animation);
-    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+    VERIFY(result == YAK::HashSetResult::InsertedNewEntry);
     if (was_empty)
         start_compose_async_timer();
 }

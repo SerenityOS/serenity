@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Random.h>
+#include <YAK/Random.h>
 #include <LibCore/ArgsParser.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     close(fd);
 
     for (int i = 0; i < count; i++) {
-        auto new_file_size = AK::get_random<uint64_t>() % (max_file_size + 1);
+        auto new_file_size = YAK::get_random<uint64_t>() % (max_file_size + 1);
         printf("(%d/%d)\tTruncating to %" PRIu64 " bytes...\n", i + 1, count, new_file_size);
         if (truncate(target, new_file_size) < 0) {
             perror("Couldn't truncate target file");

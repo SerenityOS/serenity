@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/NonnullOwnPtrVector.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/NonnullOwnPtrVector.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalSocket.h>
@@ -271,5 +271,5 @@ protected:
 }
 
 template<typename LocalEndpoint, typename PeerEndpoint>
-struct AK::Formatter<IPC::Connection<LocalEndpoint, PeerEndpoint>> : Formatter<Core::Object> {
+struct YAK::Formatter<IPC::Connection<LocalEndpoint, PeerEndpoint>> : Formatter<Core::Object> {
 };

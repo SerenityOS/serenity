@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/IterationDecision.h>
-#include <AK/NonnullRefPtrVector.h>
+#include <YAK/Badge.h>
+#include <YAK/IterationDecision.h>
+#include <YAK/NonnullRefPtrVector.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Menu.h>

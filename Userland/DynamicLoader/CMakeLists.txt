@@ -3,7 +3,7 @@ set(LOADER_SOURCES
     misc.cpp
 )
 
-file(GLOB AK_SOURCES "../../AK/*.cpp")
+file(GLOB YAK_SOURCES "../../YAK/*.cpp")
 file(GLOB ELF_SOURCES "../Libraries/LibELF/*.cpp")
 file(GLOB LIBC_SOURCES1 "../Libraries/LibC/*.cpp")
 file(GLOB LIBC_SOURCES2 "../Libraries/LibC/*/*.cpp")
@@ -27,7 +27,7 @@ endif()
 
 add_definitions(-D_DYNAMIC_LOADER)
 
-set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})
+set(SOURCES ${LOADER_SOURCES} ${YAK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})
 
 # FIXME: remove -nodefaultlibs after the next toolchain update
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -nodefaultlibs -nostdlib -pie -fpic -DNO_TLS")

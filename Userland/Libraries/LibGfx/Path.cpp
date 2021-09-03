@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
-#include <AK/HashTable.h>
-#include <AK/Math.h>
-#include <AK/QuickSort.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Function.h>
+#include <YAK/HashTable.h>
+#include <YAK/Math.h>
+#include <YAK/QuickSort.h>
+#include <YAK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 
@@ -21,8 +21,8 @@ void Path::elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, d
     double rx = radii.x();
     double ry = radii.y();
 
-    double x_axis_rotation_c = AK::cos(x_axis_rotation);
-    double x_axis_rotation_s = AK::sin(x_axis_rotation);
+    double x_axis_rotation_c = YAK::cos(x_axis_rotation);
+    double x_axis_rotation_s = YAK::sin(x_axis_rotation);
 
     // Find the last point
     FloatPoint last_point { 0, 0 };
@@ -71,14 +71,14 @@ void Path::elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, d
     double multiplier;
 
     if (lambda > 1.0) {
-        auto lambda_sqrt = AK::sqrt(lambda);
+        auto lambda_sqrt = YAK::sqrt(lambda);
         rx *= lambda_sqrt;
         ry *= lambda_sqrt;
         multiplier = 0.0;
     } else {
         double numerator = rx_sq * ry_sq - rx_sq * y1p_sq - ry_sq * x1p_sq;
         double denominator = rx_sq * y1p_sq + ry_sq * x1p_sq;
-        multiplier = AK::sqrt(numerator / denominator);
+        multiplier = YAK::sqrt(numerator / denominator);
     }
 
     if (large_arc == sweep)
@@ -93,8 +93,8 @@ void Path::elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, d
     double cx = x_axis_rotation_c * cxp - x_axis_rotation_s * cyp + x_avg;
     double cy = x_axis_rotation_s * cxp + x_axis_rotation_c * cyp + y_avg;
 
-    double theta_1 = AK::atan2((y1p - cyp) / ry, (x1p - cxp) / rx);
-    double theta_2 = AK::atan2((-y1p - cyp) / ry, (-x1p - cxp) / rx);
+    double theta_1 = YAK::atan2((y1p - cyp) / ry, (x1p - cxp) / rx);
+    double theta_2 = YAK::atan2((-y1p - cyp) / ry, (-x1p - cxp) / rx);
 
     auto theta_delta = theta_2 - theta_1;
 

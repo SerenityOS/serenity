@@ -6,9 +6,9 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/IntrusiveList.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/RefPtr.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/RefPtr.h>
 
 class IntrusiveTestItem {
 public:

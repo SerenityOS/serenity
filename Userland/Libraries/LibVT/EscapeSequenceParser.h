@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/Debug.h>
-#include <AK/Platform.h>
-#include <AK/Span.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
+#include <YAK/Debug.h>
+#include <YAK/Platform.h>
+#include <YAK/Span.h>
+#include <YAK/Types.h>
+#include <YAK/Vector.h>
 #include <LibVT/EscapeSequenceStateMachine.h>
 
 namespace VT {

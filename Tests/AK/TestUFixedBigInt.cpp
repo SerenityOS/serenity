@@ -6,10 +6,10 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Format.h>
-#include <AK/NumericLimits.h>
-#include <AK/Random.h>
-#include <AK/UFixedBigInt.h>
+#include <YAK/Format.h>
+#include <YAK/NumericLimits.h>
+#include <YAK/Random.h>
+#include <YAK/UFixedBigInt.h>
 
 constexpr int test_iterations = 32;
 

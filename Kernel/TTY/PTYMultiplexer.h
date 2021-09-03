@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Badge.h>
+#include <YAK/Badge.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Locking/Mutex.h>
 
@@ -15,7 +15,7 @@ namespace Kernel {
 class MasterPTY;
 
 class PTYMultiplexer final : public CharacterDevice {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     PTYMultiplexer();
     virtual ~PTYMultiplexer() override;

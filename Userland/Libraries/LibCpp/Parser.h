@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include "AK/NonnullRefPtr.h"
+#include "YAK/NonnullRefPtr.h"
 #include "AST.h"
 #include "Preprocessor.h"
-#include <AK/Noncopyable.h>
+#include <YAK/Noncopyable.h>
 #include <LibCpp/Lexer.h>
 
 namespace Cpp {
 
 class Parser final {
-    AK_MAKE_NONCOPYABLE(Parser);
+    YAK_MAKE_NONCOPYABLE(Parser);
 
 public:
     explicit Parser(Vector<Token> tokens, String const& filename);

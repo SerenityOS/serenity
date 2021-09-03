@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/TypeCasts.h>
-#include <AK/Weakable.h>
+#include <YAK/TypeCasts.h>
+#include <YAK/Weakable.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Forward.h>
 

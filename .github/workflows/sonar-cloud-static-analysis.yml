@@ -44,7 +44,7 @@ jobs:
           echo "sonar.cfamily.compile-commands=${{ github.workspace }}/Build/compile_commands.json" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.cfamily.threads=2" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.host.url=${{ env.SONAR_SERVER_URL }}" >> ${{ github.workspace }}/sonar-project.properties
-          echo "sonar.sources=AK,Build,Userland,Kernel,Meta" >> ${{ github.workspace }}/sonar-project.properties
+          echo "sonar.sources=YAK,Build,Userland,Kernel,Meta" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.tests=Tests" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.python.version=3.7, 3.8, 3.9" >> ${{ github.workspace }}/sonar-project.properties
 

@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Badge.h>
+#include <YAK/Badge.h>
 
 TEST_CASE(should_provide_underlying_type)
 {

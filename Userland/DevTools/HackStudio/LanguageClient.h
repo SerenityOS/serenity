@@ -8,11 +8,11 @@
 
 #include "AutoCompleteResponse.h"
 #include "Language.h"
-#include <AK/Forward.h>
-#include <AK/LexicalPath.h>
-#include <AK/Types.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
+#include <YAK/Forward.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/Types.h>
+#include <YAK/WeakPtr.h>
+#include <YAK/Weakable.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCpp/Preprocessor.h>
 #include <LibIPC/ServerConnection.h>
@@ -57,7 +57,7 @@ protected:
 };
 
 class ServerConnectionWrapper {
-    AK_MAKE_NONCOPYABLE(ServerConnectionWrapper);
+    YAK_MAKE_NONCOPYABLE(ServerConnectionWrapper);
 
 public:
     explicit ServerConnectionWrapper(const String& language_name, Function<NonnullRefPtr<ServerConnection>()> connection_creator);

@@ -6,8 +6,8 @@
 
 #include "SpreadsheetView.h"
 #include "CellTypeDialog.h"
-#include <AK/ScopeGuard.h>
-#include <AK/URL.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/URL.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/HeaderView.h>

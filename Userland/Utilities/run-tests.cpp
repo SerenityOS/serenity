@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
+#include <YAK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
@@ -306,7 +306,7 @@ int main(int argc, char** argv)
     test_glob = String::formatted("*{}*", test_glob);
 
     if (getenv("DISABLE_DBG_OUTPUT")) {
-        AK::set_debug_enabled(false);
+        YAK::set_debug_enabled(false);
     }
 
     String test_root;

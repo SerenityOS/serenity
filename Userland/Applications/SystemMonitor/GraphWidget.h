@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/CircularQueue.h>
+#include <YAK/CircularQueue.h>
 #include <LibGUI/Frame.h>
 #include <LibGfx/SystemTheme.h>
 

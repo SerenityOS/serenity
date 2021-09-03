@@ -5,8 +5,8 @@
  */
 
 #include "Selector.h"
-#include <AK/GenericLexer.h>
-#include <AK/StringUtils.h>
+#include <YAK/GenericLexer.h>
+#include <YAK/StringUtils.h>
 #include <ctype.h>
 
 namespace Web::CSS {
@@ -59,7 +59,7 @@ Selector::SimpleSelector::ANPlusBPattern Selector::SimpleSelector::ANPlusBPatter
         pattern.step_size = 2;
     } else {
         auto const consume_int = [](GenericLexer& lexer) -> Optional<int> {
-            return AK::StringUtils::convert_to_int(lexer.consume_while([](char c) -> bool {
+            return YAK::StringUtils::convert_to_int(lexer.consume_while([](char c) -> bool {
                 return isdigit(c) || c == '+' || c == '-';
             }));
         };

@@ -7,10 +7,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
-#include <AK/HashTable.h>
-#include <AK/ScopeGuard.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Function.h>
+#include <YAK/HashTable.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/StringBuilder.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayConstructor.h>

@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Atomic.h>
-#include <AK/Types.h>
+#include <YAK/Atomic.h>
+#include <YAK/Types.h>
 #include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Forward.h>
 
@@ -15,8 +15,8 @@ namespace Kernel {
 
 template<typename BaseType = u32>
 class Spinlock {
-    AK_MAKE_NONCOPYABLE(Spinlock);
-    AK_MAKE_NONMOVABLE(Spinlock);
+    YAK_MAKE_NONCOPYABLE(Spinlock);
+    YAK_MAKE_NONMOVABLE(Spinlock);
 
 public:
     Spinlock() = default;
@@ -26,7 +26,7 @@ public:
         u32 prev_flags = cpu_flags();
         Processor::enter_critical();
         cli();
-        while (m_lock.exchange(1, AK::memory_order_acquire) != 0) {
+        while (m_lock.exchange(1, YAK::memory_order_acquire) != 0) {
             Processor::wait_check();
         }
         return prev_flags;
@@ -35,7 +35,7 @@ public:
     ALWAYS_INLINE void unlock(u32 prev_flags)
     {
         VERIFY(is_locked());
-        m_lock.store(0, AK::memory_order_release);
+        m_lock.store(0, YAK::memory_order_release);
         if (prev_flags & 0x200)
             sti();
         else
@@ -45,12 +45,12 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked() const
     {
-        return m_lock.load(AK::memory_order_relaxed) != 0;
+        return m_lock.load(YAK::memory_order_relaxed) != 0;
     }
 
     ALWAYS_INLINE void initialize()
     {
-        m_lock.store(0, AK::memory_order_relaxed);
+        m_lock.store(0, YAK::memory_order_relaxed);
     }
 
 private:
@@ -58,8 +58,8 @@ private:
 };
 
 class RecursiveSpinlock {
-    AK_MAKE_NONCOPYABLE(RecursiveSpinlock);
-    AK_MAKE_NONMOVABLE(RecursiveSpinlock);
+    YAK_MAKE_NONCOPYABLE(RecursiveSpinlock);
+    YAK_MAKE_NONMOVABLE(RecursiveSpinlock);
 
 public:
     RecursiveSpinlock() = default;
@@ -72,7 +72,7 @@ public:
         auto& proc = Processor::current();
         FlatPtr cpu = FlatPtr(&proc);
         FlatPtr expected = 0;
-        while (!m_lock.compare_exchange_strong(expected, cpu, AK::memory_order_acq_rel)) {
+        while (!m_lock.compare_exchange_strong(expected, cpu, YAK::memory_order_acq_rel)) {
             if (expected == cpu)
                 break;
             Processor::wait_check();
@@ -85,9 +85,9 @@ public:
     ALWAYS_INLINE void unlock(u32 prev_flags)
     {
         VERIFY(m_recursions > 0);
-        VERIFY(m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current()));
+        VERIFY(m_lock.load(YAK::memory_order_relaxed) == FlatPtr(&Processor::current()));
         if (--m_recursions == 0)
-            m_lock.store(0, AK::memory_order_release);
+            m_lock.store(0, YAK::memory_order_release);
         if (prev_flags & 0x200)
             sti();
         else
@@ -97,17 +97,17 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked() const
     {
-        return m_lock.load(AK::memory_order_relaxed) != 0;
+        return m_lock.load(YAK::memory_order_relaxed) != 0;
     }
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked_by_current_processor() const
     {
-        return m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current());
+        return m_lock.load(YAK::memory_order_relaxed) == FlatPtr(&Processor::current());
     }
 
     ALWAYS_INLINE void initialize()
     {
-        m_lock.store(0, AK::memory_order_relaxed);
+        m_lock.store(0, YAK::memory_order_relaxed);
     }
 
 private:
@@ -117,7 +117,7 @@ private:
 
 template<typename LockType>
 class [[nodiscard]] SpinlockLocker {
-    AK_MAKE_NONCOPYABLE(SpinlockLocker);
+    YAK_MAKE_NONCOPYABLE(SpinlockLocker);
 
 public:
     SpinlockLocker() = delete;

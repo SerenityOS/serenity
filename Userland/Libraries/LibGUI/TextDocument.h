@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/HashTable.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/Optional.h>
-#include <AK/RefCounted.h>
-#include <AK/Utf32View.h>
+#include <YAK/HashTable.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/Optional.h>
+#include <YAK/RefCounted.h>
+#include <YAK/Utf32View.h>
 #include <LibCore/Forward.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Forward.h>

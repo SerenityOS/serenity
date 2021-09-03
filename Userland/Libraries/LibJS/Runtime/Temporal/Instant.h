@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AK/Optional.h>
-#include <AK/Variant.h>
+#include <YAK/Optional.h>
+#include <YAK/Variant.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Object.h>
 

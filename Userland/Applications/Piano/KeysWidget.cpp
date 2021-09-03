@@ -7,8 +7,8 @@
 
 #include "KeysWidget.h"
 #include "TrackManager.h"
-#include <AK/Array.h>
-#include <AK/StringView.h>
+#include <YAK/Array.h>
+#include <YAK/StringView.h>
 #include <LibGUI/Painter.h>
 
 KeysWidget::KeysWidget(TrackManager& track_manager)

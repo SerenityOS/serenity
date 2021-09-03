@@ -9,8 +9,8 @@
 #include "FindDialog.h"
 #include "GoToOffsetDialog.h"
 #include "SearchResultsModel.h"
-#include <AK/Optional.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Optional.h>
+#include <YAK/StringBuilder.h>
 #include <Applications/HexEditor/HexEditorWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/File.h>

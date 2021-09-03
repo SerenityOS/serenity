@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/LexicalPath.h>
-#include <AK/RefCounted.h>
-#include <AK/Result.h>
-#include <AK/String.h>
-#include <AK/Weakable.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/RefCounted.h>
+#include <YAK/Result.h>
+#include <YAK/String.h>
+#include <YAK/Weakable.h>
 #include <LibGUI/Icon.h>
 
 namespace HackStudio {

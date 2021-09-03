@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/String.h>
+#include <YAK/Assertions.h>
+#include <YAK/String.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/VimEditingEngine.h>
@@ -1312,7 +1312,7 @@ void VimEditingEngine::yank(YankType type)
 void VimEditingEngine::yank(TextRange range, YankType yank_type)
 {
     m_yank_type = yank_type;
-    m_yank_buffer = m_editor->document().text_in_range(range).trim_whitespace(AK::TrimMode::Right);
+    m_yank_buffer = m_editor->document().text_in_range(range).trim_whitespace(YAK::TrimMode::Right);
 }
 
 void VimEditingEngine::put_before()

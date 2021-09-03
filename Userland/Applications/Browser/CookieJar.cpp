@@ -5,10 +5,10 @@
  */
 
 #include "CookieJar.h"
-#include <AK/IPv4Address.h>
-#include <AK/StringBuilder.h>
-#include <AK/URL.h>
-#include <AK/Vector.h>
+#include <YAK/IPv4Address.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/URL.h>
+#include <YAK/Vector.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 
 namespace Browser {
@@ -101,7 +101,7 @@ bool CookieJar::domain_matches(const String& string, const String& domain_string
         return false;
     if (string[string.length() - domain_string.length() - 1] != '.')
         return false;
-    if (AK::IPv4Address::from_string(string).has_value())
+    if (YAK::IPv4Address::from_string(string).has_value())
         return false;
 
     return true;

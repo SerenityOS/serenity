@@ -7,7 +7,7 @@
 // For more information about locking in this code
 // please look at Documentation/Kernel/AHCILocking.md
 
-#include <AK/Atomic.h>
+#include <YAK/Atomic.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/ScatterGatherList.h>

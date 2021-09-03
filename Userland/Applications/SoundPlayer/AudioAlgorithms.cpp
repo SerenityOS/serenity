@@ -5,8 +5,8 @@
  */
 
 #include "AudioAlgorithms.h"
-#include <AK/Complex.h>
-#include <AK/Math.h>
+#include <YAK/Complex.h>
+#include <YAK/Math.h>
 
 // This function uses the input vector as output too. therefore, if you wish to
 // leave it intact, pass a copy to this function
@@ -38,8 +38,8 @@ void fft(Vector<Complex<double>>& sample_data, bool invert)
     }
 
     for (int len = 2; len <= n; len <<= 1) {
-        double ang = 2 * AK::Pi<double> / len * (invert ? -1 : 1);
-        Complex<double> wlen(AK::cos(ang), AK::sin(ang));
+        double ang = 2 * YAK::Pi<double> / len * (invert ? -1 : 1);
+        Complex<double> wlen(YAK::cos(ang), YAK::sin(ang));
         for (int i = 0; i < n; i += len) {
             Complex<double> w = { 1., 0. };
             for (int j = 0; j < len / 2; j++) {

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Atomic.h>
+#include <YAK/Atomic.h>
 #include <Kernel/Arch/x86/Processor.h>
 
 namespace Kernel {
@@ -21,7 +21,7 @@ public:
         AtomicRefCountType desired = (1 << 1) | 1;
         // Least significant bit indicates we're busy protecting/unprotecting
         for (;;) {
-            if (m_atomic_ref_count.compare_exchange_strong(expected, desired, AK::memory_order_relaxed))
+            if (m_atomic_ref_count.compare_exchange_strong(expected, desired, YAK::memory_order_relaxed))
                 break;
 
             Processor::wait_check();
@@ -33,13 +33,13 @@ public:
                 desired |= 1;
         }
 
-        atomic_thread_fence(AK::memory_order_acquire);
+        atomic_thread_fence(YAK::memory_order_acquire);
 
         if (expected == 0) {
             first_ref_action();
 
             // drop the busy flag
-            m_atomic_ref_count.store(desired & ~1, AK::memory_order_release);
+            m_atomic_ref_count.store(desired & ~1, YAK::memory_order_release);
             return true;
         }
         return false;
@@ -52,7 +52,7 @@ public:
         AtomicRefCountType desired = (1 << 1) | 1;
         // Least significant bit indicates we're busy protecting/unprotecting
         for (;;) {
-            if (m_atomic_ref_count.compare_exchange_strong(expected, desired, AK::memory_order_relaxed))
+            if (m_atomic_ref_count.compare_exchange_strong(expected, desired, YAK::memory_order_relaxed))
                 break;
 
             Processor::wait_check();
@@ -68,13 +68,13 @@ public:
             }
         }
 
-        AK::atomic_thread_fence(AK::memory_order_release);
+        YAK::atomic_thread_fence(YAK::memory_order_release);
 
         if (expected == 1 << 1) {
             last_ref_action();
 
             // drop the busy flag and release reference
-            m_atomic_ref_count.store(0, AK::memory_order_release);
+            m_atomic_ref_count.store(0, YAK::memory_order_release);
             return true;
         }
         return false;

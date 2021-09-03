@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
-#include <AK/WeakPtr.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/WeakPtr.h>
 #include <LibGUI/TextDocument.h>
 #include <LibGfx/Palette.h>
 #include <LibSyntax/HighlighterClient.h>
@@ -31,8 +31,8 @@ struct TextStyle {
 };
 
 class Highlighter {
-    AK_MAKE_NONCOPYABLE(Highlighter);
-    AK_MAKE_NONMOVABLE(Highlighter);
+    YAK_MAKE_NONCOPYABLE(Highlighter);
+    YAK_MAKE_NONMOVABLE(Highlighter);
 
 public:
     virtual ~Highlighter();
@@ -135,7 +135,7 @@ private:
 }
 
 template<>
-struct AK::Traits<Syntax::Highlighter::MatchingTokenPair> : public AK::GenericTraits<Syntax::Highlighter::MatchingTokenPair> {
+struct YAK::Traits<Syntax::Highlighter::MatchingTokenPair> : public YAK::GenericTraits<Syntax::Highlighter::MatchingTokenPair> {
     static unsigned hash(Syntax::Highlighter::MatchingTokenPair const& pair)
     {
         return pair_int_hash(u64_hash(pair.open), u64_hash(pair.close));

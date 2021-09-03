@@ -292,30 +292,30 @@ void MyClass::get_some_value(OutArgumentType* outArgument) const
 
 ### "using" Statements
 
-[](#using-ak) In header files in the AK sub-library, however, it is acceptable to use "using" declarations at the end of the file to import one or more names in the AK namespace into the global scope.
+[](#using-ak) In header files in the YAK sub-library, however, it is acceptable to use "using" declarations at the end of the file to import one or more names in the YAK namespace into the global scope.
 
 ###### Right:
 
 ```cpp
-// AK/Vector.h
+// YAK/Vector.h
 
-namespace AK {
+namespace YAK {
 
-} // namespace AK
+} // namespace YAK
 
-using AK::Vector;
+using YAK::Vector;
 ```
 
 ###### Wrong:
 
 ```cpp
-// AK/Vector.h
+// YAK/Vector.h
 
-namespace AK {
+namespace YAK {
 
-} // namespace AK
+} // namespace YAK
 
-using namespace AK;
+using namespace YAK;
 ```
 
 ###### Wrong:
@@ -323,11 +323,11 @@ using namespace AK;
 ```cpp
 // runtime/Object.h
 
-namespace AK {
+namespace YAK {
 
-} // namespace AK
+} // namespace YAK
 
-using AK::SomethingOrOther;
+using YAK::SomethingOrOther;
 ```
 
 [](#using-in-cpp) In C++ implementation files, do not use "using" declarations of any kind to import names in the standard template library. Directly qualify the names at the point they're used instead.

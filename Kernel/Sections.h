@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Platform.h>
+#include <YAK/Platform.h>
 #ifdef __cplusplus
-#    include <AK/Types.h>
+#    include <YAK/Types.h>
 #    include <Kernel/BootInfo.h>
 #endif
 

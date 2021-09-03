@@ -6,15 +6,15 @@
 
 #include "FlacLoader.h"
 #include "Buffer.h"
-#include <AK/BitStream.h>
-#include <AK/Debug.h>
-#include <AK/FlyString.h>
-#include <AK/Format.h>
-#include <AK/Math.h>
-#include <AK/ScopeGuard.h>
-#include <AK/Stream.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/BitStream.h>
+#include <YAK/Debug.h>
+#include <YAK/FlyString.h>
+#include <YAK/Format.h>
+#include <YAK/Math.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/Stream.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
 
@@ -435,9 +435,9 @@ u32 FlacLoaderPlugin::convert_sample_count_code(u8 sample_count_code)
         return FLAC_BLOCKSIZE_AT_END_OF_HEADER_16;
     }
     if (sample_count_code >= 2 && sample_count_code <= 5) {
-        return 576 * AK::exp2(sample_count_code - 2);
+        return 576 * YAK::exp2(sample_count_code - 2);
     }
-    return 256 * AK::exp2(sample_count_code - 8);
+    return 256 * YAK::exp2(sample_count_code - 8);
 }
 
 u32 FlacLoaderPlugin::convert_sample_rate_code(u8 sample_rate_code)
@@ -823,7 +823,7 @@ u64 read_utf8_char(InputStream& input)
     while (((start_byte << length) & 0b10000000) == 0b10000000)
         ++length;
     u8 bits_from_start_byte = 8 - (length + 1);
-    u8 start_byte_bitmask = AK::exp2(bits_from_start_byte) - 1;
+    u8 start_byte_bitmask = YAK::exp2(bits_from_start_byte) - 1;
     character = start_byte_bitmask & start_byte;
     for (u8 i = length - 1; i > 0; --i) {
         input.read(single_byte_buffer);

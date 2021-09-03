@@ -8,7 +8,7 @@
 #include "ManualNode.h"
 #include "ManualPageNode.h"
 #include "ManualSectionNode.h"
-#include <AK/ByteBuffer.h>
+#include <YAK/ByteBuffer.h>
 #include <LibCore/File.h>
 #include <LibGUI/FilteringProxyModel.h>
 

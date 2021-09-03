@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <LibTest/TestCase.h>
 #include <errno.h>
 #include <unistd.h>

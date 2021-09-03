@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Endian.h>
-#include <AK/MemoryStream.h>
+#include <YAK/Debug.h>
+#include <YAK/Endian.h>
+#include <YAK/MemoryStream.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
@@ -56,7 +56,7 @@ void TLSv12::write_packet(ByteBuffer& packet)
 void TLSv12::update_packet(ByteBuffer& packet)
 {
     u32 header_size = 5;
-    ByteReader::store(packet.offset_pointer(3), AK::convert_between_host_and_network_endian((u16)(packet.size() - header_size)));
+    ByteReader::store(packet.offset_pointer(3), YAK::convert_between_host_and_network_endian((u16)(packet.size() - header_size)));
 
     if (packet[0] != (u8)MessageType::ChangeCipher) {
         if (packet[0] == (u8)MessageType::Handshake && packet.size() > header_size) {
@@ -122,8 +122,8 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         Bytes aad_bytes { aad, 13 };
                         OutputMemoryStream aad_stream { aad_bytes };
 
-                        u64 seq_no = AK::convert_between_host_and_network_endian(m_context.local_sequence_number);
-                        u16 len = AK::convert_between_host_and_network_endian((u16)(packet.size() - header_size));
+                        u64 seq_no = YAK::convert_between_host_and_network_endian(m_context.local_sequence_number);
+                        u16 len = YAK::convert_between_host_and_network_endian((u16)(packet.size() - header_size));
 
                         aad_stream.write({ &seq_no, sizeof(seq_no) });
                         aad_stream.write(packet.bytes().slice(0, 3)); // content-type + version
@@ -192,7 +192,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                 // store the correct ciphertext length into the packet
                 u16 ct_length = (u16)ct.size() - header_size;
 
-                ByteReader::store(ct.offset_pointer(header_size - 2), AK::convert_between_host_and_network_endian(ct_length));
+                ByteReader::store(ct.offset_pointer(header_size - 2), YAK::convert_between_host_and_network_endian(ct_length));
 
                 // replace the packet with the ciphertext
                 packet = ct;
@@ -245,7 +245,7 @@ void TLSv12::ensure_hmac(size_t digest_size, bool local)
 
 ByteBuffer TLSv12::hmac_message(const ReadonlyBytes& buf, const Optional<ReadonlyBytes> buf2, size_t mac_length, bool local)
 {
-    u64 sequence_number = AK::convert_between_host_and_network_endian(local ? m_context.local_sequence_number : m_context.remote_sequence_number);
+    u64 sequence_number = YAK::convert_between_host_and_network_endian(local ? m_context.local_sequence_number : m_context.remote_sequence_number);
     ensure_hmac(mac_length, local);
     auto& hmac = local ? *m_hmac_local : *m_hmac_remote;
     if constexpr (TLS_DEBUG) {
@@ -296,7 +296,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
     buffer_position += 2;
 
-    auto length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(buffer_position)));
+    auto length = YAK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(buffer_position)));
 
     dbgln_if(TLS_DEBUG, "record length: {} at offset: {}", length, buffer_position);
     buffer_position += 2;
@@ -343,8 +343,8 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 Bytes aad_bytes { aad, 13 };
                 OutputMemoryStream aad_stream { aad_bytes };
 
-                u64 seq_no = AK::convert_between_host_and_network_endian(m_context.remote_sequence_number);
-                u16 len = AK::convert_between_host_and_network_endian((u16)packet_length);
+                u64 seq_no = YAK::convert_between_host_and_network_endian(m_context.remote_sequence_number);
+                u16 len = YAK::convert_between_host_and_network_endian((u16)packet_length);
 
                 aad_stream.write({ &seq_no, sizeof(seq_no) });      // Sequence number
                 aad_stream.write(buffer.slice(0, header_size - 2)); // content-type + version
@@ -417,7 +417,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 const u8* message_hmac = decrypted_span.offset(length);
                 u8 temp_buf[5];
                 memcpy(temp_buf, buffer.offset_pointer(0), 3);
-                *(u16*)(temp_buf + 3) = AK::convert_between_host_and_network_endian(length);
+                *(u16*)(temp_buf + 3) = YAK::convert_between_host_and_network_endian(length);
                 auto hmac = hmac_message({ temp_buf, 5 }, decrypted_span.slice(0, length), mac_size);
                 auto message_mac = ReadonlyBytes { message_hmac, mac_size };
                 if (hmac != message_mac) {

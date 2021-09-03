@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <AK/Types.h>
+#include <YAK/String.h>
+#include <YAK/StringView.h>
+#include <YAK/Types.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/TCPSocket.h>
 

@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Array.h>
-#include <AK/Endian.h>
-#include <AK/Types.h>
+#include <YAK/Array.h>
+#include <YAK/Endian.h>
+#include <YAK/Types.h>
 #include <string.h>
 
 namespace Gfx {
@@ -25,7 +25,7 @@ public:
     constexpr bool read(T& value)
     {
         Array<u8, sizeof(T)> network_buffer {};
-        auto network_value = new (network_buffer.data()) AK::NetworkOrdered<T> {};
+        auto network_value = new (network_buffer.data()) YAK::NetworkOrdered<T> {};
         auto res = read_bytes(network_buffer.data(), sizeof(T));
         value = T(*network_value);
         return res;

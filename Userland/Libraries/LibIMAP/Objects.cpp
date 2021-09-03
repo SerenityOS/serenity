@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
+#include <YAK/CharacterTypes.h>
 #include <LibIMAP/Objects.h>
 
 namespace IMAP {
@@ -12,7 +12,7 @@ namespace IMAP {
 String Sequence::serialize() const
 {
     if (start == end) {
-        return AK::String::formatted("{}", start);
+        return YAK::String::formatted("{}", start);
     } else {
         auto start_char = start != -1 ? String::formatted("{}", start) : "*";
         auto end_char = end != -1 ? String::formatted("{}", end) : "*";
@@ -111,14 +111,14 @@ String FetchCommand::serialize()
         first = false;
     }
 
-    return AK::String::formatted("{} ({})", sequence_builder.build(), data_items_builder.build());
+    return YAK::String::formatted("{} ({})", sequence_builder.build(), data_items_builder.build());
 }
 String serialize_astring(StringView string)
 {
     // Try to send an atom
     auto is_non_atom_char = [](char x) {
         auto non_atom_chars = { '(', ')', '{', ' ', '%', '*', '"', '\\', ']' };
-        return AK::find(non_atom_chars.begin(), non_atom_chars.end(), x) != non_atom_chars.end();
+        return YAK::find(non_atom_chars.begin(), non_atom_chars.end(), x) != non_atom_chars.end();
     };
     auto is_atom = all_of(string, [&](auto ch) { return is_ascii_control(ch) && !is_non_atom_char(ch); });
     if (is_atom) {

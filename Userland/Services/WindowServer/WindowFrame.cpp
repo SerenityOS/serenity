@@ -5,7 +5,7 @@
  */
 
 #include "ClientConnection.h"
-#include <AK/Badge.h>
+#include <YAK/Badge.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>

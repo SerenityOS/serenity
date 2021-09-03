@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TypeCasts.h>
+#include <YAK/TypeCasts.h>
 #include <LibJS/Runtime/FinalizationRegistryPrototype.h>
 
 namespace JS {

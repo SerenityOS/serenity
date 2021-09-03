@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
-#include <AK/Vector.h>
+#include <YAK/Singleton.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/StringView.h>
+#include <YAK/Vector.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Locking/MutexProtected.h>

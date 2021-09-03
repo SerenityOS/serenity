@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <YAK/FlyString.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>

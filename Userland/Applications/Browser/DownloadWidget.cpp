@@ -5,8 +5,8 @@
  */
 
 #include "DownloadWidget.h"
-#include <AK/NumberFormat.h>
-#include <AK/StringBuilder.h>
+#include <YAK/NumberFormat.h>
+#include <YAK/StringBuilder.h>
 #include <LibConfig/Client.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>

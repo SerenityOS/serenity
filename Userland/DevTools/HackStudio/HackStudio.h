@@ -9,7 +9,7 @@
 #include "EditorWrapper.h"
 #include "LanguageClients/ServerConnections.h"
 #include "Project.h"
-#include <AK/String.h>
+#include <YAK/String.h>
 #include <LibGUI/TextEditor.h>
 
 namespace HackStudio {

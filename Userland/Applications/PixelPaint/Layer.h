@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
-#include <AK/RefCounted.h>
-#include <AK/String.h>
-#include <AK/Weakable.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/RefCounted.h>
+#include <YAK/String.h>
+#include <YAK/Weakable.h>
 #include <LibGfx/Bitmap.h>
 
 namespace PixelPaint {
@@ -21,8 +21,8 @@ class Layer
     : public RefCounted<Layer>
     , public Weakable<Layer> {
 
-    AK_MAKE_NONCOPYABLE(Layer);
-    AK_MAKE_NONMOVABLE(Layer);
+    YAK_MAKE_NONCOPYABLE(Layer);
+    YAK_MAKE_NONMOVABLE(Layer);
 
 public:
     static RefPtr<Layer> try_create_with_size(Image&, Gfx::IntSize const&, String name);

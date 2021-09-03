@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LEB128.h>
-#include <AK/ScopeGuard.h>
-#include <AK/ScopeLogger.h>
+#include <YAK/LEB128.h>
+#include <YAK/ScopeGuard.h>
+#include <YAK/ScopeLogger.h>
 #include <LibWasm/Types.h>
 
 namespace Wasm {

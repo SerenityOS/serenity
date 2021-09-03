@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Endian.h>
-#include <AK/MACAddress.h>
+#include <YAK/Endian.h>
+#include <YAK/MACAddress.h>
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Net/IPv4.h>
 

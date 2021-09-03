@@ -11,7 +11,7 @@
 namespace Kernel {
 
 class LoopbackAdapter final : public NetworkAdapter {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 
 private:
     LoopbackAdapter();

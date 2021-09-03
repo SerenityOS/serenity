@@ -9,16 +9,16 @@
 #pragma once
 
 #include "Music.h"
-#include <AK/Noncopyable.h>
-#include <AK/SinglyLinkedList.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/SinglyLinkedList.h>
 #include <LibAudio/Buffer.h>
 #include <LibDSP/Effects.h>
 
-using RollIter = AK::SinglyLinkedListIterator<SinglyLinkedList<RollNote>, RollNote>;
+using RollIter = YAK::SinglyLinkedListIterator<SinglyLinkedList<RollNote>, RollNote>;
 
 class Track {
-    AK_MAKE_NONCOPYABLE(Track);
-    AK_MAKE_NONMOVABLE(Track);
+    YAK_MAKE_NONCOPYABLE(Track);
+    YAK_MAKE_NONMOVABLE(Track);
 
 public:
     explicit Track(const u32& time);

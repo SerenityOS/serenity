@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
-#include <AK/PrintfImplementation.h>
-#include <AK/ScopedValueRollback.h>
-#include <AK/StdLibExtras.h>
-#include <AK/String.h>
+#include <YAK/Format.h>
+#include <YAK/PrintfImplementation.h>
+#include <YAK/ScopedValueRollback.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/String.h>
 #include <LibC/bits/pthread_integration.h>
 #include <assert.h>
 #include <errno.h>

@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
-#include <AK/NonnullOwnPtrVector.h>
+#include <YAK/JsonArray.h>
+#include <YAK/JsonObject.h>
+#include <YAK/NonnullOwnPtrVector.h>
 #include <LibCore/LocalSocket.h>
 #include <LibGUI/Model.h>
 

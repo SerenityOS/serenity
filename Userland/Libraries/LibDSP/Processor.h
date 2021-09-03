@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
-#include <AK/StdLibExtras.h>
-#include <AK/Types.h>
+#include <YAK/Noncopyable.h>
+#include <YAK/StdLibExtras.h>
+#include <YAK/Types.h>
 #include <LibCore/Object.h>
 #include <LibDSP/Music.h>
 #include <LibDSP/ProcessorParameter.h>

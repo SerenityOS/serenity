@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <AK/Forward.h>
-#include <AK/String.h>
-#include <AK/Variant.h>
+#include <YAK/Forward.h>
+#include <YAK/String.h>
+#include <YAK/Variant.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/GlobalObject.h>
 

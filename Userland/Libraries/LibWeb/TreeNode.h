@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/TypeCasts.h>
-#include <AK/Weakable.h>
+#include <YAK/Assertions.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/TypeCasts.h>
+#include <YAK/Weakable.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {

@@ -7,12 +7,12 @@
 #pragma once
 
 #include "SearchResultsModel.h"
-#include <AK/ByteBuffer.h>
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/StdLibExtras.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Function.h>
+#include <YAK/HashMap.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/NonnullRefPtrVector.h>
+#include <YAK/StdLibExtras.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/TextAlignment.h>

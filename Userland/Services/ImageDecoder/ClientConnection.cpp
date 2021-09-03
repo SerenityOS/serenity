@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
+#include <YAK/Debug.h>
 #include <ImageDecoder/ClientConnection.h>
 #include <ImageDecoder/ImageDecoderClientEndpoint.h>
 #include <LibGfx/Bitmap.h>

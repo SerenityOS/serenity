@@ -5,7 +5,7 @@
  */
 
 #include "DNSAnswer.h"
-#include <AK/Stream.h>
+#include <YAK/Stream.h>
 #include <time.h>
 
 namespace LookupServer {
@@ -28,7 +28,7 @@ bool DNSAnswer::has_expired() const
 
 }
 
-void AK::Formatter<LookupServer::DNSRecordType>::format(AK::FormatBuilder& builder, LookupServer::DNSRecordType value)
+void YAK::Formatter<LookupServer::DNSRecordType>::format(YAK::FormatBuilder& builder, LookupServer::DNSRecordType value)
 {
     switch (value) {
     case LookupServer::DNSRecordType::A:
@@ -64,7 +64,7 @@ void AK::Formatter<LookupServer::DNSRecordType>::format(AK::FormatBuilder& build
     builder.put_u64((u16)value);
 }
 
-void AK::Formatter<LookupServer::DNSRecordClass>::format(AK::FormatBuilder& builder, LookupServer::DNSRecordClass value)
+void YAK::Formatter<LookupServer::DNSRecordClass>::format(YAK::FormatBuilder& builder, LookupServer::DNSRecordClass value)
 {
     switch (value) {
     case LookupServer::DNSRecordClass::IN:

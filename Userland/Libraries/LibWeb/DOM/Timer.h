@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Forward.h>
+#include <YAK/Forward.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/FunctionObject.h>

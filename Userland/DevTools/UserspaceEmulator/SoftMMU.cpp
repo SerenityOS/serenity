@@ -8,9 +8,9 @@
 #include "Emulator.h"
 #include "MmapRegion.h"
 #include "Report.h"
-#include <AK/ByteBuffer.h>
-#include <AK/Memory.h>
-#include <AK/QuickSort.h>
+#include <YAK/ByteBuffer.h>
+#include <YAK/Memory.h>
+#include <YAK/QuickSort.h>
 
 namespace UserspaceEmulator {
 

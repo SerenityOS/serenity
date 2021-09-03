@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Function.h>
+#include <YAK/Debug.h>
+#include <YAK/Function.h>
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>

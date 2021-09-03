@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/OwnPtr.h>
-#include <AK/Types.h>
+#include <YAK/HashMap.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/Types.h>
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Locking/Spinlock.h>

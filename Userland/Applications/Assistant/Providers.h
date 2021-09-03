@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/Queue.h>
-#include <AK/String.h>
-#include <AK/URL.h>
+#include <YAK/Queue.h>
+#include <YAK/String.h>
+#include <YAK/URL.h>
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/Desktop.h>
 #include <LibJS/Interpreter.h>

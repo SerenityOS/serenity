@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LEB128.h>
-#include <AK/MemoryStream.h>
-#include <AK/NumericLimits.h>
+#include <YAK/LEB128.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/NumericLimits.h>
 #include <LibTest/TestCase.h>
 
 TEST_CASE(single_byte)

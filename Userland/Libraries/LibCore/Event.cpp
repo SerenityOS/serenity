@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/WeakPtr.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/Event.h>
 #include <LibCore/Object.h>
 
@@ -13,7 +13,7 @@ namespace Core {
 ChildEvent::ChildEvent(Type type, Object& child, Object* insertion_before_child)
     : Core::Event(type)
     , m_child(child.make_weak_ptr())
-    , m_insertion_before_child(AK::try_make_weak_ptr(insertion_before_child))
+    , m_insertion_before_child(YAK::try_make_weak_ptr(insertion_before_child))
 {
 }
 

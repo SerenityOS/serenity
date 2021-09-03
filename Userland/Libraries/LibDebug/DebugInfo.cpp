@@ -5,10 +5,10 @@
  */
 
 #include "DebugInfo.h"
-#include <AK/Debug.h>
-#include <AK/LexicalPath.h>
-#include <AK/MemoryStream.h>
-#include <AK/QuickSort.h>
+#include <YAK/Debug.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/QuickSort.h>
 #include <LibDebug/Dwarf/CompilationUnit.h>
 #include <LibDebug/Dwarf/DwarfInfo.h>
 #include <LibDebug/Dwarf/Expression.h>

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/HashTable.h>
-#include <AK/TypeCasts.h>
+#include <YAK/HashTable.h>
+#include <YAK/TypeCasts.h>
 #include <LibJS/Runtime/SetIterator.h>
 #include <LibJS/Runtime/SetPrototype.h>
 
@@ -65,7 +65,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::add)
     auto value = vm.argument(0);
     if (value.is_negative_zero())
         value = Value(0);
-    set->values().set(value, AK::HashSetExistingEntryBehavior::Keep);
+    set->values().set(value, YAK::HashSetExistingEntryBehavior::Keep);
     return set;
 }
 

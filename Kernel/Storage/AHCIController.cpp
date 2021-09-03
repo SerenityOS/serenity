@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Atomic.h>
-#include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/Types.h>
+#include <YAK/Atomic.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefPtr.h>
+#include <YAK/Types.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Storage/AHCIController.h>
 #include <Kernel/Storage/SATADiskDevice.h>

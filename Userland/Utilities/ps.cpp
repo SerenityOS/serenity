@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/QuickSort.h>
+#include <YAK/QuickSort.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <stdio.h>

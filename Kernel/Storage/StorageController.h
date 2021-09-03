@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/RefPtr.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/Device.h>
@@ -23,7 +23,7 @@ namespace Kernel {
 class AsyncBlockDeviceRequest;
 class StorageDevice;
 class StorageController : public RefCounted<StorageController> {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 
 public:
     virtual ~StorageController() = default;

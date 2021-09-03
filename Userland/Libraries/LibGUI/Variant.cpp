@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/FlyString.h>
-#include <AK/JsonValue.h>
-#include <AK/RefPtr.h>
+#include <YAK/FlyString.h>
+#include <YAK/JsonValue.h>
+#include <YAK/RefPtr.h>
 #include <LibGUI/Variant.h>
 
 namespace GUI {
@@ -64,13 +64,13 @@ void Variant::clear()
 {
     switch (m_type) {
     case Type::String:
-        AK::unref_if_not_null(m_value.as_string);
+        YAK::unref_if_not_null(m_value.as_string);
         break;
     case Type::Bitmap:
-        AK::unref_if_not_null(m_value.as_bitmap);
+        YAK::unref_if_not_null(m_value.as_bitmap);
         break;
     case Type::Icon:
-        AK::unref_if_not_null(m_value.as_icon);
+        YAK::unref_if_not_null(m_value.as_icon);
         break;
     default:
         break;
@@ -140,7 +140,7 @@ Variant::Variant(const String& value)
     : m_type(Type::String)
 {
     m_value.as_string = const_cast<StringImpl*>(value.impl());
-    AK::ref_if_not_null(m_value.as_string);
+    YAK::ref_if_not_null(m_value.as_string);
 }
 
 Variant::Variant(const JsonValue& value)
@@ -194,21 +194,21 @@ Variant::Variant(const Gfx::Bitmap& value)
     : m_type(Type::Bitmap)
 {
     m_value.as_bitmap = const_cast<Gfx::Bitmap*>(&value);
-    AK::ref_if_not_null(m_value.as_bitmap);
+    YAK::ref_if_not_null(m_value.as_bitmap);
 }
 
 Variant::Variant(const GUI::Icon& value)
     : m_type(Type::Icon)
 {
     m_value.as_icon = &const_cast<GUI::IconImpl&>(value.impl());
-    AK::ref_if_not_null(m_value.as_icon);
+    YAK::ref_if_not_null(m_value.as_icon);
 }
 
 Variant::Variant(const Gfx::Font& value)
     : m_type(Type::Font)
 {
     m_value.as_font = &const_cast<Gfx::Font&>(value);
-    AK::ref_if_not_null(m_value.as_font);
+    YAK::ref_if_not_null(m_value.as_font);
 }
 
 Variant::Variant(Color color)
@@ -291,19 +291,19 @@ void Variant::copy_from(const Variant& other)
         break;
     case Type::String:
         m_value.as_string = other.m_value.as_string;
-        AK::ref_if_not_null(m_value.as_bitmap);
+        YAK::ref_if_not_null(m_value.as_bitmap);
         break;
     case Type::Bitmap:
         m_value.as_bitmap = other.m_value.as_bitmap;
-        AK::ref_if_not_null(m_value.as_bitmap);
+        YAK::ref_if_not_null(m_value.as_bitmap);
         break;
     case Type::Icon:
         m_value.as_icon = other.m_value.as_icon;
-        AK::ref_if_not_null(m_value.as_icon);
+        YAK::ref_if_not_null(m_value.as_icon);
         break;
     case Type::Font:
         m_value.as_font = other.m_value.as_font;
-        AK::ref_if_not_null(m_value.as_font);
+        YAK::ref_if_not_null(m_value.as_font);
         break;
     case Type::Color:
         m_value.as_color = other.m_value.as_color;

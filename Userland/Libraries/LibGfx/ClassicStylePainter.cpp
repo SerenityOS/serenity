@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringView.h>
+#include <YAK/StringView.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/ClassicStylePainter.h>

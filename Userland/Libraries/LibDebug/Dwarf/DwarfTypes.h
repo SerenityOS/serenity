@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Stream.h>
-#include <AK/Types.h>
+#include <YAK/Stream.h>
+#include <YAK/Types.h>
 
 namespace Debug::Dwarf {
 

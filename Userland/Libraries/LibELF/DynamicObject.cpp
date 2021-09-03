@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
+#include <YAK/Debug.h>
+#include <YAK/String.h>
+#include <YAK/StringBuilder.h>
 #include <LibC/elf.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>

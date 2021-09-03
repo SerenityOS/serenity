@@ -7,9 +7,9 @@
 #pragma once
 
 #include "DNSName.h"
-#include <AK/Format.h>
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/Format.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 
 namespace LookupServer {
 
@@ -58,23 +58,23 @@ private:
 
 }
 template<>
-struct AK::Formatter<LookupServer::DNSRecordType> : StandardFormatter {
+struct YAK::Formatter<LookupServer::DNSRecordType> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
     {
     }
 
-    void format(AK::FormatBuilder&, LookupServer::DNSRecordType);
+    void format(YAK::FormatBuilder&, LookupServer::DNSRecordType);
 };
 
 template<>
-struct AK::Formatter<LookupServer::DNSRecordClass> : StandardFormatter {
+struct YAK::Formatter<LookupServer::DNSRecordClass> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
     {
     }
 
-    void format(AK::FormatBuilder&, LookupServer::DNSRecordClass);
+    void format(YAK::FormatBuilder&, LookupServer::DNSRecordClass);
 };

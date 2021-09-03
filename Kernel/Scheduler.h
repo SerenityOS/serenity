@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
-#include <AK/Function.h>
-#include <AK/IntrusiveList.h>
-#include <AK/Types.h>
+#include <YAK/Assertions.h>
+#include <YAK/Function.h>
+#include <YAK/IntrusiveList.h>
+#include <YAK/Types.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Time/TimeManagement.h>

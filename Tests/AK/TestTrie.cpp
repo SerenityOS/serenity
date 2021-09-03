@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/StringView.h>
-#include <AK/Trie.h>
+#include <YAK/StringView.h>
+#include <YAK/Trie.h>
 
 TEST_CASE(normal_behaviour)
 {

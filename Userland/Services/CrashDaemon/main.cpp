@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MappedFile.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/File.h>

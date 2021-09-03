@@ -5,10 +5,10 @@
  */
 
 #include "CppComprehensionEngine.h"
-#include <AK/Assertions.h>
-#include <AK/HashTable.h>
-#include <AK/OwnPtr.h>
-#include <AK/ScopeGuard.h>
+#include <YAK/Assertions.h>
+#include <YAK/HashTable.h>
+#include <YAK/OwnPtr.h>
+#include <YAK/ScopeGuard.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCpp/AST.h>

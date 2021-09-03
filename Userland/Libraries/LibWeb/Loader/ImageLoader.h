@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Function.h>
+#include <YAK/Function.h>
 #include <LibCore/Timer.h>
 #include <LibWeb/Loader/ImageResource.h>
 

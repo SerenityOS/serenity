@@ -27,7 +27,7 @@ The following program creates a pipe, then forks, the child then
 writes some data to the pipe which the parent reads:
 
 ```c++
-#include <AK/Assertions.h>
+#include <YAK/Assertions.h>
 #include <stdio.h>
 #include <unistd.h>
 

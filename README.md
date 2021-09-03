@@ -54,7 +54,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 
 ## Libraries
 
-* C++ templates and containers (AK)
+* C++ templates and containers (YAK)
 * Event loop and utilities (LibCore)
 * 2D graphics library (LibGfx)
 * OpenGL 1.x compatible library (LibGL)

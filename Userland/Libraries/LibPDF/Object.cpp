@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Hex.h>
+#include <YAK/Hex.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/Object.h>
 

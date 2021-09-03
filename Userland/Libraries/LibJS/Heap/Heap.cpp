@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Badge.h>
-#include <AK/Debug.h>
-#include <AK/HashTable.h>
-#include <AK/StackInfo.h>
-#include <AK/TemporaryChange.h>
+#include <YAK/Badge.h>
+#include <YAK/Debug.h>
+#include <YAK/HashTable.h>
+#include <YAK/StackInfo.h>
+#include <YAK/TemporaryChange.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Heap/Handle.h>

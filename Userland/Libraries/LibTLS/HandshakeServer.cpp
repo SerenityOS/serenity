@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
-#include <AK/Endian.h>
-#include <AK/Random.h>
+#include <YAK/Debug.h>
+#include <YAK/Endian.h>
+#include <YAK/Random.h>
 
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
@@ -40,7 +40,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
         dbgln("not enough data for version");
         return (i8)Error::NeedMoreData;
     }
-    auto version = static_cast<Version>(AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res))));
+    auto version = static_cast<Version>(YAK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res))));
 
     res += 2;
     if (!supports_version(version))
@@ -71,7 +71,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
         dbgln("not enough data for cipher suite listing");
         return (i8)Error::NeedMoreData;
     }
-    auto cipher = static_cast<CipherSuite>(AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res))));
+    auto cipher = static_cast<CipherSuite>(YAK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res))));
     res += 2;
     if (!supports_cipher(cipher)) {
         m_context.cipher = CipherSuite::Invalid;
@@ -100,14 +100,14 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
 
     // Presence of extensions is determined by availability of bytes after compression_method
     if (buffer.size() - res >= 2) {
-        auto extensions_bytes_total = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res += 2)));
+        auto extensions_bytes_total = YAK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res += 2)));
         dbgln_if(TLS_DEBUG, "Extensions bytes total: {}", extensions_bytes_total);
     }
 
     while (buffer.size() - res >= 4) {
-        auto extension_type = (HandshakeExtension)AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res)));
+        auto extension_type = (HandshakeExtension)YAK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res)));
         res += 2;
-        u16 extension_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res)));
+        u16 extension_length = YAK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res)));
         res += 2;
 
         dbgln_if(TLS_DEBUG, "Extension {} with length {}", (u16)extension_type, extension_length);
@@ -121,14 +121,14 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
                 // ServerNameList total size
                 if (buffer.size() - res < 2)
                     return (i8)Error::NeedMoreData;
-                auto sni_name_list_bytes = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res += 2)));
+                auto sni_name_list_bytes = YAK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res += 2)));
                 dbgln_if(TLS_DEBUG, "SNI: expecting ServerNameList of {} bytes", sni_name_list_bytes);
 
                 // Exactly one ServerName should be present
                 if (buffer.size() - res < 3)
                     return (i8)Error::NeedMoreData;
                 auto sni_name_type = (NameType)(*(const u8*)buffer.offset_pointer(res++));
-                auto sni_name_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res += 2)));
+                auto sni_name_length = YAK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res += 2)));
 
                 if (sni_name_type != NameType::HostName)
                     return (i8)Error::NotUnderstood;
@@ -145,7 +145,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
             }
         } else if (extension_type == HandshakeExtension::ApplicationLayerProtocolNegotiation && m_context.alpn.size()) {
             if (buffer.size() - res > 2) {
-                auto alpn_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res)));
+                auto alpn_length = YAK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res)));
                 if (alpn_length && alpn_length <= extension_length - 2) {
                     const u8* alpn = buffer.offset_pointer(res + 2);
                     size_t alpn_position = 0;
@@ -238,15 +238,15 @@ ssize_t TLSv12::handle_server_key_exchange(ReadonlyBytes buffer)
 
 ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
 {
-    auto dh_p_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(3)));
+    auto dh_p_length = YAK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(3)));
     auto dh_p = buffer.slice(5, dh_p_length);
     m_context.server_diffie_hellman_params.p = ByteBuffer::copy(dh_p.data(), dh_p.size());
 
-    auto dh_g_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(5 + dh_p_length)));
+    auto dh_g_length = YAK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(5 + dh_p_length)));
     auto dh_g = buffer.slice(7 + dh_p_length, dh_g_length);
     m_context.server_diffie_hellman_params.g = ByteBuffer::copy(dh_g.data(), dh_g.size());
 
-    auto dh_Ys_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(7 + dh_p_length + dh_g_length)));
+    auto dh_Ys_length = YAK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(7 + dh_p_length + dh_g_length)));
     auto dh_Ys = buffer.slice(9 + dh_p_length + dh_g_length, dh_Ys_length);
     m_context.server_diffie_hellman_params.Ys = ByteBuffer::copy(dh_Ys.data(), dh_Ys.size());
 

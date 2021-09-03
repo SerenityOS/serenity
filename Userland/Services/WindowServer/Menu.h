@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/String.h>
-#include <AK/WeakPtr.h>
+#include <YAK/NonnullOwnPtrVector.h>
+#include <YAK/String.h>
+#include <YAK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>

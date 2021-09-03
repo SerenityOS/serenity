@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Format.h>
+#include <YAK/Format.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
@@ -131,7 +131,7 @@ private:
 
 }
 
-namespace AK {
+namespace YAK {
 
 template<>
 struct Formatter<PDF::LineCapStyle> : Formatter<StringView> {

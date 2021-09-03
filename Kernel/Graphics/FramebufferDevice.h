@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtr.h>
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <YAK/NonnullOwnPtr.h>
+#include <YAK/String.h>
+#include <YAK/Types.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
 #include <Kernel/Locking/Spinlock.h>
@@ -18,7 +18,7 @@
 namespace Kernel {
 
 class FramebufferDevice : public BlockDevice {
-    AK_MAKE_ETERNAL
+    YAK_MAKE_ETERNAL
 public:
     static NonnullRefPtr<FramebufferDevice> create(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
 

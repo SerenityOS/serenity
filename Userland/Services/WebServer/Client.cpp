@@ -5,14 +5,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Base64.h>
-#include <AK/Debug.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
-#include <AK/MemoryStream.h>
-#include <AK/QuickSort.h>
-#include <AK/StringBuilder.h>
-#include <AK/URL.h>
+#include <YAK/Base64.h>
+#include <YAK/Debug.h>
+#include <YAK/LexicalPath.h>
+#include <YAK/MappedFile.h>
+#include <YAK/MemoryStream.h>
+#include <YAK/QuickSort.h>
+#include <YAK/StringBuilder.h>
+#include <YAK/URL.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>

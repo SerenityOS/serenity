@@ -8,7 +8,7 @@
 
 #include "Guide.h"
 #include "Tool.h"
-#include <AK/RefPtr.h>
+#include <YAK/RefPtr.h>
 
 namespace PixelPaint {
 

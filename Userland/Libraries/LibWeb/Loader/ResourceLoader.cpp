@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Base64.h>
-#include <AK/Debug.h>
-#include <AK/JsonObject.h>
+#include <YAK/Base64.h>
+#include <YAK/Debug.h>
+#include <YAK/JsonObject.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibProtocol/Request.h>

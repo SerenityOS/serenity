@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/String.h>
+#include <YAK/NonnullRefPtr.h>
+#include <YAK/String.h>
 
 struct Object : public RefCounted<Object> {
     int x;

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Checked.h>
+#include <YAK/Checked.h>
 #include <Kernel/Memory/VirtualRangeAllocator.h>
 #include <Kernel/Random.h>
 

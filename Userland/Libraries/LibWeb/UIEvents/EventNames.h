@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <YAK/FlyString.h>
 
 namespace Web::UIEvents::EventNames {
 

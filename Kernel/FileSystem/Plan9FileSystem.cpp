@@ -672,10 +672,10 @@ void Plan9FS::thread_main()
 void Plan9FS::ensure_thread()
 {
     SpinlockLocker lock(m_thread_lock);
-    if (!m_thread_running.exchange(true, AK::MemoryOrder::memory_order_acq_rel)) {
+    if (!m_thread_running.exchange(true, YAK::MemoryOrder::memory_order_acq_rel)) {
         Process::create_kernel_process(m_thread, "Plan9FS", [&]() {
             thread_main();
-            m_thread_running.store(false, AK::MemoryOrder::memory_order_release);
+            m_thread_running.store(false, YAK::MemoryOrder::memory_order_release);
         });
     }
 }
