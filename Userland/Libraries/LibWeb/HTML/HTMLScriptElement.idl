@@ -6,6 +6,8 @@ interface HTMLScriptElement : HTMLElement {
     [Reflect] attribute boolean defer;
     [Reflect] attribute DOMString integrity;
 
+    static boolean supports(DOMString type);
+
     [Reflect] attribute DOMString charset;
     [Reflect] attribute DOMString event;
     [Reflect=for] attribute DOMString htmlFor;
