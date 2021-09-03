@@ -42,6 +42,7 @@ void LocalePrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.maximize, maximize, 0, attr);
+    define_native_function(vm.names.minimize, minimize, 0, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
 
     // 14.3.2 Intl.Locale.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.Locale.prototype-@@tostringtag
@@ -76,6 +77,26 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::maximize)
         locale->language_id = maximal.release_value();
 
     // 4. Return ! Construct(%Locale%, maximal).
+    return Locale::create(global_object, *locale);
+}
+
+// 14.3.4 Intl.Locale.prototype.minimize ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.minimize
+JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::minimize)
+{
+    // 1. Let loc be the this value.
+    // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
+    auto* locale_object = typed_this(global_object);
+    if (!locale_object)
+        return {};
+
+    auto locale = Unicode::parse_unicode_locale_id(locale_object->locale());
+    VERIFY(locale.has_value());
+
+    // 3. Let minimal be the result of the Remove Likely Subtags algorithm applied to loc.[[Locale]]. If an error is signaled, set minimal to loc.[[Locale]].
+    if (auto minimal = Unicode::remove_likely_subtags(locale->language_id); minimal.has_value())
+        locale->language_id = minimal.release_value();
+
+    // 4. Return ! Construct(%Locale%, minimal).
     return Locale::create(global_object, *locale);
 }
 
