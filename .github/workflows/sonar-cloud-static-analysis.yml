@@ -58,6 +58,7 @@ jobs:
           echo "sonar.host.url=${{ env.SONAR_SERVER_URL }}" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.sources=AK,Build,Userland,Kernel,Meta" >> ${{ github.workspace }}/sonar-project.properties
           echo "sonar.tests=Tests" >> ${{ github.workspace }}/sonar-project.properties
+          echo "sonar.python.version=3.7, 3.8, 3.9" >> ${{ github.workspace }}/sonar-project.properties
 
       # === OS SETUP ===
       # TODO: Is there someway to share these steps with the cmake.yml?
