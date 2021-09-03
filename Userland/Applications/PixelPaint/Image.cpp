@@ -458,10 +458,11 @@ void Image::did_change(Gfx::IntRect const& a_modified_rect)
         client->image_did_change(modified_rect);
 }
 
-void Image::did_change_rect()
+void Image::did_change_rect(Gfx::IntRect const& a_modified_rect)
 {
+    auto modified_rect = a_modified_rect.is_empty() ? this->rect() : a_modified_rect;
     for (auto* client : m_clients)
-        client->image_did_change_rect(rect());
+        client->image_did_change_rect(modified_rect);
 }
 
 ImageUndoCommand::ImageUndoCommand(Image& image)
@@ -516,6 +517,19 @@ void Image::rotate(Gfx::RotationDirection direction)
 
     m_size = { m_size.height(), m_size.width() };
     did_change_rect();
+}
+
+void Image::crop(Gfx::IntRect const& cropped_rect)
+{
+    for (auto& layer : m_layers) {
+        auto cropped = layer.bitmap().cropped(cropped_rect);
+        VERIFY(cropped);
+        layer.set_bitmap(*cropped);
+        layer.did_modify_bitmap(rect());
+    }
+
+    m_size = { cropped_rect.width(), cropped_rect.height() };
+    did_change_rect(cropped_rect);
 }
 
 }
