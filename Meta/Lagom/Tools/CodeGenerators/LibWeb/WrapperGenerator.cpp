@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -137,6 +138,7 @@ struct Interface {
     Vector<Constant> constants;
     Vector<Constructor> constructors;
     Vector<Function> functions;
+    Vector<Function> static_functions;
 
     // Added for convenience after parsing
     String wrapper_class;
@@ -300,6 +302,12 @@ static OwnPtr<Interface> parse_interface(StringView filename, StringView const& 
     };
 
     auto parse_function = [&](HashMap<String, String>& extended_attributes) {
+        bool static_ = false;
+        if (lexer.consume_specific("static")) {
+            static_ = true;
+            consume_whitespace();
+        }
+
         auto return_type = parse_type();
         consume_whitespace();
         auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '('; });
@@ -310,7 +318,10 @@ static OwnPtr<Interface> parse_interface(StringView filename, StringView const& 
         consume_whitespace();
         assert_specific(';');
 
-        interface->functions.append(Function { return_type, name, move(parameters), move(extended_attributes) });
+        if (!static_)
+            interface->functions.append(Function { return_type, name, move(parameters), move(extended_attributes) });
+        else
+            interface->static_functions.append(Function { return_type, name, move(parameters), move(extended_attributes) });
     };
 
     auto parse_constructor = [&] {
@@ -435,6 +446,20 @@ int main(int argc, char** argv)
         dbgln("Functions:");
         for (auto& function : interface->functions) {
             dbgln("  {}{} {}",
+                function.return_type.name,
+                function.return_type.nullable ? "?" : "",
+                function.name);
+            for (auto& parameter : function.parameters) {
+                dbgln("    {}{} {}",
+                    parameter.type.name,
+                    parameter.type.nullable ? "?" : "",
+                    parameter.name);
+            }
+        }
+
+        dbgln("Static Functions:");
+        for (auto& function : interface->static_functions) {
+            dbgln("  static {}{} {}",
                 function.return_type.name,
                 function.return_type.nullable ? "?" : "",
                 function.name);
@@ -747,6 +772,135 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
     arguments_builder.join(", ", parameter_names);
 }
 
+static void generate_return_statement(SourceGenerator& generator, IDL::Type const& return_type)
+{
+    auto scoped_generator = generator.fork();
+    scoped_generator.set("return_type", return_type.name);
+
+    if (return_type.name == "undefined") {
+        scoped_generator.append(R"~~~(
+    return JS::js_undefined();
+)~~~");
+        return;
+    }
+
+    if (return_type.nullable) {
+        if (return_type.is_string()) {
+            scoped_generator.append(R"~~~(
+    if (retval.is_null())
+        return JS::js_null();
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    if (!retval)
+        return JS::js_null();
+)~~~");
+        }
+    }
+
+    if (return_type.is_string()) {
+        scoped_generator.append(R"~~~(
+    return JS::js_string(vm, retval);
+)~~~");
+    } else if (return_type.name == "ArrayFromVector") {
+        // FIXME: Remove this fake type hack once it's no longer needed.
+        //        Basically once we have NodeList we can throw this out.
+        scoped_generator.append(R"~~~(
+    auto* new_array = JS::Array::create(global_object, 0);
+    for (auto& element : retval)
+        new_array->indexed_properties().append(wrap(global_object, element));
+
+    return new_array;
+)~~~");
+    } else if (return_type.name == "boolean" || return_type.name == "double") {
+        scoped_generator.append(R"~~~(
+    return JS::Value(retval);
+)~~~");
+    } else if (return_type.name == "short" || return_type.name == "unsigned short" || return_type.name == "long" || return_type.name == "unsigned long") {
+        scoped_generator.append(R"~~~(
+    return JS::Value((i32)retval);
+)~~~");
+    } else if (return_type.name == "Uint8ClampedArray") {
+        scoped_generator.append(R"~~~(
+    return retval;
+)~~~");
+    } else if (return_type.name == "EventHandler") {
+        scoped_generator.append(R"~~~(
+    if (retval.callback.is_null())
+        return JS::js_null();
+
+    return retval.callback.cell();
+)~~~");
+    } else {
+        scoped_generator.append(R"~~~(
+    return wrap(global_object, const_cast<@return_type@&>(*retval));
+)~~~");
+    }
+}
+
+enum class StaticFunction {
+    No,
+    Yes,
+};
+
+static void generate_function(SourceGenerator& generator, IDL::Function const& function, StaticFunction is_static_function, String const& class_name, String const& interface_fully_qualified_name)
+{
+    auto function_generator = generator.fork();
+    function_generator.set("class_name", class_name);
+    function_generator.set("interface_fully_qualified_name", interface_fully_qualified_name);
+    function_generator.set("function.name", function.name);
+    function_generator.set("function.name:snakecase", function.name.to_snakecase());
+
+    if (function.extended_attributes.contains("ImplementedAs")) {
+        auto implemented_as = function.extended_attributes.get("ImplementedAs").value();
+        function_generator.set("function.cpp_name", implemented_as);
+    } else {
+        function_generator.set("function.cpp_name", function.name.to_snakecase());
+    }
+
+    function_generator.append(R"~~~(
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
+{
+)~~~");
+
+    if (is_static_function == StaticFunction::No) {
+        function_generator.append(R"~~~(
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+)~~~");
+    }
+
+    generate_argument_count_check(generator, function);
+
+    StringBuilder arguments_builder;
+    generate_arguments(generator, function.parameters, arguments_builder);
+    function_generator.set(".arguments", arguments_builder.string_view());
+
+    if (is_static_function == StaticFunction::No) {
+        function_generator.append(R"~~~(
+    auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl->@function.cpp_name@(@.arguments@); });
+)~~~");
+    } else {
+        function_generator.append(R"~~~(
+    auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return @interface_fully_qualified_name@::@function.cpp_name@(@.arguments@); });
+)~~~");
+    }
+
+    function_generator.append(R"~~~(
+    if (should_return_empty(result))
+        return JS::Value();
+
+    [[maybe_unused]] auto retval = result.release_value();
+)~~~");
+
+    generate_return_statement(generator, function.return_type);
+
+    function_generator.append(R"~~~(
+}
+)~~~");
+}
+
 static void generate_header(IDL::Interface const& interface)
 {
     StringBuilder builder;
@@ -992,6 +1146,17 @@ public:
 
 private:
     virtual bool has_constructor() const override { return true; }
+)~~~");
+
+    for (auto& function : interface.static_functions) {
+        auto function_generator = generator.fork();
+        function_generator.set("function.name:snakecase", function.name.to_snakecase());
+        function_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@);
+)~~~");
+    }
+
+    generator.append(R"~~~(
 };
 
 } // namespace Web::Bindings
@@ -1134,9 +1299,28 @@ define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::
 )~~~");
     }
 
+    // https://heycam.github.io/webidl/#es-operations
+    for (auto& function : interface.static_functions) {
+        auto function_generator = generator.fork();
+        function_generator.set("function.name", function.name);
+        function_generator.set("function.name:snakecase", function.name.to_snakecase());
+        function_generator.set("function.length", String::number(function.length()));
+
+        function_generator.append(R"~~~(
+    define_native_function("@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
+)~~~");
+    }
+
     generator.append(R"~~~(
 }
+)~~~");
 
+    // Implementation: Static Functions
+    for (auto& function : interface.static_functions) {
+        generate_function(generator, function, StaticFunction::Yes, interface.constructor_class, interface.fully_qualified_name);
+    }
+
+    generator.append(R"~~~(
 } // namespace Web::Bindings
 )~~~");
 
@@ -1396,71 +1580,6 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
 )~~~");
     }
 
-    auto generate_return_statement = [&](auto& return_type) {
-        auto scoped_generator = generator.fork();
-        scoped_generator.set("return_type", return_type.name);
-
-        if (return_type.name == "undefined") {
-            scoped_generator.append(R"~~~(
-    return JS::js_undefined();
-)~~~");
-            return;
-        }
-
-        if (return_type.nullable) {
-            if (return_type.is_string()) {
-                scoped_generator.append(R"~~~(
-    if (retval.is_null())
-        return JS::js_null();
-)~~~");
-            } else {
-                scoped_generator.append(R"~~~(
-    if (!retval)
-        return JS::js_null();
-)~~~");
-            }
-        }
-
-        if (return_type.is_string()) {
-            scoped_generator.append(R"~~~(
-    return JS::js_string(vm, retval);
-)~~~");
-        } else if (return_type.name == "ArrayFromVector") {
-            // FIXME: Remove this fake type hack once it's no longer needed.
-            //        Basically once we have NodeList we can throw this out.
-            scoped_generator.append(R"~~~(
-    auto* new_array = JS::Array::create(global_object, 0);
-    for (auto& element : retval)
-        new_array->indexed_properties().append(wrap(global_object, element));
-
-    return new_array;
-)~~~");
-        } else if (return_type.name == "boolean" || return_type.name == "double") {
-            scoped_generator.append(R"~~~(
-    return JS::Value(retval);
-)~~~");
-        } else if (return_type.name == "short" || return_type.name == "unsigned short" || return_type.name == "long" || return_type.name == "unsigned long") {
-            scoped_generator.append(R"~~~(
-    return JS::Value((i32)retval);
-)~~~");
-        } else if (return_type.name == "Uint8ClampedArray") {
-            scoped_generator.append(R"~~~(
-    return retval;
-)~~~");
-        } else if (return_type.name == "EventHandler") {
-            scoped_generator.append(R"~~~(
-    if (retval.callback.is_null())
-        return JS::js_null();
-
-    return retval.callback.cell();
-)~~~");
-        } else {
-            scoped_generator.append(R"~~~(
-    return wrap(global_object, const_cast<@return_type@&>(*retval));
-)~~~");
-        }
-    };
-
     for (auto& attribute : interface.attributes) {
         auto attribute_generator = generator.fork();
         attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
@@ -1516,7 +1635,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
 )~~~");
         }
 
-        generate_return_statement(attribute.type);
+        generate_return_statement(generator, attribute.type);
 
         attribute_generator.append(R"~~~(
 }
@@ -1563,44 +1682,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
 
     // Implementation: Functions
     for (auto& function : interface.functions) {
-        auto function_generator = generator.fork();
-        function_generator.set("function.name", function.name);
-        function_generator.set("function.name:snakecase", function.name.to_snakecase());
-
-        if (function.extended_attributes.contains("ImplementedAs")) {
-            auto implemented_as = function.extended_attributes.get("ImplementedAs").value();
-            function_generator.set("function.cpp_name", implemented_as);
-        } else {
-            function_generator.set("function.cpp_name", function.name.to_snakecase());
-        }
-
-        function_generator.append(R"~~~(
-JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@function.name:snakecase@)
-{
-    auto* impl = impl_from(vm, global_object);
-    if (!impl)
-        return {};
-)~~~");
-
-        generate_argument_count_check(generator, function);
-
-        StringBuilder arguments_builder;
-        generate_arguments(generator, function.parameters, arguments_builder);
-        function_generator.set(".arguments", arguments_builder.string_view());
-
-        function_generator.append(R"~~~(
-    auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl->@function.cpp_name@(@.arguments@); });
-    if (should_return_empty(result))
-        return JS::Value();
-
-    [[maybe_unused]] auto retval = result.release_value();
-)~~~");
-
-        generate_return_statement(function.return_type);
-
-        function_generator.append(R"~~~(
-}
-)~~~");
+        generate_function(generator, function, StaticFunction::No, interface.prototype_class, interface.fully_qualified_name);
     }
 
     generator.append(R"~~~(
