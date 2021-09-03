@@ -31,8 +31,8 @@ protected:
 
     virtual StringView class_name() const override { return "KCOVDevice"; }
 
-    virtual bool can_read(const OpenFileDescription&, size_t) const override final { return true; }
-    virtual bool can_write(const OpenFileDescription&, size_t) const override final { return true; }
+    virtual bool can_read() const override final { return true; }
+    virtual bool can_write() const override final { return true; }
     virtual void start_request(AsyncBlockDeviceRequest& request) override final { request.complete(AsyncDeviceRequest::Failure); }
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return EINVAL; }
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EINVAL; }

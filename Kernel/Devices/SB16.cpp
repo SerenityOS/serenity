@@ -181,7 +181,7 @@ void SB16::set_irq_line(u8 irq_number)
     change_irq_number(irq_number);
 }
 
-bool SB16::can_read(OpenFileDescription const&, size_t) const
+bool SB16::can_read() const
 {
     return false;
 }

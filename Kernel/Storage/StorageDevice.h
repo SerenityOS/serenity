@@ -38,9 +38,9 @@ public:
 
     // ^BlockDevice
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual bool can_read(const OpenFileDescription&, size_t) const override;
+    virtual bool can_read() const override;
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_write(const OpenFileDescription&, size_t) const override;
+    virtual bool can_write() const override;
 
     virtual void prepare_for_unplug() { m_partitions.clear(); }
 

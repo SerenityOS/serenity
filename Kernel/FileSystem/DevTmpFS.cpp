@@ -325,7 +325,7 @@ KResultOr<size_t> DevTmpFSDeviceInode::read_bytes(off_t offset, size_t count, Us
     RefPtr<Device> device = DeviceManagement::the().get_device(m_major_number, m_minor_number);
     if (!device)
         return KResult(ENODEV);
-    if (!device->can_read(*description, offset))
+    if (!device->can_read())
         return KResult(ENOTIMPL);
     auto result = const_cast<Device&>(*device).read(*description, offset, buffer, count);
     if (result.is_error())
@@ -340,7 +340,7 @@ KResultOr<size_t> DevTmpFSDeviceInode::write_bytes(off_t offset, size_t count, c
     RefPtr<Device> device = DeviceManagement::the().get_device(m_major_number, m_minor_number);
     if (!device)
         return KResult(ENODEV);
-    if (!device->can_write(*description, offset))
+    if (!device->can_write())
         return KResult(ENOTIMPL);
     auto result = const_cast<Device&>(*device).write(*description, offset, buffer, count);
     if (result.is_error())

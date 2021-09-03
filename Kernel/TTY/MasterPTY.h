@@ -26,15 +26,15 @@ public:
     void notify_slave_closed(Badge<SlavePTY>);
     bool is_closed() const { return m_closed; }
 
-    virtual String absolute_path(const OpenFileDescription&) const override;
+    virtual String absolute_path() const override;
 
 private:
     explicit MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer);
     // ^CharacterDevice
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_read(const OpenFileDescription&, size_t) const override;
-    virtual bool can_write(const OpenFileDescription&, size_t) const override;
+    virtual bool can_read() const override;
+    virtual bool can_write() const override;
     virtual KResult close() override;
     virtual bool is_master_pty() const override { return true; }
     virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;

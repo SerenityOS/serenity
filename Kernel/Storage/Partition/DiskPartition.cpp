@@ -54,11 +54,9 @@ KResultOr<size_t> DiskPartition::read(OpenFileDescription& fd, u64 offset, UserO
     return m_device.strong_ref()->read(fd, offset + adjust, outbuf, len);
 }
 
-bool DiskPartition::can_read(const OpenFileDescription& fd, size_t offset) const
+bool DiskPartition::can_read() const
 {
-    unsigned adjust = m_metadata.start_block() * block_size();
-    dbgln_if(OFFD_DEBUG, "DiskPartition::can_read offset={}, adjust={}", offset, adjust);
-    return m_device.strong_ref()->can_read(fd, offset + adjust);
+    return true;
 }
 
 KResultOr<size_t> DiskPartition::write(OpenFileDescription& fd, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
@@ -68,11 +66,9 @@ KResultOr<size_t> DiskPartition::write(OpenFileDescription& fd, u64 offset, cons
     return m_device.strong_ref()->write(fd, offset + adjust, inbuf, len);
 }
 
-bool DiskPartition::can_write(const OpenFileDescription& fd, size_t offset) const
+bool DiskPartition::can_write() const
 {
-    unsigned adjust = m_metadata.start_block() * block_size();
-    dbgln_if(OFFD_DEBUG, "DiskPartition::can_write offset={}, adjust={}", offset, adjust);
-    return m_device.strong_ref()->can_write(fd, offset + adjust);
+    return true;
 }
 
 StringView DiskPartition::class_name() const

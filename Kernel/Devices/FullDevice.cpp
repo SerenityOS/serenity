@@ -29,7 +29,7 @@ UNMAP_AFTER_INIT FullDevice::~FullDevice()
 {
 }
 
-bool FullDevice::can_read(const OpenFileDescription&, size_t) const
+bool FullDevice::can_read() const
 {
     return true;
 }

@@ -10,6 +10,7 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/FileSystem/DeviceFile.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Storage/AHCIController.h>
@@ -191,14 +192,16 @@ int StorageManagement::minor_number()
 
 NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
 {
-    auto boot_device_description = boot_block_device();
-    if (!boot_device_description) {
+    if (!boot_block_device()) {
         PANIC("StorageManagement: Couldn't find a suitable device to boot from");
     }
-    auto description_or_error = OpenFileDescription::try_create(boot_device_description.release_nonnull());
-    VERIFY(!description_or_error.is_error());
+    auto boot_file_or_error = DeviceFile::try_create(*boot_block_device());
+    VERIFY(!boot_file_or_error.is_error());
 
-    auto file_system = Ext2FS::try_create(description_or_error.release_value()).release_value();
+    auto boot_description_or_error = OpenFileDescription::try_create(*boot_file_or_error.release_value());
+    VERIFY(!boot_description_or_error.is_error());
+
+    auto file_system = Ext2FS::try_create(boot_description_or_error.release_value()).release_value();
 
     if (auto result = file_system->initialize(); result.is_error()) {
         PANIC("StorageManagement: Couldn't open root filesystem: {}", result);

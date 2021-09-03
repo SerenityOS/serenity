@@ -84,16 +84,16 @@ KResultOr<size_t> SlavePTY::on_tty_write(const UserOrKernelBuffer& data, size_t 
     return m_master->on_slave_write(data, size);
 }
 
-bool SlavePTY::can_write(const OpenFileDescription&, size_t) const
+bool SlavePTY::can_write() const
 {
     return m_master->can_write_from_slave();
 }
 
-bool SlavePTY::can_read(const OpenFileDescription& description, size_t offset) const
+bool SlavePTY::can_read() const
 {
     if (m_master->is_closed())
         return true;
-    return TTY::can_read(description, offset);
+    return TTY::can_read();
 }
 
 KResultOr<size_t> SlavePTY::read(OpenFileDescription& description, u64 offset, UserOrKernelBuffer& buffer, size_t size)

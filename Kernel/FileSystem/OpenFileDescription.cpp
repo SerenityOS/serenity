@@ -275,14 +275,14 @@ const Device* OpenFileDescription::device() const
 {
     if (!is_device())
         return nullptr;
-    return static_cast<const Device*>(m_file.ptr());
+    return m_file->as_device();
 }
 
 Device* OpenFileDescription::device()
 {
     if (!is_device())
         return nullptr;
-    return static_cast<Device*>(m_file.ptr());
+    return m_file->as_device();
 }
 
 bool OpenFileDescription::is_tty() const
@@ -294,14 +294,14 @@ const TTY* OpenFileDescription::tty() const
 {
     if (!is_tty())
         return nullptr;
-    return static_cast<const TTY*>(m_file.ptr());
+    return m_file->as_tty();
 }
 
 TTY* OpenFileDescription::tty()
 {
     if (!is_tty())
         return nullptr;
-    return static_cast<TTY*>(m_file.ptr());
+    return m_file->as_tty();
 }
 
 bool OpenFileDescription::is_inode_watcher() const
@@ -313,14 +313,14 @@ const InodeWatcher* OpenFileDescription::inode_watcher() const
 {
     if (!is_inode_watcher())
         return nullptr;
-    return static_cast<const InodeWatcher*>(m_file.ptr());
+    return m_file->as_inode_watcher();
 }
 
 InodeWatcher* OpenFileDescription::inode_watcher()
 {
     if (!is_inode_watcher())
         return nullptr;
-    return static_cast<InodeWatcher*>(m_file.ptr());
+    return m_file->as_inode_watcher();
 }
 
 bool OpenFileDescription::is_master_pty() const
@@ -332,14 +332,14 @@ const MasterPTY* OpenFileDescription::master_pty() const
 {
     if (!is_master_pty())
         return nullptr;
-    return static_cast<const MasterPTY*>(m_file.ptr());
+    return m_file->as_master_pty();
 }
 
 MasterPTY* OpenFileDescription::master_pty()
 {
     if (!is_master_pty())
         return nullptr;
-    return static_cast<MasterPTY*>(m_file.ptr());
+    return m_file->as_master_pty();
 }
 
 KResult OpenFileDescription::close()

@@ -69,14 +69,14 @@ KResultOr<size_t> MasterPTY::write(OpenFileDescription&, u64, const UserOrKernel
     return size;
 }
 
-bool MasterPTY::can_read(const OpenFileDescription&, size_t) const
+bool MasterPTY::can_read() const
 {
     if (!m_slave)
         return true;
     return !m_buffer->is_empty();
 }
 
-bool MasterPTY::can_write(const OpenFileDescription&, size_t) const
+bool MasterPTY::can_write() const
 {
     return true;
 }
@@ -127,7 +127,7 @@ KResult MasterPTY::ioctl(OpenFileDescription& description, unsigned request, Use
     return EINVAL;
 }
 
-String MasterPTY::absolute_path(const OpenFileDescription&) const
+String MasterPTY::absolute_path() const
 {
     return String::formatted("ptm:{}", m_pts_name);
 }

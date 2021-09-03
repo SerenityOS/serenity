@@ -6,9 +6,14 @@
 
 #include <AK/StringView.h>
 #include <AK/Userspace.h>
+#include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/File.h>
+#include <Kernel/FileSystem/InodeWatcher.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
+#include <Kernel/TTY/MasterPTY.h>
+#include <Kernel/TTY/TTY.h>
 
 namespace Kernel {
 
@@ -37,6 +42,31 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> File::open(int options)
         description.value()->set_file_flags(options);
     }
     return description;
+}
+
+const FIFO* File::as_fifo() const
+{
+    return is_fifo() ? static_cast<const FIFO*>(this) : nullptr;
+}
+FIFO* File::as_fifo()
+{
+    return is_fifo() ? static_cast<FIFO*>(this) : nullptr;
+}
+const Socket* File::as_socket() const
+{
+    return is_socket() ? static_cast<const Socket*>(this) : nullptr;
+}
+Socket* File::as_socket()
+{
+    return is_socket() ? static_cast<Socket*>(this) : nullptr;
+}
+const InodeWatcher* File::as_inode_watcher() const
+{
+    return is_inode_watcher() ? static_cast<const InodeWatcher*>(this) : nullptr;
+}
+InodeWatcher* File::as_inode_watcher()
+{
+    return is_inode_watcher() ? static_cast<InodeWatcher*>(this) : nullptr;
 }
 
 KResult File::close()

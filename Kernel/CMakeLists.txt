@@ -106,6 +106,7 @@ set(KERNEL_SOURCES
     FileSystem/AnonymousFile.cpp
     FileSystem/BlockBasedFileSystem.cpp
     FileSystem/Custody.cpp
+    FileSystem/DeviceFile.cpp
     FileSystem/DevPtsFS.cpp
     FileSystem/DevTmpFS.cpp
     FileSystem/Ext2FileSystem.cpp

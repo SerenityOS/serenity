@@ -62,9 +62,9 @@ private:
 
     virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
     virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
-    virtual bool can_read(const OpenFileDescription&, size_t) const override { return true; }
+    virtual bool can_read() const override { return true; }
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return EINVAL; }
-    virtual bool can_write(const OpenFileDescription&, size_t) const override { return true; }
+    virtual bool can_write() const override { return true; }
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EINVAL; };
     virtual void start_request(AsyncBlockDeviceRequest& request) override { request.complete(AsyncDeviceRequest::Failure); }
 

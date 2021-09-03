@@ -74,7 +74,7 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> KCOVDevice::open(int options)
     kcov_instance->set_state(KCOVInstance::OPENED);
     proc_instance->set(pid, kcov_instance);
 
-    return File::open(options);
+    return Device::open(options);
 }
 
 KResult KCOVDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)

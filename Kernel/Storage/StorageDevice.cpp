@@ -92,9 +92,9 @@ KResultOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKe
     return pos + remaining;
 }
 
-bool StorageDevice::can_read(const OpenFileDescription&, size_t offset) const
+bool StorageDevice::can_read() const
 {
-    return offset < (max_addressable_block() * block_size());
+    return true;
 }
 
 KResultOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
@@ -182,9 +182,9 @@ KResultOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const U
     return pos + remaining;
 }
 
-bool StorageDevice::can_write(const OpenFileDescription&, size_t offset) const
+bool StorageDevice::can_write() const
 {
-    return offset < (max_addressable_block() * block_size());
+    return true;
 }
 
 }

@@ -70,6 +70,14 @@ public:
 //   - Called by mmap() when userspace wants to memory-map this File somewhere.
 //   - Should create a Region in the Process and return it if successful.
 
+class Socket;
+class Device;
+class FIFO;
+class TTY;
+class MasterPTY;
+class BlockDevice;
+class CharacterDevice;
+class InodeWatcher;
 class File
     : public RefCountedBase
     , public Weakable<File> {
@@ -114,6 +122,20 @@ public:
     virtual bool is_socket() const { return false; }
     virtual bool is_inode_watcher() const { return false; }
 
+    virtual const Device* as_device() const { return nullptr; }
+    virtual Device* as_device() { return nullptr; }
+    virtual const TTY* as_tty() const { return nullptr; }
+    virtual TTY* as_tty() { return nullptr; }
+    virtual const MasterPTY* as_master_pty() const { return nullptr; }
+    virtual MasterPTY* as_master_pty() { return nullptr; }
+
+    const FIFO* as_fifo() const;
+    FIFO* as_fifo();
+    const Socket* as_socket() const;
+    Socket* as_socket();
+    const InodeWatcher* as_inode_watcher() const;
+    InodeWatcher* as_inode_watcher();
+
     virtual FileBlockerSet& blocker_set() { return m_blocker_set; }
 
     size_t attach_count() const { return m_attach_count; }
@@ -136,13 +158,13 @@ protected:
         }
     }
 
-private:
-    ALWAYS_INLINE void do_evaluate_block_conditions()
+    virtual void do_evaluate_block_conditions()
     {
         VERIFY(!Processor::current_in_irq());
         blocker_set().unblock_all_blockers_whose_conditions_are_met();
     }
 
+private:
     FileBlockerSet m_blocker_set;
     size_t m_attach_count { 0 };
 };

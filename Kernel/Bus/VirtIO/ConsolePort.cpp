@@ -85,19 +85,19 @@ void ConsolePort::handle_queue_update(Badge<VirtIO::Console>, u16 queue_index)
     }
 }
 
-bool ConsolePort::can_read(const OpenFileDescription&, size_t) const
+bool ConsolePort::can_read() const
 {
     return m_receive_buffer->used_bytes() > 0;
 }
 
-KResultOr<size_t> ConsolePort::read(OpenFileDescription& desc, u64, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> ConsolePort::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (!size)
         return 0;
 
     SpinlockLocker ringbuffer_lock(m_receive_buffer->lock());
 
-    if (!can_read(desc, size))
+    if (!can_read())
         return EAGAIN;
 
     auto bytes_copied_or_error = m_receive_buffer->copy_data_out(size, buffer);
@@ -118,12 +118,12 @@ KResultOr<size_t> ConsolePort::read(OpenFileDescription& desc, u64, UserOrKernel
     return bytes_copied;
 }
 
-bool ConsolePort::can_write(const OpenFileDescription&, size_t) const
+bool ConsolePort::can_write() const
 {
     return m_console.get_queue(m_transmit_queue).has_free_slots() && m_transmit_buffer->has_space();
 }
 
-KResultOr<size_t> ConsolePort::write(OpenFileDescription& desc, u64, const UserOrKernelBuffer& data, size_t size)
+KResultOr<size_t> ConsolePort::write(OpenFileDescription&, u64, const UserOrKernelBuffer& data, size_t size)
 {
     if (!size)
         return 0;
@@ -132,7 +132,7 @@ KResultOr<size_t> ConsolePort::write(OpenFileDescription& desc, u64, const UserO
     auto& queue = m_console.get_queue(m_transmit_queue);
     SpinlockLocker queue_lock(queue.lock());
 
-    if (!can_write(desc, size))
+    if (!can_write())
         return EAGAIN;
 
     QueueChain chain(queue);
@@ -150,7 +150,7 @@ KResultOr<size_t> ConsolePort::write(OpenFileDescription& desc, u64, const UserO
         bool did_add_buffer = chain.add_buffer_to_chain(start_of_chunk, length_of_chunk, BufferType::DeviceReadable);
         VERIFY(did_add_buffer);
         total_bytes_copied += length_of_chunk;
-    } while (total_bytes_copied < size && can_write(desc, size));
+    } while (total_bytes_copied < size && can_write());
 
     m_console.supply_chain_and_notify(m_transmit_queue, chain);
 
@@ -162,7 +162,7 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> ConsolePort::open(int options)
     if (!m_open)
         m_console.send_open_control_message(m_port, true);
 
-    return File::open(options);
+    return Device::open(options);
 }
 
 }

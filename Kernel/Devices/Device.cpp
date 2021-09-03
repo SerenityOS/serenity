@@ -5,11 +5,16 @@
  */
 
 #include <AK/Singleton.h>
+#include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/FileSystem/DeviceFile.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/Sections.h>
+#include <Kernel/TTY/MasterPTY.h>
+#include <Kernel/TTY/TTY.h>
 
 namespace Kernel {
 
@@ -108,6 +113,66 @@ RefPtr<SysFSComponent> SysFSCharacterDevicesDirectory::lookup(StringView name)
     });
 }
 
+bool Device::unref() const
+{
+    if (deref_base())
+        return false;
+    delete this;
+    return true;
+}
+
+KResult Device::ioctl(OpenFileDescription&, unsigned, Userspace<void*>)
+{
+    return ENOTTY;
+}
+
+KResultOr<Memory::Region*> Device::mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64, int, bool)
+{
+    return ENODEV;
+}
+
+KResultOr<NonnullRefPtr<OpenFileDescription>> Device::open(int options)
+{
+    auto device_file = TRY(DeviceFile::try_create(*this));
+    auto description = TRY(OpenFileDescription::try_create(*device_file));
+    description->set_rw_mode(options);
+    description->set_file_flags(options);
+    return description;
+}
+
+const TTY* Device::as_tty() const
+{
+    return is_tty() ? static_cast<const TTY*>(this) : nullptr;
+}
+TTY* Device::as_tty()
+{
+    return is_tty() ? static_cast<TTY*>(this) : nullptr;
+}
+const MasterPTY* Device::as_master_pty() const
+{
+    return is_master_pty() ? static_cast<const MasterPTY*>(this) : nullptr;
+}
+MasterPTY* Device::as_master_pty()
+{
+    return is_master_pty() ? static_cast<MasterPTY*>(this) : nullptr;
+}
+const BlockDevice* Device::as_block_device() const
+{
+    return is_block_device() ? static_cast<const BlockDevice*>(this) : nullptr;
+}
+BlockDevice* Device::as_block_device()
+{
+    return is_block_device() ? static_cast<BlockDevice*>(this) : nullptr;
+}
+const CharacterDevice* Device::as_character_device() const
+{
+    return is_character_device() ? static_cast<const CharacterDevice*>(this) : nullptr;
+}
+CharacterDevice* Device::as_character_device()
+{
+    return is_character_device() ? static_cast<CharacterDevice*>(this) : nullptr;
+}
+
 Device::Device(unsigned major, unsigned minor)
     : m_major(major)
     , m_minor(minor)
@@ -142,16 +207,7 @@ Device::~Device()
 
 String Device::absolute_path() const
 {
-    // FIXME: I assume we can't really provide a well known path in the kernel
-    // because this is a violation of abstraction layers between userland and the
-    // kernel, but maybe the whole name of "absolute_path" is just wrong as this
-    // is really not an "absolute_path".
     return String::formatted("device:{},{}", major(), minor());
-}
-
-String Device::absolute_path(const OpenFileDescription&) const
-{
-    return absolute_path();
 }
 
 void Device::process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncDeviceRequest& completed_request)
@@ -165,7 +221,7 @@ void Device::process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncD
         next_request->do_start(move(lock));
     }
 
-    evaluate_block_conditions();
+    do_evaluate_block_conditions();
 }
 
 }

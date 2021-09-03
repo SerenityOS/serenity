@@ -6,6 +6,7 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
+#include <Kernel/FileSystem/DeviceFile.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/MasterPTY.h>
@@ -48,8 +49,9 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> PTYMultiplexer::open(int options)
 
         auto master_index = freelist.take_last();
         auto master = TRY(MasterPTY::try_create(master_index));
+        auto device_file = TRY(DeviceFile::try_create(*master));
         dbgln_if(PTMX_DEBUG, "PTYMultiplexer::open: Vending master {}", master->index());
-        auto description = TRY(OpenFileDescription::try_create(*master));
+        auto description = TRY(OpenFileDescription::try_create(*device_file));
         description->set_rw_mode(options);
         description->set_file_flags(options);
         return description;
