@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Hunter Salyer <thefalsehonesty@gmail.com>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,6 +24,11 @@ ConsoleWidget::ConsoleWidget()
 
     m_output_view = add<Web::OutOfProcessWebView>();
     m_output_view->load("data:text/html,<html></html>");
+    // Wait until our output WebView is loaded, and then request any messages that occurred before we existed
+    m_output_view->on_load_finish = [this](auto&) {
+        if (on_request_messages)
+            on_request_messages(0);
+    };
 
     auto& bottom_container = add<GUI::Widget>();
     bottom_container.set_layout<GUI::HorizontalBoxLayout>();
@@ -65,13 +71,56 @@ ConsoleWidget::~ConsoleWidget()
 {
 }
 
-void ConsoleWidget::handle_js_console_output(const String& method, const String& line)
+void ConsoleWidget::request_console_messages()
 {
-    if (method == "html") {
-        print_html(line);
-    } else if (method == "clear") {
-        clear_output();
+    VERIFY(!m_waiting_for_messages);
+    VERIFY(on_request_messages);
+    on_request_messages(m_highest_received_message_index + 1);
+    m_waiting_for_messages = true;
+}
+
+void ConsoleWidget::notify_about_new_console_message(i32 message_index)
+{
+    if (message_index <= m_highest_received_message_index) {
+        dbgln("Notified about console message we already have");
+        return;
     }
+    if (message_index <= m_highest_notified_message_index) {
+        dbgln("Notified about console message we're already aware of");
+        return;
+    }
+
+    m_highest_notified_message_index = message_index;
+    if (!m_waiting_for_messages)
+        request_console_messages();
+}
+
+void ConsoleWidget::handle_console_messages(i32 start_index, const Vector<String>& message_types, const Vector<String>& messages)
+{
+    i32 end_index = start_index + message_types.size() - 1;
+    if (end_index <= m_highest_received_message_index) {
+        dbgln("Received old console messages");
+        return;
+    }
+
+    for (size_t i = 0; i < message_types.size(); i++) {
+        auto& type = message_types[i];
+        auto& message = messages[i];
+
+        if (type == "html") {
+            print_html(message);
+        } else if (type == "clear") {
+            clear_output();
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    m_highest_received_message_index = end_index;
+    m_waiting_for_messages = false;
+
+    if (m_highest_received_message_index < m_highest_notified_message_index)
+        request_console_messages();
 }
 
 void ConsoleWidget::print_source_line(const StringView& source)
@@ -97,7 +146,9 @@ void ConsoleWidget::print_html(StringView const& line)
         document.body.appendChild(p);
 )~~~");
     m_output_view->run_javascript(builder.string_view());
-    m_output_view->scroll_to_bottom();
+    // FIXME: Make it scroll to the bottom, using `window.scrollTo()` in the JS above.
+    //        We used to call `m_output_view->scroll_to_bottom();` here, but that does not work because
+    //        it runs synchronously, meaning it happens before the HTML is output via IPC above.
 }
 
 void ConsoleWidget::clear_output()
@@ -105,6 +156,14 @@ void ConsoleWidget::clear_output()
     m_output_view->run_javascript(R"~~~(
         document.body.innerHTML = "";
     )~~~");
+}
+
+void ConsoleWidget::reset()
+{
+    clear_output();
+    m_highest_notified_message_index = -1;
+    m_highest_received_message_index = -1;
+    m_waiting_for_messages = false;
 }
 
 }
