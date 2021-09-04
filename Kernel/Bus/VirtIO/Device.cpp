@@ -47,18 +47,39 @@ UNMAP_AFTER_INIT void detect()
 
 StringView determine_device_class(const PCI::Address& address)
 {
-    auto subsystem_device_id = PCI::get_subsystem_id(address);
-    switch (subsystem_device_id) {
-    case 1:
-        return "VirtIONetAdapter";
-    case 2:
-        return "VirtIOBlockDevice";
-    case 3:
-        return "VirtIOConsole";
-    case 4:
-        return "VirtIORNG";
+    if (PCI::get_revision_id(address) == 0) {
+        // Note: If the device is a legacy (or transitional) device, therefore,
+        // probe the subsystem ID in the PCI header and figure out the
+        auto subsystem_device_id = PCI::get_subsystem_id(address);
+        switch (subsystem_device_id) {
+        case 1:
+            return "VirtIONetAdapter";
+        case 2:
+            return "VirtIOBlockDevice";
+        case 3:
+            return "VirtIOConsole";
+        case 4:
+            return "VirtIORNG";
+        }
+        dbgln("VirtIO: Unknown subsystem_device_id {}", subsystem_device_id);
+        VERIFY_NOT_REACHED();
     }
-    dbgln("VirtIO: Unknown subsystem_device_id {}", subsystem_device_id);
+
+    auto id = PCI::get_id(address);
+    VERIFY(id.vendor_id == PCI::VendorID::VirtIO);
+    switch (id.device_id) {
+    case PCI::DeviceID::VirtIONetAdapter:
+        return "VirtIONetAdapter";
+    case PCI::DeviceID::VirtIOBlockDevice:
+        return "VirtIOBlockDevice";
+    case PCI::DeviceID::VirtIOConsole:
+        return "VirtIOConsole";
+    case PCI::DeviceID::VirtIOEntropy:
+        return "VirtIORNG";
+    case PCI::DeviceID::VirtIOGPU:
+        return "VirtIOGPU";
+    }
+    dbgln("VirtIO: Unknown device_id {}", id.vendor_id);
     VERIFY_NOT_REACHED();
 }
 
