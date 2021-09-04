@@ -54,6 +54,8 @@ public:
     {
     }
 
+    explicit RegexStringView(String&&) = delete;
+
     StringView const& string_view() const
     {
         return m_view.get<StringView>();
