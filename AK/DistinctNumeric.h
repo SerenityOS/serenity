@@ -270,10 +270,10 @@ private:
 };
 
 template<typename T, typename X, bool Incr, bool Cmp, bool Bool, bool Flags, bool Shift, bool Arith>
-struct Formatter<DistinctNumeric<T, X, Incr, Cmp, Bool, Flags, Shift, Arith>> : Formatter<FormatString> {
+struct Formatter<DistinctNumeric<T, X, Incr, Cmp, Bool, Flags, Shift, Arith>> : Formatter<T> {
     void format(FormatBuilder& builder, DistinctNumeric<T, X, Incr, Cmp, Bool, Flags, Shift, Arith> value)
     {
-        return Formatter<FormatString>::format(builder, "{}", value.value());
+        return Formatter<T>::format(builder, value.value());
     }
 };
 
