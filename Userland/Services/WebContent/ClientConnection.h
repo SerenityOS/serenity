@@ -55,7 +55,6 @@ private:
     virtual Messages::WebContentServer::InspectDomNodeResponse inspect_dom_node(i32) override;
     virtual Messages::WebContentServer::GetHoveredNodeIdResponse get_hovered_node_id() override;
 
-    virtual void js_console_initialize() override;
     virtual void js_console_input(String const&) override;
     virtual void run_javascript(String const&) override;
     virtual void js_console_request_messages(i32) override;
