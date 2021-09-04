@@ -100,11 +100,11 @@ RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address,
         auto receive_buffer = create_receive_buffer();
         if (!receive_buffer)
             return {};
-        auto result = TCPSocket::create(protocol(), receive_buffer.release_nonnull());
-        if (result.is_error())
+        auto client_or_error = TCPSocket::try_create(protocol(), receive_buffer.release_nonnull());
+        if (client_or_error.is_error())
             return {};
 
-        auto client = result.release_value();
+        auto client = client_or_error.release_value();
         client->set_setup_state(SetupState::InProgress);
         client->set_local_address(new_local_address);
         client->set_local_port(new_local_port);
@@ -152,17 +152,14 @@ TCPSocket::~TCPSocket()
     dbgln_if(TCP_SOCKET_DEBUG, "~TCPSocket in state {}", to_string(state()));
 }
 
-KResultOr<NonnullRefPtr<TCPSocket>> TCPSocket::create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
+KResultOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
 {
     // Note: Scratch buffer is only used for SOCK_STREAM sockets.
     auto scratch_buffer = KBuffer::try_create_with_size(65536);
     if (!scratch_buffer)
         return ENOMEM;
 
-    auto socket = adopt_ref_if_nonnull(new (nothrow) TCPSocket(protocol, move(receive_buffer), move(scratch_buffer)));
-    if (socket)
-        return socket.release_nonnull();
-    return ENOMEM;
+    return adopt_nonnull_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(receive_buffer), move(scratch_buffer)));
 }
 
 KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)

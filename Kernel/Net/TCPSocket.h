@@ -19,7 +19,7 @@ namespace Kernel {
 class TCPSocket final : public IPv4Socket {
 public:
     static void for_each(Function<void(const TCPSocket&)>);
-    static KResultOr<NonnullRefPtr<TCPSocket>> create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
+    static KResultOr<NonnullRefPtr<TCPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~TCPSocket() override;
 
     enum class Direction {
