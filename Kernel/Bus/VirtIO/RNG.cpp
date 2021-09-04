@@ -14,9 +14,9 @@ UNMAP_AFTER_INIT NonnullRefPtr<RNG> RNG::must_create(PCI::Address address)
     return adopt_ref_if_nonnull(new RNG(address)).release_nonnull();
 }
 
-UNMAP_AFTER_INIT RNG::RNG(PCI::Address address)
-    : VirtIO::Device(address)
+UNMAP_AFTER_INIT void RNG::initialize()
 {
+    Device::initialize();
     bool success = negotiate_features([&](auto) {
         return 0;
     });
@@ -33,9 +33,14 @@ UNMAP_AFTER_INIT RNG::RNG(PCI::Address address)
     }
 }
 
+UNMAP_AFTER_INIT RNG::RNG(PCI::Address address)
+    : VirtIO::Device(address)
+{
+}
+
 bool RNG::handle_device_config_change()
 {
-    VERIFY_NOT_REACHED(); // Device has no config
+    return false; // Device has no config
 }
 
 void RNG::handle_queue_update(u16 queue_index)

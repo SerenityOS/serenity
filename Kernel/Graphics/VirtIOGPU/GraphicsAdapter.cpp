@@ -22,6 +22,7 @@ GraphicsAdapter::GraphicsAdapter(PCI::Address base_address)
     : PCI::Device(base_address)
 {
     m_gpu_device = adopt_ref(*new GPU(base_address)).leak_ref();
+    m_gpu_device->initialize();
 }
 
 void GraphicsAdapter::initialize_framebuffer_devices()

@@ -28,6 +28,8 @@ public:
         return m_device_id;
     }
 
+    virtual void initialize() override;
+
 private:
     virtual StringView class_name() const override { return "VirtIOConsole"; }
     explicit Console(PCI::Address);

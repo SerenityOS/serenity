@@ -23,6 +23,8 @@ public:
     virtual StringView purpose() const override { return class_name(); }
     virtual ~RNG() override = default;
 
+    virtual void initialize() override;
+
 private:
     virtual StringView class_name() const override { return "VirtIOConsole"; }
     explicit RNG(PCI::Address);

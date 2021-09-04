@@ -57,6 +57,8 @@ public:
         return IterationDecision::Continue;
     }
 
+    virtual void initialize() override;
+
     RefPtr<Console> default_console()
     {
         if (m_default_scanout.has_value())
