@@ -48,11 +48,3 @@ private:
 };
 
 }
-
-template<>
-struct AK::Formatter<Kernel::BlockBasedFileSystem::BlockIndex> : AK::Formatter<FormatString> {
-    void format(FormatBuilder& builder, Kernel::BlockBasedFileSystem::BlockIndex value)
-    {
-        return AK::Formatter<FormatString>::format(builder, "{}", value.value());
-    }
-};
