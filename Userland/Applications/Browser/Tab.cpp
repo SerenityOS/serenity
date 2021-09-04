@@ -180,7 +180,7 @@ Tab::Tab(BrowserWindow& window)
             m_dom_inspector_widget->clear_dom_json();
 
         if (m_console_widget)
-            m_console_widget->clear_output();
+            m_console_widget->reset();
     };
 
     hooks().on_load_finish = [this](auto&) {
@@ -301,9 +301,14 @@ Tab::Tab(BrowserWindow& window)
         m_dom_inspector_widget->set_dom_node_properties_json(node_id, specified, computed);
     };
 
-    hooks().on_js_console_output = [this](auto& method, auto& line) {
+    hooks().on_js_console_new_message = [this](auto message_index) {
         if (m_console_widget)
-            m_console_widget->handle_js_console_output(method, line);
+            m_console_widget->notify_about_new_console_message(message_index);
+    };
+
+    hooks().on_get_js_console_messages = [this](auto start_index, auto& message_types, auto& messages) {
+        if (m_console_widget)
+            m_console_widget->handle_console_messages(start_index, message_types, messages);
     };
 
     auto focus_location_box_action = GUI::Action::create(
@@ -519,6 +524,9 @@ void Tab::show_console_window()
         m_console_widget = console_window->set_main_widget<ConsoleWidget>();
         m_console_widget->on_js_input = [this](String const& js_source) {
             m_web_content_view->js_console_input(js_source);
+        };
+        m_console_widget->on_request_messages = [this](i32 start_index) {
+            m_web_content_view->js_console_request_messages(start_index);
         };
         m_web_content_view->js_console_initialize();
     }
