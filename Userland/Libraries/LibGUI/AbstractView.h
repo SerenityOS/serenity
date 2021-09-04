@@ -162,7 +162,7 @@ protected:
     void activate_selected();
     void update_edit_widget_position();
 
-    bool is_searching() const { return !m_searching.is_null(); }
+    bool is_searching() const { return !m_highlighted_search.is_null(); }
     void cancel_searching();
     void start_searching_timer();
     void do_search(String&&);
@@ -192,7 +192,7 @@ private:
 
     RefPtr<Model> m_model;
     ModelSelection m_selection;
-    String m_searching;
+    String m_highlighted_search;
     RefPtr<Core::Timer> m_searching_timer;
     SelectionBehavior m_selection_behavior { SelectionBehavior::SelectItems };
     SelectionMode m_selection_mode { SelectionMode::SingleSelection };
