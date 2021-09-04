@@ -302,6 +302,8 @@ struct Formatter<StringView> : StandardFormatter {
     }
 
     void format(FormatBuilder&, StringView value);
+
+    void check_options() const;
 };
 
 template<typename T>

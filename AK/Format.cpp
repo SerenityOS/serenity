@@ -588,7 +588,7 @@ void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& pars
     VERIFY(parser.is_eof());
 }
 
-void Formatter<StringView>::format(FormatBuilder& builder, StringView value)
+void Formatter<StringView>::check_options() const
 {
     if (m_sign_mode != FormatBuilder::SignMode::Default)
         VERIFY_NOT_REACHED();
@@ -598,7 +598,11 @@ void Formatter<StringView>::format(FormatBuilder& builder, StringView value)
         VERIFY_NOT_REACHED();
     if (m_mode != Mode::Default && m_mode != Mode::String && m_mode != Mode::Character && m_mode != Mode::HexDump)
         VERIFY_NOT_REACHED();
+}
 
+void Formatter<StringView>::format(FormatBuilder& builder, StringView value)
+{
+    check_options();
     m_width = m_width.value_or(0);
     m_precision = m_precision.value_or(NumericLimits<size_t>::max());
 
@@ -610,7 +614,18 @@ void Formatter<StringView>::format(FormatBuilder& builder, StringView value)
 
 void Formatter<FormatString>::vformat(FormatBuilder& builder, StringView fmtstr, TypeErasedFormatParams& params)
 {
-    return Formatter<String>::format(builder, String::vformatted(fmtstr, params));
+    check_options();
+    // In most cases, we don't specify any special formatting options, so the value can be constructed
+    // straight into the final output; no heap allocation is required.
+    if ((m_mode == Mode::Default || m_mode == Mode::String) && !m_width.has_value() && !m_precision.has_value()) [[likely]] {
+        FormatParser parser { fmtstr };
+        vformat_impl(params, builder, parser);
+    } else {
+        // Constructing into a StringBuilder lets us avoid the overhead of constructing a StringImpl.
+        StringBuilder inner_string_builder;
+        AK::vformat(inner_string_builder, fmtstr, params);
+        return Formatter<String>::format(builder, inner_string_builder.string_view());
+    }
 }
 
 template<typename T>
