@@ -7,6 +7,7 @@
 #include "BucketTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
+#include <AK/HashTable.h>
 #include <AK/Queue.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
@@ -47,8 +48,12 @@ static void flood_fill(Gfx::Bitmap& bitmap, Gfx::IntPoint const& start_position,
 
     Queue<Gfx::IntPoint> queue;
     queue.enqueue(start_position);
+    HashTable<Gfx::IntPoint> visited;
     while (!queue.is_empty()) {
         auto position = queue.dequeue();
+        if (visited.contains(position))
+            continue;
+        visited.set(position);
 
         auto pixel_color = bitmap.get_pixel<Gfx::StorageFormat::BGRA8888>(position.x(), position.y());
         if (color_distance_squared(pixel_color, target_color) > threshold_normalized_squared)
