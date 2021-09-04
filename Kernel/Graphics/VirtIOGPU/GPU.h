@@ -34,13 +34,14 @@ class FrameBufferDevice;
 TYPEDEF_DISTINCT_ORDERED_ID(u32, ResourceID);
 TYPEDEF_DISTINCT_ORDERED_ID(u32, ScanoutID);
 
+class GraphicsAdapter;
 class GPU final
     : public VirtIO::Device
     , public RefCounted<GPU> {
     friend class FrameBufferDevice;
 
 public:
-    GPU(PCI::Address);
+    static RefPtr<GPU> try_create(Badge<GraphicsAdapter>, PCI::Address address);
     virtual ~GPU() override;
 
     void create_framebuffer_devices();
@@ -57,7 +58,7 @@ public:
         return IterationDecision::Continue;
     }
 
-    virtual void initialize() override;
+    virtual bool initialize() override;
 
     RefPtr<Console> default_console()
     {
@@ -79,6 +80,7 @@ public:
     void flush_dirty_rectangle(ScanoutID, Protocol::Rect const& dirty_rect, ResourceID);
 
 private:
+    explicit GPU(PCI::Address);
     virtual StringView class_name() const override { return "VirtIOGPU"; }
 
     struct Scanout {

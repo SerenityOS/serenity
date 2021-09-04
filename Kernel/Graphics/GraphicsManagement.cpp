@@ -91,7 +91,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
         break;
     case PCI::VendorID::VirtIO:
         dmesgln("Graphics: Using VirtIO console");
-        adapter = Graphics::VirtIOGPU::GraphicsAdapter::initialize(address);
+        adapter = Graphics::VirtIOGPU::GraphicsAdapter::try_initialize(address);
         break;
     default:
         if (!is_vga_compatible_pci_device(address))

@@ -15,10 +15,13 @@
 
 namespace Kernel::Graphics::VirtIOGPU {
 
-void GPU::initialize()
+bool GPU::initialize()
 {
-    Device::initialize();
-    VERIFY(!!m_scratch_space);
+    if (auto result = Device::initialize(); !result)
+        return false;
+    m_scratch_space = MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Memory::Region::Access::ReadWrite);
+    if (!m_scratch_space)
+        return false;
     if (auto cfg = get_config(VirtIO::ConfigurationType::Device)) {
         m_device_configuration = cfg;
         bool success = negotiate_features([&](u64 supported_features) {
@@ -29,6 +32,8 @@ void GPU::initialize()
                 dbgln_if(VIRTIO_DEBUG, "GPU: EDID is not yet supported!");
             return negotiated;
         });
+        // FIXME: Return false if success is false, but don't forget to
+        // indicate failure within the appropriate VirtIO mechanism for this.
         if (success) {
             read_config_atomic([&]() {
                 m_num_scanouts = config_read32(*cfg, DEVICE_NUM_SCANOUTS);
@@ -44,6 +49,17 @@ void GPU::initialize()
     } else {
         VERIFY_NOT_REACHED();
     }
+    return true;
+}
+
+UNMAP_AFTER_INIT RefPtr<GPU> GPU::try_create(Badge<VirtIOGPU::GraphicsAdapter>, PCI::Address address)
+{
+    auto gpu_device = adopt_ref_if_nonnull(new GPU(address));
+    if (!gpu_device)
+        return {};
+    if (!gpu_device->initialize())
+        return {};
+    return gpu_device;
 }
 
 GPU::GPU(PCI::Address address)

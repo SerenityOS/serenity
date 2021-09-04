@@ -13,14 +13,20 @@ namespace Kernel::VirtIO {
 
 unsigned Console::next_device_id = 0;
 
-UNMAP_AFTER_INIT NonnullRefPtr<Console> Console::must_create(PCI::Address address)
+UNMAP_AFTER_INIT RefPtr<Console> Console::try_create(PCI::Address address)
 {
-    return adopt_ref_if_nonnull(new Console(address)).release_nonnull();
+    auto console = adopt_ref_if_nonnull(new Console(address));
+    if (!console)
+        return {};
+    if (!console->initialize())
+        return {};
+    return console;
 }
 
-UNMAP_AFTER_INIT void Console::initialize()
+UNMAP_AFTER_INIT bool Console::initialize()
 {
-    Device::initialize();
+    if (auto result = Device::initialize(); !result)
+        return false;
     if (auto cfg = get_config(ConfigurationType::Device)) {
         bool success = negotiate_features([&](u64 supported_features) {
             u64 negotiated = 0;
@@ -59,6 +65,7 @@ UNMAP_AFTER_INIT void Console::initialize()
             }
         }
     }
+    return true;
 }
 
 UNMAP_AFTER_INIT Console::Console(PCI::Address address)

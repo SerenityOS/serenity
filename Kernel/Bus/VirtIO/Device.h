@@ -90,7 +90,7 @@ class Device
 public:
     virtual ~Device() override = default;
 
-    virtual void initialize();
+    virtual bool initialize();
 
 protected:
     virtual StringView class_name() const { return "VirtIO::Device"; }

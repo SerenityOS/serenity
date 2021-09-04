@@ -19,11 +19,11 @@ class RNG final
     : public RefCounted<RNG>
     , public VirtIO::Device {
 public:
-    static NonnullRefPtr<RNG> must_create(PCI::Address address);
+    static RefPtr<RNG> try_create(PCI::Address address);
     virtual StringView purpose() const override { return class_name(); }
     virtual ~RNG() override = default;
 
-    virtual void initialize() override;
+    virtual bool initialize() override;
 
 private:
     virtual StringView class_name() const override { return "VirtIOConsole"; }
