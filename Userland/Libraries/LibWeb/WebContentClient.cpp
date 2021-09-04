@@ -151,6 +151,16 @@ void WebContentClient::did_js_console_output(String const& method, String const&
     m_view.notify_server_did_js_console_output(method, line);
 }
 
+void WebContentClient::did_output_js_console_message(i32 message_index)
+{
+    m_view.notify_server_did_output_js_console_message(message_index);
+}
+
+void WebContentClient::did_get_js_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages)
+{
+    m_view.notify_server_did_get_js_console_messages(start_index, message_types, messages);
+}
+
 void WebContentClient::did_request_alert(String const& message)
 {
     m_view.notify_server_did_request_alert({}, message);
