@@ -76,7 +76,7 @@ Font& FontDatabase::default_fixed_width_font()
 }
 
 struct FontDatabase::Private {
-    HashMap<String, RefPtr<Gfx::Font>> full_name_to_font_map;
+    HashMap<String, NonnullRefPtr<Gfx::Font>> full_name_to_font_map;
     Vector<RefPtr<Typeface>> typefaces;
 };
 
@@ -93,7 +93,7 @@ FontDatabase::FontDatabase()
 
         if (path.ends_with(".font"sv)) {
             if (auto font = Gfx::BitmapFont::load_from_file(path)) {
-                m_private->full_name_to_font_map.set(font->qualified_name(), font);
+                m_private->full_name_to_font_map.set(font->qualified_name(), *font);
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
                 typeface->add_bitmap_font(font);
             }
