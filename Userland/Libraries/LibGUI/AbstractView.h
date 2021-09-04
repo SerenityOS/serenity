@@ -162,7 +162,6 @@ protected:
     void activate_selected();
     void update_edit_widget_position();
 
-    bool is_searching() const { return !m_highlighted_search.is_null(); }
     void stop_highlighted_search_timer();
     void start_highlighted_search_timer();
     void do_search(String&&);

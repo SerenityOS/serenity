@@ -562,7 +562,7 @@ void AbstractView::keydown_event(KeyEvent& event)
 
     if (is_searchable()) {
         if (event.key() == KeyCode::Key_Backspace) {
-            if (is_searching()) {
+            if (!m_highlighted_search.is_null()) {
                 //if (event.modifiers() == Mod_Ctrl) {
                 // TODO: delete last word
                 //}
@@ -587,7 +587,7 @@ void AbstractView::keydown_event(KeyEvent& event)
                 return;
             }
         } else if (event.key() == KeyCode::Key_Escape) {
-            if (is_searching()) {
+            if (!m_highlighted_search.is_null()) {
                 stop_highlighted_search_timer();
 
                 event.accept();
