@@ -47,10 +47,10 @@ KResultOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
         return ENOMEM;
 
     if (type == SOCK_STREAM) {
-        auto tcp_socket = TCPSocket::create(protocol, receive_buffer.release_nonnull());
-        if (tcp_socket.is_error())
-            return tcp_socket.error();
-        return tcp_socket.release_value();
+        auto tcp_socket_or_error = TCPSocket::try_create(protocol, receive_buffer.release_nonnull());
+        if (tcp_socket_or_error.is_error())
+            return tcp_socket_or_error.error();
+        return tcp_socket_or_error.release_value();
     }
     if (type == SOCK_DGRAM) {
         auto udp_socket = UDPSocket::create(protocol, receive_buffer.release_nonnull());
