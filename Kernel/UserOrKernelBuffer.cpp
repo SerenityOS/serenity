@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,21 +13,6 @@ namespace Kernel {
 bool UserOrKernelBuffer::is_kernel_buffer() const
 {
     return !Memory::is_user_address(VirtualAddress(m_buffer));
-}
-
-String UserOrKernelBuffer::copy_into_string(size_t size) const
-{
-    if (!m_buffer)
-        return {};
-    if (Memory::is_user_address(VirtualAddress(m_buffer))) {
-        char* buffer;
-        auto data_copy = StringImpl::create_uninitialized(size, buffer);
-        if (!copy_from_user(buffer, m_buffer, size))
-            return {};
-        return data_copy;
-    }
-
-    return String(ReadonlyBytes { m_buffer, size });
 }
 
 KResultOr<NonnullOwnPtr<KString>> UserOrKernelBuffer::try_copy_into_kstring(size_t size) const
