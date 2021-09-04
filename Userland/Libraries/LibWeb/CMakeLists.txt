@@ -231,6 +231,9 @@ set(SOURCES
     WebAssembly/WebAssemblyModuleConstructor.cpp
     WebAssembly/WebAssemblyModuleObject.cpp
     WebAssembly/WebAssemblyObject.cpp
+    WebAssembly/WebAssemblyTableConstructor.cpp
+    WebAssembly/WebAssemblyTableObject.cpp
+    WebAssembly/WebAssemblyTablePrototype.cpp
     WebContentClient.cpp
     XHR/EventNames.cpp
     XHR/XMLHttpRequest.cpp

@@ -9,6 +9,8 @@
 #include "WebAssemblyModuleConstructor.h"
 #include "WebAssemblyModuleObject.h"
 #include "WebAssemblyModulePrototype.h"
+#include "WebAssemblyTableObject.h"
+#include "WebAssemblyTablePrototype.h"
 #include <AK/ScopeGuard.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
@@ -57,6 +59,12 @@ void WebAssemblyObject::initialize(JS::GlobalObject& global_object)
     auto& module_prototype = window.ensure_web_prototype<WebAssemblyModulePrototype>("WebAssemblyModulePrototype");
     module_prototype.define_direct_property(vm.names.constructor, &module_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
     define_direct_property("Module", &module_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
+
+    auto& table_constructor = window.ensure_web_constructor<WebAssemblyTableConstructor>("WebAssembly.Table");
+    table_constructor.define_direct_property(vm.names.name, js_string(vm, "WebAssembly.Table"), JS::Attribute::Configurable);
+    auto& table_prototype = window.ensure_web_prototype<WebAssemblyTablePrototype>("WebAssemblyTablePrototype");
+    table_prototype.define_direct_property(vm.names.constructor, &table_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
+    define_direct_property("Table", &table_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 }
 
 NonnullOwnPtrVector<WebAssemblyObject::CompiledWebAssemblyModule> WebAssemblyObject::s_compiled_modules;
@@ -249,6 +257,15 @@ Result<size_t, JS::Value> WebAssemblyObject::instantiate_module(Wasm::Module con
                     auto address = static_cast<WebAssemblyMemoryObject const&>(import_.as_object()).address();
                     resolved_imports.set(import_name, Wasm::ExternValue { address });
                 },
+                [&](Wasm::TableType const&) {
+                    if (!import_.is_object() || !is<WebAssemblyTableObject>(import_.as_object())) {
+                        // FIXME: Throw a LinkError instead
+                        vm.throw_exception<JS::TypeError>(global_object, "LinkError: Expected an instance of WebAssembly.Table for a table import");
+                        return;
+                    }
+                    auto address = static_cast<WebAssemblyTableObject const&>(import_.as_object()).address();
+                    resolved_imports.set(import_name, Wasm::ExternValue { address });
+                },
                 [&](const auto&) {
                     // FIXME: Implement these.
                     dbgln("Unimplemented import of non-function attempted");
@@ -399,8 +416,22 @@ Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueTyp
         return Wasm::Value { static_cast<float>(number) };
     }
     case Wasm::ValueType::FunctionReference:
+    case Wasm::ValueType::NullFunctionReference: {
+        if (value.is_null())
+            return Wasm::Value { Wasm::ValueType(Wasm::ValueType::NullExternReference), 0ull };
+
+        if (value.is_function()) {
+            auto& function = value.as_function();
+            for (auto& entry : WebAssemblyObject::s_global_cache.function_instances) {
+                if (entry.value == &function)
+                    return Wasm::Value { Wasm::Reference { Wasm::Reference::Func { entry.key } } };
+            }
+        }
+
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAn, "Exported function");
+        return {};
+    }
     case Wasm::ValueType::ExternReference:
-    case Wasm::ValueType::NullFunctionReference:
     case Wasm::ValueType::NullExternReference:
         TODO();
     }
