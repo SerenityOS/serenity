@@ -301,6 +301,23 @@ public:
     auto& elements() { return m_elements; }
     auto& type() const { return m_type; }
 
+    bool grow(size_t size_to_grow, Reference const& fill_value)
+    {
+        if (size_to_grow == 0)
+            return true;
+        auto new_size = m_elements.size() + size_to_grow;
+        if (auto max = m_type.limits().max(); max.has_value()) {
+            if (max.value() < new_size)
+                return false;
+        }
+        auto previous_size = m_elements.size();
+        if (!m_elements.try_resize(new_size))
+            return false;
+        for (size_t i = previous_size; i < m_elements.size(); ++i)
+            m_elements[i] = fill_value;
+        return true;
+    }
+
 private:
     Vector<Optional<Reference>> m_elements;
     TableType const& m_type;
