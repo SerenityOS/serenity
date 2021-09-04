@@ -12,11 +12,16 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/File.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 
 namespace Kernel {
+
+struct SysFSInodeData : public FileDescriptionData {
+    OwnPtr<KBuffer> buffer;
+};
 
 class SysFSComponent : public RefCounted<SysFSComponent> {
 public:
@@ -25,6 +30,7 @@ public:
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
     virtual RefPtr<SysFSComponent> lookup(StringView) { VERIFY_NOT_REACHED(); };
     virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, FileDescription*) { return EROFS; }
+    virtual KResult refresh_data(FileDescription&) const { return KSuccess; }
 
     virtual NonnullRefPtr<SysFSInode> to_inode(SysFS const&) const;
 

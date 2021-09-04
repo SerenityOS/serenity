@@ -23,9 +23,9 @@ SysFSUSBDeviceInformation::~SysFSUSBDeviceInformation()
 {
 }
 
-KResultOr<size_t> SysFSUSBDeviceInformation::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription*) const
+bool SysFSUSBDeviceInformation::output(KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
+    VERIFY(m_lock.is_locked());
     JsonArraySerializer array { builder };
 
     auto obj = array.add_object();
@@ -44,14 +44,54 @@ KResultOr<size_t> SysFSUSBDeviceInformation::read_bytes(off_t offset, size_t cou
     obj.add("num_configurations", m_device->device_descriptor().num_configurations);
     obj.finish();
     array.finish();
+    return true;
+}
 
-    auto data = builder.build();
-    if (!data)
+KResult SysFSUSBDeviceInformation::refresh_data(FileDescription& description) const
+{
+    MutexLocker lock(m_lock);
+    auto& cached_data = description.data();
+    if (!cached_data) {
+        cached_data = adopt_own_if_nonnull(new (nothrow) SysFSInodeData);
+        if (!cached_data)
+            return ENOMEM;
+    }
+    KBufferBuilder builder;
+    if (!const_cast<SysFSUSBDeviceInformation&>(*this).output(builder))
+        return ENOENT;
+    auto& typed_cached_data = static_cast<SysFSInodeData&>(*cached_data);
+    typed_cached_data.buffer = builder.build();
+    if (!typed_cached_data.buffer)
         return ENOMEM;
+    return KSuccess;
+}
 
-    ssize_t nread = min(static_cast<off_t>(data->size() - offset), static_cast<off_t>(count));
-    if (!buffer.write(data->data() + offset, nread))
-        return EFAULT;
+KResultOr<size_t> SysFSUSBDeviceInformation::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
+{
+    dbgln_if(PROCFS_DEBUG, "SysFSUSBDeviceInformation @ {}: read_bytes offset: {} count: {}", name(), offset, count);
+
+    VERIFY(offset >= 0);
+    VERIFY(buffer.user_or_kernel_ptr());
+
+    if (!description)
+        return KResult(EIO);
+
+    MutexLocker locker(m_lock);
+
+    if (!description->data()) {
+        dbgln("SysFSUSBDeviceInformation: Do not have cached data!");
+        return KResult(EIO);
+    }
+
+    auto& typed_cached_data = static_cast<SysFSInodeData&>(*description->data());
+    auto& data_buffer = typed_cached_data.buffer;
+
+    if (!data_buffer || (size_t)offset >= data_buffer->size())
+        return 0;
+
+    ssize_t nread = min(static_cast<off_t>(data_buffer->size() - offset), static_cast<off_t>(count));
+    if (!buffer.write(data_buffer->data() + offset, nread))
+        return KResult(EFAULT);
 
     return nread;
 }

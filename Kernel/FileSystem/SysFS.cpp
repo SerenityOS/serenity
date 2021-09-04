@@ -96,6 +96,22 @@ SysFSInode::SysFSInode(SysFS const& fs, SysFSComponent const& component)
 {
 }
 
+void SysFSInode::did_seek(FileDescription& description, off_t new_offset)
+{
+    if (new_offset != 0)
+        return;
+    auto result = m_associated_component->refresh_data(description);
+    if (result.is_error()) {
+        // Subsequent calls to read will return EIO!
+        dbgln("SysFS: Could not refresh contents: {}", result.error());
+    }
+}
+
+KResult SysFSInode::attach(FileDescription& description)
+{
+    return m_associated_component->refresh_data(description);
+}
+
 KResultOr<size_t> SysFSInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* fd) const
 {
     return m_associated_component->read_bytes(offset, count, buffer, fd);

@@ -8,6 +8,8 @@
 
 #include <Kernel/Bus/USB/USBDevice.h>
 #include <Kernel/FileSystem/SysFS.h>
+#include <Kernel/KBufferBuilder.h>
+#include <Kernel/Locking/Mutex.h>
 
 namespace Kernel::USB {
 
@@ -29,6 +31,11 @@ protected:
     IntrusiveListNode<SysFSUSBDeviceInformation, RefPtr<SysFSUSBDeviceInformation>> m_list_node;
 
     NonnullRefPtr<USB::Device> m_device;
+
+private:
+    bool output(KBufferBuilder& builder);
+    virtual KResult refresh_data(FileDescription& description) const override;
+    mutable Mutex m_lock { "SysFSUSBDeviceInformation" };
 };
 
 class SysFSUSBBusDirectory final : public SysFSDirectory {
