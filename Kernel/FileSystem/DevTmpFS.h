@@ -26,6 +26,8 @@ public:
     virtual StringView class_name() const override { return "DevTmpFS"sv; }
     virtual Inode& root_inode() override;
 
+    virtual bool supports_watchers() const override { return true; }
+
 private:
     DevTmpFS();
     size_t allocate_inode_index();

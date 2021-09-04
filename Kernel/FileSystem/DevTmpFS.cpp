@@ -242,7 +242,9 @@ KResult DevTmpFSDirectoryInode::remove_child(const StringView& name)
     MutexLocker locker(m_inode_lock);
     for (auto& node : m_nodes) {
         if (node.name() == name) {
+            InodeIdentifier child_id = node.identifier();
             m_nodes.remove(node);
+            did_remove_child(child_id, name);
             return KSuccess;
         }
     }
@@ -263,6 +265,7 @@ KResultOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView 
         auto name_kstring = TRY(KString::try_create(name));
         auto new_directory_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFSDirectoryInode(fs(), move(name_kstring))));
         m_nodes.append(*new_directory_inode);
+        did_add_child(new_directory_inode->identifier(), name);
         return new_directory_inode;
     }
     if (metadata.is_device()) {
@@ -272,6 +275,7 @@ KResultOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView 
         auto new_device_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFSDeviceInode(fs(), major, minor, is_block_device(mode), move(name_kstring))));
         TRY(new_device_inode->chmod(mode));
         m_nodes.append(*new_device_inode);
+        did_add_child(new_device_inode->identifier(), name);
         return new_device_inode;
     }
     if (metadata.is_symlink()) {
@@ -279,6 +283,7 @@ KResultOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView 
         auto new_link_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFSLinkInode(fs(), move(name_kstring))));
         TRY(new_link_inode->chmod(mode));
         m_nodes.append(*new_link_inode);
+        did_add_child(new_link_inode->identifier(), name);
         return new_link_inode;
     }
     return EROFS;
