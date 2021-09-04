@@ -782,13 +782,14 @@ KResultOr<size_t> Plan9FSInode::write_bytes(off_t offset, size_t size, const Use
 
     size = fs().adjust_buffer_size(size);
 
-    auto data_copy = data.copy_into_string(size); // FIXME: this seems ugly
-    if (data_copy.is_null())
-        return EFAULT;
+    auto data_copy_or_error = data.try_copy_into_kstring(size); // FIXME: this seems ugly
+    if (data_copy_or_error.is_error())
+        return data_copy_or_error.error();
+    auto data_copy = data_copy_or_error.release_value();
 
     Plan9FS::Message message { fs(), Plan9FS::Message::Type::Twrite };
     message << fid() << (u64)offset;
-    message.append_data(data_copy);
+    message.append_data(data_copy->view());
     result = fs().post_message_and_wait_for_a_reply(message);
     if (result.is_error())
         return result.error();
