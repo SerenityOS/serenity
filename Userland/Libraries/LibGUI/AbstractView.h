@@ -164,7 +164,8 @@ protected:
 
     void stop_highlighted_search_timer();
     void start_highlighted_search_timer();
-    void do_search(String&&);
+    ModelIndex find_next_search_match(StringView const);
+    void highlight_search(ModelIndex const index);
 
     ModelIndex drop_candidate_index() const { return m_drop_candidate_index; }
 
