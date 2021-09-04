@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/DisplayNames.h>
@@ -28,6 +29,10 @@ void DisplayNamesConstructor::initialize(GlobalObject& global_object)
 
     // 12.3.1 Intl.DisplayNames.prototype, https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype
     define_direct_property(vm.names.prototype, global_object.intl_display_names_prototype(), 0);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
+
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 }
 
@@ -123,6 +128,24 @@ Value DisplayNamesConstructor::construct(FunctionObject& new_target)
 
     // 28. Return displayNames.
     return display_names;
+}
+
+// 12.3.2 Intl.DisplayNames.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.supportedLocalesOf
+JS_DEFINE_NATIVE_FUNCTION(DisplayNamesConstructor::supported_locales_of)
+{
+    auto locales = vm.argument(0);
+    auto options = vm.argument(1);
+
+    // 1. Let availableLocales be %DisplayNames%.[[AvailableLocales]].
+    // No-op, availability of each requested locale is checked via Unicode::is_locale_available()
+
+    // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
+    auto requested_locales = canonicalize_locale_list(global_object, locales);
+    if (vm.exception())
+        return {};
+
+    // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
+    return supported_locales(global_object, requested_locales, options);
 }
 
 }
