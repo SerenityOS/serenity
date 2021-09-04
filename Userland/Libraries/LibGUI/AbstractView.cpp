@@ -30,8 +30,8 @@ AbstractView::AbstractView()
 
 AbstractView::~AbstractView()
 {
-    if (m_searching_timer)
-        m_searching_timer->stop();
+    if (m_highlighted_search_timer)
+        m_highlighted_search_timer->stop();
     if (m_model)
         m_model->unregister_view({}, *this);
 }
@@ -435,12 +435,12 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
 {
     if (!model() || !index.is_valid() || selection_mode() == SelectionMode::NoSelection) {
         m_cursor_index = {};
-        cancel_searching();
+        stop_highlighted_search_timer();
         return;
     }
 
     if (!m_cursor_index.is_valid() || model()->parent_index(m_cursor_index) != model()->parent_index(index))
-        cancel_searching();
+        stop_highlighted_search_timer();
 
     if (selection_mode() == SelectionMode::SingleSelection && (selection_update == SelectionUpdate::Ctrl || selection_update == SelectionUpdate::Shift))
         selection_update = SelectionUpdate::Set;
@@ -578,9 +578,9 @@ void AbstractView::keydown_event(KeyEvent& event)
                         sb.append_code_point(*it);
                     }
                     do_search(sb.to_string());
-                    start_searching_timer();
+                    start_highlighted_search_timer();
                 } else {
-                    cancel_searching();
+                    stop_highlighted_search_timer();
                 }
 
                 event.accept();
@@ -588,7 +588,7 @@ void AbstractView::keydown_event(KeyEvent& event)
             }
         } else if (event.key() == KeyCode::Key_Escape) {
             if (is_searching()) {
-                cancel_searching();
+                stop_highlighted_search_timer();
 
                 event.accept();
                 return;
@@ -598,7 +598,7 @@ void AbstractView::keydown_event(KeyEvent& event)
             sb.append(m_highlighted_search);
             sb.append_code_point(event.code_point());
             do_search(sb.to_string());
-            start_searching_timer();
+            start_highlighted_search_timer();
 
             event.accept();
             return;
@@ -608,34 +608,34 @@ void AbstractView::keydown_event(KeyEvent& event)
     AbstractScrollableWidget::keydown_event(event);
 }
 
-void AbstractView::cancel_searching()
+void AbstractView::stop_highlighted_search_timer()
 {
     m_highlighted_search = nullptr;
-    if (m_searching_timer)
-        m_searching_timer->stop();
+    if (m_highlighted_search_timer)
+        m_highlighted_search_timer->stop();
     if (m_highlighted_search_index.is_valid()) {
         m_highlighted_search_index = {};
         update();
     }
 }
 
-void AbstractView::start_searching_timer()
+void AbstractView::start_highlighted_search_timer()
 {
-    if (!m_searching_timer) {
-        m_searching_timer = add<Core::Timer>();
-        m_searching_timer->set_single_shot(true);
-        m_searching_timer->on_timeout = [this] {
-            cancel_searching();
+    if (!m_highlighted_search_timer) {
+        m_highlighted_search_timer = add<Core::Timer>();
+        m_highlighted_search_timer->set_single_shot(true);
+        m_highlighted_search_timer->on_timeout = [this] {
+            stop_highlighted_search_timer();
         };
     }
-    m_searching_timer->set_interval(5 * 1000);
-    m_searching_timer->restart();
+    m_highlighted_search_timer->set_interval(5 * 1000);
+    m_highlighted_search_timer->restart();
 }
 
 void AbstractView::do_search(String&& searching)
 {
     if (searching.is_empty() || !model()) {
-        cancel_searching();
+        stop_highlighted_search_timer();
         return;
     }
 
@@ -663,7 +663,7 @@ void AbstractView::set_searchable(bool searchable)
         return;
     m_searchable = searchable;
     if (!m_searchable)
-        cancel_searching();
+        stop_highlighted_search_timer();
 }
 
 void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index, bool is_selected, const Gfx::IntRect& text_rect, const StringView& item_text, const Gfx::Font& font, Gfx::TextAlignment alignment, Gfx::TextElision elision, size_t search_highlighting_offset)
