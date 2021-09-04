@@ -150,9 +150,10 @@ KResultOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread
         arguments.append(parts.last());
     }
 
-    auto process = Process::try_create(first_thread, parts.take_last(), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty);
-    if (!process || !first_thread)
-        return ENOMEM;
+    auto process_or_error = Process::try_create(first_thread, parts.take_last(), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty);
+    if (process_or_error.is_error())
+        return process_or_error.error();
+    auto process = process_or_error.release_value();
 
     if (!process->m_fds.try_resize(process->m_fds.max_open())) {
         first_thread = nullptr;
@@ -184,14 +185,16 @@ KResultOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread
     // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
     process->ref();
 
-    return process.release_nonnull();
+    return process;
 }
 
 RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
 {
-    auto process = Process::try_create(first_thread, move(name), UserID(0), GroupID(0), ProcessID(0), true);
-    if (!first_thread || !process)
+    auto process_or_error = Process::try_create(first_thread, move(name), UserID(0), GroupID(0), ProcessID(0), true);
+    if (process_or_error.is_error())
         return {};
+    auto process = process_or_error.release_value();
+
     first_thread->regs().set_ip((FlatPtr)entry);
 #if ARCH(I386)
     first_thread->regs().esp = FlatPtr(entry_data); // entry function argument is expected to be in regs.esp
@@ -222,18 +225,18 @@ void Process::unprotect_data()
     });
 }
 
-RefPtr<Process> Process::try_create(RefPtr<Thread>& first_thread, const String& name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+KResultOr<NonnullRefPtr<Process>> Process::try_create(RefPtr<Thread>& first_thread, String const& name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
 {
     auto space = Memory::AddressSpace::try_create(fork_parent ? &fork_parent->address_space() : nullptr);
     if (!space)
-        return {};
+        return ENOMEM;
     auto process = adopt_ref_if_nonnull(new (nothrow) Process(name, uid, gid, ppid, is_kernel_process, move(cwd), move(executable), tty));
     if (!process)
-        return {};
+        return ENOMEM;
     auto result = process->attach_resources(space.release_nonnull(), first_thread, fork_parent);
     if (result.is_error())
-        return {};
-    return process;
+        return result;
+    return process.release_nonnull();
 }
 
 Process::Process(const String& name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty)
