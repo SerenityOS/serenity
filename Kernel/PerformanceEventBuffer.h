@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <Kernel/API/KResult.h>
 #include <Kernel/KBuffer.h>
-#include <Kernel/KResult.h>
 
 namespace Kernel {
 

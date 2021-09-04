@@ -173,8 +173,12 @@ private:
 
 }
 
+using Kernel::KResult;
+using Kernel::KResultOr;
+using Kernel::KSuccess;
+
 template<>
-struct AK::Formatter<Kernel::KResult> : Formatter<FormatString> {
+struct AK::Formatter<KResult> : Formatter<FormatString> {
     void format(FormatBuilder& builder, Kernel::KResult value)
     {
         if (value.is_error())

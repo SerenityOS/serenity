@@ -11,9 +11,9 @@
 #include <AK/RefPtr.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Arch/x86/RegisterState.h>
-#include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {

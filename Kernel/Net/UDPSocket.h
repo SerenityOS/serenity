@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/KResult.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/IPv4Socket.h>
 

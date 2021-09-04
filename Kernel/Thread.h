@@ -19,12 +19,12 @@
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
+#include <Kernel/API/KResult.h>
 #include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
-#include <Kernel/KResult.h>
 #include <Kernel/KString.h>
 #include <Kernel/Library/ListedRefCounted.h>
 #include <Kernel/Locking/LockLocation.h>
