@@ -14,6 +14,7 @@ namespace GUI {
 class ColorButton;
 class ColorPreview;
 class CustomColorWidget;
+class ColorSelectOverlay;
 
 class ColorPicker final : public Dialog {
     C_OBJECT(ColorPicker)
@@ -40,6 +41,7 @@ private:
     Vector<ColorButton&> m_color_widgets;
     RefPtr<CustomColorWidget> m_custom_color;
     RefPtr<ColorPreview> m_preview_widget;
+    RefPtr<Button> m_selector_button;
     RefPtr<TextBox> m_html_text;
     RefPtr<SpinBox> m_red_spinbox;
     RefPtr<SpinBox> m_green_spinbox;
