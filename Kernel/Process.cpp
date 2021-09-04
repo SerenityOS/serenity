@@ -157,7 +157,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
         cwd = VirtualFileSystem::the().root_custody();
 
     auto process = Process::try_create(first_thread, parts.take_last(), uid, gid, parent_pid, false, move(cwd), nullptr, tty);
-    if (!first_thread)
+    if (!process || !first_thread)
         return {};
     if (!process->m_fds.try_resize(process->m_fds.max_open())) {
         first_thread = nullptr;
