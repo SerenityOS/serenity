@@ -267,3 +267,12 @@ bool encode(Encoder&, Gfx::IntPoint const&);
 bool decode(Decoder&, Gfx::IntPoint&);
 
 }
+
+template<typename T>
+struct AK::Traits<Gfx::Point<T>> : public AK::GenericTraits<Gfx::Point<T>> {
+    static constexpr bool is_trivial() { return false; }
+    static unsigned hash(Gfx::Point<T> const& point)
+    {
+        return pair_int_hash(AK::Traits<T>::hash(point.x()), AK::Traits<T>::hash(point.y()));
+    }
+};
