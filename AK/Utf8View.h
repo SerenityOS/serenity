@@ -58,6 +58,8 @@ public:
     explicit Utf8View(const char*);
     ~Utf8View() = default;
 
+    explicit Utf8View(String&&) = delete;
+
     const StringView& as_string() const { return m_string; }
 
     Utf8CodePointIterator begin() const;
