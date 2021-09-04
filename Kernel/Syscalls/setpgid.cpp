@@ -37,7 +37,12 @@ KResultOr<FlatPtr> Process::sys$setsid()
     if (found_process_with_same_pgid_as_my_pid)
         return EPERM;
     // Create a new Session and a new ProcessGroup.
-    m_pg = ProcessGroup::create(ProcessGroupID(pid().value()));
+
+    auto new_pg = ProcessGroup::try_create(ProcessGroupID(pid().value()));
+    if (!new_pg)
+        return ENOMEM;
+
+    m_pg = move(new_pg);
     m_tty = nullptr;
     ProtectedDataMutationScope scope { *this };
     m_protected_values.sid = pid().value();
@@ -117,10 +122,10 @@ KResultOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgi
         return EPERM;
     }
     // FIXME: There are more EPERM conditions to check for here..
-    process->m_pg = ProcessGroup::find_or_create(new_pgid);
-    if (!process->m_pg) {
+    auto process_group = ProcessGroup::try_find_or_create(new_pgid);
+    if (!process_group)
         return ENOMEM;
-    }
+    process->m_pg = move(process_group);
     return 0;
 }
 

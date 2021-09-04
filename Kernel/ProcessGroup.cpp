@@ -24,7 +24,7 @@ ProcessGroup::~ProcessGroup()
     });
 }
 
-RefPtr<ProcessGroup> ProcessGroup::create(ProcessGroupID pgid)
+RefPtr<ProcessGroup> ProcessGroup::try_create(ProcessGroupID pgid)
 {
     auto process_group = adopt_ref_if_nonnull(new (nothrow) ProcessGroup(pgid));
     if (!process_group)
@@ -35,7 +35,7 @@ RefPtr<ProcessGroup> ProcessGroup::create(ProcessGroupID pgid)
     return process_group;
 }
 
-RefPtr<ProcessGroup> ProcessGroup::find_or_create(ProcessGroupID pgid)
+RefPtr<ProcessGroup> ProcessGroup::try_find_or_create(ProcessGroupID pgid)
 {
     return process_groups().with([&](auto& groups) -> RefPtr<ProcessGroup> {
         for (auto& group : groups) {

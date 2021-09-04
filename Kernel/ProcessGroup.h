@@ -24,8 +24,8 @@ class ProcessGroup
 public:
     ~ProcessGroup();
 
-    static RefPtr<ProcessGroup> create(ProcessGroupID);
-    static RefPtr<ProcessGroup> find_or_create(ProcessGroupID);
+    static RefPtr<ProcessGroup> try_create(ProcessGroupID);
+    static RefPtr<ProcessGroup> try_find_or_create(ProcessGroupID);
     static RefPtr<ProcessGroup> from_pgid(ProcessGroupID);
 
     const ProcessGroupID& pgid() const { return m_pgid; }
