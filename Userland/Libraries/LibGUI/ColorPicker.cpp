@@ -13,6 +13,7 @@
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextBox.h>
+#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Palette.h>
 
 namespace GUI {
@@ -123,6 +124,60 @@ private:
 
     RefPtr<ColorField> m_color_field;
     RefPtr<ColorSlider> m_color_slider;
+};
+
+class ColorSelectOverlay final : public Widget {
+    C_OBJECT(ColorSelectOverlay)
+public:
+    ColorSelectOverlay()
+    {
+        set_override_cursor(Gfx::StandardCursor::Eyedropper);
+    }
+
+    Optional<Color> exec()
+    {
+        m_event_loop = make<Core::EventLoop>();
+
+        // FIXME: Allow creation of fully transparent windows without a backing store.
+        auto window = Window::construct();
+        window->set_main_widget(this);
+        window->set_has_alpha_channel(true);
+        window->set_background_color(Color::Transparent);
+        window->set_fullscreen(true);
+        window->set_frameless(true);
+        window->show();
+
+        if (!m_event_loop->exec())
+            return {};
+        return m_col;
+    }
+
+    virtual ~ColorSelectOverlay() override { }
+    Function<void(Color)> on_color_changed;
+
+private:
+    virtual void mousedown_event(GUI::MouseEvent&) { m_event_loop->quit(1); }
+    virtual void mousemove_event(GUI::MouseEvent&)
+    {
+        auto new_col = WindowServerConnection::the().get_color_under_cursor();
+        if (new_col == m_col)
+            return;
+        m_col = new_col;
+        if (on_color_changed)
+            on_color_changed(m_col);
+    }
+
+    virtual void keydown_event(GUI::KeyEvent& event)
+    {
+        if (event.key() == KeyCode::Key_Escape) {
+            event.accept();
+            m_event_loop->quit(0);
+            return;
+        }
+    }
+
+    OwnPtr<Core::EventLoop> m_event_loop;
+    Color m_col;
 };
 
 ColorPicker::ColorPicker(Color color, Window* parent_window, String title)
@@ -247,7 +302,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     preview_container.set_layout<VerticalBoxLayout>();
     preview_container.layout()->set_margins(2);
     preview_container.layout()->set_spacing(0);
-    preview_container.set_fixed_height(128);
+    preview_container.set_fixed_height(100);
 
     // Current color
     preview_container.add<ColorPreview>(m_color);
@@ -340,6 +395,24 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     make_spinbox(Green, m_color.green());
     make_spinbox(Blue, m_color.blue());
     make_spinbox(Alpha, m_color.alpha());
+
+    m_selector_button = vertical_container.add<GUI::Button>("Select on screen");
+    m_selector_button->on_click = [this](auto) {
+        auto selector = ColorSelectOverlay::construct();
+        auto original_color = m_color;
+        // This allows us to use the color preview widget as a live-preview for
+        // the color currently under the cursor, which is helpful.
+        selector->on_color_changed = [this](auto color) {
+            m_color = color;
+            update_color_widgets();
+        };
+
+        // Set the final color
+        auto maybe_color = selector->exec();
+        m_color = maybe_color.value_or(original_color);
+        m_custom_color->set_color(m_color);
+        update_color_widgets();
+    };
 }
 
 void ColorPicker::update_color_widgets()
