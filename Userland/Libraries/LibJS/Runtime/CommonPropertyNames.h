@@ -403,6 +403,7 @@ namespace JS {
     P(substring)                             \
     P(subtract)                              \
     P(sup)                                   \
+    P(supportedLocalesOf)                    \
     P(tan)                                   \
     P(tanh)                                  \
     P(test)                                  \

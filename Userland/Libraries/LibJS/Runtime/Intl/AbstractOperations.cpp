@@ -7,6 +7,7 @@
 #include <AK/AllOf.h>
 #include <AK/AnyOf.h>
 #include <AK/CharacterTypes.h>
+#include <AK/Function.h>
 #include <AK/QuickSort.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/Array.h>
@@ -400,6 +401,77 @@ LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptio
 
     // 12. Return result.
     return result;
+}
+
+// 9.2.8 LookupSupportedLocales ( availableLocales, requestedLocales ), https://tc39.es/ecma402/#sec-lookupsupportedlocales
+Vector<String> lookup_supported_locales(Vector<String> const& requested_locales)
+{
+    // 1. Let subset be a new empty List.
+    Vector<String> subset;
+
+    // 2. For each element locale of requestedLocales, do
+    for (auto const& locale : requested_locales) {
+        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        VERIFY(locale_id.has_value());
+
+        // a. Let noExtensionsLocale be the String value that is locale with any Unicode locale extension sequences removed.
+        locale_id->remove_extension_type<Unicode::LocaleExtension>();
+        auto no_extensions_locale = locale_id->to_string();
+
+        // b. Let availableLocale be BestAvailableLocale(availableLocales, noExtensionsLocale).
+        auto available_locale = best_available_locale(no_extensions_locale);
+
+        // c. If availableLocale is not undefined, append locale to the end of subset.
+        if (available_locale.has_value())
+            subset.append(locale);
+    }
+
+    // 3. Return subset.
+    return subset;
+}
+
+// 9.2.9 BestFitSupportedLocales ( availableLocales, requestedLocales ), https://tc39.es/ecma402/#sec-bestfitsupportedlocales
+Vector<String> best_fit_supported_locales(Vector<String> const& requested_locales)
+{
+    // The BestFitSupportedLocales abstract operation returns the subset of the provided BCP 47
+    // language priority list requestedLocales for which availableLocales has a matching locale
+    // when using the Best Fit Matcher algorithm. Locales appear in the same order in the returned
+    // list as in requestedLocales. The steps taken are implementation dependent.
+
+    // :yakbrain:
+    return lookup_supported_locales(requested_locales);
+}
+
+// 9.2.10 SupportedLocales ( availableLocales, requestedLocales, options ), https://tc39.es/ecma402/#sec-supportedlocales
+Array* supported_locales(GlobalObject& global_object, Vector<String> const& requested_locales, Value options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Set options to ? CoerceOptionsToObject(options).
+    auto* options_object = coerce_options_to_object(global_object, options);
+    if (vm.exception())
+        return {};
+
+    // 2. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
+    auto matcher = get_option(global_object, options_object, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv);
+    if (vm.exception())
+        return {};
+
+    Vector<String> supported_locales;
+
+    // 3. If matcher is "best fit", then
+    if (matcher.as_string().string() == "best fit"sv) {
+        // a. Let supportedLocales be BestFitSupportedLocales(availableLocales, requestedLocales).
+        supported_locales = best_fit_supported_locales(requested_locales);
+    }
+    // 4. Else,
+    else {
+        // a. Let supportedLocales be LookupSupportedLocales(availableLocales, requestedLocales).
+        supported_locales = lookup_supported_locales(requested_locales);
+    }
+
+    // 5. Return CreateArrayFromList(supportedLocales).
+    return Array::create_from<String>(global_object, supported_locales, [&vm](auto& locale) { return js_string(vm, locale); });
 }
 
 // 9.2.12 CoerceOptionsToObject ( options ), https://tc39.es/ecma402/#sec-coerceoptionstoobject
