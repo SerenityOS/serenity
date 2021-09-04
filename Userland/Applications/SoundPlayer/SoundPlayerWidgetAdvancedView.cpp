@@ -38,6 +38,10 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     m_player_view = m_splitter->add<GUI::Widget>();
     m_playlist_model = adopt_ref(*new PlaylistModel());
 
+    m_playlist_widget = PlaylistWidget::construct();
+    m_playlist_widget->set_data_model(m_playlist_model);
+    m_playlist_widget->set_fixed_width(150);
+
     m_player_view->set_layout<GUI::VerticalBoxLayout>();
 
     m_play_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png");
@@ -283,9 +287,9 @@ void SoundPlayerWidgetAdvancedView::read_playlist(StringView path)
 void SoundPlayerWidgetAdvancedView::set_playlist_visible(bool visible)
 {
     if (visible) {
-        m_playlist_widget = m_player_view->parent_widget()->add<PlaylistWidget>();
-        m_playlist_widget->set_data_model(m_playlist_model);
-        m_playlist_widget->set_fixed_width(150);
+        if (!m_playlist_widget->parent()) {
+            m_player_view->parent_widget()->add_child(*m_playlist_widget);
+        }
     } else {
         m_playlist_widget->remove_from_parent();
         m_player_view->set_max_width(window()->width());
