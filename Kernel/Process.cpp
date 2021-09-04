@@ -164,7 +164,12 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
         return {};
     }
     auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
-    auto description = device_to_use_as_tty.open(O_RDWR).value();
+    auto description_or_error = device_to_use_as_tty.open(O_RDWR);
+    if (description_or_error.is_error()) {
+        error = description_or_error.error().error();
+        return {};
+    }
+    auto& description = description_or_error.value();
 
     auto setup_description = [&process, &description](int fd) {
         process->m_fds.m_fds_metadatas[fd].allocate();
