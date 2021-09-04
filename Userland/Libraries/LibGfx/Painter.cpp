@@ -1472,14 +1472,14 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
     }
 
     for (size_t i = 0; i < lines.size(); ++i) {
-        auto& line = lines[i];
+        auto line = Utf8View { lines[i] };
 
         IntRect line_rect { bounding_rect.x(), bounding_rect.y() + static_cast<int>(i) * line_height, bounding_rect.width(), line_height };
         line_rect.intersect(rect);
 
         TextDirection line_direction = get_text_direction(line);
-        if (text_contains_bidirectional_text(Utf8View { line }, line_direction)) { // Slow Path: The line contains mixed BiDi classes
-            auto directional_runs = split_text_into_directional_runs(Utf8View { line }, line_direction);
+        if (text_contains_bidirectional_text(line, line_direction)) { // Slow Path: The line contains mixed BiDi classes
+            auto directional_runs = split_text_into_directional_runs(line, line_direction);
             auto current_dx = line_direction == TextDirection::LTR ? 0 : line_rect.width();
             for (auto& directional_run : directional_runs) {
                 auto run_width = font.width(directional_run.text());
@@ -1492,14 +1492,14 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
                 // compatible with draw_text_line.
                 StringBuilder builder;
                 builder.append(directional_run.text());
-                auto text = Utf8View { builder.to_string() };
+                auto line_text = Utf8View { builder.to_string() };
 
-                draw_text_line(run_rect, text, font, alignment, directional_run.direction(), draw_glyph);
+                draw_text_line(run_rect, line_text, font, alignment, directional_run.direction(), draw_glyph);
                 if (line_direction == TextDirection::LTR)
                     current_dx += run_width;
             }
         } else {
-            draw_text_line(line_rect, Utf8View { line }, font, alignment, line_direction, draw_glyph);
+            draw_text_line(line_rect, line, font, alignment, line_direction, draw_glyph);
         }
     }
 }
