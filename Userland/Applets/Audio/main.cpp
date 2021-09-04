@@ -219,8 +219,8 @@ int main(int argc, char** argv)
     window->set_window_type(GUI::WindowType::Applet);
 
     auto initial_volume = Config::read_i32("Audio", "Master", "Volume", 100);
-    auto initial_muted = Config::read_bool("Audio", "Master", "Muted", false);
-    window->set_main_widget<AudioWidget>(initial_volume, initial_muted);
+    auto initial_mute = Config::read_bool("Audio", "Master", "Mute", false);
+    window->set_main_widget<AudioWidget>(initial_volume, initial_mute);
     window->show();
 
     // This positioning code depends on the window actually existing.
