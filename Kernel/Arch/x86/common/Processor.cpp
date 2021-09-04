@@ -582,6 +582,11 @@ ProcessorContainer& Processor::processors()
     return s_processors;
 }
 
+Processor& Processor::by_id(u32 id)
+{
+    return *s_processors[id];
+}
+
 void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
 {
     VERIFY_INTERRUPTS_DISABLED();

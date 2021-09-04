@@ -277,6 +277,15 @@ struct [[gnu::packed]] ProcessorLocalAPIC {
     u32 flags;
 };
 
+// https://uefi.org/specs/ACPI/6.4/05_ACPI_Software_Programming_Model/ACPI_Software_Programming_Model.html#processor-local-x2apic-structure
+struct [[gnu::packed]] ProcessorLocalX2APIC {
+    MADTEntryHeader h;
+    u16 reserved;
+    u32 apic_id;
+    u32 flags;
+    u32 acpi_processor_id;
+};
+
 // https://uefi.org/specs/ACPI/6.4/05_ACPI_Software_Programming_Model/ACPI_Software_Programming_Model.html#interrupt-source-override-structure
 struct [[gnu::packed]] InterruptSourceOverride {
     MADTEntryHeader h;
