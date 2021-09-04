@@ -300,4 +300,30 @@ size_t Utf16CodePointIterator::length_in_code_units() const
     return 1;
 }
 
+// FIXME: Merge this with the logic in StringBuilder
+void AK::Formatter<Utf16View>::format(FormatBuilder& builder, AK::Utf16View const& value)
+{
+    for (auto code_point : value) {
+        if (code_point <= 0x7f) {
+            builder.put_char((char)code_point);
+        } else if (code_point <= 0x07ff) {
+            builder.put_char((char)(((code_point >> 6) & 0x1f) | 0xc0));
+            builder.put_char((char)(((code_point >> 0) & 0x3f) | 0x80));
+        } else if (code_point <= 0xffff) {
+            builder.put_char((char)(((code_point >> 12) & 0x0f) | 0xe0));
+            builder.put_char((char)(((code_point >> 6) & 0x3f) | 0x80));
+            builder.put_char((char)(((code_point >> 0) & 0x3f) | 0x80));
+        } else if (code_point <= 0x10ffff) {
+            builder.put_char((char)(((code_point >> 18) & 0x07) | 0xf0));
+            builder.put_char((char)(((code_point >> 12) & 0x3f) | 0x80));
+            builder.put_char((char)(((code_point >> 6) & 0x3f) | 0x80));
+            builder.put_char((char)(((code_point >> 0) & 0x3f) | 0x80));
+        } else {
+            builder.put_char(0xef);
+            builder.put_char(0xbf);
+            builder.put_char(0xbd);
+        }
+    }
+}
+
 }

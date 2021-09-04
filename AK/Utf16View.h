@@ -120,13 +120,9 @@ private:
 };
 
 }
-
 template<>
 struct AK::Formatter<AK::Utf16View> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, AK::Utf16View const& value)
-    {
-        return builder.builder().append(value);
-    }
+    void format(FormatBuilder& builder, AK::Utf16View const& value);
 };
 
 using AK::Utf16View;

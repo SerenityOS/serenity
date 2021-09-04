@@ -189,15 +189,20 @@ bool FormatParser::consume_replacement_field(size_t& index)
     return true;
 }
 
+FormatBuilder::FormatBuilder(StringBuilder& builder)
+    : m_putch([&builder](char ch) { builder.append(ch); })
+{
+}
+
 void FormatBuilder::put_padding(char fill, size_t amount)
 {
     for (size_t i = 0; i < amount; ++i)
-        m_builder.append(fill);
+        m_putch(fill);
 }
 void FormatBuilder::put_literal(StringView value)
 {
     for (size_t i = 0; i < value.length(); ++i) {
-        m_builder.append(value[i]);
+        m_putch(value[i]);
         if (value[i] == '{' || value[i] == '}')
             ++i;
     }
@@ -212,22 +217,27 @@ void FormatBuilder::put_string(
     const auto used_by_string = min(max_width, value.length());
     const auto used_by_padding = max(min_width, used_by_string) - used_by_string;
 
+    auto put_literal_string = [this](StringView value) {
+        for (size_t i = 0; i < value.length(); ++i)
+            m_putch(value[i]);
+    };
+
     if (used_by_string < value.length())
         value = value.substring_view(0, used_by_string);
 
     if (align == Align::Left || align == Align::Default) {
-        m_builder.append(value);
+        put_literal_string(value);
         put_padding(fill, used_by_padding);
     } else if (align == Align::Center) {
         const auto used_by_left_padding = used_by_padding / 2;
         const auto used_by_right_padding = ceil_div<size_t, size_t>(used_by_padding, 2);
 
         put_padding(fill, used_by_left_padding);
-        m_builder.append(value);
+        put_literal_string(value);
         put_padding(fill, used_by_right_padding);
     } else if (align == Align::Right) {
         put_padding(fill, used_by_padding);
-        m_builder.append(value);
+        put_literal_string(value);
     }
 }
 void FormatBuilder::put_u64(
@@ -273,31 +283,26 @@ void FormatBuilder::put_u64(
 
     const auto put_prefix = [&]() {
         if (is_negative)
-            m_builder.append('-');
+            m_putch('-');
         else if (sign_mode == SignMode::Always)
-            m_builder.append('+');
+            m_putch('+');
         else if (sign_mode == SignMode::Reserved)
-            m_builder.append(' ');
+            m_putch(' ');
 
         if (prefix) {
+            m_putch('0');
             if (base == 2) {
-                if (upper_case)
-                    m_builder.append("0B");
-                else
-                    m_builder.append("0b");
+                m_putch(upper_case ? 'B' : 'b'); // 0b
             } else if (base == 8) {
-                m_builder.append("0");
+                // the '0' prefix is already printed
             } else if (base == 16) {
-                if (upper_case)
-                    m_builder.append("0X");
-                else
-                    m_builder.append("0x");
+                m_putch(upper_case ? 'X' : 'x'); // 0x
             }
         }
     };
     const auto put_digits = [&]() {
         for (size_t i = 0; i < used_by_digits; ++i)
-            m_builder.append(buffer[i]);
+            m_putch(buffer[i]);
     };
 
     if (align == Align::Left) {
@@ -483,7 +488,7 @@ void FormatBuilder::put_hexdump(ReadonlyBytes bytes, size_t width, char fill)
         put_padding(fill, 4);
         for (size_t j = i - width; j < i; ++j) {
             auto ch = bytes[j];
-            m_builder.append(ch >= 32 && ch <= 127 ? ch : '.'); // silly hack
+            m_putch(ch >= 32 && ch <= 127 ? ch : '.'); // silly hack
         }
     };
     for (size_t i = 0; i < bytes.size(); ++i) {
@@ -500,12 +505,17 @@ void FormatBuilder::put_hexdump(ReadonlyBytes bytes, size_t width, char fill)
         put_char_view(bytes.size());
 }
 
-void vformat(StringBuilder& builder, StringView fmtstr, TypeErasedFormatParams& params)
+void vformat_to(Function<void(char)> putch, StringView fmtstr, TypeErasedFormatParams& params)
 {
-    FormatBuilder fmtbuilder { builder };
+    FormatBuilder fmtbuilder { move(putch) };
     FormatParser parser { fmtstr };
 
     vformat_impl(params, fmtbuilder, parser);
+}
+
+void vformat(StringBuilder& builder, StringView fmtstr, TypeErasedFormatParams& params)
+{
+    vformat_to([&builder](auto ch) { builder.append(ch); }, fmtstr, params);
 }
 
 void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& parser)

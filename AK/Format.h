@@ -11,6 +11,7 @@
 #include <AK/AllOf.h>
 #include <AK/AnyOf.h>
 #include <AK/Array.h>
+#include <AK/Function.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 
@@ -135,10 +136,14 @@ public:
         Default = OnlyIfNeeded,
     };
 
-    explicit FormatBuilder(StringBuilder& builder)
-        : m_builder(builder)
+    explicit FormatBuilder(Function<void(char)> putch)
+        : m_putch(move(putch))
     {
     }
+
+    explicit FormatBuilder(StringBuilder& builder);
+
+    void put_char(char ch) { m_putch(ch); }
 
     void put_padding(char fill, size_t amount);
 
@@ -202,14 +207,8 @@ public:
         size_t width,
         char fill = ' ');
 
-    const StringBuilder& builder() const
-    {
-        return m_builder;
-    }
-    StringBuilder& builder() { return m_builder; }
-
 private:
-    StringBuilder& m_builder;
+    Function<void(char)> m_putch;
 };
 
 class TypeErasedFormatParams {
@@ -467,6 +466,15 @@ struct Formatter<std::nullptr_t> : Formatter<FlatPtr> {
         return Formatter<FlatPtr>::format(builder, 0);
     }
 };
+
+void vformat_to(Function<void(char)> putch, StringView fmtstr, TypeErasedFormatParams&);
+
+template<typename... Parameters>
+void format_to(Function<void(char)> putch, CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+{
+    VariadicFormatParams variadic_format_params { parameters... };
+    vformat_to(move(putch), fmtstr.view(), variadic_format_params);
+}
 
 void vformat(StringBuilder&, StringView fmtstr, TypeErasedFormatParams&);
 
