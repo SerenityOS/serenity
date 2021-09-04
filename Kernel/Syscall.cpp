@@ -88,15 +88,15 @@ UNMAP_AFTER_INIT void initialize()
     register_user_callable_interrupt_handler(syscall_vector, syscall_asm_entry);
 }
 
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-typedef KResultOr<FlatPtr> (Process::*Handler)(FlatPtr, FlatPtr, FlatPtr, FlatPtr);
-typedef KResultOr<FlatPtr> (Process::*HandlerWithRegisterState)(RegisterState&);
+using Handler = auto (Process::*)(FlatPtr, FlatPtr, FlatPtr, FlatPtr) -> KResultOr<FlatPtr>;
+using HandlerWithRegisterState = auto (Process::*)(RegisterState&) -> KResultOr<FlatPtr>;
+
 struct HandlerMetadata {
     Handler handler;
     NeedsBigProcessLock needs_lock;
 };
 
-#define __ENUMERATE_SYSCALL(sys_call, needs_lock) { reinterpret_cast<Handler>(&Process::sys$##sys_call), needs_lock },
+#define __ENUMERATE_SYSCALL(sys_call, needs_lock) { bit_cast<Handler>(&Process::sys$##sys_call), needs_lock },
 static const HandlerMetadata s_syscall_table[] = {
     ENUMERATE_SYSCALLS(__ENUMERATE_SYSCALL)
 };
@@ -153,7 +153,7 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
     KResultOr<FlatPtr> result { FlatPtr(nullptr) };
     if (function == SC_fork || function == SC_sigreturn) {
         // These syscalls want the RegisterState& rather than individual parameters.
-        auto handler = (HandlerWithRegisterState)syscall_metadata.handler;
+        auto handler = bit_cast<HandlerWithRegisterState>(syscall_metadata.handler);
         result = (process.*(handler))(regs);
     } else {
         result = (process.*(syscall_metadata.handler))(arg1, arg2, arg3, arg4);
