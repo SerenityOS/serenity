@@ -52,6 +52,8 @@ private:
     virtual void did_get_dom_tree(String const&) override;
     virtual void did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style) override;
     virtual void did_js_console_output(String const&, String const&) override;
+    virtual void did_output_js_console_message(i32 message_index) override;
+    virtual void did_get_js_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages) override;
     virtual void did_change_favicon(Gfx::ShareableBitmap const&) override;
     virtual void did_request_alert(String const&) override;
     virtual Messages::WebContentClient::DidRequestConfirmResponse did_request_confirm(String const&) override;

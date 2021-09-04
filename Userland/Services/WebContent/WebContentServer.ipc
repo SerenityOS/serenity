@@ -31,6 +31,7 @@ endpoint WebContentServer
     get_hovered_node_id() => (i32 node_id)
     js_console_initialize() =|
     js_console_input(String js_source) =|
+    js_console_request_messages(i32 start_index) =|
 
     run_javascript(String js_source) =|
 

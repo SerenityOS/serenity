@@ -283,6 +283,18 @@ void ClientConnection::js_console_initialize()
     }
 }
 
+void ClientConnection::initialize_js_console(Badge<PageHost>)
+{
+    auto* document = page().top_level_browsing_context().document();
+    auto interpreter = document->interpreter().make_weak_ptr();
+    if (m_interpreter.ptr() == interpreter.ptr())
+        return;
+
+    m_interpreter = interpreter;
+    m_console_client = make<WebContentConsoleClient>(interpreter->global_object().console(), interpreter, *this);
+    interpreter->global_object().console().set_client(*m_console_client.ptr());
+}
+
 void ClientConnection::js_console_input(const String& js_source)
 {
     if (m_console_client)
@@ -304,6 +316,11 @@ void ClientConnection::run_javascript(String const& js_source)
         dbgln("Exception :(");
         interpreter.vm().clear_exception();
     }
+}
+
+void ClientConnection::js_console_request_messages(i32)
+{
+    TODO();
 }
 
 Messages::WebContentServer::GetSelectedTextResponse ClientConnection::get_selected_text()
