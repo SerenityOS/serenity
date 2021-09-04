@@ -59,6 +59,14 @@ Use your own judgement whether you want to include such changes. Generally speak
 
 You may want to read up what `git add -p` does (or `git checkout -p`, to undo).
 
+QtCreator tends to interpret IPC definitions as C++ headers, and then tries to format them. This is not useful. One way to avoid that is telling QtCreator that IPC definitions are not C++ headers.
+- In QtCreator, go to "Tools > Options…"
+- Type "beau" in the search box, go to "Environment > MIME Types"
+- In the little search box, type "plain", and select "text/plain"
+- In the "details" section, you should now see the list of Patterns, something like `*.txt;*.asc;*,v`. Extend it in the following way: `*.txt;*.asc;*,v;*.ipc;*.gml`
+- Click "OK" to close the dialog.
+- Maybe you need to close and open again the IPC files. You can check what QtCreator is doing by right-clicking the filename in the editor tab, and clicking "Properties...". In the third line, you should see `MIME type: text/plain`.
+
 ## License template
 
 You may have noticed how Andreas just types `lic` and the [license appears](https://youtu.be/i0J6J1Twwyo?t=346).
