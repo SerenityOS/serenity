@@ -102,9 +102,9 @@ struct DeferredCallEntry {
 };
 
 class Processor;
-// Note: We only support 8 processors at most at the moment,
-// so allocate 8 slots of inline capacity in the container.
-using ProcessorContainer = Array<Processor*, 8>;
+// Note: We only support 64 processors at most at the moment,
+// so allocate 64 slots of inline capacity in the container.
+using ProcessorContainer = Array<Processor*, 64>;
 
 class Processor {
     friend class ProcessorInfo;
@@ -189,6 +189,8 @@ public:
     {
         s_idle_cpu_mask.fetch_and(~(1u << m_cpu), AK::MemoryOrder::memory_order_relaxed);
     }
+
+    static Processor& by_id(u32);
 
     static u32 count()
     {
